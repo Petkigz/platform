@@ -37,7 +37,7 @@ triggers and row level security are actually executed rather than merely parsed.
 The suite is split by group and run by `supabase/tests/run.mjs`, which applies
 the migrations once and runs every suite against the same engine.
 
-**95 tests** across three suites:
+**170 tests** across five suites:
 
 *Group 1 — identity, family, guardians, privacy.* Schema presence, RLS on
 every public table, seed data, `updated_at` triggers, duplicate and
@@ -62,11 +62,24 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 ## Status
 
-30 tables migrated, RLS on every one, 95 tests passing.
+The database is complete: **88 tables, RLS on every one, 202 policies, 105
+triggers, 82 functions, 37 migrations, 170 passing tests.**
 
-Group 1 (identity, family, guardians, privacy) and Group 2 (courses, content,
-enrolments, progress, assessments, completion, certificates) are complete.
-Group 3 (governance) is next and has one open decision — see `NEXT.md`.
-Groups 4–5 are designed but not built.
+All five logical schema groups are built. Every frozen decision — D1
+multi-tenancy, D2 child identity, D4 money, D5 version pinning, D6 content
+licence, D7 deletion, D8 media masters, D9 translations — is enforced in SQL
+rather than in application code, which is the only place it survives a second
+developer or a second AI-generated query.
 
-See `NEXT.md`.
+Nothing above the database exists yet. No API, no screens, no authentication
+wiring. See `NEXT.md`.
+
+### Why 88 tables when the design specified 85
+
+Three were missing from the design and had to be added for the recorded
+decisions to be implementable:
+
+- `institutions` — D1 multi-tenancy had no table to hang `institution_id` on
+- `media_assets` — D8 requires originals in storage we control, with a checksum
+- `platform_settings` — without it, "build it all, enable it later" had
+  nowhere to live; `governance.panel_required` is a row, not a constant

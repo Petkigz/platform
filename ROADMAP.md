@@ -39,7 +39,7 @@ already is.
 
 ## Phase 3 — Core platform
 
-- [~] Build the backend and database — **Groups 1 and 2 complete. 30 tables, RLS on every one, 95 tests passing (`npm run test:db`).** Group 3 (governance) is next and blocked on decision P6; Groups 4–5 and the API follow.
+- [x] Build the backend and database — **all five schema groups complete. 88 tables, RLS on every one, 202 policies, 105 triggers, 170 tests passing (`npm run test:db`).** The API and application layer follow.
 - [ ] Build registration, login and password recovery — *decide `auth.email_password` vs `auth.phone_otp` first*
 - [ ] Implement user roles and permissions
 - [ ] Build user profiles and account settings
