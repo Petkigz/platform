@@ -32,7 +32,27 @@ export async function createHarness() {
     process.exit(1);
   }
 
+  // Pre-flight lint for the mistakes that otherwise surface as an opaque
+  // PostgreSQL parse error with no line number. Cheap, and this one has
+  // bitten repeatedly.
   const files = readdirSync(migrationsDir).filter((f) => f.endsWith('.sql')).sort();
+  const lintProblems = [];
+  for (const f of files) {
+    const lines = readFileSync(join(migrationsDir, f), 'utf8').split('\n');
+    lines.forEach((line, i) => {
+      // A message literal ending in a quote followed by a comma, with USING
+      // on the next line: RAISE was given no parameters.
+      if (/',\s*$/.test(line.trimEnd()) && /^\s*using errcode/.test(lines[i + 1] ?? '')) {
+        lintProblems.push(`${f}:${i + 1} — trailing comma before USING (RAISE has no parameters)`);
+      }
+    });
+  }
+  if (lintProblems.length) {
+    console.error('\n  SQL LINT:');
+    for (const p of lintProblems) console.error(`    ${p}`);
+    process.exit(1);
+  }
+
   for (const f of files) {
     try {
       await exec(readFileSync(join(migrationsDir, f), 'utf8'));
