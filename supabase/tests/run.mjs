@@ -3,6 +3,7 @@
 import { createHarness, report } from './lib.mjs';
 import { run as group1 } from './group1.test.mjs';
 import { run as group2 } from './group2.test.mjs';
+import { run as group2b } from './group2b.test.mjs';
 
 const ctx = await createHarness();
 const suites = [];
@@ -11,6 +12,7 @@ let prev = { passed: 0, failures: 0 };
 for (const [name, fn] of [
   ['group1', group1],
   ['group2', group2],
+  ['group2b', group2b],
 ]) {
   console.log(`\n--- ${name} ---\n`);
   await fn(ctx);

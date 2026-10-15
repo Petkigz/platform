@@ -37,7 +37,7 @@ triggers and row level security are actually executed rather than merely parsed.
 The suite is split by group and run by `supabase/tests/run.mjs`, which applies
 the migrations once and runs every suite against the same engine.
 
-**59 tests** across two suites:
+**95 tests** across three suites:
 
 *Group 1 — identity, family, guardians, privacy.* Schema presence, RLS on
 every public table, seed data, `updated_at` triggers, duplicate and
@@ -52,12 +52,21 @@ published version **and of its entire subtree**, the review lifecycle
 including "an author may not approve their own course", one published version
 per course per language (D9), and seven RLS visibility cases.
 
+*Group 2 part 2 — enrolments, progress, assessments, certificates.* The
+version pin cannot be forged or moved without an audited reason, and a re-pin
+leaves existing progress intact. Progress must be recorded against the pinned
+version. Attempt limits, submitted-attempt immutability, automatic and manual
+grading, and mixed grading that waits. Answer keys are unreadable by clients —
+including via `SELECT *`. Certificate issuance is idempotent, snapshots the
+course as it was, refuses incomplete work, and revokes rather than deletes.
+
 ## Status
 
-18 tables migrated, RLS on every one, 59 tests passing.
+30 tables migrated, RLS on every one, 95 tests passing.
 
-Group 1 (identity, family, guardians, privacy) is complete. Group 2 is
-half-built: courses and content are done; enrolments, progress, assessments
-and certificates remain. Groups 3–5 are designed but not built.
+Group 1 (identity, family, guardians, privacy) and Group 2 (courses, content,
+enrolments, progress, assessments, completion, certificates) are complete.
+Group 3 (governance) is next and has one open decision — see `NEXT.md`.
+Groups 4–5 are designed but not built.
 
 See `NEXT.md`.
