@@ -163,7 +163,7 @@ as $$
   );
 $$;
 
-comment on function public.has_role(uuid, text) is
-  'Holds an unrevoked assignment of the given role code.';
-comment on function public.is_privileged(uuid) is
-  'Holds any unrevoked privileged role. Used for administrative read access.';
+comment on function public.is_active_family_member(uuid, uuid) is
+  'Active owner/adult/member of the given family. Used by RLS.';
+comment on function public.is_family_owner(uuid, uuid) is
+  'Active owner of the given family. Used for family membership writes.';

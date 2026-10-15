@@ -39,7 +39,7 @@ already is.
 
 ## Phase 3 — Core platform
 
-- [~] Build the backend and database — **Group 1 done: 10 tables migrated, RLS on all of them, 23 tests passing (`npm run test:db`).** Groups 2–5 and the API remain.
+- [~] Build the backend and database — **Group 1 complete; Group 2 half-built. 18 tables, RLS on every one, 59 tests passing (`npm run test:db`).** Enrolments, assessments and certificates remain in Group 2; Groups 3–5 and the API follow.
 - [ ] Build registration, login and password recovery — *decide `auth.email_password` vs `auth.phone_otp` first*
 - [ ] Implement user roles and permissions
 - [ ] Build user profiles and account settings

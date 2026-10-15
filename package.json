@@ -3,9 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "AyahSpring — Islamic e-learning platform. Group 1: identity, family, guardians, privacy.",
+  "description": "AyahSpring \u2014 Islamic e-learning platform. Group 1: identity, family, guardians, privacy.",
   "scripts": {
-    "test:db": "node supabase/tests/group1.test.mjs"
+    "test:db": "node supabase/tests/run.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.3.11"
