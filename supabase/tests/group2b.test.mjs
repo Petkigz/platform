@@ -12,6 +12,7 @@ export async function run(ctx) {
     newUser, newProfile,
     bootstrapAdmin, newInstructor, newReviewer,
     newCourse, newVersion, newSection, newLesson, newAsset,
+    satisfyReview,
   } = ctx;
 
   const admin    = await bootstrapAdmin('g2b-admin@example.com');
@@ -48,6 +49,7 @@ export async function run(ctx) {
   async function publishVersion(pc) {
     await setStatus(pc.version, 'submitted', teacher);
     await setStatus(pc.version, 'approved', reviewer);
+    await satisfyReview(pc.version, reviewer, admin);
     await setStatus(pc.version, 'published', admin);
     return pc;
   }
@@ -145,6 +147,7 @@ export async function run(ctx) {
     const l2 = await newLesson(s2);
     await setStatus(v2, 'submitted', teacher);
     await setStatus(v2, 'approved', reviewer);
+    await satisfyReview(v2, reviewer, admin);
     await setStatus(v2, 'published', admin);
 
     await q('select * from public.re_pin_enrolment($1,$2,$3,$4,$5)',
@@ -172,6 +175,7 @@ export async function run(ctx) {
     await newLesson(s2);
     await setStatus(v2, 'submitted', teacher);
     await setStatus(v2, 'approved', reviewer);
+    await satisfyReview(v2, reviewer, admin);
     await setStatus(v2, 'published', admin);
     await q('select * from public.re_pin_enrolment($1,$2,$3,$4)',
       [e, v2, admin, 'reason']);

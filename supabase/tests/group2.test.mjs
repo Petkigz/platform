@@ -12,6 +12,7 @@ export async function run(ctx) {
     newUser, newProfile,
     bootstrapAdmin, newInstructor, newReviewer,
     newCourse, newVersion, newSection, newLesson, newAsset,
+    satisfyReview,
   } = ctx;
 
   // ---------------------------------------------------------------------
@@ -40,6 +41,8 @@ export async function run(ctx) {
   async function publish(s) {
     await setStatus(s.version, 'submitted', teacher);
     await setStatus(s.version, 'approved', reviewer);
+    // Group 3 gate: publication needs a recorded scholarly approval.
+    await satisfyReview(s.version, reviewer, admin);
     await setStatus(s.version, 'published', admin);
   }
 
@@ -238,6 +241,9 @@ export async function run(ctx) {
     const s = await scaffold();
     await setStatus(s.version, 'submitted', teacher);
     await setStatus(s.version, 'approved', reviewer);
+    // Satisfy the governance gate first, so the refusal below is about the
+    // actor's privilege and not about a missing review.
+    await satisfyReview(s.version, reviewer, admin);
     await rejects(() => setStatus(s.version, 'published', teacher),
       'an instructor published a version themselves');
     await setStatus(s.version, 'published', admin);

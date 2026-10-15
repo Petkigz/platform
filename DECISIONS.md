@@ -290,3 +290,40 @@ in them.
 | D9 | Translations | **ADOPTED** |
 
 **All nine settled. Nothing blocks the first migration.**
+
+
+---
+
+## P6 — ADOPTED 2026-10-15: peer review now, scholarly panel dormant
+
+**Decision.** Content is approved by an authorised reviewer with the right
+subject authorisation. The four scholarly-panel tables are built but dormant,
+enabled later from the admin dashboard.
+
+**This amends a recorded decision, and the amendment is deliberate.** The
+project record's Group 3 `approval_threshold` reads *"Scholarly panel required
+for all courses; quorum/voting policy open."* That stays true as the
+end-state; what changes is the order. The panel is not abandoned, it is
+deferred, because there are no panel members yet and a quorum policy has not
+been chosen.
+
+**Consequence to remember.** When the panel is enabled, every published course
+must have gone through it. Anything published under peer review alone before
+that point will need retroactive panel review or an explicit grandfathering
+decision. That is a real cost and should be decided before the panel is
+switched on, not after.
+
+**Unaffected by the amendment.** These recorded Group 3 decisions stand
+unchanged and are enforced in the schema:
+
+- *Author may do limited technical checks but cannot be the required
+  scholarly approver of their own course.*
+- *Disagreement escalates to an independent senior reviewer or panel; the
+  owner cannot override.*
+- *Material changes trigger risk-based re-review.*
+- *A designated governance administrator may suspend with reason and audit;
+  restoration requires scholarly clearance.*
+
+**Enforcement.** `panel_required` is a row in `platform_settings`, not a
+constant in code. The publication gate reads it, so switching the panel on is
+a settings change, not a migration.

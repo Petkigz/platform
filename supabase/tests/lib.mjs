@@ -149,6 +149,40 @@ export async function createHarness() {
   }
 
   // -------------------------------------------------------------------
+  // Governance fixtures
+  //
+  // Group 3 added a publication gate: a version needs a scholarly approval
+  // before it can be published. These helpers satisfy it so the earlier
+  // suites test publishing rather than accidentally testing the gate.
+  // -------------------------------------------------------------------
+  async function ensureReviewerProfile(userId, verifiedBy) {
+    const existing = await q('select id from public.reviewer_profiles where user_id = $1', [userId]);
+    if (existing.rows.length) return existing.rows[0].id;
+    const r = await q(
+      `insert into public.reviewer_profiles
+         (user_id, reviewer_status, verified_at, verified_by)
+       values ($1, 'active', now(), $2) returning id`, [userId, verifiedBy ?? userId]);
+    return r.rows[0].id;
+  }
+
+  // A completed scholarly review by reviewerUserId, assigned by assignedBy.
+  async function satisfyReview(versionId, reviewerUserId, assignedBy) {
+    const rp = await ensureReviewerProfile(reviewerUserId, assignedBy);
+    const a = (await q(
+      `insert into public.content_review_assignments
+         (course_version_id, reviewer_profile_id, review_scope, assigned_by,
+          assignment_status, accepted_at, completed_at)
+       values ($1, $2, 'scholarly', $3, 'completed', now(), now()) returning id`,
+      [versionId, rp, assignedBy])).rows[0].id;
+    await q(
+      `insert into public.content_review_decisions
+         (review_assignment_id, course_version_id, review_scope, decision, rationale, decided_by)
+       values ($1, $2, 'scholarly', 'approved', 'Reviewed and approved.', $3)`,
+      [a, versionId, reviewerUserId]);
+    return a;
+  }
+
+  // -------------------------------------------------------------------
   // Group 2 fixtures
   // -------------------------------------------------------------------
   async function newCourse(createdBy, over = {}) {
@@ -209,6 +243,7 @@ export async function createHarness() {
     test, assert, rejects,
     asSuperuser, asUser, asAnon, committed,
     newUser, newProfile, grantRole, bootstrapAdmin, newInstructor, newReviewer,
+    ensureReviewerProfile, satisfyReview,
     newCourse, newVersion, newSection, newLesson, newAsset,
     summary, close,
   };
