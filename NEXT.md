@@ -1184,6 +1184,52 @@ now refuses it.
 
 **486 database tests, 164 unit tests, tsc clean, build clean, 51 routes.**
 
+### Also done since: nothing could be bought at all
+
+Every table on the revenue path had **zero rows and no writer** — not in SQL, not
+in the application:
+
+```
+no product -> no price -> nothing to buy -> no order -> no revenue
+```
+
+`checkout.ts` resolves a price to a product and its course versions.
+`enrolment.ts` resolves `product_course_versions` to the course being bought.
+`accrue_instructor_earnings()` walks `order_items.product_id ->
+product_course_versions -> courses.created_by` to decide who earned what. All
+three were reading tables nothing could ever fill — which means the earnings unit
+built earlier was unreachable.
+
+**How it survived 511 green tests.** `earnings.test.mjs` inserts into `products`,
+`prices` and `product_course_versions` **directly, at superuser level, bypassing
+RLS entirely**. The tests built the purchase path the way the product never
+could. That is the fixture trap again, and it is the reason a coverage probe has
+to look for *application* writers rather than any INSERT in the codebase.
+
+**The split was already decided, and is not reversed here.** The row-level
+policies said it: `products_insert` is `created_by = current_user_id()`,
+`pcv_write` is the product owner, `prices_write` is `is_privileged()`. So a
+teacher creates the product and attaches their own **published** version;
+**pricing and going on sale are staff actions.**
+
+Rules worth keeping: a **draft cannot be sold** (it has never been reviewed);
+`activate_product()` refuses a product with no course or no price, so nothing can
+be listed that has no content or no price; re-pricing **supersedes** the old row
+rather than mutating it, because what someone already bought at must stay
+readable; retirement soft-deletes and closes the price, so existing orders still
+resolve.
+
+The end-to-end test is the real proof: a teacher publishes a course, staff price
+it, a learner buys it, the enrolment is created, and the teacher's share accrues.
+
+**Three of my own tests were wrong before they were right** — invented column
+names (`orders.buyer_id`, `course_enrolments.learner_id`) and a call to
+`accrue_instructor_earnings` as an authenticated user, when the grant to
+`authenticated` was deliberately withdrawn. Each was fixed against the real
+schema rather than by guessing again.
+
+**511 database tests, 179 unit tests, tsc clean, build clean, 51 routes.**
+
 ### What comes after that
 
 The paid path. It needs a provider, and a provider needs merchant

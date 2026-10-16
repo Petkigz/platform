@@ -63,8 +63,8 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **89 tables, RLS on every one, 209 policies, 112
-user-defined triggers, 118 functions, 59 migrations, 486 database tests and
-164 unit tests passing.** The web app builds 51 routes.
+user-defined triggers, 123 functions, 60 migrations, 511 database tests and
+179 unit tests passing.** The web app builds 51 routes.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. Without it
@@ -73,6 +73,13 @@ a new user could sign in and then do nothing at all.
 A lesson can contain something: `add_lesson_resource()` attaches a video,
 reading or worksheet. Before it, every lesson published on the platform was an
 empty page, because nothing could write to the table the lesson page reads.
+
+A course can be sold: `create_product()`, `link_product_course_version()`,
+`set_product_price()` and `activate_product()`. Until then every table on the
+revenue path had zero rows and no writer, so nothing could be bought and no
+teacher could earn. A teacher owns the product and attaches their own published
+course; **only staff can set a price or put it on sale** — that split was
+already in the row-level policies and is not reversed here.
 
 Uploads belong to us, not to whoever linked them: `register_media_upload()`
 creates the `media_assets` row and derives the storage key, and an upload
