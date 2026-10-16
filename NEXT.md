@@ -1388,16 +1388,32 @@ falsifying the payout history.
 
 **610 database tests, 228 unit tests, tsc clean, build clean, 59 routes.**
 
+### Also done: provider statements can be reconciled without guessed formats
+
+`payment_reconciliations` and `payment_reconciliation_items` had no writer.
+`/admin/reconciliation` now starts a provider-period run and accepts signed
+minor-unit statement rows. The database matches on provider reference, currency,
+signed amount and period. A credit is positive, a debit negative. Unknown or
+ambiguous references remain unmatched; amount, currency or date differences are
+retained as discrepancies. Staff can resolve a line to the exact transaction,
+then finalize (balanced only if every line matches) and close with a written
+reason. No row is silently discarded and no reconciliation action changes the
+financial transaction itself.
+
+No provider-specific CSV format is guessed: the entry screen is generic until
+P12 establishes which provider statement/API format is real.
+
+**624 database tests, 228 unit tests, tsc clean, build clean, 61 routes.**
+
 ### What comes after that
 
-Next is reconciliation: `payment_reconciliations` and
-`payment_reconciliation_items` still have no writer. The schema supports it,
-but a real settlement import needs provider statements (P12); we can build the
-staff-reviewed import and variance logic against fixtures without pretending a
-provider account exists. Payout execution still waits on the four payout
-preconditions and provider disbursement credentials. Automatic subscription
-renewal needs a worker and payment-provider support; pending is never treated as
-active.
+The remaining money-out gates are dispute handling and payout execution. Payout
+execution still waits on the four payout preconditions, tax/country treatment
+and provider disbursement credentials. Automatic subscription renewal needs a
+worker and payment-provider support; an expired paid period must not be extended
+by a browser redirect. Other unwired groups remain `promotion_*`,
+`learning_paths*`, `reviewer_*`, `institutions`, `scholarly_panel*` (dormant per
+P6), `currency_exchange_rates`, `access_checks`, and `content_sources`.
 
 The paid path. It needs a provider, and a provider needs merchant
 registration and signed API terms (P12). Until then `payment_required` is the

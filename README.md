@@ -63,8 +63,8 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **89 tables, RLS on every one, 209 policies, 116
-user-defined triggers, 147 functions, 66 migrations, 610 database tests and
-228 unit tests passing.** The web app builds 59 routes.
+user-defined triggers, 152 functions, 67 migrations, 624 database tests and
+228 unit tests passing.** The web app builds 61 routes.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. Without it
@@ -89,6 +89,13 @@ finance or platform admin, with a required written reason and audit entry. It
 remains at **0%** until the business decision is made; no percentage was chosen
 on the owner's behalf. The payout workflow stays closed until the four payout
 preconditions are settled.
+
+Finance can reconcile a provider statement from `/admin/reconciliation`.
+Signed minor-unit rows are matched to ledger transactions by provider reference,
+currency, amount and settlement period. Missing, ambiguous and discrepant lines
+stay visible; close requires a finalised run and a written reason. No provider-
+specific import format is assumed while P12 credentials and statement formats
+remain undecided.
 
 Finance can record a correction from `/admin/financial-adjustments`. Signed,
 append-only amounts link to an order or transaction and require finance/platform

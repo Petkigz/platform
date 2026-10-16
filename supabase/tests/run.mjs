@@ -37,6 +37,7 @@ import { run as revenueShare } from './revenue_share.test.mjs';
 import { run as plans } from './plans.test.mjs';
 import { run as subscriptions } from './subscriptions.test.mjs';
 import { run as financialAdjustments } from './financial_adjustments.test.mjs';
+import { run as reconciliation } from './reconciliation.test.mjs';
 
 const ctx = await createHarness();
 const suites = [];
@@ -70,6 +71,7 @@ for (const [name, fn] of [
   ['plans', plans],
   ['subscriptions', subscriptions],
   ['financial_adjustments', financialAdjustments],
+  ['reconciliation', reconciliation],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],
