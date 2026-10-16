@@ -474,6 +474,115 @@ export async function run(ctx) {
     assert(status === 'pending_payment', `the order moved to '${status}' without proof`);
   });
 
+  // -------------------------------------------------------------------
+  // The webhook path: no human behind it
+  // -------------------------------------------------------------------
+  // A provider callback has no session, so it cannot be attributed to a person.
+  // governance_audit_events.actor is nullable and has always allowed that;
+  // orders_paid_has_evidence did not, and refused a null confirmer outright.
+  // 20261029000200_system_payment_confirmer.sql refines it to require evidence
+  // and leaves the actor requirement where it is actually enforced — in
+  // record_payment_success(), which still refuses an anonymous manual
+  // confirmation because is_privileged(null) is false.
+
+  /** A signed provider event, as the webhook route would record it. */
+  async function providerEvent(eventId, { verified = true, status = 'received' } = {}) {
+    return committed(async () => {
+      await q(
+        `insert into public.payment_provider_events
+           (provider, provider_event_id, event_type, payload, signature_verified, processing_status)
+         values ('mtn_momo', $1, 'payment.succeeded', '{}', $2, $3)`,
+        [eventId, verified, status]);
+      return (await q(
+        'select id from public.payment_provider_events where provider_event_id = $1',
+        [eventId])).rows[0].id;
+    });
+  }
+
+  await test('a verified webhook confirms a payment with no human actor', async () => {
+    const pc = await publishedCourse({ sold: true });
+    const buyer = await buyerAccount('Webhook Buyer');
+    const order = await paidOrder(buyer, pc);
+    const eventId = await providerEvent('evt_hook_1');
+
+    // Null actor. This is the call the webhook route makes.
+    await q('select id from public.record_payment_success($1,$2,$3,$4,$5,null)',
+      [order, null, 'mtn_momo', 'hook-ref-1', eventId]);
+
+    const o = (await q(
+      `select status, payment_confirmed_by is null as actor_is_null, payment_evidence
+         from public.orders where id = $1`, [order])).rows[0];
+    assert(o.status === 'paid', `the order is '${o.status}', expected paid`);
+    assert(o.actor_is_null === true, 'a human actor was recorded for a webhook payment');
+    assert(o.payment_evidence === 'mtn_momo:hook-ref-1',
+      `evidence is '${o.payment_evidence}'`);
+
+    // And it fulfils exactly as a manual confirmation does.
+    const grants = await count(
+      `select 1 from public.entitlement_grants
+        where learner_profile_id = $1 and course_version_id = $2 and status = 'active'`,
+      [buyer.learnerId, pc.version]);
+    assert(grants === 1, `expected 1 active grant from the webhook, found ${grants}`);
+
+    const enrolments = await count(
+      `select 1 from public.course_enrolments
+        where learner_profile_id = $1 and course_version_id = $2`,
+      [buyer.learnerId, pc.version]);
+    assert(enrolments === 1, `expected 1 enrolment from the webhook, found ${enrolments}`);
+  });
+
+  await test('an unverified event cannot confirm a payment', async () => {
+    // The whole webhook path rests on this. A provider redirect is not proof;
+    // the signature is.
+    const pc = await publishedCourse({ sold: true });
+    const buyer = await buyerAccount('Unverified Buyer');
+    const order = await paidOrder(buyer, pc);
+    const eventId = await providerEvent('evt_hook_2', { verified: false });
+
+    await rejects(() => q(
+      'select id from public.record_payment_success($1,$2,$3,$4,$5,null)',
+      [order, null, 'mtn_momo', 'hook-ref-2', eventId]),
+      'an unverified provider event confirmed a payment');
+
+    const status = (await q('select status from public.orders where id = $1', [order])).rows[0].status;
+    assert(status === 'pending_payment', `the order moved to '${status}' on an unverified event`);
+  });
+
+  await test('an event cannot be applied twice', async () => {
+    const pc = await publishedCourse({ sold: true });
+    const buyer = await buyerAccount('Replayed Buyer');
+    const order = await paidOrder(buyer, pc);
+    const eventId = await providerEvent('evt_hook_3');
+
+    await q('select id from public.record_payment_success($1,$2,$3,$4,$5,null)',
+      [order, null, 'mtn_momo', 'hook-ref-3', eventId]);
+
+    // The second call finds the order already paid and returns early, which is
+    // the idempotent behaviour D4 requires. Assert it does not double-grant.
+    await q('select id from public.record_payment_success($1,$2,$3,$4,$5,null)',
+      [order, null, 'mtn_momo', 'hook-ref-3', eventId]);
+
+    const grants = await count(
+      'select 1 from public.entitlement_grants where learner_profile_id = $1', [buyer.learnerId]);
+    assert(grants === 1, `a replayed webhook produced ${grants} grants, expected 1`);
+  });
+
+  await test('an anonymous manual confirmation is still refused', async () => {
+    // The constraint was refined, not removed. Dropping the actor must not
+    // become a way to confirm a payment on nothing but a typed sentence.
+    const pc = await publishedCourse({ sold: true });
+    const buyer = await buyerAccount('Anonymous Manual');
+    const order = await paidOrder(buyer, pc);
+
+    await rejects(() => q(
+      'select id from public.record_payment_success($1,$2,$3,$4,null,$5)',
+      [order, null, 'manual', 'no-actor', 'a bank slip someone mentioned']),
+      'a manual confirmation with no actor was accepted');
+
+    const status = (await q('select status from public.orders where id = $1', [order])).rows[0].status;
+    assert(status === 'pending_payment', `the order moved to '${status}' with no actor and no event`);
+  });
+
   await test('fulfilment is recorded in the governance audit trail', async () => {
     const pc = await publishedCourse({ sold: true });
     const buyer = await buyerAccount('Audited Buyer');

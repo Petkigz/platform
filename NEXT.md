@@ -472,6 +472,94 @@ path was verified a second time with a neuter that actually applied.
 
 **312 tests pass.**
 
+### Also done since: checkout, and two more dead ends behind it
+
+Building the paid path turned up two more gaps of exactly the same shape as the
+entitlement one — machinery that was correct and nothing connected to it.
+
+**A learner could mark a lesson complete but never open it.** Grepping
+`lesson_resources` across `web/src/` returned nothing. The entitlement fix had
+made the column properly gated and then no page read it, so a learner saw a title
+and a button that recorded completion for material they could not reach. A course
+you could finish without ever watching. Now `/learn/[enrolmentId]/lesson/[lessonId]`,
+linked from the outline.
+
+The interesting part is that an empty resource list has two meanings that look
+identical in the data and mean opposite things: no materials attached, or no
+entitlement. Rendering the same message for both would be a lie of omission, so
+the page asks `can_access_lesson` and says which it is.
+
+**Creating a billing account made you unable to use it.** `billing_accounts_insert`
+allows `created_by = current_user_id()`, but every read of the account and every
+write beneath it is gated on `is_billing_member()`, which consults
+`billing_account_memberships` alone. Nothing inserted that row, and the policy
+that would let someone add a member was itself gated on already being one.
+Measured as a real authenticated user:
+
+```
+created account: 34fe18de-...
+  can the owner READ their own new account? -> NO
+  can the owner ADD THEMSELVES as a member? -> NO
+  can the owner CREATE AN ORDER on it?      -> NO
+```
+
+No bootstrap, and no privileged escape hatch in the UI. An ordinary payer was
+permanently locked out of paying, so no order could ever exist for
+`record_payment_success()` to confirm. A trigger now makes the creator a member
+at creation, scoped on the relationship rather than on whether the session is
+privileged — that phrasing has already broken this suite once, because a
+superuser fixture has no JWT claims and `is_privileged(null)` is false.
+
+That broke 28 tests with one error, `duplicate key value violates unique
+constraint "bam_one_per_user"`: the fixtures insert the creator's membership by
+hand, asserting the same wrong assumption the entitlement fixtures did. All four
+sites now use `on conflict do nothing`.
+
+**A webhook payment has no human confirmer.** `orders_paid_has_evidence` required
+a named actor, and `user_profiles.user_id` is a foreign key into `auth.users`, so
+there is no system actor to name. Attributing it to the payer is worse than the
+hack of inventing one: "who confirmed this payment?" would answer "the person who
+paid it", which is the self-approval this schema forbids elsewhere — a refund
+requester cannot approve their own refund. `governance_audit_events.actor` has
+always been nullable for exactly this case, so the constraint was refined to
+require evidence unconditionally and leave the privileged-actor rule where it is
+actually enforced, in `record_payment_success()`. Verified both directions: a
+verified event with a null actor confirms; an anonymous manual confirmation is
+still refused.
+
+**Then the checkout itself.** `/courses/[slug]/buy` → `POST /api/checkout` →
+provider → `POST /api/payments/webhook`, plus `/orders`.
+
+The client posts a price id and never an amount; the amount is resolved from the
+`prices` row and the product behind it is checked against the version being
+bought. A subscription price is refused rather than sold as a purchase, because
+fulfilment grants a course version and a subscription has its own lifecycle.
+
+`/orders` is the provider's return URL and it shows the database's status rather
+than inferring success from having been redirected. Access opens when the webhook
+lands.
+
+The webhook is the one place that bypasses RLS, via a service-role client, because
+a provider callback has no session and both `record_payment_success()` and
+`payment_provider_events` would refuse it. The signature is the authorisation
+instead, checked against the raw bytes before anything is parsed. The event is
+persisted before the payment is applied, so a crash in between cannot confirm a
+payment with no record of what confirmed it. Duplicate deliveries are
+acknowledged rather than re-applied. Unknown event types return 200, because a 500
+makes a provider retry forever.
+
+12 unit tests for `createOrder`, aimed at the ways the money can go wrong — a
+price for the wrong course, a dead price, one outside its window, a subscription
+sold as a purchase, a line item that fails. One test needed the stub fixed rather
+than the code: it could not model a failing write, so the error path was never
+exercised and the test passed for the wrong reason.
+
+**320 database tests, 37 unit tests, 32 routes.** Both new migrations were checked
+for teeth by neutering them and counting failures, then restoring.
+
+Still blocked on P12: the provider hand-off. Everything up to it and everything
+after it is built and tested.
+
 ### What comes after that
 
 The paid path. It needs a provider, and a provider needs merchant

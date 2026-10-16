@@ -15,7 +15,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { fromMinor, format, type Money } from './money';
+import { fromMinor, format, type Money } from './money.ts';
 
 export type Offering =
   | { kind: 'free' }

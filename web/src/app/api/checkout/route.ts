@@ -1,0 +1,176 @@
+import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { isSupabaseConfigured } from '@/lib/env';
+import { ownLearnerProfileId, resolveOffering } from '@/lib/enrolment';
+import { createOrder } from '@/lib/checkout';
+import { getPaymentProvider } from '@/lib/payments/registry';
+import { PaymentProviderUnavailableError } from '@/lib/payments/provider';
+import { toE164 } from '@/lib/phone';
+
+export const dynamic = 'force-dynamic';
+
+type Body = {
+  courseId?: unknown;
+  priceId?: unknown;
+  /** E.164, for mobile-money providers. Optional; card providers ignore it. */
+  msisdn?: unknown;
+};
+
+/**
+ * POST /api/checkout — open a pending order and hand the payer to the provider.
+ *
+ * The actor is taken from the session only. `courseId` and `priceId` come from
+ * the body and are both validated against each other inside `createOrder`; no
+ * amount is accepted here or anywhere else in the request.
+ *
+ * Two things this route deliberately does not do:
+ *
+ *   - It does not grant anything. A pending order confers no access; only
+ *     `record_payment_success()` does that, and it needs a verified provider
+ *     event or a privileged actor with written evidence.
+ *   - It does not treat a provider redirect as payment. The payer comes back to
+ *     `returnUrl` with nothing settled, and the entitlement arrives when the
+ *     webhook lands. The UI has to be built to wait rather than to assume.
+ */
+export async function POST(request: Request) {
+  if (!isSupabaseConfigured()) {
+    return NextResponse.json(
+      { error: 'Payments are not configured on this deployment.' },
+      { status: 503 },
+    );
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: 'Sign in to check out.' }, { status: 401 });
+  }
+
+  let body: Body;
+  try {
+    body = (await request.json()) as Body;
+  } catch {
+    return NextResponse.json({ error: 'Malformed request body.' }, { status: 400 });
+  }
+
+  const courseId = typeof body.courseId === 'string' ? body.courseId.trim() : '';
+  const priceId = typeof body.priceId === 'string' ? body.priceId.trim() : '';
+
+  if (!courseId || !priceId) {
+    return NextResponse.json(
+      { error: 'courseId and priceId are both required.' },
+      { status: 400 },
+    );
+  }
+
+  // A learner who already holds a live entitlement should not be charged again.
+  // resolveOffering answers this, and it is the same function the enrol button
+  // uses, so the two cannot disagree.
+  const learnerProfileId = await ownLearnerProfileId(supabase, user.id);
+  const offering = await resolveOffering(supabase, { courseId, learnerProfileId });
+
+  if (offering.kind === 'entitled') {
+    return NextResponse.json(
+      { error: 'You already have access to this course.' },
+      { status: 409 },
+    );
+  }
+  if (offering.kind === 'free') {
+    return NextResponse.json(
+      {
+        error: 'This course is free. Use enrolment rather than checkout.',
+        // The caller can act on this rather than showing a generic failure.
+        redirect: '/api/enrol',
+      },
+      { status: 409 },
+    );
+  }
+
+  const result = await createOrder(supabase, { courseId, priceId, userId: user.id });
+  if (!result.ok) {
+    // 409 for the expected conflicts, 400 for a bad request, 500 for the rest.
+    const status =
+      result.code === 'price_not_for_this_course' ||
+      result.code === 'price_not_available' ||
+      result.code === 'not_paid_course' ||
+      result.code === 'already_entitled'
+        ? 409
+        : result.code === 'not_found'
+          ? 404
+          : result.code === 'error'
+            ? 500
+            : 400;
+    return NextResponse.json({ error: result.message, code: result.code }, { status });
+  }
+
+  // The order exists and is pending. Now hand off. If no provider is
+  // configured the order is left pending on purpose: it is a real record of an
+  // attempt, it is harmless because it confers nothing, and the payer sees a
+  // clear sentence instead of a broken redirect.
+  const provider = getPaymentProvider();
+  if (!provider.available) {
+    return NextResponse.json(
+      {
+        error:
+          'No payment provider is configured yet, so this order cannot be paid. ' +
+          'It has been saved and will appear in your orders.',
+        code: 'provider_unavailable',
+        orderId: result.orderId,
+      },
+      { status: 503 },
+    );
+  }
+
+  const origin = new URL(request.url).origin;
+  let msisdn: string | undefined;
+  if (typeof body.msisdn === 'string' && body.msisdn.trim()) {
+    // toE164 reports an unusable number by returning null, not by throwing.
+    // The order already exists at this point, so this is a 400 on the request
+    // rather than a rollback — the payer can retry with a correct number.
+    const normalised = toE164(body.msisdn, 'UG');
+    if (!normalised) {
+      return NextResponse.json(
+        {
+          error: 'That phone number is not valid.',
+          orderId: result.orderId,
+        },
+        { status: 400 },
+      );
+    }
+    msisdn = normalised;
+  }
+
+  try {
+    const checkout = await provider.createCheckout({
+      orderId: result.orderId,
+      amount: result.amount,
+      returnUrl: `${origin}/orders?pending=${result.orderId}`,
+      description: `Course purchase ${result.orderId}`,
+      msisdn,
+    });
+
+    return NextResponse.json({
+      orderId: result.orderId,
+      kind: checkout.kind,
+      ...(checkout.kind === 'redirect'
+        ? { url: checkout.url }
+        : { providerReference: checkout.providerReference }),
+    });
+  } catch (err) {
+    if (err instanceof PaymentProviderUnavailableError) {
+      return NextResponse.json({ error: err.message }, { status: 503 });
+    }
+    // Never leak a provider's internal error to the payer, and never pretend
+    // the order failed: it exists, it is pending, and it can be retried.
+    return NextResponse.json(
+      {
+        error: 'The payment provider could not start this payment. Try again.',
+        orderId: result.orderId,
+      },
+      { status: 502 },
+    );
+  }
+}

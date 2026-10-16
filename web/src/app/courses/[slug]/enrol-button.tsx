@@ -40,16 +40,19 @@ export function EnrolButton({
   }
 
   if (state === 'paid') {
+    // This used to be a disabled button with a notice saying checkout was not
+    // open. Now there is a checkout, so it links there. Whether a provider is
+    // configured is the buy page's problem, not this button's — it reports that
+    // plainly, and it still creates the order so the attempt is recorded.
     return (
       <div>
         <div className="hero-actions">
-          <span className="btn secondary" aria-disabled="true" style={{ opacity: 0.7 }}>
-            {label}
-          </span>
-        </div>
-        <div className="notice warn" style={{ marginTop: '0.75rem' }}>
-          Checkout is not open yet. No payment provider is connected, so this
-          course cannot be bought. Free courses enrol normally.
+          <a href={`/courses/${courseId}/buy`} className="btn">
+            Buy — {label}
+          </a>
+          <a href="/learn" className="btn secondary">
+            Go to my learning
+          </a>
         </div>
       </div>
     );

@@ -49,6 +49,10 @@ npm run test        # both
 | `/auth/confirm` | dynamic | Supabase email confirmation and magic links |
 | `/learn` | dynamic | The authenticated screen, reading through RLS |
 | `/api/enrol` | dynamic | POST. Free enrolment only |
+| `/courses/[slug]/buy` | dynamic | Checkout: pick a price, pay |
+| `/api/checkout` | dynamic | POST. Create a pending order, hand off to the provider |
+| `/orders` | dynamic | Order history and payment status |
+| `/api/payments/webhook` | dynamic | POST. Provider callback. Signature-verified |
 | `/learn/[enrolmentId]` | dynamic | Course view: outline and mark-complete |
 | `/learn/[enrolmentId]/lesson/[lessonId]` | dynamic | One lesson and its materials, gated by entitlement |
 | `/api/progress` | dynamic | POST. Record lesson progress |
@@ -249,6 +253,54 @@ than showing "no materials" to someone who simply has not paid.
 masters in our own storage with Stream for delivery only, and signing a delivery
 URL is a server-side act with its own credentials. The page says playback is not
 wired up rather than rendering a link that goes nowhere.
+
+## Checkout and the payment webhook
+
+`/courses/[slug]/buy` → `POST /api/checkout` → provider → `POST /api/payments/webhook`.
+
+**The client never supplies an amount.** The form posts a price id; the amount is
+resolved server-side from the `prices` row. `createOrder` then checks that the
+product behind that price actually sells the version being bought, so a valid
+price id for one course cannot be posted while buying another. A checkout that
+accepts a posted total is a checkout where the total is whatever the caller typed.
+
+A subscription price is refused here rather than sold as a purchase. Fulfilment
+reads `order_items` and grants a course version; a subscription has its own
+lifecycle and expiry, and `record_payment_success()` does not create one. Taking
+the money would grant nothing, or worse, grant forever.
+
+**Returning from a payment screen is not confirmation.** `/orders` is the return
+URL, and it shows the database's status rather than inferring success from having
+been redirected. Access opens when the webhook lands. The page says so, because
+the alternative is a green tick that turns out to be wrong.
+
+**The webhook is the only place that bypasses row level security.** It uses
+`createAdminClient()` (service role) because a provider callback has no user
+session, and both `record_payment_success()` — revoked from `anon` — and
+`payment_provider_events` — `staff_only()` on read and write — would refuse it.
+The provider's signature is the authorisation instead, and it is checked against
+the raw request bytes before anything is parsed or written. An unconfigured
+provider verifies nothing, so an unconfigured deployment refuses every callback.
+
+The event is persisted **before** the payment is applied. Reversing that would
+allow a crash in between to confirm a payment with no record of what confirmed
+it, which is exactly what `payment_evidence` exists to prevent. Duplicate
+deliveries are acknowledged rather than re-applied: `payment_provider_events` is
+unique on `(provider, provider_event_id)`.
+
+An unknown event type returns 200, not 500. Providers add event types; a 500
+makes them retry forever and every retry is a failed request in the logs.
+
+**A webhook payment has no human confirmer.** `orders.payment_confirmed_by` is a
+foreign key into `auth.users`, so there is no system actor to name — and naming
+the payer would be the self-approval this schema forbids elsewhere (a refund
+requester cannot approve their own refund). `governance_audit_events.actor` has
+always been nullable for exactly this case, so
+`20261029000200_system_payment_confirmer.sql` refines `orders_paid_has_evidence`
+to match: **every paid order must have evidence**, and the privileged-actor
+requirement for a manual confirmation stays where it is actually enforced, in
+`record_payment_success()`. That function still refuses an anonymous manual
+confirmation, because `is_privileged(null)` is false.
 
 ## Families and children
 

@@ -87,7 +87,7 @@ Status:
 | 36 | Users | READY |
 | 37 | Teachers | READY |
 | 38 | Course approval | READY |
-| 39 | Payments | BLOCKED — provider not chosen |
+| 39 | Payments | **BUILT** — `/orders` shows status from the database, not from a redirect |
 | 40 | Revenue analytics | BLOCKED — `delivery.analytics` is CODE |
 | 41 | Certificates | READY |
 | 42 | **Settings and feature flags** | READY — **critical path, missing from the source list.** No settings table exists |
@@ -97,8 +97,8 @@ Status:
 
 | # | Screen | Status |
 |---|---|---|
-| 44 | Checkout | BLOCKED — provider not chosen |
-| 45 | Mobile money confirmation *(one screen, MTN and Airtel are parameters, not two designs)* | BLOCKED |
+| 44 | Checkout | **BUILT** — `/courses/[slug]/buy`. Price selection and order creation work end to end; the provider hand-off needs P12 |
+| 45 | Mobile money confirmation *(one screen, MTN and Airtel are parameters, not two designs)* | READY — the buy form takes an E.164 number and handles the `pending` result; needs a provider to prompt |
 | 46 | International card payment | BLOCKED |
 | 47 | Subscription management | BLOCKED |
 
