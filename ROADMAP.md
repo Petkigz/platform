@@ -11,7 +11,7 @@ marked with its real state so we never redo finished work or build on sand.
 - `[!]` **BLOCKED** — cannot be finished without a fact or a decision.
 - `[X]` **CONFLICT** — contradicts a recorded decision. Resolve before doing it.
 
-**Progress: 11 done · 6 part · 19 todo · 13 blocked · 4 conflict  (53 total)**
+**Progress: 11 done · 7 part · 18 todo · 13 blocked · 4 conflict  (53 total)**
 
 Of the first 12 tasks — all of Phase 1 and Phase 2 — **7 are complete and 4 are
 partly complete.** The roadmap starts where the project already is.
@@ -38,7 +38,7 @@ partly complete.** The roadmap starts where the project already is.
 
 ## Phase 3 — Core platform
 
-- [x] Build the backend and database — **all five schema groups complete. 88 tables, RLS on every one, 202 policies, 105 triggers, 256 tests passing (`npm run test:db`).** The API and application layer follow.
+- [x] Build the backend and database — **all five schema groups complete. 88 tables, RLS on every one, 202 policies, 105 triggers, 268 tests passing (`npm run test:db`).** The API and application layer follow.
 - [ ] Build registration, login and password recovery — *decide `auth.email_password` vs `auth.phone_otp` first*
 - [x] Implement user roles and permissions — *capability-based, not role-based. 10 roles, 4 privileged, 16 capability functions. Three real defects found and fixed in `20261021000100_authz_fixes.sql`.*
 - [ ] Build user profiles and account settings
@@ -70,7 +70,7 @@ partly complete.** The roadmap starts where the project already is.
 ## Phase 6 — Marketplace and governance
 
 - [X] Build instructor applications and verification — **conflicts with the recorded decision:** a curated cohort of teachers I know, not open applications
-- [ ] Build course creation and curriculum tools
+- [~] Build course creation and curriculum tools — **`/teach` is live: create a course, build its outline, submit for review. Reordering, lesson media upload and version creation from the UI still to build**
 - [X] Build scholar/content reviewer workflows — **conflicts with P6:** scholarly panel replaced by light peer review. 9 tables of panel machinery are excess for a trusted cohort.
 - [ ] Build course approval and revision history
 - [!] Build marketplace commissions and instructor earnings — **deferred; behind `teaching.payouts`**

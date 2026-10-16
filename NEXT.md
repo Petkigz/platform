@@ -237,6 +237,43 @@ failures with the predicate removed, 0 with it restored.
 
 **256 tests pass.**
 
+### Also done since: the teacher's side
+
+`/teach` is the course creation and curriculum tools. Without it, nobody but
+someone with database access could put content on the platform — which for a
+multi-instructor product is the whole point.
+
+A teacher creates a course (one field; the slug is derived, the first version
+is created with it because a course with no version has nowhere to hold
+content), then adds sections and lessons, then submits for review. The
+curriculum editor renders a published version read-only with an explanation
+rather than disabled controls: a greyed-out button invites you to find the
+thing that un-greys it, and here there is nothing. Changes go into a new
+version.
+
+Only "submit" and "withdraw" are offered to an author. Approving belongs to a
+reviewer and publishing to a platform admin, and the transition table refuses
+the author regardless of what the client sends. The actor passed to
+`set_course_version_status()` comes from the session, never the request body —
+letting a caller name the actor would make the transition table decorative.
+
+**A subtlety worth recording.** The write policies on `course_sections` and
+`lessons` are phrased as `can_read_version()`, which is true for *any* signed-in
+user on a published version. So the thing that actually stops a learner from
+injecting content into a course they are enrolled in is the D5 lock trigger,
+not the policy. `authoring.test.mjs` asserts the behaviour rather than the
+policy shape, so a future tightening of the policy cannot quietly become the
+only thing holding.
+
+Two of my own assertions were wrong before this passed, both from the same
+recorded trap: writes inside `asUser()` roll back, and the first error inside
+it aborts the transaction. A third read was wrong for a different reason — an
+active course with no published version is not readable by a non-author at
+all, so the teacher under test could not see the title they were trying to
+change. The row is now compared as superuser.
+
+**268 tests pass.**
+
 ### What comes after that
 
 The paid path. It needs a provider, and a provider needs merchant

@@ -57,6 +57,9 @@ npm run test        # both
 | `/api/admin/flags` | dynamic | POST. Flip a flag |
 | `/family` | dynamic | Children and their progress |
 | `/api/family/children` | dynamic | POST. Add a child |
+| `/teach` | dynamic | My courses, create a course |
+| `/teach/[courseId]` | dynamic | Curriculum editor |
+| `/api/teach` | dynamic | POST. create / add section / add lesson / transition |
 | `/sign-out` | dynamic | POST only |
 
 ## The theme is white and green
@@ -132,6 +135,24 @@ columns. Never write `select('*')` against that table — name the columns.
 The key has no read path in the application at all, for any role including
 `platform_admin`. `grade_response()` is its only reader.
 `supabase/tests/assessment.test.mjs` asserts all three of those.
+
+## Teaching
+
+A teacher creates a course, builds its outline, and submits it for review.
+Approving belongs to a reviewer and publishing to a platform admin; the
+transition table refuses the author regardless of what the client sends, and
+the actor passed to `set_course_version_status()` comes from the session rather
+than the request body.
+
+A published version renders read-only. D5 freezes the whole version subtree on
+publication, so changes go into a new version rather than into what people
+already paid for.
+
+Worth knowing: the write policies on `course_sections` and `lessons` are
+phrased as `can_read_version()`, which is true for any signed-in user on a
+published version. What actually stops a learner from injecting content is the
+D5 lock trigger, not the policy. The tests assert the behaviour, not the policy
+shape.
 
 ## Families and children
 
