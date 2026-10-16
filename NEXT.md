@@ -34,6 +34,26 @@ Every frozen decision is enforced in SQL rather than in application code:
 `web/` is a Next.js 16 + TypeScript app with Supabase Auth wired, and one
 authenticated screen reading through RLS.
 
+### Also done since: the authorization matrix
+
+`authorization_matrix: incomplete` was the last open Phase 1 item. It is now
+derived from the migrations and written up in
+`docs/decisions/authorization-matrix.md`, with
+`supabase/tests/authorization.test.mjs` enforcing all ten of the record's
+required access tests — two of which had no coverage anywhere.
+
+Writing it down found three real defects, all fixed in
+`20261021000100_authz_fixes.sql`:
+
+1. a family `billing_manager` could read the children's profiles
+2. an assigned reviewer could not read the content they were asked to review
+3. **a verified guardian could not see the child they were verified for** —
+   `guardian_relationships` was consulted by no policy at all, so the whole
+   verification workflow gated nothing. That workflow is the machinery behind
+   verifiable parental consent, which COPPA requires for US under-13s.
+
+**190 tests pass.**
+
 ### Done
 
 - [x] Next.js + TypeScript app, `npm run build` clean, 7 routes
@@ -59,6 +79,11 @@ project and confirming in a browser is the remaining step.
 
 > Create the Supabase project, push the migrations, and confirm the auth round
 > trip in a browser.
+
+### What comes after that
+
+The catalogue: browse, search, and a course page. It is the next unblocked
+Phase 3 item and needs only `subject_areas` populated.
 
 ### Not now
 

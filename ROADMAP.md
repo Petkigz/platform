@@ -11,19 +11,18 @@ marked with its real state so we never redo finished work or build on sand.
 - `[!]` **BLOCKED** — cannot be finished without a fact or a decision.
 - `[X]` **CONFLICT** — contradicts a recorded decision. Resolve before doing it.
 
-**Progress: 6 done · 5 part · 25 todo · 13 blocked · 4 conflict  (53 total)**
+**Progress: 8 done · 4 part · 24 todo · 13 blocked · 4 conflict  (53 total)**
 
-Of the first 12 tasks — all of Phase 1 and Phase 2 — **6 are complete, 5 are
-partly complete, and 1 is untouched.** The roadmap starts where the project
-already is.
+Of the first 12 tasks — all of Phase 1 and Phase 2 — **7 are complete and 4 are
+partly complete.** The roadmap starts where the project already is.
 
 ---
 
-## Phase 1 — Define the project  (5/6 done)
+## Phase 1 — Define the project  (6/6 done)
 
 - [x] Confirm the platform's purpose and target users — *DECISIONS.md: children and adults, Islamic faith, worldwide*
 - [x] Define young learner and adult learner experiences — *project record `learner_type`, `courses.audience`; SCREENS.md §3–4*
-- [~] List all user roles and permissions — **10 roles listed; the permission matrix is still incomplete** (`authorization_matrix: incomplete`)
+- [x] List all user roles and permissions — *10 roles, matrix derived from the migrations and enforced by `supabase/tests/authorization.test.mjs`. See `docs/decisions/authorization-matrix.md`.*
 - [x] Finalize the full feature requirements — *47 flags in FLAGS.md, each with a precondition*
 - [x] Choose a distinctive platform name — *AyahSpring. Trademark/domain clearance still open.*
 - [ ] **Define the first release scope and success criteria** ← **the only open Phase 1 task**
@@ -34,14 +33,14 @@ already is.
 - [~] Design the key web and mobile screens — **50 screens inventoried, 0 designed.** 38 are unblocked.
 - [x] Choose the programming languages and frameworks — *Next.js + TypeScript, Supabase/PostgreSQL, Expo/React Native*
 - [x] Design the database and backend architecture — *85 tables, 121 endpoints, modular monolith*
-- [~] Plan security, backups and child privacy — **principles done; RLS policies, retention and RPO/RTO are open**
+- [~] Plan security, backups and child privacy — **RLS is complete: 88 tables, all covered, all ten of the record's required access tests enforced. Retention and RPO/RTO still open**
 - [~] Set up the development environment and Git repository — **repo exists with a README only; no toolchain, no CI**
 
 ## Phase 3 — Core platform
 
-- [x] Build the backend and database — **all five schema groups complete. 88 tables, RLS on every one, 202 policies, 105 triggers, 170 tests passing (`npm run test:db`).** The API and application layer follow.
+- [x] Build the backend and database — **all five schema groups complete. 88 tables, RLS on every one, 202 policies, 105 triggers, 190 tests passing (`npm run test:db`).** The API and application layer follow.
 - [ ] Build registration, login and password recovery — *decide `auth.email_password` vs `auth.phone_otp` first*
-- [ ] Implement user roles and permissions
+- [x] Implement user roles and permissions — *capability-based, not role-based. 10 roles, 4 privileged, 16 capability functions. Three real defects found and fixed in `20261021000100_authz_fixes.sql`.*
 - [ ] Build user profiles and account settings
 - [ ] Build the course catalogue, search and course pages — *needs `subject_areas` populated*
 - [!] Set up file storage, video delivery and deployment — **video provider not chosen.** Cloudflare Stream researched; see IDEAS.md for the lock-in caveat.
