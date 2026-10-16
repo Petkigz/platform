@@ -728,6 +728,63 @@ already written down and I walked into them anyway:
 
 **347 database tests, 42 unit tests, 39 routes.**
 
+### Also done since: refunds could never happen
+
+The refund tables have been in the schema since 20261020000300 with a ceiling
+trigger, a self-approval ban, a ledger writer and a refundable-balance function —
+and nothing that created a row for any of it to act on. **Zero INSERT sites in
+the application, zero in any SQL function.** So no customer who ever paid could
+ask for their money back, and all the machinery built to make refunding safe was
+unreachable.
+
+It is the eighth instance of the same defect: machinery correct, nothing
+connected. And it hid the same way the others did — a green suite, because every
+fixture hand-inserts the rows it asserts on.
+
+The writers added follow D4 (frozen), which is explicit that a refund request is
+not a completed refund:
+
+* `request_refund()` — the customer asks. Moves no money.
+* `decide_refund_request()` — staff approve or decline. Approving creates a
+  refund transaction in `pending`, which is still not a payment.
+* `complete_refund()` — the provider confirms. Only now does the ledger move.
+
+Collapsing any two would mean money moving on a decision rather than a
+confirmation, and the ledger is append-only, so there is no undo.
+
+**The defect it also closes:** `refund_requests_insert` allowed any signed-in
+account to file a request against any order, because its only check was
+`requested_by = current_user_id()`. Knowing an order id was enough. That is the
+same shape as the guardian-request hole fixed in 20261029000300 — self-attribution
+is not self-scoping. The policy now requires a billing-account relationship.
+
+`complete_refund()` takes the actor as a parameter, as `record_payment_success()`
+does, rather than reading the session. A webhook arrives on the service role
+where there are no JWT claims, so reading the session would either reject every
+provider confirmation or need an exemption for "no JWT subject" — the shape of
+trigger that has already caused two incidents here.
+
+### A harness defect the teeth check exposed
+
+Neutering the self-approval ban left the suite green. That should be impossible,
+and the reason it was possible is worse than one bad test:
+
+`rejects(fn, msg)` caught **any** error and returned. The pattern was used only
+as the failure text when nothing threw — it never checked the message. So every
+`rejects(fn, /regex/)` in all 19 suites was asserting only that *something*
+threw. A test expecting "you cannot decide a refund you requested yourself"
+passed just as happily on "refund request not found".
+
+Fixed to match the reason when a pattern is given. Exactly one test across the
+whole suite turned out to be vacuous — but it was vacuous in the direction that
+matters: it guarded a money rule and would have stayed green if that rule had
+been deleted.
+
+**A rejection for the wrong reason is not a pass.** That is now enforced by the
+harness rather than by whoever happens to remember.
+
+**364 database tests, 66 unit tests, 42 routes.**
+
 ### What comes after that
 
 The paid path. It needs a provider, and a provider needs merchant

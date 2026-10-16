@@ -22,6 +22,7 @@ import { run as fulfilment } from './fulfilment.test.mjs';
 import { run as guardians } from './guardians.test.mjs';
 import { run as learnerSwitcher } from './learner_switcher.test.mjs';
 import { run as discussion } from './discussion.test.mjs';
+import { run as refunds } from './refunds.test.mjs';
 
 const ctx = await createHarness();
 const suites = [];
@@ -49,6 +50,7 @@ for (const [name, fn] of [
   ['guardians', guardians],
   ['learner switcher', learnerSwitcher],
   ['discussion', discussion],
+  ['refunds', refunds],
 ]) {
   console.log(`\n--- ${name} ---\n`);
   await fn(ctx);

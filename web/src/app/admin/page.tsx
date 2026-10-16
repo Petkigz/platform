@@ -115,6 +115,10 @@ export default async function AdminPage() {
         <code>family.guardian_verification</code> is enabled.
       </p>
       <p>
+        <Link href="/admin/refunds">Refund requests</Link> — money going back
+        out. Approving is an agreement, not a transfer.
+      </p>
+      <p>
         <Link href="/admin/discussion">Discussion queue</Link> — learner
         questions and peer answers held for review. Empty until{' '}
         <code>learning.discussion</code> is enabled.

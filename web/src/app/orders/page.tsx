@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { format, fromMinor } from '@/lib/money';
+import { RefundForm } from './refund-form';
 
 export const dynamic = 'force-dynamic';
 
@@ -144,6 +145,13 @@ export default async function OrdersPage({
                     <span className="muted">
                       Not paid — no access yet
                     </span>
+                  )}
+                  {(o.status === 'paid' || o.status === 'partially_refunded') && (
+                    <RefundForm
+                      orderId={o.id}
+                      amountMinor={o.total_minor}
+                      currencyCode={o.currency_code}
+                    />
                   )}
                 </li>
               );

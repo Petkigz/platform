@@ -60,6 +60,9 @@ npm run test        # both
 | `/admin/discussion` | dynamic | Moderation queue. Privileged only |
 | `/api/admin/discussion` | dynamic | POST. Approve, hide or remove |
 | `/api/discussion` | dynamic | POST. Ask or reply in a lesson thread |
+| `/admin/refunds` | dynamic | Refund queue. Privileged only |
+| `/api/admin/refunds` | dynamic | POST. Approve or decline |
+| `/api/refunds` | dynamic | POST. Request a refund on an order |
 | `/learn/[enrolmentId]` | dynamic | Course view: outline and mark-complete |
 | `/learn/[enrolmentId]/lesson/[lessonId]` | dynamic | One lesson and its materials, gated by entitlement |
 | `/api/progress` | dynamic | POST. Record lesson progress |
@@ -395,6 +398,33 @@ in their families. Adult profiles are excluded on purpose — enrolling for anot
 adult would put one person's decisions on someone else's record. Billing-only
 family members are excluded too, by `is_learner_family_member()`: paying is not
 parenting.
+
+## Refunds
+
+A customer asks, a person decides, the provider settles. Those are three
+separate steps and the schema keeps them apart, because D4 (frozen) is explicit
+that **a refund request is not a completed refund**.
+
+`request_refund()` creates a request and moves no money. `decide_refund_request()`
+approves or declines; approving creates a refund transaction in `pending`, which
+is still not a payment. `complete_refund()` settles it against a verified
+provider event or by a privileged actor, and only then does
+`record_refund_in_ledger()` write the debit, link it back to the request, and
+move the order to `partially_refunded` or `refunded`.
+
+Collapsing any two of those would mean money moving on a decision rather than on
+a confirmation — and the ledger is append-only, so there is no undo.
+
+Two things worth stating because they are easy to lose:
+
+* **Nobody can approve a refund they requested.** `rr_not_self_approved` forbids
+  it and the function says so in words, so the customer-facing and staff-facing
+  message is the reason, not a raw constraint name.
+* **`complete_refund()` takes the actor as a parameter**, as
+  `record_payment_success()` does. A webhook arrives on the service role where
+  there are no JWT claims, so reading the session would either reject every
+  provider confirmation or need an exemption for "no JWT subject" — the shape of
+  trigger that has already caused two incidents here.
 
 ## Discussion
 

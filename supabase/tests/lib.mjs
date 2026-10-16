@@ -78,9 +78,37 @@ export async function createHarness() {
     try { await fn(); ok(name); } catch (e) { fail(name, e); }
   }
   function assert(cond, msg) { if (!cond) throw new Error(msg || 'assertion failed'); }
+  /**
+   * Assert that fn throws — and, when a pattern is given, that it throws for
+   * the reason claimed.
+   *
+   * This used to ignore the pattern entirely: `catch { return; }` swallowed
+   * whatever the error was and used `msg` only as the failure text. Every
+   * rejects(fn, /regex/) in the suite was therefore asserting only that
+   * *something* threw. A test that expected "you cannot decide a refund you
+   * requested yourself" passed just as happily on "refund request not found",
+   * so neutering the protection it was supposed to guard changed nothing.
+   *
+   * A rejection for the wrong reason is not a pass.
+   */
   async function rejects(fn, msg) {
-    try { await fn(); } catch { return; }
-    throw new Error(msg || 'expected the statement to be rejected');
+    try {
+      await fn();
+    } catch (e) {
+      if (msg instanceof RegExp) {
+        const text = String(e && e.message ? e.message : e);
+        if (!msg.test(text)) {
+          throw new Error(
+            `rejected, but not for the reason asserted: expected ${msg}, ` +
+            `got: ${text.slice(0, 220)}`);
+        }
+      }
+      return;
+    }
+    throw new Error(
+      msg
+        ? `expected the statement to be rejected (matching ${msg})`
+        : 'expected the statement to be rejected');
   }
 
   // -------------------------------------------------------------------
