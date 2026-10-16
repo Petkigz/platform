@@ -60,12 +60,16 @@ export async function POST(request: Request) {
       };
       break;
     case 'set_price':
-      if (typeof body.versionId !== 'string' || !Number.isInteger(body.amountMinor)
+      if (typeof body.versionId !== 'string'
+          || typeof body.amountMinor !== 'string'
+          || !/^(0|[1-9][0-9]*)$/.test(body.amountMinor)
           || typeof body.currencyCode !== 'string')
         return fail('A version, whole minor-unit amount and currency are required.');
       fn = 'set_plan_price';
       args = {
         p_plan_version_id: body.versionId,
+        // Keep money as its decimal integer string all the way to PostgreSQL's
+        // bigint parameter; converting it to a JS number can silently round D4.
         p_amount_minor: body.amountMinor,
         p_currency_code: body.currencyCode,
         p_market: typeof body.market === 'string' && body.market ? body.market : null,

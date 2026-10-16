@@ -93,7 +93,8 @@ export function PlanManager({
       payload = {
         ...payload,
         versionId: value(data, 'versionId'),
-        amountMinor: Number(value(data, 'amountMinor')),
+        // Money is an integer minor-unit string, never a floating-point JS number.
+        amountMinor: value(data, 'amountMinor'),
         currencyCode: value(data, 'currencyCode').toUpperCase(),
         market: value(data, 'market').toUpperCase() || null,
       };
