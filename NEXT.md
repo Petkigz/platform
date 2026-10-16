@@ -838,6 +838,55 @@ that never moves.
 
 **32 payment tests. 364 database tests, 98 unit tests, tsc clean, 43 routes.**
 
+### Also done since: a refund takes the course back
+
+This was the one open policy question I had refused to decide unilaterally. You
+settled it: **a refund revokes course access.**
+
+The revocation machinery had been in the schema since Group 4 and nothing ever
+used it — `entitlement_grants` has a `revoked` status, `revoked_at`, `revoked_by`
+and `revocation_reason`; `entitlement_events` has a `revoked` event type; and
+`eg_revocation_agrees` requires both a timestamp and a written reason. Grepping
+the whole schema for a write of `revoked` to that table returned nothing. So a
+customer could be refunded in full and keep the course forever. Ninth instance of
+the same defect.
+
+**How the rule is drawn.** A *full* refund revokes; a *partial* one does not. The
+terse version of the rule does not cover that case, so it is worth being explicit:
+someone who paid 40,000 and had 15,000 returned because a lesson was missing has
+still paid 25,000 for a course, and taking the whole thing back would be taking
+money and goods both. Revocation is therefore tied to the order reaching
+`refunded` — nothing left to give back — not to a refund having happened.
+
+**Only the grant that order bought is revoked.** A learner may be entitled to the
+same version through a family entitlement, a scholarship or an admin grant at the
+same time. If another active grant covers it, access continues and the enrolment
+is left alone, because `can_access_lesson()` consults entitlements generally and
+would rightly still say yes. Withdrawing the enrolment in that case would lock
+someone out of a course they have a right to open.
+
+**Certificates and progress are untouched** (D7). A refund is a money event, not a
+claim that the learning did not happen.
+
+Revocation is driven from the same trigger that writes the ledger entry and
+updates the order status, so all three move together or none do.
+
+Teeth checked by neutering the revocation: five tests fail, including the one
+that matters most — `can_access_lesson()` returning false afterwards. Asserting
+the grant row was revoked would not have caught a revocation that updated the
+table but was never consulted by the access check.
+
+**A bug the test caught in my own code.** I wrote an explicit insert into
+`entitlement_events`, not knowing that `entitlement_grants_record_event` already
+writes one on any status change. Two revocation events for one refund — which
+reads as a double-revocation in an audit trail, and an audit trail you cannot
+trust is worse than none. The idempotency test caught it. Traced it by wrapping
+the real function with a logging shim rather than guessing, which showed the
+function itself was correct (#1 revoked 1, #2 revoked 0) and so the duplicate had
+to come from elsewhere.
+
+**372 database tests, 98 unit tests, tsc clean, 43 routes.**
+
 ### What comes after that
 
 The paid path. It needs a provider, and a provider needs merchant

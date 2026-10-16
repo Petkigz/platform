@@ -76,12 +76,15 @@ export async function run(ctx) {
     seq += 1;
     const userId = await newUser(`ref-buyer-${seq}@example.com`);
     await newProfile(userId, name);
-    return userId;
+    const learnerId = (await q(
+      `insert into public.learner_profiles (display_name, learner_type, age_band, linked_user_id)
+       values ($1,'adult','18+',$2) returning id`, [name, userId])).rows[0].id;
+    return { userId, learnerId };
   }
 
   /** A billing account whose creator is a member, plus a paid, captured order. */
   async function paidOrder(name, totalMinor = 30000) {
-    const userId = await newAdult(name);
+    const { userId, learnerId } = await newAdult(name);
     const account = (await q(
       `insert into public.billing_accounts (display_name, billing_currency, status, created_by)
        values ($1, 'UGX', 'active', $2) returning id`, [name, userId])).rows[0].id;
@@ -94,7 +97,7 @@ export async function run(ctx) {
     const course  = await newCourse(teacher, { status: 'active' });
     const version = await newVersion(course, teacher);
     const section = await newSection(version);
-    await newLesson(section);
+    const lesson = await newLesson(section);
     const prod = (await q(
       `insert into public.products (product_type, name, status, created_by)
        values ('course','Refundable course','active',$1) returning id`, [teacher])).rows[0].id;
@@ -124,7 +127,7 @@ export async function run(ctx) {
     await q('select id from public.record_payment_success($1,$2,$3,$4,null,$5)',
       [order, admin, 'manual', `REF-CAP-${seq}`, 'Bank statement']);
 
-    return { userId, account, order, totalMinor };
+    return { userId, learnerId, account, order, totalMinor, course, version, lesson };
   }
 
   // -------------------------------------------------------------------
@@ -172,7 +175,7 @@ export async function run(ctx) {
 
   await test('someone outside the billing account cannot request a refund', async () => {
     const { order } = await paidOrder('Account Holder');
-    const stranger = await newAdult('Unrelated Stranger');
+    const { userId: stranger } = await newAdult('Unrelated Stranger');
 
     await asUser(stranger, async () => {
       await rejects(
@@ -191,7 +194,7 @@ export async function run(ctx) {
     // policy checked only that the request was self-attributed, so a raw insert
     // naming any order id was accepted.
     const { order } = await paidOrder('Policy Holder');
-    const stranger = await newAdult('Direct Inserter');
+    const { userId: stranger } = await newAdult('Direct Inserter');
 
     await asUser(stranger, async () => {
       await rejects(
@@ -204,7 +207,7 @@ export async function run(ctx) {
   });
 
   await test('a refund cannot be requested on an order that was never paid', async () => {
-    const userId = await newAdult('Unpaid Order Holder');
+    const { userId } = await newAdult('Unpaid Order Holder');
     const account = (await q(
       `insert into public.billing_accounts (display_name, billing_currency, status, created_by)
        values ('Unpaid','UGX','active',$1) returning id`, [userId])).rows[0].id;
@@ -490,4 +493,161 @@ export async function run(ctx) {
     assert(actions && actions.includes('refund.approved'), `audit actions were: ${actions}`);
     assert(actions && actions.includes('refund.completed'), `audit actions were: ${actions}`);
   });
+  // -------------------------------------------------------------------
+  // A settled refund takes the course back
+  // -------------------------------------------------------------------
+
+  /** Run a refund all the way to settlement and return the transaction id. */
+  async function settle(fixture, amountMinor, reason = 'Full refund please') {
+    const id = (await requestAs(fixture.userId, fixture.order, amountMinor, reason)).rows[0].id;
+    await approveAs(admin, id, 'Agreed');
+    const txnId = await txnIdFor(id);
+    await settleAs(admin, txnId, 'SETTLED-REF');
+    return { requestId: id, txnId };
+  }
+
+  await test('a full refund revokes the entitlement the order paid for', async () => {
+    const f = await paidOrder('Revoked Buyer');
+
+    const before = await scalar(
+      `select status from public.entitlement_grants
+        where source_type = 'purchase' and source_id = $1`, [f.order]);
+    assert(before && before.status === 'active', `grant was ${before?.status} before refund`);
+
+    await settle(f, f.totalMinor);
+
+    const after = await scalar(
+      `select status, revoked_at, revocation_reason from public.entitlement_grants
+        where source_type = 'purchase' and source_id = $1`, [f.order]);
+    assert(after.status === 'revoked', `grant status was ${after.status} after a full refund`);
+    assert(after.revoked_at, 'revoked_at was not set');
+    assert(after.revocation_reason, 'revocation_reason was not set');
+  });
+
+  await test('a refunded learner can no longer open the lesson', async () => {
+    // The row being revoked is not the same as access being closed. This is the
+    // assertion that would catch a revocation which updated the table but was
+    // never consulted by the access check.
+    const f = await paidOrder('Locked Out Buyer');
+
+    const openBefore = (await q(
+      'select public.can_access_lesson($1,$2) as ok', [f.learnerId, f.lesson])).rows[0].ok;
+    assert(openBefore === true, 'the learner could not open the lesson before the refund');
+
+    await settle(f, f.totalMinor);
+
+    const openAfter = (await q(
+      'select public.can_access_lesson($1,$2) as ok', [f.learnerId, f.lesson])).rows[0].ok;
+    assert(openAfter === false, 'the learner can still open the lesson after a full refund');
+  });
+
+  await test('the enrolment is withdrawn so the course leaves the learning list', async () => {
+    const f = await paidOrder('Withdrawn Buyer');
+    await settle(f, f.totalMinor);
+
+    const enrolment = await scalar(
+      `select status from public.course_enrolments
+        where learner_profile_id = $1 and course_version_id = $2`, [f.learnerId, f.version]);
+    assert(enrolment.status === 'withdrawn',
+      `enrolment was ${enrolment.status}; the learner would still see a course they cannot open`);
+  });
+
+  await test('a partial refund leaves access in place', async () => {
+    // The terse version of the rule is "a refund revokes access". That is wrong
+    // for a partial: someone who paid 40000 and had 15000 returned because a
+    // lesson was missing has still paid for the course. Taking it back would be
+    // taking money and goods both.
+    const f = await paidOrder('Partial Refund Buyer', 40000);
+    await settle(f, 15000, 'One lesson was missing');
+
+    const grant = await scalar(
+      `select status from public.entitlement_grants
+        where source_type = 'purchase' and source_id = $1`, [f.order]);
+    assert(grant.status === 'active', `a partial refund revoked access (${grant.status})`);
+
+    const open = (await q(
+      'select public.can_access_lesson($1,$2) as ok', [f.learnerId, f.lesson])).rows[0].ok;
+    assert(open === true, 'a partial refund closed access');
+  });
+
+  await test('revocation is written to the entitlement history', async () => {
+    const f = await paidOrder('Audited Revocation');
+    const { requestId } = await settle(f, f.totalMinor);
+    void requestId;
+
+    const grantId = (await q(
+      `select id from public.entitlement_grants
+        where source_type = 'purchase' and source_id = $1`, [f.order])).rows[0].id;
+
+    const event = await scalar(
+      `select event_type, from_status, to_status, reason from public.entitlement_events
+        where entitlement_grant_id = $1 order by occurred_at desc limit 1`, [grantId]);
+    assert(event.event_type === 'revoked', `last event was ${event.event_type}`);
+    assert(event.from_status === 'active' && event.to_status === 'revoked',
+      `transition recorded as ${event.from_status} -> ${event.to_status}`);
+  });
+
+  await test('a learner entitled another way keeps access after the refund', async () => {
+    // Only the grant this order paid for is revoked. A family entitlement or a
+    // scholarship covering the same version still stands, and withdrawing the
+    // enrolment too would lock the learner out of something they have a right
+    // to open.
+    const f = await paidOrder('Doubly Entitled Buyer');
+
+    await q(`insert into public.entitlement_grants
+               (learner_profile_id, scope_type, course_version_id,
+                source_type, source_id, status, effective_from)
+             values ($1,'course_version',$2,'scholarship',$3,'active',now())`,
+      [f.learnerId, f.version, f.order]);
+
+    await settle(f, f.totalMinor);
+
+    const open = (await q(
+      'select public.can_access_lesson($1,$2) as ok', [f.learnerId, f.lesson])).rows[0].ok;
+    assert(open === true, 'access was closed despite an active scholarship grant');
+
+    const enrolment = await scalar(
+      `select status from public.course_enrolments
+        where learner_profile_id = $1 and course_version_id = $2`, [f.learnerId, f.version]);
+    assert(enrolment.status !== 'withdrawn',
+      `enrolment was withdrawn although the learner is still entitled (${enrolment.status})`);
+  });
+
+  await test('progress survives the refund, because a refund is not a claim the learning did not happen', async () => {
+    // D7: grading and certificate history is never deleted.
+    const f = await paidOrder('Progress Kept Buyer');
+
+    // lp_completed_means_full requires 100% before a lesson counts as completed.
+    await q(`insert into public.lesson_progress
+               (course_enrolment_id, lesson_id, status, progress_percent,
+                started_at, completed_at)
+             select id, $2, 'completed', 100, now() - interval '1 day', now()
+               from public.course_enrolments
+              where learner_profile_id = $1 and course_version_id = $3`,
+      [f.learnerId, f.lesson, f.version]);
+
+    await settle(f, f.totalMinor);
+
+    const kept = await count(
+      `select 1 from public.lesson_progress lp
+         join public.course_enrolments ce on ce.id = lp.course_enrolment_id
+        where ce.learner_profile_id = $1 and lp.lesson_id = $2`, [f.learnerId, f.lesson]);
+    assert(kept === 1, `progress rows remaining: ${kept}; a refund must not erase them`);
+  });
+
+  await test('revoking twice does not double-count or fail', async () => {
+    const f = await paidOrder('Idempotent Revocation');
+    await settle(f, f.totalMinor);
+
+    const n = await q('select public.revoke_entitlements_for_refund($1,$2,$3) as n',
+      [f.order, admin, 'Refunded in full; access withdrawn.']);
+    assert(Number(n.rows[0].n) === 0, `a second revocation touched ${n.rows[0].n} grants`);
+
+    const events = await count(
+      `select 1 from public.entitlement_events ee
+         join public.entitlement_grants eg on eg.id = ee.entitlement_grant_id
+        where eg.source_id = $1 and ee.event_type = 'revoked'`, [f.order]);
+    assert(events === 1, `${events} revocation events for one refund`);
+  });
+
 }

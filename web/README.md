@@ -476,6 +476,28 @@ move the order to `partially_refunded` or `refunded`.
 Collapsing any two of those would mean money moving on a decision rather than on
 a confirmation — and the ledger is append-only, so there is no undo.
 
+### A refund takes the course back
+
+A **full** refund revokes the entitlement the order paid for and withdraws the
+enrolment, so the course leaves the learner's list rather than sitting there
+unopenable. A **partial** refund does not: someone who paid 40,000 and had 15,000
+returned because a lesson was missing has still paid for what remains, and taking
+the whole course back would be taking money and goods both. So revocation is tied
+to the order reaching `refunded`, not to a refund having happened.
+
+Only the grant that order bought is revoked. If a family entitlement, scholarship
+or admin grant also covers the same version, access continues and the enrolment
+is left alone — `can_access_lesson()` consults entitlements generally and would
+rightly still say yes.
+
+Certificates and lesson progress are left intact (D7). A refund is a money event,
+not an assertion that the learning did not happen.
+
+Revocation is driven from the same trigger that writes the ledger entry and
+updates the order status, so all three move together or none do. A refund that
+reached the ledger without taking access back would be money *and* goods gone
+from the platform's side.
+
 Two things worth stating because they are easy to lose:
 
 * **Nobody can approve a refund they requested.** `rr_not_self_approved` forbids
