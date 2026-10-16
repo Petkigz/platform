@@ -1403,15 +1403,24 @@ financial transaction itself.
 No provider-specific CSV format is guessed: the entry screen is generic until
 P12 establishes which provider statement/API format is real.
 
-**624 database tests, 228 unit tests, tsc clean, build clean, 61 routes.**
+### Also done: disputes have a controlled internal workflow
+
+`payment_disputes` had no writer. Finance/platform admins can now open a case
+against a ledger transaction, with currency matching and a positive amount no
+greater than that transaction. `/admin/disputes` lets staff move it through
+`open -> under_review -> evidence_submitted -> won/lost/withdrawn`. Every status
+change requires a written note; resolved cases are terminal. The case is an
+internal record only — provider evidence submission and money movement still
+require provider integration and remain separate.
+
+**633 database tests, 228 unit tests, tsc clean, build clean, 63 routes.**
 
 ### What comes after that
 
-The remaining money-out gates are dispute handling and payout execution. Payout
-execution still waits on the four payout preconditions, tax/country treatment
-and provider disbursement credentials. Automatic subscription renewal needs a
-worker and payment-provider support; an expired paid period must not be extended
-by a browser redirect. Other unwired groups remain `promotion_*`,
+Payout execution still waits on the four payout preconditions, tax/country
+treatment and provider disbursement credentials. Automatic subscription renewal
+needs a worker and payment-provider support; an expired paid period must not be
+extended by a browser redirect. Other unwired groups remain `promotion_*`,
 `learning_paths*`, `reviewer_*`, `institutions`, `scholarly_panel*` (dormant per
 P6), `currency_exchange_rates`, `access_checks`, and `content_sources`.
 

@@ -125,6 +125,9 @@ export default async function AdminPage() {
         <Link href="/admin/reconciliation">Payment reconciliation</Link> — compare statement rows to settled transactions (finance/platform admin).
       </p>
       <p>
+        <Link href="/admin/disputes">Payment disputes</Link> — track and review provider cases (finance/platform admin).
+      </p>
+      <p>
         <Link href="/admin/reviews">Assign reviews</Link> — courses waiting
         for a reviewer.
       </p>
