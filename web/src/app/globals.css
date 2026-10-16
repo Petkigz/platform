@@ -535,3 +535,29 @@ textarea { resize: vertical; min-height: 4rem; }
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   color: var(--green-900);
 }
+
+/* --------------------------------------------------------------------------
+   Certificate verification
+   -------------------------------------------------------------------------- */
+
+.facts {
+  display: grid;
+  gap: 0.85rem;
+  margin: 0;
+}
+.facts > div {
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  gap: 0.75rem;
+  align-items: baseline;
+}
+.facts dt {
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.facts dd { margin: 0; }
+@media (max-width: 480px) {
+  .facts > div { grid-template-columns: 1fr; gap: 0.15rem; }
+}

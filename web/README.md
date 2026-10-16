@@ -60,6 +60,8 @@ npm run test        # both
 | `/teach` | dynamic | My courses, create a course |
 | `/teach/[courseId]` | dynamic | Curriculum editor |
 | `/api/teach` | dynamic | POST. create / add section / add lesson / transition |
+| `/certificates` | dynamic | Certificates I hold |
+| `/verify/[number]` | dynamic | **Public.** Verify a certificate by number |
 | `/sign-out` | dynamic | POST only |
 
 ## The theme is white and green
@@ -135,6 +137,26 @@ columns. Never write `select('*')` against that table — name the columns.
 The key has no read path in the application at all, for any role including
 `platform_admin`. `grade_response()` is its only reader.
 `supabase/tests/assessment.test.mjs` asserts all three of those.
+
+## Certificates
+
+`/certificates` lists what a learner holds; `/verify/<number>` is public and
+needs no account.
+
+The privacy design is two halves that only work together. `certificates_read`
+is authenticated-only, so nobody can enumerate certificates. But
+`verify_certificate()` is granted to `anon`, so anyone holding a number can
+check it. **The number is the capability.** If the read policy is ever opened
+up, the public verification page becomes a directory of every learner on the
+platform.
+
+Every field on a certificate is a snapshot taken at issue time — course title,
+version, holder name, and the criteria that applied — and
+`protect_certificate_snapshot()` keeps it that way. Renaming a course
+afterwards cannot rewrite what someone was awarded.
+
+Issuing is staff-only, requires the completion policy to enable certificates,
+requires the enrolment to be complete, and is idempotent.
 
 ## Teaching
 

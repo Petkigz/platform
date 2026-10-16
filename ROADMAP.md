@@ -11,7 +11,7 @@ marked with its real state so we never redo finished work or build on sand.
 - `[!]` **BLOCKED** — cannot be finished without a fact or a decision.
 - `[X]` **CONFLICT** — contradicts a recorded decision. Resolve before doing it.
 
-**Progress: 11 done · 7 part · 18 todo · 13 blocked · 4 conflict  (53 total)**
+**Progress: 11 done · 8 part · 17 todo · 13 blocked · 4 conflict  (53 total)**
 
 Of the first 12 tasks — all of Phase 1 and Phase 2 — **7 are complete and 4 are
 partly complete.** The roadmap starts where the project already is.
@@ -38,7 +38,7 @@ partly complete.** The roadmap starts where the project already is.
 
 ## Phase 3 — Core platform
 
-- [x] Build the backend and database — **all five schema groups complete. 88 tables, RLS on every one, 202 policies, 105 triggers, 268 tests passing (`npm run test:db`).** The API and application layer follow.
+- [x] Build the backend and database — **all five schema groups complete. 88 tables, RLS on every one, 202 policies, 105 triggers, 281 tests passing (`npm run test:db`).** The API and application layer follow.
 - [ ] Build registration, login and password recovery — *decide `auth.email_password` vs `auth.phone_otp` first*
 - [x] Implement user roles and permissions — *capability-based, not role-based. 10 roles, 4 privileged, 16 capability functions. Three real defects found and fixed in `20261021000100_authz_fixes.sql`.*
 - [ ] Build user profiles and account settings
@@ -54,7 +54,7 @@ partly complete.** The roadmap starts where the project already is.
 - [~] Build young learner profiles and age-appropriate learning — **profiles designed; engagement mechanics are not** (`gamif: 0`, `badge: 0`, `streak: 0`)
 - [ ] Build parent/guardian dashboard and controls
 - [ ] Build the adult learning dashboard and learning paths
-- [ ] Build certificates and certificate verification
+- [~] Build certificates and certificate verification — **`/certificates` and the public `/verify/<number>` are live; issuance is staff-only and idempotent, snapshots frozen. A PDF render and admin issuance UI still to build**
 
 ## Phase 5 — Payments and revenue  (all blocked on one fact)
 

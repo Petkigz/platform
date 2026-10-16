@@ -274,6 +274,41 @@ change. The row is now compared as superuser.
 
 **268 tests pass.**
 
+### Also done since: certificates and public verification
+
+`/certificates` lists what you have been awarded, and `/verify/<number>` is a
+public page anyone can load without an account. Certificates were fully built
+in SQL — `issue_certificate()`, `verify_certificate()`, `revoke_certificate()`,
+`protect_certificate_snapshot()` — with no way to reach any of it.
+
+The privacy design is worth stating because the two halves only make sense
+together. `certificates_read` is authenticated-only, so **nobody can enumerate
+certificates** — not anonymously, and not as a signed-in stranger. But
+`verify_certificate()` is granted to `anon`. The number is the capability: you
+can be told about a certificate you already hold, and that is all. If the read
+policy were ever opened up, the verification page would become a directory of
+every learner on the platform, so both halves are asserted in
+`certificates.test.mjs`.
+
+Everything on a certificate is a snapshot — course title, version, holder name,
+and the criteria that applied — and `protect_certificate_snapshot()` keeps it
+that way. The test renames the course and the learner after issue and asserts
+the certificate did not move. A certificate has to say what was true when it
+was awarded, or it says nothing.
+
+Issuing is staff-only (`is_privileged` or `support_agent`), requires the
+version's completion policy to have certificates enabled, requires the
+enrolment to actually be complete, and is idempotent — a second call returns
+the existing certificate rather than minting another.
+
+Two of my own assertions were wrong before this passed. I linked three learner
+profiles to one auth user, which `learner_profiles_linked_user_key` forbids —
+a user gets one profile. And I counted certificates globally to prove none had
+been issued, when other suites in the same run legitimately issue some; the
+count is now scoped to the enrolment.
+
+**281 tests pass.**
+
 ### What comes after that
 
 The paid path. It needs a provider, and a provider needs merchant
