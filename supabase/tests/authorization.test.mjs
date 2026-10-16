@@ -246,9 +246,13 @@ export async function run(ctx) {
        values ('Family of Learner 5', 'UG', 'USD', $1) returning id`,
       [learner.userId])).rows[0].id;
 
+    // Idempotent: granting_creator_billing_membership already made the account
+    // creator a member, so an explicit insert of that same pair would collide.
     await q(`insert into public.billing_account_memberships
                (billing_account_id, user_id, can_view_invoices, granted_by, status)
-             values ($1, $2, true, $3, 'active')`, [acct, payer.userId, learner.userId]);
+             values ($1, $2, true, $3, 'active')
+             on conflict (billing_account_id, user_id) do nothing`,
+      [acct, payer.userId, learner.userId]);
 
     await asUser(payer.userId, async () => {
       // Billing: yes.

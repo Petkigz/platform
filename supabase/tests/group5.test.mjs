@@ -26,7 +26,8 @@ export async function run(ctx) {
       `insert into public.billing_accounts (display_name, billing_currency, created_by)
        values ('Payer', 'UGX', $1) returning id`, [userId])).rows[0].id;
     await q(`insert into public.billing_account_memberships
-               (billing_account_id, user_id, granted_by) values ($1,$2,$2)`, [acct, userId]);
+               (billing_account_id, user_id, granted_by) values ($1,$2,$2)
+             on conflict (billing_account_id, user_id) do nothing`, [acct, userId]);
     return { userId, acct };
   }
 

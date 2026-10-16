@@ -237,6 +237,128 @@ export async function run(ctx) {
   });
 
   // -------------------------------------------------------------------
+  // The billing account a purchase has to hang off
+  // -------------------------------------------------------------------
+  // This section exists because the paid path had a second, earlier dead end:
+  // billing_accounts_insert allows created_by = current_user_id(), but every
+  // read and every write beneath the account is gated on
+  // is_billing_member(), which consults billing_account_memberships alone.
+  // Nothing created that row, and the policy that would have let someone add
+  // a member was itself gated on already being one. Measured as a real
+  // authenticated user: create an account, cannot read it, cannot add
+  // themselves, cannot order. The paid path was unreachable end to end.
+
+  await test('creating a billing account makes the creator a paying member', async () => {
+    const { userId } = await newAdult('Self Serve Payer');
+    let account = null;
+
+    await committed(async () => {
+      account = (await q(
+        `insert into public.billing_accounts (display_name, billing_currency, status, created_by)
+         values ($1,'UGX','active',$2) returning id`, ['Self Serve Payer', userId])).rows[0].id;
+    });
+
+    await asUser(userId, async () => {
+      const m = (await q(
+        `select status, can_view_invoices, can_manage_payment_methods, can_cancel_subscriptions
+           from public.billing_account_memberships
+          where billing_account_id = $1 and user_id = $2`, [account, userId])).rows[0];
+
+      assert(m, 'the creator was not made a member of the account they created');
+      assert(m.status === 'active', `the creator membership is '${m.status}'`);
+      // The creator is the payer. Invoice-only would strand them: they could
+      // see a bill and could neither pay it nor cancel it.
+      assert(m.can_view_invoices === true, 'the creator cannot view invoices');
+      assert(m.can_manage_payment_methods === true,
+        'the creator cannot attach a payment method, so they cannot pay');
+      assert(m.can_cancel_subscriptions === true,
+        'the creator cannot cancel a subscription they started');
+
+      const visible = (await q(
+        'select id from public.billing_accounts where id = $1', [account])).rows.length;
+      assert(visible === 1, 'the creator could not read the account they created');
+    });
+  });
+
+  await test('the creator can place an order on their own account', async () => {
+    const { userId } = await newAdult('Ordering Payer');
+    let account = null;
+
+    await committed(async () => {
+      account = (await q(
+        `insert into public.billing_accounts (display_name, billing_currency, status, created_by)
+         values ($1,'UGX','active',$2) returning id`, ['Ordering Payer', userId])).rows[0].id;
+    });
+
+    await asUser(userId, async () => {
+      const order = (await q(
+        `insert into public.orders
+           (billing_account_id, currency_code, subtotal_minor, discount_minor,
+            tax_minor, total_minor, status)
+         values ($1,'UGX',30000,0,0,30000,'pending_payment') returning id`,
+        [account])).rows[0].id;
+      assert(order, 'the creator could not create an order on their own account');
+
+      const back = (await q(
+        'select status, total_minor from public.orders where id = $1', [order])).rows[0];
+      assert(back.status === 'pending_payment', `order status is '${back.status}'`);
+      assert(Number(back.total_minor) === 30000,
+        `order total is ${back.total_minor}, expected 30000`);
+    });
+  });
+
+  await test('a user cannot join someone else\'s billing account', async () => {
+    const { userId: owner } = await newAdult('Account Owner');
+    const { userId: intruder } = await newAdult('Intruder');
+    let account = null;
+
+    await committed(async () => {
+      account = (await q(
+        `insert into public.billing_accounts (display_name, billing_currency, status, created_by)
+         values ($1,'UGX','active',$2) returning id`, ['Account Owner', owner])).rows[0].id;
+    });
+
+    // The bootstrap is scoped to the creator, so it must not become a way in.
+    // Two separate asUser blocks: inside one, the first error aborts the
+    // transaction and every later statement fails with "current transaction
+    // is aborted", which would mask the read-back assertion entirely.
+    await asUser(intruder, async () => {
+      await rejects(() => q(
+        `insert into public.billing_account_memberships
+           (billing_account_id, user_id, can_view_invoices, status, granted_by)
+         values ($1,$2,true,'active',$3)`, [account, intruder, intruder]),
+        'an unrelated user added themselves to someone else\'s billing account');
+    });
+
+    await asUser(intruder, async () => {
+      const visible = (await q(
+        'select id from public.billing_accounts where id = $1', [account])).rows.length;
+      assert(visible === 0, `an unrelated user could read someone else's account (${visible} row)`);
+    });
+  });
+
+  await test('the creator membership is not duplicated', async () => {
+    const { userId } = await newAdult('Repeat Payer');
+    let account = null;
+
+    await committed(async () => {
+      account = (await q(
+        `insert into public.billing_accounts (display_name, billing_currency, status, created_by)
+         values ($1,'UGX','active',$2) returning id`, ['Repeat Payer', userId])).rows[0].id;
+      // A second attempt to grant the same pair must be a no-op, not an error:
+      // bam_one_per_user is unique, and the trigger uses on-conflict-do-nothing.
+      await q(`insert into public.billing_account_memberships
+                 (billing_account_id, user_id, granted_by) values ($1,$2,$2)
+               on conflict (billing_account_id, user_id) do nothing`, [account, userId]);
+    });
+
+    const n = await count(
+      `select 1 from public.billing_account_memberships
+        where billing_account_id = $1 and user_id = $2`, [account, userId]);
+    assert(n === 1, `found ${n} memberships for one user on one account, expected 1`);
+  });
+
+  // -------------------------------------------------------------------
   // The paid path
   // -------------------------------------------------------------------
 
@@ -246,9 +368,12 @@ export async function run(ctx) {
     const account = (await q(
       `insert into public.billing_accounts (display_name, billing_currency, status, created_by)
        values ($1, 'UGX', 'active', $2) returning id`, [name, userId])).rows[0].id;
+    // Idempotent: the creator is already a member by trigger, so re-asserting
+    // the same pair would collide rather than prove anything.
     await q(`insert into public.billing_account_memberships
                (billing_account_id, user_id, can_view_invoices, status, granted_by)
-             values ($1, $2, true, 'active', $3)`, [account, userId, admin]);
+             values ($1, $2, true, 'active', $3)
+             on conflict (billing_account_id, user_id) do nothing`, [account, userId, admin]);
     return { userId, learnerId, account };
   }
 
