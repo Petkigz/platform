@@ -2,7 +2,10 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { VERSION_STATUS_LABEL, type AuthoredVersion } from '@/lib/authoring';
+import {
+  RESOURCE_TYPES, RESOURCE_TYPE_LABEL, VERSION_STATUS_LABEL,
+  type AuthoredVersion, type ResourceType,
+} from '@/lib/authoring';
 
 /**
  * The curriculum editor.
@@ -19,6 +22,10 @@ export function Curriculum({ version }: { version: AuthoredVersion }) {
   const [error, setError] = useState<string | null>(null);
   const [sectionTitle, setSectionTitle] = useState('');
   const [lessonTitles, setLessonTitles] = useState<Record<string, string>>({});
+  const [openLesson, setOpenLesson] = useState<string | null>(null);
+  const [resourceName, setResourceName] = useState<Record<string, string>>({});
+  const [resourceUrl, setResourceUrl] = useState<Record<string, string>>({});
+  const [resourceType, setResourceType] = useState<Record<string, ResourceType>>({});
   const [, startTransition] = useTransition();
 
   const editable = version.status === 'draft';
@@ -61,6 +68,25 @@ export function Curriculum({ version }: { version: AuthoredVersion }) {
       `lesson-${sectionId}`,
     );
     if (!failed) setLessonTitles({ ...lessonTitles, [sectionId]: '' });
+  }
+
+  async function addResource(e: React.FormEvent, lessonId: string) {
+    e.preventDefault();
+    const failed = await post(
+      {
+        action: 'add_resource',
+        lessonId,
+        resourceType: resourceType[lessonId] ?? 'video',
+        url: resourceUrl[lessonId] ?? '',
+        name: resourceName[lessonId] ?? '',
+      },
+      `resource-${lessonId}`,
+    );
+    if (!failed) {
+      setResourceName({ ...resourceName, [lessonId]: '' });
+      setResourceUrl({ ...resourceUrl, [lessonId]: '' });
+      setOpenLesson(null);
+    }
   }
 
   async function transition(to: 'submitted' | 'draft') {
@@ -140,6 +166,115 @@ export function Curriculum({ version }: { version: AuthoredVersion }) {
                         Free preview
                       </span>
                     )}
+                    {l.resources.length > 0 && (
+                      <span className="badge neutral" style={{ flex: 'none' }}>
+                        {l.resources.length} item{l.resources.length === 1 ? '' : 's'}
+                      </span>
+                    )}
+                    {editable && l.resources.length === 0 && (
+                      <span
+                        className="badge neutral"
+                        style={{ flex: 'none', borderColor: 'var(--amber, #b45309)' }}
+                      >
+                        No content yet
+                      </span>
+                    )}
+
+                    {l.resources.length > 0 && (
+                      <ul
+                        className="muted"
+                        style={{
+                          listStyle: 'none',
+                          margin: '0.35rem 0 0',
+                          padding: 0,
+                          fontSize: '0.85rem',
+                          display: 'grid',
+                          gap: '0.2rem',
+                        }}
+                      >
+                        {l.resources.map((r) => (
+                          <li key={r.id}>
+                            {RESOURCE_TYPE_LABEL[r.resourceType]} · {r.resourceName}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    {editable &&
+                      (openLesson === l.id ? (
+                        <form
+                          onSubmit={(ev) => addResource(ev, l.id)}
+                          style={{ marginTop: '0.5rem', display: 'grid', gap: '0.5rem' }}
+                        >
+                          <div className="row">
+                            <select
+                              value={resourceType[l.id] ?? 'video'}
+                              onChange={(ev) =>
+                                setResourceType({
+                                  ...resourceType,
+                                  [l.id]: ev.target.value as ResourceType,
+                                })
+                              }
+                              aria-label={`Content type for ${l.title}`}
+                            >
+                              {RESOURCE_TYPES.map((t) => (
+                                <option key={t} value={t}>
+                                  {RESOURCE_TYPE_LABEL[t]}
+                                </option>
+                              ))}
+                            </select>
+                            <input
+                              value={resourceName[l.id] ?? ''}
+                              onChange={(ev) =>
+                                setResourceName({ ...resourceName, [l.id]: ev.target.value })
+                              }
+                              placeholder="Name learners will see"
+                              aria-label={`Name for content in ${l.title}`}
+                              maxLength={200}
+                              style={{ flex: 1 }}
+                            />
+                          </div>
+                          <div className="row">
+                            <input
+                              value={resourceUrl[l.id] ?? ''}
+                              onChange={(ev) =>
+                                setResourceUrl({ ...resourceUrl, [l.id]: ev.target.value })
+                              }
+                              placeholder="https://"
+                              aria-label={`URL for content in ${l.title}`}
+                              type="url"
+                              style={{ flex: 1 }}
+                            />
+                            <button
+                              type="submit"
+                              className="btn secondary"
+                              disabled={busy === `resource-${l.id}`}
+                            >
+                              {busy === `resource-${l.id}` ? 'Adding…' : 'Add content'}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn ghost"
+                              onClick={() => setOpenLesson(null)}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                          <p className="muted" style={{ margin: 0, fontSize: '0.8rem' }}>
+                            Uploads into our own storage are not wired yet, so this
+                            takes a link. It must be https.
+                          </p>
+                        </form>
+                      ) : (
+                        <button
+                          type="button"
+                          className="btn ghost"
+                          style={{ marginTop: '0.4rem' }}
+                          onClick={() => setOpenLesson(l.id)}
+                        >
+                          Add content
+                        </button>
+                      ))}
                   </li>
                 ))}
               </ul>

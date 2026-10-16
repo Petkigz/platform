@@ -43,6 +43,7 @@ export type AuthoredLesson = {
   title: string;
   position: number;
   isPreview: boolean;
+  resources: AuthoredResource[];
 };
 
 export type AuthoredSection = {
@@ -188,6 +189,31 @@ export async function fetchSections(
   };
   const lessonRows = (lessons ?? []) as unknown as LessonRow[];
 
+  // What each lesson actually contains. Batched for the whole version, for the
+  // same reason lessons are: this is the N+1 shape. Without it the editor would
+  // have to ask per lesson, and the whole point of showing it is that a lesson
+  // with nothing attached is an empty page.
+  const { data: resources, error: rErr } = await supabase
+    .from('lesson_resources')
+    .select('id, lesson_id, display_name, resource_type, external_url, position')
+    .in(
+      'lesson_id',
+      lessonRows.map((l) => l.id),
+    )
+    .order('position', { ascending: true });
+
+  if (rErr) throw new Error(rErr.message);
+
+  type ResourceRow = {
+    id: string;
+    lesson_id: string;
+    display_name: string;
+    resource_type: string;
+    external_url: string | null;
+    position: number;
+  };
+  const resourceRows = (resources ?? []) as unknown as ResourceRow[];
+
   return rows.map((s) => ({
     id: s.id,
     title: s.title,
@@ -199,6 +225,15 @@ export async function fetchSections(
         title: l.title,
         position: l.position,
         isPreview: l.is_preview,
+        resources: resourceRows
+          .filter((r) => r.lesson_id === l.id)
+          .map((r) => ({
+            id: r.id,
+            resourceName: r.display_name,
+            resourceType: r.resource_type as ResourceType,
+            externalUrl: r.external_url,
+            position: r.position,
+          })),
       })),
   }));
 }
@@ -467,4 +502,149 @@ export async function fetchVersionSubjects(
   return ((data ?? []) as unknown as { subject: { code: string }[] | null }[])
     .map((r) => r.subject?.[0]?.code ?? '')
     .filter((c) => c.length > 0);
+}
+
+// ---------------------------------------------------------------------------
+// Lesson content
+//
+// A lesson without a resource is an empty page. These exist so the curriculum
+// editor can actually put something in front of a learner.
+// ---------------------------------------------------------------------------
+
+export const RESOURCE_TYPES = [
+  'video',
+  'audio',
+  'document',
+  'worksheet',
+  'link',
+  'quiz',
+  'other',
+] as const;
+
+export type ResourceType = (typeof RESOURCE_TYPES)[number];
+
+export const RESOURCE_TYPE_LABEL: Record<ResourceType, string> = {
+  video: 'Video',
+  audio: 'Audio',
+  document: 'Reading',
+  worksheet: 'Worksheet',
+  link: 'Link',
+  quiz: 'Quiz',
+  other: 'Other',
+};
+
+export type AuthoredResource = {
+  id: string;
+  resourceName: string;
+  resourceType: ResourceType;
+  externalUrl: string | null;
+  position: number;
+};
+
+/**
+ * What is already attached to one lesson.
+ *
+ * This is the author's view of the same table the lesson page reads. Before the
+ * writer existed this list was always empty for every lesson, because nothing
+ * could ever add to it.
+ */
+export async function fetchLessonResources(
+  client: SupabaseClient,
+  lessonId: string,
+): Promise<AuthoredResource[]> {
+  const { data, error } = await client
+    .from('lesson_resources')
+    .select('id, display_name, resource_type, external_url, position')
+    .eq('lesson_id', lessonId)
+    .order('position', { ascending: true });
+
+  if (error) throw new Error(error.message);
+
+  return (data ?? []).map((r) => ({
+    id: String(r.id),
+    resourceName: String(r.display_name),
+    resourceType: r.resource_type as ResourceType,
+    externalUrl: r.external_url === null ? null : String(r.external_url),
+    position: Number(r.position),
+  }));
+}
+
+export type AddResourceInput = {
+  lessonId: string;
+  resourceType: ResourceType;
+  url: string;
+  name: string;
+};
+
+export type AddResourceResult =
+  | { ok: true; resourceId: string }
+  | { ok: false; message: string };
+
+export function validateAddResource(input: AddResourceInput): AddResourceResult {
+  const name = input.name.trim();
+  const url = input.url.trim();
+
+  if (!input.lessonId) return { ok: false, message: 'That lesson is missing.' };
+  if (name.length === 0)
+    return { ok: false, message: 'Give it a name learners will see.' };
+  if (name.length > 200)
+    return { ok: false, message: 'Keep the name under 200 characters.' };
+
+  // The column CHECK is `^https://`. Catching it here means the teacher reads
+  // "must be https" instead of a constraint name.
+  if (url.length === 0) return { ok: false, message: 'Paste the URL for it.' };
+  if (!url.startsWith('https://'))
+    return { ok: false, message: 'Content has to be served over https.' };
+
+  if (!RESOURCE_TYPES.includes(input.resourceType))
+    return { ok: false, message: 'That is not a kind of content we support.' };
+
+  return { ok: true, resourceId: '' };
+}
+
+/**
+ * Attach content to a lesson.
+ *
+ * The database appends it, so the teacher never picks a position: the
+ * (lesson_id, position) key is unique, and guessing a free slot would collide.
+ */
+export async function addLessonResource(
+  client: SupabaseClient,
+  input: AddResourceInput,
+): Promise<AddResourceResult> {
+  const check = validateAddResource(input);
+  if (!check.ok) return check;
+
+  const { data, error } = await client.rpc('add_lesson_resource', {
+    p_lesson_id: input.lessonId,
+    p_resource_type: input.resourceType,
+    p_external_url: input.url.trim(),
+    p_display_name: input.name.trim(),
+    p_access: 'enrolled',
+  });
+
+  if (error) {
+    const m = error.message;
+    if (/only the author/i.test(m))
+      return { ok: false, message: 'Only the author can change this lesson.' };
+    if (/locked \(D5\)/i.test(m))
+      return {
+        ok: false,
+        message:
+          'That version is published and frozen. Create a new version to change it.',
+      };
+    if (/https/i.test(m))
+      return { ok: false, message: 'Content has to be served over https.' };
+    if (/needs a name/i.test(m))
+      return { ok: false, message: 'Give it a name learners will see.' };
+    if (/needs a URL/i.test(m))
+      return { ok: false, message: 'Paste the URL for it.' };
+    if (/unsupported resource type/i.test(m))
+      return { ok: false, message: 'That is not a kind of content we support.' };
+    if (/not found/i.test(m))
+      return { ok: false, message: 'That lesson no longer exists.' };
+    return { ok: false, message: m };
+  }
+
+  return { ok: true, resourceId: data === null ? '' : String(data) };
 }

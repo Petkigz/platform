@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import { addLesson, addSection, createCourse, setSubjects, transitionVersion } from '@/lib/authoring';
+import {
+  addLesson, addLessonResource, addSection, createCourse, setSubjects,
+  transitionVersion, validateAddResource, type ResourceType,
+} from '@/lib/authoring';
 
 /**
  * Course authoring writes.
@@ -37,6 +40,10 @@ export async function POST(request: Request) {
     isPreview?: unknown;
     to?: unknown;
     codes?: unknown;
+    lessonId?: unknown;
+    resourceType?: unknown;
+    url?: unknown;
+    name?: unknown;
   };
 
   const uuid = /^[0-9a-f-]{36}$/i;
@@ -132,6 +139,51 @@ export async function POST(request: Request) {
       await setSubjects(supabase, {
         versionId: b.versionId,
         codes: (b.codes as unknown[]).filter((c): c is string => typeof c === 'string'),
+      }),
+    );
+  }
+
+  // ---------------------------------------------------------------------
+  if (b.action === 'add_resource') {
+    // A lesson with no resource is an empty page. Until now nothing could add
+    // one, so every lesson published on this platform was blank.
+    if (
+      !isUuid(b.lessonId) ||
+      typeof b.resourceType !== 'string' ||
+      typeof b.url !== 'string' ||
+      typeof b.name !== 'string'
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: 'rejected',
+          message: 'A lesson, a content type, a URL and a name are required.',
+        },
+        { status: 400 },
+      );
+    }
+
+    // Validated here so the teacher reads a sentence rather than the CHECK
+    // constraint name — the column requires ^https://.
+    const check = validateAddResource({
+      lessonId: b.lessonId,
+      resourceType: b.resourceType as ResourceType,
+      url: b.url,
+      name: b.name,
+    });
+    if (!check.ok) {
+      return NextResponse.json(
+        { ok: false, code: 'rejected', message: check.message },
+        { status: 400 },
+      );
+    }
+
+    return json(
+      await addLessonResource(supabase, {
+        lessonId: b.lessonId,
+        resourceType: b.resourceType as ResourceType,
+        url: b.url,
+        name: b.name,
       }),
     );
   }

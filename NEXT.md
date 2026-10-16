@@ -1104,6 +1104,41 @@ the trigger would be guessing at a person's name.
 
 **449 database tests, 145 unit tests, tsc clean, build clean, 51 routes.**
 
+### Also done since: every lesson was an empty page
+
+Second most serious thing found, and the first that made the product
+**pointless** rather than merely incomplete.
+
+A teacher could create a course, a section, and a lesson. There was no way to
+attach anything to it. `lesson_resources` is what the lesson page reads to show
+a video, a reading, a worksheet — and nothing in the application ever wrote to
+it. The learner side had been reading an always-empty table since it was built.
+
+So a course could be authored end to end, reviewed, published, bought, and
+studied, and contain nothing.
+
+**What was added.** `add_lesson_resource()` — author or privileged, draft only
+(`lesson_resources_lock` already freezes the table at publication, exactly as it
+does sections and lessons), position assigned as `max + 1` because
+`(lesson_id, position)` is unique and guessing a free slot would collide. The
+curriculum editor now shows what each lesson contains, and marks a lesson with
+nothing in it.
+
+**URLs only, deliberately.** The other permitted source is `media_asset_id`, and
+`media_assets` has no writer either. Under D8 the masters belong in our own
+storage with Cloudflare Stream for delivery; inventing an upload path here would
+have committed to a storage layout before that decision was made. **`media_assets`
+is the next writer to build, and it gates every video on the platform.**
+
+**A third instance of the same policy mistake.** The write policies used
+`can_read_version()` — a read predicate standing in for a write gate, as with
+`course_version_subjects`. Corrected to `can_author_version()`. Whether the old
+one was exploitable was **tested rather than asserted** this time, because that
+claim was made last time and was wrong: the test records which mechanism refuses
+the insert, and the conclusion is defence in depth, not a patched hole.
+
+**463 database tests, 155 unit tests, tsc clean, build clean, 51 routes.**
+
 ### What comes after that
 
 The paid path. It needs a provider, and a provider needs merchant
