@@ -1371,13 +1371,33 @@ was tested with the existing privileged manual-evidence path, not a live provide
 
 **598 database tests, 228 unit tests, tsc clean, build clean, 57 routes.**
 
+### Also done: finance can record the clawback instead of merely flagging it
+
+`financial_adjustments` had zero rows and no writer. `/admin/financial-adjustments`
+now lets finance/platform admins record a signed, currency-checked, linked,
+append-only correction with a written reason. It does not edit the original
+transaction and does not claim to transfer funds.
+
+For the existing `earnings.clawback_needed` path, `record_earnings_clawback()`
+requires a fully refunded order, totals the instructor entries already marked
+`paid`, links the adjustment to the settled refund transaction, and records the
+exact negative amount. It cannot run for a partial refund, no paid earnings, or
+an order without a settled refund; it is one per order. The original paid
+earnings remain paid — the adjustment records the recovery claim rather than
+falsifying the payout history.
+
+**610 database tests, 228 unit tests, tsc clean, build clean, 59 routes.**
+
 ### What comes after that
 
-The next unresolved money-out gap is `financial_adjustments`, which earnings
-clawback already references but has no writer. Then reconciliation and payout
-operations remain gated on the still-open provider/tax/dispute preconditions.
-Renewal automation requires provider credentials and a worker; do not treat a
-pending subscription as active while that stays blocked.
+Next is reconciliation: `payment_reconciliations` and
+`payment_reconciliation_items` still have no writer. The schema supports it,
+but a real settlement import needs provider statements (P12); we can build the
+staff-reviewed import and variance logic against fixtures without pretending a
+provider account exists. Payout execution still waits on the four payout
+preconditions and provider disbursement credentials. Automatic subscription
+renewal needs a worker and payment-provider support; pending is never treated as
+active.
 
 The paid path. It needs a provider, and a provider needs merchant
 registration and signed API terms (P12). Until then `payment_required` is the

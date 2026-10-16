@@ -63,8 +63,8 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **89 tables, RLS on every one, 209 policies, 116
-user-defined triggers, 145 functions, 65 migrations, 598 database tests and
-228 unit tests passing.** The web app builds 57 routes.
+user-defined triggers, 147 functions, 66 migrations, 610 database tests and
+228 unit tests passing.** The web app builds 59 routes.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. Without it
@@ -89,6 +89,12 @@ finance or platform admin, with a required written reason and audit entry. It
 remains at **0%** until the business decision is made; no percentage was chosen
 on the owner's behalf. The payout workflow stays closed until the four payout
 preconditions are settled.
+
+Finance can record a correction from `/admin/financial-adjustments`. Signed,
+append-only amounts link to an order or transaction and require finance/platform
+admin plus a reason. A full-refund earnings clawback is computed from already
+paid instructor entries and recorded as one negative adjustment; paid earnings
+are not rewritten and the adjustment itself does not transfer funds.
 
 A course can be assessed: `create_assessment()`, `add_assessment_question()` and
 `activate_assessment()`. Until then no teacher could create a quiz, so
