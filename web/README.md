@@ -48,6 +48,7 @@ npm run test        # both
 | `/sign-up` | static | Account creation |
 | `/auth/confirm` | dynamic | Supabase email confirmation and magic links |
 | `/learn` | dynamic | The authenticated screen, reading through RLS |
+| `/api/enrol` | dynamic | POST. Free enrolment only |
 | `/sign-out` | dynamic | POST only |
 
 ## The theme is white and green
@@ -98,7 +99,21 @@ boundary, and it refuses to guess a country code for a bare local number —
 guessing is how an OTP reaches the wrong country. Seven unit tests cover it,
 including that refusal.
 
+## Money and payments
+
+D4 forbids floating-point amounts, so `src/lib/money.ts` uses `bigint` minor
+units and rejects a fractional value rather than truncating it. JSON has no
+bigint, so the wire form is a string.
+
+No payment provider has been chosen. `src/lib/payments/provider.ts` is the
+interface an adapter must satisfy, and `UnconfiguredPaymentProvider` is the
+implementation that says no. It is not a stub awaiting deletion — an
+unconfigured deployment must keep behaving that way, so the failure is a
+sentence rather than a null dereference.
+
+`/api/enrol` therefore enrols free courses and returns `402 payment_required`
+for paid ones.
+
 ## Not built yet
 
-Admin dashboard · payments UI · mobile · any visual identity beyond functional
-styling (see P11 in `DECISIONS.md`).
+Admin dashboard · checkout · mobile · logo and type (colour is settled).

@@ -11,6 +11,8 @@ import {
   subjectNames,
   type CatalogueCourse,
 } from '@/lib/catalogue';
+import { offeringLabel, ownLearnerProfileId, resolveOffering } from '@/lib/enrolment';
+import { EnrolButton } from './enrol-button';
 
 export const dynamic = 'force-dynamic';
 
@@ -100,6 +102,18 @@ export default async function CoursePage({
 
   const subjects = subjectNames(version);
   const languages = languagesFor(course);
+
+  // Who is looking, and what it would cost them. Both answers come from the
+  // database rather than from a flag on the course, because "is this free" is
+  // a question about products and prices, not about the course row.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const learnerProfileId = user ? await ownLearnerProfileId(supabase, user.id) : null;
+  const offering = await resolveOffering(supabase, {
+    courseId: course.id,
+    learnerProfileId,
+  });
   const lessonCount = sections.reduce(
     (n, s) => n + (s.lessons?.length ?? 0),
     0,
@@ -142,12 +156,12 @@ export default async function CoursePage({
           </div>
         </div>
 
-        <div className="hero-actions">
-          <Link href="/sign-up" className="btn">Enrol</Link>
-          <Link href="/sign-in?next=/learn" className="btn secondary">
-            I already have an account
-          </Link>
-        </div>
+        <EnrolButton
+          courseId={course.id}
+          state={offering.kind}
+          signedIn={Boolean(user)}
+          label={offeringLabel(offering)}
+        />
       </div>
 
       <div>

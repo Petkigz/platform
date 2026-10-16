@@ -37,7 +37,7 @@ triggers and row level security are actually executed rather than merely parsed.
 The suite is split by group and run by `supabase/tests/run.mjs`, which applies
 the migrations once and runs every suite against the same engine.
 
-**198 tests** across five suites:
+**208 tests** across five suites:
 
 *Group 1 — identity, family, guardians, privacy.* Schema presence, RLS on
 every public table, seed data, `updated_at` triggers, duplicate and

@@ -101,11 +101,42 @@ access control. Fixed in `20261022000200_catalogue_visibility.sql`.
 
 **198 tests pass.**
 
+### Also done since: enrolment, and the payment boundary
+
+Both at once, deliberately, because doing the first without the second would
+have hidden the thing that mattered.
+
+**Free enrolment works.** The course page resolves the offering from products
+and prices rather than from a flag on the course, and `/api/enrol` takes a
+course id and nothing else — no learner id, no price, no source. Every one of
+those would have been a way to lie.
+
+**The `PaymentProvider` boundary is real code**, not a comment.
+`web/src/lib/payments/provider.ts` is the interface an adapter must satisfy;
+`UnconfiguredPaymentProvider` is the provider that says no, and it stays in
+the tree — an unconfigured deployment must keep behaving that way.
+`web/src/lib/money.ts` is D4 in TypeScript: `bigint` minor units, and a float
+is a type error rather than a silent truncation. 19 unit tests.
+
+**A serious hole, found by wiring the button.** `course_enrolments_insert`
+checked only `can_access_learner(learner_profile_id)` — that you may act for
+the learner. It never asked whether the course was for sale. Any signed-in
+user could POST an enrolment against a paid course with `source = 'free'` and
+walk past the entire payment stack: no product, no price, no order, no
+callback. The entitlement model was correct and simply never consulted at the
+one moment it mattered. Fixed in `20261023000100_enrolment_gate.sql`;
+`supabase/tests/enrolment.test.mjs` holds the negative cases.
+
+**208 tests pass.**
+
 ### What comes after that
 
-Enrolment: the button on the course page currently points at sign-up. Wiring
-it to `course_enrolments` is the next step, and it is where free courses and
-paid courses part company — paid needs the `PaymentProvider` boundary from P11.
+The paid path. It needs a provider, and a provider needs merchant
+registration and signed API terms (P12). Until then `payment_required` is the
+honest answer and the UI says so.
+
+The next piece that is not blocked: **progress**. Marking a lesson complete and
+computing course completion — the tables and functions already exist.
 
 ### Not now
 
