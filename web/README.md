@@ -62,6 +62,9 @@ npm run test        # both
 | `/api/teach` | dynamic | POST. create / add section / add lesson / transition |
 | `/certificates` | dynamic | Certificates I hold |
 | `/verify/[number]` | dynamic | **Public.** Verify a certificate by number |
+| `/review` | dynamic | Review queue |
+| `/review/[assignmentId]` | dynamic | One assignment, with the outline under review |
+| `/api/review` | dynamic | POST. respond / decide |
 | `/sign-out` | dynamic | POST only |
 
 ## The theme is white and green
@@ -137,6 +140,26 @@ columns. Never write `select('*')` against that table — name the columns.
 The key has no read path in the application at all, for any role including
 `platform_admin`. `grade_response()` is its only reader.
 `supabase/tests/assessment.test.mjs` asserts all three of those.
+
+## Reviewing
+
+Assignments are created by platform staff and cannot be self-claimed
+(`cra_write` is privileged only). A reviewer accepts or declines, then records
+`approved`, `revision_requested`, or `rejected` with a mandatory rationale —
+required for approvals too, because that row is what a teacher appeals
+against.
+
+`validate_review_decision()` requires a decision's version and scope to match
+its assignment, and that `decided_by` is the reviewer the assignment names. It
+is a trigger rather than a policy because a SECURITY DEFINER function bypasses
+RLS but not triggers.
+
+A decision's version and scope are read back from the assignment, never taken
+from the request body. Recording a decision and moving the version are separate
+acts: if the transition fails the decision stays recorded and the API says so.
+
+An assigned reviewer can read what they were asked to review — that was a real
+defect before `20261021000100_authz_fixes.sql` — and never write to it.
 
 ## Certificates
 

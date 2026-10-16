@@ -17,6 +17,7 @@ import { run as flags } from './flags.test.mjs';
 import { run as family } from './family.test.mjs';
 import { run as authoring } from './authoring.test.mjs';
 import { run as certificates } from './certificates.test.mjs';
+import { run as review } from './review.test.mjs';
 
 const ctx = await createHarness();
 const suites = [];
@@ -39,6 +40,7 @@ for (const [name, fn] of [
   ['family', family],
   ['authoring', authoring],
   ['certificates', certificates],
+  ['review', review],
 ]) {
   console.log(`\n--- ${name} ---\n`);
   await fn(ctx);

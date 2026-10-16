@@ -309,6 +309,36 @@ count is now scoped to the enrolment.
 
 **281 tests pass.**
 
+### Also done since: the reviewer's side
+
+`/review` is the queue and `/review/<assignmentId>` shows the outline under
+review next to the controls. This closes the loop the authoring work opened: a
+teacher could submit for review, and until now nobody could act on it.
+
+A reviewer accepts or declines an offer, then records a decision —
+`approved`, `revision_requested`, or `rejected` — with a mandatory reason. The
+reason is required for approvals too, because this row is what a teacher
+appeals against and "looks fine" is not an appeal answer.
+
+Assignments are created by platform staff and cannot be self-claimed
+(`cra_write` is privileged only). A decision's version and scope are read back
+from the assignment rather than accepted from the client, so a caller cannot
+attach a decision to a version they were not asked about even by trying. The
+actor comes from the session.
+
+Recording a decision and moving the version are separate acts on purpose: a
+decision is a statement about the content, and the version's status is what
+happens next. If the transition fails, the decision stays recorded and the API
+says so rather than pretending nothing happened.
+
+One of my own assertions was wrong before this passed, from the same recorded
+trap: I read an assignment's status back *after* `asUser()`, which always rolls
+back, so it could only ever read `offered`. Both halves of the test are now
+asserted inside the block using `RETURNING`, which also makes the
+"matched zero rows" case observable — an RLS-blocked UPDATE raises nothing.
+
+**296 tests pass.**
+
 ### What comes after that
 
 The paid path. It needs a provider, and a provider needs merchant

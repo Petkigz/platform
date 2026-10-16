@@ -33,6 +33,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <Link href="/learn">My learning</Link>
               <Link href="/family">My family</Link>
               <Link href="/teach">Teach</Link>
+              <Link href="/review">Review</Link>
               <Link href="/certificates">Certificates</Link>
             </nav>
 
