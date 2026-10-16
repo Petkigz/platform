@@ -53,6 +53,10 @@ npm run test        # both
 | `/api/checkout` | dynamic | POST. Create a pending order, hand off to the provider |
 | `/orders` | dynamic | Order history and payment status |
 | `/api/payments/webhook` | dynamic | POST. Provider callback. Signature-verified |
+| `/family/guardians` | dynamic | Request guardian access to a child |
+| `/api/family/guardians` | dynamic | POST. File a guardian request |
+| `/admin/guardians` | dynamic | Guardian verification queue. Privileged only |
+| `/api/admin/guardians` | dynamic | POST. Decide a case |
 | `/learn/[enrolmentId]` | dynamic | Course view: outline and mark-complete |
 | `/learn/[enrolmentId]/lesson/[lessonId]` | dynamic | One lesson and its materials, gated by entitlement |
 | `/api/progress` | dynamic | POST. Record lesson progress |
@@ -326,6 +330,36 @@ The webhook closes the attempt. `resolved_at IS NULL` is enforced by a CHECK to
 hold exactly when the status is still open, so both move together or the row is
 refused, and only open attempts are matched, so a replay cannot rewrite a settled
 one.
+
+## Guardian verification
+
+Verifiable parental consent — what COPPA requires before a US under-13 enrolls,
+which is what this machinery was built for. Kept complete and behind
+`family.guardian_verification`, off by default, to be enabled before any US child
+enrolls.
+
+`/family/guardians` lets an adult ask; `/admin/guardians` is the queue a person
+works. The split is deliberate: `gvc_admin` keeps `guardian_verification_cases`
+to governance and platform admins, because "who may decide that this adult is
+this child's parent" is a governance question, not a self-service one. What was
+missing was the two UIs, not a looser policy.
+
+A request always lands at `pending_verification`. The table refuses an `active`
+relationship without `verified_at`, and only a reviewer's decision sets it, so
+there is no path from a request to access. Approving stamps it; rejecting or
+revoking strips every requested capability, so a rejected adult does not keep the
+access they were refused.
+
+The reviewer is taken from the session, never the body — a consent record that
+lets the caller name the decider is not a consent record. And `reviewed_at` is
+set server-side, because the table requires it not to precede `submitted_at` and
+a skewed browser clock would fail that in a way nobody could diagnose.
+
+`gr_insert` no longer allows self-nomination by an unrelated user. Before
+20261029000300, any signed-in account could file a claim against any child; it
+granted nothing, but it filled the consent queue — which has a retention
+obligation attached — with junk. A family member may still nominate themselves or
+another adult, which is how a parent adds a grandparent.
 
 ## Families and children
 

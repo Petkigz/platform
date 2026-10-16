@@ -560,6 +560,68 @@ for teeth by neutering them and counting failures, then restoring.
 Still blocked on P12: the provider hand-off. Everything up to it and everything
 after it is built and tested.
 
+### Also done since: guardian verification, and a COPPA queue nobody could work
+
+The verifiable-parental-consent machinery was complete and correct in SQL all
+along: approving a case flips the relationship to active and stamps `verified_at`,
+rejecting one revokes it and strips every capability. What was missing was
+anything connecting the two halves. Measured:
+
+```
+parent creates guardian_relationship  -> allowed
+parent creates verification case      -> refused (gvc_admin)
+staff creates case and approves       -> works
+...and there was no UI for any of it
+```
+
+So a request landed at `pending_verification` and stayed there forever, with no
+queue for anyone to see. That matters legally rather than cosmetically: COPPA
+requires verifiable parental consent before a US under-13 enrolls, and a consent
+process nobody can action is not a consent process.
+
+Now `/family/guardians` (ask) and `/admin/guardians` (the queue a person works),
+both behind `family.guardian_verification`, off by default as decided. The
+staff-only split on cases is deliberate and unchanged — "who may decide that this
+adult is this child's parent" is a governance question, not a self-service one.
+The gap was the UIs, not a loose policy.
+
+**And a second finding while testing it.** `gr_insert` allowed a request whenever
+the caller named themselves as guardian, which any session satisfies for any
+child:
+
+```
+stranger files a guardian request -> ACCEPTED
+  state: {"status":"pending_verification","unverified":true}
+  is_verified_guardian_of(child) -> false
+```
+
+Not an access leak — the row is unverified and grants nothing, and the helper
+correctly says false, which is why it went unnoticed. But it is an abuse vector on
+a legal review queue: any signed-in account could queue unlimited claims against
+any child, noise at best and a way to bury a real family's request at worst, in a
+queue that then has to retain the junk.
+
+20261029000300 drops the self-nomination branch. A family member may still
+nominate themselves or another adult — which is how a parent adds a grandparent —
+and privileged staff may do either. `is_learner_family_member()` excludes
+billing-only members, unchanged and deliberate: paying is not parenting.
+
+Both migrations checked for teeth by neutering them and counting failures, then
+restoring.
+
+Four of my own test bugs on the way, all from traps already recorded: fixtures
+created inside `asUser()` roll back, so a later `guardian_verification_cases`
+insert failed on a foreign key that no longer existed; a write proven by reading
+it back afterwards proves nothing inside `asUser()` because the first error
+aborts the transaction, so those assertions moved inside the block and read
+`RETURNING`; and I invented `families.owner_user_id` and forgot
+`fm_joined_when_active` needs `joined_at`.
+
+Also worth recording: two COPPA-relevant screens were absent from the 50-screen
+inventory entirely. Added as 19a and 19b rather than renumbering.
+
+**329 database tests, 42 unit tests, 36 routes.**
+
 ### What comes after that
 
 The paid path. It needs a provider, and a provider needs merchant

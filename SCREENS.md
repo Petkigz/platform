@@ -48,6 +48,8 @@ Status:
 | 17 | Results | READY |
 | 18 | Progress and achievements | BLOCKED — engagement mechanics undesigned |
 | 19 | Parent dashboard | READY |
+| 19a | **Guardian access request** *(added — was missing from the inventory)* | **BUILT** — `/family/guardians`. Behind `family.guardian_verification` |
+| 19b | **Guardian verification queue** *(added — was missing from the inventory)* | **BUILT** — `/admin/guardians`. Privileged only |
 
 ## 4. Adult learners — 7
 
@@ -136,6 +138,9 @@ states of screens #11 and #14. Mobile adds only #49 and #50.
 2. **Settings and feature flags** — the critical path for "enable later from
    admin."
 3. **Add a child profile** — the parent's first real task.
+3a. **Guardian verification** — two screens, absent from the original 50, one of
+    them COPPA-mandatory. A consent process with no screen to action it is not a
+    consent process. Added as 19a and 19b rather than renumbering.
 4. **Learner switcher** — the hard part of the two-audience design.
 5. **Per-lesson discussion** — wanted and confirmed.
 6. **Public certificate verification page** — the endpoint already exists.
