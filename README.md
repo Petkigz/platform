@@ -63,8 +63,8 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **89 tables, RLS on every one, 209 policies, 113
-user-defined triggers, 133 functions, 63 migrations, 574 database tests and
-227 unit tests passing.** The web app builds 52 routes.
+user-defined triggers, 138 functions, 64 migrations, 585 database tests and
+227 unit tests passing.** The web app builds 54 routes.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. Without it
@@ -73,6 +73,12 @@ a new user could sign in and then do nothing at all.
 A lesson can contain something: `add_lesson_resource()` attaches a video,
 reading or worksheet. Before it, every lesson published on the platform was an
 empty page, because nothing could write to the table the lesson page reads.
+
+Subscription plans are now configurable in `/admin/plans`: staff create a
+plan, versioned learner allowances, subject/feature entitlements and recurring
+prices. Activation refuses a plan version with no entitlement or no live price.
+This is offer configuration, **not** subscription payment or renewal; those
+remain distinct until provider callbacks are wired.
 
 The teacher revenue share is configurable from the admin dashboard by a
 finance or platform admin, with a required written reason and audit entry. It

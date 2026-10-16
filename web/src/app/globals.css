@@ -224,6 +224,8 @@ p  { margin: 0 0 1rem; }
    Forms
    -------------------------------------------------------------------------- */
 
+.stack { display: grid; gap: 0.25rem; }
+
 label {
   display: block;
   font-size: 0.85rem;

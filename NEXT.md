@@ -1335,15 +1335,28 @@ remain unanswered, so money cannot leave the platform yet.
 
 **574 database tests, 227 unit tests, tsc clean, build clean, 52 routes.**
 
+### Also done: subscription offers can be configured
+
+`plans`, `plan_versions`, `plan_entitlements` and plan-owned `prices` all had
+zero rows and no writer. Staff can now create the plan, append versioned
+allowances, add catalogue/product/feature entitlements, set a recurring price,
+and activate only when both entitlement and price exist. Repricing closes the
+old row; it does not rewrite what a subscriber would have bought. A new
+`/admin/plans` screen exposes this flow.
+
+This is deliberately just the offer catalogue. It does **not** pretend a
+subscription has been paid. `subscriptions` and their access fulfilment are the
+next unit; renewals and provider-confirmed activation still need P12 credentials.
+
+**585 database tests, 227 unit tests, tsc clean, build clean, 54 routes.**
+
 ### What comes after that
 
-The next code unit is the subscription path: `plans`, `plan_versions`,
-`subscriptions`, and `plan_entitlements` have no app writers. The path must
-create/revise plans, let staff publish prices and entitlements, let learners
-start or cancel subscriptions, and tie provider-confirmed renewals to access.
-The renewal/payment edge still depends on provider credentials (P12); the
-subscription state and admin setup can be wired without pretending provider
-callbacks exist.
+Wire subscription start, cancellation and status history, then connect
+payment-confirmed activation/renewal to entitlements without conflating payment
+state with subscription state or access. Provider callbacks still need P12
+credentials, so the pending state must remain explicitly unpaid until a real
+callback is verified. After that: `financial_adjustments` for earnings clawbacks.
 
 The paid path. It needs a provider, and a provider needs merchant
 registration and signed API terms (P12). Until then `payment_required` is the
