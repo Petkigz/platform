@@ -241,3 +241,200 @@ export async function addChild(
 }
 
 export const AGE_BANDS = ['5-7', '8-10', '11-13', '14-17'] as const;
+
+// ---------------------------------------------------------------------------
+// Creating and managing the family itself
+//
+// Everything above assumed a family already existed. Until now it could not:
+// `families` and `family_memberships` had zero rows and no writer, and the
+// policies made the first row impossible to write.
+//
+//   fm_write_owner  using (is_family_owner(family_id, current_user_id()))
+//
+// `is_family_owner()` looks for an active 'owner' row in `family_memberships`,
+// so inserting the first owner membership required already being an active
+// owner. Measured, not inferred:
+//
+//   plain INSERT into families ............. allowed
+//   INSERT ... RETURNING id ................ refused by RLS
+//   INSERT the owner membership ............ refused by RLS
+//   creator selects their own family ....... 0 rows
+//
+// The RETURNING case is the subtle one: RETURNING must satisfy the SELECT
+// policy, and `families_read` requires an active membership the creator does
+// not have. The creator could not even read back the family they made.
+//
+// That made `addChild` above unreachable in practice — it inserts a child into
+// a family the caller is an active member of, and no caller could ever become
+// one. `guardian_relationships` has the same dependency, so the parental-consent
+// workflow was blocked at the same point.
+// ---------------------------------------------------------------------------
+
+export const MEMBERSHIP_TYPES = ['owner', 'guardian', 'billing_manager'] as const;
+
+export const MEMBERSHIP_TYPE_LABEL: Record<
+  'owner' | 'guardian' | 'billing_manager',
+  string
+> = {
+  owner: 'Owner',
+  guardian: 'Guardian',
+  billing_manager: 'Billing manager',
+};
+
+export type CreateFamilyOutcome =
+  | { ok: true; familyId: string }
+  | { ok: false; message: string };
+
+/**
+ * Create a family.
+ *
+ * The database creates the owner membership in the same transaction, so no
+ * family ever exists without an owner — which is what makes the deadlock above
+ * impossible to reintroduce by accident. A family with no owner is invisible to
+ * its creator, unmanageable, and would strand its children.
+ */
+export async function createFamily(
+  supabase: SupabaseClient,
+  name?: string,
+): Promise<CreateFamilyOutcome> {
+  const trimmed = name?.trim() ?? '';
+  if (trimmed.length > 120) {
+    return { ok: false, message: 'Keep the family name under 120 characters.' };
+  }
+
+  const { data, error } = await supabase.rpc('create_family', {
+    p_name: trimmed === '' ? null : trimmed,
+  });
+
+  if (error) {
+    if (/sign in to create a family/i.test(error.message)) {
+      return { ok: false, message: 'Sign in first.' };
+    }
+    return { ok: false, message: error.message };
+  }
+
+  return { ok: true, familyId: data === null ? '' : String(data) };
+}
+
+export type InviteOutcome =
+  | { ok: true; membershipId: string }
+  | { ok: false; message: string };
+
+/**
+ * Invite someone to the family.
+ *
+ * The invitation is `invited`, not `active`: the person has to accept. Being
+ * added to someone else's household without agreeing would be a way to attach an
+ * account that never chose it.
+ */
+export async function inviteFamilyMember(
+  supabase: SupabaseClient,
+  args: {
+    familyId: string;
+    userId: string;
+    membershipType: 'owner' | 'guardian' | 'billing_manager';
+  },
+): Promise<InviteOutcome> {
+  if (!args.familyId) return { ok: false, message: 'That family is missing.' };
+  if (!args.userId) return { ok: false, message: 'Pick who to invite.' };
+
+  const { data, error } = await supabase.rpc('invite_family_member', {
+    p_family_id: args.familyId,
+    p_user_id: args.userId,
+    p_membership_type: args.membershipType,
+  });
+
+  if (error) {
+    const m = error.message;
+    if (/only the owner may invite/i.test(m)) {
+      return { ok: false, message: 'Only the owner can invite someone.' };
+    }
+    if (/already a member/i.test(m)) {
+      return { ok: false, message: 'That person is already a member.' };
+    }
+    if (/no such user/i.test(m)) {
+      return { ok: false, message: 'No one has that account.' };
+    }
+    if (/unsupported membership type/i.test(m)) {
+      return { ok: false, message: 'That is not a kind of member we support.' };
+    }
+    if (/not found/i.test(m)) {
+      return { ok: false, message: 'That family no longer exists.' };
+    }
+    return { ok: false, message: m };
+  }
+
+  return { ok: true, membershipId: data === null ? '' : String(data) };
+}
+
+export type MembershipOutcome = { ok: true } | { ok: false; message: string };
+
+/** Accept a family invitation. Only the invited person may do this. */
+export async function acceptFamilyMembership(
+  supabase: SupabaseClient,
+  membershipId: string,
+): Promise<MembershipOutcome> {
+  if (!membershipId) return { ok: false, message: 'That invitation is missing.' };
+
+  const { error } = await supabase.rpc('accept_family_membership', {
+    p_membership_id: membershipId,
+  });
+
+  if (error) {
+    const m = error.message;
+    if (/only the invited person/i.test(m)) {
+      return { ok: false, message: 'Only the invited person can accept this.' };
+    }
+    if (/was withdrawn/i.test(m)) {
+      return { ok: false, message: 'That invitation was withdrawn.' };
+    }
+    if (/not found/i.test(m)) {
+      return { ok: false, message: 'That invitation no longer exists.' };
+    }
+    return { ok: false, message: m };
+  }
+
+  return { ok: true };
+}
+
+/**
+ * Remove a member. Soft revoke per D7, written reason required.
+ *
+ * Refuses to remove the last active owner — a family with no owner would be
+ * unmanageable and its children stranded, which is the same lockout guard the
+ * privileged roles use.
+ */
+export async function revokeFamilyMembership(
+  supabase: SupabaseClient,
+  args: { membershipId: string; reason: string },
+): Promise<MembershipOutcome> {
+  if (!args.membershipId) return { ok: false, message: 'That member is missing.' };
+  if (args.reason.trim().length === 0) {
+    return { ok: false, message: 'Give a reason for removing them.' };
+  }
+
+  const { error } = await supabase.rpc('revoke_family_membership', {
+    p_membership_id: args.membershipId,
+    p_reason: args.reason.trim(),
+  });
+
+  if (error) {
+    const m = error.message;
+    if (/only the owner may remove/i.test(m)) {
+      return { ok: false, message: 'Only the owner can remove a member.' };
+    }
+    if (/needs at least one owner/i.test(m)) {
+      return {
+        ok: false,
+        message:
+          'A family needs at least one owner. Appoint another before removing this one.',
+      };
+    }
+    if (/a reason is required/i.test(m)) {
+      return { ok: false, message: 'Give a reason for removing them.' };
+    }
+    return { ok: false, message: m };
+  }
+
+  return { ok: true };
+}

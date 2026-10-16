@@ -1230,6 +1230,57 @@ schema rather than by guessing again.
 
 **511 database tests, 179 unit tests, tsc clean, build clean, 51 routes.**
 
+### Also done since: no child could exist on this platform
+
+This one corrects a claim I made earlier. I said child enrolment was wired. The
+enrolment path was — the family it depends on could not be created.
+
+`families` and `family_memberships` had zero rows and no writer, and the policy
+made the first row impossible to write:
+
+```
+fm_write_owner  using (is_family_owner(family_id, current_user_id()))
+```
+
+`is_family_owner()` looks for an active `owner` row, so inserting the first owner
+membership required already being an active owner. A bootstrap deadlock.
+Measured, not inferred:
+
+```
+plain INSERT into families ............. allowed
+INSERT ... RETURNING id ................ refused by RLS
+INSERT the owner membership ............ refused by RLS
+creator selects their own family ....... 0 rows
+```
+
+The `RETURNING` case is the subtle one: `RETURNING` must satisfy the **SELECT**
+policy, and `families_read` requires an active membership the creator does not
+have. So a parent could create a family they could not see.
+
+**Why it matters beyond a missing table.** D2 says a child is a `learner_profile`
+under a family, never a user, and the schema enforces it: `lp_no_child_login_yet`
+(a child may not have a login) plus `lp_needs_family_or_login` (a profile needs a
+family or a login) together mean **a child profile requires a family**. With no
+way to create one, no child could exist and none could be enrolled.
+`guardian_relationships` needs `is_learner_family_member`, so the parental-consent
+workflow was blocked at the same point.
+
+**The fix.** `create_family()` writes the family and its owner membership in one
+transaction, so no family ever exists without an owner. Removing the owner
+membership creation fails 22 tests.
+
+Invitations are `invited` until the person accepts, and only they can accept —
+being added to a household without agreeing would attach an account that never
+chose it. Removing a member soft-revokes per D7 with a written reason, and **the
+last active owner cannot be removed**, the same lockout guard the privileged roles
+use.
+
+One of my own tests was wrong first: it used `'guardian'` as an enrolment source,
+when the CHECK allows `family_entitlement`. Fixed against the constraint rather
+than by guessing again.
+
+**535 database tests, 195 unit tests, tsc clean, build clean, 51 routes.**
+
 ### What comes after that
 
 The paid path. It needs a provider, and a provider needs merchant

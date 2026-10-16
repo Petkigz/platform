@@ -63,8 +63,8 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **89 tables, RLS on every one, 209 policies, 112
-user-defined triggers, 123 functions, 60 migrations, 511 database tests and
-179 unit tests passing.** The web app builds 51 routes.
+user-defined triggers, 128 functions, 61 migrations, 535 database tests and
+195 unit tests passing.** The web app builds 51 routes.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. Without it
@@ -73,6 +73,12 @@ a new user could sign in and then do nothing at all.
 A lesson can contain something: `add_lesson_resource()` attaches a video,
 reading or worksheet. Before it, every lesson published on the platform was an
 empty page, because nothing could write to the table the lesson page reads.
+
+A family can be created: `create_family()` writes the family **and** its owner
+membership in one transaction. Until then no family could exist at all — the
+policy that lets you add an owner requires already being one — and since D2 says
+a child is a learner profile under a family and never a user, **no child could
+exist and none could be enrolled.**
 
 A course can be sold: `create_product()`, `link_product_course_version()`,
 `set_product_price()` and `activate_product()`. Until then every table on the
