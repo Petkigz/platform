@@ -62,13 +62,20 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 ## Status
 
-The database stands at **89 tables, RLS on every one, 207 policies, 152
-triggers, 101 functions, 52 migrations, 372 database tests and 98 unit
-tests passing.** The web app builds 43 routes.
+The database stands at **89 tables, RLS on every one, 207 policies, 111
+user-defined triggers, 105 functions, 53 migrations, 389 database tests and
+121 unit tests passing.** The web app builds 49 routes.
+
+(The trigger count is user-defined triggers. `pg_trigger` also holds 803
+internal constraint triggers; counting them gives 914, which is the number
+that produced an earlier, inflated figure in this file.)
 
 All five original logical groups are complete. The 89th table is
 `discussion_posts`, added after them for per-lesson discussion — the first
-schema added since the groups closed, and the only one so far.
+schema added since the groups closed, and the only one so far. The
+governance channels (content reports and review appeals) were wired on top
+of the existing `content_reports` and `governance_appeals` tables rather
+than adding new ones.
 
 All five logical schema groups are built. Every frozen decision — D1
 multi-tenancy, D2 child identity, D4 money, D5 version pinning, D6 content

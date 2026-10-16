@@ -119,6 +119,15 @@ export default async function AdminPage() {
         out. Approving is an agreement, not a transfer.
       </p>
       <p>
+        <Link href="/admin/reports">Content reports</Link> — problems readers
+        flagged in a lesson or an answer. Closing one needs a written note.
+      </p>
+      <p>
+        <Link href="/admin/appeals">Appeals</Link> — teachers contesting a
+        reviewer&rsquo;s rejection. You cannot decide an appeal against your own
+        decision.
+      </p>
+      <p>
         <Link href="/admin/discussion">Discussion queue</Link> — learner
         questions and peer answers held for review. Empty until{' '}
         <code>learning.discussion</code> is enabled.

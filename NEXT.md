@@ -887,6 +887,62 @@ to come from elsewhere.
 
 **372 database tests, 98 unit tests, tsc clean, 43 routes.**
 
+### Also done since: the two governance channels
+
+`content_reports` and `governance_appeals` both existed, with RLS, policies and
+an audit trail — and **nothing wrote to either of them**. That is the same
+defect class as the other nine: correct machinery, nothing connected. The
+consequences were specific:
+
+- A reader who found a mistranslation or a misattributed hadith had nowhere to
+  say so. Moderation catches what a reviewer thinks to look for, and on a
+  platform that teaches faith to children the people reading a lesson are the
+  ones who notice what a pre-publication review did not.
+- A teacher whose course was rejected had no way to contest it. A gate with no
+  appeal is not a scholarly gate, it is a refusal — and it puts a lot of
+  consequence in one reviewer's judgement.
+
+**What was added.** Four writers: `report_content`, `resolve_content_report`,
+`appeal_review_decision`, `decide_appeal`. Four API routes, a report form on the
+lesson page and on each discussion post, a rejected-versions panel on the
+teaching page, and two admin queues at `/admin/reports` and `/admin/appeals`.
+
+**Two rules are load-bearing, and both live in SQL.** Reporting requires that
+you can *see* what you report — without it, filing a report is a way to probe
+unpublished course versions by reading back which ids exist. And the reviewer
+whose decision is appealed cannot decide that appeal, which is the same
+independence rule as an author approving their own course or a requester
+approving their own refund. Closing a report and overturning an appeal each
+require a written note; a queue of silent dismissals teaches readers the button
+does nothing.
+
+**A correction I owed.** I had said `governance_appeals` was the appeal path for
+a removed discussion post. It is not — `related_decision_id` is a foreign key to
+`content_review_decisions`, so it appeals a *reviewer's* rejection of a course
+version. A moderated post is reported through `content_reports` instead, which
+is what the `discussion_post_id` column now provides.
+
+**Two bugs the tests caught, one of them mine.** A unique index on
+`(course_version_id, lesson_id, discussion_post_id, report_category,
+reported_by)` did nothing, because Postgres treats NULLs as *distinct* in a
+unique index — and the common case is exactly the one with NULLs in it, so a
+reader could file the same report of a lesson an unlimited number of times.
+Coalescing to a sentinel made NULLs compare equal.
+
+The other was a **vacuous test**, and the second one I have written. The
+self-appeal test let a reviewer attempt the decision, then branched on whether
+that reviewer was privileged. A reviewer is *not* privileged, so the test always
+took the branch asserting a different refusal — and passed with the ban deleted.
+The teeth check showed it: removing the ban produced zero failures. Rebuilt to
+construct a decider who is both privileged and the author of the ruling, with an
+explicit assertion of that premise so it cannot silently degrade again. The
+general rule: **a test that branches on a precondition can quietly take the
+branch that proves nothing.**
+
+**389 database tests, 121 unit tests, tsc clean, build clean, 49 routes.**
+Trigger count corrected from 152 to 111 — the earlier figure counted 803
+internal constraint triggers alongside the real ones.
+
 ### What comes after that
 
 The paid path. It needs a provider, and a provider needs merchant

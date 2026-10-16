@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import type { DiscussionPost } from '@/lib/discussion';
+import { ReportForm } from './report-form';
 
 /**
  * A lesson thread.
@@ -109,6 +110,11 @@ export function Discussion({
                   >
                     Reply
                   </button>
+                )}
+                {canPost && p.visibilityState === 'visible' && (
+                  <span style={{ marginLeft: '0.5rem' }}>
+                    <ReportForm lessonId={lessonId} postId={p.id} label="Report this post" />
+                  </span>
                 )}
               </div>
             </div>

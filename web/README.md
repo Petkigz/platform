@@ -509,6 +509,34 @@ Two things worth stating because they are easy to lose:
   provider confirmation or need an exemption for "no JWT subject" — the shape of
   trigger that has already caused two incidents here.
 
+## Governance: reports and appeals
+
+Two channels, both of which had tables, RLS and an audit trail and nothing that
+wrote to them.
+
+**Reporting** is on the lesson page and on each discussion post
+(`/api/reports`). It does not require a session — someone unwilling to sign in
+should still be able to flag a doctrinal error. What matters instead is that the
+reporter can *see* what they report; that check is what stops a report being
+used to probe unpublished course versions by reading back which ids exist.
+
+**Appealing** is on the teaching page, against a rejected version
+(`/api/appeals`). Standing is the author's, decided in the database.
+
+Two rules are enforced in SQL and only *surfaced* here:
+
+* **You cannot decide an appeal against your own decision.** This is not
+  enforceable in the component — it needs to know which decision the appeal
+  concerns — so the refusal comes back from `decide_appeal()` and is shown as a
+  403. Flattening it into a 400 would read to a teacher as a mistake of their
+  own, which is why the mapping is tested rather than assumed.
+* **Closing a report needs a written note; overturning an appeal needs a written
+  summary.** Acknowledging a report and upholding an appeal do not, so the
+  friction lands only where a decision is being made final.
+
+Queues are at `/admin/reports` and `/admin/appeals`, oldest first — a report left
+sitting is the thing that makes the button a lie.
+
 ## Discussion
 
 Per-lesson questions and answers, behind `learning.discussion` (off by default).

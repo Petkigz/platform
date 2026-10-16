@@ -12,6 +12,7 @@ import { MarkComplete } from '../../mark-complete';
 import { fetchThread } from '@/lib/discussion';
 import { isFlagEnabled } from '@/lib/flags';
 import { Discussion } from './discussion';
+import { ReportForm } from './report-form';
 
 export const dynamic = 'force-dynamic';
 
@@ -221,6 +222,18 @@ export default async function LessonPage({
           Marked complete.{' '}
           <Link href={`/learn/${enrolmentId}`}>Back to course</Link>
         </p>
+      )}
+
+      {/*
+        The community safeguard. A reviewer checks a course before it is
+        published; they cannot foresee every mistranslation or misattributed
+        hadith, and the people reading the lesson are the ones who notice. This
+        is the door that was missing.
+      */}
+      {entitled && (
+        <section className="section" style={{ borderTop: '1px solid var(--line, #e6e8e6)', paddingTop: '1rem' }}>
+          <ReportForm lessonId={lesson.id} />
+        </section>
       )}
 
       <Discussion
