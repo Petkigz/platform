@@ -57,6 +57,9 @@ npm run test        # both
 | `/api/family/guardians` | dynamic | POST. File a guardian request |
 | `/admin/guardians` | dynamic | Guardian verification queue. Privileged only |
 | `/api/admin/guardians` | dynamic | POST. Decide a case |
+| `/admin/discussion` | dynamic | Moderation queue. Privileged only |
+| `/api/admin/discussion` | dynamic | POST. Approve, hide or remove |
+| `/api/discussion` | dynamic | POST. Ask or reply in a lesson thread |
 | `/learn/[enrolmentId]` | dynamic | Course view: outline and mark-complete |
 | `/learn/[enrolmentId]/lesson/[lessonId]` | dynamic | One lesson and its materials, gated by entitlement |
 | `/api/progress` | dynamic | POST. Record lesson progress |
@@ -392,6 +395,48 @@ in their families. Adult profiles are excluded on purpose — enrolling for anot
 adult would put one person's decisions on someone else's record. Billing-only
 family members are excluded too, by `is_learner_family_member()`: paying is not
 parenting.
+
+## Discussion
+
+Per-lesson questions and answers, behind `learning.discussion` (off by default).
+
+The moderation rule was settled before the tables were written, because
+pre-moderation and post-moderation need different schemas: **a post by the course
+author or by staff is visible immediately; anything a learner writes — a question
+or a peer's answer — is held until a person approves it.** Peers may answer each
+other, but a peer answer is a learner post, so it is held too. That is what makes
+"peers may answer" safe on a platform teaching faith to children.
+
+**The rule is enforced by a trigger, not by the application.** `apply_discussion_moderation()`
+computes who the author is from the course version and *overwrites* whatever
+`visibility_state` the request supplied. A moderation model that trusts the client
+is not a moderation model — and a second copy of the rule in TypeScript would be
+the weaker one, which is how the two drift apart.
+
+Three constraints back it up, so the rule survives a future edit:
+
+- `dp_learner_needs_moderator` — a learner's post cannot reach any state other
+  than `pending` without a named moderator. This is the load-bearing one;
+  without it, "held until approved" is a convention rather than a rule.
+- `dp_teacher_never_pending` — an authority post is never held.
+- `dp_hidden_needs_reason` — withdrawing something needs a written reason.
+
+The flag is checked in the trigger as well as in the UI, so the feature is
+genuinely off until it is enabled rather than off only in the interface.
+
+A learner sees their own held post and nobody else's, so "where did my post go?"
+has an answer without turning the queue into a public list. Editing is allowed
+only while a post is still held — otherwise "reviewed before publishing" is
+defeated by editing afterwards.
+
+The author is always the session. The trigger overwrites `author_user_id`
+whenever there is a JWT subject; it does not do so unconditionally, because
+`current_user_id()` is null for a superuser fixture and blanking the author there
+would be wrong. There is no request path where an anonymous caller reaches the
+trigger: the insert policy is restricted to `authenticated`.
+
+Moderation goes through `moderate_discussion_post()`, not a bare UPDATE, so every
+decision lands in the governance audit trail with who made it and when.
 
 ## Families and children
 

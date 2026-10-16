@@ -109,6 +109,16 @@ export default async function AdminPage() {
         <Link href="/admin/reviews">Assign reviews</Link> — courses waiting
         for a reviewer.
       </p>
+      <p>
+        <Link href="/admin/guardians">Guardian verification</Link> — adults
+        asking to be recognised as a child&rsquo;s parent. Off until{' '}
+        <code>family.guardian_verification</code> is enabled.
+      </p>
+      <p>
+        <Link href="/admin/discussion">Discussion queue</Link> — learner
+        questions and peer answers held for review. Empty until{' '}
+        <code>learning.discussion</code> is enabled.
+      </p>
 
       <p style={{ marginTop: '1.5rem' }}>
         <Link href="/learn">Back to my learning</Link>

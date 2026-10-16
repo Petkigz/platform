@@ -9,6 +9,9 @@ import {
   RESOURCE_LABEL,
 } from '@/lib/lessons';
 import { MarkComplete } from '../../mark-complete';
+import { fetchThread } from '@/lib/discussion';
+import { isFlagEnabled } from '@/lib/flags';
+import { Discussion } from './discussion';
 
 export const dynamic = 'force-dynamic';
 
@@ -106,6 +109,14 @@ export default async function LessonPage({
 
   const progress = progressData as unknown as ProgressRow | null;
   const done = progress?.status === 'completed';
+
+  // Discussion is behind a flag, off by default, because the moderation policy
+  // behind it is a human queue with a retention obligation attached. The thread
+  // is only fetched when it is on — no reason to query a table nobody can see.
+  const discussionOn = await isFlagEnabled(supabase, 'learning.discussion');
+  const thread = discussionOn
+    ? await fetchThread(supabase, { lessonId: lesson.id, myUserId: user.id })
+    : [];
 
   const courseTitle = enrolment.courses?.[0]?.title ?? 'the course';
   const duration = formatDuration(lesson.durationSeconds);
@@ -211,6 +222,13 @@ export default async function LessonPage({
           <Link href={`/learn/${enrolmentId}`}>Back to course</Link>
         </p>
       )}
+
+      <Discussion
+        lessonId={lesson.id}
+        posts={thread}
+        enabled={discussionOn}
+        canPost={entitled}
+      />
     </main>
   );
 }

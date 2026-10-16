@@ -62,9 +62,13 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 ## Status
 
-The database is complete: **88 tables, RLS on every one, 203 policies, 150
-triggers, 94 functions, 49 migrations, 335 database tests and 42 unit
-tests passing.** The web app builds 36 routes.
+The database stands at **89 tables, RLS on every one, 207 policies, 152
+triggers, 97 functions, 50 migrations, 347 database tests and 42 unit
+tests passing.** The web app builds 39 routes.
+
+All five original logical groups are complete. The 89th table is
+`discussion_posts`, added after them for per-lesson discussion — the first
+schema added since the groups closed, and the only one so far.
 
 All five logical schema groups are built. Every frozen decision — D1
 multi-tenancy, D2 child identity, D4 money, D5 version pinning, D6 content

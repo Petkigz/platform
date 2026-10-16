@@ -67,7 +67,7 @@ Status:
 
 | # | Screen | Status |
 |---|---|---|
-| 27 | **Per-lesson discussion** | READY — wanted and confirmed; moderation policy undecided |
+| 27 | **Per-lesson discussion** | **BUILT** — thread on the lesson page + `/admin/discussion` queue. Moderation settled: authority posts visible, learner posts held. Behind `learning.discussion` |
 | 28 | **Notes and bookmarks** | BLOCKED — tables do not exist |
 
 ## 6. Teaching — 6
@@ -142,7 +142,7 @@ states of screens #11 and #14. Mobile adds only #49 and #50.
     them COPPA-mandatory. A consent process with no screen to action it is not a
     consent process. Added as 19a and 19b rather than renumbering.
 4. **Learner switcher** — the hard part of the two-audience design.
-5. **Per-lesson discussion** — wanted and confirmed.
+5. **Per-lesson discussion** — wanted and confirmed, and now built. The moderation policy that was undecided is settled: hybrid, with peers allowed to answer.
 6. **Public certificate verification page** — the endpoint already exists.
 7. **Empty, error and loading states** — where "as easy as possible" is
    actually won or lost.

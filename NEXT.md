@@ -674,6 +674,60 @@ string concatenation defeats its generated types, so the cast had to go through
 
 **335 database tests, 42 unit tests, 36 routes.**
 
+### Also done since: per-lesson discussion
+
+Forum and discussion were wanted and confirmed, and there were no tables for it at
+all — grepping the schema for `discuss|forum|comment|post|thread` returned only
+`content_reports`. This is the first schema added since the five groups closed.
+
+The flag register already carried `learning.discussion` with the precondition
+"Moderation policy; who answers; abuse handling", and `platform.moderation` says
+"Policy before feature. Sectarian/contentious threads on fiqh topics". That
+precondition was settled rather than skipped, because pre-moderation and
+post-moderation need different tables and guessing would have meant rebuilding:
+
+* **hybrid moderation** — a post by the course author or by staff is visible
+  immediately; anything a learner writes is held until a person approves it
+* **peers may answer** — enrolled learners answer each other, not only the teacher
+
+Combined, those give one rule: authority posts are visible, learner posts are
+held. A peer answer is a learner post, so it is held too — which is exactly what
+makes "peers may answer" safe on a platform teaching faith to children. Peers can
+help each other, but unreviewed instruction never appears without someone having
+looked at it.
+
+**The rule is enforced by a trigger, not by the application.**
+`apply_discussion_moderation()` computes who the author is from the course version
+and overwrites whatever `visibility_state` the request supplied. A moderation
+model that trusts the client is not a moderation model, and a second copy of the
+rule in TypeScript would be the weaker one — which is how the two drift apart.
+Three constraints back it, the load-bearing one being `dp_learner_needs_moderator`:
+a learner's post cannot reach any state other than pending without a named
+moderator. Without that, "held until approved" is a convention rather than a rule.
+
+The flag is checked in the trigger as well as the UI, so the feature is genuinely
+off until enabled rather than off only in the interface.
+
+Checked for teeth by letting the trigger trust the caller: one test fails, and it
+is the right one.
+
+Three of my own bugs on the way, each worth recording because they are traps
+already written down and I walked into them anyway:
+
+* the trigger overwrote `author_user_id` with `current_user_id()`
+  unconditionally, which is null for a superuser fixture — nine tests failed at
+  once with the same not-null violation. Scoped the override to when there is a
+  session; only `authenticated` may insert, so in production it always fires.
+* a misplaced bracket put `.rows[0]` outside an `asUser` call, so the error
+  escaped the block and poisoned the *next* test's fixture. The symptom was
+  "course version not found" in an unrelated test — a good reminder that a
+  confusing failure is often the previous test's mess.
+* I asserted an RLS-blocked UPDATE would be rejected. It matches zero rows and
+  raises nothing, so the statement "succeeds" while changing nothing. The real
+  assertion is that the wording is still the reviewed one.
+
+**347 database tests, 42 unit tests, 39 routes.**
+
 ### What comes after that
 
 The paid path. It needs a provider, and a provider needs merchant
