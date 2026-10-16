@@ -153,9 +153,17 @@ export async function createHarness() {
   }
 
   async function newProfile(userId, name = 'Test User') {
+    // Upsert, not insert. handle_new_user() now creates the profile row when
+    // the auth.users row is created, so a plain insert here would collide on
+    // user_profiles_pkey. The upsert keeps this helper meaning "this user has a
+    // profile with this name", which is what every caller actually wants.
     await q(
       `insert into public.user_profiles (user_id, display_name, country_code, timezone)
-       values ($1, $2, 'UG', 'Africa/Kampala')`, [userId, name]);
+       values ($1, $2, 'UG', 'Africa/Kampala')
+       on conflict (user_id) do update
+         set display_name = excluded.display_name,
+             country_code = excluded.country_code,
+             timezone     = excluded.timezone`, [userId, name]);
     return userId;
   }
 

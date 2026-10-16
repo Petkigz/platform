@@ -1067,6 +1067,43 @@ and the probe filtered `pg_constraint` on `contype in ('c','u','f')`.
 
 **436 database tests, 145 unit tests, tsc clean, build clean, 51 routes.**
 
+### Also done since: signing up produced an account that could do nothing
+
+This is the most serious thing found so far, and it gates everything else.
+
+`user_profiles.user_id` is the primary key, foreign-keyed to `auth.users`, and
+essentially every other table points at it: `courses.created_by`,
+`billing_accounts.created_by`, `user_role_assignments.user_id`,
+`learner_profiles.linked_user_id`, `reviewer_profiles.user_id`.
+
+**Nothing created the row.** The sign-up page calls `supabase.auth.signUp()` and
+stops. There was no trigger on `auth.users` and no application insert. Verified
+directly: a bare `auth.users` row leaves zero profiles, and then creating a
+course, opening a billing account, and being given a role each fail on their
+foreign key.
+
+So a person who signed up could sign in and then do nothing at all. Every writer
+built before this — refunds, earnings, roles, subjects, reports — was unreachable
+to anyone who arrived through the front door.
+
+**Why it survived 436 green tests.** Every suite calls `newProfile()`
+explicitly. That is the same trap as the fixture-state problem, one level up: the
+tests constructed the account the way the product never did.
+
+**The fix is a trigger, not a client-side insert.** The same signup will happen
+from the Expo app and from anything else that talks to Supabase Auth. Doing it in
+the client means every client has to remember, and the failure mode is an
+account that can sign in and do nothing. Doing it in the database means it
+cannot be forgotten.
+
+**A gap left open, deliberately.** Sign-up collects only an email or a phone
+number, and `display_name` is `NOT NULL` and non-blank, so the trigger derives a
+name. There is no settings screen, which means that derived name is currently
+the only name a user has. That needs a profile screen; inventing a nicer name in
+the trigger would be guessing at a person's name.
+
+**449 database tests, 145 unit tests, tsc clean, build clean, 51 routes.**
+
 ### What comes after that
 
 The paid path. It needs a provider, and a provider needs merchant

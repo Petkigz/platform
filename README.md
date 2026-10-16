@@ -63,8 +63,12 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **89 tables, RLS on every one, 208 policies, 111
-user-defined triggers, 111 functions, 56 migrations, 436 database tests and
+user-defined triggers, 112 functions, 57 migrations, 449 database tests and
 145 unit tests passing.** The web app builds 51 routes.
+
+Signing up produces a usable account: a trigger on `auth.users` creates the
+`user_profiles` row that every foreign key in the schema depends on. Without it
+a new user could sign in and then do nothing at all.
 
 (The trigger count is user-defined triggers. `pg_trigger` also holds 803
 internal constraint triggers; counting them gives 914, which is the number
