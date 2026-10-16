@@ -41,12 +41,26 @@ npm run test        # both
 
 | Route | Type | Purpose |
 |---|---|---|
-| `/` | static | Landing, plus a notice when Supabase is not configured |
+| `/` | dynamic | Landing, subject chips, plus a notice when Supabase is not configured |
+| `/catalogue` | dynamic | Search, subject filter, audience filter |
+| `/courses/[slug]` | dynamic | Course page with its outline |
 | `/sign-in` | static | Email+password **and** phone OTP (D3) |
 | `/sign-up` | static | Account creation |
 | `/auth/confirm` | dynamic | Supabase email confirmation and magic links |
 | `/learn` | dynamic | The authenticated screen, reading through RLS |
 | `/sign-out` | dynamic | POST only |
+
+## The theme is white and green
+
+Recorded in `DECISIONS.md`. Every colour lives in the `:root` block of
+`src/app/globals.css` — change the brand there and nowhere else. The green is
+deep and desaturated (`#0b6b3a`) rather than bright: on a white field a
+saturated green vibrates, and this is a product people read for long stretches.
+
+The masthead mark is an eight-point star in `clip-path`, the simplest unit of
+Islamic geometric pattern and abstract enough to carry no imagery. The hero
+lattice is two rotated `repeating-linear-gradient`s behind a radial mask —
+crisp at any DPI, no image request.
 
 ## Why `/learn` has no `where` clause
 

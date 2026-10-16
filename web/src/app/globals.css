@@ -1,12 +1,52 @@
+/*
+ * AyahSpring design tokens.
+ *
+ * White and green. White for surfaces, green for identity. The green is deep
+ * and desaturated rather than bright: on a white field a saturated green
+ * vibrates, and this product needs to be readable for long reading sessions.
+ *
+ * Everything downstream references these variables. Changing the brand means
+ * changing this block and nothing else.
+ */
+
 :root {
-  --bg: #0f1410;
-  --surface: #161d17;
-  --border: #26302a;
-  --text: #e8ede9;
-  --muted: #97a49b;
-  --accent: #4f9d69;
-  --accent-strong: #63b981;
-  --danger: #d06666;
+  /* Surfaces — white, with one tinted step for the page behind cards. */
+  --bg:          #f4f8f5;
+  --surface:     #ffffff;
+  --surface-2:   #f9fcfa;
+  --border:      #dfe8e2;
+  --border-soft: #ecf2ee;
+
+  /* Brand green. */
+  --green-900:   #063d22;
+  --green-800:   #0a5230;
+  --green-700:   #0b6b3a;
+  --green-600:   #0d7d45;
+  --green-500:   #159a55;
+  --green-100:   #e4f2ea;
+  --green-50:    #f1f8f4;
+
+  /* Text. */
+  --text:        #0f231a;
+  --text-soft:   #3f574b;
+  --muted:       #6b7f75;
+
+  /* Feedback. */
+  --danger:      #b23c3c;
+  --danger-bg:   #fdf3f3;
+  --warn-bg:     #fdf8ec;
+  --warn-border: #e8d9b0;
+
+  /* Type. */
+  --font: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+          'Helvetica Neue', Arial, sans-serif;
+
+  /* Elevation — subtle, because a white surface on white needs a hairline. */
+  --shadow-sm: 0 1px 2px rgba(6, 61, 34, 0.06);
+  --shadow-md: 0 2px 8px rgba(6, 61, 34, 0.08), 0 1px 2px rgba(6, 61, 34, 0.04);
+
+  --radius:    12px;
+  --radius-sm: 8px;
 }
 
 * { box-sizing: border-box; }
@@ -16,94 +56,345 @@ html, body {
   padding: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  line-height: 1.5;
+  font-family: var(--font);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
 }
 
-a { color: var(--accent-strong); text-decoration: none; }
-a:hover { text-decoration: underline; }
+a { color: var(--green-700); text-decoration: none; }
+a:hover { color: var(--green-600); text-decoration: underline; }
 
-.container { max-width: 44rem; margin: 0 auto; padding: 2rem 1.25rem; }
+.container { max-width: 60rem; margin: 0 auto; padding: 0 1.25rem; }
+.narrow    { max-width: 26rem; margin: 0 auto; padding: 2.5rem 1.25rem; }
 
-h1 { font-size: 1.6rem; margin: 0 0 0.25rem; letter-spacing: -0.01em; }
-h2 { font-size: 1.1rem; margin: 2rem 0 0.75rem; }
+/* --------------------------------------------------------------------------
+   Masthead
+   -------------------------------------------------------------------------- */
+
+.masthead {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.masthead-inner {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.85rem 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--green-900);
+  letter-spacing: -0.015em;
+}
+.brand:hover { color: var(--green-700); text-decoration: none; }
+
+/* An eight-point star — the simplest unit of Islamic geometric pattern, and
+   abstract enough to carry no imagery. */
+.mark {
+  width: 1.55rem;
+  height: 1.55rem;
+  flex: none;
+  background: var(--green-700);
+  clip-path: polygon(
+    50% 0%, 61% 20%, 85% 15%, 80% 39%, 100% 50%,
+    80% 61%, 85% 85%, 61% 80%, 50% 100%, 39% 80%,
+    15% 85%, 20% 61%, 0% 50%, 20% 39%, 15% 15%, 39% 20%
+  );
+}
+
+.nav { display: flex; gap: 1.1rem; font-size: 0.92rem; margin-right: auto; }
+.nav a { color: var(--text-soft); font-weight: 500; }
+.nav a:hover { color: var(--green-700); text-decoration: none; }
+
+.masthead-actions { margin-left: auto; display: flex; gap: 0.5rem; align-items: center; }
+.masthead-actions .btn { width: auto; margin: 0; padding: 0.42rem 0.9rem; font-size: 0.9rem; }
+
+/* --------------------------------------------------------------------------
+   Type
+   -------------------------------------------------------------------------- */
+
+h1 { font-size: 1.85rem; line-height: 1.2; margin: 0 0 0.5rem; letter-spacing: -0.02em; color: var(--green-900); }
+h2 { font-size: 1.15rem; margin: 2rem 0 0.75rem; letter-spacing: -0.01em; color: var(--green-900); }
+h3 { font-size: 1rem;    margin: 1.25rem 0 0.4rem; color: var(--green-900); }
 p  { margin: 0 0 1rem; }
 
-.muted { color: var(--muted); }
+.lede { font-size: 1.05rem; color: var(--text-soft); max-width: 34rem; }
+.muted  { color: var(--muted); }
 .danger { color: var(--danger); }
+.eyebrow {
+  font-size: 0.78rem; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--green-600);
+  margin: 0 0 0.5rem;
+}
+
+/* --------------------------------------------------------------------------
+   Layout primitives
+   -------------------------------------------------------------------------- */
 
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius);
   padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
 }
 
-label { display: block; font-size: 0.85rem; color: var(--muted); margin: 0.9rem 0 0.3rem; }
-
-input, select {
-  width: 100%;
-  padding: 0.6rem 0.7rem;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text);
-  font-size: 1rem;
+.grid { display: grid; gap: 1rem; }
+@media (min-width: 46rem) {
+  .grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
-input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 
-button {
+.section { padding: 2.5rem 0; }
+
+/* --------------------------------------------------------------------------
+   Hero
+   -------------------------------------------------------------------------- */
+
+.hero {
+  background:
+    linear-gradient(180deg, var(--green-50) 0%, var(--bg) 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 3.5rem 0 3rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* A faint geometric lattice behind the hero. Pure CSS: two rotated square
+   grids. Cheap, crisp at any DPI, and it scales with the viewport. */
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(45deg,  var(--green-100) 0 1px, transparent 1px 22px),
+    repeating-linear-gradient(-45deg, var(--green-100) 0 1px, transparent 1px 22px);
+  opacity: 0.55;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 20%, transparent 75%);
+  pointer-events: none;
+}
+.hero > .container { position: relative; }
+
+.hero-actions { display: flex; gap: 0.6rem; margin-top: 1.4rem; flex-wrap: wrap; }
+.hero-actions .btn { width: auto; margin: 0; padding: 0.65rem 1.3rem; }
+
+/* --------------------------------------------------------------------------
+   Buttons
+   -------------------------------------------------------------------------- */
+
+.btn {
+  display: inline-block;
   width: 100%;
   margin-top: 1.1rem;
   padding: 0.65rem 1rem;
-  background: var(--accent);
-  color: #08110b;
-  border: 0;
-  border-radius: 8px;
+  background: var(--green-700);
+  color: #ffffff;
+  border: 1px solid var(--green-700);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-}
-button:hover { background: var(--accent-strong); }
-button:disabled { opacity: 0.6; cursor: not-allowed; }
-button.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
-
-.tabs { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
-.tabs a {
-  flex: 1;
   text-align: center;
-  padding: 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--muted);
+  transition: background 120ms ease, border-color 120ms ease;
 }
-.tabs a[aria-current='page'] { color: var(--text); border-color: var(--accent); }
+.btn:hover { background: var(--green-600); border-color: var(--green-600); color: #fff; text-decoration: none; }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.btn.secondary {
+  background: var(--surface);
+  color: var(--green-800);
+  border-color: var(--border);
+}
+.btn.secondary:hover { background: var(--green-50); border-color: var(--green-100); color: var(--green-800); }
+
+.btn.ghost { background: transparent; border-color: transparent; color: var(--green-700); }
+.btn.ghost:hover { background: var(--green-50); color: var(--green-700); }
+
+/* --------------------------------------------------------------------------
+   Forms
+   -------------------------------------------------------------------------- */
+
+label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-soft);
+  margin: 0.9rem 0 0.3rem;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 1rem;
+}
+input::placeholder { color: var(--muted); }
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid var(--green-500);
+  outline-offset: 1px;
+  border-color: var(--green-500);
+}
 
 .row { display: flex; gap: 0.5rem; }
 .row > :first-child { flex: 0 0 6.5rem; }
 
+.search {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 1rem 0 1.5rem;
+}
+.search input { flex: 1; }
+.search select { width: auto; }
+.search .btn { width: auto; margin: 0; }
+
+/* --------------------------------------------------------------------------
+   Tabs (the sign-in mode switch)
+   -------------------------------------------------------------------------- */
+
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem;
+}
+.tabs a, .tabs button {
+  flex: 1;
+  text-align: center;
+  padding: 0.45rem 0.5rem;
+  margin: 0;
+  width: auto;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+.tabs a:hover, .tabs button:hover { background: var(--green-50); color: var(--green-700); text-decoration: none; }
+.tabs a[aria-current='page'], .tabs button[aria-current='page'] {
+  background: var(--surface);
+  color: var(--green-800);
+  box-shadow: var(--shadow-sm);
+}
+
+/* --------------------------------------------------------------------------
+   Content blocks
+   -------------------------------------------------------------------------- */
+
 .notice {
   border: 1px solid var(--border);
-  border-left: 3px solid var(--accent);
-  border-radius: 8px;
+  border-left: 3px solid var(--green-600);
+  background: var(--green-50);
+  border-radius: var(--radius-sm);
   padding: 0.8rem 1rem;
   margin-bottom: 1rem;
   font-size: 0.9rem;
+  color: var(--text-soft);
 }
-
-.course { border-top: 1px solid var(--border); padding: 0.9rem 0; }
-.course:first-of-type { border-top: 0; }
-.course .meta { font-size: 0.85rem; color: var(--muted); }
+.notice.warn { border-left-color: #b58a2a; background: var(--warn-bg); border-color: var(--warn-border); }
+.notice.error { border-left-color: var(--danger); background: var(--danger-bg); border-color: #f0dcdc; color: var(--danger); }
 
 .badge {
   display: inline-block;
   font-size: 0.75rem;
-  padding: 0.1rem 0.45rem;
+  font-weight: 600;
+  padding: 0.12rem 0.5rem;
+  background: var(--green-50);
+  border: 1px solid var(--green-100);
+  border-radius: 999px;
+  color: var(--green-800);
+  white-space: nowrap;
+}
+.badge.neutral { background: var(--surface-2); border-color: var(--border); color: var(--muted); }
+
+.course {
+  border-top: 1px solid var(--border-soft);
+  padding: 1rem 0;
+}
+.course:first-of-type { border-top: 0; padding-top: 0; }
+.course .title { font-weight: 600; color: var(--green-900); }
+.course .title:hover { color: var(--green-700); text-decoration: none; }
+.course .meta { font-size: 0.85rem; color: var(--muted); margin-top: 0.2rem; }
+.course .badges { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.45rem; }
+
+.chip {
+  display: inline-block;
+  font-size: 0.85rem;
+  padding: 0.3rem 0.75rem;
   border: 1px solid var(--border);
   border-radius: 999px;
+  color: var(--text-soft);
+  background: var(--surface);
+  white-space: nowrap;
+}
+.chip:hover { border-color: var(--green-100); background: var(--green-50); color: var(--green-800); text-decoration: none; }
+.chip[aria-current='true'] {
+  background: var(--green-700);
+  border-color: var(--green-700);
+  color: #fff;
+}
+.chips { display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 0 0 1.5rem; }
+
+.lesson-list { list-style: none; margin: 0; padding: 0; }
+.lesson-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 0.95rem;
+}
+.lesson-list li:last-child { border-bottom: 0; }
+.lesson-list .n { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 0.85rem; flex: none; width: 1.6rem; }
+
+.empty { color: var(--muted); font-style: italic; padding: 1rem 0; }
+
+.stats { display: flex; gap: 2rem; flex-wrap: wrap; margin: 1.5rem 0 0; }
+.stats div { min-width: 5rem; }
+.stats .n { font-size: 1.6rem; font-weight: 700; color: var(--green-800); line-height: 1.1; }
+.stats .l { font-size: 0.82rem; color: var(--muted); }
+
+/* --------------------------------------------------------------------------
+   Footer
+   -------------------------------------------------------------------------- */
+
+footer {
+  margin-top: 3rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  padding: 1.75rem 0;
+  font-size: 0.85rem;
   color: var(--muted);
 }
+footer .container { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+footer a { color: var(--text-soft); }
 
-.empty { color: var(--muted); font-style: italic; }
+/* --------------------------------------------------------------------------
+   Focus visibility — a keyboard user must never lose the caret on white.
+   -------------------------------------------------------------------------- */
 
-footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.8rem; color: var(--muted); }
+:focus-visible { outline: 2px solid var(--green-600); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}

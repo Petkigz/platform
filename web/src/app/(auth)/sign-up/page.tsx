@@ -50,6 +50,7 @@ export default function SignUp() {
   }
 
   return (
+    <div className="narrow">
     <div className="card">
       <h1>Create an account</h1>
       <p className="muted">An adult account. Children learn under a family, not their own login.</p>
@@ -102,6 +103,7 @@ export default function SignUp() {
       </form>
 
       <p style={{ marginTop: '1rem' }}><Link href="/sign-in">Already have an account?</Link></p>
+    </div>
     </div>
   );
 }

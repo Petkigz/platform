@@ -11,7 +11,7 @@ marked with its real state so we never redo finished work or build on sand.
 - `[!]` **BLOCKED** — cannot be finished without a fact or a decision.
 - `[X]` **CONFLICT** — contradicts a recorded decision. Resolve before doing it.
 
-**Progress: 8 done · 4 part · 24 todo · 13 blocked · 4 conflict  (53 total)**
+**Progress: 9 done · 4 part · 23 todo · 13 blocked · 4 conflict  (53 total)**
 
 Of the first 12 tasks — all of Phase 1 and Phase 2 — **7 are complete and 4 are
 partly complete.** The roadmap starts where the project already is.
@@ -29,7 +29,7 @@ partly complete.** The roadmap starts where the project already is.
 
 ## Phase 2 — Design and technical planning  (5/6 done)
 
-- [ ] Create the visual identity and design system
+- [~] Create the visual identity and design system — **colour settled: white and green. Tokens in `web/src/app/globals.css`. Type, logo and illustration still open**
 - [~] Design the key web and mobile screens — **50 screens inventoried, 0 designed.** 38 are unblocked.
 - [x] Choose the programming languages and frameworks — *Next.js + TypeScript, Supabase/PostgreSQL, Expo/React Native*
 - [x] Design the database and backend architecture — *85 tables, 121 endpoints, modular monolith*
@@ -38,11 +38,11 @@ partly complete.** The roadmap starts where the project already is.
 
 ## Phase 3 — Core platform
 
-- [x] Build the backend and database — **all five schema groups complete. 88 tables, RLS on every one, 202 policies, 105 triggers, 190 tests passing (`npm run test:db`).** The API and application layer follow.
+- [x] Build the backend and database — **all five schema groups complete. 88 tables, RLS on every one, 202 policies, 105 triggers, 198 tests passing (`npm run test:db`).** The API and application layer follow.
 - [ ] Build registration, login and password recovery — *decide `auth.email_password` vs `auth.phone_otp` first*
 - [x] Implement user roles and permissions — *capability-based, not role-based. 10 roles, 4 privileged, 16 capability functions. Three real defects found and fixed in `20261021000100_authz_fixes.sql`.*
 - [ ] Build user profiles and account settings
-- [ ] Build the course catalogue, search and course pages — *needs `subject_areas` populated*
+- [x] Build the course catalogue, search and course pages — *`/catalogue` and `/courses/[slug]`. `subject_areas` seeded with 9 disciplines and 26 subdivisions. `supabase/tests/catalogue.test.mjs`.*
 - [!] Set up file storage, video delivery and deployment — **video provider not chosen.** Cloudflare Stream researched; see IDEAS.md for the lock-in caveat.
 
 ## Phase 4 — Learning systems

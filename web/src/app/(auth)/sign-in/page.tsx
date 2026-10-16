@@ -65,6 +65,7 @@ function SignIn() {
   const phoneIsE164 = isE164(phone);
 
   return (
+    <div className="narrow">
     <div className="card">
       <h1>Sign in</h1>
       <p className="muted">Welcome back.</p>
@@ -148,12 +149,13 @@ function SignIn() {
         <Link href="/sign-up">Create an account</Link>
       </p>
     </div>
+    </div>
   );
 }
 
 export default function SignInPage() {
   return (
-    <Suspense fallback={<div className="card">Loading…</div>}>
+    <Suspense fallback={<div className="narrow"><div className="card">Loading…</div></div>}>
       <SignIn />
     </Suspense>
   );

@@ -80,10 +80,32 @@ project and confirming in a browser is the remaining step.
 > Create the Supabase project, push the migrations, and confirm the auth round
 > trip in a browser.
 
+### Also done since: the catalogue and the visual identity
+
+**White and green**, per the decision recorded in `DECISIONS.md`. The tokens
+live in `web/src/app/globals.css` and nowhere else — changing the brand means
+changing that one block.
+
+`/catalogue` (search, subject filter, audience filter) and `/courses/[slug]`
+(outline, sections, lessons, preview flags). `web/src/lib/catalogue.ts` holds
+the query so the landing page and the catalogue cannot drift into two ideas of
+what "on the shelf" means. `subject_areas` is seeded: 9 disciplines, 26
+subdivisions, two levels — a deeper tree makes the filter unusable on a phone.
+
+`supabase/tests/catalogue.test.mjs` pins the public contract, and found a
+fourth defect: `courses_read` admitted any active course whether or not a
+version had ever been published, so an author who set the wrapper to `active`
+during drafting put the title and description of unpublished work on the
+public internet. The app filtered it out, but a presentation filter is not an
+access control. Fixed in `20261022000200_catalogue_visibility.sql`.
+
+**198 tests pass.**
+
 ### What comes after that
 
-The catalogue: browse, search, and a course page. It is the next unblocked
-Phase 3 item and needs only `subject_areas` populated.
+Enrolment: the button on the course page currently points at sign-up. Wiring
+it to `course_enrolments` is the next step, and it is where free courses and
+paid courses part company — paid needs the `PaymentProvider` boundary from P11.
 
 ### Not now
 

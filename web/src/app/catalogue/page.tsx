@@ -1,0 +1,141 @@
+import Link from 'next/link';
+import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
+import { isSupabaseConfigured } from '@/lib/env';
+import { createClient } from '@/lib/supabase/server';
+import {
+  AUDIENCE_LABEL,
+  DIFFICULTY_LABEL,
+  disciplines,
+  displayVersion,
+  fetchCatalogue,
+  fetchSubjectAreas,
+  languagesFor,
+  subjectNames,
+  type CatalogueCourse,
+} from '@/lib/catalogue';
+
+export const metadata: Metadata = { title: 'Catalogue' };
+export const dynamic = 'force-dynamic';
+
+type Search = { q?: string; subject?: string; audience?: string };
+
+function CourseCard({ c }: { c: CatalogueCourse }) {
+  const version = displayVersion(c);
+  const subjects = subjectNames(version);
+  const languages = languagesFor(c);
+
+  return (
+    <article className="card">
+      <Link href={`/courses/${c.slug}`} className="course" style={{ display: 'block' }}>
+        <span className="title">{c.title}</span>
+      </Link>
+
+      {c.description && (
+        <p className="muted" style={{ fontSize: '0.92rem', margin: '0.4rem 0 0' }}>
+          {c.description.length > 180
+            ? `${c.description.slice(0, 180).trimEnd()}\u2026`
+            : c.description}
+        </p>
+      )}
+
+      <div className="badges" style={{ marginTop: '0.7rem' }}>
+        <span className="badge">{AUDIENCE_LABEL[c.audience] ?? c.audience}</span>
+        <span className="badge">{DIFFICULTY_LABEL[c.difficulty] ?? c.difficulty}</span>
+        {languages.map((l) => (
+          <span key={l} className="badge neutral">{l.toUpperCase()}</span>
+        ))}
+        {subjects.slice(0, 3).map((s) => (
+          <span key={s} className="badge neutral">{s}</span>
+        ))}
+      </div>
+    </article>
+  );
+}
+
+export default async function CataloguePage({
+  searchParams,
+}: {
+  searchParams: Promise<Search>;
+}) {
+  if (!isSupabaseConfigured()) redirect('/');
+
+  const { q, subject, audience } = await searchParams;
+  const supabase = await createClient();
+
+  const [subjects, courses] = await Promise.all([
+    fetchSubjectAreas(supabase),
+    fetchCatalogue(supabase, { q, subject, audience }),
+  ]);
+
+  // A course is only shelf-ready if it has a published version. RLS may show
+  // us a version an author can see in draft; the catalogue must not.
+  const visible = courses.filter((c) => displayVersion(c) !== null);
+  const tops = disciplines(subjects);
+
+  const qs = (over: Partial<Search>): string => {
+    const p = new URLSearchParams();
+    const merged = { q, subject, audience, ...over };
+    for (const [k, v] of Object.entries(merged)) {
+      if (v && v !== 'all') p.set(k, v);
+    }
+    const s = p.toString();
+    return s ? `/catalogue?${s}` : '/catalogue';
+  };
+
+  return (
+    <div className="container section">
+      <p className="eyebrow">Catalogue</p>
+      <h1>Find a course</h1>
+      <p className="lede">
+        Every course is reviewed before publication. Browse by subject, or
+        search by title.
+      </p>
+
+      <form method="get" action="/catalogue" className="search">
+        <input
+          type="search"
+          name="q"
+          defaultValue={q ?? ''}
+          placeholder={'Search courses\u2026'}
+          aria-label="Search courses"
+        />
+        <select name="audience" defaultValue={audience ?? 'all'} aria-label="Audience">
+          <option value="all">All ages</option>
+          <option value="child">Young learners</option>
+          <option value="adult">Adults</option>
+        </select>
+        <button type="submit" className="btn">Search</button>
+      </form>
+
+      <div className="chips">
+        <Link href={qs({ subject: undefined })} className="chip" aria-current={subject ? undefined : 'true'}>
+          All subjects
+        </Link>
+        {tops.map((s) => (
+          <Link
+            key={s.id}
+            href={qs({ subject: s.code })}
+            className="chip"
+            aria-current={subject === s.code ? 'true' : undefined}
+          >
+            {s.name}
+          </Link>
+        ))}
+      </div>
+
+      {visible.length === 0 ? (
+        <p className="empty">
+          No courses yet. Once a teacher publishes one it will appear here —
+          nothing is shown until it has passed review.
+        </p>
+      ) : (
+        <div className="grid cols-2">
+          {visible.map((c) => (
+            <CourseCard key={c.id} c={c} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

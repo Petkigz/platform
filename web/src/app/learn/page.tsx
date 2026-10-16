@@ -56,6 +56,7 @@ export default async function LearnPage() {
   const rows = (enrolments ?? []) as Enrolment[];
 
   return (
+    <div className="container section">
     <div className="card">
       <h1>My learning</h1>
       <p className="muted">
@@ -99,9 +100,10 @@ export default async function LearnPage() {
         <button type="submit" className="secondary">Sign out</button>
       </form>
 
-      <footer>
-        <Link href="/">Home</Link>
-      </footer>
+      <p style={{ marginTop: '1.5rem' }}>
+        <Link href="/catalogue">Browse the catalogue</Link>
+      </p>
+    </div>
     </div>
   );
 }
