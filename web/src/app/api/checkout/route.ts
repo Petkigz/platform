@@ -19,6 +19,12 @@ type Body = {
   priceId?: unknown;
   /** E.164, for mobile-money providers. Optional; card providers ignore it. */
   msisdn?: unknown;
+  /**
+   * Which provider to pay with. Optional: with one provider live it is implied.
+   * Validated against the registry, so a caller cannot name a provider that is
+   * not configured and get a confusing failure from the adapter.
+   */
+  provider?: unknown;
 };
 
 /**
@@ -115,7 +121,11 @@ export async function POST(request: Request) {
   // configured the order is left pending on purpose: it is a real record of an
   // attempt, it is harmless because it confers nothing, and the payer sees a
   // clear sentence instead of a broken redirect.
-  const provider = getPaymentProvider();
+  const requestedProvider =
+    typeof body.provider === 'string' && body.provider.trim()
+      ? body.provider.trim()
+      : undefined;
+  const provider = getPaymentProvider(requestedProvider);
   if (!provider.available) {
     return NextResponse.json(
       {

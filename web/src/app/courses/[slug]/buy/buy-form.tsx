@@ -24,16 +24,25 @@ type PriceOption = {
 export function BuyForm({
   courseId,
   prices,
+  providers,
   providerConfigured,
 }: {
   courseId: string;
   prices: PriceOption[];
+  /** Providers that are configured and usable right now. */
+  providers: { id: string; label: string; requiresMsisdn: boolean }[];
   providerConfigured: boolean;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [priceId, setPriceId] = useState(prices[0]?.id ?? '');
   const [msisdn, setMsisdn] = useState('');
+  // Default to the first live provider. With one provider this is the only
+  // choice, so the selector renders as a single option rather than a decision
+  // the payer has to make.
+  const [providerId, setProviderId] = useState(providers[0]?.id ?? '');
+  const chosen = providers.find((p) => p.id === providerId);
+  const needsNumber = chosen?.requiresMsisdn ?? false;
   const [message, setMessage] = useState<string | null>(null);
   const [tone, setTone] = useState<'info' | 'error'>('info');
 
@@ -56,7 +65,12 @@ export function BuyForm({
     const res = await fetch('/api/checkout', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ courseId, priceId, msisdn: msisdn || undefined }),
+      body: JSON.stringify({
+        courseId,
+        priceId,
+        msisdn: msisdn || undefined,
+        provider: providerId || undefined,
+      }),
     });
 
     const json = (await res.json().catch(() => ({}))) as {
@@ -115,9 +129,28 @@ export function BuyForm({
         ))}
       </fieldset>
 
+      {providers.length > 1 && (
+        <fieldset>
+          <legend className="eyebrow">Pay with</legend>
+          {providers.map((p) => (
+            <label key={p.id} className="radio">
+              <input
+                type="radio"
+                name="provider"
+                value={p.id}
+                checked={providerId === p.id}
+                onChange={() => setProviderId(p.id)}
+              />
+              <span>{p.label}</span>
+            </label>
+          ))}
+        </fieldset>
+      )}
+
+      {needsNumber && (
       <div>
         <label htmlFor="msisdn" className="eyebrow">
-          Mobile money number (optional)
+          Mobile money number
         </label>
         <input
           id="msisdn"
@@ -129,9 +162,11 @@ export function BuyForm({
         />
         <p className="muted">
           Used to send the payment prompt to your handset. Normalised to E.164
-          before it is sent anywhere.
+          before it is sent anywhere. Nothing is charged until you approve it on
+          the phone.
         </p>
       </div>
+      )}
 
       <button type="button" className="btn" onClick={buy} disabled={pending}>
         {pending ? 'Starting…' : 'Continue to payment'}

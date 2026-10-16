@@ -113,6 +113,30 @@ export function format(m: Money): string {
   return `${negative ? '-' : ''}${m.currency} ${whole}${fracPart}`;
 }
 
+/**
+ * The amount as a plain decimal string, for providers whose API wants major
+ * units ("100.50") rather than minor units.
+ *
+ * Done in BigInt, never by dividing into a Number. MTN MoMo and Airtel both
+ * take a decimal string, and the obvious implementation — `Number(minor) /
+ * 100` — is exactly the float arithmetic D4 exists to prevent. For a
+ * zero-decimal currency like UGX this returns the integer as-is, which is the
+ * right answer and the one most easily got wrong.
+ */
+export function toMajorString(m: Money): string {
+  const divisor = BigInt(minorUnitDivisor(m.currency));
+  if (divisor === 1n) return m.amountMinor.toString();
+
+  const negative = m.amountMinor < 0n;
+  const abs = negative ? -m.amountMinor : m.amountMinor;
+  const whole = abs / divisor;
+  const frac = (abs % divisor).toString().padStart(
+    divisor.toString().length - 1,
+    '0',
+  );
+  return `${negative ? '-' : ''}${whole}.${frac}`;
+}
+
 export function add(a: Money, b: Money): Money {
   assertSameCurrency(a, b);
   return { amountMinor: a.amountMinor + b.amountMinor, currency: a.currency };

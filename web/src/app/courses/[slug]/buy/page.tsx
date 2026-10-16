@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { ownLearnerProfileId, resolveOffering } from '@/lib/enrolment';
 import { format } from '@/lib/money';
-import { configuredProviderId } from '@/lib/payments/registry';
+import { availableProviders, configuredProviderId } from '@/lib/payments/registry';
 import { BuyForm } from './buy-form';
 
 export const dynamic = 'force-dynamic';
@@ -59,6 +59,14 @@ export default async function BuyPage({
   if (offering.kind === 'free') redirect(`/courses/${slug}`);
 
   const providerId = configuredProviderId();
+  // Every provider that is configured and usable, not just the first. A learner
+  // in Kampala may well have both MTN and Airtel, and being made to use one
+  // specific network is an unnecessary reason to abandon a purchase.
+  const providers = availableProviders().map((p) => ({
+    id: p.id,
+    label: p.label,
+    requiresMsisdn: p.requiresMsisdn,
+  }));
 
   return (
     <main className="page narrow">
@@ -95,6 +103,7 @@ export default async function BuyPage({
             label: format(p.amount),
             interval: p.billingInterval,
           }))}
+          providers={providers}
           providerConfigured={providerId !== null}
         />
       </section>

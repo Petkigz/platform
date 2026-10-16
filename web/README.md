@@ -63,6 +63,7 @@ npm run test        # both
 | `/admin/refunds` | dynamic | Refund queue. Privileged only |
 | `/api/admin/refunds` | dynamic | POST. Approve or decline |
 | `/api/refunds` | dynamic | POST. Request a refund on an order |
+| `/api/payments/webhook/[provider]` | dynamic | POST. Per-provider callback |
 | `/learn/[enrolmentId]` | dynamic | Course view: outline and mark-complete |
 | `/learn/[enrolmentId]/lesson/[lessonId]` | dynamic | One lesson and its materials, gated by entitlement |
 | `/api/progress` | dynamic | POST. Record lesson progress |
@@ -398,6 +399,66 @@ in their families. Adult profiles are excluded on purpose — enrolling for anot
 adult would put one person's decisions on someone else's record. Billing-only
 family members are excluded too, by `is_learner_family_member()`: paying is not
 parenting.
+
+## Payment providers
+
+Two adapters are built — **MTN MoMo** and **Airtel Money** — against a seam that
+was written before either was chosen (`lib/payments/provider.ts`). Adding a
+provider means writing one file and registering it in `lib/payments/registry.ts`;
+nothing else changes. `stripe`, `paypal`, `flutterwave` and `pesapal` are already
+named in the database's own CHECK constraint on `payment_provider_accounts`, so
+the schema anticipates them; they are not registered because registering a
+provider with no adapter would make the checkout page offer a button that cannot
+work.
+
+A provider is offered as soon as its credentials are present. No code change and
+no redeploy — which is how the ones not built yet get switched on later. Several
+can be live at once, because a learner in Kampala may have both MTN and Airtel
+and being forced onto one network is an avoidable reason to abandon a purchase.
+
+### Neither provider signs its callbacks
+
+This is the fact the whole design turns on. **MTN MoMo publishes no signature
+scheme for its collection callback, and neither does Airtel.** MTN's own guidance
+is to use the callback only to find the order and then re-query the transaction.
+
+So each adapter declares `webhookTrust: 'requery'`, and the webhook handler
+treats a callback as a *notification that something changed*, never as proof that
+money moved. The outcome is fetched over an authenticated status query, and the
+amount recorded is the one that query returns — not the one in the notification
+body.
+
+Trusting the body would be the exploit: anyone who knows an order id could POST a
+forged `SUCCESSFUL` and get the course free. The unsigned notification's claimed
+amount is parsed but never stored.
+
+A provider that *does* sign declares `webhookTrust: 'signature'` and is gated on
+the signature as before. The distinction is declared rather than inferred, because
+rejecting an unsigned callback from MTN would silently discard every real
+payment, and trusting one from a provider that does sign would be a
+vulnerability.
+
+### Two failure modes that cost money
+
+**Unreachable is not failed.** `fetchPaymentStatus` returns `unknown` when the
+provider cannot be reached, and the webhook defers rather than recording.
+Treating an unreachable provider as a failed payment is how a customer who paid
+is told they did not, and then charged again on retry.
+
+**Amounts never become floats.** `toMajorString()` converts integer minor units
+to the decimal string both providers expect, in BigInt. UGX has no subunit and is
+sent as `30000`; KES is sent as `100.50`. The obvious implementation — dividing
+into a `Number` — is precisely what D4 exists to prevent, and for a zero-decimal
+currency it would overcharge by 100×.
+
+### Refunds
+
+MTN refunds go out through **Disbursements**, a separate subscription. Without
+those credentials the refund is refused rather than skipped, because a refund
+recorded as sent but never despatched fails silently and the customer waits for
+money that never moves. Airtel refunds exist on the collections product, but the
+path differs between markets and API versions, so it is overridable with
+`AIRTEL_REFUND_PATH` and should be confirmed in sandbox first.
 
 ## Refunds
 

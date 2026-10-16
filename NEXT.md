@@ -785,6 +785,59 @@ harness rather than by whoever happens to remember.
 
 **364 database tests, 66 unit tests, 42 routes.**
 
+### Also done since: payment providers (P12, partially settled)
+
+P12 was the only thing blocking the checkout hand-off, and the seam had been
+sitting there deliberately empty since the boundary was written. **MTN MoMo and
+Airtel Money are now built** — the two you named.
+
+The architecture is the part that matters for "switch the others on later":
+`stripe`, `paypal`, `flutterwave` and `pesapal` are already named in the
+database's own CHECK constraint on `payment_provider_accounts`, so the schema
+anticipates them. Adding one means writing a file and registering it. A provider
+is offered as soon as its credentials exist — **no code change, no redeploy** —
+and several can be live at once, because a learner in Kampala may have both MTN
+and Airtel and being forced onto one network is an avoidable reason to abandon a
+purchase.
+
+### The finding that shaped the design
+
+**Neither MTN nor Airtel signs its callbacks.** MTN publishes no signature scheme
+for its collection callback and its own guidance is to use the callback only to
+find the order and then re-query the transaction; Airtel publishes none either.
+
+That breaks the assumption the webhook was built on. It rejected anything
+unsigned — correct for a signing provider, but it would have silently discarded
+every real MTN and Airtel payment. So each adapter now declares
+`webhookTrust: 'requery'`, and the handler treats a callback as a *notification
+that something changed*, never as proof. The outcome is fetched over an
+authenticated status query and **the amount recorded is the one that query
+returns, not the one in the notification body**.
+
+Trusting the body is the exploit: anyone who knows an order id could POST a
+forged `SUCCESSFUL` and get the course free.
+
+The distinction is declared rather than inferred, because both directions are
+expensive — rejecting MTN's unsigned callback loses real payments, and trusting
+an unsigned callback from a provider that does sign is a vulnerability.
+
+Two other failure modes that cost money, both tested:
+
+* **Unreachable is not failed.** `fetchPaymentStatus` returns `unknown` when the
+  provider cannot be reached, and the webhook defers instead of recording.
+  Treating an outage as a failed payment is how someone who paid is told they did
+  not, and then charged again on retry.
+* **Amounts never become floats.** `toMajorString()` converts minor units to the
+  decimal string both providers want, in BigInt. UGX has no subunit and goes as
+  `30000`; the obvious float implementation would overcharge by 100×.
+
+MTN refunds go out through **Disbursements**, a separate subscription. Without
+those credentials the refund is refused rather than skipped — a refund recorded
+as sent but never despatched fails silently, and the customer waits for money
+that never moves.
+
+**32 payment tests. 364 database tests, 98 unit tests, tsc clean, 43 routes.**
+
 ### What comes after that
 
 The paid path. It needs a provider, and a provider needs merchant

@@ -64,7 +64,7 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 The database stands at **89 tables, RLS on every one, 207 policies, 152
 triggers, 100 functions, 51 migrations, 364 database tests and 66 unit
-tests passing.** The web app builds 42 routes.
+tests passing.** The web app builds 43 routes.
 
 All five original logical groups are complete. The 89th table is
 `discussion_posts`, added after them for per-lesson discussion — the first

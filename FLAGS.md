@@ -101,7 +101,7 @@ Three kinds of gate:
 |---|---|---|---|
 | `commerce.free` | Free courses, no payment | ADMIN | — |
 | `commerce.checkout` | Paid enrolment | ADMIN + SETUP | **Provider chosen and account approved**; sandbox passing; jurisdiction decided; tax/invoicing decided; refund policy written |
-| `commerce.mobile_money` | MTN MoMo / Airtel Money | ADMIN + SETUP | Provider agreement; sandbox tests; callback verification; settlement terms |
+| `commerce.mobile_money` | MTN MoMo / Airtel Money | ADMIN + SETUP | **Adapters built.** Remaining: merchant agreement; sandbox pass with real credentials; settlement terms. Note both providers' callbacks are unsigned — confirmation is by authenticated re-query, which is implemented. |
 | `commerce.subscriptions` | Monthly and annual plans | ADMIN + SETUP | Plan terms; grace period by market; renewal and proration policy; dunning |
 | `commerce.promotions` | Discount campaigns | ADMIN | Eligibility rules; stacking rules; abuse limits |
 | `commerce.refunds` | Refund requests and decisions | ADMIN + SETUP | Approval authority limits; escalation path; entitlement effect of a refund |
