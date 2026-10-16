@@ -29,32 +29,36 @@ it and had to be added to make the recorded decisions implementable:
 Every frozen decision is enforced in SQL rather than in application code:
 **D1** · **D2** · **D4** · **D5** · **D6** · **D7** · **D8** · **D9**.
 
-## Current milestone: the application layer
+## Current milestone: the application layer — mostly done
 
-The database is finished. Nothing above it exists yet — no API, no screens,
-no authentication wiring.
+`web/` is a Next.js 16 + TypeScript app with Supabase Auth wired, and one
+authenticated screen reading through RLS.
+
+### Done
+
+- [x] Next.js + TypeScript app, `npm run build` clean, 7 routes
+- [x] Email+password **and** phone OTP (D3)
+- [x] E.164 normalisation at the boundary, 7 unit tests
+- [x] Sign-in, sign-up, confirmation and sign-out
+- [x] `/learn` reads enrolments with **no client-side filter** — RLS decides
+- [x] `supabase/tests/app.test.mjs` pins that data contract (177 tests total)
+- [x] `.env.example`, no secrets committed
+
+### Still open — needs a live Supabase project
+
+This sandbox has no Supabase instance, so the app builds and renders but the
+authentication round trip is unverified. Pointing `web/.env.local` at a real
+project and confirming in a browser is the remaining step.
+
+- [ ] Sign up with email, confirm, sign in
+- [ ] Sign in with phone OTP; confirm the number arrives as E.164
+- [ ] `/learn` shows only your own enrolments **in the browser**
+- [ ] Apply the migrations to the real project with `supabase db push`
 
 ### Today's sentence
 
-> Stand up the Next.js app with Supabase Auth and one real screen end to end.
-
-### Why this before anything else
-
-`ROADMAP.md` orders it: first release scope → visual identity → backend →
-auth → catalogue. The backend is done. Auth is the next dependency for
-literally every screen, and the Supabase client + RLS combination is what all
-the policies just written are designed for. Building one screen end to end
-proves the policies work from a browser, which the migration tests cannot.
-
-### Definition of done
-
-- [ ] Next.js + TypeScript app running against the Supabase project
-- [ ] Email+password **and** phone OTP both working (D3)
-- [ ] E.164 phone validation at the boundary
-- [ ] Sign-in, sign-up, and one authenticated screen that reads through RLS
-- [ ] Confirm from the browser that a learner sees their own enrolments and
-      nobody else's — the RLS tests prove it in-database, not over the wire
-- [ ] Environment variables documented; no secrets committed
+> Create the Supabase project, push the migrations, and confirm the auth round
+> trip in a browser.
 
 ### Not now
 

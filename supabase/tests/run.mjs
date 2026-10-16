@@ -7,6 +7,7 @@ import { run as group2b } from './group2b.test.mjs';
 import { run as group3 } from './group3.test.mjs';
 import { run as group4 } from './group4.test.mjs';
 import { run as group5 } from './group5.test.mjs';
+import { run as appContract } from './app.test.mjs';
 
 const ctx = await createHarness();
 const suites = [];
@@ -19,6 +20,7 @@ for (const [name, fn] of [
   ['group3', group3],
   ['group4', group4],
   ['group5', group5],
+  ['app', appContract],
 ]) {
   console.log(`\n--- ${name} ---\n`);
   await fn(ctx);

@@ -3,11 +3,19 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "AyahSpring \u2014 Islamic e-learning platform. Group 1: identity, family, guardians, privacy.",
+  "description": "AyahSpring \u2014 Islamic e-learning platform.",
   "scripts": {
-    "test:db": "node supabase/tests/run.mjs"
+    "test:db": "node supabase/tests/run.mjs",
+    "dev": "npm run dev --workspace @ayahspring/web",
+    "build": "npm run build --workspace @ayahspring/web",
+    "typecheck": "npm run typecheck --workspace @ayahspring/web",
+    "test:web": "npm run test --workspace @ayahspring/web",
+    "test": "npm run test:db && npm run test:web"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.3.11"
-  }
+  },
+  "workspaces": [
+    "web"
+  ]
 }

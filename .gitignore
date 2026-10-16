@@ -6,3 +6,12 @@ node_modules/
 dist/
 *.log
 .DS_Store
+
+# Next.js
+web/.next/
+web/next-env.d.ts
+web/.env.local
+.env.local
+
+# TypeScript incremental build info
+*.tsbuildinfo

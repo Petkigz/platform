@@ -71,8 +71,20 @@ licence, D7 deletion, D8 media masters, D9 translations — is enforced in SQL
 rather than in application code, which is the only place it survives a second
 developer or a second AI-generated query.
 
-Nothing above the database exists yet. No API, no screens, no authentication
-wiring. See `NEXT.md`.
+## Web app
+
+`web/` is a Next.js 16 + TypeScript app with Supabase Auth wired: email and
+password, phone OTP with E.164 normalisation, and a `/learn` screen that reads
+enrolments with no client-side filter — row level security decides what comes
+back. `supabase/tests/app.test.mjs` pins that contract.
+
+```bash
+npm install
+cp web/.env.example web/.env.local   # then set your project URL and anon key
+npm run dev
+```
+
+See `web/README.md`.
 
 ### Why 88 tables when the design specified 85
 
