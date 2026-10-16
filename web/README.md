@@ -65,6 +65,8 @@ npm run test        # both
 | `/review` | dynamic | Review queue |
 | `/review/[assignmentId]` | dynamic | One assignment, with the outline under review |
 | `/api/review` | dynamic | POST. respond / decide |
+| `/admin/reviews` | dynamic | Assign reviewers. Privileged only |
+| `/api/admin/reviews` | dynamic | POST. Assign a reviewer |
 | `/sign-out` | dynamic | POST only |
 
 ## The theme is white and green
@@ -153,6 +155,11 @@ against.
 its assignment, and that `decided_by` is the reviewer the assignment names. It
 is a trigger rather than a policy because a SECURITY DEFINER function bypasses
 RLS but not triggers.
+
+Assignments are created only from `/admin/reviews`. A reviewer has to create
+their own profile before they can be assigned one —
+`reviewer_profiles_insert` admits only `user_id = current_user_id()`, so staff
+cannot make one for them.
 
 A decision's version and scope are read back from the assignment, never taken
 from the request body. Recording a decision and moving the version are separate

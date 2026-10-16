@@ -88,6 +88,64 @@ export async function run(ctx) {
     assert(n === 0, `${n} assignment(s) were created anyway`);
   });
 
+  await test('a reviewer can create their own profile, but not anyone else\'s', async () => {
+    // reviewer_profiles_insert only admits user_id = current_user_id(). That
+    // is why the admin assignment page can only offer reviewers who already
+    // exist, and it is asserted here so the constraint is not quietly widened.
+    const selfId = await newUser('rev-selfmade@example.com');
+    await newProfile(selfId, 'Self Made');
+
+    await asUser(selfId, async () => {
+      const r = await q(
+        `insert into public.reviewer_profiles (user_id, reviewer_status)
+         values ($1, 'applicant') returning id`, [selfId]);
+      assert(r.rows.length === 1, 'a user could not create their own reviewer profile');
+    });
+
+    await asUser(selfId, async () => {
+      await rejects(() => q(
+        `insert into public.reviewer_profiles (user_id, reviewer_status)
+         values ($1, 'applicant')`, [reviewer]),
+        'a user created a reviewer profile for somebody else');
+    });
+  });
+
+  await test('a privileged admin can create an assignment', async () => {
+    const v = await submittedVersion();
+    const a = await assign(v.version, rpReviewer);
+
+    const row = (await q(
+      `select reviewer_profile_id, review_scope, assignment_status, assigned_by
+         from public.content_review_assignments where id = $1`, [a])).rows[0];
+
+    assert(row.reviewer_profile_id === rpReviewer, 'the assignment names the wrong reviewer');
+    assert(row.review_scope === 'scholarly', `scope was '${row.review_scope}'`);
+    assert(row.assignment_status === 'offered',
+      `a new assignment should start as offered, got '${row.assignment_status}'`);
+    assert(row.assigned_by === admin, 'assigned_by was not the admin who created it');
+  });
+
+  await test('only submitted versions appear as needing a reviewer', async () => {
+    // The admin queue filters on version_status = 'submitted'. A draft or a
+    // published version in that list would mean staff were being asked to
+    // review something that is not up for review.
+    const draft = await newVersion(await newCourse(teacher, { status: 'active' }), teacher);
+    const submitted = await submittedVersion();
+
+    const statuses = (await q(
+      `select distinct version_status s from public.course_versions
+        where version_status = 'submitted'`)).rows.map((r) => r.s);
+
+    assert(statuses.length > 0 && statuses.every((s) => s === 'submitted'),
+      `the pending query returned statuses: ${statuses.join(', ')}`);
+
+    const draftStatus = (await q(
+      'select version_status s from public.course_versions where id = $1', [draft])).rows[0].s;
+    assert(draftStatus === 'draft', `the control fixture was '${draftStatus}', not draft`);
+    assert((await statusOf(submitted.version)) === 'submitted',
+      'the control fixture was not submitted');
+  });
+
   await test('an ordinary user cannot assign anything either', async () => {
     const v = await submittedVersion();
     await asUser(outsiderId, async () => {

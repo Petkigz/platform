@@ -294,3 +294,124 @@ export async function applyDecisionToVersion(
   if (error) return { ok: false, code: 'rejected', message: error.message };
   return { ok: true, value: { status: (data as unknown as string) ?? to } };
 }
+
+// ---------------------------------------------------------------------------
+// The staff side: assigning reviewers
+// ---------------------------------------------------------------------------
+
+export type Reviewer = {
+  reviewerProfileId: string;
+  userId: string;
+  displayName: string | null;
+  status: string;
+};
+
+export type PendingVersion = {
+  id: string;
+  versionNumber: number;
+  courseTitle: string;
+  courseSlug: string;
+  submittedBy: string | null;
+};
+
+/**
+ * Reviewers who can be assigned.
+ *
+ * `reviewer_profiles_read` admits active profiles to anyone, and everything to
+ * a privileged user, so this deliberately lists only active ones — offering a
+ * suspended reviewer in a dropdown would just produce a failed assignment.
+ */
+export async function fetchAssignableReviewers(
+  supabase: SupabaseClient,
+): Promise<Reviewer[]> {
+  const { data, error } = await supabase
+    .from('reviewer_profiles')
+    .select('id, user_id, reviewer_status, user_profiles ( display_name )')
+    .eq('reviewer_status', 'active')
+    .is('deleted_at', null)
+    .order('created_at', { ascending: true });
+
+  if (error) throw new Error(error.message);
+
+  type Row = {
+    id: string;
+    user_id: string;
+    reviewer_status: string;
+    user_profiles: { display_name: string | null }[] | null;
+  };
+
+  return ((data ?? []) as unknown as Row[]).map((r) => ({
+    reviewerProfileId: r.id,
+    userId: r.user_id,
+    displayName: r.user_profiles?.[0]?.display_name ?? null,
+    status: r.reviewer_status,
+  }));
+}
+
+/**
+ * Course versions sitting in review.
+ *
+ * A privileged caller sees these through `can_read_version()`. Filtering on
+ * `submitted` is what makes this a queue rather than a list of every version
+ * anyone has ever written.
+ */
+export async function fetchPendingVersions(
+  supabase: SupabaseClient,
+): Promise<PendingVersion[]> {
+  const { data, error } = await supabase
+    .from('course_versions')
+    .select('id, version_number, created_by, courses ( title, slug )')
+    .eq('version_status', 'submitted')
+    .order('updated_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+
+  type Row = {
+    id: string;
+    version_number: number;
+    created_by: string | null;
+    courses: { title: string; slug: string }[] | null;
+  };
+
+  return ((data ?? []) as unknown as Row[]).map((r) => ({
+    id: r.id,
+    versionNumber: r.version_number,
+    courseTitle: r.courses?.[0]?.title ?? 'Untitled course',
+    courseSlug: r.courses?.[0]?.slug ?? '',
+    submittedBy: r.created_by,
+  }));
+}
+
+export async function assignReviewer(
+  supabase: SupabaseClient,
+  args: { versionId: string; reviewerProfileId: string; scope: ReviewScope; assignedBy: string },
+): Promise<ReviewOutcome<{ assignmentId: string }>> {
+  const { data, error } = await supabase
+    .from('content_review_assignments')
+    .insert({
+      course_version_id: args.versionId,
+      reviewer_profile_id: args.reviewerProfileId,
+      review_scope: args.scope,
+      assigned_by: args.assignedBy,
+      assignment_status: 'offered',
+    })
+    .select('id');
+
+  if (error) {
+    // cra_write is privileged only, so anyone else gets a policy error.
+    if (/policy|permission/i.test(error.message)) {
+      return {
+        ok: false,
+        code: 'forbidden',
+        message: 'Only platform staff can assign a reviewer.',
+      };
+    }
+    return { ok: false, code: 'rejected', message: error.message };
+  }
+
+  const row = (data?.[0] ?? null) as { id?: string } | null;
+  if (!row?.id) {
+    return { ok: false, code: 'rejected', message: 'The assignment was not created.' };
+  }
+  return { ok: true, value: { assignmentId: row.id } };
+}

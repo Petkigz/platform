@@ -102,6 +102,14 @@ export default async function AdminPage() {
         ))
       )}
 
+      <div className="outline-h" style={{ marginTop: '2rem' }}>
+        <h3>Other administration</h3>
+      </div>
+      <p>
+        <Link href="/admin/reviews">Assign reviews</Link> — courses waiting
+        for a reviewer.
+      </p>
+
       <p style={{ marginTop: '1.5rem' }}>
         <Link href="/learn">Back to my learning</Link>
       </p>

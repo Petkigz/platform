@@ -339,6 +339,28 @@ asserted inside the block using `RETURNING`, which also makes the
 
 **296 tests pass.**
 
+### Also done since: assigning reviews
+
+The queue built last turn could never have had anything in it. Assignments are
+created by platform staff (`cra_write` is privileged only) and there was no
+staff UI to create one, so `/review` would have stayed permanently empty.
+`/admin/reviews` closes that: it lists submitted versions and the active
+reviewers, and assigns one to the other.
+
+One constraint shapes the page. `reviewer_profiles_insert` only admits
+`user_id = current_user_id()`, so **staff cannot create a reviewer profile for
+somebody else** — a reviewer has to make their own first. The page says that
+plainly when the reviewer list is empty rather than showing a dead dropdown,
+and `review.test.mjs` asserts both halves: a user can create their own profile
+and cannot create one for anyone else. That is asserted so the constraint is
+not quietly widened later.
+
+The queue filters on `version_status = 'submitted'`, and the test pins that a
+draft version is not in it — staff being asked to review something that is not
+up for review is the kind of thing that erodes trust in a review step.
+
+**299 tests pass.**
+
 ### What comes after that
 
 The paid path. It needs a provider, and a provider needs merchant
