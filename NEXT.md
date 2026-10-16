@@ -1139,6 +1139,51 @@ the insert, and the conclusion is defence in depth, not a patched hole.
 
 **463 database tests, 155 unit tests, tsc clean, build clean, 51 routes.**
 
+### Also done since: an uploader could mark their own file as available
+
+`media_assets` is where the videos live. It had no writer, so the `media_asset_id`
+source on `lesson_resources` was unusable and every video had to be hotlinked —
+the opposite of D8.
+
+While probing it, a hole: the INSERT policy was correct
+(`uploaded_by = current_user_id()`), but the UPDATE policy was
+`uploaded_by = current_user_id() OR is_privileged()` with **no column
+restriction**. Verified by running it, not by reading it:
+
+```
+@@INSERTED@@      status=pending
+@@SELF_CONFIRM@@  rows=1  status=available
+```
+
+No bytes were ever uploaded. The whole pending/available/quarantined machine —
+which exists to distinguish "we have the file" from "we do not" — could be
+bypassed by the person with the most reason to bypass it.
+
+**What was built.** `register_media_upload()` creates the pending row and
+**derives** the object key from the new row's own id; a caller-chosen key would
+let one teacher register an asset pointing at another's object.
+`confirm_media_upload()` and `quarantine_media_upload()` are staff-only, and
+quarantining needs a written reason. `delete_media_asset()` is a soft delete per
+D7 — the master survives, because retention is a scheduled decision.
+
+A trigger now stops a non-privileged uploader from changing `status` at all.
+Writing it exposed a second thing worth keeping: **`SECURITY DEFINER` bypasses
+RLS but not triggers**, so the guard blocked the confirmation function too until
+it learned to recognise the platform's own transitions.
+
+**Two things deliberately not wired:** the byte transfer (needs storage
+credentials and the D8 backend choice — inventing it would commit to a layout
+before that decision) and the confirmation trigger (belongs to a storage webhook
+or worker). So an upload stops at `pending`, and the application refuses to
+attach anything that is not `available` — **the schema does not enforce that**,
+which is recorded in a test rather than assumed closed.
+
+**A test of mine caught a real gap:** a fractional duration would have been
+silently rounded by PostgreSQL, since the column is `integer`. The validation
+now refuses it.
+
+**486 database tests, 164 unit tests, tsc clean, build clean, 51 routes.**
+
 ### What comes after that
 
 The paid path. It needs a provider, and a provider needs merchant

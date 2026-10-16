@@ -29,6 +29,7 @@ import { run as roles } from './roles.test.mjs';
 import { run as subjects } from './subjects.test.mjs';
 import { run as signup } from './signup.test.mjs';
 import { run as resources } from './resources.test.mjs';
+import { run as media } from './media.test.mjs';
 
 const ctx = await createHarness();
 const suites = [];
@@ -63,6 +64,7 @@ for (const [name, fn] of [
   ['subjects', subjects],
   ['signup', signup],
   ['resources', resources],
+  ['media', media],
 ]) {
   console.log(`\n--- ${name} ---\n`);
   await fn(ctx);

@@ -62,9 +62,9 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 ## Status
 
-The database stands at **89 tables, RLS on every one, 209 policies, 111
-user-defined triggers, 113 functions, 58 migrations, 463 database tests and
-155 unit tests passing.** The web app builds 51 routes.
+The database stands at **89 tables, RLS on every one, 209 policies, 112
+user-defined triggers, 118 functions, 59 migrations, 486 database tests and
+164 unit tests passing.** The web app builds 51 routes.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. Without it
@@ -73,6 +73,12 @@ a new user could sign in and then do nothing at all.
 A lesson can contain something: `add_lesson_resource()` attaches a video,
 reading or worksheet. Before it, every lesson published on the platform was an
 empty page, because nothing could write to the table the lesson page reads.
+
+Uploads belong to us, not to whoever linked them: `register_media_upload()`
+creates the `media_assets` row and derives the storage key, and an upload
+becomes available only when staff confirm it. An uploader cannot promote their
+own file — that hole was found by running the sequence, not by reading the
+policy.
 
 (The trigger count is user-defined triggers. `pg_trigger` also holds 803
 internal constraint triggers; counting them gives 914, which is the number
