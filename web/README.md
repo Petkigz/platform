@@ -211,6 +211,22 @@ published version. What actually stops a learner from injecting content is the
 D5 lock trigger, not the policy. The tests assert the behaviour, not the policy
 shape.
 
+## Entitlement
+
+`entitlement_grants` is the only thing consulted at access time. Two writers
+create rows:
+
+- a **free enrolment** on an unsold version grants access to it (trigger on
+  `course_enrolments`)
+- a **confirmed payment** grants what was bought, then enrols the buyer
+  (inside `record_payment_success()`)
+
+Grant first, enrolment second: `can_enrol_in_version()` requires an existing
+entitlement before a sold version may be enrolled in.
+
+Being signed in is not access. `lesson_resources_read` requires entitlement, so
+a signed-in stranger sees only resources classified `public_preview`.
+
 ## Families and children
 
 A child is a `learner_profile` under a `family`, never a `user` (D2). No

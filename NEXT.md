@@ -405,6 +405,73 @@ become "nobody can apply to be a reviewer".
 
 **303 tests pass.**
 
+### Also done since: nothing ever created an entitlement grant
+
+This is the most consequential thing found so far, and it was hidden by a
+second defect.
+
+`can_access_course_version()` consults `entitlement_grants` and nothing else.
+That is the recorded design — enrolment is not entitlement is not availability —
+and it was implemented correctly. What was missing is the writer:
+
+| Check | Result |
+|---|---|
+| `INSERT INTO entitlement_grants` in migrations | **0 sites** |
+| References in `web/src/` | **0** |
+| Functions mentioning the table | **1** — the reader |
+| Triggers on `course_enrolments` | `set_updated_at`, `protect_pin` |
+| `record_payment_success()` writes | ledger, orders, audit — no grant |
+| Rows in a fresh database | **0** |
+
+No learner was ever entitled to anything. The platform only appeared to work
+because `lesson_resources_read` was gated on `can_read_version()`, which is true
+for any signed-in user on a published version. Measured:
+
+```
+enrolled learner              -> saw the resource URL
+signed-in stranger, no grant  -> saw the same URL
+anonymous                     -> saw nothing
+can_access_lesson(stranger)   -> false
+```
+
+The entitlement function gave the right answer and the policy never asked it.
+That was Groups 4 and 5 — products, pricing, subscriptions, promotions,
+entitlements, orders, payments, refunds — sidestepped by creating a free
+account and reading a column.
+
+**The two defects hid each other.** Closing the leak alone would have locked
+every learner out of their own courses, because nobody had a grant. Fulfilment
+alone would have left paid content readable by anyone signed in. They only make
+sense shipped together, which is why both are in this unit.
+
+Two writers now exist. A free enrolment on a genuinely unsold version grants
+access to it, via a trigger. A confirmed payment grants what was bought and
+then enrols the buyer, inside `record_payment_success()` — grant first, then
+enrolment, because `can_enrol_in_version()` requires an existing entitlement
+before a sold version may be enrolled in. D4 is unchanged in that function:
+order amounts stay authoritative, minor units throughout, idempotent on replay,
+an unsigned or already-processed provider event refused, a redirect still not
+proof. Subscription line items are deliberately not fulfilled there; they have
+their own lifecycle, and inventing one inside a payment callback is how a
+subscription ends up granting forever.
+
+**Why the suite stayed green the whole time:** the tests insert grants by hand
+(`enrolment.test.mjs` 5×, `group4.test.mjs` 14×). The fixtures encoded an
+assumption the application never fulfilled, which is exactly the shape of gap a
+passing suite cannot see. One of those tests then had to change: it enrolled a
+learner free into an unsold course and asserted they had no access because a
+*separate* subscription grant had expired — an assertion that only held while
+enrolment conferred nothing. It now attaches a product so the expired
+subscription is genuinely the only route to the content.
+
+Both fixes were checked for teeth rather than assumed to have them. Neutering
+the read policy gives 2 failures; neutering the free path gives 2; neutering the
+paid path gives 3; all restored, 0. The first attempt at neutering the paid path
+was ineffective — a `union all` let the original query still run — so the paid
+path was verified a second time with a neuter that actually applied.
+
+**312 tests pass.**
+
 ### What comes after that
 
 The paid path. It needs a provider, and a provider needs merchant

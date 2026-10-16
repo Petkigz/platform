@@ -435,6 +435,19 @@ export async function run(ctx) {
   await test('expiring access keeps progress and certificates (D7)', async () => {
     const pc = await publishedCourse();
     const { learnerId } = await newAdultLearner('ent-6@example.com');
+
+    // The version has to be sold for this test to mean anything. A free
+    // enrolment on an unsold version now grants access in its own right
+    // (grant_free_enrolment_entitlement), so on an unsold course the learner
+    // would still have access after this grant expired and the assertion
+    // would be testing nothing. Attaching a product makes the expired
+    // subscription the only route to the content.
+    const prod = (await q(
+      `insert into public.products (product_type, name, status, created_by)
+       values ('course','Expiry test','active',$1) returning id`, [teacher])).rows[0].id;
+    await q(`insert into public.product_course_versions (product_id, course_id, course_version_id)
+             values ($1,$2,$3)`, [prod, pc.course, pc.version]);
+
     // eg_active_is_live refuses an already-expired grant recorded as active,
     // which is correct. Create it as expired.
     const g = (await q(
@@ -445,9 +458,12 @@ export async function run(ctx) {
                now() - interval '30 days', now() - interval '1 day', 'expired')
        returning id`, [learnerId, pc.version])).rows[0].id;
 
+    // source must not be 'free': the version is sold, and course_enrolments_insert
+    // forbids claiming a sold course as a free enrolment.
     const enr = (await q(
-      `insert into public.course_enrolments (learner_profile_id, course_id, course_version_id)
-       values ($1,$2,$3) returning id`, [learnerId, pc.course, pc.version])).rows[0].id;
+      `insert into public.course_enrolments
+         (learner_profile_id, course_id, course_version_id, source)
+       values ($1,$2,$3,'subscription') returning id`, [learnerId, pc.course, pc.version])).rows[0].id;
     await q(`insert into public.lesson_progress
                (course_enrolment_id, lesson_id, status, progress_percent, completed_at)
              values ($1,$2,'completed',100,now())`, [enr, pc.lesson]);
