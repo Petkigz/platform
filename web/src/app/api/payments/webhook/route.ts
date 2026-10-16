@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { isSupabaseConfigured } from '@/lib/env';
 import { getPaymentProvider } from '@/lib/payments/registry';
+import { resolveOpenAttempts } from '@/lib/checkout.ts';
 import type { WebhookEvent } from '@/lib/payments/provider';
 
 export const dynamic = 'force-dynamic';
@@ -61,9 +62,17 @@ export async function POST(request: Request) {
   }
 
   if (event.kind !== 'payment.succeeded') {
-    // payment.failed and refund.succeeded are recorded above and need no
-    // further action here: a failed payment leaves the order pending, and a
-    // refund's ledger effect is record_refund_in_ledger's job, not this route's.
+    // A failed payment closes the attempt but leaves the order pending, so the
+    // payer can try again. A refund's ledger effect is
+    // record_refund_in_ledger's job, not this route's.
+    if (event.kind === 'payment.failed') {
+      await resolveOpenAttempts(admin, {
+        orderId: event.orderId,
+        status: 'failed',
+        providerReference: event.providerReference,
+        safeErrorCode: event.reason.slice(0, 80),
+      });
+    }
     return NextResponse.json({ status: 'recorded', kind: event.kind });
   }
 
@@ -84,11 +93,26 @@ export async function POST(request: Request) {
     // redelivery can still settle it. Marking the event processed here would
     // burn the one chance to apply it.
     await markEventFailed(admin, eventId, error.message);
+    await resolveOpenAttempts(admin, {
+      orderId: event.orderId,
+      status: 'failed',
+      providerReference: event.providerReference,
+      safeErrorCode: error.code ?? null,
+    });
     return NextResponse.json(
       { status: 'rejected', reason: error.message },
       { status: 422 },
     );
   }
+
+  // The attempt is only closed once the payment has actually settled. The
+  // table enforces resolved_at exactly when the status is terminal, so both
+  // move together or the CHECK refuses the row.
+  await resolveOpenAttempts(admin, {
+    orderId: event.orderId,
+    status: 'succeeded',
+    providerReference: event.providerReference,
+  });
 
   void data;
   return NextResponse.json({ status: 'processed', orderId: event.orderId });

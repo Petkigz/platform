@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { createOrder, resolveBillingAccount } from './checkout.ts';
+import {
+  createOrder,
+  recordPaymentAttempt,
+  resolveBillingAccount,
+  resolveOpenAttempts,
+} from './checkout.ts';
 
 // ---------------------------------------------------------------------------
 // The rule under test: the client supplies a price id and never an amount. The
@@ -45,12 +50,27 @@ function stubClient(
     chain.order = () => chain;
     chain.limit = () => chain;
     chain.select = () => chain;
+    chain.update = (patch: Row) => {
+      calls.push({ table, filters, method: 'update', insert: patch });
+      return chain;
+    };
     chain.insert = (row: Row) => {
       calls.push({ table, filters, method: 'insert', insert: row });
       return make(table, filters, 'insert');
     };
     chain.single = async () => {
       calls.push({ table, filters, method: 'single' });
+      // An insert followed by .select().single() echoes the row back. Without
+      // this, a successful insert looks like a failure to the caller.
+      if (method === 'insert') {
+        const err = errors[table] ? { message: errors[table] } : null;
+        if (err) return { data: null, error: err };
+        // Prefer the canned row when the test supplied one, so callers that
+        // depend on a specific id still get it; otherwise echo a synthetic one.
+        const dd = data[table];
+        const canned = Array.isArray(dd) ? dd[0] ?? null : dd ?? null;
+        return { data: canned ?? { id: `inserted-${table}` }, error: null };
+      }
       const d = data[table];
       const row = Array.isArray(d) ? d[0] ?? null : d ?? null;
       if (!row) return { data: null, error: { message: `${table}: no row` } };
@@ -260,4 +280,111 @@ test('a failed line item is reported rather than silently dropped', async () => 
   if (result.ok) return;
   assert.equal(result.code, 'error');
   assert.match(result.message, /line item/i);
+});
+
+test('a payment attempt is recorded with a stable idempotency key', async () => {
+  const { client, calls } = stubClient({
+    payment_attempts: [],
+  });
+
+  const id = await recordPaymentAttempt(client, {
+    orderId: 'order-1',
+    amountMinor: '30000',
+    currencyCode: 'UGX',
+    providerId: 'mtn_momo',
+    method: 'mobile_money',
+  });
+  assert.ok(id, 'no attempt id came back');
+
+  const insert = calls.find(
+    (c) => c.table === 'payment_attempts' && c.method === 'insert',
+  );
+  assert.ok(insert?.insert, 'no attempt was inserted');
+  // The key is what a provider deduplicates on, so a payer pressing the button
+  // twice must not mint a second charge.
+  assert.equal(insert.insert?.idempotency_key, 'order-1:1');
+  assert.equal(insert.insert?.status, 'pending');
+  assert.equal(insert.insert?.method, 'mobile_money');
+  // Amount stays a string all the way to the bigint column.
+  assert.equal(insert.insert?.amount_minor, '30000');
+});
+
+test('a second attempt on the same order gets a distinct key', async () => {
+  const { client, calls } = stubClient({
+    payment_attempts: [{ id: 'a-1' }],
+  });
+
+  await recordPaymentAttempt(client, {
+    orderId: 'order-1',
+    amountMinor: '30000',
+    currencyCode: 'UGX',
+    providerId: 'mtn_momo',
+  });
+
+  const insert = calls.find(
+    (c) => c.table === 'payment_attempts' && c.method === 'insert',
+  );
+  // (order_id, idempotency_key) is unique, so reusing the key would be a
+  // database error rather than a silent duplicate.
+  assert.equal(insert?.insert?.idempotency_key, 'order-1:2');
+});
+
+test('the method is null when nothing implies one', async () => {
+  // Guessing 'card' would put a falsehood in a support-facing record.
+  const { client, calls } = stubClient({ payment_attempts: [] });
+
+  await recordPaymentAttempt(client, {
+    orderId: 'order-1',
+    amountMinor: '30000',
+    currencyCode: 'UGX',
+    providerId: 'mtn_momo',
+  });
+
+  const insert = calls.find(
+    (c) => c.table === 'payment_attempts' && c.method === 'insert',
+  );
+  assert.equal(insert?.insert?.method, null);
+});
+
+test('a failed attempt write does not break checkout', async () => {
+  // This is a diagnostic record. Refusing to take a payment because a log could
+  // not be written would be the wrong trade.
+  const { client } = stubClient(
+    { payment_attempts: null },
+    { payment_attempts: 'permission denied' },
+  );
+
+  const id = await recordPaymentAttempt(client, {
+    orderId: 'order-1',
+    amountMinor: '30000',
+    currencyCode: 'UGX',
+    providerId: 'mtn_momo',
+  });
+  assert.equal(id, null);
+});
+
+test('resolving attempts moves status and resolved_at together', async () => {
+  // The table enforces resolved_at IS NULL exactly when the status is still
+  // open, so setting one without the other is a CHECK violation.
+  const { client, calls } = stubClient({ payment_attempts: [{ id: 'a-1' }] });
+
+  await resolveOpenAttempts(client, {
+    orderId: 'order-1',
+    status: 'succeeded',
+    providerReference: 'ref-9',
+  });
+
+  const update = calls.find(
+    (c) => c.table === 'payment_attempts' && c.method === 'update',
+  );
+  assert.ok(update, 'no update was issued');
+  // The stub records the patch in the same field it uses for inserts.
+  const patch = update.insert;
+  assert.equal(patch?.status, 'succeeded');
+  assert.ok(patch?.resolved_at, 'resolved_at was not set alongside the terminal status');
+  assert.equal(patch?.provider_reference, 'ref-9');
+
+  // Only open attempts are touched, so a replay cannot rewrite a settled one.
+  assert.deepEqual(update.filters.status, ['pending', 'requires_action', 'processing']);
+  assert.equal(update.filters.order_id, 'order-1');
 });

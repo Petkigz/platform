@@ -302,6 +302,31 @@ requirement for a manual confirmation stays where it is actually enforced, in
 `record_payment_success()`. That function still refuses an anonymous manual
 confirmation, because `is_privileged(null)` is false.
 
+## Payment attempts
+
+Every hand-off to a provider writes a `payment_attempts` row **before** the call,
+not after — writing it afterwards would lose exactly the attempts that matter,
+the ones where the call threw. Nothing wrote to this table before, so a payer who
+hit checkout and went nowhere left no trace: the order sat at `pending_payment`
+and support could not tell "never tried" from "tried three times and the provider
+kept failing". Both look identical in `orders`.
+
+The `idempotency_key` is why this is not just a log line. It is what a provider
+deduplicates on, so a payer who presses the button twice sends the same key
+rather than minting a second charge. It is `<orderId>:<sequence>`, and the unique
+index on `(order_id, idempotency_key)` enforces that it is not reused by
+accident.
+
+The method is recorded honestly: `mobile_money` only when a handset number was
+supplied, otherwise null. Until a provider is chosen there is no way to know what
+the payer will end up using, and guessing `card` would put a falsehood in a
+support-facing record.
+
+The webhook closes the attempt. `resolved_at IS NULL` is enforced by a CHECK to
+hold exactly when the status is still open, so both move together or the row is
+refused, and only open attempts are matched, so a replay cannot rewrite a settled
+one.
+
 ## Families and children
 
 A child is a `learner_profile` under a `family`, never a `user` (D2). No

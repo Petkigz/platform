@@ -2,7 +2,12 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { ownLearnerProfileId, resolveOffering } from '@/lib/enrolment';
-import { createOrder } from '@/lib/checkout';
+import {
+  createOrder,
+  recordPaymentAttempt,
+  resolveOpenAttempts,
+  type AttemptMethod,
+} from '@/lib/checkout';
 import { getPaymentProvider } from '@/lib/payments/registry';
 import { PaymentProviderUnavailableError } from '@/lib/payments/provider';
 import { toE164 } from '@/lib/phone';
@@ -125,11 +130,14 @@ export async function POST(request: Request) {
   }
 
   const origin = new URL(request.url).origin;
+
+  // Normalise the handset number first, so the attempt below records the
+  // method that was actually implied rather than whatever the caller typed.
+  // toE164 reports an unusable number by returning null, not by throwing. The
+  // order already exists at this point, so this is a 400 on the request rather
+  // than a rollback — the payer can retry with a correct number.
   let msisdn: string | undefined;
   if (typeof body.msisdn === 'string' && body.msisdn.trim()) {
-    // toE164 reports an unusable number by returning null, not by throwing.
-    // The order already exists at this point, so this is a 400 on the request
-    // rather than a rollback — the payer can retry with a correct number.
     const normalised = toE164(body.msisdn, 'UG');
     if (!normalised) {
       return NextResponse.json(
@@ -142,6 +150,23 @@ export async function POST(request: Request) {
     }
     msisdn = normalised;
   }
+
+  // The method is recorded honestly: we know it is mobile money only because a
+  // handset number was supplied. Until a provider is chosen there is no way to
+  // know what the payer will end up using, and guessing 'card' would put a
+  // falsehood in a support-facing record.
+  const method: AttemptMethod | null = msisdn ? 'mobile_money' : null;
+
+  // Written before the provider is called, so an attempt that throws still
+  // leaves a trace. Nothing recorded this before, so "never tried" and "tried
+  // three times, provider failed every time" were indistinguishable.
+  await recordPaymentAttempt(supabase, {
+    orderId: result.orderId,
+    amountMinor: result.amount.amountMinor.toString(),
+    currencyCode: result.currencyCode,
+    providerId: provider.id,
+    method,
+  });
 
   try {
     const checkout = await provider.createCheckout({

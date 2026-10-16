@@ -276,6 +276,105 @@ export async function createOrder(
   };
 }
 
+export type AttemptMethod =
+  | 'mobile_money'
+  | 'card'
+  | 'bank_transfer'
+  | 'ussd'
+  | 'wallet'
+  | 'cash'
+  | 'other';
+
+type AttemptRow = { id: string }[] | null;
+
+/**
+ * Record that a payment was attempted.
+ *
+ * Nothing wrote to `payment_attempts` before this, so a payer who hit checkout
+ * and went nowhere left no trace at all: the order sat at `pending_payment` and
+ * support had no way to tell "never tried" from "tried three times and the
+ * provider kept failing". Both look identical in the orders table.
+ *
+ * The idempotency key is the reason this cannot just be a log line. It is what a
+ * provider deduplicates on, so a payer who presses the button twice must send
+ * the same key rather than minting a second charge. It is derived from the order
+ * and the attempt number, which makes it stable across a retry of the same
+ * hand-off and distinct for a genuinely new one — and the unique index on
+ * `(order_id, idempotency_key)` enforces that it is not reused by accident.
+ *
+ * The attempt is written before the provider is called, not after. Writing it
+ * afterwards would lose exactly the attempts that matter: the ones where the
+ * call threw.
+ */
+export async function recordPaymentAttempt(
+  supabase: SupabaseClient,
+  args: {
+    orderId: string;
+    amountMinor: string;
+    currencyCode: string;
+    providerId: string;
+    method?: AttemptMethod | null;
+  },
+): Promise<string | null> {
+  // Count existing attempts to derive a stable, ordered key. A failed read is
+  // treated as "no attempts yet" rather than aborting checkout: this is a
+  // diagnostic record, and refusing to take a payment because a log could not
+  // be written would be the wrong trade.
+  const { data: existing } = await supabase
+    .from('payment_attempts')
+    .select('id')
+    .eq('order_id', args.orderId);
+
+  const sequence = ((existing as unknown as AttemptRow) ?? []).length + 1;
+
+  const { data, error } = await supabase
+    .from('payment_attempts')
+    .insert({
+      order_id: args.orderId,
+      amount_minor: args.amountMinor,
+      currency_code: args.currencyCode,
+      provider: args.providerId,
+      method: args.method ?? null,
+      status: 'pending',
+      idempotency_key: `${args.orderId}:${sequence}`,
+    })
+    .select('id')
+    .single();
+
+  if (error) return null;
+  return (data as { id: string } | null)?.id ?? null;
+}
+
+/**
+ * Close out the open attempt on an order.
+ *
+ * The table enforces `resolved_at IS NULL` exactly when the status is still
+ * open, so both have to move together or the CHECK refuses the row.
+ *
+ * Called from the webhook, which is the only thing that knows an attempt
+ * finished. Nothing else may resolve one, because nothing else has proof.
+ */
+export async function resolveOpenAttempts(
+  supabase: SupabaseClient,
+  args: {
+    orderId: string;
+    status: 'succeeded' | 'failed' | 'cancelled' | 'expired';
+    providerReference?: string | null;
+    safeErrorCode?: string | null;
+  },
+): Promise<void> {
+  await supabase
+    .from('payment_attempts')
+    .update({
+      status: args.status,
+      resolved_at: new Date().toISOString(),
+      ...(args.providerReference ? { provider_reference: args.providerReference } : {}),
+      ...(args.safeErrorCode ? { safe_error_code: args.safeErrorCode } : {}),
+    })
+    .eq('order_id', args.orderId)
+    .in('status', ['pending', 'requires_action', 'processing']);
+}
+
 export function describeOrderAmount(amountMinor: string | number, currency: string): string {
   return format(fromMinor(amountMinor, currency));
 }
