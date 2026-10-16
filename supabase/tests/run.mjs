@@ -12,6 +12,7 @@ import { run as authorization } from './authorization.test.mjs';
 import { run as catalogue } from './catalogue.test.mjs';
 import { run as enrolment } from './enrolment.test.mjs';
 import { run as progress } from './progress.test.mjs';
+import { run as assessment } from './assessment.test.mjs';
 
 const ctx = await createHarness();
 const suites = [];
@@ -29,6 +30,7 @@ for (const [name, fn] of [
   ['catalogue', catalogue],
   ['enrolment', enrolment],
   ['progress', progress],
+  ['assessment', assessment],
 ]) {
   console.log(`\n--- ${name} ---\n`);
   await fn(ctx);

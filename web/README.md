@@ -51,6 +51,8 @@ npm run test        # both
 | `/api/enrol` | dynamic | POST. Free enrolment only |
 | `/learn/[enrolmentId]` | dynamic | Course view: outline and mark-complete |
 | `/api/progress` | dynamic | POST. Record lesson progress |
+| `/learn/[enrolmentId]/assessment/[assessmentId]` | dynamic | Take an assessment |
+| `/api/assessment` | dynamic | POST. start / answer / submit |
 | `/sign-out` | dynamic | POST only |
 
 ## The theme is white and green
@@ -115,6 +117,17 @@ sentence rather than a null dereference.
 
 `/api/enrol` therefore enrols free courses and returns `402 payment_required`
 for paid ones.
+
+## The answer key
+
+`assessment_questions.answer_key` is protected by **column privileges**, not
+RLS, because RLS cannot hide a column. There is deliberately no table-level
+grant, so `SELECT *` is refused outright rather than returning the granted
+columns. Never write `select('*')` against that table — name the columns.
+
+The key has no read path in the application at all, for any role including
+`platform_admin`. `grade_response()` is its only reader.
+`supabase/tests/assessment.test.mjs` asserts all three of those.
 
 ## Not built yet
 

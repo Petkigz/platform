@@ -152,15 +152,33 @@ adds one by accident.
 
 **219 tests pass.**
 
+### Also done since: assessments
+
+`/learn/[enrolmentId]/assessment/[assessmentId]` is the quiz. Answers save as
+they are chosen rather than on submit, so a dropped connection mid-quiz does
+not cost the learner their work. `POST /api/assessment` takes three verbs —
+start, answer, submit — and the learner and enrolment are always resolved from
+the session, never from the body.
+
+The attempt is started server-side when the page loads, not on a button press,
+so a learner who opens the page and closes the tab has still used an attempt.
+That is what `attempt_limit` is meant to mean.
+
+**The answer key has no read path in the application, and that is tested.**
+`SELECT *` on `assessment_questions` is refused outright rather than returning
+the granted columns, because the protection is column privileges and a
+table-level grant would silently undo it. The suite asserts the star form
+fails, that `answer_key` cannot be selected directly, and that **even a
+platform admin cannot read it through SQL** — grading happens inside
+`grade_response()`, which is the only reader.
+
+**231 tests pass.**
+
 ### What comes after that
 
 The paid path. It needs a provider, and a provider needs merchant
 registration and signed API terms (P12). Until then `payment_required` is the
-honest answer and the UI says so.
-
-Otherwise unblocked: **assessments** — quizzes, attempts and grading. The
-tables, `grade_response()` and the answer-key column privilege all exist; only
-the UI is missing. And **certificates** are staff-issued only
+honest answer and the UI says so. And **certificates** are staff-issued only
 (`issue_certificate` requires a privileged actor or a support agent), so a
 learner completing a course does not get one automatically — that is a
 deliberate gate, and it will need a review step in the admin dashboard.

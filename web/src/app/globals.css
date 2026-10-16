@@ -472,3 +472,30 @@ footer a { color: var(--text-soft); }
   margin: 1.75rem 0 0.5rem;
 }
 .outline-h h3 { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   Assessment
+   -------------------------------------------------------------------------- */
+
+.choices { display: grid; gap: 0.4rem; margin-top: 0.75rem; }
+
+.choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: var(--text);
+  margin: 0;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+.choice:hover { border-color: var(--green-100); background: var(--green-50); }
+.choice.on { border-color: var(--green-600); background: var(--green-50); }
+.choice input { width: auto; margin-top: 0.2rem; flex: none; }
+
+textarea { resize: vertical; min-height: 4rem; }

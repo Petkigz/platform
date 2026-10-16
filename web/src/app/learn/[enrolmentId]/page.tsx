@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { fetchCompletion, fetchProgress, fetchSummary } from '@/lib/progress';
+import { fetchAssessmentsForVersion } from '@/lib/assessment';
 import { MarkComplete } from './mark-complete';
 
 export const dynamic = 'force-dynamic';
@@ -83,10 +84,11 @@ export default async function CourseViewPage({
     .slice()
     .sort((a, b) => a.position - b.position);
 
-  const [progress, summary, completion] = await Promise.all([
+  const [progress, summary, completion, assessments] = await Promise.all([
     fetchProgress(supabase, enrolment.id),
     fetchSummary(supabase, enrolment.id),
     fetchCompletion(supabase, enrolment.id).catch(() => null),
+    fetchAssessmentsForVersion(supabase, enrolment.course_version_id).catch(() => []),
   ]);
 
   const pct = Math.round(summary.percentComplete);
@@ -177,6 +179,30 @@ export default async function CourseViewPage({
             </div>
           </div>
         ))
+      )}
+
+      {assessments.length > 0 && (
+        <div>
+          <div className="outline-h">
+            <h3>Assessments</h3>
+          </div>
+          <div className="card">
+            <ul className="lessons">
+              {assessments.map((a) => (
+                <li key={a.id}>
+                  <span className="t">{a.title}</span>
+                  <span className="badge neutral">{a.type}</span>
+                  <Link
+                    href={`/learn/${enrolment.id}/assessment/${a.id}`}
+                    className="btn tiny secondary"
+                  >
+                    {a.type === 'practice' ? 'Practise' : 'Take'}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
       )}
 
       <p style={{ marginTop: '1.5rem' }}>
