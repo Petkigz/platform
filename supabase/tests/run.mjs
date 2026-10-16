@@ -33,6 +33,7 @@ import { run as media } from './media.test.mjs';
 import { run as products } from './products.test.mjs';
 import { run as families } from './families.test.mjs';
 import { run as assessments } from './assessments.test.mjs';
+import { run as revenueShare } from './revenue_share.test.mjs';
 
 const ctx = await createHarness();
 const suites = [];
@@ -62,6 +63,7 @@ for (const [name, fn] of [
   ['discussion', discussion],
   ['refunds', refunds],
   ['governance', governance],
+  ['revenue_share', revenueShare],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],

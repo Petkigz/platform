@@ -1319,7 +1319,31 @@ runs the real flow: submit, grade, finalise.
 
 **563 database tests, 220 unit tests, tsc clean, build clean, 51 routes.**
 
+### Also done: the revenue-share setting can finally be changed
+
+The number is still a business decision, so I have not changed the seeded 0.
+But previously it could not be changed at all: there was no writer and no
+control in the dashboard. `set_revenue_share_percent()` now permits only a
+finance or platform admin, only an integer from 0 to 100, and only with a
+written reason. It records old value, new value, actor and reason in the
+append-only governance audit log. The admin dashboard has the matching form.
+
+**0% remains the current value.** Until a rate is chosen, teachers accrue no
+share and the platform retains the sale proceeds. This is visible in the admin
+UI rather than buried in the earnings function. The four payout preconditions
+remain unanswered, so money cannot leave the platform yet.
+
+**574 database tests, 227 unit tests, tsc clean, build clean, 52 routes.**
+
 ### What comes after that
+
+The next code unit is the subscription path: `plans`, `plan_versions`,
+`subscriptions`, and `plan_entitlements` have no app writers. The path must
+create/revise plans, let staff publish prices and entitlements, let learners
+start or cancel subscriptions, and tie provider-confirmed renewals to access.
+The renewal/payment edge still depends on provider credentials (P12); the
+subscription state and admin setup can be wired without pretending provider
+callbacks exist.
 
 The paid path. It needs a provider, and a provider needs merchant
 registration and signed API terms (P12). Until then `payment_required` is the

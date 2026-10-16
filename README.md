@@ -63,8 +63,8 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **89 tables, RLS on every one, 209 policies, 113
-user-defined triggers, 132 functions, 62 migrations, 563 database tests and
-220 unit tests passing.** The web app builds 51 routes.
+user-defined triggers, 133 functions, 63 migrations, 574 database tests and
+227 unit tests passing.** The web app builds 52 routes.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. Without it
@@ -73,6 +73,12 @@ a new user could sign in and then do nothing at all.
 A lesson can contain something: `add_lesson_resource()` attaches a video,
 reading or worksheet. Before it, every lesson published on the platform was an
 empty page, because nothing could write to the table the lesson page reads.
+
+The teacher revenue share is configurable from the admin dashboard by a
+finance or platform admin, with a required written reason and audit entry. It
+remains at **0%** until the business decision is made; no percentage was chosen
+on the owner's behalf. The payout workflow stays closed until the four payout
+preconditions are settled.
 
 A course can be assessed: `create_assessment()`, `add_assessment_question()` and
 `activate_assessment()`. Until then no teacher could create a quiz, so

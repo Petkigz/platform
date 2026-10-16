@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { fetchFlags, groupFlags } from '@/lib/flags';
 import { FlagToggle } from './flag-toggle';
+import { RevenueShareForm } from './revenue-share-form';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,6 +34,13 @@ export default async function AdminPage() {
 
   const flags = await fetchFlags(supabase);
   const groups = groupFlags(flags);
+  const { data: shareSetting, error: shareError } = await supabase
+    .from('platform_settings')
+    .select('value_text')
+    .eq('key', 'teaching.revenue_share_percent')
+    .maybeSingle();
+  if (shareError) throw new Error(shareError.message);
+  const revenueSharePercent = Number(shareSetting?.value_text ?? 0);
 
   const on = flags.filter((f) => f.enabled).length;
   const deployGated = flags.filter((f) => f.gateType === 'code').length;
@@ -46,6 +54,8 @@ export default async function AdminPage() {
         Everything is built and shipped off. Turn features on here as their
         preconditions are met.
       </p>
+
+      <RevenueShareForm currentPercent={revenueSharePercent} />
 
       <div className="stats">
         <div>
