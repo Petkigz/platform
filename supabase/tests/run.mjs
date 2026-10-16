@@ -35,6 +35,7 @@ import { run as families } from './families.test.mjs';
 import { run as assessments } from './assessments.test.mjs';
 import { run as revenueShare } from './revenue_share.test.mjs';
 import { run as plans } from './plans.test.mjs';
+import { run as subscriptions } from './subscriptions.test.mjs';
 
 const ctx = await createHarness();
 const suites = [];
@@ -66,6 +67,7 @@ for (const [name, fn] of [
   ['governance', governance],
   ['revenue_share', revenueShare],
   ['plans', plans],
+  ['subscriptions', subscriptions],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],

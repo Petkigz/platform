@@ -1344,19 +1344,40 @@ and activate only when both entitlement and price exist. Repricing closes the
 old row; it does not rewrite what a subscriber would have bought. A new
 `/admin/plans` screen exposes this flow.
 
-This is deliberately just the offer catalogue. It does **not** pretend a
-subscription has been paid. `subscriptions` and their access fulfilment are the
-next unit; renewals and provider-confirmed activation still need P12 credentials.
+### Also done: subscriptions now have a real payment-gated lifecycle
 
-**585 database tests, 227 unit tests, tsc clean, build clean, 54 routes.**
+`create_plan_order()` accepts ids, resolves the amount from the active plan price,
+checks the payer and the selected learner, and creates a pending order plus a
+pending subscription. It grants **nothing** yet. The verified payment-confirmation
+path activates the subscription, starts the billing period, allocates the chosen
+learner, and creates subject/feature/product grants that expire at period end.
+Additional family members can be allocated within the versioned slot allowance.
+
+`/plans` is the customer-facing chooser; `/subscriptions` shows allocations,
+allows household additions, and cancels with a written reason. Cancellation leaves
+grants alone through the paid period. The status history records the user when a
+person acts; a provider callback has no synthetic human actor. A database guard
+blocks direct inserts or edits to subscription state, and a cancelled pending
+order cannot later be turned paid by a late callback.
+
+The earlier creator-membership migration exposed another **RETURNING trap**:
+creating a billing account with `INSERT ... RETURNING` can be refused by the
+SELECT policy before the AFTER-triggered creator membership exists. Checkout now
+uses plain INSERT, lets the trigger run, then selects the newly visible account.
+
+**Scope boundary: live MTN/Airtel/card credentials (P12) are still absent, so
+production provider callbacks and renewals are not verified here.** The database
+was tested with the existing privileged manual-evidence path, not a live provider.
+
+**598 database tests, 228 unit tests, tsc clean, build clean, 57 routes.**
 
 ### What comes after that
 
-Wire subscription start, cancellation and status history, then connect
-payment-confirmed activation/renewal to entitlements without conflating payment
-state with subscription state or access. Provider callbacks still need P12
-credentials, so the pending state must remain explicitly unpaid until a real
-callback is verified. After that: `financial_adjustments` for earnings clawbacks.
+The next unresolved money-out gap is `financial_adjustments`, which earnings
+clawback already references but has no writer. Then reconciliation and payout
+operations remain gated on the still-open provider/tax/dispute preconditions.
+Renewal automation requires provider credentials and a worker; do not treat a
+pending subscription as active while that stays blocked.
 
 The paid path. It needs a provider, and a provider needs merchant
 registration and signed API terms (P12). Until then `payment_required` is the

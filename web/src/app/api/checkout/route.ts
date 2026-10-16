@@ -4,6 +4,7 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { ownLearnerProfileId, resolveOffering } from '@/lib/enrolment';
 import {
   createOrder,
+  createPlanOrder,
   recordPaymentAttempt,
   resolveOpenAttempts,
   type AttemptMethod,
@@ -16,6 +17,8 @@ export const dynamic = 'force-dynamic';
 
 type Body = {
   courseId?: unknown;
+  planVersionId?: unknown;
+  learnerProfileId?: unknown;
   priceId?: unknown;
   /** E.164, for mobile-money providers. Optional; card providers ignore it. */
   msisdn?: unknown;
@@ -68,46 +71,56 @@ export async function POST(request: Request) {
   }
 
   const courseId = typeof body.courseId === 'string' ? body.courseId.trim() : '';
+  const planVersionId = typeof body.planVersionId === 'string' ? body.planVersionId.trim() : '';
+  const learnerProfileId = typeof body.learnerProfileId === 'string' ? body.learnerProfileId.trim() : '';
   const priceId = typeof body.priceId === 'string' ? body.priceId.trim() : '';
 
-  if (!courseId || !priceId) {
+  if (!priceId || Boolean(courseId) === Boolean(planVersionId)) {
     return NextResponse.json(
-      { error: 'courseId and priceId are both required.' },
+      { error: 'Choose exactly one course or plan version, and provide its price id.' },
+      { status: 400 },
+    );
+  }
+  if (planVersionId && !learnerProfileId) {
+    return NextResponse.json(
+      { error: 'Choose the learner who will use this subscription.' },
       { status: 400 },
     );
   }
 
-  // A learner who already holds a live entitlement should not be charged again.
-  // resolveOffering answers this, and it is the same function the enrol button
-  // uses, so the two cannot disagree.
-  const learnerProfileId = await ownLearnerProfileId(supabase, user.id);
-  const offering = await resolveOffering(supabase, { courseId, learnerProfileId });
-
-  if (offering.kind === 'entitled') {
-    return NextResponse.json(
-      { error: 'You already have access to this course.' },
-      { status: 409 },
-    );
-  }
-  if (offering.kind === 'free') {
-    return NextResponse.json(
-      {
+  const isPlanCheckout = Boolean(planVersionId);
+  let result;
+  if (isPlanCheckout) {
+    result = await createPlanOrder(supabase, {
+      planVersionId,
+      priceId,
+      learnerProfileId,
+      userId: user.id,
+    });
+  } else {
+    // A learner who already holds a live entitlement should not be charged
+    // again. resolveOffering is the same decision the enrol button uses.
+    const ownLearnerId = await ownLearnerProfileId(supabase, user.id);
+    const offering = await resolveOffering(supabase, { courseId, learnerProfileId: ownLearnerId });
+    if (offering.kind === 'entitled') {
+      return NextResponse.json({ error: 'You already have access to this course.' }, { status: 409 });
+    }
+    if (offering.kind === 'free') {
+      return NextResponse.json({
         error: 'This course is free. Use enrolment rather than checkout.',
-        // The caller can act on this rather than showing a generic failure.
         redirect: '/api/enrol',
-      },
-      { status: 409 },
-    );
+      }, { status: 409 });
+    }
+    result = await createOrder(supabase, { courseId, priceId, userId: user.id });
   }
-
-  const result = await createOrder(supabase, { courseId, priceId, userId: user.id });
   if (!result.ok) {
     // 409 for the expected conflicts, 400 for a bad request, 500 for the rest.
     const status =
       result.code === 'price_not_for_this_course' ||
       result.code === 'price_not_available' ||
       result.code === 'not_paid_course' ||
-      result.code === 'already_entitled'
+      result.code === 'already_entitled' ||
+      result.code === 'conflict'
         ? 409
         : result.code === 'not_found'
           ? 404
@@ -183,7 +196,7 @@ export async function POST(request: Request) {
       orderId: result.orderId,
       amount: result.amount,
       returnUrl: `${origin}/orders?pending=${result.orderId}`,
-      description: `Course purchase ${result.orderId}`,
+      description: `${isPlanCheckout ? 'Subscription' : 'Course purchase'} ${result.orderId}`,
       msisdn,
     });
 

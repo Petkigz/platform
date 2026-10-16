@@ -3,6 +3,7 @@ import test from 'node:test';
 
 import {
   createOrder,
+  createPlanOrder,
   recordPaymentAttempt,
   resolveBillingAccount,
   resolveOpenAttempts,
@@ -264,6 +265,45 @@ test('a billing account is created when the payer has none', async () => {
   // membership trigger keys off. Getting this wrong means the account cannot
   // be read or ordered against — the dead end that migration fixed.
   assert.equal(created.insert?.created_by, 'user-1');
+  assert.equal(calls.some((c) => c.table === 'billing_accounts' && c.method === 'single'), false,
+    'INSERT ... RETURNING would run before the creator membership trigger makes SELECT policy true');
+  assert.equal(calls.some((c) => c.table === 'billing_accounts' && c.method === 'maybeSingle'), true,
+    'the id should be selected only after the plain INSERT and trigger complete');
+});
+
+test('plan checkout sends ids, not an amount, and keeps pending orders payment-gated', async () => {
+  const { client, calls } = stubClient(baseData());
+  const rpcCalls: { fn: string; args: Record<string, unknown> }[] = [];
+  client.rpc = async (fn: string, args: Record<string, unknown>) => {
+    rpcCalls.push({ fn, args });
+    return {
+      data: [{ order_id: 'plan-order-1', subscription_id: 'sub-1', amount_minor: '125000', currency_code: 'UGX' }],
+      error: null,
+    };
+  };
+
+  const result = await createPlanOrder(client, {
+    planVersionId: 'version-1',
+    priceId: 'price-1',
+    learnerProfileId: 'learner-1',
+    userId: 'user-1',
+  });
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+  assert.equal(result.orderId, 'plan-order-1');
+  assert.equal(result.amount.amountMinor, 125000n);
+  assert.equal(result.currencyCode, 'UGX');
+  assert.deepEqual(rpcCalls, [{
+    fn: 'create_plan_order',
+    args: {
+      p_billing_account_id: 'acct-1',
+      p_plan_version_id: 'version-1',
+      p_price_id: 'price-1',
+      p_learner_profile_id: 'learner-1',
+    },
+  }]);
+  assert.equal(Object.hasOwn(rpcCalls[0]?.args ?? {}, 'amount_minor'), false,
+    'the client must not supply or influence the amount');
 });
 
 test('a failed line item is reported rather than silently dropped', async () => {

@@ -79,18 +79,29 @@ export async function resolveBillingAccount(
   const existing = (memberships as unknown as MembershipRow)?.[0]?.billing_account_id;
   if (existing) return existing;
 
-  const { data: created, error: createErr } = await supabase
-    .from('billing_accounts')
-    .insert({
-      display_name: 'My account',
-      billing_currency: 'UGX',
-      status: 'active',
-      created_by: userId,
-    })
-    .select('id')
-    .single();
+  // Do not chain RETURNING here. `billing_accounts_read` requires an active
+  // membership, and the creator-membership trigger runs after the INSERT. As
+  // measured on families, INSERT ... RETURNING can be refused by the SELECT
+  // policy before the AFTER trigger has made the row readable. A plain INSERT
+  // succeeds; then the trigger has run and this separate SELECT is visible.
+  const { error: createErr } = await supabase.from('billing_accounts').insert({
+    display_name: 'My account',
+    billing_currency: 'UGX',
+    status: 'active',
+    created_by: userId,
+  });
 
   if (createErr) throw new Error(createErr.message);
+
+  const { data: created, error: lookupErr } = await supabase
+    .from('billing_accounts')
+    .select('id')
+    .eq('created_by', userId)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (lookupErr) throw new Error(lookupErr.message);
   return (created as { id: string } | null)?.id ?? null;
 }
 
@@ -273,6 +284,70 @@ export async function createOrder(
     orderId,
     amount,
     currencyCode: price.currency_code,
+  };
+}
+
+export type CreatePlanOrderArgs = {
+  planVersionId: string;
+  priceId: string;
+  learnerProfileId: string;
+  userId: string;
+};
+
+/**
+ * Start a subscription checkout from a selected plan version, price id and
+ * learner profile. The SQL writer resolves the amount from `prices`, verifies
+ * the learner belongs to the payer/family and creates only a pending order and
+ * pending subscription. It grants no access until the verified payment writer
+ * confirms the order.
+ */
+export async function createPlanOrder(
+  supabase: SupabaseClient,
+  args: CreatePlanOrderArgs,
+): Promise<CreateOrderResult> {
+  if (!args.planVersionId || !args.priceId || !args.learnerProfileId) {
+    return { ok: false, code: 'error', message: 'Choose a plan, price and learner.' };
+  }
+
+  const billingAccountId = await resolveBillingAccount(supabase, args.userId);
+  if (!billingAccountId) {
+    return { ok: false, code: 'error', message: 'Could not open a billing account. Please try again.' };
+  }
+
+  const { data, error } = await supabase.rpc('create_plan_order', {
+    p_billing_account_id: billingAccountId,
+    p_plan_version_id: args.planVersionId,
+    p_price_id: args.priceId,
+    p_learner_profile_id: args.learnerProfileId,
+  });
+
+  if (error) {
+    const message = error.message;
+    const code: CheckoutErrorCode = /not currently available|not available for this plan/i.test(message)
+      ? 'price_not_available'
+      : /already has a pending or unexpired subscription/i.test(message)
+        ? 'conflict'
+        : /not found/i.test(message)
+          ? 'not_found'
+          : 'error';
+    return { ok: false, code, message };
+  }
+
+  const row = (Array.isArray(data) ? data[0] : data) as {
+    order_id?: string;
+    subscription_id?: string;
+    amount_minor?: string | number | bigint;
+    currency_code?: string;
+  } | null;
+  if (!row?.order_id || row.amount_minor === undefined || !row.currency_code) {
+    return { ok: false, code: 'error', message: 'The subscription order was not created.' };
+  }
+
+  return {
+    ok: true,
+    orderId: String(row.order_id),
+    amount: fromMinor(String(row.amount_minor), row.currency_code),
+    currencyCode: row.currency_code,
   };
 }
 

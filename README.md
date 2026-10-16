@@ -62,9 +62,9 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 ## Status
 
-The database stands at **89 tables, RLS on every one, 209 policies, 113
-user-defined triggers, 138 functions, 64 migrations, 585 database tests and
-227 unit tests passing.** The web app builds 54 routes.
+The database stands at **89 tables, RLS on every one, 209 policies, 116
+user-defined triggers, 145 functions, 65 migrations, 598 database tests and
+228 unit tests passing.** The web app builds 57 routes.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. Without it
@@ -77,8 +77,12 @@ empty page, because nothing could write to the table the lesson page reads.
 Subscription plans are now configurable in `/admin/plans`: staff create a
 plan, versioned learner allowances, subject/feature entitlements and recurring
 prices. Activation refuses a plan version with no entitlement or no live price.
-This is offer configuration, **not** subscription payment or renewal; those
-remain distinct until provider callbacks are wired.
+The customer path is now wired too: `/plans` starts a pending order from the
+server-resolved price and selected learner; only payment confirmation activates
+the subscription and grants time-bounded access. `/subscriptions` allocates
+additional household learners and cancels with a reason; cancellation keeps
+already-paid access through the period end. Live provider credentials and
+renewal processing remain separate preconditions (P12).
 
 The teacher revenue share is configurable from the admin dashboard by a
 finance or platform admin, with a required written reason and audit entry. It
