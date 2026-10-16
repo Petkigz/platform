@@ -123,6 +123,10 @@ export default async function AdminPage() {
         flagged in a lesson or an answer. Closing one needs a written note.
       </p>
       <p>
+        <Link href="/admin/roles">Roles</Link> — who may do what. Every check in
+        the database reads these; granting or revoking needs a written reason.
+      </p>
+      <p>
         <Link href="/admin/appeals">Appeals</Link> — teachers contesting a
         reviewer&rsquo;s rejection. You cannot decide an appeal against your own
         decision.

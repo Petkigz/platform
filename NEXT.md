@@ -987,6 +987,44 @@ level where grants do not apply.
 
 **407 database tests, 121 unit tests, tsc clean, build clean, 49 routes.**
 
+### Also done since: nobody could be given a role
+
+`user_role_assignments` had **zero rows and no writer**. The trigger guarding
+privileged grants is genuinely careful — it refuses a self-grant, refuses a null
+assigner, and requires the assigner to hold a privileged role right now — and
+there was no way through the product to give anyone a role at all. The test
+harness grants roles with a direct INSERT, which is exactly the fixture state
+that hides a missing path, so all 407 tests passed while the platform could not
+be staffed.
+
+That made it the twelfth instance and the most foundational one: the
+authorisation model is capability-based, every check in the schema reads these
+roles, and nothing could be appointed. **A teacher could sign up and could never
+teach.**
+
+**What was added.** `assign_role()` and `revoke_role()`, an `/admin/roles` page
+grouped by role, and `/api/admin/roles`.
+
+**The actor is never an argument.** Both writers read `current_user_id()`. I
+first wrote them taking `p_actor_id` and granted them to `authenticated` — which
+would have let any signed-in learner pass an admin's id and satisfy the
+privilege check. That is the identical hole I had closed one unit earlier in the
+earnings and entitlement writers, and I was about to reopen it.
+
+**The lockout guard.** Removing the last privileged account is a one-way door:
+afterwards nobody can appoint anybody, and the platform cannot be administered
+without direct database access. It is refused here rather than discovered later.
+
+**A claim I had to retract.** I wrote in the migration header that the assignment
+trigger "misfired on revocation". It does not. The UPDATE trigger is declared
+`BEFORE UPDATE OF revoked_at ... WHEN (old.revoked_at IS NOT NULL AND
+new.revoked_at IS NULL)`, so it fires only on **reinstatement**. I verified by
+removing my guard and observing identical behaviour. The guard stays as defence
+in depth, but the header now says what is true, and the teeth check honestly
+records that no test can distinguish it.
+
+**424 database tests, 135 unit tests, tsc clean, build clean, 51 routes.**
+
 ### What comes after that
 
 The paid path. It needs a provider, and a provider needs merchant
