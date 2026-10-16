@@ -622,6 +622,58 @@ inventory entirely. Added as 19a and 19b rather than renumbering.
 
 **329 database tests, 42 unit tests, 36 routes.**
 
+### Also done since: no child could ever be enrolled
+
+Screen 10 in the inventory was the learner switcher, marked "READY — not designed
+anywhere". Building it turned up something worse than an undesigned screen.
+
+A child is a `learner_profile` under a `family`, never a `user` (D2). A child
+cannot sign in, so a child cannot enrol themselves. And `enrolInFreeCourse()`
+always used the caller's own profile — so the only person who could enrol a child
+was the parent, and the application never offered it. **No child could ever be
+enrolled through the product**, with the family dashboard, the child profiles and
+guardian verification all built around that missing step.
+
+The database already permitted it, and I verified that before building anything:
+
+```
+parent ENROLs their child at the DB level -> YES
+  free-enrolment entitlement granted      -> 1
+  child can access the course             -> true
+```
+
+`course_enrolments_insert` is gated on `can_access_learner(learner_profile_id)`,
+which covers family members. Same shape as the other four: the machinery was
+right and nothing connected to it.
+
+Now `/api/enrol` takes an optional `learnerProfileId`, and the enrol button asks
+*who is learning?* when the account has children.
+
+Accepting a client-supplied learner id is the kind of thing that needs saying out
+loud, so: it is safe because the decision stays where it already lives. The
+policy refuses an id the caller may not act for, and the route deliberately does
+not re-implement `can_access_learner`. A second, weaker copy of an authorisation
+rule is how the two drift apart. Four tests pin that boundary — an unrelated user
+is refused, a billing-only family member is refused, and a refused enrolment
+produces no grant.
+
+One consequence I had to fix rather than ship: `/learn` reads enrolments with no
+learner filter, so once children can be enrolled a parent's dashboard silently
+mixes their courses with their children's. A parent opening a child's course
+believing it was their own progress is a real confusion, not a cosmetic one, so
+each card is now labelled with whose it is.
+
+`enrollableLearners()` returns the caller plus the *child* profiles in their
+families. Adult profiles are excluded because enrolling for another adult would
+put one person's decisions on someone else's record. Billing-only members are
+excluded by `is_learner_family_member()` — paying is not parenting.
+
+Six database tests. One typing error of my own: building a PostgREST select by
+string concatenation defeats its generated types, so the cast had to go through
+`unknown` as the rest of the codebase does.
+
+**335 database tests, 42 unit tests, 36 routes.**
+
 ### What comes after that
 
 The paid path. It needs a provider, and a provider needs merchant

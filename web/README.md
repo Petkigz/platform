@@ -361,6 +361,38 @@ granted nothing, but it filled the consent queue — which has a retention
 obligation attached — with junk. A family member may still nominate themselves or
 another adult, which is how a parent adds a grandparent.
 
+## Who is learning
+
+A child is a `learner_profile` under a `family`, never a `user` (D2). So a child
+cannot sign in and cannot enrol themselves — which means the parent has to be
+able to, and for most of this project the application never asked.
+`enrolInFreeCourse()` always used the caller's own profile, so no child could
+ever be enrolled through the product, despite the family dashboard and guardian
+verification both existing.
+
+The database already permitted it: `course_enrolments_insert` is gated on
+`can_access_learner(learner_profile_id)`, which covers family members. Verified
+end to end before building anything — a parent enrolling a child grants the child
+an entitlement and the child can access the course.
+
+So `/api/enrol` now accepts a `learnerProfileId`, and the enrol button asks *who
+is learning?* when the account has children. The id comes from the client, and
+that is safe only because the decision stays where it already lives: the policy
+refuses an id the caller may not act for. This route does not re-implement
+`can_access_learner` — a second, weaker copy of an authorisation rule is how the
+two drift apart.
+
+`/learn` labels each course with whose it is. That is not decoration: once a
+parent can enrol a child, their dashboard legitimately holds both, and showing
+them undifferentiated would let a parent open a child's course believing it was
+their own progress.
+
+`enrollableLearners()` returns the caller's own profile plus the *child* profiles
+in their families. Adult profiles are excluded on purpose — enrolling for another
+adult would put one person's decisions on someone else's record. Billing-only
+family members are excluded too, by `is_learner_family_member()`: paying is not
+parenting.
+
 ## Families and children
 
 A child is a `learner_profile` under a `family`, never a `user` (D2). No

@@ -11,7 +11,12 @@ import {
   subjectNames,
   type CatalogueCourse,
 } from '@/lib/catalogue';
-import { offeringLabel, ownLearnerProfileId, resolveOffering } from '@/lib/enrolment';
+import {
+  enrollableLearners,
+  offeringLabel,
+  ownLearnerProfileId,
+  resolveOffering,
+} from '@/lib/enrolment';
 import { EnrolButton } from './enrol-button';
 
 export const dynamic = 'force-dynamic';
@@ -110,6 +115,10 @@ export default async function CoursePage({
     data: { user },
   } = await supabase.auth.getUser();
   const learnerProfileId = user ? await ownLearnerProfileId(supabase, user.id) : null;
+  // Who this account can enrol: itself, plus any children in its families. A
+  // child has no account of its own (D2), so this list is the only way a child
+  // ever gets into a course.
+  const learners = user ? await enrollableLearners(supabase, user.id) : [];
   const offering = await resolveOffering(supabase, {
     courseId: course.id,
     learnerProfileId,
@@ -159,6 +168,11 @@ export default async function CoursePage({
         <EnrolButton
           courseId={course.id}
           state={offering.kind}
+          learners={learners.map((l) => ({
+            id: l.id,
+            name: l.name,
+            isSelf: l.isSelf,
+          }))}
           signedIn={Boolean(user)}
           label={offeringLabel(offering)}
         />

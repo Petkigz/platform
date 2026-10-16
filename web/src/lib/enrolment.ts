@@ -171,11 +171,101 @@ export type EnrolErrorCode =
  * There is no `source` parameter. A free enrolment is `source = 'free'` and
  * nothing else; a paid one never reaches this function.
  */
+export type EnrollableLearner = {
+  id: string;
+  name: string;
+  isSelf: boolean;
+  /** Present for a child, so the UI can say whose learning this is. */
+  ageBand: string | null;
+};
+
+/**
+ * Who this account can enrol.
+ *
+ * A child is a `learner_profile` under a `family`, never a `user` (D2) — so a
+ * child cannot sign in, and cannot enrol themselves. If the parent cannot enrol
+ * them either, the child has no route into a course at all. That was the
+ * situation: the database allowed it (`course_enrolments_insert` is gated on
+ * `can_access_learner`, which already covers family members), and the
+ * application never asked.
+ *
+ * This returns the caller's own profile plus the child profiles they may act
+ * for. It does not decide who is permitted — RLS narrows what comes back, so
+ * the list is a consequence of the policies rather than a second opinion about
+ * them.
+ */
+export async function enrollableLearners(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<EnrollableLearner[]> {
+  const out: EnrollableLearner[] = [];
+
+  const { data: own } = await supabase
+    .from('learner_profiles')
+    .select('id, display_name')
+    .eq('linked_user_id', userId)
+    .is('deleted_at', null)
+    .maybeSingle();
+
+  const ownRow = own as unknown as { id: string; display_name: string } | null;
+  if (ownRow) {
+    out.push({
+      id: ownRow.id,
+      name: ownRow.display_name,
+      isSelf: true,
+      ageBand: null,
+    });
+  }
+
+  const { data: memberships } = await supabase
+    .from('family_memberships')
+    .select(
+      'families ( learner_profiles ( id, display_name, age_band, learner_type, linked_user_id ) )',
+    )
+    .eq('user_id', userId)
+    .eq('status', 'active');
+
+  type ChildRow = {
+    id: string;
+    display_name: string;
+    age_band: string | null;
+    learner_type: string;
+    linked_user_id: string | null;
+  };
+  const children = ((memberships ?? []) as {
+    families: { learner_profiles: ChildRow[] | null }[] | null;
+  }[])
+    .flatMap((m) => m.families ?? [])
+    .flatMap((f) => f.learner_profiles ?? [])
+    // A child only. An adult profile in the family enrols for themselves; doing
+    // it for them would put one adult's decisions on another's record.
+    .filter((c) => c.learner_type === 'child' && !c.linked_user_id);
+
+  for (const c of children) {
+    if (out.some((o) => o.id === c.id)) continue;
+    out.push({
+      id: c.id,
+      name: c.display_name,
+      isSelf: false,
+      ageBand: c.age_band,
+    });
+  }
+
+  return out;
+}
+
 export async function enrolInFreeCourse(
   supabase: SupabaseClient,
-  args: { userId: string; courseId: string },
+  args: { userId: string; courseId: string; learnerProfileId?: string | null },
 ): Promise<EnrolOutcome> {
-  const learnerProfileId = await ownLearnerProfileId(supabase, args.userId);
+  // Who is learning. Defaults to the caller. When a parent enrols a child the
+  // id is supplied by the client — and that is safe only because
+  // course_enrolments_insert is gated on can_access_learner(learner_profile_id),
+  // so the database decides whether this caller may act for that learner. This
+  // function does not re-implement that check; a second, weaker copy of an
+  // authorisation rule is how the two drift apart.
+  const learnerProfileId =
+    args.learnerProfileId ?? (await ownLearnerProfileId(supabase, args.userId));
   if (!learnerProfileId) {
     return {
       ok: false,

@@ -6,13 +6,26 @@ import { enrolInFreeCourse } from '@/lib/enrolment';
 /**
  * Free enrolment.
  *
- * POST only, and it takes a course id and nothing else. In particular it does
- * not take a learner id, a price or a source: the learner is whoever is signed
- * in, the price is whatever the database says, and the source is always
- * 'free'. Every one of those would have been a way to lie.
+ * POST only. It takes a course id and, optionally, the learner profile the
+ * enrolment is for. It still never takes a price or a source: the price is
+ * whatever the database says and the source is always 'free', because either
+ * one accepted from the client would have been a way to lie.
+ *
+ * The learner id is a change, and it is worth being precise about why it is
+ * safe. A child is a `learner_profile` under a `family`, never a `user` (D2), so
+ * a child cannot sign in and cannot enrol themselves — and before this, the
+ * application always enrolled whoever was signed in, which meant no child could
+ * ever be enrolled through the product at all. The database already permitted a
+ * parent to do it: `course_enrolments_insert` is gated on
+ * `can_access_learner(learner_profile_id)`, which covers family members.
+ *
+ * So the id is accepted and the decision is left where it already lives. This
+ * route does not re-implement `can_access_learner`; a second, weaker copy of an
+ * authorisation rule is how the two drift apart. An id for a learner the caller
+ * may not act for is refused by the policy, not by a check here.
  *
  * Paid courses are refused here rather than routed to a provider, because no
- * provider exists yet (P11). The refusal is a normal response, not an error —
+ * provider exists yet (P12). The refusal is a normal response, not an error —
  * the UI has to explain it.
  */
 export async function POST(request: Request) {
@@ -41,6 +54,12 @@ export async function POST(request: Request) {
     );
   }
 
+  const rawLearnerId = (body as { learnerProfileId?: unknown })?.learnerProfileId;
+  const learnerProfileId =
+    typeof rawLearnerId === 'string' && /^[0-9a-f-]{36}$/i.test(rawLearnerId)
+      ? rawLearnerId
+      : null;
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -56,6 +75,7 @@ export async function POST(request: Request) {
   const outcome = await enrolInFreeCourse(supabase, {
     userId: user.id,
     courseId,
+    learnerProfileId,
   });
 
   if (!outcome.ok) {

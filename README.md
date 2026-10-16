@@ -63,7 +63,7 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database is complete: **88 tables, RLS on every one, 203 policies, 150
-triggers, 94 functions, 49 migrations, 329 database tests and 42 unit
+triggers, 94 functions, 49 migrations, 335 database tests and 42 unit
 tests passing.** The web app builds 36 routes.
 
 All five logical schema groups are built. Every frozen decision — D1

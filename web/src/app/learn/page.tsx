@@ -13,12 +13,27 @@ type Enrolment = {
   id: string;
   status: string;
   enrolled_at: string;
+  learner_profile_id: string;
+  learner_profiles: { display_name: string; learner_type: string }[] | null;
   courses: { title: string; slug: string }[] | null;
   course_versions: { version_number: number; language: string }[] | null;
 };
 
 const courseTitle = (e: Enrolment): string =>
   e.courses?.[0]?.title ?? 'Untitled course';
+
+/**
+ * Whose enrolment this is.
+ *
+ * Now that a parent can enrol a child, this list legitimately contains more
+ * than one person's courses, and showing them undifferentiated would let a
+ * parent open a child's course believing it was their own progress. The label
+ * is 'Me' for the signed-in person's own profile.
+ */
+const learnerName = (e: Enrolment, myProfileId: string | null): string => {
+  if (!myProfileId || e.learner_profile_id === myProfileId) return 'Me';
+  return e.learner_profiles?.[0]?.display_name ?? 'Someone else';
+};
 const versionNumber = (e: Enrolment): string =>
   e.course_versions?.[0] ? `v${e.course_versions[0].version_number}` : 'v?';
 const language = (e: Enrolment): string => e.course_versions?.[0]?.language ?? '?';
@@ -63,12 +78,34 @@ export default async function LearnPage() {
   const { data: enrolments, error } = await supabase
     .from('course_enrolments')
     .select(
-      'id, status, enrolled_at, courses ( title, slug ), course_versions ( version_number, language )',
+      'id, status, enrolled_at, learner_profile_id, ' +
+        'learner_profiles ( display_name, learner_type ), ' +
+        'courses ( title, slug ), course_versions ( version_number, language )',
     )
     .eq('deleted_at', null)
     .order('enrolled_at', { ascending: false });
 
-  const rows = (enrolments ?? []) as Enrolment[];
+  // Cast through unknown: a select built by string concatenation defeats
+  // PostgREST's generated types, which then resolve to an error type rather
+  // than to the columns actually requested.
+  const rows = (enrolments ?? []) as unknown as Enrolment[];
+
+  // Needed to label each row as mine or a child's. A parent's dashboard
+  // legitimately holds both now, and mixing them would let a parent open a
+  // child's course believing it was their own progress.
+  const { data: myProfile } = await supabase
+    .from('learner_profiles')
+    .select('id')
+    .eq('linked_user_id', user.id)
+    .is('deleted_at', null)
+    .maybeSingle();
+  const myProfileId =
+    ((myProfile as unknown as { id: string } | null)?.id) ?? null;
+
+  const distinctLearners = new Set(
+    rows.map((r) => learnerName(r, myProfileId)),
+  );
+  const showLearner = distinctLearners.size > 1;
 
   // Progress per enrolment. Fetched in parallel: each call is an independent
   // RPC and there is no reason to serialise them.
@@ -130,6 +167,12 @@ export default async function LearnPage() {
                 <Link href={`/learn/${r.id}`} className="course" style={{ display: 'block' }}>
                   <span className="title">{courseTitle(r)}</span>
                 </Link>
+
+                {showLearner && (
+                  <span className="badge neutral" style={{ marginBottom: '0.5rem' }}>
+                    {learnerName(r, myProfileId)}
+                  </span>
+                )}
 
                 <div className="badges" style={{ margin: '0.5rem 0 0.75rem' }}>
                   <span className="badge">{STATUS_LABEL[r.status] ?? r.status}</span>

@@ -33,7 +33,7 @@ Status:
 |---|---|---|
 | 8 | **Sign in / register** | READY — auth method undecided (see `auth.email_password`, `auth.phone_otp`) |
 | 9 | **Add a child profile** | READY — name + age band, no date of birth |
-| 10 | **Learner switcher** | READY — parent moving between their own learning and a child's. Not designed anywhere |
+| 10 | **Learner switcher** | **BUILT** — the enrol button asks "who is learning?", and `/learn` labels each course with whose it is |
 
 ## 3. Young learners — 9
 
