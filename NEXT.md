@@ -1281,6 +1281,44 @@ than by guessing again.
 
 **535 database tests, 195 unit tests, tsc clean, build clean, 51 routes.**
 
+### Also done since: no teacher could create a quiz
+
+`assessments` and `assessment_questions` both had zero rows and no writer. That
+cascades further than a missing feature:
+
+* completion rules of type `assessment_submitted` and `assessment_passed` carry
+  a `target_assessment_id`, and there was no assessment to point at, so those
+  rules could never be satisfied
+* `submit_attempt()` was unreachable, so no learner could ever sit a quiz
+* certificates gated on completion could not be earned by any rule needing one
+
+**A trap closed, not just a writer added.** The learner reader filters
+`status='active'`, and D5 freezes assessments at publication. So a teacher who
+wrote an assessment, forgot to activate it, and published would leave it
+**invisible forever** — with no way to fix it short of cutting a new course
+version. Publication now refuses that, and **names the assessment blocking it**,
+because "something is not ready" sends the teacher hunting.
+
+Also: activation requires at least one question (an empty assessment produces a
+zero-mark attempt nobody could pass), and an automatically graded question
+requires an answer key (otherwise it can never be marked and the attempt never
+resolves).
+
+**My new guard broke 7 existing tests, and the guard was right.** `group2b`
+created assessments without a `status`, so they defaulted to `draft` — a state
+learners never see. Those fixtures were building a state the product could not
+reach, and were corrected to `active` rather than the guard being weakened.
+
+**Four of my own tests were wrong before they were right.** Two helpers used
+`opts.x ?? default`, which turns an explicit `null` into the default — so the
+tests meant to check a refusal silently sent the valid value and passed by
+proving nothing. I also invented `assessment_responses.attempt_id` (it is
+`assessment_attempt_id`) and pre-set a score in the response, which bypassed
+`grade_response()` — the only code allowed to read `answer_key`. The test now
+runs the real flow: submit, grade, finalise.
+
+**563 database tests, 220 unit tests, tsc clean, build clean, 51 routes.**
+
 ### What comes after that
 
 The paid path. It needs a provider, and a provider needs merchant

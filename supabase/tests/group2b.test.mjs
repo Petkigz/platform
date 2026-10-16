@@ -239,9 +239,13 @@ export async function run(ctx) {
   // An assessment with one automatic single-choice question.
   async function gradedAssessment(pc, { pass = 60, limit = null, points = 10 } = {}) {
     const a = (await q(
+      // status is set explicitly. The default is 'draft', which the
+      // learner-facing reader (fetchAssessmentsForVersion) never shows, and
+      // which course_versions_guard_draft_assessments_at_publication refuses to
+      // publish — so a fixture that omits it builds a state learners cannot see.
       `insert into public.assessments
-         (course_version_id, title, type, pass_threshold, attempt_limit)
-       values ($1,'Unit check','graded',$2,$3) returning id`,
+         (course_version_id, title, type, pass_threshold, attempt_limit, status)
+       values ($1,'Unit check','graded',$2,$3,'active') returning id`,
       [pc.version, pass, limit])).rows[0].id;
     // answer_key is written as the table owner, which the tests run as.
     await q(`insert into public.assessment_questions
@@ -383,8 +387,10 @@ export async function run(ctx) {
   await test('mixed grading waits for the manual question', async () => {
     const pc = await draftCourse();
     const a = (await q(
-      `insert into public.assessments (course_version_id, title, type, pass_threshold)
-       values ($1,'Mixed','graded',50) returning id`, [pc.version])).rows[0].id;
+      // 'active' for the same reason as gradedAssessment(): a draft assessment
+      // is invisible to learners and blocks publication.
+      `insert into public.assessments (course_version_id, title, type, pass_threshold, status)
+       values ($1,'Mixed','graded',50,'active') returning id`, [pc.version])).rows[0].id;
     await q(`insert into public.assessment_questions
                (assessment_id, type, content, answer_key, points, position, grading_method)
              values ($1,'single_choice','{}','{"answer":"b"}',5,1,'automatic')`, [a]);

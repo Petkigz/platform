@@ -62,9 +62,9 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 ## Status
 
-The database stands at **89 tables, RLS on every one, 209 policies, 112
-user-defined triggers, 128 functions, 61 migrations, 535 database tests and
-195 unit tests passing.** The web app builds 51 routes.
+The database stands at **89 tables, RLS on every one, 209 policies, 113
+user-defined triggers, 132 functions, 62 migrations, 563 database tests and
+220 unit tests passing.** The web app builds 51 routes.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. Without it
@@ -73,6 +73,12 @@ a new user could sign in and then do nothing at all.
 A lesson can contain something: `add_lesson_resource()` attaches a video,
 reading or worksheet. Before it, every lesson published on the platform was an
 empty page, because nothing could write to the table the lesson page reads.
+
+A course can be assessed: `create_assessment()`, `add_assessment_question()` and
+`activate_assessment()`. Until then no teacher could create a quiz, so
+`submit_attempt()` was unreachable and any completion rule that needed an
+assessment could never be satisfied. Publishing now **refuses a version with a
+draft assessment left behind** — D5 would freeze it invisible to learners.
 
 A family can be created: `create_family()` writes the family **and** its owner
 membership in one transaction. Until then no family could exist at all — the

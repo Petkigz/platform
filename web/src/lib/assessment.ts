@@ -238,3 +238,360 @@ export function choicesOf(q: Question): { id: string; text: string }[] {
     })
     .filter((x): x is { id: string; text: string } => x !== null);
 }
+
+// ---------------------------------------------------------------------------
+// Authoring assessments
+//
+// Everything above assumes an assessment exists. Until now none could:
+// `assessments` and `assessment_questions` both had zero rows and no writer, so
+// no teacher could create a quiz. That cascaded — completion rules of type
+// `assessment_submitted` and `assessment_passed` carry a `target_assessment_id`
+// with nothing to point at, and `submit_attempt()` above was unreachable.
+//
+// Note the reader filters `status = 'active'`, so a draft is invisible to a
+// learner, and D5 freezes assessments at publication. `createAssessment()`
+// therefore returns a draft that must be activated, and the database refuses to
+// publish a version with a draft left behind.
+// ---------------------------------------------------------------------------
+
+export const ASSESSMENT_TYPES = ['practice', 'graded', 'final'] as const;
+
+export type AssessmentType = (typeof ASSESSMENT_TYPES)[number];
+
+export const ASSESSMENT_TYPE_LABEL: Record<AssessmentType, string> = {
+  practice: 'Practice',
+  graded: 'Graded',
+  final: 'Final',
+};
+
+export const ASSESSMENT_TYPE_HINT: Record<AssessmentType, string> = {
+  practice: 'Not scored, so learners can rehearse. No pass mark.',
+  graded: 'Scored against a pass mark.',
+  final: 'Scored against a pass mark, intended as the last check.',
+};
+
+export type AuthoredAssessment = {
+  id: string;
+  title: string;
+  type: AssessmentType;
+  status: 'draft' | 'active' | 'retired';
+  passThreshold: number | null;
+  questionCount: number;
+};
+
+/**
+ * The author's own assessments for one version, including drafts.
+ *
+ * Deliberately not the same query as `fetchAssessmentsForVersion`, which filters
+ * to `active` for learners. An author has to see the drafts, or a half-finished
+ * assessment would simply vanish from the editor.
+ */
+export async function fetchAuthoredAssessments(
+  supabase: SupabaseClient,
+  versionId: string,
+): Promise<AuthoredAssessment[]> {
+  const { data, error } = await supabase
+    .from('assessments')
+    .select(
+      'id, title, type, status, pass_threshold, assessment_questions ( id )',
+    )
+    .eq('course_version_id', versionId)
+    .order('title', { ascending: true });
+
+  if (error) throw new Error(error.message);
+
+  type Row = {
+    id: string;
+    title: string;
+    type: string;
+    status: string;
+    pass_threshold: number | null;
+    assessment_questions: { id: string }[] | null;
+  };
+
+  return ((data ?? []) as unknown as Row[]).map((a) => ({
+    id: String(a.id),
+    title: String(a.title),
+    type: a.type as AssessmentType,
+    status: a.status as AuthoredAssessment['status'],
+    passThreshold: a.pass_threshold === null ? null : Number(a.pass_threshold),
+    questionCount: a.assessment_questions?.length ?? 0,
+  }));
+}
+
+export type CreateAssessmentInput = {
+  versionId: string;
+  title: string;
+  type?: AssessmentType;
+  passThreshold?: number | null;
+  attemptLimit?: number | null;
+  instructions?: string;
+  lessonId?: string | null;
+};
+
+export type CreateAssessmentResult =
+  | { ok: true; assessmentId: string }
+  | { ok: false; message: string };
+
+/**
+ * Validate before the request, because the rules are easy to get wrong in the
+ * form and a constraint name is not an explanation.
+ *
+ * The pair that trips people up: a practice assessment must NOT have a pass
+ * mark, and a graded or final one must.
+ */
+export function validateCreateAssessment(
+  input: CreateAssessmentInput,
+): CreateAssessmentResult {
+  if (!input.versionId)
+    return { ok: false, message: 'That course version is missing.' };
+
+  const title = input.title.trim();
+  if (title.length === 0)
+    return { ok: false, message: 'Give the assessment a title.' };
+  if (title.length > 200)
+    return { ok: false, message: 'Keep the title under 200 characters.' };
+
+  const type = input.type ?? 'graded';
+  if (!ASSESSMENT_TYPES.includes(type))
+    return { ok: false, message: 'That is not a kind of assessment we support.' };
+
+  const threshold =
+    input.passThreshold === undefined ? null : input.passThreshold;
+
+  if (type === 'practice' && threshold !== null)
+    return {
+      ok: false,
+      message: 'A practice assessment is not scored, so it cannot have a pass mark.',
+    };
+
+  if (type !== 'practice' && threshold === null)
+    return {
+      ok: false,
+      message: `A ${ASSESSMENT_TYPE_LABEL[type].toLowerCase()} assessment needs a pass mark.`,
+    };
+
+  if (threshold !== null) {
+    if (!Number.isFinite(threshold) || threshold < 0 || threshold > 100)
+      return { ok: false, message: 'A pass mark must be between 0 and 100.' };
+  }
+
+  const limit = input.attemptLimit === undefined ? null : input.attemptLimit;
+  if (limit !== null) {
+    if (!Number.isInteger(limit) || limit <= 0)
+      return { ok: false, message: 'An attempt limit must be at least 1.' };
+  }
+
+  return { ok: true, assessmentId: '' };
+}
+
+export async function createAssessment(
+  supabase: SupabaseClient,
+  input: CreateAssessmentInput,
+): Promise<CreateAssessmentResult> {
+  const check = validateCreateAssessment(input);
+  if (!check.ok) return check;
+
+  const { data, error } = await supabase.rpc('create_assessment', {
+    p_course_version_id: input.versionId,
+    p_title: input.title.trim(),
+    p_type: input.type ?? 'graded',
+    p_lesson_id: input.lessonId ?? null,
+    p_pass_threshold:
+      input.passThreshold === undefined ? null : input.passThreshold,
+    p_attempt_limit: input.attemptLimit === undefined ? null : input.attemptLimit,
+    p_instructions: input.instructions?.trim() || null,
+  });
+
+  if (error) {
+    const m = error.message;
+    if (/only the author may add an assessment/i.test(m))
+      return { ok: false, message: 'Only the author can change this course.' };
+    if (/locked \(D5\)/i.test(m))
+      return {
+        ok: false,
+        message:
+          'That version is published and frozen. Create a new version to change it.',
+      };
+    if (/needs a title/i.test(m))
+      return { ok: false, message: 'Give the assessment a title.' };
+    if (/not graded/i.test(m))
+      return {
+        ok: false,
+        message: 'A practice assessment is not scored, so it cannot have a pass mark.',
+      };
+    if (/needs a pass mark/i.test(m))
+      return { ok: false, message: 'That assessment needs a pass mark.' };
+    if (/between 0 and 100/i.test(m))
+      return { ok: false, message: 'A pass mark must be between 0 and 100.' };
+    if (/at least 1/i.test(m))
+      return { ok: false, message: 'An attempt limit must be at least 1.' };
+    if (/belongs to version/i.test(m))
+      return { ok: false, message: 'That lesson belongs to a different version.' };
+    return { ok: false, message: m };
+  }
+
+  return { ok: true, assessmentId: data === null ? '' : String(data) };
+}
+
+export type AddQuestionInput = {
+  assessmentId: string;
+  type?: QuestionType;
+  prompt: string;
+  choices?: { id: string; text: string }[];
+  answerId?: string;
+  points?: number;
+  gradingMethod?: 'automatic' | 'manual';
+  explanation?: string;
+};
+
+export type AddQuestionResult =
+  | { ok: true; questionId: string }
+  | { ok: false; message: string };
+
+/**
+ * Validate a question.
+ *
+ * The rule that matters: an automatically graded question needs an answer, or
+ * the attempt can never be marked and the learner is left hanging. A manually
+ * graded one must not have one, because there would be nothing to grade against.
+ */
+export function validateAddQuestion(
+  input: AddQuestionInput,
+): AddQuestionResult {
+  if (!input.assessmentId)
+    return { ok: false, message: 'That assessment is missing.' };
+
+  const prompt = input.prompt.trim();
+  if (prompt.length === 0)
+    return { ok: false, message: 'Write the question itself.' };
+
+  const type = input.type ?? 'single_choice';
+  const grading = input.gradingMethod ?? 'automatic';
+
+  if (grading !== 'automatic' && grading !== 'manual')
+    return { ok: false, message: 'That is not a way to mark a question.' };
+
+  const points = input.points === undefined ? 1 : input.points;
+  if (!Number.isFinite(points) || points <= 0)
+    return { ok: false, message: 'A question is worth at least one point.' };
+
+  if (type === 'single_choice' || type === 'multiple_choice') {
+    const choices = input.choices ?? [];
+    if (choices.length < 2)
+      return { ok: false, message: 'Give at least two choices.' };
+    if (choices.some((c) => c.text.trim().length === 0))
+      return { ok: false, message: 'A choice cannot be blank.' };
+
+    if (grading === 'automatic') {
+      if (!input.answerId)
+        return { ok: false, message: 'Mark which choice is correct.' };
+      if (!choices.some((c) => c.id === input.answerId))
+        return { ok: false, message: 'The correct answer is not one of the choices.' };
+    }
+  }
+
+  if (type === 'true_false' && grading === 'automatic' && !input.answerId)
+    return { ok: false, message: 'Mark whether the statement is true or false.' };
+
+  return { ok: true, questionId: '' };
+}
+
+export async function addAssessmentQuestion(
+  supabase: SupabaseClient,
+  input: AddQuestionInput,
+): Promise<AddQuestionResult> {
+  const check = validateAddQuestion(input);
+  if (!check.ok) return check;
+
+  const type = input.type ?? 'single_choice';
+  const grading = input.gradingMethod ?? 'automatic';
+  const choices = input.choices ?? [];
+
+  // Content and answer key are stored as JSON. The key is never returned to an
+  // authenticated client — assessment_questions_read excludes it — so writing it
+  // here is the only place it enters the system.
+  const content: Record<string, unknown> = { prompt: input.prompt.trim() };
+  if (type === 'single_choice' || type === 'multiple_choice') {
+    content.choices = choices.map((c) => ({ id: c.id, text: c.text.trim() }));
+  }
+
+  let answerKey: Record<string, unknown> | null = null;
+  if (grading === 'automatic') {
+    answerKey =
+      type === 'multiple_choice'
+        ? { answers: [input.answerId ?? ''] }
+        : { answer: input.answerId ?? 'true' };
+  }
+
+  const { data, error } = await supabase.rpc('add_assessment_question', {
+    p_assessment_id: input.assessmentId,
+    p_type: type,
+    p_content: content,
+    p_points: input.points === undefined ? 1 : input.points,
+    p_grading_method: grading,
+    p_answer_key: answerKey,
+    p_explanation: input.explanation?.trim() || null,
+  });
+
+  if (error) {
+    const m = error.message;
+    if (/only the author may add questions/i.test(m))
+      return { ok: false, message: 'Only the author can change this assessment.' };
+    if (/locked \(D5\)/i.test(m))
+      return {
+        ok: false,
+        message:
+          'That version is published and frozen. Create a new version to change it.',
+      };
+    if (/needs an answer key/i.test(m))
+      return { ok: false, message: 'Mark the correct answer, or switch it to manual marking.' };
+    if (/JSON object/i.test(m))
+      return { ok: false, message: 'The question content was malformed.' };
+    if (/at least one point/i.test(m))
+      return { ok: false, message: 'A question is worth at least one point.' };
+    if (/not found/i.test(m))
+      return { ok: false, message: 'That assessment no longer exists.' };
+    return { ok: false, message: m };
+  }
+
+  return { ok: true, questionId: data === null ? '' : String(data) };
+}
+
+export type ActivateAssessmentResult =
+  | { ok: true }
+  | { ok: false; message: string };
+
+/**
+ * Make an assessment visible to learners.
+ *
+ * The reader only shows `active`, and D5 freezes assessments at publication, so
+ * this is the step that must not be forgotten — which is why the database also
+ * refuses to publish a version with a draft left behind.
+ */
+export async function activateAssessment(
+  supabase: SupabaseClient,
+  assessmentId: string,
+): Promise<ActivateAssessmentResult> {
+  if (!assessmentId)
+    return { ok: false, message: 'That assessment is missing.' };
+
+  const { error } = await supabase.rpc('activate_assessment', {
+    p_assessment_id: assessmentId,
+  });
+
+  if (error) {
+    const m = error.message;
+    if (/at least one question/i.test(m))
+      return { ok: false, message: 'Add at least one question first.' };
+    if (/only the author may activate/i.test(m))
+      return { ok: false, message: 'Only the author can change this assessment.' };
+    if (/has been retired/i.test(m))
+      return { ok: false, message: 'That assessment has been retired.' };
+    if (/not found/i.test(m))
+      return { ok: false, message: 'That assessment no longer exists.' };
+    return { ok: false, message: m };
+  }
+
+  return { ok: true };
+}
