@@ -53,6 +53,8 @@ npm run test        # both
 | `/api/progress` | dynamic | POST. Record lesson progress |
 | `/learn/[enrolmentId]/assessment/[assessmentId]` | dynamic | Take an assessment |
 | `/api/assessment` | dynamic | POST. start / answer / submit |
+| `/admin` | dynamic | Feature flags. Privileged only |
+| `/api/admin/flags` | dynamic | POST. Flip a flag |
 | `/sign-out` | dynamic | POST only |
 
 ## The theme is white and green
@@ -128,6 +130,26 @@ columns. Never write `select('*')` against that table — name the columns.
 The key has no read path in the application at all, for any role including
 `platform_admin`. `grade_response()` is its only reader.
 `supabase/tests/assessment.test.mjs` asserts all three of those.
+
+## Feature flags
+
+Every feature is built and shipped off. `/admin` is where they get turned on.
+
+Flags come in three gates, recorded in `platform_settings.gate_type`:
+
+| Gate | Meaning |
+|---|---|
+| `admin` | Pure runtime toggle. Flip it. |
+| `admin_setup` | Toggle exists, but external setup must finish first. |
+| `code` | Needs a deploy. **Cannot be enabled at runtime.** |
+
+A `code` flag being unflippable is enforced by `reject_code_flag_enablement()`
+in the database, not by the UI hiding the switch. A UI that hides something is
+not a control. A migration can still enable one by setting
+`app.bypassing_code_flag = 'on'`.
+
+Gate a feature with `isFlagEnabled(supabase, 'learning.discussion')`, which
+calls `setting_bool()` — readable by any role, unlike the table itself.
 
 ## Not built yet
 

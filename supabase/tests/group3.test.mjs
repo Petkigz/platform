@@ -110,13 +110,26 @@ export async function run(ctx) {
     assert(safe.rows.length === 1, 'the safe projection of reviewer_profiles failed');
   });
 
-  await test('platform settings cannot be enumerated by a client', async () => {
-    // There is no SELECT policy, so the rows are invisible rather than
-    // protected by an error. Assert nothing comes back.
-    const n = await asUser(admin, () => count('select count(*)::int n from public.platform_settings'));
-    assert(n === 0, `a client read ${n} settings rows`);
-    // The security definer accessor still works, which is the point.
-    const v = (await asUser(admin, () => q(
+  await test('platform settings are readable by staff and by nobody else', async () => {
+    // This used to assert that the rows were invisible to everyone, because
+    // there was no SELECT policy at all. That changed when the admin flag
+    // dashboard needed to render the list (20261024000100_flag_register.sql).
+    // The property that matters is narrower and is asserted on both sides:
+    // privileged roles can read, and an ordinary signed-in user still cannot.
+    const staff = await asUser(admin, () =>
+      count('select count(*)::int n from public.platform_settings'));
+    assert(staff > 0, 'a privileged role could not read the flag register');
+
+    const nobody = await newUser('g3-settings-observer@example.com');
+    await newProfile(nobody);
+    const seen = await asUser(nobody, () =>
+      count('select count(*)::int n from public.platform_settings'));
+    assert(seen === 0, `an ordinary user read ${seen} settings rows`);
+
+    // The security definer accessor still works for everyone, which is the
+    // point: the app reads a setting through setting_bool(), not by selecting
+    // the table.
+    const v = (await asUser(nobody, () => q(
       `select public.setting_bool('governance.panel_required', true) as v`))).rows[0].v;
     assert(v === false, 'setting_bool stopped working for a client');
   });

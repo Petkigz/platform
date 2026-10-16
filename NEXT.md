@@ -174,11 +174,41 @@ platform admin cannot read it through SQL** — grading happens inside
 
 **231 tests pass.**
 
+### Also done since: the admin flag dashboard
+
+`/admin` is the page the standing architecture decision points at — build
+everything, ship it off, turn it on from here. All 86 flags from `FLAGS.md`
+are seeded into `platform_settings`, each with its gate type and its written
+precondition, so the dashboard shows *why* a flag is off and not only that it
+is.
+
+**A `code`-gated flag cannot be enabled at runtime, and that is a trigger.**
+31 of the 86 need a deploy, a provider, or a policy document first. Enforcing
+that in the UI by hiding the switch would not be a control — the API is
+reachable and so is psql. `reject_code_flag_enablement()` refuses it; a
+migration can still do it by setting `app.bypassing_code_flag`, the same
+pattern the version lock and enrolment pin use.
+
+Two things had to change to make this possible. `platform_settings` had no
+SELECT policy at all, so nothing could render the list; it now has one,
+privileged-only, and an ordinary signed-in user still reads zero rows. And
+`FLAGS.md` held two duplicate keys — `learning.wishlist` and
+`teaching.applications`, each listed twice with different preconditions. Both
+were merged with their preconditions preserved; a register with duplicate keys
+cannot be a primary key.
+
+**243 tests pass.**
+
 ### What comes after that
 
 The paid path. It needs a provider, and a provider needs merchant
 registration and signed API terms (P12). Until then `payment_required` is the
-honest answer and the UI says so. And **certificates** are staff-issued only
+honest answer and the UI says so.
+
+The dashboard also makes a gap visible: only `governance.panel_required` is
+actually consulted in SQL. The other 85 flags are recorded and toggleable but
+nothing reads them yet, because the features they gate are not wired. Each one
+needs its `isFlagEnabled()` call added where the feature lives. And **certificates** are staff-issued only
 (`issue_certificate` requires a privileged actor or a support agent), so a
 learner completing a course does not get one automatically — that is a
 deliberate gate, and it will need a review step in the admin dashboard.

@@ -33,11 +33,10 @@ Three kinds of gate:
 | `learning.subject_nav` | Hierarchical subject browsing in the catalogue | ADMIN | `subject_areas` taxonomy populated — this is catalogue infrastructure, not governance |
 | `learning.reviews` | Learner ratings and reviews on courses | ADMIN | **Table does not exist.** Satisfaction signal only — **never a substitute for scholarly review**. Needs a moderation policy |
 | `learning.previews` | Free preview lessons before enrolment | ADMIN | Which lessons are free is per course version; interacts with entitlement checks |
-| `learning.wishlist` | Saved courses to buy later | ADMIN | **Table does not exist** |
 | `learning.badges` | Bestseller and rating badges in the catalogue | ADMIN | Threshold rules; must not imply scholarly endorsement |
 | `learning.notes_bookmarks` | Notes, bookmarks, transcripts | ADMIN | **Tables do not exist yet** — listed as a feature, never designed |
 | `learning.assignments` | Marked homework separate from quizzes | ADMIN | **Table does not exist yet** — grading workflow for assignments undesigned |
-| `learning.wishlist` | Saved courses to buy later | ADMIN | Only meaningful once `commerce.checkout` is on |
+| `learning.wishlist` | Saved courses to buy later | ADMIN | **Table does not exist.** Only meaningful once `commerce.checkout` is on |
 | `learning.multi_language` | Interface and content in more languages | CODE | Translation workflow; per-locale content; RTL support; who translates |
 | `learning.ai_support` | Safeguarded AI study help | CODE | Safeguarding policy; provider chosen; cost ceiling; **must refuse to issue rulings and refer to a teacher** |
 | `learning.ai_quiz_gen` | Generate quiz questions from lesson transcripts | ADMIN + SETUP | Provider and cost ceiling; teacher reviews every generated question before use |
@@ -88,13 +87,12 @@ Three kinds of gate:
 | `teaching.qa_capacity` | Limits or queueing on per-lesson questions | ADMIN | A teacher with an audience behind them will be overwhelmed without it |
 | `teaching.public_profile` | Public instructor page with bio, qualifications and courses | ADMIN | **Does not exist.** `reviewer_profiles` is internal, not public. This is where a teacher sends their own audience |
 | `teaching.set_pricing` | Instructor sets price within a platform floor and ceiling | ADMIN + SETUP | Floor/ceiling per market; interacts with `prices`; blocked on the same facts as checkout |
-| `teaching.applications` | Open applications to teach | CODE | Currently a curated cohort by decision. **Build the queue, keep it closed** — cheapest way to preserve the option |
 | `teaching.invite_links` | Shareable link with attribution to the teacher | ADMIN | Attribution model; UTM handling; abuse limits. **The growth engine — teachers already have audiences** |
 | `teaching.content_licence` | Who owns uploaded content and what licence the platform holds | CODE | **Nothing exists.** Written agreement needed before the first teacher uploads |
 | `teaching.screening` | Teacher screening and conduct acknowledgement | CODE | Screening policy; record retention; who verifies |
 | `teaching.peer_review` | One other teacher reviews before publish | ADMIN | Who reviews; what happens on disagreement |
 | `teaching.panel` | Scholarly panel with quorum and voting | CODE | Quorum policy; voting rules; conflict declarations; appeals. **Currently open — do not build until decided** |
-| `teaching.applications` | Unknown teachers apply to teach | CODE | Vetting process; terms for teachers; rejection handling |
+| `teaching.applications` | Open applications to teach — unknown teachers apply | CODE | Currently a curated cohort by decision. **Build the queue, keep it closed** — cheapest way to preserve the option. Needs a vetting process, terms for teachers, and rejection handling |
 | `teaching.payouts` | Teachers earn and get paid | CODE | Revenue share decided; payout provider; tax treatment; minimum thresholds; dispute process |
 
 ## Money
