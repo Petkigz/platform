@@ -129,14 +129,41 @@ one moment it mattered. Fixed in `20261023000100_enrolment_gate.sql`;
 
 **208 tests pass.**
 
+### Also done since: progress and completion
+
+`/learn` now shows a real progress bar per course, and `/learn/[enrolmentId]`
+is the course view: sections, lessons, mark complete, undo. `POST
+/api/progress` records it. Mark-complete is optimistic — a tick that waits on
+a round trip feels broken on a slow connection, and ease of use is the first
+design constraint.
+
+Two things worth knowing about the model:
+
+**Progress is pinned to the version the learner enrolled into.** Recording
+progress against a lesson from a different version is refused by
+`enforce_progress_version_match`. Publishing v2 leaves v1 progress untouched
+and does not move anyone's enrolment. Both are pinned by tests.
+
+**Completion is derived, not stored.** There is no `course_completions` table.
+`evaluate_completion()` recomputes from recorded facts and returns what is
+still blocking, so a completion report cannot drift out of sync with a
+progress bar. `progress.test.mjs` asserts the table does not exist, so nobody
+adds one by accident.
+
+**219 tests pass.**
+
 ### What comes after that
 
 The paid path. It needs a provider, and a provider needs merchant
 registration and signed API terms (P12). Until then `payment_required` is the
 honest answer and the UI says so.
 
-The next piece that is not blocked: **progress**. Marking a lesson complete and
-computing course completion — the tables and functions already exist.
+Otherwise unblocked: **assessments** — quizzes, attempts and grading. The
+tables, `grade_response()` and the answer-key column privilege all exist; only
+the UI is missing. And **certificates** are staff-issued only
+(`issue_certificate` requires a privileged actor or a support agent), so a
+learner completing a course does not get one automatically — that is a
+deliberate gate, and it will need a review step in the admin dashboard.
 
 ### Not now
 

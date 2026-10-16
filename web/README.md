@@ -49,6 +49,8 @@ npm run test        # both
 | `/auth/confirm` | dynamic | Supabase email confirmation and magic links |
 | `/learn` | dynamic | The authenticated screen, reading through RLS |
 | `/api/enrol` | dynamic | POST. Free enrolment only |
+| `/learn/[enrolmentId]` | dynamic | Course view: outline and mark-complete |
+| `/api/progress` | dynamic | POST. Record lesson progress |
 | `/sign-out` | dynamic | POST only |
 
 ## The theme is white and green
