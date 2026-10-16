@@ -62,8 +62,8 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 ## Status
 
-The database is complete: **88 tables, RLS on every one, 203 policies, 146
-triggers, 90 functions, 43 migrations, 299 database tests and 19 unit
+The database is complete: **88 tables, RLS on every one, 203 policies, 148
+triggers, 91 functions, 44 migrations, 303 database tests and 19 unit
 tests passing.**
 
 All five logical schema groups are built. Every frozen decision — D1

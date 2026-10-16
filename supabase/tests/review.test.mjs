@@ -110,6 +110,96 @@ export async function run(ctx) {
     });
   });
 
+  await test('a reviewer cannot verify themselves', async () => {
+    // The defect this pins: reviewer_profiles_insert and _update both admit
+    // your own row and said nothing about reviewer_status, so a single insert
+    // produced a profile reading as verified, with yourself recorded as the
+    // verifier. reviewer_profiles_read shows active profiles to anon, so the
+    // false credential was public.
+    const userId = await newUser('rev-selfverify@example.com');
+    await newProfile(userId, 'Self Verifier');
+
+    // Straight to active in one insert.
+    await asUser(userId, async () => {
+      await rejects(() => q(
+        `insert into public.reviewer_profiles
+           (user_id, reviewer_status, verified_at, verified_by)
+         values ($1, 'active', now(), $1)`, [userId]),
+        'a user inserted their own profile already verified');
+    });
+
+    // The two-step version: register as an applicant, then promote yourself.
+    await committed(async () => {
+      await q(`insert into public.reviewer_profiles (user_id, reviewer_status)
+               values ($1, 'applicant')`, [userId]);
+    });
+
+    await asUser(userId, async () => {
+      await rejects(() => q(
+        `update public.reviewer_profiles
+            set reviewer_status = 'active', verified_at = now(), verified_by = $1
+          where user_id = $1`, [userId]),
+        'a user promoted their own profile to active');
+
+      // Recording the verification without changing status is the same act.
+      await rejects(() => q(
+        `update public.reviewer_profiles
+            set verified_at = now(), verified_by = $1
+          where user_id = $1`, [userId]),
+        'a user recorded their own verification');
+    });
+
+    const row = (await q(
+      'select reviewer_status s, verified_at v from public.reviewer_profiles where user_id = $1',
+      [userId])).rows[0];
+    assert(row.s === 'applicant', `the profile ended up '${row.s}'`);
+    assert(row.v === null, 'the profile carried a verified_at timestamp');
+  });
+
+  await test('an unverified profile is not offered for assignment', async () => {
+    // The admin assignment list filters on reviewer_status = 'active', so a
+    // self-registered applicant must not appear in it.
+    const n = await count(
+      `select 1 from public.reviewer_profiles
+        where reviewer_status = 'active' and user_id = $1`,
+      [(await q(`select user_id u from public.reviewer_profiles
+                  where reviewer_status = 'applicant' limit 1`)).rows[0]?.u ?? '00000000-0000-0000-0000-000000000000']);
+    assert(n === 0, `${n} applicant(s) were listed as active`);
+  });
+
+  await test('staff can verify a reviewer, and that is the only path', async () => {
+    const userId = await newUser('rev-tobeverified@example.com');
+    await newProfile(userId, 'To Be Verified');
+    const profileId = await committed(async () => (await q(
+      `insert into public.reviewer_profiles (user_id, reviewer_status)
+       values ($1, 'applicant') returning id`, [userId])).rows[0].id);
+
+    await q(`update public.reviewer_profiles
+                set reviewer_status = 'active', verified_at = now(), verified_by = $1
+              where id = $2`, [admin, profileId]);
+
+    const row = (await q(
+      'select reviewer_status s, verified_by b from public.reviewer_profiles where id = $1',
+      [profileId])).rows[0];
+    assert(row.s === 'active', `staff could not verify the reviewer; status '${row.s}'`);
+    assert(row.b === admin, 'verified_by was not the admin who did it');
+  });
+
+  await test('self-registration as an applicant still works', async () => {
+    // Guard against over-blocking: the fix is about verification, not about
+    // applying. If this fails, the trigger has been scoped too widely and
+    // nobody can ask to become a reviewer.
+    const userId = await newUser('rev-applicant2@example.com');
+    await newProfile(userId, 'Applicant Two');
+
+    await asUser(userId, async () => {
+      const r = await q(
+        `insert into public.reviewer_profiles (user_id, reviewer_status, public_bio)
+         values ($1, 'applicant', 'I would like to review.') returning id`, [userId]);
+      assert(r.rows.length === 1, 'a user could not apply to become a reviewer');
+    });
+  });
+
   await test('a privileged admin can create an assignment', async () => {
     const v = await submittedVersion();
     const a = await assign(v.version, rpReviewer);

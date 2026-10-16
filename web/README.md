@@ -156,6 +156,11 @@ its assignment, and that `decided_by` is the reviewer the assignment names. It
 is a trigger rather than a policy because a SECURITY DEFINER function bypasses
 RLS but not triggers.
 
+A reviewer cannot verify themselves. `protect_reviewer_verification()` refuses
+a self-service write that would set `reviewer_status` to `active` or
+`suspended`, or record `verified_at` / `verified_by`. Applying as an
+`applicant` still works; only staff can move a profile past that.
+
 Assignments are created only from `/admin/reviews`. A reviewer has to create
 their own profile before they can be assigned one —
 `reviewer_profiles_insert` admits only `user_id = current_user_id()`, so staff

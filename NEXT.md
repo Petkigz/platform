@@ -361,6 +361,50 @@ up for review is the kind of thing that erodes trust in a review step.
 
 **299 tests pass.**
 
+### Also done since: a reviewer could verify themselves
+
+While checking the reviewer onboarding loop end to end I found that a signed-in
+user could make their own profile read as verified, in a single statement:
+
+```sql
+insert into reviewer_profiles (user_id, reviewer_status, verified_at, verified_by)
+values (auth.uid(), 'active', now(), auth.uid());
+```
+
+`reviewer_profiles_insert` admits any row where `user_id = current_user_id()`,
+and `_update` admits any update to your own row. Neither said anything about
+`reviewer_status`, so the two-step version worked too: apply as an `applicant`,
+then promote yourself.
+
+It is worth being precise about what that did and did not buy. **It was not a
+route to approving courses.** `is_authorised_reviewer()` additionally requires a
+live `reviewer_subject_authorizations` row, and `rsa_write` is privileged only,
+so `validate_review_assignment()` still refused to assign a self-verified
+reviewer to any version with review requirements. I checked that rather than
+assuming it, because the severity of the fix depends on it.
+
+What it *was* is a public false credential. `reviewer_profiles_read` shows
+active profiles to the anonymous role, so a self-verified profile was displayed
+to the world as a verified reviewer — and it landed in the staff assignment
+dropdown, which filters on `reviewer_status = 'active'`. So the defect degraded
+a human judgement rather than bypassing a machine one.
+
+`protect_reviewer_verification()` now refuses it. The scoping took a second
+attempt: my first version exempted "privileged or no JWT subject", which broke
+twelve tests across four suites because the fixtures run as superuser with no
+claims. The narrower rule is also the more honest one — the defect is a person
+verifying their *own* profile, so the trigger fires only when the row belongs
+to the acting user. A rule whose exemption is "there is no authenticated user"
+can be read as trusting the anonymous role; a rule whose exemption is "this row
+is not yours" cannot.
+
+The regression test was checked for teeth: with the guard neutered the suite
+reports 1 failure, restored it reports 0. A separate test asserts
+self-registration as an `applicant` still works, so the fix cannot quietly
+become "nobody can apply to be a reviewer".
+
+**303 tests pass.**
+
 ### What comes after that
 
 The paid path. It needs a provider, and a provider needs merchant
