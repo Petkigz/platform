@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { ownLearnerProfileId } from '@/lib/enrolment';
 import { fetchQuestions, startAttempt, type Attempt } from '@/lib/assessment';
+import { isFlagEnabled } from '@/lib/flags';
 import { Quiz } from './quiz';
 
 export const dynamic = 'force-dynamic';
@@ -71,6 +72,10 @@ export default async function AssessmentPage({
   // the same here. Both are a notFound; neither is worth distinguishing to
   // someone who did not have access in the first place.
   if (!assessment || assessment.course_version_id !== enrolment.course_version_id) notFound();
+
+  if (!(await isFlagEnabled(supabase, 'learning.assessments').catch(() => false))) {
+    redirect(`/learn/${enrolmentId}`);
+  }
 
   const started = await startAttempt(supabase, {
     learnerProfileId: enrolment.learner_profile_id,

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { ownLearnerProfileId } from '@/lib/enrolment';
 import { saveResponse, startAttempt, submitAttempt } from '@/lib/assessment';
+import { isFlagEnabled } from '@/lib/flags';
 
 /**
  * One endpoint, three verbs: start, answer, submit.
@@ -57,6 +58,21 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { ok: false, code: 'not_signed_in', message: 'Sign in first.' },
       { status: 401 },
+    );
+  }
+
+  // The gate is checked here as well as in the UI, because the UI hiding a
+  // button is not a control. An in-flight attempt is still allowed to submit,
+  // so turning the flag off mid-quiz does not strand a learner who was
+  // already answering.
+  if (action === 'start' && !(await isFlagEnabled(supabase, 'learning.assessments').catch(() => false))) {
+    return NextResponse.json(
+      {
+        ok: false,
+        code: 'rejected',
+        message: 'Assessments are not enabled on this platform yet.',
+      },
+      { status: 403 },
     );
   }
 

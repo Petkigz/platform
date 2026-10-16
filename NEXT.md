@@ -205,10 +205,17 @@ The paid path. It needs a provider, and a provider needs merchant
 registration and signed API terms (P12). Until then `payment_required` is the
 honest answer and the UI says so.
 
-The dashboard also makes a gap visible: only `governance.panel_required` is
-actually consulted in SQL. The other 85 flags are recorded and toggleable but
-nothing reads them yet, because the features they gate are not wired. Each one
-needs its `isFlagEnabled()` call added where the feature lives. And **certificates** are staff-issued only
+The dashboard also made a gap visible, and the first two are now closed:
+`learning.progress` gates the progress bar and mark-complete, and
+`learning.assessments` gates the quiz, its route, and its API. The remaining
+84 flags are recorded and toggleable but nothing reads them yet, because the
+features they gate are not built. Each one needs its `isFlagEnabled()` call
+added where the feature lives.
+
+The gate is checked in the API as well as the UI, because a UI hiding a button
+is not a control. One deliberate exception: an attempt already in progress may
+still be submitted, so turning assessments off mid-quiz does not strand a
+learner who was already answering. And **certificates** are staff-issued only
 (`issue_certificate` requires a privileged actor or a support agent), so a
 learner completing a course does not get one automatically — that is a
 deliberate gate, and it will need a review step in the admin dashboard.

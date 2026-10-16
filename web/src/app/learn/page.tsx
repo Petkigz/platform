@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { fetchSummary } from '@/lib/progress';
+import { isFlagEnabled } from '@/lib/flags';
 
 export const dynamic = 'force-dynamic';
 
@@ -81,8 +82,7 @@ export default async function LearnPage() {
     }),
   );
 
-  const active = rows.length > 0 && summaries.some((s) => s.lessonsDone > 0);
-  void active;
+  const progressOn = await isFlagEnabled(supabase, 'learning.progress').catch(() => false);
 
   return (
     <div className="container section">
@@ -137,6 +137,7 @@ export default async function LearnPage() {
                   <span className="badge neutral">{language(r).toUpperCase()}</span>
                 </div>
 
+                {progressOn && (
                 <div
                   className="progress"
                   role="progressbar"
@@ -147,10 +148,12 @@ export default async function LearnPage() {
                 >
                   <span style={{ width: `${Math.min(100, Math.max(0, s.percentComplete))}%` }} />
                 </div>
+                )}
 
                 <div className="meta" style={{ marginTop: '0.5rem' }}>
-                  {s.lessonsDone} of {s.lessonsTotal} lessons ·{' '}
-                  {Math.round(s.percentComplete)}%
+                  {progressOn
+                    ? `${s.lessonsDone} of ${s.lessonsTotal} lessons · ${Math.round(s.percentComplete)}%`
+                    : `${s.lessonsTotal} lessons`}
                 </div>
 
                 <Link href={`/learn/${r.id}`} className="btn secondary" style={{ marginTop: '1rem' }}>

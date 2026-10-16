@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { fetchCompletion, fetchProgress, fetchSummary } from '@/lib/progress';
 import { fetchAssessmentsForVersion } from '@/lib/assessment';
+import { isFlagEnabled } from '@/lib/flags';
 import { MarkComplete } from './mark-complete';
 
 export const dynamic = 'force-dynamic';
@@ -84,12 +85,17 @@ export default async function CourseViewPage({
     .slice()
     .sort((a, b) => a.position - b.position);
 
-  const [progress, summary, completion, assessments] = await Promise.all([
-    fetchProgress(supabase, enrolment.id),
-    fetchSummary(supabase, enrolment.id),
-    fetchCompletion(supabase, enrolment.id).catch(() => null),
-    fetchAssessmentsForVersion(supabase, enrolment.course_version_id).catch(() => []),
-  ]);
+  // Feature gates. Read through setting_bool(), which any role may call, so
+  // this works for a learner as well as for staff.
+  const [progressOn, assessmentsOn, progress, summary, completion, assessments] =
+    await Promise.all([
+      isFlagEnabled(supabase, 'learning.progress').catch(() => false),
+      isFlagEnabled(supabase, 'learning.assessments').catch(() => false),
+      fetchProgress(supabase, enrolment.id),
+      fetchSummary(supabase, enrolment.id),
+      fetchCompletion(supabase, enrolment.id).catch(() => null),
+      fetchAssessmentsForVersion(supabase, enrolment.course_version_id).catch(() => []),
+    ]);
 
   const pct = Math.round(summary.percentComplete);
 
@@ -104,6 +110,14 @@ export default async function CourseViewPage({
         Version {version?.version_number ?? '?'} · {(version?.language ?? '?').toUpperCase()}
       </p>
 
+      {!progressOn && (
+        <div className="notice warn">
+          Progress tracking is not enabled yet. You can still read the course
+          and play its lessons; nothing is being recorded.
+        </div>
+      )}
+
+      {progressOn && (
       <div className="card" style={{ marginBottom: '1.5rem' }}>
         <div
           className="progress"
@@ -137,6 +151,7 @@ export default async function CourseViewPage({
           </div>
         )}
       </div>
+      )}
 
       {sections.length === 0 ? (
         <p className="empty">This course has no published outline yet.</p>
@@ -167,11 +182,13 @@ export default async function CourseViewPage({
                             </span>
                           )}
                         </span>
-                        <MarkComplete
-                          enrolmentId={enrolment.id}
-                          lessonId={l.id}
-                          initiallyDone={done}
-                        />
+                        {progressOn && (
+                          <MarkComplete
+                            enrolmentId={enrolment.id}
+                            lessonId={l.id}
+                            initiallyDone={done}
+                          />
+                        )}
                       </li>
                     );
                   })}
@@ -181,7 +198,7 @@ export default async function CourseViewPage({
         ))
       )}
 
-      {assessments.length > 0 && (
+      {assessmentsOn && assessments.length > 0 && (
         <div>
           <div className="outline-h">
             <h3>Assessments</h3>
