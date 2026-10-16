@@ -6,6 +6,8 @@ import { fetchVersions } from '@/lib/authoring';
 import { Curriculum } from './curriculum';
 import { fetchRejections } from '@/lib/governance';
 import { AppealForm } from './appeal-form';
+import { fetchSubjects, fetchVersionSubjects } from '@/lib/authoring';
+import { SubjectPicker } from './subject-picker';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,13 +49,20 @@ export default async function TeachCoursePage({
   if (!row || row.created_by !== user.id) notFound();
 
   const versions = await fetchVersions(supabase, courseId);
+  const draft = versions.find((v) => v.status === 'draft');
+  const current = draft ?? versions[0];
 
   // Rejections the author is allowed to contest. The page has already
   // established authorship above, which is the check that makes this safe to
   // show.
   const rejections = await fetchRejections(supabase, courseId);
-  const draft = versions.find((v) => v.status === 'draft');
-  const current = draft ?? versions[0];
+
+  // Subject tagging, and the taxonomy it draws from. Tagging is what makes a
+  // course findable in the catalogue.
+  const [subjects, currentSubjects] = await Promise.all([
+    fetchSubjects(supabase),
+    current ? fetchVersionSubjects(supabase, current.id) : Promise.resolve<string[]>([]),
+  ]);
 
   return (
     <div className="container section">
@@ -80,6 +89,11 @@ export default async function TeachCoursePage({
               without touching what learners are already studying.
             </div>
           )}
+          <SubjectPicker
+            version={current}
+            subjects={subjects}
+            initial={currentSubjects}
+          />
           <Curriculum version={current} />
         </>
       )}

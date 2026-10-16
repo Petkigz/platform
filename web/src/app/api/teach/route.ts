@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import { addLesson, addSection, createCourse, transitionVersion } from '@/lib/authoring';
+import { addLesson, addSection, createCourse, setSubjects, transitionVersion } from '@/lib/authoring';
 
 /**
  * Course authoring writes.
  *
- * One route with an `action`, because these four are the whole authoring
+ * One route with an `action`, because these five are the whole authoring
  * surface and they share the same auth story: you are the author or you are
  * not, and the policies decide which. Nothing here grants permission — it
  * forwards to the database and reports what came back.
@@ -36,6 +36,7 @@ export async function POST(request: Request) {
     sectionId?: unknown;
     isPreview?: unknown;
     to?: unknown;
+    codes?: unknown;
   };
 
   const uuid = /^[0-9a-f-]{36}$/i;
@@ -113,6 +114,24 @@ export async function POST(request: Request) {
         versionId: b.versionId,
         to: b.to,
         actorId: user.id,
+      }),
+    );
+  }
+
+  // ---------------------------------------------------------------------
+  if (b.action === 'set_subjects') {
+    if (!isUuid(b.versionId) || !Array.isArray(b.codes)) {
+      return NextResponse.json(
+        { ok: false, code: 'rejected', message: 'A version and a list of subject codes are required.' },
+        { status: 400 },
+      );
+    }
+    // Codes are validated against subject_areas in the database, so a typo is
+    // reported by name rather than becoming a foreign key violation on a uuid.
+    return json(
+      await setSubjects(supabase, {
+        versionId: b.versionId,
+        codes: (b.codes as unknown[]).filter((c): c is string => typeof c === 'string'),
       }),
     );
   }

@@ -1025,6 +1025,48 @@ records that no test can distinguish it.
 
 **424 database tests, 135 unit tests, tsc clean, build clean, 51 routes.**
 
+### Also done since: courses could never be found by subject
+
+`subject_areas` is seeded with 37 subjects and subdivisions. The catalogue has a
+working subject filter and renders subject badges on every card. Both read
+`course_version_subjects`.
+
+That table had **zero rows and no writer**. So the filter narrowed against an
+empty set: choosing any subject returned no courses, forever, and every badge
+was empty. A learner browsing for Quran got a blank page however many courses
+were published. Thirteenth instance — and the first one a learner would actually
+have seen.
+
+**What was added.** `set_version_subjects()`, a `set_subjects` action on
+`/api/teach`, and a subject picker on the teaching page.
+
+**Tagging is draft-only, and that was not my choice.** I had written in the
+migration header that subject tags were "deliberately not frozen at publication",
+reasoning that tags are only discovery metadata. The tests disagreed:
+`lock_subject_mapping_of_locked_version()` already froze this table at
+publication, exactly as it does sections and lessons. The header is corrected,
+and the consequence is stated rather than hidden — **a mis-tagged published
+course cannot be corrected without cutting a new version.**
+
+**Two claims I had to retract.**
+
+I wrote that the write policies let any signed-in user tag anyone else's
+published course, because they used `can_read_version()` — which is true for
+every published version, to anyone. Testing it showed the insert was still
+refused, by the D5 lock rather than by RLS. A draft is refused by RLS, since
+`can_read_version()` is false for a stranger there. So both states were already
+covered, by two different mechanisms. The predicate is still corrected, because
+the right gate for a write is a write predicate — but it is defence in depth,
+not a patched hole.
+
+I also added a unique index claiming nothing prevented duplicate subjects. There
+already was one: `course_version_subjects_key`, on exactly the same two columns.
+Removing my index changed nothing, which is how I found it. It was invisible to
+my earlier probe because it is a unique **index**, not a unique **constraint**,
+and the probe filtered `pg_constraint` on `contype in ('c','u','f')`.
+
+**436 database tests, 145 unit tests, tsc clean, build clean, 51 routes.**
+
 ### What comes after that
 
 The paid path. It needs a provider, and a provider needs merchant

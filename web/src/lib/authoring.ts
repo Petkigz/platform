@@ -383,3 +383,88 @@ export async function transitionVersion(
 
   return { ok: true, value: { status: (data as unknown as VersionStatus) ?? args.to } };
 }
+
+export type SubjectOption = {
+  code: string;
+  name: string;
+  isTopLevel: boolean;
+};
+
+/**
+ * The subject taxonomy, for the tagging control.
+ *
+ * Seeded, not user-created: the subjects are a fixed scholarly taxonomy, and
+ * letting a teacher invent one would fragment the catalogue the filter depends
+ * on.
+ */
+export async function fetchSubjects(
+  supabase: SupabaseClient,
+): Promise<SubjectOption[]> {
+  const { data, error } = await supabase
+    .from('subject_areas')
+    .select('code, name, parent_id')
+    .order('name', { ascending: true });
+
+  if (error) throw new Error(error.message);
+
+  return ((data ?? []) as unknown as { code: string; name: string; parent_id: string | null }[])
+    .map((r) => ({ code: r.code, name: r.name, isTopLevel: r.parent_id === null }));
+}
+
+/**
+ * Set the subjects on a draft version.
+ *
+ * Replaces rather than merges, matching the database function: the caller sends
+ * the whole list, so removing a mistagging is possible.
+ *
+ * Draft only. D5 freezes subject mapping at publication exactly as it does
+ * sections and lessons, so this cannot be used to re-tag a live course — and
+ * the UI must not offer it as though it could.
+ */
+export async function setSubjects(
+  supabase: SupabaseClient,
+  args: { versionId: string; codes: string[] },
+): Promise<WriteOutcome<{ count: number }>> {
+  if (args.codes.length === 0) {
+    return {
+      ok: false,
+      code: 'rejected',
+      message: 'Choose at least one subject, or the course can never be found.',
+    };
+  }
+
+  const { data, error } = await supabase.rpc('set_version_subjects', {
+    p_version_id: args.versionId,
+    p_subject_codes: args.codes,
+  });
+
+  if (error) {
+    const m = error.message.toLowerCase();
+    if (m.includes('no such subject area')) {
+      return { ok: false, code: 'rejected', message: error.message };
+    }
+    if (m.includes('only the author may tag')) {
+      return { ok: false, code: 'rejected', message: 'Only the author can tag this course.' };
+    }
+    return classify(error);
+  }
+
+  return { ok: true, value: { count: Number(data) } };
+}
+
+/** The subject codes currently on a version. */
+export async function fetchVersionSubjects(
+  supabase: SupabaseClient,
+  versionId: string,
+): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('course_version_subjects')
+    .select('subject_area_id, subject:subject_area_id(code)')
+    .eq('course_version_id', versionId);
+
+  if (error) throw new Error(error.message);
+
+  return ((data ?? []) as unknown as { subject: { code: string }[] | null }[])
+    .map((r) => r.subject?.[0]?.code ?? '')
+    .filter((c) => c.length > 0);
+}
