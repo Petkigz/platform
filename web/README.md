@@ -50,6 +50,7 @@ npm run test        # both
 | `/learn` | dynamic | The authenticated screen, reading through RLS |
 | `/api/enrol` | dynamic | POST. Free enrolment only |
 | `/learn/[enrolmentId]` | dynamic | Course view: outline and mark-complete |
+| `/learn/[enrolmentId]/lesson/[lessonId]` | dynamic | One lesson and its materials, gated by entitlement |
 | `/api/progress` | dynamic | POST. Record lesson progress |
 | `/learn/[enrolmentId]/assessment/[assessmentId]` | dynamic | Take an assessment |
 | `/api/assessment` | dynamic | POST. start / answer / submit |
@@ -226,6 +227,28 @@ entitlement before a sold version may be enrolled in.
 
 Being signed in is not access. `lesson_resources_read` requires entitlement, so
 a signed-in stranger sees only resources classified `public_preview`.
+
+## Opening a lesson
+
+`/learn/[enrolmentId]/lesson/[lessonId]` is the first place the entitlement work
+is visible to a learner. Two things are decided independently there, and the
+difference is deliberate:
+
+- the **lesson row** is readable by anyone who can read the version, so the
+  title and description appear before purchase — that is how a catalogue
+  preview works
+- the **resources** are gated on entitlement, so a signed-in visitor who has not
+  bought the course gets only those classified `public_preview`
+
+An empty resource list therefore has two meanings that look identical in the
+data and mean opposite things: no materials attached, or no entitlement. The
+page asks `can_access_lesson` explicitly so it can say which one it is, rather
+than showing "no materials" to someone who simply has not paid.
+
+`media_asset_id` is deliberately not resolved to a playable URL. D8 keeps
+masters in our own storage with Stream for delivery only, and signing a delivery
+URL is a server-side act with its own credentials. The page says playback is not
+wired up rather than rendering a link that goes nowhere.
 
 ## Families and children
 

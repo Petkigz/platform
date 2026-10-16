@@ -175,7 +175,9 @@ export default async function CourseViewPage({
                       <li key={l.id}>
                         <span className="n">{j + 1}</span>
                         <span className={`t ${done ? 'done' : ''}`}>
-                          {l.title}
+                          <Link href={`/learn/${enrolment.id}/lesson/${l.id}`}>
+                            {l.title}
+                          </Link>
                           {l.is_preview && (
                             <span className="badge neutral" style={{ marginLeft: '0.5rem' }}>
                               Preview

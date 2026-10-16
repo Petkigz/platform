@@ -42,8 +42,8 @@ Status:
 | 11 | Child home | READY |
 | 12 | Age-band selection | READY |
 | 13 | Course page | READY |
-| 14 | Video lesson | READY |
-| 15 | Interactive lesson | READY |
+| 14 | Video lesson | **BUILT** — `/learn/[enrolmentId]/lesson/[lessonId]` |
+| 15 | Interactive lesson | READY — shares the lesson route, no interactive player yet |
 | 16 | Quiz | READY |
 | 17 | Results | READY |
 | 18 | Progress and achievements | BLOCKED — engagement mechanics undesigned |
@@ -55,7 +55,7 @@ Status:
 |---|---|---|
 | 20 | Adult home, led by "continue where you stopped" | READY |
 | 21 | Course details | READY |
-| 22 | Video lesson *(shares the player with #14, different chrome)* | READY |
+| 22 | Video lesson *(adult chrome)* | **BUILT** — same route as #14, chrome not yet differentiated |
 | 23 | Qur'an / audio player | READY |
 | 24 | Quiz or exam | READY |
 | 25 | Progress | READY |
