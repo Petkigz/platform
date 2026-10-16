@@ -31,6 +31,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <nav className="nav" aria-label="Main">
               <Link href="/catalogue">Catalogue</Link>
               <Link href="/learn">My learning</Link>
+              <Link href="/family">My family</Link>
             </nav>
 
             <div className="masthead-actions">

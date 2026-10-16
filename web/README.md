@@ -55,6 +55,8 @@ npm run test        # both
 | `/api/assessment` | dynamic | POST. start / answer / submit |
 | `/admin` | dynamic | Feature flags. Privileged only |
 | `/api/admin/flags` | dynamic | POST. Flip a flag |
+| `/family` | dynamic | Children and their progress |
+| `/api/family/children` | dynamic | POST. Add a child |
 | `/sign-out` | dynamic | POST only |
 
 ## The theme is white and green
@@ -130,6 +132,22 @@ columns. Never write `select('*')` against that table — name the columns.
 The key has no read path in the application at all, for any role including
 `platform_admin`. `grade_response()` is its only reader.
 `supabase/tests/assessment.test.mjs` asserts all three of those.
+
+## Families and children
+
+A child is a `learner_profile` under a `family`, never a `user` (D2). No
+email, no password, no date of birth — an age band instead. Adding a child
+asks for a name and an age band, and the database does the enforcing:
+`lp_children_need_age_band`, `lp_no_child_login_yet`, and `lp_insert`
+requiring active family membership.
+
+`/family` filters nothing by user. RLS decides, so a family member whose
+membership is billing-only sees the family and none of its children.
+
+One trap worth knowing: a SELECT policy is applied to an `INSERT ... RETURNING`
+result, so a policy that resolves the row by joining back through the same
+table will refuse the read-back of a row that was just inserted. Prefer a
+predicate that reads the new row's own columns.
 
 ## Feature flags
 

@@ -199,6 +199,44 @@ cannot be a primary key.
 
 **243 tests pass.**
 
+### Also done since: the family dashboard, and a real defect
+
+`/family` is the other half of the product. A child here is a
+`learner_profile` under a `family`, never a `user` (D2) — no email, no
+password, no date of birth. The page shows each family's children with their
+age band and per-course progress, plus who the adults are. Nothing filters by
+the signed-in user; RLS decides what comes back, including the case that used
+to be a defect: a billing-only member sees the family and none of its
+children.
+
+Adding a child asks for a name and an age band and nothing else. That is the
+whole COPPA-adjacent surface, and the constraints doing the work are in the
+database: `lp_children_need_age_band`, `lp_no_child_login_yet`, and
+`lp_insert` requiring active family membership.
+
+**The defect.** A parent could insert a child profile but could not read back
+its id:
+
+```sql
+insert into learner_profiles (...) values (...)              -- allowed
+insert into learner_profiles (...) values (...) returning id -- refused
+```
+
+`lp_read` was written as `is_learner_family_member(id)`, which joins
+`family_memberships` back through `learner_profiles`. The SELECT policy is
+applied to an `INSERT ... RETURNING` result too, and at that instant the new
+tuple is not visible to the separate SECURITY DEFINER query inside the helper
+— the command counter has not advanced. `is_family_member_of()` decides from
+the row's own `family_id` instead, with no join back, and excludes
+`billing_manager` so widening it does not quietly undo that fix.
+
+This would have failed at the first child anyone added, because
+`.insert().select('id')` is what every client library compiles to. It is
+pinned by a regression test that was verified to fail without the fix: 2
+failures with the predicate removed, 0 with it restored.
+
+**256 tests pass.**
+
 ### What comes after that
 
 The paid path. It needs a provider, and a provider needs merchant

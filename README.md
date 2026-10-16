@@ -37,7 +37,7 @@ triggers and row level security are actually executed rather than merely parsed.
 The suite is split by group and run by `supabase/tests/run.mjs`, which applies
 the migrations once and runs every suite against the same engine.
 
-**243 tests** across five suites:
+**256 tests** across five suites:
 
 *Group 1 — identity, family, guardians, privacy.* Schema presence, RLS on
 every public table, seed data, `updated_at` triggers, duplicate and
@@ -62,8 +62,9 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 ## Status
 
-The database is complete: **88 tables, RLS on every one, 202 policies, 105
-triggers, 82 functions, 37 migrations, 170 passing tests.**
+The database is complete: **88 tables, RLS on every one, 203 policies, 146
+triggers, 90 functions, 43 migrations, 256 database tests and 19 unit
+tests passing.**
 
 All five logical schema groups are built. Every frozen decision — D1
 multi-tenancy, D2 child identity, D4 money, D5 version pinning, D6 content
