@@ -650,4 +650,61 @@ export async function run(ctx) {
     assert(events === 1, `${events} revocation events for one refund`);
   });
 
+  // -------------------------------------------------------------------
+  // Who may call the revocation writer at all
+  // -------------------------------------------------------------------
+  //
+  // revoke_entitlements_for_refund() is SECURITY DEFINER owned by postgres and
+  // its body trusts its arguments. It was granted to authenticated, which meant
+  // any signed-in user could strip any learner's course access on any order and
+  // write themselves in as the revoking actor. The grant is now withdrawn; this
+  // test is what keeps it withdrawn. Without it, re-granting by accident is
+  // invisible: every other test in this suite calls the function at superuser
+  // level, where grants do not apply.
+
+  await test('a learner cannot call the revocation writer directly', async () => {
+    const f = await paidOrder('Revocation Intruder');
+
+    await asUser(f.userId, async () => {
+      await rejects(
+        () => q('select public.revoke_entitlements_for_refund($1,$2,$3) as n',
+          [f.order, f.userId, 'Taking my own access away from someone else']),
+        /permission denied/i,
+        'a signed-in learner could invoke a SECURITY DEFINER function that revokes entitlements');
+    });
+
+    const stillActive = await count(
+      `select 1 from public.entitlement_grants
+        where source_type = 'purchase' and source_id = $1 and status = 'active'`, [f.order]);
+    assert(stillActive === 1,
+      `active grants after the refused call: ${stillActive}; the refusal must leave access untouched`);
+  });
+
+  await test('a learner cannot credit earnings by calling the writer directly', async () => {
+    const f = await paidOrder('Earnings Intruder A');
+
+    // One rejection per asUser block: the first error aborts the transaction,
+    // so a second assertion in the same block reports the abort rather than the
+    // refusal it was written to check.
+    await asUser(f.userId, async () => {
+      await rejects(
+        () => q('select public.accrue_instructor_earnings($1,null,$2) as n',
+          [f.order, f.userId]),
+        /permission denied/i,
+        'a signed-in learner could credit earnings by calling the writer directly');
+    });
+  });
+
+  await test('a learner cannot reverse a teacher\'s earnings directly', async () => {
+    const f = await paidOrder('Earnings Intruder B');
+
+    await asUser(f.userId, async () => {
+      await rejects(
+        () => q('select public.reverse_earnings_for_refund($1,$2,$3) as n',
+          [f.order, f.userId, 'Wiping the teacher']),
+        /permission denied/i,
+        'a signed-in learner could reverse a teacher\'s earnings directly');
+    });
+  });
+
 }

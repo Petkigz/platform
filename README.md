@@ -63,7 +63,7 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **89 tables, RLS on every one, 207 policies, 111
-user-defined triggers, 105 functions, 53 migrations, 389 database tests and
+user-defined triggers, 108 functions, 54 migrations, 407 database tests and
 121 unit tests passing.** The web app builds 49 routes.
 
 (The trigger count is user-defined triggers. `pg_trigger` also holds 803

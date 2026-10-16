@@ -943,6 +943,50 @@ branch that proves nothing.**
 Trigger count corrected from 152 to 111 — the earlier figure counted 803
 internal constraint triggers alongside the real ones.
 
+### Also done since: a teacher's earnings now exist at all
+
+`instructor_earnings_entries`, `instructor_payout_items` and `instructor_payouts`
+all shipped with RLS and policies, and **nothing wrote to any of them**. A
+teacher could sell a course, the platform could take the money, and there was no
+record anywhere that the teacher had earned anything — let alone a way to pay
+them. That is the eleventh instance of the same defect.
+
+**What was added.** `accrue_instructor_earnings()` is called from
+`record_payment_success()`, so the ledger, the order status, the entitlement and
+the teacher's share all move together or not at all.
+`reverse_earnings_for_refund()` is called from `record_refund_in_ledger()` when
+an order reaches `refunded`. Attribution is per line item, so an order spanning
+two teachers credits both separately rather than dumping the whole sale on one
+of them.
+
+**The revenue-share percentage was not invented.** The project record lists it
+as `revenue share: 0`, and my own planning notes name it a precondition for
+payouts alongside the provider, tax treatment and thresholds. So it is an admin
+setting seeded at 0, and accrual still runs at 0% so the gross record of what
+sold survives. **It needs a decision before any teacher is paid.**
+
+**Payouts are still unwired, deliberately.** Accruing is safe and reversible;
+moving money out is not, and it needs four external facts that are not known.
+
+**A security hole I introduced, and one I inherited.** Both new functions are
+`SECURITY DEFINER` owned by postgres and their bodies trust their arguments. I
+first granted them to `authenticated`, which meant any signed-in learner could
+credit themselves earnings or wipe a teacher's. Checking that made me look at
+last unit's `revoke_entitlements_for_refund` — same shape, same grant, so any
+signed-in user could strip any learner's course access and write themselves in
+as the revoking actor. Both grants are now withdrawn; neither caller needed
+them, since both run inside `SECURITY DEFINER` functions owned by postgres.
+
+**Three bugs the tests caught.** A unique index was needed because nothing
+stopped a replayed webhook crediting a teacher twice. The reversal hook landed
+*after* its `end if`, so it ran on every refund and took earnings back on a
+partial one too. And the teeth check found that the security revoke had **zero
+tests covering it** — the fix was real but nothing would have noticed if the
+grant came back, because every other test calls these functions at superuser
+level where grants do not apply.
+
+**407 database tests, 121 unit tests, tsc clean, build clean, 49 routes.**
+
 ### What comes after that
 
 The paid path. It needs a provider, and a provider needs merchant

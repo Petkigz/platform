@@ -375,11 +375,17 @@ export async function run(ctx) {
          (instructor_user_id, order_id, gross_amount_minor, currency_code,
           revenue_share_percent, net_amount_minor)
        values ($1,$2,40000,'UGX',70,28000) returning id`, [teacher, order])).rows[0].id;
+    // A second, DISTINCT order. Two earnings rows for one instructor on one
+    // order is no longer legal: accrual is idempotent per (instructor, order),
+    // so a replayed payment confirmation cannot credit a teacher twice. What
+    // this test is actually about is the payout-item rules, and those are
+    // unchanged — it just needs two separate earnings to pay out.
+    const { order: order2 } = await newOrder(acct, { total: 40000 });
     const e2 = (await q(
       `insert into public.instructor_earnings_entries
          (instructor_user_id, order_id, gross_amount_minor, currency_code,
           revenue_share_percent, net_amount_minor)
-       values ($1,$2,40000,'UGX',70,28000) returning id`, [teacher, order])).rows[0].id;
+       values ($1,$2,40000,'UGX',70,28000) returning id`, [teacher, order2])).rows[0].id;
 
     const payout = (await q(
       `insert into public.instructor_payouts (instructor_user_id, amount_minor, currency_code, created_by)
