@@ -11,7 +11,7 @@ Global Islamic e-learning platform for children and adults.
 | `ROADMAP.md` | All 53 tasks with completion gates |
 | `IRREVERSIBLE.md` | The nine decisions that are expensive to reverse |
 | `FLAGS.md` | Every feature, behind a flag, with its precondition |
-| `SCREENS.md` | 51 distinct screens; 13 ready to design |
+| `SCREENS.md` | 53 distinct screens; 13 ready to design |
 | `IDEAS.md` | Parking lot. Nothing here is scheduled. |
 
 ## Database
@@ -62,10 +62,10 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 ## Status
 
-The database stands at **98 tables, RLS on every one, 226 policies, 130
-user-defined triggers, 199 functions and 82 migrations.** The database suite
-passes **754 tests**; the web suite passes **327 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **92 app route entries**.
+The database stands at **101 tables, RLS on every one, 229 policies, 132
+user-defined triggers, 210 functions and 83 migrations.** The database suite
+passes **774 tests**; the web suite passes **337 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **95 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. `/account`
@@ -108,6 +108,20 @@ action into a form. The note carries that intent instead. Owner ids are taken
 from the session and never accepted from a caller, removal is not flag-gated so
 switching the feature off cannot trap a list, and a hundred saved courses is the
 ceiling. `learning.wishlist` ships off.
+
+Marked homework now has its own tables and workflow, separate from quiz
+questions: `/teach/[courseId]/assignments` creates work beside a published,
+frozen version; `/learn/[enrolmentId]/assignment/[assignmentId]` saves and
+submits a private written response. Self-paced deadlines are measured from each
+learner's enrolment; a cohort assignment has one absolute date. The course
+author and privileged staff can mark; score and feedback are visible only to
+that learner/their family and the marker. Cohort data is version-pinned, and a
+learner or guardian opts in; learners cannot browse other families' roster
+rows. `learning.cohorts` and `learning.assignments` both ship off while cohort
+screens and secure file handling are incomplete. The database accepts only
+verified PDF/image/audio asset references (25 MiB each, at most 10), but no
+bytes are transferred, scanned or securely delivered yet; the UI is text-only.
+A learner gets one submission per task; revision/resubmission is not built.
 
 Learners can rate and review a course they are enrolled in, from the course
 page, and staff read anything they wrote at `/admin/course-reviews`. The rules
@@ -277,11 +291,11 @@ npm run dev
 
 See `web/README.md`.
 
-### Why 98 tables when the design specified 85
+### Why 101 tables when the design specified 85
 
-Thirteen tables beyond the original 85 were needed for recorded decisions, the
+Sixteen tables beyond the original 85 were needed for recorded decisions, the
 chosen discussion experience, teacher-authored public profiles, private study
-data, the help desk, learner reviews, saved courses and dated cohorts:
+data, the help desk, learner reviews, saved courses, dated cohorts and marked assignments:
 
 - `institutions` — D1 multi-tenancy had no table to hang `institution_id` on
 - `media_assets` — D8 requires originals in storage we control, with a checksum
@@ -304,6 +318,7 @@ data, the help desk, learner reviews, saved courses and dated cohorts:
   false of saving: a course can be free, unpublished, or under discussion in a
   family about which child it is for
 - `cohorts`, `cohort_members` — a published course version freezes its lessons and quizzes, so dated group work needs a class alongside the immutable version. Membership writes are session-bound; learners see only themselves and their family, not the roster; joining requires an exact-version enrolment. `learning.cohorts` ships off until late-join policy and the UI are ready.
+- `course_assignments`, `assignment_submissions`, `assignment_submission_assets` — a separate task can be created after publication, carry an enrolment-relative or cohort-absolute deadline, and receive one private learner hand-in with text and verified file references. Marks/feedback are private and audited; no bytes or public object keys are stored. `learning.assignments` ships off until safe upload, scanning, delivery/retention and cohort UI are ready.
 
 Learning paths reuse the existing `learning_paths` and `learning_path_items`
 tables; this work adds their audited writers and the teacher/learner screens,

@@ -51,13 +51,14 @@ Status:
 | 19a | **Guardian access request** *(added — was missing from the inventory)* | **BUILT** — `/family/guardians`. Behind `family.guardian_verification` |
 | 19b | **Guardian verification queue** *(added — was missing from the inventory)* | **BUILT** — `/admin/guardians`. Privileged only |
 
-## 4. Adult learners — 7
+## 4. Adult learners — 7 *(plus 20a, 20b and 20c added later)*
 
 | # | Screen | Status |
 |---|---|---|
 | 20 | Adult home, led by "continue where you stopped" | **BUILT** — shared learner dashboard at `/learn` |
 | 20a | **Learning path detail and progress** | **BUILT** — `/paths/[slug]` tracks required-course completion |
 | 20b | **Saved courses** *(added — was missing from the inventory)* | **BUILT** — `/saved`, reached from `/learn` and from the save button on a course page. Behind `learning.wishlist`; the list stays reachable when the flag is off so nothing is trapped |
+| 20c | **Assignment hand-in and feedback** *(added — was missing from the inventory)* | **BUILT** — `/learn/[enrolmentId]/assignment/[assignmentId]`, text draft, submit and private mark/feedback. Behind `learning.assignments`; secure file transfer/viewing is not connected, so the flag stays off |
 | 21 | Course details | **BUILT** — `/courses/[slug]`: outline, preview lesson, enrolment, ratings and reviews behind `learning.reviews` |
 | 22 | Video lesson *(adult chrome)* | **BUILT** — same route as #14, chrome not yet differentiated |
 | 23 | Qur'an / audio player | READY |
@@ -72,7 +73,7 @@ Status:
 | 27 | **Per-lesson discussion** | **BUILT** — thread on the lesson page + `/admin/discussion` queue. Moderation settled: authority posts visible, learner posts held. Behind `learning.discussion` |
 | 28 | **Notes and bookmarks** | **BUILT** — private per-account lesson notes and bookmarks; transcripts remain unbuilt |
 
-## 6. Teaching — 6
+## 6. Teaching — 6 *(plus 31a and 31b added later)*
 
 | # | Screen | Status |
 |---|---|---|
@@ -80,6 +81,7 @@ Status:
 | 30 | Create course | **BUILT** — `/teach`, one field: a title. Everything else is set in the curriculum builder |
 | 31 | Curriculum builder | **BUILT** — `/teach/[courseId]`: sections, lessons, content items, reordering, sources. No drag-and-drop |
 | 31a | **Cohort manager and roster** *(added — missing from the inventory)* | READY — cohort database, author-only management functions, join/leave and row-level privacy exist; no teacher screen yet. Decide late-join policy before enabling `learning.cohorts` |
+| 31b | **Assignment authoring and marking** *(added — missing from the inventory)* | **BUILT** — `/teach/[courseId]/assignments`; author creates/opens/closes tasks and marks private submissions. Behind `learning.assignments`; secure file delivery and cohort UI are separate preconditions |
 | 32 | Learner analytics | READY |
 | 33 | Course submission and review | **BUILT** — submit from `/teach/[courseId]`; `/review` and `/admin/reviews` handle the assignment |
 | 34 | Earnings | BLOCKED — `teaching.payouts` is CODE and refused by trigger. The *data* exists: `instructor_earnings` accrues on a paid order and reverses on refund. No teacher-facing screen |
@@ -126,15 +128,15 @@ Status:
 
 | | |
 |---|---|
-| Numbered screen IDs | **50**, plus 19a, 19b, 20a, 20b and 31a — **55 rows** |
-| Built | **37** |
+| Numbered screen IDs | **50**, plus 19a, 19b, 20a, 20b, 20c, 31a and 31b — **57 rows** |
+| Built | **39** |
 | Ready to design now | **13** |
 | Blocked | **5** |
 
 The four mobile home/learning rows in the source are responsive states of
-screens #11 and #14, not four separate designs. The five additional rows are
-19a, 19b, 20a, 20b and 31a; after collapsing the responsive states, this is 51
-distinct screens. Mobile adds only #49 and #50.
+screens #11 and #14, not four separate designs. The seven additional rows are
+19a, 19b, 20a, 20b, 20c, 31a and 31b; after collapsing the responsive states,
+this is 53 distinct screens. Mobile adds only #49 and #50.
 
 
 ## Missing from the source's list of 48
@@ -153,3 +155,4 @@ distinct screens. Mobile adds only #49 and #50.
 7. **Empty, error and loading states** — where "as easy as possible" is
    actually won or lost.
 8. **Cohort management** — both delivery models are confirmed; the data and access rules exist, but the teacher's class/roster screen does not. Added as 31a.
+9. **Marked assignments** — standalone deadlines, private hand-in and teacher feedback were missing from the source list. The text workflow is built as 20c/31b; secure file transfer and viewing remain blocked on media setup.

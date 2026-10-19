@@ -163,6 +163,8 @@ export default async function TeachCoursePage({
       <p style={{ marginTop: '1.5rem' }}>
         <Link href={`/courses/${row.slug}`}>View the public page</Link>
         {' · '}
+        <Link href={`/teach/${courseId}/assignments`}>Assignments</Link>
+        {' · '}
         <Link href="/teach">Back to my courses</Link>
       </p>
     </div>

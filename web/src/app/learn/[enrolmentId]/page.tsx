@@ -6,6 +6,12 @@ import { fetchCompletion, fetchProgress, fetchSummary } from '@/lib/progress';
 import { fetchAssessmentsForVersion } from '@/lib/assessment';
 import { isFlagEnabled } from '@/lib/flags';
 import { MarkComplete } from './mark-complete';
+import {
+  assignmentDeadline,
+  fetchAssignmentSubmissionsForLearner,
+  fetchCourseAssignments,
+  SUBMISSION_STATUS_LABEL,
+} from '@/lib/course-assignments';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,7 +30,10 @@ type Section = {
 type EnrolmentRow = {
   id: string;
   status: string;
+  course_id: string;
   course_version_id: string;
+  learner_profile_id: string;
+  enrolled_at: string;
   courses: { title: string; slug: string }[] | null;
   course_versions: {
     version_number: number;
@@ -60,7 +69,7 @@ export default async function CourseViewPage({
   const { data, error } = await supabase
     .from('course_enrolments')
     .select(
-      'id, status, course_version_id, ' +
+      'id, status, course_id, course_version_id, learner_profile_id, enrolled_at, ' +
         'courses ( title, slug ), ' +
         'course_versions ( version_number, language, ' +
         'course_sections ( id, title, position, ' +
@@ -87,7 +96,7 @@ export default async function CourseViewPage({
 
   // Feature gates. Read through setting_bool(), which any role may call, so
   // this works for a learner as well as for staff.
-  const [progressOn, assessmentsOn, previewsOn, progress, summary, completion, assessments] =
+  const [progressOn, assessmentsOn, previewsOn, progress, summary, completion, assessments, assignments] =
     await Promise.all([
       isFlagEnabled(supabase, 'learning.progress').catch(() => false),
       isFlagEnabled(supabase, 'learning.assessments').catch(() => false),
@@ -96,7 +105,34 @@ export default async function CourseViewPage({
       fetchSummary(supabase, enrolment.id),
       fetchCompletion(supabase, enrolment.id).catch(() => null),
       fetchAssessmentsForVersion(supabase, enrolment.course_version_id).catch(() => []),
+      fetchCourseAssignments(supabase, {
+        courseId: enrolment.course_id,
+        courseVersionId: enrolment.course_version_id,
+      }),
     ]);
+  const assignmentSubmissions = await fetchAssignmentSubmissionsForLearner(supabase, {
+    assignmentIds: assignments.map((a) => a.id),
+    learnerProfileId: enrolment.learner_profile_id,
+  });
+  const submissionByAssignment = new Map(assignmentSubmissions.map((s) => [s.assignmentId, s]));
+  const cohortIds = assignments.flatMap((a) => a.cohortId ? [a.cohortId] : []);
+  let activeCohortIds = new Set<string>();
+  if (cohortIds.length > 0) {
+    const { data: memberships, error: membershipError } = await supabase
+      .from('cohort_members')
+      .select('cohort_id')
+      .in('cohort_id', cohortIds)
+      .eq('learner_profile_id', enrolment.learner_profile_id)
+      .eq('status', 'active');
+    if (membershipError) throw new Error(membershipError.message);
+    activeCohortIds = new Set(((memberships ?? []) as unknown as { cohort_id: string }[]).map((m) => m.cohort_id));
+  }
+  // The parent RLS policy may see more than one child's cohort data. Bind this
+  // course page to the learner named by this enrolment, while retaining work
+  // they already submitted if they later left the cohort.
+  const visibleAssignments = assignments.filter((a) =>
+    a.cohortId === null || activeCohortIds.has(a.cohortId) || submissionByAssignment.has(a.id),
+  );
 
   const pct = Math.round(summary.percentComplete);
 
@@ -220,6 +256,44 @@ export default async function CourseViewPage({
                   </Link>
                 </li>
               ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
+      {visibleAssignments.length > 0 && (
+        <div>
+          <div className="outline-h">
+            <h3>Assignments</h3>
+          </div>
+          <div className="card">
+            <ul className="lessons">
+              {visibleAssignments.map((assignment) => {
+                const submission = submissionByAssignment.get(assignment.id);
+                const deadline = assignmentDeadline(assignment, enrolment.enrolled_at);
+                return (
+                  <li key={assignment.id}>
+                    <span className="t">
+                      <Link href={`/learn/${enrolment.id}/assignment/${assignment.id}`}>
+                        {assignment.title}
+                      </Link>
+                      <span className="muted" style={{ display: 'block', fontSize: '.85rem' }}>
+                        {deadline ? `Due ${deadline.toLocaleString()}` : 'No deadline'}
+                        {submission?.isLate ? ' · submitted late' : ''}
+                      </span>
+                    </span>
+                    <span className="badge neutral">
+                      {submission ? SUBMISSION_STATUS_LABEL[submission.status] : 'Not started'}
+                    </span>
+                    {submission?.scoreEarned !== null && submission?.scoreEarned !== undefined && (
+                      <span className="badge">{submission.scoreEarned}{assignment.pointsPossible ? ` / ${assignment.pointsPossible}` : ''}</span>
+                    )}
+                    <Link href={`/learn/${enrolment.id}/assignment/${assignment.id}`} className="btn tiny secondary">
+                      {submission?.status === 'graded' ? 'View feedback' : submission?.status === 'submitted' ? 'View submission' : 'Open'}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </div>

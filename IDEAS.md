@@ -355,16 +355,17 @@ These are inconsistencies in the project record itself, not missing features.
    "review" mentions are all *governance* review (scholarly approval), not
    learner ratings. Learner ratings appear in the source's feature list and
    nowhere in the plan.
-4. **Learner assignments are not yet built.** The matches are
-   `user_role_assignments` and `content_review_assignments`; there is no learner
-   assignment table. There *is* question-level manual grading in assessments,
-   but that is not a home for a dated task with free-form writing, a voice
-   recording or a photographed worksheet. The design is now confirmed: both
-   self-paced and cohort work; relative deadline from enrolment for self-paced,
-   absolute due date for a cohort; text and file submissions; the course author
-   marks. Cohort data/policies now exist. Assignment tables and the trusted
-   upload/verification/delivery path remain to build; the file-submission flag
-   must stay off until those pieces and the late-work rule are settled.
+4. **Learner assignments now have their own tables and text workflow.** They
+   are separate from question-level quiz marking: a task lives beside (not
+   inside) the frozen course version, with a per-enrolment or cohort deadline,
+   a private learner draft, a final hand-in and feedback from the course author
+   or privileged staff. The design is confirmed for both self-paced and cohort
+   learning; learners submit text or files. Cohort/assignment data, RLS, audit,
+   teacher creation/marking UI and learner text hand-in are built behind flags.
+   File references accept conservative formats/limits, but bytes are not
+   transferred, scanned or delivered; there is no resubmission loop, and the
+   teacher/learner cohort screens remain. `learning.assignments` stays off until
+   those preconditions are complete.
 
 Also still absent, confirming an earlier finding: `settings` and `feature_flags`.
 

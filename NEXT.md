@@ -59,21 +59,28 @@ private to the teacher/staff and that learner's family; a version change does
 not move an existing class to new material. The feature still ships off while
 late joining and the cohort screens are unfinished.
 
-`learning.assignments` is therefore not a duplicate quiz: it needs standalone
-work authored after publication, a deadline relative to enrolment for
-self-paced learners or an absolute date for a cohort, written/file submissions,
-and author-only marking with feedback. `media_assets` can represent verified
-files, but uploads still stop at `pending`: bytes are not transferred and only
-trusted staff/worker confirmation can make an asset `available`. Assignment
-submissions, feedback, file-delivery wiring and the late-work rule remain; the
-flag stays off until they exist.
+`learning.assignments` is not a duplicate quiz, and its database and text
+workflow now exist: tasks can be authored after publication; self-paced due
+dates are relative to each enrolment, cohort deadlines are absolute; one
+private submission can be saved and sent; the author or privileged staff mark
+it and return private feedback. `/teach/[courseId]/assignments` and
+`/learn/[enrolmentId]/assignment/[assignmentId]` are built. Each task explicitly
+chooses whether to accept late work (default: no). One hand-in per learner/task;
+there is no revision loop yet.
+
+File references accept PDF/JPEG/PNG/WebP and common audio formats, with a
+25 MiB per-file / 10-file ceiling, but the upload path is still missing: bytes
+are not transferred, scanned or delivered, and there is no retention workflow.
+The learner screen is text-only for now. Both flags stay off until the secure
+media path and the cohort join/management screens are ready; the cohort late-join
+policy also needs review. These are the remaining pieces, not another quiz table.
 
 The two planning documents were also stale in a way that would have misdirected
 the next session, so both were re-audited against the route list in the build
 output rather than against memory. `SCREENS.md` had 24 rows saying READY or
 BLOCKED for screens that exist — including the settings and flags screen, which
 its own note called the critical path while claiming no settings table existed.
-It now reads **37 built, 13 ready, 5 blocked**; the five blocked ones are blocked
+It now reads **39 built, 13 ready, 5 blocked**; the five blocked ones are blocked
 on a decision or a provider, not on code. `FLAGS.md` claimed seven flags could
 not be runtime toggles and then listed eleven: the measured figure is **31 CODE,
 14 ADMIN + SETUP, 43 ADMIN**, and `platform_settings` holds **90 rows — the 87
@@ -92,9 +99,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **754 database tests, 327 web tests; TypeScript typecheck and
-production build pass; 98 tables, 226 policies, 130 user-defined triggers,
-199 functions, 82 migrations and 92 app route entries.**
+Verification: **774 database tests, 337 web tests; TypeScript typecheck and
+production build pass; 101 tables, 229 policies, 132 user-defined triggers,
+210 functions, 83 migrations and 95 app route entries.**
 
 ## Today's sentence
 
