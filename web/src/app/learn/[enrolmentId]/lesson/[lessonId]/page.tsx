@@ -15,6 +15,8 @@ import { isFlagEnabled } from '@/lib/flags';
 import { Discussion } from './discussion';
 import { ReportForm } from './report-form';
 import { fetchLessonSources } from '@/lib/provenance';
+import { fetchLessonStudyTools } from '@/lib/lesson-study-tools';
+import { StudyTools } from './study-tools';
 
 export const dynamic = 'force-dynamic';
 
@@ -116,14 +118,18 @@ export default async function LessonPage({
   // Discussion is behind a flag, off by default, because the moderation policy
   // behind it is a human queue with a retention obligation attached. The thread
   // is only fetched when it is on — no reason to query a table nobody can see.
-  const [discussionOn, provenanceOn, previewsOn] = await Promise.all([
+  const [discussionOn, provenanceOn, previewsOn, studyToolsOn] = await Promise.all([
     isFlagEnabled(supabase, 'learning.discussion'),
     isFlagEnabled(supabase, 'learning.provenance'),
     isFlagEnabled(supabase, 'learning.previews').catch(() => false),
+    isFlagEnabled(supabase, 'learning.notes_bookmarks').catch(() => false),
   ]);
-  const [thread, sources] = await Promise.all([
+  const [thread, sources, studyTools] = await Promise.all([
     discussionOn ? fetchThread(supabase, { lessonId: lesson.id, myUserId: user.id }) : Promise.resolve([]),
     provenanceOn ? fetchLessonSources(supabase, lesson.id) : Promise.resolve([]),
+    studyToolsOn && entitled
+      ? fetchLessonStudyTools(supabase, { userId: user.id, enrolmentId, lessonId: lesson.id })
+      : Promise.resolve(null),
   ]);
 
   const courseTitle = enrolment.courses?.[0]?.title ?? 'the course';
@@ -256,6 +262,15 @@ export default async function LessonPage({
             </ol>
           )}
         </section>
+      )}
+
+      {studyTools && (
+        <StudyTools
+          enrolmentId={enrolmentId}
+          lessonId={lesson.id}
+          initialNote={studyTools.note}
+          initiallyBookmarked={studyTools.bookmarked}
+        />
       )}
 
       {entitled && !done && (

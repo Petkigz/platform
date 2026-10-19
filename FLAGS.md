@@ -34,7 +34,7 @@ Three kinds of gate:
 | `learning.reviews` | Learner ratings and reviews on courses | ADMIN | **Table does not exist.** Satisfaction signal only — **never a substitute for scholarly review**. Needs a moderation policy |
 | `learning.previews` | Free preview lessons before enrolment | ADMIN | Select the free lesson and public-sample resources per course version; verify sample content before enabling. The flag gates both anonymous resource reads and the free-entitlement bypass; it never unlocks enrolled-only materials. |
 | `learning.badges` | Bestseller and rating badges in the catalogue | ADMIN | Threshold rules; must not imply scholarly endorsement |
-| `learning.notes_bookmarks` | Notes, bookmarks, transcripts | ADMIN | **Tables do not exist yet** — listed as a feature, never designed |
+| `learning.notes_bookmarks` | Private lesson notes and bookmarks | ADMIN | Retention and family-sharing policy decided before enabling; transcripts are not included |
 | `learning.assignments` | Marked homework separate from quizzes | ADMIN | **Table does not exist yet** — grading workflow for assignments undesigned |
 | `learning.wishlist` | Saved courses to buy later | ADMIN | **Table does not exist.** Only meaningful once `commerce.checkout` is on |
 | `learning.multi_language` | Interface and content in more languages | CODE | Translation workflow; per-locale content; RTL support; who translates |

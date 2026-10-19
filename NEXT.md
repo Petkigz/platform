@@ -29,7 +29,12 @@ signed-in user's display name, preferred language and time zone under RLS; the
 email recovery path uses a verified callback and authenticated password update.
 Phone sign-in now completes the SMS OTP instead of stopping after sending it;
 real delivery still depends on Supabase provider configuration. `/paths/[slug]`
-shows a learner's required-course progress across a guided path. Version copying
+shows a learner's required-course progress across a guided path. A learner can
+save one private note and one bookmark per lesson from the lesson page; both
+tables are new, both are gated by `learning.notes_bookmarks` in the database
+rather than only in the UI, and ownership comes from the session with the
+enrolment's pinned version checked before a row is written. Transcripts are not
+part of it. Version copying
 carries forward the curriculum, assessments, completion requirements, citations
 and product/price links; existing learners stay pinned
 to their original version.
@@ -41,9 +46,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **683 database tests, 281 web tests; TypeScript typecheck and
-production build pass; 90 tables, 210 policies, 121 user-defined triggers,
-177 functions, 78 migrations and 82 app route entries.**
+Verification: **689 database tests, 283 web tests; TypeScript typecheck and
+production build pass; 92 tables, 217 policies, 125 user-defined triggers,
+179 functions, 78 migrations and 82 app route entries.**
 
 ## Today's sentence
 

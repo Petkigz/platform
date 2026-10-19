@@ -69,7 +69,7 @@ Status:
 | # | Screen | Status |
 |---|---|---|
 | 27 | **Per-lesson discussion** | **BUILT** — thread on the lesson page + `/admin/discussion` queue. Moderation settled: authority posts visible, learner posts held. Behind `learning.discussion` |
-| 28 | **Notes and bookmarks** | BLOCKED — tables do not exist |
+| 28 | **Notes and bookmarks** | **BUILT** — private per-account lesson notes and bookmarks; transcripts remain unbuilt |
 
 ## 6. Teaching — 6
 

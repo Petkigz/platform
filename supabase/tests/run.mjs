@@ -45,6 +45,7 @@ import { run as paymentDisputes } from './payment_disputes.test.mjs';
 import { run as learningPaths } from './learning_paths.test.mjs';
 import { run as contentSources } from './content_sources.test.mjs';
 import { run as instructorProfiles } from './instructor_profiles.test.mjs';
+import { run as lessonStudyTools } from './lesson_study_tools.test.mjs';
 
 const ctx = await createHarness();
 const suites = [];
@@ -86,6 +87,7 @@ for (const [name, fn] of [
   ['learning_paths', learningPaths],
   ['content_sources', contentSources],
   ['instructor_profiles', instructorProfiles],
+  ['lesson study tools', lessonStudyTools],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],
