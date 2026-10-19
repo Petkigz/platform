@@ -355,9 +355,16 @@ These are inconsistencies in the project record itself, not missing features.
    "review" mentions are all *governance* review (scholarly approval), not
    learner ratings. Learner ratings appear in the source's feature list and
    nowhere in the plan.
-4. **Learner assignments do not exist.** `assignments` absent — the matches are
-   `user_role_assignments` and `content_review_assignments`. Homework/marked
-   assignments are undesigned.
+4. **Learner assignments are not yet built.** The matches are
+   `user_role_assignments` and `content_review_assignments`; there is no learner
+   assignment table. There *is* question-level manual grading in assessments,
+   but that is not a home for a dated task with free-form writing, a voice
+   recording or a photographed worksheet. The design is now confirmed: both
+   self-paced and cohort work; relative deadline from enrolment for self-paced,
+   absolute due date for a cohort; text and file submissions; the course author
+   marks. Cohort data/policies now exist. Assignment tables and the trusted
+   upload/verification/delivery path remain to build; the file-submission flag
+   must stay off until those pieces and the late-work rule are settled.
 
 Also still absent, confirming an earlier finding: `settings` and `feature_flags`.
 

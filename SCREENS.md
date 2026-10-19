@@ -79,6 +79,7 @@ Status:
 | 29 | Teacher dashboard | **BUILT** — `/teach` with 13 endpoints behind it. Learner analytics (#32) is the missing piece |
 | 30 | Create course | **BUILT** — `/teach`, one field: a title. Everything else is set in the curriculum builder |
 | 31 | Curriculum builder | **BUILT** — `/teach/[courseId]`: sections, lessons, content items, reordering, sources. No drag-and-drop |
+| 31a | **Cohort manager and roster** *(added — missing from the inventory)* | READY — cohort database, author-only management functions, join/leave and row-level privacy exist; no teacher screen yet. Decide late-join policy before enabling `learning.cohorts` |
 | 32 | Learner analytics | READY |
 | 33 | Course submission and review | **BUILT** — submit from `/teach/[courseId]`; `/review` and `/admin/reviews` handle the assignment |
 | 34 | Earnings | BLOCKED — `teaching.payouts` is CODE and refused by trigger. The *data* exists: `instructor_earnings` accrues on a paid order and reverses on refund. No teacher-facing screen |
@@ -94,7 +95,7 @@ Status:
 | 39 | Payments | **BUILT** — `/orders` shows status from the database, not from a redirect |
 | 40 | Revenue analytics | BLOCKED — `delivery.analytics` is CODE |
 | 41 | Certificates | **BUILT** — `/admin/certificates` |
-| 42 | **Settings and feature flags** | **BUILT** — *critical path, and it was missing from the source list.* `platform_settings` holds all 86 flags plus 3 governance and money controls; `/admin` reads and toggles them, with `code`-gated flags refused by trigger |
+| 42 | **Settings and feature flags** | **BUILT** — *critical path, and it was missing from the source list.* `platform_settings` holds all 87 flags plus 3 governance and money controls; `/admin` reads and toggles them, with `code`-gated flags refused by trigger |
 | 43 | Support cases | **BUILT** — `/support` (open and list), `/support/<caseNumber>` (thread, reply, withdraw), `/admin/support` (queue and triage). Behind `platform.support` |
 
 ## 8. Payments — 4
@@ -125,14 +126,16 @@ Status:
 
 | | |
 |---|---|
-| Numbered screens | **50**, plus 19a, 19b and 20a added later — **53 rows** |
-| Built | **12** |
-| Ready to design now | **34** |
-| Blocked | **7** |
+| Numbered screen IDs | **50**, plus 19a, 19b, 20a, 20b and 31a — **55 rows** |
+| Built | **37** |
+| Ready to design now | **13** |
+| Blocked | **5** |
 
-**Not separate screens** (the source listed them as four): Android home,
-Android learning, iOS home, iOS learning. One codebase, so these are responsive
-states of screens #11 and #14. Mobile adds only #49 and #50.
+The four mobile home/learning rows in the source are responsive states of
+screens #11 and #14, not four separate designs. The five additional rows are
+19a, 19b, 20a, 20b and 31a; after collapsing the responsive states, this is 51
+distinct screens. Mobile adds only #49 and #50.
+
 
 ## Missing from the source's list of 48
 
@@ -149,3 +152,4 @@ states of screens #11 and #14. Mobile adds only #49 and #50.
 6. **Public certificate verification page** — the endpoint already exists.
 7. **Empty, error and loading states** — where "as easy as possible" is
    actually won or lost.
+8. **Cohort management** — both delivery models are confirmed; the data and access rules exist, but the teacher's class/roster screen does not. Added as 31a.

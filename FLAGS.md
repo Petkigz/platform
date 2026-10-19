@@ -35,8 +35,9 @@ Three kinds of gate:
 | `learning.previews` | Free preview lessons before enrolment | ADMIN | Select the free lesson and public-sample resources per course version; verify sample content before enabling. The flag gates both anonymous resource reads and the free-entitlement bypass; it never unlocks enrolled-only materials. |
 | `learning.badges` | Bestseller and rating badges in the catalogue | ADMIN | Threshold rules; must not imply scholarly endorsement |
 | `learning.notes_bookmarks` | Private lesson notes and bookmarks | ADMIN | Retention and family-sharing policy decided before enabling; transcripts are not included |
-| `learning.assignments` | Marked homework separate from quizzes | ADMIN | **Table does not exist yet** — grading workflow for assignments undesigned |
+| `learning.assignments` | Marked homework with deadlines, written/file submissions and teacher feedback — separate from quizzes | ADMIN | The design is now confirmed: self-paced deadlines are relative to enrolment; cohort deadlines are absolute; the course author marks. Cohort data/policies exist, but assignment submissions and feedback are not built. Before enabling: late-work rule, accepted file types/size and retention, and a trusted upload/verification/delivery path; files cannot be served from pending media assets |
 | `learning.wishlist` | Saved courses, with an optional private note | ADMIN | Retention and account-deletion policy decided. Saving works without checkout — a course can be free or unpublished — but taking payment for a saved one still needs `commerce.checkout` |
+| `learning.cohorts` | Dated groups taking a published course version together | ADMIN | Database rules are built; teacher/course and learner join screens are not. Decide late-join policy before enabling. Roster is private: course author/staff see member rows; learners see only themselves and family. A learner/guardian opts in; the author cannot silently add a learner |
 | `learning.multi_language` | Interface and content in more languages | CODE | Translation workflow; per-locale content; RTL support; who translates |
 | `learning.ai_support` | Safeguarded AI study help | CODE | Safeguarding policy; provider chosen; cost ceiling; **must refuse to issue rulings and refer to a teacher** |
 | `learning.ai_quiz_gen` | Generate quiz questions from lesson transcripts | ADMIN + SETUP | Provider and cost ceiling; teacher reviews every generated question before use |
@@ -145,8 +146,8 @@ money rules behave, and they shipped with values rather than being absent.
 | `governance.min_approvals` | integer | none | `1` | How many independent approvals a version needs before it may be published |
 | `teaching.revenue_share_percent` | integer | ADMIN | `0` | The teacher's share of a paid order, in whole percent. **Deliberately 0: the number has not been chosen.** Earnings accrue at whatever this says, so setting it is a business decision, not a configuration one. Changing it never rewrites earnings already booked |
 
-Measured, the table holds **89 rows: the 86 flags above plus these three.**
-Eighty-seven are boolean switches and two are integers. Gate types: **42 ADMIN,
+Measured, the table holds **90 rows: the 87 flags above plus these three.**
+Eighty-eight are boolean switches and two are integers. Gate types: **43 ADMIN,
 14 ADMIN + SETUP, 31 CODE**, and the two governance controls, which have no gate
 because they are not features.
 

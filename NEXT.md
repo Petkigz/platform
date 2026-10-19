@@ -50,15 +50,33 @@ profile — "who is this for" goes in the note, so saving stays one tap — and
 removal is not flag-gated, so turning the feature off cannot trap it.
 `learning.wishlist` ships off.
 
+The next clarification is now settled: the teacher wants **both** self-paced
+courses and dated cohorts, learners submit **text or files** (including voice or
+photos), and the **course author** marks. Cohort persistence is built behind
+`learning.cohorts`: classes pin one published course version; learners or their
+guardians opt in (the author cannot silently add a child); roster rows are
+private to the teacher/staff and that learner's family; a version change does
+not move an existing class to new material. The feature still ships off while
+late joining and the cohort screens are unfinished.
+
+`learning.assignments` is therefore not a duplicate quiz: it needs standalone
+work authored after publication, a deadline relative to enrolment for
+self-paced learners or an absolute date for a cohort, written/file submissions,
+and author-only marking with feedback. `media_assets` can represent verified
+files, but uploads still stop at `pending`: bytes are not transferred and only
+trusted staff/worker confirmation can make an asset `available`. Assignment
+submissions, feedback, file-delivery wiring and the late-work rule remain; the
+flag stays off until they exist.
+
 The two planning documents were also stale in a way that would have misdirected
 the next session, so both were re-audited against the route list in the build
 output rather than against memory. `SCREENS.md` had 24 rows saying READY or
 BLOCKED for screens that exist — including the settings and flags screen, which
 its own note called the critical path while claiming no settings table existed.
-It now reads **36 built, 12 ready, 5 blocked**; the five blocked ones are blocked
+It now reads **37 built, 13 ready, 5 blocked**; the five blocked ones are blocked
 on a decision or a provider, not on code. `FLAGS.md` claimed seven flags could
 not be runtime toggles and then listed eleven: the measured figure is **31 CODE,
-14 ADMIN + SETUP, 42 ADMIN**, and `platform_settings` holds **89 rows — the 86
+14 ADMIN + SETUP, 43 ADMIN**, and `platform_settings` holds **90 rows — the 87
 documented flags plus three controls** that were in the database and not in the
 register (`governance.panel_required`, `governance.min_approvals`,
 `teaching.revenue_share_percent`). All three are now documented, including the
@@ -74,9 +92,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **732 database tests, 327 web tests; TypeScript typecheck and
-production build pass; 96 tables, 224 policies, 129 user-defined triggers,
-191 functions, 81 migrations and 92 app route entries.**
+Verification: **754 database tests, 327 web tests; TypeScript typecheck and
+production build pass; 98 tables, 226 policies, 130 user-defined triggers,
+199 functions, 82 migrations and 92 app route entries.**
 
 ## Today's sentence
 
@@ -244,13 +262,13 @@ platform admin cannot read it through SQL** — grading happens inside
 ### Also done since: the admin flag dashboard
 
 `/admin` is the page the standing architecture decision points at — build
-everything, ship it off, turn it on from here. All 86 flags from `FLAGS.md`
+everything, ship it off, turn it on from here. All 87 flags from `FLAGS.md`
 are seeded into `platform_settings`, each with its gate type and its written
 precondition, so the dashboard shows *why* a flag is off and not only that it
 is.
 
 **A `code`-gated flag cannot be enabled at runtime, and that is a trigger.**
-31 of the 86 need a deploy, a provider, or a policy document first. Enforcing
+31 of the 87 need a deploy, a provider, or a policy document first. Enforcing
 that in the UI by hiding the switch would not be a control — the API is
 reachable and so is psql. `reject_code_flag_enablement()` refuses it; a
 migration can still do it by setting `app.bypassing_code_flag`, the same
