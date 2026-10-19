@@ -48,6 +48,7 @@ import { run as instructorProfiles } from './instructor_profiles.test.mjs';
 import { run as lessonStudyTools } from './lesson_study_tools.test.mjs';
 import { run as supportCases } from './support_cases.test.mjs';
 import { run as courseReviews } from './course_reviews.test.mjs';
+import { run as courseWishlist } from './course_wishlist.test.mjs';
 
 const ctx = await createHarness();
 const suites = [];
@@ -92,6 +93,7 @@ for (const [name, fn] of [
   ['lesson study tools', lessonStudyTools],
   ['support cases', supportCases],
   ['course reviews', courseReviews],
+  ['course wishlist', courseWishlist],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],

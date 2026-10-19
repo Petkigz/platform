@@ -27,6 +27,8 @@ import {
   type ReviewSummary,
 } from '@/lib/reviews';
 import { ReviewPanel } from './review-panel';
+import { SaveButton } from './save-button';
+import { isCourseSaved } from '@/lib/wishlist';
 
 export const dynamic = 'force-dynamic';
 
@@ -150,6 +152,15 @@ export default async function CoursePage({
       ])
     : ([{ average: 0, count: 0, distribution: {} }, [], false] as [ReviewSummary, CourseReview[], boolean]);
 
+  // Saved for later. Asked only when the flag is on and someone is signed in:
+  // the row is private to an account, so there is nothing to look up otherwise.
+  const savedOn = user
+    ? await isFlagEnabled(supabase, 'learning.wishlist').catch(() => false)
+    : false;
+  const savedState = savedOn
+    ? await isCourseSaved(supabase, course.id)
+    : { saved: false, id: null, note: null };
+
   return (
     <div className="container section" style={{ display: 'grid', gap: '1.5rem' }}>
       <div>
@@ -198,6 +209,16 @@ export default async function CoursePage({
           signedIn={Boolean(user)}
           label={offeringLabel(offering)}
         />
+
+        {savedOn && (
+          <SaveButton
+            courseId={course.id}
+            signedIn
+            initiallySaved={savedState.saved}
+            initialId={savedState.id}
+            initialNote={savedState.note}
+          />
+        )}
       </div>
 
       <div>

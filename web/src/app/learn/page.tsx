@@ -120,6 +120,14 @@ export default async function LearnPage() {
   );
 
   const progressOn = await isFlagEnabled(supabase, 'learning.progress').catch(() => false);
+  // Saved courses live here rather than in the masthead: the nav is already
+  // eight links wide on a phone, and this is where someone looks for their own
+  // things. The link appears whether or not the flag is on, because a list
+  // somebody built while it was on must stay reachable after it is turned off.
+  const savedCount = await supabase
+    .from('course_wishlist')
+    .select('id', { count: 'exact', head: true })
+    .then((r) => r.count ?? 0);
 
   return (
     <div className="container section">
@@ -131,7 +139,11 @@ export default async function LearnPage() {
       </h1>
       <p className="muted">
         Signed in as {user.email ?? user.phone ?? 'unknown'}.{' '}
-        <Link href="/account">Account settings</Link>{' · '}
+        <Link href="/account">Account settings</Link>
+        {' · '}
+        <Link href="/saved">
+          Saved courses{savedCount > 0 ? ` (${savedCount})` : ''}
+        </Link>{' · '}
         <form action="/sign-out" method="post" style={{ display: 'inline' }}>
           <button
             type="submit"

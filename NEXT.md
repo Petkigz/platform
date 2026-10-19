@@ -42,7 +42,13 @@ stops new cases but not the ones already in flight. Enrolled learners can rate
 and review a course from its page; a rating alone is counted immediately while
 words are held until staff publish them, and `/admin/course-reviews` is the
 reading queue. Reviews are a satisfaction signal only — nothing in the
-publication workflow reads them. `learning.reviews` ships off.
+publication workflow reads them. `learning.reviews` ships off. An account can also save a course from its page and
+keep a private note against it; `/saved` lists them with whether each is
+available, unpublished or no longer offered, and whether someone in the family is
+already enrolled. The list belongs to an account rather than to a learner
+profile — "who is this for" goes in the note, so saving stays one tap — and
+removal is not flag-gated, so turning the feature off cannot trap it.
+`learning.wishlist` ships off.
 
 The two planning documents were also stale in a way that would have misdirected
 the next session, so both were re-audited against the route list in the build
@@ -68,9 +74,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **718 database tests, 312 web tests; TypeScript typecheck and
-production build pass; 95 tables, 220 policies, 127 user-defined triggers,
-190 functions, 80 migrations and 90 app route entries.**
+Verification: **732 database tests, 327 web tests; TypeScript typecheck and
+production build pass; 96 tables, 224 policies, 129 user-defined triggers,
+191 functions, 81 migrations and 92 app route entries.**
 
 ## Today's sentence
 

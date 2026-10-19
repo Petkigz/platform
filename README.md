@@ -62,10 +62,10 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 ## Status
 
-The database stands at **95 tables, RLS on every one, 220 policies, 127
-user-defined triggers, 190 functions and 80 migrations.** The database suite
-passes **718 tests**; the web suite passes **312 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **90 app route entries**.
+The database stands at **96 tables, RLS on every one, 224 policies, 129
+user-defined triggers, 191 functions and 81 migrations.** The database suite
+passes **732 tests**; the web suite passes **327 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **92 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. `/account`
@@ -97,6 +97,17 @@ the session, not the request body, and the row must point at an enrolment the
 caller may act for whose pinned version actually contains that lesson — a note
 cannot be attached to a version the learner never accessed. Transcripts, which
 the old flag description bundled in, are not built and are no longer claimed.
+
+A learner can save a course from its page and keep a private note against it, and
+`/saved` lists what they kept with whether each course is available, not
+published yet, or no longer offered, and whether someone in the family is already
+enrolled. The list belongs to an account rather than to a learner profile: every
+other learner-scoped thing on the platform asks "who is learning?" at enrolment,
+where it matters, and asking it again on a bookmark would turn the one effortless
+action into a form. The note carries that intent instead. Owner ids are taken
+from the session and never accepted from a caller, removal is not flag-gated so
+switching the feature off cannot trap a list, and a hundred saved courses is the
+ceiling. `learning.wishlist` ships off.
 
 Learners can rate and review a course they are enrolled in, from the course
 page, and staff read anything they wrote at `/admin/course-reviews`. The rules
@@ -233,15 +244,15 @@ becomes available only when staff confirm it. An uploader cannot promote their
 own file — that hole was found by running the sequence, not by reading the
 policy.
 
-(The trigger count is user-defined triggers. `pg_trigger` also holds 903
-internal constraint triggers; counting them gives 1030, which is the number
+(The trigger count is user-defined triggers. `pg_trigger` also holds 911
+internal constraint triggers; counting them gives 1040, which is the number
 that produced an earlier, inflated figure in this file.)
 
 All five original logical groups are complete. `discussion_posts` was the
 89th table, added for per-lesson discussion after those groups closed. The
 teacher profile feature adds the 90th table. Private lesson notes and
 bookmarks add the 91st and 92nd, the help desk adds the 93rd and 94th, and
-learner reviews add the 95th.
+learner reviews add the 95th and saved courses the 96th.
 Governance channels (content reports and review appeals) use the existing
 `content_reports` and `governance_appeals` tables rather than adding new ones.
 
@@ -266,11 +277,11 @@ npm run dev
 
 See `web/README.md`.
 
-### Why 95 tables when the design specified 85
+### Why 96 tables when the design specified 85
 
-Ten tables beyond the original 85 were needed for recorded decisions, the
+Eleven tables beyond the original 85 were needed for recorded decisions, the
 chosen discussion experience, teacher-authored public profiles, private study
-data, the help desk and learner reviews:
+data, the help desk, learner reviews and saved courses:
 
 - `institutions` — D1 multi-tenancy had no table to hang `institution_id` on
 - `media_assets` — D8 requires originals in storage we control, with a checksum
@@ -288,6 +299,10 @@ data, the help desk and learner reviews:
 - `course_reviews` — the register had the flag and no table; a review is not a
   `content_report` (it is an opinion about a course, not a defect in a lesson)
   and not a review decision (which is scholarly and gates publication)
+- `course_wishlist` — the register had the flag and no table, and its
+  precondition ("only meaningful once checkout is on") was true of paying and
+  false of saving: a course can be free, unpublished, or under discussion in a
+  family about which child it is for
 
 Learning paths reuse the existing `learning_paths` and `learning_path_items`
 tables; this work adds their audited writers and the teacher/learner screens,

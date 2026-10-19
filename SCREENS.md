@@ -57,6 +57,7 @@ Status:
 |---|---|---|
 | 20 | Adult home, led by "continue where you stopped" | **BUILT** — shared learner dashboard at `/learn` |
 | 20a | **Learning path detail and progress** | **BUILT** — `/paths/[slug]` tracks required-course completion |
+| 20b | **Saved courses** *(added — was missing from the inventory)* | **BUILT** — `/saved`, reached from `/learn` and from the save button on a course page. Behind `learning.wishlist`; the list stays reachable when the flag is off so nothing is trapped |
 | 21 | Course details | **BUILT** — `/courses/[slug]`: outline, preview lesson, enrolment, ratings and reviews behind `learning.reviews` |
 | 22 | Video lesson *(adult chrome)* | **BUILT** — same route as #14, chrome not yet differentiated |
 | 23 | Qur'an / audio player | READY |
