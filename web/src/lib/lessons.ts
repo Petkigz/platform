@@ -52,6 +52,25 @@ export type LessonResource = {
   accessClassification: AccessClassification;
 };
 
+/**
+ * Identify direct, browser-playable HTTPS media URLs. Signed first-party media
+ * assets are deliberately not treated as external URLs; their delivery remains
+ * gated by the server-side asset signer.
+ */
+export function nativeMediaKind(
+  resource: Pick<LessonResource, 'resourceType' | 'externalUrl'>,
+): 'video' | 'audio' | null {
+  if (!resource.externalUrl || (resource.resourceType !== 'video' && resource.resourceType !== 'audio')) return null;
+  let url: URL;
+  try { url = new URL(resource.externalUrl); }
+  catch { return null; }
+  if (url.protocol !== 'https:') return null;
+  const path = url.pathname.toLowerCase();
+  if (resource.resourceType === 'video' && /\.(mp4|webm|ogv)$/.test(path)) return 'video';
+  if (resource.resourceType === 'audio' && /\.(mp3|m4a|aac|ogg|oga|wav|flac)$/.test(path)) return 'audio';
+  return null;
+}
+
 export type Lesson = {
   id: string;
   title: string;

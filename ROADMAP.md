@@ -47,8 +47,8 @@ partly complete.** The roadmap starts where the project already is.
 
 ## Phase 4 — Learning systems
 
-- [ ] Build course sections and lessons
-- [ ] Build the video/audio lesson player
+- [~] Build course sections and lessons — *teacher course/version/section/lesson authoring, ordering, and learner pages are live; secure media upload is pending storage setup.*
+- [~] Build the video/audio lesson player — *native playback for direct HTTPS MP4/WebM/OGV and MP3/M4A/AAC/OGG/WAV/FLAC resources; first-party media needs the provider-backed signed delivery path, still undecided.*
 - [x] Track lesson progress and course completion — *`/learn` and `/learn/[enrolmentId]`, `POST /api/progress`. Progress pinned to the enrolled version; completion derived, never stored. `supabase/tests/progress.test.mjs`.*
 - [x] Build quizzes, assessments and results — *`/learn/[enrolmentId]/assessment/[assessmentId]`, `POST /api/assessment`, and authoring tools in `/teach/<courseId>`. Automatic single/multiple-choice and true/false, attempt limits; identity-checked submission and server-side auto-grading; anonymized, course-author/staff manual-answer queue with audited marking and final scoring. Answer keys unreadable by clients; low-level actor-argument grading RPCs revoked. `supabase/tests/assessment.test.mjs`, `supabase/tests/assessment_grading_workflow.test.mjs`.*
 - [~] Build young learner profiles and age-appropriate learning — **profiles designed; engagement mechanics are not** (`gamif: 0`, `badge: 0`, `streak: 0`)

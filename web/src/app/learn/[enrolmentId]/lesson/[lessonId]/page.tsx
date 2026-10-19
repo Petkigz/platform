@@ -6,6 +6,7 @@ import {
   canAccessLesson,
   fetchLesson,
   formatDuration,
+  nativeMediaKind,
   RESOURCE_LABEL,
 } from '@/lib/lessons';
 import { MarkComplete } from '../../mark-complete';
@@ -180,30 +181,54 @@ export default async function LessonPage({
           )
         ) : (
           <ul className="lessons">
-            {lesson.resources.map((r) => (
-              <li key={r.id}>
-                <span className="n">{RESOURCE_LABEL[r.resourceType]}</span>
-                <span className="t">
-                  {r.externalUrl ? (
-                    <a href={r.externalUrl} target="_blank" rel="noreferrer">
-                      {r.displayName}
-                    </a>
-                  ) : (
-                    // A media asset has no public URL by design: D8 keeps
-                    // masters in our own storage and Stream is delivery only,
-                    // so the playable URL is signed server-side at the moment
-                    // of playback. Until that signing exists, saying so is
-                    // more useful than rendering a link that goes nowhere.
-                    <span className="muted">
-                      {r.displayName} — playback not wired up yet
-                    </span>
+            {lesson.resources.map((r) => {
+              const nativeKind = nativeMediaKind(r);
+              return (
+                <li key={r.id}>
+                  <span className="n">{RESOURCE_LABEL[r.resourceType]}</span>
+                  <span className="t" style={{ minWidth: 0, flex: 1 }}>
+                    {r.externalUrl && nativeKind === 'video' ? (
+                      <div style={{ display: 'grid', gap: '0.4rem' }}>
+                        <strong>{r.displayName}</strong>
+                        <video
+                          controls
+                          playsInline
+                          preload="metadata"
+                          src={r.externalUrl}
+                          aria-label={r.displayName}
+                          style={{ width: '100%', maxHeight: '70vh', borderRadius: '0.75rem', background: '#101510' }}
+                        >
+                          Your browser cannot play this video.{' '}
+                          <a href={r.externalUrl} target="_blank" rel="noreferrer">Open the video directly</a>.
+                        </video>
+                      </div>
+                    ) : r.externalUrl && nativeKind === 'audio' ? (
+                      <div style={{ display: 'grid', gap: '0.4rem' }}>
+                        <strong>{r.displayName}</strong>
+                        <audio controls preload="metadata" src={r.externalUrl} aria-label={r.displayName} style={{ width: '100%' }}>
+                          Your browser cannot play this audio.{' '}
+                          <a href={r.externalUrl} target="_blank" rel="noreferrer">Open the audio directly</a>.
+                        </audio>
+                      </div>
+                    ) : r.externalUrl ? (
+                      <a href={r.externalUrl} target="_blank" rel="noreferrer">
+                        {r.displayName}
+                      </a>
+                    ) : (
+                      // First-party media assets remain protected: they need a
+                      // short-lived signed playback URL from the chosen storage
+                      // provider rather than a permanent public link.
+                      <span className="muted">
+                        {r.displayName} — secure playback setup is still required
+                      </span>
+                    )}
+                  </span>
+                  {r.accessClassification === 'public_preview' && previewsOn && (
+                    <span className="badge neutral">Preview</span>
                   )}
-                </span>
-                {r.accessClassification === 'public_preview' && previewsOn && (
-                  <span className="badge neutral">Preview</span>
-                )}
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

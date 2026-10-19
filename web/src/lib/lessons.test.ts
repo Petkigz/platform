@@ -5,6 +5,7 @@ import {
   canAccessLesson,
   fetchLesson,
   formatDuration,
+  nativeMediaKind,
   RESOURCE_LABEL,
   type Lesson,
 } from './lessons.ts';
@@ -188,4 +189,19 @@ test('canAccessLesson passes both ids and treats failure as no access', async ()
 
   const noData = stubClient({ rpc: { data: null } });
   assert.equal(await canAccessLesson(noData.client, 'learner-1', 'l-1'), false);
+});
+
+test('native playback recognises direct HTTPS video and audio files', () => {
+  assert.equal(nativeMediaKind({ resourceType: 'video', externalUrl: 'https://media.example/lesson.mp4?token=abc' }), 'video');
+  assert.equal(nativeMediaKind({ resourceType: 'video', externalUrl: 'https://media.example/lesson.webm' }), 'video');
+  assert.equal(nativeMediaKind({ resourceType: 'audio', externalUrl: 'https://media.example/recitation.mp3#chapter' }), 'audio');
+  assert.equal(nativeMediaKind({ resourceType: 'audio', externalUrl: 'https://media.example/recitation.ogg' }), 'audio');
+});
+
+test('native playback refuses non-HTTPS, mismatched types and non-media pages', () => {
+  assert.equal(nativeMediaKind({ resourceType: 'video', externalUrl: 'http://media.example/lesson.mp4' }), null);
+  assert.equal(nativeMediaKind({ resourceType: 'audio', externalUrl: 'https://media.example/lesson.mp4' }), null);
+  assert.equal(nativeMediaKind({ resourceType: 'video', externalUrl: 'https://video.example/watch/123' }), null);
+  assert.equal(nativeMediaKind({ resourceType: 'document', externalUrl: 'https://media.example/lesson.mp4' }), null);
+  assert.equal(nativeMediaKind({ resourceType: 'audio', externalUrl: 'not a url' }), null);
 });

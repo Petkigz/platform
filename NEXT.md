@@ -17,7 +17,10 @@ questions; answer keys are never read back into the editor. Learner submission
 now grades objective questions server-side; course authors see an anonymized
 queue for written responses, and the final score is committed once every answer
 is marked. Certificates now have a session-bound staff admin workflow for
-issuance and reasoned revocation, plus an RLS-protected print/save-as-PDF view for certificate holders and their authorised family.
+issuance and reasoned revocation, plus an RLS-protected print/save-as-PDF view
+for certificate holders and their authorised family. Lesson pages now play
+approved direct HTTPS audio/video files natively; first-party uploaded media
+still needs a chosen storage provider and short-lived signed playback URLs.
 Version copying carries forward the curriculum, assessments, completion
 requirements, citations and product/price links; existing learners stay pinned
 to their original version.
@@ -29,7 +32,7 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **682 database tests, 270 web tests; TypeScript typecheck and
+Verification: **682 database tests, 272 web tests; TypeScript typecheck and
 production build pass; 90 tables, 210 policies, 121 user-defined triggers,
 176 functions, 76 migrations and 76 app route entries.**
 
