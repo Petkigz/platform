@@ -22,7 +22,7 @@ Three kinds of gate:
 | Flag | Gates | Type | Preconditions before it can be ON |
 |---|---|---|---|
 | `learning.progress` | Progress tracking and resume | ADMIN | — |
-| `learning.assessments` | Quizzes, attempts, grading | ADMIN | Question bank seeded; grading types supported |
+| `learning.assessments` | Quizzes, attempts, grading | ADMIN | Question bank seeded. Four question types, automatic and manual marking, and teacher feedback on a marked answer all exist |
 | `learning.certificates.simple` | Completion certificate for a learner | ADMIN | Template chosen; certificate numbering scheme |
 | `learning.certificates.verification` | Public verify-a-certificate page | ADMIN + SETUP | Verification page deployed; revocation policy written; token format fixed |
 | `learning.discussion` | Per-lesson questions and replies | ADMIN | Moderation policy; who answers (teacher vs. peers); abuse handling |

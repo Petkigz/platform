@@ -48,7 +48,20 @@ available, unpublished or no longer offered, and whether someone in the family i
 already enrolled. The list belongs to an account rather than to a learner
 profile — "who is this for" goes in the note, so saving stays one tap — and
 removal is not flag-gated, so turning the feature off cannot trap it.
-`learning.wishlist` ships off.
+`learning.wishlist` ships off. A teacher marking a written answer can now say
+something as well as award a number: `grading_feedback` is written in the same
+statement as the mark, so it is immutable with it, and the learner reads it under
+"Your marked attempts" on the assessment page. The audit records that a comment
+was given and not what it says.
+
+Quizzes gained the same capacity separately, and it matters that they are two
+surfaces rather than one: `short_answer` questions are marked through the
+existing manual queue in `/teach/[courseId]`, which could award a score and a
+verdict and say nothing. That marking now carries a comment, written in the same
+statement as the mark so it is immutable with it, and the learner reads it under
+"Your marked attempts" on the assessment page. Assignments and quizzes keep their
+own feedback because they keep their own submissions — an assignment is dated
+work beside a frozen version, a quiz question belongs to the version itself.
 
 The next clarification is now settled: the teacher wants **both** self-paced
 courses and dated cohorts, learners submit **text or files** (including voice or
@@ -99,9 +112,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **774 database tests, 342 web tests; TypeScript typecheck and
+Verification: **784 database tests, 351 web tests; TypeScript typecheck and
 production build pass; 101 tables, 229 policies, 132 user-defined triggers,
-210 functions, 84 migrations and 97 app route entries.**
+210 functions, 85 migrations and 97 app route entries.**
 
 ## Today's sentence
 

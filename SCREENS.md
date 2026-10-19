@@ -45,7 +45,7 @@ Status:
 | 14 | Video lesson | **BUILT** — `/learn/[enrolmentId]/lesson/[lessonId]` |
 | 15 | Interactive lesson | READY — shares the lesson route, no interactive player yet |
 | 16 | Quiz | **BUILT** — `/learn/[enrolmentId]/assessment/[assessmentId]`. Four question types (`single_choice`, `multiple_choice`, `true_false`, `short_answer`); the answer key is a protected column. No question bank, no timed sittings |
-| 17 | Results | **BUILT** — same route; score, attempt count and pass state |
+| 17 | Results | **BUILT** — same route; score, attempt count, pass state, and the teacher's comments on marked answers. Deliberately does not list which automatic questions were right, so a result cannot be read as an answer key |
 | 18 | Progress and achievements | BLOCKED — engagement mechanics undesigned |
 | 19 | Parent dashboard | **BUILT** — `/family`: children, per-child progress, members, guardian requests |
 | 19a | **Guardian access request** *(added — was missing from the inventory)* | **BUILT** — `/family/guardians`. Behind `family.guardian_verification` |

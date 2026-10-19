@@ -51,6 +51,7 @@ export async function POST(request: Request) {
     responseId?: unknown;
     score?: unknown;
     isCorrect?: unknown;
+    feedback?: unknown;
     passThreshold?: unknown;
     attemptLimit?: unknown;
     lessonId?: unknown;
@@ -125,6 +126,13 @@ export async function POST(request: Request) {
       responseId: b.responseId,
       score: b.score,
       isCorrect: b.isCorrect,
+      // Optional, and validated in the library and again in the database: a
+      // comment is the part of marking a learner can act on, so refusing it here
+      // for being slightly too long would be the wrong kind of strict.
+      feedback:
+        typeof b.feedback === 'string' || b.feedback === null || b.feedback === undefined
+          ? b.feedback
+          : '',
     });
     return NextResponse.json(outcome, { status: outcome.ok ? 200 : 400 });
   }

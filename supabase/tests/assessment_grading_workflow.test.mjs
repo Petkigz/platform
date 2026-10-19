@@ -161,7 +161,7 @@ export async function run(ctx) {
 
   await test('clients cannot call the low-level actor-argument grading functions', async () => {
     const privileges = (await q(
-      `select has_function_privilege('authenticated','public.grade_response(uuid,uuid,numeric,boolean)','execute') as can_grade,
+      `select has_function_privilege('authenticated','public.grade_response(uuid,uuid,numeric,boolean,text)','execute') as can_grade,
               has_function_privilege('authenticated','public.finalize_attempt_grading(uuid)','execute') as can_finalize,
               has_function_privilege('authenticated','public.submit_attempt(uuid)','execute') as can_submit`)).rows[0];
     assert(privileges.can_grade===false && privileges.can_finalize===false && privileges.can_submit===false,

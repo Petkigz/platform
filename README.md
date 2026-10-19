@@ -63,8 +63,8 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **101 tables, RLS on every one, 229 policies, 132
-user-defined triggers, 210 functions and 84 migrations.** The database suite
-passes **774 tests**; the web suite passes **342 tests**. TypeScript typecheck
+user-defined triggers, 210 functions and 85 migrations.** The database suite
+passes **784 tests**; the web suite passes **351 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **97 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
@@ -97,6 +97,16 @@ the session, not the request body, and the row must point at an enrolment the
 caller may act for whose pinned version actually contains that lesson — a note
 cannot be attached to a version the learner never accessed. Transcripts, which
 the old flag description bundled in, are not built and are no longer claimed.
+
+A teacher marking a written answer can say something as well as award a number.
+Feedback is written in the same statement as the mark, inside the window the
+immutability trigger opens, so a comment cannot be quietly rewritten after the
+fact; the learner reads it under "Your marked attempts". The audit log records
+that a comment was given and not what it says. The results screen deliberately
+does not list which automatic questions were right — that information is already
+readable by the learner through RLS, but a results page that reports every wrong
+answer becomes an answer key for the next attempt, and these assessments are
+reusable by design.
 
 A learner can save a course from its page and keep a private note against it, and
 `/saved` lists what they kept with whether each course is available, not
@@ -258,15 +268,16 @@ becomes available only when staff confirm it. An uploader cannot promote their
 own file — that hole was found by running the sequence, not by reading the
 policy.
 
-(The trigger count is user-defined triggers. `pg_trigger` also holds 911
-internal constraint triggers; counting them gives 1040, which is the number
+(The trigger count is user-defined triggers. `pg_trigger` also holds 991
+internal constraint triggers; counting them gives 1123, which is the number
 that produced an earlier, inflated figure in this file.)
 
 All five original logical groups are complete. `discussion_posts` was the
 89th table, added for per-lesson discussion after those groups closed. The
 teacher profile feature adds the 90th table. Private lesson notes and
-bookmarks add the 91st and 92nd, the help desk adds the 93rd and 94th, and
-learner reviews add the 95th and saved courses the 96th.
+bookmarks add the 91st and 92nd, the help desk adds the 93rd and 94th,
+learner reviews the 95th and saved courses the 96th. Dated cohorts add the 97th
+and 98th, and marked assignments add the 99th, 100th and 101st.
 Governance channels (content reports and review appeals) use the existing
 `content_reports` and `governance_appeals` tables rather than adding new ones.
 

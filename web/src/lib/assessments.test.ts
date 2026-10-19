@@ -2,7 +2,10 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  fetchAttemptResults,
+  FEEDBACK_MAX,
   validateCreateAssessment,
+  validateFeedback,
   validateAddQuestion,
   addAssessmentQuestion,
   choicesOf,
@@ -400,8 +403,158 @@ test('manual marking sends score and verdict, never an actor id', async () => {
   assert.equal(result.ok, true);
   assert.deepEqual(calls[0], {
     fn: 'mark_manual_assessment_response',
-    args: { p_response_id: 'response-1', p_score: 2, p_is_correct: true },
+    args: { p_response_id: 'response-1', p_score: 2, p_is_correct: true, p_feedback: null },
   });
+});
+
+// ---------------------------------------------------------------------------
+// Feedback on a marked answer.
+//
+// The comment is the only part of marking a written answer that a learner can
+// act on, so what is worth pinning is that it travels with the mark, that blank
+// means none rather than an empty string, and that it is refused before the
+// database is asked when it is too long.
+// ---------------------------------------------------------------------------
+
+test('a comment is trimmed and sent with the mark', async () => {
+  const { client, calls } = stubRpc({ data: null });
+  const result = await markManualAssessmentResponse(client, {
+    responseId: 'response-1', score: 3, isCorrect: true,
+    feedback: '  Clearer this time — cite the verse.  ',
+  });
+  assert.equal(result.ok, true);
+  assert.equal(calls[0]?.args.p_feedback, 'Clearer this time — cite the verse.');
+});
+
+test('a blank comment is sent as none, not as an empty string', async () => {
+  const { client, calls } = stubRpc({ data: null });
+  await markManualAssessmentResponse(client, {
+    responseId: 'response-1', score: 1, isCorrect: false, feedback: '   ',
+  });
+  assert.equal(calls[0]?.args.p_feedback, null);
+});
+
+test('validateFeedback reports the limit this side of the database', () => {
+  assert.equal(validateFeedback({}).ok, true);
+  assert.equal(validateFeedback({ feedback: 42 }).ok, true, 'a non-string comment is treated as none');
+  assert.equal(validateFeedback({ feedback: 'x'.repeat(FEEDBACK_MAX) }).ok, true);
+
+  const tooLong = validateFeedback({ feedback: 'x'.repeat(FEEDBACK_MAX + 1) });
+  assert.equal(tooLong.ok, false);
+
+  const blank = validateFeedback({ feedback: '  ' });
+  if (blank.ok) assert.equal(blank.feedback, null);
+});
+
+test('an overlong comment is refused before the database call', async () => {
+  const { client, calls } = stubRpc();
+  const result = await markManualAssessmentResponse(client, {
+    responseId: 'response-1', score: 2, isCorrect: true,
+    feedback: 'x'.repeat(FEEDBACK_MAX + 1),
+  });
+  assert.equal(result.ok, false);
+  assert.equal(calls.length, 0, 'an overlong comment was sent to the database');
+});
+
+test('a refusal about the comment reads as one', async () => {
+  const { client } = stubRpc({ error: { message: 'feedback must be 5000 characters or fewer' } });
+  const result = await markManualAssessmentResponse(client, {
+    responseId: 'response-1', score: 2, isCorrect: true, feedback: 'ok',
+  });
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.match(result.message, /under 5000 characters/);
+});
+
+test('marking an automatic answer is reported as such', async () => {
+  const { client } = stubRpc({ error: { message: 'only a manually graded response can be marked here' } });
+  const result = await markManualAssessmentResponse(client, {
+    responseId: 'response-1', score: 2, isCorrect: true, feedback: 'Nice.',
+  });
+  if (!result.ok) assert.equal(result.message, 'That answer is marked automatically.');
+});
+
+// ---------------------------------------------------------------------------
+// What the learner gets back.
+// ---------------------------------------------------------------------------
+
+/** A thenable query-builder stub keyed by table. */
+function stubTables(tables: Record<string, unknown[]>) {
+  const log: { table: string; select: string; filters: Record<string, unknown>; order: string | null }[] = [];
+  function makeChain(table: string) {
+    const rec = { table, select: '', filters: {} as Record<string, unknown>, order: null as string | null };
+    log.push(rec);
+    const rows = tables[table] ?? [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const chain: any = {};
+    chain.select = (s: string) => { rec.select = s; return chain; };
+    chain.eq = (c: string, v: unknown) => { rec.filters[c] = v; return chain; };
+    chain.order = (c: string, o?: { ascending?: boolean }) => {
+      rec.order = `${c}:${o?.ascending === false ? 'desc' : 'asc'}`;
+      return chain;
+    };
+    chain.maybeSingle = async () => ({ data: rows[0] ?? null, error: null });
+    chain.then = (resolve: (v: unknown) => unknown) =>
+      Promise.resolve({ data: rows, error: null }).then(resolve);
+    return chain;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const client = { from: (table: string) => makeChain(table) } as any;
+  return { client, log };
+}
+
+test('results carry the score and the comments, newest attempt first', async () => {
+  const { client, log } = stubTables({
+    assessment_attempts: [
+      { id: 'a-2', attempt_number: 2, status: 'graded', score_earned: '5', score_possible: '6', passed: true, graded_at: '2026-10-02T09:00:00Z' },
+      { id: 'a-1', attempt_number: 1, status: 'graded', score_earned: '2', score_possible: '6', passed: false, graded_at: '2026-10-01T09:00:00Z' },
+      { id: 'a-0', attempt_number: 0, status: 'submitted', score_earned: null, score_possible: null, passed: null, graded_at: null },
+    ],
+    assessment_responses: [
+      {
+        score: '3', is_correct: true, grading_feedback: 'Cite the verse next time.',
+        assessment_questions: [{ content: { prompt: 'Explain your reasoning' }, points: '3', grading_method: 'manual' }],
+      },
+      {
+        score: '2', is_correct: true, grading_feedback: null,
+        assessment_questions: [{ content: { prompt: 'Choose yes' }, points: '2', grading_method: 'automatic' }],
+      },
+    ],
+  });
+
+  const results = await fetchAttemptResults(client, { enrolmentId: 'e-1', assessmentId: 'as-1' });
+
+  // An ungraded attempt is not a result: it has no score and nothing was said.
+  assert.equal(results.length, 2);
+  assert.equal(results[0]?.attemptNumber, 2);
+  assert.equal(results[0]?.scoreEarned, 5);
+  assert.equal(results[0]?.passed, true);
+  assert.equal(results[0]?.comments.length, 1, 'an answer with no comment was listed as one');
+  assert.equal(results[0]?.comments[0]?.prompt, 'Explain your reasoning');
+  assert.equal(results[0]?.comments[0]?.feedback, 'Cite the verse next time.');
+  assert.equal(results[0]?.comments[0]?.points, 3);
+
+  const attemptQuery = log.find((c) => c.table === 'assessment_attempts');
+  assert.equal(attemptQuery?.order, 'attempt_number:desc');
+  assert.deepEqual(attemptQuery?.filters, {
+    course_enrolment_id: 'e-1',
+    assessment_id: 'as-1',
+  });
+});
+
+test('no graded attempts means no results and no second query', async () => {
+  const { client, log } = stubTables({
+    assessment_attempts: [
+      { id: 'a-1', attempt_number: 1, status: 'submitted', score_earned: null, score_possible: null, passed: null, graded_at: null },
+    ],
+  });
+  assert.deepEqual(await fetchAttemptResults(client, { enrolmentId: 'e-1', assessmentId: 'as-1' }), []);
+  assert.equal(log.length, 1, 'responses were fetched for an ungraded attempt');
+});
+
+test('a missing id asks for nothing', async () => {
+  const { client, log } = stubTables({ assessment_attempts: [] });
+  assert.deepEqual(await fetchAttemptResults(client, { enrolmentId: '', assessmentId: 'as-1' }), []);
+  assert.equal(log.length, 0);
 });
 
 test('manual grading rejects a negative score before the database call', async () => {

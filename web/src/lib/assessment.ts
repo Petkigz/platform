@@ -248,18 +248,44 @@ export type ManualGradeResult =
   | { ok: true }
   | { ok: false; message: string };
 
+/** Mirrors the check in `mark_manual_assessment_response()`. */
+export const FEEDBACK_MAX = 5000;
+
+/**
+ * A comment is optional, and blank means none.
+ *
+ * The words are the only part of marking a human answer that a learner can act
+ * on, so they are worth making easy — but they are not required, because a
+ * teacher marking twenty answers at midnight should not have to write twenty
+ * paragraphs.
+ */
+export function validateFeedback(input: { feedback?: unknown }):
+  | { ok: true; feedback: string | null }
+  | { ok: false; message: string } {
+  const text = typeof input.feedback === 'string' ? input.feedback.trim() : '';
+  if (text.length > FEEDBACK_MAX) {
+    return { ok: false, message: `Please keep feedback under ${FEEDBACK_MAX} characters.` };
+  }
+  return { ok: true, feedback: text.length > 0 ? text : null };
+}
+
 /** Grade as the signed-in course author; the caller cannot supply an actor id. */
 export async function markManualAssessmentResponse(
   supabase: SupabaseClient,
-  input: { responseId: string; score: number; isCorrect: boolean },
+  input: { responseId: string; score: number; isCorrect: boolean; feedback?: unknown },
 ): Promise<ManualGradeResult> {
   if (!input.responseId) return { ok: false, message: 'That response is missing.' };
   if (!Number.isFinite(input.score) || input.score < 0)
     return { ok: false, message: 'Enter a score of zero or more.' };
+
+  const feedback = validateFeedback({ feedback: input.feedback });
+  if (!feedback.ok) return feedback;
+
   const { error } = await supabase.rpc('mark_manual_assessment_response', {
     p_response_id: input.responseId,
     p_score: input.score,
     p_is_correct: input.isCorrect,
+    p_feedback: feedback.feedback,
   });
   if (error) {
     if (/only the course author/i.test(error.message))
@@ -268,9 +294,137 @@ export async function markManualAssessmentResponse(
       return { ok: false, message: 'This response has already been marked.' };
     if (/between zero and/i.test(error.message))
       return { ok: false, message: 'The score cannot be above the available points.' };
+    if (/5000 characters or fewer/i.test(error.message))
+      return { ok: false, message: `Please keep feedback under ${FEEDBACK_MAX} characters.` };
+    if (/only a manually graded response/i.test(error.message))
+      return { ok: false, message: 'That answer is marked automatically.' };
     return { ok: false, message: error.message };
   }
   return { ok: true };
+}
+
+export type MarkedAnswer = {
+  prompt: string;
+  score: number | null;
+  points: number | null;
+  isCorrect: boolean | null;
+  feedback: string | null;
+};
+
+export type AttemptResult = {
+  attemptNumber: number;
+  status: string;
+  scoreEarned: number | null;
+  scorePossible: number | null;
+  passed: boolean | null;
+  gradedAt: string | null;
+  /** Only manually marked answers, and only those with something said. */
+  comments: MarkedAnswer[];
+};
+
+type AttemptRow = {
+  id: string;
+  attempt_number: number;
+  status: string;
+  score_earned: string | number | null;
+  score_possible: string | number | null;
+  passed: boolean | null;
+  graded_at: string | null;
+};
+
+type ResponseRow = {
+  score: string | number | null;
+  is_correct: boolean | null;
+  grading_feedback: string | null;
+  assessment_questions?: {
+    content: unknown;
+    points: string | number | null;
+    grading_method: string | null;
+  }[] | null;
+};
+
+const num = (v: string | number | null): number | null =>
+  v === null || v === undefined ? null : Number(v);
+
+/**
+ * What a learner gets back after an attempt is marked.
+ *
+ * Deliberately narrow: the score, whether it passed, and the teacher's comments
+ * on the answers a person read. It does not list which automatic questions were
+ * right or wrong. That information is already readable by the learner through
+ * row level security, so this is not a secrecy claim — it is a choice about what
+ * a results screen is for. A quiz that reports "question 3: wrong" on every
+ * attempt becomes an answer key for the next one, and the assessments here are
+ * reusable across attempts by design.
+ *
+ * Both queries run under the caller's session, so a guardian sees a child's
+ * comments and a stranger sees nothing.
+ */
+export async function fetchAttemptResults(
+  supabase: SupabaseClient,
+  args: { enrolmentId: string; assessmentId: string },
+): Promise<AttemptResult[]> {
+  if (!args.enrolmentId || !args.assessmentId) return [];
+
+  const { data: attempts, error } = await supabase
+    .from('assessment_attempts')
+    .select('id, attempt_number, status, score_earned, score_possible, passed, graded_at')
+    .eq('course_enrolment_id', args.enrolmentId)
+    .eq('assessment_id', args.assessmentId)
+    .order('attempt_number', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  const rows = ((attempts ?? []) as unknown as AttemptRow[]).filter(
+    (a) => a.status === 'graded',
+  );
+  if (rows.length === 0) return [];
+
+  const withComments = await Promise.all(
+    rows.map(async (a) => {
+      const { data, error: responseError } = await supabase
+        .from('assessment_responses')
+        .select(
+          'score, is_correct, grading_feedback, ' +
+            'assessment_questions ( content, points, grading_method )',
+        )
+        .eq('assessment_attempt_id', a.id);
+      if (responseError) throw new Error(responseError.message);
+
+      const comments: MarkedAnswer[] = ((data ?? []) as unknown as ResponseRow[])
+        .filter((r) => r.grading_feedback !== null)
+        .map((r) => {
+          const question = r.assessment_questions?.[0];
+          return {
+            prompt: question
+              ? promptOf({
+                  id: '',
+                  type: 'short_answer',
+                  content: question.content,
+                  points: num(question.points) ?? 0,
+                  position: 0,
+                  grading_method: question.grading_method ?? 'manual',
+                } as Question)
+              : '',
+            score: num(r.score),
+            points: num(question?.points ?? null),
+            isCorrect: r.is_correct,
+            feedback: r.grading_feedback,
+          };
+        });
+
+      return {
+        attemptNumber: a.attempt_number,
+        status: a.status,
+        scoreEarned: num(a.score_earned),
+        scorePossible: num(a.score_possible),
+        passed: a.passed,
+        gradedAt: a.graded_at,
+        comments,
+      } satisfies AttemptResult;
+    }),
+  );
+
+  return withComments;
 }
 
 /** Render a question prompt from its free-form content. */

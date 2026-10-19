@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
   ASSESSMENT_TYPE_HINT,
   ASSESSMENT_TYPE_LABEL,
+  FEEDBACK_MAX,
   type AssessmentType,
   type AuthoredAssessment,
   type PendingManualResponse,
@@ -42,6 +43,7 @@ export function AssessmentManager({
   const [answerIds, setAnswerIds] = useState<string[]>([]);
   const [manualScores, setManualScores] = useState<Record<string, string>>({});
   const [manualVerdicts, setManualVerdicts] = useState<Record<string, boolean>>({});
+  const [manualFeedback, setManualFeedback] = useState<Record<string, string>>({});
 
   const lessons = version.sections.flatMap((section) =>
     section.lessons.map((lesson) => ({
@@ -114,6 +116,7 @@ export function AssessmentManager({
       responseId: response.response_id,
       score,
       isCorrect: verdict,
+      feedback: manualFeedback[response.response_id] ?? '',
     }, `manual-${response.response_id}`);
   }
 
@@ -172,9 +175,24 @@ export function AssessmentManager({
                     event.preventDefault();
                     void markManualResponse(response);
                   }}
-                  className="row"
-                  style={{ alignItems: 'end', gap: '0.75rem' }}
+                  style={{ display: 'grid', gap: '0.75rem' }}
                 >
+                  <label style={{ display: 'grid', gap: '0.25rem' }}>
+                    <span className="eyebrow">
+                      Comment for the learner — optional, and cannot be edited once saved
+                    </span>
+                    <textarea
+                      rows={2}
+                      maxLength={FEEDBACK_MAX}
+                      value={manualFeedback[response.response_id] ?? ''}
+                      onChange={(event) => setManualFeedback({
+                        ...manualFeedback, [response.response_id]: event.target.value,
+                      })}
+                      placeholder="What was good, and what to do next time"
+                      aria-label={`Comment for attempt ${response.attempt_number}`}
+                    />
+                  </label>
+                  <div className="row" style={{ alignItems: 'end', gap: '0.75rem' }}>
                   <label style={{ display: 'grid', gap: '0.25rem' }}>
                     Score (0–{response.max_points})
                     <input
@@ -211,13 +229,14 @@ export function AssessmentManager({
                       /> Incorrect
                     </label>
                   </fieldset>
-                  <button
-                    type="submit"
-                    className="btn secondary"
-                    disabled={busy !== null}
-                  >
-                    {busy === `manual-${response.response_id}` ? 'Saving…' : 'Save mark'}
-                  </button>
+                    <button
+                      type="submit"
+                      className="btn secondary"
+                      disabled={busy !== null}
+                    >
+                      {busy === `manual-${response.response_id}` ? 'Saving…' : 'Save mark'}
+                    </button>
+                  </div>
                 </form>
               </article>
             ))}

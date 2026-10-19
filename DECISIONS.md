@@ -370,3 +370,74 @@ confidential qualification records. It exposes only teacher-authored biography,
 HTTPS links to the teacher's own social channels, and published courses; it does
 not assert that credentials have been checked. Public reads require both the
 `teaching.public_profile` flag and an active instructor role, enforced by RLS.
+
+## Marked work — cohorts, deadlines and what a learner hands in
+
+Decided 2026-10-19, answering the three questions `learning.assignments` was
+blocked on.
+
+**Both deadline models, not one.** Published courses stay self-paced, and a
+teacher can also open a dated cohort of the same course. That is the reason the
+flag said "separate from quizzes": assessments are version-scoped and locked at
+publication (`lock_assessment_of_locked_version`), so a teacher cannot add work
+to a course that is already live without cutting a new version and putting it
+back through review. Marked work therefore needs its own home, scoped to the
+course rather than to a version.
+
+The consequence for the schema was concrete, and `course_assignments` now encodes
+it: a deadline is either **absolute** (a cohort: due Friday) or **relative** to
+enrolment (self-paced: due seven days after you start), never both, and the two
+need different clocks and different late policies. One column with a check
+constraint, not two nullable columns that can contradict each other. Late work is
+refused by default and each task can explicitly opt into accepting it, because
+"late" means something different to a cohort that met on Friday than it does to
+someone who enrolled on Sunday.
+
+**Submissions carry files, not only text.** Written answers, audio recitation and
+photographs of workbook pages. Recitation is central to Qur'an teaching, so audio
+is not an edge case. This creates two preconditions that did not exist before and
+that must not be skipped:
+
+1. *Media ingest stops short of bytes.* `media_assets` is a complete register —
+   backend, bucket, key, sha256 checksum, mime, size, duration and a
+   `quarantined` status that is the right home for scanning — and
+   `create_media_asset()` will open a `pending` row and hand back the bucket and
+   a derived key. What does not exist is anything that moves bytes, verifies the
+   object arrived, scans it, or delivers it safely to the person marking it, and
+   D8 (where original masters live) is still **PROPOSED**. A submission can
+   therefore reference a verified asset, and `attach_assignment_asset()` enforces
+   the type and size ceilings, but no learner can produce one yet. The screens do
+   not claim otherwise.
+2. *Files from children to adults are a safeguarding question before they are a
+   feature.* Who may receive them, what is retained, who can see them after a
+   guardian asks, and what happens to a recording of a child's voice when an
+   account is deleted. `platform.safeguarding` is CODE-gated and unbuilt.
+
+**Marking stays with the course author.** The existing manual-marking queue is
+already restricted to the author and privileged staff, anonymised and audited. No
+cohort-teacher marking relationship is introduced, which is also what keeps the
+conflict-of-interest rules from having to grow a second case.
+
+**Two marking surfaces, one idea of feedback.** Assignments carry `feedback` on
+the submission. Quizzes carry `grading_feedback` on the marked response, because
+`short_answer` questions are marked through the manual queue that already
+existed, and that queue could award a score and a verdict and say nothing — the
+whole answer for a multiple-choice question and none of it for a written one. The
+two stay separate because the submissions are separate: an assignment is dated
+work beside a frozen version, a quiz question belongs to the version itself. They
+share one ceiling, 5000 characters, because a teacher marking work should meet
+one limit rather than one per surface.
+
+On the quiz side the comment is written in the same statement as the mark, inside
+the window `lock_submitted_response()` opens, so it is immutable with the mark and
+cannot be quietly rewritten afterwards — a comment a learner can rely on. The
+audit records *that* a comment was given and not what it says: the words belong to
+one learner about their own work, and an append-only log is the wrong place to
+keep a copy.
+
+The learner-facing results panel shows the score and the comments, and
+deliberately does not list which automatically marked questions were right. Row
+level security already lets a learner read their own responses, so this is not a
+secrecy claim but a choice about what a results screen is for: a quiz that reports
+every wrong answer becomes an answer key for the next attempt, and these
+assessments are reusable by design.

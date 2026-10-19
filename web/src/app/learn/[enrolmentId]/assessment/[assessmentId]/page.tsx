@@ -3,7 +3,12 @@ import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { ownLearnerProfileId } from '@/lib/enrolment';
-import { fetchQuestions, startAttempt, type Attempt } from '@/lib/assessment';
+import {
+  fetchAttemptResults,
+  fetchQuestions,
+  startAttempt,
+  type Attempt,
+} from '@/lib/assessment';
 import { isFlagEnabled } from '@/lib/flags';
 import { Quiz } from './quiz';
 
@@ -85,6 +90,14 @@ export default async function AssessmentPage({
 
   const questions = await fetchQuestions(supabase, assessment.id);
 
+  // Marked attempts and what the teacher said. Fetched whether or not a new
+  // attempt could be started: running out of attempts is exactly when a learner
+  // most needs to see the comment on the one they used.
+  const results = await fetchAttemptResults(supabase, {
+    enrolmentId: enrolment.id,
+    assessmentId: assessment.id,
+  });
+
   return (
     <div className="container section">
       <p className="eyebrow">
@@ -121,6 +134,45 @@ export default async function AssessmentPage({
           </p>
           <Quiz attemptId={started.attempt.id} questions={questions} />
         </>
+      )}
+
+      {results.length > 0 && (
+        <section aria-labelledby="marked-attempts" style={{ marginTop: '1.5rem' }}>
+          <h2 id="marked-attempts">Your marked attempts</h2>
+          <div style={{ display: 'grid', gap: '0.75rem' }}>
+            {results.map((r) => (
+              <div className="card" key={r.attemptNumber}>
+                <p className="eyebrow" style={{ marginBottom: '0.4rem' }}>
+                  Attempt {r.attemptNumber}
+                  {r.scorePossible !== null && r.scoreEarned !== null
+                    ? ` · ${r.scoreEarned} of ${r.scorePossible}`
+                    : ''}
+                  {r.passed === null ? '' : r.passed ? ' · passed' : ' · not passed'}
+                </p>
+
+                {r.comments.length === 0 ? (
+                  <p className="muted" style={{ margin: 0 }}>
+                    Marked, with no comment.
+                  </p>
+                ) : (
+                  r.comments.map((c, i) => (
+                    <blockquote key={`${r.attemptNumber}-${i}`} style={{ margin: '0.5rem 0 0' }}>
+                      <p className="muted" style={{ margin: 0, fontSize: '.9rem' }}>
+                        {c.prompt}
+                      </p>
+                      <p style={{ margin: '.25rem 0 0', whiteSpace: 'pre-wrap' }}>{c.feedback}</p>
+                      {c.score !== null && c.points !== null && (
+                        <p className="muted" style={{ margin: '.25rem 0 0', fontSize: '.85rem' }}>
+                          {c.score} of {c.points} points
+                        </p>
+                      )}
+                    </blockquote>
+                  ))
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
       )}
 
       <p style={{ marginTop: '1.5rem' }}>
