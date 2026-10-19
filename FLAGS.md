@@ -85,7 +85,7 @@ Three kinds of gate:
 | `teaching.authoring` | Teacher builds and publishes a course | ADMIN | Authoring flow tested by a real teacher; media upload limits |
 | `teaching.dashboard` | Teacher sees their courses and learners | ADMIN | — |
 | `teaching.qa_capacity` | Limits or queueing on per-lesson questions | ADMIN | A teacher with an audience behind them will be overwhelmed without it |
-| `teaching.public_profile` | Public instructor page with bio, qualifications and courses | ADMIN | **Does not exist.** `reviewer_profiles` is internal, not public. This is where a teacher sends their own audience |
+| `teaching.public_profile` | Public teacher page with bio, social links and published courses | ADMIN | Review the teacher-authored copy and outbound links first; do not imply unverified qualifications. Public RLS also hides profiles if this flag is off or the instructor role is revoked |
 | `teaching.set_pricing` | Instructor sets price within a platform floor and ceiling | ADMIN + SETUP | Floor/ceiling per market; interacts with `prices`; blocked on the same facts as checkout |
 | `teaching.invite_links` | Shareable link with attribution to the teacher | ADMIN | Attribution model; UTM handling; abuse limits. **The growth engine — teachers already have audiences** |
 | `teaching.content_licence` | Who owns uploaded content and what licence the platform holds | CODE | **Nothing exists.** Written agreement needed before the first teacher uploads |

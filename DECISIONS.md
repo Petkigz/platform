@@ -362,3 +362,11 @@ Citations are authored against a draft course version and a specific lesson.
 They become readable with that published version and cannot be added, edited or
 removed after publication. A correction belongs in a new draft version, so the
 source record a learner sees stays tied to the reviewed material.
+
+## Public teacher profiles — disclosure boundary
+
+The public teacher page is separate from `reviewer_profiles` and other
+confidential qualification records. It exposes only teacher-authored biography,
+HTTPS links to the teacher's own social channels, and published courses; it does
+not assert that credentials have been checked. Public reads require both the
+`teaching.public_profile` flag and an active instructor role, enforced by RLS.

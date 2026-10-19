@@ -62,6 +62,8 @@ export default async function TeachPage() {
 
       <p style={{ marginTop: '1.5rem' }}>
         <Link href="/teach/paths">Learning paths</Link> — curate a sequence of active courses.
+        {' · '}
+        <Link href="/teach/profile">Public teacher profile</Link> — introduce yourself and link your social channels.
       </p>
 
       <div style={{ marginTop: '1.75rem' }}>

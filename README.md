@@ -62,10 +62,10 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 ## Status
 
-The database stands at **89 tables, RLS on every one, 209 policies, 120
-user-defined triggers, 164 functions and 70 migrations.** The database suite
-passes **655 tests**; the web suite passes **242 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **69 app route entries**.
+The database stands at **90 tables, RLS on every one, 210 policies, 121
+user-defined triggers, 165 functions and 71 migrations.** The database suite
+passes **661 tests**; the web suite passes **248 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **72 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. Without it
@@ -111,6 +111,13 @@ source citations are part of the version subtree and lock when published.
 edition, locator, usage anchor and optional HTTPS link. Existing source tables
 are now guarded against post-publication edits as well as writes through the UI.
 
+Instructors can prepare a public profile at `/teach/profile` and share it at
+`/teachers/<slug>`. It contains only teacher-authored biography, HTTPS social
+links and published courses; reviewer qualifications remain confidential and
+are not implied by the profile. Public RLS requires both the `teaching.public_profile`
+flag and an active instructor role, so turning the flag off or revoking the role
+hides the profile at the database boundary as well as at the page.
+
 Finance can reconcile a provider statement from `/admin/reconciliation`.
 Signed minor-unit rows are matched to ledger transactions by provider reference,
 currency, amount and settlement period. Missing, ambiguous and discrepant lines
@@ -153,12 +160,11 @@ policy.
 internal constraint triggers; counting them gives 914, which is the number
 that produced an earlier, inflated figure in this file.)
 
-All five original logical groups are complete. The 89th table is
-`discussion_posts`, added after them for per-lesson discussion — the first
-schema added since the groups closed, and the only one so far. The
-governance channels (content reports and review appeals) were wired on top
-of the existing `content_reports` and `governance_appeals` tables rather
-than adding new ones.
+All five original logical groups are complete. `discussion_posts` was the
+89th table, added for per-lesson discussion after those groups closed. The
+teacher profile feature adds the 90th table. Governance channels (content
+reports and review appeals) use the existing `content_reports` and
+`governance_appeals` tables rather than adding new ones.
 
 All five logical schema groups are built. Every frozen decision — D1
 multi-tenancy, D2 child identity, D4 money, D5 version pinning, D6 content
@@ -181,16 +187,17 @@ npm run dev
 
 See `web/README.md`.
 
-### Why 89 tables when the design specified 85
+### Why 90 tables when the design specified 85
 
-Four tables beyond the original 85 were needed to implement recorded decisions
-and the chosen discussion experience:
+Five tables beyond the original 85 were needed for recorded decisions, the
+chosen discussion experience and teacher-authored public profiles:
 
 - `institutions` — D1 multi-tenancy had no table to hang `institution_id` on
 - `media_assets` — D8 requires originals in storage we control, with a checksum
 - `platform_settings` — without it, "build it all, enable it later" had
   nowhere to live; `governance.panel_required` is a row, not a constant
 - `discussion_posts` — per-lesson discussion, explicitly wanted for the product
+- `instructor_public_profiles` — public teacher biographies and owned social links, separate from internal reviewer qualifications
 
 Learning paths reuse the existing `learning_paths` and `learning_path_items`
 tables; this work adds their audited writers and the teacher/learner screens,

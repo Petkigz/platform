@@ -5,16 +5,17 @@ for context; the counts in that historical log are snapshots from their dates.
 
 ## Current status
 
-The learning-path and provenance units are complete locally: teachers curate
-paths in `/teach/paths` and cite source material from the draft curriculum;
-learners browse paths at `/paths` and citations on lesson pages when the
-respective flags are enabled. Paths do not grant access, and citations lock
-with their published course version. Both learner-facing flags remain off until
-content is ready.
+Learning paths, source provenance and public teacher profiles are implemented:
+teachers curate paths in `/teach/paths`, cite material from the draft curriculum,
+and prepare shareable profiles at `/teach/profile`. Learners can browse the paths,
+lesson citations and teacher pages when the corresponding flags are enabled.
+Paths do not grant course access; citations lock with the published version;
+public profiles disclose no unverified credentials. All three public-facing
+features remain off until reviewed content is ready.
 
-Verification: **655 database tests, 242 web tests; TypeScript typecheck and
-production build pass; 89 tables, 209 policies, 120 user-defined triggers,
-164 functions, 70 migrations and 69 app route entries.**
+Verification: **661 database tests, 248 web tests; TypeScript typecheck and
+production build pass; 90 tables, 210 policies, 121 user-defined triggers,
+165 functions, 71 migrations and 72 app route entries.**
 
 ## Today's sentence
 
