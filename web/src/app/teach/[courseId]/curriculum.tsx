@@ -127,6 +127,14 @@ export function Curriculum({
     await post({ action: 'transition', versionId: version.id, to }, `transition-${to}`);
   }
 
+  async function moveContent(
+    contentType: 'section' | 'lesson' | 'resource',
+    contentId: string,
+    direction: 'up' | 'down',
+  ) {
+    await post({ action: 'move_content', contentType, contentId, direction }, `move-${contentId}`);
+  }
+
   return (
     <div>
       <div className="outline-h">
@@ -200,11 +208,33 @@ export function Curriculum({
       {version.sections.length === 0 ? (
         <div className="empty">No sections yet.</div>
       ) : (
-        version.sections.map((s) => (
+        version.sections.map((s, sectionIndex) => (
           <div className="card" key={s.id} style={{ marginBottom: '1rem' }}>
-            <h3 style={{ marginTop: 0 }}>
-              {s.position}. {s.title}
-            </h3>
+            <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0 }}>
+                {s.position}. {s.title}
+              </h3>
+              {editable && (
+                <div className="row" style={{ gap: '0.25rem' }}>
+                  <button
+                    type="button"
+                    className="btn ghost"
+                    title={`Move section ${s.title} up`}
+                    aria-label={`Move section ${s.title} up`}
+                    disabled={busy !== null || sectionIndex === 0}
+                    onClick={() => moveContent('section', s.id, 'up')}
+                  >↑</button>
+                  <button
+                    type="button"
+                    className="btn ghost"
+                    title={`Move section ${s.title} down`}
+                    aria-label={`Move section ${s.title} down`}
+                    disabled={busy !== null || sectionIndex === version.sections.length - 1}
+                    onClick={() => moveContent('section', s.id, 'down')}
+                  >↓</button>
+                </div>
+              )}
+            </div>
 
             {s.lessons.length === 0 ? (
               <p className="empty" style={{ marginBottom: editable ? '0.75rem' : 0 }}>
@@ -212,11 +242,31 @@ export function Curriculum({
               </p>
             ) : (
               <ul className="lessons">
-                {s.lessons.map((l) => (
+                {s.lessons.map((l, lessonIndex) => (
                   <li key={l.id}>
                     <span className="t">
                       {l.position}. {l.title}
                     </span>
+                    {editable && (
+                      <div className="row" style={{ gap: '0.25rem' }}>
+                        <button
+                          type="button"
+                          className="btn ghost"
+                          title={`Move lesson ${l.title} up`}
+                          aria-label={`Move lesson ${l.title} up`}
+                          disabled={busy !== null || lessonIndex === 0}
+                          onClick={() => moveContent('lesson', l.id, 'up')}
+                        >↑</button>
+                        <button
+                          type="button"
+                          className="btn ghost"
+                          title={`Move lesson ${l.title} down`}
+                          aria-label={`Move lesson ${l.title} down`}
+                          disabled={busy !== null || lessonIndex === s.lessons.length - 1}
+                          onClick={() => moveContent('lesson', l.id, 'down')}
+                        >↓</button>
+                      </div>
+                    )}
                     {editable ? (
                       <label
                         className="muted"
@@ -263,11 +313,33 @@ export function Curriculum({
                           gap: '0.2rem',
                         }}
                       >
-                        {l.resources.map((r) => (
-                          <li key={r.id}>
-                            {RESOURCE_TYPE_LABEL[r.resourceType]} · {r.resourceName}
-                            {r.access === 'public_preview' && (
-                              <span className="badge" style={{ marginLeft: '0.4rem' }}>Public preview</span>
+                        {l.resources.map((r, resourceIndex) => (
+                          <li key={r.id} className="row" style={{ justifyContent: 'space-between' }}>
+                            <span>
+                              {RESOURCE_TYPE_LABEL[r.resourceType]} · {r.resourceName}
+                              {r.access === 'public_preview' && (
+                                <span className="badge" style={{ marginLeft: '0.4rem' }}>Public preview</span>
+                              )}
+                            </span>
+                            {editable && (
+                              <span className="row" style={{ gap: '0.25rem' }}>
+                                <button
+                                  type="button"
+                                  className="btn ghost"
+                                  title={`Move ${r.resourceName} up`}
+                                  aria-label={`Move ${r.resourceName} up`}
+                                  disabled={busy !== null || resourceIndex === 0}
+                                  onClick={() => moveContent('resource', r.id, 'up')}
+                                >↑</button>
+                                <button
+                                  type="button"
+                                  className="btn ghost"
+                                  title={`Move ${r.resourceName} down`}
+                                  aria-label={`Move ${r.resourceName} down`}
+                                  disabled={busy !== null || resourceIndex === l.resources.length - 1}
+                                  onClick={() => moveContent('resource', r.id, 'down')}
+                                >↓</button>
+                              </span>
                             )}
                           </li>
                         ))}

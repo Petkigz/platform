@@ -3,7 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import {
   addLesson, addLessonResource, addSection, createCourse, createCourseVersionFrom,
-  setLessonPreview, setSubjects,
+  moveCourseContent, setLessonPreview, setSubjects,
+  type MoveDirection, type ReorderableContentType,
   transitionVersion, validateAddResource, type AddResourceAccess, type ResourceType,
 } from '@/lib/authoring';
 
@@ -37,6 +38,9 @@ export async function POST(request: Request) {
     title?: unknown;
     versionId?: unknown;
     sourceVersionId?: unknown;
+    contentType?: unknown;
+    contentId?: unknown;
+    direction?: unknown;
     sectionId?: unknown;
     isPreview?: unknown;
     to?: unknown;
@@ -89,6 +93,25 @@ export async function POST(request: Request) {
       );
     }
     return json(await createCourseVersionFrom(supabase, b.sourceVersionId));
+  }
+
+  // ---------------------------------------------------------------------
+  if (b.action === 'move_content') {
+    if (
+      !isUuid(b.contentId) ||
+      (b.contentType !== 'section' && b.contentType !== 'lesson' && b.contentType !== 'resource') ||
+      (b.direction !== 'up' && b.direction !== 'down')
+    ) {
+      return NextResponse.json(
+        { ok: false, code: 'rejected', message: 'Choose a section, lesson or content item and move it up or down.' },
+        { status: 400 },
+      );
+    }
+    return json(await moveCourseContent(supabase, {
+      contentType: b.contentType as ReorderableContentType,
+      contentId: b.contentId,
+      direction: b.direction as MoveDirection,
+    }));
   }
 
   // ---------------------------------------------------------------------

@@ -3,7 +3,7 @@ import test from 'node:test';
 
 import {
   addLessonResource, createCourseVersionFrom, fetchSubjects, fetchVersionSubjects,
-  setLessonPreview, setSubjects, validateAddResource,
+  moveCourseContent, setLessonPreview, setSubjects, validateAddResource,
 } from './authoring.ts';
 
 // ---------------------------------------------------------------------------
@@ -282,4 +282,42 @@ test('version copy reports an in-progress draft rather than creating a duplicate
   const result = await createCourseVersionFrom(client, 'version-1');
   assert.equal(result.ok, false);
   if (!result.ok) assert.match(result.message, /finish or withdraw/i);
+});
+
+test('reordering sends item type, id and direction to the atomic writer', async () => {
+  const { client, calls } = stubRpc({ data: 2 });
+  const result = await moveCourseContent(client, {
+    contentType: 'lesson', contentId: 'lesson-1', direction: 'up',
+  });
+  assert.equal(result.ok, true);
+  assert.deepEqual(one(calls, 'reorder rpc'), {
+    fn: 'move_course_content',
+    args: { p_content_type: 'lesson', p_content_id: 'lesson-1', p_direction: 'up' },
+  });
+  if (result.ok) assert.equal(result.value.position, 2);
+});
+
+test('reordering explains the list edge and preserves the returned locked state', async () => {
+  const edge = stubRpc({ error: { message: 'content is already at the start of its list' } });
+  const edgeResult = await moveCourseContent(edge.client, {
+    contentType: 'section', contentId: 'section-1', direction: 'up',
+  });
+  assert.equal(edgeResult.ok, false);
+  if (!edgeResult.ok) assert.match(edgeResult.message, /edge of its list/i);
+
+  const locked = stubRpc({ error: { message: 'only draft course content can be reordered' } });
+  const lockedResult = await moveCourseContent(locked.client, {
+    contentType: 'resource', contentId: 'resource-1', direction: 'down',
+  });
+  assert.equal(lockedResult.ok, false);
+  if (!lockedResult.ok) assert.equal(lockedResult.code, 'locked');
+});
+
+test('an empty item id is refused before the reorder RPC', async () => {
+  const { client, calls } = stubRpc();
+  const result = await moveCourseContent(client, {
+    contentType: 'section', contentId: '', direction: 'down',
+  });
+  assert.equal(result.ok, false);
+  assert.equal(calls.length, 0);
 });

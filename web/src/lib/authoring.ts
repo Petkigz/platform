@@ -323,6 +323,45 @@ export async function createCourse(
   };
 }
 
+export type ReorderableContentType = 'section' | 'lesson' | 'resource';
+export type MoveDirection = 'up' | 'down';
+
+export async function moveCourseContent(
+  client: SupabaseClient,
+  args: { contentType: ReorderableContentType; contentId: string; direction: MoveDirection },
+): Promise<WriteOutcome<{ position: number }>> {
+  if (!args.contentId) {
+    return { ok: false, code: 'rejected', message: 'Choose an item to reorder.' };
+  }
+  if (!['section', 'lesson', 'resource'].includes(args.contentType)) {
+    return { ok: false, code: 'rejected', message: 'Choose a section, lesson or content item.' };
+  }
+  if (args.direction !== 'up' && args.direction !== 'down') {
+    return { ok: false, code: 'rejected', message: 'Choose up or down.' };
+  }
+  const { data, error } = await client.rpc('move_course_content', {
+    p_content_type: args.contentType,
+    p_content_id: args.contentId,
+    p_direction: args.direction,
+  });
+  if (error) {
+    if (/already at the (start|end)/i.test(error.message)) {
+      return { ok: false, code: 'rejected', message: 'That item is already at the edge of its list.' };
+    }
+    if (/only the course author/i.test(error.message)) {
+      return { ok: false, code: 'rejected', message: 'Only the course author can reorder this content.' };
+    }
+    if (/only draft course content/i.test(error.message)) {
+      return { ok: false, code: 'locked', message: 'Only draft content can be reordered.' };
+    }
+    return classify(error);
+  }
+  if (typeof data !== 'number') {
+    return { ok: false, code: 'rejected', message: 'The new content position was not returned.' };
+  }
+  return { ok: true, value: { position: data } };
+}
+
 export async function createCourseVersionFrom(
   client: SupabaseClient,
   sourceVersionId: string,
