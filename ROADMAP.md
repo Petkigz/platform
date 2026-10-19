@@ -54,7 +54,7 @@ partly complete.** The roadmap starts where the project already is.
 - [~] Build young learner profiles and age-appropriate learning — **profiles designed; engagement mechanics are not** (`gamif: 0`, `badge: 0`, `streak: 0`)
 - [ ] Build parent/guardian dashboard and controls
 - [ ] Build the adult learning dashboard and learning paths
-- [~] Build certificates and certificate verification — **`/certificates` and the public `/verify/<number>` are live; issuance is staff-only and idempotent, snapshots frozen. A PDF render and admin issuance UI still to build**
+- [x] Build certificates and certificate verification — *`/admin/certificates` lists eligible completions and supports staff-only issuance and reasoned revocation; client calls are session-bound. Holders can print/save their certificate as PDF from `/certificates/<number>`, and `/verify/<number>` remains public. `supabase/tests/certificates.test.mjs`.*
 
 ## Phase 5 — Payments and revenue  (all blocked on one fact)
 

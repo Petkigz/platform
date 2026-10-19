@@ -162,22 +162,49 @@ export async function run(ctx) {
   const goodEnrolment = await enrol(goodLearner, good.course, good.version);
   await completeLesson(goodEnrolment, good.lesson);
 
-  await test('only staff may issue a certificate', async () => {
-    await rejects(() => q(
-      `select id from public.issue_certificate($1, $2)`, [goodEnrolment, learnerId]),
-      'a learner issued themselves a certificate');
-
-    await rejects(() => q(
-      `select id from public.issue_certificate($1, $2)`, [goodEnrolment, teacher]),
-      'the course author issued a certificate');
+  await test('actor-argument issuance is no longer executable by clients', async () => {
+    const grants = (await q(
+      `select has_function_privilege('authenticated','public.issue_certificate(uuid,uuid,text)','execute') as can_issue,
+              has_function_privilege('authenticated','public.revoke_certificate(uuid,uuid,text)','execute') as can_revoke`)).rows[0];
+    assert(grants.can_issue === false && grants.can_revoke === false,
+      'authenticated clients can still call certificate writers with a forged actor id');
+    await asUser(learnerId, async () => {
+      await rejects(() => q('select * from public.issue_certificate($1,$2)',[goodEnrolment,admin]),
+        'a learner called the internal issue writer');
+    });
   });
 
-  await test('a support agent may issue one', async () => {
-    const r = await q(`select id, certificate_number from public.issue_certificate($1, $2)`,
-      [goodEnrolment, supportId]);
-    assert(r.rows.length === 1, 'a support agent could not issue a certificate');
-    assert(/^AS-\d{4}-\d{8}$/.test(r.rows[0].certificate_number),
-      `unexpected certificate number '${r.rows[0].certificate_number}'`);
+  await test('only staff may issue and only completed eligible learners appear in the queue', async () => {
+    await asUser(learnerId, async () => {
+      await rejects(() => q('select * from public.list_certificate_issuance_candidates()'),
+        'a learner read the staff certificate queue');
+      await rejects(() => q('select public.issue_certificate_for_session($1)',[goodEnrolment]),
+        'a learner issued themselves a certificate');
+    });
+    await asUser(supportId, async () => {
+      const candidates = await q('select * from public.list_certificate_issuance_candidates()');
+      const row = candidates.rows.find((candidate) => candidate.enrolment_id === goodEnrolment);
+      assert(row, 'the completed eligible enrolment was missing from the queue');
+      assert(row.learner_display_name === 'Awarded' && Number(row.course_version_number) > 0,
+        'the queue omitted display details');
+      assert(!Object.hasOwn(row,'learner_profile_id'), 'the queue exposed a learner profile id');
+    });
+  });
+
+  await test('a support agent may issue one through the session-bound wrapper', async () => {
+    let number;
+    await asUser(supportId, async () => {
+      const r = await q('select public.issue_certificate_for_session($1) as certificate_number',
+        [goodEnrolment]);
+      number = r.rows[0].certificate_number;
+      assert(/^AS-\d{4}-\d{8}$/.test(number), `unexpected certificate number '${number}'`);
+      const records = await q('select * from public.list_certificate_admin_records()');
+      assert(records.rows.some((record) => record.certificate_number === number),
+        'the staff certificate register omitted the issued certificate');
+    });
+    // asUser() intentionally rolls back; make the persistent base fixture for
+    // the subsequent snapshot/idempotency tests through the trusted DB harness.
+    await q('select id from public.issue_certificate($1,$2)',[goodEnrolment,supportId]);
   });
 
   await test('issuing twice returns the same certificate', async () => {
@@ -293,8 +320,17 @@ export async function run(ctx) {
     const id = (await q(
       'select id from public.certificates where course_enrolment_id = $1', [goodEnrolment])).rows[0].id;
 
-    await q('select id from public.revoke_certificate($1, $2, $3)',
-      [id, admin, 'Issued in error']);
+    await asUser(learnerId, async () => {
+      await rejects(() => q('select public.revoke_certificate_for_session($1,$2)',
+        [id,'Issued in error']), 'a learner revoked a certificate');
+    });
+    await asUser(admin, async () => {
+      await q('select public.revoke_certificate_for_session($1,$2)', [id,'Issued in error']);
+    });
+    // The session transaction above is rolled back by the harness. Apply the
+    // same transition as the trusted DB owner so the anonymous verification
+    // assertions below can inspect the durable result.
+    await q('select id from public.revoke_certificate($1,$2,$3)',[id,admin,'Issued in error']);
 
     await asAnon(async () => {
       const r = (await q('select * from public.verify_certificate($1)', [number])).rows[0];

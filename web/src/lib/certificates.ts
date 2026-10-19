@@ -3,11 +3,10 @@
  *
  * The shape here is deliberate and worth understanding before changing it:
  *
- * - `issue_certificate()` is SECURITY DEFINER and checks internally that the
- *   actor is privileged or a support agent. It refuses an enrolment whose
- *   completion policy has `certificate_enabled = false`, and it refuses an
- *   incomplete enrolment. It is idempotent — a second call returns the
- *   existing certificate rather than minting another.
+ * - Session-bound SECURITY DEFINER wrappers issue and revoke certificates;
+ *   clients cannot choose an actor id. Issuance still requires platform/support
+ *   staff, an enabled policy and a genuinely complete enrolment. It is
+ *   idempotent — a second call returns the existing public certificate number.
  *
  * - Everything on the row is a **snapshot**: `course_title`,
  *   `course_version_number`, `learner_display_name`, and `criteria_snapshot`
@@ -141,45 +140,106 @@ export async function verifyCertificate(
   };
 }
 
+export type CertificateCandidate = {
+  enrolment_id: string;
+  course_title: string;
+  course_version_number: number;
+  learner_display_name: string;
+};
+
+export type CertificateAdminRecord = {
+  certificate_id: string;
+  certificate_number: string;
+  status: 'issued' | 'revoked';
+  issued_at: string;
+  course_title: string;
+  course_version_number: number;
+  learner_display_name: string;
+  revocation_reason: string | null;
+};
+
+export async function fetchCertificateCandidates(
+  supabase: SupabaseClient,
+): Promise<CertificateCandidate[]> {
+  const { data, error } = await supabase.rpc('list_certificate_issuance_candidates');
+  if (error) throw new Error(error.message);
+  return (data ?? []) as unknown as CertificateCandidate[];
+}
+
+export async function fetchCertificateAdminRecords(
+  supabase: SupabaseClient,
+): Promise<CertificateAdminRecord[]> {
+  const { data, error } = await supabase.rpc('list_certificate_admin_records');
+  if (error) throw new Error(error.message);
+  return (data ?? []) as unknown as CertificateAdminRecord[];
+}
+
+/** The certificate itself remains visible only through the holder's RLS access. */
+export async function fetchCertificateForHolder(
+  supabase: SupabaseClient,
+  certificateNumber: string,
+): Promise<Certificate | null> {
+  const number = certificateNumber.trim().toUpperCase();
+  if (!number) return null;
+  const { data, error } = await supabase
+    .from('certificates')
+    .select('id, certificate_number, status, issued_at, course_title, course_version_number, course_language, learner_display_name, revocation_reason')
+    .eq('certificate_number', number)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  const row = data as unknown as CertificateRow | null;
+  if (!row) return null;
+  return {
+    id: row.id,
+    certificateNumber: row.certificate_number,
+    status: row.status as Certificate['status'],
+    issuedAt: row.issued_at,
+    courseTitle: row.course_title,
+    courseVersionNumber: row.course_version_number,
+    courseLanguage: row.course_language,
+    learnerDisplayName: row.learner_display_name,
+    revocationReason: row.revocation_reason,
+  };
+}
+
 export type IssueOutcome =
   | { ok: true; certificateNumber: string }
   | { ok: false; code: 'not_privileged' | 'not_eligible' | 'rejected'; message: string };
 
-/**
- * Issue a certificate for a completed enrolment.
- *
- * The eligibility rules live in `issue_certificate()`, not here: the course
- * version's completion policy must have certificates enabled, and the
- * enrolment must actually be complete. This only translates the refusal into
- * something worth showing.
- */
+/** Issue a completed, eligible enrolment without accepting an actor id from the client. */
 export async function issueCertificate(
   supabase: SupabaseClient,
-  args: { enrolmentId: string; actorId: string },
+  args: { enrolmentId: string },
 ): Promise<IssueOutcome> {
-  const { data, error } = await supabase.rpc('issue_certificate', {
+  const { data, error } = await supabase.rpc('issue_certificate_for_session', {
     p_enrolment_id: args.enrolmentId,
-    p_actor_id: args.actorId,
   });
 
   if (error) {
     const m = error.message;
-    if (/may not issue/i.test(m)) {
-      return {
-        ok: false,
-        code: 'not_privileged',
-        message: 'Only platform staff can issue certificates.',
-      };
+    if (/may issue certificates/i.test(m)) {
+      return { ok: false, code: 'not_privileged', message: 'Only platform staff can issue certificates.' };
     }
     if (/not complete|does not issue certificates/i.test(m)) {
       return { ok: false, code: 'not_eligible', message: m };
     }
     return { ok: false, code: 'rejected', message: m };
   }
+  return { ok: true, certificateNumber: String(data ?? '') };
+}
 
-  const row = (Array.isArray(data) ? data[0] : data) as
-    | { certificate_number?: string }
-    | null;
-
-  return { ok: true, certificateNumber: row?.certificate_number ?? '' };
+export async function revokeCertificate(
+  supabase: SupabaseClient,
+  args: { certificateId: string; reason: string },
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  if (!args.certificateId) return { ok: false, message: 'Choose a certificate.' };
+  if (!args.reason.trim() || args.reason.trim().length > 500) {
+    return { ok: false, message: 'Give a written reason under 500 characters.' };
+  }
+  const { error } = await supabase.rpc('revoke_certificate_for_session', {
+    p_certificate_id: args.certificateId,
+    p_reason: args.reason.trim(),
+  });
+  if (error) return { ok: false, message: error.message };
+  return { ok: true };
 }

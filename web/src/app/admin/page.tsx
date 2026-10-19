@@ -116,6 +116,9 @@ export default async function AdminPage() {
         <h3>Other administration</h3>
       </div>
       <p>
+        <Link href="/admin/certificates">Certificates</Link> — issue completion certificates and manage revocations with an audit-ready reason.
+      </p>
+      <p>
         <Link href="/admin/plans">Subscription plans</Link> — configure versioned terms, entitlements and recurring prices.
       </p>
       <p>

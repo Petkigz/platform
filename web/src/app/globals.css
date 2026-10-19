@@ -563,3 +563,76 @@ textarea { resize: vertical; min-height: 4rem; }
 @media (max-width: 480px) {
   .facts > div { grid-template-columns: 1fr; gap: 0.15rem; }
 }
+
+/* --------------------------------------------------------------------------
+   Holder-facing certificate document
+   -------------------------------------------------------------------------- */
+
+.certificate-page { max-width: 1120px; }
+.certificate-sheet {
+  page: certificate;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  max-width: 1000px;
+  min-height: 620px;
+  margin: 1.5rem auto;
+  padding: clamp(2rem, 6vw, 5rem);
+  border: 1px solid var(--green-600);
+  border-radius: 1rem;
+  background:
+    radial-gradient(ellipse at 50% 0, rgba(23, 116, 75, 0.07), transparent 52%),
+    linear-gradient(140deg, #fff 0%, #fbfefc 54%, #f1f8f3 100%);
+  box-shadow: 0 1.5rem 4rem rgba(24, 66, 45, 0.12);
+  text-align: center;
+}
+.certificate-sheet::before {
+  position: absolute;
+  z-index: -1;
+  inset: 1rem;
+  border: 1px solid rgba(23, 116, 75, 0.3);
+  border-radius: 0.65rem;
+  content: '';
+  pointer-events: none;
+}
+.certificate-inner { display: flex; min-height: 520px; flex-direction: column; align-items: center; justify-content: center; }
+.certificate-brand { display: flex; align-items: center; gap: 0.55rem; color: var(--green-800); font-size: 1.05rem; font-weight: 800; letter-spacing: 0.04em; }
+.certificate-mark { width: 1rem; height: 1rem; border: 2px solid currentColor; border-radius: 0.2rem 0.7rem 0.2rem 0.7rem; transform: rotate(45deg); }
+.certificate-kicker { margin: 2.25rem 0 0.25rem; color: var(--green-700); font-size: 0.8rem; font-weight: 750; letter-spacing: 0.2em; text-transform: uppercase; }
+.certificate-sheet h1 { margin: 0; color: var(--green-900); font-family: Georgia, 'Times New Roman', serif; font-size: clamp(2rem, 5vw, 3.6rem); font-weight: 500; }
+.certificate-intro { margin: 1.75rem 0 0.25rem; color: var(--muted); }
+.certificate-learner { margin: 0; color: var(--green-900); font-family: Georgia, 'Times New Roman', serif; font-size: clamp(1.8rem, 4vw, 3rem); }
+.certificate-copy { color: var(--muted); }
+.certificate-sheet h2 { margin: 0.5rem 0; color: var(--green-800); font-size: clamp(1.25rem, 3vw, 2rem); }
+.certificate-footer { display: flex; width: 100%; align-items: end; justify-content: space-between; gap: 2rem; margin-top: auto; padding-top: 2rem; text-align: left; }
+.certificate-footer > div { display: grid; gap: 0.25rem; }
+.certificate-footer strong { color: var(--green-900); }
+.certificate-rule { width: 11rem; border-top: 1px solid var(--green-600); }
+.certificate-meta { color: var(--muted); font-size: 0.8rem; }
+.certificate-number-block { text-align: right; }
+.certificate-number-block a { font-size: 0.85rem; }
+.certificate-sheet.is-revoked { filter: grayscale(0.8); }
+.certificate-sheet.is-revoked::after { position: absolute; top: 44%; left: 20%; color: #a12828; border: 0.35rem solid currentColor; padding: 0.3rem 1rem; font-size: clamp(2rem, 8vw, 6rem); font-weight: 900; letter-spacing: 0.15em; opacity: 0.72; transform: rotate(-18deg); content: 'REVOKED'; }
+
+@media (max-width: 600px) {
+  .certificate-sheet { min-height: 560px; padding: 2.25rem 1.5rem; }
+  .certificate-inner { min-height: 470px; }
+  .certificate-footer { gap: 0.75rem; font-size: 0.85rem; }
+  .certificate-rule { width: 7rem; }
+}
+
+@page certificate { size: A4 landscape; margin: 12mm; }
+@media print {
+  body:has(.certificate-page) { background: #fff; }
+  body:has(.certificate-page) .masthead,
+  body:has(.certificate-page) footer,
+  body:has(.certificate-page) .no-print { display: none !important; }
+  body:has(.certificate-page) main { margin: 0; padding: 0; }
+  .certificate-page { width: 100%; max-width: none; margin: 0; padding: 0; }
+  .certificate-sheet { width: 100%; height: 185mm; min-height: 0; max-width: none; margin: 0; padding: 10mm; border-radius: 0; box-shadow: none; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .certificate-sheet::before { inset: 5mm; }
+  .certificate-inner { min-height: 100%; }
+  .certificate-sheet h1 { font-size: 34pt; }
+  .certificate-learner { font-size: 28pt; }
+  .certificate-sheet h2 { font-size: 20pt; }
+}

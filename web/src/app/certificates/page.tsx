@@ -84,7 +84,9 @@ export default async function CertificatesPage() {
               </p>
 
               <p className="meta" style={{ marginTop: '0.5rem' }}>
-                <Link href={`/verify/${c.certificateNumber}`}>Verify this certificate</Link>
+                <Link href={`/certificates/${encodeURIComponent(c.certificateNumber)}`}>View and print certificate</Link>
+                {' · '}
+                <Link href={`/verify/${encodeURIComponent(c.certificateNumber)}`}>Verify this certificate</Link>
               </p>
 
               {c.status === 'revoked' && (

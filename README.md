@@ -63,9 +63,9 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **90 tables, RLS on every one, 210 policies, 121
-user-defined triggers, 172 functions and 75 migrations.** The database suite
-passes **681 tests**; the web suite passes **265 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **73 app route entries**.
+user-defined triggers, 176 functions and 76 migrations.** The database suite
+passes **682 tests**; the web suite passes **270 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **76 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. Without it
@@ -164,6 +164,14 @@ score is recorded after the last manual response is graded. Marks are audited,
 and clients cannot call the lower-level grading RPCs directly. Publishing now
 **refuses a version with a draft assessment left behind** — D5 would freeze it
 invisible to learners.
+
+Certificate workflows are now reachable end to end: `/admin/certificates` lists
+completed eligible enrolments, issues certificates, and permanently revokes them
+with a reason. The client-facing issuance/revocation calls are bound to the
+session (no caller-supplied actor id); the admin RPC returns only the certificate
+number rather than learner-linked records. Holders can view and print/save their
+snapshot as a PDF from `/certificates/<number>`, with public verification at
+`/verify/<number>`.
 
 A family can be created: `create_family()` writes the family **and** its owner
 membership in one transaction. Until then no family could exist at all — the
