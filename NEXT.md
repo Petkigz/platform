@@ -25,7 +25,8 @@ Adults can create a family, add child profiles and review progress at `/family`;
 when enabled, `family.guardian_verification` now gates child enrolment on an
 active verified guardian with learning permission. The flag remains off until
 its review and evidence-handling preconditions are met. `/account` saves the
-signed-in user's display name, preferred language and time zone under RLS.
+signed-in user's display name, preferred language and time zone under RLS; the
+email recovery path uses a verified callback and authenticated password update.
 Version copying carries forward the curriculum, assessments, completion
 requirements, citations and product/price links; existing learners stay pinned
 to their original version.
@@ -39,7 +40,7 @@ is ready.
 
 Verification: **683 database tests, 277 web tests; TypeScript typecheck and
 production build pass; 90 tables, 210 policies, 121 user-defined triggers,
-177 functions, 78 migrations and 79 app route entries.**
+177 functions, 78 migrations and 81 app route entries.**
 
 ## Today's sentence
 

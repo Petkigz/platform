@@ -146,6 +146,7 @@ function SignIn() {
       </form>
 
       <p style={{ marginTop: '1rem' }}>
+        {mode === 'password' && <><Link href="/forgot-password">Forgot password?</Link>{' · '}</>}
         <Link href="/sign-up">Create an account</Link>
       </p>
     </div>

@@ -40,6 +40,17 @@ export default async function AccountPage() {
         preferredLanguage: profile.preferred_language,
         timezone: profile.timezone,
       }} />
+      <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
+        <h2 style={{ marginTop: 0 }}>Password</h2>
+        {user.email ? (
+          <p className="muted">
+            Send a secure password reset link to your sign-in email. The link expires according to your authentication provider&rsquo;s settings.
+            {' '}<Link href="/forgot-password">Send reset link</Link>
+          </p>
+        ) : (
+          <p className="muted">This account signs in with a phone code, so there is no password to reset.</p>
+        )}
+      </section>
       <p style={{ marginTop: '1.5rem' }}><Link href="/learn">Back to my learning</Link></p>
     </div>
   );
