@@ -69,8 +69,8 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **102 tables, RLS on every one, 230 policies, 133
-user-defined triggers, 213 functions and 86 migrations.** The database suite
-passes **802 tests**; the web suite passes **360 tests**. TypeScript typecheck
+user-defined triggers, 213 functions and 87 migrations.** The database suite
+passes **803 tests**; the web suite passes **360 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **97 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
@@ -175,9 +175,13 @@ renewal processing remain separate preconditions (P12).
 
 The teacher revenue share is configurable from the admin dashboard by a
 finance or platform admin, with a required written reason and audit entry. It
-remains at **0%** until the business decision is made; no percentage was chosen
-on the owner's behalf. The payout workflow stays closed until the four payout
-preconditions are settled.
+was seeded at 0% because no percentage had been chosen and a migration is not
+entitled to invent one; on 2026-10-19 the owner chose **50%**, so that is what
+the register ships. Each earnings entry snapshots the share it accrued under, so
+changing the setting never rewrites money already booked. Settling the
+percentage does not open payouts: the workflow stays closed until the four
+payout preconditions are settled, and tax treatment, processing fees and
+uniform-or-per-teacher terms are still open.
 
 Finance can record and review dispute cases from `/admin/disputes`. Amounts
 must match the internal transaction's currency and not exceed its value; status

@@ -305,6 +305,38 @@ export async function run(ctx) {
     await setShare(70);
   });
 
+  await test('the chosen 50% split halves a real sale, and the ledger agrees with itself', async () => {
+    // The share every other test overrides, exercised as it actually ships:
+    // 40000 minor units sold, half to the teacher, half kept by the platform.
+    await setShare(50);
+    const pc = await publishedCourse(teacher);
+    const buyer = await buyerAccount('Earn Buyer 50/50');
+    const order = await paidOrder(buyer, pc, 40000);
+    await confirm(order);
+
+    const e = (await entriesFor(order)).rows[0];
+    assert(e, 'a paid order accrued nothing to the teacher at the chosen share');
+    assert(Number(e.revenue_share_percent) === 50,
+      `the entry recorded ${e.revenue_share_percent}%, not the chosen 50`);
+    assert(Number(e.gross_amount_minor) === 40000);
+    assert(Number(e.net_amount_minor) === 20000,
+      `the teacher's half came out as ${e.net_amount_minor} of 40000`);
+    assert(e.status === 'accrued',
+      'money that has accrued is not money that can be paid out');
+
+    // A 50% share is not the case the zero-share audit note exists for, so the
+    // note must not fire and mislead a reader of the ledger.
+    assert((await auditFor(order, 'earnings.accrued_at_zero_share')).rows.length === 0,
+      'a nonzero share was logged as though nothing accrued to the teacher');
+
+    // And it still cannot be paid out: the payout gate is CODE, not a setting.
+    const payoutBlocked = (await q(
+      `select value_text from public.platform_settings where key='teaching.payouts'`)).rows[0];
+    assert(payoutBlocked.value_text === 'false',
+      'choosing a revenue share must not switch payouts on');
+    await setShare(70);
+  });
+
   await test('two entries for one teacher on one order are refused', async () => {
     const pc = await publishedCourse(teacher);
     const order = (await q(

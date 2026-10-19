@@ -37,6 +37,10 @@ you. Do not treat it as settled, and do not build on it until it moves up.
 | 2026-10-16 | **Instructor earnings accrue on payment and reverse on a full refund.** A teacher's share is recorded when an order is paid and taken back when that order is refunded in full — the same trigger as access revocation. A **partial** refund leaves earnings intact, for the same reason it leaves access intact: the learner has still paid for what remains. The share is **snapshotted onto each entry**, so changing the rate later cannot rewrite money already accounted for. A teacher buying their own course accrues nothing. An entry already paid out is **not** silently rewritten on refund — a clawback event is raised instead, because money that has left the platform cannot be un-sent by editing a ledger row. The percentage is now configurable by a finance or platform admin through the dashboard, with a required written reason and an append-only audit record. **The value remains 0 and the business decision remains open** — no percentage was chosen on the user's behalf. Payouts remain unwired: the four operational preconditions still need answers before money can leave the platform. |
 | 2026-10-16 | **Two governance channels, both wired.** A reader can report a lesson or a specific discussion post; a teacher can appeal a reviewer's rejection. Neither existed as a *path* before — the tables were there and nothing wrote to them. Two rules are load-bearing and enforced in SQL, not in TypeScript: reporting requires being able to *see* what you report, so filing a report cannot be used to probe unpublished drafts; and **the reviewer whose decision is appealed cannot decide that appeal**, the same independence rule that stops an author approving their own course and a requester approving their own refund. Closing a report and overturning an appeal each require a written note. |
 | 2026-10-16 | **A refund revokes course access.** Settled directly: "refund revokes course access." Implemented as: a **full** refund revokes the entitlement the order paid for and withdraws the enrolment; a **partial** refund does not, because a learner who paid 40,000 and had 15,000 returned has still paid for what remains. Only the grant the order bought is revoked — access held through a family entitlement, scholarship or admin grant survives. Certificates and lesson progress are left intact per D7: a refund is a money event, not a claim the learning did not happen. |
+| 2026-10-19 | **A teacher keeps 50% of a course sale.** Chosen by the owner, not inferred: `teaching.revenue_share_percent` moves from its seeded 0 to 50 in `20261205000100_revenue_share_decision.sql`, and the register carries the date so a reader knows a person decided it. 0 was never a neutral default — it was the platform keeping everything a teacher earned. Earnings accrue at whatever this says when an order is confirmed, and each entry snapshots the share it accrued under (`iee_split_agrees` ties net to that copy), so changing it later cannot rewrite money already booked. **This does not enable payouts**: `teaching.payouts` stays CODE-gated, and the terms around the percentage are still open — tax treatment per country, who bears processing fees, and whether the share is uniform or per teacher. |
+| 2026-10-19 | **A course author may see individual learner progress only inside a cohort a learner or guardian opted into.** Self-paced learners stay private: RLS gives an author no read at all on `course_enrolments` or `lesson_progress`, and that does not change. The reasoning is that a dated cohort is a group somebody joined on purpose, where a teacher knowing who is falling behind is the point of the class — while a self-paced catalogue enrolment is a private purchase, and pace is data about a child nobody agreed to share. Aggregate-only was considered and rejected as the general rule, because a count with no learner attached cannot tell a teacher who to help. Governs `SCREENS.md` row 32. |
+| 2026-10-19 | **The teacher decides when a cohort stops accepting joiners, per cohort.** A `join_closes_at` the teacher sets when creating the class, defaulting to the cohort's start date — so the default is the strict and fair one, and opening the window later is a deliberate act rather than something that happens by omission. This replaces the built behaviour, in which joining stayed open from before the start until the cohort ended and anyone could join in the final week. Settling it is the precondition `learning.cohorts` was held on. |
+| 2026-10-19 | **D8 stays open, and the next step is costed research rather than a choice.** Where original media masters live is not decided; before it is, the options (Cloudflare R2, Supabase Storage, Backblaze B2, with Stream as delivery only) are to be compared with real numbers at 100, 1,000 and 50,000 users and brought back as a recommendation. Nothing in the media byte path is built on a guess in the meantime. |
 
 ## Decided — from the project record
 
@@ -516,13 +520,13 @@ them to be byte-identical would make every wording improvement a two-file
 change for no safety gained. Keys, types, gates and shipped-off values are the
 part that can hurt somebody.
 
-## What a teacher may see about a learner — **OPEN, needs the user**
+## What a teacher may see about a learner — **DECIDED 2026-10-19**
 
-Recorded 2026-10-19 while looking for the next buildable gap.
+Recorded while looking for the next buildable gap, and settled the same day.
 
 "Learner analytics" (`SCREENS.md` row 32) is marked READY, and the teacher
-dashboard names it as its missing piece. It is not buildable without a decision,
-and the decision is not a technical one.
+dashboard names it as its missing piece. It was not buildable without a decision,
+and the decision was not a technical one.
 
 Today RLS gives a course author **no read at all** on `course_enrolments` or
 `lesson_progress`: both are readable only where `can_access_learner()` is true,
@@ -531,15 +535,31 @@ them — assignment submissions, marks, reviews — and cohort membership as cou
 rather than as a roster. That boundary was drawn deliberately and has been
 respected consistently.
 
-So a progress analytics screen for teachers would widen it, for a platform that
+So a progress analytics screen for teachers would widen it — for a platform that
 teaches children, in a product whose dominant principle is ease of use for the
-teacher. Both answers are defensible: a teacher who cannot see that half a class
+teacher. Both answers were defensible: a teacher who cannot see that half a class
 stopped at lesson four cannot help them, and a teacher who can see every child's
-pace holds data about children that no parent was told about. The options are
+pace holds data about children that no parent was told about. The options were
 aggregate-only for the author (counts and distributions, no learner attached),
 per-learner for the author, or per-learner only for cohort classes where a
 guardian opted in to a dated group.
 
-Until that is chosen, the teacher-facing surfaces keep using only what an author
-can already read, and row 32 stays READY rather than becoming BUILT by quietly
-widening a privacy rule.
+**Chosen 2026-10-19: per-learner, inside an opted-in cohort only.** The third
+option. A dated cohort is a group somebody joined on purpose and where a teacher
+knowing who is falling behind is the point of the class; a self-paced catalogue
+enrolment is a private purchase, and pace is data about a child nobody agreed to
+share. Aggregate-only was rejected as the general rule because a count with no
+learner attached cannot tell a teacher who to help.
+
+So the boundary to build is narrow and explicit: an author may read enrolment and
+progress rows **only** for learners with an active membership of one of that
+course's cohorts, and only for the pinned version the cohort teaches. Self-paced
+learners keep exactly the access they have today, which is none. The predicate
+belongs in SQL beside `can_read_assignment_submission()` rather than in a query
+filter, so no second caller can forget it.
+
+The late-join rule was settled in the same conversation and is what makes this
+safe to build at all: **the teacher decides when a cohort stops accepting
+joiners**, with `join_closes_at` defaulting to the cohort's start date. A
+progress view over a class whose membership can still grow in its final week
+would be a view over a moving target.

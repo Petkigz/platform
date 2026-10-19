@@ -46,14 +46,15 @@ export function RevenueShareForm({ currentPercent }: { currentPercent: number })
         <span className="badge neutral">{currentPercent}% to teachers</span>
       </div>
       <p className="muted">
-        The teacher&rsquo;s percentage of course-sale proceeds. Processing fees, tax treatment,
-        and whether this is uniform across teachers still need a policy decision; the percentage
-        is not a substitute for deciding those terms.
+        The teacher&rsquo;s percentage of course-sale proceeds. Changing it applies only to orders
+        confirmed afterwards: every earnings entry snapshots the share it accrued under, so money
+        already booked cannot move. Processing fees, tax treatment, and whether this is uniform
+        across teachers still need a policy decision; the percentage is not a substitute for
+        deciding those terms, and it does not switch payouts on.
       </p>
       {currentPercent === 0 && (
         <div className="notice" role="note">
-          It is still 0%: teachers currently accrue no share and the platform retains the sale
-          proceeds. No percentage was chosen on your behalf.
+          It is currently 0%: teachers accrue no share and the platform retains the sale proceeds.
         </div>
       )}
       <div style={{ display: 'grid', gap: '0.8rem', maxWidth: '34rem', marginTop: '1rem' }}>

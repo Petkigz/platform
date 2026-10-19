@@ -47,9 +47,32 @@ export async function run(ctx) {
     return Number(r.rows[0]?.value_text);
   }
 
-  await test('the existing seed remains 0; no revenue share is chosen by migration', async () => {
-    assert((await currentPercent()) === 0,
-      'the migration must not invent a percentage for the owner');
+  await test('the register ships the share the owner chose, not an invented one', async () => {
+    // 0 was the honest value while the number was unchosen. It was chosen on
+    // 2026-10-19, and the register is the seed: every fresh environment has to
+    // start from the decision rather than from the placeholder, because
+    // earnings accrue at whatever this says when an order is confirmed.
+    assert((await currentPercent()) === 50,
+      `the shipped share is ${await currentPercent()}, expected the chosen 50`);
+
+    const row = (await q(`select description, preconditions
+      from public.platform_settings
+      where key='teaching.revenue_share_percent'`)).rows[0];
+    assert(/chosen at 50%/i.test(row.description),
+      'the register no longer says who chose the number or when');
+    assert(/tax treatment/i.test(row.preconditions),
+      'choosing the percentage must not quietly settle the terms around it');
+
+    // The change is in the log, and the log says it came from a migration
+    // rather than pretending an administrator made it.
+    const seeded = (await q(`select actor, detail from public.governance_audit_events
+      where action='teaching.revenue_share_changed' and detail->>'source'='migration'`)).rows;
+    assert(seeded.length === 1, `expected one migration-sourced change, got ${seeded.length}`);
+    assert(seeded[0].actor === null, 'a migration claimed an actor it did not have');
+    assert(Number(seeded[0].detail.previous_percent) === 0);
+    assert(Number(seeded[0].detail.new_percent) === 50);
+    assert(String(seeded[0].detail.reason).length > 10,
+      'the recorded decision has no reason worth reading');
   });
 
   await test('finance admin sets a percentage and the actor/reason are audited', async () => {
@@ -65,7 +88,8 @@ export async function run(ctx) {
     assert(audit.action === 'teaching.revenue_share_changed');
     assert(audit.target_type === 'platform_setting');
     assert(audit.detail.key === 'teaching.revenue_share_percent');
-    assert(Number(audit.detail.previous_percent) === 0);
+    assert(Number(audit.detail.previous_percent) === 50,
+      'the audit trail lost the share that was in force before this change');
     assert(Number(audit.detail.new_percent) === 25);
     assert(audit.detail.reason === 'Approved instructor payout policy');
   });

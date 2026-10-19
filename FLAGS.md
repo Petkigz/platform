@@ -144,7 +144,7 @@ money rules behave, and they shipped with values rather than being absent.
 |---|---|---|---|---|
 | `governance.panel_required` | boolean | none | `false` | Whether a scholarly panel must decide before publication. Off means peer review by an authorised reviewer is enough (P6). Flipping it is a settings change, not a migration |
 | `governance.min_approvals` | integer | none | `1` | How many independent approvals a version needs before it may be published |
-| `teaching.revenue_share_percent` | integer | ADMIN | `0` | The teacher's share of a paid order, in whole percent. **Deliberately 0: the number has not been chosen.** Earnings accrue at whatever this says, so setting it is a business decision, not a configuration one. Changing it never rewrites earnings already booked |
+| `teaching.revenue_share_percent` | integer | ADMIN | `50` | The teacher's share of a paid order, in whole percent. **Chosen at 50% by the owner on 2026-10-19** (it was seeded 0 while the number was unchosen). Earnings accrue at whatever this says when an order is confirmed, so setting it is a business decision, not a configuration one. Changing it never rewrites earnings already booked — each entry snapshots the share it accrued under. The percentage being settled does not settle the terms around it: tax per country, who bears processing fees, and uniform-or-per-teacher are still open, and `teaching.payouts` stays CODE-gated |
 
 Measured, the table holds **90 rows: the 87 flags above plus these three.**
 Eighty-eight are boolean switches and two are integers. Gate types: **43 ADMIN,

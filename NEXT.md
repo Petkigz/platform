@@ -136,14 +136,40 @@ honest gaps kept visible: no receipt document, and no renewal or failed-payment
 retry. The same audit closed the course-approval row, whose note still claimed an
 appeals queue was missing when `/admin/appeals` is built and privileged-only.
 
+Four decisions came back from the owner on 2026-10-19, and all four are
+recorded in `DECISIONS.md`:
+
+1. **A teacher keeps 50% of a course sale.** `teaching.revenue_share_percent`
+   moves from its seeded 0 to 50 in `20261205000100_revenue_share_decision.sql`,
+   which also rewrites the register's description and preconditions so the row
+   says who chose the number and when, and logs the change with no actor and
+   `source: migration` rather than pretending an administrator made it. 0 was
+   never a neutral default — it was the platform keeping everything a teacher
+   earned, and every fresh environment would have started there. Two tests pin
+   it: the shipped value and its audit row, and a real 40,000-minor-unit sale
+   splitting 20,000/20,000 with no zero-share note and `teaching.payouts` still
+   off. The percentage is settled; tax per country, processing fees and
+   uniform-or-per-teacher are not, and the register still says so.
+2. **A course author may see individual learner progress only inside a cohort a
+   learner or guardian opted into.** Self-paced learners keep exactly the access
+   they have today, which is none. That is the boundary to build row 32 against.
+3. **The teacher decides when a cohort stops accepting joiners**, per cohort,
+   defaulting to the start date. This is the precondition `learning.cohorts` was
+   held on, and the current behaviour — open until the cohort ends — is what has
+   to change.
+4. **D8 stays open, with costed research as the next step** rather than a choice
+   made blind.
+
 That leaves one gap that is not code. **Learner analytics (`SCREENS.md` row 32)
-is blocked on a privacy decision**, and it is recorded in `DECISIONS.md` under
-"What a teacher may see about a learner". RLS gives a course author no read at
-all on `course_enrolments` or `lesson_progress` — only the learner and their
-guardian have one — so a teacher progress screen would widen that boundary on a
-platform that teaches children. Aggregate-only, per-learner, or per-learner
-inside an opted-in cohort are all defensible; picking one is the user's call.
-Until then the teacher surfaces keep to what an author can already read.
+was blocked on a privacy decision**, now made and recorded in `DECISIONS.md`
+under "What a teacher may see about a learner". RLS gives a course author no read
+at all on `course_enrolments` or `lesson_progress` — only the learner and their
+guardian have one — so a teacher progress screen widens that boundary, and the
+chosen width is one cohort membership deep: an author may read enrolment and
+progress rows only for learners with an active membership of one of that course's
+cohorts, and only for the version the cohort pins. The predicate belongs in SQL
+beside `can_read_assignment_submission()`, not in a query filter a second caller
+could forget.
 
 The two planning documents were also stale in a way that would have misdirected
 the next session, so both were re-audited against the route list in the build
@@ -157,7 +183,8 @@ not be runtime toggles and then listed eleven: the measured figure is **31 CODE,
 documented flags plus three controls** that were in the database and not in the
 register (`governance.panel_required`, `governance.min_approvals`,
 `teaching.revenue_share_percent`). All three are now documented, including the
-fact that the revenue share is 0 because nobody has chosen a number yet. Version copying
+fact that the revenue share was then 0 because nobody had chosen a number yet (it has since been
+chosen at 50%; see below). Version copying
 carries forward the curriculum, assessments, completion requirements, citations
 and product/price links; existing learners stay pinned
 to their original version.
@@ -169,9 +196,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **802 database tests, 360 web tests; TypeScript typecheck and
+Verification: **803 database tests, 360 web tests; TypeScript typecheck and
 production build pass; 102 tables, 230 policies, 133 user-defined triggers,
-213 functions, 86 migrations and 97 app route entries.**
+213 functions, 87 migrations and 97 app route entries.**
 
 ## Today's sentence
 
@@ -182,9 +209,15 @@ pushing the completed unit.
 ## Open external decisions (not to be guessed)
 
 - Payment provider merchant/sandbox credentials and callback verification (P12).
-- Teacher/platform revenue-share percentage; it remains 0% until chosen.
 - Payout policy/preconditions, tax and jurisdiction treatment, and disbursement
   credentials.
+- Where original media masters live (D8): costed comparison of R2, Supabase
+  Storage and B2 at 100 / 1,000 / 50,000 users, then a recommendation.
+
+Settled on 2026-10-19 and no longer open: the teacher/platform revenue share
+(**50%**), what a course author may see about a learner (**individual progress
+only inside an opted-in cohort**), and when a cohort stops accepting joiners
+(**the teacher sets it, defaulting to the start date**).
 - Automatic subscription renewal worker and provider support.
 - Legal review and any locale-specific safeguarding/child-consent requirements.
 
@@ -1125,7 +1158,12 @@ of them.
 as `revenue share: 0`, and my own planning notes name it a precondition for
 payouts alongside the provider, tax treatment and thresholds. So it is an admin
 setting seeded at 0, and accrual still runs at 0% so the gross record of what
-sold survives. **It needs a decision before any teacher is paid.**
+sold survives. **It needed a decision before any teacher was paid — and on
+2026-10-19 the owner made it: 50%.** The register now ships 50 rather than 0,
+because the register is the seed and every fresh environment would otherwise
+start from a placeholder that contradicts a decision. Accrual snapshots the share
+per entry, so the change cannot rewrite money already booked, and `teaching.payouts`
+stays CODE-gated: the percentage is settled, the terms around it are not.
 
 **Payouts are still unwired, deliberately.** Accruing is safe and reversible;
 moving money out is not, and it needs four external facts that are not known.
