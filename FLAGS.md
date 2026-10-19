@@ -133,28 +133,62 @@ Three kinds of gate:
 | `platform.audit` | Audit log of privileged actions | ADMIN | — |
 | `platform.maintenance_mode` | Read-only mode | ADMIN | — |
 
+## Controls that are not flags
+
+`platform_settings` holds three rows that are not in the tables above. They are
+not features to switch on — they are dials that decide how the publication and
+money rules behave, and they shipped with values rather than being absent.
+
+| Key | Type | Gate | Current value | What it decides |
+|---|---|---|---|---|
+| `governance.panel_required` | boolean | none | `false` | Whether a scholarly panel must decide before publication. Off means peer review by an authorised reviewer is enough (P6). Flipping it is a settings change, not a migration |
+| `governance.min_approvals` | integer | none | `1` | How many independent approvals a version needs before it may be published |
+| `teaching.revenue_share_percent` | integer | ADMIN | `0` | The teacher's share of a paid order, in whole percent. **Deliberately 0: the number has not been chosen.** Earnings accrue at whatever this says, so setting it is a business decision, not a configuration one. Changing it never rewrites earnings already booked |
+
+Measured, the table holds **89 rows: the 86 flags above plus these three.**
+Eighty-seven are boolean switches and two are integers. Gate types: **42 ADMIN,
+14 ADMIN + SETUP, 31 CODE**, and the two governance controls, which have no gate
+because they are not features.
+
 ---
 
 ## What this register shows
 
-**1. The admin dashboard is the critical path, not a nice-to-have.**
-`platform.admin_settings` has to exist before any other flag means anything.
-It is not in the plan: 0 settings endpoints, no settings table.
+**1. The admin dashboard was the critical path, and it is built.**
+`platform.admin_settings` had to exist before any other flag meant anything, and
+it was missing from the plan: no settings table, no endpoints. `platform_settings`
+now holds the register, `/admin` reads and toggles it, and `/api/admin/flags`
+writes it. A trigger refuses to enable a `code`-gated flag at runtime, so the
+dashboard cannot promise what needs a deploy.
 
-**2. Seven of these cannot be runtime toggles.**
-`offline`, `child_login`, `multi_language`, `ai_support`, `panel`,
-`applications`, `payouts`, `referrals`, `institutions`, `live_classes`,
-`analytics` — each needs a deploy, a provider, or a policy that doesn't exist.
-Building them "to completion" means building them against guesses.
+**2. Thirty-one of these cannot be runtime toggles.**
+`gate_type='code'` on 31 flags — `offline`, `child_login`, `multi_language`,
+`ai_support`, `panel`, `applications`, `payouts`, `referrals`, `institutions`,
+`live_classes`, `analytics`, and — counted properly — 11 `platform.*` legal,
+safety and data ones, 5 `teaching.*`, 5 `learning.*`, 4 `institution.*`,
+3 `commerce.*`, 2 `delivery.*` and `family.child_login`. Each needs a deploy, a provider, or a
+policy that does not exist. Building them "to completion" means building them
+against guesses, so the tables and the flags exist and the work waits.
+
+A further **14 are ADMIN + SETUP**: the toggle is real, but a provider, a sender
+domain or a written policy has to be finished first. Those are the ones where
+turning it on too early does damage.
 
 **3. Six flags are blocked on facts you don't have, not on code.**
 `commerce.checkout`, `mobile_money`, `subscriptions`, `refunds`,
-`teaching.panel`, `family.guardian_verification`. No amount of building
-finishes these. They need a provider, a jurisdiction, or a policy decision.
+`teaching.panel`, `family.guardian_verification`. No amount of building finishes
+these. Four of the six now have their code: refunds are decided at
+`/admin/refunds`, guardian verification runs at `/family/guardians` and
+`/admin/guardians`, checkout creates orders and subscriptions allocate seats.
+What is missing is a provider, a jurisdiction, or a policy decision — and
+`teaching.panel` is still an open question, not a backlog item.
 
-**4. Two flags are blocked on design that was never done.**
-`family.engagement` (child engagement mechanics) and `learning.discussion`
-(moderation policy). Both are wanted. Neither is designed.
+**4. One flag is still blocked on design that was never done.**
+`family.engagement` — child engagement mechanics. It is wanted and undesigned;
+badges, streaks and points for a five-year-old are a safeguarding question
+before they are a feature. `learning.discussion` was in this category and is no
+longer: moderation is settled (authority posts visible, learner posts held) and
+built. `learning.reviews` joined it on the same terms.
 
 ---
 

@@ -42,7 +42,21 @@ stops new cases but not the ones already in flight. Enrolled learners can rate
 and review a course from its page; a rating alone is counted immediately while
 words are held until staff publish them, and `/admin/course-reviews` is the
 reading queue. Reviews are a satisfaction signal only — nothing in the
-publication workflow reads them. `learning.reviews` ships off. Version copying
+publication workflow reads them. `learning.reviews` ships off.
+
+The two planning documents were also stale in a way that would have misdirected
+the next session, so both were re-audited against the route list in the build
+output rather than against memory. `SCREENS.md` had 24 rows saying READY or
+BLOCKED for screens that exist — including the settings and flags screen, which
+its own note called the critical path while claiming no settings table existed.
+It now reads **36 built, 12 ready, 5 blocked**; the five blocked ones are blocked
+on a decision or a provider, not on code. `FLAGS.md` claimed seven flags could
+not be runtime toggles and then listed eleven: the measured figure is **31 CODE,
+14 ADMIN + SETUP, 42 ADMIN**, and `platform_settings` holds **89 rows — the 86
+documented flags plus three controls** that were in the database and not in the
+register (`governance.panel_required`, `governance.min_approvals`,
+`teaching.revenue_share_percent`). All three are now documented, including the
+fact that the revenue share is 0 because nobody has chosen a number yet. Version copying
 carries forward the curriculum, assessments, completion requirements, citations
 and product/price links; existing learners stay pinned
 to their original version.
