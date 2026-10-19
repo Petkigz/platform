@@ -18,6 +18,7 @@ import { run as family } from './family.test.mjs';
 import { run as authoring } from './authoring.test.mjs';
 import { run as courseVersionCopy } from './course_version_copy.test.mjs';
 import { run as courseContentReordering } from './course_content_reordering.test.mjs';
+import { run as assessmentGradingWorkflow } from './assessment_grading_workflow.test.mjs';
 import { run as certificates } from './certificates.test.mjs';
 import { run as review } from './review.test.mjs';
 import { run as fulfilment } from './fulfilment.test.mjs';
@@ -67,6 +68,7 @@ for (const [name, fn] of [
   ['authoring', authoring],
   ['course version copy', courseVersionCopy],
   ['course content reordering', courseContentReordering],
+  ['assessment grading workflow', assessmentGradingWorkflow],
   ['certificates', certificates],
   ['review', review],
   ['fulfilment', fulfilment],

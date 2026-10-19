@@ -7,6 +7,7 @@ import {
   ASSESSMENT_TYPE_LABEL,
   type AssessmentType,
   type AuthoredAssessment,
+  type PendingManualResponse,
   type QuestionType,
 } from '@/lib/assessment';
 import type { AuthoredVersion } from '@/lib/authoring';
@@ -16,9 +17,11 @@ const NEW_CHOICE_IDS = ['choice-a', 'choice-b', 'choice-c', 'choice-d'];
 export function AssessmentManager({
   version,
   assessments,
+  manualResponses,
 }: {
   version: AuthoredVersion;
   assessments: AuthoredAssessment[];
+  manualResponses: PendingManualResponse[];
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -37,6 +40,8 @@ export function AssessmentManager({
   const [choices, setChoices] = useState(['', '', '', '']);
   const [answerId, setAnswerId] = useState(NEW_CHOICE_IDS[0]);
   const [answerIds, setAnswerIds] = useState<string[]>([]);
+  const [manualScores, setManualScores] = useState<Record<string, string>>({});
+  const [manualVerdicts, setManualVerdicts] = useState<Record<string, boolean>>({});
 
   const lessons = version.sections.flatMap((section) =>
     section.lessons.map((lesson) => ({
@@ -92,6 +97,26 @@ export function AssessmentManager({
     }
   }
 
+  async function markManualResponse(response: PendingManualResponse) {
+    const scoreText = manualScores[response.response_id] ?? '0';
+    const score = Number(scoreText);
+    if (!Number.isFinite(score) || score < 0 || score > Number(response.max_points)) {
+      setError(`Enter a score from 0 to ${response.max_points}.`);
+      return;
+    }
+    const verdict = manualVerdicts[response.response_id];
+    if (verdict === undefined) {
+      setError('Choose whether this answer is correct or incorrect.');
+      return;
+    }
+    await post({
+      action: 'mark_manual_response',
+      responseId: response.response_id,
+      score,
+      isCorrect: verdict,
+    }, `manual-${response.response_id}`);
+  }
+
   async function addQuestion(event: React.FormEvent, assessmentId: string) {
     event.preventDefault();
     const choicesForRequest = questionType === 'single_choice' || questionType === 'multiple_choice'
@@ -127,6 +152,78 @@ export function AssessmentManager({
         platform’s assessment setting also controls learner access.
       </p>
       {error && <div className="notice error" role="alert">{error}</div>}
+
+      {manualResponses.length > 0 && (
+        <section aria-labelledby="manual-grading-title" style={{ marginBottom: '1.25rem' }}>
+          <h3 id="manual-grading-title">Waiting for your marking ({manualResponses.length})</h3>
+          <p className="muted">Learner names are hidden here. Mark the answer itself; the attempt is scored when all manual answers are graded.</p>
+          <div style={{ display: 'grid', gap: '0.75rem' }}>
+            {manualResponses.map((response) => (
+              <article className="card" key={response.response_id}>
+                <p className="eyebrow">{response.assessment_title} · v{response.course_version_number} · attempt {response.attempt_number}</p>
+                <h4>{response.question_prompt}</h4>
+                <div className="notice" style={{ whiteSpace: 'pre-wrap' }}>
+                  {typeof response.response_content === 'string'
+                    ? response.response_content
+                    : JSON.stringify(response.response_content)}
+                </div>
+                <form
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    void markManualResponse(response);
+                  }}
+                  className="row"
+                  style={{ alignItems: 'end', gap: '0.75rem' }}
+                >
+                  <label style={{ display: 'grid', gap: '0.25rem' }}>
+                    Score (0–{response.max_points})
+                    <input
+                      type="number"
+                      min="0"
+                      max={response.max_points}
+                      step="any"
+                      required
+                      value={manualScores[response.response_id] ?? '0'}
+                      onChange={(event) => setManualScores({
+                        ...manualScores, [response.response_id]: event.target.value,
+                      })}
+                      aria-label={`Score for attempt ${response.attempt_number}`}
+                    />
+                  </label>
+                  <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
+                    <legend>Verdict</legend>
+                    <label>
+                      <input
+                        type="radio"
+                        name={`verdict-${response.response_id}`}
+                        checked={manualVerdicts[response.response_id] === true}
+                        onChange={() => setManualVerdicts({ ...manualVerdicts, [response.response_id]: true })}
+                        style={{ width: 'auto' }}
+                      /> Correct
+                    </label>
+                    <label style={{ marginLeft: '0.75rem' }}>
+                      <input
+                        type="radio"
+                        name={`verdict-${response.response_id}`}
+                        checked={manualVerdicts[response.response_id] === false}
+                        onChange={() => setManualVerdicts({ ...manualVerdicts, [response.response_id]: false })}
+                        style={{ width: 'auto' }}
+                      /> Incorrect
+                    </label>
+                  </fieldset>
+                  <button
+                    type="submit"
+                    className="btn secondary"
+                    disabled={busy !== null}
+                  >
+                    {busy === `manual-${response.response_id}` ? 'Saving…' : 'Save mark'}
+                  </button>
+                </form>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
       {assessments.length === 0 ? (
         <p className="empty">No assessments in this version yet.</p>

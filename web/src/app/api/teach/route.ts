@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import {
   activateAssessment, addAssessmentQuestion, createAssessment,
+  markManualAssessmentResponse,
   type AssessmentType, type QuestionType,
 } from '@/lib/assessment';
 import {
@@ -47,6 +48,9 @@ export async function POST(request: Request) {
     contentId?: unknown;
     direction?: unknown;
     assessmentId?: unknown;
+    responseId?: unknown;
+    score?: unknown;
+    isCorrect?: unknown;
     passThreshold?: unknown;
     attemptLimit?: unknown;
     lessonId?: unknown;
@@ -107,6 +111,22 @@ export async function POST(request: Request) {
       );
     }
     return json(await createCourseVersionFrom(supabase, b.sourceVersionId));
+  }
+
+  // ---------------------------------------------------------------------
+  if (b.action === 'mark_manual_response') {
+    if (!isUuid(b.responseId) || typeof b.score !== 'number' || typeof b.isCorrect !== 'boolean') {
+      return NextResponse.json(
+        { ok: false, message: 'Choose a score and verdict for this response.' },
+        { status: 400 },
+      );
+    }
+    const outcome = await markManualAssessmentResponse(supabase, {
+      responseId: b.responseId,
+      score: b.score,
+      isCorrect: b.isCorrect,
+    });
+    return NextResponse.json(outcome, { status: outcome.ok ? 200 : 400 });
   }
 
   // ---------------------------------------------------------------------

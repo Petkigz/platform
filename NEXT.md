@@ -13,10 +13,12 @@ curriculum, prepare shareable profiles at `/teach/profile`, mark preview
 lessons/resources, create a new draft from a published version, and reorder
 sections, lessons and content with audited up/down controls. Authors can create
 and activate assessments and add automatically graded choice/true-false
-questions; answer keys are never read back into the editor. Manual-answer
-marking still needs a teacher-facing queue. Version copying
-carries forward the curriculum, assessments, completion requirements, citations
-and product/price links; existing learners stay pinned to their original version.
+questions; answer keys are never read back into the editor. Learner submission
+now grades objective questions server-side; course authors see an anonymized
+queue for written responses, and the final score is committed once every answer
+is marked. Version copying carries forward the curriculum, assessments,
+completion requirements, citations and product/price links; existing learners
+stay pinned to their original version.
 Learners can browse paths, lesson citations and teacher pages when the
 corresponding flags are enabled. Public samples have a dedicated course-preview
 route; `learning.previews` controls anonymous reads and the free-entitlement
@@ -25,9 +27,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **676 database tests, 261 web tests; TypeScript typecheck and
+Verification: **681 database tests, 265 web tests; TypeScript typecheck and
 production build pass; 90 tables, 210 policies, 121 user-defined triggers,
-169 functions, 74 migrations and 73 app route entries.**
+172 functions, 75 migrations and 73 app route entries.**
 
 ## Today's sentence
 

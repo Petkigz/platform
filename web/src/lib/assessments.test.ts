@@ -6,6 +6,9 @@ import {
   validateAddQuestion,
   addAssessmentQuestion,
   choicesOf,
+  fetchPendingManualResponses,
+  markManualAssessmentResponse,
+  submitAttempt,
   type Question,
   ASSESSMENT_TYPES,
 } from './assessment.ts';
@@ -362,4 +365,50 @@ test('true-false answer keys match the learner’s selected scalar id', async ()
   const call = calls[0];
   if (!call) throw new Error('expected an rpc call');
   assert.equal(call.args.p_answer_key, 'true');
+});
+
+test('learner submission uses the identity-checked auto-grading writer', async () => {
+  const attempt = { id: 'attempt-1', assessment_id: ASSESSMENT, attempt_number: 1,
+    status: 'graded', score_earned: 1, score_possible: 1, passed: true };
+  const { client, calls } = stubRpc({ data: attempt });
+  const result = await submitAttempt(client, 'attempt-1');
+  assert.equal(result.ok, true);
+  const call = calls[0];
+  if (!call) throw new Error('expected an rpc call');
+  assert.deepEqual(call, {
+    fn: 'submit_assessment_attempt',
+    args: { p_attempt_id: 'attempt-1' },
+  });
+});
+
+test('manual grading queue is fetched by course id through its guarded RPC', async () => {
+  const response = { response_id: 'response-1', question_prompt: 'Explain', response_content: 'Because' };
+  const { client, calls } = stubRpc({ data: [response] });
+  const rows = await fetchPendingManualResponses(client, 'course-1');
+  assert.deepEqual(rows, [response]);
+  assert.deepEqual(calls[0], {
+    fn: 'list_pending_manual_assessment_responses',
+    args: { p_course_id: 'course-1' },
+  });
+});
+
+test('manual marking sends score and verdict, never an actor id', async () => {
+  const { client, calls } = stubRpc({ data: { id: 'attempt-1' } });
+  const result = await markManualAssessmentResponse(client, {
+    responseId: 'response-1', score: 2, isCorrect: true,
+  });
+  assert.equal(result.ok, true);
+  assert.deepEqual(calls[0], {
+    fn: 'mark_manual_assessment_response',
+    args: { p_response_id: 'response-1', p_score: 2, p_is_correct: true },
+  });
+});
+
+test('manual grading rejects a negative score before the database call', async () => {
+  const { client, calls } = stubRpc();
+  const result = await markManualAssessmentResponse(client, {
+    responseId: 'response-1', score: -1, isCorrect: false,
+  });
+  assert.equal(result.ok, false);
+  assert.equal(calls.length, 0);
 });

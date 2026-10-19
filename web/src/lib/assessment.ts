@@ -203,19 +203,74 @@ export async function saveResponse(
 }
 
 /**
- * Submit. `submit_attempt()` is the only path from in_progress to submitted,
- * and it refuses an attempt with unanswered questions — so the server decides,
- * not this function.
+ * Submit through the session-checked writer. It refuses unanswered attempts,
+ * grades automatic questions on the server, and leaves only manual answers for
+ * the teacher queue.
  */
 export async function submitAttempt(
   supabase: SupabaseClient,
   attemptId: string,
 ): Promise<{ ok: true; attempt: Attempt } | { ok: false; message: string }> {
-  const { data, error } = await supabase.rpc('submit_attempt', { p_attempt_id: attemptId });
+  const { data, error } = await supabase.rpc('submit_assessment_attempt', { p_attempt_id: attemptId });
   if (error) {
     return { ok: false, message: error.message };
   }
   return { ok: true, attempt: data as unknown as Attempt };
+}
+
+export type PendingManualResponse = {
+  response_id: string;
+  assessment_id: string;
+  assessment_title: string;
+  course_version_number: number;
+  question_id: string;
+  question_prompt: string;
+  response_content: unknown;
+  max_points: number;
+  attempt_number: number;
+  submitted_at: string;
+};
+
+/** The SECURITY DEFINER reader returns only unanswered manual-marking items. */
+export async function fetchPendingManualResponses(
+  supabase: SupabaseClient,
+  courseId: string,
+): Promise<PendingManualResponse[]> {
+  if (!courseId) return [];
+  const { data, error } = await supabase.rpc('list_pending_manual_assessment_responses', {
+    p_course_id: courseId,
+  });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as unknown as PendingManualResponse[];
+}
+
+export type ManualGradeResult =
+  | { ok: true }
+  | { ok: false; message: string };
+
+/** Grade as the signed-in course author; the caller cannot supply an actor id. */
+export async function markManualAssessmentResponse(
+  supabase: SupabaseClient,
+  input: { responseId: string; score: number; isCorrect: boolean },
+): Promise<ManualGradeResult> {
+  if (!input.responseId) return { ok: false, message: 'That response is missing.' };
+  if (!Number.isFinite(input.score) || input.score < 0)
+    return { ok: false, message: 'Enter a score of zero or more.' };
+  const { error } = await supabase.rpc('mark_manual_assessment_response', {
+    p_response_id: input.responseId,
+    p_score: input.score,
+    p_is_correct: input.isCorrect,
+  });
+  if (error) {
+    if (/only the course author/i.test(error.message))
+      return { ok: false, message: 'Only the course author can mark this response.' };
+    if (/already been marked/i.test(error.message))
+      return { ok: false, message: 'This response has already been marked.' };
+    if (/between zero and/i.test(error.message))
+      return { ok: false, message: 'The score cannot be above the available points.' };
+    return { ok: false, message: error.message };
+  }
+  return { ok: true };
 }
 
 /** Render a question prompt from its free-form content. */

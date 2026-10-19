@@ -63,8 +63,8 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **90 tables, RLS on every one, 210 policies, 121
-user-defined triggers, 169 functions and 74 migrations.** The database suite
-passes **676 tests**; the web suite passes **261 tests**. TypeScript typecheck
+user-defined triggers, 172 functions and 75 migrations.** The database suite
+passes **681 tests**; the web suite passes **265 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **73 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
@@ -158,7 +158,10 @@ exposed it; course quizzes and assessment-based completion rules were therefore
 unusable from the product. Course authors can now create assessments, add
 automatically graded single/multiple-choice or true/false questions, then
 activate them from `/teach/<courseId>`. The editor never reads answer keys back.
-Manual-answer marking is not yet exposed in the teacher UI. Publishing now
+Learner submission auto-grades objective questions inside the database; written
+answers appear in the course-author/staff marking queue, and the final attempt
+score is recorded after the last manual response is graded. Marks are audited,
+and clients cannot call the lower-level grading RPCs directly. Publishing now
 **refuses a version with a draft assessment left behind** — D5 would freeze it
 invisible to learners.
 
