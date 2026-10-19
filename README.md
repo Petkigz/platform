@@ -65,7 +65,7 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 The database stands at **90 tables, RLS on every one, 210 policies, 121
 user-defined triggers, 176 functions and 76 migrations.** The database suite
 passes **682 tests**; the web suite passes **272 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **76 app route entries**.
+and the production build pass; Next.js emits **77 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. Without it
@@ -173,11 +173,12 @@ number rather than learner-linked records. Holders can view and print/save their
 snapshot as a PDF from `/certificates/<number>`, with public verification at
 `/verify/<number>`.
 
-A family can be created: `create_family()` writes the family **and** its owner
-membership in one transaction. Until then no family could exist at all — the
-policy that lets you add an owner requires already being one — and since D2 says
-a child is a learner profile under a family and never a user, **no child could
-exist and none could be enrolled.**
+Families are set up from `/family`: an adult can now create a family space,
+add children with age bands (no birth date or child login), and see each child’s
+course progress. `create_family()` writes the family and its owner membership
+in one transaction, so there is no ownerless family state. Guardian verification
+remains a separate, explicit flow and is not bypassed by adding a child to a
+family.
 
 A course can be sold: `create_product()`, `link_product_course_version()`,
 `set_product_price()` and `activate_product()`. Until then every table on the

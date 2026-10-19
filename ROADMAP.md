@@ -52,7 +52,7 @@ partly complete.** The roadmap starts where the project already is.
 - [x] Track lesson progress and course completion — *`/learn` and `/learn/[enrolmentId]`, `POST /api/progress`. Progress pinned to the enrolled version; completion derived, never stored. `supabase/tests/progress.test.mjs`.*
 - [x] Build quizzes, assessments and results — *`/learn/[enrolmentId]/assessment/[assessmentId]`, `POST /api/assessment`, and authoring tools in `/teach/<courseId>`. Automatic single/multiple-choice and true/false, attempt limits; identity-checked submission and server-side auto-grading; anonymized, course-author/staff manual-answer queue with audited marking and final scoring. Answer keys unreadable by clients; low-level actor-argument grading RPCs revoked. `supabase/tests/assessment.test.mjs`, `supabase/tests/assessment_grading_workflow.test.mjs`.*
 - [~] Build young learner profiles and age-appropriate learning — **profiles designed; engagement mechanics are not** (`gamif: 0`, `badge: 0`, `streak: 0`)
-- [ ] Build parent/guardian dashboard and controls
+- [~] Build parent/guardian dashboard and controls — *`/family` now creates the family, adds child profiles, and shows course progress; guardian verification remains separate and must be explicitly completed when required.*
 - [ ] Build the adult learning dashboard and learning paths
 - [x] Build certificates and certificate verification — *`/admin/certificates` lists eligible completions and supports staff-only issuance and reasoned revocation; client calls are session-bound. Holders can print/save their certificate as PDF from `/certificates/<number>`, and `/verify/<number>` remains public. `supabase/tests/certificates.test.mjs`.*
 

@@ -11,6 +11,7 @@ import {
   type Family,
 } from '@/lib/family';
 import { AddChild } from './add-child';
+import { CreateFamily } from './create-family';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,10 +58,7 @@ export default async function FamilyPage() {
           learns under your account — they do not need an email address or a
           password.
         </p>
-        <div className="notice">
-          Creating a family is not wired up yet. The table and its policies are
-          in place; the form is not.
-        </div>
+        <CreateFamily />
         <p style={{ marginTop: '1.5rem' }}>
           <Link href="/learn">Back to my learning</Link>
         </p>

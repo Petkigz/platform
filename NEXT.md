@@ -21,7 +21,8 @@ issuance and reasoned revocation, plus an RLS-protected print/save-as-PDF view
 for certificate holders and their authorised family. Lesson pages now play
 approved direct HTTPS audio/video files natively; first-party uploaded media
 still needs a chosen storage provider and short-lived signed playback URLs.
-Version copying carries forward the curriculum, assessments, completion
+Adults can create a family, add child profiles and review progress at `/family`;
+guardian verification is still its separate consent workflow. Version copying carries forward the curriculum, assessments, completion
 requirements, citations and product/price links; existing learners stay pinned
 to their original version.
 Learners can browse paths, lesson citations and teacher pages when the
@@ -34,7 +35,7 @@ is ready.
 
 Verification: **682 database tests, 272 web tests; TypeScript typecheck and
 production build pass; 90 tables, 210 policies, 121 user-defined triggers,
-176 functions, 76 migrations and 76 app route entries.**
+176 functions, 76 migrations and 77 app route entries.**
 
 ## Today's sentence
 
