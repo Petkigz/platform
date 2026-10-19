@@ -131,6 +131,7 @@ export default async function LearnPage() {
       </h1>
       <p className="muted">
         Signed in as {user.email ?? user.phone ?? 'unknown'}.{' '}
+        <Link href="/account">Account settings</Link>{' · '}
         <form action="/sign-out" method="post" style={{ display: 'inline' }}>
           <button
             type="submit"

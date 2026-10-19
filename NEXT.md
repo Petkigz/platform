@@ -24,7 +24,9 @@ still needs a chosen storage provider and short-lived signed playback URLs.
 Adults can create a family, add child profiles and review progress at `/family`;
 when enabled, `family.guardian_verification` now gates child enrolment on an
 active verified guardian with learning permission. The flag remains off until
-its review and evidence-handling preconditions are met. Version copying carries forward the curriculum, assessments, completion
+its review and evidence-handling preconditions are met. `/account` saves the
+signed-in user's display name, preferred language and time zone under RLS.
+Version copying carries forward the curriculum, assessments, completion
 requirements, citations and product/price links; existing learners stay pinned
 to their original version.
 Learners can browse paths, lesson citations and teacher pages when the
@@ -35,9 +37,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **683 database tests, 272 web tests; TypeScript typecheck and
+Verification: **683 database tests, 277 web tests; TypeScript typecheck and
 production build pass; 90 tables, 210 policies, 121 user-defined triggers,
-177 functions, 78 migrations and 77 app route entries.**
+177 functions, 78 migrations and 79 app route entries.**
 
 ## Today's sentence
 

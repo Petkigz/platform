@@ -64,12 +64,15 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 The database stands at **90 tables, RLS on every one, 210 policies, 121
 user-defined triggers, 177 functions and 78 migrations.** The database suite
-passes **683 tests**; the web suite passes **272 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **77 app route entries**.
+passes **683 tests**; the web suite passes **277 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **79 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
-`user_profiles` row that every foreign key in the schema depends on. Without it
-a new user could sign in and then do nothing at all.
+`user_profiles` row that every foreign key in the schema depends on. `/account`
+lets a signed-in learner update their display name, preferred language and IANA
+time zone; email/phone and account status are not editable there. The signup
+trigger prevents an authenticated account from being created without its
+application profile.
 
 A lesson can contain something: `add_lesson_resource()` attaches a video,
 reading or worksheet. Before it, every lesson published on the platform was an
