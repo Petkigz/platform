@@ -509,11 +509,13 @@ export async function run(ctx) {
 
   await test('provenance is visible once the version is readable', async () => {
     const pc = await draftCourse();
-    await publishForReport(pc);
     const src = (await q(
       `insert into public.content_sources
          (course_version_id, source_type, title, created_by)
        values ($1, 'quran', 'Al-Muwatta', $2) returning id`, [pc.version, teacher])).rows[0].id;
+    // Source citations are part of the D5-locked version subtree; author them
+    // before publication, then confirm the public read policy exposes them.
+    await publishForReport(pc);
     const seen = await asAnon(() =>
       count('select count(*)::int n from public.content_sources where id = $1', [src]));
     assert(seen === 1, `anonymous saw ${seen} sources on a published version`);

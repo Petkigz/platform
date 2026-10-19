@@ -43,7 +43,7 @@ Three kinds of gate:
 | `learning.recitation` | Qur'an recitation feedback | CODE | Quranic ASR accuracy validated; **start with letter-level makharij on short surahs only** — a wrong correction on religious content is worse than none |
 | `learning.hifz` | Memorisation tracker with spaced repetition | ADMIN | Revision schedule and decay model designed. Best value on the premium list |
 | `learning.ijazah` | Verified chain of transmission | CODE | Extends `certificates`; needs teacher authorisation rules and a public chain view |
-| `learning.provenance` | Source citations shown on every lesson | ADMIN | `content_sources` **already exists** — needs a UI, not a schema |
+| `learning.provenance` | Source citations shown on every lesson | ADMIN | Draft curriculum citation UI is deployed; seed and review citations on published lessons before enabling |
 | `learning.quran_sync` | Ayah-synchronised audio and text | ADMIN | Timing dataset licensed or generated |
 | `companion.prayer_tools` | Prayer times, qibla, dhikr counter, adhkar | ADMIN | Location handling and privacy; calculation method choice |
 | `companion.ayah_daily` | Ayah of the day with audio and tafsir | ADMIN | Content sourcing and translation licensing |

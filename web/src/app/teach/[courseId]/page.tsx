@@ -8,6 +8,7 @@ import { fetchRejections } from '@/lib/governance';
 import { AppealForm } from './appeal-form';
 import { fetchSubjects, fetchVersionSubjects } from '@/lib/authoring';
 import { SubjectPicker } from './subject-picker';
+import { fetchVersionSources } from '@/lib/provenance';
 
 export const dynamic = 'force-dynamic';
 
@@ -59,9 +60,10 @@ export default async function TeachCoursePage({
 
   // Subject tagging, and the taxonomy it draws from. Tagging is what makes a
   // course findable in the catalogue.
-  const [subjects, currentSubjects] = await Promise.all([
+  const [subjects, currentSubjects, sourcesByLesson] = await Promise.all([
     fetchSubjects(supabase),
     current ? fetchVersionSubjects(supabase, current.id) : Promise.resolve<string[]>([]),
+    current ? fetchVersionSources(supabase, current.id) : Promise.resolve({}),
   ]);
 
   return (
@@ -94,7 +96,7 @@ export default async function TeachCoursePage({
             subjects={subjects}
             initial={currentSubjects}
           />
-          <Curriculum version={current} />
+          <Curriculum version={current} sourcesByLesson={sourcesByLesson} />
         </>
       )}
 

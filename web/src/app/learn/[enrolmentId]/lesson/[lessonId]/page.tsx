@@ -13,6 +13,7 @@ import { fetchThread } from '@/lib/discussion';
 import { isFlagEnabled } from '@/lib/flags';
 import { Discussion } from './discussion';
 import { ReportForm } from './report-form';
+import { fetchLessonSources } from '@/lib/provenance';
 
 export const dynamic = 'force-dynamic';
 
@@ -114,10 +115,14 @@ export default async function LessonPage({
   // Discussion is behind a flag, off by default, because the moderation policy
   // behind it is a human queue with a retention obligation attached. The thread
   // is only fetched when it is on — no reason to query a table nobody can see.
-  const discussionOn = await isFlagEnabled(supabase, 'learning.discussion');
-  const thread = discussionOn
-    ? await fetchThread(supabase, { lessonId: lesson.id, myUserId: user.id })
-    : [];
+  const [discussionOn, provenanceOn] = await Promise.all([
+    isFlagEnabled(supabase, 'learning.discussion'),
+    isFlagEnabled(supabase, 'learning.provenance'),
+  ]);
+  const [thread, sources] = await Promise.all([
+    discussionOn ? fetchThread(supabase, { lessonId: lesson.id, myUserId: user.id }) : Promise.resolve([]),
+    provenanceOn ? fetchLessonSources(supabase, lesson.id) : Promise.resolve([]),
+  ]);
 
   const courseTitle = enrolment.courses?.[0]?.title ?? 'the course';
   const duration = formatDuration(lesson.durationSeconds);
@@ -201,6 +206,31 @@ export default async function LessonPage({
           </ul>
         )}
       </section>
+
+      {provenanceOn && (
+        <section className="card">
+          <h2>Sources and references</h2>
+          {sources.length === 0 ? (
+            <p className="muted">No references are listed for this lesson yet.</p>
+          ) : (
+            <ol className="lessons">
+              {sources.map((source) => (
+                <li key={source.id}>
+                  <div className="t">
+                    <strong>{source.title}</strong>
+                    {source.authorOrCompiler && <span> · {source.authorOrCompiler}</span>}
+                    {source.editionOrVersion && <span> · {source.editionOrVersion}</span>}
+                    {source.referenceLocator && <span> · {source.referenceLocator}</span>}
+                    {source.anchor && <p className="muted" style={{ margin: '.2rem 0 0' }}>Used at: {source.anchor}</p>}
+                    {source.url && <a href={source.url} target="_blank" rel="noreferrer">Open source</a>}
+                  </div>
+                  <span className="badge neutral">{source.sourceType.replaceAll('_', ' ')}</span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </section>
+      )}
 
       {entitled && !done && (
         <section className="card">

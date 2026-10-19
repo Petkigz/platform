@@ -62,10 +62,10 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 ## Status
 
-The database stands at **89 tables, RLS on every one, 209 policies, 118
-user-defined triggers, 161 functions and 69 migrations.** The database suite
-passes **646 tests**; the web suite passes **235 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **68 app route entries**.
+The database stands at **89 tables, RLS on every one, 209 policies, 120
+user-defined triggers, 164 functions and 70 migrations.** The database suite
+passes **655 tests**; the web suite passes **242 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **69 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. Without it
@@ -103,6 +103,13 @@ learner page at `/paths` and its home-page link are gated by `learning.paths`,
 which stays off until path content has been authored. Paths organize courses;
 they do not grant or bundle access, so the existing enrolment and payment rules
 remain authoritative.
+
+Teachers can add lesson-level source citations from the draft curriculum editor.
+An atomic RPC creates the source and link, records the actor, and enforces D5:
+source citations are part of the version subtree and lock when published.
+`learning.provenance` gates learner display; when on, citations show the source,
+edition, locator, usage anchor and optional HTTPS link. Existing source tables
+are now guarded against post-publication edits as well as writes through the UI.
 
 Finance can reconcile a provider statement from `/admin/reconciliation`.
 Signed minor-unit rows are matched to ledger transactions by provider reference,

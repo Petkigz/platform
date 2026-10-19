@@ -5,14 +5,16 @@ for context; the counts in that historical log are snapshots from their dates.
 
 ## Current status
 
-The learning-path unit is complete locally: teachers curate paths in `/teach/paths`,
-learners browse active paths at `/paths`, and `learning.paths` gates exposure.
-Paths do not bypass enrolment or payment. The flag remains off until content is
-ready.
+The learning-path and provenance units are complete locally: teachers curate
+paths in `/teach/paths` and cite source material from the draft curriculum;
+learners browse paths at `/paths` and citations on lesson pages when the
+respective flags are enabled. Paths do not grant access, and citations lock
+with their published course version. Both learner-facing flags remain off until
+content is ready.
 
-Verification: **646 database tests, 235 web tests; TypeScript typecheck and
-production build pass; 89 tables, 209 policies, 118 user-defined triggers,
-161 functions, 69 migrations and 68 app route entries.**
+Verification: **655 database tests, 242 web tests; TypeScript typecheck and
+production build pass; 89 tables, 209 policies, 120 user-defined triggers,
+164 functions, 70 migrations and 69 app route entries.**
 
 ## Today's sentence
 

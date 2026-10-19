@@ -6,6 +6,8 @@ import {
   RESOURCE_TYPES, RESOURCE_TYPE_LABEL, VERSION_STATUS_LABEL,
   type AuthoredVersion, type ResourceType,
 } from '@/lib/authoring';
+import { SourceForm } from './source-form';
+import type { LessonSource } from '@/lib/provenance';
 
 /**
  * The curriculum editor.
@@ -16,7 +18,13 @@ import {
  * to find the thing that un-greys it, and here there is nothing. You make a
  * new version instead.
  */
-export function Curriculum({ version }: { version: AuthoredVersion }) {
+export function Curriculum({
+  version,
+  sourcesByLesson,
+}: {
+  version: AuthoredVersion;
+  sourcesByLesson: Record<string, LessonSource[]>;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -198,6 +206,10 @@ export function Curriculum({ version }: { version: AuthoredVersion }) {
                           </li>
                         ))}
                       </ul>
+                    )}
+
+                    {editable && (
+                      <SourceForm courseVersionId={version.id} lessonId={l.id} lessonTitle={l.title} sources={sourcesByLesson[l.id] ?? []} />
                     )}
 
                     {editable &&

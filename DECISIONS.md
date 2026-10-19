@@ -355,3 +355,10 @@ only with at least one active course that has a published version; changes to
 an active path are made on a draft, and retirement requires a written reason.
 The learner-facing `learning.paths` flag remains off until curated path content
 is ready.
+
+## Source provenance — implementation invariant
+
+Citations are authored against a draft course version and a specific lesson.
+They become readable with that published version and cannot be added, edited or
+removed after publication. A correction belongs in a new draft version, so the
+source record a learner sees stays tied to the reviewed material.
