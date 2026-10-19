@@ -2,15 +2,20 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import {
+  type AssignmentRevisionResult,
+  type AssignmentWriteResult,
   attachAssignmentAsset,
   createCourseAssignment,
   markAssignmentSubmission,
   removeAssignmentAsset,
+  reopenAssignmentSubmission,
   saveAssignmentDraft,
+  setAssignmentRevisionPolicy,
   setCourseAssignmentStatus,
   submitAssignment,
   updateCourseAssignmentDraft,
   validateAssignmentInput,
+  validateRevisionPolicy,
 } from '@/lib/course-assignments';
 
 export const dynamic = 'force-dynamic';
@@ -33,6 +38,8 @@ type Payload = {
   status?: unknown;
   score?: unknown;
   feedback?: unknown;
+  revisionsAllowed?: unknown;
+  revisionLimit?: unknown;
 };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -40,7 +47,7 @@ const isUuid = (value: unknown): value is string => typeof value === 'string' &&
 const text = (value: unknown): string => typeof value === 'string' ? value : '';
 const fail = (message: string, status: number) =>
   NextResponse.json({ ok: false, message }, { status });
-const respond = (result: Awaited<ReturnType<typeof createCourseAssignment>>) =>
+const respond = (result: AssignmentWriteResult | AssignmentRevisionResult) =>
   result.ok
     ? NextResponse.json(result)
     : NextResponse.json({ ok: false, message: result.message }, { status: result.status });
@@ -110,6 +117,28 @@ export async function POST(request: Request) {
   if (body.action === 'submit') {
     if (!isUuid(body.submissionId)) return fail('Choose a draft to submit.', 400);
     return respond(await submitAssignment(supabase, body.submissionId));
+  }
+
+  // Reopening clears a mark, so it is the learner's decision alone and the
+  // database is what refuses the cases that matter — a passed deadline, a closed
+  // task, a ceiling the teacher set. The route does not second-guess any of it.
+  if (body.action === 'reopen') {
+    if (!isUuid(body.submissionId)) return fail('Choose marked work to revise.', 400);
+    return respond(await reopenAssignmentSubmission(supabase, body.submissionId));
+  }
+
+  if (body.action === 'set_revision_policy') {
+    if (!isUuid(body.assignmentId)) return fail('Choose an assignment.', 400);
+    const checked = validateRevisionPolicy({
+      revisionsAllowed: body.revisionsAllowed,
+      revisionLimit: body.revisionLimit,
+    });
+    if (!checked.ok) return fail(checked.message, 400);
+    return respond(await setAssignmentRevisionPolicy(supabase, {
+      assignmentId: body.assignmentId,
+      revisionsAllowed: checked.value.revisionsAllowed,
+      revisionLimit: checked.value.revisionLimit,
+    }));
   }
 
   if (body.action === 'attach_asset' || body.action === 'remove_asset') {

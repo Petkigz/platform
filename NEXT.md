@@ -78,8 +78,19 @@ dates are relative to each enrolment, cohort deadlines are absolute; one
 private submission can be saved and sent; the author or privileged staff mark
 it and return private feedback. `/teach/[courseId]/assignments` and
 `/learn/[enrolmentId]/assignment/[assignmentId]` are built. Each task explicitly
-chooses whether to accept late work (default: no). One hand-in per learner/task;
-there is no revision loop yet.
+chooses whether to accept late work (default: no). One hand-in per learner/task.
+
+Feedback is now actionable. A learner can reopen marked work and hand it in
+again: the reopen clears the live mark, snapshots the version that was marked
+into `assignment_submission_revisions` (append-only, as private as the submission
+it came from) and keeps the learner's own words in the editor, because a revision
+starts from what was marked rather than from a blank page. The teacher sets the
+policy per task — revisions on by default, an optional limit that counts versions
+including the first — and can change it while a task is open, since content and
+deadlines freeze once learners rely on them but what happens after marking does
+not. The one hard refusal is the deadline: reopening past a due date on a task
+that does not accept late work is refused, because otherwise a learner could
+trade a grade for a draft they can never hand back in.
 
 File references accept PDF/JPEG/PNG/WebP and common audio formats, with a
 25 MiB per-file / 10-file ceiling, but the upload path is still missing: bytes
@@ -112,9 +123,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **784 database tests, 351 web tests; TypeScript typecheck and
-production build pass; 101 tables, 229 policies, 132 user-defined triggers,
-210 functions, 85 migrations and 97 app route entries.**
+Verification: **801 database tests, 360 web tests; TypeScript typecheck and
+production build pass; 102 tables, 230 policies, 133 user-defined triggers,
+213 functions, 86 migrations and 97 app route entries.**
 
 ## Today's sentence
 

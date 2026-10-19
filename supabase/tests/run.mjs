@@ -52,6 +52,7 @@ import { run as courseWishlist } from './course_wishlist.test.mjs';
 import { run as cohorts } from './cohorts.test.mjs';
 import { run as courseAssignments } from './course_assignments.test.mjs';
 import { run as markingFeedback } from './marking_feedback.test.mjs';
+import { run as assignmentRevisions } from './assignment_revisions.test.mjs';
 
 const ctx = await createHarness();
 const suites = [];
@@ -100,6 +101,7 @@ for (const [name, fn] of [
   ['cohorts', cohorts],
   ['course assignments', courseAssignments],
   ['marking feedback', markingFeedback],
+  ['assignment revisions', assignmentRevisions],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],

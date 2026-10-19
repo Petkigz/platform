@@ -5,6 +5,7 @@ import { isSupabaseConfigured } from '@/lib/env';
 import {
   assignmentDeadline,
   fetchAssignmentFileReferences,
+  fetchAssignmentRevisions,
   fetchAssignmentSubmission,
   fetchCourseAssignment,
 } from '@/lib/course-assignments';
@@ -68,6 +69,11 @@ export default async function AssignmentPage({
   const files = submission
     ? await fetchAssignmentFileReferences(supabase, [submission.id])
     : [];
+  // Marked versions the learner has already handed in. RLS keeps this to their
+  // own submission, so it is safe to fetch without a second permission check.
+  const history = submission
+    ? await fetchAssignmentRevisions(supabase, [submission.id])
+    : [];
   const deadline = assignmentDeadline(assignment, enrolment.enrolled_at);
   const courseTitle = enrolment.courses?.[0]?.title ?? 'Course';
 
@@ -92,6 +98,9 @@ export default async function AssignmentPage({
         deadline={deadline?.toISOString() ?? null}
         initialSubmission={submission}
         fileCount={files.length}
+        revisionsAllowed={assignment.revisionsAllowed}
+        revisionLimit={assignment.revisionLimit}
+        history={history}
       />
       <p><Link href={`/learn/${enrolment.id}`}>Back to {courseTitle}</Link></p>
     </div>

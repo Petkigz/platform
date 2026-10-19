@@ -2,7 +2,12 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { AssignmentSubmission, CourseAssignment } from '@/lib/course-assignments';
+import {
+  type AssignmentRevision,
+  type AssignmentSubmission,
+  type CourseAssignment,
+  revisionPolicyLabel,
+} from '@/lib/course-assignments';
 
 export type AssignmentVersionOption = { id: string; versionNumber: number; status: string };
 export type AssignmentCohortOption = {
@@ -34,6 +39,7 @@ export function AssignmentManager({
   assignments,
   submissions,
   fileCounts,
+  revisions,
 }: {
   enabled: boolean;
   cohortsEnabled: boolean;
@@ -42,6 +48,7 @@ export function AssignmentManager({
   assignments: CourseAssignment[];
   submissions: AssignmentSubmission[];
   fileCounts: Record<string, number>;
+  revisions: Record<string, AssignmentRevision[]>;
 }) {
   const router = useRouter();
   const publishedVersions = versions.filter((v) => v.status === 'published');
@@ -241,6 +248,7 @@ export function AssignmentManager({
                     {' · '}{cohort ? cohort.title : 'Self-paced'}
                     {' · '}{cohort ? dateLabel(assignment.dueAt) : assignment.dueAfterDays ? `${assignment.dueAfterDays} days after enrolment` : 'No deadline'}
                     {' · '}{assignment.acceptLate ? 'Late work accepted' : 'Late work rejected'}
+                    {' · '}{revisionPolicyLabel(assignment)}
                   </p>
                 </div>
                 <span className={`badge ${assignment.status === 'open' ? '' : 'neutral'}`}>{assignment.status}</span>
@@ -274,6 +282,10 @@ export function AssignmentManager({
                 )}
               </div>
 
+              {(assignment.status === 'draft' || assignment.status === 'open') && (
+                <RevisionPolicy assignment={assignment} onSend={send} busy={busy} />
+              )}
+
               <div className="outline-h" style={{ marginTop: '.35rem' }}><h4>Submissions ({rows.length})</h4></div>
               {rows.length === 0 ? <p className="muted" style={{ margin: 0 }}>None received yet.</p> : rows.map((submission) => (
                 <SubmissionForMarking
@@ -281,6 +293,7 @@ export function AssignmentManager({
                   assignment={assignment}
                   submission={submission}
                   fileCount={fileCounts[submission.id] ?? 0}
+                  earlierVersions={revisions[submission.id] ?? []}
                   onSend={send}
                   busy={busy}
                 />
@@ -293,16 +306,89 @@ export function AssignmentManager({
   );
 }
 
+/**
+ * The revision policy sits beside an open task rather than inside the draft form
+ * because it is the one setting that stays live after learners begin: content and
+ * deadlines freeze when a task opens, but what happens after marking does not.
+ */
+function RevisionPolicy({
+  assignment,
+  onSend,
+  busy,
+}: {
+  assignment: CourseAssignment;
+  onSend: (payload: Record<string, unknown>, key: string) => Promise<unknown>;
+  busy: string | null;
+}) {
+  const [allowed, setAllowed] = useState(assignment.revisionsAllowed);
+  const [limit, setLimit] = useState(assignment.revisionLimit?.toString() ?? '');
+  const key = `policy-${assignment.id}`;
+  const unchanged = allowed === assignment.revisionsAllowed &&
+    (allowed
+      ? limit === (assignment.revisionLimit?.toString() ?? '')
+      : assignment.revisionLimit === null);
+
+  async function save() {
+    await onSend({
+      action: 'set_revision_policy',
+      assignmentId: assignment.id,
+      revisionsAllowed: allowed,
+      // Blank means no ceiling; the database clears the limit when revisions are
+      // switched off, so a stale number cannot come back later.
+      revisionLimit: allowed && limit.trim() !== '' ? Number(limit) : null,
+    }, key);
+  }
+
+  return (
+    <div className="card" style={{ display: 'grid', gap: '.4rem', background: 'var(--surface, #f8faf8)' }}>
+      <p className="eyebrow" style={{ margin: 0 }}>Revisions</p>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
+        <input
+          type="checkbox"
+          checked={allowed}
+          onChange={(e) => setAllowed(e.target.checked)}
+          style={{ width: 'auto' }}
+        />
+        Let a learner revise after you mark
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
+        Versions allowed, counting the first
+        <input
+          type="number"
+          min={1}
+          step={1}
+          value={limit}
+          disabled={!allowed}
+          onChange={(e) => setLimit(e.target.value)}
+          placeholder="No limit"
+          style={{ maxWidth: '8rem' }}
+        />
+      </label>
+      <div className="row" style={{ gap: '.5rem' }}>
+        <button type="button" className="btn ghost" disabled={Boolean(busy) || unchanged} onClick={save}>
+          {busy === key ? 'Saving…' : 'Save revision policy'}
+        </button>
+      </div>
+      <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>
+        Revising reopens the submission as a draft and keeps the version you marked.
+        A learner cannot revise once the deadline has passed unless late work is accepted.
+      </p>
+    </div>
+  );
+}
+
 function SubmissionForMarking({
   assignment,
   submission,
   fileCount,
+  earlierVersions,
   onSend,
   busy,
 }: {
   assignment: CourseAssignment;
   submission: AssignmentSubmission;
   fileCount: number;
+  earlierVersions: AssignmentRevision[];
   onSend: (payload: Record<string, unknown>, key: string) => Promise<unknown>;
   busy: string | null;
 }) {
@@ -320,9 +406,27 @@ function SubmissionForMarking({
     <div className="card" style={{ display: 'grid', gap: '.5rem', background: 'var(--surface, #f8faf8)' }}>
       <p className="eyebrow" style={{ margin: 0 }}>
         Submission {submission.id.slice(0, 8)} · {submission.status}
+        {submission.revisionNumber > 1 ? ` · version ${submission.revisionNumber}` : ''}
         {submission.isLate ? ' · late' : ''}
         {submission.submittedAt ? ` · ${new Date(submission.submittedAt).toLocaleString()}` : ''}
       </p>
+      {earlierVersions.length > 0 && (
+        <div style={{ display: 'grid', gap: '.4rem' }}>
+          <p className="eyebrow" style={{ margin: 0 }}>What you asked for</p>
+          {earlierVersions.map((version) => (
+            <div key={version.id} className="card" style={{ padding: '.6rem .75rem' }}>
+              <p className="muted" style={{ margin: 0, fontSize: '.8rem' }}>
+                Version {version.revisionNumber}
+                {version.scoreEarned !== null ? ` · you gave ${version.scoreEarned}${assignment.pointsPossible ? ` / ${assignment.pointsPossible}` : ''}` : ''}
+                {version.markedAt ? ` · ${new Date(version.markedAt).toLocaleString()}` : ''}
+              </p>
+              {version.feedback && (
+                <p style={{ margin: '.25rem 0 0', whiteSpace: 'pre-wrap' }}>{version.feedback}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
       {submission.bodyText && <div style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{submission.bodyText}</div>}
       {fileCount > 0 && (
         <p className="notice warn" style={{ margin: 0 }}>

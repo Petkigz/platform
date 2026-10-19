@@ -4,11 +4,17 @@ import test from 'node:test';
 import {
   assignmentDeadline,
   createCourseAssignment,
+  fetchAssignmentRevisions,
   fetchAssignmentSubmissionsForLearner,
   fetchCourseAssignments,
   mapAssignmentError,
+  reopenAssignmentSubmission,
+  revisionPolicyLabel,
+  revisionsRemaining,
   saveAssignmentDraft,
+  setAssignmentRevisionPolicy,
   validateAssignmentInput,
+  validateRevisionPolicy,
 } from './course-assignments.ts';
 
 type RpcCall = { fn: string; args: Record<string, unknown> };
@@ -172,4 +178,135 @@ test('a learner read filters only to their own enrolment profile', async () => {
   });
   assert.equal(state.table, 'assignment_submissions');
   assert.deepEqual(state.filters, { assignment_id: ['a-1', 'a-2'], learner_profile_id: 'lp-1' });
+});
+
+// ---------------------------------------------------------------------------
+// The revision loop
+// ---------------------------------------------------------------------------
+
+test('a revision policy is one decision, so the checkbox and the limit are validated together', () => {
+  // No ceiling is a real choice, not a missing value.
+  assert.deepEqual(validateRevisionPolicy({ revisionsAllowed: true, revisionLimit: '' }),
+    { ok: true, value: { revisionsAllowed: true, revisionLimit: null } });
+  assert.deepEqual(validateRevisionPolicy({ revisionsAllowed: true, revisionLimit: '3' }),
+    { ok: true, value: { revisionsAllowed: true, revisionLimit: 3 } });
+  // Switching revisions off drops the limit rather than storing a number nobody
+  // asked for, which is what lets it come back cleanly later.
+  assert.deepEqual(validateRevisionPolicy({ revisionsAllowed: false, revisionLimit: '5' }),
+    { ok: true, value: { revisionsAllowed: false, revisionLimit: null } });
+
+  for (const input of [
+    { revisionsAllowed: 'true' },
+    { revisionsAllowed: true, revisionLimit: '0' },
+    { revisionsAllowed: true, revisionLimit: '1.5' },
+    { revisionsAllowed: true, revisionLimit: 'lots' },
+  ]) assert.equal(validateRevisionPolicy(input).ok, false, JSON.stringify(input));
+});
+
+test('a limit counts versions including the first, and the learner is told what is left', () => {
+  const graded = { revisionNumber: 1, status: 'graded' as const };
+  assert.deepEqual(revisionsRemaining({ revisionsAllowed: true, revisionLimit: null }, graded),
+    { allowed: true, remaining: null });
+  assert.deepEqual(revisionsRemaining({ revisionsAllowed: true, revisionLimit: 2 }, graded),
+    { allowed: true, remaining: 1 });
+  assert.deepEqual(revisionsRemaining({ revisionsAllowed: true, revisionLimit: 2 },
+    { revisionNumber: 2, status: 'graded' as const }), { allowed: false, remaining: 0 });
+  // A limit of one version means the work is marked once.
+  assert.deepEqual(revisionsRemaining({ revisionsAllowed: true, revisionLimit: 1 }, graded),
+    { allowed: false, remaining: 0 });
+  assert.deepEqual(revisionsRemaining({ revisionsAllowed: false, revisionLimit: null }, graded),
+    { allowed: false, remaining: null });
+  // Unmarked work has nothing to revise yet.
+  for (const status of ['draft', 'submitted'] as const) {
+    assert.equal(revisionsRemaining({ revisionsAllowed: true, revisionLimit: null },
+      { revisionNumber: 1, status }).allowed, false);
+  }
+});
+
+test('the policy label says what the teacher set, without inventing a default', () => {
+  assert.equal(revisionPolicyLabel({ revisionsAllowed: false, revisionLimit: null }),
+    'Marked once — no revisions');
+  assert.equal(revisionPolicyLabel({ revisionsAllowed: true, revisionLimit: null }),
+    'Revisions allowed, no limit');
+  assert.equal(revisionPolicyLabel({ revisionsAllowed: true, revisionLimit: 1 }), 'One version only');
+  assert.equal(revisionPolicyLabel({ revisionsAllowed: true, revisionLimit: 3 }), 'Up to 3 versions');
+});
+
+test('reopening reports the version the work now carries', async () => {
+  const { client, calls } = stubRpc({ data: 2 });
+  const result = await reopenAssignmentSubmission(client, 's-1');
+  assert.deepEqual(result, { ok: true, revisionNumber: 2 });
+  assert.equal(calls[0]?.fn, 'reopen_assignment_submission');
+  assert.deepEqual(Object.keys(calls[0]!.args), ['p_submission_id']);
+});
+
+test('a refused reopen reaches the learner as a readable conflict, not a 400', () => {
+  const { client } = stubRpc({ error: { message: 'the deadline has passed, so this mark stands' } });
+  return reopenAssignmentSubmission(client, 's-1').then((result) => {
+    assert.equal(result.ok, false);
+    if (!result.ok) {
+      assert.equal(result.status, 409);
+      assert.match(result.message, /this mark stands/i);
+    }
+  });
+});
+
+test('a ceiling the teacher set is reported with its own number', () => {
+  assert.equal(mapAssignmentError({
+    message: 'this assignment allows 2 versions and this is version 2',
+    code: 'program_limit_exceeded',
+  }).status, 409);
+  assert.equal(mapAssignmentError({ message: 'this assignment does not allow revisions' }).status, 409);
+  assert.equal(mapAssignmentError({ message: 'only marked work can be revised' }).status, 409);
+  assert.equal(mapAssignmentError({ message: 'sign in to revise this submission' }).status, 401);
+  assert.equal(mapAssignmentError({ message: 'this learner needs an active enrolment and cohort membership' }).status, 403);
+});
+
+test('the revision policy is written with the task, never with a caller-supplied actor', async () => {
+  const { client, calls } = stubRpc({ data: null });
+  const checked = validateRevisionPolicy({ revisionsAllowed: true, revisionLimit: 2 });
+  assert.equal(checked.ok, true);
+  if (!checked.ok) return;
+  await setAssignmentRevisionPolicy(client, { assignmentId: 'a-1', ...checked.value });
+  assert.equal(calls[0]?.fn, 'set_assignment_revision_policy');
+  assert.deepEqual(calls[0]?.args, {
+    p_assignment_id: 'a-1', p_revisions_allowed: true, p_revision_limit: 2,
+  });
+});
+
+test('marked versions are read for the submissions on screen, and rely on RLS for privacy', async () => {
+  const { client, state } = stubQuery([
+    {
+      id: 'r-1', submission_id: 's-1', revision_number: 1, body_text: 'Version one.',
+      asset_ids: ['asset-1'], score_earned: '6.00', feedback: 'Cite the verse.',
+      submitted_at: '2026-12-01T09:00:00.000Z', is_late: false,
+      marked_at: '2026-12-02T09:00:00.000Z', reopened_at: '2026-12-03T09:00:00.000Z',
+    },
+  ]);
+  const rows = await fetchAssignmentRevisions(client, ['s-1']);
+  assert.equal(state.table, 'assignment_submission_revisions');
+  assert.deepEqual(state.filters, { submission_id: ['s-1'] });
+  assert.equal(state.order, 'revision_number:asc');
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0]!.revisionNumber, 1);
+  assert.equal(rows[0]!.scoreEarned, 6);
+  assert.deepEqual(rows[0]!.assetIds, ['asset-1']);
+  assert.equal(rows[0]!.feedback, 'Cite the verse.');
+
+  // An empty list must not become a query for everything.
+  assert.deepEqual(await fetchAssignmentRevisions(client, []), []);
+});
+
+test('a snapshot with no recorded files still maps cleanly', async () => {
+  const { client } = stubQuery([
+    {
+      id: 'r-2', submission_id: 's-1', revision_number: 2, body_text: '',
+      asset_ids: null, score_earned: null, feedback: 'Well done.',
+      submitted_at: null, is_late: null, marked_at: null, reopened_at: null,
+    },
+  ]);
+  const rows = await fetchAssignmentRevisions(client, ['s-1']);
+  assert.deepEqual(rows[0]!.assetIds, []);
+  assert.equal(rows[0]!.scoreEarned, null);
+  assert.equal(rows[0]!.bodyText, '');
 });

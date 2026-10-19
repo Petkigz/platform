@@ -441,3 +441,54 @@ level security already lets a learner read their own responses, so this is not a
 secrecy claim but a choice about what a results screen is for: a quiz that reports
 every wrong answer becomes an answer key for the next attempt, and these
 assessments are reusable by design.
+
+**Feedback has to be actionable, or it is decoration.** A teacher who writes
+"cite the verse" on a marked assignment has, until now, produced a sentence
+nobody can answer: the submission was `graded`, the row was closed, and the only
+way to change it was a second mark over the first. `20261204000100_assignment_revisions`
+adds the loop — a learner reopens marked work, edits it, and hands it in again.
+
+The shape of it was the real decision. A revision **reopens the submission as a
+draft** rather than opening a second hand-in path. That is what lets the existing
+functions stay the only ones that matter: `save_assignment_draft()` edits the
+text, `attach_assignment_asset()` and `remove_assignment_asset()` already require
+a draft, and `submit_assignment()` re-derives the deadline, the lateness verdict
+and the asset-availability check for the new version. A parallel "resubmit"
+function would have had to reimplement all three, and the two paths would drift
+until one of them let late work through.
+
+Two consequences follow, and both are load-bearing:
+
+1. *Reopening destroys a mark, so the marked version is kept.* Each reopen
+   snapshots the graded row into `assignment_submission_revisions` before the live
+   row is cleared — text, score, feedback, who marked it and when, and the ids of
+   the files that accompanied it. The table is append-only by trigger and reads
+   through `can_read_assignment_submission()`, so a snapshot is exactly as private
+   as the submission it came from. The learner's own words stay in the live row:
+   a revision starts from what was marked, not from a blank page.
+2. *A passed deadline keeps the mark instead of destroying it.* Reopening is
+   refused once the deadline has gone by on a task that does not accept late work.
+   Without that check a learner could trade a grade for a draft they can never
+   hand back in — the refusal would arrive from `submit_assignment()`, after the
+   mark was already gone. A task that accepts late work allows the revision, and
+   the resubmission is recorded as late under the same rule as the first.
+
+Revisions are **on by default with no platform-wide ceiling**. The flag this sits
+behind ships off, so a loop nobody can reach is a loop nobody would find; and the
+teacher who wants one-shot work — a final recitation, an exam — switches it off
+on that task, which is a decision about their own work rather than a number
+invented for everyone else's. Where a teacher does set a limit it counts versions
+including the first, because "two attempts" means two things a learner hands in.
+
+The policy is deliberately not part of `update_course_assignment_draft()`, and it
+can be changed while a task is `open`. Content and deadlines freeze once learners
+are relying on them; what happens *after* marking is a different question and a
+teacher may legitimately change their mind about it mid-course. Switching
+revisions off cannot trap anyone, because `submit_assignment()` does not consult
+the policy — a learner already holding a reopened draft can still hand it in. For
+the same reason the reopen is not flag-gated, matching submitting and marking:
+turning `learning.assignments` off stops new tasks and new openings, while work in
+flight keeps its whole lifecycle.
+
+The audit records the transition and the score that was given up, and not the
+feedback text, for the reason already settled on the quiz side.

@@ -5,6 +5,7 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
 import {
   fetchAssignmentFileReferences,
+  fetchAssignmentRevisions,
   fetchAssignmentSubmissions,
   fetchCourseAssignments,
 } from '@/lib/course-assignments';
@@ -68,10 +69,21 @@ export default async function TeachAssignmentsPage({
   }));
 
   const submissions = await fetchAssignmentSubmissions(supabase, assignments.map((a) => a.id));
-  const files = await fetchAssignmentFileReferences(supabase, submissions.map((s) => s.id));
+  const [files, revisions] = await Promise.all([
+    fetchAssignmentFileReferences(supabase, submissions.map((s) => s.id)),
+    // Earlier versions of work already marked, so a teacher marking a revision
+    // can see what they asked for and whether the learner answered it.
+    fetchAssignmentRevisions(supabase, submissions.map((s) => s.id)),
+  ]);
   const fileCounts = files.reduce<Record<string, number>>((counts, file) => {
     counts[file.submissionId] = (counts[file.submissionId] ?? 0) + 1;
     return counts;
+  }, {});
+  const revisionsBySubmission = revisions.reduce<Record<string, typeof revisions>>((groups, revision) => {
+    const group = groups[revision.submissionId] ?? [];
+    group.push(revision);
+    groups[revision.submissionId] = group;
+    return groups;
   }, {});
 
   return (
@@ -90,6 +102,7 @@ export default async function TeachAssignmentsPage({
         assignments={assignments}
         submissions={submissions}
         fileCounts={fileCounts}
+        revisions={revisionsBySubmission}
       />
       <p style={{ marginTop: '1.5rem' }}>
         <Link href={`/courses/${courseRow.slug}`}>View course page</Link>{' · '}

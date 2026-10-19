@@ -100,6 +100,55 @@ export function validateAssignmentInput(input: {
   };
 }
 
+export type RevisionPolicyInput = {
+  revisionsAllowed: boolean;
+  revisionLimit: number | null;
+};
+
+export type RevisionPolicyValidation =
+  | { ok: true; value: RevisionPolicyInput }
+  | { ok: false; message: string };
+
+/**
+ * The checkbox and the limit are one decision, so they are validated together.
+ * A limit counts versions including the first hand-in, because that is what a
+ * teacher means by "two attempts"; a blank limit is no ceiling, and there is no
+ * platform default to fall back on.
+ */
+export function validateRevisionPolicy(input: {
+  revisionsAllowed: unknown;
+  revisionLimit?: unknown;
+}): RevisionPolicyValidation {
+  if (typeof input.revisionsAllowed !== 'boolean')
+    return { ok: false, message: 'Choose whether revisions are allowed.' };
+
+  if (!input.revisionsAllowed) return { ok: true, value: { revisionsAllowed: false, revisionLimit: null } };
+
+  const raw = input.revisionLimit;
+  if (raw === null || raw === undefined || raw === '')
+    return { ok: true, value: { revisionsAllowed: true, revisionLimit: null } };
+
+  const limit = typeof raw === 'number' ? raw : Number(String(raw).trim());
+  if (!Number.isInteger(limit) || limit < 1)
+    return { ok: false, message: 'A revision limit must be a whole number of versions, at least one.' };
+  return { ok: true, value: { revisionsAllowed: true, revisionLimit: limit } };
+}
+
+/**
+ * How many versions a learner still has, worded for the screen rather than as a
+ * count: a learner should be able to tell whether one more revision is coming.
+ */
+export function revisionsRemaining(
+  assignment: Pick<CourseAssignment, 'revisionsAllowed' | 'revisionLimit'>,
+  submission: Pick<AssignmentSubmission, 'revisionNumber' | 'status'>,
+): { allowed: boolean; remaining: number | null } {
+  if (!assignment.revisionsAllowed || submission.status !== 'graded')
+    return { allowed: false, remaining: null };
+  if (assignment.revisionLimit === null) return { allowed: true, remaining: null };
+  const remaining = assignment.revisionLimit - submission.revisionNumber;
+  return { allowed: remaining > 0, remaining: Math.max(remaining, 0) };
+}
+
 export type AssignmentWriteResult =
   | { ok: true; id: string | null }
   | { ok: false; status: number; message: string };
@@ -116,6 +165,9 @@ export type CourseAssignment = {
   acceptLate: boolean;
   pointsPossible: number | null;
   status: 'draft' | 'open' | 'closed' | 'cancelled';
+  revisionsAllowed: boolean;
+  /** Total versions allowed, counting the first hand-in. Null means no ceiling. */
+  revisionLimit: number | null;
   createdAt: string;
 };
 
@@ -131,6 +183,27 @@ export type AssignmentSubmission = {
   scoreEarned: number | null;
   feedback: string | null;
   markedAt: string | null;
+  /** Which version of the work this row currently holds; 1 until it is revised. */
+  revisionNumber: number;
+};
+
+/**
+ * One recorded version of marked work, kept when a submission is reopened.
+ * The snapshot is append-only and holds the same privacy as its submission, so
+ * a learner can see how their work changed and nobody else's.
+ */
+export type AssignmentRevision = {
+  id: string;
+  submissionId: string;
+  revisionNumber: number;
+  bodyText: string;
+  assetIds: string[];
+  scoreEarned: number | null;
+  feedback: string | null;
+  submittedAt: string | null;
+  isLate: boolean | null;
+  markedAt: string | null;
+  reopenedAt: string | null;
 };
 
 export type AssignmentFileReference = {
@@ -152,6 +225,8 @@ type AssignmentRow = {
   accept_late: boolean;
   points_possible: number | string | null;
   status: CourseAssignment['status'];
+  revisions_allowed: boolean;
+  revision_limit: number | null;
   created_at: string;
 };
 
@@ -167,6 +242,21 @@ type SubmissionRow = {
   score_earned: number | string | null;
   feedback: string | null;
   marked_at: string | null;
+  revision_number: number;
+};
+
+type RevisionRow = {
+  id: string;
+  submission_id: string;
+  revision_number: number;
+  body_text: string;
+  asset_ids: unknown;
+  score_earned: number | string | null;
+  feedback: string | null;
+  submitted_at: string | null;
+  is_late: boolean | null;
+  marked_at: string | null;
+  reopened_at: string | null;
 };
 
 function mapAssignment(row: AssignmentRow): CourseAssignment {
@@ -182,6 +272,8 @@ function mapAssignment(row: AssignmentRow): CourseAssignment {
     acceptLate: Boolean(row.accept_late),
     pointsPossible: row.points_possible === null ? null : Number(row.points_possible),
     status: row.status,
+    revisionsAllowed: Boolean(row.revisions_allowed),
+    revisionLimit: row.revision_limit === null ? null : Number(row.revision_limit),
     createdAt: String(row.created_at),
   };
 }
@@ -199,6 +291,23 @@ function mapSubmission(row: SubmissionRow): AssignmentSubmission {
     scoreEarned: row.score_earned === null ? null : Number(row.score_earned),
     feedback: row.feedback,
     markedAt: row.marked_at,
+    revisionNumber: Number(row.revision_number ?? 1),
+  };
+}
+
+function mapRevision(row: RevisionRow): AssignmentRevision {
+  return {
+    id: String(row.id),
+    submissionId: String(row.submission_id),
+    revisionNumber: Number(row.revision_number),
+    bodyText: String(row.body_text ?? ''),
+    assetIds: Array.isArray(row.asset_ids) ? row.asset_ids.map(String) : [],
+    scoreEarned: row.score_earned === null ? null : Number(row.score_earned),
+    feedback: row.feedback,
+    submittedAt: row.submitted_at,
+    isLate: row.is_late,
+    markedAt: row.marked_at,
+    reopenedAt: row.reopened_at,
   };
 }
 
@@ -206,6 +315,16 @@ export function mapAssignmentError(error: { message: string; code?: string }): {
   const m = error.message;
   if (/not enabled|not available yet/i.test(m))
     return { status: 409, message: 'Assignments are not available right now.' };
+  if (/sign in to/i.test(m))
+    return { status: 401, message: 'Please sign in to do that.' };
+  if (/needs an active enrolment/i.test(m))
+    return { status: 403, message: 'This learner is not enrolled in the course right now.' };
+  // A ceiling the teacher set, reached. Say the number rather than a generic
+  // refusal, because the learner is entitled to know why the button stopped.
+  if (error.code === 'program_limit_exceeded' || /versions and this is version/i.test(m))
+    return { status: 409, message: m };
+  if (/does not allow revisions|only marked work can be revised/i.test(m))
+    return { status: 409, message: m };
   if (/only the course author|only the uploader|responsible for|insufficient privilege|row-level security/i.test(m))
     return { status: 403, message: 'You do not have permission to do that.' };
   if (/not found|no_data_found|does not exist/i.test(m) || error.code === 'P0002')
@@ -307,6 +426,36 @@ export async function markAssignmentSubmission(
   });
 }
 
+export type AssignmentRevisionResult =
+  | { ok: true; revisionNumber: number }
+  | { ok: false; status: number; message: string };
+
+/**
+ * Reopen marked work as a draft so the learner can act on the feedback.
+ * Returns the revision number the submission now carries.
+ */
+export async function reopenAssignmentSubmission(
+  client: SupabaseClient,
+  submissionId: string,
+): Promise<AssignmentRevisionResult> {
+  const { data, error } = await client.rpc('reopen_assignment_submission', {
+    p_submission_id: submissionId,
+  });
+  if (error) return { ok: false, ...mapAssignmentError(error) };
+  return { ok: true, revisionNumber: Number(data ?? 1) };
+}
+
+export async function setAssignmentRevisionPolicy(
+  client: SupabaseClient,
+  input: { assignmentId: string; revisionsAllowed: boolean; revisionLimit: number | null },
+): Promise<AssignmentWriteResult> {
+  return rpcWrite(client, 'set_assignment_revision_policy', {
+    p_assignment_id: input.assignmentId,
+    p_revisions_allowed: input.revisionsAllowed,
+    p_revision_limit: input.revisionLimit,
+  });
+}
+
 export async function attachAssignmentAsset(
   client: SupabaseClient,
   submissionId: string,
@@ -330,9 +479,11 @@ export async function removeAssignmentAsset(
 }
 
 const ASSIGNMENT_COLUMNS =
-  'id, course_id, course_version_id, cohort_id, title, instructions, due_after_days, due_at, accept_late, points_possible, status, created_at';
+  'id, course_id, course_version_id, cohort_id, title, instructions, due_after_days, due_at, accept_late, points_possible, status, revisions_allowed, revision_limit, created_at';
 const SUBMISSION_COLUMNS =
-  'id, assignment_id, learner_profile_id, course_enrolment_id, body_text, status, submitted_at, is_late, score_earned, feedback, marked_at';
+  'id, assignment_id, learner_profile_id, course_enrolment_id, body_text, status, submitted_at, is_late, score_earned, feedback, marked_at, revision_number';
+const REVISION_COLUMNS =
+  'id, submission_id, revision_number, body_text, asset_ids, score_earned, feedback, submitted_at, is_late, marked_at, reopened_at';
 
 export async function fetchCourseAssignments(
   client: SupabaseClient,
@@ -427,6 +578,21 @@ export async function fetchAssignmentFileReferences(
   }));
 }
 
+/** Recorded versions of marked work, oldest first. Row-level security decides who sees any. */
+export async function fetchAssignmentRevisions(
+  client: SupabaseClient,
+  submissionIds: string[],
+): Promise<AssignmentRevision[]> {
+  if (submissionIds.length === 0) return [];
+  const { data, error } = await client
+    .from('assignment_submission_revisions')
+    .select(REVISION_COLUMNS)
+    .in('submission_id', submissionIds)
+    .order('revision_number', { ascending: true });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as unknown as RevisionRow[]).map(mapRevision);
+}
+
 /** Deadline shown to one learner: absolute for a cohort, relative to enrolment otherwise. */
 export function assignmentDeadline(
   assignment: Pick<CourseAssignment, 'cohortId' | 'dueAt' | 'dueAfterDays'>,
@@ -451,3 +617,14 @@ export const SUBMISSION_STATUS_LABEL: Record<AssignmentSubmission['status'], str
   submitted: 'Waiting for marking',
   graded: 'Marked',
 };
+
+/** What the revision policy says, in words a teacher reads next to a checkbox. */
+export function revisionPolicyLabel(
+  assignment: Pick<CourseAssignment, 'revisionsAllowed' | 'revisionLimit'>,
+): string {
+  if (!assignment.revisionsAllowed) return 'Marked once — no revisions';
+  if (assignment.revisionLimit === null) return 'Revisions allowed, no limit';
+  return assignment.revisionLimit === 1
+    ? 'One version only'
+    : `Up to ${assignment.revisionLimit} versions`;
+}

@@ -58,7 +58,7 @@ Status:
 | 20 | Adult home, led by "continue where you stopped" | **BUILT** — shared learner dashboard at `/learn` |
 | 20a | **Learning path detail and progress** | **BUILT** — `/paths/[slug]` tracks required-course completion |
 | 20b | **Saved courses** *(added — was missing from the inventory)* | **BUILT** — `/saved`, reached from `/learn` and from the save button on a course page. Behind `learning.wishlist`; the list stays reachable when the flag is off so nothing is trapped |
-| 20c | **Assignment hand-in and feedback** *(added — was missing from the inventory)* | **BUILT** — `/learn/[enrolmentId]/assignment/[assignmentId]`, text draft, submit and private mark/feedback. Behind `learning.assignments`; secure file transfer/viewing is not connected, so the flag stays off |
+| 20c | **Assignment hand-in and feedback** *(added — was missing from the inventory)* | **BUILT** — `/learn/[enrolmentId]/assignment/[assignmentId]`, text draft, submit, private mark/feedback, and revise: marked work can be reopened as a draft with the marked version kept below it. Behind `learning.assignments`; secure file transfer/viewing is not connected, so the flag stays off |
 | 21 | Course details | **BUILT** — `/courses/[slug]`: outline, preview lesson, enrolment, ratings and reviews behind `learning.reviews` |
 | 22 | Video lesson *(adult chrome)* | **BUILT** — same route as #14, chrome not yet differentiated |
 | 23 | Qur'an / audio player | READY |
@@ -81,7 +81,7 @@ Status:
 | 30 | Create course | **BUILT** — `/teach`, one field: a title. Everything else is set in the curriculum builder |
 | 31 | Curriculum builder | **BUILT** — `/teach/[courseId]`: sections, lessons, content items, reordering, sources. No drag-and-drop |
 | 31a | **Cohort manager and roster** *(added — missing from the inventory)* | **BUILT** — `/teach/[courseId]/cohorts`, course-page join for a learner or guardian, and leave controls on the enrolment page. The roster shows counts only; learners see themselves/family, never other members. `learning.cohorts` stays off pending review of the late-join rule |
-| 31b | **Assignment authoring and marking** *(added — missing from the inventory)* | **BUILT** — `/teach/[courseId]/assignments`; author creates/opens/closes tasks and marks private submissions. Behind `learning.assignments`; secure file delivery and late-join policy are separate preconditions |
+| 31b | **Assignment authoring and marking** *(added — missing from the inventory)* | **BUILT** — `/teach/[courseId]/assignments`; author creates/opens/closes tasks, marks private submissions, sets the revision policy per task, and marks a revision against what they asked for last time. Behind `learning.assignments`; secure file delivery and late-join policy are separate preconditions |
 | 32 | Learner analytics | READY |
 | 33 | Course submission and review | **BUILT** — submit from `/teach/[courseId]`; `/review` and `/admin/reviews` handle the assignment |
 | 34 | Earnings | BLOCKED — `teaching.payouts` is CODE and refused by trigger. The *data* exists: `instructor_earnings` accrues on a paid order and reverses on refund. No teacher-facing screen |
@@ -155,4 +155,4 @@ this is 53 distinct screens. Mobile adds only #49 and #50.
 7. **Empty, error and loading states** — where "as easy as possible" is
    actually won or lost.
 8. **Cohort management** — both delivery models are confirmed; the class and join/leave flow was missing from the source and is now built as 31a. The late-join policy still needs review before enabling.
-9. **Marked assignments** — standalone deadlines, private hand-in and teacher feedback were missing from the source list. The text workflow is built as 20c/31b; secure file transfer and viewing remain blocked on media setup.
+9. **Marked assignments** — standalone deadlines, private hand-in and teacher feedback were missing from the source list. The text workflow is built as 20c/31b, including the revision loop that lets a learner answer that feedback; secure file transfer and viewing remain blocked on media setup.

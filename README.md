@@ -62,9 +62,9 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 ## Status
 
-The database stands at **101 tables, RLS on every one, 229 policies, 132
-user-defined triggers, 210 functions and 85 migrations.** The database suite
-passes **784 tests**; the web suite passes **351 tests**. TypeScript typecheck
+The database stands at **102 tables, RLS on every one, 230 policies, 133
+user-defined triggers, 213 functions and 86 migrations.** The database suite
+passes **801 tests**; the web suite passes **360 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **97 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
@@ -268,8 +268,8 @@ becomes available only when staff confirm it. An uploader cannot promote their
 own file — that hole was found by running the sequence, not by reading the
 policy.
 
-(The trigger count is user-defined triggers. `pg_trigger` also holds 991
-internal constraint triggers; counting them gives 1123, which is the number
+(The trigger count is user-defined triggers. `pg_trigger` also holds 1007
+internal constraint triggers; counting them gives 1140, which is the number
 that produced an earlier, inflated figure in this file.)
 
 All five original logical groups are complete. `discussion_posts` was the
@@ -277,7 +277,8 @@ All five original logical groups are complete. `discussion_posts` was the
 teacher profile feature adds the 90th table. Private lesson notes and
 bookmarks add the 91st and 92nd, the help desk adds the 93rd and 94th,
 learner reviews the 95th and saved courses the 96th. Dated cohorts add the 97th
-and 98th, and marked assignments add the 99th, 100th and 101st.
+and 98th, marked assignments add the 99th, 100th and 101st, and the record of a
+marked version a learner revises is the 102nd.
 Governance channels (content reports and review appeals) use the existing
 `content_reports` and `governance_appeals` tables rather than adding new ones.
 
@@ -302,11 +303,12 @@ npm run dev
 
 See `web/README.md`.
 
-### Why 101 tables when the design specified 85
+### Why 102 tables when the design specified 85
 
-Sixteen tables beyond the original 85 were needed for recorded decisions, the
+Seventeen tables beyond the original 85 were needed for recorded decisions, the
 chosen discussion experience, teacher-authored public profiles, private study
-data, the help desk, learner reviews, saved courses, dated cohorts and marked assignments:
+data, the help desk, learner reviews, saved courses, dated cohorts, marked
+assignments and the revision loop that makes feedback actionable:
 
 - `institutions` — D1 multi-tenancy had no table to hang `institution_id` on
 - `media_assets` — D8 requires originals in storage we control, with a checksum
@@ -330,6 +332,7 @@ data, the help desk, learner reviews, saved courses, dated cohorts and marked as
   family about which child it is for
 - `cohorts`, `cohort_members` — a published course version freezes its lessons and quizzes, so dated group work needs a class alongside the immutable version. Membership writes are session-bound; learners see only themselves and their family, not the roster; joining requires an exact-version enrolment. `learning.cohorts` ships off pending review of the late-join policy.
 - `course_assignments`, `assignment_submissions`, `assignment_submission_assets` — a separate task can be created after publication, carry an enrolment-relative or cohort-absolute deadline, and receive one private learner hand-in with text and verified file references. Marks/feedback are private and audited; no bytes or public object keys are stored. `learning.assignments` ships off until safe upload, scanning, delivery/retention and late-join policy are reviewed.
+- `assignment_submission_revisions` — feedback a learner cannot answer is decoration, so marked work can be reopened as a draft and handed in again. The version that was marked is snapshotted here before the live row is cleared: append-only by trigger, readable exactly where its submission is readable, and it holds file *ids* rather than bytes. Reopening past a deadline is refused on a task that does not accept late work, because the alternative is a learner trading a grade for a draft they can never submit.
 
 Learning paths reuse the existing `learning_paths` and `learning_path_items`
 tables; this work adds their audited writers and the teacher/learner screens,
