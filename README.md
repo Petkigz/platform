@@ -63,9 +63,9 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **90 tables, RLS on every one, 210 policies, 121
-user-defined triggers, 165 functions and 71 migrations.** The database suite
-passes **661 tests**; the web suite passes **248 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **72 app route entries**.
+user-defined triggers, 167 functions and 72 migrations.** The database suite
+passes **664 tests**; the web suite passes **252 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **73 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. Without it
@@ -74,6 +74,16 @@ a new user could sign in and then do nothing at all.
 A lesson can contain something: `add_lesson_resource()` attaches a video,
 reading or worksheet. Before it, every lesson published on the platform was an
 empty page, because nothing could write to the table the lesson page reads.
+
+Free previews now have one consistent gate from the catalogue to content
+access. Teachers can mark draft lessons and individual public-sample resources;
+those settings are audited and freeze with the published version. The
+`learning.previews` admin flag is off by default: while off, anonymous reads and
+the free-entitlement bypass are both denied. When on, only preview lessons and
+resources explicitly classified as public samples are exposed; the preview
+bypass cannot unlock enrolled-only materials. A public sample page is linked
+from the course outline, and the teacher editor explains when previews are
+prepared but globally disabled.
 
 Subscription plans are now configurable in `/admin/plans`: staff create a
 plan, versioned learner allowances, subject/feature entitlements and recurring

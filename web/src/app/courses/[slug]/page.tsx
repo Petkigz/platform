@@ -18,6 +18,7 @@ import {
   resolveOffering,
 } from '@/lib/enrolment';
 import { EnrolButton } from './enrol-button';
+import { isFlagEnabled } from '@/lib/flags';
 
 export const dynamic = 'force-dynamic';
 
@@ -114,6 +115,7 @@ export default async function CoursePage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const previewsEnabled = await isFlagEnabled(supabase, 'learning.previews').catch(() => false);
   const learnerProfileId = user ? await ownLearnerProfileId(supabase, user.id) : null;
   // Who this account can enrol: itself, plus any children in its families. A
   // child has no account of its own (D2), so this list is the only way a child
@@ -196,7 +198,11 @@ export default async function CoursePage({
                     <li key={l.id}>
                       <span className="n">{j + 1}</span>
                       <span>{l.title}</span>
-                      {l.is_preview && <span className="badge">Preview</span>}
+                      {l.is_preview && previewsEnabled && (
+                        <Link className="badge" href={`/courses/${course.slug}/preview/${l.id}`}>
+                          Preview
+                        </Link>
+                      )}
                     </li>
                   ))}
               </ul>

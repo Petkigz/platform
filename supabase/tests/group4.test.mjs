@@ -420,17 +420,29 @@ export async function run(ctx) {
       'retiring a course cut off an existing learner, which D6 forbids');
   });
 
-  await test('a preview lesson is free; the rest is not', async () => {
+  await test('a preview lesson is free only while learning.previews is enabled', async () => {
     const pc = await publishedCourse({ preview: true });
     const preview = pc.previewLesson;
     const { learnerId } = await newAdultLearner('ent-5@example.com');
+    const original = (await q(
+      `select value_text from public.platform_settings where key='learning.previews'`)).rows[0].value_text;
 
-    const free = (await q('select public.can_access_lesson($1,$2) as v',
-      [learnerId, preview])).rows[0].v;
-    const paid = (await q('select public.can_access_lesson($1,$2) as v',
-      [learnerId, pc.lesson])).rows[0].v;
-    assert(free === true, 'a preview lesson was not free');
-    assert(paid === false, 'a paid lesson was accessible without entitlement');
+    try {
+      await q(`update public.platform_settings set value_text='false' where key='learning.previews'`);
+      const off = (await q('select public.can_access_lesson($1,$2) as v',
+        [learnerId, preview])).rows[0].v;
+      assert(off === false, 'a preview lesson remained free while the flag was off');
+
+      await q(`update public.platform_settings set value_text='true' where key='learning.previews'`);
+      const free = (await q('select public.can_access_lesson($1,$2) as v',
+        [learnerId, preview])).rows[0].v;
+      const paid = (await q('select public.can_access_lesson($1,$2) as v',
+        [learnerId, pc.lesson])).rows[0].v;
+      assert(free === true, 'a preview lesson was not free');
+      assert(paid === false, 'a paid lesson was accessible without entitlement');
+    } finally {
+      await q(`update public.platform_settings set value_text=$1 where key='learning.previews'`, [original]);
+    }
   });
 
   await test('expiring access keeps progress and certificates (D7)', async () => {

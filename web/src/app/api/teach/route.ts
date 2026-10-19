@@ -2,16 +2,15 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import {
-  addLesson, addLessonResource, addSection, createCourse, setSubjects,
-  transitionVersion, validateAddResource, type ResourceType,
+  addLesson, addLessonResource, addSection, createCourse, setLessonPreview, setSubjects,
+  transitionVersion, validateAddResource, type AddResourceAccess, type ResourceType,
 } from '@/lib/authoring';
 
 /**
  * Course authoring writes.
  *
- * One route with an `action`, because these five are the whole authoring
- * surface and they share the same auth story: you are the author or you are
- * not, and the policies decide which. Nothing here grants permission — it
+ * One route with an `action`, because these authoring writes share the same
+ * auth story: you are the author or you are not, and the policies decide which. Nothing here grants permission — it
  * forwards to the database and reports what came back.
  */
 export async function POST(request: Request) {
@@ -44,6 +43,7 @@ export async function POST(request: Request) {
     resourceType?: unknown;
     url?: unknown;
     name?: unknown;
+    access?: unknown;
   };
 
   const uuid = /^[0-9a-f-]{36}$/i;
@@ -97,13 +97,32 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
-    return json(
-      await addLesson(supabase, {
-        sectionId: b.sectionId,
-        title: str(b.title),
-        isPreview: b.isPreview === true,
-      }),
-    );
+    const created = await addLesson(supabase, {
+      sectionId: b.sectionId,
+      title: str(b.title),
+      // Preview status is set by the audited RPC below, not by a direct insert.
+      isPreview: false,
+    });
+    if (!created.ok || b.isPreview !== true) return json(created);
+    const preview = await setLessonPreview(supabase, {
+      lessonId: created.value.lessonId,
+      isPreview: true,
+    });
+    return preview.ok ? json(created) : json(preview);
+  }
+
+  // ---------------------------------------------------------------------
+  if (b.action === 'set_preview') {
+    if (!isUuid(b.lessonId) || typeof b.isPreview !== 'boolean') {
+      return NextResponse.json(
+        { ok: false, code: 'rejected', message: 'A lesson and preview setting are required.' },
+        { status: 400 },
+      );
+    }
+    return json(await setLessonPreview(supabase, {
+      lessonId: b.lessonId,
+      isPreview: b.isPreview,
+    }));
   }
 
   // ---------------------------------------------------------------------
@@ -163,6 +182,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (b.access !== undefined && b.access !== 'enrolled' && b.access !== 'public_preview') {
+      return NextResponse.json(
+        { ok: false, code: 'rejected', message: 'Choose enrolled access or public preview.' },
+        { status: 400 },
+      );
+    }
+
     // Validated here so the teacher reads a sentence rather than the CHECK
     // constraint name — the column requires ^https://.
     const check = validateAddResource({
@@ -170,6 +196,7 @@ export async function POST(request: Request) {
       resourceType: b.resourceType as ResourceType,
       url: b.url,
       name: b.name,
+      access: b.access as AddResourceAccess | undefined,
     });
     if (!check.ok) {
       return NextResponse.json(

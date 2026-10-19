@@ -115,9 +115,10 @@ export default async function LessonPage({
   // Discussion is behind a flag, off by default, because the moderation policy
   // behind it is a human queue with a retention obligation attached. The thread
   // is only fetched when it is on — no reason to query a table nobody can see.
-  const [discussionOn, provenanceOn] = await Promise.all([
+  const [discussionOn, provenanceOn, previewsOn] = await Promise.all([
     isFlagEnabled(supabase, 'learning.discussion'),
     isFlagEnabled(supabase, 'learning.provenance'),
+    isFlagEnabled(supabase, 'learning.previews').catch(() => false),
   ]);
   const [thread, sources] = await Promise.all([
     discussionOn ? fetchThread(supabase, { lessonId: lesson.id, myUserId: user.id }) : Promise.resolve([]),
@@ -144,7 +145,7 @@ export default async function LessonPage({
         </p>
         <h1>{lesson.title}</h1>
         <div className="row" style={{ gap: '0.5rem', marginTop: '0.75rem' }}>
-          {lesson.isPreview && (
+          {lesson.isPreview && previewsOn && (
             <span className="badge neutral">Preview lesson</span>
           )}
           {done ? (
@@ -198,7 +199,7 @@ export default async function LessonPage({
                     </span>
                   )}
                 </span>
-                {r.accessClassification === 'public_preview' && (
+                {r.accessClassification === 'public_preview' && previewsOn && (
                   <span className="badge neutral">Preview</span>
                 )}
               </li>

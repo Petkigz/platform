@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { setSubjects, fetchSubjects, fetchVersionSubjects } from './authoring.ts';
+import {
+  addLessonResource, fetchSubjects, fetchVersionSubjects, setLessonPreview,
+  setSubjects, validateAddResource,
+} from './authoring.ts';
 
 // ---------------------------------------------------------------------------
 // Subject tagging is what makes a course findable. The catalogue filter and the
@@ -212,4 +215,50 @@ test('a version with no tags reads back as an empty list, not an error', async (
   const codes = await fetchVersionSubjects(client, 'v-1');
 
   assert.deepEqual(codes, []);
+});
+
+// ---------------------------------------------------------------------------
+// Preview access
+// ---------------------------------------------------------------------------
+
+test('preview settings use the audited database writer', async () => {
+  const { client, calls } = stubRpc({ data: true });
+  const result = await setLessonPreview(client, { lessonId: 'lesson-1', isPreview: true });
+  assert.equal(result.ok, true);
+  assert.deepEqual(one(calls, 'preview rpc').args, {
+    p_lesson_id: 'lesson-1',
+    p_is_preview: true,
+  });
+});
+
+test('a locked preview update is reported as a new-version action', async () => {
+  const { client } = stubRpc({ error: { message: 'preview settings are locked with the course version (D5)' } });
+  const result = await setLessonPreview(client, { lessonId: 'lesson-1', isPreview: false });
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.match(result.message, /new version/i);
+});
+
+test('public preview resource access is passed through explicitly', async () => {
+  const { client, calls } = stubRpc({ data: 'resource-1' });
+  const result = await addLessonResource(client, {
+    lessonId: 'lesson-1',
+    resourceType: 'video',
+    url: 'https://cdn.example.com/sample.mp4',
+    name: 'Sample',
+    access: 'public_preview',
+  });
+  assert.equal(result.ok, true);
+  assert.equal(one(calls, 'resource rpc').args.p_access, 'public_preview');
+});
+
+test('resource validation rejects unsupported access classes', () => {
+  const result = validateAddResource({
+    lessonId: 'lesson-1',
+    resourceType: 'video',
+    url: 'https://cdn.example.com/sample.mp4',
+    name: 'Sample',
+    access: 'restricted' as never,
+  });
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.match(result.message, /enrolled access or public preview/i);
 });

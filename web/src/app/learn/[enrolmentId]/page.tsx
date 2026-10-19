@@ -87,10 +87,11 @@ export default async function CourseViewPage({
 
   // Feature gates. Read through setting_bool(), which any role may call, so
   // this works for a learner as well as for staff.
-  const [progressOn, assessmentsOn, progress, summary, completion, assessments] =
+  const [progressOn, assessmentsOn, previewsOn, progress, summary, completion, assessments] =
     await Promise.all([
       isFlagEnabled(supabase, 'learning.progress').catch(() => false),
       isFlagEnabled(supabase, 'learning.assessments').catch(() => false),
+      isFlagEnabled(supabase, 'learning.previews').catch(() => false),
       fetchProgress(supabase, enrolment.id),
       fetchSummary(supabase, enrolment.id),
       fetchCompletion(supabase, enrolment.id).catch(() => null),
@@ -178,7 +179,7 @@ export default async function CourseViewPage({
                           <Link href={`/learn/${enrolment.id}/lesson/${l.id}`}>
                             {l.title}
                           </Link>
-                          {l.is_preview && (
+                          {l.is_preview && previewsOn && (
                             <span className="badge neutral" style={{ marginLeft: '0.5rem' }}>
                               Preview
                             </span>

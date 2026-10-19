@@ -46,11 +46,11 @@ export async function run(ctx) {
   }
 
   /** A published course, optionally attached to a product so it counts as sold. */
-  async function publishedCourse({ sold = false } = {}) {
+  async function publishedCourse({ sold = false, preview = false } = {}) {
     const course  = await newCourse(teacher, { status: 'active' });
     const version = await newVersion(course, teacher);
     const section = await newSection(version);
-    const lesson  = await newLesson(section);
+    const lesson  = await newLesson(section, { is_preview: preview });
 
     // Both resources are created while the version is still a draft. D5
     // freezes the whole subtree on publication, so a resource added
@@ -59,10 +59,12 @@ export async function run(ctx) {
                (lesson_id, resource_type, external_url, display_name, position, access_classification)
              values ($1,'video','https://cdn.example.com/lesson.mp4','The lesson',1,'enrolled')`,
       [lesson]);
-    await q(`insert into public.lesson_resources
-               (lesson_id, resource_type, external_url, display_name, position, access_classification)
-             values ($1,'video','https://cdn.example.com/taster.mp4','Taster',2,'public_preview')`,
-      [lesson]);
+    if (preview) {
+      await q(`insert into public.lesson_resources
+                 (lesson_id, resource_type, external_url, display_name, position, access_classification)
+               values ($1,'video','https://cdn.example.com/taster.mp4','Taster',2,'public_preview')`,
+        [lesson]);
+    }
 
     if (sold) {
       const prod = (await q(
@@ -182,9 +184,11 @@ export async function run(ctx) {
   // The leak, closed
   // -------------------------------------------------------------------
   await test('a signed-in stranger cannot read a course they have not bought', async () => {
-    const pc = await publishedCourse({ sold: true });
+    const pc = await publishedCourse({ sold: true, preview: true });
     const { learnerId: buyerId, userId: buyerUser } = await newAdult('Buyer');
     const { userId: strangerUser } = await newAdult('Stranger');
+    const original = (await q(
+      `select value_text from public.platform_settings where key='learning.previews'`)).rows[0].value_text;
 
     // Give the buyer a real entitlement, as a purchase would.
     await q(`insert into public.entitlement_grants
@@ -201,39 +205,44 @@ export async function run(ctx) {
       return names;
     };
 
-    const buyerSaw = await namesFor(buyerUser);
-    assert(buyerSaw.includes('The lesson'),
-      `the entitled buyer could not read the paid resource (saw: ${buyerSaw.join(', ') || 'nothing'})`);
+    try {
+      await q(`update public.platform_settings set value_text='true' where key='learning.previews'`);
+      const buyerSaw = await namesFor(buyerUser);
+      assert(buyerSaw.includes('The lesson'),
+        `the entitled buyer could not read the paid resource (saw: ${buyerSaw.join(', ') || 'nothing'})`);
 
-    // This is the regression that mattered: before the fix this returned the
-    // paid resource URL to anyone signed in. The preview is expected to be
-    // visible — that is what its classification is for.
-    const strangerSaw = await namesFor(strangerUser);
-    assert(!strangerSaw.includes('The lesson'),
-      `a stranger with no entitlement read the paid resource (saw: ${strangerSaw.join(', ')})`);
-    assert(strangerSaw.includes('Taster'),
-      'a public preview was hidden from a signed-in visitor');
-
-    const access = (await q(
-      'select public.can_access_lesson($1,$2) v',
-      [(await q('select id from public.learner_profiles limit 1')).rows[0].id, pc.lesson])).rows[0].v;
-    void access;
+      // The paid resource must remain private while the public sample is visible.
+      const strangerSaw = await namesFor(strangerUser);
+      assert(!strangerSaw.includes('The lesson'),
+        `a stranger with no entitlement read the paid resource (saw: ${strangerSaw.join(', ')})`);
+      assert(strangerSaw.includes('Taster'),
+        'a public preview was hidden from a signed-in visitor');
+    } finally {
+      await q(`update public.platform_settings set value_text=$1 where key='learning.previews'`, [original]);
+    }
   });
 
-  await test('a public preview resource stays readable without entitlement', async () => {
-    const pc = await publishedCourse({ sold: true });
+  await test('a public preview resource stays readable without entitlement when previews are enabled', async () => {
+    const pc = await publishedCourse({ sold: true, preview: true });
     const { userId: strangerUser } = await newAdult('Browser');
+    const original = (await q(
+      `select value_text from public.platform_settings where key='learning.previews'`)).rows[0].value_text;
 
-    await asUser(strangerUser, async () => {
-      const rows = (await q(
-        `select display_name from public.lesson_resources
-          where lesson_id = $1 order by position`, [pc.lesson])).rows;
-      const names = rows.map((r) => r.display_name);
-      assert(names.includes('Taster'),
-        `a public preview was hidden from a signed-in visitor (saw: ${names.join(', ') || 'nothing'})`);
-      assert(!names.includes('The lesson'),
-        'a paid resource was visible to someone with no entitlement');
-    });
+    try {
+      await q(`update public.platform_settings set value_text='true' where key='learning.previews'`);
+      await asUser(strangerUser, async () => {
+        const rows = (await q(
+          `select display_name from public.lesson_resources
+            where lesson_id = $1 order by position`, [pc.lesson])).rows;
+        const names = rows.map((r) => r.display_name);
+        assert(names.includes('Taster'),
+          `a public preview was hidden from a signed-in visitor (saw: ${names.join(', ') || 'nothing'})`);
+        assert(!names.includes('The lesson'),
+          'a paid resource was visible to someone with no entitlement');
+      });
+    } finally {
+      await q(`update public.platform_settings set value_text=$1 where key='learning.previews'`, [original]);
+    }
   });
 
   // -------------------------------------------------------------------

@@ -13,7 +13,7 @@
 export async function run(ctx) {
   const {
     q, test, assert, rejects,
-    asUser,
+    asUser, asAnon,
     newUser, newProfile,
     newInstructor, newReviewer, satisfyReview, bootstrapAdmin,
     newCourse, newVersion, newSection, newLesson,
@@ -58,11 +58,11 @@ export async function run(ctx) {
     ]);
 
   /** A course with one lesson, optionally published. */
-  async function authored({ publish = false } = {}) {
+  async function authored({ publish = false, preview = false } = {}) {
     const course  = await newCourse(teacher, { status: 'active' });
     const version = await newVersion(course, teacher);
     const section = await newSection(version);
-    const lesson  = await newLesson(section);
+    const lesson  = await newLesson(section, { is_preview: preview });
 
     if (publish) {
       await transition(version, 'submitted', teacher);
@@ -146,8 +146,8 @@ export async function run(ctx) {
       /unsupported resource type: hologram/i);
   });
 
-  await test('a public preview is allowed, and marked as one', async () => {
-    const { lesson } = await authored();
+  await test('a public preview is allowed only on a preview lesson, and marked as one', async () => {
+    const { lesson } = await authored({ preview: true });
 
     await addResource(teacher, lesson, {
       name: 'Taster',
@@ -158,6 +158,38 @@ export async function run(ctx) {
     const rows = await resourcesOf(lesson);
     assert(rows[0].access_classification === 'public_preview',
       `access was ${rows[0].access_classification}`);
+  });
+
+  await test('preview toggles are author-only, draft-only, and audited', async () => {
+    const { lesson } = await authored();
+    const enabled = await asActor(teacher,
+      'select public.set_lesson_preview($1, true) as changed', [lesson]);
+    assert(enabled.rows[0].changed === true, 'preview toggle did not report a change');
+    await addResource(teacher, lesson, { access: 'public_preview', name: 'Sample' });
+
+    const stranger = await newUser('res-preview-stranger@example.com');
+    await newProfile(stranger, 'Preview Stranger');
+    await rejects(() => asActor(stranger,
+      'select public.set_lesson_preview($1, false)', [lesson]), /only the course author/i);
+
+    const disabled = await asActor(teacher,
+      'select public.set_lesson_preview($1, false) as changed', [lesson]);
+    assert(disabled.rows[0].changed === true, 'preview toggle did not report a change');
+    const rows = await resourcesOf(lesson);
+    assert(rows[0].access_classification === 'enrolled',
+      'disabling preview did not downgrade public resources');
+    assert((await scalar('select is_preview from public.lessons where id = $1', [lesson])).is_preview === false,
+      'lesson is still marked as a preview');
+    assert(await count(
+      `select 1 from public.governance_audit_events
+        where target_type='lesson' and target_id=$1 and action='lesson.preview_changed'`,
+      [lesson]) === 2, 'expected both preview changes in the audit trail');
+  });
+
+  await test('preview toggles respect the published-version lock', async () => {
+    const { lesson } = await authored({ publish: true });
+    await rejects(() => asActor(teacher,
+      'select public.set_lesson_preview($1, true)', [lesson]), /locked with the course version/i);
   });
 
   // -------------------------------------------------------------------
@@ -280,6 +312,58 @@ export async function run(ctx) {
       `the lesson page would show ${rows.rows.length} items; expected 2`);
     assert(rows.rows[0].resource_type === 'video');
     assert(rows.rows[1].resource_type === 'document');
+  });
+
+  await test('preview access and public resources are both controlled by learning.previews', async () => {
+    const { lesson, section, version } = await authored({ preview: true });
+    const nonPreviewLesson = await newLesson(section, { position: 2, title: 'Enrolled lesson' });
+    await addResource(teacher, lesson, {
+      name: 'Taster', access: 'public_preview',
+      url: 'https://cdn.example.com/taster.mp4',
+    });
+    await addResource(teacher, nonPreviewLesson, {
+      name: 'Misclassified taster', access: 'public_preview',
+      url: 'https://cdn.example.com/misclassified.mp4',
+    });
+    await transition(version, 'submitted', teacher);
+    await transition(version, 'approved', reviewer);
+    await satisfyReview(version, reviewer, admin);
+    await transition(version, 'published', admin);
+    const learnerUser = await newUser('res-preview-learner@example.com');
+    await newProfile(learnerUser, 'Preview Learner');
+    const learnerId = (await q(
+      `insert into public.learner_profiles (display_name, learner_type, age_band, linked_user_id)
+       values ('Preview Learner', 'adult', '18+', $1) returning id`, [learnerUser])).rows[0].id;
+    const original = (await scalar(
+      `select value_text from public.platform_settings where key='learning.previews'`)).value_text;
+
+    try {
+      await q(`update public.platform_settings set value_text='false' where key='learning.previews'`);
+      const anonOff = await asAnon(() => count(
+        'select 1 from public.lesson_resources where lesson_id=$1', [lesson]));
+      const learnerOff = await asUser(learnerUser, () => count(
+        'select 1 from public.lesson_resources where lesson_id=$1', [lesson]));
+      const canOff = (await scalar(
+        'select public.can_access_lesson($1,$2) as allowed', [learnerId, lesson])).allowed;
+      assert(anonOff === 0 && learnerOff === 0 && canOff === false,
+        `flag-off exposure: anon=${anonOff}, learner=${learnerOff}, access=${canOff}`);
+
+      await q(`update public.platform_settings set value_text='true' where key='learning.previews'`);
+      const anonOn = await asAnon(() => count(
+        'select 1 from public.lesson_resources where lesson_id=$1', [lesson]));
+      const anonNonPreview = await asAnon(() => count(
+        'select 1 from public.lesson_resources where lesson_id=$1', [nonPreviewLesson]));
+      const learnerOn = await asUser(learnerUser, () => count(
+        'select 1 from public.lesson_resources where lesson_id=$1', [lesson]));
+      const canOn = (await scalar(
+        'select public.can_access_lesson($1,$2) as allowed', [learnerId, lesson])).allowed;
+      const canNonPreview = (await scalar(
+        'select public.can_access_lesson($1,$2) as allowed', [learnerId, nonPreviewLesson])).allowed;
+      assert(anonOn === 1 && anonNonPreview === 0 && learnerOn === 1 && canOn === true && canNonPreview === false,
+        `flag-on exposure: anon=${anonOn}, nonpreview=${anonNonPreview}, learner=${learnerOn}, access=${canOn}, nonpreviewAccess=${canNonPreview}`);
+    } finally {
+      await q(`update public.platform_settings set value_text=$1 where key='learning.previews'`, [original]);
+    }
   });
 
   // -------------------------------------------------------------------

@@ -32,7 +32,7 @@ Three kinds of gate:
 | `learning.age_bands` | Age-band navigation inside Young Learners | ADMIN | Bands chosen. Use `age_band`, **not** dates of birth |
 | `learning.subject_nav` | Hierarchical subject browsing in the catalogue | ADMIN | `subject_areas` taxonomy populated — this is catalogue infrastructure, not governance |
 | `learning.reviews` | Learner ratings and reviews on courses | ADMIN | **Table does not exist.** Satisfaction signal only — **never a substitute for scholarly review**. Needs a moderation policy |
-| `learning.previews` | Free preview lessons before enrolment | ADMIN | Which lessons are free is per course version; interacts with entitlement checks |
+| `learning.previews` | Free preview lessons before enrolment | ADMIN | Select the free lesson and public-sample resources per course version; verify sample content before enabling. The flag gates both anonymous resource reads and the free-entitlement bypass; it never unlocks enrolled-only materials. |
 | `learning.badges` | Bestseller and rating badges in the catalogue | ADMIN | Threshold rules; must not imply scholarly endorsement |
 | `learning.notes_bookmarks` | Notes, bookmarks, transcripts | ADMIN | **Tables do not exist yet** — listed as a feature, never designed |
 | `learning.assignments` | Marked homework separate from quizzes | ADMIN | **Table does not exist yet** — grading workflow for assignments undesigned |

@@ -195,7 +195,7 @@ export async function fetchSections(
   // with nothing attached is an empty page.
   const { data: resources, error: rErr } = await supabase
     .from('lesson_resources')
-    .select('id, lesson_id, display_name, resource_type, external_url, position')
+    .select('id, lesson_id, display_name, resource_type, external_url, access_classification, position')
     .in(
       'lesson_id',
       lessonRows.map((l) => l.id),
@@ -210,6 +210,7 @@ export async function fetchSections(
     display_name: string;
     resource_type: string;
     external_url: string | null;
+    access_classification: ResourceAccess;
     position: number;
   };
   const resourceRows = (resources ?? []) as unknown as ResourceRow[];
@@ -232,6 +233,7 @@ export async function fetchSections(
             resourceName: r.display_name,
             resourceType: r.resource_type as ResourceType,
             externalUrl: r.external_url,
+            access: r.access_classification,
             position: r.position,
           })),
       })),
@@ -385,6 +387,21 @@ export async function addLesson(
   return { ok: true, value: { lessonId: (data as unknown as { id: string }).id } };
 }
 
+export async function setLessonPreview(
+  client: SupabaseClient,
+  args: { lessonId: string; isPreview: boolean },
+): Promise<WriteOutcome<{ changed: boolean }>> {
+  if (!args.lessonId) {
+    return { ok: false, code: 'rejected', message: 'That lesson is missing.' };
+  }
+  const { data, error } = await client.rpc('set_lesson_preview', {
+    p_lesson_id: args.lessonId,
+    p_is_preview: args.isPreview,
+  });
+  if (error) return classify(error);
+  return { ok: true, value: { changed: data === true } };
+}
+
 export type Transition = 'submitted' | 'draft';
 
 /**
@@ -533,11 +550,15 @@ export const RESOURCE_TYPE_LABEL: Record<ResourceType, string> = {
   other: 'Other',
 };
 
+export type ResourceAccess = 'public_preview' | 'enrolled' | 'guardian' | 'restricted';
+export type AddResourceAccess = Extract<ResourceAccess, 'enrolled' | 'public_preview'>;
+
 export type AuthoredResource = {
   id: string;
   resourceName: string;
   resourceType: ResourceType;
   externalUrl: string | null;
+  access: ResourceAccess;
   position: number;
 };
 
@@ -554,7 +575,7 @@ export async function fetchLessonResources(
 ): Promise<AuthoredResource[]> {
   const { data, error } = await client
     .from('lesson_resources')
-    .select('id, display_name, resource_type, external_url, position')
+    .select('id, display_name, resource_type, external_url, access_classification, position')
     .eq('lesson_id', lessonId)
     .order('position', { ascending: true });
 
@@ -565,6 +586,7 @@ export async function fetchLessonResources(
     resourceName: String(r.display_name),
     resourceType: r.resource_type as ResourceType,
     externalUrl: r.external_url === null ? null : String(r.external_url),
+    access: r.access_classification as ResourceAccess,
     position: Number(r.position),
   }));
 }
@@ -574,6 +596,7 @@ export type AddResourceInput = {
   resourceType: ResourceType;
   url: string;
   name: string;
+  access?: AddResourceAccess;
 };
 
 export type AddResourceResult =
@@ -598,6 +621,8 @@ export function validateAddResource(input: AddResourceInput): AddResourceResult 
 
   if (!RESOURCE_TYPES.includes(input.resourceType))
     return { ok: false, message: 'That is not a kind of content we support.' };
+  if (input.access !== undefined && input.access !== 'enrolled' && input.access !== 'public_preview')
+    return { ok: false, message: 'Choose enrolled access or public preview.' };
 
   return { ok: true, resourceId: '' };
 }
@@ -620,7 +645,7 @@ export async function addLessonResource(
     p_resource_type: input.resourceType,
     p_external_url: input.url.trim(),
     p_display_name: input.name.trim(),
-    p_access: 'enrolled',
+    p_access: input.access ?? 'enrolled',
   });
 
   if (error) {

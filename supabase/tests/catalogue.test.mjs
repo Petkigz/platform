@@ -21,6 +21,10 @@ export async function run(ctx) {
   const admin    = await bootstrapAdmin('cat-admin@example.com');
   const teacher  = await newInstructor('cat-teacher@example.com', admin);
   const reviewer = await newReviewer('cat-reviewer@example.com', admin);
+  const previewFlag = (await q(
+    `select value_text from public.platform_settings where key = 'learning.previews'`,
+  )).rows[0]?.value_text ?? 'false';
+  await q(`update public.platform_settings set value_text = 'true' where key = 'learning.previews'`);
 
   const count = async (sql, params) =>
     (await q(`select count(*)::int n from (${sql}) t`, params)).rows[0].n;
@@ -258,4 +262,6 @@ export async function run(ctx) {
         'an author published their own course into the public catalogue');
     });
   });
+
+  await q(`update public.platform_settings set value_text = $1 where key = 'learning.previews'`, [previewFlag]);
 }

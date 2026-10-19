@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   RESOURCE_TYPES, RESOURCE_TYPE_LABEL, VERSION_STATUS_LABEL,
-  type AuthoredVersion, type ResourceType,
+  type AddResourceAccess, type AuthoredVersion, type ResourceType,
 } from '@/lib/authoring';
 import { SourceForm } from './source-form';
 import type { LessonSource } from '@/lib/provenance';
@@ -21,15 +21,19 @@ import type { LessonSource } from '@/lib/provenance';
 export function Curriculum({
   version,
   sourcesByLesson,
+  previewsEnabled,
 }: {
   version: AuthoredVersion;
   sourcesByLesson: Record<string, LessonSource[]>;
+  previewsEnabled: boolean;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sectionTitle, setSectionTitle] = useState('');
   const [lessonTitles, setLessonTitles] = useState<Record<string, string>>({});
+  const [lessonPreviews, setLessonPreviews] = useState<Record<string, boolean>>({});
+  const [resourceAccess, setResourceAccess] = useState<Record<string, AddResourceAccess>>({});
   const [openLesson, setOpenLesson] = useState<string | null>(null);
   const [resourceName, setResourceName] = useState<Record<string, string>>({});
   const [resourceUrl, setResourceUrl] = useState<Record<string, string>>({});
@@ -72,10 +76,28 @@ export function Curriculum({
     e.preventDefault();
     const title = lessonTitles[sectionId] ?? '';
     const failed = await post(
-      { action: 'add_lesson', sectionId, title },
+      {
+        action: 'add_lesson',
+        sectionId,
+        title,
+        isPreview: lessonPreviews[sectionId] === true,
+      },
       `lesson-${sectionId}`,
     );
-    if (!failed) setLessonTitles({ ...lessonTitles, [sectionId]: '' });
+    if (!failed) {
+      setLessonTitles({ ...lessonTitles, [sectionId]: '' });
+      setLessonPreviews({ ...lessonPreviews, [sectionId]: false });
+    }
+  }
+
+  async function setPreview(lessonId: string, isPreview: boolean) {
+    const failed = await post(
+      { action: 'set_preview', lessonId, isPreview },
+      `preview-${lessonId}`,
+    );
+    if (!failed && !isPreview) {
+      setResourceAccess({ ...resourceAccess, [lessonId]: 'enrolled' });
+    }
   }
 
   async function addResource(e: React.FormEvent, lessonId: string) {
@@ -87,12 +109,14 @@ export function Curriculum({
         resourceType: resourceType[lessonId] ?? 'video',
         url: resourceUrl[lessonId] ?? '',
         name: resourceName[lessonId] ?? '',
+        access: resourceAccess[lessonId] ?? 'enrolled',
       },
       `resource-${lessonId}`,
     );
     if (!failed) {
       setResourceName({ ...resourceName, [lessonId]: '' });
       setResourceUrl({ ...resourceUrl, [lessonId]: '' });
+      setResourceAccess({ ...resourceAccess, [lessonId]: 'enrolled' });
       setOpenLesson(null);
     }
   }
@@ -143,6 +167,14 @@ export function Curriculum({
         </div>
       )}
 
+      {!previewsEnabled && (
+        <div className="notice warn" style={{ marginBottom: '1rem' }}>
+          Free previews are switched off by the platform right now. You can still
+          prepare preview lessons; they will not be available to learners until
+          an administrator enables Learning previews.
+        </div>
+      )}
+
       {error && (
         <div className="notice error" style={{ marginBottom: '1rem' }} role="alert">
           {error}
@@ -169,11 +201,26 @@ export function Curriculum({
                     <span className="t">
                       {l.position}. {l.title}
                     </span>
-                    {l.isPreview && (
+                    {editable ? (
+                      <label
+                        className="muted"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.85rem' }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={l.isPreview}
+                          disabled={busy === `preview-${l.id}`}
+                          onChange={(event) => setPreview(l.id, event.target.checked)}
+                          aria-label={`Allow free preview for ${l.title}`}
+                          style={{ width: 'auto' }}
+                        />
+                        Free preview
+                      </label>
+                    ) : l.isPreview && previewsEnabled ? (
                       <span className="badge" style={{ flex: 'none' }}>
                         Free preview
                       </span>
-                    )}
+                    ) : null}
                     {l.resources.length > 0 && (
                       <span className="badge neutral" style={{ flex: 'none' }}>
                         {l.resources.length} item{l.resources.length === 1 ? '' : 's'}
@@ -203,6 +250,9 @@ export function Curriculum({
                         {l.resources.map((r) => (
                           <li key={r.id}>
                             {RESOURCE_TYPE_LABEL[r.resourceType]} · {r.resourceName}
+                            {r.access === 'public_preview' && (
+                              <span className="badge" style={{ marginLeft: '0.4rem' }}>Public preview</span>
+                            )}
                           </li>
                         ))}
                       </ul>
@@ -246,6 +296,22 @@ export function Curriculum({
                               style={{ flex: 1 }}
                             />
                           </div>
+                          {l.isPreview && (
+                            <label className="muted" style={{ display: 'grid', gap: '0.25rem', fontSize: '0.85rem' }}>
+                              Who can view this content?
+                              <select
+                                value={resourceAccess[l.id] ?? 'enrolled'}
+                                onChange={(ev) => setResourceAccess({
+                                  ...resourceAccess,
+                                  [l.id]: ev.target.value as AddResourceAccess,
+                                })}
+                                aria-label={`Access for content in ${l.title}`}
+                              >
+                                <option value="enrolled">Enrolled learners only</option>
+                                <option value="public_preview">Public preview (only while enabled)</option>
+                              </select>
+                            </label>
+                          )}
                           <div className="row">
                             <input
                               value={resourceUrl[l.id] ?? ''}
@@ -302,6 +368,15 @@ export function Curriculum({
                   maxLength={120}
                   style={{ flex: 1 }}
                 />
+                <label className="muted" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.85rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={lessonPreviews[s.id] ?? false}
+                    onChange={(e) => setLessonPreviews({ ...lessonPreviews, [s.id]: e.target.checked })}
+                    style={{ width: 'auto' }}
+                  />
+                  Free preview
+                </label>
                 <button
                   type="submit"
                   className="btn secondary"

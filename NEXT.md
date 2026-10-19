@@ -5,17 +5,21 @@ for context; the counts in that historical log are snapshots from their dates.
 
 ## Current status
 
-Learning paths, source provenance and public teacher profiles are implemented:
-teachers curate paths in `/teach/paths`, cite material from the draft curriculum,
-and prepare shareable profiles at `/teach/profile`. Learners can browse the paths,
-lesson citations and teacher pages when the corresponding flags are enabled.
-Paths do not grant course access; citations lock with the published version;
-public profiles disclose no unverified credentials. All three public-facing
-features remain off until reviewed content is ready.
+Learning paths, source provenance, public teacher profiles and gated lesson
+previews are implemented. Teachers curate paths in `/teach/paths`, cite material
+from the draft curriculum, prepare shareable profiles at `/teach/profile`, and
+mark preview lessons/resources in the curriculum editor. Learners can browse
+paths, lesson citations and teacher pages when the corresponding flags are
+enabled. Public samples have a dedicated course-preview route; `learning.previews`
+controls anonymous reads and the free-entitlement bypass without exposing
+paid-only lesson resources. Paths do not grant course access; citations and
+preview settings lock with the published version; public profiles disclose no
+unverified credentials. Public-facing features remain off until reviewed content
+is ready.
 
-Verification: **661 database tests, 248 web tests; TypeScript typecheck and
+Verification: **664 database tests, 252 web tests; TypeScript typecheck and
 production build pass; 90 tables, 210 policies, 121 user-defined triggers,
-165 functions, 71 migrations and 72 app route entries.**
+167 functions, 72 migrations and 73 app route entries.**
 
 ## Today's sentence
 

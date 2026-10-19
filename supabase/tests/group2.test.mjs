@@ -387,15 +387,26 @@ export async function run(ctx) {
     assert(seen === 1, `anonymous saw ${seen} versions, expected only the published one`);
   });
 
-  await test('an anonymous visitor sees preview lessons only', async () => {
+  await test('an anonymous visitor sees preview lessons only when the flag is on', async () => {
     const s = await scaffold();
     await newLesson(s.section, { position: 2, title: 'Preview', is_preview: true });
     await publish(s);
-    const seen = await asAnon(() => count(
+    await q(`update public.platform_settings set value_text = 'false' where key = 'learning.previews'`);
+    const hidden = await asAnon(() => count(
       'select count(*)::int n from public.lessons l ' +
       'join public.course_sections cs on cs.id = l.section_id ' +
       'where cs.course_version_id = $1', [s.version]));
-    assert(seen === 1, `anonymous saw ${seen} lessons, expected only the preview`);
+    assert(hidden === 0, `anonymous saw ${hidden} preview lessons while the flag was off`);
+    try {
+      await q(`update public.platform_settings set value_text = 'true' where key = 'learning.previews'`);
+      const seen = await asAnon(() => count(
+        'select count(*)::int n from public.lessons l ' +
+        'join public.course_sections cs on cs.id = l.section_id ' +
+        'where cs.course_version_id = $1', [s.version]));
+      assert(seen === 1, `anonymous saw ${seen} lessons, expected only the preview`);
+    } finally {
+      await q(`update public.platform_settings set value_text = 'false' where key = 'learning.previews'`);
+    }
   });
 
   await test('media assets are invisible to everyone but the uploader and staff', async () => {

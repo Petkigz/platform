@@ -4,9 +4,10 @@
  * The rule this file is built around: **being signed in is not access.** A
  * lesson's resources are gated by entitlement, not by session, so this never
  * asks "is there a user?" and always lets the database answer. A learner who
- * has not bought the course gets the resources classified `public_preview` and
- * nothing else — which is what makes a free taster possible without handing
- * over the paid content beside it.
+ * has not bought the course gets only resources classified `public_preview`
+ * on a preview lesson, and only while `learning.previews` is enabled. The
+ * database keeps that sample separate from enrolled-only content, even though
+ * the preview lesson itself has a free-entitlement bypass.
  *
  * `media_asset_id` is returned but not resolved to a playable URL here. D8
  * keeps masters in our own storage with Stream for delivery only, and signing
