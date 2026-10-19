@@ -56,8 +56,8 @@ photos), and the **course author** marks. Cohort persistence is built behind
 `learning.cohorts`: classes pin one published course version; learners or their
 guardians opt in (the author cannot silently add a child); roster rows are
 private to the teacher/staff and that learner's family; a version change does
-not move an existing class to new material. The feature still ships off while
-late joining and the cohort screens are unfinished.
+not move an existing class to new material. The feature still ships off pending review of the late-join rule; the teacher
+manager and learner join/leave screens are now built.
 
 `learning.assignments` is not a duplicate quiz, and its database and text
 workflow now exist: tasks can be authored after publication; self-paced due
@@ -72,15 +72,15 @@ File references accept PDF/JPEG/PNG/WebP and common audio formats, with a
 25 MiB per-file / 10-file ceiling, but the upload path is still missing: bytes
 are not transferred, scanned or delivered, and there is no retention workflow.
 The learner screen is text-only for now. Both flags stay off until the secure
-media path and the cohort join/management screens are ready; the cohort late-join
-policy also needs review. These are the remaining pieces, not another quiz table.
+media path and retention workflow are ready; the cohort UI is built, but its
+late-join policy still needs review. These are the remaining pieces, not another quiz table.
 
 The two planning documents were also stale in a way that would have misdirected
 the next session, so both were re-audited against the route list in the build
 output rather than against memory. `SCREENS.md` had 24 rows saying READY or
 BLOCKED for screens that exist — including the settings and flags screen, which
 its own note called the critical path while claiming no settings table existed.
-It now reads **39 built, 13 ready, 5 blocked**; the five blocked ones are blocked
+It now reads **40 built, 12 ready, 5 blocked**; the five blocked ones are blocked
 on a decision or a provider, not on code. `FLAGS.md` claimed seven flags could
 not be runtime toggles and then listed eleven: the measured figure is **31 CODE,
 14 ADMIN + SETUP, 43 ADMIN**, and `platform_settings` holds **90 rows — the 87
@@ -99,9 +99,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **774 database tests, 337 web tests; TypeScript typecheck and
+Verification: **774 database tests, 342 web tests; TypeScript typecheck and
 production build pass; 101 tables, 229 policies, 132 user-defined triggers,
-210 functions, 83 migrations and 95 app route entries.**
+210 functions, 84 migrations and 97 app route entries.**
 
 ## Today's sentence
 

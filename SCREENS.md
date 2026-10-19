@@ -80,8 +80,8 @@ Status:
 | 29 | Teacher dashboard | **BUILT** — `/teach` with 13 endpoints behind it. Learner analytics (#32) is the missing piece |
 | 30 | Create course | **BUILT** — `/teach`, one field: a title. Everything else is set in the curriculum builder |
 | 31 | Curriculum builder | **BUILT** — `/teach/[courseId]`: sections, lessons, content items, reordering, sources. No drag-and-drop |
-| 31a | **Cohort manager and roster** *(added — missing from the inventory)* | READY — cohort database, author-only management functions, join/leave and row-level privacy exist; no teacher screen yet. Decide late-join policy before enabling `learning.cohorts` |
-| 31b | **Assignment authoring and marking** *(added — missing from the inventory)* | **BUILT** — `/teach/[courseId]/assignments`; author creates/opens/closes tasks and marks private submissions. Behind `learning.assignments`; secure file delivery and cohort UI are separate preconditions |
+| 31a | **Cohort manager and roster** *(added — missing from the inventory)* | **BUILT** — `/teach/[courseId]/cohorts`, course-page join for a learner or guardian, and leave controls on the enrolment page. The roster shows counts only; learners see themselves/family, never other members. `learning.cohorts` stays off pending review of the late-join rule |
+| 31b | **Assignment authoring and marking** *(added — missing from the inventory)* | **BUILT** — `/teach/[courseId]/assignments`; author creates/opens/closes tasks and marks private submissions. Behind `learning.assignments`; secure file delivery and late-join policy are separate preconditions |
 | 32 | Learner analytics | READY |
 | 33 | Course submission and review | **BUILT** — submit from `/teach/[courseId]`; `/review` and `/admin/reviews` handle the assignment |
 | 34 | Earnings | BLOCKED — `teaching.payouts` is CODE and refused by trigger. The *data* exists: `instructor_earnings` accrues on a paid order and reverses on refund. No teacher-facing screen |
@@ -129,8 +129,8 @@ Status:
 | | |
 |---|---|
 | Numbered screen IDs | **50**, plus 19a, 19b, 20a, 20b, 20c, 31a and 31b — **57 rows** |
-| Built | **39** |
-| Ready to design now | **13** |
+| Built | **40** |
+| Ready to design now | **12** |
 | Blocked | **5** |
 
 The four mobile home/learning rows in the source are responsive states of
@@ -154,5 +154,5 @@ this is 53 distinct screens. Mobile adds only #49 and #50.
 6. **Public certificate verification page** — the endpoint already exists.
 7. **Empty, error and loading states** — where "as easy as possible" is
    actually won or lost.
-8. **Cohort management** — both delivery models are confirmed; the data and access rules exist, but the teacher's class/roster screen does not. Added as 31a.
+8. **Cohort management** — both delivery models are confirmed; the class and join/leave flow was missing from the source and is now built as 31a. The late-join policy still needs review before enabling.
 9. **Marked assignments** — standalone deadlines, private hand-in and teacher feedback were missing from the source list. The text workflow is built as 20c/31b; secure file transfer and viewing remain blocked on media setup.

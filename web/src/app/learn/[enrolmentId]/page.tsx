@@ -6,6 +6,8 @@ import { fetchCompletion, fetchProgress, fetchSummary } from '@/lib/progress';
 import { fetchAssessmentsForVersion } from '@/lib/assessment';
 import { isFlagEnabled } from '@/lib/flags';
 import { MarkComplete } from './mark-complete';
+import { CohortMemberships } from './cohort-memberships';
+import type { CourseCohort } from '@/lib/cohorts';
 import {
   assignmentDeadline,
   fetchAssignmentSubmissionsForLearner,
@@ -134,6 +136,34 @@ export default async function CourseViewPage({
     a.cohortId === null || activeCohortIds.has(a.cohortId) || submissionByAssignment.has(a.id),
   );
 
+  const cohortsEnabled = await isFlagEnabled(supabase, 'learning.cohorts').catch(() => false);
+  const { data: memberRows, error: memberRowsError } = await supabase
+    .from('cohort_members')
+    .select('cohort_id')
+    .eq('learner_profile_id', enrolment.learner_profile_id)
+    .eq('status', 'active');
+  if (memberRowsError) throw new Error(memberRowsError.message);
+  const memberCohortIds = ((memberRows ?? []) as unknown as { cohort_id: string }[]).map((m) => m.cohort_id);
+  let learnerCohorts: CourseCohort[] = [];
+  if (memberCohortIds.length > 0) {
+    const { data: cohortRows, error: cohortRowsError } = await supabase
+      .from('cohorts')
+      .select('id,course_id,course_version_id,title,description,starts_at,ends_at,capacity,status')
+      .in('id', memberCohortIds)
+      .eq('course_id', enrolment.course_id)
+      .is('deleted_at', null);
+    if (cohortRowsError) throw new Error(cohortRowsError.message);
+    learnerCohorts = ((cohortRows ?? []) as unknown as {
+      id: string; course_id: string; course_version_id: string; title: string;
+      description: string | null; starts_at: string; ends_at: string | null;
+      capacity: number | null; status: CourseCohort['status'];
+    }[]).map((c) => ({
+      id: c.id, courseId: c.course_id, courseVersionId: c.course_version_id,
+      title: c.title, description: c.description, startsAt: c.starts_at,
+      endsAt: c.ends_at, capacity: c.capacity, status: c.status,
+    }));
+  }
+
   const pct = Math.round(summary.percentComplete);
 
   return (
@@ -188,6 +218,14 @@ export default async function CourseViewPage({
           </div>
         )}
       </div>
+      )}
+
+      {learnerCohorts.length > 0 && (
+        <CohortMemberships
+          enabled={cohortsEnabled}
+          cohorts={learnerCohorts}
+          learnerProfileId={enrolment.learner_profile_id}
+        />
       )}
 
       {sections.length === 0 ? (

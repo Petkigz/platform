@@ -363,9 +363,9 @@ These are inconsistencies in the project record itself, not missing features.
    learning; learners submit text or files. Cohort/assignment data, RLS, audit,
    teacher creation/marking UI and learner text hand-in are built behind flags.
    File references accept conservative formats/limits, but bytes are not
-   transferred, scanned or delivered; there is no resubmission loop, and the
-   teacher/learner cohort screens remain. `learning.assignments` stays off until
-   those preconditions are complete.
+   transferred, scanned or delivered; there is no resubmission loop. The cohort
+   screens are now built. `learning.assignments` stays off until safe file
+   delivery/retention and the cohort late-join rule are reviewed.
 
 Also still absent, confirming an earlier finding: `settings` and `feature_flags`.
 

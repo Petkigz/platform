@@ -165,6 +165,8 @@ export default async function TeachCoursePage({
         {' · '}
         <Link href={`/teach/${courseId}/assignments`}>Assignments</Link>
         {' · '}
+        <Link href={`/teach/${courseId}/cohorts`}>Cohorts</Link>
+        {' · '}
         <Link href="/teach">Back to my courses</Link>
       </p>
     </div>

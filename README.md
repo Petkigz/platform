@@ -11,7 +11,7 @@ Global Islamic e-learning platform for children and adults.
 | `ROADMAP.md` | All 53 tasks with completion gates |
 | `IRREVERSIBLE.md` | The nine decisions that are expensive to reverse |
 | `FLAGS.md` | Every feature, behind a flag, with its precondition |
-| `SCREENS.md` | 53 distinct screens; 13 ready to design |
+| `SCREENS.md` | 53 distinct screens; 12 ready to design |
 | `IDEAS.md` | Parking lot. Nothing here is scheduled. |
 
 ## Database
@@ -63,9 +63,9 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **101 tables, RLS on every one, 229 policies, 132
-user-defined triggers, 210 functions and 83 migrations.** The database suite
-passes **774 tests**; the web suite passes **337 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **95 app route entries**.
+user-defined triggers, 210 functions and 84 migrations.** The database suite
+passes **774 tests**; the web suite passes **342 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **97 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. `/account`
@@ -317,8 +317,8 @@ data, the help desk, learner reviews, saved courses, dated cohorts and marked as
   precondition ("only meaningful once checkout is on") was true of paying and
   false of saving: a course can be free, unpublished, or under discussion in a
   family about which child it is for
-- `cohorts`, `cohort_members` — a published course version freezes its lessons and quizzes, so dated group work needs a class alongside the immutable version. Membership writes are session-bound; learners see only themselves and their family, not the roster; joining requires an exact-version enrolment. `learning.cohorts` ships off until late-join policy and the UI are ready.
-- `course_assignments`, `assignment_submissions`, `assignment_submission_assets` — a separate task can be created after publication, carry an enrolment-relative or cohort-absolute deadline, and receive one private learner hand-in with text and verified file references. Marks/feedback are private and audited; no bytes or public object keys are stored. `learning.assignments` ships off until safe upload, scanning, delivery/retention and cohort UI are ready.
+- `cohorts`, `cohort_members` — a published course version freezes its lessons and quizzes, so dated group work needs a class alongside the immutable version. Membership writes are session-bound; learners see only themselves and their family, not the roster; joining requires an exact-version enrolment. `learning.cohorts` ships off pending review of the late-join policy.
+- `course_assignments`, `assignment_submissions`, `assignment_submission_assets` — a separate task can be created after publication, carry an enrolment-relative or cohort-absolute deadline, and receive one private learner hand-in with text and verified file references. Marks/feedback are private and audited; no bytes or public object keys are stored. `learning.assignments` ships off until safe upload, scanning, delivery/retention and late-join policy are reviewed.
 
 Learning paths reuse the existing `learning_paths` and `learning_path_items`
 tables; this work adds their audited writers and the teacher/learner screens,

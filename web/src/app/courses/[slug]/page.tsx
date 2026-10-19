@@ -29,6 +29,8 @@ import {
 import { ReviewPanel } from './review-panel';
 import { SaveButton } from './save-button';
 import { isCourseSaved } from '@/lib/wishlist';
+import { fetchJoinableCohorts } from '@/lib/cohorts';
+import { CohortBrowser } from './cohort-browser';
 
 export const dynamic = 'force-dynamic';
 
@@ -161,6 +163,16 @@ export default async function CoursePage({
     ? await isCourseSaved(supabase, course.id)
     : { saved: false, id: null, note: null };
 
+  // RLS returns open cohorts while the flag is on, and still returns an
+  // existing member's own class while it is off so they can leave rather than
+  // being trapped by an admin toggle.
+  const [cohortsOn, joinableCohorts] = user
+    ? await Promise.all([
+        isFlagEnabled(supabase, 'learning.cohorts').catch(() => false),
+        fetchJoinableCohorts(supabase, { courseId: course.id, learners }),
+      ])
+    : [false, [] as Awaited<ReturnType<typeof fetchJoinableCohorts>>];
+
   return (
     <div className="container section" style={{ display: 'grid', gap: '1.5rem' }}>
       <div>
@@ -209,6 +221,14 @@ export default async function CoursePage({
           signedIn={Boolean(user)}
           label={offeringLabel(offering)}
         />
+
+        {user && (cohortsOn || joinableCohorts.length > 0) && (
+          <CohortBrowser
+            cohortsEnabled={cohortsOn}
+            cohorts={joinableCohorts}
+            learners={learners}
+          />
+        )}
 
         {savedOn && (
           <SaveButton
