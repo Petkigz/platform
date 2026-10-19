@@ -19,6 +19,14 @@ import {
 } from '@/lib/enrolment';
 import { EnrolButton } from './enrol-button';
 import { isFlagEnabled } from '@/lib/flags';
+import {
+  canReviewCourse,
+  fetchCourseReviews,
+  fetchReviewSummary,
+  type CourseReview,
+  type ReviewSummary,
+} from '@/lib/reviews';
+import { ReviewPanel } from './review-panel';
 
 export const dynamic = 'force-dynamic';
 
@@ -130,6 +138,18 @@ export default async function CoursePage({
     0,
   );
 
+  // Ratings and reviews. Read only when the flag is on: the tables exist either
+  // way, but an empty review section on every course page is a promise the
+  // platform is not keeping yet.
+  const reviewsOn = await isFlagEnabled(supabase, 'learning.reviews').catch(() => false);
+  const [reviewSummary, courseReviews, mayReview] = reviewsOn
+    ? await Promise.all([
+        fetchReviewSummary(supabase, course.id),
+        fetchCourseReviews(supabase, { courseId: course.id, myUserId: user?.id ?? null }),
+        canReviewCourse(supabase, { courseId: course.id, learnerProfileId }),
+      ])
+    : ([{ average: 0, count: 0, distribution: {} }, [], false] as [ReviewSummary, CourseReview[], boolean]);
+
   return (
     <div className="container section" style={{ display: 'grid', gap: '1.5rem' }}>
       <div>
@@ -210,6 +230,16 @@ export default async function CoursePage({
           ))
         )}
       </div>
+
+      {reviewsOn && (
+        <ReviewPanel
+          courseId={course.id}
+          summary={reviewSummary}
+          reviews={courseReviews}
+          signedIn={Boolean(user)}
+          canReview={mayReview}
+        />
+      )}
     </div>
   );
 }

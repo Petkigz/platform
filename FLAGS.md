@@ -31,7 +31,7 @@ Three kinds of gate:
 | `learning.audience_sections` | Separate Young Learners and Adult Learner entry experiences | ADMIN | Learner switcher designed — a parent who also studies must move between their own learning and a child's |
 | `learning.age_bands` | Age-band navigation inside Young Learners | ADMIN | Bands chosen. Use `age_band`, **not** dates of birth |
 | `learning.subject_nav` | Hierarchical subject browsing in the catalogue | ADMIN | `subject_areas` taxonomy populated — this is catalogue infrastructure, not governance |
-| `learning.reviews` | Learner ratings and reviews on courses | ADMIN | **Table does not exist.** Satisfaction signal only — **never a substitute for scholarly review**. Needs a moderation policy |
+| `learning.reviews` | Learner ratings and reviews on courses | ADMIN | Someone available to read review text before it appears. Satisfaction signal only — **never a substitute for scholarly review**, and never read by the publication workflow. Catalogue badges stay behind `learning.badges` |
 | `learning.previews` | Free preview lessons before enrolment | ADMIN | Select the free lesson and public-sample resources per course version; verify sample content before enabling. The flag gates both anonymous resource reads and the free-entitlement bypass; it never unlocks enrolled-only materials. |
 | `learning.badges` | Bestseller and rating badges in the catalogue | ADMIN | Threshold rules; must not imply scholarly endorsement |
 | `learning.notes_bookmarks` | Private lesson notes and bookmarks | ADMIN | Retention and family-sharing policy decided before enabling; transcripts are not included |

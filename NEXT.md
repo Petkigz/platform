@@ -38,7 +38,11 @@ part of it. The help desk is built end to end: `/support` opens and lists
 cases, `/support/<caseNumber>` holds the thread, `/admin/support` is the staff
 queue, internal notes are staff-only in the read policy, and a requester reply
 to a resolved case reopens it. `platform.support` ships off; turning it off
-stops new cases but not the ones already in flight. Version copying
+stops new cases but not the ones already in flight. Enrolled learners can rate
+and review a course from its page; a rating alone is counted immediately while
+words are held until staff publish them, and `/admin/course-reviews` is the
+reading queue. Reviews are a satisfaction signal only — nothing in the
+publication workflow reads them. `learning.reviews` ships off. Version copying
 carries forward the curriculum, assessments, completion requirements, citations
 and product/price links; existing learners stay pinned
 to their original version.
@@ -50,9 +54,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **705 database tests, 294 web tests; TypeScript typecheck and
-production build pass; 94 tables, 219 policies, 126 user-defined triggers,
-186 functions, 79 migrations and 87 app route entries.**
+Verification: **718 database tests, 312 web tests; TypeScript typecheck and
+production build pass; 95 tables, 220 policies, 127 user-defined triggers,
+190 functions, 80 migrations and 90 app route entries.**
 
 ## Today's sentence
 

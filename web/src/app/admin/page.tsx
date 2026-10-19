@@ -168,6 +168,14 @@ export default async function AdminPage() {
         cases already in flight, which stay answerable here.
       </p>
 
+      <p>
+        <Link href="/admin/course-reviews">Course review queue</Link> — learner
+        ratings that include words, held until someone reads them. Ratings
+        alone are published immediately. Off until{' '}
+        <code>learning.reviews</code> is enabled, and never part of scholarly
+        review.
+      </p>
+
       <p style={{ marginTop: '1.5rem' }}>
         <Link href="/learn">Back to my learning</Link>
       </p>

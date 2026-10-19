@@ -62,10 +62,10 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 ## Status
 
-The database stands at **94 tables, RLS on every one, 219 policies, 126
-user-defined triggers, 186 functions and 79 migrations.** The database suite
-passes **705 tests**; the web suite passes **294 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **87 app route entries**.
+The database stands at **95 tables, RLS on every one, 220 policies, 127
+user-defined triggers, 190 functions and 80 migrations.** The database suite
+passes **718 tests**; the web suite passes **312 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **90 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. `/account`
@@ -97,6 +97,19 @@ the session, not the request body, and the row must point at an enrolment the
 caller may act for whose pinned version actually contains that lesson — a note
 cannot be attached to a version the learner never accessed. Transcripts, which
 the old flag description bundled in, are not built and are no longer claimed.
+
+Learners can rate and review a course they are enrolled in, from the course
+page, and staff read anything they wrote at `/admin/course-reviews`. The rules
+that make the number mean something are in the database: enrolled learners only,
+one review per learner per course, an account reviews as itself rather than as a
+child in its family, and the course author cannot review their own course. A
+rating with no words is counted immediately — there is nothing to moderate — and
+words are held until a person publishes them, so leaving a review stays a
+two-tap action. Editing text sends it back through moderation, otherwise
+updating is a way to publish an unreviewed sentence. A review is a satisfaction
+signal and never reaches the publication workflow, which the tests assert
+directly rather than by convention. `learning.reviews` ships off; the catalogue
+badges that would advertise a score stay behind their own flag.
 
 There is a help desk. `/support` opens a case and lists the ones already open,
 `/support/<caseNumber>` holds the thread, and `/admin/support` is the staff
@@ -220,14 +233,15 @@ becomes available only when staff confirm it. An uploader cannot promote their
 own file — that hole was found by running the sequence, not by reading the
 policy.
 
-(The trigger count is user-defined triggers. `pg_trigger` also holds 883
-internal constraint triggers; counting them gives 1009, which is the number
+(The trigger count is user-defined triggers. `pg_trigger` also holds 903
+internal constraint triggers; counting them gives 1030, which is the number
 that produced an earlier, inflated figure in this file.)
 
 All five original logical groups are complete. `discussion_posts` was the
 89th table, added for per-lesson discussion after those groups closed. The
 teacher profile feature adds the 90th table. Private lesson notes and
-bookmarks add the 91st and 92nd, and the help desk adds the 93rd and 94th.
+bookmarks add the 91st and 92nd, the help desk adds the 93rd and 94th, and
+learner reviews add the 95th.
 Governance channels (content reports and review appeals) use the existing
 `content_reports` and `governance_appeals` tables rather than adding new ones.
 
@@ -252,11 +266,11 @@ npm run dev
 
 See `web/README.md`.
 
-### Why 94 tables when the design specified 85
+### Why 95 tables when the design specified 85
 
-Nine tables beyond the original 85 were needed for recorded decisions, the
+Ten tables beyond the original 85 were needed for recorded decisions, the
 chosen discussion experience, teacher-authored public profiles, private study
-data and the help desk:
+data, the help desk and learner reviews:
 
 - `institutions` — D1 multi-tenancy had no table to hang `institution_id` on
 - `media_assets` — D8 requires originals in storage we control, with a checksum
@@ -271,6 +285,9 @@ data and the help desk:
   different readers: staff see internal notes on a message that the person who
   opened the case must never see, which is a row-level distinction rather than
   a column on the case
+- `course_reviews` — the register had the flag and no table; a review is not a
+  `content_report` (it is an opinion about a course, not a defect in a lesson)
+  and not a review decision (which is scholarly and gates publication)
 
 Learning paths reuse the existing `learning_paths` and `learning_path_items`
 tables; this work adds their audited writers and the teacher/learner screens,

@@ -77,7 +77,8 @@ partly complete.** The roadmap starts where the project already is.
 - [~] Build course approval and revision history — **`/review` is live: accept or decline an assignment, record a decision with a mandatory rationale, version transitions applied. An appeals queue still to build**
 - [!] Build marketplace commissions and instructor earnings — **deferred; behind `teaching.payouts`**
 - [!] Build payouts and instructor analytics — **3 tables with no fields and no endpoints**
-- [~] Build admin dashboard and moderation tools — **`/admin` is live: all 86 flags seeded with gate type and precondition, `code`-gated ones refused at runtime by trigger. Moderation tools (reports, appeals) still to build**
+- [~] Build admin dashboard and moderation tools — **`/admin` is live: all 86 flags seeded with gate type and precondition, `code`-gated ones refused at runtime by trigger. Queues built: content reports, appeals, discussion, guardian verification, support cases and course reviews. Still to build: learner analytics**
+- [x] Build learner ratings and reviews — *`course_reviews` plus the ratings panel on `/courses/[slug]` and the held-text queue at `/admin/course-reviews`. Enrolled learners only, one review each, an account reviews as itself, the author cannot review their own course, and text is held until a person publishes it. A rating alone is counted immediately. Satisfaction only: nothing here is read by the publication workflow. `supabase/tests/course_reviews.test.mjs`.*
 
 ## Phase 7 — Mobile and advanced features
 
