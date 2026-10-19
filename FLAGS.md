@@ -128,7 +128,7 @@ Three kinds of gate:
 |---|---|---|---|
 | `auth.email_password` | Email + password sign-in | ADMIN | Email sender verified; reset flow |
 | `auth.phone_otp` | Phone number + OTP sign-in | ADMIN + SETUP | SMS provider chosen; **cost per message confirmed for each launch market**; OTP used at registration and recovery only, never per login |
-| `platform.support` | Support cases and replies | ADMIN | **`support_cases` table does not exist** — 7 endpoints reference it |
+| `platform.support` | Support cases and replies | ADMIN | Someone available to answer the queue; reply-channel and retention policy decided. No notification provider is wired — cases are read in the dashboard |
 | `platform.admin_settings` | The admin dashboard itself | ADMIN | Must be built **first** — everything else depends on it |
 | `platform.audit` | Audit log of privileged actions | ADMIN | — |
 | `platform.maintenance_mode` | Read-only mode | ADMIN | — |

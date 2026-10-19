@@ -62,10 +62,10 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 ## Status
 
-The database stands at **92 tables, RLS on every one, 217 policies, 125
-user-defined triggers, 179 functions and 78 migrations.** The database suite
-passes **689 tests**; the web suite passes **283 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **82 app route entries**.
+The database stands at **94 tables, RLS on every one, 219 policies, 126
+user-defined triggers, 186 functions and 79 migrations.** The database suite
+passes **705 tests**; the web suite passes **294 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **87 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. `/account`
@@ -97,6 +97,17 @@ the session, not the request body, and the row must point at an enrolment the
 caller may act for whose pinned version actually contains that lesson — a note
 cannot be attached to a version the learner never accessed. Transcripts, which
 the old flag description bundled in, are not built and are no longer claimed.
+
+There is a help desk. `/support` opens a case and lists the ones already open,
+`/support/<caseNumber>` holds the thread, and `/admin/support` is the staff
+queue. Case numbers are human (`SC-000123`) because a support conversation
+happens partly outside the product and a uuid cannot be read aloud. Internal
+notes are staff-only in the read policy, not filtered in the application, so a
+requester is never one query away from seeing them. A requester who replies to
+a resolved case reopens it, which is what stops the queue reporting a
+resolution rate it has not earned. `platform.support` ships off, and turning it
+off stops new cases while leaving the ones in flight answerable — a kill switch
+that strands live conversations is worse than none.
 
 Subscription plans are now configurable in `/admin/plans`: staff create a
 plan, versioned learner allowances, subject/feature entitlements and recurring
@@ -209,16 +220,16 @@ becomes available only when staff confirm it. An uploader cannot promote their
 own file — that hole was found by running the sequence, not by reading the
 policy.
 
-(The trigger count is user-defined triggers. `pg_trigger` also holds 847
-internal constraint triggers; counting them gives 972, which is the number
+(The trigger count is user-defined triggers. `pg_trigger` also holds 883
+internal constraint triggers; counting them gives 1009, which is the number
 that produced an earlier, inflated figure in this file.)
 
 All five original logical groups are complete. `discussion_posts` was the
 89th table, added for per-lesson discussion after those groups closed. The
 teacher profile feature adds the 90th table. Private lesson notes and
-bookmarks add the 91st and 92nd. Governance channels (content reports and
-review appeals) use the existing `content_reports` and `governance_appeals`
-tables rather than adding new ones.
+bookmarks add the 91st and 92nd, and the help desk adds the 93rd and 94th.
+Governance channels (content reports and review appeals) use the existing
+`content_reports` and `governance_appeals` tables rather than adding new ones.
 
 All five logical schema groups are built. Every frozen decision — D1
 multi-tenancy, D2 child identity, D4 money, D5 version pinning, D6 content
@@ -241,11 +252,11 @@ npm run dev
 
 See `web/README.md`.
 
-### Why 92 tables when the design specified 85
+### Why 94 tables when the design specified 85
 
-Seven tables beyond the original 85 were needed for recorded decisions, the
-chosen discussion experience, teacher-authored public profiles and private
-study data:
+Nine tables beyond the original 85 were needed for recorded decisions, the
+chosen discussion experience, teacher-authored public profiles, private study
+data and the help desk:
 
 - `institutions` — D1 multi-tenancy had no table to hang `institution_id` on
 - `media_assets` — D8 requires originals in storage we control, with a checksum
@@ -256,6 +267,10 @@ study data:
 - `lesson_notes`, `lesson_bookmarks` — the notes/bookmarks flag existed in the
   register with no tables behind it; a note and a bookmark have different
   lifecycles (one is edited, one is toggled), so they are separate tables
+- `support_cases`, `support_case_messages` — a case and its thread have
+  different readers: staff see internal notes on a message that the person who
+  opened the case must never see, which is a row-level distinction rather than
+  a column on the case
 
 Learning paths reuse the existing `learning_paths` and `learning_path_items`
 tables; this work adds their audited writers and the teacher/learner screens,

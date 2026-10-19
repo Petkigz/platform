@@ -161,6 +161,12 @@ export default async function AdminPage() {
         questions and peer answers held for review. Empty until{' '}
         <code>learning.discussion</code> is enabled.
       </p>
+      <p>
+        <Link href="/admin/support">Support queue</Link> — requests people
+        opened from <Link href="/support">Help</Link>. Turning{' '}
+        <code>platform.support</code> off stops new ones; it does not close the
+        cases already in flight, which stay answerable here.
+      </p>
 
       <p style={{ marginTop: '1.5rem' }}>
         <Link href="/learn">Back to my learning</Link>

@@ -38,11 +38,12 @@ partly complete.** The roadmap starts where the project already is.
 
 ## Phase 3 — Core platform
 
-- [x] Build the backend and database — **all five schema groups complete. 88 tables, RLS on every one, 202 policies, 105 triggers, 312 tests passing (`npm run test:db`).** The API and application layer follow.
+- [x] Build the backend and database — **all five schema groups complete. 94 tables, RLS on every one, 219 policies, 126 user-defined triggers, 705 tests passing (`npm run test:db`).** The API and application layer follow.
 - [~] Build registration, login and password recovery — *email/password sign-up, sign-in and recovery are live; phone OTP can now be requested and verified in-app. Live email/SMS delivery and callback allowlists still need a configured Supabase project.*
 - [x] Implement user roles and permissions — *capability-based, not role-based. 10 roles, 4 privileged, 16 capability functions. Three real defects found and fixed in `20261021000100_authz_fixes.sql`.*
 - [~] Build user profiles and account settings — *`/account` edits display name, preferred language and IANA time zone through the session-scoped RLS policy; email password recovery and phone OTP sign-in are available, while sign-in address changes and wider profile fields remain.*
 - [x] Build the course catalogue, search and course pages — *`/catalogue` and `/courses/[slug]`. `subject_areas` seeded with 9 disciplines and 26 subdivisions. `supabase/tests/catalogue.test.mjs`.*
+- [x] Build the help desk — *`/support` for the person asking, `/support/<caseNumber>` for the thread, `/admin/support` for the queue. `support_cases` and `support_case_messages` with session-bound writer functions, staff-only internal notes, and an audited state machine. `platform.support` ships off. `supabase/tests/support_cases.test.mjs`.*
 - [!] Set up file storage, video delivery and deployment — **video provider not chosen.** Cloudflare Stream researched; see IDEAS.md for the lock-in caveat.
 
 ## Phase 4 — Learning systems

@@ -94,7 +94,7 @@ Status:
 | 40 | Revenue analytics | BLOCKED — `delivery.analytics` is CODE |
 | 41 | Certificates | READY |
 | 42 | **Settings and feature flags** | READY — **critical path, missing from the source list.** No settings table exists |
-| 43 | Support cases | BLOCKED — 7 endpoints, no `support_cases` table |
+| 43 | Support cases | **BUILT** — `/support` (open and list), `/support/<caseNumber>` (thread, reply, withdraw), `/admin/support` (queue and triage). Behind `platform.support` |
 
 ## 8. Payments — 4
 
@@ -124,9 +124,10 @@ Status:
 
 | | |
 |---|---|
-| Distinct screens | **50** |
-| Ready to design now | **38** |
-| Blocked | **12** |
+| Numbered screens | **50**, plus 19a, 19b and 20a added later — **53 rows** |
+| Built | **12** |
+| Ready to design now | **34** |
+| Blocked | **7** |
 
 **Not separate screens** (the source listed them as four): Android home,
 Android learning, iOS home, iOS learning. One codebase, so these are responsive

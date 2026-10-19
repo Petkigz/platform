@@ -34,7 +34,11 @@ save one private note and one bookmark per lesson from the lesson page; both
 tables are new, both are gated by `learning.notes_bookmarks` in the database
 rather than only in the UI, and ownership comes from the session with the
 enrolment's pinned version checked before a row is written. Transcripts are not
-part of it. Version copying
+part of it. The help desk is built end to end: `/support` opens and lists
+cases, `/support/<caseNumber>` holds the thread, `/admin/support` is the staff
+queue, internal notes are staff-only in the read policy, and a requester reply
+to a resolved case reopens it. `platform.support` ships off; turning it off
+stops new cases but not the ones already in flight. Version copying
 carries forward the curriculum, assessments, completion requirements, citations
 and product/price links; existing learners stay pinned
 to their original version.
@@ -46,9 +50,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **689 database tests, 283 web tests; TypeScript typecheck and
-production build pass; 92 tables, 217 policies, 125 user-defined triggers,
-179 functions, 78 migrations and 82 app route entries.**
+Verification: **705 database tests, 294 web tests; TypeScript typecheck and
+production build pass; 94 tables, 219 policies, 126 user-defined triggers,
+186 functions, 79 migrations and 87 app route entries.**
 
 ## Today's sentence
 

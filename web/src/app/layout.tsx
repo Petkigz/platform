@@ -52,6 +52,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <div className="container">
             <span>© {new Date().getFullYear()} AyahSpring</span>
             <span>Islamic learning for children and adults, worldwide.</span>
+            {/* Help lives in the footer rather than the masthead: the nav is
+                already eight links wide on a phone, and nobody looks for
+                support in the primary navigation until they need it. */}
+            <Link href="/support">Help</Link>
           </div>
         </footer>
       </body>
