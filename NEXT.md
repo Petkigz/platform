@@ -122,6 +122,20 @@ gate disagreement — the docs promising an admin that a flag needs a deploy whi
 the dashboard offers to flip it. Prose is deliberately not compared: keys,
 types, gates and shipped-off values are the parts that can hurt somebody.
 
+Auditing what is left turned up a roadmap that was badly wrong about money.
+Phase 5 carried six rows all marked blocked, and five of them were false: the
+38 money tables are built and enforced in SQL; `lib/payments/` holds a complete
+`PaymentProvider` boundary plus working MTN MoMo and Airtel adapters, 1,583 lines
+covered by the `payments`, `checkout`, `refunds` and `money` suites;
+`/courses/[slug]/buy` → `/api/checkout` → `/orders` is an end-to-end path; and
+`/subscriptions`, `/admin/refunds`, `/admin/reconciliation`, `/admin/disputes`
+and `/admin/financial-adjustments` all exist. What is genuinely
+missing is a merchant account, so none of it has been exercised against a live
+provider — a business fact, not a build task. The rows now say that, with the two
+honest gaps kept visible: no receipt document, and no renewal or failed-payment
+retry. The same audit closed the course-approval row, whose note still claimed an
+appeals queue was missing when `/admin/appeals` is built and privileged-only.
+
 That leaves one gap that is not code. **Learner analytics (`SCREENS.md` row 32)
 is blocked on a privacy decision**, and it is recorded in `DECISIONS.md` under
 "What a teacher may see about a learner". RLS gives a course author no read at

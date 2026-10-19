@@ -61,23 +61,34 @@ partly complete.** The roadmap starts where the project already is.
 - [x] Build saved courses — *`course_wishlist` plus `/saved`, a save button on the course page and `POST /api/wishlist`. One row per account per course, owner taken from the session rather than supplied, an optional private note that carries the "who is this for" question so saving stays one tap, a 100-row ceiling, and removal that is not flag-gated so switching the feature off cannot trap a list. `supabase/tests/course_wishlist.test.mjs`.*
 - [~] Build lesson notes and bookmarks — *`lesson_notes`/`lesson_bookmarks` plus a private study-tools panel on the lesson page and `POST /api/lesson-study-tools`; the `learning.notes_bookmarks` flag is checked in the database, ownership comes from the session, and a row must match the enrolment's pinned version. Transcripts, which the flag description used to bundle in, are not built. `supabase/tests/lesson_study_tools.test.mjs`.*
 
-## Phase 5 — Payments and revenue  (all blocked on one fact)
+## Phase 5 — Payments and revenue  (built to the provider boundary; blocked on one fact)
 
-- [!] Design the payment and order system — **provider and jurisdiction undecided**
-- [!] Integrate and test MTN Mobile Money — **merchant registration + API terms unconfirmed**
-- [!] Integrate and test Airtel Money — **do not assume Airtel's terms match MTN's**
-- [!] Build checkout, receipts and transaction history
-- [!] Build subscriptions and access control
-- [!] Build refunds, reconciliation and payment administration
+Re-audited 2026-10-19. These six rows all said blocked, and five of them were
+wrong: the money code exists and is tested. What is missing is a merchant
+account, so nothing below can be exercised against a live provider — which is a
+business fact, not a build task.
 
-*Build the `PaymentProvider` boundary now with no implementation. Do not guess a provider — this is money code.*
+- [x] Design the payment and order system — **38 money tables (schema Groups 4 and 5), all enforced in SQL: integer minor units with an explicit currency and no floating point anywhere (D4), order totals that must agree with their components, append-only status history, a `financial_transactions` ledger, and a provider-event inbox that dedupes on provider plus event id so one callback cannot confirm a payment twice. Not modelled: jurisdiction-specific tax**
+- [~] Integrate and test MTN Mobile Money — **adapter complete against the documented Collections API: token, request-to-pay with a caller-generated reference, then poll or callback. Sandbox base URL and target environment come from the environment, and it refuses rather than guessing when unconfigured. The collection callback is unsigned, so `verifyWebhookSignature` returns false by design and the webhook falls back to re-querying the transaction — returning true would let anyone who knows an order id mark it paid. Refunds refuse until separate Disbursement credentials exist. Untested against a live sandbox: merchant registration and API terms unconfirmed**
+- [~] Integrate and test Airtel Money — **adapter complete on the same boundary, with its own OAuth client credentials and country. Written separately rather than assumed to match MTN's terms. Untested against a live sandbox**
+- [~] Build checkout, receipts and transaction history — **`/courses/[slug]/buy` → `POST /api/checkout` → `lib/checkout.ts` creates the order and records the attempt; `/orders` reads status from the table rather than from having been redirected, and carries the refund-request form. Missing: a receipt document, and transaction history is the order list rather than a ledger view**
+- [~] Build subscriptions and access control — **`/plans`, `/subscriptions` (allocate a seat to a household learner, cancel with a reason), and entitlement grants/events that drive access. Missing: renewal and failed-payment retry**
+- [~] Build refunds, reconciliation and payment administration — **`/api/refunds`, `/admin/refunds`, `/admin/reconciliation`, `/admin/disputes`, `/admin/financial-adjustments`. The database refuses a refund exceeding the captured amount net of prior refunds, and a requester may not approve their own refund. Anything that moves money waits on a provider**
+
+*The note this phase carried — "build the `PaymentProvider` boundary now with no
+implementation" — is done and was the right call. `lib/payments/provider.ts`
+defines the boundary, `lib/payments/registry.ts` holds the adapters, and a
+registered provider with no credentials reports `available === false` so checkout
+is never offered against a provider that cannot run. Two adapters are now
+registered, which is more than the note asked for; neither has been paid real
+money through.*
 
 ## Phase 6 — Marketplace and governance
 
 - [X] Build instructor applications and verification — **conflicts with the recorded decision:** a curated cohort of teachers I know, not open applications
 - [~] Build course creation and curriculum tools — **`/teach` is live: create a course, build its outline, reorder sections/lessons/content, submit for review, and create a draft from a published version. Lesson media upload from our storage is still to build; the current form accepts HTTPS resources**
 - [X] Build scholar/content reviewer workflows — **conflicts with P6:** scholarly panel replaced by light peer review. 9 tables of panel machinery are excess for a trusted cohort.
-- [~] Build course approval and revision history — **`/review` is live: accept or decline an assignment, record a decision with a mandatory rationale, version transitions applied. An appeals queue still to build**
+- [x] Build course approval and revision history — **`/review` is live: accept or decline an assignment, record a decision with a mandatory rationale, version transitions applied. `/admin/appeals` is live too — privileged staff read the queue and decide, and `decide_appeal()` refuses to let the original decision-maker resolve an appeal against their own decision. Review decisions are append-only, so the history is the record**
 - [!] Build marketplace commissions and instructor earnings — **deferred; behind `teaching.payouts`**
 - [!] Build payouts and instructor analytics — **3 tables with no fields and no endpoints**
 - [~] Build admin dashboard and moderation tools — **`/admin` is live: all 87 flags seeded with gate type and precondition (plus the 3 governance and money controls in `platform_settings`), `code`-gated ones refused at runtime by trigger, and the register is now held against `FLAGS.md` by test — no ghost flags, no gate disagreement. Queues built: content reports, appeals, discussion, guardian verification, support cases and course reviews. Still to build: learner analytics, which needs a decision on whether a course author may see learner progress at all (today RLS gives an author no read on `course_enrolments` or `lesson_progress`; only the learner and their guardian have one)**
