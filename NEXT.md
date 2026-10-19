@@ -27,8 +27,10 @@ active verified guardian with learning permission. The flag remains off until
 its review and evidence-handling preconditions are met. `/account` saves the
 signed-in user's display name, preferred language and time zone under RLS; the
 email recovery path uses a verified callback and authenticated password update.
-Version copying carries forward the curriculum, assessments, completion
-requirements, citations and product/price links; existing learners stay pinned
+Phone sign-in now completes the SMS OTP instead of stopping after sending it;
+real delivery still depends on Supabase provider configuration. Version copying
+carries forward the curriculum, assessments, completion requirements, citations
+and product/price links; existing learners stay pinned
 to their original version.
 Learners can browse paths, lesson citations and teacher pages when the
 corresponding flags are enabled. Public samples have a dedicated course-preview

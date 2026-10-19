@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { toE164, isE164 } from '@/lib/phone';
+import { safeNextPath } from '@/lib/auth';
 
 /**
  * D3: both email+password and phone OTP.
@@ -18,7 +19,7 @@ import { toE164, isE164 } from '@/lib/phone';
 function SignIn() {
   const router = useRouter();
   const params = useSearchParams();
-  const next = params.get('next') ?? '/learn';
+  const next = safeNextPath(params.get('next'));
 
   const [mode, setMode] = useState<'password' | 'otp'>('password');
   const [email, setEmail] = useState('');
@@ -28,6 +29,8 @@ function SignIn() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState<string | null>(null);
+  const [sentPhone, setSentPhone] = useState<string | null>(null);
+  const [otpCode, setOtpCode] = useState('');
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -43,6 +46,15 @@ function SignIn() {
         if (err) throw err;
         router.push(next);
         router.refresh();
+      } else if (sentPhone) {
+        const { error: err } = await supabase.auth.verifyOtp({
+          phone: sentPhone,
+          token: otpCode.trim(),
+          type: 'sms',
+        });
+        if (err) throw err;
+        router.push(next);
+        router.refresh();
       } else {
         // D3: whatever the user typed, what leaves this browser is E.164.
         const normalised = toE164(phone, countryCode);
@@ -53,10 +65,27 @@ function SignIn() {
         }
         const { error: err } = await supabase.auth.signInWithOtp({ phone: normalised });
         if (err) throw err;
+        setSentPhone(normalised);
         setSent(`If an account exists for ${normalised}, a code is on its way.`);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function resendCode() {
+    if (!sentPhone || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const { error: err } = await createClient().auth.signInWithOtp({ phone: sentPhone });
+      if (err) throw err;
+      setOtpCode('');
+      setSent(`A new code has been sent to ${sentPhone}.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not resend the code.');
     } finally {
       setBusy(false);
     }
@@ -119,6 +148,7 @@ function SignIn() {
               <input
                 aria-label="Country code"
                 value={countryCode}
+                disabled={Boolean(sentPhone) || busy}
                 onChange={(e) => setCountryCode(e.target.value)}
               />
               <input
@@ -129,6 +159,7 @@ function SignIn() {
                 required
                 placeholder="0772 123 456"
                 value={phone}
+                disabled={Boolean(sentPhone) || busy}
                 onChange={(e) => setPhone(e.target.value)}
               />
             </div>
@@ -137,11 +168,45 @@ function SignIn() {
                 ? 'Already in international format.'
                 : `Will be sent as ${toE164(phone, countryCode) ?? '—'}`}
             </p>
+            {sentPhone && (
+              <>
+                <label htmlFor="otp-code">Text message code</label>
+                <input
+                  id="otp-code"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  pattern="[0-9]+"
+                  maxLength={12}
+                  required
+                  value={otpCode}
+                  onChange={(event) => setOtpCode(event.target.value.replace(/\D/g, ''))}
+                />
+                <div className="row">
+                  <button type="button" className="btn secondary" disabled={busy} onClick={resendCode}>
+                    Resend code
+                  </button>
+                  <button
+                    type="button"
+                    className="btn secondary"
+                    disabled={busy}
+                    onClick={() => {
+                      setSentPhone(null);
+                      setOtpCode('');
+                      setSent(null);
+                      setError(null);
+                    }}
+                  >
+                    Change number
+                  </button>
+                </div>
+              </>
+            )}
           </>
         )}
 
         <button type="submit" disabled={busy}>
-          {busy ? 'Working…' : mode === 'password' ? 'Sign in' : 'Send code'}
+          {busy ? 'Working…' : mode === 'password' ? 'Sign in' : sentPhone ? 'Verify code' : 'Send code'}
         </button>
       </form>
 
