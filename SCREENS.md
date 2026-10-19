@@ -55,7 +55,8 @@ Status:
 
 | # | Screen | Status |
 |---|---|---|
-| 20 | Adult home, led by "continue where you stopped" | READY |
+| 20 | Adult home, led by "continue where you stopped" | **BUILT** — shared learner dashboard at `/learn` |
+| 20a | **Learning path detail and progress** | **BUILT** — `/paths/[slug]` tracks required-course completion |
 | 21 | Course details | READY |
 | 22 | Video lesson *(adult chrome)* | **BUILT** — same route as #14, chrome not yet differentiated |
 | 23 | Qur'an / audio player | READY |

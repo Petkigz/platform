@@ -7,6 +7,7 @@ import {
   createLearningPath,
   removeLearningPathItem,
   retireLearningPath,
+  summarizeLearningPathProgress,
   validatePath,
 } from './learning-paths.ts';
 
@@ -21,6 +22,34 @@ function stubRpc(result: { data?: unknown; error?: { message: string } } = { dat
   } as any;
   return { client, calls };
 }
+
+test('path progress averages required courses, clamps values and ignores optional courses', () => {
+  const summary = summarizeLearningPathProgress(
+    [
+      { courseId: 'done', required: true },
+      { courseId: 'working', required: true },
+      { courseId: 'not-started', required: true },
+      { courseId: 'optional', required: false },
+    ],
+    new Map([
+      ['done', { status: 'completed', percentComplete: 25 }],
+      ['working', { status: 'active', percentComplete: 51.6 }],
+      ['not-started', { status: 'active', percentComplete: -5 }],
+      ['optional', { status: 'active', percentComplete: 100 }],
+    ]),
+  );
+  assert.deepEqual(summary, { requiredCount: 3, completedRequired: 1, percentComplete: 51 });
+});
+
+test('an empty or optional-only path does not claim completion', () => {
+  assert.deepEqual(summarizeLearningPathProgress([], new Map()), {
+    requiredCount: 0, completedRequired: 0, percentComplete: 0,
+  });
+  assert.deepEqual(summarizeLearningPathProgress(
+    [{ courseId: 'optional', required: false }],
+    new Map([['optional', { status: 'completed', percentComplete: 100 }]]),
+  ), { requiredCount: 0, completedRequired: 0, percentComplete: 0 });
+});
 
 test('path titles, slugs and audiences are validated', () => {
   assert.equal(validatePath(' Quran basics ', 'quran-basics', 'child').ok, true);

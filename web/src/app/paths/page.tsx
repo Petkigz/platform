@@ -18,11 +18,12 @@ export default async function LearningPathsPage(){
   return <div className="container section"><p className="eyebrow">Guided learning</p><h1>Learning paths</h1>
     <p className="lede">Follow a curated sequence of courses at your own pace. Each course keeps its own enrolment and access rules.</p>
     {(data??[]).length===0?<p className="empty">No learning paths are published yet.</p>:<div className="grid cols-2">{(data??[]).map(path=><article className="card" key={path.id}>
-      <p className="eyebrow">{path.audience==='both'?'Children and adults':path.audience==='child'?'For children':'For adults'}</p><h2>{path.title}</h2>{path.description&&<p className="muted">{path.description}</p>}
+      <p className="eyebrow">{path.audience==='both'?'Children and adults':path.audience==='child'?'For children':'For adults'}</p><h2><Link href={`/paths/${path.slug}`}>{path.title}</Link></h2>{path.description&&<p className="muted">{path.description}</p>}
       <ol>{[...(path.learning_path_items??[])].sort((a,b)=>a.position-b.position).map(item=><li key={item.id}>
         {item.courses?.[0]?.status==='active'?<Link href={`/courses/${item.courses[0].slug}`}>{item.courses[0].title}</Link>:(item.courses?.[0]?.title??'Course')}
         {!item.required&&<span className="badge neutral" style={{marginLeft:'.5rem'}}>Optional</span>}
       </li>)}</ol>
+      <Link className="btn secondary" href={`/paths/${path.slug}`}>View path and track progress</Link>
     </article>)}</div>}
   </div>;
 }

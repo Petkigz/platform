@@ -3,6 +3,32 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 export type PathAudience = 'child' | 'adult' | 'both';
 export type LearningPathActionResult = { ok: true; id: string } | { ok: false; message: string };
 
+export type PathCourseProgress = { status: string; percentComplete: number };
+
+/** Aggregate only required courses; optional courses never block pathway completion. */
+export function summarizeLearningPathProgress(
+  items: { courseId: string; required: boolean }[],
+  courses: ReadonlyMap<string, PathCourseProgress>,
+): { requiredCount: number; completedRequired: number; percentComplete: number } {
+  const required = items.filter((item) => item.required);
+  if (required.length === 0) return { requiredCount: 0, completedRequired: 0, percentComplete: 0 };
+
+  const percent = required.reduce((sum, item) => {
+    const course = courses.get(item.courseId);
+    if (course?.status === 'completed') return sum + 100;
+    if (course?.status !== 'active') return sum;
+    const value = Number.isFinite(course.percentComplete) ? course.percentComplete : 0;
+    return sum + Math.min(100, Math.max(0, value));
+  }, 0);
+  const completedRequired = required.filter((item) => courses.get(item.courseId)?.status === 'completed').length;
+
+  return {
+    requiredCount: required.length,
+    completedRequired,
+    percentComplete: Math.round(percent / required.length),
+  };
+}
+
 export function validatePath(title: string, slug: string, audience: string): LearningPathActionResult {
   if (!title.trim() || title.trim().length > 200)
     return { ok: false, message: 'A learning path needs a title under 200 characters.' };

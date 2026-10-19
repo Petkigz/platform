@@ -28,7 +28,8 @@ its review and evidence-handling preconditions are met. `/account` saves the
 signed-in user's display name, preferred language and time zone under RLS; the
 email recovery path uses a verified callback and authenticated password update.
 Phone sign-in now completes the SMS OTP instead of stopping after sending it;
-real delivery still depends on Supabase provider configuration. Version copying
+real delivery still depends on Supabase provider configuration. `/paths/[slug]`
+shows a learner's required-course progress across a guided path. Version copying
 carries forward the curriculum, assessments, completion requirements, citations
 and product/price links; existing learners stay pinned
 to their original version.
@@ -40,9 +41,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **683 database tests, 277 web tests; TypeScript typecheck and
+Verification: **683 database tests, 281 web tests; TypeScript typecheck and
 production build pass; 90 tables, 210 policies, 121 user-defined triggers,
-177 functions, 78 migrations and 81 app route entries.**
+177 functions, 78 migrations and 82 app route entries.**
 
 ## Today's sentence
 
