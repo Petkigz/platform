@@ -343,3 +343,15 @@ unchanged and are enforced in the schema:
 **Enforcement.** `panel_required` is a row in `platform_settings`, not a
 constant in code. The publication gate reads it, so switching the panel on is
 a settings change, not a migration.
+
+---
+
+## Learning paths — implementation invariant
+
+A learning path is an ordered catalogue guide, not a purchasable bundle and
+not an entitlement. Each course continues to use its existing publication,
+enrolment, price and access checks. Teacher-authored paths can be published
+only with at least one active course that has a published version; changes to
+an active path are made on a draft, and retirement requires a written reason.
+The learner-facing `learning.paths` flag remains off until curated path content
+is ready.

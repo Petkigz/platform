@@ -60,6 +60,10 @@ export default async function TeachPage() {
         </div>
       )}
 
+      <p style={{ marginTop: '1.5rem' }}>
+        <Link href="/teach/paths">Learning paths</Link> — curate a sequence of active courses.
+      </p>
+
       <div style={{ marginTop: '1.75rem' }}>
         <div className="outline-h">
           <h3>Create</h3>

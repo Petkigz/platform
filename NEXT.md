@@ -1,38 +1,41 @@
 # NEXT
 
-One milestone. One page. When it's done, rewrite this file.
+One current milestone. One current sentence. The implementation history follows
+for context; the counts in that historical log are snapshots from their dates.
 
-**Test:** can I answer "what am I doing today?" in one sentence?
+## Current status
+
+The learning-path unit is complete locally: teachers curate paths in `/teach/paths`,
+learners browse active paths at `/paths`, and `learning.paths` gates exposure.
+Paths do not bypass enrolment or payment. The flag remains off until content is
+ready.
+
+Verification: **646 database tests, 235 web tests; TypeScript typecheck and
+production build pass; 89 tables, 209 policies, 118 user-defined triggers,
+161 functions, 69 migrations and 68 app route entries.**
+
+## Today's sentence
+
+Continue with the next non-blocked writer/UI gap, keeping each feature behind
+its recorded flag, testing the database and web contract, then committing and
+pushing the completed unit.
+
+## Open external decisions (not to be guessed)
+
+- Payment provider merchant/sandbox credentials and callback verification (P12).
+- Teacher/platform revenue-share percentage; it remains 0% until chosen.
+- Payout policy/preconditions, tax and jurisdiction treatment, and disbursement
+  credentials.
+- Automatic subscription renewal worker and provider support.
+- Legal review and any locale-specific safeguarding/child-consent requirements.
+
+The dormant scholarly panel and other unbuilt product groups remain in
+`ROADMAP.md`, `FLAGS.md` and `NEXT.md`'s implementation history below. Do not
+claim external integrations work without credentials or provider callbacks.
 
 ---
 
-## Done: the entire database
-
-**All five logical schema groups are migrated, tested and committed.**
-
-| | Tables | What it covers |
-|---|---|---|
-| Group 1 | 10 | identity, roles, family, guardians, privacy |
-| Group 2 | 20 | courses, versions, structure, enrolments, progress, assessments, completion, certificates |
-| Group 3 | 20 | reviewers, review workflow, provenance, appeals, panels, audit |
-| Group 4 | 18 | products, pricing, subscriptions, promotions, entitlements |
-| Group 5 | 20 | orders, payments, refunds, reconciliation, payouts |
-| **Total** | **88** | RLS on every table · 202 policies · 105 triggers · 82 functions |
-
-**170 tests pass** against a real PostgreSQL engine: `npm run test:db`.
-
-The record specified 85 tables. There are 88 because three were missing from
-it and had to be added to make the recorded decisions implementable:
-`institutions` (D1 multi-tenancy), `media_assets` (D8 media masters) and
-`platform_settings` (without which "enable it later" had nowhere to live).
-
-Every frozen decision is enforced in SQL rather than in application code:
-**D1** · **D2** · **D4** · **D5** · **D6** · **D7** · **D8** · **D9**.
-
-## Current milestone: the application layer — mostly done
-
-`web/` is a Next.js 16 + TypeScript app with Supabase Auth wired, and one
-authenticated screen reading through RLS.
+## Implementation history (counts below are historical snapshots)
 
 ### Also done since: the authorization matrix
 

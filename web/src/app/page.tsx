@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { isSupabaseConfigured } from '@/lib/env';
 import { createClient } from '@/lib/supabase/server';
 import { disciplines, fetchSubjectAreas } from '@/lib/catalogue';
+import { isFlagEnabled } from '@/lib/flags';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,9 +31,13 @@ const PILLARS = [
 
 export default async function Home() {
   const configured = isSupabaseConfigured();
-  const subjects = configured
-    ? disciplines(await fetchSubjectAreas(await createClient()))
-    : [];
+  const supabase = configured ? await createClient() : null;
+  const [subjects, learningPathsEnabled] = supabase
+    ? await Promise.all([
+        fetchSubjectAreas(supabase).then(disciplines),
+        isFlagEnabled(supabase, 'learning.paths'),
+      ])
+    : [[], false];
 
   return (
     <>
@@ -48,6 +53,9 @@ export default async function Home() {
           <div className="hero-actions">
             <Link href="/catalogue" className="btn">Browse the catalogue</Link>
             <Link href="/sign-up" className="btn secondary">Create a free account</Link>
+            {learningPathsEnabled && (
+              <Link href="/paths" className="btn secondary">Explore learning paths</Link>
+            )}
           </div>
 
           {!configured && (

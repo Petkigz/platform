@@ -62,9 +62,10 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 ## Status
 
-The database stands at **89 tables, RLS on every one, 209 policies, 116
-user-defined triggers, 154 functions, 68 migrations, 633 database tests and
-228 unit tests passing.** The web app builds 63 routes.
+The database stands at **89 tables, RLS on every one, 209 policies, 118
+user-defined triggers, 161 functions and 69 migrations.** The database suite
+passes **646 tests**; the web suite passes **235 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **68 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. Without it
@@ -94,6 +95,14 @@ Finance can record and review dispute cases from `/admin/disputes`. Amounts
 must match the internal transaction's currency and not exceed its value; status
 changes require notes and follow a fixed review path. This is an internal case
 log, not a provider evidence submission.
+
+Teachers can curate ordered learning paths in `/teach/paths`. Publishing
+requires at least one active course with a published version; changes to
+published paths require a draft, and retirement is reasoned and audited. The
+learner page at `/paths` and its home-page link are gated by `learning.paths`,
+which stays off until path content has been authored. Paths organize courses;
+they do not grant or bundle access, so the existing enrolment and payment rules
+remain authoritative.
 
 Finance can reconcile a provider statement from `/admin/reconciliation`.
 Signed minor-unit rows are matched to ledger transactions by provider reference,
@@ -165,12 +174,17 @@ npm run dev
 
 See `web/README.md`.
 
-### Why 88 tables when the design specified 85
+### Why 89 tables when the design specified 85
 
-Three were missing from the design and had to be added for the recorded
-decisions to be implementable:
+Four tables beyond the original 85 were needed to implement recorded decisions
+and the chosen discussion experience:
 
 - `institutions` — D1 multi-tenancy had no table to hang `institution_id` on
 - `media_assets` — D8 requires originals in storage we control, with a checksum
 - `platform_settings` — without it, "build it all, enable it later" had
   nowhere to live; `governance.panel_required` is a row, not a constant
+- `discussion_posts` — per-lesson discussion, explicitly wanted for the product
+
+Learning paths reuse the existing `learning_paths` and `learning_path_items`
+tables; this work adds their audited writers and the teacher/learner screens,
+not another table.
