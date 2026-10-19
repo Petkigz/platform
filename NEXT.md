@@ -22,7 +22,9 @@ for certificate holders and their authorised family. Lesson pages now play
 approved direct HTTPS audio/video files natively; first-party uploaded media
 still needs a chosen storage provider and short-lived signed playback URLs.
 Adults can create a family, add child profiles and review progress at `/family`;
-guardian verification is still its separate consent workflow. Version copying carries forward the curriculum, assessments, completion
+when enabled, `family.guardian_verification` now gates child enrolment on an
+active verified guardian with learning permission. The flag remains off until
+its review and evidence-handling preconditions are met. Version copying carries forward the curriculum, assessments, completion
 requirements, citations and product/price links; existing learners stay pinned
 to their original version.
 Learners can browse paths, lesson citations and teacher pages when the
@@ -33,9 +35,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **682 database tests, 272 web tests; TypeScript typecheck and
+Verification: **683 database tests, 272 web tests; TypeScript typecheck and
 production build pass; 90 tables, 210 policies, 121 user-defined triggers,
-176 functions, 76 migrations and 77 app route entries.**
+177 functions, 78 migrations and 77 app route entries.**
 
 ## Today's sentence
 

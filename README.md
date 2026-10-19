@@ -63,8 +63,8 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **90 tables, RLS on every one, 210 policies, 121
-user-defined triggers, 176 functions and 76 migrations.** The database suite
-passes **682 tests**; the web suite passes **272 tests**. TypeScript typecheck
+user-defined triggers, 177 functions and 78 migrations.** The database suite
+passes **683 tests**; the web suite passes **272 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **77 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
@@ -178,7 +178,10 @@ add children with age bands (no birth date or child login), and see each childâ€
 course progress. `create_family()` writes the family and its owner membership
 in one transaction, so there is no ownerless family state. Guardian verification
 remains a separate, explicit flow and is not bypassed by adding a child to a
-family.
+family. When `family.guardian_verification` is enabled, the database also blocks
+new child enrolments until the enrolling account has an active, reviewed
+relationship with learning permission; the default-off flag must be enabled
+before any US child enrols.
 
 A course can be sold: `create_product()`, `link_product_course_version()`,
 `set_product_price()` and `activate_product()`. Until then every table on the

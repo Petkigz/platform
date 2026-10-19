@@ -14,10 +14,10 @@
 // the caller's own profile. So no child could ever be enrolled through the
 // product, despite the family dashboard and guardian verification both existing.
 //
-// These tests pin both halves: that a family member can enrol a child, and that
-// nobody outside the family can — because the application now passes a
-// client-supplied learner id through, and the only thing standing between that
-// and enrolling a stranger's child is the policy.
+// These tests pin both halves: family membership allows child enrolment while
+// the guardian-consent flag is off; once enabled, a verified, session-linked
+// guardian relationship becomes a database precondition. No client-supplied
+// actor id or UI-only check can substitute for that verification.
 
 export async function run(ctx) {
   const {
@@ -91,6 +91,45 @@ export async function run(ctx) {
       assert(enrolment.learner_profile_id === fam.childId,
         'the enrolment was recorded against the wrong learner');
     });
+  });
+
+  await test('enabling guardian verification blocks unverified child enrolment until staff verifies the guardian', async () => {
+    const pc = await freeCourse();
+    const fam = await parentWithChild('ls-consent-parent@example.com');
+    await q(`update public.platform_settings set value_text='true' where key='family.guardian_verification'`);
+    try {
+      await asUser(fam.userId, async () => {
+        await rejects(() => q(
+          `insert into public.course_enrolments
+             (learner_profile_id,course_id,course_version_id,source,status)
+           values ($1,$2,$3,'free','active')`,[fam.childId,pc.course,pc.version]),
+          'a parent enrolled a child without verified consent while the gate was enabled');
+      });
+
+      const relationshipId = (await q(
+        `insert into public.guardian_relationships
+           (guardian_user_id,learner_profile_id,relationship_type,status,
+            can_manage_profile,can_view_progress,can_manage_learning)
+         values ($1,$2,'parent','pending_verification',true,true,true) returning id`,
+        [fam.userId,fam.childId])).rows[0].id;
+      await q(
+        `insert into public.guardian_verification_cases
+           (guardian_relationship_id,status,reviewed_by,reviewed_at,decision_reason)
+         values ($1,'verified',$2,now(),'guardian identity reviewed')`,
+        [relationshipId,admin]);
+
+      await asUser(fam.userId, async () => {
+        const enrolled = (await q(
+          `insert into public.course_enrolments
+             (learner_profile_id,course_id,course_version_id,source,status)
+           values ($1,$2,$3,'free','active') returning id,learner_profile_id`,
+          [fam.childId,pc.course,pc.version])).rows[0];
+        assert(enrolled.id && enrolled.learner_profile_id===fam.childId,
+          'a verified guardian could not enrol the child profile');
+      });
+    } finally {
+      await q(`update public.platform_settings set value_text='false' where key='family.guardian_verification'`);
+    }
   });
 
   await test('enrolling a child grants the child access, not the parent’s', async () => {

@@ -6,12 +6,11 @@
  * needs an entitlement grant first, which only appears once a payment has
  * been recorded by `record_payment_success()`.
  *
- * That rule is enforced in the database (`can_enrol_in_version`, migration
- * 20261023000100). This module reflects it in the UI so we show the right
- * button, but the database is what actually holds the line. If this file were
- * deleted, a paid course would still be impossible to take for free; if the
- * migration were deleted, this file would be the only thing standing between
- * a learner and someone else's paid content.
+ * Payment eligibility is enforced in `can_enrol_in_version`. When the guardian
+ * consent flag is enabled, that same function and a BEFORE INSERT/UPDATE trigger
+ * require an active verified guardian for child enrolments, including internal
+ * SECURITY DEFINER writers. This module only translates the refusal for the UI;
+ * it cannot authorize an enrolment.
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -159,6 +158,7 @@ export type EnrolErrorCode =
   | 'no_learner_profile'
   | 'no_published_version'
   | 'payment_required'
+  | 'guardian_verification_required'
   | 'not_available'
   | 'already_enrolled';
 
@@ -327,8 +327,18 @@ export async function enrolInFreeCourse(
     .single();
 
   if (error) {
-    // A refused insert under RLS surfaces as a policy error. Treat it as
-    // "not available" rather than leaking the policy name to the browser.
+    // The database trigger is authoritative and its specific reason is safe to
+    // translate into the parent's next step; no client-side check can authorize
+    // the enrolment.
+    if (/verified guardian consent is required/i.test(error.message)) {
+      return {
+        ok: false,
+        code: 'guardian_verification_required',
+        message: 'A verified parent or guardian must complete the consent review before this child can enrol.',
+      };
+    }
+    // A refused insert under RLS otherwise stays intentionally generic rather
+    // than leaking the policy name to the browser.
     return {
       ok: false,
       code: 'not_available',

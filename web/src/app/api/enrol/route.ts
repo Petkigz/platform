@@ -20,9 +20,10 @@ import { enrolInFreeCourse } from '@/lib/enrolment';
  * `can_access_learner(learner_profile_id)`, which covers family members.
  *
  * So the id is accepted and the decision is left where it already lives. This
- * route does not re-implement `can_access_learner`; a second, weaker copy of an
- * authorisation rule is how the two drift apart. An id for a learner the caller
- * may not act for is refused by the policy, not by a check here.
+ * route does not re-implement `can_access_learner` or guardian consent; the
+ * database policy and enrolment trigger remain authoritative. An id for a
+ * learner the caller may not act for, or an unverified child when the consent
+ * flag is enabled, is refused below the application layer.
  *
  * Paid courses are refused here rather than routed to a provider, because no
  * provider exists yet (P12). The refusal is a normal response, not an error —

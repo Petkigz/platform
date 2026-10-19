@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 export type LearnerOption = { id: string; name: string; isSelf: boolean };
@@ -34,6 +35,7 @@ export function EnrolButton({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
+  const [guardianReviewRequired, setGuardianReviewRequired] = useState(false);
   const [tone, setTone] = useState<'info' | 'error'>('info');
   const [learnerId, setLearnerId] = useState<string>(
     learners[0]?.id ?? '',
@@ -81,12 +83,13 @@ export function EnrolButton({
       // learner — the check is not duplicated here.
       body: JSON.stringify({ courseId, learnerProfileId: learnerId || undefined }),
     });
-    const json = (await res.json()) as { ok: boolean; message?: string };
+    const json = (await res.json()) as { ok: boolean; code?: string; message?: string };
 
     if (json.ok) {
       startTransition(() => router.push('/learn'));
       return;
     }
+    setGuardianReviewRequired(json.code === 'guardian_verification_required');
     setTone(res.status === 402 ? 'info' : 'error');
     setMessage(json.message ?? 'Enrolment failed. Please try again.');
   }
@@ -128,6 +131,11 @@ export function EnrolButton({
       {message && (
         <div className={`notice ${tone === 'error' ? 'error' : 'warn'}`} style={{ marginTop: '0.75rem' }}>
           {message}
+          {guardianReviewRequired && (
+            <p style={{ margin: '0.5rem 0 0' }}>
+              <Link href="/family/guardians">Open guardian access</Link> to request review.
+            </p>
+          )}
         </div>
       )}
     </div>
