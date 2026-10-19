@@ -21,7 +21,8 @@ applied in filename order.
 
 `supabase/tests/harness.sql` stubs the parts Supabase provides (`auth.users`,
 the `anon` and `authenticated` roles) so the migrations can run against a bare
-PostgreSQL instance in CI. It is never applied to a real database.
+PostgreSQL instance in CI. It is never applied to a real database. That CI is
+`.github/workflows/ci.yml`, and it needs no Supabase project and no secrets.
 
 ### Running the tests
 
@@ -35,9 +36,14 @@ This runs the real migration files against a real PostgreSQL engine
 triggers and row level security are actually executed rather than merely parsed.
 
 The suite is split by group and run by `supabase/tests/run.mjs`, which applies
-the migrations once and runs every suite against the same engine.
+the migrations once and runs every suite against the same engine. Because the
+runner lists its suites by hand, a new `*.test.mjs` that nobody registered would
+not fail — it would simply never run. `npm run check:repo` catches that, along
+with two migrations sharing a filename prefix and conflict markers left in a
+file; `npm test` runs it first, and CI runs it as its own job.
 
-**256 tests** across five suites:
+**170 tests** across the five original groups (six files, since group 2 is split
+in two):
 
 *Group 1 — identity, family, guardians, privacy.* Schema presence, RLS on
 every public table, seed data, `updated_at` triggers, duplicate and
@@ -64,7 +70,7 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 The database stands at **102 tables, RLS on every one, 230 policies, 133
 user-defined triggers, 213 functions and 86 migrations.** The database suite
-passes **801 tests**; the web suite passes **360 tests**. TypeScript typecheck
+passes **802 tests**; the web suite passes **360 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **97 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the

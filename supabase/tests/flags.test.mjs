@@ -9,6 +9,51 @@
 //
 // It is enforced by a trigger rather than by the UI hiding the control,
 // because a UI that hides something is not a control.
+//
+// The register is also the documentation: FLAGS.md is what a person reads
+// before flipping anything, so the last test here holds the file against the
+// table. A key in one and not the other is a ghost flag — either a feature the
+// dashboard can switch that nobody wrote down, or a promise in the docs that
+// the database does not keep.
+
+import { readFileSync } from 'node:fs';
+
+/**
+ * Parse the two tables in FLAGS.md. The flag table is
+ * `| Flag | Gates | Type | Preconditions |` where "Type" is the gate; the
+ * controls table is `| Key | Type | Gate | Current value | What it decides |`
+ * where "Type" is the SQL value type. Same shape, different meaning, so they
+ * are read separately rather than by column position.
+ */
+function documentedFlags(markdown) {
+  const gates = { ADMIN: 'admin', 'ADMIN + SETUP': 'admin_setup', CODE: 'code', NONE: null };
+  // "ADMIN+SETUP", "admin + setup" and "ADMIN + SETUP" are one gate.
+  const gateOf = (label) => {
+    const normalized = String(label ?? '').toUpperCase().replace(/\s*\+\s*/, ' + ').trim();
+    if (!Object.prototype.hasOwnProperty.call(gates, normalized)) {
+      throw new Error(`FLAGS.md: unknown gate "${label}"`);
+    }
+    return gates[normalized];
+  };
+  const flags = new Map();
+  const controls = new Map();
+  let section = null;
+  for (const raw of markdown.split('\n')) {
+    const line = raw.trim();
+    if (line.startsWith('| Flag |')) { section = 'flags'; continue; }
+    if (line.startsWith('| Key |')) { section = 'controls'; continue; }
+    if (!line.startsWith('|')) { section = null; continue; }
+    const cells = line.split('|').map((c) => c.trim());
+    // The |---|---| rule under a header is a row of this shape and says nothing.
+    if (cells.slice(1, -1).every((c) => /^:?-{2,}:?$/.test(c))) continue;
+    if (!section || !cells[1]?.startsWith('`')) continue;
+    const key = cells[1].replace(/^`|`$/g, '');
+    if (!key) continue;
+    if (section === 'flags') flags.set(key, gateOf(cells[3]));
+    else controls.set(key, { valueType: cells[2], gate: gateOf(cells[3]) });
+  }
+  return { flags, controls };
+}
 
 export async function run(ctx) {
   const {
@@ -202,6 +247,61 @@ export async function run(ctx) {
 
       await q(`update public.platform_settings set value_text = 'false' where key = $1`, [key]);
     });
+  });
+
+  // -------------------------------------------------------------------
+  // The register is the documentation
+  // -------------------------------------------------------------------
+  await test('FLAGS.md and platform_settings describe the same register', async () => {
+    const markdown = readFileSync(
+      new URL('../../FLAGS.md', import.meta.url), 'utf8');
+    const { flags, controls } = documentedFlags(markdown);
+    const rows = (await q(
+      `select key, value_type, gate_type from public.platform_settings order by key`)).rows;
+    const inDb = new Map(rows.map((r) => [r.key, r]));
+
+    assert(flags.size >= 86, `FLAGS.md documented only ${flags.size} flags`);
+    assert(controls.size === 3, `expected the 3 controls in FLAGS.md, found ${controls.size}`);
+
+    // Neither side may hold a key the other lacks. Reported as a set rather
+    // than a count, because a count hides a swap.
+    const undocumented = [...inDb.keys()].filter((k) => !flags.has(k) && !controls.has(k));
+    const ghostFlags = [...flags.keys()].filter((k) => !inDb.has(k));
+    const ghostControls = [...controls.keys()].filter((k) => !inDb.has(k));
+    assert(undocumented.length === 0,
+      `in the database but not in FLAGS.md: ${undocumented.join(', ')}`);
+    assert(ghostFlags.length === 0,
+      `documented but absent from platform_settings: ${ghostFlags.join(', ')}`);
+    assert(ghostControls.length === 0,
+      `controls documented but absent: ${ghostControls.join(', ')}`);
+
+    // The gate is the safety claim, so a disagreement here is the serious one:
+    // the docs would be telling an admin a flag is CODE-gated and unflippable
+    // when the dashboard is about to let them flip it, or the reverse.
+    for (const [key, gate] of flags) {
+      const row = inDb.get(key);
+      const dbGate = row.gate_type ?? null;
+      assert(dbGate === gate,
+        `${key}: FLAGS.md says gate ${gate}, platform_settings says ${dbGate}`);
+      assert(row.value_type === 'boolean',
+        `${key}: a documented flag is value_type ${row.value_type}, not boolean`);
+    }
+    for (const [key, doc] of controls) {
+      const row = inDb.get(key);
+      assert(row.value_type === doc.valueType,
+        `${key}: FLAGS.md says ${doc.valueType}, platform_settings says ${row.value_type}`);
+      assert((row.gate_type ?? null) === (doc.gate ?? null),
+        `${key}: FLAGS.md says gate ${doc.gate}, platform_settings says ${row.gate_type}`);
+    }
+
+    // Everything the register holds must be off until it is switched on, which
+    // is what makes "built to completion, enabled later" a promise rather than
+    // a hope. The controls are excluded: they carry values, not features.
+    const enabled = rows.filter((r) => flags.has(r.key) && r.value_type === 'boolean');
+    const on = (await q(
+      `select key from public.platform_settings where value_text = 'true' order by key`)).rows;
+    assert(on.length === 0, `flags shipped on: ${on.map((r) => r.key).join(', ')}`);
+    assert(enabled.length === flags.size, 'a documented flag is not a boolean switch');
   });
 
   await test('setting_bool stays readable by everyone', async () => {

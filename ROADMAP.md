@@ -34,7 +34,7 @@ partly complete.** The roadmap starts where the project already is.
 - [x] Choose the programming languages and frameworks — *Next.js + TypeScript, Supabase/PostgreSQL, Expo/React Native*
 - [x] Design the database and backend architecture — *85 tables, 121 endpoints, modular monolith*
 - [~] Plan security, backups and child privacy — **RLS is complete: 88 tables, all covered, all ten of the record's required access tests enforced. Retention and RPO/RTO still open**
-- [~] Set up the development environment and Git repository — **repo exists with a README only; no toolchain, no CI**
+- [x] Set up the development environment and Git repository — **Node 22 workspaces (`npm ci` at the root installs the web app), PGlite for the database suite, and `.github/workflows/ci.yml` running the structural checks, both test suites, typecheck and the production build on every push. No secrets are needed: the suite runs in memory and the build succeeds with no Supabase project configured**
 
 ## Phase 3 — Core platform
 
@@ -80,7 +80,7 @@ partly complete.** The roadmap starts where the project already is.
 - [~] Build course approval and revision history — **`/review` is live: accept or decline an assignment, record a decision with a mandatory rationale, version transitions applied. An appeals queue still to build**
 - [!] Build marketplace commissions and instructor earnings — **deferred; behind `teaching.payouts`**
 - [!] Build payouts and instructor analytics — **3 tables with no fields and no endpoints**
-- [~] Build admin dashboard and moderation tools — **`/admin` is live: all 87 flags seeded with gate type and precondition (plus the 3 governance and money controls in `platform_settings`), `code`-gated ones refused at runtime by trigger. Queues built: content reports, appeals, discussion, guardian verification, support cases and course reviews. Still to build: learner analytics**
+- [~] Build admin dashboard and moderation tools — **`/admin` is live: all 87 flags seeded with gate type and precondition (plus the 3 governance and money controls in `platform_settings`), `code`-gated ones refused at runtime by trigger, and the register is now held against `FLAGS.md` by test — no ghost flags, no gate disagreement. Queues built: content reports, appeals, discussion, guardian verification, support cases and course reviews. Still to build: learner analytics, which needs a decision on whether a course author may see learner progress at all (today RLS gives an author no read on `course_enrolments` or `lesson_progress`; only the learner and their guardian have one)**
 - [x] Build learner ratings and reviews — *`course_reviews` plus the ratings panel on `/courses/[slug]` and the held-text queue at `/admin/course-reviews`. Enrolled learners only, one review each, an account reviews as itself, the author cannot review their own course, and text is held until a person publishes it. A rating alone is counted immediately. Satisfaction only: nothing here is read by the publication workflow. `supabase/tests/course_reviews.test.mjs`.*
 
 ## Phase 7 — Mobile and advanced features

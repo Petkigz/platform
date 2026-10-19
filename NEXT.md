@@ -99,6 +99,38 @@ The learner screen is text-only for now. Both flags stay off until the secure
 media path and retention workflow are ready; the cohort UI is built, but its
 late-join policy still needs review. These are the remaining pieces, not another quiz table.
 
+The gates themselves are now enforced by the repository rather than by
+remembering them. `.github/workflows/ci.yml` runs on every push: a structural
+job (`npm run check:repo`, Node builtins only, so it needs no install) and a
+gates job (`npm ci`, then the database suite, the web suite, typecheck and the
+production build). No secrets and no Supabase project are involved — PGlite runs
+in memory and the build succeeds with no credentials configured, which is worth
+saying out loud because it is the reason CI can exist before the backend does.
+
+The structural job checks three things that have each cost real time here: two
+migrations sharing a filename prefix, which is what happened when separate
+sessions both chose `20261130000100`; a new `supabase/tests/*.test.mjs` that
+nobody registered in `run.mjs`, which does not fail — it simply never runs, and
+the test count in a commit message goes up anyway; and conflict markers left
+behind by a three-way apply.
+
+`flags.test.mjs` gained the check that protects the register: it reads
+`FLAGS.md` and holds it against `platform_settings`. Every documented key must
+exist and every existing key must be documented, the gate in the table must
+match `gate_type`, and all 87 flags must still ship off. The serious case is a
+gate disagreement — the docs promising an admin that a flag needs a deploy while
+the dashboard offers to flip it. Prose is deliberately not compared: keys,
+types, gates and shipped-off values are the parts that can hurt somebody.
+
+That leaves one gap that is not code. **Learner analytics (`SCREENS.md` row 32)
+is blocked on a privacy decision**, and it is recorded in `DECISIONS.md` under
+"What a teacher may see about a learner". RLS gives a course author no read at
+all on `course_enrolments` or `lesson_progress` — only the learner and their
+guardian have one — so a teacher progress screen would widen that boundary on a
+platform that teaches children. Aggregate-only, per-learner, or per-learner
+inside an opted-in cohort are all defensible; picking one is the user's call.
+Until then the teacher surfaces keep to what an author can already read.
+
 The two planning documents were also stale in a way that would have misdirected
 the next session, so both were re-audited against the route list in the build
 output rather than against memory. `SCREENS.md` had 24 rows saying READY or
@@ -123,7 +155,7 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **801 database tests, 360 web tests; TypeScript typecheck and
+Verification: **802 database tests, 360 web tests; TypeScript typecheck and
 production build pass; 102 tables, 230 policies, 133 user-defined triggers,
 213 functions, 86 migrations and 97 app route entries.**
 

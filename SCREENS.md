@@ -77,12 +77,12 @@ Status:
 
 | # | Screen | Status |
 |---|---|---|
-| 29 | Teacher dashboard | **BUILT** — `/teach` with 13 endpoints behind it. Learner analytics (#32) is the missing piece |
+| 29 | Teacher dashboard | **BUILT** — `/teach` with four POST-only API routes behind it. Learner analytics (#32) is the missing piece, and it waits on a privacy decision |
 | 30 | Create course | **BUILT** — `/teach`, one field: a title. Everything else is set in the curriculum builder |
 | 31 | Curriculum builder | **BUILT** — `/teach/[courseId]`: sections, lessons, content items, reordering, sources. No drag-and-drop |
 | 31a | **Cohort manager and roster** *(added — missing from the inventory)* | **BUILT** — `/teach/[courseId]/cohorts`, course-page join for a learner or guardian, and leave controls on the enrolment page. The roster shows counts only; learners see themselves/family, never other members. `learning.cohorts` stays off pending review of the late-join rule |
 | 31b | **Assignment authoring and marking** *(added — missing from the inventory)* | **BUILT** — `/teach/[courseId]/assignments`; author creates/opens/closes tasks, marks private submissions, sets the revision policy per task, and marks a revision against what they asked for last time. Behind `learning.assignments`; secure file delivery and late-join policy are separate preconditions |
-| 32 | Learner analytics | READY |
+| 32 | Learner analytics | READY — **blocked on a privacy decision, not on code.** RLS gives a course author no read on `course_enrolments` or `lesson_progress`; only the learner and their guardian have one. A progress screen for teachers would widen that, so the options (aggregate-only, per-learner, or per-learner inside an opted-in cohort) are recorded in `DECISIONS.md` for the user to choose |
 | 33 | Course submission and review | **BUILT** — submit from `/teach/[courseId]`; `/review` and `/admin/reviews` handle the assignment |
 | 34 | Earnings | BLOCKED — `teaching.payouts` is CODE and refused by trigger. The *data* exists: `instructor_earnings` accrues on a paid order and reverses on refund. No teacher-facing screen |
 

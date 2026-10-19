@@ -492,3 +492,54 @@ flight keeps its whole lifecycle.
 
 The audit records the transition and the score that was given up, and not the
 feedback text, for the reason already settled on the quiz side.
+
+## The flag register is the documentation, and a test holds them together
+
+Decided 2026-10-19, when CI was added.
+
+`FLAGS.md` is what a person reads before switching anything on, and
+`platform_settings` is what the code consults. Two descriptions of one thing
+drift, and the drift is invisible in exactly the case that matters: a flag the
+docs call CODE-gated and unflippable while the table says `admin`, so the
+dashboard offers a switch the docs promised would not exist. The parity is now a
+database test rather than a habit — every documented key must exist, every
+existing key must be documented, every gate must agree, and every flag must
+still ship off.
+
+The check reads the Markdown file. That is deliberate: a test that compared the
+table against a second copy of itself in SQL would pass no matter how wrong the
+documentation became, and the documentation is the artefact under protection.
+
+What the test does *not* do is compare the prose. Preconditions and descriptions
+are written twice — once for a reader, once for a trigger message — and forcing
+them to be byte-identical would make every wording improvement a two-file
+change for no safety gained. Keys, types, gates and shipped-off values are the
+part that can hurt somebody.
+
+## What a teacher may see about a learner — **OPEN, needs the user**
+
+Recorded 2026-10-19 while looking for the next buildable gap.
+
+"Learner analytics" (`SCREENS.md` row 32) is marked READY, and the teacher
+dashboard names it as its missing piece. It is not buildable without a decision,
+and the decision is not a technical one.
+
+Today RLS gives a course author **no read at all** on `course_enrolments` or
+`lesson_progress`: both are readable only where `can_access_learner()` is true,
+which means the learner or their guardian. A teacher sees the work handed to
+them — assignment submissions, marks, reviews — and cohort membership as counts
+rather than as a roster. That boundary was drawn deliberately and has been
+respected consistently.
+
+So a progress analytics screen for teachers would widen it, for a platform that
+teaches children, in a product whose dominant principle is ease of use for the
+teacher. Both answers are defensible: a teacher who cannot see that half a class
+stopped at lesson four cannot help them, and a teacher who can see every child's
+pace holds data about children that no parent was told about. The options are
+aggregate-only for the author (counts and distributions, no learner attached),
+per-learner for the author, or per-learner only for cohort classes where a
+guardian opted in to a dated group.
+
+Until that is chosen, the teacher-facing surfaces keep using only what an author
+can already read, and row 32 stays READY rather than becoming BUILT by quietly
+widening a privacy rule.

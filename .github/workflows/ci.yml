@@ -1,0 +1,64 @@
+# The gates that used to be run by hand at the end of every work session.
+#
+# They are here because the person building this works with an AI assistant in
+# sessions that end and restart, and a gate that lives only in somebody's memory
+# of the last session is a gate that gets skipped. Nothing in this file deploys
+# anything or holds a secret: the whole suite runs against PGlite in memory, and
+# the web build succeeds with no Supabase credentials configured at all.
+
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A solo builder pushes often; a superseded run on the same branch is wasted
+# minutes rather than lost information.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  structure:
+    name: Repository structure
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Node builtins only, so there is nothing to install before this runs.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.3'
+      - run: node scripts/repo-check.mjs
+
+  gates:
+    name: Database, web, types and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # Pinned to the version the suite was verified against. Bumping it is
+          # a deliberate act, not something a runner image decides.
+          node-version: '22.22.3'
+          cache: npm
+      - run: npm ci
+
+      # 86 migrations applied to an in-memory database, then every suite in
+      # supabase/tests/run.mjs against it.
+      - name: Database suite
+        run: npm run test:db
+
+      - name: Web unit suite
+        run: npm run test:web
+
+      - name: Types
+        run: npm run typecheck
+
+      - name: Production build
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'

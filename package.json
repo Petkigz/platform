@@ -6,11 +6,12 @@
   "description": "AyahSpring \u2014 Islamic e-learning platform.",
   "scripts": {
     "test:db": "node supabase/tests/run.mjs",
+    "check:repo": "node scripts/repo-check.mjs",
     "dev": "npm run dev --workspace @ayahspring/web",
     "build": "npm run build --workspace @ayahspring/web",
     "typecheck": "npm run typecheck --workspace @ayahspring/web",
     "test:web": "npm run test --workspace @ayahspring/web",
-    "test": "npm run test:db && npm run test:web"
+    "test": "npm run check:repo && npm run test:db && npm run test:web"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.3.11"
