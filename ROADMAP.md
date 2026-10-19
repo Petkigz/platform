@@ -50,7 +50,7 @@ partly complete.** The roadmap starts where the project already is.
 - [ ] Build course sections and lessons
 - [ ] Build the video/audio lesson player
 - [x] Track lesson progress and course completion — *`/learn` and `/learn/[enrolmentId]`, `POST /api/progress`. Progress pinned to the enrolled version; completion derived, never stored. `supabase/tests/progress.test.mjs`.*
-- [x] Build quizzes, assessments and results — *`/learn/[enrolmentId]/assessment/[assessmentId]`, `POST /api/assessment`. Automatic and manual grading, attempt limits, mixed grading waits for the human verdict. Answer key unreadable by any role. `supabase/tests/assessment.test.mjs`.*
+- [x] Build quizzes, assessments and results — *`/learn/[enrolmentId]/assessment/[assessmentId]`, `POST /api/assessment`, and authoring tools in `/teach/<courseId>`. Automatic single/multiple-choice and true/false, attempt limits; answer key unreadable by any role. Manual-answer grading queue remains to build. `supabase/tests/assessment.test.mjs`.*
 - [~] Build young learner profiles and age-appropriate learning — **profiles designed; engagement mechanics are not** (`gamif: 0`, `badge: 0`, `streak: 0`)
 - [ ] Build parent/guardian dashboard and controls
 - [ ] Build the adult learning dashboard and learning paths

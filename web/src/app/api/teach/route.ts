@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import {
+  activateAssessment, addAssessmentQuestion, createAssessment,
+  type AssessmentType, type QuestionType,
+} from '@/lib/assessment';
+import {
   addLesson, addLessonResource, addSection, createCourse, createCourseVersionFrom,
   moveCourseContent, setLessonPreview, setSubjects,
   type MoveDirection, type ReorderableContentType,
@@ -36,16 +40,26 @@ export async function POST(request: Request) {
   const b = body as {
     action?: unknown;
     title?: unknown;
+    type?: unknown;
     versionId?: unknown;
     sourceVersionId?: unknown;
     contentType?: unknown;
     contentId?: unknown;
     direction?: unknown;
+    assessmentId?: unknown;
+    passThreshold?: unknown;
+    attemptLimit?: unknown;
+    lessonId?: unknown;
+    instructions?: unknown;
+    prompt?: unknown;
+    choices?: unknown;
+    answerId?: unknown;
+    answerIds?: unknown;
+    gradingMethod?: unknown;
     sectionId?: unknown;
     isPreview?: unknown;
     to?: unknown;
     codes?: unknown;
-    lessonId?: unknown;
     resourceType?: unknown;
     url?: unknown;
     name?: unknown;
@@ -93,6 +107,84 @@ export async function POST(request: Request) {
       );
     }
     return json(await createCourseVersionFrom(supabase, b.sourceVersionId));
+  }
+
+  // ---------------------------------------------------------------------
+  if (b.action === 'create_assessment') {
+    if (
+      !isUuid(b.versionId) || typeof b.title !== 'string' ||
+      (b.type !== 'practice' && b.type !== 'graded' && b.type !== 'final') ||
+      (b.passThreshold !== null && typeof b.passThreshold !== 'number') ||
+      (b.attemptLimit !== null && typeof b.attemptLimit !== 'number') ||
+      (b.lessonId !== null && typeof b.lessonId !== 'string') ||
+      typeof b.instructions !== 'string'
+    ) {
+      return NextResponse.json(
+        { ok: false, message: 'Check the assessment details and try again.' },
+        { status: 400 },
+      );
+    }
+    if (b.lessonId !== null && !isUuid(b.lessonId)) {
+      return NextResponse.json(
+        { ok: false, message: 'Choose a lesson from this version.' },
+        { status: 400 },
+      );
+    }
+    const outcome = await createAssessment(supabase, {
+      versionId: b.versionId,
+      title: b.title,
+      type: b.type as AssessmentType,
+      passThreshold: b.passThreshold,
+      attemptLimit: b.attemptLimit,
+      lessonId: b.lessonId,
+      instructions: b.instructions,
+    });
+    return NextResponse.json(outcome, { status: outcome.ok ? 200 : 400 });
+  }
+
+  // ---------------------------------------------------------------------
+  if (b.action === 'add_assessment_question') {
+    const validQuestionType =
+      b.type === 'single_choice' || b.type === 'multiple_choice' || b.type === 'true_false';
+    const validGradingMethod = b.gradingMethod === 'automatic';
+    const choicesValid = Array.isArray(b.choices) && b.choices.every((choice) =>
+      typeof choice === 'object' && choice !== null &&
+      typeof (choice as { id?: unknown }).id === 'string' &&
+      typeof (choice as { text?: unknown }).text === 'string');
+    if (
+      !isUuid(b.assessmentId) || !validQuestionType || !validGradingMethod ||
+      typeof b.prompt !== 'string' || !choicesValid ||
+      (b.answerId !== undefined && typeof b.answerId !== 'string') ||
+      (b.answerIds !== undefined &&
+        (!Array.isArray(b.answerIds) || !b.answerIds.every((id) => typeof id === 'string')))
+    ) {
+      return NextResponse.json(
+        { ok: false, message: 'Check the question details and try again.' },
+        { status: 400 },
+      );
+    }
+    const outcome = await addAssessmentQuestion(supabase, {
+      assessmentId: b.assessmentId,
+      type: b.type as QuestionType,
+      gradingMethod: b.gradingMethod as 'automatic' | 'manual',
+      prompt: b.prompt,
+      choices: b.choices as { id: string; text: string }[],
+      answerId: b.answerId as string | undefined,
+      answerIds: b.answerIds as string[] | undefined,
+    });
+    return NextResponse.json(outcome, { status: outcome.ok ? 200 : 400 });
+  }
+
+  // ---------------------------------------------------------------------
+  if (b.action === 'activate_assessment') {
+    if (!isUuid(b.assessmentId)) {
+      return NextResponse.json(
+        { ok: false, message: 'Choose an assessment to activate.' },
+        { status: 400 },
+      );
+    }
+    const outcome = await activateAssessment(supabase, b.assessmentId);
+    return NextResponse.json(outcome, { status: outcome.ok ? 200 : 400 });
   }
 
   // ---------------------------------------------------------------------

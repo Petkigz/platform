@@ -226,6 +226,9 @@ export function promptOf(q: Question): string {
 }
 
 export function choicesOf(q: Question): { id: string; text: string }[] {
+  if (q.type === 'true_false') {
+    return [{ id: 'true', text: 'True' }, { id: 'false', text: 'False' }];
+  }
   const c = q.content as { choices?: unknown; options?: unknown };
   const raw = (c.choices ?? c.options ?? []) as unknown[];
   return raw
@@ -440,6 +443,7 @@ export type AddQuestionInput = {
   prompt: string;
   choices?: { id: string; text: string }[];
   answerId?: string;
+  answerIds?: string[];
   points?: number;
   gradingMethod?: 'automatic' | 'manual';
   explanation?: string;
@@ -469,8 +473,13 @@ export function validateAddQuestion(
   const type = input.type ?? 'single_choice';
   const grading = input.gradingMethod ?? 'automatic';
 
+  if (!['single_choice', 'multiple_choice', 'true_false', 'short_answer'].includes(type))
+    return { ok: false, message: 'That question type is not supported.' };
+
   if (grading !== 'automatic' && grading !== 'manual')
     return { ok: false, message: 'That is not a way to mark a question.' };
+  if (type === 'short_answer' && grading === 'automatic')
+    return { ok: false, message: 'Short answers need teacher marking.' };
 
   const points = input.points === undefined ? 1 : input.points;
   if (!Number.isFinite(points) || points <= 0)
@@ -484,9 +493,14 @@ export function validateAddQuestion(
       return { ok: false, message: 'A choice cannot be blank.' };
 
     if (grading === 'automatic') {
-      if (!input.answerId)
+      const answers = type === 'multiple_choice'
+        ? input.answerIds ?? (input.answerId ? [input.answerId] : [])
+        : input.answerId ? [input.answerId] : [];
+      if (answers.length === 0)
         return { ok: false, message: 'Mark which choice is correct.' };
-      if (!choices.some((c) => c.id === input.answerId))
+      if (new Set(answers).size !== answers.length)
+        return { ok: false, message: 'A correct answer was selected more than once.' };
+      if (!answers.every((answer) => choices.some((choice) => choice.id === answer)))
         return { ok: false, message: 'The correct answer is not one of the choices.' };
     }
   }
@@ -516,12 +530,13 @@ export async function addAssessmentQuestion(
     content.choices = choices.map((c) => ({ id: c.id, text: c.text.trim() }));
   }
 
-  let answerKey: Record<string, unknown> | null = null;
+  let answerKey: unknown = null;
   if (grading === 'automatic') {
-    answerKey =
-      type === 'multiple_choice'
-        ? { answers: [input.answerId ?? ''] }
-        : { answer: input.answerId ?? 'true' };
+    // grade_response compares the saved response JSONB directly to this key:
+    // single choice/true-false save a scalar id, multiple choice saves an array.
+    answerKey = type === 'multiple_choice'
+      ? [...(input.answerIds ?? (input.answerId ? [input.answerId] : []))].sort()
+      : input.answerId ?? 'true';
   }
 
   const { data, error } = await supabase.rpc('add_assessment_question', {

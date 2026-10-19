@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { fetchVersions } from '@/lib/authoring';
 import { Curriculum } from './curriculum';
+import { AssessmentManager } from './assessment-manager';
+import { fetchAuthoredAssessments } from '@/lib/assessment';
 import { fetchRejections } from '@/lib/governance';
 import { AppealForm } from './appeal-form';
 import { fetchSubjects, fetchVersionSubjects } from '@/lib/authoring';
@@ -61,11 +63,12 @@ export default async function TeachCoursePage({
 
   // Subject tagging, and the taxonomy it draws from. Tagging is what makes a
   // course findable in the catalogue.
-  const [subjects, currentSubjects, sourcesByLesson, previewsEnabled] = await Promise.all([
+  const [subjects, currentSubjects, sourcesByLesson, previewsEnabled, assessments] = await Promise.all([
     fetchSubjects(supabase),
     current ? fetchVersionSubjects(supabase, current.id) : Promise.resolve<string[]>([]),
     current ? fetchVersionSources(supabase, current.id) : Promise.resolve({}),
     isFlagEnabled(supabase, 'learning.previews').catch(() => false),
+    current ? fetchAuthoredAssessments(supabase, current.id) : Promise.resolve([]),
   ]);
 
   return (
@@ -104,6 +107,7 @@ export default async function TeachCoursePage({
             previewsEnabled={previewsEnabled}
             copyFromVersionId={!draft && current.status === 'published' ? current.id : null}
           />
+          <AssessmentManager version={current} assessments={assessments} />
         </>
       )}
 

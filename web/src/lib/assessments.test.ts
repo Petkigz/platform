@@ -5,6 +5,8 @@ import {
   validateCreateAssessment,
   validateAddQuestion,
   addAssessmentQuestion,
+  choicesOf,
+  type Question,
   ASSESSMENT_TYPES,
 } from './assessment.ts';
 
@@ -210,6 +212,17 @@ test('the correct answer must actually be one of the choices', () => {
   if (!r.ok) assert.match(r.message, /not one of the choices/i);
 });
 
+test('a short answer cannot be automatically graded without an expected-answer model', () => {
+  const result = validateAddQuestion({
+    assessmentId: ASSESSMENT,
+    type: 'short_answer',
+    prompt: 'Explain the answer.',
+    gradingMethod: 'automatic',
+  });
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.match(result.message, /teacher marking/i);
+});
+
 test('a manually graded question needs no correct answer', () => {
   assert.equal(
     validateAddQuestion({
@@ -283,8 +296,8 @@ test('an automatically graded question sends an answer key', async () => {
   const call = calls[0];
   if (!call) throw new Error('expected an rpc call');
   assert.equal(call.fn, 'add_assessment_question');
-  assert.notEqual(call.args.p_answer_key, null,
-    'an automatically graded question must carry its answer key');
+  assert.equal(call.args.p_answer_key, 'b',
+    'a single-choice key must match the scalar answer the learner submits');
 });
 
 test('a manually graded question sends no answer key', async () => {
@@ -310,4 +323,43 @@ test('no answer key is sent when validation has already refused', async () => {
   const r = await addAssessmentQuestion(client, { ...baseQuestion, answerId: undefined });
   assert.equal(r.ok, false);
   assert.equal(calls.length, 0, 'no request should have been sent');
+});
+
+test('multiple choice keys are sorted arrays matching the learner response shape', async () => {
+  const { client, calls } = stubRpc();
+  const result = await addAssessmentQuestion(client, {
+    ...baseQuestion,
+    type: 'multiple_choice',
+    answerId: undefined,
+    answerIds: ['b', 'a'],
+  });
+  assert.equal(result.ok, true);
+  const call = calls[0];
+  if (!call) throw new Error('expected an rpc call');
+  assert.deepEqual(call.args.p_answer_key, ['a', 'b']);
+});
+
+test('true-false questions render two selectable answers for the learner', () => {
+  const question = {
+    id: 'q', assessment_id: ASSESSMENT, type: 'true_false' as const,
+    content: { prompt: 'A statement' }, points: 1, position: 1,
+    explanation: null, grading_method: 'automatic' as const,
+  } satisfies Question;
+  assert.deepEqual(choicesOf(question), [
+    { id: 'true', text: 'True' },
+    { id: 'false', text: 'False' },
+  ]);
+});
+
+test('true-false answer keys match the learner’s selected scalar id', async () => {
+  const { client, calls } = stubRpc();
+  await addAssessmentQuestion(client, {
+    ...baseQuestion,
+    type: 'true_false',
+    choices: undefined,
+    answerId: 'true',
+  });
+  const call = calls[0];
+  if (!call) throw new Error('expected an rpc call');
+  assert.equal(call.args.p_answer_key, 'true');
 });

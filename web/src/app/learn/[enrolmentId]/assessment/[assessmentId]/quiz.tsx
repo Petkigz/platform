@@ -120,7 +120,7 @@ export function Quiz({
                             const next = cur.includes(c.id)
                               ? cur.filter((x) => x !== c.id)
                               : [...cur, c.id];
-                            void save(q.id, next);
+                            void save(q.id, next.sort());
                           } else {
                             void save(q.id, c.id);
                           }

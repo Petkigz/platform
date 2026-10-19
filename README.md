@@ -64,7 +64,7 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 The database stands at **90 tables, RLS on every one, 210 policies, 121
 user-defined triggers, 169 functions and 74 migrations.** The database suite
-passes **676 tests**; the web suite passes **257 tests**. TypeScript typecheck
+passes **676 tests**; the web suite passes **261 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **73 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
@@ -153,10 +153,14 @@ paid instructor entries and recorded as one negative adjustment; paid earnings
 are not rewritten and the adjustment itself does not transfer funds.
 
 A course can be assessed: `create_assessment()`, `add_assessment_question()` and
-`activate_assessment()`. Until then no teacher could create a quiz, so
-`submit_attempt()` was unreachable and any completion rule that needed an
-assessment could never be satisfied. Publishing now **refuses a version with a
-draft assessment left behind** — D5 would freeze it invisible to learners.
+`activate_assessment()`. The database writer existed, but no teacher tools
+exposed it; course quizzes and assessment-based completion rules were therefore
+unusable from the product. Course authors can now create assessments, add
+automatically graded single/multiple-choice or true/false questions, then
+activate them from `/teach/<courseId>`. The editor never reads answer keys back.
+Manual-answer marking is not yet exposed in the teacher UI. Publishing now
+**refuses a version with a draft assessment left behind** — D5 would freeze it
+invisible to learners.
 
 A family can be created: `create_family()` writes the family **and** its owner
 membership in one transaction. Until then no family could exist at all — the
