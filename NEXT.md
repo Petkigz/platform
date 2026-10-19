@@ -192,8 +192,9 @@ memberships panel on the enrolment page is unchanged on purpose: it lists
 classes the learner is already in, where leaving is the only action, and the
 window governs arriving rather than staying.
 
-That leaves one gap that is not code. **Learner analytics (`SCREENS.md` row 32)
-was blocked on a privacy decision**, now made and recorded in `DECISIONS.md`
+That leaves one gap, and it is now code rather than a decision. **Learner
+analytics (`SCREENS.md` row 32) was blocked on a privacy decision**, now made and
+recorded in `DECISIONS.md`
 under "What a teacher may see about a learner". RLS gives a course author no read
 at all on `course_enrolments` or `lesson_progress` — only the learner and their
 guardian have one — so a teacher progress screen widens that boundary, and the
