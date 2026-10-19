@@ -70,7 +70,7 @@ partly complete.** The roadmap starts where the project already is.
 ## Phase 6 — Marketplace and governance
 
 - [X] Build instructor applications and verification — **conflicts with the recorded decision:** a curated cohort of teachers I know, not open applications
-- [~] Build course creation and curriculum tools — **`/teach` is live: create a course, build its outline, submit for review. Reordering, lesson media upload and version creation from the UI still to build**
+- [~] Build course creation and curriculum tools — **`/teach` is live: create a course, build its outline, submit for review, and create a draft from a published version. Reordering and lesson media upload from the UI still to build**
 - [X] Build scholar/content reviewer workflows — **conflicts with P6:** scholarly panel replaced by light peer review. 9 tables of panel machinery are excess for a trusted cohort.
 - [~] Build course approval and revision history — **`/review` is live: accept or decline an assignment, record a decision with a mandatory rationale, version transitions applied. An appeals queue still to build**
 - [!] Build marketplace commissions and instructor earnings — **deferred; behind `teaching.payouts`**

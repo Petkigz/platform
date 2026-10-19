@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
-  addLessonResource, fetchSubjects, fetchVersionSubjects, setLessonPreview,
-  setSubjects, validateAddResource,
+  addLessonResource, createCourseVersionFrom, fetchSubjects, fetchVersionSubjects,
+  setLessonPreview, setSubjects, validateAddResource,
 } from './authoring.ts';
 
 // ---------------------------------------------------------------------------
@@ -261,4 +261,25 @@ test('resource validation rejects unsupported access classes', () => {
   });
   assert.equal(result.ok, false);
   if (!result.ok) assert.match(result.message, /enrolled access or public preview/i);
+});
+
+test('version copy calls the audited server-side writer', async () => {
+  const { client, calls } = stubRpc({
+    data: [{ version_id: 'version-2', version_number: 2 }],
+  });
+  const result = await createCourseVersionFrom(client, 'version-1');
+  assert.equal(result.ok, true);
+  assert.deepEqual(one(calls, 'version-copy rpc').args, {
+    p_source_version_id: 'version-1',
+  });
+  if (result.ok) assert.deepEqual(result.value, { versionId: 'version-2', versionNumber: 2 });
+});
+
+test('version copy reports an in-progress draft rather than creating a duplicate', async () => {
+  const { client } = stubRpc({
+    error: { message: 'this course already has a draft or a version in review' },
+  });
+  const result = await createCourseVersionFrom(client, 'version-1');
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.match(result.message, /finish or withdraw/i);
 });

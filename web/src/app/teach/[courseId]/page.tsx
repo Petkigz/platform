@@ -102,6 +102,7 @@ export default async function TeachCoursePage({
             version={current}
             sourcesByLesson={sourcesByLesson}
             previewsEnabled={previewsEnabled}
+            copyFromVersionId={!draft && current.status === 'published' ? current.id : null}
           />
         </>
       )}

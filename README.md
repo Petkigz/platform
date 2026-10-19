@@ -63,8 +63,8 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **90 tables, RLS on every one, 210 policies, 121
-user-defined triggers, 167 functions and 72 migrations.** The database suite
-passes **664 tests**; the web suite passes **252 tests**. TypeScript typecheck
+user-defined triggers, 168 functions and 73 migrations.** The database suite
+passes **670 tests**; the web suite passes **254 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **73 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
@@ -120,6 +120,12 @@ source citations are part of the version subtree and lock when published.
 `learning.provenance` gates learner display; when on, citations show the source,
 edition, locator, usage anchor and optional HTTPS link. Existing source tables
 are now guarded against post-publication edits as well as writes through the UI.
+
+When a published course needs revision, its author can create a draft from the
+course editor. The audited copy includes the curriculum, assessments, completion
+requirements, citations and existing product/price links. The new draft has new
+content IDs; learners already enrolled remain pinned to their original version.
+A course with an existing draft or review in progress cannot be copied again.
 
 Instructors can prepare a public profile at `/teach/profile` and share it at
 `/teachers/<slug>`. It contains only teacher-authored biography, HTTPS social

@@ -323,6 +323,30 @@ export async function createCourse(
   };
 }
 
+export async function createCourseVersionFrom(
+  client: SupabaseClient,
+  sourceVersionId: string,
+): Promise<WriteOutcome<{ versionId: string; versionNumber: number }>> {
+  if (!sourceVersionId) {
+    return { ok: false, code: 'rejected', message: 'Choose a published version to copy.' };
+  }
+  const { data, error } = await client.rpc('create_course_version_from', {
+    p_source_version_id: sourceVersionId,
+  });
+  if (error) {
+    if (/only the course author/i.test(error.message)) {
+      return { ok: false, code: 'rejected', message: 'Only the course author can start a new version.' };
+    }
+    if (/already has a draft or a version in review/i.test(error.message)) {
+      return { ok: false, code: 'rejected', message: 'Finish or withdraw the current draft/review before starting another version.' };
+    }
+    return classify(error);
+  }
+  const row = (data as unknown as { version_id: string; version_number: number }[] | null)?.[0];
+  if (!row) return { ok: false, code: 'rejected', message: 'The new version was not returned.' };
+  return { ok: true, value: { versionId: row.version_id, versionNumber: Number(row.version_number) } };
+}
+
 export async function addSection(
   supabase: SupabaseClient,
   args: { versionId: string; title: string },

@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import {
-  addLesson, addLessonResource, addSection, createCourse, setLessonPreview, setSubjects,
+  addLesson, addLessonResource, addSection, createCourse, createCourseVersionFrom,
+  setLessonPreview, setSubjects,
   transitionVersion, validateAddResource, type AddResourceAccess, type ResourceType,
 } from '@/lib/authoring';
 
@@ -35,6 +36,7 @@ export async function POST(request: Request) {
     action?: unknown;
     title?: unknown;
     versionId?: unknown;
+    sourceVersionId?: unknown;
     sectionId?: unknown;
     isPreview?: unknown;
     to?: unknown;
@@ -76,6 +78,17 @@ export async function POST(request: Request) {
       userId: user.id,
     });
     return json(outcome);
+  }
+
+  // ---------------------------------------------------------------------
+  if (b.action === 'create_version') {
+    if (!isUuid(b.sourceVersionId)) {
+      return NextResponse.json(
+        { ok: false, code: 'rejected', message: 'Choose a published version to copy.' },
+        { status: 400 },
+      );
+    }
+    return json(await createCourseVersionFrom(supabase, b.sourceVersionId));
   }
 
   // ---------------------------------------------------------------------

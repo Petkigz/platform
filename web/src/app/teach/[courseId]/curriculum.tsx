@@ -22,10 +22,12 @@ export function Curriculum({
   version,
   sourcesByLesson,
   previewsEnabled,
+  copyFromVersionId,
 }: {
   version: AuthoredVersion;
   sourcesByLesson: Record<string, LessonSource[]>;
   previewsEnabled: boolean;
+  copyFromVersionId: string | null;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
@@ -133,6 +135,20 @@ export function Curriculum({
           <span className="badge neutral">{VERSION_STATUS_LABEL[version.status]}</span>
         </h3>
         <div className="row" style={{ gap: '0.5rem' }}>
+          {copyFromVersionId && (
+            <button
+              type="button"
+              className="btn secondary"
+              disabled={busy === 'create-version'}
+              onClick={() => post(
+                { action: 'create_version', sourceVersionId: copyFromVersionId },
+                'create-version',
+              )}
+              title="Copies the curriculum into a new draft. Existing learners stay on this version and current product/price links carry over."
+            >
+              {busy === 'create-version' ? 'Copying…' : `Create draft from v${version.versionNumber}`}
+            </button>
+          )}
           {version.status === 'draft' && (
             <button
               type="button"
