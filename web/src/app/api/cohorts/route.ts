@@ -6,6 +6,7 @@ import {
   joinCohort,
   leaveCohort,
   mapCohortError,
+  setCohortJoinWindow,
   setCohortStatus,
   validateCohortInput,
 } from '@/lib/cohorts';
@@ -24,11 +25,26 @@ type Payload = {
   endsAt?: unknown;
   capacity?: unknown;
   status?: unknown;
+  joinClosesAt?: unknown;
 };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const isUuid = (value: unknown): value is string => typeof value === 'string' && UUID.test(value);
 const fail = (message: string, status: number) => NextResponse.json({ ok: false, message }, { status });
+
+/**
+ * A join window is required rather than optional: moving it to blank would mean
+ * "go back to the default", and the writer takes a timestamp. Asking for the
+ * default again is a deliberate date the teacher can see.
+ */
+function validateCohortJoinWindow(value: unknown): { ok: true; value: string } | { ok: false; message: string } {
+  if (typeof value !== 'string' || !Number.isFinite(Date.parse(value)))
+    return { ok: false, message: 'Choose when registration should close.' };
+  const closes = new Date(value);
+  if (closes.getTime() <= Date.now())
+    return { ok: false, message: 'Registration must close later than now.' };
+  return { ok: true, value: closes.toISOString() };
+}
 const respond = (result: Awaited<ReturnType<typeof createCohort>>) => result.ok
   ? NextResponse.json(result)
   : NextResponse.json({ ok: false, message: result.message }, { status: result.status });
@@ -52,6 +68,7 @@ export async function POST(request: Request) {
       startsAt: body.startsAt,
       endsAt: body.endsAt,
       capacity: body.capacity,
+      joinClosesAt: body.joinClosesAt,
     });
     if (!checked.ok) return fail(checked.message, 400);
     if (!isUuid(checked.value.courseId) || !isUuid(checked.value.courseVersionId))
@@ -67,6 +84,16 @@ export async function POST(request: Request) {
       body.cohortId,
       body.status as 'open' | 'closed' | 'cancelled',
     ));
+  }
+
+  // Moving the join window is the one change a teacher legitimately needs once a
+  // class is running: "we will take joiners for two more days". The database
+  // decides who may do it and how far it may move.
+  if (body.action === 'set_join_window') {
+    if (!isUuid(body.cohortId)) return fail('Choose a cohort.', 400);
+    const checked = validateCohortJoinWindow(body.joinClosesAt);
+    if (!checked.ok) return fail(checked.message, 400);
+    return respond(await setCohortJoinWindow(supabase, body.cohortId, checked.value));
   }
 
   if (body.action === 'join' || body.action === 'leave') {

@@ -4,7 +4,11 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { EnrollableLearner } from '@/lib/enrolment';
-import type { JoinableCohort } from '@/lib/cohorts';
+import {
+  type JoinableCohort,
+  cohortJoinWindowOpen,
+  joinWindowLabel,
+} from '@/lib/cohorts';
 
 export function CohortBrowser({
   cohortsEnabled,
@@ -77,9 +81,12 @@ export function CohortBrowser({
                   Version {cohort.versionNumber ?? '?'} · Starts {new Date(cohort.startsAt).toLocaleString()}
                   {cohort.endsAt ? ` · Ends ${new Date(cohort.endsAt).toLocaleString()}` : ' · Open-ended'}
                   {cohort.capacity ? ` · Up to ${cohort.capacity} learners` : ''}
+                  {' · '}{joinWindowLabel(cohort)}
                 </p>
               </div>
-              <span className="badge neutral">Open</span>
+              <span className="badge neutral">
+                {cohortJoinWindowOpen(cohort) ? 'Open to joiners' : 'Registration closed'}
+              </span>
             </div>
             {cohort.description && <p style={{ margin: 0 }}>{cohort.description}</p>}
 
@@ -114,7 +121,7 @@ export function CohortBrowser({
                   {busy === `${cohort.id}-leave` ? 'Leaving…' : 'Leave class'}
                 </button>
               </div>
-            ) : !cohortsEnabled ? null : eligible ? (
+            ) : !cohortsEnabled ? null : eligible && cohortJoinWindowOpen(cohort) ? (
               <button
                 type="button"
                 className="btn"
@@ -124,6 +131,13 @@ export function CohortBrowser({
               >
                 {busy === `${cohort.id}-join` ? 'Joining…' : `Join for ${learner.isSelf ? 'me' : learner.name}`}
               </button>
+            ) : eligible ? (
+              // The class is still running; it simply stopped taking joiners.
+              // Saying "closed" would read as the class being over.
+              <p className="muted" style={{ margin: 0 }}>
+                This class stopped accepting joiners{cohort.endsAt ? ' but is still running' : ''}.
+                {' '}{joinWindowLabel(cohort)}.
+              </p>
             ) : (
               <p className="muted" style={{ margin: 0 }}>
                 {learner.isSelf ? 'You need to be enrolled' : `${learner.name} needs to be enrolled`}

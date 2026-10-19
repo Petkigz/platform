@@ -148,7 +148,7 @@ export default async function CourseViewPage({
   if (memberCohortIds.length > 0) {
     const { data: cohortRows, error: cohortRowsError } = await supabase
       .from('cohorts')
-      .select('id,course_id,course_version_id,title,description,starts_at,ends_at,capacity,status')
+      .select('id,course_id,course_version_id,title,description,starts_at,ends_at,capacity,status,join_closes_at')
       .in('id', memberCohortIds)
       .eq('course_id', enrolment.course_id)
       .is('deleted_at', null);
@@ -156,11 +156,12 @@ export default async function CourseViewPage({
     learnerCohorts = ((cohortRows ?? []) as unknown as {
       id: string; course_id: string; course_version_id: string; title: string;
       description: string | null; starts_at: string; ends_at: string | null;
-      capacity: number | null; status: CourseCohort['status'];
+      capacity: number | null; status: CourseCohort['status']; join_closes_at: string;
     }[]).map((c) => ({
       id: c.id, courseId: c.course_id, courseVersionId: c.course_version_id,
       title: c.title, description: c.description, startsAt: c.starts_at,
       endsAt: c.ends_at, capacity: c.capacity, status: c.status,
+      joinClosesAt: c.join_closes_at,
     }));
   }
 

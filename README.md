@@ -69,8 +69,8 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **102 tables, RLS on every one, 230 policies, 133
-user-defined triggers, 213 functions and 87 migrations.** The database suite
-passes **803 tests**; the web suite passes **360 tests**. TypeScript typecheck
+user-defined triggers, 214 functions and 88 migrations.** The database suite
+passes **814 tests**; the web suite passes **363 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **97 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
@@ -340,7 +340,7 @@ assignments and the revision loop that makes feedback actionable:
   precondition ("only meaningful once checkout is on") was true of paying and
   false of saving: a course can be free, unpublished, or under discussion in a
   family about which child it is for
-- `cohorts`, `cohort_members` — a published course version freezes its lessons and quizzes, so dated group work needs a class alongside the immutable version. Membership writes are session-bound; learners see only themselves and their family, not the roster; joining requires an exact-version enrolment. `learning.cohorts` ships off pending review of the late-join policy.
+- `cohorts`, `cohort_members` — a published course version freezes its lessons and quizzes, so dated group work needs a class alongside the immutable version. Membership writes are session-bound; learners see only themselves and their family, not the roster; joining requires an exact-version enrolment. Registration closes at a teacher-set `join_closes_at`, defaulting to the start date and movable while the class runs; shutting the window governs arriving, not staying. `learning.cohorts` ships off pending the safeguarding review of files children send.
 - `course_assignments`, `assignment_submissions`, `assignment_submission_assets` — a separate task can be created after publication, carry an enrolment-relative or cohort-absolute deadline, and receive one private learner hand-in with text and verified file references. Marks/feedback are private and audited; no bytes or public object keys are stored. `learning.assignments` ships off until safe upload, scanning, delivery/retention and late-join policy are reviewed.
 - `assignment_submission_revisions` — feedback a learner cannot answer is decoration, so marked work can be reopened as a draft and handed in again. The version that was marked is snapshotted here before the live row is cleared: append-only by trigger, readable exactly where its submission is readable, and it holds file *ids* rather than bytes. Reopening past a deadline is refused on a task that does not accept late work, because the alternative is a learner trading a grade for a draft they can never submit.
 

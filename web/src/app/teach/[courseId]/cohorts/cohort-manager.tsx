@@ -2,7 +2,19 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { CourseCohort, CohortMemberCounts } from '@/lib/cohorts';
+import {
+  type CohortMemberCounts,
+  type CourseCohort,
+  cohortJoinWindowOpen,
+  joinWindowLabel,
+} from '@/lib/cohorts';
+
+function toLocalInput(value: string | null) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return '';
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+}
 
 export type CohortVersionOption = { id: string; versionNumber: number; status: string };
 
@@ -27,6 +39,8 @@ export function CohortManager({
   const [startsAt, setStartsAt] = useState('');
   const [endsAt, setEndsAt] = useState('');
   const [capacity, setCapacity] = useState('');
+  // Blank is the decided default: registration closes when the class starts.
+  const [joinClosesAt, setJoinClosesAt] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
@@ -65,6 +79,7 @@ export function CohortManager({
       startsAt: startsAt ? new Date(startsAt).toISOString() : '',
       endsAt: endsAt ? new Date(endsAt).toISOString() : null,
       capacity: capacity || null,
+      joinClosesAt: joinClosesAt ? new Date(joinClosesAt).toISOString() : null,
     }, 'create');
     if (ok) {
       setTitle('');
@@ -72,6 +87,7 @@ export function CohortManager({
       setStartsAt('');
       setEndsAt('');
       setCapacity('');
+      setJoinClosesAt('');
       setMessage('Draft cohort created. Open it when you are ready for people to join.');
     }
   }
@@ -117,12 +133,16 @@ export function CohortManager({
           <label htmlFor="cohort-capacity">Capacity (optional)</label>
           <input id="cohort-capacity" type="number" min={1} step={1} value={capacity} onChange={(e) => setCapacity(e.target.value)} placeholder="No limit" />
 
+          <label htmlFor="cohort-join-closes">Registration closes (optional)</label>
+          <input id="cohort-join-closes" type="datetime-local" value={joinClosesAt} onChange={(e) => setJoinClosesAt(e.target.value)} placeholder="When the class starts" />
+
           <button type="submit" className="btn" disabled={Boolean(busy) || publishedVersions.length === 0}>
             {busy === 'create' ? 'Creating…' : 'Create draft cohort'}
           </button>
           <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>
-            Current join rule: an open class accepts members after the start until it ends.
-            Review that late-join policy before switching the feature on.
+            Join rule: registration closes when the class starts unless you set a later
+            time here. You can move it while the class is a draft or open, so
+            &ldquo;two more days&rdquo; is a change rather than a new class.
           </p>
         </form>
       )}
@@ -145,6 +165,7 @@ export function CohortManager({
                   <p className="muted" style={{ margin: '.25rem 0' }}>
                     Version {version?.versionNumber ?? '?'} · Starts {new Date(cohort.startsAt).toLocaleString()}
                     {cohort.endsAt ? ` · Ends ${new Date(cohort.endsAt).toLocaleString()}` : ' · Open-ended'}
+                    {' · '}{joinWindowLabel(cohort)}
                   </p>
                 </div>
                 <span className={`badge ${cohort.status === 'open' ? '' : 'neutral'}`}>{cohort.status}</span>
@@ -172,6 +193,10 @@ export function CohortManager({
                   </button>
                 )}
               </div>
+
+              {(cohort.status === 'draft' || cohort.status === 'open') && (
+                <JoinWindowControl cohort={cohort} onSend={send} busy={busy} />
+              )}
               <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>
                 Member names are not shown on this screen. Learners see only themselves and family.
               </p>
@@ -179,6 +204,68 @@ export function CohortManager({
           );
         })}
       </section>
+    </div>
+  );
+}
+
+/**
+ * Moving the join window, beside the class it governs rather than in the create
+ * form: "we will take joiners for two more days" is a decision made once a class
+ * is running, and the create form cannot know it yet.
+ */
+function JoinWindowControl({
+  cohort,
+  onSend,
+  busy,
+}: {
+  cohort: CourseCohort;
+  onSend: (payload: Record<string, unknown>, key: string) => Promise<unknown>;
+  busy: string | null;
+}) {
+  const [closesAt, setClosesAt] = useState(toLocalInput(cohort.joinClosesAt));
+  const key = `window-${cohort.id}`;
+  const open = cohortJoinWindowOpen(cohort);
+  const unchanged = closesAt === toLocalInput(cohort.joinClosesAt);
+
+  async function save() {
+    if (!closesAt) return;
+    await onSend({
+      action: 'set_join_window',
+      cohortId: cohort.id,
+      joinClosesAt: new Date(closesAt).toISOString(),
+    }, key);
+  }
+
+  return (
+    <div style={{ display: 'grid', gap: '.35rem' }}>
+      <label htmlFor={`join-closes-${cohort.id}`} style={{ margin: 0 }}>
+        Registration closes
+      </label>
+      <div className="row" style={{ gap: '.5rem', alignItems: 'center' }}>
+        <input
+          id={`join-closes-${cohort.id}`}
+          type="datetime-local"
+          value={closesAt}
+          onChange={(e) => setClosesAt(e.target.value)}
+          style={{ maxWidth: '15rem' }}
+        />
+        <button
+          type="button"
+          className="btn ghost"
+          disabled={Boolean(busy) || unchanged || !closesAt}
+          onClick={save}
+        >
+          {busy === key ? 'Saving…' : 'Move the window'}
+        </button>
+      </div>
+      <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>
+        {cohort.status === 'open'
+          ? open
+            ? 'Joining is open. Moving this later lets in someone who was refused.'
+            : 'Registration has closed. Move it later to let somebody in; the class keeps running.'
+          : 'Set it before opening the class, or move it later while it runs.'}
+        {' '}It cannot move past the end of the class.
+      </p>
     </div>
   );
 }

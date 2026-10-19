@@ -69,8 +69,11 @@ photos), and the **course author** marks. Cohort persistence is built behind
 `learning.cohorts`: classes pin one published course version; learners or their
 guardians opt in (the author cannot silently add a child); roster rows are
 private to the teacher/staff and that learner's family; a version change does
-not move an existing class to new material. The feature still ships off pending review of the late-join rule; the teacher
-manager and learner join/leave screens are now built.
+not move an existing class to new material. The teacher manager and learner
+join/leave screens are built, and the late-join rule is settled: each cohort
+carries `join_closes_at`, defaulting to the start date, which the teacher can
+move while the class is a draft or open. The feature still ships off, pending the
+safeguarding review of files children send.
 
 `learning.assignments` is not a duplicate quiz, and its database and text
 workflow now exist: tasks can be authored after publication; self-paced due
@@ -97,7 +100,7 @@ File references accept PDF/JPEG/PNG/WebP and common audio formats, with a
 are not transferred, scanned or delivered, and there is no retention workflow.
 The learner screen is text-only for now. Both flags stay off until the secure
 media path and retention workflow are ready; the cohort UI is built, but its
-late-join policy still needs review. These are the remaining pieces, not another quiz table.
+These are the remaining pieces, not another quiz table.
 
 The gates themselves are now enforced by the repository rather than by
 remembering them. `.github/workflows/ci.yml` runs on every push: a structural
@@ -160,6 +163,32 @@ recorded in `DECISIONS.md`:
 4. **D8 stays open, with costed research as the next step** rather than a choice
    made blind.
 
+The late-join rule is now built. `cohorts.join_closes_at` is not null, backfilled
+to `starts_at` for every cohort that already existed, and checked against
+`ends_at` at the table level so a window cannot outlive its class even through a
+write that bypasses the functions. `create_cohort()` takes it as an eighth
+argument — the old seven-argument signature is dropped first, because adding a
+DEFAULT argument to a plpgsql function creates an overload rather than replacing
+it — and a blank means "use the default", which is the start date.
+`set_cohort_join_window()` is a narrow writer for moving it while a class is a
+draft or open: not a general `update_cohort()`, because the title, dates and
+capacity of a published class are what people registered against, and this is
+the one field a teacher legitimately needs to change once the class is running.
+
+`join_cohort()` checks the window before it checks `ends_at`, so the refusal
+names the thing that actually stopped somebody. A class can still be running
+after it stopped taking joiners, and "this cohort has already ended" would be a
+lie the learner could see for themselves. The message carries the date.
+
+Both screens say the same thing from their own side: the teacher gets a window
+control beside each draft or open class, and the learner's join button
+disappears when the window shuts, replaced by "this class stopped accepting
+joiners but is still running" — because a badge that said CLOSED on a class
+that meets on Thursday would be wrong in the way that costs trust. The
+memberships panel on the enrolment page is unchanged on purpose: it lists
+classes the learner is already in, where leaving is the only action, and the
+window governs arriving rather than staying.
+
 That leaves one gap that is not code. **Learner analytics (`SCREENS.md` row 32)
 was blocked on a privacy decision**, now made and recorded in `DECISIONS.md`
 under "What a teacher may see about a learner". RLS gives a course author no read
@@ -196,9 +225,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **803 database tests, 360 web tests; TypeScript typecheck and
+Verification: **814 database tests, 363 web tests; TypeScript typecheck and
 production build pass; 102 tables, 230 policies, 133 user-defined triggers,
-213 functions, 87 migrations and 97 app route entries.**
+214 functions, 88 migrations and 97 app route entries.**
 
 ## Today's sentence
 

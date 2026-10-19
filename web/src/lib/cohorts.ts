@@ -12,6 +12,8 @@ export type CourseCohort = {
   endsAt: string | null;
   capacity: number | null;
   status: CohortStatus;
+  /** When this class stops accepting joiners. Defaults to `startsAt`. */
+  joinClosesAt: string;
 };
 
 export type JoinableCohort = CourseCohort & {
@@ -26,6 +28,18 @@ export type CohortWriteResult =
   | { ok: true; id: string | null }
   | { ok: false; status: number; message: string };
 
+export type CohortInput = {
+  courseId: string;
+  courseVersionId: string;
+  title: string;
+  description: string | null;
+  startsAt: string;
+  endsAt: string | null;
+  capacity: number | null;
+  /** Null means "close when the class starts", which is the decided default. */
+  joinClosesAt: string | null;
+};
+
 export function validateCohortInput(input: {
   courseId: unknown;
   courseVersionId: unknown;
@@ -34,8 +48,9 @@ export function validateCohortInput(input: {
   startsAt: unknown;
   endsAt?: unknown;
   capacity?: unknown;
+  joinClosesAt?: unknown;
 }):
-  | { ok: true; value: { courseId: string; courseVersionId: string; title: string; description: string | null; startsAt: string; endsAt: string | null; capacity: number | null } }
+  | { ok: true; value: CohortInput }
   | { ok: false; message: string } {
   const courseId = typeof input.courseId === 'string' ? input.courseId.trim() : '';
   const courseVersionId = typeof input.courseVersionId === 'string' ? input.courseVersionId.trim() : '';
@@ -62,6 +77,20 @@ export function validateCohortInput(input: {
     if (!Number.isInteger(capacity) || capacity < 1)
       return { ok: false, message: 'Capacity must be a whole number of at least one.' };
   }
+  // Blank is a real choice here, not a missing one: it means the class stops
+  // taking joiners when it starts. Setting a date is how a teacher says the
+  // first weeks are catch-up-able, or that registration closes early.
+  let joinClosesAt: string | null = null;
+  if (input.joinClosesAt !== null && input.joinClosesAt !== undefined && input.joinClosesAt !== '') {
+    if (typeof input.joinClosesAt !== 'string' || !Number.isFinite(Date.parse(input.joinClosesAt)))
+      return { ok: false, message: 'Choose a valid date for closing registration.' };
+    const closes = new Date(input.joinClosesAt);
+    if (closes.getTime() <= Date.now())
+      return { ok: false, message: 'Registration must close later than now, or be left blank to close at the start.' };
+    if (endsAt !== null && closes.getTime() > new Date(endsAt).getTime())
+      return { ok: false, message: 'Registration cannot stay open past the end of the class.' };
+    joinClosesAt = closes.toISOString();
+  }
   return {
     ok: true,
     value: {
@@ -72,6 +101,7 @@ export function validateCohortInput(input: {
       startsAt: starts.toISOString(),
       endsAt,
       capacity,
+      joinClosesAt,
     },
   };
 }
@@ -85,7 +115,14 @@ export function mapCohortError(error: { message: string; code?: string }): { sta
     return { status: 404, message: 'That cohort could not be found.' };
   if (/full/i.test(m)) return { status: 409, message: 'This cohort is full.' };
   if (/already in the cohort/i.test(m)) return { status: 409, message: 'This learner is already in the cohort.' };
-  if (/not open|already ended|cannot move|start already|ends after/i.test(m))
+  if (/only the teacher who opened/i.test(m))
+    return { status: 403, message: 'Only the teacher who opened this class can change it.' };
+  // The window shut. Say so, and say when: "not open" would read as the whole
+  // class being closed, which is a different thing to a learner.
+  if (/stopped accepting joiners/i.test(m)) return { status: 409, message: m };
+  if (/must close later than now|cannot close after the cohort ends|choose when the cohort stops/i.test(m))
+    return { status: 400, message: m };
+  if (/not open|already ended|cannot move|start already|ends after|not accepting joiners/i.test(m))
     return { status: 409, message: m };
   return { status: 400, message: m };
 }
@@ -102,7 +139,7 @@ async function rpcWrite(
 
 export async function createCohort(
   client: SupabaseClient,
-  input: { courseId: string; courseVersionId: string; title: string; description: string | null; startsAt: string; endsAt: string | null; capacity: number | null },
+  input: CohortInput,
 ): Promise<CohortWriteResult> {
   return rpcWrite(client, 'create_cohort', {
     p_course_id: input.courseId,
@@ -112,7 +149,45 @@ export async function createCohort(
     p_starts_at: input.startsAt,
     p_ends_at: input.endsAt,
     p_capacity: input.capacity,
+    p_join_closes_at: input.joinClosesAt,
   });
+}
+
+/** Move the join window. Only the teacher who opened the class, while it is draft or open. */
+export async function setCohortJoinWindow(
+  client: SupabaseClient,
+  cohortId: string,
+  joinClosesAt: string,
+): Promise<CohortWriteResult> {
+  return rpcWrite(client, 'set_cohort_join_window', {
+    p_cohort_id: cohortId,
+    p_join_closes_at: joinClosesAt,
+  });
+}
+
+/** Whether the class is still taking joiners. The database decides; this is for the button. */
+export function cohortJoinWindowOpen(
+  cohort: Pick<CourseCohort, 'status' | 'joinClosesAt'>,
+  now: Date = new Date(),
+): boolean {
+  if (cohort.status !== 'open') return false;
+  const closes = new Date(cohort.joinClosesAt);
+  if (!Number.isFinite(closes.getTime())) return false;
+  return now.getTime() <= closes.getTime();
+}
+
+/** What the window says, in words: a learner should not have to work out a date. */
+export function joinWindowLabel(
+  cohort: Pick<CourseCohort, 'status' | 'startsAt' | 'joinClosesAt'>,
+  now: Date = new Date(),
+): string {
+  const closes = new Date(cohort.joinClosesAt);
+  const starts = new Date(cohort.startsAt);
+  const sameAsStart = Math.abs(closes.getTime() - starts.getTime()) < 60_000;
+  if (now.getTime() > closes.getTime()) return 'Registration has closed';
+  return sameAsStart
+    ? 'Registration closes when the class starts'
+    : `Registration closes ${closes.toLocaleString()}`;
 }
 
 export async function setCohortStatus(
@@ -145,16 +220,18 @@ export async function leaveCohort(
   });
 }
 
-const COHORT_COLUMNS = 'id,course_id,course_version_id,title,description,starts_at,ends_at,capacity,status';
+const COHORT_COLUMNS = 'id,course_id,course_version_id,title,description,starts_at,ends_at,capacity,status,join_closes_at';
 
 function mapCohort(row: {
   id: string; course_id: string; course_version_id: string; title: string; description: string | null;
   starts_at: string; ends_at: string | null; capacity: number | null; status: CohortStatus;
+  join_closes_at: string;
 }): CourseCohort {
   return {
     id: String(row.id), courseId: String(row.course_id), courseVersionId: String(row.course_version_id),
     title: String(row.title), description: row.description, startsAt: String(row.starts_at),
     endsAt: row.ends_at, capacity: row.capacity === null ? null : Number(row.capacity), status: row.status,
+    joinClosesAt: String(row.join_closes_at),
   };
 }
 

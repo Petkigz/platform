@@ -2,9 +2,12 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  cohortJoinWindowOpen,
   createCohort,
   fetchJoinableCohorts,
+  joinWindowLabel,
   mapCohortError,
+  setCohortJoinWindow,
   validateCohortInput,
 } from './cohorts.ts';
 
@@ -94,8 +97,81 @@ test('creating a cohort sends no actor id', async () => {
   assert.deepEqual(result, { ok: true, id: 'cohort-1' });
   assert.equal(calls[0]?.fn, 'create_cohort');
   assert.deepEqual(Object.keys(calls[0]!.args).sort(), [
-    'p_capacity', 'p_course_id', 'p_course_version_id', 'p_description', 'p_ends_at', 'p_starts_at', 'p_title',
+    'p_capacity', 'p_course_id', 'p_course_version_id', 'p_description', 'p_ends_at',
+    'p_join_closes_at', 'p_starts_at', 'p_title',
   ]);
+  // Blank means "close at the start", which is a decision rather than a missing
+  // value, so it is sent as null and the database applies its own default.
+  assert.equal(calls[0]?.args.p_join_closes_at, null);
+});
+
+test('a join window is normalized, and cannot outlive the class', () => {
+  const start = new Date(Date.now() + 2 * 86_400_000).toISOString();
+  const end = new Date(Date.now() + 30 * 86_400_000).toISOString();
+  const closes = new Date(Date.now() + 10 * 86_400_000).toISOString();
+
+  const blank = validateCohortInput({
+    courseId: 'c-1', courseVersionId: 'v-1', title: 'Class', startsAt: start,
+  });
+  assert.equal(blank.ok, true);
+  if (blank.ok) assert.equal(blank.value.joinClosesAt, null,
+    'a blank window became a date instead of the default');
+
+  const set = validateCohortInput({
+    courseId: 'c-1', courseVersionId: 'v-1', title: 'Class', startsAt: start,
+    endsAt: end, joinClosesAt: closes,
+  });
+  assert.equal(set.ok, true);
+  if (set.ok) assert.equal(set.value.joinClosesAt, closes);
+
+  // Registration cannot close before now, and cannot stay open past the end.
+  for (const input of [
+    { courseId: 'c-1', courseVersionId: 'v-1', title: 'C', startsAt: start, joinClosesAt: 'not a date' },
+    { courseId: 'c-1', courseVersionId: 'v-1', title: 'C', startsAt: start, joinClosesAt: new Date(Date.now() - 3_600_000).toISOString() },
+    { courseId: 'c-1', courseVersionId: 'v-1', title: 'C', startsAt: start, endsAt: end, joinClosesAt: new Date(Date.now() + 40 * 86_400_000).toISOString() },
+  ]) {
+    const result = validateCohortInput(input);
+    assert.equal(result.ok, false, JSON.stringify(input.joinClosesAt));
+  }
+});
+
+test('the window decides whether the button is offered, and says so in words', () => {
+  const startsAt = new Date(Date.now() + 2 * 86_400_000).toISOString();
+  const open = { status: 'open' as const, startsAt, joinClosesAt: new Date(Date.now() + 86_400_000).toISOString() };
+  const shut = { status: 'open' as const, startsAt, joinClosesAt: new Date(Date.now() - 86_400_000).toISOString() };
+  const draft = { status: 'draft' as const, startsAt, joinClosesAt: open.joinClosesAt };
+
+  assert.equal(cohortJoinWindowOpen(open), true);
+  assert.equal(cohortJoinWindowOpen(shut), false);
+  // A draft class is not taking anybody yet, however far off its window is.
+  assert.equal(cohortJoinWindowOpen(draft), false);
+  assert.equal(cohortJoinWindowOpen({ status: 'open', joinClosesAt: 'nonsense' }), false);
+
+  assert.match(joinWindowLabel(shut), /Registration has closed/);
+  assert.match(joinWindowLabel(open), /Registration closes/);
+  // Closing at the start is the default, and is described as such rather than
+  // as a date a learner would have to compare against the start themselves.
+  assert.equal(joinWindowLabel({ status: 'open', startsAt, joinClosesAt: startsAt }),
+    'Registration closes when the class starts');
+});
+
+test('moving the window sends a timestamp, and a shut window is a conflict not a permission error', async () => {
+  const { client, calls } = stubRpc({ data: '2027-01-05T09:00:00.000Z' });
+  const closes = new Date(Date.now() + 5 * 86_400_000).toISOString();
+  const result = await setCohortJoinWindow(client, 'cohort-1', closes);
+  assert.equal(result.ok, true);
+  assert.equal(calls[0]?.fn, 'set_cohort_join_window');
+  assert.deepEqual(calls[0]?.args, { p_cohort_id: 'cohort-1', p_join_closes_at: closes });
+
+  const shut = mapCohortError({ message: 'this cohort stopped accepting joiners on 2027-01-02 09:00 EAT' });
+  assert.equal(shut.status, 409);
+  assert.match(shut.message, /stopped accepting joiners/,
+    'a shut window was reworded into something that reads as the class being over');
+
+  assert.equal(mapCohortError({ message: 'only the teacher who opened this cohort can change it' }).status, 403);
+  assert.equal(mapCohortError({ message: 'the join window must close later than now' }).status, 400);
+  assert.equal(mapCohortError({ message: 'the join window cannot close after the cohort ends' }).status, 400);
+  assert.equal(mapCohortError({ message: 'a closed cohort is not accepting joiners, so its window cannot move' }).status, 409);
 });
 
 test('cohort failures map to useful statuses', () => {
@@ -115,7 +191,7 @@ test('a learner sees only the classes they can access and the exact version they
       {
         id: 'cohort-1', course_id: 'course-1', course_version_id: 'version-1',
         title: 'Tajweed group', description: null, starts_at: '2027-01-01T09:00:00Z',
-        ends_at: null, capacity: 12, status: 'open',
+        ends_at: null, capacity: 12, status: 'open', join_closes_at: '2027-01-01T09:00:00Z',
       },
     ],
     course_versions: [{ id: 'version-1', version_number: 2 }],
@@ -130,6 +206,7 @@ test('a learner sees only the classes they can access and the exact version they
     courseId: 'course-1', learners: [{ id: 'learner-1' }, { id: 'learner-2' }],
   });
   assert.equal(cohorts.length, 1);
+  assert.equal(cohorts[0]?.joinClosesAt, '2027-01-01T09:00:00Z');
   assert.equal(cohorts[0]?.versionNumber, 2);
   assert.deepEqual(cohorts[0]?.eligibleLearnerIds, ['learner-1']);
   assert.deepEqual(cohorts[0]?.joinedLearnerIds, ['learner-1']);
