@@ -41,6 +41,7 @@ you. Do not treat it as settled, and do not build on it until it moves up.
 | 2026-10-19 | **A course author may see individual learner progress only inside a cohort a learner or guardian opted into.** Self-paced learners stay private: RLS gives an author no read at all on `course_enrolments` or `lesson_progress`, and that does not change. The reasoning is that a dated cohort is a group somebody joined on purpose, where a teacher knowing who is falling behind is the point of the class — while a self-paced catalogue enrolment is a private purchase, and pace is data about a child nobody agreed to share. Aggregate-only was considered and rejected as the general rule, because a count with no learner attached cannot tell a teacher who to help. Governs `SCREENS.md` row 32. |
 | 2026-10-19 | **The teacher decides when a cohort stops accepting joiners, per cohort.** A `join_closes_at` the teacher sets when creating the class, defaulting to the cohort's start date — so the default is the strict and fair one, and opening the window later is a deliberate act rather than something that happens by omission. This replaces the built behaviour, in which joining stayed open from before the start until the cohort ended and anyone could join in the final week. Settling it is the precondition `learning.cohorts` was held on. |
 | 2026-10-19 | **D8 stays open, and the next step is costed research rather than a choice.** Where original media masters live is not decided; before it is, the options (Cloudflare R2, Supabase Storage, Backblaze B2, with Stream as delivery only) are to be compared with real numbers at 100, 1,000 and 50,000 users and brought back as a recommendation. Nothing in the media byte path is built on a guess in the meantime. |
+| 2026-10-19 | **D8 research delivered: R2, at every tier.** Costed at `docs/decisions/media-storage-costing.md` from each provider's own price card read the same day. Monthly cost at 100 / 1,000 / 50,000 users: R2 $1.13 / $7.14 / $113.75; Supabase Storage $0.00 / $64.92 / $4,089.94; B2 direct egress $0.52 / $3.31 / $272.66; Stream as delivery $7.77 / $62.85 / $2,548.50 with masters still stored elsewhere. Two findings decide it beyond price: Cloudflare's CDN terms permit serving video only where the content is hosted by a Cloudflare service, which disqualifies the B2-plus-Cloudflare free-egress path on the plans a solo builder uses; and `register_media_upload()` already defaults to `'r2'` with the bucket derived, while `'b2'` is not a permitted backend at all. The recommendation is R2 for masters and delivery, Supabase Storage kept for avatars and receipts, Stream declined unless hardware DRM is ever required, and the ffmpeg worker accepted as the real cost of not buying Stream. The owner's choice is still outstanding. |
 
 ## Decided — from the project record
 
@@ -271,6 +272,10 @@ That is the gap.
 MP4 you cannot replace.
 
 - [x] **ADOPTED 2026-10-15** — reversible
+- [ ] **PROVIDER CHOICE OUTSTANDING 2026-10-19** — costed comparison and
+  recommendation at `docs/decisions/media-storage-costing.md`. The principle
+  above is adopted; the provider is not yet chosen, and no byte path is built
+  on a guess.
 
 ---
 
@@ -306,7 +311,7 @@ in them.
 | D5 | Version pinning | **FROZEN** |
 | D6 | Content licence | **ADOPTED** — draft at `docs/legal/content-licence.md`, needs legal review |
 | D7 | Deletion and retention | **ADOPTED** — schedule at `docs/decisions/retention-schedule.md`, 4 periods to confirm |
-| D8 | Media masters | **ADOPTED** |
+| D8 | Media masters | **ADOPTED** (principle) — provider costed at `docs/decisions/media-storage-costing.md`, choice outstanding |
 | D9 | Translations | **ADOPTED** |
 
 **All nine settled. Nothing blocks the first migration.**

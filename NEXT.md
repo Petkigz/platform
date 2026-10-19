@@ -157,11 +157,14 @@ recorded in `DECISIONS.md`:
    learner or guardian opted into.** Self-paced learners keep exactly the access
    they have today, which is none. That is the boundary to build row 32 against.
 3. **The teacher decides when a cohort stops accepting joiners**, per cohort,
-   defaulting to the start date. This is the precondition `learning.cohorts` was
-   held on, and the current behaviour — open until the cohort ends — is what has
-   to change.
-4. **D8 stays open, with costed research as the next step** rather than a choice
-   made blind.
+   defaulting to the start date. This was the precondition `learning.cohorts`
+   was held on, and it is now built — see `20261206000100_cohort_join_window.sql`.
+4. **D8 stays open, and the costed research it was waiting on is now done** —
+   `docs/decisions/media-storage-costing.md`. R2 comes to $1.13 / $7.14 /
+   $113.75 a month at 100 / 1,000 / 50,000 users, against Supabase Storage's
+   $0.00 / $64.92 / $4,089.94 and Stream's $7.77 / $62.85 / $2,548.50 as
+   delivery only. The recommendation is R2 for masters and delivery. What
+   remains is the owner's choice, not the arithmetic.
 
 The late-join rule is now built. `cohorts.join_closes_at` is not null, backfilled
 to `starts_at` for every cohort that already existed, and checked against
@@ -240,8 +243,9 @@ pushing the completed unit.
 - Payment provider merchant/sandbox credentials and callback verification (P12).
 - Payout policy/preconditions, tax and jurisdiction treatment, and disbursement
   credentials.
-- Where original media masters live (D8): costed comparison of R2, Supabase
-  Storage and B2 at 100 / 1,000 / 50,000 users, then a recommendation.
+- Where original media masters live (D8): the costed comparison is delivered at
+  `docs/decisions/media-storage-costing.md` and recommends R2; the provider
+  choice itself is still the owner's to make.
 
 Settled on 2026-10-19 and no longer open: the teacher/platform revenue share
 (**50%**), what a course author may see about a learner (**individual progress
