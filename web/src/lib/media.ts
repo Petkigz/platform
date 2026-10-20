@@ -17,9 +17,9 @@ import type { SupabaseClient } from '@supabase/supabase-js';
  *
  * Two things are deliberately NOT wired:
  *
- *   * Transferring the bytes. That needs storage credentials and a backend
- *     choice (D8 is settled on "our own storage" but not on which), and
- *     inventing it here would commit to a layout before that decision is made.
+ *   * Transferring the bytes. D8 chose Cloudflare R2 on 2026-10-20, and the
+ *     signing lives in `lib/media-r2.ts`; `POST /api/media` puts the two
+ *     together. This library still moves no bytes itself.
  *   * Confirmation. `confirm_media_upload()` is staff-only by design — letting
  *     the uploader confirm their own file is the hole this closes. The intended
  *     caller is the storage webhook or a worker that has verified the object
@@ -274,5 +274,127 @@ export async function attachMediaAsset(
     return { ok: false, message: m };
   }
 
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Moderation: holding and withdrawing a master
+// ---------------------------------------------------------------------------
+
+export type ModerationAsset = {
+  id: string;
+  mimeType: string;
+  byteSize: number;
+  durationSeconds: number | null;
+  status: MediaAsset['status'];
+  createdAt: string;
+  uploader: string | null;
+  renditions: { profile: string; status: string }[];
+};
+
+/**
+ * Every upload a staff member may see, newest first.
+ *
+ * No filter on who uploaded it: the SELECT policy is
+ * `uploaded_by = current_user_id() OR is_privileged()`, so on a moderation
+ * screen this is everything. Deciding that in a query as well would be deciding
+ * it twice, and the second decision is the one that drifts.
+ */
+export async function fetchMediaModerationQueue(
+  client: SupabaseClient,
+): Promise<ModerationAsset[]> {
+  const { data, error } = await client
+    .from('media_assets')
+    .select(`id, mime_type, byte_size, duration_seconds, status, created_at,
+             user_profiles ( display_name ),
+             media_renditions ( profile, status )`)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+
+  return (data ?? []).map((row) => {
+    const r = row as Record<string, unknown>;
+    const uploader = r.user_profiles as { display_name?: string } | null;
+    const renditions = (r.media_renditions as { profile?: string; status?: string }[] | null) ?? [];
+    return {
+      id: String(r.id),
+      mimeType: String(r.mime_type),
+      byteSize: Number(r.byte_size),
+      durationSeconds: r.duration_seconds === null ? null : Number(r.duration_seconds),
+      status: r.status as MediaAsset['status'],
+      createdAt: String(r.created_at),
+      uploader: uploader?.display_name ? String(uploader.display_name) : null,
+      renditions: renditions.map((x) => ({
+        profile: String(x.profile ?? ''),
+        status: String(x.status ?? ''),
+      })),
+    };
+  });
+}
+
+export type ModerationResult = { ok: true } | { ok: false; message: string };
+
+/** Both actions end access to a file, so both need a reason in writing. */
+function requireReason(reason: string): string | null {
+  const trimmed = reason.trim();
+  if (trimmed.length === 0) return 'Say why in writing. A takedown with no reason cannot be defended later.';
+  if (trimmed.length > 2000) return 'Keep the reason under 2000 characters.';
+  return null;
+}
+
+function mapModerationError(message: string): string {
+  if (/only staff may|only platform staff/i.test(message))
+    return 'Only platform staff can do that.';
+  if (/reason is required/i.test(message))
+    return 'Say why in writing. A takedown with no reason cannot be defended later.';
+  if (/only delete your own uploads/i.test(message))
+    return 'That file belongs to somebody else.';
+  if (/no media asset|not found/i.test(message)) return 'That upload is gone.';
+  if (/cannot be quarantined|already/i.test(message))
+    return 'That upload has already been dealt with.';
+  return message;
+}
+
+/**
+ * Hold a master for review. It stops being servable immediately, and every
+ * rendition derived from it stops with it — `may_play_rendition()` requires the
+ * master to be available, so quarantining the master withdraws the copies.
+ */
+export async function quarantineMediaAsset(
+  client: SupabaseClient,
+  assetId: string,
+  reason: string,
+): Promise<ModerationResult> {
+  const refusal = requireReason(reason);
+  if (refusal) return { ok: false, message: refusal };
+  if (!assetId) return { ok: false, message: 'That upload is gone.' };
+
+  const { error } = await client.rpc('quarantine_media_upload', {
+    p_asset_id: assetId,
+    p_reason: reason.trim(),
+  });
+  if (error) return { ok: false, message: mapModerationError(error.message) };
+  return { ok: true };
+}
+
+/**
+ * Withdraw a master. Soft delete per D7: the object survives and the row is
+ * tombstoned, because a rights request may have to be matched to it afterwards.
+ */
+export async function withdrawMediaAsset(
+  client: SupabaseClient,
+  assetId: string,
+  reason: string,
+): Promise<ModerationResult> {
+  const refusal = requireReason(reason);
+  if (refusal) return { ok: false, message: refusal };
+  if (!assetId) return { ok: false, message: 'That upload is gone.' };
+
+  const { data, error } = await client.rpc('delete_media_asset', {
+    p_asset_id: assetId,
+    p_reason: reason.trim(),
+  });
+  if (error) return { ok: false, message: mapModerationError(error.message) };
+  if (data === false) return { ok: false, message: 'That upload has already been withdrawn.' };
   return { ok: true };
 }

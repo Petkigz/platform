@@ -6,8 +6,8 @@ import {
   R2RequestError,
   presignMasterUpload,
   readR2Config,
-  validateUploadRequest,
 } from '@/lib/media-r2';
+import { registerMediaUpload } from '@/lib/media';
 
 export const dynamic = 'force-dynamic';
 
@@ -76,34 +76,25 @@ export async function POST(request: Request) {
     return fail(new R2NotConfiguredError().message, 503);
   }
 
-  const validated = validateUploadRequest(body);
-  if (!validated.ok) return fail(validated.message, 400);
-  const { mimeType, byteSize, checksum, durationSeconds } = validated.value;
-
-  const { data, error } = await supabase.rpc('register_media_upload', {
-    p_mime_type: mimeType,
-    p_byte_size: byteSize,
-    p_checksum: checksum,
-    p_duration_seconds: durationSeconds,
-    // 'r2' is the function's own default and the backend D8 chose. Named
-    // explicitly so a change of default in SQL cannot silently move uploads.
-    p_storage_backend: 'r2',
+  // Through lib/media.ts rather than a second validator here: that library
+  // already refuses a fractional duration and anything over MAX_UPLOAD_BYTES,
+  // and a rule that exists in two places is a rule enforced in one of them.
+  const mimeType = typeof body?.mimeType === 'string' ? body.mimeType.trim().toLowerCase() : '';
+  const registered = await registerMediaUpload(supabase, {
+    mimeType,
+    byteSize: typeof body?.byteSize === 'number' ? body.byteSize : Number(body?.byteSize),
+    checksum: typeof body?.checksum === 'string' ? body.checksum : '',
+    durationSeconds:
+      body?.durationSeconds === null || body?.durationSeconds === undefined || body?.durationSeconds === ''
+        ? null
+        : Number(body.durationSeconds),
+    // 'r2' is the backend D8 chose on 2026-10-20. Named explicitly so a change
+    // of default in SQL cannot silently move uploads somewhere else.
+    storageBackend: 'r2',
   });
-  if (error) {
-    const message = error.message;
-    const status = /sign in to upload/i.test(message) ? 401
-      : /unsupported storage backend|invalid|needs|must be/i.test(message) ? 400
-      : 409;
-    return fail(message, status);
-  }
+  if (!registered.ok) return fail(registered.message, 400);
 
-  const target = data as { asset_id?: string; master_bucket?: string; master_key?: string } | null;
-  const assetId = target?.asset_id;
-  const bucket = target?.master_bucket;
-  const key = target?.master_key;
-  if (!assetId || !bucket || !key) {
-    return fail('The upload could not be registered.', 502);
-  }
+  const { assetId, masterBucket: bucket, masterKey: key } = registered.target;
   if (bucket !== config.mastersBucket) {
     // Two places name this bucket. Refusing is better than signing a URL for a
     // bucket the database will never record the object in.

@@ -86,7 +86,7 @@ Status:
 | 33 | Course submission and review | **BUILT** — submit from `/teach/[courseId]`; `/review` and `/admin/reviews` handle the assignment |
 | 34 | Earnings | BLOCKED — `teaching.payouts` is CODE and refused by trigger. The *data* exists: `instructor_earnings` accrues on a paid order and reverses on refund. No teacher-facing screen |
 
-## 7. Administration — 9
+## 7. Administration — 10
 
 | # | Screen | Status |
 |---|---|---|
@@ -98,6 +98,7 @@ Status:
 | 40 | Revenue analytics | BLOCKED — `delivery.analytics` is CODE |
 | 41 | Certificates | **BUILT** — `/admin/certificates` |
 | 42 | **Settings and feature flags** | **BUILT** — *critical path, and it was missing from the source list.* `platform_settings` holds all 87 flags plus 3 governance and money controls; `/admin` reads and toggles them, with `code`-gated flags refused by trigger |
+| 44 | **Uploaded media moderation** *(added by audit, 2026-10-20)* | **BUILT** — `/admin/media`: every master anybody has uploaded, with its uploader, size, duration and the renditions derived from it. Quarantine holds one for review and withdraws every copy derived from it; withdraw is a soft delete per D7. Both need a written reason, which the database now refuses to do without. *Found by the audit: `quarantine_media_upload()` and `delete_media_asset()` existed and were tested, and no screen reached them, so a rights complaint about an uploaded file had no path at all* |
 | 43 | Support cases | **BUILT** — `/support` (open and list), `/support/<caseNumber>` (thread, reply, withdraw), `/admin/support` (queue and triage). Behind `platform.support` |
 
 ## 8. Payments — 4
@@ -151,15 +152,15 @@ against the actual route list in the production build, not from memory.
 | `/admin/reports` | Abuse and content reports |
 | `/admin/roles` | Role assignments |
 
-Nine of the seventeen are administration screens, which is why section 7 says
-"Administration — 9" while the app has fifteen admin routes.
+Nine of the seventeen are administration screens. Section 7 has since gained row
+44, so the app now has sixteen admin routes.
 
 ## Counts
 
 | | |
 |---|---|
 | Numbered screen IDs | **50**, plus 19a, 19b, 20a, 20b, 20c, 31a and 31b — **57 rows** |
-| Built | **40 inventoried**, plus **17 built but never inventoried** above — **57 in the app** |
+| Built | **41 inventoried**, plus **17 built but never inventoried** above — **58 in the app** |
 | Ready to design now | **12** |
 | Blocked | **5** |
 

@@ -22,7 +22,6 @@ import {
   requireR2Config,
   signRequest,
   uriEncode,
-  validateUploadRequest,
   type R2Config,
 } from './media-r2.ts';
 
@@ -300,46 +299,4 @@ test('buckets default to the derived names and can be overridden', () => {
 test('requiring configuration fails loudly rather than signing with nothing', () => {
   assert.throws(() => requireR2Config({}), R2NotConfiguredError);
   assert.equal(requireR2Config(env).accountId, 'acct-123');
-});
-
-// ---------------------------------------------------------------------------
-// The upload request
-// ---------------------------------------------------------------------------
-
-const checksum = 'a'.repeat(64);
-
-test('a well-formed upload request is normalised, not just accepted', () => {
-  const result = validateUploadRequest({ mimeType: ' VIDEO/MP4 ', byteSize: '1048576', checksum: checksum.toUpperCase(), durationSeconds: '600' });
-  assert.equal(result.ok, true);
-  if (!result.ok) return;
-  assert.deepEqual(result.value, { mimeType: 'video/mp4', byteSize: 1048576, checksum, durationSeconds: 600 });
-});
-
-test('a duration may be absent, which is how a document arrives', () => {
-  for (const durationSeconds of [null, undefined, '']) {
-    const result = validateUploadRequest({ mimeType: 'application/pdf', byteSize: 2048, checksum, durationSeconds });
-    assert.equal(result.ok, true, `duration ${String(durationSeconds)} was refused`);
-    if (result.ok) assert.equal(result.value.durationSeconds, null);
-  }
-});
-
-test('the same refusals the database makes are made first, in words', () => {
-  const cases: Array<[unknown, string]> = [
-    [{ byteSize: 10, checksum }, 'A file needs a type.'],
-    [{ mimeType: 'not-a-type', byteSize: 10, checksum }, 'That is not a MIME type.'],
-    [{ mimeType: 'video/mp4', byteSize: 0, checksum }, 'whole number of bytes'],
-    [{ mimeType: 'video/mp4', byteSize: 1.5, checksum }, 'whole number of bytes'],
-    [{ mimeType: 'video/mp4', byteSize: 'lots', checksum }, 'whole number of bytes'],
-    [{ mimeType: 'video/mp4', byteSize: 10, checksum: 'abc' }, '64-character lowercase hex'],
-    [{ mimeType: 'video/mp4', byteSize: 10, checksum: 'A'.repeat(63) }, '64-character lowercase hex'],
-    [{ mimeType: 'video/mp4', byteSize: 10, checksum, durationSeconds: -1 }, 'whole number of seconds'],
-    [{ mimeType: 'video/mp4', byteSize: 10, checksum, durationSeconds: 1.5 }, 'whole number of seconds'],
-    [null, 'An upload request is missing.'],
-  ];
-  for (const [body, expected] of cases) {
-    const result = validateUploadRequest(body);
-    assert.equal(result.ok, false, `${JSON.stringify(body)} was accepted`);
-    if (result.ok) continue;
-    assert.match(result.message, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
-  }
 });

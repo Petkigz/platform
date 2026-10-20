@@ -148,6 +148,12 @@ export default async function AdminPage() {
         flagged in a lesson or an answer. Closing one needs a written note.
       </p>
       <p>
+        <Link href="/admin/media">Uploaded media</Link> — every master anybody
+        has uploaded. Quarantine holds one for review and withdraws every copy
+        derived from it; withdrawing ends its use but keeps the object. Both
+        need a written reason.
+      </p>
+      <p>
         <Link href="/admin/roles">Roles</Link> — who may do what. Every check in
         the database reads these; granting or revoking needs a written reason.
       </p>

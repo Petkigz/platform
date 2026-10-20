@@ -302,9 +302,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **848 database tests, 384 web tests; TypeScript typecheck and
+Verification: **851 database tests, 388 web tests; TypeScript typecheck and
 production build pass; 102 tables, 230 policies, 133 user-defined triggers,
-220 functions, 90 migrations and 97 app route entries.**
+220 functions, 91 migrations and 99 app route entries.**
 
 ## Today's sentence
 
@@ -376,15 +376,24 @@ function:
 Both are tested, so neither is broken. Both are dead, and a reader would
 reasonably assume otherwise.
 
-**Four staff functions have no admin surface**, which is an operational gap
-rather than a tidy one:
+**Four staff functions had no admin surface.** Two are now closed — `/admin/media`
+reaches `quarantine_media_upload()` and `delete_media_asset()`, so a rights
+complaint or a safeguarding report about an uploaded master has a path. The other
+two, `confirm_media_rendition()` and `fail_media_rendition()`, are still expected
+to be uncalled, because no transcode worker exists.
 
-- `quarantine_media_upload()` and `delete_media_asset()` — the powers a rights
-  complaint or a safeguarding report about an uploaded master would need. They
-  exist, they are tested, and **no screen offers them**, so today such a report
-  has no UI path at all.
-- `confirm_media_rendition()` and `fail_media_rendition()` — expected, since no
-  transcode worker calls them yet.
+**A second divergence, found while closing the first, and worse:** `web/src/lib/
+media.ts` was complete, tested and **imported by nothing** — including an 8 GiB
+per-file upload ceiling, a `fetchMediaAssets()` read path and an
+`attachMediaAsset()` that refuses a file which was never confirmed. `POST
+/api/media`, written the day before this audit, validated and registered an
+upload itself instead, so the ceiling existed and was not in force. The route now
+calls the library, the duplicate validator is deleted, and the ceiling is live.
+This is the same failure as `add_child_to_family()` one level up: not a rule
+enforced in one of two paths, but a library of rules bypassed by a second
+implementation. The lesson is general and worth stating — **before writing a
+helper, grep for one that already exists**, and the audit should have checked
+for unimported libraries rather than only for unreferenced tables.
 
 **One divergence between SQL and the web layer:** `add_child_to_family()` is
 called by tests only. `web/src/lib/family.ts` inserts into `learner_profiles`

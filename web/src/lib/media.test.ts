@@ -96,3 +96,151 @@ test('a negative duration is refused', () => {
 test('a fractional duration is refused', () => {
   assert.equal(validateRegisterUpload({ ...base, durationSeconds: 1.5 }).ok, false);
 });
+
+// ---------------------------------------------------------------------------
+// Moderation: holding and withdrawing a master.
+//
+// These two actions end access to a file somebody uploaded, and both are asked
+// about later by somebody who was not in the room. So the rules under test are
+// that the reason is required before the database is asked, that it arrives
+// trimmed, and that a refusal reads as a sentence.
+// ---------------------------------------------------------------------------
+
+import {
+  fetchMediaModerationQueue,
+  quarantineMediaAsset,
+  withdrawMediaAsset,
+} from './media.ts';
+
+type RpcCall = { fn: string; args: Record<string, unknown> };
+
+function stubRpc(result: { data?: unknown; error?: { message: string } } = { data: true }) {
+  const calls: RpcCall[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const client = {
+    rpc: async (fn: string, args: Record<string, unknown>) => {
+      calls.push({ fn, args });
+      return result;
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any;
+  return { client, calls };
+}
+
+const assetId = '4f30fd1d-6f2c-4c1e-9a5b-0d2f6c8a1b23';
+
+test('quarantining sends the reason, trimmed, to the function that requires it', async () => {
+  const { client, calls } = stubRpc();
+  const result = await quarantineMediaAsset(client, assetId, '  rights complaint 2026-1043  ');
+  assert.equal(result.ok, true);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0]?.fn, 'quarantine_media_upload');
+  assert.deepEqual(calls[0]?.args, { p_asset_id: assetId, p_reason: 'rights complaint 2026-1043' });
+});
+
+test('withdrawing sends the reason too, and reports a file that was already gone', async () => {
+  const { client, calls } = stubRpc({ data: true });
+  assert.equal((await withdrawMediaAsset(client, assetId, 'safeguarding report 88')).ok, true);
+  assert.equal(calls[0]?.fn, 'delete_media_asset');
+  assert.deepEqual(calls[0]?.args, { p_asset_id: assetId, p_reason: 'safeguarding report 88' });
+
+  const gone = stubRpc({ data: false });
+  const result = await withdrawMediaAsset(gone.client, assetId, 'already handled');
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.match(result.message, /already been withdrawn/);
+});
+
+test('a blank reason never reaches the database', async () => {
+  for (const reason of ['', '   ', '\n\t']) {
+    const q = stubRpc();
+    assert.equal((await quarantineMediaAsset(q.client, assetId, reason)).ok, false);
+    const w = stubRpc();
+    assert.equal((await withdrawMediaAsset(w.client, assetId, reason)).ok, false);
+    assert.equal(q.calls.length, 0, 'quarantine called the database without a reason');
+    assert.equal(w.calls.length, 0, 'withdrawal called the database without a reason');
+  }
+});
+
+test('a reason has a length, because it is written into an audit trail', async () => {
+  const { client, calls } = stubRpc();
+  const result = await quarantineMediaAsset(client, assetId, 'x'.repeat(2001));
+  assert.equal(result.ok, false);
+  assert.equal(calls.length, 0);
+  if (!result.ok) assert.match(result.message, /under 2000 characters/);
+});
+
+test('a missing asset id is refused without a call', async () => {
+  const { client, calls } = stubRpc();
+  assert.equal((await withdrawMediaAsset(client, '', 'a reason')).ok, false);
+  assert.equal(calls.length, 0);
+});
+
+test('the database\'s refusals read as sentences', async () => {
+  const cases: Array<[string, RegExp]> = [
+    ['only staff may quarantine an upload', /Only platform staff/],
+    ['a reason is required to withdraw an upload', /Say why in writing/],
+    ['you may only delete your own uploads', /belongs to somebody else/],
+    ['no media asset 4f30fd1d', /That upload is gone/],
+  ];
+  for (const [message, expected] of cases) {
+    const { client } = stubRpc({ error: { message } });
+    const result = await quarantineMediaAsset(client, assetId, 'a reason');
+    assert.equal(result.ok, false, `${message} was accepted`);
+    if (!result.ok) assert.match(result.message, expected);
+  }
+});
+
+/** A query-builder stub: .from().select().order() resolves to rows. */
+function stubTable(rows: unknown[]) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chain: any = {
+    select: () => chain,
+    order: () => chain,
+    is: () => chain,
+    then: (resolve: (v: { data: unknown[]; error: null }) => void) =>
+      resolve({ data: rows, error: null }),
+  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const client = { from: () => chain } as any;
+  return client;
+}
+
+test('the moderation queue carries the uploader and the renditions derived from a master', async () => {
+  const client = stubTable([
+    {
+      id: assetId,
+      mime_type: 'video/mp4',
+      byte_size: '10485760',
+      duration_seconds: 600,
+      status: 'available',
+      created_at: '2026-10-20T09:00:00.000Z',
+      user_profiles: { display_name: 'Teacher One' },
+      media_renditions: [
+        { profile: '720p', status: 'available' },
+        { profile: 'audio', status: 'pending' },
+      ],
+    },
+    {
+      id: '00000000-0000-4000-8000-000000000000',
+      mime_type: 'application/pdf',
+      byte_size: 2048,
+      duration_seconds: null,
+      status: 'quarantined',
+      created_at: '2026-10-19T09:00:00.000Z',
+      user_profiles: null,
+      media_renditions: null,
+    },
+  ]);
+
+  const queue = await fetchMediaModerationQueue(client);
+  assert.equal(queue.length, 2);
+  assert.equal(queue[0]?.uploader, 'Teacher One');
+  assert.equal(queue[0]?.byteSize, 10485760, 'a bigint column must arrive as a number');
+  assert.deepEqual(queue[0]?.renditions, [
+    { profile: '720p', status: 'available' },
+    { profile: 'audio', status: 'pending' },
+  ]);
+  assert.equal(queue[1]?.uploader, null);
+  assert.equal(queue[1]?.durationSeconds, null);
+  assert.deepEqual(queue[1]?.renditions, []);
+});

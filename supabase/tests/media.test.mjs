@@ -223,7 +223,7 @@ export async function run(ctx) {
 
   await test('a deleted upload cannot be confirmed', async () => {
     const r = (await register(teacher)).rows[0];
-    await asActor(teacher, 'select public.delete_media_asset($1)', [r.asset_id]);
+    await asActor(teacher, 'select public.delete_media_asset($1,$2)', [r.asset_id, 'superseded by a re-upload']);
 
     await rejects(() => asActor(admin, 'select public.confirm_media_upload($1)', [r.asset_id]),
       /has been deleted/i);
@@ -271,7 +271,7 @@ export async function run(ctx) {
     const r = (await register(teacher)).rows[0];
 
     const deleted = (await asActor(teacher,
-      'select public.delete_media_asset($1) as d', [r.asset_id])).rows[0].d;
+      'select public.delete_media_asset($1,$2) as d', [r.asset_id, 'the teacher withdrew it'])).rows[0].d;
     assert(deleted === true, 'deletion reported no change');
 
     const row = await statusOf(r.asset_id);
@@ -281,11 +281,46 @@ export async function run(ctx) {
 
   await test('deleting twice reports no change rather than failing', async () => {
     const r = (await register(teacher)).rows[0];
-    await asActor(teacher, 'select public.delete_media_asset($1)', [r.asset_id]);
+    await asActor(teacher, 'select public.delete_media_asset($1,$2)', [r.asset_id, 'superseded by a re-upload']);
 
     const again = (await asActor(teacher,
-      'select public.delete_media_asset($1) as d', [r.asset_id])).rows[0].d;
+      'select public.delete_media_asset($1,$2) as d', [r.asset_id, 'the teacher withdrew it'])).rows[0].d;
     assert(again === false, 'a second deletion should report no change');
+  });
+
+  await test('a withdrawal without a written reason is refused', async () => {
+    const r = (await register(teacher)).rows[0];
+    for (const reason of [null, '', '   ']) {
+      await rejects(() => asActor(teacher,
+        'select public.delete_media_asset($1,$2)', [r.asset_id, reason]),
+        /reason is required/i);
+    }
+    assert((await statusOf(r.asset_id)).deleted_at === null,
+      'the upload was withdrawn without a reason');
+  });
+
+  await test('the reason for a withdrawal is recorded, not only the fact of it', async () => {
+    const r = (await register(teacher)).rows[0];
+    await asActor(teacher, 'select public.delete_media_asset($1,$2)',
+      [r.asset_id, 'rights complaint 2026-1043']);
+    const detail = (await q(
+      `select detail from public.governance_audit_events
+        where action='media.upload_deleted' and target_id=$1
+        order by occurred_at desc limit 1`, [r.asset_id])).rows[0].detail;
+    assert(detail.reason === 'rights complaint 2026-1043',
+      `the audit detail was ${JSON.stringify(detail)}`);
+  });
+
+  await test('there is no way left to withdraw an upload without saying why', async () => {
+    // Adding a parameter to a plpgsql function creates an overload rather than
+    // replacing it, and an overload here would leave the old one-argument path
+    // open -- which is exactly what was being closed.
+    const signatures = (await q(
+      `select count(*)::int n from pg_proc p
+         join pg_namespace ns on ns.oid = p.pronamespace
+        where ns.nspname='public' and p.proname='delete_media_asset'`)).rows[0].n;
+    assert(signatures === 1,
+      `delete_media_asset has ${signatures} signatures; only the one taking a reason may exist`);
   });
 
   await test('a stranger cannot delete someone else\'s upload', async () => {
@@ -294,7 +329,7 @@ export async function run(ctx) {
     await newProfile(stranger, 'Stranger Two');
 
     await rejects(() => asActor(stranger,
-      'select public.delete_media_asset($1)', [r.asset_id]),
+      'select public.delete_media_asset($1,$2)', [r.asset_id, 'not mine to withdraw']),
       /only delete your own/i);
 
     assert((await statusOf(r.asset_id)).deleted_at === null, 'the upload was deleted');
@@ -363,7 +398,7 @@ export async function run(ctx) {
   await test('registration, confirmation and deletion are all audited', async () => {
     const r = (await register(teacher)).rows[0];
     await asActor(admin, 'select public.confirm_media_upload($1)', [r.asset_id]);
-    await asActor(teacher, 'select public.delete_media_asset($1)', [r.asset_id]);
+    await asActor(teacher, 'select public.delete_media_asset($1,$2)', [r.asset_id, 'superseded by a re-upload']);
 
     const actions = (await q(
       `select action from public.governance_audit_events
