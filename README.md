@@ -321,7 +321,7 @@ data, the help desk, learner reviews, saved courses, dated cohorts, marked
 assignments and the revision loop that makes feedback actionable:
 
 - `institutions` — D1 multi-tenancy had no table to hang `institution_id` on
-- `media_assets` — D8 requires originals in storage we control, with a checksum; the provider is costed at `docs/decisions/media-storage-costing.md`
+- `media_assets` — D8 requires originals in storage we control, with a checksum; the provider is **Cloudflare R2**, chosen 2026-10-20 from `docs/decisions/media-storage-costing.md`
 - `platform_settings` — without it, "build it all, enable it later" had
   nowhere to live; `governance.panel_required` is a row, not a constant
 - `discussion_posts` — per-lesson discussion, explicitly wanted for the product

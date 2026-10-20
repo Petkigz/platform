@@ -1,9 +1,22 @@
 # Where the Media Masters Live — Costed
 
-**Status:** research complete 2026-10-19, recommendation pending the owner's
-choice. This document settles the *provider* question inside decision **D8**
+**Status: DECIDED 2026-10-20 — Cloudflare R2, for masters and delivery.** The
+recommendation in §5 was accepted by the owner the day after it was written.
+This document settles the *provider* question inside decision **D8**
 (`DECISIONS.md`), whose principle — originals in object storage you control,
-never in the delivery provider — was already adopted on 2026-10-15.
+never in the delivery provider — was adopted on 2026-10-15.
+
+Kept in full rather than filed, because §2 is the model to re-run: the two
+numbers most likely to be wrong are hours per course and watch time per active
+user, and the byte path is not built yet.
+
+**One thing has changed since the recommendation was written.** The owner added
+a requirement while accepting it: saved lessons must stay available for students
+to review and for other teachers to see. §5 item 3 declined Stream, and that
+stands for recorded lessons — R2 serves them permanently and far more cheaply.
+But *live* classes that are streamed and then saved are the one workload where
+Stream earns its price, because self-hosting a media server is not a weekend.
+See §7.
 
 **Method:** every price below was read off the provider's own pricing page on
 2026-10-19 and is quoted with its date. The usage model is stated in full so the
@@ -205,3 +218,58 @@ policy that let an uploader mark its own bytes `available`.
    `learning.assignments` and `learning.cohorts` are still held on.
 
 Nothing in this list is started, and no screen claims otherwise.
+
+---
+
+## 7. Added after the decision: saved lessons
+
+Recorded here because it is a cost and architecture question, and because it
+arrived as part of accepting §5 rather than after it.
+
+**The requirement.** Lessons must remain available so students can review them,
+and so other teachers can see them.
+
+**For recorded lessons this changes nothing, and costs nothing extra.** A master
+in R2 is permanent by design — that is the whole point of D8, and the reason
+Stream was rejected as an archive. A signed playback URL is minted per request,
+so "still available next year" is a property of the stored object, not of a link
+that expires. Storage for the library was already priced in §3: 426 GB at 1,000
+users, 4.3 TB at 50,000. Re-watching does not add stored bytes; it adds
+delivered ones, and R2 does not charge for delivery. The 2 h/month per active
+user in §2 already assumes re-watching.
+
+**What is genuinely new is the access rule, and it is not settled.** "Other
+teachers" is three different privacy boundaries:
+
+| Reading | Who sees the lesson | Consequence |
+|---|---|---|
+| Co-teachers of the same course | People already trusted with that course | Small. Extends an existing authorisation check |
+| Reviewers checking quality | A named reviewer, for a named period | Medium. Peer review (P6) already exists and is dormant; this wakes it |
+| Any teacher on the platform | Everyone with a teacher account | Large. Makes a paid course's content readable by its competitors |
+
+The third is the one that would need an explicit licence per lesson, because
+`content_licence` exists for exactly this and defaults to "not shared". Nothing
+is built until the owner picks one.
+
+**Live classes are the case that reopens Stream.** If "stream with an option of
+saving" means a class taught live and recorded for later review, then:
+
+- Self-hosted means a media server (SFU) plus recording plus transcode — the
+  largest single piece of engineering in §6, and the only part with real
+  operational risk for one person.
+- Cloudflare Stream Live does ingest, recording, transcoding and delivery for
+  the same rates as on-demand: $5 per 1,000 minutes stored, $1 per 1,000
+  minutes delivered, no free tier, $5/month minimum.
+- Costed on the §2 model, if a tenth of cohort classes were taught live and
+  saved at 50,000 users — say 4,000 live hours a month, recorded — that is
+  240,000 minutes stored once ($1,200, permanent) and whatever the cohort
+  watches back. Meaningful, but it is the workload Stream was built for, and
+  the masters would still go to R2 so the archive rule holds either way.
+
+**A recording of a class containing children is a safeguarding question before
+it is a storage question.** `docs/decisions/retention-schedule.md` gives child
+learner data the shortest retention period in the system, and a saved class
+video captures children's faces, voices and mistakes together in one file that
+is far harder to withdraw than a progress row. This needs a decision — guardian
+consent, teacher-only capture, or no recording of classes with children — before
+any live-recording feature is built. It is recorded as open in `DECISIONS.md`.

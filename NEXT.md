@@ -159,12 +159,12 @@ recorded in `DECISIONS.md`:
 3. **The teacher decides when a cohort stops accepting joiners**, per cohort,
    defaulting to the start date. This was the precondition `learning.cohorts`
    was held on, and it is now built — see `20261206000100_cohort_join_window.sql`.
-4. **D8 stays open, and the costed research it was waiting on is now done** —
-   `docs/decisions/media-storage-costing.md`. R2 comes to $1.13 / $7.14 /
-   $113.75 a month at 100 / 1,000 / 50,000 users, against Supabase Storage's
-   $0.00 / $64.92 / $4,089.94 and Stream's $7.77 / $62.85 / $2,548.50 as
-   delivery only. The recommendation is R2 for masters and delivery. What
-   remains is the owner's choice, not the arithmetic.
+4. **D8 is decided: Cloudflare R2, for masters and delivery** (2026-10-20),
+   taken from the costed research at `docs/decisions/media-storage-costing.md`.
+   R2 comes to $1.13 / $7.14 / $113.75 a month at 100 / 1,000 / 50,000 users,
+   against Supabase Storage's $0.00 / $64.92 / $4,089.94 and Stream's
+   $7.77 / $62.85 / $2,548.50 as delivery only. The arithmetic is settled; the
+   byte path is still not built.
 
 The late-join rule is now built. `cohorts.join_closes_at` is not null, backfilled
 to `starts_at` for every cohort that already existed, and checked against
@@ -244,9 +244,21 @@ pushing the completed unit.
 - Payment provider merchant/sandbox credentials and callback verification (P12).
 - Payout policy/preconditions, tax and jurisdiction treatment, and disbursement
   credentials.
-- Where original media masters live (D8): the costed comparison is delivered at
-  `docs/decisions/media-storage-costing.md` and recommends R2; the provider
-  choice itself is still the owner's to make.
+- Two questions opened by the saved-lessons requirement the owner added while
+  accepting D8 (2026-10-20), both recorded in `DECISIONS.md` and costed in
+  §7 of `docs/decisions/media-storage-costing.md`:
+  - **Who counts as "other teachers"** allowed to review a saved lesson —
+    co-teachers of the same course, reviewers checking quality, or any teacher
+    on the platform. These are three different privacy boundaries, and the
+    third makes a paid course's content readable by its competitors unless a
+    per-lesson licence says otherwise.
+  - **Whether a live class may be recorded at all when children are in it.**
+    Recorded lessons are already permanent in R2 and cost nothing extra to
+    re-watch; a live class saved for later review is new work, is the one
+    workload where Cloudflare Stream would earn its price, and captures
+    children's faces, voices and mistakes in a single file that is far harder
+    to withdraw than a progress row. `docs/decisions/retention-schedule.md`
+    gives child data the shortest retention in the system.
 
 Settled on 2026-10-19 and no longer open: the teacher/platform revenue share
 (**50%**), what a course author may see about a learner (**individual progress

@@ -42,6 +42,8 @@ you. Do not treat it as settled, and do not build on it until it moves up.
 | 2026-10-19 | **The teacher decides when a cohort stops accepting joiners, per cohort.** A `join_closes_at` the teacher sets when creating the class, defaulting to the cohort's start date — so the default is the strict and fair one, and opening the window later is a deliberate act rather than something that happens by omission. This replaces the built behaviour, in which joining stayed open from before the start until the cohort ended and anyone could join in the final week. Settling it is the precondition `learning.cohorts` was held on. |
 | 2026-10-19 | **D8 stays open, and the next step is costed research rather than a choice.** Where original media masters live is not decided; before it is, the options (Cloudflare R2, Supabase Storage, Backblaze B2, with Stream as delivery only) are to be compared with real numbers at 100, 1,000 and 50,000 users and brought back as a recommendation. Nothing in the media byte path is built on a guess in the meantime. |
 | 2026-10-19 | **D8 research delivered: R2, at every tier.** Costed at `docs/decisions/media-storage-costing.md` from each provider's own price card read the same day. Monthly cost at 100 / 1,000 / 50,000 users: R2 $1.13 / $7.14 / $113.75; Supabase Storage $0.00 / $64.92 / $4,089.94; B2 direct egress $0.52 / $3.31 / $272.66; Stream as delivery $7.77 / $62.85 / $2,548.50 with masters still stored elsewhere. Two findings decide it beyond price: Cloudflare's CDN terms permit serving video only where the content is hosted by a Cloudflare service, which disqualifies the B2-plus-Cloudflare free-egress path on the plans a solo builder uses; and `register_media_upload()` already defaults to `'r2'` with the bucket derived, while `'b2'` is not a permitted backend at all. The recommendation is R2 for masters and delivery, Supabase Storage kept for avatars and receipts, Stream declined unless hardware DRM is ever required, and the ffmpeg worker accepted as the real cost of not buying Stream. The owner's choice is still outstanding. |
+| 2026-10-20 | **D8 decided: Cloudflare R2, for masters and delivery.** Chosen from the costed comparison rather than from preference. R2 is $113.75 a month at 50,000 users where Supabase Storage is $4,089.94 and Stream is $2,548.50 for delivery alone; its free egress is permitted through Cloudflare's CDN rather than merely tolerated, and `register_media_upload()` already defaults to `'r2'`. Supabase Storage is kept for avatars and receipts inside its 100 GB quota, never for video. Stream is declined, with one live exception recorded below. What is chosen is where the bytes live — the byte path itself (signed upload, transcode worker, signed playback) is still not built. |
+| 2026-10-20 | **Saved lessons are a requirement, not a convenience.** The owner added it while accepting D8: lessons must remain available so students can review them, and so other teachers can see them. Two consequences follow and neither is settled. First, masters are permanent by design — this requirement is already satisfied for recorded lessons, so what is actually new is the *access* rule, and "other teachers" is not yet defined: co-teachers of one course, reviewers checking quality, or any teacher on the platform are three different privacy boundaries. Second, if a live class is to be saved, that is live streaming with recording, which is the one case that would genuinely reopen the Stream decision, because self-hosting a media server is not a weekend of work — and a recording of a class containing children is a safeguarding question before it is a storage question. Recorded as open; see `NEXT.md`. |
 
 ## Decided — from the project record
 
@@ -255,7 +257,7 @@ a regulator's deadline attached.
 
 ---
 
-## D8 · Where original media masters live  — **PROPOSED**
+## D8 · Where original media masters live  — **ADOPTED**
 
 **Recommendation:** originals go to object storage **you control**; the delivery
 provider is never the archive.
@@ -272,10 +274,19 @@ That is the gap.
 MP4 you cannot replace.
 
 - [x] **ADOPTED 2026-10-15** — reversible
-- [ ] **PROVIDER CHOICE OUTSTANDING 2026-10-19** — costed comparison and
-  recommendation at `docs/decisions/media-storage-costing.md`. The principle
-  above is adopted; the provider is not yet chosen, and no byte path is built
-  on a guess.
+- [x] **PROVIDER CHOSEN 2026-10-20 — Cloudflare R2** for masters *and*
+  delivery. Chosen from the costed comparison at
+  `docs/decisions/media-storage-costing.md`: $1.13 / $7.14 / $113.75 a month
+  at 100 / 1,000 / 50,000 users, against Supabase Storage's
+  $0.00 / $64.92 / $4,089.94 and Stream's $7.77 / $62.85 / $2,548.50 as
+  delivery only. Decided by two things beyond price: Cloudflare's CDN terms
+  permit serving video only where the content is hosted by a Cloudflare
+  service, which disqualifies the B2-plus-Cloudflare free-egress path on the
+  plans a solo builder uses; and `register_media_upload()` already defaults
+  to `'r2'` with the bucket derived, so choosing R2 agrees with code that
+  shipped. Supabase Storage stays for avatars and receipts inside its 100 GB
+  quota. Stream is declined — unless live classes or hardware DRM are wanted,
+  either of which would reopen this. Reversible.
 
 ---
 
@@ -311,7 +322,7 @@ in them.
 | D5 | Version pinning | **FROZEN** |
 | D6 | Content licence | **ADOPTED** — draft at `docs/legal/content-licence.md`, needs legal review |
 | D7 | Deletion and retention | **ADOPTED** — schedule at `docs/decisions/retention-schedule.md`, 4 periods to confirm |
-| D8 | Media masters | **ADOPTED** (principle) — provider costed at `docs/decisions/media-storage-costing.md`, choice outstanding |
+| D8 | Media masters | **ADOPTED** — Cloudflare R2 for masters and delivery, chosen 2026-10-20 from `docs/decisions/media-storage-costing.md` |
 | D9 | Translations | **ADOPTED** |
 
 **All nine settled. Nothing blocks the first migration.**
