@@ -294,4 +294,48 @@ export async function run(ctx) {
     const row = (await q('select bucket from public.media_renditions where id=$1', [rendition])).rows[0];
     assert(row.bucket === 'ayahspring-renditions', `the derived bucket was ${row.bucket}`);
   });
+
+  // ---------------------------------------------------------------------------
+  // The switch the worker reads before it does anything
+  // ---------------------------------------------------------------------------
+
+  await test('delivery.transcode exists, ships off, and is CODE-gated', async () => {
+    const row = (await q(
+      `select value_text v, value_type t, gate_type g, flag_group grp,
+              length(btrim(description)) d, length(btrim(preconditions)) p
+         from public.platform_settings where key = 'delivery.transcode'`)).rows[0];
+    assert(row, 'the worker has no flag to read');
+    assert(row.v === 'false', `transcoding shipped ${row.v}`);
+    assert(row.t === 'boolean', `the flag is a ${row.t}, not a boolean`);
+    assert(row.g === 'code',
+      'transcoding must be CODE-gated: turning it on needs the worker deployed on a host with ffmpeg and R2 credentials, which no setting can supply');
+    assert(row.grp === 'Delivery', `the flag sits in '${row.grp}'`);
+    assert(row.d > 0, 'the flag has no description');
+    assert(row.p > 0,
+      'the flag has no preconditions, so an admin would not know that enabling it is not the whole job');
+  });
+
+  await test('reading the flag is itself a privilege check', async () => {
+    // The worker signs in as a real staff account instead of using a service
+    // key, so platform_settings_read applies to it. A learner sees no row at all,
+    // which is why an unprivileged worker cannot even learn whether transcoding
+    // is on — it stops at the first query.
+    const learner = await asActor(learnerUser,
+      `select count(*)::int n from public.platform_settings where key = 'delivery.transcode'`);
+    assert(learner.rows[0].n === 0, 'a learner can read the worker flag');
+
+    const staff = await asActor(admin,
+      `select count(*)::int n from public.platform_settings where key = 'delivery.transcode'`);
+    assert(staff.rows[0].n === 1, 'staff cannot read the worker flag');
+  });
+
+  await test('the preconditions name what must exist before a rendition is encoded', async () => {
+    const p = (await q(
+      `select preconditions from public.platform_settings where key = 'delivery.transcode'`)).rows[0].preconditions;
+    // Each of these is a thing that does not exist yet, and each one is a reason
+    // the flag being on would not be enough.
+    for (const needed of ['ffmpeg', 'R2', 'privileged', 'playback']) {
+      assert(String(p).includes(needed), `the preconditions do not mention ${needed}: ${p}`);
+    }
+  });
 }

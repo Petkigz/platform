@@ -3,11 +3,12 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "AyahSpring \u2014 Islamic e-learning platform.",
+  "description": "AyahSpring — Islamic e-learning platform.",
   "scripts": {
     "test:db": "node supabase/tests/run.mjs",
     "check:repo": "node scripts/repo-check.mjs",
     "dev": "npm run dev --workspace @ayahspring/web",
+    "worker:transcode": "node --experimental-strip-types web/src/worker/transcode-worker.ts",
     "build": "npm run build --workspace @ayahspring/web",
     "typecheck": "npm run typecheck --workspace @ayahspring/web",
     "test:web": "npm run test --workspace @ayahspring/web",

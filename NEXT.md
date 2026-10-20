@@ -285,7 +285,8 @@ its own note called the critical path while claiming no settings table existed.
 It now reads **40 built, 12 ready, 5 blocked**; the five blocked ones are blocked
 on a decision or a provider, not on code. `FLAGS.md` claimed seven flags could
 not be runtime toggles and then listed eleven: the measured figure is **31 CODE,
-14 ADMIN + SETUP, 43 ADMIN**, and `platform_settings` holds **90 rows — the 87
+14 ADMIN + SETUP, 43 ADMIN** (32 CODE since `delivery.transcode` was added), and
+`platform_settings` holds **91 rows — the 88
 documented flags plus three controls** that were in the database and not in the
 register (`governance.panel_required`, `governance.min_approvals`,
 `teaching.revenue_share_percent`). All three are now documented, including the
@@ -302,9 +303,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **851 database tests, 388 web tests; TypeScript typecheck and
+Verification: **854 database tests, 426 web tests; TypeScript typecheck and
 production build pass; 102 tables, 230 policies, 133 user-defined triggers,
-220 functions, 91 migrations and 99 app route entries.**
+220 functions, 92 migrations and 99 app route entries.**
 
 ## Today's sentence
 
@@ -325,7 +326,7 @@ never started). Updated 2026-10-20.
 | Piece | Built and tested | Not built | Waiting on |
 |---|---|---|---|
 | **Media ingest** (D8 = R2) | `media_assets` register with a pending/available/quarantined/deleted state machine and four writer functions; SigV4 signing in `web/src/lib/media-r2.ts`, pinned against AWS's published vector; `POST /api/media` `request_upload` + `confirm_upload`; R2 variables documented in `web/.env.example` | Any R2 credential in this environment, so nothing has been exercised against a real bucket | **Nothing.** R2 is chosen; this is buildable now |
-| **Media delivery** | `media_renditions` register: one row per profile per asset, a closed profile vocabulary, derived bucket and object key, pending/available/failed with a written reason for a failure, staff-only writers, and `may_play_rendition()` which serves a rendition exactly where its lesson is open; 17 database tests | The transcode worker (nothing calls the writers yet), the signed playback route, the download route, a player that reads a rendition, a teacher upload screen | **Nothing.** Decided and buildable; the worker is the largest piece of engineering left in the media path |
+| **Media delivery** | `media_renditions` register: one row per profile per asset, a closed profile vocabulary, derived bucket and object key, pending/available/failed with a written reason for a failure, staff-only writers, and `may_play_rendition()` which serves a rendition exactly where its lesson is open; **plus the transcode worker that drives it** — `web/src/worker/transcode-worker.ts` with its decisions in `web/src/lib/transcode.ts`, 32 web tests, gated by `delivery.transcode` | The signed playback route, the download route, a player that reads a rendition, a teacher upload screen, a host to run the worker on with ffmpeg, R2 credentials, a staff account for it, and a retry path for a rendition stuck `failed` | **Nothing** for the playback route and the player. The worker cannot be *run* until it has a host, credentials and an account, but nothing about it is undecided |
 | **Offline download** | `may_download_lesson()` requiring entitlement + an `offline_downloads` feature grant + verified first-party media; closed feature vocabulary (`pe_feature_vocabulary`, `plan_feature_codes()`) with the admin plan form offering the list; 17 database tests | Any download route or UI, device registration, device storage limits, download expiry, protected-media handling | **Decisions:** device limits, expiry and protected media (`learning.offline`). It would also serve renditions, which do not exist |
 | **Upload cost control** | Nothing — and nothing was invented | A per-teacher byte quota, a spend alert, any ceiling on a single upload | **Decision:** quota policy (`platform.cost_controls`). `register_media_upload()` checks type, size and checksum but no quota |
 | **Assignments** | Tasks, self-paced and cohort deadlines, one private submission per learner, drafts and hand-in, marking with immutable feedback, a revision loop with an append-only snapshot, file *references* with type and size ceilings | Byte transfer for submissions (the R2 path exists but is not wired to submissions), scanning, secure delivery to the marker, retention of children's files | **Decision/review:** the safeguarding review of files children send. This one review holds `learning.assignments` **and** `learning.cohorts` |
@@ -379,8 +380,9 @@ reasonably assume otherwise.
 **Four staff functions had no admin surface.** Two are now closed — `/admin/media`
 reaches `quarantine_media_upload()` and `delete_media_asset()`, so a rights
 complaint or a safeguarding report about an uploaded master has a path. The other
-two, `confirm_media_rendition()` and `fail_media_rendition()`, are still expected
-to be uncalled, because no transcode worker exists.
+two, `confirm_media_rendition()` and `fail_media_rendition()`, now have a caller:
+the transcode worker below. It is not deployed, so in production they are still
+uncalled, but nothing is waiting on a design any more.
 
 **A second divergence, found while closing the first, and worse:** `web/src/lib/
 media.ts` was complete, tested and **imported by nothing** — including an 8 GiB
@@ -419,6 +421,65 @@ only through the admin surface, so a half-built piece cannot leak. Second, where
 a row says **Decision**, do not infer an answer: the repository's discipline is
 that an undecided rule is recorded as open rather than guessed, because a guess
 in code is far harder to find later than a gap in a document.
+
+### The transcode worker, 2026-10-20
+
+The `media_renditions` register was built before anything could write to it, on
+the argument that a worker needs somewhere to write and that the playback
+predicate must not be retrofitted around one. This is the writer.
+
+**Where the decisions live.** `web/src/lib/transcode.ts` holds every branch that
+decides something — which profiles a master gets, what ffmpeg is told, in what
+order the database is called, and what counts as a failure. It touches no disk,
+no network and no database, so it is unit-tested: 32 tests. The program that does
+the I/O, `web/src/worker/transcode-worker.ts`, is thin, and nothing in it runs in
+CI, because `ffmpeg` is not installed, there are no R2 credentials, and there is
+no staff account to sign in with. That split is the reason the worker could be
+built at all before any of those three things exist.
+
+**Three rules worth stating plainly.**
+
+- **The order is forced by the schema.** Encode, measure, register, upload,
+  confirm. `register_media_rendition()` takes the byte size and the dimensions,
+  and a row cannot be corrected afterwards — `media_renditions` has no update
+  policy and `confirm` only moves `pending` to `available`. So a row is opened
+  only once the encode has happened. The useful consequence: a crash before
+  `register` leaves nothing behind, and a crash after it leaves a `pending` row
+  the next run finishes, because the object key is derived from the asset and the
+  profile and is therefore the same key both times.
+- **Nothing is confirmed before its bytes are uploaded.** Confirming first would
+  publish a row that `may_play_rendition()` hands to a learner as a URL that 404s.
+- **`failed` is written only for an error that is a property of the file.** The
+  state is terminal — nothing moves it back to `pending`, and `register` would
+  meet the unique index on `(asset_id, profile)` — so marking a row failed
+  retires that profile until somebody adds a retry path. An ffmpeg refusal is
+  definitive and gets recorded. An upload error or a confirm refusal is usually a
+  network blip or a missing grant, so the row is **left pending**, invisible to
+  learners and picked up by the next run. A worker that failed a row on a timeout
+  would permanently cost a course its 720p copy.
+
+**The probe decides, not the declaration.** `media_assets.mime_type` is what the
+uploader said. The worker downloads the master and runs `ffprobe`, and plans from
+what it finds: a file declared `video/mp4` that contains only audio gets an audio
+rendition rather than four encodes that fail. Cover art on an audio file probes
+as a video stream and is excluded, or every MP3 would grow a picture ladder. And
+nothing upscales — a 480p master gets 480p and 360p, because a 1080p rendition
+of it would cost storage, cost bandwidth, and tell a learner the picture is
+better than it is.
+
+**It signs in.** There is no `service_role` anywhere in this schema, so the
+worker is a real account that an admin has made staff at `/admin/roles`, and it
+is subject to the same refusals as any other caller. Revoking the role stops it.
+Reading `platform_settings` is itself a privilege check, so an unprivileged
+worker cannot even see `delivery.transcode`.
+
+**What is still not true.** No rendition exists, because nothing has run: the
+flag ships off, and enabling it is CODE-gated, which means a deploy — a host with
+ffmpeg, R2 credentials in its environment, and the staff account. `manifest` is
+in the profile vocabulary and nothing produces one, because an HLS manifest is
+thousands of segment objects and this register holds one row per profile. A
+rendition stuck `failed` needs SQL to retry, and there is no playback route to
+serve one even when it exists.
 
 ## Open external decisions (not to be guessed)
 

@@ -63,7 +63,7 @@ Three kinds of gate:
 | `platform.withdrawal_right` | EU 14-day withdrawal handling at checkout | CODE | Statutory right on digital content; needs explicit waiver wording for content started immediately |
 | `platform.email_auth` | SPF / DKIM / DMARC and deliverability | ADMIN + SETUP | **Nothing exists.** Resets and receipts land in spam without it |
 | `platform.phone_format` | E.164 storage and per-country formatting | CODE | **Nothing exists.** International OTP breaks without normalisation |
-| `platform.cost_controls` | Storage quotas per teacher and spend alerts | ADMIN | The signed upload path exists (`/api/media` → R2) and a **per-file ceiling of 8 GiB** is now enforced on it (`MAX_UPLOAD_BYTES` in `web/src/lib/media.ts`), but **nothing meters accumulation**: `register_media_upload()` checks a type, a size and a checksum but no quota, and no ceiling is invented in the web layer either. Unlimited teacher uploads is how $250/month becomes $3,000, so a per-teacher byte quota and a spend alert are what this flag is for |
+| `platform.cost_controls` | Storage quotas per teacher and spend alerts | ADMIN | The signed upload path exists (`/api/media` → R2) and a **per-file ceiling of 8 GiB** is now enforced on it (`MAX_UPLOAD_BYTES` in `web/src/lib/media.ts`), but **nothing meters accumulation**: `register_media_upload()` checks a type, a size and a checksum but no quota, so a teacher can upload an unlimited number of 8 GiB files. Unlimited teacher uploads is how $250/month becomes $3,000, so a per-teacher byte quota and a spend alert are what this flag is for |
 | `platform.moderation` | Moderation of per-lesson discussion | ADMIN + SETUP | **Policy before feature.** Sectarian/contentious threads on fiqh topics; who reviews; escalation |
 | `platform.accessibility` | RTL, Arabic typography, screen readers, dyslexia-friendly fonts | CODE | `rtl: 0` today; font licensing (Uthmani/naskh) |
 
@@ -119,6 +119,7 @@ Three kinds of gate:
 
 | Flag | Gates | Type | Preconditions before it can be ON |
 |---|---|---|---|
+| `delivery.transcode` | Encode delivery copies (renditions) of an uploaded master, and mark them servable | CODE | **Built and waiting.** `web/src/worker/transcode-worker.ts` signs in as a staff account, reads this flag, downloads a master from R2, plans a ladder from what `ffprobe` actually finds (never upscales, never trusts the declared mime), and for each profile calls `register_media_rendition()` → uploads → `confirm_media_rendition()`, or `fail_media_rendition()` with a reason. Enabling the flag is not enough: it also needs ffmpeg on the worker host, R2 credentials in its environment, an account granted staff at `/admin/roles`, and a playback route that mints rendition URLs — **none of which exist**. `manifest` is in the profile vocabulary and nothing produces one: an HLS manifest is thousands of segment objects and this register holds one row per profile |
 | `delivery.live_classes` | Live teaching sessions | CODE | RTC provider; scheduling and timezones; recording policy; moderation |
 | `delivery.analytics` | Reporting beyond basics | CODE | Event instrumentation; storage and retention; privacy review |
 | `delivery.notifications` | Email / push / SMS | ADMIN + SETUP | Sender domains verified; provider chosen; consent and frequency rules |

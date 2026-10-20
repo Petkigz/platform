@@ -7,6 +7,7 @@ import {
   DEFAULT_MASTERS_BUCKET,
   MAX_PLAYBACK_SECONDS,
   MAX_UPLOAD_SECONDS,
+  MAX_WORKER_SECONDS,
   R2NotConfiguredError,
   R2RequestError,
   amzDateParts,
@@ -14,8 +15,10 @@ import {
   assertRenditionKey,
   canonicalQuery,
   isR2Configured,
+  presignMasterDownload,
   presignMasterUpload,
   presignRenditionPlayback,
+  presignRenditionUpload,
   presignUrl,
   r2Endpoint,
   readR2Config,
@@ -299,4 +302,79 @@ test('buckets default to the derived names and can be overridden', () => {
 test('requiring configuration fails loudly rather than signing with nothing', () => {
   assert.throws(() => requireR2Config({}), R2NotConfiguredError);
   assert.equal(requireR2Config(env).accountId, 'acct-123');
+});
+
+// ---------------------------------------------------------------------------
+// The worker's two ends
+// ---------------------------------------------------------------------------
+
+test('a master download is a GET against the masters bucket and nothing else', () => {
+  const signed = presignMasterDownload(config, masterKey, { now: fixed });
+  assert.equal(signed.method, 'GET');
+  assert.equal(signed.bucket, DEFAULT_MASTERS_BUCKET);
+  assert.equal(signed.key, masterKey);
+  assert.equal(signed.expiresInSeconds, MAX_WORKER_SECONDS);
+  assert.ok(signed.url.includes(`/${DEFAULT_MASTERS_BUCKET}/${assetId}/video-mp4?`));
+  assert.deepEqual(signed.requiredHeaders, {}, 'a GET carries no content type to sign');
+});
+
+test('a rendition upload is a PUT against the renditions bucket, with its type signed', () => {
+  const signed = presignRenditionUpload(config, renditionKey, {
+    contentType: 'video/mp4',
+    now: fixed,
+  });
+  assert.equal(signed.method, 'PUT');
+  assert.equal(signed.bucket, 'ayahspring-renditions');
+  assert.equal(signed.key, renditionKey);
+  assert.equal(signed.expiresInSeconds, MAX_WORKER_SECONDS);
+  // The signature covers the content type, so the request fails without the
+  // header. That is what keeps the type in the database the type in the bucket.
+  assert.deepEqual(signed.requiredHeaders, { 'content-type': 'video/mp4' });
+  assert.ok(signed.url.includes('X-Amz-Signature='));
+});
+
+test('the worker cannot cross the two buckets over', () => {
+  // A rendition key is not a master key and a master key is not a rendition key,
+  // so the worker can neither read a delivery copy as if it were the archive nor
+  // write an encoded profile over the master it came from.
+  assert.throws(() => presignMasterDownload(config, renditionKey, { now: fixed }), R2RequestError);
+  assert.throws(
+    () => presignRenditionUpload(config, masterKey, { contentType: 'video/mp4', now: fixed }),
+    R2RequestError,
+  );
+});
+
+test('a worker window is capped, like every other window here', () => {
+  assert.throws(
+    () => presignMasterDownload(config, masterKey, { expiresInSeconds: MAX_WORKER_SECONDS + 1 }),
+    /cannot exceed/,
+  );
+  assert.throws(
+    () =>
+      presignRenditionUpload(config, renditionKey, {
+        contentType: 'video/mp4',
+        expiresInSeconds: MAX_WORKER_SECONDS + 1,
+      }),
+    /cannot exceed/,
+  );
+  assert.equal(
+    presignMasterDownload(config, masterKey, { expiresInSeconds: 60, now: fixed }).expiresInSeconds,
+    60,
+  );
+});
+
+test('an upload with no declared type is refused', () => {
+  assert.throws(
+    () => presignRenditionUpload(config, renditionKey, { contentType: '   ', now: fixed }),
+    /must declare the type it was encoded to/,
+  );
+});
+
+test('a learner playback URL and a worker master download are different things', () => {
+  const play = presignRenditionPlayback(config, renditionKey, { now: fixed });
+  const worker = presignMasterDownload(config, masterKey, { now: fixed });
+  assert.notEqual(play.bucket, worker.bucket, 'the buckets are split so a player never reaches a master');
+  assert.equal(play.method, 'GET');
+  assert.equal(worker.method, 'GET');
+  assert.notEqual(play.url, worker.url);
 });

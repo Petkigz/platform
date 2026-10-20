@@ -48,6 +48,13 @@ export const MAX_UPLOAD_SECONDS = 3_600;
 /** A playback URL outlives a lesson and nothing longer. */
 export const MAX_PLAYBACK_SECONDS = 21_600;
 
+/**
+ * A worker window is short by design. It covers one download or one upload of
+ * one encoded profile, not a shift; a worker that needs longer is doing
+ * something that should be several jobs.
+ */
+export const MAX_WORKER_SECONDS = 3_600;
+
 export type R2Credentials = {
   accessKeyId: string;
   secretAccessKey: string;
@@ -412,6 +419,75 @@ export function presignRenditionPlayback(
     bucket: config.renditionsBucket,
     key: assertRenditionKey(key),
     expiresInSeconds: expires,
+    now: options.now,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// The worker's two ends. Neither is for a browser.
+// ---------------------------------------------------------------------------
+
+/**
+ * Reading a master, for the transcode worker only.
+ *
+ * This is the one presigned URL in this file that points at the masters bucket,
+ * and it must never reach a learner: a master is the archive, it may be an
+ * unencoded 8 GiB original, and D8 is the reason delivery copies exist at all.
+ * It is a GET rather than a streamed proxy because the worker pulls the bytes to
+ * a local disk to run ffmpeg against, and routing them through the web server
+ * would put the largest file in the system on the request path.
+ */
+export function presignMasterDownload(
+  config: R2Config,
+  key: string,
+  options: { expiresInSeconds?: number; now?: Date } = {},
+): PresignedUrl {
+  const expires = options.expiresInSeconds ?? MAX_WORKER_SECONDS;
+  if (expires > MAX_WORKER_SECONDS) {
+    throw new R2RequestError(
+      `a worker window cannot exceed ${MAX_WORKER_SECONDS} seconds; it covers one file, not one shift`,
+    );
+  }
+  return presignUrl({
+    config,
+    method: 'GET',
+    bucket: config.mastersBucket,
+    key: assertMasterKey(key),
+    expiresInSeconds: expires,
+    now: options.now,
+  });
+}
+
+/**
+ * Writing an encoded profile, for the transcode worker only.
+ *
+ * The key comes from `register_media_rendition()`, which derives it from the
+ * asset id and the master's own mime slug, so a rendition row cannot be pointed
+ * at another asset's object. `assertRenditionKey` re-checks that here rather
+ * than trusting the caller, because this function is what would upload the bytes
+ * if the check were wrong.
+ */
+export function presignRenditionUpload(
+  config: R2Config,
+  key: string,
+  options: { contentType: string; expiresInSeconds?: number; now?: Date },
+): PresignedUrl {
+  const expires = options.expiresInSeconds ?? MAX_WORKER_SECONDS;
+  if (expires > MAX_WORKER_SECONDS) {
+    throw new R2RequestError(
+      `a worker window cannot exceed ${MAX_WORKER_SECONDS} seconds; it covers one file, not one shift`,
+    );
+  }
+  if (!options.contentType.trim()) {
+    throw new R2RequestError('an encoded profile must declare the type it was encoded to');
+  }
+  return presignUrl({
+    config,
+    method: 'PUT',
+    bucket: config.renditionsBucket,
+    key: assertRenditionKey(key),
+    expiresInSeconds: expires,
+    contentType: options.contentType,
     now: options.now,
   });
 }
