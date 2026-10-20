@@ -44,7 +44,7 @@ partly complete.** The roadmap starts where the project already is.
 - [~] Build user profiles and account settings — *`/account` edits display name, preferred language and IANA time zone through the session-scoped RLS policy; email password recovery and phone OTP sign-in are available, while sign-in address changes and wider profile fields remain.*
 - [x] Build the course catalogue, search and course pages — *`/catalogue` and `/courses/[slug]`. `subject_areas` seeded with 9 disciplines and 26 subdivisions. `supabase/tests/catalogue.test.mjs`.*
 - [x] Build the help desk — *`/support` for the person asking, `/support/<caseNumber>` for the thread, `/admin/support` for the queue. `support_cases` and `support_case_messages` with session-bound writer functions, staff-only internal notes, and an audited state machine. `platform.support` ships off. `supabase/tests/support_cases.test.mjs`.*
-- [!] Set up file storage, video delivery and deployment — **video provider not chosen.** Cloudflare Stream researched; see IDEAS.md for the lock-in caveat.
+- [!] Set up file storage, video delivery and deployment — *storage is chosen: Cloudflare R2 for masters and delivery (D8, 2026-10-20), costed at `docs/decisions/media-storage-costing.md`; Stream is declined because it cannot return an original upload. Signed upload ingest is built; transcode, playback and deployment are not. See the half-built ledger in `NEXT.md`.*
 
 ## Phase 4 — Learning systems
 

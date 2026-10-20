@@ -285,6 +285,41 @@ Continue with the next non-blocked writer/UI gap, keeping each feature behind
 its recorded flag, testing the database and web contract, then committing and
 pushing the completed unit.
 
+## Half-built, and what each piece is waiting on
+
+Everything below is deliberately partial. Each piece is behind a flag that ships
+`false`, so none of it is reachable by a learner or a teacher, and none of it
+claims to work. This table exists so a session that starts cold — or one that
+runs out of context mid-unit — can resume without re-deriving what was finished.
+
+Read it with `FLAGS.md` (what each flag is held on) and `ROADMAP.md` (what was
+never started). Updated 2026-10-20.
+
+| Piece | Built and tested | Not built | Waiting on |
+|---|---|---|---|
+| **Media ingest** (D8 = R2) | `media_assets` register with a pending/available/quarantined/deleted state machine and four writer functions; SigV4 signing in `web/src/lib/media-r2.ts`, pinned against AWS's published vector; `POST /api/media` `request_upload` + `confirm_upload`; R2 variables documented in `web/.env.example` | Any R2 credential in this environment, so nothing has been exercised against a real bucket | **Nothing.** R2 is chosen; this is buildable now |
+| **Media delivery** | Nothing | `media_renditions` register, transcode worker, signed playback tied to enrolment, teacher upload screen | The ingest half above, then this. No decision outstanding |
+| **Offline download** | `may_download_lesson()` requiring entitlement + an `offline_downloads` feature grant + verified first-party media; closed feature vocabulary (`pe_feature_vocabulary`, `plan_feature_codes()`) with the admin plan form offering the list; 17 database tests | Any download route or UI, device registration, device storage limits, download expiry, protected-media handling | **Decisions:** device limits, expiry and protected media (`learning.offline`). It would also serve renditions, which do not exist |
+| **Upload cost control** | Nothing — and nothing was invented | A per-teacher byte quota, a spend alert, any ceiling on a single upload | **Decision:** quota policy (`platform.cost_controls`). `register_media_upload()` checks type, size and checksum but no quota |
+| **Assignments** | Tasks, self-paced and cohort deadlines, one private submission per learner, drafts and hand-in, marking with immutable feedback, a revision loop with an append-only snapshot, file *references* with type and size ceilings | Byte transfer for submissions (the R2 path exists but is not wired to submissions), scanning, secure delivery to the marker, retention of children's files | **Decision/review:** the safeguarding review of files children send. This one review holds `learning.assignments` **and** `learning.cohorts` |
+| **Cohorts** | Tables, exact-version pinning, opt-in join/leave, capacity serialisation, family opt-in for children, private roster (counts only in the UI), teacher manager, learner join/leave, and the teacher-set `join_closes_at` window | Nothing structural | The same safeguarding review. `learning.cohorts` ships `false` |
+| **Learner analytics** (`SCREENS.md` row 32) | Nothing — but the privacy boundary is decided and written down | A SQL predicate beside `can_read_assignment_submission()`, the read path, a teacher progress screen | **Nothing.** Decided 2026-10-19: per-learner progress only for active members of that course's cohorts at the pinned version; self-paced learners stay invisible, individually and in aggregate |
+| **Reviewer access to lesson media** | `can_review_version()` exists and already gates the `lesson_resources` read policy | A read path for the media *bytes* scoped to an assigned review and a period, so access ends with the review | **Nothing.** Decided 2026-10-20: "other teachers" means a reviewer checking quality for a named period, not co-teachers and not any teacher on the platform |
+| **Live classes with teacher-only recording** | Nothing. No live-class tables exist | Schema, capture, recording, storage, playback, and the rule that learners' video and audio are never captured | **Decision:** build versus buy. This is the one workload that would reopen the Stream decision, because self-hosting a media server is the largest piece of engineering left. Costed in §7 of `docs/decisions/media-storage-costing.md`. Decided 2026-10-20: teacher-only capture, so the child-recording safeguarding question does not arise |
+| **Payments** | MTN MoMo and Airtel adapters, checkout, orders, refunds, reconciliation, disputes, financial adjustments, subscriptions with entitlement grants that drive access, 50% teacher-share accrual with the split snapshotted per row | Live credentials, callback verification against a real provider, automatic renewal, failed-payment retry, the receipt document, a merchant account | **External:** provider sandbox and merchant credentials (P12). Do not claim any of this works end to end |
+| **Payouts** (`teaching.payouts`) | Three tables, earnings entries, a split that must satisfy its own check constraint, reversal on refund | Fields and endpoints; disbursement of any kind | **External/decision:** payout policy, tax per country, who bears processing fees, uniform versus per-teacher share. Setting the share to 50 did not enable payouts |
+| **Guardian verification** | Tables and flow complete, shipping off. **Not to be deleted** — COPPA makes verifiable parental consent mandatory for US under-13s | Enabling it | **External:** legal review, and it must be on before any US child enrols |
+| **Notifications** | Email/password sign-up, sign-in and recovery; phone OTP requested and verified in-app | Live email and SMS delivery | **External:** a delivery provider and its credentials |
+| **Product analytics** (`delivery.analytics`) | Nothing | Event instrumentation and the reporting screens | **Decision:** what is collected and its retention. Distinct from learner analytics above, which is decided |
+| **Visual identity** | White and green theme settled, tokens in `web/src/app/globals.css` | Type, logo, illustration; 0 of the 50 inventoried screens designed | **Decision:** the owner's. Not a blocker for any backend work |
+
+**Two rules for resuming any row.** First, nothing above is enabled by writing
+code alone — each sits behind a flag in `platform_settings`, and a flag moves
+only through the admin surface, so a half-built piece cannot leak. Second, where
+a row says **Decision**, do not infer an answer: the repository's discipline is
+that an undecided rule is recorded as open rather than guessed, because a guess
+in code is far harder to find later than a gap in a document.
+
 ## Open external decisions (not to be guessed)
 
 - Payment provider merchant/sandbox credentials and callback verification (P12).

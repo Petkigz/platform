@@ -6,7 +6,7 @@ Global Islamic e-learning platform for children and adults.
 
 | File | Purpose |
 |---|---|
-| `NEXT.md` | The one current milestone. Read this first. |
+| `NEXT.md` | The one current milestone, and a **half-built ledger** — what exists, what does not, and which decision each piece waits on. Read this first. |
 | `DECISIONS.md` | What is settled, and the nine irreversible decisions |
 | `ROADMAP.md` | All 53 tasks with completion gates |
 | `IRREVERSIBLE.md` | The nine decisions that are expensive to reverse |
