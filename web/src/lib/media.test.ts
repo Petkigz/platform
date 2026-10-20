@@ -13,6 +13,7 @@ import { validateRegisterUpload, MAX_UPLOAD_BYTES } from './media.ts';
 // ---------------------------------------------------------------------------
 
 const base = {
+  displayName: 'Lesson recording',
   mimeType: 'video/mp4',
   byteSize: 1048576,
   checksum: 'a'.repeat(64),
@@ -21,6 +22,31 @@ const base = {
 
 test('a well-formed upload registers', () => {
   assert.equal(validateRegisterUpload(base).ok, true);
+});
+
+test('a file needs a name, and the column has a limit', () => {
+  for (const displayName of ['', '   ', '\n\t']) {
+    const r = validateRegisterUpload({ ...base, displayName });
+    assert.equal(r.ok, false, `${JSON.stringify(displayName)} should be refused`);
+    assert.ok(!r.ok);
+    if (!r.ok) assert.match(r.message, /name/);
+  }
+
+  const long = validateRegisterUpload({ ...base, displayName: 'x'.repeat(201) });
+  assert.equal(long.ok, false);
+  assert.ok(!long.ok);
+  if (!long.ok) assert.match(long.message, /200 characters/);
+
+  assert.equal(validateRegisterUpload({ ...base, displayName: 'x'.repeat(200) }).ok, true);
+  // A name in another script is the common case on this platform, not an edge.
+  assert.equal(validateRegisterUpload({ ...base, displayName: 'درس التجويد الأول' }).ok, true);
+});
+
+test('a name is checked before anything else, so the message is about the name', () => {
+  const r = validateRegisterUpload({ ...base, displayName: '', checksum: 'nope' });
+  assert.equal(r.ok, false);
+  assert.ok(!r.ok);
+  assert.match(r.message, /name/, 'the first thing wrong is the first thing reported');
 });
 
 test('duration is optional', () => {

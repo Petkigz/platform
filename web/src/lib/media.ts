@@ -39,6 +39,12 @@ export type MediaUploadTarget = {
 };
 
 export type RegisterUploadInput = {
+  /**
+   * What the teacher calls this file. Required by the database since
+   * 20261211000100: an unnamed row in a media library cannot be identified
+   * later, and nobody remembers what the file was.
+   */
+  displayName: string;
   mimeType: string;
   byteSize: number;
   checksum: string;
@@ -55,9 +61,38 @@ const SHA256_HEX = /^[a-f0-9]{64}$/;
 
 export const MAX_UPLOAD_BYTES = 8 * 1024 * 1024 * 1024; // 8 GiB
 
+/** The column's own limit, so the caller is told here rather than by Postgres. */
+export const MAX_DISPLAY_NAME_LENGTH = 200;
+
+/**
+ * A size a person can read. Binary units, because the ceilings in this file are
+ * binary too: 512 MiB is what a browser can hash, and calling it 512 MB would
+ * overstate it by 24 megabytes of somebody's lesson.
+ */
+export function readableByteSize(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes < 1024) return `${String(Math.max(0, Math.round(bytes)))} B`;
+  const units = ['KiB', 'MiB', 'GiB', 'TiB'];
+  let value = bytes / 1024;
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit += 1;
+  }
+  return `${value.toFixed(value >= 100 ? 0 : 1)} ${units[unit] ?? 'KiB'}`;
+}
+
 export function validateRegisterUpload(
   input: RegisterUploadInput,
 ): RegisterUploadResult {
+  if (input.displayName.trim().length === 0)
+    return { ok: false, message: 'A file needs a name you will recognise later.' };
+
+  if (input.displayName.trim().length > MAX_DISPLAY_NAME_LENGTH)
+    return {
+      ok: false,
+      message: `A file name cannot be longer than ${MAX_DISPLAY_NAME_LENGTH} characters.`,
+    };
+
   if (input.mimeType.trim().length === 0)
     return { ok: false, message: 'A file needs a type.' };
 
@@ -106,6 +141,7 @@ export async function registerMediaUpload(
     p_mime_type: input.mimeType.trim(),
     p_byte_size: input.byteSize,
     p_checksum: input.checksum,
+    p_display_name: input.displayName.trim(),
     p_duration_seconds: input.durationSeconds ?? null,
     p_storage_backend: input.storageBackend ?? 'r2',
   });
@@ -123,6 +159,13 @@ export async function registerMediaUpload(
       return { ok: false, message: 'A file needs a size in bytes.' };
     if (/needs a type/i.test(m))
       return { ok: false, message: 'A file needs a type.' };
+    if (/needs a name/i.test(m))
+      return { ok: false, message: 'A file needs a name you will recognise later.' };
+    if (/longer than 200 characters/i.test(m))
+      return {
+        ok: false,
+        message: `A file name cannot be longer than ${MAX_DISPLAY_NAME_LENGTH} characters.`,
+      };
     if (/duration cannot be negative/i.test(m))
       return { ok: false, message: 'A duration cannot be negative.' };
     return { ok: false, message: m };
@@ -175,20 +218,26 @@ export async function fetchMediaAssets(
 ): Promise<MediaAsset[]> {
   const { data, error } = await client
     .from('media_assets')
-    .select('id, mime_type, byte_size, duration_seconds, status')
+    .select('id, display_name, mime_type, byte_size, duration_seconds, status')
     .is('deleted_at', null)
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
 
-  return (data ?? []).map((a) => ({
-    id: String(a.id),
-    displayName: String(a.mime_type),
-    mimeType: String(a.mime_type),
-    byteSize: Number(a.byte_size),
-    durationSeconds: a.duration_seconds === null ? null : Number(a.duration_seconds),
-    status: a.status as MediaAsset['status'],
-  }));
+  return (data ?? []).map((a) => {
+    const row = a as Record<string, unknown>;
+    const stored = row.display_name;
+    return {
+    id: String(row.id),
+    // Rows written before display_name existed have no name, and saying
+    // "video/mp4" is more useful than saying nothing.
+    displayName: stored ? String(stored) : String(row.mime_type),
+    mimeType: String(row.mime_type),
+    byteSize: Number(row.byte_size),
+    durationSeconds: row.duration_seconds === null ? null : Number(row.duration_seconds),
+    status: row.status as MediaAsset['status'],
+    };
+  });
 }
 
 export type AttachMediaInput = {
@@ -283,6 +332,8 @@ export async function attachMediaAsset(
 
 export type ModerationAsset = {
   id: string;
+  /** Null for a row registered before names were required. */
+  displayName: string | null;
   mimeType: string;
   byteSize: number;
   durationSeconds: number | null;
@@ -305,7 +356,7 @@ export async function fetchMediaModerationQueue(
 ): Promise<ModerationAsset[]> {
   const { data, error } = await client
     .from('media_assets')
-    .select(`id, mime_type, byte_size, duration_seconds, status, created_at,
+    .select(`id, display_name, mime_type, byte_size, duration_seconds, status, created_at,
              user_profiles ( display_name ),
              media_renditions ( profile, status )`)
     .order('created_at', { ascending: false });
@@ -318,6 +369,7 @@ export async function fetchMediaModerationQueue(
     const renditions = (r.media_renditions as { profile?: string; status?: string }[] | null) ?? [];
     return {
       id: String(r.id),
+      displayName: r.display_name ? String(r.display_name) : null,
       mimeType: String(r.mime_type),
       byteSize: Number(r.byte_size),
       durationSeconds: r.duration_seconds === null ? null : Number(r.duration_seconds),

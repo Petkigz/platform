@@ -2,22 +2,10 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import { fetchMediaModerationQueue, MEDIA_STATUS_LABEL } from '@/lib/media';
+import { fetchMediaModerationQueue, MEDIA_STATUS_LABEL, readableByteSize } from '@/lib/media';
 import { ModerateForm } from './moderate-form';
 
 export const dynamic = 'force-dynamic';
-
-function readableSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  const units = ['KiB', 'MiB', 'GiB', 'TiB'];
-  let value = bytes / 1024;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return `${value.toFixed(value >= 100 ? 0 : 1)} ${units[unit]}`;
-}
 
 /**
  * Uploaded masters, and the two things staff can do about one.
@@ -68,9 +56,10 @@ export default async function AdminMediaPage() {
 
       {queue.map((asset) => (
         <section className="card" key={asset.id}>
+          <h2>{asset.displayName ?? <span className="muted">Untitled upload</span>}</h2>
           <p className="eyebrow">
             {MEDIA_STATUS_LABEL[asset.status]} · {asset.mimeType} ·{' '}
-            {readableSize(asset.byteSize)}
+            {readableByteSize(asset.byteSize)}
             {asset.durationSeconds !== null && ` · ${Math.round(asset.durationSeconds / 60)} min`}
             {' · uploaded '}
             {new Date(asset.createdAt).toLocaleDateString()}

@@ -44,10 +44,14 @@ export async function run(ctx) {
   }
 
   const register = (who, opts = {}) =>
-    asActor(who, 'select * from public.register_media_upload($1,$2,$3,$4,$5)', [
+    asActor(who, 'select * from public.register_media_upload($1,$2,$3,$4,$5,$6)', [
       opts.mime ?? 'video/mp4',
       opts.bytes ?? 1048576,
       opts.checksum ?? SHA,
+      // Required, not defaulted: see 20261211000100_media_asset_display_name.sql.
+      // It sits before the two optional parameters because Postgres will not
+      // accept a required one after an optional one.
+      'name' in opts ? opts.name : 'Lesson recording',
       opts.duration ?? 600,
       opts.backend ?? 'r2',
     ]);
@@ -72,6 +76,60 @@ export async function run(ctx) {
     const row = await statusOf(r.asset_id);
     assert(row.status === 'pending', `status was ${row.status}, expected pending`);
     assert(row.deleted_at === null, 'a new upload must not be deleted');
+  });
+
+  await test('the name a teacher gave the file is stored with it', async () => {
+    const r = (await register(teacher, { name: '  Wudu for young learners  ' })).rows[0];
+    const row = (await q('select display_name from public.media_assets where id=$1',
+      [r.asset_id])).rows[0];
+    assert(row.display_name === 'Wudu for young learners',
+      `stored '${row.display_name}', expected the trimmed name`);
+
+    const detail = (await q(
+      `select detail from public.governance_audit_events
+        where action='media.upload_registered' and target_id=$1`, [r.asset_id])).rows[0].detail;
+    assert(detail.display_name === 'Wudu for young learners',
+      'the audit trail does not say which file was registered');
+  });
+
+  await test('a file with no name is refused', async () => {
+    // An optional name is how a library fills up with files nobody can
+    // identify: the caller that forgets it cannot be fixed later.
+    for (const bad of ['', '   ', null]) {
+      await rejects(() => register(teacher, { name: bad }),
+        'an unnamed upload was accepted');
+    }
+  });
+
+  await test('a name longer than the column allows is refused rather than truncated', async () => {
+    await rejects(() => register(teacher, { name: 'x'.repeat(201) }),
+      'a 201-character name was accepted');
+    const r = (await register(teacher, { name: 'x'.repeat(200) })).rows[0];
+    assert(r.asset_id, 'a name at the limit should be accepted');
+  });
+
+  await test('a name in another script survives intact', async () => {
+    const name = 'درس التجويد الأول — المستوى الثاني';
+    const r = (await register(teacher, { name })).rows[0];
+    const row = (await q('select display_name from public.media_assets where id=$1',
+      [r.asset_id])).rows[0];
+    assert(row.display_name === name, `stored '${row.display_name}'`);
+  });
+
+  await test('the nameless signature is gone, so no caller can reach it', async () => {
+    // An added DEFAULT parameter would have left the old five-argument function
+    // beside the new one, and anything not updated would keep registering
+    // unnamed files.
+    const signatures = (await q(
+      `select count(*)::int n from pg_proc p
+         join pg_namespace n on n.oid = p.pronamespace
+        where n.nspname='public' and p.proname='register_media_upload'`)).rows[0].n;
+    assert(signatures === 1, `${signatures} signatures of register_media_upload exist`);
+
+    await rejects(() => asActor(teacher,
+      'select * from public.register_media_upload($1,$2,$3,$4,$5)',
+      ['video/mp4', 1048576, SHA, 600, 'r2']),
+      'the five-argument call still resolves');
   });
 
   await test('the object key is derived from the asset, never supplied by the caller', async () => {

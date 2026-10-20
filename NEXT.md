@@ -239,7 +239,7 @@ the renditions one.
 What is not built, and is not implied by any of this: no transcode worker, so no
 renditions exist; no playback or download URL, because serving a learner means a
 rendition and masters are never served; and no teacher screen that offers the
-upload. There is also still no ceiling on what a teacher may send — no quota in
+upload. There is a ceiling on a single file — 8 GiB in SQL, 512 MiB from a browser — but no quota in
 SQL and none invented in the web layer, because that rule belongs to
 `platform.cost_controls` and is an open decision.
 
@@ -303,9 +303,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **854 database tests, 456 web tests; TypeScript typecheck and
+Verification: **859 database tests, 471 web tests; TypeScript typecheck and
 production build pass; 102 tables, 230 policies, 133 user-defined triggers,
-220 functions, 92 migrations and 101 app route entries.**
+220 functions, 93 migrations and 102 app route entries.**
 
 ## Today's sentence
 
@@ -326,9 +326,9 @@ never started). Updated 2026-10-20.
 | Piece | Built and tested | Not built | Waiting on |
 |---|---|---|---|
 | **Media ingest** (D8 = R2) | `media_assets` register with a pending/available/quarantined/deleted state machine and four writer functions; SigV4 signing in `web/src/lib/media-r2.ts`, pinned against AWS's published vector; `POST /api/media` `request_upload` + `confirm_upload`; R2 variables documented in `web/.env.example` | Any R2 credential in this environment, so nothing has been exercised against a real bucket | **Nothing.** R2 is chosen; this is buildable now |
-| **Media delivery** | `media_renditions` register: one row per profile per asset, a closed profile vocabulary, derived bucket and object key, pending/available/failed with a written reason for a failure, staff-only writers, and `may_play_rendition()` which serves a rendition exactly where its lesson is open; **the transcode worker that drives it** (`web/src/worker/transcode-worker.ts`, decisions in `web/src/lib/transcode.ts`, gated by `delivery.transcode`); **and the learner's end of it** — `/api/media/playback` signs a short-lived rendition URL with the database as the only authority on who may watch, `/api/media/download` saves one behind `learning.offline` and `may_download_lesson()`, and the lesson page plays either with a quality selector and a poster; **32 tests on the worker's decisions, 24 on playback's and 30 on the R2 signer** | A host to run the worker on with ffmpeg, R2 credentials, a staff account for it, and a retry path for a rendition stuck `failed`; a teacher upload screen; and a decision about whether a **free preview may be watched signed-out** — `may_play_rendition()` requires a signed-in identity, so the public preview page cannot play a rendition yet and has deliberately not been wired to one | **Nothing** for the upload screen. The worker needs infrastructure, not design; the preview question needs a decision |
+| **Media delivery** | The whole path, end to end: `media_renditions` register with a closed profile vocabulary and derived object keys; the transcode worker that fills it (`web/src/worker/transcode-worker.ts`, decisions in `lib/transcode.ts`, gated by `delivery.transcode`); `/api/media/playback` and `/api/media/download` signing short-lived rendition URLs with the database as the only authority on who may watch; a player on the lesson page with a quality selector and a poster; and `/teach/media`, where a teacher uploads straight to R2 with a browser-computed checksum | A host to run the worker on with ffmpeg, R2 credentials and a staff account for it; a staff action to **verify and confirm an upload** — without one, every file stays `pending` forever and nothing can be encoded; a retry path for a rendition stuck `failed`; and a decision about whether a free preview may be watched signed-out | **Nothing** for the verify-and-confirm action, which is the next piece. The worker needs infrastructure, and the preview question needs a decision |
 | **Offline download** | `may_download_lesson()` requiring entitlement + an `offline_downloads` feature grant + verified first-party media; closed feature vocabulary (`pe_feature_vocabulary`, `plan_feature_codes()`) with the admin plan form offering the list; 17 database tests | Any download route or UI, device registration, device storage limits, download expiry, protected-media handling | **Decisions:** device limits, expiry and protected media (`learning.offline`). It would also serve renditions, which do not exist |
-| **Upload cost control** | Nothing — and nothing was invented | A per-teacher byte quota, a spend alert, any ceiling on a single upload | **Decision:** quota policy (`platform.cost_controls`). `register_media_upload()` checks type, size and checksum but no quota |
+| **Upload cost control** | A per-file ceiling, in two places: 8 GiB in SQL and in `lib/media.ts`, and **512 MiB for a browser upload**, because WebCrypto cannot digest a stream and the checksum is required | A cumulative per-teacher byte quota, a spend alert, and a way to raise the browser ceiling (a chunked digest or a desktop uploader) | **Decision:** quota policy (`platform.cost_controls`). Note that `register_media_upload()` is open to **any signed-in user**, not only teachers, because learners attach files to assignment submissions through the same table — so the missing control is a cumulative quota per person, not a role check |
 | **Assignments** | Tasks, self-paced and cohort deadlines, one private submission per learner, drafts and hand-in, marking with immutable feedback, a revision loop with an append-only snapshot, file *references* with type and size ceilings | Byte transfer for submissions (the R2 path exists but is not wired to submissions), scanning, secure delivery to the marker, retention of children's files | **Decision/review:** the safeguarding review of files children send. This one review holds `learning.assignments` **and** `learning.cohorts` |
 | **Cohorts** | Tables, exact-version pinning, opt-in join/leave, capacity serialisation, family opt-in for children, private roster (counts only in the UI), teacher manager, learner join/leave, and the teacher-set `join_closes_at` window | Nothing structural | The same safeguarding review. `learning.cohorts` ships `false` |
 | **Learner analytics** (`SCREENS.md` row 32) | Nothing — but the privacy boundary is decided and written down | A SQL predicate beside `can_read_assignment_submission()`, the read path, a teacher progress screen | **Nothing.** Decided 2026-10-19: per-learner progress only for active members of that course's cohorts at the pinned version; self-paced learners stay invisible, individually and in aggregate |
@@ -529,6 +529,43 @@ preview page: `may_play_rendition()` requires a signed-in identity, so an
 anonymous visitor would get a player that always errors. Whether a free preview
 should be watchable signed-out is a product decision, and it has been left open
 rather than answered by quietly widening the predicate.
+
+### A teacher can upload, and every file has a name, 2026-10-20
+
+`/teach/media` is the teacher's end of the byte path: choose a file, name it,
+and it goes from the browser straight to Cloudflare R2 on a presigned PUT with a
+progress bar. The bytes never pass through the web server, and nothing is
+published by uploading — the row is `pending` until a staff member verifies it,
+because letting an uploader mark their own file ready is how unreviewed material
+reaches a child.
+
+**The checksum is computed in the browser, and that has a cost.**
+`register_media_upload()` requires a SHA-256 digest: it is what proves the
+platform still holds the exact original somebody uploaded, and what lets a
+rights request be matched to every copy. But WebCrypto has no streaming digest,
+so hashing means holding the whole file in memory. A browser upload is therefore
+capped at **512 MiB**, well below the database's 8 GiB, and the refusal names
+both numbers and the reason. Lifting it needs a chunked digest or an uploader
+that runs somewhere with a filesystem; neither exists.
+
+**Files got names, which needed a schema change.** `media_assets` recorded a
+type, a size, a digest and a duration, and nothing a teacher could recognise —
+`technical_metadata` was designed to hold the original filename and
+`register_media_upload()` never wrote it, so the first screen that lists a
+teacher's uploads would have shown "video/mp4" twelve times. `display_name` is
+now a column and a **required** parameter, with the old five-argument signature
+dropped rather than left beside the new one: an added DEFAULT would have kept the
+name-less path open for anything not updated. Null had to be handled explicitly,
+because `btrim(null) = ''` is not true and a missing name would have walked
+straight past the check.
+
+**One thing verified before changing it.** It looks as though registration should
+be restricted to teachers, since any signed-in user can currently open an upload
+and get a presigned URL for it. It should not: `assignment_submission_assets`
+references `media_assets`, so learners attach files to assignments through the
+same table. The control that is genuinely missing is a cumulative quota per
+person, which is an open decision, and not a role check that would break
+homework.
 
 ## Open external decisions (not to be guessed)
 

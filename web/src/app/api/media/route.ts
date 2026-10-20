@@ -13,6 +13,8 @@ export const dynamic = 'force-dynamic';
 
 type Payload = {
   action?: unknown;
+  /** What the teacher calls the file; required by the database. */
+  displayName?: unknown;
   mimeType?: unknown;
   byteSize?: unknown;
   checksum?: unknown;
@@ -83,6 +85,7 @@ export async function POST(request: Request) {
   // and a rule that exists in two places is a rule enforced in one of them.
   const mimeType = typeof body?.mimeType === 'string' ? body.mimeType.trim().toLowerCase() : '';
   const registered = await registerMediaUpload(supabase, {
+    displayName: typeof body?.displayName === 'string' ? body.displayName : '',
     mimeType,
     byteSize: typeof body?.byteSize === 'number' ? body.byteSize : Number(body?.byteSize),
     checksum: typeof body?.checksum === 'string' ? body.checksum : '',

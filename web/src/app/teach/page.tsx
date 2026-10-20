@@ -64,6 +64,8 @@ export default async function TeachPage() {
         <Link href="/teach/paths">Learning paths</Link> — curate a sequence of active courses.
         {' · '}
         <Link href="/teach/profile">Public teacher profile</Link> — introduce yourself and link your social channels.
+        {' · '}
+        <Link href="/teach/media">Media library</Link> — upload lesson recordings and see which ones are ready to use.
       </p>
 
       <div style={{ marginTop: '1.75rem' }}>
