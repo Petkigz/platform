@@ -237,6 +237,63 @@ export async function run(ctx) {
       });
     });
 
+    // -----------------------------------------------------------------
+    // One definition of who may read a case
+    //
+    // `can_read_support_case()` existed from the start and nothing called it:
+    // both read policies spelled the same rule out inline, so the definition of
+    // who may see a conversation lived in three places and the one written to be
+    // the single copy was the one nothing read. A missed policy does not fail
+    // loudly — it shows one person a conversation that was not theirs, or hides
+    // one that was. These pin the shape, not just the outcome.
+    // -----------------------------------------------------------------
+
+    await test('both read policies ask the function, and neither spells the rule out again', async () => {
+      const policies = (await q(
+        `select policyname, coalesce(qual,'') as qual
+           from pg_policies
+          where schemaname='public'
+            and policyname in ('support_cases_read','support_case_messages_read')
+          order by policyname`)).rows;
+      assert(policies.length === 2, `found ${policies.length} of the two read policies`);
+      for (const policy of policies) {
+        assert(/can_read_support_case/.test(policy.qual),
+          `${policy.policyname} does not ask who may read the case`);
+        assert(!/requested_by/.test(policy.qual),
+          `${policy.policyname} still keeps its own copy of the requester rule`);
+      }
+      // Which messages a reader may see is a second question, and its rule stays
+      // where a reader of the message policy will look for it.
+      const messages = policies.find((row) => row.policyname === 'support_case_messages_read');
+      assert(/is_internal/.test(messages.qual),
+        'the internal-note rule moved out of the message policy');
+    });
+
+    await test('the predicate both policies use answers for each kind of caller', async () => {
+      const a = await newAsker('Predicate');
+      const id = (await open(a.userId, 'other', 'Who may read this', 'Checking the predicate.')).rows[0].id;
+      const may = (who) => asUser(who, async () =>
+        (await q('select public.can_read_support_case($1) as ok', [id])).rows[0].ok);
+
+      assert(await may(a.userId) === true, 'the account that opened the case may not read it');
+      assert(await may(agent) === true, 'a support agent may not read it');
+      assert(await may(admin) === true, 'staff may not read it');
+      assert(await may(stranger.userId) === false, 'another account may read it');
+    });
+
+    await test('a staff member who opens their own case still reads its internal notes', async () => {
+      const id = (await open(agent, 'other', 'An agent asks', 'A staff member opening their own case.')).rows[0].id;
+      await reply(admin, id, 'They are staff, so this note is theirs to read.', true);
+
+      await asUser(agent, async () => {
+        const rows = (await q(
+          'select is_internal from public.support_case_messages where case_id=$1', [id])).rows;
+        assert(rows.length === 1, `a staff requester saw ${rows.length} of 1 messages`);
+        assert(rows[0].is_internal === true,
+          'an internal note was hidden from a requester who is staff, which the policy says it is not');
+      });
+    });
+
     await test('only staff may triage, and resolving needs the note the requester reads', async () => {
       const a = await newAsker('Triaged');
       const id = (await open(a.userId, 'account', 'Change my email', 'I lost access to my old address.')).rows[0].id;

@@ -790,3 +790,40 @@ being pressed still refuses, and now says why in words the page had already
 prepared the reader for. Implemented in `20261215000100_cohort_places.sql`,
 `fetchCohortPlaces()` in `lib/cohorts.ts`, and the class cards on
 `/courses/[slug]`.
+
+## Who may read a support case — implementation invariant
+
+The help desk was built with `can_read_support_case()`, granted to
+`authenticated`, tested, and commented as "used by the writer functions; reads
+are handled by RLS". Both halves of that comment were false. No writer calls it —
+each writer checks the row it is already holding — and the reads that were
+"handled by RLS" each spelled the same rule out again, so the definition of who
+may see a conversation existed in three places and the one written to be the
+single copy was the one nothing read.
+
+**The invariant: `can_read_support_case(uuid)` is the definition, and both read
+policies ask it.** `support_cases_read` asks about the row;
+`support_case_messages_read` asks about the message's case and then applies the
+second, genuinely different question — which of that case's *messages* the reader
+may see. An internal note stays inside the team even from the person who opened
+the case, and a staff member who opens their own case still reads its internal
+notes, because internal notes are staff information and they are staff. That rule
+stays inline in the message policy, where a reader of it will look, rather than
+moving into a function whose name is about cases.
+
+This is not a style preference. The next change to who may see a case — an
+assigned agent who is not otherwise privileged, say — has to be made in one place
+now. A policy missed in the old arrangement does not fail loudly: it either shows
+one person a conversation that was not theirs or hides one that was, and both
+look like the system working.
+
+No recursion, and the reason is worth recording because it is the objection that
+stops this refactor being done: a definer function used inside a policy on the
+table it reads would loop, except that `can_read_support_case()` is SECURITY
+DEFINER, so its own lookup of `support_cases` runs as the function owner and is
+not filtered by the policy that called it. `cohorts_read` has used
+`can_read_cohort()` the same way since cohorts were built. Implemented in
+`20261216000100_support_case_read_predicate.sql`; the behaviour is unchanged, and
+the tests that pinned it — a case visible to its requester and to staff and to
+nobody else, an internal note invisible to the requester and readable by staff —
+pass either way, which is what made the change safe to make.

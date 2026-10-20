@@ -303,9 +303,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **914 database tests, 570 web tests; TypeScript typecheck and
+Verification: **917 database tests, 570 web tests; TypeScript typecheck and
 production build pass; 103 tables, 231 policies, 134 user-defined triggers,
-228 functions, 97 migrations and 105 app route entries.**
+228 functions, 98 migrations and 105 app route entries.**
 
 ## Today's sentence
 
@@ -367,19 +367,17 @@ given a surface. Grouped by the feature they belong to:
 
 **Two functions were genuinely unreachable**, in the stronger sense that nothing
 called them at all — not a route, not a policy, not a trigger, not another
-function. One is now closed:
+function. Both are now closed:
 
 - `cohort_member_count()` — built so the cohort roster could show counts without
   exposing members. The teacher UI showed counts, but counted rows itself. It is
   now the definition `cohort_places()` uses for each cohort, so a joiner sees how
   full a class is — see "A learner can see how full a class is before joining".
-- `can_read_support_case()` — **still dead.** Its own comment claims it is "used
-  by the writer functions", and no writer calls it: the predicate it expresses is
-  written out inline in `support_cases_read` and again inside
-  `support_case_messages_read`. So the definition of who may read a support case
-  lives in three places, and the function that was meant to be the one place is
-  the one nothing reads. Both are tested, so neither is broken; the comment is
-  simply wrong.
+- `can_read_support_case()` — its own comment claimed it was "used by the writer
+  functions", and no writer called it: both read policies spelled the same rule
+  out inline, so who may read a support case was defined three times and the copy
+  written to be the only one was the one nothing read. Both policies now ask it —
+  see "Who may read a support case is written down once".
 
 **Four staff functions had no admin surface.** Two are now closed — `/admin/media`
 reaches `quarantine_media_upload()` and `delete_media_asset()`, so a rights
@@ -885,6 +883,56 @@ second way to be wrong.
 comment to be used by the writer functions; the predicate it expresses is written
 inline in two policies instead, so who may read a support case is defined in three
 places.
+
+### Who may read a support case is written down once, 2026-10-20
+
+The audit's second dead function was `can_read_support_case()`, and its comment
+claimed it was "used by the writer functions; reads are handled by RLS". Neither
+half was true. No writer calls it — each checks the row it is already holding —
+and the reads that were "handled by RLS" spelled the same predicate out twice
+more:
+
+- `support_cases_read` — `requested_by = me OR is_privileged(me)`
+- `support_case_messages_read` — an `EXISTS` over `support_cases` repeating that
+  rule, plus the internal-note condition
+- `can_read_support_case()` — `is_privileged(me) OR EXISTS (this case, requested
+  by me)`
+
+Three copies of one rule. That is not a style complaint: the next change to who
+may see a case — an assigned agent who is not otherwise privileged, say — would
+have had to be made in three places, and a policy that is missed does not fail
+loudly. It either shows one person a conversation that was not theirs or hides
+one that was, and both look like the system working.
+
+**Both read policies now ask the function.** What stays inline is the part that
+is genuinely a second question: who may read a *case*, and which of its
+*messages* they may read. An internal note still stays inside the team even from
+the person who opened the case, and a staff member who opens their own case still
+reads its internal notes, because internal notes are staff information and they
+are staff. That rule belongs in the message policy, where a reader of it will
+look, not in a function whose name is about cases.
+
+**The behaviour is identical, which is the point.** The existing tests pinned the
+outcome either way — a case visible to its requester and to staff and to nobody
+else, an internal note invisible to the requester and readable by staff — and
+they pass unchanged. No recursion either, and the reason is the objection that
+usually stops this refactor: the function is SECURITY DEFINER, so its own lookup
+of `support_cases` runs as the owner and is not filtered by the policy that
+called it. `cohorts_read` has used `can_read_cohort()` the same way since cohorts
+were built.
+
+**Three new tests pin the shape, not only the outcome**: both policies mention
+`can_read_support_case()` and neither still contains `requested_by`; the
+internal-note rule is still in the message policy; the function answers true for
+the requester, an agent and an admin, and false for a stranger; and a staff
+requester reads the internal note on their own case. 917 database tests. No web
+change, no new function, no new policy.
+
+That closes the audit's dead-function list. What the audit found that is still
+open is a category rather than an item: tables written by triggers and read by
+nobody — `order_status_history`, `publication_events`, `entitlement_events`,
+`access_checks`, `subscription_history` — which are waiting on a support console
+rather than on a decision.
 
 ## Open external decisions (not to be guessed)
 
