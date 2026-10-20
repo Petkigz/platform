@@ -174,6 +174,56 @@ export async function fetchLesson(
 }
 
 /**
+ * One lesson's media, with the lesson it belongs to.
+ *
+ * `LessonResource` plus `lessonId`, because a page that lists many lessons needs
+ * to know which resource hangs off which one, and asking per lesson is one query
+ * per lesson for the same rows.
+ */
+export type LessonMediaResource = LessonResource & { lessonId: string };
+
+/**
+ * The media resources of many lessons in one query.
+ *
+ * Only rows with a `media_asset_id` come back: this exists to feed a player, and
+ * an external URL or a document is a different control with a different rule.
+ * Whatever the caller is not allowed to read simply does not come back, which is
+ * the policy answering and not this function filtering.
+ */
+export async function fetchMediaResourcesForLessons(
+  supabase: SupabaseClient,
+  lessonIds: readonly string[],
+): Promise<LessonMediaResource[]> {
+  const ids = [...new Set(lessonIds.filter((id) => id.trim().length > 0))];
+  if (ids.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from('lesson_resources')
+    .select(
+      'id, lesson_id, resource_type, display_name, position, external_url, media_asset_id, access_classification',
+    )
+    .in('lesson_id', ids)
+    .not('media_asset_id', 'is', null)
+    .order('position', { ascending: true });
+
+  // Thrown rather than swallowed: a failed read and an empty one mean different
+  // things, and a screen that cannot tell them apart shows "no media" for a
+  // permission failure.
+  if (error) throw new Error(error.message);
+
+  return ((data ?? []) as unknown as ResourceRow[]).map((r) => ({
+    lessonId: r.lesson_id,
+    id: r.id,
+    resourceType: r.resource_type as ResourceType,
+    displayName: r.display_name,
+    position: r.position,
+    externalUrl: r.external_url,
+    mediaAssetId: r.media_asset_id,
+    accessClassification: r.access_classification as AccessClassification,
+  }));
+}
+
+/**
  * Whether the caller may access this lesson at all.
  *
  * Asked explicitly rather than inferred from the resource list, because the

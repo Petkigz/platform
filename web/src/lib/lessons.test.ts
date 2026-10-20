@@ -4,10 +4,12 @@ import test from 'node:test';
 import {
   canAccessLesson,
   fetchLesson,
+  fetchMediaResourcesForLessons,
   formatDuration,
   nativeMediaKind,
   RESOURCE_LABEL,
   type Lesson,
+  type LessonMediaResource,
 } from './lessons.ts';
 
 // ---------------------------------------------------------------------------
@@ -204,4 +206,106 @@ test('native playback refuses non-HTTPS, mismatched types and non-media pages', 
   assert.equal(nativeMediaKind({ resourceType: 'video', externalUrl: 'https://video.example/watch/123' }), null);
   assert.equal(nativeMediaKind({ resourceType: 'document', externalUrl: 'https://media.example/lesson.mp4' }), null);
   assert.equal(nativeMediaKind({ resourceType: 'audio', externalUrl: 'not a url' }), null);
+});
+
+// ---------------------------------------------------------------------------
+// Many lessons' media in one query
+//
+// A reviewer's screen lists a whole version, and one query per lesson would be
+// one round trip per row of the outline for the same table. What matters here is
+// that the query asks for the media rows only, and that a failure is thrown
+// rather than turned into an empty list: "no media" and "you may not see this"
+// are different sentences and a screen cannot tell them apart otherwise.
+// ---------------------------------------------------------------------------
+
+function stubResources(rows: unknown[], options: { error?: string } = {}) {
+  const calls: string[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chain: any = {
+    select: (columns: string) => {
+      calls.push(`select:${columns}`);
+      return chain;
+    },
+    in: (column: string, values: unknown[]) => {
+      calls.push(`in:${column}=${values.join(',')}`);
+      return chain;
+    },
+    not: (column: string, op: string, value: unknown) => {
+      calls.push(`not:${column} ${op} ${String(value)}`);
+      return chain;
+    },
+    order: (column: string) => {
+      calls.push(`order:${column}`);
+      return chain;
+    },
+    then: (
+      resolve: (value: { data: unknown[] | null; error: { message: string } | null }) => void,
+    ) =>
+      resolve(
+        options.error
+          ? { data: null, error: { message: options.error } }
+          : { data: rows, error: null },
+      ),
+  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return { client: { from: (table: string) => { calls.push(`from:${table}`); return chain; } } as any, calls };
+}
+
+const resourceRow = (over: Record<string, unknown> = {}) => ({
+  id: 'resource-1',
+  lesson_id: 'lesson-1',
+  resource_type: 'video',
+  display_name: 'Recorded lesson',
+  position: 1,
+  external_url: null,
+  media_asset_id: 'asset-1',
+  access_classification: 'entitled',
+  ...over,
+});
+
+await test('the media of many lessons is asked for in one query', async () => {
+  const stub = stubResources([resourceRow()]);
+  const rows = await fetchMediaResourcesForLessons(stub.client, ['lesson-1', 'lesson-2']);
+
+  assert.ok(stub.calls.includes('from:lesson_resources'), 'the wrong table was asked');
+  assert.equal(stub.calls.find((c) => c.startsWith('in:')), 'in:lesson_id=lesson-1,lesson-2');
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0]?.lessonId, 'lesson-1', 'the lesson a resource belongs to was lost');
+  assert.equal(rows[0]?.mediaAssetId, 'asset-1');
+  assert.equal(rows[0]?.displayName, 'Recorded lesson');
+});
+
+await test('only rows with a master behind them are asked for', async () => {
+  const stub = stubResources([]);
+  await fetchMediaResourcesForLessons(stub.client, ['lesson-1']);
+  assert.equal(stub.calls.find((c) => c.startsWith('not:')), 'not:media_asset_id is null',
+    'a document or an external URL was fetched for a player that cannot use it');
+  assert.equal(stub.calls.find((c) => c.startsWith('order:')), 'order:position');
+});
+
+await test('lesson ids are deduped and blanks dropped', async () => {
+  const stub = stubResources([]);
+  await fetchMediaResourcesForLessons(stub.client, ['lesson-1', 'lesson-1', ' ', 'lesson-2']);
+  assert.equal(stub.calls.find((c) => c.startsWith('in:')), 'in:lesson_id=lesson-1,lesson-2');
+});
+
+await test('no lessons means no query at all', async () => {
+  const stub = stubResources([resourceRow()]);
+  const rows = await fetchMediaResourcesForLessons(stub.client, []);
+  assert.deepEqual(rows, []);
+  assert.deepEqual(stub.calls, [], 'nothing is asked of the database');
+});
+
+await test('a failed read is thrown, not turned into an empty outline', async () => {
+  const stub = stubResources([], { error: 'permission denied for table lesson_resources' });
+  await assert.rejects(
+    () => fetchMediaResourcesForLessons(stub.client, ['lesson-1']),
+    /permission denied/,
+  );
+});
+
+await test('a null result is an empty list, because the driver says null for no rows', async () => {
+  const stub = stubResources(null as unknown as unknown[]);
+  const rows: LessonMediaResource[] = await fetchMediaResourcesForLessons(stub.client, ['lesson-1']);
+  assert.deepEqual(rows, []);
 });

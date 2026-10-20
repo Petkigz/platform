@@ -209,8 +209,13 @@ export async function run(ctx) {
   await test('a rendition is playable exactly where its lesson is open', async () => {
     assert(await mayPlay(learnerUser, rendition) === true, 'an enrolled learner could not play the lesson');
     assert(await mayPlay(strangerUser, rendition) === false, 'a stranger could play it');
-    assert(await mayPlay(teacher, rendition) === false,
-      'the author could play a rendition through this predicate; authors read their own media by another path');
+    // This used to assert false, with the note that authors reach their own media
+    // by another path. There was no other path: presignMasterDownload() had no
+    // caller outside its own tests, so a teacher could upload a lesson and never
+    // watch it. 20261213000100_reviewer_media_access.sql adds the author and
+    // reviewer branches here, and /api/media/master is the archive path.
+    assert(await mayPlay(teacher, rendition) === true,
+      'the author could not play the rendition of their own lesson');
     assert(await asAnon(async () =>
       (await q('select public.may_play_rendition($1) as ok', [rendition])).rows[0].ok) === false,
       'an anonymous visitor could play it');

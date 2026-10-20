@@ -5,6 +5,7 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { MEDIA_STATUS_LABEL, fetchMediaAssets, readableByteSize } from '@/lib/media';
 import { createClient } from '@/lib/supabase/server';
 
+import { MasterPlayer } from '@/app/_shared/master-player';
 import { UploadMedia } from './upload-form';
 
 export const dynamic = 'force-dynamic';
@@ -21,6 +22,10 @@ export const dynamic = 'force-dynamic';
  * available file can be attached to a lesson. That split exists because letting
  * an uploader mark their own file as ready is how unreviewed material reaches a
  * child.
+ *
+ * Waiting for verification is not waiting in the dark: the person who uploaded a
+ * file can watch it, from `pending` onwards, through `/api/media/master`. What
+ * they cannot do is promote it.
  */
 export default async function TeachMediaPage() {
   if (!isSupabaseConfigured()) redirect('/');
@@ -84,6 +89,9 @@ export default async function TeachMediaPage() {
                   )}
                 </span>
                 {asset.status === 'available' && <span className="badge">Ready</span>}
+                <span style={{ display: 'block', marginTop: '0.4rem' }}>
+                  <MasterPlayer assetId={asset.id} />
+                </span>
               </li>
             ))}
           </ul>

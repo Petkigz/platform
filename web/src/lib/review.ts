@@ -38,6 +38,23 @@ export const ASSIGNMENT_STATUS_LABEL: Record<AssignmentStatus, string> = {
   cancelled: 'Cancelled',
 };
 
+/**
+ * The assignment states in which the media of the version under review is served.
+ *
+ * The database decides this — `may_review_version_media()` requires `accepted` or
+ * `in_progress` — and this list exists so a screen can say *why* a lesson is not
+ * playable instead of showing an empty player. If the two ever disagree, the
+ * database wins and the sentence is wrong, which is the safer way to be wrong.
+ */
+export const WATCHABLE_ASSIGNMENT_STATUSES: readonly AssignmentStatus[] = [
+  'accepted',
+  'in_progress',
+];
+
+export function isAssignmentWatchable(status: AssignmentStatus): boolean {
+  return WATCHABLE_ASSIGNMENT_STATUSES.includes(status);
+}
+
 export type ReviewScope = 'technical' | 'scholarly';
 
 export const SCOPE_LABEL: Record<ReviewScope, string> = {

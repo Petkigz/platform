@@ -69,9 +69,9 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **103 tables, RLS on every one, 231 policies, 134
-user-defined triggers, 222 functions and 94 migrations.** The database suite
-passes **878 tests**; the web suite passes **519 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **104 app route entries**.
+user-defined triggers, 225 functions and 95 migrations.** The database suite
+passes **897 tests**; the web suite passes **545 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **105 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. `/account`
@@ -326,7 +326,7 @@ assignments and the revision loop that makes feedback actionable:
 
 - `institutions` — D1 multi-tenancy had no table to hang `institution_id` on
 - `media_assets` — D8 requires originals in storage we control, with a checksum; the provider is **Cloudflare R2**, chosen 2026-10-20 from `docs/decisions/media-storage-costing.md`
-- `media_renditions` — the delivery copies a learner is actually served, one row per profile, staff-written; a master is the archive and is never handed to a browser
+- `media_renditions` — the delivery copies a learner is actually served, one row per profile, staff-written; a master is the archive and is never handed to a learner's browser. Three people may watch a master — whoever uploaded it, platform staff, and the author of a version whose lesson uses it while it is available — through `master_preview_target()`; a reviewer is deliberately not one of them, and gets the delivery copy instead
 - `platform_settings` — without it, "build it all, enable it later" had
   nowhere to live; `governance.panel_required` is a row, not a constant
 - `discussion_posts` — per-lesson discussion, explicitly wanted for the product

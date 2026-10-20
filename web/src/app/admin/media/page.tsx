@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { fetchMediaModerationQueue, MEDIA_STATUS_LABEL, readableByteSize } from '@/lib/media';
+import { MasterPlayer } from '@/app/_shared/master-player';
 import { ModerateForm } from './moderate-form';
 
 export const dynamic = 'force-dynamic';
@@ -17,6 +18,10 @@ export const dynamic = 'force-dynamic';
  *
  * Both need a reason in writing, and the database refuses without one — the
  * audit trail for a takedown used to record who and when but not why.
+ *
+ * Staff can also watch the file itself, through `/api/media/master`. Verification
+ * compares a byte count against storage, which is not the same as looking: a file
+ * of exactly the declared size can still be the wrong footage.
  */
 export default async function AdminMediaPage() {
   if (!isSupabaseConfigured()) redirect('/');
@@ -81,17 +86,22 @@ export default async function AdminMediaPage() {
               retention schedule.
             </p>
           ) : (
-            <ModerateForm assetId={asset.id} canVerify={asset.status === 'pending'} />
+            <>
+              <MasterPlayer assetId={asset.id} label="Watch the file" />
+              <ModerateForm assetId={asset.id} canVerify={asset.status === 'pending'} />
+            </>
           )}
         </section>
       ))}
 
       <p className="muted">
-        No byte is transferred by this screen. Verifying an upload asks storage
-        whether the object arrived and whether it is the size that was declared;
-        it does not recompute the checksum, because that would mean downloading
-        the file. Only staff can do any of this, and an uploader can never
-        promote their own file.
+        Verifying an upload transfers no byte: it asks storage whether the object
+        arrived and whether it is the size that was declared, and it does not
+        recompute the checksum, because that would mean downloading the file.
+        Watching one does — a signed link to the master itself, good for fifteen
+        minutes, because a file nobody has looked at is a file nobody has
+        moderated. Only staff can verify, quarantine or withdraw, and an uploader
+        can never promote their own file.
       </p>
     </main>
   );

@@ -18,7 +18,7 @@ import { fetchLessonSources } from '@/lib/provenance';
 import { fetchLessonStudyTools } from '@/lib/lesson-study-tools';
 import { StudyTools } from './study-tools';
 import { fetchPlayableRenditions, groupByAsset, posterFor } from '@/lib/playback';
-import { RenditionPlayer } from './rendition-player';
+import { RenditionPlayer } from '@/app/_shared/rendition-player';
 
 export const dynamic = 'force-dynamic';
 

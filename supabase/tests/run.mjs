@@ -57,6 +57,7 @@ import { run as cohortJoinWindow } from './cohort_join_window.test.mjs';
 import { run as offlineDownload } from './offline_download.test.mjs';
 import { run as mediaRenditions } from './media_renditions.test.mjs';
 import { run as learnerAnalytics } from './learner_analytics.test.mjs';
+import { run as masterAccess } from './master_access.test.mjs';
 
 const ctx = await createHarness();
 const suites = [];
@@ -110,6 +111,7 @@ for (const [name, fn] of [
   ['offline download', offlineDownload],
   ['media renditions', mediaRenditions],
   ['learner analytics', learnerAnalytics],
+  ['master access', masterAccess],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],

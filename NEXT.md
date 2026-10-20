@@ -303,9 +303,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **878 database tests, 519 web tests; TypeScript typecheck and
+Verification: **897 database tests, 545 web tests; TypeScript typecheck and
 production build pass; 103 tables, 231 policies, 134 user-defined triggers,
-222 functions, 94 migrations and 104 app route entries.**
+225 functions, 95 migrations and 105 app route entries.**
 
 ## Today's sentence
 
@@ -332,7 +332,7 @@ never started). Updated 2026-10-20.
 | **Assignments** | Tasks, self-paced and cohort deadlines, one private submission per learner, drafts and hand-in, marking with immutable feedback, a revision loop with an append-only snapshot, file *references* with type and size ceilings | Byte transfer for submissions (the R2 path exists but is not wired to submissions), scanning, secure delivery to the marker, retention of children's files | **Decision/review:** the safeguarding review of files children send. This one review holds `learning.assignments` **and** `learning.cohorts` |
 | **Cohorts** | Tables, exact-version pinning, opt-in join/leave, capacity serialisation, family opt-in for children, counts on the manager and, since row 32, names and progress on the class page for the teacher who opened it, teacher manager, learner join/leave, and the teacher-set `join_closes_at` window | Nothing structural | The same safeguarding review. `learning.cohorts` ships `false` |
 | **Learner analytics** (`SCREENS.md` row 32) | `can_read_learner_course_progress()` as a second branch on the `course_enrolments` and `lesson_progress` read policies; `cohort_learner_progress()`, which returns four columns of a profile rather than the row; `/teach/[courseId]/cohorts/[cohortId]` with a class summary and a roster ordered by need; 19 database tests, most of them negative | Aggregate or platform-wide reporting, event instrumentation beyond lesson progress, export or CSV, anything that follows a learner across courses | **Retention:** how long progress stays readable after a class ends or a learner leaves — a decision, not a default. `delivery.analytics` and `learning.cohorts` both ship `false`, and the predicate checks both |
-| **Reviewer access to lesson media** | `can_review_version()` exists and already gates the `lesson_resources` read policy | A read path for the media *bytes* scoped to an assigned review and a period, so access ends with the review | **Nothing.** Decided 2026-10-20: "other teachers" means a reviewer checking quality for a named period, not co-teachers and not any teacher on the platform |
+| **Reviewer access to lesson media** | `may_review_version_media()` — an accepted or in-progress assignment and nothing else — as a third branch of `may_play_rendition()`, with the player wired into `/review/[assignmentId]`; `may_watch_master()`, `master_preview_target()` and `/api/media/master` for the uploader, staff and the version author, with `Watch` on `/teach/media` and `/admin/media`; 19 database tests, most of them refusals | Any copy for a reviewer: no download, no master, no export. Aggregate review analytics | **Nothing.** Decided 2026-10-20: "other teachers" means a reviewer checking quality for a named period, not co-teachers and not any teacher on the platform. The period is the assignment's state, so access ends with the review |
 | **Live classes with teacher-only recording** | Nothing. No live-class tables exist | Schema, capture, recording, storage, playback, and the rule that learners' video and audio are never captured | **Decision:** build versus buy. This is the one workload that would reopen the Stream decision, because self-hosting a media server is the largest piece of engineering left. Costed in §7 of `docs/decisions/media-storage-costing.md`. Decided 2026-10-20: teacher-only capture, so the child-recording safeguarding question does not arise |
 | **Payments** | MTN MoMo and Airtel adapters, checkout, orders, refunds, reconciliation, disputes, financial adjustments, subscriptions with entitlement grants that drive access, 50% teacher-share accrual with the split snapshotted per row | Live credentials, callback verification against a real provider, automatic renewal, failed-payment retry, the receipt document, a merchant account | **External:** provider sandbox and merchant credentials (P12). Do not claim any of this works end to end |
 | **Payouts** (`teaching.payouts`) | Three tables, earnings entries, a split that must satisfy its own check constraint, reversal on refund | Fields and endpoints; disbursement of any kind | **External/decision:** payout policy, tax per country, who bears processing fees, uniform versus per-teacher share. Setting the share to 50 did not enable payouts |
@@ -659,6 +659,66 @@ SQL was that there is only one.
 Still open, and deliberately not guessed: **retention** — how long progress stays
 readable after a class ends or a learner leaves — and event instrumentation
 beyond lesson progress, which is what `delivery.analytics` was originally about.
+
+### Everybody who needs to watch a lesson now can, 2026-10-20
+
+`may_play_rendition()` asked one question — is this caller an entitled learner,
+right now — and two people who need the same bytes had no path at all.
+
+**A teacher could not watch their own upload.** `can_access_lesson_now()` only
+ever looks at learner profiles, so the author of a version was refused by the
+predicate that serves its lessons. The test that pinned this said authors reach
+their own media "by another path"; there was no other path.
+`presignMasterDownload()` existed in `lib/media-r2.ts` and had no caller outside
+its own tests, so a teacher could upload 8 GiB, watch the row turn `available`,
+and never see what they had made. A claim inside a passing test is still a claim,
+and this one was false — the assertion is now inverted, with the reason written
+where the old one was.
+
+**A reviewer could see where the bytes were and could not be served them.**
+`lesson_resources_read` has had a `can_review_version()` branch since October, so
+an assigned reviewer could read the row naming a lesson's media, while the
+predicate that serves it asked only about learners.
+
+Three predicates now answer this, and each is narrower than the last:
+`may_review_version_media()` wants an accepted or in-progress assignment;
+`may_watch_master()` wants the uploader, staff, or the author of a version whose
+lesson uses an available master; and `may_play_rendition()` gained the author and
+the reviewer as branches inside the same `exists`, so quarantining a master still
+withdraws every copy from everybody at once. A reviewer gets the delivery copy
+and not the archive, because what is under review is what a learner will see;
+`may_download_lesson()` is untouched, so watching is not saving.
+
+**The route is `/api/media/master`, and it decides nothing.** It calls
+`master_preview_target()`, which is SECURITY DEFINER and returns the bucket, key
+and description only where `may_watch_master()` says yes. That function exists
+because `media_assets_read` is uploader-or-staff and is *narrower* than the
+predicate: a version author who did not upload the file may watch it but cannot
+read its row, and widening that policy to hand a route two columns would have
+exposed every other column to the same caller. Seven columns come back, and two
+tests hold the list — one in SQL, one in TypeScript — because a spread would
+carry the digest and the uploader with it.
+
+The window is fifteen minutes against a learner's six hours. This is a check,
+not a lesson, and a master URL is a bearer token for the one copy nothing else in
+the system hands out.
+
+**All three paths are reachable from a screen**, because a capability no screen
+reaches is the exact defect the audit kept finding: `Watch` on `/teach/media` for
+the person who uploaded it, `Watch the file` on `/admin/media` beside `Verify` —
+verification compares a byte count with storage, which is not the same as looking
+— and the rendition player on `/review/[assignmentId]` for every lesson of the
+version under review, which says in words when an assignment is closed and the
+media has stopped. `RenditionPlayer` moved to `app/_shared/` because two routes
+use it now, and `app/_shared` is not routable, so the move added no page.
+
+`/admin/media` used to end with "no byte is transferred by this screen". That was
+true and is not now, so the sentence says which act transfers nothing and which
+one does.
+
+No new flag: the gate is the predicate, and a flag would be a second switch on a
+door that already has a lock. What is still open is a reviewer's own record of
+what they watched — no aggregate review analytics, no export, and no copy.
 
 ## Open external decisions (not to be guessed)
 

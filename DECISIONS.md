@@ -592,3 +592,54 @@ Names come through `cohort_learner_progress(cohort)` rather than through a wider
 `learner_profiles` policy: it returns four columns of a profile, so `family_id`
 and `linked_user_id` are not reachable by a teacher through any query they could
 write against it. `SCREENS.md` row 32 is built.
+
+## Who may watch an uploaded master — **DECIDED 2026-10-20**
+
+Found while building the media path, and settled the same day.
+
+`may_play_rendition()` asked one question — is this caller a learner entitled to
+this lesson, right now — which is the right question for a learner and the wrong
+one for the two other people who need the same bytes. A teacher who uploaded a
+lesson recording could not watch it: `can_access_lesson_now()` only ever looks at
+learner profiles, and the test that pinned this said authors reach their own
+media "by another path". There was no other path. `presignMasterDownload()` had
+no caller outside its own tests. So a teacher could upload 8 GiB, watch a row
+turn `available`, and never once see what they had made. A reviewer could read
+the `lesson_resources` row naming a lesson's object key and could not be served a
+byte of it.
+
+**Chosen: three people may watch a master, and a reviewer is not one of them.**
+
+The uploader may watch their own file in whatever state it is in. A `pending`
+file has to be watchable by the person who uploaded it, because "look at it
+before you confirm it" is the whole point of a pending state; a `quarantined` one
+has to be watchable too, because a takedown whose subject you cannot see is a
+takedown you cannot answer. Platform staff may watch any master, in any state,
+because verifying an upload, judging an appeal and matching a rights complaint
+are all acts of looking. The author of a version may watch a master attached to
+one of its lessons **only while it is available**: a pending or quarantined file
+belongs to its uploader and to moderation, not to the course.
+
+A reviewer gets the **delivery copy and not the archive**. What is under review
+is what a learner will see, and a master is up to 8 GiB of unedited footage the
+job does not need. The rendition branch sits inside the same `exists` as the
+learner branch, so quarantining a master withdraws it from the reviewer and the
+teacher as well as from the learner, without a second rule.
+
+**The period is the assignment's state, not its due date.** `accepted` or
+`in_progress` and nothing else: somebody who declined never was entitled, and
+somebody who completed or was cancelled stops being served at that moment. A past
+`due_at` does not cut access, because a late review still has to watch the lesson
+— the switch a person controls is the state, and staff cancel an assignment when
+it should stop.
+
+**Watching is not saving.** `may_download_lesson()` is untouched: offline copies
+are an entitlement a Plus subscriber holds, and neither a reviewer nor an author
+has one. Letting either keep an unpublished lesson on a device would undo the one
+thing the entitlement exists to control.
+
+**No new flag.** The gate is the predicate — an assignment, an upload, an
+authorship — and a flag would be a second switch on a door that already has a
+lock, which is a second way to be wrong. Implemented in
+`20261213000100_reviewer_media_access.sql`, `/api/media/master`, and the player
+on `/review/[assignmentId]`, `/teach/media` and `/admin/media`.
