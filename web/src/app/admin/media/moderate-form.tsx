@@ -72,7 +72,7 @@ export function ModerateForm({
         <div>
           <button
             type="button"
-            className="button"
+            className="btn"
             disabled={pending}
             onClick={() => act('verify')}
           >
@@ -102,7 +102,7 @@ export function ModerateForm({
       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
         <button
           type="button"
-          className="button secondary"
+          className="btn secondary"
           disabled={pending}
           onClick={() => act('quarantine')}
         >
@@ -110,7 +110,7 @@ export function ModerateForm({
         </button>
         <button
           type="button"
-          className="button danger"
+          className="btn danger"
           disabled={pending}
           onClick={() => act('withdraw')}
         >

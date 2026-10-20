@@ -303,9 +303,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **897 database tests, 545 web tests; TypeScript typecheck and
+Verification: **908 database tests, 552 web tests; TypeScript typecheck and
 production build pass; 103 tables, 231 policies, 134 user-defined triggers,
-225 functions, 95 migrations and 105 app route entries.**
+227 functions, 96 migrations and 105 app route entries.**
 
 ## Today's sentence
 
@@ -326,7 +326,7 @@ never started). Updated 2026-10-20.
 | Piece | Built and tested | Not built | Waiting on |
 |---|---|---|---|
 | **Media ingest** (D8 = R2) | `media_assets` register with a pending/available/quarantined/deleted state machine and four writer functions; SigV4 signing in `web/src/lib/media-r2.ts`, pinned against AWS's published vector; `POST /api/media` `request_upload` + `confirm_upload`; R2 variables documented in `web/.env.example` | Any R2 credential in this environment, so nothing has been exercised against a real bucket | **Nothing.** R2 is chosen; this is buildable now |
-| **Media delivery** | The whole path, end to end: `media_renditions` register with a closed profile vocabulary and derived object keys; the transcode worker that fills it (`web/src/worker/transcode-worker.ts`, decisions in `lib/transcode.ts`, gated by `delivery.transcode`), which checks the master's SHA-256 against the bytes before it encodes anything; `/api/media/playback` and `/api/media/download` signing short-lived rendition URLs with the database as the only authority on who may watch; a player on the lesson page with a quality selector and a poster; `/teach/media`, where a teacher uploads straight to R2 with a browser-computed checksum; and `verify` on `/admin/media`, which asks storage whether the file arrived at the declared size and only then confirms it | A host to run the worker on with ffmpeg, R2 credentials and a staff account for it; a retry path for a rendition stuck `failed`; and a decision about whether a free preview may be watched signed-out | **Nothing** that is a design question. What is left is infrastructure and one product decision |
+| **Media delivery** | The whole path, end to end: `media_renditions` register with a closed profile vocabulary and derived object keys; the transcode worker that fills it (`web/src/worker/transcode-worker.ts`, decisions in `lib/transcode.ts`, gated by `delivery.transcode`), which checks the master's SHA-256 against the bytes before it encodes anything; `/api/media/playback` and `/api/media/download` signing short-lived rendition URLs with the database as the only authority on who may watch; a player on the lesson page with a quality selector and a poster; `/teach/media`, where a teacher uploads straight to R2 with a browser-computed checksum; `verify` on `/admin/media`, which asks storage whether the file arrived at the declared size and only then confirms it; and `retry_media_rendition()`, reached from the same screen, which puts a copy that failed to encode back in the queue on a written reason | A host to run the worker on with ffmpeg, R2 credentials and a staff account for it, and a decision about whether a free preview may be watched signed-out | **Nothing** that is a design question. What is left is infrastructure and one product decision |
 | **Offline download** | `may_download_lesson()` requiring entitlement + an `offline_downloads` feature grant + verified first-party media; closed feature vocabulary (`pe_feature_vocabulary`, `plan_feature_codes()`) with the admin plan form offering the list; 17 database tests | Any download route or UI, device registration, device storage limits, download expiry, protected-media handling | **Decisions:** device limits, expiry and protected media (`learning.offline`). It would also serve renditions, which do not exist |
 | **Upload cost control** | A per-file ceiling, in two places: 8 GiB in SQL and in `lib/media.ts`, and **512 MiB for a browser upload**, because WebCrypto cannot digest a stream and the checksum is required | A cumulative per-teacher byte quota, a spend alert, and a way to raise the browser ceiling (a chunked digest or a desktop uploader) | **Decision:** quota policy (`platform.cost_controls`). Note that `register_media_upload()` is open to **any signed-in user**, not only teachers, because learners attach files to assignment submissions through the same table — so the missing control is a cumulative quota per person, not a role check |
 | **Assignments** | Tasks, self-paced and cohort deadlines, one private submission per learner, drafts and hand-in, marking with immutable feedback, a revision loop with an append-only snapshot, file *references* with type and size ceilings | Byte transfer for submissions (the R2 path exists but is not wired to submissions), scanning, secure delivery to the marker, retention of children's files | **Decision/review:** the safeguarding review of files children send. This one review holds `learning.assignments` **and** `learning.cohorts` |
@@ -441,18 +441,22 @@ built at all before any of those three things exist.
 
 - **The order is forced by the schema.** Encode, measure, register, upload,
   confirm. `register_media_rendition()` takes the byte size and the dimensions,
-  and a row cannot be corrected afterwards — `media_renditions` has no update
+  and a row could not be corrected afterwards — `media_renditions` has no update
   policy and `confirm` only moves `pending` to `available`. So a row is opened
-  only once the encode has happened. The useful consequence: a crash before
+  only once the encode has happened. *(Since: `record_media_rendition_encode()`
+  re-measures a `pending` row, the one case where the file that arrives is not
+  the file the row was opened from.)* The useful consequence: a crash before
   `register` leaves nothing behind, and a crash after it leaves a `pending` row
   the next run finishes, because the object key is derived from the asset and the
   profile and is therefore the same key both times.
 - **Nothing is confirmed before its bytes are uploaded.** Confirming first would
   publish a row that `may_play_rendition()` hands to a learner as a URL that 404s.
 - **`failed` is written only for an error that is a property of the file.** The
-  state is terminal — nothing moves it back to `pending`, and `register` would
-  meet the unique index on `(asset_id, profile)` — so marking a row failed
-  retires that profile until somebody adds a retry path. An ffmpeg refusal is
+  state is terminal for the worker — nothing in it moves a row back to `pending`,
+  and `register` would meet the unique index on `(asset_id, profile)` — so
+  marking a row failed retires that profile until somebody adds a retry path.
+  *(Since: `retry_media_rendition()` is that path, and it is a person's decision
+  on `/admin/media`, not the worker's.)* An ffmpeg refusal is
   definitive and gets recorded. An upload error or a confirm refusal is usually a
   network blip or a missing grant, so the row is **left pending**, invisible to
   learners and picked up by the next run. A worker that failed a row on a timeout
@@ -719,6 +723,63 @@ one does.
 No new flag: the gate is the predicate, and a flag would be a second switch on a
 door that already has a lock. What is still open is a reviewer's own record of
 what they watched — no aggregate review analytics, no export, and no copy.
+
+### A failed encode stopped being a dead end, 2026-10-20
+
+The transcode worker's header described `--asset` as the escape hatch for a
+master that does not match its filter, "such as one whose profile is stuck
+`failed`, which nothing in the schema can retry". That was true, and it meant one
+bad afternoon on the worker host cost a lesson a rung of its quality ladder for
+good: `fail_media_rendition()` moved the row to `failed`, nothing moved it back,
+and registering the same profile again met the unique index on
+`(asset_id, profile)`. The repair was SQL against production, with no audit entry
+and no record of who had decided the file was worth another attempt.
+
+**Two writers, one meaning each.**
+
+- `retry_media_rendition(rendition, reason)` — staff-only, reason required and
+  trimmed, `failed` to `pending`. It keeps the row and the derived object key, so
+  the next encode overwrites the file that was never confirmed instead of
+  orphaning an object nothing will ever list. It refuses unless the master is
+  `available` and not tombstoned, and says which: encoding again from a file
+  under review would be encoding from evidence that has been withdrawn. It writes
+  `media.rendition_retried` with both reasons — why it failed, and why somebody
+  believed a second attempt would work — because only the second one is new.
+- `record_media_rendition_encode(...)` — staff-only, `pending` only, and the same
+  shape checks `register` makes. A recovered row's measurements belong to the run
+  that crashed, and the file about to be uploaded is a different one;
+  `fetchPlayableRenditions()` sorts the ladder by `byte_size`, so a stale number
+  mis-orders the quality picker and mis-states a download size. An `available`
+  row's measurements are history and a `failed` row is waiting for a person, so
+  neither is accepted.
+
+**Why a person and not the worker.** The commonest reason a master will not
+encode is the master itself, and an automatic retry would spend encode time on it
+forever while the reason went unread. The written reason is the decision, and the
+audit trail is its record. For the same reason `register_media_rendition()` was
+**not** turned into an upsert: a duplicate profile is a bug worth hearing about
+today, and as an upsert it becomes a silent overwrite of a row that may be being
+served to learners right now.
+
+**The worker re-measures before it uploads.** `TranscodeDeps` gained `record()`,
+called on the recovered path only, between the encode and the upload. If the
+database refuses the measurements, the run reports it and leaves the row pending
+rather than putting a file in storage whose size the register will not take —
+uploading first would leave a served row describing the wrong file.
+
+**Reached from a screen.** `/admin/media` now lists every failed copy with the
+reason the worker wrote and a Retry control that asks for its own, through
+`POST /api/admin/media` with `action: 'retry_rendition'` and a `renditionId`.
+Staff-only in the route and in the database. Retrying is offered only for a
+master that is still `available`, because a button that always fails is worse
+than no button. While wiring it, the moderation form's three buttons turned out
+to use a `.button` class that `globals.css` does not define, so they rendered
+unstyled; they are `.btn` now.
+
+**Not built.** No automatic retry and no retry budget or attempt counter — a
+second failure shows up on the same screen with its own reason, and a person
+decides again. Retrying does not encode anything: it re-queues, and the next
+worker run does the work. 11 database tests, 7 web.
 
 ## Open external decisions (not to be guessed)
 

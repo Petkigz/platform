@@ -12,13 +12,19 @@
  * Encode, measure, register, upload, confirm. Not the order you would pick.
  *
  * `register_media_rendition()` takes the byte size, the dimensions and the
- * bitrate, and there is no way to correct a row afterwards: `media_renditions`
- * has no update policy, and `confirm_media_rendition()` only moves `pending` to
- * `available`. So a row can be opened only once the encode has happened and its
- * facts are known. The useful consequence is that a crash before `register`
- * leaves nothing behind at all — no row, no object — and a crash after it leaves
- * a `pending` row that the next run can finish, because the object key is
- * derived from the asset and the profile and so is the same key both times.
+ * bitrate, and `media_renditions` has no update policy, so a row can be opened
+ * only once the encode has happened and its facts are known. The useful
+ * consequence is that a crash before `register` leaves nothing behind at all —
+ * no row, no object — and a crash after it leaves a `pending` row that the next
+ * run can finish, because the object key is derived from the asset and the
+ * profile and so is the same key both times.
+ *
+ * The one exception is the case that exception creates. A `pending` row's
+ * measurements belong to the run that crashed, and the file this run encodes is
+ * a different file, so `record_media_rendition_encode()` re-measures the row
+ * before the new file is uploaded. It is refused for any other status: an
+ * `available` row's measurements are history, and a `failed` row is waiting for
+ * a person, not for a number.
  *
  * `pending` is therefore a claim, of a sort. Two workers may still encode the
  * same master; the second one's `register` meets the unique index on
@@ -322,6 +328,16 @@ export type TranscodeDeps = {
   confirm(renditionId: string): Promise<void>;
   /** Records why an encode failed. Needs a reason; a blank one is refused. */
   fail(renditionId: string, reason: string): Promise<void>;
+  /**
+   * Re-measures a `pending` row from a new encode.
+   *
+   * Only the recovered path calls it. A `pending` row is a crashed run's claim,
+   * so it may still be describing a file that never arrived; the file about to be
+   * uploaded is a different one. The player sorts rungs by `byte_size`, so a
+   * wrong number there reorders the quality picker and mis-states a download
+   * size. Refused for a row that is already `available` or still `failed`.
+   */
+  record(renditionId: string, facts: EncodeOutput): Promise<void>;
   encode(plan: ProfilePlan): Promise<EncodeOutput>;
   /** Uploads the encoded file to the key the database derived. */
   upload(bucket: string, key: string, contentType: string, path: string): Promise<void>;
@@ -334,7 +350,7 @@ export type OutcomeState =
   | 'recovered'
   /** Nothing to do: already available, or this kind of file has no renditions. */
   | 'skipped'
-  /** Stopped without encoding: the master is not available, or a past failure is terminal. */
+  /** Stopped without encoding: the master is not available, or a past failure is awaiting a person. */
   | 'blocked'
   /** Something went wrong in this run; the row, if there is one, says why. */
   | 'failed';
@@ -421,12 +437,16 @@ export function mapTranscodeError(error: unknown): string {
  *
  * WHEN A ROW IS MARKED FAILED — THE IMPORTANT PART
  * ------------------------------------------------
- * `failed` is terminal: nothing in the schema moves it back to `pending`, and
- * `register_media_rendition()` would meet the unique index on
- * `(asset_id, profile)`. So marking a row failed retires that profile until
- * somebody adds a retry path. The worker therefore only writes `failed` for an
- * error that is a property of the file — ffmpeg refusing to encode it — because
- * re-running will refuse the same way.
+ * `failed` is terminal for this program: nothing here moves a row back to
+ * `pending`, and `register_media_rendition()` would meet the unique index on
+ * `(asset_id, profile)`. So marking a row failed retires that profile until a
+ * person reads the reason and retries it on `/admin/media`, which is
+ * `retry_media_rendition()` — deliberately not something this worker can do for
+ * itself, because the commonest reason a master will not encode is the master
+ * itself and an automatic retry would spend encode time on it forever. The
+ * worker therefore only writes `failed` for an error that is a property of the
+ * file — ffmpeg refusing to encode it — because re-running will refuse the same
+ * way.
  *
  * An upload error or a confirm refusal leaves the row `pending`, which is
  * invisible to learners and is picked up by the next run. A network blip or a
@@ -518,6 +538,18 @@ export async function transcodeMaster(
       renditionId = row.id;
       bucket = row.bucket;
       objectKey = row.objectKey;
+      // The row's measurements belong to the run that crashed. This file is not
+      // that file.
+      try {
+        await deps.record(renditionId, encoded);
+      } catch (error) {
+        outcomes.push({
+          profile: rung.profile,
+          state: 'failed',
+          detail: `the re-encoded file's measurements could not be recorded: ${describeFailure(error)}; the row stays pending for the next run`,
+        });
+        continue;
+      }
     } else {
       try {
         const target = await deps.register(rung.profile, encoded);

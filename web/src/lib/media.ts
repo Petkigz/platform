@@ -340,7 +340,19 @@ export type ModerationAsset = {
   status: MediaAsset['status'];
   createdAt: string;
   uploader: string | null;
-  renditions: { profile: string; status: string }[];
+  /**
+   * Every copy derived from this master, with the reason a failed one carries.
+   *
+   * The reason is here because the person who decides whether to retry has to
+   * read it: "encode crashed" and "the codec is not supported" call for
+   * different answers, and only one of them is worth a second attempt.
+   */
+  renditions: {
+    id: string;
+    profile: string;
+    status: string;
+    failureReason: string | null;
+  }[];
 };
 
 /**
@@ -358,7 +370,7 @@ export async function fetchMediaModerationQueue(
     .from('media_assets')
     .select(`id, display_name, mime_type, byte_size, duration_seconds, status, created_at,
              user_profiles ( display_name ),
-             media_renditions ( profile, status )`)
+             media_renditions ( id, profile, status, failure_reason )`)
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
@@ -366,7 +378,10 @@ export async function fetchMediaModerationQueue(
   return (data ?? []).map((row) => {
     const r = row as Record<string, unknown>;
     const uploader = r.user_profiles as { display_name?: string } | null;
-    const renditions = (r.media_renditions as { profile?: string; status?: string }[] | null) ?? [];
+    const renditions =
+      (r.media_renditions as
+        | { id?: string; profile?: string; status?: string; failure_reason?: string | null }[]
+        | null) ?? [];
     return {
       id: String(r.id),
       displayName: r.display_name ? String(r.display_name) : null,
@@ -377,8 +392,10 @@ export async function fetchMediaModerationQueue(
       createdAt: String(r.created_at),
       uploader: uploader?.display_name ? String(uploader.display_name) : null,
       renditions: renditions.map((x) => ({
+        id: String(x.id ?? ''),
         profile: String(x.profile ?? ''),
         status: String(x.status ?? ''),
+        failureReason: x.failure_reason ? String(x.failure_reason) : null,
       })),
     };
   });
@@ -448,5 +465,56 @@ export async function withdrawMediaAsset(
   });
   if (error) return { ok: false, message: mapModerationError(error.message) };
   if (data === false) return { ok: false, message: 'That upload has already been withdrawn.' };
+  return { ok: true };
+}
+
+/**
+ * Why a rendition failed, translated into something a person can act on.
+ *
+ * The database refuses a retry in five different ways and each refusal means a
+ * different next step, so they do not collapse into one sentence.
+ */
+function mapRetryError(message: string): string {
+  if (/only platform staff/i.test(message)) return 'Only platform staff can do that.';
+  if (/needs a written reason/i.test(message))
+    return 'Say why a second attempt will work. A retry with no reason is a guess.';
+  if (/no rendition/i.test(message)) return 'That rendition is gone.';
+  if (/has been withdrawn/i.test(message))
+    return 'The master has been withdrawn, so there is nothing to encode from.';
+  if (/nothing to encode from yet/i.test(message))
+    return 'The master is held for review, so there is nothing to encode from yet.';
+  if (/is not waiting for a retry/i.test(message))
+    return 'Only a rendition that failed can be retried.';
+  return message;
+}
+
+/**
+ * Put a failed rendition back in the queue.
+ *
+ * A reason is required, in writing, for the same reason a takedown needs one:
+ * this is the record of somebody deciding that the failure was not the master's
+ * fault. It is also what stops a retry becoming a loop — a worker that retried
+ * on its own would spend encode time forever on a file that genuinely cannot be
+ * encoded, and nobody would ever read the reason.
+ *
+ * The row keeps its id and its derived object key, so the next encode overwrites
+ * the file that was never confirmed rather than orphaning it.
+ */
+export async function retryMediaRendition(
+  client: SupabaseClient,
+  renditionId: string,
+  reason: string,
+): Promise<ModerationResult> {
+  const trimmed = reason.trim();
+  if (trimmed.length === 0)
+    return { ok: false, message: 'Say why a second attempt will work. A retry with no reason is a guess.' };
+  if (trimmed.length > 2000) return { ok: false, message: 'Keep the reason under 2000 characters.' };
+  if (!renditionId) return { ok: false, message: 'That rendition is gone.' };
+
+  const { error } = await client.rpc('retry_media_rendition', {
+    p_rendition_id: renditionId,
+    p_reason: trimmed,
+  });
+  if (error) return { ok: false, message: mapRetryError(error.message) };
   return { ok: true };
 }

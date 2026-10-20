@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import { quarantineMediaAsset, withdrawMediaAsset } from '@/lib/media';
+import { quarantineMediaAsset, retryMediaRendition, withdrawMediaAsset } from '@/lib/media';
 import { confirmMediaUpload } from '@/lib/media-verify';
 import { R2NotConfiguredError, readR2Config } from '@/lib/media-r2';
 
@@ -10,6 +10,8 @@ export const dynamic = 'force-dynamic';
 type Payload = {
   action?: unknown;
   assetId?: unknown;
+  /** The copy to put back in the queue, for `retry_rendition`. */
+  renditionId?: unknown;
   reason?: unknown;
 };
 
@@ -29,6 +31,14 @@ const fail = (message: string, status: number) =>
  * the object in storage with a single HEAD, compares its size with what was
  * declared, and only then calls `confirm_media_upload()`.
  *
+ * The fourth, `retry_rendition`, is the one that undoes a failure. An encode
+ * that failed used to be permanent: `fail_media_rendition()` moved the row to
+ * `failed`, nothing moved it back, and a second register for the same profile
+ * hit the unique index. So a lesson lost a rung until somebody edited the
+ * database. A retry needs a written reason, which is what keeps it from becoming
+ * an automatic loop — the usual reason a master will not encode is the master
+ * itself.
+ *
  * All three are staff-only in the database as well as here. Checking only in the
  * route would mean one forgotten import away from anybody calling the function.
  */
@@ -37,7 +47,12 @@ export async function POST(request: Request) {
 
   const body = (await request.json().catch(() => null)) as Payload | null;
   const action = body?.action;
-  if (action !== 'quarantine' && action !== 'withdraw' && action !== 'verify') {
+  if (
+    action !== 'quarantine' &&
+    action !== 'withdraw' &&
+    action !== 'verify' &&
+    action !== 'retry_rendition'
+  ) {
     return fail('Unknown moderation action.', 400);
   }
 
@@ -49,6 +64,26 @@ export async function POST(request: Request) {
 
   const { data: privileged } = await supabase.rpc('is_privileged', { p_user_id: user.id });
   if (privileged !== true) return fail('Only platform staff can moderate uploads.', 403);
+
+  // Retrying a copy is addressed to the copy, not to the master: one master has
+  // several rungs and usually only one of them failed.
+  if (action === 'retry_rendition') {
+    const renditionId = typeof body?.renditionId === 'string' ? body.renditionId.trim() : '';
+    if (!UUID.test(renditionId)) return fail('That is not a rendition.', 400);
+
+    const reason = typeof body?.reason === 'string' ? body.reason : '';
+    const retried = await retryMediaRendition(supabase, renditionId, reason);
+    if (!retried.ok) {
+      const status = /Only platform staff/.test(retried.message) ? 403
+        : /gone|withdrawn|held for review|Only a rendition that failed/.test(retried.message) ? 409
+        : 400;
+      return fail(retried.message, status);
+    }
+    return NextResponse.json(
+      { ok: true, data: { renditionId, action } },
+      { status: 200 },
+    );
+  }
 
   const assetId = typeof body?.assetId === 'string' ? body.assetId.trim() : '';
   if (!UUID.test(assetId)) return fail('That is not an upload.', 400);

@@ -135,6 +135,7 @@ test('a fractional duration is refused', () => {
 import {
   fetchMediaModerationQueue,
   quarantineMediaAsset,
+  retryMediaRendition,
   withdrawMediaAsset,
 } from './media.ts';
 
@@ -242,8 +243,8 @@ test('the moderation queue carries the uploader and the renditions derived from 
       created_at: '2026-10-20T09:00:00.000Z',
       user_profiles: { display_name: 'Teacher One' },
       media_renditions: [
-        { profile: '720p', status: 'available' },
-        { profile: 'audio', status: 'pending' },
+        { id: 'r-720', profile: '720p', status: 'available', failure_reason: null },
+        { id: 'r-aud', profile: 'audio', status: 'pending', failure_reason: null },
       ],
     },
     {
@@ -263,10 +264,68 @@ test('the moderation queue carries the uploader and the renditions derived from 
   assert.equal(queue[0]?.uploader, 'Teacher One');
   assert.equal(queue[0]?.byteSize, 10485760, 'a bigint column must arrive as a number');
   assert.deepEqual(queue[0]?.renditions, [
-    { profile: '720p', status: 'available' },
-    { profile: 'audio', status: 'pending' },
+    { id: 'r-720', profile: '720p', status: 'available', failureReason: null },
+    { id: 'r-aud', profile: 'audio', status: 'pending', failureReason: null },
   ]);
   assert.equal(queue[1]?.uploader, null);
   assert.equal(queue[1]?.durationSeconds, null);
   assert.deepEqual(queue[1]?.renditions, []);
+});
+
+// ---------------------------------------------------------------------------
+// Retrying a copy that failed to encode.
+//
+// A `failed` rendition used to be permanent: nothing moved the row back and a
+// second register for the profile hit the unique index. These pin the web side
+// of the repair — the reason is required before the database is asked, it
+// arrives trimmed, the id goes to the copy rather than to the master, and each
+// of the database's refusals reads as a sentence about what to do next.
+// ---------------------------------------------------------------------------
+
+const renditionId = '9b1c2d3e-4f50-4a6b-8c7d-0e1f2a3b4c5d';
+
+test('a retry sends the reason, trimmed, to the function that requires it', async () => {
+  const { client, calls } = stubRpc({ data: null });
+  const result = await retryMediaRendition(client, renditionId, '  the worker host was out of disk  ');
+  assert.equal(result.ok, true);
+  assert.equal(calls[0]?.fn, 'retry_media_rendition');
+  assert.equal(calls[0]?.args.p_rendition_id, renditionId, 'the retry went to the master, not the copy');
+  assert.equal(calls[0]?.args.p_reason, 'the worker host was out of disk');
+});
+
+test('a retry with nothing written never reaches the database', async () => {
+  for (const reason of ['', '   ', '\n\t']) {
+    const { client, calls } = stubRpc({ data: null });
+    assert.equal((await retryMediaRendition(client, renditionId, reason)).ok, false, reason);
+    assert.equal(calls.length, 0, 'a reasonless retry called the database');
+  }
+  const long = stubRpc({ data: null });
+  const result = await retryMediaRendition(long.client, renditionId, 'x'.repeat(2001));
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.match(result.message, /under 2000/);
+  assert.equal(long.calls.length, 0);
+});
+
+test('a retry with no rendition id is refused here, not by the database', async () => {
+  const { client, calls } = stubRpc({ data: null });
+  assert.equal((await retryMediaRendition(client, '', 'a reason')).ok, false);
+  assert.equal(calls.length, 0);
+});
+
+test('the refusals a retry can meet each say what to do about them', async () => {
+  const cases: Array<[string, RegExp]> = [
+    ['only platform staff may retry a rendition', /Only platform staff/],
+    ['a retry needs a written reason', /Say why a second attempt will work/],
+    ['no rendition 9b1c2d3e', /That rendition is gone/],
+    ['a rendition that is available is not waiting for a retry', /Only a rendition that failed/],
+    ['the master this rendition was encoded from has been withdrawn', /withdrawn/],
+    ['the master is quarantined, so there is nothing to encode from yet', /held for review/],
+    ['something nobody anticipated', /something nobody anticipated/],
+  ];
+  for (const [message, expected] of cases) {
+    const { client } = stubRpc({ error: { message } });
+    const result = await retryMediaRendition(client, renditionId, 'a reason');
+    assert.equal(result.ok, false, `${message} was accepted`);
+    if (!result.ok) assert.match(result.message, expected);
+  }
 });

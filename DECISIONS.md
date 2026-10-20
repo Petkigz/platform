@@ -643,3 +643,56 @@ authorship — and a flag would be a second switch on a door that already has a
 lock, which is a second way to be wrong. Implemented in
 `20261213000100_reviewer_media_access.sql`, `/api/media/master`, and the player
 on `/review/[assignmentId]`, `/teach/media` and `/admin/media`.
+
+## Who may undo a failed encode — **DECIDED 2026-10-20**
+
+Found while reading the transcode worker's own header, which described its
+escape hatch as being for a profile "stuck `failed`, which nothing in the schema
+can retry". That was accurate, and it meant a lesson could permanently lose one
+of its rungs to a full disk.
+
+`fail_media_rendition()` moved a row to `failed` and nothing moved it back.
+`register_media_rendition()` could not open a second one: `(asset_id, profile)`
+is unique, so the same profile a second time is refused. A row was therefore
+retired by any error the worker judged to be a property of the file, and the only
+repair was SQL against the production database — no screen, no function, no audit
+entry, no record of who decided the file was worth another attempt.
+
+**Chosen: a person retries it, in writing, and the worker never does.**
+
+`retry_media_rendition(rendition, reason)` is staff-only, requires a reason that
+survives trimming, and moves `failed` back to `pending`. It keeps the same row
+and the same derived object key, so the next encode overwrites the file that was
+never confirmed instead of orphaning an object nobody will ever list. It refuses
+unless the master is `available` and not tombstoned, and says which of the two it
+is — retrying a copy of a file that is under review would be encoding from
+evidence that has been withdrawn. It writes `media.rendition_retried` with **both**
+reasons: why the encode failed, and why somebody believed a second attempt would
+work. Those answer different questions and only the second one is new.
+
+The reason is required because the decision is the product. The commonest cause
+of a failed encode is the master itself — a codec ffmpeg will not read, a file
+that is not a video — and an automatic retry would spend encode time on it
+forever while the reason went unread. A written reason is also what makes the
+audit entry useful to the next person, who was not in the room.
+
+**Rejected: making `register_media_rendition()` an upsert.** It would have solved
+the stuck row in one line and quietly changed a documented contract: a duplicate
+profile is today a bug worth hearing about, and as an upsert it becomes a silent
+overwrite of a row that may be being served. Two writers with one meaning each
+beat one writer with two.
+
+**The second writer exists because of the first.** `record_media_rendition_encode()`
+re-measures a `pending` row from the encode that is about to be uploaded. A
+recovered row's numbers belong to the run that crashed and describe a file that
+may never have arrived; `fetchPlayableRenditions()` sorts the quality picker by
+`byte_size`, so a stale number there mis-orders the ladder and mis-states a
+download size. It accepts `pending` only — an `available` row's measurements are
+history, and changing them would rewrite what a learner was served, and a
+`failed` row is waiting for a person rather than for a number.
+
+**No new flag.** The gate is the role and the row's state. A flag would be a
+second switch on a door that already has a lock, and it would let a deployment
+turn off the ability to repair its own failures. Implemented in
+`20261214000100_rendition_retry.sql`, `POST /api/admin/media` with
+`action: 'retry_rendition'`, and the retry control on `/admin/media`.

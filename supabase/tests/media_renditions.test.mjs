@@ -301,6 +301,203 @@ export async function run(ctx) {
   });
 
   // ---------------------------------------------------------------------------
+  // A failure a person can reverse
+  //
+  // `fail_media_rendition()` moved a row to `failed` and nothing moved it back,
+  // and a second register for the same profile hit the unique index. So one
+  // transient failure permanently removed a rung from a lesson, and the worker's
+  // own header pointed at `--asset` as the escape hatch for a profile "stuck
+  // failed, which nothing in the schema can retry". These pin the door that now
+  // exists, and the two things it must not become: a machine retrying a broken
+  // master forever, and a served row whose measurements quietly change.
+  //
+  // Each test gets its own master, because (asset, profile) is unique and the
+  // tests above have already used most of the vocabulary on the first one.
+  // ---------------------------------------------------------------------------
+
+  const RETRY = 'select public.retry_media_rendition($1,$2)';
+  const RECORD = 'select public.record_media_rendition_encode($1,$2,$3,$4,$5,$6,$7,$8)';
+  const record = (actor, id, over = {}) => asActor(actor, RECORD, [
+    id,
+    over.mimeType ?? 'video/mp4',
+    over.byteSize ?? 4_000_000,
+    over.width === undefined ? 1280 : over.width,
+    over.height === undefined ? 720 : over.height,
+    over.bitrate === undefined ? 1100 : over.bitrate,
+    over.duration === undefined ? 600 : over.duration,
+    over.checksum ?? null,
+  ]);
+
+  const renditionState = async (id) =>
+    (await q(
+      `select id, status, failure_reason, object_key, byte_size, width, checksum
+         from public.media_renditions where id=$1`, [id])).rows[0];
+
+  let retrySeq = 0;
+
+  /** A master, a lesson and a learner entitled to it, none of them shared. */
+  async function freshTaught() {
+    retrySeq += 1;
+    const t = await taughtLesson();
+    const user = await newUser(`rendition-retry-${retrySeq}@example.com`);
+    await newProfile(user, `Retry ${retrySeq}`);
+    await enrol(user, t.version);
+    return { ...t, user };
+  }
+
+  await test('a failed rendition is retried by a person, and comes back as the same row', async () => {
+    const t = await freshTaught();
+    const id = (await register(admin, t.asset, '720p')).rows[0].rendition_id;
+    await asActor(admin, 'select public.fail_media_rendition($1,$2)', [id, 'ffmpeg exited on a font']);
+
+    await asActor(admin, RETRY, [id, 'the font is installed on the worker now']);
+    const after = await renditionState(id);
+    assert(after.status === 'pending', `status was ${after.status}`);
+    assert(after.failure_reason === null,
+      `the old reason stayed on the row: ${after.failure_reason}`);
+    assert(after.id === id, 'a retry made a new row');
+    assert(after.object_key === `${t.asset}/video-mp4/720p`,
+      `a retry moved the object: ${after.object_key}`);
+
+    // Both reasons are in the audit trail, because they answer different
+    // questions: why it failed, and why somebody believed a second attempt would
+    // work.
+    const events = (await q(
+      `select detail from public.governance_audit_events
+        where action='media.rendition_retried' and target_id=$1`, [id])).rows;
+    assert(events.length === 1, `a retry wrote ${events.length} audit entries`);
+    assert(events[0].detail.reason === 'the font is installed on the worker now',
+      `the retry reason was ${JSON.stringify(events[0].detail.reason)}`);
+    assert(events[0].detail.failed_because === 'ffmpeg exited on a font',
+      `why it had failed was lost: ${JSON.stringify(events[0].detail.failed_because)}`);
+    assert(events[0].detail.profile === '720p' && events[0].detail.asset_id === t.asset,
+      'the audit entry does not say which rendition was retried');
+  });
+
+  await test('a retry needs a written reason', async () => {
+    const t = await freshTaught();
+    const id = (await register(admin, t.asset, '480p')).rows[0].rendition_id;
+    await asActor(admin, 'select public.fail_media_rendition($1,$2)', [id, 'bucket unreachable']);
+    await rejects(() => asActor(admin, RETRY, [id, '   ']), /needs a written reason/);
+    assert((await renditionState(id)).status === 'failed', 'a reasonless retry changed the row');
+  });
+
+  await test('only staff may retry, and only staff may re-measure', async () => {
+    const t = await freshTaught();
+    const id = (await register(admin, t.asset, '1080p')).rows[0].rendition_id;
+    await asActor(admin, 'select public.fail_media_rendition($1,$2)', [id, 'encode crashed']);
+    // The uploader is the person with the most reason to want their own lesson
+    // back online without anybody looking at why it failed.
+    await rejects(() => asActor(teacher, RETRY, [id, 'please']), /only platform staff may retry/);
+    await rejects(() => asActor(t.user, RETRY, [id, 'please']), /only platform staff may retry/);
+    await rejects(() => asActor(teacher, 'select public.record_media_rendition_encode($1,$2,$3)',
+      [id, 'video/mp4', 1]), /only platform staff may record/);
+    assert((await renditionState(id)).status === 'failed', 'a refusal still changed the row');
+  });
+
+  await test('a rendition that is not failed is not waiting for a retry', async () => {
+    // Pending is the worker's, and available is being served: reopening either
+    // would take a rung away from learners who are watching it right now.
+    const t = await freshTaught();
+    const pending = (await register(admin, t.asset, 'audio',
+      { mimeType: 'audio/mp4', width: null, height: null })).rows[0].rendition_id;
+    await rejects(() => asActor(admin, RETRY, [pending, 'it looks stuck']),
+      /a rendition that is pending is not waiting for a retry/);
+
+    await asActor(admin, 'select public.confirm_media_rendition($1)', [pending]);
+    await rejects(() => asActor(admin, RETRY, [pending, 'it looks stuck']),
+      /a rendition that is available is not waiting for a retry/);
+    assert(await mayPlay(t.user, pending) === true,
+      'a refused retry cost a learner the rendition they had');
+  });
+
+  await test('a retry needs a master that can still be encoded from', async () => {
+    const held = await taughtLesson();
+    const id = (await register(admin, held.asset, '720p')).rows[0].rendition_id;
+    await asActor(admin, 'select public.fail_media_rendition($1,$2)', [id, 'encode crashed']);
+
+    await asActor(admin, 'select public.quarantine_media_upload($1,$2)', [held.asset, 'rights query']);
+    await rejects(() => asActor(admin, RETRY, [id, 'try again']),
+      /the master is quarantined, so there is nothing to encode from yet/);
+    assert((await renditionState(id)).status === 'failed',
+      'a retry went ahead against a master that is held');
+
+    await asActor(admin, 'select public.delete_media_asset($1,$2)', [held.asset, 'withdrawn on request']);
+    await rejects(() => asActor(admin, RETRY, [id, 'try again']), /has been withdrawn/);
+  });
+
+  await test('a retried rendition is still not served until somebody confirms it', async () => {
+    const t = await freshTaught();
+    const id = (await register(admin, t.asset, 'poster',
+      { mimeType: 'image/jpeg', width: null, height: null })).rows[0].rendition_id;
+    await asActor(admin, 'select public.fail_media_rendition($1,$2)', [id, 'no frame at that offset']);
+    await asActor(admin, RETRY, [id, 'the offset was past the end of a short file']);
+
+    assert(await mayPlay(t.user, id) === false,
+      'a retry made a rendition servable without an encode or a confirmation');
+    await asActor(admin, 'select public.confirm_media_rendition($1)', [id]);
+    assert(await mayPlay(t.user, id) === true,
+      'a retried and confirmed rendition was not served');
+  });
+
+  await test('a recovered row carries the measurements of the encode that will be uploaded', async () => {
+    // A crashed run leaves a pending row describing a file that may never have
+    // arrived. The next run encodes again, and the new file is not the same size,
+    // so the row has to be told — the player sorts rungs by byte_size.
+    const t = await freshTaught();
+    const id = (await register(admin, t.asset, '720p', { byteSize: 5_242_880 })).rows[0].rendition_id;
+    await record(admin, id, { byteSize: 4_901_234, width: 1280, height: 720, bitrate: 1150 });
+    const after = await renditionState(id);
+    assert(String(after.byte_size) === '4901234', `the size stayed ${after.byte_size}`);
+    assert(after.width === 1280, 'the dimensions were lost');
+  });
+
+  await test('the measurements of a served row are history', async () => {
+    await rejects(() => record(admin, rendition, { byteSize: 1 }),
+      /the measurements of a rendition that is available are history/);
+    assert(String((await renditionState(rendition)).byte_size) === '5242880',
+      "a served rendition's measurements changed");
+  });
+
+  await test('a failed row cannot be re-measured; a person retries it first', async () => {
+    const t = await freshTaught();
+    const id = (await register(admin, t.asset, '360p', { byteSize: 1_000 })).rows[0].rendition_id;
+    await asActor(admin, 'select public.fail_media_rendition($1,$2)', [id, 'encode crashed']);
+    await rejects(() => record(admin, id, { byteSize: 2_000 }),
+      /the measurements of a rendition that is failed are history/);
+    await asActor(admin, RETRY, [id, 'the worker host had no free disk']);
+    await record(admin, id, { byteSize: 2_000 });
+    assert(String((await renditionState(id)).byte_size) === '2000',
+      'a retried row could not be re-measured');
+  });
+
+  await test('re-measuring refuses the same nonsense registering refuses', async () => {
+    const t = await freshTaught();
+    const id = (await register(admin, t.asset, '480p', { byteSize: 10 })).rows[0].rendition_id;
+    await rejects(() => record(admin, id, { mimeType: '  ' }), /needs a type/);
+    await rejects(() => record(admin, id, { byteSize: -1 }), /needs a size in bytes/);
+    await rejects(() => record(admin, id, { width: 854, height: null }),
+      /both dimensions or neither/);
+    await rejects(() => record(admin, id, { checksum: 'not-a-digest' }),
+      /64-character lowercase hex/);
+    assert(String((await renditionState(id)).byte_size) === '10',
+      'a refused measurement changed the row');
+  });
+
+  await test('a recorded digest is held to the same shape as a registered one', async () => {
+    // register_media_rendition() refuses anything that is not already lowercase
+    // hex, so re-measuring must too: two writers with different ideas of a digest
+    // is how a takedown ends up matched against the wrong bytes.
+    const t = await freshTaught();
+    const id = (await register(admin, t.asset, '360p', { byteSize: 11 })).rows[0].rendition_id;
+    await rejects(() => record(admin, id, { checksum: 'C'.repeat(64) }),
+      /64-character lowercase hex/);
+    const digest = 'a'.repeat(64);
+    await record(admin, id, { checksum: digest });
+    assert((await renditionState(id)).checksum === digest, 'a valid digest was not stored');
+  });
+
+  // ---------------------------------------------------------------------------
   // The switch the worker reads before it does anything
   // ---------------------------------------------------------------------------
 

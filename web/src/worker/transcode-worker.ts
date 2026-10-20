@@ -43,8 +43,14 @@
  * anything finer needs the picture height, and the only trustworthy height comes
  * from probing the file — so the alternative to this filter is downloading every
  * master on every run. `--asset` is the escape hatch for a master that needs
- * attention and does not match the filter, such as one whose profile is stuck
- * `failed`, which nothing in the schema can retry.
+ * attention and does not match the filter.
+ *
+ * A `failed` profile is deliberately not one of them. Nothing here retries a
+ * failure on its own, because the usual reason a master will not encode is the
+ * master itself, and an automatic retry would spend encode time on it forever.
+ * A person reads the reason, fixes what it says, and presses Retry on
+ * `/admin/media`; that moves the row back to `pending`, and the next run finds
+ * it with the filter above.
  */
 
 import { spawn } from 'node:child_process';
@@ -511,6 +517,21 @@ async function processMaster(
         const { error } = await supabase.rpc('fail_media_rendition', {
           p_rendition_id: renditionId,
           p_reason: reason,
+        });
+        if (error) throw new Error(mapTranscodeError(error));
+      },
+      async record(renditionId: string, encoded: EncodeOutput) {
+        // Reached only when a crashed run left a `pending` row. Its measurements
+        // describe a file that may never have arrived, and the file this run is
+        // about to upload is a different one.
+        const { error } = await supabase.rpc('record_media_rendition_encode', {
+          p_rendition_id: renditionId,
+          p_mime_type: encoded.mime,
+          p_byte_size: encoded.byteSize,
+          p_width: encoded.width,
+          p_height: encoded.height,
+          p_bitrate_kbps: encoded.bitrateKbps,
+          p_duration_seconds: encoded.durationSeconds,
         });
         if (error) throw new Error(mapTranscodeError(error));
       },

@@ -36,6 +36,7 @@ function fakeDeps(options: {
   failEncode?: (plan: ProfilePlan) => Error | null;
   failUpload?: Error | null;
   failRegister?: Error | null;
+  failRecord?: Error | null;
   failConfirm?: Error | null;
   failList?: Error | null;
 } = {}) {
@@ -44,6 +45,7 @@ function fakeDeps(options: {
   const registers: Array<{ profile: string; facts: EncodeOutput }> = [];
   const confirmed: string[] = [];
   const failed: Array<{ id: string; reason: string }> = [];
+  const recorded: Array<{ id: string; facts: EncodeOutput }> = [];
   let n = 0;
 
   const deps: TranscodeDeps = {
@@ -72,6 +74,11 @@ function fakeDeps(options: {
       calls.push(`fail:${renditionId}`);
       failed.push({ id: renditionId, reason });
     },
+    async record(renditionId, facts) {
+      calls.push(`record:${renditionId}`);
+      recorded.push({ id: renditionId, facts });
+      if (options.failRecord) throw options.failRecord;
+    },
     async encode(plan) {
       calls.push(`encode:${plan.profile}`);
       const error = options.failEncode?.(plan);
@@ -93,7 +100,7 @@ function fakeDeps(options: {
     },
   };
 
-  return { deps, calls, uploads, registers, confirmed, failed };
+  return { deps, calls, uploads, registers, recorded, confirmed, failed };
 }
 
 function video(over: Partial<MasterFacts> = {}): MasterFacts {
@@ -431,7 +438,54 @@ await test('a pending row is recovered: reused key, no second register', async (
   });
   assert.ok(fake.confirmed.includes('p-9'), 'the crashed run\'s own row is confirmed');
   assert.equal(result.outcomes[0]?.state, 'recovered');
-  assert.match(result.outcomes[0]?.detail ?? '', /left this pending/);
+});
+
+await test('a recovered row is re-measured from the file this run encoded', async () => {
+  // The pending row's measurements came from a run that crashed, and the file it
+  // describes may never have arrived. The player sorts rungs by byte_size, so a
+  // stale number there reorders the quality picker and mis-states a download.
+  const existing = row({ profile: '360p', status: 'pending', id: 'p-9' });
+  const fake = fakeDeps({ existing: [existing] });
+  const result = await transcodeMaster(video({ videoHeight: 360 }), fake.deps);
+
+  assert.equal(fake.recorded.length, 1, 'the recovered row was not re-measured');
+  assert.equal(fake.recorded[0]?.id, 'p-9');
+  assert.equal(fake.recorded[0]?.facts.byteSize, 1360, 'the new file\'s size was not passed');
+  assert.deepEqual(fake.calls.slice(0, 3), ['list', 'encode:360p', 'record:p-9'],
+    'the row was not re-measured before the new file replaced the old one');
+  assert.equal(result.outcomes[0]?.state, 'recovered');
+});
+
+await test('a fresh register is not re-measured, because it is registered from these facts', async () => {
+  const fake = fakeDeps({ existing: [] });
+  await transcodeMaster(video({ videoHeight: 360 }), fake.deps);
+  assert.equal(fake.recorded.length, 0, 'a brand new row was re-measured after being registered');
+});
+
+await test('a row that cannot be re-measured is left pending and reported', async () => {
+  const existing = row({
+    profile: '360p',
+    status: 'pending',
+    id: 'p-9',
+    objectKey: 'a1/video-mp4/360p',
+  });
+  const fake = fakeDeps({
+    existing: [existing],
+    failRecord: new Error('the measurements of a rendition that is available are history'),
+  });
+  const result = await transcodeMaster(video({ videoHeight: 360 }), fake.deps);
+
+  assert.equal(fake.uploads.some((u) => u.key === 'a1/video-mp4/360p'), false,
+    'a file was uploaded whose size the database will not take');
+  assert.equal(fake.confirmed.includes('p-9'), false,
+    'a row was confirmed against measurements it refused');
+  assert.equal(fake.failed.length, 0,
+    'the row was marked failed, so no run would pick it up again');
+  assert.equal(result.outcomes[0]?.state, 'failed');
+  assert.match(result.outcomes[0]?.detail ?? '', /could not be recorded/);
+  assert.match(result.outcomes[0]?.detail ?? '', /stays pending/);
+  assert.equal(result.outcomes[1]?.state, 'confirmed',
+    'one refused rung stopped the rest of the ladder');
 });
 
 await test('an available rendition is left alone and never re-encoded', async () => {
