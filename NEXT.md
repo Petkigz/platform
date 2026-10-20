@@ -266,16 +266,16 @@ expiry, protected media, and the signed transfer itself. The predicate decides
 who is entitled and hands nothing over.
 
 That leaves one gap, and it is now code rather than a decision. **Learner
-analytics (`SCREENS.md` row 32) was blocked on a privacy decision**, now made and
-recorded in `DECISIONS.md`
-under "What a teacher may see about a learner". RLS gives a course author no read
-at all on `course_enrolments` or `lesson_progress` — only the learner and their
-guardian have one — so a teacher progress screen widens that boundary, and the
-chosen width is one cohort membership deep: an author may read enrolment and
-progress rows only for learners with an active membership of one of that course's
-cohorts, and only for the version the cohort pins. The predicate belongs in SQL
-beside `can_read_assignment_submission()`, not in a query filter a second caller
-could forget.
+analytics (`SCREENS.md` row 32) is built**, on the boundary decided and recorded
+in `DECISIONS.md` under "What a teacher may see about a learner". RLS gave a
+course author no read at all on `course_enrolments` or `lesson_progress` — only
+the learner and their guardian had one — so a teacher progress screen widens that
+boundary, and the chosen width is one cohort membership deep: an author may read
+enrolment and progress rows only for learners with an active membership of one of
+that course's cohorts, and only for the version the cohort pins. The predicate is
+in SQL, beside `can_read_assignment_submission()`, not in a query filter a second
+caller could forget. See today's section below for what that cost and what it
+deliberately does not do.
 
 The two planning documents were also stale in a way that would have misdirected
 the next session, so both were re-audited against the route list in the build
@@ -303,9 +303,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **859 database tests, 487 web tests; TypeScript typecheck and
-production build pass; 102 tables, 230 policies, 133 user-defined triggers,
-220 functions, 93 migrations and 102 app route entries.**
+Verification: **878 database tests, 519 web tests; TypeScript typecheck and
+production build pass; 103 tables, 231 policies, 134 user-defined triggers,
+222 functions, 94 migrations and 104 app route entries.**
 
 ## Today's sentence
 
@@ -330,8 +330,8 @@ never started). Updated 2026-10-20.
 | **Offline download** | `may_download_lesson()` requiring entitlement + an `offline_downloads` feature grant + verified first-party media; closed feature vocabulary (`pe_feature_vocabulary`, `plan_feature_codes()`) with the admin plan form offering the list; 17 database tests | Any download route or UI, device registration, device storage limits, download expiry, protected-media handling | **Decisions:** device limits, expiry and protected media (`learning.offline`). It would also serve renditions, which do not exist |
 | **Upload cost control** | A per-file ceiling, in two places: 8 GiB in SQL and in `lib/media.ts`, and **512 MiB for a browser upload**, because WebCrypto cannot digest a stream and the checksum is required | A cumulative per-teacher byte quota, a spend alert, and a way to raise the browser ceiling (a chunked digest or a desktop uploader) | **Decision:** quota policy (`platform.cost_controls`). Note that `register_media_upload()` is open to **any signed-in user**, not only teachers, because learners attach files to assignment submissions through the same table — so the missing control is a cumulative quota per person, not a role check |
 | **Assignments** | Tasks, self-paced and cohort deadlines, one private submission per learner, drafts and hand-in, marking with immutable feedback, a revision loop with an append-only snapshot, file *references* with type and size ceilings | Byte transfer for submissions (the R2 path exists but is not wired to submissions), scanning, secure delivery to the marker, retention of children's files | **Decision/review:** the safeguarding review of files children send. This one review holds `learning.assignments` **and** `learning.cohorts` |
-| **Cohorts** | Tables, exact-version pinning, opt-in join/leave, capacity serialisation, family opt-in for children, private roster (counts only in the UI), teacher manager, learner join/leave, and the teacher-set `join_closes_at` window | Nothing structural | The same safeguarding review. `learning.cohorts` ships `false` |
-| **Learner analytics** (`SCREENS.md` row 32) | Nothing — but the privacy boundary is decided and written down | A SQL predicate beside `can_read_assignment_submission()`, the read path, a teacher progress screen | **Nothing.** Decided 2026-10-19: per-learner progress only for active members of that course's cohorts at the pinned version; self-paced learners stay invisible, individually and in aggregate |
+| **Cohorts** | Tables, exact-version pinning, opt-in join/leave, capacity serialisation, family opt-in for children, counts on the manager and, since row 32, names and progress on the class page for the teacher who opened it, teacher manager, learner join/leave, and the teacher-set `join_closes_at` window | Nothing structural | The same safeguarding review. `learning.cohorts` ships `false` |
+| **Learner analytics** (`SCREENS.md` row 32) | `can_read_learner_course_progress()` as a second branch on the `course_enrolments` and `lesson_progress` read policies; `cohort_learner_progress()`, which returns four columns of a profile rather than the row; `/teach/[courseId]/cohorts/[cohortId]` with a class summary and a roster ordered by need; 19 database tests, most of them negative | Aggregate or platform-wide reporting, event instrumentation beyond lesson progress, export or CSV, anything that follows a learner across courses | **Retention:** how long progress stays readable after a class ends or a learner leaves — a decision, not a default. `delivery.analytics` and `learning.cohorts` both ship `false`, and the predicate checks both |
 | **Reviewer access to lesson media** | `can_review_version()` exists and already gates the `lesson_resources` read policy | A read path for the media *bytes* scoped to an assigned review and a period, so access ends with the review | **Nothing.** Decided 2026-10-20: "other teachers" means a reviewer checking quality for a named period, not co-teachers and not any teacher on the platform |
 | **Live classes with teacher-only recording** | Nothing. No live-class tables exist | Schema, capture, recording, storage, playback, and the rule that learners' video and audio are never captured | **Decision:** build versus buy. This is the one workload that would reopen the Stream decision, because self-hosting a media server is the largest piece of engineering left. Costed in §7 of `docs/decisions/media-storage-costing.md`. Decided 2026-10-20: teacher-only capture, so the child-recording safeguarding question does not arise |
 | **Payments** | MTN MoMo and Airtel adapters, checkout, orders, refunds, reconciliation, disputes, financial adjustments, subscriptions with entitlement grants that drive access, 50% teacher-share accrual with the split snapshotted per row | Live credentials, callback verification against a real provider, automatic renewal, failed-payment retry, the receipt document, a merchant account | **External:** provider sandbox and merchant credentials (P12). Do not claim any of this works end to end |
@@ -606,6 +606,59 @@ signs requests, so it imports `media-r2.ts`, which uses `node:crypto`.
 a signing import there would break the browser build. The ingest and moderation
 library stays free of signing code, and the constraint is written into both file
 headers.
+
+### A teacher can now see who is falling behind, 2026-10-20
+
+`SCREENS.md` row 32 was the last teaching screen marked READY, and it was ready
+only because a person had decided how wide a teacher's view of a learner may be.
+That decision is now enforced where the rows live.
+
+**The predicate is `can_read_learner_course_progress(learner, version)`.** It
+answers yes only for the author of that version (or staff), only while both
+`learning.cohorts` and `delivery.analytics` are on, and only for a learner with
+an active membership of a cohort that pins exactly that version. Both flags are
+checked inside the predicate rather than in a screen, so no caller reaches the
+read path by forgetting one, and turning either off closes the feature without a
+deploy. A learner who left stops being visible at once — a child who leaves a
+class is precisely the case where continuing to watch their pace would be wrong —
+while a class that has ended is still that teacher's class.
+
+**It is a second branch on the two existing read policies, not a replacement.**
+`course_enrolments_read` and `lesson_progress_read` keep their old predicate
+verbatim, including the progress policy's habit of not checking `deleted_at`,
+which the new branch does check; nothing a learner, a parent or a guardian could
+read became unreadable, and the tests assert exactly that. No insert or update
+policy was touched. A teacher may read progress and may not write it, and the
+test asserts the refusal rather than a row that quietly did not change.
+
+**Names come through a function, not through a wider policy.** A course author
+cannot read `learner_profiles`, and that table holds `family_id` and
+`linked_user_id` — the two columns that connect a child to a household and to an
+account. Widening `lp_read` to show one name would have handed a teacher every
+column of a child's profile. `cohort_learner_progress(cohort)` returns eleven
+fields instead, four of them from a profile, and is gated by `can_manage_cohort()`
+*and* the per-learner predicate, so a class a caller manages but whose version
+they did not author returns nothing. The limit is structural: there is no query
+against this function that returns more. Two tests hold the column list, one in
+SQL and one in TypeScript, because a spread would carry every column the function
+ever grows.
+
+**Completion is not counted twice.** The roster's "done" and "of how many" come
+from `enrolment_progress_summary()`, the function that already decides whether a
+course is complete, so a class page can never disagree with a certificate.
+
+**The screen sorts by need and filters nothing.** Somebody in the class who has
+not enrolled comes first — that is the one thing this page can fix with a message
+— then whoever went quiet, meaning fourteen days without being seen, then whoever
+has not started, then whoever is working, then whoever finished. Within a rank
+the least far along comes first. Sorting is presentation: every row the database
+returned is still on the page, because a screen that dropped somebody would be a
+second place deciding visibility, and the whole point of putting the predicate in
+SQL was that there is only one.
+
+Still open, and deliberately not guessed: **retention** — how long progress stays
+readable after a class ends or a learner leaves — and event instrumentation
+beyond lesson progress, which is what `delivery.analytics` was originally about.
 
 ## Open external decisions (not to be guessed)
 

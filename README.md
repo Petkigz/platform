@@ -69,9 +69,9 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **103 tables, RLS on every one, 231 policies, 134
-user-defined triggers, 220 functions and 93 migrations.** The database suite
-passes **859 tests**; the web suite passes **487 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **102 app route entries**.
+user-defined triggers, 222 functions and 94 migrations.** The database suite
+passes **878 tests**; the web suite passes **519 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **104 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. `/account`
@@ -133,7 +133,11 @@ learner's enrolment; a cohort assignment has one absolute date. The course
 author and privileged staff can mark; score and feedback are visible only to
 that learner/their family and the marker. Cohort data is version-pinned, and a
 learner or guardian opts in; learners cannot browse other families' roster
-rows. `learning.cohorts` and `learning.assignments` both ship off while cohort
+rows. `/teach/[courseId]/cohorts/[cohortId]` shows the teacher who opened a class
+each member's progress in the version that class teaches, ordered by who needs a
+nudge, and it is the only place a learner's name meets their pace: the predicate
+in SQL requires an active membership of a cohort pinning that version, so a
+self-paced learner stays invisible, and so does somebody who left. `learning.cohorts` and `learning.assignments` both ship off while cohort
 screens and secure file handling are incomplete. The database accepts only
 verified PDF/image/audio asset references (25 MiB each, at most 10), but no
 bytes are transferred, scanned or securely delivered yet; the UI is text-only.

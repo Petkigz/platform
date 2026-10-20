@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   type CohortMemberCounts,
@@ -177,6 +178,9 @@ export function CohortManager({
                 {count.left ? ` · ${count.left} previously left` : ''}
               </p>
               <div className="row" style={{ gap: '.5rem' }}>
+                <Link className="btn secondary" href={`/teach/${courseId}/cohorts/${cohort.id}`}>
+                  Class progress
+                </Link>
                 {cohort.status === 'draft' && (
                   <button type="button" className="btn" disabled={!enabled || Boolean(busy)} onClick={() => setStatus(cohort, 'open')}>
                     {busy === `${cohort.id}-open` ? 'Opening…' : 'Open for joining'}

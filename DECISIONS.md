@@ -581,3 +581,14 @@ safe to build at all: **the teacher decides when a cohort stops accepting
 joiners**, with `join_closes_at` defaulting to the cohort's start date. A
 progress view over a class whose membership can still grow in its final week
 would be a view over a moving target.
+
+**Implemented 2026-10-20** in `20261212000100_cohort_learner_analytics.sql`.
+`can_read_learner_course_progress(learner, version)` is the predicate, added as a
+second branch to the existing read policies on `course_enrolments` and
+`lesson_progress`, so the learner and guardian branches are unchanged and a
+self-paced learner keeps exactly the access they had: none. The insert and update
+policies were not widened — a teacher may read progress and may not write it.
+Names come through `cohort_learner_progress(cohort)` rather than through a wider
+`learner_profiles` policy: it returns four columns of a profile, so `family_id`
+and `linked_user_id` are not reachable by a teacher through any query they could
+write against it. `SCREENS.md` row 32 is built.

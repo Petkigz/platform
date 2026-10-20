@@ -50,8 +50,9 @@ export default async function TeachCohortsPage({
       <p className="eyebrow"><Link href={`/teach/${courseId}`}>Teaching · {row.title}</Link></p>
       <h1>Cohorts</h1>
       <p className="lede">
-        A dated class takes one published course version together. The roster is
-        private; this page shows counts, not learner names.
+        A dated class takes one published course version together. This page shows
+        counts, not names: a class&apos;s progress is on its own page, and only for a
+        class you opened.
       </p>
       <CohortManager
         enabled={enabled}

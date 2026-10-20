@@ -77,13 +77,13 @@ Status:
 
 | # | Screen | Status |
 |---|---|---|
-| 29 | Teacher dashboard | **BUILT** — `/teach` with four POST-only API routes behind it. Learner analytics (#32) is the missing piece, and its privacy boundary is now decided |
+| 29 | Teacher dashboard | **BUILT** — `/teach` with four POST-only API routes behind it. Learner analytics (#32) was the missing piece and is now built beside it |
 | 30 | Create course | **BUILT** — `/teach`, one field: a title. Everything else is set in the curriculum builder |
 | 31 | Curriculum builder | **BUILT** — `/teach/[courseId]`: sections, lessons, content items, reordering, sources. No drag-and-drop |
-| 31a | **Cohort manager and roster** *(added — missing from the inventory)* | **BUILT** — `/teach/[courseId]/cohorts`, course-page join for a learner or guardian, and leave controls on the enrolment page. The roster shows counts only; learners see themselves/family, never other members. The teacher sets when registration closes per class (`join_closes_at`), defaulting to the start date, and can move it while the class runs. `learning.cohorts` stays off pending the safeguarding review of files children send |
+| 31a | **Cohort manager and roster** *(added — missing from the inventory)* | **BUILT** — `/teach/[courseId]/cohorts`, course-page join for a learner or guardian, and leave controls on the enrolment page. The manager page shows counts only; names and progress are on the class page (#32), for the teacher who opened the class. Learners see themselves/family, never other members. The teacher sets when registration closes per class (`join_closes_at`), defaulting to the start date, and can move it while the class runs. `learning.cohorts` stays off pending the safeguarding review of files children send |
 | 31b | **Assignment authoring and marking** *(added — missing from the inventory)* | **BUILT** — `/teach/[courseId]/assignments`; author creates/opens/closes tasks, marks private submissions, sets the revision policy per task, and marks a revision against what they asked for last time. Behind `learning.assignments`; secure file delivery and late-join policy are separate preconditions |
 | 31c | **Media library and upload** *(added — missing from the inventory)* | **BUILT** — `/teach/media`: upload a lesson recording straight to Cloudflare R2 on a presigned PUT, with the SHA-256 checksum computed in the browser before it goes, a progress bar, a name the teacher chooses, and a list of every file they own with its state. Uploading does not publish: the row is `pending` until a staff member verifies it at `/admin/media`, and only an `available` file can be attached to a lesson. The browser ceiling is 512 MiB rather than the database's 8 GiB because WebCrypto cannot digest a stream — that gap is written down, not hidden |
- READY — **the privacy boundary is now decided (2026-10-19), so this is buildable.** A course author may read enrolment and progress only for learners with an active membership of one of that course's cohorts, and only for the version the cohort pins. Self-paced learners stay invisible to the author, as today. The predicate belongs in SQL beside `can_read_assignment_submission()`; see `DECISIONS.md`, "What a teacher may see about a learner" |
+| 32 | Learner analytics | **BUILT** — `/teach/[courseId]/cohorts/[cohortId]`: the roster of a class the teacher opened, with each member's name, their lesson counts against the version the class pins, a percentage and when they were last seen, ordered by who needs a nudge first. Read-only, and the whole boundary is in SQL: `can_read_learner_course_progress()` requires an active membership of a cohort pinning that version, so a self-paced learner stays invisible and so does somebody who left. Names come from `cohort_learner_progress()`, which returns four columns of `learner_profiles` and cannot return a family or an account link. `delivery.analytics` and `learning.cohorts` both ship off |
 | 33 | Course submission and review | **BUILT** — submit from `/teach/[courseId]`; `/review` and `/admin/reviews` handle the assignment |
 | 34 | Earnings | BLOCKED — `teaching.payouts` is CODE and refused by trigger. The *data* exists: `instructor_earnings` accrues on a paid order and reverses on refund. No teacher-facing screen |
 
@@ -161,8 +161,8 @@ Nine of the seventeen are administration screens. Section 7 has since gained row
 | | |
 |---|---|
 | Numbered screen IDs | **50**, plus 19a, 19b, 20a, 20b, 20c, 31a, 31b and 31c — **58 rows** |
-| Built | **42 inventoried**, plus **17 built but never inventoried** above — **59 in the app** |
-| Ready to design now | **12** |
+| Built | **43 inventoried**, plus **17 built but never inventoried** above — **60 in the app** |
+| Ready to design now | **11** |
 | Blocked | **5** |
 
 The "40 built" figure counted inventoried rows only. It was not wrong about what

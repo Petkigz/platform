@@ -56,6 +56,7 @@ import { run as assignmentRevisions } from './assignment_revisions.test.mjs';
 import { run as cohortJoinWindow } from './cohort_join_window.test.mjs';
 import { run as offlineDownload } from './offline_download.test.mjs';
 import { run as mediaRenditions } from './media_renditions.test.mjs';
+import { run as learnerAnalytics } from './learner_analytics.test.mjs';
 
 const ctx = await createHarness();
 const suites = [];
@@ -108,6 +109,7 @@ for (const [name, fn] of [
   ['cohort join window', cohortJoinWindow],
   ['offline download', offlineDownload],
   ['media renditions', mediaRenditions],
+  ['learner analytics', learnerAnalytics],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],
