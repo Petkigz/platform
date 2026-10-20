@@ -20,6 +20,29 @@ export type JoinableCohort = CourseCohort & {
   versionNumber: number | null;
   eligibleLearnerIds: string[];
   joinedLearnerIds: string[];
+  /** How full the class is, as far as a joiner is allowed to know. */
+  places: CohortPlaces;
+};
+
+/**
+ * How full a class is.
+ *
+ * A joiner may know that a class has three of twelve places taken and may not
+ * know who took them: `cohort_members_read` is deliberately narrower than
+ * `cohorts_read`, so a learner sees their own membership and their family's and
+ * never a class list of other people's children. The count therefore comes from
+ * `cohort_places()`, which is SECURITY DEFINER and returns integers only.
+ *
+ * `null` means "could not be read", which is not the same as zero. Nothing treats
+ * an unknown count as full: refusing a joiner because a number was unavailable
+ * would be worse than letting them try.
+ */
+export type CohortPlaces = {
+  activeMembers: number | null;
+  /** Null when the class has no capacity, or when the count is unknown. */
+  placesLeft: number | null;
+  /** True only when a capacity is known and no place is left. */
+  full: boolean;
 };
 
 export type CohortMemberCounts = Record<string, { active: number; left: number }>;
@@ -267,6 +290,53 @@ export async function fetchCohortMemberCounts(
   return result;
 }
 
+/**
+ * "3 of 12 places taken" — or null, when the count could not be read.
+ *
+ * A count that is not readable is left unsaid rather than shown as zero, because
+ * "0 of 12 places taken" on a full class is a promise the Join button cannot
+ * keep.
+ */
+export function placesLabel(places: CohortPlaces, capacity: number | null): string | null {
+  if (places.activeMembers === null || capacity === null) return null;
+  return `${String(places.activeMembers)} of ${String(capacity)} places taken`;
+}
+
+/** Places left, from a capacity and a count that may be either unknown or stale. */
+export function summarisePlaces(
+  capacity: number | null,
+  activeMembers: number | null,
+): CohortPlaces {
+  if (activeMembers === null) return { activeMembers: null, placesLeft: null, full: false };
+  if (capacity === null) return { activeMembers, placesLeft: null, full: false };
+  // More members than capacity is possible: capacity can be lowered after people
+  // join. That is a class that is over, not one with negative places.
+  const placesLeft = Math.max(0, capacity - activeMembers);
+  return { activeMembers, placesLeft, full: placesLeft === 0 };
+}
+
+/**
+ * Active members per cohort, in one call.
+ *
+ * A cohort the caller may not read is absent from the result rather than zero,
+ * which is why this is not `fetchCohortMemberCounts()`: that one counts rows the
+ * caller can read, and it is used on the teacher's own cohort page, where the
+ * roster is visible anyway and "left" members are counted too.
+ */
+export async function fetchCohortPlaces(
+  client: SupabaseClient,
+  cohortIds: string[],
+): Promise<Record<string, number>> {
+  if (cohortIds.length === 0) return {};
+  const { data, error } = await client.rpc('cohort_places', { p_cohort_ids: cohortIds });
+  if (error) throw new Error(error.message);
+  const places: Record<string, number> = {};
+  for (const row of (data ?? []) as unknown as { cohort_id: string; active_members: number }[]) {
+    places[String(row.cohort_id)] = Number(row.active_members);
+  }
+  return places;
+}
+
 export async function fetchJoinableCohorts(
   client: SupabaseClient,
   args: { courseId: string; learners: { id: string }[] },
@@ -313,10 +383,18 @@ export async function fetchJoinableCohorts(
     joinedByCohort.set(row.cohort_id, list);
   }
 
+  // One call for every cohort on the page rather than one per cohort, because a
+  // course can have several open classes and this is a round trip.
+  const places = await fetchCohortPlaces(client, cohortIds);
+
   return cohorts.map((c) => ({
     ...c,
     versionNumber: versionNumbers.get(c.courseVersionId) ?? null,
     eligibleLearnerIds: learnerIds.filter((id) => enrolled.has(`${id}:${c.courseVersionId}`)),
     joinedLearnerIds: joinedByCohort.get(c.id) ?? [],
+    places: summarisePlaces(
+      c.capacity,
+      Object.hasOwn(places, c.id) ? (places[c.id] ?? null) : null,
+    ),
   }));
 }

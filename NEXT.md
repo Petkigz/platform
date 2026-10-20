@@ -303,9 +303,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **908 database tests, 565 web tests; TypeScript typecheck and
+Verification: **914 database tests, 570 web tests; TypeScript typecheck and
 production build pass; 103 tables, 231 policies, 134 user-defined triggers,
-227 functions, 96 migrations and 105 app route entries.**
+228 functions, 97 migrations and 105 app route entries.**
 
 ## Today's sentence
 
@@ -330,7 +330,7 @@ never started). Updated 2026-10-20.
 | **Offline download** | `may_download_lesson()` requiring entitlement + an `offline_downloads` feature grant + verified first-party media; closed feature vocabulary (`pe_feature_vocabulary`, `plan_feature_codes()`) with the admin plan form offering the list; 17 database tests | Any download route or UI, device registration, device storage limits, download expiry, protected-media handling | **Decisions:** device limits, expiry and protected media (`learning.offline`). It would also serve renditions, which do not exist |
 | **Upload cost control** | A per-file ceiling, in two places: 8 GiB in SQL and in `lib/media.ts`, and **5 GiB less 5 MiB for a browser upload**, which is storage's own limit on one request — `lib/digest.ts` hashes a slice at a time, so the checksum no longer caps the size | A cumulative per-teacher byte quota, a spend alert, and a multipart uploader, which is what would take a browser past 5 GiB and make a failed upload resumable instead of starting again | **Decision:** quota policy (`platform.cost_controls`). Note that `register_media_upload()` is open to **any signed-in user**, not only teachers, because learners attach files to assignment submissions through the same table — so the missing control is a cumulative quota per person, not a role check |
 | **Assignments** | Tasks, self-paced and cohort deadlines, one private submission per learner, drafts and hand-in, marking with immutable feedback, a revision loop with an append-only snapshot, file *references* with type and size ceilings | Byte transfer for submissions (the R2 path exists but is not wired to submissions), scanning, secure delivery to the marker, retention of children's files | **Decision/review:** the safeguarding review of files children send. This one review holds `learning.assignments` **and** `learning.cohorts` |
-| **Cohorts** | Tables, exact-version pinning, opt-in join/leave, capacity serialisation, family opt-in for children, counts on the manager and, since row 32, names and progress on the class page for the teacher who opened it, teacher manager, learner join/leave, and the teacher-set `join_closes_at` window | Nothing structural | The same safeguarding review. `learning.cohorts` ships `false` |
+| **Cohorts** | Tables, exact-version pinning, opt-in join/leave, capacity serialisation, family opt-in for children, counts on the manager and, since row 32, names and progress on the class page for the teacher who opened it, teacher manager, learner join/leave, the teacher-set `join_closes_at` window, and how full each class is on the course page a joiner reads it from (`cohort_places()`, counts only — the roster stays behind `can_read_cohort_member()`) | Nothing structural | The same safeguarding review. `learning.cohorts` ships `false` |
 | **Learner analytics** (`SCREENS.md` row 32) | `can_read_learner_course_progress()` as a second branch on the `course_enrolments` and `lesson_progress` read policies; `cohort_learner_progress()`, which returns four columns of a profile rather than the row; `/teach/[courseId]/cohorts/[cohortId]` with a class summary and a roster ordered by need; 19 database tests, most of them negative | Aggregate or platform-wide reporting, event instrumentation beyond lesson progress, export or CSV, anything that follows a learner across courses | **Retention:** how long progress stays readable after a class ends or a learner leaves — a decision, not a default. `delivery.analytics` and `learning.cohorts` both ship `false`, and the predicate checks both |
 | **Reviewer access to lesson media** | `may_review_version_media()` — an accepted or in-progress assignment and nothing else — as a third branch of `may_play_rendition()`, with the player wired into `/review/[assignmentId]`; `may_watch_master()`, `master_preview_target()` and `/api/media/master` for the uploader, staff and the version author, with `Watch` on `/teach/media` and `/admin/media`; 19 database tests, most of them refusals | Any copy for a reviewer: no download, no master, no export. Aggregate review analytics | **Nothing.** Decided 2026-10-20: "other teachers" means a reviewer checking quality for a named period, not co-teachers and not any teacher on the platform. The period is the assignment's state, so access ends with the review |
 | **Live classes with teacher-only recording** | Nothing. No live-class tables exist | Schema, capture, recording, storage, playback, and the rule that learners' video and audio are never captured | **Decision:** build versus buy. This is the one workload that would reopen the Stream decision, because self-hosting a media server is the largest piece of engineering left. Costed in §7 of `docs/decisions/media-storage-costing.md`. Decided 2026-10-20: teacher-only capture, so the child-recording safeguarding question does not arise |
@@ -365,17 +365,21 @@ given a surface. Grouped by the feature they belong to:
 | History and diagnostics | `order_status_history`, `publication_events`, `entitlement_events`, `course_enrolment_version_history`, `access_checks`, `subscription_history` | Written by triggers or by other writers for audit, and read by nobody. Intentional for now; a support console would read them |
 | Other | `adult_learning_shares` | Adult learner sharing, never surfaced |
 
-**Two functions are genuinely unreachable**, in the stronger sense that nothing
-calls them at all — not a route, not a policy, not a trigger, not another
-function:
+**Two functions were genuinely unreachable**, in the stronger sense that nothing
+called them at all — not a route, not a policy, not a trigger, not another
+function. One is now closed:
 
 - `cohort_member_count()` — built so the cohort roster could show counts without
-  exposing members. The teacher UI shows counts, but it does not call this.
-- `can_read_support_case()` — superseded by whatever the support policies
-  actually use.
-
-Both are tested, so neither is broken. Both are dead, and a reader would
-reasonably assume otherwise.
+  exposing members. The teacher UI showed counts, but counted rows itself. It is
+  now the definition `cohort_places()` uses for each cohort, so a joiner sees how
+  full a class is — see "A learner can see how full a class is before joining".
+- `can_read_support_case()` — **still dead.** Its own comment claims it is "used
+  by the writer functions", and no writer calls it: the predicate it expresses is
+  written out inline in `support_cases_read` and again inside
+  `support_case_messages_read`. So the definition of who may read a support case
+  lives in three places, and the function that was meant to be the one place is
+  the one nothing reads. Both are tested, so neither is broken; the comment is
+  simply wrong.
 
 **Four staff functions had no admin surface.** Two are now closed — `/admin/media`
 reaches `quarantine_media_upload()` and `delete_media_asset()`, so a rights
@@ -836,6 +840,51 @@ database change.
 past 5 GiB. A desktop uploader. Cancelling a hash in flight — the button is
 disabled while it runs, so a teacher who picks a huge file by mistake has to
 reload the page.
+
+### A learner can see how full a class is before joining, 2026-10-20
+
+`cohort_member_count()` was written for the joiner-facing "3 of 12 places", and
+the audit found nothing had ever called it. The course page therefore offered a
+Join button next to "Up to 12 learners" with no idea how many places were taken,
+so the way to learn a class was full was to choose it, pick which child was
+joining, press the button and be refused by `join_cohort()`.
+
+**Why it stayed unbuilt is the roster boundary, and the boundary is right.**
+`cohort_members_read` is deliberately narrower than `cohorts_read`: a learner sees
+their own membership and their family's, never a class list of other people's
+children. That rules out counting rows client-side, which is what the teacher's
+own cohort page does, because a teacher may read the roster.
+
+**`cohort_places(uuid[])` returns the number and nothing the number is made of.**
+One row per cohort the caller may already read, with `cohort_id` and
+`active_members` and no third column, built on `cohort_member_count()` so the
+scalar function is finally the definition rather than a bystander. It is SECURITY
+DEFINER because it has to read membership rows the caller cannot, and that is
+what a definer function is for; three of twelve places taken is not personal data
+about the three.
+
+**A cohort the caller cannot read is absent, not zero.** A zero would make a draft
+class look like an open one with room in it. Absent means unknown, and unknown is
+rendered as silence: `summarisePlaces()` returns `full: false` whenever the count
+is missing, so an unreadable number never fills a class and never takes the
+button away. Refusing a joiner over a count that could not be read would be worse
+than letting them try — `join_cohort()` still enforces capacity under a row lock,
+so the count is a courtesy and never the authority.
+
+**On the page.** Each class card now reads "3 of 12 places taken" where a count
+could be read, keeps "Up to 12 learners" where it could not, carries a `Full`
+badge, and replaces the Join button with a sentence when every place is taken —
+including the part that matters, which is that somebody leaving opens one again.
+One call covers every cohort on the page rather than one per cohort.
+
+6 database tests, 5 web. No flag: the gate is `can_read_cohort()`, which already
+answers to `learning.cohorts`, and a second switch on the same door would be a
+second way to be wrong.
+
+**Left open.** `can_read_support_case()` is still dead and still claims in its own
+comment to be used by the writer functions; the predicate it expresses is written
+inline in two policies instead, so who may read a support case is defined in three
+places.
 
 ## Open external decisions (not to be guessed)
 

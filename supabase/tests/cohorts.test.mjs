@@ -351,6 +351,109 @@ export async function run(ctx) {
       assert(seenByTeacher.rows.length === 1, 'the teacher could not see their own draft');
     });
 
+    // -----------------------------------------------------------------
+    // How full a class is
+    //
+    // `cohort_member_count()` was written for the joiner-facing "3 of 12 places"
+    // and nothing called it, so the way to learn a class was full was to press
+    // Join and be refused. `cohort_places()` is the batch form of it. The point
+    // of these tests is the boundary it keeps: a joiner learns a number, and
+    // still cannot read the roster the number came from.
+    // -----------------------------------------------------------------
+
+    const SQL_PLACES = 'select cohort_id, active_members from public.cohort_places($1::uuid[])';
+    const placesFor = async (who, ids) => (await asActor(who, SQL_PLACES, [ids])).rows;
+
+    const placesCohort = (await create(teacher, course, version, 'Places class', 4)).rows[0].id;
+    await asActor(teacher, SQL_STATUS, [placesCohort, 'open']);
+    const placesMembers = [];
+    for (let i = 0; i < 3; i += 1) {
+      const one = await learner(`Places ${i}`, { course, version });
+      await asActor(one.userId, SQL_JOIN, [placesCohort, one.learnerId]);
+      placesMembers.push(one);
+    }
+    const bystander = await learner('Places bystander', { course, version });
+
+    await test('a joiner can see how full a class is, and not who is in it', async () => {
+      const seen = await placesFor(bystander.userId, [placesCohort]);
+      assert(seen.length === 1, `a joiner got ${seen.length} rows for one readable class`);
+      assert(seen[0].active_members === 3, `the count was ${seen[0].active_members}, expected 3`);
+
+      // The same caller cannot get this from the table. If they could, the
+      // function would be leaking a roster it was written to withhold.
+      const roster = await asActor(bystander.userId,
+        'select learner_profile_id from public.cohort_members where cohort_id=$1', [placesCohort]);
+      assert(roster.rows.length === 0,
+        `a bystander read ${roster.rows.length} roster rows, so the count was not the only thing they got`);
+
+      // And the count is only a count: no names, no profile ids, one row.
+      const columns = Object.keys(seen[0]).sort().join(',');
+      assert(columns === 'active_members,cohort_id', `the function returned ${columns}`);
+    });
+
+    await test('the teacher sees the same number as the roster they are allowed to read', async () => {
+      const counted = await placesFor(teacher, [placesCohort]);
+      const roster = await asActor(teacher,
+        `select count(*)::int n from public.cohort_members
+          where cohort_id=$1 and status='active'`, [placesCohort]);
+      assert(counted[0].active_members === roster.rows[0].n,
+        `the function said ${counted[0].active_members} and the roster has ${roster.rows[0].n}`);
+    });
+
+    await test('a learner who left is not a place taken', async () => {
+      await asActor(placesMembers[0].userId, SQL_LEAVE, [placesCohort, placesMembers[0].learnerId]);
+      const seen = await placesFor(bystander.userId, [placesCohort]);
+      assert(seen[0].active_members === 2,
+        `a leaver was still counted: ${seen[0].active_members}`);
+      // Leaving frees a place, which is the whole reason the number is shown
+      // before the button rather than after the refusal.
+      await asActor(placesMembers[0].userId, SQL_JOIN, [placesCohort, placesMembers[0].learnerId]);
+      assert((await placesFor(bystander.userId, [placesCohort]))[0].active_members === 3);
+    });
+
+    await test('a class the caller cannot read is absent, not zero', async () => {
+      const draft = (await create(teacher, course, version, 'Still a draft', 8)).rows[0].id;
+      const stranger = await placesFor(bystander.userId, [draft]);
+      assert(stranger.length === 0,
+        'a draft class was reported to a joiner, as an empty one it could now go and join');
+
+      const author = await placesFor(teacher, [draft]);
+      assert(author.length === 1 && author[0].active_members === 0,
+        'the teacher who opened the class could not see that nobody is in it');
+
+      await q('update public.cohorts set deleted_at=now() where id=$1', [draft]);
+      assert((await placesFor(teacher, [draft])).length === 0,
+        'a deleted class was still counted');
+      assert((await placesFor(admin, [draft])).length === 0,
+        'a deleted class was still counted for staff');
+    });
+
+    await test('one call covers a whole page of classes, and repeats are one row', async () => {
+      const other = (await create(teacher, course, version, 'Second places class', 6)).rows[0].id;
+      await asActor(teacher, SQL_STATUS, [other, 'open']);
+
+      const seen = await placesFor(bystander.userId,
+        [placesCohort, other, crypto.randomUUID(), placesCohort]);
+      assert(seen.length === 2, `a joiner got ${seen.length} rows for two readable classes`);
+      const counts = Object.fromEntries(seen.map((r) => [r.cohort_id, r.active_members]));
+      assert(counts[placesCohort] === 3, `the full class was reported as ${counts[placesCohort]}`);
+      assert(counts[other] === 0, `the new class was reported as ${counts[other]}`);
+
+      assert((await placesFor(bystander.userId, [])).length === 0, 'an empty list returned rows');
+      assert((await placesFor(bystander.userId, null)).length === 0, 'a null list was refused');
+    });
+
+    await test('asking how full a class is needs an account, and nothing else', async () => {
+      // A signed-out visitor cannot ask: the count is about a class, and every
+      // predicate in this schema starts from who is asking.
+      const allowed = (await q(
+        `select has_function_privilege('anon','public.cohort_places(uuid[])','EXECUTE') as anon,
+                has_function_privilege('authenticated','public.cohort_places(uuid[])','EXECUTE') as auth`
+      )).rows[0];
+      assert(allowed.anon === false, 'a signed-out visitor could count a class');
+      assert(allowed.auth === true, 'a joiner could not ask how full a class is');
+    });
+
     await test('every act is audited', async () => {
       const events = (await q(
         `select action from public.governance_audit_events

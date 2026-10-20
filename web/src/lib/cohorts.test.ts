@@ -4,10 +4,13 @@ import test from 'node:test';
 import {
   cohortJoinWindowOpen,
   createCohort,
+  fetchCohortPlaces,
   fetchJoinableCohorts,
   joinWindowLabel,
   mapCohortError,
+  placesLabel,
   setCohortJoinWindow,
+  summarisePlaces,
   validateCohortInput,
 } from './cohorts.ts';
 
@@ -30,6 +33,11 @@ function stubQueries(tableRows: Record<string, unknown[]>) {
   const calls: { table: string; filters: Record<string, unknown>; order: string | null }[] = [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const client = {
+    /** Rows for a function call are keyed `rpc:<name>` alongside the tables. */
+    rpc(fn: string, args: Record<string, unknown>) {
+      calls.push({ table: `rpc:${fn}`, filters: args, order: null });
+      return Promise.resolve({ data: tableRows[`rpc:${fn}`] ?? [], error: null });
+    },
     from(table: string) {
       const state = { table, filters: {} as Record<string, unknown>, order: null as string | null };
       calls.push(state);
@@ -200,6 +208,7 @@ test('a learner sees only the classes they can access and the exact version they
       { learner_profile_id: 'learner-2', course_version_id: 'version-2', status: 'active' },
     ],
     cohort_members: [{ cohort_id: 'cohort-1', learner_profile_id: 'learner-1' }],
+    'rpc:cohort_places': [{ cohort_id: 'cohort-1', active_members: 3 }],
   });
 
   const cohorts = await fetchJoinableCohorts(client, {
@@ -210,7 +219,64 @@ test('a learner sees only the classes they can access and the exact version they
   assert.equal(cohorts[0]?.versionNumber, 2);
   assert.deepEqual(cohorts[0]?.eligibleLearnerIds, ['learner-1']);
   assert.deepEqual(cohorts[0]?.joinedLearnerIds, ['learner-1']);
+  assert.deepEqual(cohorts[0]?.places, { activeMembers: 3, placesLeft: 9, full: false });
   const cohortQuery = calls.find((call) => call.table === 'cohorts');
   assert.deepEqual(cohortQuery?.filters, { course_id: 'course-1', deleted_at: null, status: 'open' });
+  // One function call for every cohort on the page, not one per cohort.
+  const placesCalls = calls.filter((call) => call.table === 'rpc:cohort_places');
+  assert.equal(placesCalls.length, 1);
+  assert.deepEqual(placesCalls[0]?.filters, { p_cohort_ids: ['cohort-1'] });
   for (const call of calls) assert.equal(Object.hasOwn(call.filters, 'user_id'), false);
+});
+
+// ---------------------------------------------------------------------------
+// How full a class is
+//
+// The count is read by a definer function because a joiner may not read the
+// roster: `cohort_members_read` shows a learner their own row and their family's,
+// never a class list of other people's children. So what arrives is an integer
+// and nothing else, and an integer that did not arrive is not a zero.
+// ---------------------------------------------------------------------------
+
+test('a count that could not be read is unknown, never zero and never full', () => {
+  assert.deepEqual(summarisePlaces(12, null), { activeMembers: null, placesLeft: null, full: false });
+  assert.equal(placesLabel({ activeMembers: null, placesLeft: null, full: false }, 12), null,
+    'an unreadable count was shown as a number of places taken');
+});
+
+test('a class with no capacity has members but no places left to count', () => {
+  assert.deepEqual(summarisePlaces(null, 4), { activeMembers: 4, placesLeft: null, full: false });
+  assert.equal(placesLabel(summarisePlaces(null, 4), null), null);
+});
+
+test('places left are counted down to zero and never below it', () => {
+  assert.deepEqual(summarisePlaces(12, 3), { activeMembers: 3, placesLeft: 9, full: false });
+  assert.deepEqual(summarisePlaces(12, 12), { activeMembers: 12, placesLeft: 0, full: true });
+  // Capacity can be lowered after people join, so more members than places is a
+  // real state and not a negative number of places.
+  assert.deepEqual(summarisePlaces(12, 15), { activeMembers: 15, placesLeft: 0, full: true });
+});
+
+test('the label a joiner reads names both numbers', () => {
+  assert.equal(placesLabel(summarisePlaces(12, 3), 12), '3 of 12 places taken');
+  assert.equal(placesLabel(summarisePlaces(12, 12), 12), '12 of 12 places taken');
+  assert.equal(placesLabel(summarisePlaces(1, 0), 1), '0 of 1 places taken');
+});
+
+test('one call asks for every cohort, and a page with none asks for nothing', async () => {
+  const { client, calls } = stubRpc({
+    data: [
+      { cohort_id: 'cohort-1', active_members: '3' },
+      { cohort_id: 'cohort-2', active_members: 12 },
+    ],
+  });
+  const places = await fetchCohortPlaces(client, ['cohort-1', 'cohort-2', 'cohort-9']);
+  assert.deepEqual(places, { 'cohort-1': 3, 'cohort-2': 12 },
+    'a count arriving as a string must be a number, and an unreadable cohort is absent');
+  assert.equal(calls.length, 1);
+  assert.deepEqual(calls[0]?.args, { p_cohort_ids: ['cohort-1', 'cohort-2', 'cohort-9'] });
+
+  const none = stubQueries({});
+  assert.deepEqual(await fetchCohortPlaces(none.client, []), {});
+  assert.equal(none.calls.length, 0, 'a page with no classes called the database');
 });

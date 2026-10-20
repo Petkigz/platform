@@ -8,8 +8,18 @@ import {
   type JoinableCohort,
   cohortJoinWindowOpen,
   joinWindowLabel,
+  placesLabel,
 } from '@/lib/cohorts';
 
+/**
+ * The classes a learner or guardian can join, and how full each one is.
+ *
+ * Fullness comes from `cohort_places()`, which returns counts and no identities:
+ * a joiner may know that three of twelve places are taken and may not know whose
+ * children took them, because `cohort_members_read` is deliberately narrower than
+ * `cohorts_read`. A class that is full says so instead of offering a button that
+ * `join_cohort()` would refuse for spare capacity.
+ */
 export function CohortBrowser({
   cohortsEnabled,
   cohorts,
@@ -80,12 +90,17 @@ export function CohortBrowser({
                 <p className="muted" style={{ margin: '.25rem 0 0' }}>
                   Version {cohort.versionNumber ?? '?'} · Starts {new Date(cohort.startsAt).toLocaleString()}
                   {cohort.endsAt ? ` · Ends ${new Date(cohort.endsAt).toLocaleString()}` : ' · Open-ended'}
-                  {cohort.capacity ? ` · Up to ${cohort.capacity} learners` : ''}
+                  {' · '}{placesLabel(cohort.places, cohort.capacity)
+                    ?? (cohort.capacity ? `Up to ${cohort.capacity} learners` : 'No place limit')}
                   {' · '}{joinWindowLabel(cohort)}
                 </p>
               </div>
               <span className="badge neutral">
-                {cohortJoinWindowOpen(cohort) ? 'Open to joiners' : 'Registration closed'}
+                {cohort.places.full
+                  ? 'Full'
+                  : cohortJoinWindowOpen(cohort)
+                    ? 'Open to joiners'
+                    : 'Registration closed'}
               </span>
             </div>
             {cohort.description && <p style={{ margin: 0 }}>{cohort.description}</p>}
@@ -122,15 +137,25 @@ export function CohortBrowser({
                 </button>
               </div>
             ) : !cohortsEnabled ? null : eligible && cohortJoinWindowOpen(cohort) ? (
-              <button
-                type="button"
-                className="btn"
-                style={{ justifySelf: 'start' }}
-                disabled={busy === `${cohort.id}-join`}
-                onClick={() => act(cohort, learner.id, 'join')}
-              >
-                {busy === `${cohort.id}-join` ? 'Joining…' : `Join for ${learner.isSelf ? 'me' : learner.name}`}
-              </button>
+              cohort.places.full ? (
+                // The count is why the button is not here: `join_cohort()` would
+                // refuse it for spare capacity, and being refused after choosing a
+                // class and a learner reads as a broken site.
+                <p className="muted" style={{ margin: 0 }}>
+                  This class is full — all {cohort.capacity} places are taken. If somebody leaves,
+                  a place opens here.
+                </p>
+              ) : (
+                <button
+                  type="button"
+                  className="btn"
+                  style={{ justifySelf: 'start' }}
+                  disabled={busy === `${cohort.id}-join`}
+                  onClick={() => act(cohort, learner.id, 'join')}
+                >
+                  {busy === `${cohort.id}-join` ? 'Joining…' : `Join for ${learner.isSelf ? 'me' : learner.name}`}
+                </button>
+              )
             ) : eligible ? (
               // The class is still running; it simply stopped taking joiners.
               // Saying "closed" would read as the class being over.

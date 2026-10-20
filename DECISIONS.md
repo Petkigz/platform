@@ -746,3 +746,47 @@ URL expires mid-transfer. Both are arguments for building multipart next, not fo
 picking a smaller number here: a limit the provider set is a fact to design
 around, and a limit invented to avoid a build is a product that refuses a
 teacher's lesson.
+
+## How full a class is, and who may know — **DECIDED 2026-10-20**
+
+Found as dead code: `cohort_member_count()` was written, tested, granted to
+`authenticated` and commented as existing "for the joiner-facing '3 of 12
+places'", and nothing ever called it. Meanwhile the course page offered a Join
+button next to "Up to 12 learners", so the way to find out a class was full was
+to choose it, pick which child was joining, press the button, and be refused by
+`join_cohort()` for spare capacity.
+
+The reason it stayed unbuilt is the roster boundary, and the boundary is right:
+`cohort_members_read` is deliberately narrower than `cohorts_read`, so a learner
+sees their own membership and their family's and never a class list of other
+people's children. That rules out the obvious implementation — counting rows
+client-side, which is what the teacher's own cohort page does, because a teacher
+may read the roster.
+
+**Chosen: a joiner may know a number, and nothing the number is made of.**
+`cohort_places(uuid[])` is SECURITY DEFINER and returns one row per cohort the
+caller may already read, with `cohort_id` and `active_members` and no third
+column. It has to read membership rows the caller cannot, which is exactly what a
+definer function is for; what it gives back is an integer about a class the
+caller can already see, which discloses nobody. Three of twelve places taken is
+not personal data about the three.
+
+**A cohort the caller cannot read is absent from the result, not zero.** Returning
+a zero would make a draft class look like an open one with room in it — an
+invitation to join something that is not accepting joiners. Absent means unknown,
+and the caller renders unknown as silence: no count, and still a Join button. An
+unknown count never fills a class, because refusing a joiner over a number that
+could not be read is worse than letting them try.
+
+**Rejected: letting the joiner count rows themselves.** It would need widening
+`cohort_members_read`, and the narrowness of that policy is the thing protecting
+a class list of children. A count that is computed where the rows are readable
+and returned as an integer keeps both properties at once.
+
+Also rejected: leaving the count to fail silently at the join. `join_cohort()`
+still enforces capacity under a row lock, so the count is never the authority —
+it is the courtesy. A class that fills between the page rendering and the button
+being pressed still refuses, and now says why in words the page had already
+prepared the reader for. Implemented in `20261215000100_cohort_places.sql`,
+`fetchCohortPlaces()` in `lib/cohorts.ts`, and the class cards on
+`/courses/[slug]`.
