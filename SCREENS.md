@@ -124,14 +124,48 @@ Status:
 
 ---
 
+## 11. Built but never inventoried  *(found by audit, 2026-10-20)*
+
+The rows above were derived from a source list of 48 mockups, and the codebase
+has grown past it. These screens exist, are routed, and are reachable — they were
+simply never added as rows. Counted by comparing the inventory's cited paths
+against the actual route list in the production build, not from memory.
+
+| Route | What it is |
+|---|---|
+| `/` | Marketing home |
+| `/account` | Account settings: display name, preferred language, IANA time zone |
+| `/courses/[slug]/preview/[lessonId]` | A free preview lesson, gated by `learning.previews` |
+| `/learn/[enrolmentId]` | The learner dashboard for one enrolment |
+| `/paths` | Guided learning-path catalogue |
+| `/teach/paths` | A teacher's own learning paths |
+| `/teach/profile` | Teacher profile and public biography editing |
+| `/teachers/[slug]` | A teacher's public page |
+| `/admin/appeals` | Appeals queue |
+| `/admin/course-reviews` | Held learner review text before it is published |
+| `/admin/disputes` | Payment disputes |
+| `/admin/financial-adjustments` | Manual financial adjustments |
+| `/admin/plans` | Subscription plans, versions, entitlements and prices |
+| `/admin/reconciliation` | Payment reconciliation |
+| `/admin/refunds` | Refund queue |
+| `/admin/reports` | Abuse and content reports |
+| `/admin/roles` | Role assignments |
+
+Nine of the seventeen are administration screens, which is why section 7 says
+"Administration — 9" while the app has fifteen admin routes.
+
 ## Counts
 
 | | |
 |---|---|
 | Numbered screen IDs | **50**, plus 19a, 19b, 20a, 20b, 20c, 31a and 31b — **57 rows** |
-| Built | **40** |
+| Built | **40 inventoried**, plus **17 built but never inventoried** above — **57 in the app** |
 | Ready to design now | **12** |
 | Blocked | **5** |
+
+The "40 built" figure counted inventoried rows only. It was not wrong about what
+it counted, but it understated what exists, and a reader would have taken it for
+the whole picture. Both numbers are given so neither misleads.
 
 The four mobile home/learning rows in the source are responsive states of
 screens #11 and #14, not four separate designs. The seven additional rows are

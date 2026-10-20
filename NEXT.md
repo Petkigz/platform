@@ -340,6 +340,70 @@ never started). Updated 2026-10-20.
 | **Product analytics** (`delivery.analytics`) | Nothing | Event instrumentation and the reporting screens | **Decision:** what is collected and its retention. Distinct from learner analytics above, which is decided |
 | **Visual identity** | White and green theme settled, tokens in `web/src/app/globals.css` | Type, logo, illustration; 0 of the 50 inventoried screens designed | **Decision:** the owner's. Not a blocker for any backend work |
 
+### Found by audit, 2026-10-20
+
+The ledger above lists the pieces that were being built. An audit of the whole
+repository against the running schema found a second category the ledger did not
+cover: **schema that exists and nothing can reach.** Counted by asking, for every
+table, whether any route or screen names it, and if not whether any SQL function
+that the web layer calls touches it.
+
+**25 tables have no path from the application** — no screen reads them, no route
+writes them, and no function the web layer calls touches them. They are not
+broken; they are the shape of features that were built in SQL first and never
+given a surface. Grouped by the feature they belong to:
+
+| Group | Tables | Accounted for by |
+|---|---|---|
+| Promotions | `promotion_campaigns`, `promotion_benefits`, `promotion_redemptions` | `commerce.promotions`, off, eligibility and stacking rules undecided |
+| Scholarly panel | `scholarly_panels`, `scholarly_panel_memberships`, `scholarly_panel_cases`, `scholarly_panel_votes` | `teaching.panel`, off and deliberately dormant (P6) |
+| Reviewer machinery | `reviewer_qualifications`, `reviewer_subject_authorizations`, `reviewer_conflict_declarations`, `content_review_requirements`, `technical_review_checks`, `content_change_assessments` | The peer-review path, which works for course versions but has no admin surface of its own |
+| Payouts | `instructor_payouts`, `instructor_payout_items` | `teaching.payouts`, off; ROADMAP already says "3 tables with no fields and no endpoints" |
+| Institutions | `institutions` | `commerce.institutions` and four `institution.*` flags, all off |
+| Money plumbing | `currency_exchange_rates`, `order_adjustments`, `payment_method_references` | Multi-currency reporting and stored payment methods, neither decided |
+| History and diagnostics | `order_status_history`, `publication_events`, `entitlement_events`, `course_enrolment_version_history`, `access_checks`, `subscription_history` | Written by triggers or by other writers for audit, and read by nobody. Intentional for now; a support console would read them |
+| Other | `adult_learning_shares` | Adult learner sharing, never surfaced |
+
+**Two functions are genuinely unreachable**, in the stronger sense that nothing
+calls them at all — not a route, not a policy, not a trigger, not another
+function:
+
+- `cohort_member_count()` — built so the cohort roster could show counts without
+  exposing members. The teacher UI shows counts, but it does not call this.
+- `can_read_support_case()` — superseded by whatever the support policies
+  actually use.
+
+Both are tested, so neither is broken. Both are dead, and a reader would
+reasonably assume otherwise.
+
+**Four staff functions have no admin surface**, which is an operational gap
+rather than a tidy one:
+
+- `quarantine_media_upload()` and `delete_media_asset()` — the powers a rights
+  complaint or a safeguarding report about an uploaded master would need. They
+  exist, they are tested, and **no screen offers them**, so today such a report
+  has no UI path at all.
+- `confirm_media_rendition()` and `fail_media_rendition()` — expected, since no
+  transcode worker calls them yet.
+
+**One divergence between SQL and the web layer:** `add_child_to_family()` is
+called by tests only. `web/src/lib/family.ts` inserts into `learner_profiles`
+directly and relies on RLS, and its own comment records that this made the
+helper "unreachable in practice". Two paths to one outcome is how a rule gets
+enforced in one of them.
+
+**What the audit found that was already right:** the counts in `README.md` and
+`NEXT.md` (103 tables, RLS on every one, 231 policies, 220 functions, 90
+migrations, 97 route entries = 52 pages + 45 API routes) all reproduce from the
+schema and the build. Every one of the 37 paths `SCREENS.md` cites exists. The
+flag register and `platform_settings` agree, and are pinned by a test.
+
+**One document was wrong and is now corrected:** `SCREENS.md` counted 40 built
+screens because it counted inventoried rows, while 17 more exist in the app and
+were never added as rows — nine of them admin screens, which is why its section 7
+said "Administration — 9" when the app has fifteen admin routes. Section 11 now
+lists them and the counts give both numbers.
+
 **Two rules for resuming any row.** First, nothing above is enabled by writing
 code alone — each sits behind a flag in `platform_settings`, and a flag moves
 only through the admin surface, so a half-built piece cannot leak. Second, where
