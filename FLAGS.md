@@ -63,7 +63,7 @@ Three kinds of gate:
 | `platform.withdrawal_right` | EU 14-day withdrawal handling at checkout | CODE | Statutory right on digital content; needs explicit waiver wording for content started immediately |
 | `platform.email_auth` | SPF / DKIM / DMARC and deliverability | ADMIN + SETUP | **Nothing exists.** Resets and receipts land in spam without it |
 | `platform.phone_format` | E.164 storage and per-country formatting | CODE | **Nothing exists.** International OTP breaks without normalisation |
-| `platform.cost_controls` | Storage quotas per teacher and spend alerts | ADMIN | **Nothing exists.** Unlimited teacher uploads is how $250/month becomes $3,000 |
+| `platform.cost_controls` | Storage quotas per teacher and spend alerts | ADMIN | The signed upload path now exists (`/api/media` → R2) and **nothing meters it**: `register_media_upload()` checks a type, a size and a checksum but no quota, and no ceiling is invented in the web layer either. Unlimited teacher uploads is how $250/month becomes $3,000, so a per-teacher byte quota and a spend alert are what this flag is for |
 | `platform.moderation` | Moderation of per-lesson discussion | ADMIN + SETUP | **Policy before feature.** Sectarian/contentious threads on fiqh topics; who reviews; escalation |
 | `platform.accessibility` | RTL, Arabic typography, screen readers, dyslexia-friendly fonts | CODE | `rtl: 0` today; font licensing (Uthmani/naskh) |
 
@@ -83,7 +83,7 @@ Three kinds of gate:
 | Flag | Gates | Type | Preconditions before it can be ON |
 |---|---|---|---|
 | `teaching.invites` | You invite a teacher | ADMIN | — |
-| `teaching.authoring` | Teacher builds and publishes a course | ADMIN | Authoring flow tested by a real teacher; media upload limits |
+| `teaching.authoring` | Teacher builds and publishes a course | ADMIN | Authoring flow tested by a real teacher; media upload limits — the ingest half is built (signed direct-to-R2 upload, `pending` until a privileged confirmation) but no ceiling exists, the transcode worker and playback path are not built, and no teacher screen offers the upload yet |
 | `teaching.dashboard` | Teacher sees their courses and learners | ADMIN | — |
 | `teaching.qa_capacity` | Limits or queueing on per-lesson questions | ADMIN | A teacher with an audience behind them will be overwhelmed without it |
 | `teaching.public_profile` | Public teacher page with bio, social links and published courses | ADMIN | Review the teacher-authored copy and outbound links first; do not imply unverified qualifications. Public RLS also hides profiles if this flag is off or the instructor role is revoked |

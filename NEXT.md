@@ -192,6 +192,30 @@ memberships panel on the enrolment page is unchanged on purpose: it lists
 classes the learner is already in, where leaving is the only action, and the
 window governs arriving rather than staying.
 
+Half the media byte path now exists. `/api/media` answers `request_upload` by
+asking the database to open a `pending` row — `register_media_upload()` derives
+the object key, so a caller cannot name one — and returns a signed
+direct-to-R2 PUT for that exact key, with the declared content type inside the
+signature so what arrives is what was recorded. Bytes go browser to R2 and never
+through the web server. `confirm_upload` is the only way a row becomes
+`available`, and it stays privileged, because "we have the file" and "we do not"
+is the distinction the whole state machine exists to hold.
+
+Signing is hand-rolled rather than an SDK: R2 speaks the S3 API, so a presigned
+URL is an AWS Signature Version 4 calculation, and the implementation is pinned
+against AWS's own published worked example — a vector written by somebody else,
+so the algorithm is not verified against itself. Masters sign for
+`ayahspring-masters` and renditions for `ayahspring-renditions`, and a master key
+is refused as a rendition key, because the only bucket a player may ever touch is
+the renditions one.
+
+What is not built, and is not implied by any of this: no transcode worker, so no
+renditions exist; no playback or download URL, because serving a learner means a
+rendition and masters are never served; and no teacher screen that offers the
+upload. There is also still no ceiling on what a teacher may send — no quota in
+SQL and none invented in the web layer, because that rule belongs to
+`platform.cost_controls` and is an open decision.
+
 Offline download is now a rule the database enforces. `may_download_lesson()`
 answers one question — may this session save this lesson to a device? — and it
 says yes only when the same learner profile has entitlement to the lesson's
@@ -251,7 +275,7 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **831 database tests, 363 web tests; TypeScript typecheck and
+Verification: **831 database tests, 384 web tests; TypeScript typecheck and
 production build pass; 102 tables, 230 policies, 133 user-defined triggers,
 216 functions, 89 migrations and 97 app route entries.**
 
