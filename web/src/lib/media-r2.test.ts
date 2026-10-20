@@ -17,6 +17,7 @@ import {
   isR2Configured,
   presignMasterDownload,
   presignMasterUpload,
+  presignRenditionDownload,
   presignRenditionPlayback,
   presignRenditionUpload,
   presignUrl,
@@ -377,4 +378,92 @@ test('a learner playback URL and a worker master download are different things',
   assert.equal(play.method, 'GET');
   assert.equal(worker.method, 'GET');
   assert.notEqual(play.url, worker.url);
+});
+
+// ---------------------------------------------------------------------------
+// Saving rather than playing
+// ---------------------------------------------------------------------------
+
+test('a download URL carries a signed attachment disposition', () => {
+  const signed = presignRenditionDownload(config, renditionKey, {
+    filename: 'Lesson One-720p.mp4',
+    now: fixed,
+  });
+  assert.equal(signed.method, 'GET');
+  assert.equal(signed.bucket, 'ayahspring-renditions');
+  assert.equal(signed.expiresInSeconds, MAX_PLAYBACK_SECONDS);
+  assert.match(signed.url, /response-content-disposition=/);
+  assert.match(signed.url, /attachment/);
+  assert.match(signed.url, /X-Amz-Signature=/);
+});
+
+test('the disposition is inside the signature, so it cannot be added later', () => {
+  const play = presignRenditionPlayback(config, renditionKey, { now: fixed });
+  const save = presignRenditionDownload(config, renditionKey, {
+    filename: 'Lesson One-720p.mp4',
+    now: fixed,
+  });
+  const signatureOf = (url: string) => url.split('X-Amz-Signature=')[1];
+  assert.notEqual(signatureOf(play.url), signatureOf(save.url));
+  // Same object, same instant, same window — the only difference is the
+  // override, and it changes the signature. A playback URL cannot be edited
+  // into a download one.
+  assert.equal(play.expiresInSeconds, save.expiresInSeconds);
+});
+
+test('a non-ASCII filename gets an ASCII fallback and a real name in filename*', () => {
+  const signed = presignRenditionDownload(config, renditionKey, {
+    filename: 'درس التجويد-480p.mp4',
+    now: fixed,
+  });
+  const disposition = decodeURIComponent(
+    signed.url.split('response-content-disposition=')[1]?.split('&')[0] ?? '',
+  );
+  assert.match(disposition, /filename\*=UTF-8''/, 'RFC 6266 extended form carries the real name');
+  assert.match(disposition, /%D8%AF%D8%B1%D8%B3/, 'the Arabic survives, percent-encoded');
+  const plain = disposition.match(/filename="([^"]*)"/)?.[1] ?? '';
+  assert.equal(/[^\x20-\x7e]/.test(plain), false, 'the fallback parameter is ASCII only');
+  assert.ok(plain.length > 0, 'and it is not empty, so an old client still saves something');
+});
+
+test('a quote in the filename cannot close the header value', () => {
+  const signed = presignRenditionDownload(config, renditionKey, {
+    filename: 'lesson"-720p.mp4',
+    now: fixed,
+  });
+  const disposition = decodeURIComponent(
+    signed.url.split('response-content-disposition=')[1]?.split('&')[0] ?? '',
+  );
+  const quotes = (disposition.match(/"/g) ?? []).length;
+  assert.equal(quotes, 2, `expected exactly the two quotes around the fallback, got ${String(quotes)}`);
+});
+
+test('a download with no filename, or of a master key, is refused', () => {
+  assert.throws(
+    () => presignRenditionDownload(config, renditionKey, { filename: '   ', now: fixed }),
+    /needs a filename/,
+  );
+  assert.throws(
+    () => presignRenditionDownload(config, masterKey, { filename: 'x.mp4', now: fixed }),
+    R2RequestError,
+    'a master is never handed to a learner, not even as a download',
+  );
+  assert.throws(
+    () =>
+      presignRenditionDownload(config, renditionKey, {
+        filename: 'x.mp4',
+        expiresInSeconds: MAX_PLAYBACK_SECONDS + 1,
+        now: fixed,
+      }),
+    /cannot exceed/,
+  );
+});
+
+test('a download can also override the type the object is served as', () => {
+  const signed = presignRenditionDownload(config, renditionKey, {
+    filename: 'lesson.m4a',
+    contentType: 'audio/mp4',
+    now: fixed,
+  });
+  assert.match(signed.url, /response-content-type=audio%2Fmp4/);
 });

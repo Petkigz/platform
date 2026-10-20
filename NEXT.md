@@ -303,9 +303,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **854 database tests, 426 web tests; TypeScript typecheck and
+Verification: **854 database tests, 456 web tests; TypeScript typecheck and
 production build pass; 102 tables, 230 policies, 133 user-defined triggers,
-220 functions, 92 migrations and 99 app route entries.**
+220 functions, 92 migrations and 101 app route entries.**
 
 ## Today's sentence
 
@@ -326,7 +326,7 @@ never started). Updated 2026-10-20.
 | Piece | Built and tested | Not built | Waiting on |
 |---|---|---|---|
 | **Media ingest** (D8 = R2) | `media_assets` register with a pending/available/quarantined/deleted state machine and four writer functions; SigV4 signing in `web/src/lib/media-r2.ts`, pinned against AWS's published vector; `POST /api/media` `request_upload` + `confirm_upload`; R2 variables documented in `web/.env.example` | Any R2 credential in this environment, so nothing has been exercised against a real bucket | **Nothing.** R2 is chosen; this is buildable now |
-| **Media delivery** | `media_renditions` register: one row per profile per asset, a closed profile vocabulary, derived bucket and object key, pending/available/failed with a written reason for a failure, staff-only writers, and `may_play_rendition()` which serves a rendition exactly where its lesson is open; **plus the transcode worker that drives it** — `web/src/worker/transcode-worker.ts` with its decisions in `web/src/lib/transcode.ts`, 32 web tests, gated by `delivery.transcode` | The signed playback route, the download route, a player that reads a rendition, a teacher upload screen, a host to run the worker on with ffmpeg, R2 credentials, a staff account for it, and a retry path for a rendition stuck `failed` | **Nothing** for the playback route and the player. The worker cannot be *run* until it has a host, credentials and an account, but nothing about it is undecided |
+| **Media delivery** | `media_renditions` register: one row per profile per asset, a closed profile vocabulary, derived bucket and object key, pending/available/failed with a written reason for a failure, staff-only writers, and `may_play_rendition()` which serves a rendition exactly where its lesson is open; **the transcode worker that drives it** (`web/src/worker/transcode-worker.ts`, decisions in `web/src/lib/transcode.ts`, gated by `delivery.transcode`); **and the learner's end of it** — `/api/media/playback` signs a short-lived rendition URL with the database as the only authority on who may watch, `/api/media/download` saves one behind `learning.offline` and `may_download_lesson()`, and the lesson page plays either with a quality selector and a poster; **32 tests on the worker's decisions, 24 on playback's and 30 on the R2 signer** | A host to run the worker on with ffmpeg, R2 credentials, a staff account for it, and a retry path for a rendition stuck `failed`; a teacher upload screen; and a decision about whether a **free preview may be watched signed-out** — `may_play_rendition()` requires a signed-in identity, so the public preview page cannot play a rendition yet and has deliberately not been wired to one | **Nothing** for the upload screen. The worker needs infrastructure, not design; the preview question needs a decision |
 | **Offline download** | `may_download_lesson()` requiring entitlement + an `offline_downloads` feature grant + verified first-party media; closed feature vocabulary (`pe_feature_vocabulary`, `plan_feature_codes()`) with the admin plan form offering the list; 17 database tests | Any download route or UI, device registration, device storage limits, download expiry, protected-media handling | **Decisions:** device limits, expiry and protected media (`learning.offline`). It would also serve renditions, which do not exist |
 | **Upload cost control** | Nothing — and nothing was invented | A per-teacher byte quota, a spend alert, any ceiling on a single upload | **Decision:** quota policy (`platform.cost_controls`). `register_media_upload()` checks type, size and checksum but no quota |
 | **Assignments** | Tasks, self-paced and cohort deadlines, one private submission per learner, drafts and hand-in, marking with immutable feedback, a revision loop with an append-only snapshot, file *references* with type and size ceilings | Byte transfer for submissions (the R2 path exists but is not wired to submissions), scanning, secure delivery to the marker, retention of children's files | **Decision/review:** the safeguarding review of files children send. This one review holds `learning.assignments` **and** `learning.cohorts` |
@@ -480,6 +480,55 @@ in the profile vocabulary and nothing produces one, because an HLS manifest is
 thousands of segment objects and this register holds one row per profile. A
 rendition stuck `failed` needs SQL to retry, and there is no playback route to
 serve one even when it exists.
+
+### Serving a rendition to a learner, 2026-10-20
+
+The lesson page used to say *"secure playback setup is still required"* for any
+first-party upload. That was true, and it is the last thing standing between an
+uploaded lesson and a watched one.
+
+**Three pieces.** `/api/media/playback?rendition=<id>` signs a short-lived GET
+for one delivery copy. `/api/media/download?lesson=<id>` signs the same object
+with `response-content-disposition: attachment`, so a button labelled *Save for
+offline* saves a file instead of opening a tab. And `rendition-player.tsx` plays
+either, with a quality selector that shows the size of each rung.
+
+**The database is the only authority on who may watch.** `media_renditions_read`
+is `may_play_rendition(id) or is_privileged(...)`, and that predicate already
+walks rendition → master → `lesson_resources` → `lessons` and asks
+`can_access_lesson_now()`. So the route selects the row and trusts the answer
+rather than re-checking entitlement, because a second check is a second
+authority and two authorities that can disagree is the failure this repository
+keeps finding. A row the caller may not play does not come back at all, so
+"does not exist" and "is not yours" answer identically.
+
+**Streaming defaults down, saving defaults up.** A streamed lesson costs data
+every time it is watched and most of these learners are on metered mobile
+connections, so playback starts at 480p and the learner can choose another rung.
+A saved lesson costs data once, so saving takes the best rung that exists. Both
+are overridable; neither changes what the database allowed.
+
+**The URL is fetched, not embedded.** A presigned URL is a bearer token, so
+putting it in server-rendered HTML would leave it in the browser history, in any
+saved copy of the page, and in the page source of a lesson somebody
+screen-shared. It also expires, and a long lesson watched slowly outlives a URL
+minted at page load, so the player asks again.
+
+**The filename is treated as hostile input.** A lesson title here can be Arabic,
+can contain a quote, and can contain a slash, and it ends up in a
+`Content-Disposition` header. `downloadFilename()` strips separators, quotes and
+control characters and trims leading dots — trimmed *before* stripping, since
+`.. / ..` only starts with a dot once the spaces are gone. The header carries an
+ASCII fallback plus RFC 6266 `filename*`, so the learner sees their own lesson's
+name rather than a transliteration of it.
+
+**Two things this is not.** Not DRM: the saved file is an ordinary MP4 that can
+be copied, so what the feature buys is convenience and not protection, and the
+device-limit and expiry decisions are still open. And not wired into the public
+preview page: `may_play_rendition()` requires a signed-in identity, so an
+anonymous visitor would get a player that always errors. Whether a free preview
+should be watchable signed-out is a product decision, and it has been left open
+rather than answered by quietly widening the predicate.
 
 ## Open external decisions (not to be guessed)
 

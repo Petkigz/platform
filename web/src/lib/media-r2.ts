@@ -302,6 +302,13 @@ export type PresignInput = {
   expiresInSeconds: number;
   /** Signed when supplied, so an upload cannot change the type it declared. */
   contentType?: string;
+  /**
+   * `response-*` query parameters, which S3 and R2 honour by overriding the
+   * stored object's response headers for this request only. They are part of the
+   * canonical query, so they are signed: a caller cannot add one afterwards to
+   * turn a playback URL into a download.
+   */
+  responseOverrides?: Record<string, string>;
   region?: string;
   service?: string;
   now?: Date;
@@ -346,6 +353,7 @@ export function presignUrl(input: PresignInput): PresignedUrl {
     'X-Amz-Date': amzDate,
     'X-Amz-Expires': String(input.expiresInSeconds),
     'X-Amz-SignedHeaders': signedHeaders,
+    ...(input.responseOverrides ?? {}),
   };
 
   const canonical = canonicalRequest({
@@ -405,7 +413,7 @@ export function presignMasterUpload(
 export function presignRenditionPlayback(
   config: R2Config,
   key: string,
-  options: { expiresInSeconds?: number; now?: Date },
+  options: { expiresInSeconds?: number; now?: Date } = {},
 ): PresignedUrl {
   const expires = options.expiresInSeconds ?? MAX_PLAYBACK_SECONDS;
   if (expires > MAX_PLAYBACK_SECONDS) {
@@ -488,6 +496,59 @@ export function presignRenditionUpload(
     key: assertRenditionKey(key),
     expiresInSeconds: expires,
     contentType: options.contentType,
+    now: options.now,
+  });
+}
+
+/**
+ * Saving a rendition rather than playing it.
+ *
+ * Same object, same bucket, same short window as playback — the difference is
+ * `response-content-disposition`, which makes the browser save the bytes instead
+ * of opening them. Without it a "Save for offline" button would open a new tab
+ * and play the lesson, which is not what the button says.
+ *
+ * The filename is quoted and escaped here rather than trusted: a display name on
+ * this platform can be Arabic, can contain a double quote, and can contain a
+ * slash, and any of those in a raw header would either break the response or let
+ * a teacher choose the path a learner saves to.
+ */
+export function presignRenditionDownload(
+  config: R2Config,
+  key: string,
+  options: { filename: string; contentType?: string; expiresInSeconds?: number; now?: Date },
+): PresignedUrl {
+  const filename = options.filename.trim();
+  if (!filename) {
+    throw new R2RequestError('a download needs a filename to save under');
+  }
+  const expires = options.expiresInSeconds ?? MAX_PLAYBACK_SECONDS;
+  if (expires > MAX_PLAYBACK_SECONDS) {
+    throw new R2RequestError(
+      `a download window cannot exceed ${MAX_PLAYBACK_SECONDS} seconds; the bytes are meant to be saved, not the URL kept`,
+    );
+  }
+  // RFC 6266: an ASCII fallback for old clients, and filename* carrying the real
+  // name. A lesson title on this platform is as likely to be Arabic as English,
+  // and the plain parameter cannot hold that.
+  const ascii =
+    filename
+      .replace(/[^\x20-\x7e]/g, '')
+      .replace(/["\\]/g, '')
+      .trim() || 'lesson';
+  const overrides: Record<string, string> = {
+    'response-content-disposition': `attachment; filename="${ascii}"; filename*=UTF-8''${uriEncode(filename)}`,
+  };
+  if (options.contentType?.trim()) {
+    overrides['response-content-type'] = options.contentType.trim();
+  }
+  return presignUrl({
+    config,
+    method: 'GET',
+    bucket: config.renditionsBucket,
+    key: assertRenditionKey(key),
+    expiresInSeconds: expires,
+    responseOverrides: overrides,
     now: options.now,
   });
 }

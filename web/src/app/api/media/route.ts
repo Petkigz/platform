@@ -31,11 +31,13 @@ const fail = (message: string, status: number) => NextResponse.json({ ok: false,
  * `available` until a privileged confirmation says the object really arrived.
  *
  * What is NOT here, deliberately:
- * - No playback or download URL. Serving a learner means a rendition, and the
- *   renditions register and transcode worker do not exist yet. Masters are
- *   never served to a learner, so there is nothing honest to mint.
- * - No ceiling on size and no allowlist of types. Neither exists in SQL, and
- *   the ceiling is an open decision under `platform.cost_controls`.
+ * - No playback or download URL. A learner is served a rendition and never a
+ *   master, so those live in `/api/media/playback` and `/api/media/download`
+ *   and read `media_renditions`, not this table.
+ *
+ * The per-file ceiling is enforced by `registerMediaUpload` in `lib/media.ts`
+ * (`MAX_UPLOAD_BYTES`, 8 GiB). What still does not exist is a cumulative
+ * per-teacher quota, which is the open decision under `platform.cost_controls`.
  */
 export async function POST(request: Request) {
   if (!isSupabaseConfigured()) return fail('Storage is not configured on this deployment.', 503);

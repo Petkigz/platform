@@ -17,6 +17,8 @@ import { ReportForm } from './report-form';
 import { fetchLessonSources } from '@/lib/provenance';
 import { fetchLessonStudyTools } from '@/lib/lesson-study-tools';
 import { StudyTools } from './study-tools';
+import { fetchPlayableRenditions, groupByAsset, posterFor } from '@/lib/playback';
+import { RenditionPlayer } from './rendition-player';
 
 export const dynamic = 'force-dynamic';
 
@@ -132,6 +134,33 @@ export default async function LessonPage({
       : Promise.resolve(null),
   ]);
 
+  // Delivery copies of any uploaded media in this lesson. The select is filtered
+  // by row-level security — `may_play_rendition()` — so what comes back is
+  // exactly what this learner may watch, and nothing here re-decides that. A
+  // second check would be a second authority that could disagree with the first.
+  const assetIds = lesson.resources
+    .map((resource) => resource.mediaAssetId)
+    .filter((id): id is string => Boolean(id));
+  const hasMedia = assetIds.length > 0;
+
+  const [renditions, offlineOn] = await Promise.all([
+    hasMedia ? fetchPlayableRenditions(supabase, assetIds) : Promise.resolve([]),
+    hasMedia
+      ? isFlagEnabled(supabase, 'learning.offline').catch(() => false)
+      : Promise.resolve(false),
+  ]);
+  const renditionsByAsset = groupByAsset(renditions);
+
+  // Saving is a paid feature with its own predicate, deliberately not
+  // can_access_lesson(): a free preview may be watched but not kept.
+  let canDownload = false;
+  if (offlineOn && hasMedia) {
+    const { data: maySave } = await supabase.rpc('may_download_lesson', {
+      p_lesson_id: lesson.id,
+    });
+    canDownload = maySave === true;
+  }
+
   const courseTitle = enrolment.courses?.[0]?.title ?? 'the course';
   const duration = formatDuration(lesson.durationSeconds);
 
@@ -220,13 +249,26 @@ export default async function LessonPage({
                       <a href={r.externalUrl} target="_blank" rel="noreferrer">
                         {r.displayName}
                       </a>
-                    ) : (
-                      // First-party media assets remain protected: they need a
-                      // short-lived signed playback URL from the chosen storage
-                      // provider rather than a permanent public link.
+                    ) : r.mediaAssetId && (renditionsByAsset.get(r.mediaAssetId)?.length ?? 0) > 0 ? (
+                      <RenditionPlayer
+                        displayName={r.displayName}
+                        lessonId={lesson.id}
+                        resourceId={r.id}
+                        renditions={renditionsByAsset.get(r.mediaAssetId) ?? []}
+                        posterRenditionId={
+                          posterFor(renditionsByAsset.get(r.mediaAssetId) ?? [])?.id ?? null
+                        }
+                        canDownload={canDownload}
+                      />
+                    ) : r.mediaAssetId ? (
+                      // The master exists but nothing has encoded a delivery copy
+                      // yet, and a master is never served to a learner, so there
+                      // is nothing honest to put in a player.
                       <span className="muted">
-                        {r.displayName} — secure playback setup is still required
+                        {r.displayName} — uploaded, not yet encoded for playback
                       </span>
+                    ) : (
+                      <span className="muted">{r.displayName}</span>
                     )}
                   </span>
                   {r.accessClassification === 'public_preview' && previewsOn && (
