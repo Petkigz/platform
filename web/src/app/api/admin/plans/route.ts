@@ -86,8 +86,13 @@ export async function POST(request: Request) {
 
   const { data, error } = await supabase.rpc(fn, args as never);
   if (error) {
-    const message = error.message;
-    const status = /only platform staff/i.test(message) ? 403
+    const message = /pe_feature_vocabulary/i.test(error.message)
+      // The vocabulary is closed on purpose: a code nothing reads would take
+      // money and grant nothing, silently.
+      ? 'That feature code cannot be sold. The permitted codes come from plan_feature_codes(), and a new one needs a rule that honours it.'
+      : error.message;
+    const status = /cannot be sold/i.test(message) ? 400
+      : /only platform staff/i.test(message) ? 403
       : /not found|does not exist/i.test(message) ? 404
       : 409;
     return fail(message, status);

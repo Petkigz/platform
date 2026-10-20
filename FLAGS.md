@@ -26,7 +26,7 @@ Three kinds of gate:
 | `learning.certificates.simple` | Completion certificate for a learner | ADMIN | Template chosen; certificate numbering scheme |
 | `learning.certificates.verification` | Public verify-a-certificate page | ADMIN + SETUP | Verification page deployed; revocation policy written; token format fixed |
 | `learning.discussion` | Per-lesson questions and replies | ADMIN | Moderation policy; who answers (teacher vs. peers); abuse handling |
-| `learning.offline` | Download lessons for offline use | CODE | Download entitlement rules; protected media decision; device storage limits; expiry |
+| `learning.offline` | Download lessons for offline use | CODE | The entitlement rule is decided and enforced: `may_download_lesson()` requires entitlement to the version, an active `offline_downloads` feature grant on the plan being paid for, and verified first-party media — so a Plus plan carries it and a Basic plan does not (2026-10-20). Still open: protected media decision, device storage limits, download expiry, and the byte path itself — no object is fetched or signed yet |
 | `learning.paths` | Structured multi-course learning paths | ADMIN | Path content authored |
 | `learning.audience_sections` | Separate Young Learners and Adult Learner entry experiences | ADMIN | Learner switcher designed — a parent who also studies must move between their own learning and a child's |
 | `learning.age_bands` | Age-band navigation inside Young Learners | ADMIN | Bands chosen. Use `age_band`, **not** dates of birth |

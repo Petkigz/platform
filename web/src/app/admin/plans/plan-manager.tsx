@@ -52,9 +52,11 @@ function value(data: FormData, key: string): string {
 
 export function PlanManager({
   plans,
+  featureCodes,
   subjects,
 }: {
   plans: PlanView[];
+  featureCodes: string[];
   subjects: SubjectView[];
 }) {
   const router = useRouter();
@@ -161,7 +163,18 @@ export function PlanManager({
                 <input type="hidden" name="versionId" value={version.id} />
                 <label>Entitlement type<select name="scopeType" defaultValue="catalogue"><option value="catalogue">Subject catalogue</option><option value="feature">Platform feature</option></select></label>
                 <label>Subject area<select name="subjectAreaId" defaultValue=""><option value="">Choose a subject</option>{subjects.map((subject) => <option key={subject.id} value={subject.id}>{subject.name}</option>)}</select></label>
-                <label>Feature code<input name="featureCode" maxLength={100} placeholder="offline_downloads" /></label>
+                <label>Feature code
+                  <select name="featureCode" defaultValue="">
+                    <option value="">Choose a feature</option>
+                    {featureCodes.map((code) => (
+                      <option key={code} value={code}>{code === 'offline_downloads' ? 'Offline downloads (Plus plans)' : code}</option>
+                    ))}
+                  </select>
+                </label>
+                <p className="muted" style={{ fontSize: '0.85rem' }}>
+                  A closed list, not free text: selling a code no rule reads would take money and grant
+                  nothing. <code>offline_downloads</code> is what <code>may_download_lesson()</code> honours.
+                </p>
                 <button className="btn secondary" disabled={pending}>Add entitlement</button>
               </form>
 

@@ -99,7 +99,7 @@ money through.*
 - [ ] Build the Android app experience — *one Expo codebase: this and iOS are the same build, not two tasks*
 - [ ] Build the iOS app experience
 - [ ] Implement notifications and reminders
-- [!] Implement offline learning where supported — **entitlement rules, protected media, device storage limits all undecided**
+- [!] Implement offline learning where supported — *the entitlement rule is decided and enforced in SQL: saving requires a plan carrying the `offline_downloads` feature (Plus, not Basic), entitlement to the version, and verified first-party media; a free preview may be watched but not kept. Protected media, device storage limits, download expiry and the byte path are all still open*
 - [!] Add analytics and reporting — **`delivery.analytics` is CODE; needs event instrumentation and a retention decision**
 - [ ] Prepare international currencies, languages and payment expansion
 

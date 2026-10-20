@@ -192,6 +192,28 @@ memberships panel on the enrolment page is unchanged on purpose: it lists
 classes the learner is already in, where leaving is the only action, and the
 window governs arriving rather than staying.
 
+Offline download is now a rule the database enforces. `may_download_lesson()`
+answers one question — may this session save this lesson to a device? — and it
+says yes only when the same learner profile has entitlement to the lesson's
+course version, holds an active `offline_downloads` feature grant on the plan
+being paid for, and the lesson has verified first-party media behind it. All
+three parts matter separately: entitlement without the feature is a Basic
+subscriber, the feature without entitlement is a stranger with a plan, and media
+that is still `pending` or `quarantined` must never be handed out because that
+state machine exists precisely to distinguish "we have the file" from "we do
+not". A hotlinked resource fails the third check for a plainer reason — it is
+somebody else's server, and there is nothing of ours to save.
+
+The vocabulary of sellable feature codes is closed (`pe_feature_vocabulary`,
+mirrored by `plan_feature_codes()`), because the failure it prevents is silent:
+a plan sold with `offline_download` instead of `offline_downloads` takes money
+and grants nothing, with no error anywhere. The admin plan form now offers the
+closed list instead of a free-text box, and a refusal names the reason.
+
+What is still open is everything about the bytes: device storage limits, download
+expiry, protected media, and the signed transfer itself. The predicate decides
+who is entitled and hands nothing over.
+
 That leaves one gap, and it is now code rather than a decision. **Learner
 analytics (`SCREENS.md` row 32) was blocked on a privacy decision**, now made and
 recorded in `DECISIONS.md`
@@ -229,9 +251,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **814 database tests, 363 web tests; TypeScript typecheck and
+Verification: **831 database tests, 363 web tests; TypeScript typecheck and
 production build pass; 102 tables, 230 policies, 133 user-defined triggers,
-214 functions, 88 migrations and 97 app route entries.**
+216 functions, 89 migrations and 97 app route entries.**
 
 ## Today's sentence
 

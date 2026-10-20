@@ -281,11 +281,11 @@ export async function createHarness() {
       `insert into public.media_assets
          (storage_backend, master_bucket, master_key, checksum, mime_type,
           byte_size, status, uploaded_by)
-       values ('r2', $1, $2, $3, 'video/mp4', 1048576, 'available', $4) returning id`,
+       values ('r2', $1, $2, $3, 'video/mp4', 1048576, $4, $5) returning id`,
       [over.bucket ?? 'masters',
        over.key ?? `${crypto.randomUUID()}.mp4`,
        over.checksum ?? crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '').slice(0, 32),
-       uploadedBy]);
+       over.status ?? 'available', uploadedBy]);
     return r.rows[0].id;
   }
 

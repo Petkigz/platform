@@ -14,7 +14,7 @@ export default async function AdminPlansPage() {
   const { data: privileged } = await supabase.rpc('is_privileged', { p_user_id: user.id });
   if (privileged !== true) redirect('/');
 
-  const [plansResult, subjectsResult] = await Promise.all([
+  const [plansResult, subjectsResult, featureResult] = await Promise.all([
     supabase
       .from('plans')
       .select(`id, code, name, status, description,
@@ -25,9 +25,15 @@ export default async function AdminPlansPage() {
         )`)
       .order('created_at', { ascending: false }),
     supabase.from('subject_areas').select('id, code, name').eq('status', 'active').order('name'),
+    // The vocabulary is closed in SQL (pe_feature_vocabulary), so the form offers
+    // exactly what the schema will accept rather than free text.
+    supabase.rpc('plan_feature_codes'),
   ]);
   if (plansResult.error) throw new Error(plansResult.error.message);
   if (subjectsResult.error) throw new Error(subjectsResult.error.message);
+  if (featureResult.error) throw new Error(featureResult.error.message);
+
+  const featureCodes = (featureResult.data ?? []) as unknown as string[];
 
   const plans = (plansResult.data ?? []) as unknown as PlanView[];
   const subjects = (subjectsResult.data ?? []) as unknown as SubjectView[];
@@ -41,7 +47,7 @@ export default async function AdminPlansPage() {
         Activation requires both an entitlement and a live price. This configures offers only; it does
         not create a paid subscription or substitute for provider confirmation.
       </p>
-      <PlanManager plans={plans} subjects={subjects} />
+      <PlanManager plans={plans} subjects={subjects} featureCodes={featureCodes} />
       <p style={{ marginTop: '1.5rem' }}><Link href="/admin">Back to administration</Link></p>
     </div>
   );
