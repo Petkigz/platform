@@ -239,7 +239,7 @@ the renditions one.
 What is not built, and is not implied by any of this: no transcode worker, so no
 renditions exist; no playback or download URL, because serving a learner means a
 rendition and masters are never served; and no teacher screen that offers the
-upload. There is a ceiling on a single file — 8 GiB in SQL, 512 MiB from a browser — but no quota in
+upload. There is a ceiling on a single file — 8 GiB in SQL, 5 GiB less 5 MiB from a browser — but no quota in
 SQL and none invented in the web layer, because that rule belongs to
 `platform.cost_controls` and is an open decision.
 
@@ -303,7 +303,7 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **908 database tests, 552 web tests; TypeScript typecheck and
+Verification: **908 database tests, 565 web tests; TypeScript typecheck and
 production build pass; 103 tables, 231 policies, 134 user-defined triggers,
 227 functions, 96 migrations and 105 app route entries.**
 
@@ -328,7 +328,7 @@ never started). Updated 2026-10-20.
 | **Media ingest** (D8 = R2) | `media_assets` register with a pending/available/quarantined/deleted state machine and four writer functions; SigV4 signing in `web/src/lib/media-r2.ts`, pinned against AWS's published vector; `POST /api/media` `request_upload` + `confirm_upload`; R2 variables documented in `web/.env.example` | Any R2 credential in this environment, so nothing has been exercised against a real bucket | **Nothing.** R2 is chosen; this is buildable now |
 | **Media delivery** | The whole path, end to end: `media_renditions` register with a closed profile vocabulary and derived object keys; the transcode worker that fills it (`web/src/worker/transcode-worker.ts`, decisions in `lib/transcode.ts`, gated by `delivery.transcode`), which checks the master's SHA-256 against the bytes before it encodes anything; `/api/media/playback` and `/api/media/download` signing short-lived rendition URLs with the database as the only authority on who may watch; a player on the lesson page with a quality selector and a poster; `/teach/media`, where a teacher uploads straight to R2 with a browser-computed checksum; `verify` on `/admin/media`, which asks storage whether the file arrived at the declared size and only then confirms it; and `retry_media_rendition()`, reached from the same screen, which puts a copy that failed to encode back in the queue on a written reason | A host to run the worker on with ffmpeg, R2 credentials and a staff account for it, and a decision about whether a free preview may be watched signed-out | **Nothing** that is a design question. What is left is infrastructure and one product decision |
 | **Offline download** | `may_download_lesson()` requiring entitlement + an `offline_downloads` feature grant + verified first-party media; closed feature vocabulary (`pe_feature_vocabulary`, `plan_feature_codes()`) with the admin plan form offering the list; 17 database tests | Any download route or UI, device registration, device storage limits, download expiry, protected-media handling | **Decisions:** device limits, expiry and protected media (`learning.offline`). It would also serve renditions, which do not exist |
-| **Upload cost control** | A per-file ceiling, in two places: 8 GiB in SQL and in `lib/media.ts`, and **512 MiB for a browser upload**, because WebCrypto cannot digest a stream and the checksum is required | A cumulative per-teacher byte quota, a spend alert, and a way to raise the browser ceiling (a chunked digest or a desktop uploader) | **Decision:** quota policy (`platform.cost_controls`). Note that `register_media_upload()` is open to **any signed-in user**, not only teachers, because learners attach files to assignment submissions through the same table — so the missing control is a cumulative quota per person, not a role check |
+| **Upload cost control** | A per-file ceiling, in two places: 8 GiB in SQL and in `lib/media.ts`, and **5 GiB less 5 MiB for a browser upload**, which is storage's own limit on one request — `lib/digest.ts` hashes a slice at a time, so the checksum no longer caps the size | A cumulative per-teacher byte quota, a spend alert, and a multipart uploader, which is what would take a browser past 5 GiB and make a failed upload resumable instead of starting again | **Decision:** quota policy (`platform.cost_controls`). Note that `register_media_upload()` is open to **any signed-in user**, not only teachers, because learners attach files to assignment submissions through the same table — so the missing control is a cumulative quota per person, not a role check |
 | **Assignments** | Tasks, self-paced and cohort deadlines, one private submission per learner, drafts and hand-in, marking with immutable feedback, a revision loop with an append-only snapshot, file *references* with type and size ceilings | Byte transfer for submissions (the R2 path exists but is not wired to submissions), scanning, secure delivery to the marker, retention of children's files | **Decision/review:** the safeguarding review of files children send. This one review holds `learning.assignments` **and** `learning.cohorts` |
 | **Cohorts** | Tables, exact-version pinning, opt-in join/leave, capacity serialisation, family opt-in for children, counts on the manager and, since row 32, names and progress on the class page for the teacher who opened it, teacher manager, learner join/leave, and the teacher-set `join_closes_at` window | Nothing structural | The same safeguarding review. `learning.cohorts` ships `false` |
 | **Learner analytics** (`SCREENS.md` row 32) | `can_read_learner_course_progress()` as a second branch on the `course_enrolments` and `lesson_progress` read policies; `cohort_learner_progress()`, which returns four columns of a profile rather than the row; `/teach/[courseId]/cohorts/[cohortId]` with a class summary and a roster ordered by need; 19 database tests, most of them negative | Aggregate or platform-wide reporting, event instrumentation beyond lesson progress, export or CSV, anything that follows a learner across courses | **Retention:** how long progress stays readable after a class ends or a learner leaves — a decision, not a default. `delivery.analytics` and `learning.cohorts` both ship `false`, and the predicate checks both |
@@ -551,6 +551,10 @@ so hashing means holding the whole file in memory. A browser upload is therefore
 capped at **512 MiB**, well below the database's 8 GiB, and the refusal names
 both numbers and the reason. Lifting it needs a chunked digest or an uploader
 that runs somewhere with a filesystem; neither exists.
+
+*(Since: `lib/digest.ts` is the chunked digest, so the browser ceiling is now
+storage's own 5 GiB limit on a single request — see "A browser can now upload a
+recording it can actually make".)*
 
 **Files got names, which needed a schema change.** `media_assets` recorded a
 type, a size, a digest and a duration, and nothing a teacher could recognise —
@@ -780,6 +784,58 @@ unstyled; they are `.btn` now.
 second failure shows up on the same screen with its own reason, and a person
 decides again. Retrying does not encode anything: it re-queues, and the next
 worker run does the work. 11 database tests, 7 web.
+
+### A browser can now upload a recording it can actually make, 2026-10-20
+
+The browser ceiling was 512 MiB against a database ceiling of 8 GiB, and the gap
+was not conservatism. A 45-minute lesson at the 1080p rung this platform encodes
+to is about 2 GiB, so the ingest path refused the most ordinary thing a teacher
+has, and the refusal named the checksum — truthfully. `register_media_upload()`
+requires a SHA-256 digest, and WebCrypto's `subtle.digest` takes a whole
+`ArrayBuffer`, so hashing meant holding the file in memory.
+
+**`web/src/lib/digest.ts` is the same algorithm fed a slice at a time.** It reads
+`Blob.slice()` in 4 MiB chunks, so memory is bounded by the chunk and not by the
+file, and it runs at about 84 MiB/s — roughly a minute for a 5 GiB recording.
+That minute is reported: the upload form now shows a progress bar for hashing as
+well as for the transfer, because a button that says only "Computing the
+checksum…" for sixty seconds gets the tab closed.
+
+**One implementation, not a fast path and a slow path.** WebCrypto would be
+several times faster below some threshold, and using it there is the obvious
+design. It is refused because the digest is a security property: two
+implementations means the one exercised least is the large-file path, which is
+where a bug hides, and a wrong digest does not fail loudly — it fails when
+somebody tries to match a rights request to the file. Every upload now goes
+through the same code.
+
+**The new ceiling is the transport's, not ours.** 5 GiB less 5 MiB is the
+provider's limit on a single request (Cloudflare's R2 limits documentation,
+checked October 2026), and this upload is one presigned PUT. Getting the last
+3 GiB up to the database's ceiling needs multipart — parts of at least 5 MiB, all
+but the last the same size, at most 10,000 of them — and with it two things that
+matter more than the number:
+
+- **A single PUT cannot be resumed.** A failure at 90% of a 4 GiB recording
+  starts again from zero, which is why the provider recommends single PUT only
+  below about 100 MB.
+- **The presigned URL lives at most an hour** (`MAX_UPLOAD_SECONDS`), so at this
+  ceiling a teacher needs a sustained 1.5 MiB/s or the URL expires mid-transfer.
+
+**Tests.** The digest is checked against `node:crypto`: the four published
+vectors including a million `a`s; every block and padding boundary — 55/56/57,
+63/64/65, 119/120/127/128/129 and chunk ±1 — fed three ways (one buffer, a byte
+at a time, uneven slices); progress monotonic; a finished digest refusing more
+bytes; and 512 MiB of zeros end to end. That last one is the expensive test and
+it is kept: 512 MiB is the smallest input whose padded bit count has a non-zero
+high word, so it is the only test that drives the branch the WebCrypto-only path
+never reached, in the range this unit just made uploadable. 13 web tests, and no
+database change.
+
+**Not built.** Multipart, which is resumable and parallel and lifts the ceiling
+past 5 GiB. A desktop uploader. Cancelling a hash in flight — the button is
+disabled while it runs, so a teacher who picks a huge file by mistake has to
+reload the page.
 
 ## Open external decisions (not to be guessed)
 

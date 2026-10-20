@@ -26,18 +26,38 @@ await test('an ordinary lesson video is accepted', () => {
   assert.deepEqual(validateBrowserFile(file()), { ok: true });
 });
 
-await test('the browser ceiling is well below the database ceiling, and says why', () => {
+await test('the ceiling is what one request to storage can carry, and the refusal says so', () => {
+  // 5 GiB less 5 MiB is the provider's own single-PUT limit, not a number chosen
+  // here: `lib/digest.ts` removed the hashing ceiling that used to stop this at
+  // 512 MiB, so the transport is what binds now.
+  assert.equal(MAX_BROWSER_UPLOAD_BYTES, 5 * 1024 * 1024 * 1024 - 5 * 1024 * 1024);
+
   const refused = validateBrowserFile(file({ size: MAX_BROWSER_UPLOAD_BYTES + 1 }));
   assert.equal(refused.ok, false);
   assert.ok(!refused.ok);
-  // The teacher is told the reason, not just the number: without the checksum
+  // The teacher is told the reason, not just the number: without the transport
   // explanation the limit looks arbitrary.
-  assert.match(refused.message, /checksum/);
-  assert.match(refused.message, /512 MiB/);
+  assert.match(refused.message, /one request to storage/i);
+  assert.match(refused.message, /5 GiB less 5 MiB/);
+  assert.match(refused.message, /cannot be resumed/);
+  assert.match(refused.message, /Split the recording/);
   assert.ok(
     MAX_BROWSER_UPLOAD_BYTES < 8 * 1024 * 1024 * 1024,
     'the browser ceiling must stay below the 8 GiB the database allows',
   );
+});
+
+await test('a recording too large for the old ceiling is now accepted', () => {
+  // 512 MiB was the limit when hashing needed the whole file in memory. These
+  // are the sizes a real lesson recording actually comes in at.
+  for (const size of [
+    512 * 1024 * 1024 + 1,
+    1024 * 1024 * 1024,
+    2 * 1024 * 1024 * 1024,
+    4 * 1024 * 1024 * 1024,
+  ]) {
+    assert.deepEqual(validateBrowserFile(file({ size })), { ok: true }, String(size));
+  }
 });
 
 await test('a file exactly at the ceiling is accepted', () => {
@@ -57,12 +77,11 @@ await test('an empty file, a nameless file and a typeless file are each refused'
   }
 });
 
-await test('a refusal names both sizes, so the teacher knows how far over they are', () => {
-  const refused = validateBrowserFile(file({ size: MAX_BROWSER_UPLOAD_BYTES * 2 }));
+await test('a refusal names the size of the file the teacher picked', () => {
+  const refused = validateBrowserFile(file({ size: 9 * 1024 * 1024 * 1024 }));
   assert.equal(refused.ok, false);
   assert.ok(!refused.ok);
-  assert.match(refused.message, /1\.0 GiB/);
-  assert.match(refused.message, /512 MiB/);
+  assert.match(refused.message, /9\.0 GiB/, 'the teacher cannot tell which file was refused');
 });
 
 // ---------------------------------------------------------------------------
@@ -125,4 +144,17 @@ await test('two different files do not share a digest', async () => {
   const a = await sha256OfFile(new Blob([new TextEncoder().encode('lesson one')]));
   const b = await sha256OfFile(new Blob([new TextEncoder().encode('lesson two')]));
   assert.notEqual(a, b);
+});
+
+await test('hashing reports progress, because on a large file it takes a while', async () => {
+  // Bigger than one digest chunk, so this is more than one pass: a progress
+  // callback that fires once is indistinguishable from no progress at all.
+  const bytes = new Uint8Array(4 * 1024 * 1024 + 1000);
+
+  const seen: number[] = [];
+  const got = await sha256OfFile(new Blob([bytes]), (progress) => seen.push(progress.hashedBytes));
+
+  assert.equal(got, createHash('sha256').update(bytes).digest('hex'));
+  assert.equal(seen[seen.length - 1], bytes.length, 'the last report is the whole file');
+  assert.ok(seen.length > 1, 'a file this size is hashed in more than one pass');
 });

@@ -66,8 +66,8 @@ export const MAX_DISPLAY_NAME_LENGTH = 200;
 
 /**
  * A size a person can read. Binary units, because the ceilings in this file are
- * binary too: 512 MiB is what a browser can hash, and calling it 512 MB would
- * overstate it by 24 megabytes of somebody's lesson.
+ * binary too: the largest single request storage accepts is 5 GiB less 5 MiB, and
+ * calling that 5 GB would overstate it by 365 megabytes of somebody's lesson.
  */
 export function readableByteSize(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes < 1024) return `${String(Math.max(0, Math.round(bytes)))} B`;

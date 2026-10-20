@@ -696,3 +696,53 @@ second switch on a door that already has a lock, and it would let a deployment
 turn off the ability to repair its own failures. Implemented in
 `20261214000100_rendition_retry.sql`, `POST /api/admin/media` with
 `action: 'retry_rendition'`, and the retry control on `/admin/media`.
+
+## How large a file a teacher may upload from a browser — **DECIDED 2026-10-20**
+
+Settled while lifting the ceiling, because the number that came out is not the
+one that was written down before.
+
+A browser could upload 512 MiB while the database accepted 8 GiB. That is not a
+conservative limit; it is smaller than the most ordinary thing a teacher has. A
+45-minute lesson recorded at the 1080p rung this platform encodes to is about
+2 GiB, so the ingest path refused it, and the refusal named a checksum as the
+reason — which was true, and fixable.
+
+**The blocker was WebCrypto, not the network.** `register_media_upload()`
+requires a SHA-256 digest of the file, and that requirement stays: the digest is
+what proves the platform still holds the exact original somebody uploaded, and
+what lets a rights request be matched to every copy of it. But `subtle.digest`
+takes a whole `ArrayBuffer`, so hashing meant holding the entire file in memory,
+and a large recording crashed the tab before it reached the network.
+
+**Chosen: implement SHA-256 in the browser and feed it a slice at a time.**
+`web/src/lib/digest.ts` reads `Blob.slice()` in 4 MiB chunks, so memory is
+bounded by the chunk rather than by the file. It runs at about 84 MiB/s, which
+makes a 5 GiB recording roughly a minute of hashing — reported per chunk, with a
+progress bar, because a teacher watching a button that says only "Computing the
+checksum…" for a minute closes the tab.
+
+**Rejected: WebCrypto below a threshold, this above it.** It would be several
+times faster on a small file, and it is the obvious design. It is refused
+because the digest is a security property and two implementations means the one
+exercised least — the large-file path, which is the rare one — is where a bug
+hides. A wrong digest does not fail loudly: it fails months later, when somebody
+tries to match a takedown request to the file. Every upload now goes through the
+same code, so every upload tests it.
+
+**The new ceiling is the transport's, not ours: 5 GiB less 5 MiB.** That is the
+provider's own limit on a single request, verified against Cloudflare's R2 limits
+documentation in October 2026, and the upload is one presigned PUT. The
+remaining 3 GiB up to the database's ceiling needs a multipart upload — parts of
+at least 5 MiB, all but the last the same size, at most 10,000 of them — which
+does not exist yet.
+
+Two consequences of staying on one request are recorded rather than discovered.
+A single PUT cannot be resumed, so a failure at 90% of a 4 GiB recording starts
+again from zero; Cloudflare recommends single PUT only below about 100 MB for
+exactly that reason. And the presigned URL lives at most an hour
+(`MAX_UPLOAD_SECONDS`), which at this ceiling means a sustained 1.5 MiB/s or the
+URL expires mid-transfer. Both are arguments for building multipart next, not for
+picking a smaller number here: a limit the provider set is a fact to design
+around, and a limit invented to avoid a build is a product that refuses a
+teacher's lesson.

@@ -1,27 +1,38 @@
 /**
  * The half of uploading that only a browser can do.
  *
- * WHY THERE IS A SECOND, LOWER CEILING
- * ------------------------------------
- * `register_media_upload()` requires a SHA-256 digest of the file, and that is
- * the right requirement: the digest is what proves the platform still holds the
- * exact original somebody uploaded, and what lets a takedown request be matched
- * to every copy. But WebCrypto has no streaming digest — `crypto.subtle.digest`
- * takes a whole buffer — so hashing in a browser means holding the entire file
- * in memory at once. An 8 GiB lesson recording, which the database would accept,
- * would crash the tab before it ever reached the network.
+ * WHERE THE CEILING IS NOW, AND WHAT MOVED IT
+ * -------------------------------------------
+ * This used to stop at 512 MiB while the database accepted 8 GiB, because
+ * `register_media_upload()` requires a SHA-256 digest of the file and WebCrypto
+ * has no streaming one: `crypto.subtle.digest` takes a whole `ArrayBuffer`, so
+ * hashing meant holding the entire file in memory and a large recording crashed
+ * the tab before it reached the network.
  *
- * So the browser path is capped well below the database's ceiling, and the
- * difference is stated to the teacher rather than discovered by them. Lifting it
- * needs either a chunked SHA-256 in the browser or an uploader that runs
- * somewhere with a filesystem; neither exists yet, and neither is implied by
- * anything here.
+ * `lib/digest.ts` removed that ceiling — the same algorithm fed a slice at a
+ * time, so memory is bounded by the chunk and not by the file. What binds now is
+ * the transport, and it is not ours to raise: the upload is one presigned PUT,
+ * and storage refuses a single request above 5 GiB less 5 MiB. Past that a
+ * multipart upload is required, which is resumable and parallel and is the next
+ * thing to build; until it exists the gap between this ceiling and the
+ * database's 8 GiB is stated to the teacher rather than discovered by them.
+ *
+ * Two consequences of staying on one request are worth saying out loud. A single
+ * PUT cannot be resumed, so a failure at 90% of a 4 GiB recording starts again
+ * from zero. And the presigned URL is signed for at most an hour
+ * (`MAX_UPLOAD_SECONDS`), which at this ceiling means a sustained 1.5 MiB/s or
+ * the URL expires mid-transfer — a reason to keep the multipart work near the
+ * top of the list rather than a reason to lower the number here.
  */
 
+import { sha256OfBlob, type DigestProgress } from './digest.ts';
 import { readableByteSize } from './media.ts';
 
-/** 512 MiB: large enough for a real lesson, small enough to hash in a tab. */
-export const MAX_BROWSER_UPLOAD_BYTES = 512 * 1024 * 1024;
+/**
+ * The largest file one presigned PUT can carry: storage's single-request limit,
+ * 5 GiB less 5 MiB. Not a number chosen here, so not a number to negotiate.
+ */
+export const MAX_BROWSER_UPLOAD_BYTES = 5 * 1024 * 1024 * 1024 - 5 * 1024 * 1024;
 
 /** The column allows 200 characters; the form should not let a teacher hit it. */
 export const MAX_DISPLAY_NAME_LENGTH = 200;
@@ -51,9 +62,9 @@ export function validateBrowserFile(file: BrowserFileFacts): BrowserFileCheck {
     return {
       ok: false,
       message:
-        `That file is ${readableByteSize(file.size)}, and a browser can only upload up to ` +
-        `${readableByteSize(MAX_BROWSER_UPLOAD_BYTES)}. The limit is the checksum: a browser has to ` +
-        'hold the whole file in memory to digest it. Split the recording, or wait for the desktop uploader.',
+        `That file is ${readableByteSize(file.size)}. One request to storage carries at most ` +
+        '5 GiB less 5 MiB, and an upload that fails part-way cannot be resumed, so there is no ' +
+        'point starting one that cannot finish. Split the recording into parts.',
     };
   }
 
@@ -101,20 +112,19 @@ export function fallbackName(mimeType: string): string {
 /**
  * The SHA-256 digest the database requires, as 64 lowercase hex characters.
  *
- * `file.arrayBuffer()` is the part that costs: the whole file lands in memory,
- * which is why `MAX_BROWSER_UPLOAD_BYTES` is what it is.
+ * Read a slice at a time by `lib/digest.ts`, so the cost in memory is one chunk
+ * whatever the size of the file, and the cost in time is reported rather than
+ * endured: hashing a multi-gigabyte recording takes about a minute, and a
+ * teacher watching a frozen button cannot tell that from a hung tab.
+ *
+ * No WebCrypto here any more. It would be faster on a small file and it cannot
+ * be fed incrementally, so using it below some threshold would mean two digest
+ * implementations — and the one exercised least would be the large-file path,
+ * which is where a wrong digest does the most damage and makes the least noise.
  */
-export async function sha256OfFile(file: Blob): Promise<string> {
-  const buffer = await file.arrayBuffer();
-  const subtle = globalThis.crypto?.subtle;
-  if (!subtle) {
-    throw new Error(
-      'This browser cannot compute a checksum, so the file cannot be uploaded. ' +
-        'A secure context (HTTPS) is required.',
-    );
-  }
-  const digest = await subtle.digest('SHA-256', buffer);
-  return Array.from(new Uint8Array(digest))
-    .map((byte) => byte.toString(16).padStart(2, '0'))
-    .join('');
+export async function sha256OfFile(
+  file: Blob,
+  onProgress?: (progress: DigestProgress) => void,
+): Promise<string> {
+  return sha256OfBlob(file, { onProgress });
 }

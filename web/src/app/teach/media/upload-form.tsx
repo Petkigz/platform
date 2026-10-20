@@ -45,9 +45,14 @@ const PHASE_LABEL: Record<Phase, string> = {
  * The checksum is computed here, in the browser, because the database requires
  * one and nothing else can produce it: it is what proves the platform still holds
  * the exact original somebody uploaded, and what lets a rights request be matched
- * to every copy. That requirement is also why the browser ceiling is lower than
- * the database's — WebCrypto has no streaming digest, so the whole file has to
- * fit in memory to be hashed.
+ * to every copy. It is hashed a slice at a time by `lib/digest.ts`, so a
+ * multi-gigabyte recording costs one chunk of memory rather than the whole file —
+ * which is what lifted this form's ceiling from 512 MiB to the largest single
+ * request storage will take.
+ *
+ * Hashing at that size takes about a minute, so it reports progress like the
+ * upload does. A teacher watching a button that says only "Computing the
+ * checksum…" for sixty seconds closes the tab.
  *
  * Uploading does not publish anything. The row is `pending` until a staff member
  * verifies the object arrived, and a `pending` file cannot be attached to a
@@ -65,6 +70,8 @@ export function UploadMedia() {
   const [tone, setTone] = useState<'muted' | 'error' | 'ok'>('muted');
 
   const busy = phase !== 'idle' && phase !== 'done';
+  /** The two phases that can take a minute on a large file, and so get a bar. */
+  const counted = phase === 'hashing' || phase === 'uploading';
 
   function choose(next: File | null) {
     setMessage('');
@@ -129,7 +136,10 @@ export function UploadMedia() {
       const durationSeconds = await readDurationSeconds(file);
 
       setPhase('hashing');
-      const checksum = await sha256OfFile(file);
+      setPercent(0);
+      const checksum = await sha256OfFile(file, (progress) => {
+        setPercent(Math.floor((progress.hashedBytes / progress.totalBytes) * 100));
+      });
 
       setPhase('registering');
       const response = await fetch('/api/media', {
@@ -178,7 +188,8 @@ export function UploadMedia() {
       <p className="muted">
         Video, audio or a document, up to {readableByteSize(MAX_BROWSER_UPLOAD_BYTES)}. The file
         travels straight to storage; the checksum is worked out in your browser first, which is
-        what lets a rights request be matched to every copy later.
+        what lets a rights request be matched to every copy later. On a large recording the
+        checksum takes about a minute before the transfer starts, and it says how far along it is.
       </p>
 
       <div style={{ display: 'grid', gap: '0.6rem' }}>
@@ -207,7 +218,7 @@ export function UploadMedia() {
             <button type="button" onClick={() => void upload()} disabled={busy}>
               {busy ? PHASE_LABEL[phase] : 'Upload'}
             </button>
-            {phase === 'uploading' && (
+            {counted && (
               <span className="muted" style={{ marginLeft: '0.6rem' }}>
                 {String(percent)}%
               </span>
@@ -215,8 +226,13 @@ export function UploadMedia() {
           </div>
         )}
 
-        {phase === 'uploading' && (
-          <progress value={percent} max={100} style={{ width: '100%' }} aria-label="Upload progress" />
+        {counted && (
+          <progress
+            value={percent}
+            max={100}
+            style={{ width: '100%' }}
+            aria-label={phase === 'hashing' ? 'Checksum progress' : 'Upload progress'}
+          />
         )}
 
         {message && <p className={tone === 'error' ? 'error' : 'muted'}>{message}</p>}

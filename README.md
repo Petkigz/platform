@@ -70,7 +70,7 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 The database stands at **103 tables, RLS on every one, 231 policies, 134
 user-defined triggers, 227 functions and 96 migrations.** The database suite
-passes **908 tests**; the web suite passes **552 tests**. TypeScript typecheck
+passes **908 tests**; the web suite passes **565 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **105 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
@@ -325,7 +325,7 @@ data, the help desk, learner reviews, saved courses, dated cohorts, marked
 assignments and the revision loop that makes feedback actionable:
 
 - `institutions` — D1 multi-tenancy had no table to hang `institution_id` on
-- `media_assets` — D8 requires originals in storage we control, with a checksum; the provider is **Cloudflare R2**, chosen 2026-10-20 from `docs/decisions/media-storage-costing.md`
+- `media_assets` — D8 requires originals in storage we control, with a checksum; the provider is **Cloudflare R2**, chosen 2026-10-20 from `docs/decisions/media-storage-costing.md`. A browser hashes the checksum a slice at a time (`web/src/lib/digest.ts`), so the ceiling on one upload is storage's own 5 GiB limit on a single request rather than the memory of a tab
 - `media_renditions` — the delivery copies a learner is actually served, one row per profile, staff-written; a master is the archive and is never handed to a learner's browser. Three people may watch a master — whoever uploaded it, platform staff, and the author of a version whose lesson uses it while it is available — through `master_preview_target()`; a reviewer is deliberately not one of them, and gets the delivery copy instead. A copy that failed to encode is not a dead end: staff retry it from `/admin/media` with a written reason, which the worker deliberately cannot do for itself
 - `platform_settings` — without it, "build it all, enable it later" had
   nowhere to live; `governance.panel_required` is a row, not a constant
