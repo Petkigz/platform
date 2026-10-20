@@ -68,9 +68,9 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 ## Status
 
-The database stands at **102 tables, RLS on every one, 230 policies, 133
-user-defined triggers, 216 functions and 89 migrations.** The database suite
-passes **831 tests**; the web suite passes **384 tests**. TypeScript typecheck
+The database stands at **103 tables, RLS on every one, 231 policies, 134
+user-defined triggers, 220 functions and 90 migrations.** The database suite
+passes **848 tests**; the web suite passes **384 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **97 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
@@ -322,6 +322,7 @@ assignments and the revision loop that makes feedback actionable:
 
 - `institutions` — D1 multi-tenancy had no table to hang `institution_id` on
 - `media_assets` — D8 requires originals in storage we control, with a checksum; the provider is **Cloudflare R2**, chosen 2026-10-20 from `docs/decisions/media-storage-costing.md`
+- `media_renditions` — the delivery copies a learner is actually served, one row per profile, staff-written; a master is the archive and is never handed to a browser
 - `platform_settings` — without it, "build it all, enable it later" had
   nowhere to live; `governance.panel_required` is a row, not a constant
 - `discussion_posts` — per-lesson discussion, explicitly wanted for the product

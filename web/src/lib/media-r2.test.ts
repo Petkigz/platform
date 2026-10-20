@@ -178,6 +178,17 @@ test('the default masters bucket is the one the database derives', () => {
     migration.includes(`when 'supabase' then 'masters'`) && migration.includes(DEFAULT_MASTERS_BUCKET),
     'the writer migration no longer derives the bucket this library signs for',
   );
+
+  // Same check for the renditions bucket, which is derived in a different
+  // migration by register_media_rendition().
+  const renditions = readFileSync(
+    new URL('../../../supabase/migrations/20261208000100_media_renditions.sql', import.meta.url),
+    'utf8',
+  );
+  assert.ok(
+    renditions.includes(`v_bucket text := '${config.renditionsBucket}'`),
+    'the renditions migration no longer derives the bucket this library signs playback for',
+  );
 });
 
 // ---------------------------------------------------------------------------

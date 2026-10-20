@@ -55,6 +55,7 @@ import { run as markingFeedback } from './marking_feedback.test.mjs';
 import { run as assignmentRevisions } from './assignment_revisions.test.mjs';
 import { run as cohortJoinWindow } from './cohort_join_window.test.mjs';
 import { run as offlineDownload } from './offline_download.test.mjs';
+import { run as mediaRenditions } from './media_renditions.test.mjs';
 
 const ctx = await createHarness();
 const suites = [];
@@ -106,6 +107,7 @@ for (const [name, fn] of [
   ['assignment revisions', assignmentRevisions],
   ['cohort join window', cohortJoinWindow],
   ['offline download', offlineDownload],
+  ['media renditions', mediaRenditions],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],

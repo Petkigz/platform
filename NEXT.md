@@ -192,6 +192,33 @@ memberships panel on the enrolment page is unchanged on purpose: it lists
 classes the learner is already in, where leaving is the only action, and the
 window governs arriving rather than staying.
 
+The serving half of the media path now has a register to serve from.
+`media_renditions` holds one row per profile per asset — `1080p`, `720p`, `480p`,
+`360p`, `audio`, `poster`, `manifest`, a closed vocabulary because the profile
+names the object key and an invented one writes an object nothing can find again.
+The bucket and key are derived, never supplied, so a rendition cannot point at
+another asset's object. Writers are staff-only: a rendition is what other people
+are served, so the uploader of the master cannot mark their own copy available,
+which is the same hole `media_assets` had before its status guard closed it.
+
+`may_play_rendition()` is the playback predicate, and it widens no boundary: a
+rendition is playable exactly where a lesson referencing its master is open,
+through the existing `can_access_lesson_now()`. It requires the rendition *and*
+its master to be available, so quarantining a master withdraws every copy
+derived from it — which is the entire point of quarantining it.
+
+That predicate differs from `may_download_lesson()` in one deliberate way, and
+the difference is the decision from earlier today: playback follows lesson access
+including the free-preview bypass, while saving requires entitlement and excludes
+it. **Watching a preview is free; keeping one is not.** One test asserts both
+halves of that from the same fixture.
+
+Still absent, and still not implied: no transcode worker, so nothing calls these
+writers; no playback or download route, so no URL is minted; no player. The
+register is built first because a worker needs somewhere to write, and because
+the predicate is the part that must not be retrofitted around a worker that
+already exists.
+
 Half the media byte path now exists. `/api/media` answers `request_upload` by
 asking the database to open a `pending` row — `register_media_upload()` derives
 the object key, so a caller cannot name one — and returns a signed
@@ -275,9 +302,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **831 database tests, 384 web tests; TypeScript typecheck and
+Verification: **848 database tests, 384 web tests; TypeScript typecheck and
 production build pass; 102 tables, 230 policies, 133 user-defined triggers,
-216 functions, 89 migrations and 97 app route entries.**
+220 functions, 90 migrations and 97 app route entries.**
 
 ## Today's sentence
 
@@ -298,7 +325,7 @@ never started). Updated 2026-10-20.
 | Piece | Built and tested | Not built | Waiting on |
 |---|---|---|---|
 | **Media ingest** (D8 = R2) | `media_assets` register with a pending/available/quarantined/deleted state machine and four writer functions; SigV4 signing in `web/src/lib/media-r2.ts`, pinned against AWS's published vector; `POST /api/media` `request_upload` + `confirm_upload`; R2 variables documented in `web/.env.example` | Any R2 credential in this environment, so nothing has been exercised against a real bucket | **Nothing.** R2 is chosen; this is buildable now |
-| **Media delivery** | Nothing | `media_renditions` register, transcode worker, signed playback tied to enrolment, teacher upload screen | The ingest half above, then this. No decision outstanding |
+| **Media delivery** | `media_renditions` register: one row per profile per asset, a closed profile vocabulary, derived bucket and object key, pending/available/failed with a written reason for a failure, staff-only writers, and `may_play_rendition()` which serves a rendition exactly where its lesson is open; 17 database tests | The transcode worker (nothing calls the writers yet), the signed playback route, the download route, a player that reads a rendition, a teacher upload screen | **Nothing.** Decided and buildable; the worker is the largest piece of engineering left in the media path |
 | **Offline download** | `may_download_lesson()` requiring entitlement + an `offline_downloads` feature grant + verified first-party media; closed feature vocabulary (`pe_feature_vocabulary`, `plan_feature_codes()`) with the admin plan form offering the list; 17 database tests | Any download route or UI, device registration, device storage limits, download expiry, protected-media handling | **Decisions:** device limits, expiry and protected media (`learning.offline`). It would also serve renditions, which do not exist |
 | **Upload cost control** | Nothing — and nothing was invented | A per-teacher byte quota, a spend alert, any ceiling on a single upload | **Decision:** quota policy (`platform.cost_controls`). `register_media_upload()` checks type, size and checksum but no quota |
 | **Assignments** | Tasks, self-paced and cohort deadlines, one private submission per learner, drafts and hand-in, marking with immutable feedback, a revision loop with an append-only snapshot, file *references* with type and size ceilings | Byte transfer for submissions (the R2 path exists but is not wired to submissions), scanning, secure delivery to the marker, retention of children's files | **Decision/review:** the safeguarding review of files children send. This one review holds `learning.assignments` **and** `learning.cohorts` |

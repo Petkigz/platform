@@ -83,7 +83,7 @@ Three kinds of gate:
 | Flag | Gates | Type | Preconditions before it can be ON |
 |---|---|---|---|
 | `teaching.invites` | You invite a teacher | ADMIN | — |
-| `teaching.authoring` | Teacher builds and publishes a course | ADMIN | Authoring flow tested by a real teacher; media upload limits — the ingest half is built (signed direct-to-R2 upload, `pending` until a privileged confirmation) but no ceiling exists, the transcode worker and playback path are not built, and no teacher screen offers the upload yet |
+| `teaching.authoring` | Teacher builds and publishes a course | ADMIN | Authoring flow tested by a real teacher; media upload limits — the ingest half is built (signed direct-to-R2 upload, `pending` until a privileged confirmation) but no ceiling exists, and while the `media_renditions` register and its playback predicate are built, no transcode worker calls them, no playback route mints a URL, and no teacher screen offers the upload yet |
 | `teaching.dashboard` | Teacher sees their courses and learners | ADMIN | — |
 | `teaching.qa_capacity` | Limits or queueing on per-lesson questions | ADMIN | A teacher with an audience behind them will be overwhelmed without it |
 | `teaching.public_profile` | Public teacher page with bio, social links and published courses | ADMIN | Review the teacher-authored copy and outbound links first; do not imply unverified qualifications. Public RLS also hides profiles if this flag is off or the instructor role is revoked |
