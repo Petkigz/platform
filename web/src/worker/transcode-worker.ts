@@ -49,10 +49,11 @@
 
 import { spawn } from 'node:child_process';
 import { createReadStream, createWriteStream } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { mkdtemp, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { Readable } from 'node:stream';
+import { Readable, Writable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
@@ -66,6 +67,7 @@ import {
 } from '../lib/media-r2.ts';
 import {
   describeFailure,
+  digestMatches,
   encodeArgs,
   mapTranscodeError,
   probeArgs,
@@ -236,6 +238,24 @@ function readProbe(json: ProbeJson): {
   };
 }
 
+/**
+ * The SHA-256 of a file on disk, streamed, so an 8 GiB master costs a buffer and
+ * not an allocation.
+ */
+async function sha256OfFileAtPath(path: string): Promise<string> {
+  const hash = createHash('sha256');
+  await pipeline(
+    createReadStream(path),
+    new Writable({
+      write(chunk: Buffer, _encoding: string, callback: (error?: Error | null) => void) {
+        hash.update(chunk);
+        callback();
+      },
+    }),
+  );
+  return hash.digest('hex');
+}
+
 async function probe(path: string) {
   const { stdout } = await run('ffprobe', probeArgs(path));
   return readProbe(JSON.parse(stdout) as ProbeJson);
@@ -302,6 +322,7 @@ async function uploadRendition(
 
 type MasterRow = {
   id: string;
+  checksum: string;
   mime_type: string;
   master_bucket: string;
   master_key: string;
@@ -326,7 +347,7 @@ async function findWork(
   if (args.asset) {
     const { data, error } = await supabase
       .from('media_assets')
-      .select('id, mime_type, master_bucket, master_key, status')
+      .select('id, checksum, mime_type, master_bucket, master_key, status')
       .eq('id', args.asset)
       .maybeSingle();
     if (error) throw new Error(mapTranscodeError(error));
@@ -337,7 +358,7 @@ async function findWork(
 
   const { data, error } = await supabase
     .from('media_assets')
-    .select('id, mime_type, master_bucket, master_key, status')
+    .select('id, checksum, mime_type, master_bucket, master_key, status')
     .eq('status', 'available')
     .order('created_at', { ascending: true })
     .limit(args.scan);
@@ -426,6 +447,21 @@ async function processMaster(
   try {
     process.stdout.write(`\n${master.id} — downloading the master\n`);
     await downloadMaster(r2, master.master_key, input);
+
+    // The only place the declared digest can honestly be checked: the bytes are
+    // already on a local disk here, and the verification HEAD at confirm time can
+    // compare a size but cannot recompute a SHA-256. Encoding from a master whose
+    // digest does not match would publish content nobody declared, and would make
+    // every takedown matched against that digest a match against the wrong bytes.
+    const actualDigest = await sha256OfFileAtPath(input);
+    if (!digestMatches(master.checksum, actualDigest)) {
+      process.stdout.write(
+        `  the object in storage is not the file that was declared: the row says ${master.checksum} ` +
+          `and the bytes are ${actualDigest}. Nothing will be encoded from it. ` +
+          'Quarantine it from /admin/media and ask the teacher to upload it again.\n',
+      );
+      return 1;
+    }
     const probed = await probe(input);
     process.stdout.write(
       `  probed: ${probed.hasVideo ? `video ${String(probed.videoWidth ?? '?')}x${String(probed.videoHeight ?? '?')}` : 'no video stream'}` +

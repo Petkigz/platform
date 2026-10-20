@@ -6,6 +6,7 @@ import {
   POSTER_MIME,
   VIDEO_MIME,
   describeFailure,
+  digestMatches,
   encodeArgs,
   mapTranscodeError,
   planRenditions,
@@ -248,6 +249,19 @@ await test('the probe asks for JSON and no chatter', () => {
 // ---------------------------------------------------------------------------
 // Failure reporting
 // ---------------------------------------------------------------------------
+
+await test('a digest matches only when both sides are really digests', () => {
+  const digest = 'a'.repeat(64);
+  assert.equal(digestMatches(digest, digest), true);
+  assert.equal(digestMatches(digest.toUpperCase(), digest), true, 'the column is lowercase hex');
+  assert.equal(digestMatches(`  ${digest} `, digest), true);
+  assert.equal(digestMatches(digest, 'b'.repeat(64)), false);
+  assert.equal(digestMatches(digest, 'a'.repeat(63)), false);
+  // The case that matters: two blanks are equal strings, and a row with no
+  // checksum must not pass as a match for a file with no checksum.
+  assert.equal(digestMatches('', ''), false);
+  assert.equal(digestMatches(digest, ''), false);
+});
 
 await test('a failure reason is never blank, because the database refuses one', () => {
   assert.equal(describeFailure(new Error('ffmpeg died')), 'ffmpeg died');

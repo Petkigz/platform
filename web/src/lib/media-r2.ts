@@ -49,6 +49,13 @@ export const MAX_UPLOAD_SECONDS = 3_600;
 export const MAX_PLAYBACK_SECONDS = 21_600;
 
 /**
+ * A verification window covers one HEAD request. It is the shortest window here
+ * because it is also the most privileged: it points at a master, which no
+ * learner is ever served.
+ */
+export const MAX_VERIFY_SECONDS = 300;
+
+/**
  * A worker window is short by design. It covers one download or one upload of
  * one encoded profile, not a shift; a worker that needs longer is doing
  * something that should be several jobs.
@@ -296,7 +303,7 @@ export function signRequest(input: SignRequestInput): SignedRequest {
 
 export type PresignInput = {
   config: R2Config;
-  method: 'GET' | 'PUT';
+  method: 'GET' | 'PUT' | 'HEAD';
   bucket: string;
   key: string;
   expiresInSeconds: number;
@@ -316,7 +323,7 @@ export type PresignInput = {
 
 export type PresignedUrl = {
   url: string;
-  method: 'GET' | 'PUT';
+  method: 'GET' | 'PUT' | 'HEAD';
   bucket: string;
   key: string;
   expiresInSeconds: number;
@@ -549,6 +556,39 @@ export function presignRenditionDownload(
     key: assertRenditionKey(key),
     expiresInSeconds: expires,
     responseOverrides: overrides,
+    now: options.now,
+  });
+}
+
+/**
+ * Looking at a master without downloading it, for verification only.
+ *
+ * A HEAD answers the one question that has to be answered before a file becomes
+ * `available`: did the object actually arrive, and is it the size the uploader
+ * declared? Both are answered from the response headers, so a verification costs
+ * one request rather than a transfer of something that can be 8 GiB.
+ *
+ * It cannot answer whether the bytes are the bytes whose digest was declared —
+ * that needs the file, and the only place the file is already local is the
+ * transcode worker, which downloads it to encode it.
+ */
+export function presignMasterHead(
+  config: R2Config,
+  key: string,
+  options: { expiresInSeconds?: number; now?: Date } = {},
+): PresignedUrl {
+  const expires = options.expiresInSeconds ?? MAX_VERIFY_SECONDS;
+  if (expires > MAX_VERIFY_SECONDS) {
+    throw new R2RequestError(
+      `a verification window cannot exceed ${MAX_VERIFY_SECONDS} seconds; it covers one request`,
+    );
+  }
+  return presignUrl({
+    config,
+    method: 'HEAD',
+    bucket: config.mastersBucket,
+    key: assertMasterKey(key),
+    expiresInSeconds: expires,
     now: options.now,
   });
 }

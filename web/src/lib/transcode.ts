@@ -350,6 +350,21 @@ export type TranscodeResult = {
   outcomes: ProfileOutcome[];
 };
 
+/**
+ * Whether the bytes in storage are the bytes that were declared.
+ *
+ * Compared case-insensitively and trimmed because the column stores lowercase
+ * hex and a digest computed elsewhere may not be. The comparison is the whole
+ * point of a checksum: a master whose digest does not match is not the file
+ * anybody declared, so nothing may be encoded from it, and a takedown matched
+ * against that digest would have matched the wrong bytes.
+ */
+export function digestMatches(declared: string, actual: string): boolean {
+  const a = declared.trim().toLowerCase();
+  const b = actual.trim().toLowerCase();
+  return a.length === 64 && a === b;
+}
+
 /** A failure reason is never blank, because `fail_media_rendition` refuses one. */
 export function describeFailure(error: unknown): string {
   if (error instanceof Error) {

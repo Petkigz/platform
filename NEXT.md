@@ -303,7 +303,7 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **859 database tests, 471 web tests; TypeScript typecheck and
+Verification: **859 database tests, 487 web tests; TypeScript typecheck and
 production build pass; 102 tables, 230 policies, 133 user-defined triggers,
 220 functions, 93 migrations and 102 app route entries.**
 
@@ -326,7 +326,7 @@ never started). Updated 2026-10-20.
 | Piece | Built and tested | Not built | Waiting on |
 |---|---|---|---|
 | **Media ingest** (D8 = R2) | `media_assets` register with a pending/available/quarantined/deleted state machine and four writer functions; SigV4 signing in `web/src/lib/media-r2.ts`, pinned against AWS's published vector; `POST /api/media` `request_upload` + `confirm_upload`; R2 variables documented in `web/.env.example` | Any R2 credential in this environment, so nothing has been exercised against a real bucket | **Nothing.** R2 is chosen; this is buildable now |
-| **Media delivery** | The whole path, end to end: `media_renditions` register with a closed profile vocabulary and derived object keys; the transcode worker that fills it (`web/src/worker/transcode-worker.ts`, decisions in `lib/transcode.ts`, gated by `delivery.transcode`); `/api/media/playback` and `/api/media/download` signing short-lived rendition URLs with the database as the only authority on who may watch; a player on the lesson page with a quality selector and a poster; and `/teach/media`, where a teacher uploads straight to R2 with a browser-computed checksum | A host to run the worker on with ffmpeg, R2 credentials and a staff account for it; a staff action to **verify and confirm an upload** — without one, every file stays `pending` forever and nothing can be encoded; a retry path for a rendition stuck `failed`; and a decision about whether a free preview may be watched signed-out | **Nothing** for the verify-and-confirm action, which is the next piece. The worker needs infrastructure, and the preview question needs a decision |
+| **Media delivery** | The whole path, end to end: `media_renditions` register with a closed profile vocabulary and derived object keys; the transcode worker that fills it (`web/src/worker/transcode-worker.ts`, decisions in `lib/transcode.ts`, gated by `delivery.transcode`), which checks the master's SHA-256 against the bytes before it encodes anything; `/api/media/playback` and `/api/media/download` signing short-lived rendition URLs with the database as the only authority on who may watch; a player on the lesson page with a quality selector and a poster; `/teach/media`, where a teacher uploads straight to R2 with a browser-computed checksum; and `verify` on `/admin/media`, which asks storage whether the file arrived at the declared size and only then confirms it | A host to run the worker on with ffmpeg, R2 credentials and a staff account for it; a retry path for a rendition stuck `failed`; and a decision about whether a free preview may be watched signed-out | **Nothing** that is a design question. What is left is infrastructure and one product decision |
 | **Offline download** | `may_download_lesson()` requiring entitlement + an `offline_downloads` feature grant + verified first-party media; closed feature vocabulary (`pe_feature_vocabulary`, `plan_feature_codes()`) with the admin plan form offering the list; 17 database tests | Any download route or UI, device registration, device storage limits, download expiry, protected-media handling | **Decisions:** device limits, expiry and protected media (`learning.offline`). It would also serve renditions, which do not exist |
 | **Upload cost control** | A per-file ceiling, in two places: 8 GiB in SQL and in `lib/media.ts`, and **512 MiB for a browser upload**, because WebCrypto cannot digest a stream and the checksum is required | A cumulative per-teacher byte quota, a spend alert, and a way to raise the browser ceiling (a chunked digest or a desktop uploader) | **Decision:** quota policy (`platform.cost_controls`). Note that `register_media_upload()` is open to **any signed-in user**, not only teachers, because learners attach files to assignment submissions through the same table — so the missing control is a cumulative quota per person, not a role check |
 | **Assignments** | Tasks, self-paced and cohort deadlines, one private submission per learner, drafts and hand-in, marking with immutable feedback, a revision loop with an append-only snapshot, file *references* with type and size ceilings | Byte transfer for submissions (the R2 path exists but is not wired to submissions), scanning, secure delivery to the marker, retention of children's files | **Decision/review:** the safeguarding review of files children send. This one review holds `learning.assignments` **and** `learning.cohorts` |
@@ -566,6 +566,46 @@ references `media_assets`, so learners attach files to assignments through the
 same table. The control that is genuinely missing is a cumulative quota per
 person, which is an open decision, and not a role check that would break
 homework.
+
+### Nothing became available without being looked at, 2026-10-20
+
+Uploading a file and confirming it were two acts, and only the first had a
+screen. `confirm_media_upload()` is staff-only precisely so an uploader cannot
+mark their own file ready, but no person could reach it either: every upload sat
+at `pending` forever, which means it could not be attached to a lesson and the
+worker would not encode it, because `register_media_rendition()` requires an
+available master.
+
+**`verify` on `/admin/media`** closes that, and it does not confirm on trust. One
+HEAD request against the master's own object answers whether it arrived and
+whether storage reports the size the uploader declared; only when both are yes is
+`confirm_media_upload()` called. A missing object, a truncated one and an
+unreachable bucket are three different answers — 409, 409 and 503 — because the
+first two are the teacher's problem with different causes and the third is ours.
+
+**Confirming now goes through one function.** The ingest route's `confirm_upload`
+action used to call the RPC directly, so there were two ways to confirm and one
+of them did not look at storage. Both call `confirmMediaUpload()` in
+`lib/media-verify.ts` now. The old direct call also mapped the SQL's *"only staff
+may confirm an upload"* to a 409 rather than a 403, because the regex it tested
+was a different sentence — a permissions refusal reported as a conflict sends
+somebody looking in the wrong place.
+
+**The digest is still not verified at confirm time, and that is not an
+oversight.** A HEAD reports a size, not a SHA-256, and recomputing one means
+downloading the file — up to 8 GiB through a route handler. The only place the
+bytes are already on a local disk is the transcode worker, so that is where the
+check now lives: it hashes the master it downloaded, compares it with the row,
+and refuses to encode anything from a file that does not match, saying so in its
+log. A master whose digest does not match is not the file anybody declared, and
+every takedown matched against that digest would have matched the wrong bytes.
+
+**`lib/media-verify.ts` is its own module because of the client bundle.** It
+signs requests, so it imports `media-r2.ts`, which uses `node:crypto`.
+`lib/media.ts` is imported by the teacher's upload form — a client component — so
+a signing import there would break the browser build. The ingest and moderation
+library stays free of signing code, and the constraint is written into both file
+headers.
 
 ## Open external decisions (not to be guessed)
 

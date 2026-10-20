@@ -81,15 +81,17 @@ export default async function AdminMediaPage() {
               retention schedule.
             </p>
           ) : (
-            <ModerateForm assetId={asset.id} />
+            <ModerateForm assetId={asset.id} canVerify={asset.status === 'pending'} />
           )}
         </section>
       ))}
 
       <p className="muted">
-        No byte is transferred by this screen, and nothing here makes a file
-        available — confirmation stays with the ingest path, so an uploader
-        cannot promote their own.
+        No byte is transferred by this screen. Verifying an upload asks storage
+        whether the object arrived and whether it is the size that was declared;
+        it does not recompute the checksum, because that would mean downloading
+        the file. Only staff can do any of this, and an uploader can never
+        promote their own file.
       </p>
     </main>
   );

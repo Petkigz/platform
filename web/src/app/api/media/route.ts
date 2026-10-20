@@ -8,6 +8,7 @@ import {
   readR2Config,
 } from '@/lib/media-r2';
 import { registerMediaUpload } from '@/lib/media';
+import { confirmMediaUpload } from '@/lib/media-verify';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,28 +57,38 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
   if (!user) return fail('Sign in to upload media.', 401);
 
-  if (action === 'confirm_upload') {
-    const assetId = typeof body?.assetId === 'string' ? body.assetId.trim() : '';
-    if (!UUID.test(assetId)) return fail('That is not a media asset.', 400);
-    const { data, error } = await supabase.rpc('confirm_media_upload', { p_asset_id: assetId });
-    if (error) {
-      const message = error.message;
-      // Only platform staff may declare an upload verified; that is the whole
-      // point of the pending/available split, so the refusal is passed through
-      // rather than softened.
-      const status = /only platform staff|privileged/i.test(message) ? 403
-        : /not found|no media asset/i.test(message) ? 404
-        : 409;
-      return fail(message, status);
-    }
-    return NextResponse.json({ ok: true, data: { assetId, available: data === true } }, { status: 200 });
-  }
-
+  // Both actions need storage configured: one signs an upload URL, the other has
+  // to look at the object before it may confirm it.
   const config = readR2Config();
   if (!config) {
     // Not a 500: this deployment has no R2 credentials, which is the expected
     // state until they are issued. The message says what is missing.
     return fail(new R2NotConfiguredError().message, 503);
+  }
+
+  if (action === 'confirm_upload') {
+    const assetId = typeof body?.assetId === 'string' ? body.assetId.trim() : '';
+    if (!UUID.test(assetId)) return fail('That is not a media asset.', 400);
+
+    // Through lib/media-verify.ts rather than a bare rpc here: confirming means
+    // having seen the object in storage, and a second path that skipped the
+    // looking would be a second, laxer rule for the same outcome. (The bare call
+    // also mapped the SQL's "only staff may confirm an upload" to a 409, because
+    // the regex it tested against was a different sentence.)
+    const outcome = await confirmMediaUpload(supabase, assetId, { config });
+    if (!outcome.ok) return fail(outcome.message, outcome.status);
+
+    return NextResponse.json(
+      {
+        ok: true,
+        data: {
+          assetId: outcome.assetId,
+          available: true,
+          verifiedBytes: outcome.verifiedBytes,
+        },
+      },
+      { status: 200 },
+    );
   }
 
   // Through lib/media.ts rather than a second validator here: that library
