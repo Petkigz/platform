@@ -266,21 +266,23 @@ pushing the completed unit.
 - Payment provider merchant/sandbox credentials and callback verification (P12).
 - Payout policy/preconditions, tax and jurisdiction treatment, and disbursement
   credentials.
-- Two questions opened by the saved-lessons requirement the owner added while
-  accepting D8 (2026-10-20), both recorded in `DECISIONS.md` and costed in
-  §7 of `docs/decisions/media-storage-costing.md`:
-  - **Who counts as "other teachers"** allowed to review a saved lesson —
-    co-teachers of the same course, reviewers checking quality, or any teacher
-    on the platform. These are three different privacy boundaries, and the
-    third makes a paid course's content readable by its competitors unless a
-    per-lesson licence says otherwise.
-  - **Whether a live class may be recorded at all when children are in it.**
-    Recorded lessons are already permanent in R2 and cost nothing extra to
-    re-watch; a live class saved for later review is new work, is the one
-    workload where Cloudflare Stream would earn its price, and captures
-    children's faces, voices and mistakes in a single file that is far harder
-    to withdraw than a progress row. `docs/decisions/retention-schedule.md`
-    gives child data the shortest retention in the system.
+- The saved-lessons questions are answered (2026-10-20, `DECISIONS.md`); what
+  is left is code. Both delivery models are wanted — live classes recorded and
+  saved, and offline download of anything saved — with the download gated to a
+  Plus subscription, which is now built and enforced. "Other teachers" means a
+  reviewer checking quality for a named period, which wakes the dormant
+  peer-review path rather than opening a shared library. A live class containing
+  children is recorded as teacher-only capture: learners' video and audio are
+  never recorded. Still to build:
+  - **A reviewer-scoped read path for lesson media**, tied to an assigned
+    review and a period, so access ends with the review rather than with a
+    memory of who was trusted.
+  - **Live capture with teacher-only recording.** No live-class tables exist
+    yet, so this is design plus schema, not a wiring job. It is also the one
+    workload that would reopen the Stream decision, because self-hosting a
+    media server is not a weekend; costed in §7 of
+    `docs/decisions/media-storage-costing.md`. Because learners are never
+    captured, the child-recording safeguarding question does not arise.
 
 Settled on 2026-10-19 and no longer open: the teacher/platform revenue share
 (**50%**), what a course author may see about a learner (**individual progress

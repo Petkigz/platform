@@ -238,8 +238,9 @@ users, 4.3 TB at 50,000. Re-watching does not add stored bytes; it adds
 delivered ones, and R2 does not charge for delivery. The 2 h/month per active
 user in §2 already assumes re-watching.
 
-**What is genuinely new is the access rule, and it is not settled.** "Other
-teachers" is three different privacy boundaries:
+**What is genuinely new is the access rule — settled 2026-10-20 as the second of
+these three readings.** Kept because the other two were live options and the
+reason for rejecting them is the useful part:
 
 | Reading | Who sees the lesson | Consequence |
 |---|---|---|
@@ -247,9 +248,12 @@ teachers" is three different privacy boundaries:
 | Reviewers checking quality | A named reviewer, for a named period | Medium. Peer review (P6) already exists and is dormant; this wakes it |
 | Any teacher on the platform | Everyone with a teacher account | Large. Makes a paid course's content readable by its competitors |
 
-The third is the one that would need an explicit licence per lesson, because
-`content_licence` exists for exactly this and defaults to "not shared". Nothing
-is built until the owner picks one.
+**Chosen: a reviewer checking quality, for a named period.** That wakes the
+dormant peer-review path (P6) instead of opening a shared library, which is why
+the third reading never has to be made safe with a per-lesson licence — a paid
+course's content is not readable by its competitors at all. What is left is code:
+a read path scoped to an assigned review, so access ends with the review rather
+than with a memory of who was trusted.
 
 **Live classes are the case that reopens Stream.** If "stream with an option of
 saving" means a class taught live and recorded for later review, then:
@@ -270,6 +274,18 @@ saving" means a class taught live and recorded for later review, then:
 it is a storage question.** `docs/decisions/retention-schedule.md` gives child
 learner data the shortest retention period in the system, and a saved class
 video captures children's faces, voices and mistakes together in one file that
-is far harder to withdraw than a progress row. This needs a decision — guardian
-consent, teacher-only capture, or no recording of classes with children — before
-any live-recording feature is built. It is recorded as open in `DECISIONS.md`.
+is far harder to withdraw than a progress row.
+
+**Decided 2026-10-20: teacher-only capture.** Learners' video and audio are
+never recorded, so a child can take part in a live class without appearing in a
+file that outlives it. This is the strongest of the three options available —
+guardian consent, teacher-only capture, or no recording at all — and it takes the
+question off the critical path rather than managing it: nothing captured, nothing
+to withdraw, no consent to track and no retention clock to run on a child's face.
+It costs the recording some of its teaching value, since a reviewer or an absent
+student hears the teacher and not the class; that is an accepted trade.
+
+What is left is code and it is not small: no live-class tables exist, so this is
+design plus schema rather than wiring. Live capture is also the one workload here
+that would genuinely reopen the Stream decision in §5, because self-hosting a
+media server is the largest piece of engineering left in the project.
