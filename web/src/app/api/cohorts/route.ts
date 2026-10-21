@@ -6,8 +6,10 @@ import {
   joinCohort,
   leaveCohort,
   mapCohortError,
+  setCohortCapacity,
   setCohortJoinWindow,
   setCohortStatus,
+  validateCapacity,
   validateCohortInput,
 } from '@/lib/cohorts';
 
@@ -94,6 +96,18 @@ export async function POST(request: Request) {
     const checked = validateCohortJoinWindow(body.joinClosesAt);
     if (!checked.ok) return fail(checked.message, 400);
     return respond(await setCohortJoinWindow(supabase, body.cohortId, checked.value));
+  }
+
+  // How big the class is. Published to learners as "3 of 12 places taken" the
+  // moment `cohort_places()` exists, so the teacher has to be able to change it:
+  // otherwise the only way to let a thirteenth learner in is to cancel a running
+  // class and open another. The database decides who may, and refuses a limit
+  // below the learners already in the room.
+  if (body.action === 'set_capacity') {
+    if (!isUuid(body.cohortId)) return fail('Choose a cohort.', 400);
+    const checked = validateCapacity(body.capacity);
+    if (!checked.ok) return fail(checked.message, 400);
+    return respond(await setCohortCapacity(supabase, body.cohortId, checked.value));
   }
 
   if (body.action === 'join' || body.action === 'leave') {

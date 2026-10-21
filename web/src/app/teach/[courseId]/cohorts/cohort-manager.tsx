@@ -8,6 +8,7 @@ import {
   type CourseCohort,
   cohortJoinWindowOpen,
   joinWindowLabel,
+  validateCapacity,
 } from '@/lib/cohorts';
 
 function toLocalInput(value: string | null) {
@@ -199,7 +200,15 @@ export function CohortManager({
               </div>
 
               {(cohort.status === 'draft' || cohort.status === 'open') && (
-                <JoinWindowControl cohort={cohort} onSend={send} busy={busy} />
+                <>
+                  <ClassSizeControl
+                    cohort={cohort}
+                    activeMembers={count.active}
+                    onSend={send}
+                    busy={busy}
+                  />
+                  <JoinWindowControl cohort={cohort} onSend={send} busy={busy} />
+                </>
               )}
               <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>
                 Member names are not shown on this screen. Learners see only themselves and family.
@@ -269,6 +278,84 @@ function JoinWindowControl({
             : 'Registration has closed. Move it later to let somebody in; the class keeps running.'
           : 'Set it before opening the class, or move it later while it runs.'}
         {' '}It cannot move past the end of the class.
+      </p>
+    </div>
+  );
+}
+
+/**
+ * How many learners this class holds, beside the class it governs.
+ *
+ * The number is published: a learner choosing a class reads "3 of 12 places
+ * taken" and sees a **Full** badge instead of a Join button. A number other
+ * people are refused by has to be one its owner can change, so this control
+ * exists in the same place and on the same terms as the join window.
+ *
+ * It cannot go below the learners already in the class, and the reason is worth
+ * showing rather than discovering: the alternative to refusing is taking a child
+ * out of a class because a number changed. The floor is stated up front, with the
+ * count in it, so a teacher who wants more room raises the limit and a teacher
+ * who wanted to shrink a running class learns here that they cannot.
+ */
+function ClassSizeControl({
+  cohort,
+  activeMembers,
+  onSend,
+  busy,
+}: {
+  cohort: CourseCohort;
+  /** Active members, which the manager screen already counts for this card. */
+  activeMembers: number;
+  onSend: (payload: Record<string, unknown>, key: string) => Promise<unknown>;
+  busy: string | null;
+}) {
+  const [size, setSize] = useState(cohort.capacity === null ? '' : String(cohort.capacity));
+  const key = `size-${cohort.id}`;
+  const parsed = validateCapacity(size);
+  const next = parsed.ok ? parsed.value : null;
+  const unchanged = next === cohort.capacity;
+  const tooSmall = next !== null && next < activeMembers;
+
+  async function save() {
+    if (!parsed.ok || unchanged || tooSmall) return;
+    await onSend({ action: 'set_capacity', cohortId: cohort.id, capacity: next }, key);
+  }
+
+  return (
+    <div style={{ display: 'grid', gap: '.35rem' }}>
+      <label htmlFor={`capacity-${cohort.id}`} style={{ margin: 0 }}>
+        Places in this class
+      </label>
+      <div className="row" style={{ gap: '.5rem', alignItems: 'center' }}>
+        <input
+          id={`capacity-${cohort.id}`}
+          type="number"
+          min={activeMembers > 0 ? activeMembers : 1}
+          step={1}
+          value={size}
+          onChange={(e) => setSize(e.target.value)}
+          placeholder="No limit"
+          style={{ maxWidth: '9rem' }}
+        />
+        <button
+          type="button"
+          className="btn ghost"
+          disabled={Boolean(busy) || unchanged || tooSmall || !parsed.ok}
+          onClick={save}
+        >
+          {busy === key ? 'Saving…' : 'Change the size'}
+        </button>
+      </div>
+      {!parsed.ok && <p className="error" style={{ margin: 0 }}>{parsed.message}</p>}
+      <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>
+        {activeMembers} learner{activeMembers === 1 ? '' : 's'} in it now
+        {cohort.capacity === null ? ', and no limit set' : ` of ${cohort.capacity} places`}.
+        {' '}Blank means no limit. The size cannot go below the learners already in the class —
+        {tooSmall
+          ? ` ${String(activeMembers)} is the smallest number this class can be limited to right now.`
+          : ' nobody is removed to make a number true.'}
+        {' '}Learners see this as "3 of 12 places taken", and a class with no place left shows as
+        full instead of offering a button that would refuse them.
       </p>
     </div>
   );

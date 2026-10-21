@@ -827,3 +827,58 @@ not filtered by the policy that called it. `cohorts_read` has used
 the tests that pinned it — a case visible to its requester and to staff and to
 nobody else, an internal note invisible to the requester and readable by staff —
 pass either way, which is what made the change safe to make.
+
+## How big a class is, and who decides — **DECIDED 2026-10-20**
+
+A direct consequence of publishing the number. Once a learner reads "3 of 12
+places taken" and sees a **Full** badge where the Join button was, the capacity
+stops being an internal detail of `join_cohort()` and becomes a promise made to
+the people it refuses. And it could only be set once, at `create_cohort()`: a
+teacher with fourteen people who want in and a class opened for twelve had two
+bad options — cancel a running class and open another, moving everybody's
+membership and leaving the conversation behind, or turn learners away for a
+number they typed once, before anybody had joined.
+
+**Chosen: the teacher who opened the class sets its size, while it is a draft or
+open, and the floor is the people already in the room.**
+
+`set_cohort_capacity()` is the sibling of `set_cohort_join_window()` and keeps its
+terms: the course author or staff, a draft or an open class, a row lock, an audit
+entry. A closed or cancelled class has a size rather than a setting — it is not
+taking anybody, so changing the number would edit history.
+
+**A capacity below the current active membership is refused, naming the count.**
+The two alternatives are both worse. Allowing it puts the class into a state its
+own page cannot describe — "14 of 12 places taken" — and makes the published
+number a lie in the direction that matters, since a learner reading it is being
+told there is room. Enforcing it means removing a learner from a class because a
+number changed, and for a child's class that is the most harmful thing this
+feature could do: a parent would receive a withdrawal they did not ask for and
+cannot see the cause of. Raising the limit is the act that needs no protection,
+and it is the one a teacher actually wants; the refusal costs them nothing they
+were entitled to.
+
+**The lock is the same one `join_cohort()` takes, and that is not a detail.**
+Both writers select the cohort row `for update` before counting anything, so
+either a join lands first and the floor is computed with that learner in it, or
+the limit lands first and the join is refused for spare capacity. Without that
+ordering the floor could be checked against a count that is already stale, which
+is precisely how a class ends up over its own limit — and the failure would be
+silent, because both writers would have been individually correct.
+
+**Null means no limit, and it is a choice rather than an omission.** "I will take
+everybody" is a real position for a teacher to hold, and blank is how the create
+form already spells it, so the writer takes it explicitly instead of defaulting
+to it. A capacity of zero is refused: it would be a class nobody can join, which
+is a cancelled class wearing a different hat.
+
+**Not flag-gated**, like the join-window writer and unlike `create_cohort()`. The
+flag governs arriving: with `learning.cohorts` off, `join_cohort()` refuses and an
+open cohort is invisible to a bystander, so a size change publishes nothing.
+Taking the control away when the platform switch flips would strand a teacher
+mid-class over a decision that is not about them — the same reason closing and
+cancelling stay possible with the flag off.
+
+Implemented in `20261217000100_cohort_capacity.sql`, `setCohortCapacity()` and
+`validateCapacity()` in `lib/cohorts.ts`, the `set_capacity` action on
+`/api/cohorts`, and the size control on `/teach/[courseId]/cohorts`.

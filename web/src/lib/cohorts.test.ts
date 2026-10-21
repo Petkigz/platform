@@ -9,8 +9,10 @@ import {
   joinWindowLabel,
   mapCohortError,
   placesLabel,
+  setCohortCapacity,
   setCohortJoinWindow,
   summarisePlaces,
+  validateCapacity,
   validateCohortInput,
 } from './cohorts.ts';
 
@@ -279,4 +281,65 @@ test('one call asks for every cohort, and a page with none asks for nothing', as
   const none = stubQueries({});
   assert.deepEqual(await fetchCohortPlaces(none.client, []), {});
   assert.equal(none.calls.length, 0, 'a page with no classes called the database');
+});
+
+// ---------------------------------------------------------------------------
+// How big a class is
+//
+// The capacity is published: a learner reads "3 of 12 places taken" and sees a
+// Full badge instead of a Join button. A number other people are refused by has
+// to be one its owner can change, so the teacher sets it — and blank is a choice
+// (no limit) rather than an omission, which is why the validation returns null
+// instead of refusing an empty field.
+// ---------------------------------------------------------------------------
+
+test('a blank size is no limit, and a whole number of places is that many', () => {
+  for (const blank of ['', null, undefined]) {
+    assert.deepEqual(validateCapacity(blank), { ok: true, value: null }, String(blank));
+  }
+  assert.deepEqual(validateCapacity('12'), { ok: true, value: 12 });
+  assert.deepEqual(validateCapacity(12), { ok: true, value: 12 });
+  assert.deepEqual(validateCapacity('1'), { ok: true, value: 1 });
+});
+
+test('a size that could not be a number of places is refused, not rounded', () => {
+  for (const bad of ['0', 0, '-3', '1.5', '0.5', 'twelve', ' ', 'NaN']) {
+    const result = validateCapacity(bad);
+    assert.equal(result.ok, false, `${JSON.stringify(bad)} was accepted`);
+    if (!result.ok) assert.match(result.message, /at least one learner/);
+  }
+  // A number input can hand over exponent notation, and 1e3 is a thousand
+  // places rather than a mistake worth refusing.
+  assert.deepEqual(validateCapacity('1e3'), { ok: true, value: 1000 });
+});
+
+test('changing the size sends the number, or null for no limit', async () => {
+  const { client, calls } = stubRpc({ data: 12 });
+  assert.equal((await setCohortCapacity(client, 'cohort-1', 12)).ok, true);
+  assert.equal(calls[0]?.fn, 'set_cohort_capacity');
+  assert.deepEqual(calls[0]?.args, { p_cohort_id: 'cohort-1', p_capacity: 12 });
+
+  assert.equal((await setCohortCapacity(client, 'cohort-1', null)).ok, true);
+  assert.deepEqual(calls[1]?.args, { p_cohort_id: 'cohort-1', p_capacity: null },
+    'removing the limit was sent as something other than null');
+});
+
+test('the refusals a teacher meets when sizing a class read as sentences', () => {
+  const floor = { message: 'this class already has 3 learners, so its limit cannot go below that' };
+  assert.equal(mapCohortError(floor).status, 409);
+  // The count is the part that makes it actionable, so it survives the mapping.
+  assert.match(mapCohortError(floor).message, /already has 3 learners/);
+
+  assert.equal(mapCohortError({ message: 'capacity must be at least one' }).status, 400);
+  assert.match(mapCohortError({ message: 'capacity must be at least one' }).message,
+    /room for at least one learner/);
+
+  const finished = { message: 'a closed cohort is not accepting joiners, so its size cannot change' };
+  assert.equal(mapCohortError(finished).status, 409);
+  assert.match(mapCohortError(finished).message, /not accepting joiners/);
+
+  assert.equal(mapCohortError({
+    message: 'only the teacher who opened this cohort can change it',
+  }).status, 403);
+  assert.equal(mapCohortError({ message: 'cohort not found', code: 'P0002' }).status, 404);
 });

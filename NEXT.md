@@ -303,9 +303,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **917 database tests, 570 web tests; TypeScript typecheck and
+Verification: **924 database tests, 574 web tests; TypeScript typecheck and
 production build pass; 103 tables, 231 policies, 134 user-defined triggers,
-228 functions, 98 migrations and 105 app route entries.**
+229 functions, 99 migrations and 105 app route entries.**
 
 ## Today's sentence
 
@@ -330,7 +330,7 @@ never started). Updated 2026-10-20.
 | **Offline download** | `may_download_lesson()` requiring entitlement + an `offline_downloads` feature grant + verified first-party media; closed feature vocabulary (`pe_feature_vocabulary`, `plan_feature_codes()`) with the admin plan form offering the list; 17 database tests | Any download route or UI, device registration, device storage limits, download expiry, protected-media handling | **Decisions:** device limits, expiry and protected media (`learning.offline`). It would also serve renditions, which do not exist |
 | **Upload cost control** | A per-file ceiling, in two places: 8 GiB in SQL and in `lib/media.ts`, and **5 GiB less 5 MiB for a browser upload**, which is storage's own limit on one request — `lib/digest.ts` hashes a slice at a time, so the checksum no longer caps the size | A cumulative per-teacher byte quota, a spend alert, and a multipart uploader, which is what would take a browser past 5 GiB and make a failed upload resumable instead of starting again | **Decision:** quota policy (`platform.cost_controls`). Note that `register_media_upload()` is open to **any signed-in user**, not only teachers, because learners attach files to assignment submissions through the same table — so the missing control is a cumulative quota per person, not a role check |
 | **Assignments** | Tasks, self-paced and cohort deadlines, one private submission per learner, drafts and hand-in, marking with immutable feedback, a revision loop with an append-only snapshot, file *references* with type and size ceilings | Byte transfer for submissions (the R2 path exists but is not wired to submissions), scanning, secure delivery to the marker, retention of children's files | **Decision/review:** the safeguarding review of files children send. This one review holds `learning.assignments` **and** `learning.cohorts` |
-| **Cohorts** | Tables, exact-version pinning, opt-in join/leave, capacity serialisation, family opt-in for children, counts on the manager and, since row 32, names and progress on the class page for the teacher who opened it, teacher manager, learner join/leave, the teacher-set `join_closes_at` window, and how full each class is on the course page a joiner reads it from (`cohort_places()`, counts only — the roster stays behind `can_read_cohort_member()`) | Nothing structural | The same safeguarding review. `learning.cohorts` ships `false` |
+| **Cohorts** | Tables, exact-version pinning, opt-in join/leave, capacity serialisation, family opt-in for children, counts on the manager and, since row 32, names and progress on the class page for the teacher who opened it, teacher manager, learner join/leave, the teacher-set `join_closes_at` window, how full each class is on the course page a joiner reads it from (`cohort_places()`, counts only — the roster stays behind `can_read_cohort_member()`), and the teacher's control over the published number (`set_cohort_capacity()`, never below the learners already in the class) | Nothing structural | The same safeguarding review. `learning.cohorts` ships `false` |
 | **Learner analytics** (`SCREENS.md` row 32) | `can_read_learner_course_progress()` as a second branch on the `course_enrolments` and `lesson_progress` read policies; `cohort_learner_progress()`, which returns four columns of a profile rather than the row; `/teach/[courseId]/cohorts/[cohortId]` with a class summary and a roster ordered by need; 19 database tests, most of them negative | Aggregate or platform-wide reporting, event instrumentation beyond lesson progress, export or CSV, anything that follows a learner across courses | **Retention:** how long progress stays readable after a class ends or a learner leaves — a decision, not a default. `delivery.analytics` and `learning.cohorts` both ship `false`, and the predicate checks both |
 | **Reviewer access to lesson media** | `may_review_version_media()` — an accepted or in-progress assignment and nothing else — as a third branch of `may_play_rendition()`, with the player wired into `/review/[assignmentId]`; `may_watch_master()`, `master_preview_target()` and `/api/media/master` for the uploader, staff and the version author, with `Watch` on `/teach/media` and `/admin/media`; 19 database tests, most of them refusals | Any copy for a reviewer: no download, no master, no export. Aggregate review analytics | **Nothing.** Decided 2026-10-20: "other teachers" means a reviewer checking quality for a named period, not co-teachers and not any teacher on the platform. The period is the assignment's state, so access ends with the review |
 | **Live classes with teacher-only recording** | Nothing. No live-class tables exist | Schema, capture, recording, storage, playback, and the rule that learners' video and audio are never captured | **Decision:** build versus buy. This is the one workload that would reopen the Stream decision, because self-hosting a media server is the largest piece of engineering left. Costed in §7 of `docs/decisions/media-storage-costing.md`. Decided 2026-10-20: teacher-only capture, so the child-recording safeguarding question does not arise |
@@ -933,6 +933,60 @@ open is a category rather than an item: tables written by triggers and read by
 nobody — `order_status_history`, `publication_events`, `entitlement_events`,
 `access_checks`, `subscription_history` — which are waiting on a support console
 rather than on a decision.
+
+### The teacher can set the number a learner is refused by, 2026-10-20
+
+Publishing "3 of 12 places taken" on the course page made `cohorts.capacity` a
+promise to the people it refuses — and it could only be set once, in
+`create_cohort()`. A teacher with fourteen people who want in and a class opened
+for twelve had two bad options: cancel a running class and open another, moving
+everybody's membership and leaving the conversation behind, or turn learners away
+for a number typed once, before anybody had joined. The obvious follow-up to
+showing a learner that a class is full is letting its owner make it bigger.
+
+**`set_cohort_capacity()` is the sibling of `set_cohort_join_window()` and keeps
+its terms**: the teacher who opened the class or staff, a draft or an open class,
+a row lock, an audit entry (`cohort.capacity_set`, with the previous size, the new
+one and the membership that set the floor). A closed or cancelled class has a
+size rather than a setting — it is not taking anybody, so editing the number
+would be editing history.
+
+**The floor is the people already in the room.** A capacity below the current
+active membership is refused and names the count. Both alternatives are worse:
+allowing it makes the published number a lie in the direction that matters, since
+a learner reading "14 of 12" is being told there is room; enforcing it means
+removing a learner from a class because a number changed, which for a child's
+class is the most harmful thing this feature could do — a parent gets a withdrawal
+they did not ask for and cannot see the cause of. Raising the limit is the act
+that needs no protection and is the one a teacher wants.
+
+**The lock is the same one `join_cohort()` takes.** Both writers select the cohort
+row `for update` before counting, so either a join lands first and the floor is
+computed with that learner in it, or the limit lands first and the join is refused
+for spare capacity. Without that ordering the floor could be checked against a
+count that is already stale — which is how a class ends up over its own limit,
+silently, with both writers individually correct. A test walks it: fill a class of
+six to three, set the limit to three, and the fourth joiner is refused while
+`cohort_places()` reports three; one of the three leaves and the refused learner
+gets in, at the same limit.
+
+**Null is no limit, and it is a choice rather than an omission** — "I will take
+everybody" is a real position, and blank is how the create form already spells it,
+so the writer takes it explicitly rather than defaulting to it. Zero is refused:
+a class nobody can join is a cancelled class in a different hat. **Not
+flag-gated**, like the join-window writer and unlike `create_cohort()`: the flag
+governs arriving, so with it off a size change publishes nothing, and taking the
+control away mid-class would strand a teacher over a decision that is not about
+them.
+
+**On the screen.** The size control sits beside the join window on each class card
+in `/teach/[courseId]/cohorts`, with the current membership in the label, blank
+for no limit, Save disabled until something changes, and the floor stated before
+it is hit — "nobody is removed to make a number true" — so a teacher who wanted to
+shrink a running class learns that here rather than from a refusal. One call,
+`POST /api/cohorts` with `action: 'set_capacity'`.
+
+7 database tests, 4 web. No new flag, no new policy, no new table.
 
 ## Open external decisions (not to be guessed)
 

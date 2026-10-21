@@ -454,6 +454,136 @@ export async function run(ctx) {
       assert(allowed.auth === true, 'a joiner could not ask how full a class is');
     });
 
+    // -----------------------------------------------------------------
+    // How big a class is
+    //
+    // `cohort_places()` publishes the capacity to the people it refuses — a
+    // learner reads "3 of 12 places taken" and sees Full instead of a Join
+    // button — so the teacher has to be able to change it. These pin who may,
+    // and the floor: a class cannot be made smaller than the people in it,
+    // because the alternative is removing a learner to make a number true.
+    // -----------------------------------------------------------------
+
+    const SQL_SIZE = 'select public.set_cohort_capacity($1,$2) as capacity';
+    const sizeOf = async (id) => (await q(
+      'select capacity from public.cohorts where id=$1', [id])).rows[0].capacity;
+
+    /** A draft class of a given size, opened if asked. */
+    async function sizedClass(title, capacity, open = false) {
+      const id = (await create(teacher, course, version, title, capacity)).rows[0].id;
+      if (open) await asActor(teacher, SQL_STATUS, [id, 'open']);
+      return id;
+    }
+
+    await test('the teacher who opened the class sets how big it is', async () => {
+      const id = await sizedClass('Sized class', 4);
+      const set = await asActor(teacher, SQL_SIZE, [id, 12]);
+      assert(set.rows[0].capacity === 12, `the writer returned ${set.rows[0].capacity}`);
+      assert(await sizeOf(id) === 12, 'the column did not move');
+
+      // Staff may, because they may stand in for a teacher who cannot.
+      assert((await asActor(admin, SQL_SIZE, [id, 20])).rows[0].capacity === 20);
+      assert(await sizeOf(id) === 20);
+    });
+
+    await test('nobody else sets the size of a class they do not own', async () => {
+      const id = await sizedClass('Owned class', 6);
+      const outsider = await learner('Size outsider');
+      await refused(otherTeacher, SQL_SIZE, [id, 30],
+        /only the teacher who opened this cohort can change it/i);
+      await refused(outsider.userId, SQL_SIZE, [id, 30],
+        /only the teacher who opened this cohort can change it/i);
+      assert(await sizeOf(id) === 6, 'a refusal still changed the size');
+      await refused(outsider.userId, SQL_SIZE, [crypto.randomUUID(), 30], /cohort not found/i);
+    });
+
+    await test('a class cannot be made smaller than the learners already in it', async () => {
+      const id = await sizedClass('Floor class', 6, true);
+      const members = [];
+      for (let i = 0; i < 3; i += 1) {
+        const one = await learner(`Floor ${i}`, { course, version });
+        await asActor(one.userId, SQL_JOIN, [id, one.learnerId]);
+        members.push(one);
+      }
+
+      await refused(teacher, SQL_SIZE, [id, 2],
+        /already has 3 learners, so its limit cannot go below that/i);
+      assert(await sizeOf(id) === 6, 'a refused size still moved the column');
+      // The count is the floor and is allowed: that is how a teacher fills a
+      // class and stops it growing.
+      await asActor(teacher, SQL_SIZE, [id, 3]);
+      assert(await sizeOf(id) === 3);
+
+      // And the floor is real, not decorative: the next joiner is refused by the
+      // same lock the writer took, and the learner-facing number says full.
+      const late = await learner('Floor late', { course, version });
+      await refused(late.userId, SQL_JOIN, [id, late.learnerId], /full/i);
+      const seen = (await asActor(late.userId,
+        'select active_members from public.cohort_places($1::uuid[])', [[id]])).rows;
+      assert(seen[0].active_members === 3, `a joiner was told ${seen[0].active_members} are in it`);
+
+      // Somebody leaving opens the place again, which is what the course page
+      // tells a learner to wait for.
+      await asActor(members[0].userId, SQL_LEAVE, [id, members[0].learnerId]);
+      await asActor(late.userId, SQL_JOIN, [id, late.learnerId]);
+      assert(await sizeOf(id) === 3, 'a join changed the limit');
+    });
+
+    await test('no limit is a choice the teacher can make, and take back', async () => {
+      const id = await sizedClass('Unlimited class', 2, true);
+      assert((await asActor(teacher, SQL_SIZE, [id, null])).rows[0].capacity === null);
+      assert(await sizeOf(id) === null, 'blank did not remove the limit');
+
+      const one = await learner('Unlimited joiner', { course, version });
+      await asActor(one.userId, SQL_JOIN, [id, one.learnerId]);
+      assert((await asActor(one.userId,
+        'select active_members from public.cohort_places($1::uuid[])', [[id]])).rows[0]
+        .active_members === 1, 'a class with no limit stopped reporting its members');
+
+      await asActor(teacher, SQL_SIZE, [id, 8]);
+      assert(await sizeOf(id) === 8);
+    });
+
+    await test('a class that has stopped taking joiners has a size, not a setting', async () => {
+      const closed = await sizedClass('Closing class', 5, true);
+      await asActor(teacher, SQL_STATUS, [closed, 'closed']);
+      await refused(teacher, SQL_SIZE, [closed, 25],
+        /a closed cohort is not accepting joiners, so its size cannot change/i);
+
+      const cancelled = await sizedClass('Cancelled class', 5);
+      await asActor(teacher, SQL_STATUS, [cancelled, 'cancelled']);
+      await refused(teacher, SQL_SIZE, [cancelled, 25],
+        /a cancelled cohort is not accepting joiners, so its size cannot change/i);
+      assert(await sizeOf(closed) === 5 && await sizeOf(cancelled) === 5);
+    });
+
+    await test('a class has room for at least one learner', async () => {
+      const id = await sizedClass('At least one', 4);
+      for (const bad of [0, -1]) {
+        await refused(teacher, SQL_SIZE, [id, bad], /capacity must be at least one/i);
+      }
+      assert(await sizeOf(id) === 4, 'a refused size still moved the column');
+    });
+
+    await test('changing the size is audited with the count that set the floor', async () => {
+      const id = await sizedClass('Audited size', 4, true);
+      const one = await learner('Audited joiner', { course, version });
+      await asActor(one.userId, SQL_JOIN, [id, one.learnerId]);
+      await asActor(teacher, SQL_SIZE, [id, 9]);
+
+      const events = (await q(
+        `select actor, detail from public.governance_audit_events
+          where action='cohort.capacity_set' and target_id=$1 order by occurred_at`, [id])).rows;
+      assert(events.length === 1, `a size change wrote ${events.length} audit entries`);
+      const detail = events[0].detail;
+      assert(detail.previous_capacity === 4, `the old size was recorded as ${detail.previous_capacity}`);
+      assert(detail.capacity === 9, `the new size was recorded as ${detail.capacity}`);
+      // The count is in the trail because it is the reason a smaller number would
+      // have been refused, and that reason is not recoverable afterwards.
+      assert(detail.active_members === 1, `the membership was recorded as ${detail.active_members}`);
+      assert(events[0].actor === teacher, 'the audit entry does not say who changed the size');
+    });
+
     await test('every act is audited', async () => {
       const events = (await q(
         `select action from public.governance_audit_events

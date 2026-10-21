@@ -137,6 +137,12 @@ export function mapCohortError(error: { message: string; code?: string }): { sta
   if (/not found|no_data_found|does not exist/i.test(m) || error.code === 'P0002')
     return { status: 404, message: 'That cohort could not be found.' };
   if (/full/i.test(m)) return { status: 409, message: 'This cohort is full.' };
+  if (/capacity must be at least one/i.test(m))
+    return { status: 400, message: 'A class must have room for at least one learner.' };
+  // The teacher tried to make the class smaller than it already is. The database
+  // names the count, which is the part that makes the refusal actionable, so the
+  // sentence is passed through rather than replaced with a generic one.
+  if (/already has .* learner/i.test(m)) return { status: 409, message: m };
   if (/already in the cohort/i.test(m)) return { status: 409, message: 'This learner is already in the cohort.' };
   if (/only the teacher who opened/i.test(m))
     return { status: 403, message: 'Only the teacher who opened this class can change it.' };
@@ -173,6 +179,44 @@ export async function createCohort(
     p_ends_at: input.endsAt,
     p_capacity: input.capacity,
     p_join_closes_at: input.joinClosesAt,
+  });
+}
+
+/**
+ * How many learners a class holds, from whatever the form handed over.
+ *
+ * Blank is a choice and not an omission: it means no limit, which is what the
+ * column's null means and what the create form's placeholder says. Zero, a
+ * fraction and a negative are refused rather than rounded, because a capacity of
+ * zero would be a class nobody can join and a fraction would be a limit the
+ * database cannot enforce.
+ */
+export function validateCapacity(
+  value: unknown,
+): { ok: true; value: number | null } | { ok: false; message: string } {
+  if (value === null || value === undefined || value === '') return { ok: true, value: null };
+  const capacity = typeof value === 'number' ? value : Number(value);
+  if (!Number.isInteger(capacity) || capacity < 1)
+    return { ok: false, message: 'A class must have room for at least one learner, in whole places.' };
+  return { ok: true, value: capacity };
+}
+
+/**
+ * Set how many learners a class holds.
+ *
+ * Only the teacher who opened it, or staff, and only while it is a draft or open.
+ * The database refuses a limit below the learners already in the class and names
+ * the count, because the alternative would be removing a child from a class
+ * because a number changed.
+ */
+export async function setCohortCapacity(
+  client: SupabaseClient,
+  cohortId: string,
+  capacity: number | null,
+): Promise<CohortWriteResult> {
+  return rpcWrite(client, 'set_cohort_capacity', {
+    p_cohort_id: cohortId,
+    p_capacity: capacity,
   });
 }
 
@@ -309,8 +353,10 @@ export function summarisePlaces(
 ): CohortPlaces {
   if (activeMembers === null) return { activeMembers: null, placesLeft: null, full: false };
   if (capacity === null) return { activeMembers, placesLeft: null, full: false };
-  // More members than capacity is possible: capacity can be lowered after people
-  // join. That is a class that is over, not one with negative places.
+  // `set_cohort_capacity()` refuses a limit below the learners already in the
+  // class, so this cannot happen through a writer. Clamped anyway: a negative
+  // number of places would render as "−2 of 12 places taken" on a page a learner
+  // reads, and being wrong here costs one `Math.max`.
   const placesLeft = Math.max(0, capacity - activeMembers);
   return { activeMembers, placesLeft, full: placesLeft === 0 };
 }
