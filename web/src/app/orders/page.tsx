@@ -3,14 +3,30 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { format, fromMinor } from '@/lib/money';
+import { describeOrderAdjustment, describeOrderBreakdown } from '@/lib/checkout';
 import { RefundForm } from './refund-form';
 
 export const dynamic = 'force-dynamic';
+
+type AdjustmentRow = {
+  id: string;
+  adjustment_type: string;
+  direction: 'debit' | 'credit';
+  amount_minor: string | number;
+  currency_code: string;
+  description: string | null;
+  voided_at: string | null;
+  voided_reason: string | null;
+};
 
 type OrderRow = {
   id: string;
   status: string;
   currency_code: string;
+  subtotal_minor: string | number;
+  discount_minor: string | number;
+  tax_minor: string | number;
+  fee_minor: string | number;
   total_minor: string | number;
   paid_at: string | null;
   created_at: string;
@@ -18,6 +34,7 @@ type OrderRow = {
     id: string;
     item_snapshot: { title?: string } | null;
   }[] | null;
+  order_adjustments: AdjustmentRow[] | null;
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -29,6 +46,7 @@ const STATUS_LABEL: Record<string, string> = {
   refunded: 'Refunded',
   cancelled: 'Cancelled',
   failed: 'Failed',
+  expired: 'Expired',
 };
 
 /**
@@ -76,7 +94,14 @@ export default async function OrdersPage({
           await supabase
             .from('orders')
             .select(
-              'id, status, currency_code, total_minor, paid_at, created_at, order_items ( id, item_snapshot )',
+              'id, status, currency_code, subtotal_minor, discount_minor, tax_minor, ' +
+              'fee_minor, total_minor, paid_at, created_at, ' +
+              'order_items ( id, item_snapshot ), ' +
+              // A payer may read the adjustments on their own order, including
+              // withdrawn ones: without them the total on this page cannot be
+              // reconstructed from anything the payer can see.
+              'order_adjustments ( id, adjustment_type, direction, amount_minor, ' +
+              'currency_code, description, voided_at, voided_reason )',
             )
             .in('billing_account_id', accountIds)
             .is('deleted_at', null)
@@ -125,11 +150,50 @@ export default async function OrdersPage({
                 fromMinor(o.total_minor, o.currency_code),
               );
               const paid = o.status === 'paid';
+              // Null when the total is the whole story, which it is for nearly
+              // every order: no discount, no tax, no fee.
+              const breakdown = describeOrderBreakdown({
+                currencyCode: o.currency_code,
+                subtotalMinor: String(o.subtotal_minor ?? 0),
+                discountMinor: String(o.discount_minor ?? 0),
+                taxMinor: String(o.tax_minor ?? 0),
+                feeMinor: String(o.fee_minor ?? 0),
+                totalMinor: String(o.total_minor ?? 0),
+              });
+              const adjustments = (o.order_adjustments ?? []).map((a) =>
+                describeOrderAdjustment({
+                  id: a.id,
+                  adjustment_type: a.adjustment_type,
+                  direction: a.direction,
+                  // PostgREST sends a bigint as a JSON number; money is a
+                  // decimal integer string everywhere else, so it becomes one
+                  // here rather than being formatted as a float.
+                  amount_minor: String(a.amount_minor),
+                  currency_code: a.currency_code,
+                  description: a.description,
+                  voided_at: a.voided_at,
+                  voided_reason: a.voided_reason,
+                }),
+              );
               return (
                 <li key={o.id}>
                   <span className="t">
                     {title}
                     <span className="muted"> · {amount}</span>
+                    {breakdown && (
+                      <span className="muted" style={{ display: 'block' }}>
+                        {breakdown}
+                      </span>
+                    )}
+                    {adjustments.map((line, i) => (
+                      <span
+                        key={`${o.id}-adjustment-${i}`}
+                        className="muted"
+                        style={{ display: 'block' }}
+                      >
+                        {line}
+                      </span>
+                    ))}
                   </span>
                   <span
                     className={`badge ${paid ? 'ok' : 'neutral'}`}

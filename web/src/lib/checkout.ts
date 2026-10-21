@@ -384,3 +384,87 @@ export async function resolveOpenAttempts(
 export function describeOrderAmount(amountMinor: string | number, currency: string): string {
   return format(fromMinor(amountMinor, currency));
 }
+
+/** What an order's total is made of. Every field is a decimal integer string. */
+export type OrderTotals = {
+  currencyCode: string;
+  subtotalMinor: string;
+  discountMinor: string;
+  taxMinor: string;
+  feeMinor: string;
+  totalMinor: string;
+};
+
+export type OrderAdjustmentRow = {
+  id: string;
+  adjustment_type: string;
+  direction: 'debit' | 'credit';
+  amount_minor: string;
+  currency_code: string;
+  description: string | null;
+  voided_at: string | null;
+  voided_reason: string | null;
+};
+
+export const ADJUSTMENT_LABEL: Record<string, string> = {
+  manual_discount: 'Discount',
+  promotion: 'Promotion',
+  tax: 'Tax',
+  fee: 'Fee',
+  shipping: 'Shipping',
+  rounding: 'Rounding',
+};
+
+const isZero = (minor: string) => {
+  const n = minor.trim();
+  return n === '0' || n === '' || /^-?0+$/.test(n);
+};
+
+/**
+ * How the total is made up, or null when the total is the whole story.
+ *
+ * `orders_totals_agree` holds total = subtotal − discount + tax + fee, and
+ * since 20261225000100 an order can actually have all four. Showing only the
+ * total on an invoice that has a fee in it is how a payer learns the number is
+ * arbitrary: the parts have to be visible for the total to be checkable.
+ *
+ * Returns null rather than "Subtotal X" when nothing moved the total, because
+ * a breakdown that repeats the total is noise on every order that has no
+ * discount, tax or fee — which is nearly all of them.
+ */
+export function describeOrderBreakdown(totals: OrderTotals): string | null {
+  const { discountMinor, taxMinor, feeMinor } = totals;
+  if (isZero(discountMinor) && isZero(taxMinor) && isZero(feeMinor)) return null;
+
+  const parts: string[] = [
+    `Subtotal ${format(fromMinor(totals.subtotalMinor, totals.currencyCode))}`,
+  ];
+  if (!isZero(discountMinor)) {
+    parts.push(`− discount ${format(fromMinor(discountMinor, totals.currencyCode))}`);
+  }
+  if (!isZero(taxMinor)) {
+    parts.push(`+ tax ${format(fromMinor(taxMinor, totals.currencyCode))}`);
+  }
+  if (!isZero(feeMinor)) {
+    parts.push(`+ fee ${format(fromMinor(feeMinor, totals.currencyCode))}`);
+  }
+  return parts.join(' ');
+}
+
+/**
+ * One adjustment as a payer reads it on their own order.
+ *
+ * A voided adjustment is still shown, marked as withdrawn with its reason.
+ * Hiding it would leave a total that cannot be reconstructed from what is on
+ * screen, and the row is still on the invoice for exactly that reason.
+ */
+export function describeOrderAdjustment(a: OrderAdjustmentRow): string {
+  const label = ADJUSTMENT_LABEL[a.adjustment_type] ?? a.adjustment_type;
+  const sign = a.direction === 'credit' ? '−' : '+';
+  const amount = format(fromMinor(a.amount_minor, a.currency_code));
+  const reason = a.description?.trim();
+  const base = `${label} ${sign} ${amount}${reason ? ` · ${reason}` : ''}`;
+  if (!a.voided_at) return base;
+  const why = a.voided_reason?.trim();
+  return `${base} · withdrawn${why ? `: ${why}` : ''}`;
+}

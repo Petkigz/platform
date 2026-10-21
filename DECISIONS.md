@@ -1573,3 +1573,89 @@ Implemented in `20261224000100_course_order_writer.sql` (one function, two polic
 dropped), `web/src/lib/checkout.ts`, `web/src/app/api/checkout/route.ts`,
 `/courses/[slug]/buy`, `supabase/tests/course_order.test.mjs` and one inverted
 assertion in `supabase/tests/fulfilment.test.mjs`.
+
+## What an order's total is made of — **DECIDED 2026-10-21**
+
+`orders_totals_agree` held an order to itself — total = subtotal − discount + tax — and
+nothing held it to the rows behind it. The subtotal was not the sum of the lines.
+`order_adjustments` could be written by any member of the billing account, which is to
+say by the customer, and was read by nothing, so a discount changed no total and an
+invoice could not show one. There was no column for a fee, so a provider charge was
+either folded into the tax column or into the total, which the CHECK refuses. This
+decides what the parts of a total are, who may change them, and when they stop being
+changeable.
+
+**A total has five numbers and they come from rows.** `subtotal_minor` is the sum of the
+order's lines, `discount_minor` the sum of its live credits, `tax_minor` the sum of its
+live tax debits, `fee_minor` the sum of its other live debits, and `total_minor` is
+subtotal − discount + tax + fee, which is now the constraint. A fee gets its own column
+because a charge that cannot be shown is a charge nobody can check, and because tax is
+the one part of a total that may have to be remitted to somebody — hiding a provider fee
+inside it is not a rounding convenience, it is a wrong filing.
+
+**One function derives them.** `recompute_order_totals()` reads the items and the live
+adjustments and writes all five columns. It is not callable by a client: a recompute
+nobody asked for is a total that changed with no row to explain it, and the only callers
+that need it are the two writers, which call it after every change they make.
+
+**Adjustments happen before payment, and after payment they do not happen at all.** Once
+an order is paid its total is history — a capture was written for exactly that amount and
+a teacher's earnings were accrued from it — so both writers refuse a paid order and point
+at `record_financial_adjustment()` or a refund, which are separate rows that leave the
+original amount intact. That is D4 applied to a correction: the way to change what a paid
+order means is to add a row beside it, never to edit it.
+
+**A wrong adjustment is voided, not deleted.** It keeps its type, amount and reason, gains
+who withdrew it and why, and stops counting. The payer can still see it on `/orders`,
+marked withdrawn. A total that cannot be reconstructed from what the person paying can see
+is a total that looks arbitrary, and "the discount disappeared" is not an explanation
+anybody can audit.
+
+**Direction follows from type, except where it genuinely cannot.** `manual_discount` is a
+credit; `tax`, `fee` and `shipping` are debits; a contradiction is refused rather than
+stored, because a discount that adds money is not a discount and a tax that removes it is
+not a tax. `rounding` is the one type that can go either way — 12 347 UGX down to 12 300 is
+a credit, up to 12 400 a debit — so it is the one that asks, and refuses to guess.
+`promotion` is refused outright: the constraint requires a redemption id, nothing can write
+one, and accepting a hand-typed id would manufacture the row the constraint exists to
+guarantee.
+
+**Only finance may adjust an order.** An explicit `platform_admin` or `finance_admin` pair,
+not `is_privileged()`, which includes `support_agent` — the least-privileged role in the
+platform, whose job is to read an order and answer a question about it. Changing what an
+order costs is not that job, and a test pins the refusal so a future "staff only" shortcut
+fails loudly.
+
+**The invariant fires when the numbers become history.** A BEFORE UPDATE trigger on
+`orders.status` refuses to let an order become paid, partially refunded or refunded while
+any of its four columns disagrees with the rows behind it, naming both figures in the
+error. That is the moment a capture and an earnings entry are written from the total, so it
+is the last point at which a wrong number is cheap. It does not fire on INSERT: an order is
+always born `pending_payment` with its line written next, and on INSERT the sum of its
+lines is necessarily zero.
+
+**Left open, and asked.** Who funds an order-level discount. A teacher's gross is computed
+from the order's lines, so a discount comes out of the platform's margin and the teacher
+still earns a share of the pre-discount price — right for a scholarship the platform chose
+to give, questionable for a promotion a teacher asked for, and at the extreme it accrues
+more than the order collected. Every candidate guard is a different answer to that
+question, so the behaviour is pinned by a test and recorded in `NEXT.md` instead of being
+decided by whoever wrote the migration.
+
+**Rejected:** leaving the totals un-derived and validating them in a route (two paths, one
+rule); deleting a wrong adjustment (an unexplainable total); allowing an adjustment after
+payment and re-deriving the ledger row (the ledger is the record of what happened, and D4
+says the original amount stays); a CHECK constraint for the parts invariant (whether an
+order's columns describe its rows is a question about other tables, and a CHECK cannot ask
+it); accepting a currency on an adjustment (it could not be added to the total); accepting
+a direction for every type (a discount that adds money); narrowing
+`order_adjustments_insert` to staff instead of dropping it (a second, unaudited way to
+change a total); and gating the writers behind a new flag (finance correcting an unpaid
+order is not a feature to be switched on, and the promotions part of it is already refused
+by the undecided policy rather than by a switch).
+
+Implemented in `20261225000100_order_adjustment_writer.sql` (one column, three functions,
+one trigger function and trigger, one policy dropped, three constraints added and one
+widened), `web/src/lib/checkout.ts` (`describeOrderBreakdown`, `describeOrderAdjustment`),
+`/orders`, `supabase/tests/order_adjustments.test.mjs` and one rewritten test in
+`supabase/tests/course_order.test.mjs`.

@@ -68,9 +68,9 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 ## Status
 
-The database stands at **103 tables, RLS on every one, 229 policies, 135
-user-defined triggers, 258 functions and 106 migrations.** The database suite
-passes **1107 tests**; the web suite passes **752 tests**. TypeScript typecheck
+The database stands at **103 tables, RLS on every one, 228 policies, 136
+user-defined triggers, 262 functions and 107 migrations.** The database suite
+passes **1131 tests**; the web suite passes **756 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **115 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
@@ -150,6 +150,21 @@ the definer writers are the only way an order comes into existence and a payer
 still reads their own invoice. `commerce.checkout` is enforced inside it, which
 makes that flag load-bearing for the first time — it was registered and read by
 nothing, so "ships off" was untrue for checkout specifically.
+
+An order's total is now held against the parts that make it up. `orders_totals_agree`
+kept an order internally consistent and nothing kept it honest about its own rows:
+`subtotal_minor` was not held to the sum of the lines, `order_adjustments` had the same
+`is_billing_member()` insert policy that let a payer write an order and no reader at all,
+and there was no column for a fee, so a provider charge was either folded into the tax
+column — a lie on an invoice — or into the total, which the CHECK refuses. `orders.fee_minor`
+exists, the identity is `total = subtotal − discount + tax + fee`, `add_order_adjustment()`
+and `void_order_adjustment()` are the only way an adjustment happens (finance admin or
+platform admin, before payment only, with a written reason, and a voided row stays
+readable so the total can be reconstructed), the client-side insert policy is dropped, and
+a trigger refuses to let an order become paid while any of its columns disagrees with the
+rows behind it — which is the moment a capture is written for the total and a teacher's
+earnings are accrued from it. `/orders` shows the breakdown and every adjustment on the
+invoice, including withdrawn ones.
 
 Free previews now have one consistent gate from the catalogue to content
 access. Teachers can mark draft lessons and individual public-sample resources;

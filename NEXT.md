@@ -303,9 +303,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **1107 database tests, 752 web tests; TypeScript typecheck and
-production build pass; 103 tables, 229 policies, 135 user-defined triggers,
-258 functions, 106 migrations and 115 app route entries.**
+Verification: **1131 database tests, 756 web tests; TypeScript typecheck and
+production build pass; 103 tables, 228 policies, 136 user-defined triggers,
+262 functions, 107 migrations and 115 app route entries.**
 
 ## Today's sentence
 
@@ -362,7 +362,7 @@ given a surface. Grouped by the feature they belong to:
 | Reviewer machinery — the versions | `content_review_requirements`, `technical_review_checks`, `content_change_assessments` | **Now written** by `20261221000100_review_requirements.sql`, on `/teach/[courseId]`, `/admin/reviews` and `/review/[assignmentId]`. `validate_review_assignment()`'s authorisation loop now has something to loop over, so a version can require a reviewer authorised for a subject — and a requirement can be closed, which nothing could do before |
 | Payouts | `instructor_payouts`, `instructor_payout_items` | `teaching.payouts`, off; ROADMAP already says "3 tables with no fields and no endpoints" |
 | Institutions | `institutions` | `commerce.institutions` and four `institution.*` flags, all off |
-| Money plumbing | `currency_exchange_rates`, `order_adjustments`, `payment_method_references` | **`currency_exchange_rates` is now written and read** by `20261223000100_currency_reporting.sql`, on `/admin/exchange-rates` and `/admin/money-report`, and it is what stamps `financial_transactions.fx_rate`/`fx_source`/`fx_observed_at` — columns a constraint required and nothing ever set. Multi-currency reporting is therefore built; the open part is what nets against what in the report. `orders` and `order_items` are now **writer-only**: `20261224000100_course_order_writer.sql` dropped `orders_insert` and `order_items_insert`, so a course order exists only if `create_course_order()` made it (see today's section — the policies had let a payer write the total and the product themselves). `order_adjustments` still has no writer and still has an open insert policy (promotions eligibility and stacking are undecided, and an order's total is not held against its items plus adjustments by anything), and `payment_method_references` needs a provider that can store one |
+| Money plumbing | `currency_exchange_rates`, `order_adjustments`, `payment_method_references` | **`currency_exchange_rates` is now written and read** by `20261223000100_currency_reporting.sql`, on `/admin/exchange-rates` and `/admin/money-report`, and it is what stamps `financial_transactions.fx_rate`/`fx_source`/`fx_observed_at` — columns a constraint required and nothing ever set. Multi-currency reporting is therefore built; the open part is what nets against what in the report. `orders` and `order_items` are now **writer-only**: `20261224000100_course_order_writer.sql` dropped `orders_insert` and `order_items_insert`, so a course order exists only if `create_course_order()` made it (see today's section — the policies had let a payer write the total and the product themselves). `order_adjustments` is now **written by `add_order_adjustment()`/`void_order_adjustment()` and read on `/orders`** — its client-side insert policy is dropped and an order's total is held against its items plus its live adjustments by a trigger before it can be paid (`20261225000100`). What is missing is the finance screen that drives the two writers, which is the next unit; until then they are reachable only by a client that calls the RPC. Promotions remain refused by the writer because eligibility and stacking are undecided. `payment_method_references` needs a provider that can store one |
 | History and diagnostics | `order_status_history`, `publication_events`, `entitlement_events`, `course_enrolment_version_history`, `subscription_history` | **Now read** by `support_case_history()`, on `/support/<caseNumber>` for staff. Still closed to every other read path, which is the point: one function decides what support may see |
 | Diagnostics with no writer | `access_checks` | **Correction to the audit:** nothing has ever inserted a row here — not a trigger, not a function, not a route. Its comment promises a denial log for support agents and the platform does not keep one. Excluded from the console on purpose; an always-empty list would read as "no denial happened" |
 | Other | `adult_learning_shares` | **Now written and read**, by `20261222000100_adult_learning_shares.sql` on `/account/sharing`. The console still reads it too, and its empty section is now a true answer about a feature that exists: nobody has been given sight of this adult's progress. The gap the audit named — no writer, and no predicate that made a share mean anything — is closed at both ends |
@@ -1722,6 +1722,115 @@ policies dropped, no new table, no new flag.
   dropped there, rather than dropped now and left with no path at all.
 
 
+### An order's total is held against the parts that make it up, 2026-10-21
+
+`orders_totals_agree` — total = subtotal − discount + tax — is a real constraint,
+and it was the only thing standing between an order and a total that contradicted
+itself. Nothing held an order to the rows behind it, in three places:
+
+- **`subtotal_minor` was not the sum of the lines.** `order_items.line_total_minor`
+  is checked against its own unit price, quantity and discount, and the order's
+  subtotal was checked against nothing. An order could be paid for less than the
+  things on it added up to, and both constraints would have been satisfied.
+- **`order_adjustments` was write-only, and by the wrong people.** Its insert
+  policy asked the same question as the two dropped in `20261224000100` —
+  `is_billing_member()` — so a customer could put a discount row on their own
+  order. It was harmless only because no total was derived from the table, which
+  is also why the table was useless: a discount finance recorded changed nothing.
+- **There was nowhere to put a fee.** No `fee_minor` column, so a provider or
+  handling charge was either folded into the tax column (a lie on an invoice, and
+  one that matters if tax is ever remitted) or into the total (which
+  `orders_totals_agree` refuses).
+
+**What changed.** `orders.fee_minor` (default 0, non-negative) and the identity
+widened to `total = subtotal − discount + tax + fee`. `order_adjustments` gains
+`voided_at`, `voided_by`, `voided_reason`, an `oa_void_agrees` CHECK (a voided row
+names who voided it and why; a live row names neither) and `oa_amount_non_negative`
+(the sign lives in `direction`, so a negative amount with a direction is a double
+negative). `order_adjustments_insert` is dropped, with the read left alone so a
+payer can still see their own invoice.
+
+Three functions. `recompute_order_totals(order_id)` derives all five columns from
+the rows — subtotal from the lines, credits into discount, debits into tax or fee,
+total from the identity — and refuses when the result would be negative. It is not
+callable by a client, because a recompute nobody asked for is a total that changed
+with no row to explain it; it is the arithmetic inside the two writers.
+`add_order_adjustment(order_id, type, amount_minor, direction?, reason?, item_id?)`
+and `void_order_adjustment(adjustment_id, reason)` are finance_admin or
+platform_admin only — an explicit role pair, because `is_privileged()` includes
+`support_agent`, who may read an order to answer a question and may not change what
+it costs, and a test pins that refusal. Both audit, both return the new totals, and
+both take the currency from the order rather than as a parameter, since an
+adjustment in another currency could not be added to a total and there is no rate on
+the row to convert it with.
+
+**Two rules that are decisions rather than mechanics.**
+
+- **Adjustments are for before payment.** Once an order is paid its total is
+  history: `record_payment_success()` has already written a
+  `financial_transactions` capture for exactly that amount and accrued a teacher's
+  earnings from it. Both writers refuse a paid order and say to use
+  `record_financial_adjustment()` or a refund instead — separate rows that leave the
+  original amount intact, which is D4.
+- **Voiding, not deleting.** A wrong adjustment is withdrawn with a reason and stays
+  readable, and `/orders` shows it as withdrawn. An order whose discount simply
+  vanished is an order nobody can explain later, and a total that cannot be
+  reconstructed from what the payer can see is a total that looks arbitrary.
+
+**Direction comes from the type.** `manual_discount` is a credit; `tax`, `fee` and
+`shipping` are debits; a contradiction is refused rather than stored, because a
+discount that adds money is not a discount. Credits accumulate into
+`discount_minor`, a debit `tax` into `tax_minor`, every other debit into
+`fee_minor` — so `fee` and `shipping` share a column and an invoice shows them
+apart from the adjustment rows. `rounding` is the one type that can genuinely go
+either way (12 347 UGX to 12 300 is a credit, to 12 400 a debit), so it is the one
+that asks for a direction and refuses to guess. `promotion` is refused outright:
+`oa_promotion_agrees` requires a `promotion_redemption_id` and nothing can write
+one, because promotions eligibility and stacking are undecided, so accepting a
+hand-typed id would manufacture the row the constraint exists to guarantee.
+
+**The invariant, and where it fires.** `orders_parts_agree` is a BEFORE UPDATE OF
+status trigger that refuses to let an order become `paid`, `partially_refunded` or
+`refunded` while any of its four columns disagrees with the rows behind it. That is
+the moment the numbers stop being editable and start being history — the capture and
+the earnings are written in the same call — and the refusal names both figures
+("its subtotal is 5000 but its line items add up to 30000") so a support agent can
+act on it. It deliberately does not fire on INSERT: an order is always born
+`pending_payment` by one of the two definer writers, and on INSERT its line item
+does not exist yet, so the sum would be zero and every order would be refused.
+Nothing can insert one another way, because both insert policies are gone.
+
+**A finding this exposed, pinned rather than endorsed.**
+`accrue_instructor_earnings()` computes a teacher's gross as
+`sum(order_items.line_total_minor)` for their courses — the **subtotal**. So an
+order-level discount is absorbed by the platform and the teacher's share is still
+computed on the pre-discount price, while a fee or a tax is kept by the platform and
+is not in the gross either. For a fee and a tax that is plainly right. For a discount
+it is an open business decision — who funds a promotion — and at the extreme it pays
+the teacher more than the order collected: a 100% discount on a 50 000 UGX course
+still accrues a share of 50 000 against an order that took nothing. A test asserts
+the behaviour exactly as it is, with a comment saying it is pinned and not endorsed,
+so changing it is a decision somebody makes rather than something nobody noticed.
+Recorded below. No guard was added, because every candidate guard (cap the earnings,
+refuse the discount, apportion it across the lines) is a different answer to that
+question.
+
+**Where it renders.** `/orders` shows the breakdown — subtotal, discount, tax, fee —
+when any part moved the total, and nothing when the total is the whole story, which
+it is for nearly every order. Under it, each adjustment as a line with its reason,
+including withdrawn ones. Both are formatted by the same `format()` as the total,
+because two renderings of one number read as two numbers.
+
+**Not built.** No screen calls the two writers yet. `/admin/financial-adjustments`
+is the post-payment instrument and says so on its face ("append-only accounting
+corrections... they do not themselves transfer funds"), and there is no admin order
+list to hang a pre-payment adjustment on, so the screen that drives them is
+`/admin/orders` and it is the next unit.
+
+24 database tests, 4 web tests. One migration, four functions, one trigger, one
+policy dropped, one column added, two constraints added and one widened.
+
+
 ## Open external decisions (not to be guessed)
 
 - Payment provider merchant/sandbox credentials and callback verification (P12).
@@ -1757,6 +1866,18 @@ policies dropped, no new table, no new flag.
   settlement country — and a decision about what happens when somebody is entitled
   to two. Not guessed, because the wrong rule either charges a family the price for
   another country or lets the cheapest market become everyone's.
+- **Who funds an order-level discount.** `accrue_instructor_earnings()` computes a
+  teacher's gross from the order's *lines*, so a discount recorded with
+  `add_order_adjustment()` comes out of the platform's margin and the teacher still
+  earns a share of the pre-discount price. That is defensible for a scholarship the
+  platform chose to give and wrong for a promotion a teacher asked for, and at the
+  extreme it accrues more than the order collected. The options are to leave it (the
+  platform funds every discount), to apportion order-level discounts across the lines
+  (the teacher funds them, pro rata), or to make it a property of the adjustment — a
+  "funded by" the recorder chooses, which is what a real invoice needs and what
+  promotions will need once eligibility and stacking are decided. Pinned as-is by a
+  test in `order_adjustments.test.mjs` so the current answer is a fact on the record
+  rather than an accident.
 - **Whether buying a course the account already owns should be refused.**
   `record_payment_success()` grants to every linked learner profile of every active
   member of the billing account, so a second purchase of the same course version is

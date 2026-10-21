@@ -4,6 +4,8 @@ import test from 'node:test';
 import {
   createOrder,
   createPlanOrder,
+  describeOrderAdjustment,
+  describeOrderBreakdown,
   recordPaymentAttempt,
   resolveBillingAccount,
   resolveOpenAttempts,
@@ -457,4 +459,114 @@ test('resolving attempts moves status and resolved_at together', async () => {
   // Only open attempts are touched, so a replay cannot rewrite a settled one.
   assert.deepEqual(update.filters.status, ['pending', 'requires_action', 'processing']);
   assert.equal(update.filters.order_id, 'order-1');
+});
+
+// ---------------------------------------------------------------------------
+// Showing the parts of a total. An invoice that only shows a total on an order
+// with a fee in it is an invoice nobody can check.
+// ---------------------------------------------------------------------------
+
+const TOTALS = {
+  currencyCode: 'UGX',
+  subtotalMinor: '30000',
+  discountMinor: '0',
+  taxMinor: '0',
+  feeMinor: '0',
+  totalMinor: '30000',
+};
+
+test('an order with nothing but a price shows no breakdown', async () => {
+  assert.equal(describeOrderBreakdown(TOTALS), null);
+});
+
+test('a breakdown names every part that moved the total', async () => {
+  const line = describeOrderBreakdown({
+    ...TOTALS,
+    discountMinor: '5000',
+    taxMinor: '1000',
+    feeMinor: '500',
+    totalMinor: '26500',
+  });
+  assert.ok(line);
+  assert.match(line, /Subtotal/);
+  assert.match(line, /discount/);
+  assert.match(line, /tax/);
+  assert.match(line, /fee/);
+  // The parts have to be the ones from the columns, formatted by the same
+  // `format()` the total uses — not restated in some other unit, and not
+  // grouped differently, because two renderings of one number read as two
+  // numbers.
+  for (const amount of ['UGX 30000', 'UGX 5000', 'UGX 1000', 'UGX 500']) {
+    assert.ok(line.includes(amount), `${amount} is missing from '${line}'`);
+  }
+  // The total is already on the card; repeating it invites a reader to add it
+  // to the parts.
+  assert.equal(line.includes('26500'), false, `'${line}' repeats the total`);
+});
+
+test('a fee on its own is still shown', async () => {
+  const line = describeOrderBreakdown({ ...TOTALS, feeMinor: '1250', totalMinor: '31250' });
+  assert.ok(line);
+  assert.match(line, /fee/);
+  assert.equal(line.includes('discount'), false, 'a fee-only order claims a discount');
+});
+
+test('an adjustment reads as a line on the invoice, and a withdrawn one says so', async () => {
+  const live = describeOrderAdjustment({
+    id: 'a1',
+    adjustment_type: 'manual_discount',
+    direction: 'credit',
+    amount_minor: '5000',
+    currency_code: 'UGX',
+    description: 'Scholarship, approved',
+    voided_at: null,
+    voided_reason: null,
+  });
+  assert.match(live, /Discount/);
+  assert.match(live, /UGX 5000/);
+  assert.match(live, /Scholarship, approved/);
+  assert.equal(live.includes('withdrawn'), false);
+
+  const voided = describeOrderAdjustment({
+    id: 'a1',
+    adjustment_type: 'manual_discount',
+    direction: 'credit',
+    amount_minor: '5000',
+    currency_code: 'UGX',
+    description: 'Scholarship, approved',
+    voided_at: '2026-10-21T10:00:00Z',
+    voided_reason: 'Applied to the wrong order',
+  });
+  assert.match(voided, /withdrawn/);
+  assert.match(voided, /Applied to the wrong order/);
+  // Still the amount and the reason it was made: a withdrawn row that hides its
+  // own history leaves a total nobody can reconstruct.
+  assert.match(voided, /UGX 5000/);
+  assert.match(voided, /Scholarship, approved/);
+
+  const debit = describeOrderAdjustment({
+    id: 'a2',
+    adjustment_type: 'fee',
+    direction: 'debit',
+    amount_minor: '1250',
+    currency_code: 'UGX',
+    description: null,
+    voided_at: null,
+    voided_reason: null,
+  });
+  assert.match(debit, /Fee/);
+  assert.match(debit, /\+ UGX 1250/);
+  assert.equal(debit.includes('·'), false, `'${debit}' shows a reason that was never given`);
+
+  const unknown = describeOrderAdjustment({
+    id: 'a3',
+    adjustment_type: 'something_new',
+    direction: 'debit',
+    amount_minor: '100',
+    currency_code: 'UGX',
+    description: null,
+    voided_at: null,
+    voided_reason: null,
+  });
+  assert.match(unknown, /something_new/, 'an unlabelled type was silently renamed');
 });

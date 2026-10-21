@@ -224,22 +224,23 @@ export async function run(ctx) {
     const made = await withCheckoutOn(() => callWriter(buyer.userId, offer.course, offer.priceId));
     const orderId = made.rows[0].r.orderId;
 
-    // order_adjustments_insert still exists (Unit 21 replaces it), so this
-    // asserts what is true today rather than what will be: the row can be
-    // written, and it changes nothing, because no total is derived from it.
-    await asUser(buyer.userId, async () => {
-      await q(`insert into public.order_adjustments
+    // order_adjustments_insert asked the same question as the two policies
+    // dropped above, so a customer could put a discount on their own order.
+    // 20261225000100_order_adjustment_writer.sql drops it: add_order_adjustment()
+    // is the only way in, and it is finance-only.
+    await asUser(buyer.userId, () => rejects(
+      () => q(`insert into public.order_adjustments
                  (order_id, adjustment_type, direction, amount_minor, currency_code, description)
-               values ($1,'manual_discount','credit',50000,'UGX','asked nicely')`, [orderId]);
-    });
+               values ($1,'manual_discount','credit',50000,'UGX','asked nicely')`, [orderId]),
+      /row-level security/i));
 
     const back = await scalar(
       'select total_minor, discount_minor, subtotal_minor from public.orders where id = $1',
       [orderId]);
     assert(Number(back.total_minor) === 30000,
-      `a customer-written adjustment moved the total to ${back.total_minor}`);
+      `the total moved to ${back.total_minor}`);
     assert(Number(back.discount_minor) === 0,
-      `a customer-written adjustment moved the discount to ${back.discount_minor}`);
+      `the discount moved to ${back.discount_minor}`);
   });
 
   // ---------------------------------------------------------------------
