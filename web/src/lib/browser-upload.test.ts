@@ -5,9 +5,11 @@ import { createHash } from 'node:crypto';
 import {
   MAX_BROWSER_UPLOAD_BYTES,
   MAX_DISPLAY_NAME_LENGTH,
+  MULTIPART_THRESHOLD_BYTES,
   fallbackName,
   normalizeDisplayName,
   sha256OfFile,
+  shouldUploadInParts,
   validateBrowserFile,
 } from './browser-upload.ts';
 
@@ -26,38 +28,54 @@ await test('an ordinary lesson video is accepted', () => {
   assert.deepEqual(validateBrowserFile(file()), { ok: true });
 });
 
-await test('the ceiling is what one request to storage can carry, and the refusal says so', () => {
-  // 5 GiB less 5 MiB is the provider's own single-PUT limit, not a number chosen
-  // here: `lib/digest.ts` removed the hashing ceiling that used to stop this at
-  // 512 MiB, so the transport is what binds now.
-  assert.equal(MAX_BROWSER_UPLOAD_BYTES, 5 * 1024 * 1024 * 1024 - 5 * 1024 * 1024);
+await test('the ceiling is the database\'s, and the refusal says so', () => {
+  // Two ceilings used to sit below this one: hashing, which needed the whole file
+  // in memory and stopped at 512 MiB, and the transport, because one presigned
+  // PUT carries at most 5 GiB less 5 MiB. `lib/digest.ts` removed the first and
+  // parts removed the second, so what is left is the row's own limit — and the
+  // browser and the database now refuse the same file for the same reason.
+  assert.equal(MAX_BROWSER_UPLOAD_BYTES, 8 * 1024 * 1024 * 1024);
 
   const refused = validateBrowserFile(file({ size: MAX_BROWSER_UPLOAD_BYTES + 1 }));
   assert.equal(refused.ok, false);
   assert.ok(!refused.ok);
-  // The teacher is told the reason, not just the number: without the transport
-  // explanation the limit looks arbitrary.
-  assert.match(refused.message, /one request to storage/i);
-  assert.match(refused.message, /5 GiB less 5 MiB/);
-  assert.match(refused.message, /cannot be resumed/);
+  // The teacher is told why the number exists rather than being handed a limit
+  // that looks like a network problem they could retry their way past.
+  assert.match(refused.message, /The most one lesson may be is/);
+  assert.match(refused.message, /8\.0 GiB/);
+  assert.match(refused.message, /limit on the record and not on the network/);
   assert.match(refused.message, /Split the recording/);
-  assert.ok(
-    MAX_BROWSER_UPLOAD_BYTES < 8 * 1024 * 1024 * 1024,
-    'the browser ceiling must stay below the 8 GiB the database allows',
-  );
 });
 
-await test('a recording too large for the old ceiling is now accepted', () => {
-  // 512 MiB was the limit when hashing needed the whole file in memory. These
-  // are the sizes a real lesson recording actually comes in at.
+await test('a recording too large for either old ceiling is now accepted', () => {
+  // 512 MiB was the limit when hashing needed the whole file in memory; 5 GiB
+  // less 5 MiB was the limit while the upload was one request. These are the
+  // sizes a real lesson recording comes in at, including the ones that used to be
+  // refused and now travel in parts.
   for (const size of [
     512 * 1024 * 1024 + 1,
     1024 * 1024 * 1024,
-    2 * 1024 * 1024 * 1024,
     4 * 1024 * 1024 * 1024,
+    5 * 1024 * 1024 * 1024,
+    6 * 1024 * 1024 * 1024,
+    8 * 1024 * 1024 * 1024,
   ]) {
     assert.deepEqual(validateBrowserFile(file({ size })), { ok: true }, String(size));
   }
+});
+
+await test('a file is uploaded in parts once one request stops being the safer choice', () => {
+  assert.equal(MULTIPART_THRESHOLD_BYTES, 32 * 1024 * 1024);
+  // At the threshold one PUT still wins: a single request, no XML, nothing to
+  // assemble, and nothing that can be left half-finished in storage.
+  assert.equal(shouldUploadInParts(MULTIPART_THRESHOLD_BYTES), false);
+  assert.equal(shouldUploadInParts(MULTIPART_THRESHOLD_BYTES + 1), true);
+  assert.equal(shouldUploadInParts(10_485_760), false);
+  assert.equal(shouldUploadInParts(8 * 1024 * 1024 * 1024), true);
+  // A size that is not a number is the caller's bug, and answering "one PUT"
+  // would send it down the path that fails least loudly.
+  assert.equal(shouldUploadInParts(Number.NaN), false);
+  assert.equal(shouldUploadInParts(Number.POSITIVE_INFINITY), false);
 });
 
 await test('a file exactly at the ceiling is accepted', () => {

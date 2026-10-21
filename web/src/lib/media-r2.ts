@@ -170,7 +170,8 @@ export function uriEncode(value: string, encodeSlash = true): string {
     .replace(/%2F/g, (slash) => (encodeSlash ? slash : '/'));
 }
 
-function sha256Hex(data: string | Buffer): string {
+/** Exported because a server-signed request has to hash its own body to sign it. */
+export function sha256Hex(data: string | Buffer): string {
   return createHash('sha256').update(data).digest('hex');
 }
 
@@ -316,6 +317,13 @@ export type PresignInput = {
    * turn a playback URL into a download.
    */
   responseOverrides?: Record<string, string>;
+  /**
+   * Other query parameters the request needs, signed like the rest: `partNumber`
+   * and `uploadId` for one part of a multipart upload. They are in the canonical
+   * query, so a caller cannot change which part a URL writes to after it is
+   * signed — that would be a way to aim one part at another's slot.
+   */
+  extraQuery?: Record<string, string>;
   region?: string;
   service?: string;
   now?: Date;
@@ -360,6 +368,7 @@ export function presignUrl(input: PresignInput): PresignedUrl {
     'X-Amz-Date': amzDate,
     'X-Amz-Expires': String(input.expiresInSeconds),
     'X-Amz-SignedHeaders': signedHeaders,
+    ...(input.extraQuery ?? {}),
     ...(input.responseOverrides ?? {}),
   };
 
@@ -414,6 +423,202 @@ export function presignMasterUpload(
     contentType: options.contentType,
     now: options.now,
   });
+}
+
+// ---------------------------------------------------------------------------
+// Multipart upload
+//
+// One presigned PUT caps a file at storage's own single-request limit (5 GiB less
+// 5 MiB) and cannot be resumed: a failure near the end of a 4 GiB recording
+// starts again from zero. Parts fix both — the database accepts 8 GiB, and a part
+// that fails is retried on its own.
+//
+// Only the parts are presigned. Initiating, completing and aborting are calls the
+// server makes with its own credentials (see `media-multipart.ts`), which keeps
+// three things out of the browser: the XML, the upload id's provenance, and any
+// URL that could finish or cancel an upload it did not start.
+// ---------------------------------------------------------------------------
+
+/** Storage's limit on the parts in one upload. */
+export const MAX_MULTIPART_PARTS = 10_000;
+
+/** Storage refuses a part below this, except the last one. */
+export const MIN_MULTIPART_PART_BYTES = 5 * 1024 * 1024;
+
+/**
+ * 16 MiB: the database's 8 GiB ceiling in 512 parts, comfortably inside the part
+ * limit, and small enough that a retry costs seconds rather than minutes.
+ */
+export const MULTIPART_PART_BYTES = 16 * 1024 * 1024;
+
+/**
+ * How long one part's URL lives.
+ *
+ * Deliberately far shorter than `MAX_UPLOAD_SECONDS`: an upload of this size has
+ * hundreds of part URLs in flight, each one a credential for one slot of one
+ * object, and the batch is signed as the upload progresses rather than all at
+ * once. Fifteen minutes is long enough for a part on a slow connection and short
+ * enough that a leaked batch is stale before it is useful.
+ */
+export const MAX_PART_UPLOAD_SECONDS = 900;
+
+export type MultipartPlan = {
+  byteSize: number;
+  partBytes: number;
+  partCount: number;
+};
+
+/**
+ * How a file divides into parts.
+ *
+ * Every part but the last is exactly `partBytes`, which is what storage requires;
+ * a plan whose parts differed would be refused at CompleteMultipartUpload, after
+ * the bytes had already been transferred.
+ */
+export function planMultipartParts(
+  byteSize: number,
+  partBytes: number = MULTIPART_PART_BYTES,
+): MultipartPlan {
+  if (!Number.isInteger(byteSize) || byteSize < 1) {
+    throw new R2RequestError('a multipart upload needs a whole number of bytes to divide');
+  }
+  if (!Number.isInteger(partBytes) || partBytes < MIN_MULTIPART_PART_BYTES) {
+    throw new R2RequestError(
+      `a part cannot be smaller than ${MIN_MULTIPART_PART_BYTES} bytes, which is storage's own minimum`,
+    );
+  }
+  const partCount = Math.ceil(byteSize / partBytes);
+  if (partCount > MAX_MULTIPART_PARTS) {
+    throw new R2RequestError(
+      `${byteSize} bytes at ${partBytes} per part is ${partCount} parts, and one upload takes at ` +
+        `most ${MAX_MULTIPART_PARTS}`,
+    );
+  }
+  return { byteSize, partBytes, partCount };
+}
+
+/** The byte range of one part, as `Blob.slice()` takes it: start inclusive, end exclusive. */
+export function multipartPartRange(
+  plan: MultipartPlan,
+  partNumber: number,
+): { start: number; end: number } {
+  if (!Number.isInteger(partNumber) || partNumber < 1 || partNumber > plan.partCount) {
+    throw new R2RequestError(
+      `part ${String(partNumber)} is not one of the ${String(plan.partCount)} in this upload`,
+    );
+  }
+  const start = (partNumber - 1) * plan.partBytes;
+  return { start, end: Math.min(start + plan.partBytes, plan.byteSize) };
+}
+
+/** A presigned PUT for one part of a master's multipart upload. */
+export function presignMasterPartUpload(
+  config: R2Config,
+  key: string,
+  options: {
+    uploadId: string;
+    partNumber: number;
+    plan: MultipartPlan;
+    expiresInSeconds?: number;
+    now?: Date;
+  },
+): PresignedUrl {
+  const expires = options.expiresInSeconds ?? MAX_PART_UPLOAD_SECONDS;
+  if (expires > MAX_PART_UPLOAD_SECONDS) {
+    throw new R2RequestError(
+      `a part URL cannot live longer than ${MAX_PART_UPLOAD_SECONDS} seconds; hundreds of them exist at once`,
+    );
+  }
+  const uploadId = options.uploadId.trim();
+  if (!uploadId) throw new R2RequestError('a part needs the upload it belongs to');
+  // Checked against the plan rather than against the constant: part 7 of a
+  // 3-part upload is a request for a slot that does not exist.
+  if (
+    !Number.isInteger(options.partNumber) ||
+    options.partNumber < 1 ||
+    options.partNumber > options.plan.partCount
+  ) {
+    throw new R2RequestError(
+      `part ${String(options.partNumber)} is not one of the ${String(options.plan.partCount)} in this upload`,
+    );
+  }
+  return presignUrl({
+    config,
+    method: 'PUT',
+    bucket: config.mastersBucket,
+    key: assertMasterKey(key),
+    expiresInSeconds: expires,
+    extraQuery: {
+      partNumber: String(options.partNumber),
+      uploadId,
+    },
+    now: options.now,
+  });
+}
+
+/**
+ * The XML body `CompleteMultipartUpload` takes.
+ *
+ * The part list is checked here rather than left to storage, because the failure
+ * it prevents is the expensive kind: completing with a missing part produces a
+ * shorter object, and the row still declares the size the whole file would have
+ * been. Storage would accept it.
+ */
+export function completeMultipartUploadBody(
+  parts: { partNumber: number; etag: string }[],
+): string {
+  if (parts.length === 0) throw new R2RequestError('an upload with no parts has nothing to complete');
+  const xml = parts.map((part, index) => {
+    if (!Number.isInteger(part.partNumber) || part.partNumber !== index + 1) {
+      throw new R2RequestError(
+        `the parts must be listed in order from 1 with no gaps; ${String(part.partNumber)} is at position ${String(index + 1)}`,
+      );
+    }
+    const etag = part.etag.trim().replace(/^"|"$/g, '');
+    if (!etag) throw new R2RequestError(`part ${String(part.partNumber)} has no ETag`);
+    const escaped = etag
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+    return `<Part><PartNumber>${String(part.partNumber)}</PartNumber><ETag>&quot;${escaped}&quot;</ETag></Part>`;
+  });
+  return `<CompleteMultipartUpload>${xml.join('')}</CompleteMultipartUpload>`;
+}
+
+/**
+ * The text of one XML element.
+ *
+ * Not an XML parser, and deliberately not one: the responses this reads are three
+ * short documents from storage, and a dependency to pull two strings out of them
+ * is worse than a function that refuses to guess. Zero matches and two matches
+ * are both errors, because silently taking the first is how an upload id from
+ * somebody else's response ends up in a request.
+ */
+export function xmlElementText(xml: string, tag: string): string {
+  if (!/^[A-Za-z][A-Za-z0-9]*$/.test(tag)) throw new R2RequestError('that is not an element name');
+  const matches = [...xml.matchAll(new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`, 'g'))];
+  if (matches.length === 0) throw new R2RequestError(`storage returned no <${tag}>`);
+  if (matches.length > 1) {
+    throw new R2RequestError(`storage returned ${String(matches.length)} <${tag}> elements, so which one is right is a guess`);
+  }
+  const text = String(matches[0]?.[1] ?? '')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, '&')
+    .trim();
+  if (!text) throw new R2RequestError(`storage returned an empty <${tag}>`);
+  return text;
+}
+
+/** The host and path a server-side signed request to one master needs. */
+export function masterRequestTarget(config: R2Config, key: string): { host: string; path: string } {
+  return {
+    host: `${config.accountId}.r2.cloudflarestorage.com`,
+    path: `/${config.mastersBucket}/${assertMasterKey(key).split('/').map((segment) => uriEncode(segment)).join('/')}`,
+  };
 }
 
 /** Playback of a rendition, short-lived by design. */

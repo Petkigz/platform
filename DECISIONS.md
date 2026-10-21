@@ -882,3 +882,93 @@ cancelling stay possible with the flag off.
 Implemented in `20261217000100_cohort_capacity.sql`, `setCohortCapacity()` and
 `validateCapacity()` in `lib/cohorts.ts`, the `set_capacity` action on
 `/api/cohorts`, and the size control on `/teach/[courseId]/cohorts`.
+
+
+## How a large file gets to storage — **DECIDED 2026-10-21**
+
+This supersedes the ceiling sentence in "How large a file a teacher may upload
+from a browser" above. That entry was right about the constraint and honest about
+the consequence: one presigned PUT carries at most 5 GiB less 5 MiB, it cannot be
+resumed, and the browser therefore refused files the database would have taken.
+The constraint is storage's and has not moved. What moved is that the browser no
+longer uses one request for a large file.
+
+**Chosen: the browser PUTs presigned parts; the server opens, assembles and
+abandons the upload.**
+
+Above 32 MiB a file travels in 16 MiB parts — 512 of them at the 8 GiB ceiling,
+inside storage's 10 000-part budget with room to spare. `MAX_BROWSER_UPLOAD_BYTES`
+is now `MAX_UPLOAD_BYTES`, so the browser and the row refuse the same file for the
+same reason instead of the browser being the smaller number and having to explain
+itself.
+
+**The three calls that could finish or cancel an upload stay on the server, and
+that is the decision rather than a detail.** Initiate, complete and abort are
+signed with the deployment's own credentials in `lib/media-multipart.ts`. The
+browser receives only URLs that can each write one slice of one key, for fifteen
+minutes. Three things follow from it: the XML is never built or parsed in a tab;
+the upload id is learned from storage's answer rather than accepted from a client,
+so nothing downstream trusts the browser to name the upload it is writing into;
+and no presigned complete or abort URL exists to be leaked, replayed or pointed at
+another upload. A presigned complete URL is a credential that assembles whatever
+parts it is told to, which is not something to hand out. `request_upload` takes a
+`transport` for the same reason — registering for `multipart` mints no single-PUT
+URL, because an unused presigned PUT is still a live credential for an hour that
+can write the whole file to that key.
+
+**Part URLs live 900 seconds and are signed eight at a time.** Signing the whole
+plan at once would create hundreds of live credentials, most of which would expire
+before they were used on any connection slower than the file is large. Batches also
+solve the second half of the large-file problem: a single presigned PUT is limited
+to an hour, which at gigabytes means a required sustained bitrate, while an upload
+that renews its own URLs every few minutes has no such requirement.
+
+**Retries re-sign.** A part that fails is tried up to three times, and each retry
+asks for a fresh URL. The two common causes are a dropped connection and an
+expired URL, and the second is not fixed by repeating the same request — it fails
+identically three times and reports a network problem that was really a clock.
+
+**Sequential, not parallel.** Storage allows several parts at once and a parallel
+uploader would finish sooner on a good link. It would also fail worse on a bad
+one: four parts in flight when a connection drops is four retries and a progress
+bar that moves backwards, which reads as a broken upload to the person watching
+it. One part at a time gives a number that only rises, on the connection profile
+this platform is used on.
+
+**Completing is not publishing.** The assembled object leaves the row `pending`; a
+staff member still verifies the size in storage before it becomes `available`, on
+the same path as a single PUT. Complete also refuses a part list shorter than the
+plan, naming both numbers. Storage would accept it and produce a truncated object
+whose row still declares the full size — a lesson that stops in the middle,
+discovered later by somebody comparing two numbers, instead of now by a sentence.
+
+**Not persisted, deliberately, and not quietly.** The upload id and the accepted
+parts live in the page. A part that fails is retried, which is the common case and
+the expensive one to get wrong; a tab closed mid-upload starts again from zero,
+because a reload has no way to find the upload it was doing. Storage aborts an
+incomplete multipart upload on its own lifecycle after seven days, and this asks
+for an explicit abort when it gives up, so an abandoned upload costs a week of
+storage at worst. Recording the in-flight upload on the row — resumable across a
+reload, and an orphan an operator can find and delete — is the next unit, written
+into `NEXT.md` rather than left as an implication.
+
+**One new deployment requirement comes with it:** the masters bucket needs a CORS
+rule allowing `PUT` from the app's origin and `Access-Control-Expose-Headers:
+ETag`. Every part uploads without it and the assembly then fails, because a
+browser may not read a response header the server did not expose. The failure
+arrives at the end of a long transfer, so the error names the header.
+
+**Rejected:** presigning initiate, complete and abort for the browser (puts the
+XML, the upload id's provenance and a finish-or-cancel credential in a tab);
+parallel parts (worse failure, worse progress, harder to test); XHR for byte-level
+progress (16 MiB parts make part-level progress smooth enough, and `fetch` keeps
+the uploader testable in node); persisting an upload id with no way to look it up
+again (a stored id nobody can find on reload is storage for its own sake — the
+lookup is the work, and it is the next unit); and lowering the browser ceiling to
+match the transport, which was the previous state and the reason this one exists.
+
+Implemented in `lib/media-r2.ts` (part planning, part signing, the complete body,
+one XML element reader), `lib/media-multipart.ts` (the server's three calls),
+`lib/multipart-upload.ts` (the browser's), four actions on `POST /api/media`,
+`transport` on `request_upload`, and `shouldUploadInParts()` in
+`lib/browser-upload.ts`.

@@ -5,17 +5,26 @@ import { readFileSync } from 'node:fs';
 import {
   ALGORITHM,
   DEFAULT_MASTERS_BUCKET,
+  MAX_MULTIPART_PARTS,
+  MAX_PART_UPLOAD_SECONDS,
   MAX_PLAYBACK_SECONDS,
   MAX_UPLOAD_SECONDS,
   MAX_WORKER_SECONDS,
+  MIN_MULTIPART_PART_BYTES,
+  MULTIPART_PART_BYTES,
   R2NotConfiguredError,
   R2RequestError,
   amzDateParts,
   assertMasterKey,
   assertRenditionKey,
   canonicalQuery,
+  completeMultipartUploadBody,
   isR2Configured,
+  masterRequestTarget,
+  multipartPartRange,
+  planMultipartParts,
   presignMasterDownload,
+  presignMasterPartUpload,
   presignMasterUpload,
   presignRenditionDownload,
   presignRenditionPlayback,
@@ -26,6 +35,7 @@ import {
   requireR2Config,
   signRequest,
   uriEncode,
+  xmlElementText,
   type R2Config,
 } from './media-r2.ts';
 
@@ -466,4 +476,220 @@ test('a download can also override the type the object is served as', () => {
     now: fixed,
   });
   assert.match(signed.url, /response-content-type=audio%2Fmp4/);
+});
+
+
+// ---------------------------------------------------------------------------
+// Dividing a file into parts
+// ---------------------------------------------------------------------------
+
+test('a file divides into fixed parts, and the last one is whatever is left', () => {
+  const plan = planMultipartParts(33 * 1024 * 1024);
+  assert.equal(plan.partBytes, MULTIPART_PART_BYTES);
+  assert.equal(plan.partCount, 3);
+
+  assert.deepEqual(multipartPartRange(plan, 1), { start: 0, end: 16 * 1024 * 1024 });
+  assert.deepEqual(multipartPartRange(plan, 2), {
+    start: 16 * 1024 * 1024,
+    end: 32 * 1024 * 1024,
+  });
+  // The short tail. A plan that padded this out would ask the browser for bytes
+  // the file does not have.
+  assert.deepEqual(multipartPartRange(plan, 3), {
+    start: 32 * 1024 * 1024,
+    end: 33 * 1024 * 1024,
+  });
+});
+
+test('the ceiling the database allows divides into a legal number of parts', () => {
+  // 8 GiB over 16 MiB parts. Both numbers are constants; this pins that they
+  // still fit inside storage's 10 000-part budget.
+  const plan = planMultipartParts(8 * 1024 * 1024 * 1024);
+  assert.equal(plan.partCount, 512);
+  assert.ok(plan.partCount <= MAX_MULTIPART_PARTS);
+});
+
+test('a file smaller than one part is still one part, and the range is its real size', () => {
+  const plan = planMultipartParts(1);
+  assert.equal(plan.partCount, 1);
+  // The plan keeps the standard part size; what the browser sends is the range,
+  // which is a single byte here. Storage's 5 MiB floor applies to every part but
+  // the last, and a one-part upload has no other part.
+  assert.equal(plan.partBytes, MULTIPART_PART_BYTES);
+  assert.deepEqual(multipartPartRange(plan, 1), { start: 0, end: 1 });
+});
+
+test('a part smaller than storage will accept is refused, not signed', () => {
+  assert.throws(
+    () => planMultipartParts(33 * 1024 * 1024, 1024 * 1024),
+    /storage's own minimum/,
+    'a part under 5 MiB is rejected by storage at the last one',
+  );
+  assert.throws(() => planMultipartParts(0), /whole number of bytes/);
+  assert.throws(() => planMultipartParts(1024.5), /whole number of bytes/);
+});
+
+test('a size that would need more parts than storage assembles is refused', () => {
+  assert.throws(
+    () => planMultipartParts((MAX_MULTIPART_PARTS + 1) * MULTIPART_PART_BYTES),
+    /at most/,
+  );
+});
+
+test('a part number outside the plan is refused', () => {
+  const plan = planMultipartParts(33 * 1024 * 1024);
+  assert.throws(() => multipartPartRange(plan, 4), /is not one of the 3/);
+  assert.throws(() => multipartPartRange(plan, 0), /is not one of the 3/);
+});
+
+// ---------------------------------------------------------------------------
+// Signing one part
+// ---------------------------------------------------------------------------
+
+test('a part URL is a PUT carrying the upload id and the part number, both signed', () => {
+  const plan = planMultipartParts(33 * 1024 * 1024);
+  const signed = presignMasterPartUpload(config, masterKey, {
+    uploadId: '2~upload-id-abc',
+    partNumber: 2,
+    plan,
+    now: fixed,
+  });
+
+  assert.equal(signed.method, 'PUT');
+  assert.equal(signed.bucket, DEFAULT_MASTERS_BUCKET);
+  assert.equal(signed.key, masterKey);
+  assert.equal(signed.expiresInSeconds, MAX_PART_UPLOAD_SECONDS);
+
+  const url = new URL(signed.url);
+  assert.equal(url.searchParams.get('partNumber'), '2');
+  assert.equal(url.searchParams.get('uploadId'), '2~upload-id-abc');
+  assert.equal(url.searchParams.get('X-Amz-Expires'), String(MAX_PART_UPLOAD_SECONDS));
+  // Pinned. A part URL is a credential for one slice of one key: if the canonical
+  // request ever stops including partNumber or uploadId, the same URL would serve
+  // any part of any upload, and this is the line that fails.
+  assert.equal(
+    url.searchParams.get('X-Amz-Signature'),
+    '7e94fff7bb95bbdfc7c934637e2411d515050564e3e2b0cf6d5f3926e3ce6d24',
+  );
+});
+
+test('the part number is inside the signature, not merely appended to the URL', () => {
+  const plan = planMultipartParts(33 * 1024 * 1024);
+  const first = presignMasterPartUpload(config, masterKey, {
+    uploadId: '2~upload-id-abc',
+    partNumber: 1,
+    plan,
+    now: fixed,
+  });
+  const second = presignMasterPartUpload(config, masterKey, {
+    uploadId: '2~upload-id-abc',
+    partNumber: 2,
+    plan,
+    now: fixed,
+  });
+  const whole = presignMasterUpload(config, masterKey, { contentType: 'video/mp4', now: fixed });
+
+  const signatureOf = (url: string) => new URL(url).searchParams.get('X-Amz-Signature');
+  assert.notEqual(signatureOf(first.url), signatureOf(second.url));
+  assert.notEqual(signatureOf(second.url), signatureOf(whole.url));
+});
+
+test('a part URL cannot be given a longer life than a part needs', () => {
+  const plan = planMultipartParts(33 * 1024 * 1024);
+  assert.throws(
+    () =>
+      presignMasterPartUpload(config, masterKey, {
+        uploadId: '2~upload-id-abc',
+        partNumber: 1,
+        plan,
+        expiresInSeconds: MAX_PART_UPLOAD_SECONDS + 1,
+        now: fixed,
+      }),
+    /cannot live longer/,
+  );
+  assert.throws(
+    () => presignMasterPartUpload(config, masterKey, { uploadId: '  ', partNumber: 1, plan, now: fixed }),
+    /needs the upload it belongs to/,
+  );
+  assert.throws(
+    () => presignMasterPartUpload(config, masterKey, { uploadId: '2~x', partNumber: 4, plan, now: fixed }),
+    /is not one of the 3/,
+  );
+});
+
+// ---------------------------------------------------------------------------
+// The XML the browser is never asked to build
+// ---------------------------------------------------------------------------
+
+test('completing an upload is a body the server writes, with the ETags quoted', () => {
+  assert.equal(
+    completeMultipartUploadBody([
+      { partNumber: 1, etag: '"9b2cf535"' },
+      { partNumber: 2, etag: 'a54357aff0' },
+    ]),
+    '<CompleteMultipartUpload>' +
+      '<Part><PartNumber>1</PartNumber><ETag>&quot;9b2cf535&quot;</ETag></Part>' +
+      '<Part><PartNumber>2</PartNumber><ETag>&quot;a54357aff0&quot;</ETag></Part>' +
+      '</CompleteMultipartUpload>',
+  );
+});
+
+test('a part list with a gap or a repeat is refused before it is sent', () => {
+  assert.throws(() => completeMultipartUploadBody([]), /nothing to complete/);
+  assert.throws(
+    () => completeMultipartUploadBody([{ partNumber: 2, etag: 'a' }]),
+    /in order from 1 with no gaps/,
+    'starting at part 2 would assemble a file with its first slice missing',
+  );
+  assert.throws(
+    () =>
+      completeMultipartUploadBody([
+        { partNumber: 1, etag: 'a' },
+        { partNumber: 3, etag: 'c' },
+      ]),
+    /in order from 1 with no gaps/,
+  );
+  assert.throws(
+    () =>
+      completeMultipartUploadBody([
+        { partNumber: 1, etag: 'a' },
+        { partNumber: 1, etag: 'b' },
+      ]),
+    /in order from 1 with no gaps/,
+  );
+  assert.throws(
+    () => completeMultipartUploadBody([{ partNumber: 1, etag: '   ' }]),
+    /has no ETag/,
+  );
+});
+
+test('an ETag cannot break out of the element it sits in', () => {
+  // Real ETags are hex, so this is defensive: the value comes from storage's own
+  // response, and a body built by concatenation should not trust it.
+  const body = completeMultipartUploadBody([{ partNumber: 1, etag: 'a<b>&c' }]);
+  assert.ok(body.includes('<ETag>&quot;a&lt;b&gt;&amp;c&quot;</ETag>'), body);
+});
+
+test('an element is read once, or not at all', () => {
+  assert.equal(xmlElementText('<r><UploadId>2~abc</UploadId></r>', 'UploadId'), '2~abc');
+  assert.equal(
+    xmlElementText('<r><ETag>&quot;a&amp;b&quot;</ETag></r>', 'ETag'),
+    '"a&b"',
+    'entities come back as the characters storage meant',
+  );
+  assert.throws(() => xmlElementText('<r></r>', 'UploadId'), /returned no <UploadId>/);
+  assert.throws(
+    () => xmlElementText('<r><UploadId>a</UploadId><UploadId>b</UploadId></r>', 'UploadId'),
+    /which one is right is a guess/,
+  );
+  assert.throws(() => xmlElementText('<r><UploadId>  </UploadId></r>', 'UploadId'), /empty/);
+  assert.throws(() => xmlElementText('<r></r>', 'Upload Id'), /not an element name/);
+});
+
+test('a multipart call targets the master key in the masters bucket', () => {
+  assert.deepEqual(masterRequestTarget(config, masterKey), {
+    host: 'test-account.r2.cloudflarestorage.com',
+    path: `/${DEFAULT_MASTERS_BUCKET}/${masterKey}`,
+  });
+  assert.throws(() => masterRequestTarget(config, 'not-a-master-key'), R2RequestError);
 });

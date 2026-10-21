@@ -5,11 +5,14 @@ import { useRouter } from 'next/navigation';
 
 import {
   MAX_BROWSER_UPLOAD_BYTES,
+  MULTIPART_THRESHOLD_BYTES,
   normalizeDisplayName,
   sha256OfFile,
+  shouldUploadInParts,
   validateBrowserFile,
 } from '@/lib/browser-upload';
 import { readableByteSize } from '@/lib/media';
+import { uploadInParts } from '@/lib/multipart-upload';
 
 type Phase = 'idle' | 'reading' | 'hashing' | 'registering' | 'uploading' | 'done';
 
@@ -18,9 +21,11 @@ type RequestUploadResponse = {
   message?: string;
   data?: {
     assetId: string;
-    uploadUrl: string;
-    requiredHeaders: Record<string, string>;
-    expiresInSeconds: number;
+    /** Absent when the file was registered for a multipart upload. */
+    uploadUrl?: string;
+    requiredHeaders?: Record<string, string>;
+    expiresInSeconds?: number;
+    transport?: 'single' | 'multipart';
   };
 };
 
@@ -47,8 +52,14 @@ const PHASE_LABEL: Record<Phase, string> = {
  * the exact original somebody uploaded, and what lets a rights request be matched
  * to every copy. It is hashed a slice at a time by `lib/digest.ts`, so a
  * multi-gigabyte recording costs one chunk of memory rather than the whole file —
- * which is what lifted this form's ceiling from 512 MiB to the largest single
- * request storage will take.
+ * which is what lifted this form's ceiling from 512 MiB.
+ *
+ * Above 32 MiB the transfer itself changes shape. One presigned PUT is capped by
+ * storage at 5 GiB less 5 MiB and cannot be resumed, so a big recording now goes
+ * up in parts (`lib/multipart-upload.ts`): a part that fails is retried on its
+ * own, and the ceiling is the database's 8 GiB rather than the transport's. The
+ * parts still travel straight to storage; what the server keeps is the opening,
+ * the assembling and the abandoning of the upload.
  *
  * Hashing at that size takes about a minute, so it reports progress like the
  * upload does. A teacher watching a button that says only "Computing the
@@ -68,6 +79,8 @@ export function UploadMedia() {
   const [percent, setPercent] = useState(0);
   const [message, setMessage] = useState('');
   const [tone, setTone] = useState<'muted' | 'error' | 'ok'>('muted');
+  /** Which part is travelling, on a file big enough to be sent in pieces. */
+  const [partLabel, setPartLabel] = useState('');
 
   const busy = phase !== 'idle' && phase !== 'done';
   /** The two phases that can take a minute on a large file, and so get a bar. */
@@ -142,6 +155,7 @@ export function UploadMedia() {
       });
 
       setPhase('registering');
+      const inParts = shouldUploadInParts(file.size);
       const response = await fetch('/api/media', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -152,6 +166,10 @@ export function UploadMedia() {
           byteSize: file.size,
           checksum,
           durationSeconds,
+          // Told to the server so it does not sign a single-PUT URL this browser
+          // is never going to use: an unused presigned PUT is still a live
+          // credential for an hour.
+          transport: inParts ? 'multipart' : 'single',
         }),
       });
       const result = (await response.json().catch(() => ({}))) as RequestUploadResponse;
@@ -162,9 +180,36 @@ export function UploadMedia() {
       }
 
       setPhase('uploading');
-      await putWithProgress(result.data.uploadUrl, result.data.requiredHeaders, file, setPercent);
+      if (inParts) {
+        const outcome = await uploadInParts({
+          file,
+          assetId: result.data.assetId,
+          onProgress: (progress) => {
+            setPercent(
+              progress.totalBytes > 0
+                ? Math.floor((progress.uploadedBytes / progress.totalBytes) * 100)
+                : 0,
+            );
+            setPartLabel(
+              progress.partCount > 0
+                ? progress.phase === 'assembling'
+                  ? 'Putting the parts together…'
+                  : `Part ${String(progress.partNumber)} of ${String(progress.partCount)}`
+                : '',
+            );
+          },
+        });
+        // The message came from the server or from storage and was written for a
+        // teacher, so it is shown as it is rather than summarised.
+        if (!outcome.ok) throw new Error(outcome.message);
+      } else {
+        const uploadUrl = result.data.uploadUrl;
+        if (!uploadUrl) throw new Error('The server did not sign an upload URL. Try again.');
+        await putWithProgress(uploadUrl, result.data.requiredHeaders ?? {}, file, setPercent);
+      }
 
       setPhase('done');
+      setPartLabel('');
       setTone('ok');
       setMessage(
         'Uploaded. It is waiting for verification, and can be attached to a lesson once a ' +
@@ -177,6 +222,7 @@ export function UploadMedia() {
       router.refresh();
     } catch (cause) {
       setPhase('idle');
+      setPartLabel('');
       setTone('error');
       setMessage(cause instanceof Error ? cause.message : 'The upload did not complete.');
     }
@@ -190,6 +236,8 @@ export function UploadMedia() {
         travels straight to storage; the checksum is worked out in your browser first, which is
         what lets a rights request be matched to every copy later. On a large recording the
         checksum takes about a minute before the transfer starts, and it says how far along it is.
+        Anything over {readableByteSize(MULTIPART_THRESHOLD_BYTES)} is sent in parts, so a
+        connection that drops costs one part rather than the whole file.
       </p>
 
       <div style={{ display: 'grid', gap: '0.6rem' }}>
@@ -220,7 +268,7 @@ export function UploadMedia() {
             </button>
             {counted && (
               <span className="muted" style={{ marginLeft: '0.6rem' }}>
-                {String(percent)}%
+                {String(percent)}%{partLabel ? ` · ${partLabel}` : ''}
               </span>
             )}
           </div>

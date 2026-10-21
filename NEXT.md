@@ -303,7 +303,7 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **924 database tests, 574 web tests; TypeScript typecheck and
+Verification: **924 database tests, 623 web tests; TypeScript typecheck and
 production build pass; 103 tables, 231 policies, 134 user-defined triggers,
 229 functions, 99 migrations and 105 app route entries.**
 
@@ -325,10 +325,10 @@ never started). Updated 2026-10-20.
 
 | Piece | Built and tested | Not built | Waiting on |
 |---|---|---|---|
-| **Media ingest** (D8 = R2) | `media_assets` register with a pending/available/quarantined/deleted state machine and four writer functions; SigV4 signing in `web/src/lib/media-r2.ts`, pinned against AWS's published vector; `POST /api/media` `request_upload` + `confirm_upload`; R2 variables documented in `web/.env.example` | Any R2 credential in this environment, so nothing has been exercised against a real bucket | **Nothing.** R2 is chosen; this is buildable now |
+| **Media ingest** (D8 = R2) | `media_assets` register with a pending/available/quarantined/deleted state machine and four writer functions; SigV4 signing in `web/src/lib/media-r2.ts`, pinned against AWS's published vector; `POST /api/media` `request_upload` + `confirm_upload`; multipart upload for a file too big for one presigned PUT (`lib/media-multipart.ts` on the server, `lib/multipart-upload.ts` in the browser, four more actions on the same route); R2 variables documented in `web/.env.example` | Any R2 credential in this environment, so nothing has been exercised against a real bucket; the bucket's CORS rule, which multipart needs and single-PUT did not | **Nothing** that is a design question. R2 is chosen; when credentials are issued the masters bucket must allow `PUT` from the app's origin and expose `ETag` |
 | **Media delivery** | The whole path, end to end: `media_renditions` register with a closed profile vocabulary and derived object keys; the transcode worker that fills it (`web/src/worker/transcode-worker.ts`, decisions in `lib/transcode.ts`, gated by `delivery.transcode`), which checks the master's SHA-256 against the bytes before it encodes anything; `/api/media/playback` and `/api/media/download` signing short-lived rendition URLs with the database as the only authority on who may watch; a player on the lesson page with a quality selector and a poster; `/teach/media`, where a teacher uploads straight to R2 with a browser-computed checksum; `verify` on `/admin/media`, which asks storage whether the file arrived at the declared size and only then confirms it; and `retry_media_rendition()`, reached from the same screen, which puts a copy that failed to encode back in the queue on a written reason | A host to run the worker on with ffmpeg, R2 credentials and a staff account for it, and a decision about whether a free preview may be watched signed-out | **Nothing** that is a design question. What is left is infrastructure and one product decision |
 | **Offline download** | `may_download_lesson()` requiring entitlement + an `offline_downloads` feature grant + verified first-party media; closed feature vocabulary (`pe_feature_vocabulary`, `plan_feature_codes()`) with the admin plan form offering the list; 17 database tests | Any download route or UI, device registration, device storage limits, download expiry, protected-media handling | **Decisions:** device limits, expiry and protected media (`learning.offline`). It would also serve renditions, which do not exist |
-| **Upload cost control** | A per-file ceiling, in two places: 8 GiB in SQL and in `lib/media.ts`, and **5 GiB less 5 MiB for a browser upload**, which is storage's own limit on one request — `lib/digest.ts` hashes a slice at a time, so the checksum no longer caps the size | A cumulative per-teacher byte quota, a spend alert, and a multipart uploader, which is what would take a browser past 5 GiB and make a failed upload resumable instead of starting again | **Decision:** quota policy (`platform.cost_controls`). Note that `register_media_upload()` is open to **any signed-in user**, not only teachers, because learners attach files to assignment submissions through the same table — so the missing control is a cumulative quota per person, not a role check |
+| **Upload cost control** | A per-file ceiling of 8 GiB that the browser can now actually reach: `lib/digest.ts` hashes a slice at a time so the checksum does not cap the size, and above 32 MiB `lib/multipart-upload.ts` sends 16 MiB parts so the transport does not either — a failed part is retried rather than the file restarted | A cumulative per-teacher byte quota, a spend alert, and any record of an in-flight multipart upload: a reload cannot resume one, so the parts are abandoned and the file starts again, and an upload nobody finishes is left to storage's own seven-day cleanup | **Decision:** quota policy (`platform.cost_controls`). Note that `register_media_upload()` is open to **any signed-in user**, not only teachers, because learners attach files to assignment submissions through the same table — so the missing control is a cumulative quota per person, not a role check |
 | **Assignments** | Tasks, self-paced and cohort deadlines, one private submission per learner, drafts and hand-in, marking with immutable feedback, a revision loop with an append-only snapshot, file *references* with type and size ceilings | Byte transfer for submissions (the R2 path exists but is not wired to submissions), scanning, secure delivery to the marker, retention of children's files | **Decision/review:** the safeguarding review of files children send. This one review holds `learning.assignments` **and** `learning.cohorts` |
 | **Cohorts** | Tables, exact-version pinning, opt-in join/leave, capacity serialisation, family opt-in for children, counts on the manager and, since row 32, names and progress on the class page for the teacher who opened it, teacher manager, learner join/leave, the teacher-set `join_closes_at` window, how full each class is on the course page a joiner reads it from (`cohort_places()`, counts only — the roster stays behind `can_read_cohort_member()`), and the teacher's control over the published number (`set_cohort_capacity()`, never below the learners already in the class) | Nothing structural | The same safeguarding review. `learning.cohorts` ships `false` |
 | **Learner analytics** (`SCREENS.md` row 32) | `can_read_learner_course_progress()` as a second branch on the `course_enrolments` and `lesson_progress` read policies; `cohort_learner_progress()`, which returns four columns of a profile rather than the row; `/teach/[courseId]/cohorts/[cohortId]` with a class summary and a roster ordered by need; 19 database tests, most of them negative | Aggregate or platform-wide reporting, event instrumentation beyond lesson progress, export or CSV, anything that follows a learner across courses | **Retention:** how long progress stays readable after a class ends or a learner leaves — a decision, not a default. `delivery.analytics` and `learning.cohorts` both ship `false`, and the predicate checks both |
@@ -988,9 +988,81 @@ shrink a running class learns that here rather than from a refusal. One call,
 
 7 database tests, 4 web. No new flag, no new policy, no new table.
 
+### A large recording goes up in pieces, and a piece that fails is retried, 2026-10-21
+
+The browser ceiling was storage's, not ours. One presigned PUT carries at most
+5 GiB less 5 MiB and cannot be resumed, so a failure at 90% of a 4 GiB recording
+started again from zero, and a file above the cap could not be sent at all even
+though `register_media_upload()` would have taken it. The database allows 8 GiB,
+so the two numbers disagreed and the browser was the smaller one.
+
+**Parts close the gap and change what a failure costs.** Above 32 MiB the
+transfer is a multipart upload: `lib/multipart-upload.ts` in the browser PUTs
+16 MiB slices straight to storage, and `lib/media-multipart.ts` on the server
+opens the upload, signs the slices, assembles them and throws them away. A part
+that fails is retried up to three times against a freshly signed URL, so a
+dropped connection costs one part rather than the file. `MAX_BROWSER_UPLOAD_BYTES`
+is now `MAX_UPLOAD_BYTES` — 8 GiB — and the refusal above it says the limit is on
+the record rather than on the network, because that is what it is.
+
+**The server keeps the three calls that matter.** Initiate, complete and abort
+are server-side signed requests; the browser only PUTs presigned parts. That
+split is the design and not an implementation detail: the XML stays out of the
+tab, the upload id is learned from storage rather than being told by a client,
+and no URL that could finish or cancel an upload is ever handed to a browser — a
+presigned complete URL is a credential that assembles whatever parts it is
+pointed at. `request_upload` now takes a `transport`, and registering for
+`multipart` mints no single-PUT URL, because an unused presigned PUT is still a
+live credential for an hour.
+
+**Part URLs live fifteen minutes and are signed eight at a time.** Signing all
+512 of an 8 GiB upload at the start would hand out credentials that outlive the
+transfer and expire before they are used; batches mean a multi-hour upload never
+meets the one-hour window a single presigned PUT is limited to, which was the
+other half of why a large file could not finish.
+
+**Parts go one at a time.** Parallel would be quicker on a fast link and worse
+everywhere else: four parts in flight on a connection that drops is four retries
+and a progress bar that moves backwards. Sequential gives a number that only
+rises, on the connection this platform is actually used on, and it makes the
+browser half testable without a scheduler.
+
+**Completing is not publishing.** Assembling the object leaves the row `pending`;
+a staff member still verifies the size in storage before it becomes `available`,
+exactly as for a single PUT. And complete refuses a short part list instead of
+assembling it — storage would accept fewer parts and produce a truncated object
+whose row still declares the full size, which is a lesson that stops in the
+middle and is found later by somebody comparing two numbers.
+
+**What is deliberately not here:** the upload id is not written to the database,
+so a page reload cannot resume a half-finished upload. The part that fails is
+retried, which is the common case and the expensive one to get wrong; a tab
+closed mid-upload starts again. Storage aborts an incomplete multipart upload on
+its own lifecycle after seven days, and this asks for an explicit abort when it
+gives up, so an abandoned upload costs a week of storage at worst and usually
+less. Recording the in-flight upload on the row — so a later visit can resume it,
+and an operator can find and delete an orphan — is the next unit.
+
+**One new deployment requirement.** The masters bucket needs a CORS rule allowing
+`PUT` from the app's origin with `Access-Control-Expose-Headers: ETag`. Every
+part uploads happily without it and the assembly then fails, because a browser
+may not read a response header the server did not expose — so the error names the
+header instead of reporting a mystery at the end of a long transfer.
+
+49 web tests: 14 on the signing and the XML, 22 on the server's three calls, 12
+on the browser's flow, and one on where the threshold sits. No migration, no new
+flag, no new table, no new route.
+
 ## Open external decisions (not to be guessed)
 
 - Payment provider merchant/sandbox credentials and callback verification (P12).
+- **R2 credentials, and one bucket setting that comes with them.** No credential
+  exists in this environment, so no byte has been sent to a real bucket. When
+  they are issued, the masters bucket also needs a CORS rule: allow `PUT` from
+  this app's origin, and `Access-Control-Expose-Headers: ETag`. Without the
+  exposed header a multipart upload transfers every part and then cannot assemble
+  them, and it fails at the end of the transfer, which is the most expensive
+  place to discover a deployment setting.
 - Payout policy/preconditions, tax and jurisdiction treatment, and disbursement
   credentials.
 - The saved-lessons questions are answered (2026-10-20, `DECISIONS.md`); what

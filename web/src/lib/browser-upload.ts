@@ -10,29 +10,52 @@
  * the tab before it reached the network.
  *
  * `lib/digest.ts` removed that ceiling — the same algorithm fed a slice at a
- * time, so memory is bounded by the chunk and not by the file. What binds now is
- * the transport, and it is not ours to raise: the upload is one presigned PUT,
- * and storage refuses a single request above 5 GiB less 5 MiB. Past that a
- * multipart upload is required, which is resumable and parallel and is the next
- * thing to build; until it exists the gap between this ceiling and the
- * database's 8 GiB is stated to the teacher rather than discovered by them.
+ * time, so memory is bounded by the chunk and not by the file.
  *
- * Two consequences of staying on one request are worth saying out loud. A single
- * PUT cannot be resumed, so a failure at 90% of a 4 GiB recording starts again
- * from zero. And the presigned URL is signed for at most an hour
- * (`MAX_UPLOAD_SECONDS`), which at this ceiling means a sustained 1.5 MiB/s or
- * the URL expires mid-transfer — a reason to keep the multipart work near the
- * top of the list rather than a reason to lower the number here.
+ * The transport ceiling moved too, and that is the newer change. One presigned
+ * PUT is capped by storage at 5 GiB less 5 MiB and cannot be resumed, so a
+ * failure at 90% of a 4 GiB recording started again from zero, and a file above
+ * the cap could not be sent at all even though the database would have taken it.
+ * Above `MULTIPART_THRESHOLD_BYTES` the browser now uploads in parts
+ * (`lib/multipart-upload.ts`), which storage assembles into one object and which
+ * retries a failed part instead of the whole file. What binds here is therefore
+ * the database's own ceiling, `MAX_UPLOAD_BYTES`, and the two now agree.
+ *
+ * One consequence of the single-PUT path still applies below the threshold and is
+ * worth saying out loud: a presigned PUT is signed for at most an hour
+ * (`MAX_UPLOAD_SECONDS`). Under 32 MiB that is generous. It is also why the
+ * multipart path signs part URLs for fifteen minutes at a time and renews them as
+ * the upload goes, rather than asking for one long-lived URL to cover a
+ * multi-hour transfer — a longer window is a standing bearer credential.
  */
 
 import { sha256OfBlob, type DigestProgress } from './digest.ts';
-import { readableByteSize } from './media.ts';
+import { MAX_UPLOAD_BYTES, readableByteSize } from './media.ts';
 
 /**
- * The largest file one presigned PUT can carry: storage's single-request limit,
- * 5 GiB less 5 MiB. Not a number chosen here, so not a number to negotiate.
+ * The largest file a browser may send: the database's ceiling, 8 GiB.
+ *
+ * This used to be storage's single-request limit (5 GiB less 5 MiB) because that
+ * was the smaller of the two and the gap could only be stated, not closed. With
+ * parts, the transport is no longer the binding number, so the browser and the
+ * row now refuse the same file for the same reason.
  */
-export const MAX_BROWSER_UPLOAD_BYTES = 5 * 1024 * 1024 * 1024 - 5 * 1024 * 1024;
+export const MAX_BROWSER_UPLOAD_BYTES = MAX_UPLOAD_BYTES;
+
+/**
+ * Above this, upload in parts.
+ *
+ * Storage suggests a single request under roughly 100 MB. The number here is
+ * lower — 32 MiB, two parts — because what parts buy is not throughput but that
+ * a failed part is retried on its own, and a 40 MiB recording on a phone
+ * connection is already long enough for a restart to cost something. Below it,
+ * one PUT is one request, with no XML and nothing to assemble.
+ */
+export const MULTIPART_THRESHOLD_BYTES = 32 * 1024 * 1024;
+
+export function shouldUploadInParts(byteSize: number): boolean {
+  return Number.isFinite(byteSize) && byteSize > MULTIPART_THRESHOLD_BYTES;
+}
 
 /** The column allows 200 characters; the form should not let a teacher hit it. */
 export const MAX_DISPLAY_NAME_LENGTH = 200;
@@ -62,9 +85,10 @@ export function validateBrowserFile(file: BrowserFileFacts): BrowserFileCheck {
     return {
       ok: false,
       message:
-        `That file is ${readableByteSize(file.size)}. One request to storage carries at most ` +
-        '5 GiB less 5 MiB, and an upload that fails part-way cannot be resumed, so there is no ' +
-        'point starting one that cannot finish. Split the recording into parts.',
+        `That file is ${readableByteSize(file.size)}. The most one lesson may be is ` +
+        `${readableByteSize(MAX_BROWSER_UPLOAD_BYTES)}, which is a limit on the record and not on ` +
+        'the network — a larger file cannot be described to the database at all. Split the ' +
+        'recording into two lessons.',
     };
   }
 
