@@ -511,19 +511,29 @@ export type SubjectOption = {
  * Seeded, not user-created: the subjects are a fixed scholarly taxonomy, and
  * letting a teacher invent one would fragment the catalogue the filter depends
  * on.
+ *
+ * The parent column is `parent_subject_id`. It was asked for here as `parent_id`,
+ * which does not exist, so this query could only ever come back
+ * `column subject_areas.parent_id does not exist` — and since `/teach/[courseId]`
+ * awaits it alongside the rest of the page's reads, the teacher's course page could
+ * not render at all. A stub cannot catch that: it answers whatever columns are
+ * asked for. The test beside this now asserts the select string against the real
+ * column name.
  */
 export async function fetchSubjects(
   supabase: SupabaseClient,
 ): Promise<SubjectOption[]> {
   const { data, error } = await supabase
     .from('subject_areas')
-    .select('code, name, parent_id')
+    .select('code, name, parent_subject_id')
     .order('name', { ascending: true });
 
   if (error) throw new Error(error.message);
 
-  return ((data ?? []) as unknown as { code: string; name: string; parent_id: string | null }[])
-    .map((r) => ({ code: r.code, name: r.name, isTopLevel: r.parent_id === null }));
+  type Row = { code: string; name: string; parent_subject_id: string | null };
+
+  return ((data ?? []) as unknown as Row[])
+    .map((r) => ({ code: r.code, name: r.name, isTopLevel: r.parent_subject_id === null }));
 }
 
 /**

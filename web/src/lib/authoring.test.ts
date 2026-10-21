@@ -49,6 +49,7 @@ function stubRpc(
 function stubChain(queries: { rows: unknown[]; error?: { message: string } | null }[]) {
   let i = 0;
   const seen: string[] = [];
+  const columns: string[] = [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const client = {
     from: (table: string) => {
@@ -56,7 +57,12 @@ function stubChain(queries: { rows: unknown[]; error?: { message: string } | nul
       seen.push(table);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const chain: any = {};
-      chain.select = () => chain;
+      // Column lists are recorded, because a stub will happily answer for a column
+      // that does not exist — which is how `parent_id` survived on subject_areas.
+      chain.select = (cols?: string) => {
+        if (typeof cols === 'string') columns.push(cols);
+        return chain;
+      };
       chain.eq = () => chain;
       chain.order = () => chain;
       chain.then = (resolve: (v: unknown) => unknown) =>
@@ -65,7 +71,7 @@ function stubChain(queries: { rows: unknown[]; error?: { message: string } | nul
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any;
-  return { client, tables: () => seen };
+  return { client, tables: () => seen, columns: () => columns };
 }
 
 // ---------------------------------------------------------------------------
@@ -147,12 +153,12 @@ test('a non-author is told so rather than getting a bare error', async () => {
 // ---------------------------------------------------------------------------
 
 test('subjects are split into top level and subdivisions', async () => {
-  const { client, tables } = stubChain([
+  const { client, tables, columns } = stubChain([
     {
       rows: [
-        { code: 'quran', name: 'Quran', parent_id: null },
-        { code: 'tajweed', name: 'Tajweed', parent_id: 'quran-id' },
-        { code: 'fiqh', name: 'Fiqh', parent_id: null },
+        { code: 'quran', name: 'Quran', parent_subject_id: null },
+        { code: 'tajweed', name: 'Tajweed', parent_subject_id: 'quran-id' },
+        { code: 'fiqh', name: 'Fiqh', parent_subject_id: null },
       ],
     },
   ]);
@@ -165,6 +171,10 @@ test('subjects are split into top level and subdivisions', async () => {
   assert.equal(quran?.isTopLevel, true);
   assert.equal(tajweed?.isTopLevel, false);
   assert.deepEqual(tables(), ['subject_areas']);
+  // The real column is parent_subject_id. Asking for parent_id returns an error
+  // from the database, and this page cannot render without the subjects.
+  assert.match(columns()[0] ?? '', /parent_subject_id/);
+  assert.doesNotMatch(columns()[0] ?? '', /\bparent_id\b/);
 });
 
 test('a subjects query error propagates', async () => {

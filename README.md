@@ -69,9 +69,9 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **103 tables, RLS on every one, 231 policies, 134
-user-defined triggers, 231 functions and 101 migrations.** The database suite
-passes **954 tests**; the web suite passes **680 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **105 app route entries**.
+user-defined triggers, 238 functions and 102 migrations.** The database suite
+passes **986 tests**; the web suite passes **700 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **108 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. `/account`
@@ -84,6 +84,16 @@ from being created without its application profile.
 A lesson can contain something: `add_lesson_resource()` attaches a video,
 reading or worksheet. Before it, every lesson published on the platform was an
 empty page, because nothing could write to the table the lesson page reads.
+
+Somebody can now be a reviewer. Publishing a course needs a scholarly approval,
+an approval needs an assignment, and an assignment needs a reviewer whose profile
+reads `active` — and until `20261220000100_reviewer_register.sql` nothing in the
+application could put a profile in that state, so no course could be published
+through the product at all. `/admin/reviewers` is where governance staff check an
+applicant, grant the subjects they may judge and hear the conflicts they declare;
+`/review` is where a person applies, records their qualifications and stands aside
+from work they cannot judge impartially. Declaring a conflict bars an assignment
+immediately, before anybody reads it, and only a written assessment lifts it.
 
 Free previews now have one consistent gate from the catalogue to content
 access. Teachers can mark draft lessons and individual public-sample resources;

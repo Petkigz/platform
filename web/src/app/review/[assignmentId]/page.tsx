@@ -12,6 +12,7 @@ import {
 import { fetchMediaResourcesForLessons, type LessonMediaResource } from '@/lib/lessons';
 import { fetchPlayableRenditions, groupByAsset, posterFor } from '@/lib/playback';
 import { RenditionPlayer } from '@/app/_shared/rendition-player';
+import { ConflictForm } from './conflict-form';
 import { ReviewActions } from './review-actions';
 
 export const dynamic = 'force-dynamic';
@@ -187,6 +188,10 @@ export default async function ReviewAssignmentPage({
       </div>
 
       <ReviewActions assignment={assignment} />
+
+      <div style={{ marginTop: '1.5rem' }}>
+        <ConflictForm courseVersionId={assignment.courseVersionId} />
+      </div>
 
       <p style={{ marginTop: '1.5rem' }}>
         <Link href="/review">Back to the queue</Link>

@@ -303,9 +303,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **954 database tests, 680 web tests; TypeScript typecheck and
+Verification: **986 database tests, 700 web tests; TypeScript typecheck and
 production build pass; 103 tables, 231 policies, 134 user-defined triggers,
-231 functions, 101 migrations and 105 app route entries.**
+238 functions, 102 migrations and 108 app route entries.**
 
 ## Today's sentence
 
@@ -358,7 +358,8 @@ given a surface. Grouped by the feature they belong to:
 |---|---|---|
 | Promotions | `promotion_campaigns`, `promotion_benefits`, `promotion_redemptions` | `commerce.promotions`, off, eligibility and stacking rules undecided |
 | Scholarly panel | `scholarly_panels`, `scholarly_panel_memberships`, `scholarly_panel_cases`, `scholarly_panel_votes` | `teaching.panel`, off and deliberately dormant (P6) |
-| Reviewer machinery | `reviewer_qualifications`, `reviewer_subject_authorizations`, `reviewer_conflict_declarations`, `content_review_requirements`, `technical_review_checks`, `content_change_assessments` | The peer-review path, which works for course versions but has no admin surface of its own |
+| Reviewer machinery — the people | `reviewer_qualifications`, `reviewer_subject_authorizations`, `reviewer_conflict_declarations` | **Now written** by seven functions in `20261220000100_reviewer_register.sql`, on `/admin/reviewers` (governance staff) and `/review` (the reviewer themself). The audit called this group "no admin surface of its own"; the truer account is in the section below — it had no *writer* of any kind, so no reviewer could become active and nothing could be published through the product |
+| Reviewer machinery — the versions | `content_review_requirements`, `technical_review_checks`, `content_change_assessments` | Still unreachable, and still the next unit. Until `content_review_requirements` can be written, `validate_review_assignment()`'s authorisation loop is empty, so any verified reviewer fits any subject |
 | Payouts | `instructor_payouts`, `instructor_payout_items` | `teaching.payouts`, off; ROADMAP already says "3 tables with no fields and no endpoints" |
 | Institutions | `institutions` | `commerce.institutions` and four `institution.*` flags, all off |
 | Money plumbing | `currency_exchange_rates`, `order_adjustments`, `payment_method_references` | Multi-currency reporting and stored payment methods, neither decided |
@@ -1207,6 +1208,114 @@ work in flight is not stranded by a switch.
 21 database tests, 14 web. One migration, one function, no new table, no new flag,
 no new route.
 
+### The reviewer register, 2026-10-21
+
+Four tables were built to say who may review a course — `reviewer_qualifications`,
+`reviewer_subject_authorizations`, `reviewer_conflict_declarations` and the subjects
+they name — and not one of them had a writer. A profile could only reach `active` by
+hand in SQL, and `active` is what everything downstream needs: an assignment can only
+be made to an active reviewer, publication needs a scholarly approval, and a scholarly
+approval needs an assignment. So the peer-review path was not partly built. It was
+complete at the version end and empty at the people end, which meant **no course could
+be published through the product at all**.
+
+`/admin/reviews` even explained why its dropdown was empty — "a reviewer has to create
+their own profile before staff can assign them" — which was true and unreachable,
+because there was no screen where anybody could.
+
+**Seven functions, and no actor anywhere.** `register_as_reviewer`,
+`set_reviewer_status`, `record_reviewer_qualification`, `verify_reviewer_qualification`,
+`set_reviewer_authorization`, `declare_reviewer_conflict`, `assess_reviewer_conflict`.
+Each is `SECURITY DEFINER`, writes to `governance_audit_events` under a `reviewer.*`
+action, is revoked from `public` and `anon` and granted to `authenticated`, and takes
+no parameter naming the caller: the session says who is asking, so there is no way to
+speak for somebody else.
+
+**Who may decide.** Governance staff means `governance_admin` or `platform_admin`, not
+`is_privileged`. `is_privileged` also admits a support agent, who should be able to
+read a case and refund an order without thereby appointing the scholars who sign off on
+what the platform teaches. The route checks the same pair, and a database test pins the
+refusal: a support agent is privileged and still may not verify a reviewer, authorise a
+subject, or hear a conflict.
+
+**The rules worth writing down, because each is a choice rather than a default:**
+
+- Applying is the only route to `applicant`, and nothing may set that status by hand.
+  An admin who could set it could un-verify a reviewer and leave the record saying
+  somebody had checked them. Suspension and retirement both need a written reason;
+  checking somebody does not.
+- Activating a reviewer records who did it, **once**. Reinstating a suspended reviewer
+  does not rewrite `verified_by`, because verification is a fact about a moment, not a
+  pointer to whoever last touched the row.
+- A qualification a reviewer records is always `pending`, and recording one does not
+  authorise a subject — that is a separate decision. Staff may record one for somebody
+  else, and the audit entry says which of the two happened.
+- A validity window that has already closed cannot be recorded whichever way the
+  decision goes: `verified_at` is written on a rejection too, and `rq_validity_window`
+  compares the two, so a past date would come back as a constraint name rather than a
+  sentence.
+- Granting a subject updates the live row; revoking keeps it, so granting again writes a
+  new row beside the old one. What was taken away stays part of the record.
+- Declaring a conflict bars an assignment at once, before anybody has read it, and keeps
+  barring until it is heard. `accepted` and `resolved` are the only two answers that let
+  the reviewer work again, and both need the reason in writing, because either one ends
+  a bar that was protecting a course.
+- Only the reviewer may declare one. `rcd_insert` admits nobody else and the function
+  takes no reviewer parameter, for the same reason: a declaration about somebody else is
+  not a declaration.
+
+**Two grants, and why each is safe.** `reviewer_profiles` and `reviewer_qualifications`
+are granted by column so that `internal_notes` and `evidence_reference` cannot survive a
+`SELECT *`. That is right and it stays. What it also does is refuse a query that
+*filters* on an ungranted column — and one such query was already shipped:
+`fetchAssignableReviewers()` asks for active reviewers with `deleted_at is null`,
+`deleted_at` was not in the grant, so the reviewer dropdown on `/admin/reviews` failed
+with `permission denied for table reviewer_profiles` for every member of staff who
+opened the page. The screen did not have an empty dropdown; it had no dropdown, and the
+page could not render. `deleted_at` is now granted — a closed profile is not a secret,
+the read policy already hides the row from everybody but staff and the reviewer — and so
+is `verified_by` on both tables, because a governance screen that cannot say who checked
+a reviewer asks to be trusted instead of showing its record. One database test runs the
+register's exact column lists as `authenticated`; a second asserts that `internal_notes`,
+`evidence_reference` and `SELECT *` are still refused, so the fix cannot quietly become
+an over-grant.
+
+**What still cannot be shown.** `evidence_reference` stays unreadable by every client,
+deliberately: `reviewer_qualifications_read` admits all privileged roles, a support agent
+among them, and the storage key of an identity document is not something to hand out
+alongside a refund permission. So checking a qualification on this register is a
+judgement made from a document held outside the platform, and the card says so in words
+instead of hiding it behind a button that looks like it saw something. A signed evidence
+route for governance staff is the missing piece, and it is recorded as such rather than
+papered over.
+
+**Where it renders.** `/admin/reviewers`, for governance staff: a count of who is waiting
+to be checked, who is verified and who is barred by a declaration, a filter over the
+same three groups, and per reviewer their status decision, their qualifications with a
+check on each, their subjects with a grant form, and their conflicts with an assessment
+on each. The reviewer's own end is on `/review`, above the queue, because an empty queue
+with no entry on the register is not a quiet page — it is a person who cannot yet be
+asked. A declaration about one course is made from that course's offer
+(`/review/<assignmentId>`), where the version is known; a standing declaration is made
+from `/review`.
+
+**A second defect, found the same way.** `fetchSubjects()` asked `subject_areas` for
+`parent_id`. The column is `parent_subject_id` and always has been, so the query came
+back `column subject_areas.parent_id does not exist` — and `/teach/[courseId]` awaits it
+beside the rest of its reads, so the teacher's course page could not render either. Its
+test passed because the stub was fed `parent_id` rows: a stub answers whatever columns
+are asked for and cannot know the table. That stub now records column lists, and the test
+asserts the real name.
+
+**Left open on purpose.** Whether a scholarly authorisation should require a verified
+qualification in that subject — see the open decisions below. It is not implemented
+either way, and the screen shows the verified qualifications beside the grant control so
+that whoever decides can see what they are deciding about.
+
+32 database tests, 20 web. One migration, seven functions, no new table, no new flag,
+three new route entries.
+
+
 ## Open external decisions (not to be guessed)
 
 - Payment provider merchant/sandbox credentials and callback verification (P12).
@@ -1219,6 +1328,13 @@ no new route.
   place to discover a deployment setting.
 - Payout policy/preconditions, tax and jurisdiction treatment, and disbursement
   credentials.
+- **Whether a scholarly authorisation should require a verified qualification in
+  that subject.** Raised by the reviewer register (2026-10-21) and deliberately not
+  implemented either way: it is a governance policy about who is trusted with what the
+  platform teaches, and inferring it would bury the answer in a predicate. Today
+  `is_authorised_reviewer()` reads authorisations only, and `/admin/reviewers` shows a
+  reviewer's verified qualifications beside the grant control so the decision can be
+  made with the evidence on screen.
 - The saved-lessons questions are answered (2026-10-20, `DECISIONS.md`); what
   is left is code. Both delivery models are wanted — live classes recorded and
   saved, and offline download of anything saved — with the download gated to a

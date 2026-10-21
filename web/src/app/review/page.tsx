@@ -7,16 +7,24 @@ import {
   DECISION_LABEL,
   SCOPE_LABEL,
   fetchMyAssignments,
+  fetchMyReviewerEntry,
+  fetchSubjectOptions,
 } from '@/lib/review';
+import { MyRegister } from './my-register';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * The review queue.
+ * The review queue, and above it the reviewer's own place on the register.
  *
  * Assignments are created by platform staff, never self-claimed — `cra_write`
  * is privileged only. So an empty queue means nobody has asked this person for
  * anything, not that the page is broken, and it says so.
+ *
+ * The register comes first because it is the reason a queue is ever empty: until a
+ * person applies, is checked, and is granted the subject, no assignment to them can
+ * be made and no approval from them can publish anything. An empty queue with no
+ * entry on the register is not a quiet page; it is a person who cannot yet be asked.
  */
 export default async function ReviewPage() {
   if (!isSupabaseConfigured()) redirect('/');
@@ -28,7 +36,11 @@ export default async function ReviewPage() {
 
   if (!user) redirect('/sign-in?next=/review');
 
-  const assignments = await fetchMyAssignments(supabase, user.id);
+  const [assignments, entry, subjects] = await Promise.all([
+    fetchMyAssignments(supabase, user.id),
+    fetchMyReviewerEntry(supabase, user.id),
+    fetchSubjectOptions(supabase),
+  ]);
   const pending = assignments.filter((a) => a.status === 'offered' || a.status === 'accepted' || a.status === 'in_progress');
 
   return (
@@ -39,6 +51,10 @@ export default async function ReviewPage() {
         Assignments come from platform staff. You cannot assign yourself, and
         you cannot approve a course you wrote.
       </p>
+
+      <div style={{ marginTop: '1.5rem' }}>
+        <MyRegister entry={entry} subjects={subjects} />
+      </div>
 
       {assignments.length === 0 ? (
         <div className="empty">

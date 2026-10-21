@@ -1148,3 +1148,107 @@ layer up.
 Implemented in `20261219000100_support_case_history.sql`, `readCaseHistory()` and
 `fetchCaseHistory()` in `lib/support.ts`, and `CaseHistory` on
 `/support/<caseNumber>`.
+
+## Who may review, and who decides that — **DECIDED 2026-10-21**
+
+Publication needs a scholarly approval; an approval needs an assignment; an assignment
+needs a reviewer whose profile reads `active`. Nothing in the application could put a
+profile in that state, so the question "who may review" had no answer the product could
+give — only SQL could. This decides who answers it, and what each answer leaves behind.
+
+**Governance staff means `governance_admin` or `platform_admin`, not `is_privileged`.**
+`is_privileged` is the house gate for staff and it is right for most of what staff do.
+It also admits a support agent, which is the least-privileged staff role and should stay
+that way: somebody who can read a case and refund an order should not thereby be able to
+appoint the scholars who sign off on what the platform teaches children. The same pair
+guards the functions and the route, so the route is a courtesy and the database is the
+defence, and a test pins the refusal from the support agent's seat.
+
+**Applying is the only route to `applicant`, and no status may be set back to it.**
+`set_reviewer_status` takes `active`, `suspended` or `inactive` and refuses the other
+two. An admin who could write `pending_verification` could un-verify a reviewer while
+leaving the record saying somebody had checked them — the same shape as an audit entry
+that can be edited, which is the one kind of record worth nothing.
+
+**Checking somebody is setting them `active`, and it is recorded once.** Activation
+writes `verified_at` and `verified_by` only when they are empty. Reinstating a suspended
+reviewer does not move either, because verification is a fact about a moment: who
+checked this person, and when. A row that always pointed at whoever last touched it
+would answer a different question and look like it answered this one.
+
+**Suspending or retiring needs a written reason; checking somebody does not.** The
+asymmetry is deliberate. Ending somebody's access is a decision about a person that
+they may dispute, so the reason is part of the record. Verifying is the ordinary case
+and asking for an essay each time would only produce "ok".
+
+**A qualification is claimed by the reviewer and checked by staff, and the two are
+different acts.** `record_reviewer_qualification` always writes `pending`, whoever calls
+it, and the audit entry says whether staff recorded it for somebody else. Recording one
+does not authorise a subject: a claim about a certificate and a decision to let somebody
+judge a subject are separate, and collapsing them would let a reviewer grant themselves
+the thing that actually matters.
+
+**A validity window that has closed cannot be recorded, either way.** `verified_at` is
+written on a rejection as well as a verification, and `rq_validity_window` requires it to
+fall inside the window, so a past date would surface as a constraint violation rather
+than a sentence. Refusing both is the honest reading: an expiry date in the past is not a
+validity window.
+
+**Revoking keeps the row, and granting again writes a new one beside it.** The partial
+unique index allows one live (`pending` or `active`) authorisation per reviewer per
+subject per scope, so a revocation has to stay as a row for the record to survive the
+next grant. What a reviewer was allowed to judge, and when that ended, is the history
+governance is asked about later.
+
+**A declaration bars the assignment immediately, and only a written assessment lifts
+it.** `declared`, `under_assessment` and `disqualifying` all bar; `accepted` and
+`resolved` do not. The bar is not lifted by staff happening to read it, and the two
+answers that let a conflicted reviewer work again both need the reason in writing,
+because each one ends a protection that was standing between a course and a review by
+somebody who could not judge it impartially. Only the reviewer may declare one — the
+insert policy admits nobody else, and the function takes no reviewer parameter, because
+a declaration about somebody else is not a declaration.
+
+**Two columns were added to the client grant, and two were not.** `deleted_at` is
+granted because a `WHERE` on an ungranted column is refused outright, and the shipped
+`fetchAssignableReviewers()` filtered on it: the reviewer dropdown on `/admin/reviews`
+could only ever fail, and the page with it. A closed profile is not a secret — the read
+policy already hides the row from everybody but staff and the reviewer. `verified_by` is
+granted on both tables because a governance screen that cannot say who checked a
+reviewer, or who checked a qualification, asks to be trusted instead of showing its
+record; the same fact is already freely readable on an authorisation (`approver`).
+`internal_notes` and `evidence_reference` are not granted, and a test asserts they still
+are not, so the fix cannot drift into an over-grant.
+
+**The consequence of leaving `evidence_reference` alone is stated on the screen, not
+hidden.** `reviewer_qualifications_read` admits every privileged role, a support agent
+among them, and the storage key of an identity document is not something to hand out
+beside a refund permission. So the register cannot show the document, which means
+checking a qualification is a judgement made from evidence held outside the platform. The
+card says exactly that in words. A signed evidence route for governance staff is the
+missing piece, recorded in `NEXT.md`; implying the check saw something would have been
+the worse choice.
+
+**Not decided, and not implemented either way:** whether a scholarly authorisation should
+require a verified qualification in that subject. It is a governance policy about who is
+trusted with what the platform teaches, and guessing it would bury the answer in a
+predicate nobody reads. The screen shows a reviewer's verified qualifications beside the
+grant control instead, so the decision can be made with the evidence in front of whoever
+makes it. Recorded as open in `NEXT.md`.
+
+**Rejected:** gating the register on `is_privileged()` (a support agent could appoint a
+scholar); letting staff set `applicant` or `pending_verification` (an editable
+verification record); rewriting `verified_by` on reinstatement (verification stops being
+a fact about a moment); requiring a verified qualification before granting a subject (an
+undecided policy, implemented as though it were decided); letting staff insert a conflict
+declaration for a reviewer (the insert policy is reviewer-only and the declaration would
+then be somebody else's words); one bundle function returning the whole register as
+`jsonb` (RLS already admits governance staff to every row except two columns, so the
+bundle would only have hidden the column grants that were the actual problem); and
+granting `evidence_reference` to make the check meaningful (it would hand an identity
+document's storage key to every privileged role).
+
+Implemented in `20261220000100_reviewer_register.sql` (seven functions and two grants),
+the register section of `lib/review.ts`, `/api/review/profile` and
+`/api/admin/reviewers`, `/admin/reviewers`, the register panel on `/review`, and the
+conflict form on `/review/[assignmentId]`.

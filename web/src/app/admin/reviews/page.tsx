@@ -60,9 +60,12 @@ export default async function AdminReviewsPage() {
 
       {reviewers.length === 0 && (
         <div className="notice warn" style={{ marginTop: '1.5rem' }}>
-          There are no active reviewers, so nothing below can be assigned. A
-          reviewer has to create their own profile before staff can assign
-          them — `reviewer_profiles_insert` only admits the person themselves.
+          There are no verified reviewers, so nothing below can be assigned. A
+          reviewer applies on{' '}
+          <Link href="/review">their own review page</Link> and is checked on the{' '}
+          <Link href="/admin/reviewers">reviewer register</Link> — staff cannot
+          create a profile for somebody else, and an unchecked applicant cannot be
+          assigned.
         </div>
       )}
 
@@ -94,6 +97,8 @@ export default async function AdminReviewsPage() {
       )}
 
       <p style={{ marginTop: '1.5rem' }}>
+        <Link href="/admin/reviewers">Reviewer register</Link>
+        {' · '}
         <Link href="/admin">Back to feature flags</Link>
       </p>
     </div>

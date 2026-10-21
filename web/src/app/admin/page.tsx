@@ -135,6 +135,12 @@ export default async function AdminPage() {
         for a reviewer.
       </p>
       <p>
+        <Link href="/admin/reviewers">Reviewer register</Link> — who applied to
+        review, who has been checked, what each may judge, and what each has stood
+        aside from (governance/platform admin). Nothing can be published until
+        somebody here is verified.
+      </p>
+      <p>
         <Link href="/admin/guardians">Guardian verification</Link> — adults
         asking to be recognised as a child&rsquo;s parent. Off until{' '}
         <code>family.guardian_verification</code> is enabled.
