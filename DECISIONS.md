@@ -972,3 +972,93 @@ one XML element reader), `lib/media-multipart.ts` (the server's three calls),
 `lib/multipart-upload.ts` (the browser's), four actions on `POST /api/media`,
 `transport` on `request_upload`, and `shouldUploadInParts()` in
 `lib/browser-upload.ts`.
+
+
+## How an unfinished upload is found again — **DECIDED 2026-10-21**
+
+Parts made an 8 GiB file possible and created a state the schema had no word for:
+an upload nobody finished. A multipart upload stores its parts as they arrive, and
+the object does not exist until the upload is completed, so a tab closed at part
+300 of 512 left bytes in the bucket that no row mentioned. They were billed, they
+could not be served, nothing in the platform could find them, and the teacher who
+came back paid for the whole file again.
+
+**Chosen: the bucket is the record. Nothing about an in-flight upload is written
+to the database.**
+
+The obvious alternative is a column — `media_assets.upload_id`, or a child table
+of uploads and parts. It was rejected because a recorded id has to be kept true
+against a transfer that is happening somewhere else, and every way of keeping it
+true is worse than not having it: written by the browser, it is a client's claim
+about state the server cannot check; written by the server at initiate, it goes
+stale the moment storage completes or expires the upload, and the row then claims
+an upload is in flight that does not exist. Storage is the only authority on what
+it is holding, and asking it costs one Class A request at the moment somebody
+actually asks — which is rare, and never on a path a learner touches.
+
+**The lookup is by checksum and size.** A page cannot remember an upload id it no
+longer has, and "which of your pending files did you mean?" is a question a
+teacher cannot answer by looking at a library of files that all say `pending`. The
+digest the browser computes before every upload and the size it reads from the
+file are the two facts that survive a closed tab, a reload and a different device,
+and `media_assets` is already indexed on the checksum because a rights request has
+to be matched to every copy. So the second attempt finds the first one's row.
+
+**Scoped to `uploaded_by`, not to what the policy happens to allow.** Staff may
+read every row, so without the explicit filter a member of staff uploading a file
+a teacher left half-sent would be handed the teacher's object key to write into —
+a hole that RLS would not show, because RLS is exactly what lets staff read it.
+
+**The parts are read back from storage.** Which parts arrived, and the ETags that
+completing them needs, come from a parts listing rather than from anything the
+browser remembers. Resuming from a client's account of what it sent would assemble
+an object out of guesses, made by the one party that has already lost its state
+once. The same rule refuses a listing that does not fit the plan this deployment
+makes — a part of the wrong size means the upload was opened by different code —
+and refuses a document that is not a listing at all, because an HTML error page
+answered with a 200 parses as "nothing unfinished", and that wrong answer costs a
+teacher a transfer they had already paid for.
+
+**Reusing the row is part of the decision, not a side effect.** A second attempt
+continues the first attempt's record, including for a file small enough to travel
+in one request. The alternative — a new row every time — is what the platform did
+before, and its cost is visible to the teacher: a library full of `pending` files
+that will never have bytes behind them, each one indistinguishable from a file
+somebody is about to verify.
+
+**Staff can end one, and the decision is recorded before the deletion.**
+`abandon_media_upload()` is staff-only, requires a reason in writing like every
+other reversal here, and writes `media.upload_abandoned` with the key, the bucket,
+the upload id, the declared size and the asset's state at the time. Then the caller
+asks storage to delete the parts. That order is the point: if storage refuses, the
+trail says what was decided and why and storage's own seven-day lifecycle finishes
+the job, whereas the opposite order would leave a deletion with no audit entry
+whenever the write failed — the one gap an audit trail may not have. The response
+reports which of the two happened, because "recorded and deleted" and "recorded,
+storage refused" are different facts and only one of them needs a second look.
+
+**No row changes state.** An unfinished upload says nothing about the asset: it may
+be `pending` and about to be resumed, or `available` because a later attempt
+succeeded and these are the leftovers of an earlier one. Quarantining or
+withdrawing as part of a cleanup would be a decision about the file dressed up as a
+decision about the bytes, and `delete_media_asset()` already exists for that
+decision, with its own reason and its own audit entry.
+
+**Rejected:** a column or child table recording the in-flight upload (state to keep
+true against a system that owns it, and a stale row that lies); a checksum lookup
+that also trusted a client-reported part list (guesses from the party that lost its
+state); resuming automatically without the file being chosen again (the browser
+cannot produce the bytes, so there is nothing to resume into); completing an upload
+whose parts do not fit the current plan (an object the row cannot describe); and
+leaving unfinished uploads to storage's seven-day lifecycle alone, which is what
+the platform did before and is still the backstop — the panel exists because a week
+of paying for bytes nobody will assemble is a week too long, and because a list
+nobody can read is a list nobody can act on.
+
+Implemented in `20261218000100_media_upload_abandonment.sql`,
+`findResumableUpload()`, `fetchMediaAssetsByIds()` and `abandonMediaUpload()` in
+`lib/media.ts`, the listing readers in `lib/media-r2.ts`,
+`resumeMasterMultipart()`, `listUnfinishedMasterUploads()` and
+`abandonUnfinishedUpload()` in `lib/media-multipart.ts`, `resume_upload` on
+`/api/media`, two actions on `/api/admin/media`, resume in `lib/multipart-upload.ts`
+and the upload form, and `UnfinishedUploads` on `/admin/media`.

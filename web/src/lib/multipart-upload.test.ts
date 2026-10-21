@@ -7,6 +7,7 @@ import {
   RETRY_DELAY_MS,
   uploadInParts,
   type MultipartProgress,
+  type ResumedPart,
 } from './multipart-upload.ts';
 
 const assetId = '4f30fd1d-6f2c-4c1e-9a5b-0d2f6c8a1b23';
@@ -143,7 +144,12 @@ function stubWorld(options: WorldOptions) {
     sleeps,
     progress,
     totalBytes,
-    run: (over: { signal?: { aborted: boolean } } = {}) =>
+    run: (
+      over: {
+        signal?: { aborted: boolean };
+        resume?: { uploadId: string; partCount: number; parts: ResumedPart[] };
+      } = {},
+    ) =>
       uploadInParts({
         file,
         assetId,
@@ -154,6 +160,7 @@ function stubWorld(options: WorldOptions) {
         },
         onProgress: (event) => progress.push(event),
         signal: over.signal ?? signal,
+        resume: over.resume,
       }),
   };
 }
@@ -386,4 +393,125 @@ test('a plan the server cannot describe is refused rather than guessed', async (
     assert.match(outcome.message, /did not say how many parts/);
     assert.equal(outcome.abandoned, false);
   }
+});
+
+// ---------------------------------------------------------------------------
+// Continuing an upload a closed tab left behind
+// ---------------------------------------------------------------------------
+
+/** Two-byte parts, so a resumed prefix is easy to read against the byte count. */
+const resumedParts = (count: number, partBytes = 2): ResumedPart[] =>
+  Array.from({ length: count }, (_, index) => ({
+    partNumber: index + 1,
+    etag: `"etag-${String(index + 1)}"`,
+    size: partBytes,
+  }));
+
+test('a resumed upload sends only the parts storage does not already have', async () => {
+  const world = stubWorld({ partCount: 3 });
+
+  const outcome = await world.run({
+    resume: { uploadId, partCount: 3, parts: resumedParts(2) },
+  });
+
+  assert.equal(outcome.ok, true, JSON.stringify(outcome));
+  // No initiate: the upload storage is holding is the one continued, so the parts
+  // already there are not sent again.
+  assert.deepEqual(world.requests, ['sign:3', 'put:3', 'complete']);
+
+  const complete = world.bodies.at(-1) as { uploadId: string; parts: { partNumber: number; etag: string }[] };
+  assert.equal(complete.uploadId, uploadId);
+  assert.deepEqual(complete.parts, [
+    { partNumber: 1, etag: '"etag-1"' },
+    { partNumber: 2, etag: '"etag-2"' },
+    { partNumber: 3, etag: '"etag-3"' },
+  ], 'the ETags storage reported and the one this transfer produced arrive together, in order');
+});
+
+test('the progress bar starts part-way, because the bytes are already there', async () => {
+  const world = stubWorld({ partCount: 3 });
+
+  await world.run({ resume: { uploadId, partCount: 3, parts: resumedParts(2) } });
+
+  assert.deepEqual(
+    world.progress.map((event) => [event.phase, event.uploadedBytes]),
+    [
+      ['resuming', 0],
+      ['resuming', 4],
+      ['signing', 4],
+      ['uploading', 4],
+      ['uploading', 6],
+      ['assembling', 6],
+    ],
+  );
+});
+
+test('a file whose parts have all arrived only needs assembling', async () => {
+  const world = stubWorld({ partCount: 3 });
+
+  const outcome = await world.run({
+    resume: { uploadId, partCount: 3, parts: resumedParts(3) },
+  });
+
+  assert.equal(outcome.ok, true, JSON.stringify(outcome));
+  assert.deepEqual(world.requests, ['complete']);
+  assert.deepEqual(world.progress.map((event) => event.uploadedBytes), [0, 6, 6]);
+});
+
+test('a part that is not in this plan is dropped rather than assembled', async () => {
+  const world = stubWorld({ partCount: 3 });
+
+  const outcome = await world.run({
+    resume: {
+      uploadId,
+      partCount: 3,
+      // Part 9 of a three-part upload belongs to some other attempt at the same
+      // key. Completing with it would produce an object the row cannot describe.
+      parts: [...resumedParts(1), { partNumber: 9, etag: '"stale"', size: 2 }],
+    },
+  });
+
+  assert.equal(outcome.ok, true, JSON.stringify(outcome));
+  assert.deepEqual(world.requests, ['sign:2,3', 'put:2', 'put:3', 'complete']);
+  const complete = world.bodies.at(-1) as { parts: { partNumber: number }[] };
+  assert.deepEqual(complete.parts.map((part) => part.partNumber), [1, 2, 3]);
+});
+
+test('a resume the server cannot describe is refused before anything is sent', async () => {
+  for (const resume of [
+    { uploadId: '', partCount: 3, parts: [] },
+    { uploadId, partCount: 0, parts: [] },
+    { uploadId, partCount: 2.5, parts: [] },
+  ]) {
+    const world = stubWorld({ partCount: 3 });
+    const outcome = await world.run({ resume });
+    assert.equal(outcome.ok, false, JSON.stringify(resume));
+    if (!outcome.ok) {
+      assert.match(outcome.message, /did not say how many parts/);
+      assert.equal(outcome.abandoned, false, 'nothing was opened here, so there is nothing to delete');
+    }
+    assert.deepEqual(world.requests, []);
+  }
+});
+
+test('a resumed upload that fails still cleans up after itself', async () => {
+  const world = stubWorld({ partCount: 3, alwaysFail: [3] });
+
+  const outcome = await world.run({
+    resume: { uploadId, partCount: 3, parts: resumedParts(2) },
+  });
+
+  assert.equal(outcome.ok, false);
+  if (outcome.ok) return;
+  assert.equal(outcome.abandoned, true);
+  assert.match(outcome.message, /Part 3 of 3 failed after 3 attempts/);
+  assert.deepEqual(world.requests, [
+    'sign:3',
+    'put:3',
+    'sign:3',
+    'put:3',
+    'sign:3',
+    'put:3',
+    'abort',
+  ]);
 });

@@ -52,17 +52,22 @@ import {
   R2_SERVICE,
   canonicalQuery,
   completeMultipartUploadBody,
+  masterBucketTarget,
   masterRequestTarget,
   multipartPartRange,
+  parseMultipartUploadListing,
+  parsePartListing,
   planMultipartParts,
   presignMasterPartUpload,
   r2Endpoint,
   sha256Hex,
   signRequest,
   xmlElementText,
+  type ListedMultipartUpload,
   type MultipartPlan,
   type R2Config,
 } from './media-r2.ts';
+import { abandonMediaUpload } from './media.ts';
 
 /** Columns needed to sign for one master, and nothing else. */
 const READ_COLUMNS = 'id, master_bucket, master_key, byte_size, mime_type, status';
@@ -119,11 +124,18 @@ type Refusal = ReturnType<typeof failure>;
  * master belonging to somebody else, so a missing row and somebody else's row
  * produce the same answer.
  */
-async function readUploadableMaster(
+/**
+ * Where an asset's master lives, if the caller may see the row at all.
+ *
+ * No state check: ending an unfinished upload is legitimate for an asset that is
+ * still pending (the usual case) and for one that is `available` because a later
+ * attempt succeeded and these are the parts of an earlier one.
+ */
+async function readMasterLocation(
   client: SupabaseClient,
   assetId: string,
   config: R2Config,
-): Promise<{ row: MasterUploadRow; plan: MultipartPlan } | Refusal> {
+): Promise<{ row: MasterUploadRow } | Refusal> {
   const { data, error } = await client
     .from('media_assets')
     .select(READ_COLUMNS)
@@ -134,18 +146,29 @@ async function readUploadableMaster(
   const row = data as unknown as MasterUploadRow | null;
   if (!row) return failure('That upload does not exist.', 404);
 
-  if (row.status !== 'pending') {
-    return failure(
-      `That file is already ${row.status}, so there is nothing left to upload.`,
-      409,
-    );
-  }
-
   if (row.master_bucket !== config.mastersBucket) {
     return failure(
       `Storage is misconfigured: the row records '${row.master_bucket}' but this deployment ` +
         `signs for '${config.mastersBucket}'.`,
       503,
+    );
+  }
+  return { row };
+}
+
+async function readUploadableMaster(
+  client: SupabaseClient,
+  assetId: string,
+  config: R2Config,
+): Promise<{ row: MasterUploadRow; plan: MultipartPlan } | Refusal> {
+  const located = await readMasterLocation(client, assetId, config);
+  if (!('row' in located)) return located;
+  const { row } = located;
+
+  if (row.status !== 'pending') {
+    return failure(
+      `That file is already ${row.status}, so there is nothing left to upload.`,
+      409,
     );
   }
 
@@ -171,7 +194,14 @@ async function readUploadableMaster(
 async function callStorage(
   options: MultipartOptions,
   target: { host: string; path: string },
-  init: { method: string; query: Record<string, string>; contentType?: string; body?: string },
+  init: {
+    method: string;
+    query: Record<string, string>;
+    contentType?: string;
+    body?: string;
+    /** A 404 is the answer wanted, not a refusal: "already gone" is the outcome. */
+    allowMissing?: boolean;
+  },
 ): Promise<{ ok: true; response: Response } | Refusal> {
   const payloadHash = sha256Hex(init.body ?? '');
   const signed = signRequest({
@@ -214,6 +244,7 @@ async function callStorage(
     return failure('Storage could not be reached. Nothing was published and the row is still pending.', 503);
   }
 
+  if (response.status === 404 && init.allowMissing) return { ok: true, response };
   if (response.status === 403 || response.status === 404) {
     return failure(
       `Storage refused the ${init.method} (${String(response.status)}). The row is still pending.`,
@@ -425,4 +456,334 @@ export async function abortMasterMultipart(
   });
   if (!called.ok) return called;
   return { ok: true, value: { aborted: true } };
+}
+
+// ---------------------------------------------------------------------------
+// Finding an upload nobody finished
+//
+// The upload id is storage's and nothing here records it, so the only way back to
+// a stalled transfer is to ask the bucket what it is holding. That is what makes
+// a resume honest: the parts and their ETags come from storage rather than from a
+// browser's memory of what it sent, so a teacher who closes the tab at part 300
+// and comes back tomorrow continues from part 301 instead of starting again.
+// ---------------------------------------------------------------------------
+
+/** Pages read before giving up: ten pages of storage's own thousand entries. */
+export const MAX_LISTING_PAGES = 10;
+
+/** Storage's page size for both listings. */
+const LISTING_PAGE_SIZE = 1000;
+
+export type ResumablePart = {
+  partNumber: number;
+  etag: string;
+  size: number;
+};
+
+export type ResumeValue = {
+  /** Null when nothing is in flight for this key, so a new upload is opened. */
+  uploadId: string | null;
+  partBytes: number;
+  partCount: number;
+  uploadedParts: ResumablePart[];
+  uploadedBytes: number;
+  /** Why an upload that was found is not being used, when one was found. */
+  note: string | null;
+};
+
+export type AbandonValue = {
+  assetId: string;
+  uploadId: string;
+  /** The decision is in the audit trail whatever storage then said. */
+  recorded: true;
+  deleted: boolean;
+  note: string | null;
+};
+
+function parseOrRefuse<T>(xml: string, parse: (xml: string) => T, what: string): { ok: true; value: T } | Refusal {
+  try {
+    return { ok: true, value: parse(xml) };
+  } catch (cause) {
+    return failure(
+      cause instanceof R2RequestError
+        ? `Storage listed ${what} in a form this could not read: ${cause.message}`
+        : `Storage listed ${what} in a form this could not read.`,
+      502,
+    );
+  }
+}
+
+/**
+ * The uploads storage is holding, optionally for one key.
+ *
+ * Paginated because a bucket-wide listing is capped at a thousand entries and a
+ * platform with a thousand unfinished uploads is exactly the platform that needs
+ * to see the rest. `capped` says when reading stopped early, so a caller shows
+ * "the first ten thousand" rather than "all of them".
+ */
+async function listUploads(
+  options: MultipartOptions,
+  prefix?: string,
+): Promise<{ ok: true; value: { uploads: ListedMultipartUpload[]; capped: boolean } } | Refusal> {
+  const target = masterBucketTarget(options.config);
+  const uploads: ListedMultipartUpload[] = [];
+  let keyMarker: string | null = null;
+  let uploadIdMarker: string | null = null;
+
+  for (let page = 0; page < MAX_LISTING_PAGES; page += 1) {
+    const query: Record<string, string> = {
+      uploads: '',
+      'max-uploads': String(LISTING_PAGE_SIZE),
+    };
+    if (prefix !== undefined) query.prefix = prefix;
+    if (keyMarker) query['key-marker'] = keyMarker;
+    if (uploadIdMarker) query['upload-id-marker'] = uploadIdMarker;
+
+    const called = await callStorage(options, target, { method: 'GET', query });
+    if (!called.ok) return called;
+
+    const parsed = parseOrRefuse(await called.response.text(), parseMultipartUploadListing, 'unfinished uploads');
+    if (!parsed.ok) return parsed;
+
+    // The prefix is matched by storage as a prefix, so a key that merely starts
+    // with the wanted one can arrive. Exact comparison keeps a resume from
+    // continuing somebody else's transfer.
+    uploads.push(...parsed.value.uploads.filter((upload) => prefix === undefined || upload.key === prefix));
+
+    if (!parsed.value.truncated) return { ok: true, value: { uploads, capped: false } };
+    keyMarker = parsed.value.nextKeyMarker;
+    uploadIdMarker = parsed.value.nextUploadIdMarker;
+    if (!keyMarker && !uploadIdMarker) return { ok: true, value: { uploads, capped: true } };
+  }
+
+  return { ok: true, value: { uploads, capped: true } };
+}
+
+/** The parts storage already holds for one upload, in ascending part order. */
+async function listParts(
+  options: MultipartOptions,
+  key: string,
+  uploadId: string,
+): Promise<{ ok: true; value: ResumablePart[] } | Refusal> {
+  const target = masterRequestTarget(options.config, key);
+  const parts: ResumablePart[] = [];
+  let marker: number | null = null;
+
+  for (let page = 0; page < MAX_LISTING_PAGES; page += 1) {
+    const query: Record<string, string> = { uploadId, 'max-parts': String(LISTING_PAGE_SIZE) };
+    if (marker !== null) query['part-number-marker'] = String(marker);
+
+    const called = await callStorage(options, target, { method: 'GET', query });
+    if (!called.ok) return called;
+
+    const parsed = parseOrRefuse(await called.response.text(), parsePartListing, 'parts');
+    if (!parsed.ok) return parsed;
+
+    parts.push(...parsed.value.parts);
+    if (!parsed.value.truncated) {
+      return { ok: true, value: parts.sort((a, b) => a.partNumber - b.partNumber) };
+    }
+    marker = parsed.value.nextPartNumberMarker;
+    // Truncated with no marker is a listing that cannot be continued. Saying so
+    // beats resuming from half a list, which would re-send parts that arrived.
+    if (marker === null) {
+      return failure(
+        'Storage said there were more parts but not where to continue reading, so this will not ' +
+          'guess which ones arrived.',
+        502,
+      );
+    }
+  }
+
+  return failure(
+    `Storage listed more than ${String(MAX_LISTING_PAGES * LISTING_PAGE_SIZE)} parts of one upload, ` +
+      'which is more than an upload this platform opens can have.',
+    502,
+  );
+}
+
+/**
+ * Whether the parts storage holds still fit the plan this deployment makes.
+ *
+ * A part size that differs means the upload was opened by different code — a
+ * changed part size, or a file whose declared size has since changed — and
+ * completing it would assemble an object whose bytes do not line up with the row.
+ * The answer is a sentence rather than a boolean because the caller reports it.
+ */
+function partsAgainstPlan(parts: ResumablePart[], plan: MultipartPlan): string | null {
+  const seen = new Set<number>();
+  const lastPartBytes = plan.byteSize - (plan.partCount - 1) * plan.partBytes;
+
+  for (const part of parts) {
+    if (seen.has(part.partNumber)) {
+      return `storage listed part ${String(part.partNumber)} twice`;
+    }
+    seen.add(part.partNumber);
+
+    if (part.partNumber > plan.partCount) {
+      return `storage holds a part ${String(part.partNumber)} of an upload this file divides into ` +
+        `${String(plan.partCount)}`;
+    }
+    const expected = part.partNumber === plan.partCount ? lastPartBytes : plan.partBytes;
+    if (part.size !== expected) {
+      return `part ${String(part.partNumber)} is ${String(part.size)} bytes and this plan makes it ` +
+        `${String(expected)}`;
+    }
+  }
+  return null;
+}
+
+/** The most recently opened of several uploads, or null when there are none. */
+function newestUpload(uploads: ListedMultipartUpload[]): ListedMultipartUpload | null {
+  if (uploads.length === 0) return null;
+  // ISO timestamps compare as strings. A missing date sorts last rather than
+  // winning: an upload nobody can date is not the one to prefer.
+  const sorted = [...uploads].sort((a, b) => (b.initiated ?? '').localeCompare(a.initiated ?? ''));
+  return sorted[0] ?? null;
+}
+
+/**
+ * What a stalled upload of this asset looks like now.
+ *
+ * Answered for a `pending` row the caller may see, so a teacher asking about
+ * their own file gets their own upload and nothing else. Three outcomes, all of
+ * them usable by the caller: an upload with parts (continue from where it
+ * stopped), an upload whose parts do not fit the plan (start again, and say why),
+ * and no upload at all (start again — the row is still worth reusing, which is
+ * what stops a second attempt from leaving a duplicate `pending` file in the
+ * teacher's library).
+ */
+export async function resumeMasterMultipart(
+  client: SupabaseClient,
+  assetId: string,
+  options: MultipartOptions,
+): Promise<MultipartOutcome<ResumeValue>> {
+  const read = await readUploadableMaster(client, assetId, options.config);
+  if (!('row' in read)) return read;
+  const { row, plan } = read;
+
+  const empty: ResumeValue = {
+    uploadId: null,
+    partBytes: plan.partBytes,
+    partCount: plan.partCount,
+    uploadedParts: [],
+    uploadedBytes: 0,
+    note: null,
+  };
+
+  const listed = await listUploads(options, row.master_key);
+  if (!listed.ok) return listed;
+
+  const found = newestUpload(listed.value.uploads);
+  if (!found) return { ok: true, value: empty };
+
+  const parts = await listParts(options, row.master_key, found.uploadId);
+  if (!parts.ok) return parts;
+
+  const problem = partsAgainstPlan(parts.value, plan);
+  if (problem) {
+    return {
+      ok: true,
+      value: {
+        ...empty,
+        note:
+          `An unfinished upload of this file is in storage but ${problem}, so a new one will start. ` +
+          'The old parts are left to the cleanup that runs on unfinished uploads.',
+      },
+    };
+  }
+
+  return {
+    ok: true,
+    value: {
+      uploadId: found.uploadId,
+      partBytes: plan.partBytes,
+      partCount: plan.partCount,
+      uploadedParts: parts.value,
+      uploadedBytes: parts.value.reduce((total, part) => total + part.size, 0),
+      note: null,
+    },
+  };
+}
+
+/**
+ * Every unfinished upload in the masters bucket, for staff.
+ *
+ * These are bytes being paid for that no row in the schema mentions: an upload
+ * was opened, some parts arrived, and nobody completed or abandoned it. Storage
+ * ends them on its own lifecycle after seven days, so this is not a leak — it is
+ * a week of storage per abandoned transfer, and a list nobody could read.
+ */
+export async function listUnfinishedMasterUploads(
+  options: MultipartOptions,
+): Promise<MultipartOutcome<{ uploads: ListedMultipartUpload[]; capped: boolean }>> {
+  const listed = await listUploads(options);
+  if (!listed.ok) return listed;
+  // Newest first: the question an operator asks is what has been sitting there.
+  const uploads = [...listed.value.uploads].sort((a, b) =>
+    (a.initiated ?? '').localeCompare(b.initiated ?? ''),
+  );
+  return { ok: true, value: { uploads, capped: listed.value.capped } };
+}
+
+/**
+ * End an unfinished upload: record the decision, then delete the parts.
+ *
+ * The audit entry is written before storage is asked, so a refusal leaves a
+ * record of what was decided and why, while the opposite order would leave a
+ * deletion unrecorded whenever the write failed. The response says which of the
+ * two happened, because "recorded and deleted" and "recorded, storage refused"
+ * are different facts and only one of them needs a second look.
+ */
+export async function abandonUnfinishedUpload(
+  client: SupabaseClient,
+  input: { assetId: string; uploadId: string; reason: string },
+  options: MultipartOptions,
+): Promise<MultipartOutcome<AbandonValue>> {
+  const recorded = await abandonMediaUpload(client, input.assetId, input.uploadId, input.reason);
+  if (!recorded.ok) {
+    const status = /Only platform staff/i.test(recorded.message)
+      ? 403
+      : /That upload is gone/i.test(recorded.message)
+        ? 404
+        : 400;
+    return failure(recorded.message, status);
+  }
+
+  const located = await readMasterLocation(client, input.assetId, options.config);
+  if (!('row' in located)) return located;
+
+  const target = masterRequestTarget(options.config, located.row.master_key);
+  const called = await callStorage(options, target, {
+    method: 'DELETE',
+    query: { uploadId: input.uploadId.trim() },
+    allowMissing: true,
+  });
+
+  if (!called.ok) {
+    return {
+      ok: true,
+      value: {
+        assetId: input.assetId,
+        uploadId: input.uploadId.trim(),
+        recorded: true,
+        deleted: false,
+        note:
+          `${called.message} The decision is recorded, and storage ends an unfinished upload on ` +
+          'its own after seven days.',
+      },
+    };
+  }
+
+  const missing = called.response.status === 404;
+  return {
+    ok: true,
+    value: {
+      assetId: input.assetId,
+      uploadId: input.uploadId.trim(),
+      recorded: true,
+      deleted: true,
+      note: missing ? 'Storage had no record of that upload, so there was nothing to delete.' : null,
+    },
+  };
 }

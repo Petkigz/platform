@@ -16,6 +16,37 @@ import { uploadInParts } from '@/lib/multipart-upload';
 
 type Phase = 'idle' | 'reading' | 'hashing' | 'registering' | 'uploading' | 'done';
 
+type ResumedPart = { partNumber: number; etag: string; size: number };
+
+type ResumeUploadResponse = {
+  ok?: boolean;
+  message?: string;
+  data?: {
+    found: boolean;
+    assetId: string;
+    transport: 'single' | 'multipart';
+    /** Multipart: the upload storage is holding, or null when none is. */
+    uploadId?: string | null;
+    partCount?: number;
+    uploadedParts?: ResumedPart[];
+    uploadedBytes?: number;
+    /** Why an upload that was found is not being continued. */
+    note?: string | null;
+    /** Single: the URL to send the whole file to. */
+    uploadUrl?: string;
+    requiredHeaders?: Record<string, string>;
+  };
+};
+
+/** Where the bytes are going: an existing record to continue, or a new one. */
+type UploadTarget =
+  | {
+      assetId: string;
+      transport: 'multipart';
+      resume?: { uploadId: string; partCount: number; parts: ResumedPart[] };
+    }
+  | { assetId: string; transport: 'single'; uploadUrl: string; requiredHeaders: Record<string, string> };
+
 type RequestUploadResponse = {
   ok?: boolean;
   message?: string;
@@ -81,6 +112,8 @@ export function UploadMedia() {
   const [tone, setTone] = useState<'muted' | 'error' | 'ok'>('muted');
   /** Which part is travelling, on a file big enough to be sent in pieces. */
   const [partLabel, setPartLabel] = useState('');
+  /** What the server found before the transfer started, worth saying out loud. */
+  const [notice, setNotice] = useState('');
 
   const busy = phase !== 'idle' && phase !== 'done';
   /** The two phases that can take a minute on a large file, and so get a bar. */
@@ -88,6 +121,7 @@ export function UploadMedia() {
 
   function choose(next: File | null) {
     setMessage('');
+    setNotice('');
     setPercent(0);
     setPhase('idle');
 
@@ -141,7 +175,11 @@ export function UploadMedia() {
 
   async function upload() {
     if (!file) return;
+    // Held in a const because the two helpers below are closures, and a narrowing
+    // that applies to this block does not travel into one.
+    const chosen: File = file;
     setMessage('');
+    setNotice('');
     setPercent(0);
 
     try {
@@ -156,34 +194,101 @@ export function UploadMedia() {
 
       setPhase('registering');
       const inParts = shouldUploadInParts(file.size);
-      const response = await fetch('/api/media', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          action: 'request_upload',
-          displayName: name.trim(),
-          mimeType: file.type,
-          byteSize: file.size,
-          checksum,
-          durationSeconds,
-          // Told to the server so it does not sign a single-PUT URL this browser
-          // is never going to use: an unused presigned PUT is still a live
-          // credential for an hour.
-          transport: inParts ? 'multipart' : 'single',
-        }),
-      });
-      const result = (await response.json().catch(() => ({}))) as RequestUploadResponse;
-      if (!response.ok || !result.data) {
-        throw new Error(
-          result.message ?? 'The upload could not be started. Storage may not be configured.',
+
+      /**
+       * The unfinished upload of this very file, if there is one.
+       *
+       * Found by checksum and size, which are the only two facts about a file that
+       * survive a closed tab. Continuing it is what stops a second attempt from
+       * leaving a duplicate `pending` file in the library and the first attempt's
+       * parts in the bucket, and the parts are read back from storage rather than
+       * remembered, so nothing here has to trust this page's account of what it
+       * sent.
+       */
+      async function findUnfinished(digest: string, size: number): Promise<UploadTarget | null> {
+        const response = await fetch('/api/media', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ action: 'resume_upload', checksum: digest, byteSize: size }),
+        });
+        const result = (await response.json().catch(() => null)) as ResumeUploadResponse | null;
+        // A lookup that fails is not worth failing an upload over: the cost is a
+        // second pending row, which is what every attempt used to leave behind.
+        if (!response.ok || !result?.ok || !result.data?.found) return null;
+
+        const data = result.data;
+        if (data.transport !== 'multipart') {
+          if (!data.uploadUrl) return null;
+          setNotice('This file was already registered, so the same record is being used.');
+          return {
+            assetId: data.assetId,
+            transport: 'single',
+            uploadUrl: data.uploadUrl,
+            requiredHeaders: data.requiredHeaders ?? {},
+          };
+        }
+
+        const parts = data.uploadedParts ?? [];
+        const partCount = data.partCount ?? 0;
+        if (!data.uploadId || !Number.isInteger(partCount) || partCount < 1) {
+          // Either nothing is in flight, or what is in flight does not fit the plan
+          // this deployment makes. Either way the record is reused and the
+          // transfer starts again — and the reason is said rather than hidden.
+          setNotice(data.note ?? 'This file was already registered, so the same record is being used.');
+          return { assetId: data.assetId, transport: 'multipart' };
+        }
+
+        setNotice(
+          `An upload of this file stopped part-way: ${String(parts.length)} of ${String(partCount)} ` +
+            `parts — ${readableByteSize(data.uploadedBytes ?? 0)} — are already in storage, so ` +
+            'this continues from there.',
         );
+        return { assetId: data.assetId, transport: 'multipart', resume: { uploadId: data.uploadId, partCount, parts } };
       }
 
+      /** A new record for the file, and a URL to send it to if it goes in one piece. */
+      async function openNew(): Promise<UploadTarget> {
+        const response = await fetch('/api/media', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            action: 'request_upload',
+            displayName: name.trim(),
+            mimeType: chosen.type,
+            byteSize: chosen.size,
+            checksum,
+            durationSeconds,
+            // Told to the server so it does not sign a single-PUT URL this browser
+            // is never going to use: an unused presigned PUT is still a live
+            // credential for an hour.
+            transport: inParts ? 'multipart' : 'single',
+          }),
+        });
+        const result = (await response.json().catch(() => ({}))) as RequestUploadResponse;
+        if (!response.ok || !result.data) {
+          throw new Error(
+            result.message ?? 'The upload could not be started. Storage may not be configured.',
+          );
+        }
+        if (inParts) return { assetId: result.data.assetId, transport: 'multipart' };
+        const uploadUrl = result.data.uploadUrl;
+        if (!uploadUrl) throw new Error('The server did not sign an upload URL. Try again.');
+        return {
+          assetId: result.data.assetId,
+          transport: 'single',
+          uploadUrl,
+          requiredHeaders: result.data.requiredHeaders ?? {},
+        };
+      }
+
+      const target = (await findUnfinished(checksum, file.size)) ?? (await openNew());
+
       setPhase('uploading');
-      if (inParts) {
+      if (target.transport === 'multipart') {
         const outcome = await uploadInParts({
           file,
-          assetId: result.data.assetId,
+          assetId: target.assetId,
+          resume: target.resume,
           onProgress: (progress) => {
             setPercent(
               progress.totalBytes > 0
@@ -194,7 +299,9 @@ export function UploadMedia() {
               progress.partCount > 0
                 ? progress.phase === 'assembling'
                   ? 'Putting the parts together…'
-                  : `Part ${String(progress.partNumber)} of ${String(progress.partCount)}`
+                  : progress.phase === 'resuming'
+                    ? 'Picking up where it stopped…'
+                    : `Part ${String(progress.partNumber)} of ${String(progress.partCount)}`
                 : '',
             );
           },
@@ -203,13 +310,12 @@ export function UploadMedia() {
         // teacher, so it is shown as it is rather than summarised.
         if (!outcome.ok) throw new Error(outcome.message);
       } else {
-        const uploadUrl = result.data.uploadUrl;
-        if (!uploadUrl) throw new Error('The server did not sign an upload URL. Try again.');
-        await putWithProgress(uploadUrl, result.data.requiredHeaders ?? {}, file, setPercent);
+        await putWithProgress(target.uploadUrl, target.requiredHeaders, file, setPercent);
       }
 
       setPhase('done');
       setPartLabel('');
+      setNotice('');
       setTone('ok');
       setMessage(
         'Uploaded. It is waiting for verification, and can be attached to a lesson once a ' +
@@ -223,6 +329,7 @@ export function UploadMedia() {
     } catch (cause) {
       setPhase('idle');
       setPartLabel('');
+      setNotice('');
       setTone('error');
       setMessage(cause instanceof Error ? cause.message : 'The upload did not complete.');
     }
@@ -237,7 +344,9 @@ export function UploadMedia() {
         what lets a rights request be matched to every copy later. On a large recording the
         checksum takes about a minute before the transfer starts, and it says how far along it is.
         Anything over {readableByteSize(MULTIPART_THRESHOLD_BYTES)} is sent in parts, so a
-        connection that drops costs one part rather than the whole file.
+        connection that drops costs one part rather than the whole file — and if you
+        close the tab and choose the same file again, the parts already sent are
+        found in storage and the upload continues from there.
       </p>
 
       <div style={{ display: 'grid', gap: '0.6rem' }}>
@@ -282,6 +391,8 @@ export function UploadMedia() {
             aria-label={phase === 'hashing' ? 'Checksum progress' : 'Upload progress'}
           />
         )}
+
+        {notice && <p className="muted">{notice}</p>}
 
         {message && <p className={tone === 'error' ? 'error' : 'muted'}>{message}</p>}
       </div>

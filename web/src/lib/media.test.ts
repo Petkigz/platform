@@ -329,3 +329,254 @@ test('the refusals a retry can meet each say what to do about them', async () =>
     if (!result.ok) assert.match(result.message, expected);
   }
 });
+
+// ---------------------------------------------------------------------------
+// An upload nobody finished.
+//
+// Two capabilities, both about a file whose bytes are partly somewhere. Finding
+// one is what lets a second attempt continue the first instead of leaving a
+// duplicate pending row behind; ending one is what lets a person stop paying for
+// parts that will never be assembled. The rules under test are that the lookup is
+// scoped to the person asking, that it fails quietly rather than failing an
+// upload, and that the decision to end one is written down with a reason.
+// ---------------------------------------------------------------------------
+
+import {
+  abandonMediaUpload,
+  fetchMediaAssetsByIds,
+  findResumableUpload,
+} from './media.ts';
+
+const uploaderId = '6a1f0d2c-4b3e-4c5d-9e8f-0a1b2c3d4e5f';
+
+/** A query-builder stub that records every filter, because the filters are the rule. */
+function stubLookup(row: unknown | null, options: { error?: string } = {}) {
+  const calls: string[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chain: any = {
+    select: (columns: string) => {
+      calls.push(`select:${columns}`);
+      return chain;
+    },
+    eq: (column: string, value: unknown) => {
+      calls.push(`eq:${column}=${String(value)}`);
+      return chain;
+    },
+    is: (column: string, value: unknown) => {
+      calls.push(`is:${column}=${String(value)}`);
+      return chain;
+    },
+    order: (column: string, direction?: { ascending?: boolean }) => {
+      calls.push(`order:${column}:${direction?.ascending === false ? 'desc' : 'asc'}`);
+      return chain;
+    },
+    limit: (count: number) => {
+      calls.push(`limit:${String(count)}`);
+      return chain;
+    },
+    in: (column: string, values: unknown[]) => {
+      calls.push(`in:${column}=${values.join(',')}`);
+      return chain;
+    },
+    maybeSingle: async () => {
+      calls.push('maybeSingle');
+      return options.error
+        ? { data: null, error: { message: options.error } }
+        : { data: row, error: null };
+    },
+    // A builder awaited directly, which is how the by-id read finishes.
+    then: (resolve: (value: { data: unknown[]; error: { message: string } | null }) => void) => {
+      calls.push('then');
+      resolve(
+        options.error
+          ? { data: [], error: { message: options.error } }
+          : { data: Array.isArray(row) ? row : row ? [row] : [], error: null },
+      );
+    },
+  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const client = {
+    from: (table: string) => {
+      calls.push(`from:${table}`);
+      return chain;
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any;
+  return { client, calls };
+}
+
+const resumableRow = {
+  id: assetId,
+  master_bucket: 'ayahspring-masters',
+  master_key: `${assetId}/video-mp4`,
+  mime_type: 'video/mp4',
+  byte_size: '34603008',
+};
+
+test('the unfinished upload of this file is found by checksum, size and owner', async () => {
+  const { client, calls } = stubLookup(resumableRow);
+
+  const found = await findResumableUpload(client, uploaderId, 'a'.repeat(64), 34_603_008);
+
+  assert.deepEqual(found, {
+    assetId,
+    masterBucket: 'ayahspring-masters',
+    masterKey: `${assetId}/video-mp4`,
+    mimeType: 'video/mp4',
+    byteSize: 34_603_008,
+  });
+  assert.deepEqual(calls, [
+    'from:media_assets',
+    'select:id, master_bucket, master_key, mime_type, byte_size',
+    `eq:uploaded_by=${uploaderId}`,
+    `eq:checksum=${'a'.repeat(64)}`,
+    'eq:byte_size=34603008',
+    'eq:status=pending',
+    'is:deleted_at=null',
+    'order:created_at:desc',
+    'limit:1',
+    'maybeSingle',
+  ]);
+});
+
+test('the lookup is scoped to the person asking, not to whoever the policy lets see', async () => {
+  // Staff may read every row, so without `uploaded_by` a member of staff
+  // uploading a file a teacher left unfinished would be handed the teacher's
+  // object key to write into.
+  const { client, calls } = stubLookup(null);
+  await findResumableUpload(client, uploaderId, 'b'.repeat(64), 1024);
+  assert.ok(calls.includes(`eq:uploaded_by=${uploaderId}`), calls.join(' '));
+});
+
+test('a checksum is lowered before it is looked for', async () => {
+  const { client, calls } = stubLookup(null);
+  await findResumableUpload(client, uploaderId, 'AB' + 'c'.repeat(62), 1024);
+  assert.ok(calls.includes(`eq:checksum=ab${'c'.repeat(62)}`), calls.join(' '));
+});
+
+test('a lookup that cannot be made, or that fails, is no upload rather than an error', async () => {
+  // The cost of a missed lookup is a duplicate pending row, which is what every
+  // attempt used to leave. The cost of a failed one would be a teacher who cannot
+  // upload at all.
+  const impossible: Array<[string, string, number]> = [
+    ['not a digest', 'a'.repeat(64), 0],
+    ['a fractional size', 'a'.repeat(64), 1024.5],
+    ['above the ceiling', 'a'.repeat(64), MAX_UPLOAD_BYTES + 1],
+    ['no owner', 'a'.repeat(64), 1024],
+  ];
+  for (const [why, checksum, byteSize] of impossible) {
+    const { client, calls } = stubLookup(resumableRow);
+    const found = await findResumableUpload(
+      client,
+      why === 'no owner' ? '   ' : uploaderId,
+      why === 'not a digest' ? 'nope' : checksum,
+      byteSize,
+    );
+    assert.equal(found, null, why);
+    assert.deepEqual(calls, [], `${why} still queried the database`);
+  }
+
+  const broken = stubLookup(null, { error: 'could not reach the database' });
+  assert.equal(await findResumableUpload(broken.client, uploaderId, 'a'.repeat(64), 1024), null);
+
+  const nothing = stubLookup(null);
+  assert.equal(await findResumableUpload(nothing.client, uploaderId, 'a'.repeat(64), 1024), null);
+});
+
+test('ending an unfinished upload sends the reason and the id, both trimmed', async () => {
+  const { client, calls } = stubRpc();
+
+  const result = await abandonMediaUpload(client, assetId, '  2~upload-7  ', '  stalled in June  ');
+
+  assert.equal(result.ok, true);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0]?.fn, 'abandon_media_upload');
+  assert.deepEqual(calls[0]?.args, {
+    p_asset_id: assetId,
+    p_upload_id: '2~upload-7',
+    p_reason: 'stalled in June',
+  });
+});
+
+test('ending an upload needs a reason and an id before the database is asked', async () => {
+  const refusals: Array<[string, string, RegExp]> = [
+    ['  ', '2~upload-7', /Say why in writing/],
+    ['x'.repeat(2001), '2~upload-7', /under 2000 characters/],
+    ['a reason', '   ', /has no id/],
+    ['a reason', 'x'.repeat(513), /not an upload id storage issued/],
+  ];
+  for (const [reason, uploadId, expected] of refusals) {
+    const { client, calls } = stubRpc();
+    const result = await abandonMediaUpload(client, assetId, uploadId, reason);
+    assert.equal(result.ok, false, `${JSON.stringify(reason)} was accepted`);
+    if (!result.ok) assert.match(result.message, expected);
+    assert.equal(calls.length, 0, 'a refusal still reached the database');
+  }
+});
+
+test('the refusals an abandonment can meet each say what to do about them', async () => {
+  const cases: Array<[string, RegExp]> = [
+    ['only platform staff may abandon an unfinished upload', /Only platform staff/],
+    ['abandoning an unfinished upload needs a written reason', /Say why in writing/],
+    ['no media asset 9b1c2d3e', /That upload is gone/],
+    ['that is not an upload id storage issued', /not an upload id storage issued/],
+  ];
+  for (const [message, expected] of cases) {
+    const { client } = stubRpc({ error: { message } });
+    const result = await abandonMediaUpload(client, assetId, '2~upload-7', 'a reason');
+    assert.equal(result.ok, false, `${message} was accepted`);
+    if (!result.ok) assert.match(result.message, expected);
+  }
+});
+
+test('the rows behind a bucket listing are read for the ids asked about, once', async () => {
+  // Storage lists uploads by object key, so the ids come from a bucket rather than
+  // from a query. Reading them through the caller's own client keeps the answer
+  // inside RLS: an asset the caller may not see arrives as no row, and the panel
+  // shows an upload it cannot name.
+  const { client, calls } = stubLookup([
+    {
+      id: assetId,
+      display_name: 'Lesson 3 — Wudu',
+      mime_type: 'video/mp4',
+      byte_size: '34603008',
+      status: 'pending',
+      user_profiles: { display_name: 'Teacher One' },
+    },
+    {
+      id: '00000000-0000-4000-8000-000000000000',
+      display_name: null,
+      mime_type: 'audio/m4a',
+      byte_size: 2048,
+      status: 'available',
+      user_profiles: null,
+    },
+  ]);
+  // Asked for three ids, one of them twice and one of them blank: the query is
+  // made once, for the one id that is an id.
+  const rows = await fetchMediaAssetsByIds(client, [assetId, assetId, '  ']);
+  assert.equal(rows.length, 2);
+  assert.deepEqual(rows[0], {
+    id: assetId,
+    displayName: 'Lesson 3 — Wudu',
+    mimeType: 'video/mp4',
+    byteSize: 34_603_008,
+    status: 'pending',
+    uploader: 'Teacher One',
+  });
+  assert.equal(rows[1]?.displayName, null);
+  assert.equal(rows[1]?.uploader, null);
+  assert.deepEqual(calls, [
+    'from:media_assets',
+    'select:id, display_name, mime_type, byte_size, status, user_profiles ( display_name )',
+    `in:id=${assetId}`,
+    'then',
+  ]);
+});
+
+test('no ids means no query', async () => {
+  const { client, calls } = stubLookup([]);
+  assert.deepEqual(await fetchMediaAssetsByIds(client, []), []);
+  assert.deepEqual(await fetchMediaAssetsByIds(client, ['   ']), []);
+  assert.deepEqual(calls, []);
+});

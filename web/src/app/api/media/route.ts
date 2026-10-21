@@ -13,9 +13,11 @@ import {
   abortMasterMultipart,
   completeMasterMultipart,
   initiateMasterMultipart,
+  resumeMasterMultipart,
   signMasterPartUploads,
 } from '@/lib/media-multipart';
-import { registerMediaUpload } from '@/lib/media';
+import { findResumableUpload, registerMediaUpload } from '@/lib/media';
+import { shouldUploadInParts } from '@/lib/browser-upload';
 import { confirmMediaUpload } from '@/lib/media-verify';
 
 export const dynamic = 'force-dynamic';
@@ -46,6 +48,7 @@ const fail = (message: string, status: number) => NextResponse.json({ ok: false,
 /** Every action this route answers. Anything else is a 400, not a guess. */
 const ACTIONS = [
   'request_upload',
+  'resume_upload',
   'confirm_upload',
   'initiate_multipart',
   'sign_parts',
@@ -66,6 +69,14 @@ const asText = (value: unknown) => (typeof value === 'string' ? value.trim() : '
  * and this route turns that key into a short-lived URL the browser uploads to
  * directly. Bytes never pass through the web server, and nothing becomes
  * `available` until a privileged confirmation says the object really arrived.
+ *
+ * `resume_upload` is the other half of an interrupted transfer. A closed tab used
+ * to cost the whole file, because the upload id lives in storage and nothing here
+ * recorded it: a second attempt registered a second row and started again, leaving
+ * the first attempt's parts in the bucket and a duplicate `pending` file in the
+ * teacher's library. So the lookup is by checksum and size — the only two facts
+ * that survive a reload — and the parts already in storage are read back from
+ * storage, rather than trusted from a browser's memory of what it sent.
  *
  * The same route also carries the multipart half of the upload, for a file too
  * big for one presigned PUT — storage caps a single PUT at 5 GiB less 5 MiB and
@@ -112,6 +123,73 @@ export async function POST(request: Request) {
     // Not a 500: this deployment has no R2 credentials, which is the expected
     // state until they are issued. The message says what is missing.
     return fail(new R2NotConfiguredError().message, 503);
+  }
+
+  if (action === 'resume_upload') {
+    // The digest the browser just computed and the size it just read. Scoped to
+    // this user inside lib/media.ts, because staff may read every row and must not
+    // be handed somebody else's object key to write into.
+    const found = await findResumableUpload(
+      supabase,
+      user.id,
+      asText(body?.checksum).toLowerCase(),
+      Number(body?.byteSize),
+    );
+    if (!found) return NextResponse.json({ ok: true, data: { found: false } });
+
+    if (found.masterBucket !== config.mastersBucket) {
+      return fail(
+        `Storage is misconfigured: the row records "${found.masterBucket}" but this deployment ` +
+          `signs for "${config.mastersBucket}".`,
+        503,
+      );
+    }
+
+    // The threshold lives in lib/browser-upload.ts and is not repeated here: a
+    // rule in two places is a rule enforced in one of them.
+    if (!shouldUploadInParts(found.byteSize)) {
+      try {
+        const signed = presignMasterUpload(config, found.masterKey, {
+          contentType: found.mimeType,
+        });
+        return NextResponse.json({
+          ok: true,
+          data: {
+            found: true,
+            assetId: found.assetId,
+            transport: 'single' as const,
+            key: found.masterKey,
+            bucket: found.masterBucket,
+            method: signed.method,
+            uploadUrl: signed.url,
+            requiredHeaders: signed.requiredHeaders,
+            expiresInSeconds: signed.expiresInSeconds,
+            expiresAt: signed.expiresAt,
+          },
+        });
+      } catch (error) {
+        if (error instanceof R2RequestError) return fail(error.message, 400);
+        throw error;
+      }
+    }
+
+    const resumed = await resumeMasterMultipart(supabase, found.assetId, { config });
+    if (!resumed.ok) return fail(resumed.message, resumed.status);
+    return NextResponse.json({
+      ok: true,
+      data: {
+        found: true,
+        assetId: found.assetId,
+        transport: 'multipart' as const,
+        uploadId: resumed.value.uploadId,
+        partBytes: resumed.value.partBytes,
+        partCount: resumed.value.partCount,
+        uploadedParts: resumed.value.uploadedParts,
+        uploadedBytes: resumed.value.uploadedBytes,
+        note: resumed.value.note,
+        partUrlSeconds: MAX_PART_UPLOAD_SECONDS,
+      },
+    });
   }
 
   if (MULTIPART_ACTIONS.includes(action)) {

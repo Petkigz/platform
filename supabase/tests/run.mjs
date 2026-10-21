@@ -58,6 +58,7 @@ import { run as offlineDownload } from './offline_download.test.mjs';
 import { run as mediaRenditions } from './media_renditions.test.mjs';
 import { run as learnerAnalytics } from './learner_analytics.test.mjs';
 import { run as masterAccess } from './master_access.test.mjs';
+import { run as mediaUploadAbandonment } from './media_upload_abandonment.test.mjs';
 
 const ctx = await createHarness();
 const suites = [];
@@ -112,6 +113,7 @@ for (const [name, fn] of [
   ['media renditions', mediaRenditions],
   ['learner analytics', learnerAnalytics],
   ['master access', masterAccess],
+  ['media upload abandonment', mediaUploadAbandonment],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],

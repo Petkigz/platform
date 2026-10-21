@@ -20,6 +20,8 @@ import {
   canonicalQuery,
   completeMultipartUploadBody,
   isR2Configured,
+  masterBucketTarget,
+  masterKeyAssetId,
   masterRequestTarget,
   multipartPartRange,
   planMultipartParts,
@@ -29,6 +31,8 @@ import {
   presignRenditionDownload,
   presignRenditionPlayback,
   presignRenditionUpload,
+  parseMultipartUploadListing,
+  parsePartListing,
   presignUrl,
   r2Endpoint,
   readR2Config,
@@ -36,6 +40,8 @@ import {
   signRequest,
   uriEncode,
   xmlElementText,
+  xmlElements,
+  xmlOptionalText,
   type R2Config,
 } from './media-r2.ts';
 
@@ -692,4 +698,172 @@ test('a multipart call targets the master key in the masters bucket', () => {
     path: `/${DEFAULT_MASTERS_BUCKET}/${masterKey}`,
   });
   assert.throws(() => masterRequestTarget(config, 'not-a-master-key'), R2RequestError);
+});
+
+
+// ---------------------------------------------------------------------------
+// Reading what storage lists
+//
+// Two listings the platform could not do without: the unfinished uploads in a
+// bucket, which is the only place an upload nobody completed can be found, and
+// the parts of one upload, which is the only honest answer to "where did this
+// transfer get to".
+// ---------------------------------------------------------------------------
+
+const uploadListing = `<?xml version="1.0" encoding="UTF-8"?>
+<ListMultipartUploadsResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+  <Bucket>ayahspring-masters</Bucket>
+  <KeyMarker></KeyMarker>
+  <UploadIdMarker></UploadIdMarker>
+  <NextKeyMarker>${masterKey}</NextKeyMarker>
+  <NextUploadIdMarker>2~next</NextUploadIdMarker>
+  <MaxUploads>1000</MaxUploads>
+  <IsTruncated>true</IsTruncated>
+  <Upload>
+    <Key>${masterKey}</Key>
+    <UploadId>2~first</UploadId>
+    <Initiated>2026-10-19T08:00:00.000Z</Initiated>
+    <StorageClass>STANDARD</StorageClass>
+  </Upload>
+  <Upload>
+    <Key>${assetId}/audio-m4a</Key>
+    <UploadId>2~second</UploadId>
+    <StorageClass>STANDARD</StorageClass>
+  </Upload>
+</ListMultipartUploadsResult>`;
+
+test('an unfinished-upload listing is read whole, including the fact that it is a page', () => {
+  const listing = parseMultipartUploadListing(uploadListing);
+
+  assert.deepEqual(listing.uploads, [
+    { key: masterKey, uploadId: '2~first', initiated: '2026-10-19T08:00:00.000Z' },
+    // Storage does not always say when an upload was opened; a missing date is
+    // null rather than a guess, because "how old is this" is the question the
+    // listing exists to answer.
+    { key: `${assetId}/audio-m4a`, uploadId: '2~second', initiated: null },
+  ]);
+  assert.equal(listing.truncated, true);
+  assert.equal(listing.nextKeyMarker, masterKey);
+  assert.equal(listing.nextUploadIdMarker, '2~next');
+});
+
+test('a bucket with nothing unfinished says so, and an empty marker is no marker', () => {
+  const listing = parseMultipartUploadListing(
+    `<ListMultipartUploadsResult><Bucket>b</Bucket><KeyMarker></KeyMarker>` +
+      `<UploadIdMarker></UploadIdMarker><MaxUploads>1000</MaxUploads>` +
+      `<IsTruncated>false</IsTruncated></ListMultipartUploadsResult>`,
+  );
+  assert.deepEqual(listing.uploads, []);
+  assert.equal(listing.truncated, false);
+  assert.equal(listing.nextKeyMarker, null);
+  assert.equal(listing.nextUploadIdMarker, null);
+});
+
+test('a listing that says the same thing twice is refused rather than half-read', () => {
+  assert.throws(
+    () =>
+      parseMultipartUploadListing(
+        '<ListMultipartUploadsResult><Upload><Key>k</Key>' +
+          '<UploadId>a</UploadId><UploadId>b</UploadId></Upload></ListMultipartUploadsResult>',
+      ),
+    /which one is right is a guess/,
+    'taking the first is how another upload\'s id ends up in a request',
+  );
+  assert.throws(
+    () => parseMultipartUploadListing('<ListMultipartUploadsResult><Upload><UploadId>a</UploadId></Upload></ListMultipartUploadsResult>'),
+    /returned no <Key>/,
+  );
+});
+
+test('the parts of an upload are read with the sizes and ETags completing them needs', () => {
+  const listing = parsePartListing(
+    `<ListPartsResult><Bucket>b</Bucket><Key>${masterKey}</Key><UploadId>2~first</UploadId>` +
+      '<PartNumberMarker>0</PartNumberMarker><MaxParts>1000</MaxParts>' +
+      '<IsTruncated>false</IsTruncated>' +
+      '<Part><PartNumber>1</PartNumber><LastModified>2026-10-19T08:01:00.000Z</LastModified>' +
+      '<ETag>&quot;aaa111&quot;</ETag><Size>16777216</Size></Part>' +
+      '<Part><PartNumber>2</PartNumber><LastModified>2026-10-19T08:04:00.000Z</LastModified>' +
+      '<ETag>&quot;bbb222&quot;</ETag><Size>1048576</Size></Part>' +
+      '</ListPartsResult>',
+  );
+
+  assert.deepEqual(listing.parts, [
+    { partNumber: 1, etag: '"aaa111"', size: 16 * 1024 * 1024 },
+    { partNumber: 2, etag: '"bbb222"', size: 1024 * 1024 },
+  ]);
+  assert.equal(listing.truncated, false);
+  assert.equal(listing.nextPartNumberMarker, null);
+});
+
+test('a part listing knows when it is a page, and where the next one starts', () => {
+  const listing = parsePartListing(
+    '<ListPartsResult><IsTruncated>true</IsTruncated><NextPartNumberMarker>1000</NextPartNumberMarker>' +
+      '<Part><PartNumber>1000</PartNumber><ETag>x</ETag><Size>5242880</Size></Part>' +
+      '</ListPartsResult>',
+  );
+  assert.equal(listing.truncated, true);
+  assert.equal(listing.nextPartNumberMarker, 1000);
+  assert.equal(listing.parts.length, 1);
+});
+
+test('a part that is not a part is refused', () => {
+  const partWith = (inner: string) =>
+    parsePartListing(`<ListPartsResult><Part>${inner}</Part></ListPartsResult>`);
+
+  assert.throws(() => partWith('<PartNumber>0</PartNumber><ETag>x</ETag><Size>1</Size>'),
+    /not a part number/);
+  assert.throws(() => partWith('<PartNumber>one</PartNumber><ETag>x</ETag><Size>1</Size>'),
+    /not a part number/);
+  assert.throws(() => partWith('<PartNumber>1</PartNumber><ETag>x</ETag><Size>-5</Size>'),
+    /not a size/);
+  assert.throws(() => partWith('<PartNumber>1</PartNumber><Size>5</Size>'), /returned no <ETag>/);
+  // Size is required too: a part resumed as though it were empty would report
+  // progress further along than the transfer actually is.
+  assert.throws(() => partWith('<PartNumber>1</PartNumber><ETag>x</ETag>'), /returned no <Size>/);
+  assert.throws(() => partWith('<PartNumber>1</PartNumber><ETag>x</ETag><Size/></Size>'),
+    /returned no <Size>/);
+});
+
+test('an optional element is null when it is absent, empty or self-closed', () => {
+  assert.equal(xmlOptionalText('<r><a>text</a></r>', 'a'), 'text');
+  assert.equal(xmlOptionalText('<r><a></a></r>', 'a'), null);
+  assert.equal(xmlOptionalText('<r><a/></r>', 'a'), null);
+  assert.equal(xmlOptionalText('<r></r>', 'a'), null);
+  assert.equal(xmlOptionalText('<r><a>&amp;</a></r>', 'a'), '&');
+  assert.throws(() => xmlOptionalText('<r><a>1</a><a>2</a></r>', 'a'), /which one is right/);
+  assert.throws(() => xmlOptionalText('<r></r>', 'a b'), /not an element name/);
+});
+
+test('a document that is not the listing asked for is refused, not read as empty', () => {
+  // A proxy or a captive portal answering with HTML and a 200 parses as "nothing
+  // unfinished" and "no parts arrived" — two wrong answers that each cost a
+  // teacher a transfer they had already paid for.
+  const html = '<html><body>Are you still there?</body></html>';
+  assert.throws(() => parseMultipartUploadListing(html), /not a <ListMultipartUploadsResult>/);
+  assert.throws(() => parsePartListing(html), /not a <ListPartsResult>/);
+  assert.throws(() => parsePartListing(uploadListing), /not a <ListPartsResult>/);
+});
+
+test('blocks come back in document order, and self-closing ones are not blocks', () => {
+  assert.deepEqual(xmlElements('<r><P>1</P><P>2</P></r>', 'P'), ['1', '2']);
+  assert.deepEqual(xmlElements('<r><P/></r>', 'P'), []);
+  // A name is matched whole: <Part> is not a prefix of <PartNumber>.
+  assert.deepEqual(xmlElements('<r><PartNumber>1</PartNumber></r>', 'Part'), []);
+});
+
+
+test('a bucket listing can be turned back into the rows it came from', () => {
+  // Storage lists unfinished uploads by object key, and the platform's record of a
+  // file is addressed by id. This is the whole reason the panel can name one.
+  assert.equal(masterKeyAssetId(masterKey), assetId);
+  assert.equal(masterKeyAssetId(`${assetId}/audio-m4a`), assetId);
+  assert.throws(() => masterKeyAssetId('not-a-key'), R2RequestError);
+  assert.throws(() => masterKeyAssetId(`${assetId}/video-mp4/720p`), R2RequestError);
+});
+
+test('the two calls that are not about one object target the bucket', () => {
+  assert.deepEqual(masterBucketTarget(config), {
+    host: 'test-account.r2.cloudflarestorage.com',
+    path: `/${DEFAULT_MASTERS_BUCKET}`,
+  });
 });

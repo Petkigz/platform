@@ -28,6 +28,16 @@
  * needed, which keeps the live credentials small and means a multi-hour transfer
  * never runs into the one-hour window a single presigned PUT is limited to.
  *
+ * RESUMING
+ * --------
+ * A reload used to cost the whole file, because the upload id is storage's and
+ * this page had no way back to it. `/api/media` now answers `resume_upload` for a
+ * checksum and a size — the only two facts about a file that survive a closed tab
+ * — and reads back the parts storage already holds, so the transfer continues from
+ * the part it stopped at and the bar starts part-way instead of at zero. The ETags
+ * come from the bucket rather than from memory, which is the difference between
+ * resuming a transfer and assembling a file out of guesses.
+ *
  * WHAT A FAILURE COSTS
  * --------------------
  * A part that fails is retried, up to three times, with a freshly signed URL each
@@ -38,11 +48,12 @@
  * incomplete multipart upload on its own lifecycle after seven days, so the worst
  * case is paying for bytes nobody will assemble for a week.
  *
- * What is not here: an upload id is not written to the database, so a page reload
- * cannot resume a half-finished upload. The part that failed is retried, which is
- * the common case and the expensive one to get wrong; a tab closed mid-upload
- * starts again. Recording the in-flight upload so a later visit can pick it up is
- * the next unit (NEXT.md).
+ * Still not here: nothing about an in-flight upload is written to the database, so
+ * the way back to one is always a question to the bucket, and resuming needs the
+ * same file to be chosen again — the checksum is what recognises it, and a browser
+ * cannot produce it from nothing. An upload whose parts do not fit the plan this
+ * deployment makes is left to storage's own seven-day cleanup and started again,
+ * because completing it would assemble an object the row cannot describe.
  *
  * DEPLOYMENT REQUIREMENT
  * ----------------------
@@ -61,7 +72,7 @@ export const MAX_PART_ATTEMPTS = 3;
 /** Pause before a retry, multiplied by the attempt: 750ms, then 1500ms. */
 export const RETRY_DELAY_MS = 750;
 
-export type PartPhase = 'opening' | 'signing' | 'uploading' | 'assembling' | 'abandoned';
+export type PartPhase = 'opening' | 'resuming' | 'signing' | 'uploading' | 'assembling' | 'abandoned';
 
 export type MultipartProgress = {
   phase: PartPhase;
@@ -92,10 +103,25 @@ export type SignedPartFromServer = {
   expiresInSeconds: number;
 };
 
+/** A part storage already holds, read back from the bucket by the server. */
+export type ResumedPart = {
+  partNumber: number;
+  etag: string;
+  size: number;
+};
+
 export type MultipartUploadInput = {
   /** The file's bytes. A browser `File` is a `Blob`, and `slice` is all this needs. */
   file: Blob;
   assetId: string;
+  /**
+   * An upload storage is already holding parts of, from `resume_upload`.
+   *
+   * The parts and their ETags come from the bucket rather than from this page's
+   * memory, which is what makes them trustworthy after a reload: nothing here has
+   * to believe a browser that says it sent something.
+   */
+  resume?: { uploadId: string; partCount: number; parts: ResumedPart[] };
   onProgress?: (progress: MultipartProgress) => void;
   /** Injectable so the uploader can be tested without a bucket or a browser. */
   fetchImpl?: typeof fetch;
@@ -166,28 +192,55 @@ export async function uploadInParts(input: MultipartUploadInput): Promise<Multip
   const report = (phase: PartPhase, partNumber: number, partCount: number, uploadedBytes: number) =>
     input.onProgress?.({ phase, partNumber, partCount, uploadedBytes, totalBytes });
 
-  report('opening', 0, 0, 0);
-  const opened = await callApi<{ uploadId: string; partBytes: number; partCount: number }>(
-    fetchImpl,
-    { action: 'initiate_multipart', assetId: input.assetId },
-  );
-  if (!opened.ok) return failure(opened.message, false);
+  const etags: { partNumber: number; etag: string }[] = [];
+  /** The parts storage already holds, which are not sent again. */
+  const arrived = new Set<number>();
+  let uploadId: string;
+  let partCount: number;
+  let uploadedBytes = 0;
 
-  const { uploadId, partCount } = opened.data;
-  if (!Number.isInteger(partCount) || partCount < 1) {
-    return failure('The server did not say how many parts this file needs.', false);
+  if (input.resume) {
+    uploadId = input.resume.uploadId;
+    partCount = input.resume.partCount;
+    report('resuming', 0, partCount, 0);
+    for (const part of input.resume.parts) {
+      // A part outside the plan belongs to some other upload of the same key, and
+      // completing with it would assemble an object the row cannot describe.
+      if (!Number.isInteger(part.partNumber) || part.partNumber < 1 || part.partNumber > partCount) {
+        continue;
+      }
+      if (arrived.has(part.partNumber)) continue;
+      arrived.add(part.partNumber);
+      etags.push({ partNumber: part.partNumber, etag: part.etag });
+      uploadedBytes += part.size;
+    }
+    // The bar starts part-way, which is the point: the bytes are already there.
+    report('resuming', arrived.size, partCount, uploadedBytes);
+  } else {
+    report('opening', 0, 0, 0);
+    const opened = await callApi<{ uploadId: string; partBytes: number; partCount: number }>(
+      fetchImpl,
+      { action: 'initiate_multipart', assetId: input.assetId },
+    );
+    if (!opened.ok) return failure(opened.message, false);
+    uploadId = opened.data.uploadId;
+    partCount = opened.data.partCount;
   }
 
-  const etags: { partNumber: number; etag: string }[] = [];
-  let uploadedBytes = 0;
+  if (!uploadId?.trim() || !Number.isInteger(partCount) || partCount < 1) {
+    return failure('The server did not say how many parts this file needs.', false);
+  }
 
   for (let first = 1; first <= partCount; first += PARTS_PER_SIGNATURE_BATCH) {
     if (input.signal?.aborted) return abandon(fetchImpl, input.assetId, uploadId);
 
     const wanted: number[] = [];
     for (let part = first; part < first + PARTS_PER_SIGNATURE_BATCH && part <= partCount; part += 1) {
-      wanted.push(part);
+      if (!arrived.has(part)) wanted.push(part);
     }
+    // A batch storage already holds costs no request at all: nothing to sign, and
+    // nothing to send.
+    if (wanted.length === 0) continue;
 
     report('signing', wanted[0] ?? first, partCount, uploadedBytes);
     const signed = await callApi<{ parts: SignedPartFromServer[] }>(fetchImpl, {
@@ -226,7 +279,10 @@ export async function uploadInParts(input: MultipartUploadInput): Promise<Multip
     action: 'complete_multipart',
     assetId: input.assetId,
     uploadId,
-    parts: etags,
+    // Resumed parts come first and new ones are appended as they land, so the list
+    // is sorted here rather than assumed: the server refuses one that is out of
+    // order, and it is right to.
+    parts: [...etags].sort((a, b) => a.partNumber - b.partNumber),
   });
   // A refusal here is not an abandoned upload: the parts are all in storage and
   // the object may even exist. Deleting them would throw away the transfer to

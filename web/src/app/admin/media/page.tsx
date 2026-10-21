@@ -6,6 +6,7 @@ import { fetchMediaModerationQueue, MEDIA_STATUS_LABEL, readableByteSize } from 
 import { MasterPlayer } from '@/app/_shared/master-player';
 import { ModerateForm } from './moderate-form';
 import { RetryRenditionForm } from './retry-rendition-form';
+import { UnfinishedUploads } from './unfinished-uploads';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,6 +24,14 @@ export const dynamic = 'force-dynamic';
  * Staff can also watch the file itself, through `/api/media/master`. Verification
  * compares a byte count against storage, which is not the same as looking: a file
  * of exactly the declared size can still be the wrong footage.
+ *
+ * The fifth is the bytes rather than the files. A multipart upload stores its
+ * parts as they arrive and the object does not exist until the upload is
+ * completed, so a transfer nobody finished leaves bytes in the bucket that no row
+ * here mentions — billed, unservable, and invisible until `UnfinishedUploads` asks
+ * the bucket for them. Storage ends an incomplete upload on its own after seven
+ * days, so the panel is not putting out a fire; it is reading a list nobody could
+ * read and stopping the meter sooner, with a reason in the audit trail.
  *
  * The fourth thing is undoing a failed encode. A copy that failed used to be
  * stuck: nothing in the schema moved a `failed` rendition back, and registering
@@ -119,6 +128,8 @@ export default async function AdminMediaPage() {
         );
       })}
 
+      <UnfinishedUploads />
+
       <p className="muted">
         Verifying an upload transfers no byte: it asks storage whether the object
         arrived and whether it is the size that was declared, and it does not
@@ -126,9 +137,10 @@ export default async function AdminMediaPage() {
         Watching one does — a signed link to the master itself, good for fifteen
         minutes, because a file nobody has looked at is a file nobody has
         moderated. Retrying a failed copy transfers nothing either: it moves the
-        row back to pending, and the next worker run does the encoding. Only staff
-        can verify, quarantine, withdraw or retry, and an uploader can never
-        promote their own file.
+        row back to pending, and the next worker run does the encoding. Looking for
+        unfinished uploads transfers nothing either, and ending one deletes parts
+        rather than files. Only staff can verify, quarantine, withdraw, retry or
+        abandon, and an uploader can never promote their own file.
       </p>
     </main>
   );

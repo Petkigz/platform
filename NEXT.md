@@ -303,9 +303,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **924 database tests, 623 web tests; TypeScript typecheck and
+Verification: **933 database tests, 666 web tests; TypeScript typecheck and
 production build pass; 103 tables, 231 policies, 134 user-defined triggers,
-229 functions, 99 migrations and 105 app route entries.**
+230 functions, 100 migrations and 105 app route entries.**
 
 ## Today's sentence
 
@@ -325,10 +325,10 @@ never started). Updated 2026-10-20.
 
 | Piece | Built and tested | Not built | Waiting on |
 |---|---|---|---|
-| **Media ingest** (D8 = R2) | `media_assets` register with a pending/available/quarantined/deleted state machine and four writer functions; SigV4 signing in `web/src/lib/media-r2.ts`, pinned against AWS's published vector; `POST /api/media` `request_upload` + `confirm_upload`; multipart upload for a file too big for one presigned PUT (`lib/media-multipart.ts` on the server, `lib/multipart-upload.ts` in the browser, four more actions on the same route); R2 variables documented in `web/.env.example` | Any R2 credential in this environment, so nothing has been exercised against a real bucket; the bucket's CORS rule, which multipart needs and single-PUT did not | **Nothing** that is a design question. R2 is chosen; when credentials are issued the masters bucket must allow `PUT` from the app's origin and expose `ETag` |
+| **Media ingest** (D8 = R2) | `media_assets` register with a pending/available/quarantined/deleted state machine and four writer functions; SigV4 signing in `web/src/lib/media-r2.ts`, pinned against AWS's published vector; `POST /api/media` `request_upload` + `confirm_upload`; multipart upload for a file too big for one presigned PUT (`lib/media-multipart.ts` on the server, `lib/multipart-upload.ts` in the browser, four more actions on the same route); `resume_upload`, which finds the caller's own `pending` row by checksum and size and reads back from the bucket the parts storage already holds, so a closed tab costs one part rather than the file; `abandon_media_upload()` and the `/admin/media` panel that reaches it, which is the only place an upload nobody finished can be seen; R2 variables documented in `web/.env.example` | Any R2 credential in this environment, so nothing has been exercised against a real bucket; the bucket's CORS rule, which multipart needs and single-PUT did not | **Nothing** that is a design question. R2 is chosen; when credentials are issued the masters bucket must allow `PUT` from the app's origin and expose `ETag` |
 | **Media delivery** | The whole path, end to end: `media_renditions` register with a closed profile vocabulary and derived object keys; the transcode worker that fills it (`web/src/worker/transcode-worker.ts`, decisions in `lib/transcode.ts`, gated by `delivery.transcode`), which checks the master's SHA-256 against the bytes before it encodes anything; `/api/media/playback` and `/api/media/download` signing short-lived rendition URLs with the database as the only authority on who may watch; a player on the lesson page with a quality selector and a poster; `/teach/media`, where a teacher uploads straight to R2 with a browser-computed checksum; `verify` on `/admin/media`, which asks storage whether the file arrived at the declared size and only then confirms it; and `retry_media_rendition()`, reached from the same screen, which puts a copy that failed to encode back in the queue on a written reason | A host to run the worker on with ffmpeg, R2 credentials and a staff account for it, and a decision about whether a free preview may be watched signed-out | **Nothing** that is a design question. What is left is infrastructure and one product decision |
 | **Offline download** | `may_download_lesson()` requiring entitlement + an `offline_downloads` feature grant + verified first-party media; closed feature vocabulary (`pe_feature_vocabulary`, `plan_feature_codes()`) with the admin plan form offering the list; 17 database tests | Any download route or UI, device registration, device storage limits, download expiry, protected-media handling | **Decisions:** device limits, expiry and protected media (`learning.offline`). It would also serve renditions, which do not exist |
-| **Upload cost control** | A per-file ceiling of 8 GiB that the browser can now actually reach: `lib/digest.ts` hashes a slice at a time so the checksum does not cap the size, and above 32 MiB `lib/multipart-upload.ts` sends 16 MiB parts so the transport does not either — a failed part is retried rather than the file restarted | A cumulative per-teacher byte quota, a spend alert, and any record of an in-flight multipart upload: a reload cannot resume one, so the parts are abandoned and the file starts again, and an upload nobody finishes is left to storage's own seven-day cleanup | **Decision:** quota policy (`platform.cost_controls`). Note that `register_media_upload()` is open to **any signed-in user**, not only teachers, because learners attach files to assignment submissions through the same table — so the missing control is a cumulative quota per person, not a role check |
+| **Upload cost control** | A per-file ceiling of 8 GiB that the browser can now actually reach: `lib/digest.ts` hashes a slice at a time so the checksum does not cap the size, and above 32 MiB `lib/multipart-upload.ts` sends 16 MiB parts so the transport does not either — a failed part is retried rather than the file restarted | A cumulative per-teacher byte quota and a spend alert. Resuming needs the same file to be chosen again, because the checksum is what recognises it, so a half-sent file cannot be finished from the library without it; and an unfinished upload whose key was not derived from an asset can be listed but not ended, since the audit trail would have nothing to point at | **Decision:** quota policy (`platform.cost_controls`). Note that `register_media_upload()` is open to **any signed-in user**, not only teachers, because learners attach files to assignment submissions through the same table — so the missing control is a cumulative quota per person, not a role check |
 | **Assignments** | Tasks, self-paced and cohort deadlines, one private submission per learner, drafts and hand-in, marking with immutable feedback, a revision loop with an append-only snapshot, file *references* with type and size ceilings | Byte transfer for submissions (the R2 path exists but is not wired to submissions), scanning, secure delivery to the marker, retention of children's files | **Decision/review:** the safeguarding review of files children send. This one review holds `learning.assignments` **and** `learning.cohorts` |
 | **Cohorts** | Tables, exact-version pinning, opt-in join/leave, capacity serialisation, family opt-in for children, counts on the manager and, since row 32, names and progress on the class page for the teacher who opened it, teacher manager, learner join/leave, the teacher-set `join_closes_at` window, how full each class is on the course page a joiner reads it from (`cohort_places()`, counts only — the roster stays behind `can_read_cohort_member()`), and the teacher's control over the published number (`set_cohort_capacity()`, never below the learners already in the class) | Nothing structural | The same safeguarding review. `learning.cohorts` ships `false` |
 | **Learner analytics** (`SCREENS.md` row 32) | `can_read_learner_course_progress()` as a second branch on the `course_enrolments` and `lesson_progress` read policies; `cohort_learner_progress()`, which returns four columns of a profile rather than the row; `/teach/[courseId]/cohorts/[cohortId]` with a class summary and a roster ordered by need; 19 database tests, most of them negative | Aggregate or platform-wide reporting, event instrumentation beyond lesson progress, export or CSV, anything that follows a learner across courses | **Retention:** how long progress stays readable after a class ends or a learner leaves — a decision, not a default. `delivery.analytics` and `learning.cohorts` both ship `false`, and the predicate checks both |
@@ -1052,6 +1052,82 @@ header instead of reporting a mystery at the end of a long transfer.
 49 web tests: 14 on the signing and the XML, 22 on the server's three calls, 12
 on the browser's flow, and one on where the threshold sits. No migration, no new
 flag, no new table, no new route.
+
+### An unfinished upload can be found again, and ended, 2026-10-21
+
+Parts made a large file possible and left a new kind of mess: an upload nobody
+finished. A multipart upload stores its parts as they arrive and the object does
+not exist until it is completed, so a tab closed at part 300 of 512 left bytes in
+the bucket that no row in the schema mentioned — billed, unservable, invisible.
+The same gap cost the teacher the whole file, because a second attempt registered
+a second row and started again from zero.
+
+**The upload id is storage's, and it stays that way.** Nothing here records an
+in-flight upload, so the way back to one is a question to the bucket: list the
+unfinished uploads for a key, then list the parts of the newest one. That is a
+choice over the obvious alternative of a column on the row. A recorded id has to
+be kept true against a transfer happening somewhere else, and its failure mode is
+a row claiming an upload is in flight that storage completed or expired days ago.
+Storage is the only authority on what it is holding, and asking costs one Class A
+request at the moment somebody actually asks.
+
+**The lookup is by checksum and size, because those are what survive a reload.**
+A page cannot remember an upload id it no longer has, and a teacher cannot be
+asked which of their pending files they meant. So `resume_upload` takes the digest
+the browser just computed and the size it just read, and finds the caller's own
+newest `pending` row that matches. Scoped to `uploaded_by` even though the read
+policy already hides somebody else's row from a learner: staff may read every row,
+and a member of staff uploading a file a teacher left half-sent must not be handed
+the teacher's object key to write into.
+
+**The parts come from the bucket, not from memory.** Which parts arrived, and the
+ETags that completing them needs, are read back with a parts listing. Resuming
+from a browser's account of what it sent would assemble an object out of guesses,
+made by the one party that has already lost its state once.
+
+**A resume that does not fit is refused rather than completed.** A listed part
+whose size is not the size this deployment's plan makes — a part size that has
+changed, a row whose declared size has changed — leaves the upload alone and
+starts a new one, with the reason in the response. Completing it would produce an
+object whose bytes do not line up with the row describing it. A document that is
+not a listing at all is refused for the same kind of reason: an HTML error page
+with a 200 on it parses as "nothing unfinished", which is a wrong answer that
+costs a teacher a transfer they had already paid for.
+
+**Reusing the row is the other half of the win.** A second attempt now continues
+the first attempt's record instead of opening a second `pending` row — including a
+small file that travels in one request, where the same checksum finds the same row
+and the route signs a fresh PUT for the key already derived. Without that, every
+failed attempt left a file in the teacher's library that would never have bytes
+behind it.
+
+**Staff can see the ones nobody is coming back for.** `/admin/media` gained a
+panel that lists the bucket's unfinished uploads on a button. The listing is a
+paid request to storage and the page already reads the moderation queue, so paying
+for it on every visit to look at something usually empty is not a trade to make
+silently. Each entry names the file it belongs to where its key was derived from
+an asset, says how long it has been sitting there, and can be ended on a written
+reason.
+
+**Ending one records the decision, then deletes.** `abandon_media_upload()` is
+staff-only, needs a reason, writes `media.upload_abandoned` with the key, the
+bucket, the upload id, the declared size and the asset's state at the time, and
+touches no row. The order is the point: if storage then refuses, the trail says
+what was decided and why, and storage's own seven-day lifecycle finishes the job —
+while the opposite order would leave a deletion with no record whenever the write
+failed, which is the one gap an audit trail may not have. The response says which
+of the two happened, because "recorded and deleted" and "recorded, storage
+refused" are different facts.
+
+**Nothing here changes a file's state.** An unfinished upload says nothing about
+the asset: it may be `pending` and about to be resumed, or `available` because a
+later attempt succeeded and these are the parts of an earlier one. Quarantining or
+withdrawing as part of a cleanup would be a decision about the file dressed up as
+a decision about the bytes, and `delete_media_asset()` already exists for that
+decision.
+
+9 database tests, 43 web. One migration, one function, no new table, no new flag,
+no new route.
 
 ## Open external decisions (not to be guessed)
 

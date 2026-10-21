@@ -414,7 +414,7 @@ function requireReason(reason: string): string | null {
 function mapModerationError(message: string): string {
   if (/only staff may|only platform staff/i.test(message))
     return 'Only platform staff can do that.';
-  if (/reason is required/i.test(message))
+  if (/reason is required|needs a written reason/i.test(message))
     return 'Say why in writing. A takedown with no reason cannot be defended later.';
   if (/only delete your own uploads/i.test(message))
     return 'That file belongs to somebody else.';
@@ -465,6 +465,157 @@ export async function withdrawMediaAsset(
   });
   if (error) return { ok: false, message: mapModerationError(error.message) };
   if (data === false) return { ok: false, message: 'That upload has already been withdrawn.' };
+  return { ok: true };
+}
+
+export type ResumableUpload = {
+  assetId: string;
+  masterBucket: string;
+  masterKey: string;
+  mimeType: string;
+  byteSize: number;
+};
+
+/**
+ * The unfinished upload of this very file, if the caller has one.
+ *
+ * Found by checksum and size rather than by anything the browser remembers, which
+ * is the only lookup that survives the thing it is for: a closed tab, a reloaded
+ * page, a different device. The teacher picks the same file again, the browser
+ * hashes it again, and the hash finds the `pending` row the earlier attempt
+ * opened — so the second attempt continues the first instead of leaving a
+ * duplicate file in the library that will never have bytes behind it.
+ *
+ * Scoped to `uploaded_by` even though the read policy would already hide somebody
+ * else's row from a learner: staff may read every row, and a member of staff
+ * uploading a file a teacher left unfinished must not be handed the teacher's
+ * object key to write into.
+ */
+export async function findResumableUpload(
+  client: SupabaseClient,
+  uploadedBy: string,
+  checksum: string,
+  byteSize: number,
+): Promise<ResumableUpload | null> {
+  const digest = checksum.trim().toLowerCase();
+  if (!SHA256_HEX.test(digest)) return null;
+  if (!Number.isInteger(byteSize) || byteSize < 1 || byteSize > MAX_UPLOAD_BYTES) return null;
+  if (!uploadedBy.trim()) return null;
+
+  const { data, error } = await client
+    .from('media_assets')
+    .select('id, master_bucket, master_key, mime_type, byte_size')
+    .eq('uploaded_by', uploadedBy)
+    .eq('checksum', digest)
+    .eq('byte_size', byteSize)
+    .eq('status', 'pending')
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  // A lookup that fails is not worth failing an upload over: the caller registers
+  // a new row and the teacher's file goes up anyway. The cost is a duplicate
+  // pending row, which is what happened every time before this existed.
+  if (error || !data) return null;
+
+  const row = data as Record<string, unknown>;
+  return {
+    assetId: String(row.id),
+    masterBucket: String(row.master_bucket),
+    masterKey: String(row.master_key),
+    mimeType: String(row.mime_type),
+    byteSize: Number(row.byte_size),
+  };
+}
+
+export type UploadSummary = {
+  id: string;
+  displayName: string | null;
+  mimeType: string;
+  byteSize: number;
+  status: MediaAsset['status'];
+  uploader: string | null;
+};
+
+/**
+ * The rows behind a list of asset ids, for a screen that learned the ids
+ * somewhere else.
+ *
+ * The unfinished-upload panel is the reason this exists: storage lists uploads by
+ * object key, and the key is derived from the asset's id, so the ids come from a
+ * bucket rather than from a query. Reading the rows through the caller's own
+ * client keeps the answer inside RLS — a caller who may not see an asset gets no
+ * row for it, and the panel shows an upload it cannot name rather than somebody's
+ * file.
+ */
+export async function fetchMediaAssetsByIds(
+  client: SupabaseClient,
+  ids: string[],
+): Promise<UploadSummary[]> {
+  const wanted = [...new Set(ids.filter((id) => id.trim() !== ''))];
+  if (wanted.length === 0) return [];
+
+  const { data, error } = await client
+    .from('media_assets')
+    .select('id, display_name, mime_type, byte_size, status, user_profiles ( display_name )')
+    .in('id', wanted);
+
+  if (error) throw new Error(error.message);
+
+  return (data ?? []).map((row) => {
+    const r = row as Record<string, unknown>;
+    const uploader = r.user_profiles as { display_name?: string } | null;
+    return {
+      id: String(r.id),
+      displayName: r.display_name ? String(r.display_name) : null,
+      mimeType: String(r.mime_type),
+      byteSize: Number(r.byte_size),
+      status: r.status as MediaAsset['status'],
+      uploader: uploader?.display_name ? String(uploader.display_name) : null,
+    };
+  });
+}
+
+/** Storage's own cap on a listing page, so a caller cannot ask for the bucket. */
+export const MAX_LISTED_IDS = 500;
+
+/**
+ * Records the decision to end an upload nobody finished.
+ *
+ * The parts themselves are deleted by the caller in storage — SQL cannot reach a
+ * bucket — and the order is deliberate: the decision is written down first, so a
+ * storage refusal leaves a record of what was asked for and why, while the
+ * opposite order would leave a deletion with no audit entry whenever the write
+ * failed. Storage also ends an incomplete upload on its own lifecycle after seven
+ * days, so what is being recorded is somebody choosing not to wait.
+ *
+ * No row changes. An unfinished upload says nothing about the asset: it may still
+ * be `pending` and about to be resumed by the teacher who owns it, or `available`
+ * because a later attempt succeeded and these are the parts of an earlier one.
+ */
+export async function abandonMediaUpload(
+  client: SupabaseClient,
+  assetId: string,
+  uploadId: string,
+  reason: string,
+): Promise<ModerationResult> {
+  const refusal = requireReason(reason);
+  if (refusal) return { ok: false, message: refusal };
+  if (!assetId) return { ok: false, message: 'That upload is gone.' };
+
+  const trimmedId = uploadId.trim();
+  if (!trimmedId) return { ok: false, message: 'That upload has no id, so there is nothing to end.' };
+  if (trimmedId.length > 512) {
+    return { ok: false, message: 'That is not an upload id storage issued.' };
+  }
+
+  const { error } = await client.rpc('abandon_media_upload', {
+    p_asset_id: assetId,
+    p_upload_id: trimmedId,
+    p_reason: reason.trim(),
+  });
+  if (error) return { ok: false, message: mapModerationError(error.message) };
   return { ok: true };
 }
 

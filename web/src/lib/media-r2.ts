@@ -141,6 +141,25 @@ export function r2Endpoint(accountId: string): string {
 const ASSET_KEY =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/[a-z0-9][a-z0-9._-]*$/;
 
+/**
+ * The asset a master key was derived from.
+ *
+ * A key is `<asset uuid>/<mime slug>`, which is the only reason a bucket listing
+ * can be turned back into rows: storage lists uploads by key, and the platform's
+ * own record of a file is addressed by id.
+ */
+export function masterKeyAssetId(key: string): string {
+  return assertMasterKey(key).split('/')[0] ?? '';
+}
+
+/** The bucket itself, for the two calls that are not about one object. */
+export function masterBucketTarget(config: R2Config): { host: string; path: string } {
+  return {
+    host: `${config.accountId}.r2.cloudflarestorage.com`,
+    path: `/${config.mastersBucket}`,
+  };
+}
+
 /** A rendition key adds a profile segment: `<uuid>/<mime>/720p.mp4`. */
 const RENDITION_KEY =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/[a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._-]*$/;
@@ -587,30 +606,164 @@ export function completeMultipartUploadBody(
 }
 
 /**
- * The text of one XML element.
+ * Reading storage's XML, in four small functions.
  *
- * Not an XML parser, and deliberately not one: the responses this reads are three
- * short documents from storage, and a dependency to pull two strings out of them
- * is worse than a function that refuses to guess. Zero matches and two matches
- * are both errors, because silently taking the first is how an upload id from
- * somebody else's response ends up in a request.
+ * Not an XML parser, and deliberately not one: what this reads is a handful of
+ * short documents from storage — an upload id, a list of unfinished uploads, a
+ * list of parts — and a dependency to pull two strings out of them is worse than
+ * functions that refuse to guess. Zero matches and two matches are both errors
+ * where a value is required, because silently taking the first is how an upload
+ * id from somebody else's response ends up in a request.
  */
-export function xmlElementText(xml: string, tag: string): string {
+function assertElementName(tag: string): void {
   if (!/^[A-Za-z][A-Za-z0-9]*$/.test(tag)) throw new R2RequestError('that is not an element name');
-  const matches = [...xml.matchAll(new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`, 'g'))];
-  if (matches.length === 0) throw new R2RequestError(`storage returned no <${tag}>`);
-  if (matches.length > 1) {
-    throw new R2RequestError(`storage returned ${String(matches.length)} <${tag}> elements, so which one is right is a guess`);
-  }
-  const text = String(matches[0]?.[1] ?? '')
+}
+
+function unescapeXml(text: string): string {
+  return text
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&apos;/g, "'")
-    .replace(/&amp;/g, '&')
-    .trim();
+    .replace(/&amp;/g, '&');
+}
+
+/**
+ * That the document is the one asked for.
+ *
+ * Not a schema check — a shape check with a purpose. A proxy or a captive portal
+ * can answer a storage request with an HTML page and a 200, and a listing parsed
+ * from that is an empty listing: "nothing unfinished", "no parts arrived". Both
+ * are wrong answers that cost a teacher a transfer they had already paid for, so
+ * a document that does not name itself is refused instead of being read.
+ */
+function assertDocumentRoot(xml: string, root: string): void {
+  if (!new RegExp(`<${root}[\\s>]`).test(xml)) {
+    throw new R2RequestError(`that is not a <${root}> document`);
+  }
+}
+
+/** Every `<tag>…</tag>` block, in document order, as raw inner XML. */
+export function xmlElements(xml: string, tag: string): string[] {
+  assertElementName(tag);
+  return [...xml.matchAll(new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`, 'g'))].map((match) =>
+    String(match[1] ?? ''),
+  );
+}
+
+/**
+ * One element's text, or null when it is absent or empty.
+ *
+ * For the parts of a listing that mean nothing when they mean nothing: a marker
+ * with no value is the start of the list, and a self-closing element arrives as
+ * no match at all. Two matches are still an error, since a document that says the
+ * same thing twice is not a document this can read.
+ */
+export function xmlOptionalText(xml: string, tag: string): string | null {
+  const blocks = xmlElements(xml, tag);
+  if (blocks.length > 1) {
+    throw new R2RequestError(
+      `storage returned ${String(blocks.length)} <${tag}> elements, so which one is right is a guess`,
+    );
+  }
+  if (blocks.length === 0) return null;
+  const text = unescapeXml(String(blocks[0] ?? '')).trim();
+  return text === '' ? null : text;
+}
+
+/** One element's text, required: absent, empty or duplicated all refuse. */
+export function xmlElementText(xml: string, tag: string): string {
+  const blocks = xmlElements(xml, tag);
+  if (blocks.length === 0) throw new R2RequestError(`storage returned no <${tag}>`);
+  const text = xmlOptionalText(xml, tag);
   if (!text) throw new R2RequestError(`storage returned an empty <${tag}>`);
   return text;
+}
+
+/** One unfinished upload, as storage lists it. */
+export type ListedMultipartUpload = {
+  key: string;
+  uploadId: string;
+  /** ISO timestamp, or null if storage did not say when it was opened. */
+  initiated: string | null;
+};
+
+export type MultipartUploadListing = {
+  uploads: ListedMultipartUpload[];
+  truncated: boolean;
+  nextKeyMarker: string | null;
+  nextUploadIdMarker: string | null;
+};
+
+/**
+ * A `?uploads` listing: every upload in the bucket that was opened and never
+ * completed or abandoned.
+ *
+ * This is the only place the platform can find an unfinished upload, because the
+ * upload id is storage's and nothing here records it. The markers are what a
+ * second page is asked for; a listing of a whole bucket is capped by storage at
+ * 1 000 uploads, so a caller that ignores `truncated` sees a fraction of what is
+ * being paid for.
+ */
+export function parseMultipartUploadListing(xml: string): MultipartUploadListing {
+  assertDocumentRoot(xml, 'ListMultipartUploadsResult');
+  return {
+    uploads: xmlElements(xml, 'Upload').map((block) => ({
+      key: xmlElementText(block, 'Key'),
+      uploadId: xmlElementText(block, 'UploadId'),
+      initiated: xmlOptionalText(block, 'Initiated'),
+    })),
+    truncated: (xmlOptionalText(xml, 'IsTruncated') ?? 'false').toLowerCase() === 'true',
+    nextKeyMarker: xmlOptionalText(xml, 'NextKeyMarker'),
+    nextUploadIdMarker: xmlOptionalText(xml, 'NextUploadIdMarker'),
+  };
+}
+
+/** One part storage already holds, with the ETag that completing it needs. */
+export type ListedPart = {
+  partNumber: number;
+  etag: string;
+  size: number;
+};
+
+export type PartListing = {
+  parts: ListedPart[];
+  truncated: boolean;
+  nextPartNumberMarker: number | null;
+};
+
+/**
+ * A `?uploadId=` listing: the parts of one upload that have arrived.
+ *
+ * The authoritative answer to "where did this upload get to", and the reason a
+ * stalled transfer can be resumed rather than restarted: the ETags come from
+ * storage, so nothing has to trust a browser to remember which parts it sent.
+ */
+export function parsePartListing(xml: string): PartListing {
+  assertDocumentRoot(xml, 'ListPartsResult');
+  const marker = xmlOptionalText(xml, 'NextPartNumberMarker');
+  return {
+    parts: xmlElements(xml, 'Part').map((block) => {
+      const partNumber = Number(xmlElementText(block, 'PartNumber'));
+      // Required, like the ETag: a part with no size would be resumed as though it
+      // were empty, and the progress it reports would be a lie in the direction
+      // that makes a teacher think the transfer is further along than it is.
+      const size = Number(xmlElementText(block, 'Size'));
+      if (!Number.isInteger(partNumber) || partNumber < 1) {
+        throw new R2RequestError(
+          `storage returned a part numbered ${String(partNumber)}, which is not a part number`,
+        );
+      }
+      if (!Number.isInteger(size) || size < 0) {
+        throw new R2RequestError(
+          `storage returned ${String(size)} bytes for part ${String(partNumber)}, which is not a size`,
+        );
+      }
+      return { partNumber, etag: xmlElementText(block, 'ETag'), size };
+    }),
+    truncated: (xmlOptionalText(xml, 'IsTruncated') ?? 'false').toLowerCase() === 'true',
+    nextPartNumberMarker: marker === null ? null : Number(marker),
+  };
 }
 
 /** The host and path a server-side signed request to one master needs. */
