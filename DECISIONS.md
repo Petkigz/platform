@@ -1495,3 +1495,81 @@ Implemented in `20261223000100_currency_reporting.sql` (eight functions, two con
 `lib/currency.ts`, `lib/money.ts`, `/api/admin/exchange-rates`, `/api/admin/money-report`,
 a `settle` action on `/api/admin/reconciliation`, and the screens `/admin/exchange-rates`
 and `/admin/money-report`.
+
+## Who may write an order — **DECIDED 2026-10-21**
+
+`orders_insert` and `order_items_insert` asked one question: is the writer a member of
+the billing account? A payer is. So a payer could write the money rows directly — a
+total of their choosing, and a line naming any product in the catalogue at a unit price
+of zero with no price behind it — and `record_payment_success()` would fulfil from
+`order_items.product_id`, which the payer had written. Both CHECKs on the tables are
+satisfied by that pair of rows, because they hold an order internally consistent and
+say nothing about whether the platform agreed to sell it. The validation existed in
+`createOrder()` in TypeScript, which was one of two paths to the table. This decides
+who writes a money row, and with what.
+
+**A money row is written by a function or by nobody.** Row-level security answers "may
+this person touch this row", which is the right instrument for reading an invoice and
+the wrong one for creating one, because the interesting question about a new order is
+not *who* but *what*: what is being sold, at which price, for how much. That is a
+derivation from rows the platform already owns, and a derivation belongs in one place
+that every order passes through. `create_course_order(course_id, price_id)` is that
+place for a course, as `create_plan_order()` already was for a subscription.
+
+**The insert policies are dropped, not narrowed to staff.** A staff-only insert would
+still write a line that fulfilment trusts with no price behind it, and would leave two
+ways to make an order — one audited and one not — which is how the two drift apart
+again. With no insert policy at all, a definer writer is the only way an order or an
+order line comes into existence, and "who created this order" has one answer. Reading
+is untouched: a payer still sees their own orders and lines and nobody else's.
+
+**The amount is a fact about a price row, so the caller cannot send one.** The writer
+takes a course and a price and derives everything else: the published version, the
+product that links that version to that price, the currency, the total, the single line,
+the snapshot. There is no amount parameter to validate, no product parameter to
+cross-check and no status parameter to refuse — the surface a caller can influence is
+two ids, and an id that does not describe a real offer is a refusal. `amountMinor`
+comes back as a decimal integer string, because money in this codebase is a bigint all
+the way to the wire and a JSON number is where it would stop being exact.
+
+**Who pays is derived from the session, not from the request.** The writer takes the
+actor from the JWT claims and resolves the billing account from that actor's own
+memberships, requiring `can_manage_payment_methods` — the same test
+`create_plan_order()` applies — and matching the account's `billing_currency` to the
+price's, opening an account only when the payer has none in that currency. D4 says the
+account currency is authoritative for the original amount, and an order in one currency
+hanging off an account billed in another is a contradiction that no screen can render
+honestly. `createOrder()` lost its `userId` argument for the same reason: a user id in
+the request is a value the caller chooses.
+
+**A closed platform says it is closed.** `commerce.checkout` is enforced inside the
+writer, which makes the flag load-bearing for the first time — it was registered and
+read by nothing, so "ships off, enabled from the dashboard" was untrue for checkout
+specifically. The buy page reads it too and says so instead of offering a form that
+fails after the payer has chosen a provider and typed a phone number. Refusals are keys
+(`checkout:price_window`) mapped to sentences in TypeScript, matched exactly rather than
+by regex over English prose, because prose matching breaks the moment somebody rewords a
+`RAISE`. An unmapped key becomes a 500 rather than a friendly guess: a refusal nobody
+anticipated should be loud.
+
+**Not decided here, and asked rather than assumed.** Whether buying a course the account
+already owns should be refused (entitlements are granted account-wide, so a second
+purchase is redundant rather than per-child); and how `prices.market` is meant to choose
+a price, since nothing enforces it today and the buy page lists every market's price to
+every visitor. Both are in `NEXT.md` under open decisions.
+
+**Rejected:** validating in TypeScript and writing through RLS, which is what existed —
+a rule in one of two paths is a suggestion to whoever uses that path; narrowing the
+insert policies to privileged roles (a second, unaudited way to make an order); a
+`BEFORE INSERT` trigger that re-checked the amount (it would have to re-derive the offer
+from the product to know the right answer, which is the writer's job, and a trigger that
+refuses still leaves the client writing rows); an amount parameter "because the provider
+needs to be told" (the provider is told from the order, never the reverse); gating
+checkout in the route only (the route is one of the paths, which is the whole problem);
+and dropping `order_adjustments_insert` in the same step, because it needs its audited
+writer first and that is the next unit rather than this one.
+
+Implemented in `20261224000100_course_order_writer.sql` (one function, two policies
+dropped), `web/src/lib/checkout.ts`, `web/src/app/api/checkout/route.ts`,
+`/courses/[slug]/buy`, `supabase/tests/course_order.test.mjs` and one inverted
+assertion in `supabase/tests/fulfilment.test.mjs`.

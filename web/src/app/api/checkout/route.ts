@@ -111,22 +111,30 @@ export async function POST(request: Request) {
         redirect: '/api/enrol',
       }, { status: 409 });
     }
-    result = await createOrder(supabase, { courseId, priceId, userId: user.id });
+    // The writer takes the payer from the session's own claims; there is no
+    // user id to hand it, and no amount, product or billing account either.
+    result = await createOrder(supabase, { courseId, priceId });
   }
   if (!result.ok) {
-    // 409 for the expected conflicts, 400 for a bad request, 500 for the rest.
-    const status =
-      result.code === 'price_not_for_this_course' ||
-      result.code === 'price_not_available' ||
-      result.code === 'not_paid_course' ||
-      result.code === 'already_entitled' ||
-      result.code === 'conflict'
-        ? 409
+    // 409 for the expected conflicts, 404 when there is nothing to buy, and 503
+    // when the platform itself is closed: `commerce.checkout` ships off and the
+    // order writer refuses while it is. A payer who meets that deserves "not
+    // open yet" rather than "your request was wrong" (400) or "something broke"
+    // (500). 500 is the fallback, so a refusal nobody thought about stays loud.
+    const status: number =
+      result.code === 'checkout_disabled'
+        ? 503
         : result.code === 'not_found'
           ? 404
           : result.code === 'error'
             ? 500
-            : 400;
+            : result.code === 'price_not_for_this_course' ||
+                result.code === 'price_not_available' ||
+                result.code === 'not_paid_course' ||
+                result.code === 'already_entitled' ||
+                result.code === 'conflict'
+              ? 409
+              : 400;
     return NextResponse.json({ error: result.message, code: result.code }, { status });
   }
 

@@ -303,9 +303,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **1087 database tests, 755 web tests; TypeScript typecheck and
-production build pass; 103 tables, 231 policies, 135 user-defined triggers,
-257 functions, 105 migrations and 115 app route entries.**
+Verification: **1107 database tests, 752 web tests; TypeScript typecheck and
+production build pass; 103 tables, 229 policies, 135 user-defined triggers,
+258 functions, 106 migrations and 115 app route entries.**
 
 ## Today's sentence
 
@@ -362,7 +362,7 @@ given a surface. Grouped by the feature they belong to:
 | Reviewer machinery — the versions | `content_review_requirements`, `technical_review_checks`, `content_change_assessments` | **Now written** by `20261221000100_review_requirements.sql`, on `/teach/[courseId]`, `/admin/reviews` and `/review/[assignmentId]`. `validate_review_assignment()`'s authorisation loop now has something to loop over, so a version can require a reviewer authorised for a subject — and a requirement can be closed, which nothing could do before |
 | Payouts | `instructor_payouts`, `instructor_payout_items` | `teaching.payouts`, off; ROADMAP already says "3 tables with no fields and no endpoints" |
 | Institutions | `institutions` | `commerce.institutions` and four `institution.*` flags, all off |
-| Money plumbing | `currency_exchange_rates`, `order_adjustments`, `payment_method_references` | **`currency_exchange_rates` is now written and read** by `20261223000100_currency_reporting.sql`, on `/admin/exchange-rates` and `/admin/money-report`, and it is what stamps `financial_transactions.fx_rate`/`fx_source`/`fx_observed_at` — columns a constraint required and nothing ever set. Multi-currency reporting is therefore built; the open part is what nets against what in the report. `order_adjustments` still has no writer (promotions eligibility and stacking are undecided, and an order's total is not held against its items plus adjustments by anything), and `payment_method_references` needs a provider that can store one |
+| Money plumbing | `currency_exchange_rates`, `order_adjustments`, `payment_method_references` | **`currency_exchange_rates` is now written and read** by `20261223000100_currency_reporting.sql`, on `/admin/exchange-rates` and `/admin/money-report`, and it is what stamps `financial_transactions.fx_rate`/`fx_source`/`fx_observed_at` — columns a constraint required and nothing ever set. Multi-currency reporting is therefore built; the open part is what nets against what in the report. `orders` and `order_items` are now **writer-only**: `20261224000100_course_order_writer.sql` dropped `orders_insert` and `order_items_insert`, so a course order exists only if `create_course_order()` made it (see today's section — the policies had let a payer write the total and the product themselves). `order_adjustments` still has no writer and still has an open insert policy (promotions eligibility and stacking are undecided, and an order's total is not held against its items plus adjustments by anything), and `payment_method_references` needs a provider that can store one |
 | History and diagnostics | `order_status_history`, `publication_events`, `entitlement_events`, `course_enrolment_version_history`, `subscription_history` | **Now read** by `support_case_history()`, on `/support/<caseNumber>` for staff. Still closed to every other read path, which is the point: one function decides what support may see |
 | Diagnostics with no writer | `access_checks` | **Correction to the audit:** nothing has ever inserted a row here — not a trigger, not a function, not a route. Its comment promises a denial log for support agents and the platform does not keep one. Excluded from the console on purpose; an always-empty list would read as "no denial happened" |
 | Other | `adult_learning_shares` | **Now written and read**, by `20261222000100_adult_learning_shares.sql` on `/account/sharing`. The console still reads it too, and its empty section is now a true answer about a feature that exists: nobody has been given sight of this adult's progress. The gap the audit named — no writer, and no predicate that made a share mean anything — is closed at both ends |
@@ -1592,6 +1592,136 @@ as a choice and the response reading back what was stamped rather than "saved".
 recreated), no new table, no new flag, two new controls, four new route entries.
 
 
+### An order is created by the platform, not by the browser, 2026-10-21
+
+**The hole.** Two insert policies in `20261020000400_rls.sql` decided who could
+write the money rows by asking one question:
+
+    orders_insert:      with check (is_billing_member(billing_account_id))
+    order_items_insert: with check (exists (select 1 from orders o
+                               where o.id = order_items.order_id
+                                 and is_billing_member(o.billing_account_id)))
+
+`is_billing_member()` is the right question for reading an invoice and the wrong
+one for writing one. A payer satisfies it. So a payer could skip
+`web/src/lib/checkout.ts` and POST straight to PostgREST: an `orders` row with
+any `total_minor` they liked, then an `order_items` row naming **any product in
+the catalogue** with `unit_price_minor = 0`, `discount_minor = 0`,
+`line_total_minor = 0` and no `price_id` — the column is nullable, so no price
+had to exist at all. Both rows satisfy every CHECK on their table
+(`orders_totals_agree`: 50000 = 50000 − 0 + 0; `oi_line_total_agrees`:
+0 = 0 × 1 − 0), and `record_payment_success()` fulfils from exactly those rows:
+
+    select distinct pcv.course_id
+      from order_items oi
+      join product_course_versions pcv on pcv.product_id = oi.product_id
+     where oi.order_id = p_order_id
+
+The entitlement is decided by `order_items.product_id`, which the payer wrote.
+Paying the order's own real total therefore delivered whichever course had been
+named. The second half is worse than the first: the extra zero-priced line could
+be added to a **real pending order**, so an honest purchase of one course
+delivered two, and nothing about the order total changed to hint at it.
+
+The validation existed. It lived in TypeScript, in `createOrder()`: published
+version, active in-window one-time price, product linked to that version, amount
+read from `prices`, exactly one line. That was one of two paths to the table, and
+a rule that lives in one of two paths is a suggestion to whoever uses that path.
+`create_plan_order()` already did this correctly for subscriptions, which is why
+the course path looked finished and was not.
+
+**The fix.** `create_course_order(p_course_id uuid, p_price_id uuid) → jsonb`,
+`SECURITY DEFINER`, executable by `authenticated` and nobody else. It re-derives
+the offer on every call — active undeleted course, highest published version,
+the named price active/one-time/inside its window, and the product behind it
+linked to *that* version and itself active — resolves the payer from the session
+claims, resolves their billing account from their own memberships, and writes the
+order, its single line and an audit row. The caller supplies no amount, no
+currency, no product, no billing account, no snapshot and no status, so there is
+nothing left to forge. It returns
+`{orderId, orderItemId, billingAccountId, productId, priceId, courseVersionId,
+amountMinor, currencyCode, title}`, with `amountMinor` as a decimal integer
+string, because money does not become a JSON number anywhere in this codebase.
+
+Both insert policies are **dropped, not narrowed to staff**. A staff-only insert
+would still let a privileged actor write a line that `record_payment_success()`
+trusts with no price behind it, and would leave two ways to make an order that
+can drift. Reads are untouched: `orders_read`, `order_items_read` and
+`order_adjustments_read` still give a payer their own invoice and hide everybody
+else's, and both are pinned by a test in the new suite. Dropping an insert policy
+does not lock the writers out — no table here has `force row level security`, so
+a definer function owned by the migration owner bypasses RLS. That was verified
+before the design rested on it, and the happy-path test runs as `authenticated`
+through the writer, which is the proof.
+
+**Two things that got better on the way.** The account is chosen by matching
+`billing_accounts.billing_currency` to the price's currency and opening one only
+when the payer has none in it — the client-side version hardcoded `UGX` on a new
+account whatever the price was in, and D4 says the account currency is
+authoritative for the original amount. And a membership that cannot
+`can_manage_payment_methods` is no longer used to pay, which is what
+`create_plan_order()` already required; the two writers now agree about who a
+payer is.
+
+**`commerce.checkout` is load-bearing.** It was registered in
+`20261024000100_flag_register.sql` and read by nothing in the runtime, so the
+platform's "everything ships off, enabled from the dashboard" promise was untrue
+for checkout specifically: with Supabase configured, an order could be created
+with the flag off. It is checked in the writer, because the writer is the only
+place every course order must pass, and `/courses/[slug]/buy` reads it too — a
+closed checkout shows "Checkout is not open yet" instead of a form that fails
+after the payer has chosen a provider and typed a phone number. The refusal key
+is `checkout:disabled`, which the API answers as 503 rather than 400 or 500: the
+platform is closed, the payer's request was not wrong and nothing is broken.
+
+**Refusals are keys, not prose.** The writer raises `checkout:not_signed_in`,
+`disabled`, `course_not_available`, `price_not_available`, `price_window`,
+`not_one_time`, `price_not_for_this_course`. `lib/checkout.ts` maps each to a
+`CheckoutErrorCode` and a sentence, matched on the key rather than on English
+words, because the prose version of that — the regexes in `createPlanOrder` —
+breaks the moment somebody rewords a `RAISE`. An unmapped key degrades to
+`error`, which is a 500: a refusal nobody thought about should be loud rather
+than wearing a friendly sentence that happens to be wrong. `createOrder()` no
+longer takes a `userId`, since the writer takes the actor from the session's own
+claims and a user id in the request would be a value the caller chooses.
+
+20 database tests in `supabase/tests/course_order.test.mjs`, every one of them
+from the `authenticated` seat the exploit was reachable from, plus one inverted
+assertion in `fulfilment.test.mjs` ('the creator **cannot** write an order row on
+their own account' — it used to assert the opposite, correctly, when the pin it
+was making was that the paid path was reachable at all; that reachability is now
+pinned through the writer). 8 web tests replace the 10 that asserted TypeScript
+validation which no longer exists in TypeScript. One migration, one function, two
+policies dropped, no new table, no new flag.
+
+**Recorded, not fixed here.**
+
+- `create_plan_order()` is **not** gated on `commerce.subscriptions`. Course
+  checkout is now gated and plan checkout is not, which is an asymmetry rather
+  than a decision; it needs the plan writer recreated or a shared gate, and its
+  own suite flipped, so it is its own unit.
+- `resolveBillingAccount()` still hardcodes `UGX` for a *new* account and is
+  still used by the plan path, so a USD-priced plan can hang off a UGX account.
+  The course path can no longer do that. Fixing the plan path means knowing the
+  price's currency where the account is resolved, which is exactly what moving it
+  into SQL would give.
+- `prices.market` is enforced nowhere. `resolveOffering()` lists every market's
+  price and the writer accepts any of them, so a payer in Kampala can buy at a
+  price set for Nairobi. Localised pricing is display-only today; how a market is
+  derived (the payer's country, the account's country, a selector on the page) is
+  an open decision below.
+- `payment_attempts_insert` still lets a billing member write an attempt row with
+  any `amount_minor > 0`. Nothing grants access from an attempt and no money moves
+  from one, so this is a support-facing record a payer could pollute rather than a
+  hole in the money path. A `record_payment_attempt()` that takes the amount from
+  the order belongs with the provider work (P12).
+- `order_adjustments_insert` is the same shape as the two that were dropped, and
+  is still open: a customer can write a discount onto their own order. It is
+  harmless only because no total is derived from that table yet, and the next unit
+  is the one that makes it derived — so it is replaced by an audited writer and
+  dropped there, rather than dropped now and left with no path at all.
+
+
 ## Open external decisions (not to be guessed)
 
 - Payment provider merchant/sandbox credentials and callback verification (P12).
@@ -1618,6 +1748,25 @@ recreated), no new table, no new flag, two new controls, four new route entries.
   about the business. Each is a one-line change to `report_money_in_reporting_currency()`
   once made, and guessing would bury the answer in a sum that looks authoritative.
   The report says on its face that it does not net.
+- **How a price's market is chosen.** `prices.market` exists, `resolveOffering()`
+  lists every market's price to every visitor, and `create_course_order()` accepts
+  any of them, so localised pricing is currently display-only: a payer in Kampala
+  can buy at a price set for Nairobi by posting that price id. Making it mean
+  something needs a rule for whose market applies — the payer's `country_code`,
+  the billing account's `billing_country`, a selector on the page, or the provider's
+  settlement country — and a decision about what happens when somebody is entitled
+  to two. Not guessed, because the wrong rule either charges a family the price for
+  another country or lets the cheapest market become everyone's.
+- **Whether buying a course the account already owns should be refused.**
+  `record_payment_success()` grants to every linked learner profile of every active
+  member of the billing account, so a second purchase of the same course version is
+  redundant rather than per-child, and the API answers 409 from `resolveOffering()`
+  while the writer itself will happily create the order. If a family is meant to buy
+  the same course twice — one purchase per child, say — then entitlements have to
+  become per-learner before the refusal is added; if not, the writer should refuse.
+  Either answer changes what a parent sees on `/catalogue`, so it is asked rather
+  than assumed.
+
 - **Whether a scholarly authorisation should require a verified qualification in
   that subject.** Raised by the reviewer register (2026-10-21) and deliberately not
   implemented either way: it is a governance policy about who is trusted with what the

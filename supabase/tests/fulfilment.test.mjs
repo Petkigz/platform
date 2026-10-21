@@ -289,7 +289,20 @@ export async function run(ctx) {
     });
   });
 
-  await test('the creator can place an order on their own account', async () => {
+  // This used to assert the opposite: that the creator could INSERT an order on
+  // their own account. That was the right pin when the creator-membership
+  // trigger landed, because an account nobody could order against made the whole
+  // paid path unreachable. It became the wrong pin once it was noticed what the
+  // insert policy actually allowed: `orders_insert` asked only whether the
+  // writer was a billing member, so a payer could write the total and, through
+  // `order_items_insert`, the product that record_payment_success() fulfils
+  // from. 20261224000100_course_order_writer.sql drops both policies and moves
+  // order creation into create_course_order().
+  //
+  // The reachability half of the old assertion is not lost — it is now made
+  // through the writer, in course_order.test.mjs ('a payer with no billing
+  // account gets an order, a line and an account').
+  await test('the creator cannot write an order row on their own account', async () => {
     const { userId } = await newAdult('Ordering Payer');
     let account = null;
 
@@ -299,21 +312,18 @@ export async function run(ctx) {
          values ($1,'UGX','active',$2) returning id`, ['Ordering Payer', userId])).rows[0].id;
     });
 
-    await asUser(userId, async () => {
-      const order = (await q(
+    await asUser(userId, () => rejects(
+      () => q(
         `insert into public.orders
            (billing_account_id, currency_code, subtotal_minor, discount_minor,
             tax_minor, total_minor, status)
          values ($1,'UGX',30000,0,0,30000,'pending_payment') returning id`,
-        [account])).rows[0].id;
-      assert(order, 'the creator could not create an order on their own account');
+        [account]),
+      /row-level security/i));
 
-      const back = (await q(
-        'select status, total_minor from public.orders where id = $1', [order])).rows[0];
-      assert(back.status === 'pending_payment', `order status is '${back.status}'`);
-      assert(Number(back.total_minor) === 30000,
-        `order total is ${back.total_minor}, expected 30000`);
-    });
+    const orders = await count(
+      'select id from public.orders where billing_account_id = $1', [account]);
+    assert(orders === 0, `${orders} orders exist — the direct insert got through`);
   });
 
   await test('a user cannot join someone else\'s billing account', async () => {

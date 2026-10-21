@@ -112,8 +112,6 @@ const ACTIVE_PRICE = {
 
 const LINKED = [{ product_id: 'prod-1' }];
 
-const ARGS = { courseId: 'course-1', priceId: 'price-1', userId: 'user-1' };
-
 const baseData = (over: Partial<Record<string, Row[] | Row | null>> = {}) => ({
   // publishedVersionId
   course_versions: { id: 'v-1', version_number: 1 },
@@ -126,144 +124,192 @@ const baseData = (over: Partial<Record<string, Row[] | Row | null>> = {}) => ({
   ...over,
 });
 
-test('the amount comes from the price row, not from the caller', async () => {
-  const { client, calls } = stubClient(baseData());
+// ---------------------------------------------------------------------------
+// Since 20261224000100_course_order_writer.sql the offer is resolved in SQL, by
+// create_course_order(), and the two insert policies that made a client-written
+// order possible are gone. So the tests that used to sit here — an inactive
+// price, a price for another course, a price outside its window, a subscription
+// sold as a purchase — are no longer this file's to make: they are made against
+// a real database in supabase/tests/course_order.test.mjs, where a stub cannot
+// answer whatever columns happen to be asked for.
+//
+// What is left here is the part that genuinely lives in TypeScript: the writer
+// is handed ids and nothing else, and its refusal keys become sentences.
+// ---------------------------------------------------------------------------
 
-  const result = await createOrder(client, ARGS);
+const ORDER_ROW: Row = {
+  orderId: 'order-1',
+  orderItemId: 'item-1',
+  billingAccountId: 'acct-1',
+  productId: 'prod-1',
+  priceId: 'price-1',
+  courseVersionId: 'v-1',
+  amountMinor: '30000',
+  currencyCode: 'UGX',
+  title: 'Tajweed basics',
+};
+
+/** A client whose only capability is calling the writer. */
+function writerClient(
+  result: { data: unknown; error: { message: string } | null },
+) {
+  const rpcCalls: { fn: string; args: Record<string, unknown> }[] = [];
+  const calls: { table: string; method: string }[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const client = {
+    rpc: async (fn: string, args: Record<string, unknown>) => {
+      rpcCalls.push({ fn, args });
+      return result;
+    },
+    // Any table access at all during createOrder would mean the client is
+    // still resolving something the writer is supposed to resolve.
+    from: (t: string) => {
+      calls.push({ table: t, method: 'from' });
+      throw new Error(`createOrder read or wrote '${t}' directly`);
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any;
+  return { client, rpcCalls, calls };
+}
+
+test('the order is created by the writer, from ids and nothing else', async () => {
+  const { client, rpcCalls, calls } = writerClient({ data: ORDER_ROW, error: null });
+
+  const result = await createOrder(client, { courseId: 'course-1', priceId: 'price-1' });
   assert.equal(result.ok, true);
   if (!result.ok) return;
 
+  assert.equal(result.orderId, 'order-1');
   assert.equal(result.amount.amountMinor, 30000n);
   assert.equal(result.currencyCode, 'UGX');
 
-  const order = calls.find((c) => c.table === 'orders' && c.method === 'insert');
-  assert.ok(order?.insert, 'no order was inserted');
-  // Sent as a string so the bigint survives to the bigint column. A Number
-  // here would be the one lossy step in an otherwise exact money path.
-  assert.equal(order.insert?.total_minor, '30000');
-  assert.equal(order.insert?.subtotal_minor, '30000');
-  assert.equal(order.insert?.discount_minor, 0);
-  assert.equal(order.insert?.tax_minor, 0);
-  assert.equal(order.insert?.status, 'pending_payment');
+  assert.deepEqual(rpcCalls, [{
+    fn: 'create_course_order',
+    args: { p_course_id: 'course-1', p_price_id: 'price-1' },
+  }]);
+
+  const argKeys = Object.keys(rpcCalls[0]?.args ?? {});
+  for (const forbidden of ['amount_minor', 'amountMinor', 'total_minor', 'currency_code',
+                           'product_id', 'billing_account_id', 'user_id', 'status']) {
+    assert.equal(argKeys.includes(forbidden), false,
+      `the client sent '${forbidden}' to the writer — that is a value the payer could choose`);
+  }
+  assert.equal(calls.length, 0, 'createOrder touched a table directly');
 });
 
-test('a pending order confers nothing, and the item carries the snapshot', async () => {
-  const { client, calls } = stubClient(baseData());
+test('a refusal key becomes a code and a sentence, and the key never leaks', async () => {
+  const expected: Record<string, string> = {
+    not_signed_in: 'error',
+    disabled: 'checkout_disabled',
+    course_not_available: 'not_found',
+    price_not_available: 'price_not_available',
+    price_window: 'price_not_available',
+    not_one_time: 'not_paid_course',
+    price_not_for_this_course: 'price_not_for_this_course',
+  };
 
-  await createOrder(client, ARGS);
-
-  const item = calls.find((c) => c.table === 'order_items' && c.method === 'insert');
-  assert.ok(item?.insert, 'no order item was inserted');
-  // line_total = unit_price * quantity - discount is a CHECK on the table, so
-  // getting it wrong is a database error rather than a wrong charge. Still
-  // worth asserting the arithmetic is stated consistently.
-  assert.equal(item.insert?.unit_price_minor, '30000');
-  assert.equal(item.insert?.quantity, 1);
-  assert.equal(item.insert?.discount_minor, 0);
-  assert.equal(item.insert?.line_total_minor, '30000');
-
-  const snap = item.insert?.item_snapshot as { course_version_id: string };
-  assert.equal(snap.course_version_id, 'v-1');
+  for (const [key, code] of Object.entries(expected)) {
+    const { client } = writerClient({
+      data: null,
+      error: { message: `checkout:${key}` },
+    });
+    const result = await createOrder(client, { courseId: 'course-1', priceId: 'price-1' });
+    assert.equal(result.ok, false, `checkout:${key} was not refused`);
+    if (result.ok) continue;
+    assert.equal(result.code, code, `checkout:${key} mapped to '${result.code}'`);
+    assert.equal(result.message.includes('checkout:'), false,
+      `the payer was shown the raw refusal key: ${result.message}`);
+    assert.ok(result.message.length > 12,
+      `'${result.message}' is not a sentence a payer can act on`);
+  }
 });
 
-test('a price that does not sell this course version is refused', async () => {
-  // The load-bearing check. Without it, a valid price id for course A can be
-  // posted while buying course B.
-  const { client } = stubClient(baseData({ product_course_versions: [] }));
+test('a refusal nobody mapped is loud rather than friendly', async () => {
+  // Degrading an unknown key to a nice sentence would hide a writer that has
+  // grown a refusal this file does not know about. A 500 is the honest answer.
+  const { client } = writerClient({
+    data: null,
+    error: { message: 'checkout:some_new_reason' },
+  });
 
-  const result = await createOrder(client, ARGS);
+  const result = await createOrder(client, { courseId: 'course-1', priceId: 'price-1' });
   assert.equal(result.ok, false);
   if (result.ok) return;
-  assert.equal(result.code, 'price_not_for_this_course');
+  assert.equal(result.code, 'error');
+  assert.match(result.message, /some_new_reason/);
 });
 
-test('an inactive price is refused', async () => {
-  const { client } = stubClient(
-    baseData({ prices: { ...ACTIVE_PRICE, status: 'archived' } }),
-  );
+test('a database error that is not a refusal is passed through as an error', async () => {
+  const { client } = writerClient({
+    data: null,
+    error: { message: 'connection terminated unexpectedly' },
+  });
 
-  const result = await createOrder(client, ARGS);
+  const result = await createOrder(client, { courseId: 'course-1', priceId: 'price-1' });
   assert.equal(result.ok, false);
   if (result.ok) return;
-  assert.equal(result.code, 'price_not_available');
+  assert.equal(result.code, 'error');
 });
 
-test('a price outside its validity window is refused', async () => {
-  const { client } = stubClient(
-    baseData({
-      prices: {
-        ...ACTIVE_PRICE,
-        effective_from: '2020-01-01T00:00:00Z',
-        effective_until: '2020-12-31T00:00:00Z',
-      },
-    }),
-  );
-
-  const result = await createOrder(client, ARGS);
-  assert.equal(result.ok, false);
-  if (result.ok) return;
-  assert.equal(result.code, 'price_not_available');
+test('a result with no amount is refused rather than charged as zero', async () => {
+  // The handoff charges `result.amount`. An order that came back without an
+  // amount must not become a zero charge that fulfils everything.
+  for (const data of [
+    { ...ORDER_ROW, amountMinor: undefined },
+    { ...ORDER_ROW, currencyCode: undefined },
+    { amountMinor: '30000', currencyCode: 'UGX' },
+    null,
+  ]) {
+    const { client } = writerClient({ data, error: null });
+    const result = await createOrder(client, { courseId: 'course-1', priceId: 'price-1' });
+    assert.equal(result.ok, false, `${JSON.stringify(data)} was accepted as an order`);
+    if (result.ok) continue;
+    assert.equal(result.code, 'error');
+  }
 });
 
-test('a subscription is not sold as a one-off purchase', async () => {
-  // Fulfilment reads order_items to work out what was bought and grants a
-  // course version. A subscription has its own lifecycle and expiry, and
-  // record_payment_success() does not create one — so taking the money would
-  // grant nothing, or worse, grant forever.
-  const { client } = stubClient(
-    baseData({ prices: { ...ACTIVE_PRICE, billing_interval: 'monthly' } }),
-  );
+test('the amount stays exact whatever its size', async () => {
+  // amountMinor comes back as a decimal integer string precisely so that this
+  // is not a Number() at any point: 1234567890123 minor units of a zero-decimal
+  // currency is past the point where a double starts approximating.
+  const { client } = writerClient({
+    data: { ...ORDER_ROW, amountMinor: '1234567890123', currencyCode: 'UGX' },
+    error: null,
+  });
 
-  const result = await createOrder(client, ARGS);
-  assert.equal(result.ok, false);
-  if (result.ok) return;
-  assert.equal(result.code, 'not_paid_course');
+  const result = await createOrder(client, { courseId: 'course-1', priceId: 'price-1' });
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+  assert.equal(result.amount.amountMinor, 1234567890123n);
+  assert.equal(result.amount.currency, 'UGX');
 });
 
-test('a price that no longer exists is refused', async () => {
-  const { client } = stubClient(baseData({ prices: null }));
-
-  const result = await createOrder(client, ARGS);
-  assert.equal(result.ok, false);
-  if (result.ok) return;
-  assert.equal(result.code, 'price_not_available');
-});
-
-test('a course with no published version cannot be bought', async () => {
-  const { client } = stubClient(baseData({ course_versions: null }));
-
-  const result = await createOrder(client, ARGS);
-  assert.equal(result.ok, false);
-  if (result.ok) return;
-  assert.equal(result.code, 'not_found');
-});
-
-test('an existing billing account is reused rather than duplicated', async () => {
+test('resolveBillingAccount reuses an account instead of opening a second one', async () => {
+  // Now only the plan path resolves an account in TypeScript; the course writer
+  // does it in SQL, where it can also refuse an account the caller may not pay
+  // from and match the account currency to the price.
   const { client, calls } = stubClient(
     baseData({ billing_account_memberships: [{ billing_account_id: 'acct-existing' }] }),
   );
 
-  const result = await createOrder(client, ARGS);
-  assert.equal(result.ok, true);
+  const accountId = await resolveBillingAccount(client, 'user-1');
+  assert.equal(accountId, 'acct-existing');
 
   const created = calls.filter((c) => c.table === 'billing_accounts' && c.method === 'insert');
   assert.equal(created.length, 0, 'a second billing account was opened for one person');
-
-  const order = calls.find((c) => c.table === 'orders' && c.method === 'insert');
-  assert.equal(order?.insert?.billing_account_id, 'acct-existing');
 });
 
-test('a billing account is created when the payer has none', async () => {
+test('resolveBillingAccount creates an account when the payer has none', async () => {
   const { client, calls } = stubClient(baseData());
 
   const accountId = await resolveBillingAccount(client, 'user-1');
   assert.equal(accountId, 'acct-1');
 
   const created = calls.find((c) => c.table === 'billing_accounts' && c.method === 'insert');
-  assert.ok(created?.insert, 'no billing account was created');
+  assert.ok(created, 'no billing account was created');
   // created_by is what billing_accounts_insert enforces, and what the creator
-  // membership trigger keys off. Getting this wrong means the account cannot
-  // be read or ordered against — the dead end that migration fixed.
+  // membership trigger keys off. Getting this wrong means the account cannot be
+  // read or ordered against — the dead end that migration fixed.
   assert.equal(created.insert?.created_by, 'user-1');
   assert.equal(calls.some((c) => c.table === 'billing_accounts' && c.method === 'single'), false,
     'INSERT ... RETURNING would run before the creator membership trigger makes SELECT policy true');
@@ -304,22 +350,6 @@ test('plan checkout sends ids, not an amount, and keeps pending orders payment-g
   }]);
   assert.equal(Object.hasOwn(rpcCalls[0]?.args ?? {}, 'amount_minor'), false,
     'the client must not supply or influence the amount');
-});
-
-test('a failed line item is reported rather than silently dropped', async () => {
-  // An order with no item cannot be fulfilled, because fulfilment reads
-  // order_items to work out what was bought. Swallowing this would take money
-  // for nothing.
-  const { client } = stubClient(
-    baseData({ order_items: null }),
-    { order_items: 'violates check constraint "order_items_line_total_matches"' },
-  );
-
-  const result = await createOrder(client, ARGS);
-  assert.equal(result.ok, false);
-  if (result.ok) return;
-  assert.equal(result.code, 'error');
-  assert.match(result.message, /line item/i);
 });
 
 test('a payment attempt is recorded with a stable idempotency key', async () => {

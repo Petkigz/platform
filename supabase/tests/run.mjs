@@ -64,6 +64,7 @@ import { run as reviewerRegister } from './reviewer_register.test.mjs';
 import { run as reviewRequirements } from './review_requirements.test.mjs';
 import { run as adultLearningShares } from './adult_learning_shares.test.mjs';
 import { run as currencyReporting } from './currency_reporting.test.mjs';
+import { run as courseOrder } from './course_order.test.mjs';
 
 const ctx = await createHarness();
 const suites = [];
@@ -124,6 +125,7 @@ for (const [name, fn] of [
   ['review requirements', reviewRequirements],
   ['adult learning shares', adultLearningShares],
   ['currency reporting', currencyReporting],
+  ['course order writer', courseOrder],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],

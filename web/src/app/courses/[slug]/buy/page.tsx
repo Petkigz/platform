@@ -5,6 +5,7 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { ownLearnerProfileId, resolveOffering } from '@/lib/enrolment';
 import { format } from '@/lib/money';
 import { availableProviders, configuredProviderId } from '@/lib/payments/registry';
+import { isFlagEnabled } from '@/lib/flags';
 import { BuyForm } from './buy-form';
 
 export const dynamic = 'force-dynamic';
@@ -58,6 +59,13 @@ export default async function BuyPage({
   if (offering.kind === 'entitled') redirect('/learn');
   if (offering.kind === 'free') redirect(`/courses/${slug}`);
 
+  // Checkout ships off and is opened from the admin dashboard. The order writer
+  // refuses while it is closed, so a form that cannot work would only produce a
+  // failure at the last step — after the payer has chosen a provider and typed a
+  // phone number. Saying so up front is the difference between "not open yet"
+  // and "the site is broken".
+  const checkoutOpen = await isFlagEnabled(supabase, 'commerce.checkout');
+
   const providerId = configuredProviderId();
   // Every provider that is configured and usable, not just the first. A learner
   // in Kampala may well have both MTN and Airtel, and being made to use one
@@ -83,7 +91,7 @@ export default async function BuyPage({
         <h1>{course.title}</h1>
       </div>
 
-      {providerId === null && (
+      {checkoutOpen && providerId === null && (
         <div className="notice warn">
           <strong>No payment provider is connected yet.</strong> You can place
           this order and it will be saved, but it cannot be paid until a provider
@@ -92,21 +100,32 @@ export default async function BuyPage({
         </div>
       )}
 
-      <section className="card">
-        <h2>Choose an option</h2>
-        <BuyForm
-          courseId={course.id}
-          prices={offering.prices.map((p) => ({
-            id: p.id,
-            // Rendered from Money, so what the payer sees is the same integer
-            // minor units that will be charged.
-            label: format(p.amount),
-            interval: p.billingInterval,
-          }))}
-          providers={providers}
-          providerConfigured={providerId !== null}
-        />
-      </section>
+      {!checkoutOpen && (
+        <div className="notice warn">
+          <strong>Checkout is not open yet.</strong> This platform is not taking
+          payment for courses at the moment, so no order can be placed and
+          nothing has been charged. Free courses can still be joined from the
+          course page.
+        </div>
+      )}
+
+      {checkoutOpen && (
+        <section className="card">
+          <h2>Choose an option</h2>
+          <BuyForm
+            courseId={course.id}
+            prices={offering.prices.map((p) => ({
+              id: p.id,
+              // Rendered from Money, so what the payer sees is the same integer
+              // minor units that will be charged.
+              label: format(p.amount),
+              interval: p.billingInterval,
+            }))}
+            providers={providers}
+            providerConfigured={providerId !== null}
+          />
+        </section>
+      )}
 
       <p className="muted">
         Access starts when payment is confirmed, not when you press the button.

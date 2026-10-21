@@ -2,14 +2,24 @@
  * Creating an order.
  *
  * The rule this file exists to enforce: **the client never supplies an amount.**
- * It supplies a price id, which is looked up and validated here. Everything
- * else follows from the row in `prices`. A checkout that trusts a posted total
- * is a checkout where the total is whatever the caller typed.
+ * It supplies a course id and a price id. Everything else — the amount, the
+ * product, the currency, the line item, the billing account — follows from rows
+ * the platform already owns.
  *
- * That is also why this takes `courseId` rather than an amount or a product:
- * the price is resolved from the published version of the course being bought,
- * so a stale or hand-edited price id for some other course cannot be used
- * against this one.
+ * Since 20261224000100_course_order_writer.sql that rule is enforced in the
+ * database rather than here. `createOrder` used to re-derive the offer in
+ * TypeScript and then write `orders` and `order_items` through two RLS insert
+ * policies that asked only "is this person a member of the billing account?".
+ * A payer is, so a payer could skip this file and write those rows themselves:
+ * a total of their choosing, and a line naming any product in the catalogue at
+ * unit price zero. Both CHECKs on the tables are satisfied by that, and
+ * `record_payment_success()` fulfils from `order_items.product_id` — so paying
+ * the real total delivered whatever course the payer had named.
+ *
+ * Validation in one of two paths is not validation. It now lives in
+ * `create_course_order()`, which is the only thing that can create a course
+ * order, and this file's job is the part that is genuinely presentation:
+ * turning the writer's refusal keys into sentences a payer can act on.
  *
  * Provider-independent by design. Nothing here knows whether the payer is about
  * to be redirected or prompted on their handset — `startCheckout` in
@@ -20,7 +30,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { fromMinor, format, type Money } from './money.ts';
-import { publishedVersionId } from './enrolment.ts';
 
 export type CheckoutErrorCode =
   | 'not_found'
@@ -29,38 +38,33 @@ export type CheckoutErrorCode =
   | 'price_not_for_this_course'
   | 'already_entitled'
   | 'conflict'
+  | 'checkout_disabled'
   | 'error';
 
 export type CreateOrderResult =
   | { ok: true; orderId: string; amount: Money; currencyCode: string }
   | { ok: false; code: CheckoutErrorCode; message: string };
 
-type PriceRow = {
-  id: string;
-  product_id: string | null;
-  amount_minor: string | number;
-  currency_code: string;
-  billing_interval: string;
-  status: string;
-  effective_from: string | null;
-  effective_until: string | null;
-  products: { id: string; status: string; name: string }[] | null;
-};
-
-type PcvRow = { product_id: string }[] | null;
-
 type MembershipRow = { billing_account_id: string }[] | null;
 
 /**
- * The billing account an order should hang off.
+ * The billing account a plan order should hang off.
  *
  * Reuses the caller's existing account rather than opening a new one per
  * purchase: one account per person is what makes "my orders" a coherent list,
- * and what makes a refund findable. Creating one is now safe because the
- * creator is made a member of it by trigger — before
+ * and what makes a refund findable. Creating one is safe because the creator is
+ * made a member of it by trigger — before
  * 20261029000100_billing_account_creator_member.sql, an account created here
  * could never be read or ordered against, and this whole function was
  * unreachable in practice.
+ *
+ * Only `createPlanOrder` uses this. Course checkout resolves its account inside
+ * `create_course_order()`, which can do two things this cannot: refuse an
+ * account the caller may not pay from, and match the account's `billing_currency`
+ * to the price's. The currency this function hardcodes for a *new* account is
+ * therefore a known gap on the plan path — recorded in NEXT.md rather than
+ * papered over here, because fixing it means knowing the price's currency, and
+ * this function is deliberately not given the price.
  */
 export async function resolveBillingAccount(
   supabase: SupabaseClient,
@@ -105,185 +109,112 @@ export async function resolveBillingAccount(
   return (created as { id: string } | null)?.id ?? null;
 }
 
+/** What `create_course_order()` returns. Every field is the platform's own. */
+type CourseOrderRow = {
+  orderId?: string;
+  orderItemId?: string;
+  billingAccountId?: string;
+  productId?: string;
+  priceId?: string;
+  courseVersionId?: string;
+  /** A decimal integer string. Never a JSON number: money stays exact. */
+  amountMinor?: string;
+  currencyCode?: string;
+  title?: string;
+};
+
+/**
+ * The writer's refusal keys, and what a payer is told for each.
+ *
+ * The keys are the contract between this file and the SQL function. They are
+ * matched exactly rather than by prose, because the prose version of this —
+ * regexes over English sentences in `createPlanOrder` — breaks the moment
+ * somebody rewords a `RAISE`. An unknown key degrades to `error`, which is a
+ * 500: a refusal nobody thought about should be loud, not a friendly sentence
+ * that happens to be wrong.
+ */
+const COURSE_ORDER_REFUSALS: Record<string, { code: CheckoutErrorCode; message: string }> = {
+  not_signed_in: { code: 'error', message: 'Sign in to buy a course.' },
+  // commerce.checkout ships off. This is not a failure of the payer's request;
+  // it is the platform being closed, and it has its own status code so the UI
+  // can say so instead of implying something is broken.
+  disabled: {
+    code: 'checkout_disabled',
+    message: 'Checkout is not open on this platform yet.',
+  },
+  course_not_available: {
+    code: 'not_found',
+    message: 'That course has no published version to buy.',
+  },
+  price_not_available: {
+    code: 'price_not_available',
+    message: 'That price is not currently available. Pick another and try again.',
+  },
+  price_window: {
+    code: 'price_not_available',
+    message: 'That price is outside its validity window.',
+  },
+  // A recurring price has its own writer, lifecycle and expiry. Accepting it
+  // here would take subscription money and grant a one-off entitlement,
+  // because record_payment_success() does not create subscriptions.
+  not_one_time: {
+    code: 'not_paid_course',
+    message:
+      'Subscriptions are not on sale through this checkout yet. One-off purchases are.',
+  },
+  price_not_for_this_course: {
+    code: 'price_not_for_this_course',
+    message: 'That price does not apply to this course.',
+  },
+};
+
+/** Split `checkout:<key>` back out of a Postgres error message. */
+export function mapCourseOrderRefusal(message: string): {
+  code: CheckoutErrorCode;
+  message: string;
+} {
+  const key = /checkout:([a-z_]+)/i.exec(message)?.[1]?.toLowerCase();
+  const mapped = key ? COURSE_ORDER_REFUSALS[key] : undefined;
+  if (mapped) return mapped;
+  return { code: 'error', message };
+}
+
 /**
  * Create a pending order for one course at one price.
  *
  * Returns a discriminated result rather than throwing, because every failure
  * mode here is an expected one that the caller has to tell the payer about in
- * different words: the wrong price, a course they already own, a price that has
- * expired. Those are not exceptions.
+ * different words: the wrong price, a course that is not on sale, a price that
+ * has expired. Those are not exceptions.
+ *
+ * There is no `userId` argument. The writer takes the actor from the session's
+ * own JWT claims, so the payer cannot be named by the request — and neither can
+ * the billing account, which it resolves from that actor's memberships.
  */
 export async function createOrder(
   supabase: SupabaseClient,
-  args: { courseId: string; priceId: string; userId: string },
+  args: { courseId: string; priceId: string },
 ): Promise<CreateOrderResult> {
-  const versionId = await publishedVersionId(supabase, args.courseId);
-  if (!versionId) {
-    return {
-      ok: false,
-      code: 'not_found',
-      message: 'That course has no published version to buy.',
-    };
-  }
-
-  // Resolve the price ourselves. Note the filter is on the price row, and the
-  // product linkage is checked after — never the other way round, because
-  // trusting a joined product id from the caller is how a price for course A
-  // gets applied to course B.
-  const { data: priceData, error: priceErr } = await supabase
-    .from('prices')
-    .select(
-      'id, product_id, amount_minor, currency_code, billing_interval, status, effective_from, effective_until, products ( id, status, name )',
-    )
-    .eq('id', args.priceId)
-    .maybeSingle();
-
-  if (priceErr) return { ok: false, code: 'error', message: priceErr.message };
-
-  const price = priceData as unknown as PriceRow | null;
-  if (!price) {
-    return {
-      ok: false,
-      code: 'price_not_available',
-      message: 'That price no longer exists. Pick another and try again.',
-    };
-  }
-
-  if (price.status !== 'active') {
-    return {
-      ok: false,
-      code: 'price_not_available',
-      message: 'That price is not currently available.',
-    };
-  }
-
-  const now = new Date();
-  const from = price.effective_from ? new Date(price.effective_from) : null;
-  const until = price.effective_until ? new Date(price.effective_until) : null;
-  if ((from && now < from) || (until && now > until)) {
-    return {
-      ok: false,
-      code: 'price_not_available',
-      message: 'That price is outside its validity window.',
-    };
-  }
-
-  const productId = price.product_id ?? price.products?.[0]?.id ?? null;
-  if (!productId) {
-    return {
-      ok: false,
-      code: 'price_not_for_this_course',
-      message: 'That price is not attached to a product.',
-    };
-  }
-
-  // The load-bearing check: the product behind this price has to be the one
-  // that sells this course version.
-  const { data: links, error: linkErr } = await supabase
-    .from('product_course_versions')
-    .select('product_id')
-    .eq('product_id', productId)
-    .eq('course_version_id', versionId);
-
-  if (linkErr) return { ok: false, code: 'error', message: linkErr.message };
-  if (!links || (links as { product_id: string }[]).length === 0) {
-    return {
-      ok: false,
-      code: 'price_not_for_this_course',
-      message: 'That price does not apply to this course.',
-    };
-  }
-
-  // A subscription line item is a different thing from a course purchase and is
-  // deliberately not fulfilled as one: it has its own lifecycle and expiry, and
-  // record_payment_success() does not create subscriptions. Saying so is more
-  // honest than taking the money and granting nothing.
-  if (price.billing_interval !== 'one_time') {
-    return {
-      ok: false,
-      code: 'not_paid_course',
-      message:
-        'Subscriptions are not on sale through this checkout yet. One-off purchases are.',
-    };
-  }
-
-  const amount = fromMinor(price.amount_minor, price.currency_code);
-  // Sent as a string, not Number(): Money carries a bigint on purpose, and
-  // narrowing it here would be the one place in the money path that could lose
-  // precision. PostgREST casts a numeric string into the bigint column exactly.
-  const amountMinor = amount.amountMinor.toString();
-
-  const billingAccountId = await resolveBillingAccount(supabase, args.userId);
-  if (!billingAccountId) {
-    return {
-      ok: false,
-      code: 'error',
-      message: 'Could not open a billing account. Please try again.',
-    };
-  }
-
-  const productName = price.products?.[0]?.name ?? 'Course';
-  const snapshot = {
-    title: productName,
-    course_id: args.courseId,
-    course_version_id: versionId,
-    billing_interval: price.billing_interval,
-    priced_at: now.toISOString(),
-  };
-
-  // subtotal - discount + tax must equal total, enforced by a CHECK on the
-  // table. There is no discount or tax path yet, so both are zero and the
-  // identity is exact. Promotions will change this, and that CHECK is what will
-  // catch a wrong answer.
-  const { data: order, error: orderErr } = await supabase
-    .from('orders')
-    .insert({
-      billing_account_id: billingAccountId,
-      currency_code: price.currency_code,
-      subtotal_minor: amountMinor,
-      discount_minor: 0,
-      tax_minor: 0,
-      total_minor: amountMinor,
-      status: 'pending_payment',
-    })
-    .select('id')
-    .single();
-
-  if (orderErr) return { ok: false, code: 'conflict', message: orderErr.message };
-  const orderId = (order as { id: string } | null)?.id;
-  if (!orderId) {
-    return { ok: false, code: 'error', message: 'The order was not created.' };
-  }
-
-  // line_total must equal unit_price * quantity - discount, also a CHECK.
-  const { error: itemErr } = await supabase.from('order_items').insert({
-    order_id: orderId,
-    product_id: productId,
-    price_id: price.id,
-    quantity: 1,
-    unit_price_minor: amountMinor,
-    currency_code: price.currency_code,
-    discount_minor: 0,
-    line_total_minor: amountMinor,
-    item_snapshot: snapshot,
+  const { data, error } = await supabase.rpc('create_course_order', {
+    p_course_id: args.courseId,
+    p_price_id: args.priceId,
   });
 
-  if (itemErr) {
-    // An order with no line item cannot be fulfilled: fulfilment reads
-    // order_items to work out what was bought. Leaving it pending rather than
-    // deleting it keeps the audit trail intact, and it is never confirmable.
-    return {
-      ok: false,
-      code: 'error',
-      message: 'The order was created but its line item failed: ' + itemErr.message,
-    };
+  if (error) return { ok: false, ...mapCourseOrderRefusal(error.message) };
+
+  const row = data as CourseOrderRow | null;
+  // A row without an amount must never become an order of zero. `fromMinor`
+  // would happily make 0n out of undefined-ish input, and the provider handoff
+  // would then charge nothing and fulfil everything.
+  if (!row?.orderId || row.amountMinor === undefined || !row.currencyCode) {
+    return { ok: false, code: 'error', message: 'The order was not created.' };
   }
 
   return {
     ok: true,
-    orderId,
-    amount,
-    currencyCode: price.currency_code,
+    orderId: String(row.orderId),
+    amount: fromMinor(row.amountMinor, row.currencyCode),
+    currencyCode: row.currencyCode,
   };
 }
 

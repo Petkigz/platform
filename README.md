@@ -68,9 +68,9 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 ## Status
 
-The database stands at **103 tables, RLS on every one, 231 policies, 135
-user-defined triggers, 257 functions and 105 migrations.** The database suite
-passes **1087 tests**; the web suite passes **755 tests**. TypeScript typecheck
+The database stands at **103 tables, RLS on every one, 229 policies, 135
+user-defined triggers, 258 functions and 106 migrations.** The database suite
+passes **1107 tests**; the web suite passes **752 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **115 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
@@ -133,6 +133,23 @@ The same migration gives `financial_transactions.fx_rate`, `fx_source` and
 `fx_observed_at` their first writer: a settlement in another currency is refused unless
 a rate is recorded, so FX provenance has one source and cannot be typed in beside the
 figure it justifies.
+
+An order is now created by the platform rather than by the browser.
+`orders_insert` and `order_items_insert` decided who could write the money rows by
+asking one question — is this person a member of the billing account? — and a payer
+is, so a payer could write those rows directly through PostgREST: an order with any
+total, and a line naming any product in the catalogue at a unit price of zero, with
+no price behind it. Both CHECKs on the tables are satisfied by that, and
+`record_payment_success()` fulfils from `order_items.product_id`, so paying the
+order's own total delivered whichever course had been named. The validation existed
+and lived in TypeScript, in one of the two paths to the table.
+`create_course_order(course_id, price_id)` now re-derives the offer from the
+catalogue, resolves the payer's own billing account in the price's currency, and
+writes the order and its single line itself; both insert policies are dropped, so
+the definer writers are the only way an order comes into existence and a payer
+still reads their own invoice. `commerce.checkout` is enforced inside it, which
+makes that flag load-bearing for the first time — it was registered and read by
+nothing, so "ships off" was untrue for checkout specifically.
 
 Free previews now have one consistent gate from the catalogue to content
 access. Teachers can mark draft lessons and individual public-sample resources;

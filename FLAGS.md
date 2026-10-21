@@ -101,7 +101,7 @@ Three kinds of gate:
 | Flag | Gates | Type | Preconditions before it can be ON |
 |---|---|---|---|
 | `commerce.free` | Free courses, no payment | ADMIN | — |
-| `commerce.checkout` | Paid enrolment | ADMIN + SETUP | **Provider chosen and account approved**; sandbox passing; jurisdiction decided; tax/invoicing decided; refund policy written |
+| `commerce.checkout` | Paid enrolment — **enforced in `create_course_order()`**, the only writer of a course order; while off, `/courses/[slug]/buy` says so instead of offering a form that cannot work | ADMIN + SETUP | **Provider chosen and account approved**; sandbox passing; jurisdiction decided; tax/invoicing decided; refund policy written |
 | `commerce.mobile_money` | MTN MoMo / Airtel Money | ADMIN + SETUP | **Adapters built.** Remaining: merchant agreement; sandbox pass with real credentials; settlement terms. Note both providers' callbacks are unsigned — confirmation is by authenticated re-query, which is implemented. |
 | `commerce.subscriptions` | Monthly and annual plans | ADMIN + SETUP | Plan terms; grace period by market; renewal and proration policy; dunning |
 | `commerce.promotions` | Discount campaigns | ADMIN | Eligibility rules; stacking rules; abuse limits |
