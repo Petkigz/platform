@@ -69,8 +69,8 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **103 tables, RLS on every one, 231 policies, 134
-user-defined triggers, 230 functions and 100 migrations.** The database suite
-passes **933 tests**; the web suite passes **666 tests**. TypeScript typecheck
+user-defined triggers, 231 functions and 101 migrations.** The database suite
+passes **954 tests**; the web suite passes **680 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **105 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
@@ -165,7 +165,12 @@ requester is never one query away from seeing them. A requester who replies to
 a resolved case reopens it, which is what stops the queue reporting a
 resolution rate it has not earned. `platform.support` ships off, and turning it
 off stops new cases while leaving the ones in flight answerable — a kill switch
-that strands live conversations is worse than none.
+that strands live conversations is worse than none. On the staff side of a case
+there is also its history: one definer function reads the orders, subscriptions,
+access grants, enrolments, course publication events and progress shares behind
+the question, scoped to the person who asked rather than to the person answering,
+and six tables that were written for exactly this and read by nothing else stay
+closed to every other path.
 
 Subscription plans are now configurable in `/admin/plans`: staff create a
 plan, versioned learner allowances, subject/feature entitlements and recurring

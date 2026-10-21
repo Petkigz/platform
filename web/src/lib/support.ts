@@ -183,7 +183,8 @@ export function mapSupportError(error: { message: string; code?: string }): Supp
   if (error.code === 'P0002' || /not found/i.test(message)) {
     return { ok: false, status: 404, error: message };
   }
-  if (error.code === 'insufficient_privilege' || /only staff|cannot|sign in/i.test(message)) {
+  if (error.code === 'insufficient_privilege'
+      || /only staff|only platform staff|cannot|sign in/i.test(message)) {
     return { ok: false, status: 403, error: message };
   }
   return { ok: false, status: 409, error: message };
@@ -459,4 +460,579 @@ export async function fetchSupportQueue(
   const { data, error } = await query;
   if (error) throw new Error(error.message);
   return ((data ?? []) as unknown as CaseRow[]).map(toCase);
+}
+
+// ---------------------------------------------------------------------------
+// The history behind a case
+// ---------------------------------------------------------------------------
+/**
+ * Six tables in this schema are written so that a support agent can explain how a
+ * state came about — `order_status_history`, `subscription_history`,
+ * `entitlement_events`, `course_enrolment_version_history`, `publication_events`
+ * and `adult_learning_shares` — and none of them was readable by any screen. This
+ * is the read model for them.
+ *
+ * Everything arrives from one call to `support_case_history()`, which is a
+ * SECURITY DEFINER function and therefore the only place that decides what a
+ * member of staff may see. Two consequences shape this module:
+ *
+ *   * The scope is the requester's, not the reader's. The bundle describes the
+ *     learners and payments the person who asked could see, so a support agent
+ *     answering a case about one family is not handed the platform. Nothing here
+ *     can widen that, and no query in this file reaches those tables directly.
+ *   * A section that comes back empty means empty. Because the sections are only
+ *     ever filled by a function that can read every row, a missing or malformed
+ *     section is refused rather than defaulted — an invented empty list is the one
+ *     answer a support agent cannot recover from.
+ *
+ * The seventh table, `access_checks`, is not in the bundle at all. Its comment
+ * promises a log of denials and nothing has ever written a row to it; the panel
+ * says so in words instead of showing an empty list.
+ */
+
+/** Every section reports how many rows exist beside the rows it returned, so a
+ *  cap in the SQL is never silent. */
+export type CaseHistorySection<T> = {
+  total: number;
+  rows: T[];
+};
+
+export type CaseHistoryRequester = {
+  userId: string;
+  displayName: string | null;
+  accountStatus: string | null;
+  createdAt: string | null;
+};
+
+export type CaseHistoryLearner = {
+  id: string;
+  displayName: string | null;
+  learnerType: string | null;
+  ageBand: string | null;
+  status: string | null;
+  /** True when this is the profile belonging to the person who asked. */
+  isRequester: boolean;
+};
+
+/** One step in a status history, shared by orders and subscriptions. */
+export type CaseHistoryStatusStep = {
+  fromStatus: string | null;
+  toStatus: string | null;
+  reason: string | null;
+  changedBy: string | null;
+  changedByName: string | null;
+  occurredAt: string | null;
+};
+
+export type CaseHistoryOrder = {
+  id: string;
+  isCaseOrder: boolean;
+  status: string | null;
+  currencyCode: string | null;
+  subtotalMinor: number | null;
+  discountMinor: number | null;
+  taxMinor: number | null;
+  totalMinor: number | null;
+  placedAt: string | null;
+  paidAt: string | null;
+  cancelledAt: string | null;
+  billingAccountId: string | null;
+  history: CaseHistoryStatusStep[];
+};
+
+export type CaseHistorySubscription = {
+  id: string;
+  status: string | null;
+  planId: string | null;
+  planName: string | null;
+  planVersionId: string | null;
+  billingInterval: string | null;
+  startedAt: string | null;
+  currentPeriodStart: string | null;
+  currentPeriodEnd: string | null;
+  cancelledAt: string | null;
+  cancelReason: string | null;
+  billingAccountId: string | null;
+  history: CaseHistoryStatusStep[];
+};
+
+export type CaseHistoryEntitlementEvent = {
+  eventType: string | null;
+  fromStatus: string | null;
+  toStatus: string | null;
+  reason: string | null;
+  performedBy: string | null;
+  performedByName: string | null;
+  occurredAt: string | null;
+};
+
+export type CaseHistoryEntitlement = {
+  id: string;
+  learnerProfileId: string | null;
+  learnerName: string | null;
+  scopeType: string | null;
+  courseId: string | null;
+  courseTitle: string | null;
+  courseVersionId: string | null;
+  subjectAreaId: string | null;
+  featureCode: string | null;
+  sourceType: string | null;
+  status: string | null;
+  effectiveFrom: string | null;
+  effectiveUntil: string | null;
+  revokedAt: string | null;
+  revocationReason: string | null;
+  events: CaseHistoryEntitlementEvent[];
+};
+
+export type CaseHistoryVersionStep = {
+  fromVersionId: string | null;
+  toVersionId: string | null;
+  reason: string | null;
+  method: string | null;
+  initiator: string | null;
+  initiatorName: string | null;
+  occurredAt: string | null;
+};
+
+export type CaseHistoryEnrolment = {
+  id: string;
+  learnerProfileId: string | null;
+  learnerName: string | null;
+  courseId: string | null;
+  courseTitle: string | null;
+  courseVersionId: string | null;
+  versionNumber: number | null;
+  versionStatus: string | null;
+  status: string | null;
+  source: string | null;
+  enrolledAt: string | null;
+  completedAt: string | null;
+  versionHistory: CaseHistoryVersionStep[];
+};
+
+export type CaseHistoryPublicationEvent = {
+  courseVersionId: string;
+  courseTitle: string | null;
+  versionNumber: number | null;
+  eventType: string | null;
+  reason: string | null;
+  performedBy: string | null;
+  performedByName: string | null;
+  occurredAt: string | null;
+};
+
+export type CaseHistoryShare = {
+  id: string;
+  learnerProfileId: string | null;
+  learnerName: string | null;
+  granteeUserId: string | null;
+  granteeName: string | null;
+  scope: string | null;
+  status: string | null;
+  grantedAt: string | null;
+  expiresAt: string | null;
+  revokedAt: string | null;
+};
+
+export type CaseHistory = {
+  generatedAt: string | null;
+  requester: CaseHistoryRequester | null;
+  /** The learner named on the case, or null when the requester did not name one. */
+  learner: Omit<CaseHistoryLearner, 'isRequester'> | null;
+  learners: CaseHistoryLearner[];
+  orders: CaseHistorySection<CaseHistoryOrder>;
+  subscriptions: CaseHistorySection<CaseHistorySubscription>;
+  entitlements: CaseHistorySection<CaseHistoryEntitlement>;
+  enrolments: CaseHistorySection<CaseHistoryEnrolment>;
+  publicationEvents: CaseHistorySection<CaseHistoryPublicationEvent>;
+  shares: CaseHistorySection<CaseHistoryShare>;
+};
+
+export const HISTORY_ORDER_STATUS_LABEL: Record<string, string> = {
+  draft: 'Not placed',
+  pending_payment: 'Waiting for payment',
+  awaiting_confirmation: 'Waiting for us to confirm',
+  paid: 'Paid',
+  partially_refunded: 'Partly refunded',
+  refunded: 'Refunded',
+  cancelled: 'Cancelled',
+  failed: 'Failed',
+  expired: 'Expired',
+};
+
+export const HISTORY_SUBSCRIPTION_STATUS_LABEL: Record<string, string> = {
+  pending: 'Pending',
+  trialing: 'Trialling',
+  active: 'Active',
+  past_due: 'Past due',
+  paused: 'Paused',
+  cancelled: 'Cancelled',
+  expired: 'Expired',
+};
+
+export const HISTORY_ENTITLEMENT_STATUS_LABEL: Record<string, string> = {
+  active: 'Can open it',
+  suspended: 'Suspended',
+  revoked: 'Revoked',
+  expired: 'Expired',
+};
+
+export const HISTORY_ENTITLEMENT_EVENT_LABEL: Record<string, string> = {
+  granted: 'Granted',
+  activated: 'Activated',
+  suspended: 'Suspended',
+  restored: 'Restored',
+  revoked: 'Revoked',
+  expired: 'Expired',
+};
+
+export const HISTORY_ENROLMENT_STATUS_LABEL: Record<string, string> = {
+  active: 'Enrolled',
+  completed: 'Completed',
+  withdrawn: 'Withdrawn',
+  suspended: 'Suspended',
+  expired: 'Expired',
+};
+
+export const HISTORY_PUBLICATION_EVENT_LABEL: Record<string, string> = {
+  submitted: 'Sent for review',
+  approved_for_publication: 'Approved',
+  published: 'Published',
+  suspended: 'Suspended',
+  restored: 'Restored',
+  retired: 'Retired',
+};
+
+/** How an enrolment came to point at a different version of its course. */
+export const HISTORY_REPIN_METHOD_LABEL: Record<string, string> = {
+  admin: 'Changed by staff',
+  learner_request: 'At the learner\'s request',
+  course_merge: 'Courses merged',
+  data_repair: 'Data repair',
+};
+
+export const HISTORY_SHARE_SCOPE_LABEL: Record<string, string> = {
+  progress: 'Progress',
+  achievements: 'Achievements',
+  progress_and_achievements: 'Progress and achievements',
+};
+
+export const HISTORY_SHARE_STATUS_LABEL: Record<string, string> = {
+  active: 'Active',
+  revoked: 'Revoked',
+  expired: 'Expired',
+};
+
+export const HISTORY_LEARNER_TYPE_LABEL: Record<string, string> = {
+  adult: 'Adult',
+  child: 'Child',
+};
+
+function text(value: unknown): string | null {
+  return typeof value === 'string' ? value : null;
+}
+
+function whole(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string' && value.trim() !== '' && Number.isFinite(Number(value))) {
+    return Number(value);
+  }
+  return null;
+}
+
+function record(value: unknown): Record<string, unknown> | null {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function list(value: unknown): Record<string, unknown>[] | null {
+  if (!Array.isArray(value)) return null;
+  const rows: Record<string, unknown>[] = [];
+  for (const item of value) {
+    const row = record(item);
+    if (!row) return null;
+    rows.push(row);
+  }
+  return rows;
+}
+
+function readStatusSteps(value: unknown): CaseHistoryStatusStep[] | null {
+  const rows = list(value);
+  if (!rows) return null;
+  return rows.map((r) => ({
+    fromStatus: text(r.fromStatus),
+    toStatus: text(r.toStatus),
+    reason: text(r.reason),
+    changedBy: text(r.changedBy),
+    changedByName: text(r.changedByName),
+    occurredAt: text(r.occurredAt),
+  }));
+}
+
+function readSection<T>(
+  value: unknown,
+  readRow: (row: Record<string, unknown>) => T | null,
+): CaseHistorySection<T> | null {
+  const body = record(value);
+  if (!body) return null;
+  const total = whole(body.total);
+  const rows = list(body.rows);
+  if (total === null || !rows) return null;
+  const out: T[] = [];
+  for (const row of rows) {
+    const read = readRow(row);
+    if (!read) return null;
+    out.push(read);
+  }
+  return { total, rows: out };
+}
+
+function learnerOf(row: Record<string, unknown>): Omit<CaseHistoryLearner, 'isRequester'> | null {
+  const id = text(row.id);
+  if (!id) return null;
+  return {
+    id,
+    displayName: text(row.displayName),
+    learnerType: text(row.learnerType),
+    ageBand: text(row.ageBand),
+    status: text(row.status),
+  };
+}
+
+/**
+ * Read the bundle, or refuse.
+ *
+ * The sections are the answer, so a section that is missing, is not an object, or
+ * carries rows that are not objects is a refusal rather than an empty list. The
+ * fields inside a row are not required: a course with no title yet is a fact about
+ * the course, not a malformed payload.
+ */
+export function readCaseHistory(value: unknown): { history: CaseHistory } | { error: string } {
+  const body = record(value);
+  if (!body) return { error: 'the history came back empty' };
+
+  const requesterRow = body.requester === null ? null : record(body.requester);
+  if (body.requester !== null && !requesterRow) {
+    return { error: 'the history did not identify who asked' };
+  }
+  const requesterUserId = requesterRow ? text(requesterRow.userId) : null;
+  if (requesterRow && !requesterUserId) {
+    return { error: 'the history did not identify who asked' };
+  }
+
+  const learnerRow = body.learner === null ? null : record(body.learner);
+  const learner = learnerRow ? learnerOf(learnerRow) : null;
+  if (body.learner !== null && !learner) {
+    return { error: 'the history named a learner it could not describe' };
+  }
+
+  const learnerRows = list(body.learners);
+  if (!learnerRows) return { error: 'the history did not say which learners it covers' };
+  const learners: CaseHistoryLearner[] = [];
+  for (const row of learnerRows) {
+    const read = learnerOf(row);
+    if (!read) return { error: 'the history could not describe a learner it covers' };
+    learners.push({ ...read, isRequester: row.isRequester === true });
+  }
+
+  const sections = {
+    orders: readSection(body.orders, (r) => {
+      const id = text(r.id);
+      if (!id) return null;
+      const history = readStatusSteps(r.history);
+      if (!history) return null;
+      const order: CaseHistoryOrder = {
+        id,
+        isCaseOrder: r.isCaseOrder === true,
+        status: text(r.status),
+        currencyCode: text(r.currencyCode),
+        subtotalMinor: whole(r.subtotalMinor),
+        discountMinor: whole(r.discountMinor),
+        taxMinor: whole(r.taxMinor),
+        totalMinor: whole(r.totalMinor),
+        placedAt: text(r.placedAt),
+        paidAt: text(r.paidAt),
+        cancelledAt: text(r.cancelledAt),
+        billingAccountId: text(r.billingAccountId),
+        history,
+      };
+      return order;
+    }),
+    subscriptions: readSection(body.subscriptions, (r) => {
+      const id = text(r.id);
+      if (!id) return null;
+      const history = readStatusSteps(r.history);
+      if (!history) return null;
+      const subscription: CaseHistorySubscription = {
+        id,
+        status: text(r.status),
+        planId: text(r.planId),
+        planName: text(r.planName),
+        planVersionId: text(r.planVersionId),
+        billingInterval: text(r.billingInterval),
+        startedAt: text(r.startedAt),
+        currentPeriodStart: text(r.currentPeriodStart),
+        currentPeriodEnd: text(r.currentPeriodEnd),
+        cancelledAt: text(r.cancelledAt),
+        cancelReason: text(r.cancelReason),
+        billingAccountId: text(r.billingAccountId),
+        history,
+      };
+      return subscription;
+    }),
+    entitlements: readSection(body.entitlements, (r) => {
+      const id = text(r.id);
+      if (!id) return null;
+      const events = list(r.events);
+      if (!events) return null;
+      const grant: CaseHistoryEntitlement = {
+        id,
+        learnerProfileId: text(r.learnerProfileId),
+        learnerName: text(r.learnerName),
+        scopeType: text(r.scopeType),
+        courseId: text(r.courseId),
+        courseTitle: text(r.courseTitle),
+        courseVersionId: text(r.courseVersionId),
+        subjectAreaId: text(r.subjectAreaId),
+        featureCode: text(r.featureCode),
+        sourceType: text(r.sourceType),
+        status: text(r.status),
+        effectiveFrom: text(r.effectiveFrom),
+        effectiveUntil: text(r.effectiveUntil),
+        revokedAt: text(r.revokedAt),
+        revocationReason: text(r.revocationReason),
+        events: events.map((e) => ({
+          eventType: text(e.eventType),
+          fromStatus: text(e.fromStatus),
+          toStatus: text(e.toStatus),
+          reason: text(e.reason),
+          performedBy: text(e.performedBy),
+          performedByName: text(e.performedByName),
+          occurredAt: text(e.occurredAt),
+        })),
+      };
+      return grant;
+    }),
+    enrolments: readSection(body.enrolments, (r) => {
+      const id = text(r.id);
+      if (!id) return null;
+      const steps = list(r.versionHistory);
+      if (!steps) return null;
+      const enrolment: CaseHistoryEnrolment = {
+        id,
+        learnerProfileId: text(r.learnerProfileId),
+        learnerName: text(r.learnerName),
+        courseId: text(r.courseId),
+        courseTitle: text(r.courseTitle),
+        courseVersionId: text(r.courseVersionId),
+        versionNumber: whole(r.versionNumber),
+        versionStatus: text(r.versionStatus),
+        status: text(r.status),
+        source: text(r.source),
+        enrolledAt: text(r.enrolledAt),
+        completedAt: text(r.completedAt),
+        versionHistory: steps.map((step) => ({
+          fromVersionId: text(step.fromVersionId),
+          toVersionId: text(step.toVersionId),
+          reason: text(step.reason),
+          method: text(step.method),
+          initiator: text(step.initiator),
+          initiatorName: text(step.initiatorName),
+          occurredAt: text(step.occurredAt),
+        })),
+      };
+      return enrolment;
+    }),
+    publicationEvents: readSection(body.publicationEvents, (r) => {
+      const courseVersionId = text(r.courseVersionId);
+      if (!courseVersionId) return null;
+      const event: CaseHistoryPublicationEvent = {
+        courseVersionId,
+        courseTitle: text(r.courseTitle),
+        versionNumber: whole(r.versionNumber),
+        eventType: text(r.eventType),
+        reason: text(r.reason),
+        performedBy: text(r.performedBy),
+        performedByName: text(r.performedByName),
+        occurredAt: text(r.occurredAt),
+      };
+      return event;
+    }),
+    shares: readSection(body.shares, (r) => {
+      const id = text(r.id);
+      if (!id) return null;
+      const share: CaseHistoryShare = {
+        id,
+        learnerProfileId: text(r.learnerProfileId),
+        learnerName: text(r.learnerName),
+        granteeUserId: text(r.granteeUserId),
+        granteeName: text(r.granteeName),
+        scope: text(r.scope),
+        status: text(r.status),
+        grantedAt: text(r.grantedAt),
+        expiresAt: text(r.expiresAt),
+        revokedAt: text(r.revokedAt),
+      };
+      return share;
+    }),
+  };
+
+  for (const [name, section] of Object.entries(sections)) {
+    if (!section) return { error: `the history could not be read: ${name}` };
+  }
+
+  return {
+    history: {
+      generatedAt: text(body.generatedAt),
+      requester: requesterRow
+        ? {
+            userId: requesterUserId as string,
+            displayName: text(requesterRow.displayName),
+            accountStatus: text(requesterRow.accountStatus),
+            createdAt: text(requesterRow.createdAt),
+          }
+        : null,
+      learner,
+      learners,
+      orders: sections.orders as CaseHistorySection<CaseHistoryOrder>,
+      subscriptions: sections.subscriptions as CaseHistorySection<CaseHistorySubscription>,
+      entitlements: sections.entitlements as CaseHistorySection<CaseHistoryEntitlement>,
+      enrolments: sections.enrolments as CaseHistorySection<CaseHistoryEnrolment>,
+      publicationEvents:
+        sections.publicationEvents as CaseHistorySection<CaseHistoryPublicationEvent>,
+      shares: sections.shares as CaseHistorySection<CaseHistoryShare>,
+    },
+  };
+}
+
+export type CaseHistoryResult =
+  | { ok: true; history: CaseHistory }
+  | { ok: false; status: number; error: string };
+
+/**
+ * The history behind one case.
+ *
+ * Only staff may call it, and the function refuses everybody else, so the caller
+ * does not have to be trusted to check first — though the panel that renders it is
+ * only mounted for staff, because a requester has no business being shown a bundle
+ * built from tables they cannot read.
+ */
+export async function fetchCaseHistory(
+  supabase: SupabaseClient,
+  caseId: string,
+): Promise<CaseHistoryResult> {
+  const { data, error } = await supabase.rpc('support_case_history', { p_case_id: caseId });
+  if (error) {
+    // mapSupportError cannot succeed, but its return type allows it, and a cast
+    // here would be the only place this module pretends a refusal is an answer.
+    const mapped = mapSupportError(error);
+    return mapped.ok
+      ? { ok: false, status: 502, error: 'the history could not be read' }
+      : { ok: false, status: mapped.status, error: mapped.error };
+  }
+  const read = readCaseHistory(data);
+  if ('error' in read) return { ok: false, status: 502, error: read.error };
+  return { ok: true, history: read.history };
 }

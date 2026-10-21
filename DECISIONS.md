@@ -1062,3 +1062,89 @@ Implemented in `20261218000100_media_upload_abandonment.sql`,
 `abandonUnfinishedUpload()` in `lib/media-multipart.ts`, `resume_upload` on
 `/api/media`, two actions on `/api/admin/media`, resume in `lib/multipart-upload.ts`
 and the upload form, and `UnfinishedUploads` on `/admin/media`.
+
+## What a support agent may see — **DECIDED 2026-10-21**
+
+Six tables were written so that a person answering a support case could explain how
+a state came about — `order_status_history`, `subscription_history`,
+`entitlement_events`, `course_enrolment_version_history`, `publication_events` and
+`adult_learning_shares` — and no screen, route or function read any of them. They
+are append-only where it matters and indexed for recency, and together they hold the
+only answer to the most common question a paid platform receives: "I paid and I still
+cannot watch." Answering that means reading four of them at once — what the order
+did, what the subscription did, what the access grant did, and whether the learner
+was moved to another version of the course in between. The platform was instead
+answering from the current state of those rows, which is exactly the state that has
+already changed.
+
+**Decided: one `SECURITY DEFINER` read model, `support_case_history(case)`,** which
+returns the whole bundle as one `jsonb` document — who asked, which learners the
+case is about, and the orders, subscriptions, access grants, enrolments, publication
+events and progress shares behind them, each with the steps that produced it and the
+name of whoever took each step. Staff only, refused to everybody else with a
+sentence, and it writes nothing: reading history is not a decision about the case.
+
+**No read policy was widened to get it.** That is the part worth recording, because
+the obvious implementation is a panel that queries the tables, and it would have
+needed two policies opened to staff: `subscription_history` is readable by the
+billing account's members and not by staff at all, and `order_status_history` is
+readable through the order. A widened policy answers one screen's question by giving
+every future staff query path the same reach, permanently, with nowhere left to
+write down what support may see. One definer function is one authority: it decides
+the scope, it caps what comes back, and the six tables stay closed to everything
+else — which is what makes the bundle a policy statement rather than a convenience.
+
+**The scope is the requester's, never the reader's.** The bundle describes what the
+person who asked could see: their own learner profiles, the learners in their family
+other than a member who only pays the bills, the children of a guardian verified for
+progress and not merely for identity, and the billing accounts they are an active
+member of — plus the one order they named on the case, which is in scope even after
+they left its account, because naming an order is the requester saying which payment
+they mean. `can_access_learner()` cannot express this, and the reason is worth
+stating as an invariant for every future definer function: **inside a
+`SECURITY DEFINER` function the caller is the member of staff, so any predicate
+keyed on `current_user_id()` answers for the reader and not for the subject.** Used
+as a filter here it would have returned yes for every learner on the platform and
+still looked correct from the staff seat. The rule is therefore written out against
+the case's `requested_by`, and the tests ask every question from two seats — the
+requester's and a stranger's — because a scope that returns too much passes every
+assertion written from the side that is allowed to see too much.
+
+**A cap is never silent.** Every section reports how many rows exist beside the rows
+it returned, so a panel showing 50 publication events out of 63 says so. The
+histories nested inside a row are deliberately uncapped: a state machine has a
+handful of transitions, and a list that quietly dropped one of them would be worse
+than no list.
+
+**`access_checks` is excluded, and the panel says why.** Its table comment promises
+"recorded so a support agent can explain a denial", and nothing in the schema, the
+web layer or the worker has ever inserted a row into it — the diagnostic was designed
+and never wired, presumably because keeping it would mean a write every time a
+learner opens a lesson. Rendering an always-empty section would read as "no denial
+happened", the one wrong answer a support agent cannot recover from, so the screen
+states in words that refusals are not recorded and points at what to read instead: a
+refusal is a missing, expired, suspended or revoked grant, or a retired version.
+Recording the gap is the decision; quietly omitting the table would have left the
+next reader to rediscover it.
+
+**`adult_learning_shares` is included, and empty means empty.** Nobody has been given
+sight of this adult's progress, which is a true and useful answer. What is not true
+yet is that a person can create one: no screen or route writes that table, only SQL.
+The console can therefore show a share that nothing in the product can make — a gap
+in the adult privacy story, recorded in `NEXT.md`, not something this panel should
+paper over by hiding the section.
+
+**Rejected:** widening the five read policies to `is_privileged` (loses the single
+authority on what support may see, and makes each table independently readable by
+any staff query forever); a plain view over the six tables (a view reads as its
+owner and bypasses the underlying RLS unless it is declared `security_invoker`,
+which is a Supabase footgun that fails open); one function per section (five to seven
+new RPCs for a single screen, and the scope recomputed six times with six chances to
+differ); a client component fetching sections on demand (the scope would then be
+decided by a request the browser can shape); and defaulting a missing section to an
+empty list in the web layer, which is the same lie as the empty denial log, told one
+layer up.
+
+Implemented in `20261219000100_support_case_history.sql`, `readCaseHistory()` and
+`fetchCaseHistory()` in `lib/support.ts`, and `CaseHistory` on
+`/support/<caseNumber>`.

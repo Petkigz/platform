@@ -9,6 +9,7 @@ import {
   STATUS_LABEL,
 } from '@/lib/support';
 import { CaseActions } from './case-actions';
+import { CaseHistory } from './case-history';
 
 export const metadata = { title: 'Support request' };
 export const dynamic = 'force-dynamic';
@@ -25,6 +26,11 @@ export const dynamic = 'force-dynamic';
  * That is why there is no `where requested_by = user.id` filter below. Adding
  * one would not make the page safer — RLS already is — and it would break the
  * staff queue, which links here.
+ *
+ * One part is not the same for both seats: the history panel below is mounted for
+ * staff only. It reads tables the requester cannot see, through a function that
+ * refuses anybody who is not staff, so showing it to a requester would render an
+ * error where their conversation should be.
  */
 export default async function SupportCasePage({
   params,
@@ -143,6 +149,8 @@ export default async function SupportCasePage({
           </p>
         )}
       </section>
+
+      {isStaff && <CaseHistory caseId={supportCaseRow.id} />}
 
       <CaseActions
         caseId={supportCaseRow.id}

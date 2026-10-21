@@ -303,9 +303,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **933 database tests, 666 web tests; TypeScript typecheck and
+Verification: **954 database tests, 680 web tests; TypeScript typecheck and
 production build pass; 103 tables, 231 policies, 134 user-defined triggers,
-230 functions, 100 migrations and 105 app route entries.**
+231 functions, 101 migrations and 105 app route entries.**
 
 ## Today's sentence
 
@@ -362,8 +362,9 @@ given a surface. Grouped by the feature they belong to:
 | Payouts | `instructor_payouts`, `instructor_payout_items` | `teaching.payouts`, off; ROADMAP already says "3 tables with no fields and no endpoints" |
 | Institutions | `institutions` | `commerce.institutions` and four `institution.*` flags, all off |
 | Money plumbing | `currency_exchange_rates`, `order_adjustments`, `payment_method_references` | Multi-currency reporting and stored payment methods, neither decided |
-| History and diagnostics | `order_status_history`, `publication_events`, `entitlement_events`, `course_enrolment_version_history`, `access_checks`, `subscription_history` | Written by triggers or by other writers for audit, and read by nobody. Intentional for now; a support console would read them |
-| Other | `adult_learning_shares` | Adult learner sharing, never surfaced |
+| History and diagnostics | `order_status_history`, `publication_events`, `entitlement_events`, `course_enrolment_version_history`, `subscription_history` | **Now read** by `support_case_history()`, on `/support/<caseNumber>` for staff. Still closed to every other read path, which is the point: one function decides what support may see |
+| Diagnostics with no writer | `access_checks` | **Correction to the audit:** nothing has ever inserted a row here — not a trigger, not a function, not a route. Its comment promises a denial log for support agents and the platform does not keep one. Excluded from the console on purpose; an always-empty list would read as "no denial happened" |
+| Other | `adult_learning_shares` | **Now read** by the same console, where empty is a real answer ("nobody can see your progress"). Still never written by the product: no screen or route creates a share, only SQL can. The adult privacy story is the gap, not the panel |
 
 **Two functions were genuinely unreachable**, in the stronger sense that nothing
 called them at all — not a route, not a policy, not a trigger, not another
@@ -1127,6 +1128,83 @@ a decision about the bytes, and `delete_media_asset()` already exists for that
 decision.
 
 9 database tests, 43 web. One migration, one function, no new table, no new flag,
+no new route.
+
+### The history behind a support case is now readable, 2026-10-21
+
+Six tables were written so that a support agent could explain how a state came
+about — `order_status_history`, `subscription_history`, `entitlement_events`,
+`course_enrolment_version_history`, `publication_events` and
+`adult_learning_shares` — and nothing read any of them. They are append-only where
+it matters, they are indexed, and between them they hold the only answer to the
+question a paid platform gets most often: "I paid and I still cannot watch."
+Answering it means reading four tables at once — what the order did, what the
+subscription did, what the access grant did, and whether the learner was moved to a
+different version of the course in between. Until now the answer was to read the
+current state of those rows, which is precisely the state that has already changed.
+
+**One function, one authority.** `support_case_history(case)` returns the whole
+bundle as one `jsonb` document: who asked, which learners the case is about, and
+the orders, subscriptions, access grants, enrolments, publication events and
+progress shares behind them — each with the steps that got it there and the name of
+whoever took each step. It is `SECURITY DEFINER`, staff-only, and it writes nothing.
+
+The alternative was a panel that queries the tables, which would have needed read
+policies widened to staff on two of them: `subscription_history` is readable by the
+billing account's members and not by staff, and `order_status_history` is readable
+through the order. Widening a policy to answer one screen's question gives every
+future staff query the same reach, permanently, with nowhere to write down what
+support may see. One function is one place to decide it, and the six tables stay
+closed to everything else.
+
+**The scope is the requester's, not the reader's.** This is the part that is easy
+to get wrong and impossible to notice from the staff seat. The bundle describes
+what the person who asked could see: their own learner profiles, the learners in
+their family other than a billing-only member, the children a verified guardian
+holds the progress permission for, and the billing accounts they are an active
+member of — plus the single order they named on the case, which is in scope even
+when they have left its account, because naming an order is the requester saying
+which payment they mean. `can_access_learner()` cannot express that here. Inside a
+`SECURITY DEFINER` function the caller is the member of staff, so it answers yes for
+every learner on the platform and would hand an agent everybody's enrolments and
+grants. The same rule is written out against the case's `requested_by` instead, and
+the tests ask every question from two seats — the requester's and a stranger's —
+because a scope that returns too much passes every assertion written from the staff
+side of the screen.
+
+**A cap is never silent.** Every section reports how many rows exist beside the
+rows it returned, so a panel showing 50 publication events out of 63 says so. The
+histories nested inside a row are uncapped on purpose: a state machine has a
+handful of transitions, and a list that hides one of them would be worse than no
+list.
+
+**Two findings, recorded rather than papered over.**
+
+- `access_checks` is not in the bundle. Its table comment says "Recorded so a
+  support agent can explain a denial", and nothing in the schema, the web layer or
+  the worker has ever inserted a row into it: the diagnostic was designed and never
+  wired, presumably because keeping it would mean a write on every lesson every
+  learner opens. An always-empty section would read as "no denial happened", which
+  is the one wrong answer a support agent cannot recover from, so the panel says in
+  words that refusals are not recorded and points at what to read instead: a refusal
+  is a missing, expired, suspended or revoked grant, or a version that was retired.
+  This corrects the audit row in the ledger above, which listed the table as
+  trigger-written.
+- `adult_learning_shares` is in the bundle, and here empty means empty: nobody has
+  been given sight of this adult's progress or achievements, which is a true answer
+  to a real question. What is not true yet is that a person can create one — no
+  screen or route writes this table, only SQL — so the console can show a share and
+  nothing in the product can make one.
+
+**Where it renders.** `/support/<caseNumber>`, for staff, above the case actions, in
+collapsed sections so a conversation stays readable. The page already serves both
+seats and already knows whether the caller is staff; the function refuses everybody
+else in any case, so the panel is not the only thing standing between a requester
+and those tables. `platform.support` gates opening new cases and does not gate
+reading one, so the history is there for cases opened before the flag went off —
+work in flight is not stranded by a switch.
+
+21 database tests, 14 web. One migration, one function, no new table, no new flag,
 no new route.
 
 ## Open external decisions (not to be guessed)
