@@ -1252,3 +1252,89 @@ Implemented in `20261220000100_reviewer_register.sql` (seven functions and two g
 the register section of `lib/review.ts`, `/api/review/profile` and
 `/api/admin/reviewers`, `/admin/reviewers`, the register panel on `/review`, and the
 conflict form on `/review/[assignmentId]`.
+
+## What a version needs before it can publish — **DECIDED 2026-10-21**
+
+`content_review_requirements` existed with two rules reading it and nothing writing it.
+Publication refuses while one is open, and a reviewer who is not authorised for a required
+subject cannot be assigned at all. With no writer, neither rule ever fired; with no way to
+set `satisfied`, the first row anybody wrote would have locked that version forever. This
+decides how a requirement is written, how it closes, and who may say it does not apply.
+
+**Closing one is a recount, not an event.** A requirement is satisfied when enough
+approvals exist, in its scope, from reviewers authorised for its subject, counting
+distinct assignments so one reviewer approving twice is one approval. The count is stored
+nowhere, and that is deliberate: a counter column would be a second fact to keep true, and
+a counter that drifts from the decisions behind it is worse than no counter. Instead
+`refresh_review_requirements()` computes it, and runs on every approved decision, whenever
+a requirement is written or changed, and whenever a screen asks.
+
+**The recount moves a requirement one way.** Open to satisfied, never back. Reopening is
+something a person does — raising `required_approval_count` — and it is audited as an act
+rather than appearing as a state change nobody asked for. The alternative is worse in both
+directions: a reviewer whose authorisation expires next year would silently retract a
+review they validly gave, and a version would become unpublishable for a reason no screen
+could explain. So an approval counts while the authorisation is live and stays counted
+afterwards; a revoked authorisation stops *new* approvals counting, which is a decision
+about the future.
+
+**The panel reads the recount, not the table.** Status and approval count come from the
+recount; subjects, waivers and names come from the rows. That is not a preference for a
+fresh read: the counting rule lives in SQL, and a TypeScript copy of it would be the
+second implementation of one rule, which is how a rule ends up enforced in one of them.
+When the recount itself fails the panel says so and shows the rows, because a panel
+showing stale statuses tells a teacher their course can publish when it cannot.
+
+**Waiving is governance-only and written.** It is the one act here that lets a course
+publish without a review somebody asked for, so it carries the reason and the name, and
+it is audited with the state it replaced. Waiving twice reports the state already there
+rather than rewriting the first reason. Reopening a waived requirement clears both waiver
+columns, because `crr_waiver_agrees` ties them to the status and a waiver that no longer
+applies should not keep its paperwork attached. An author may not reopen one.
+
+**A waiver does not replace the approval the gate always needs.** `governance.min_approvals`
+is a separate dial, and waiving a requirement leaves it alone. The test pins this because
+the opposite reading is easy to fall into: a governance admin who waives everything has not
+turned peer review off, they have removed the subject-specific requirements on top of it.
+
+**Who may write what, and the helper that lies.** Requirements and change classifications:
+the version's author or governance staff. Technical checks: the author, a reviewer assigned
+to that version whose assignment is accepted, in progress or completed, or governance staff.
+The authorship test reads `course_versions.created_by` against the session and does not
+call `can_author_version()`, which short-circuits on `is_privileged()` and therefore answers
+"may act as the author" — a question whose answer is every member of staff, a support agent
+included. That is fine for the `crr_write` policy, where the table's other rules are the
+gate. It is not fine inside a function that *is* the gate: a support agent who could write
+what a course needs reviewed could also write that it needs nothing.
+
+**What is not enforced, on purpose.** A technical check does not touch the publication gate;
+the table's own comment says it is never a substitute for scholarly approval, and a
+self-check that gated publication would be a self-approval. A failed check is recorded and
+shown, and a test publishes a version carrying one. A change assessment does not create
+requirements either: it classifies, and the classification is what the next reader sees
+first. The one thing the schema does enforce is that a doctrinal or source change cannot be
+called low risk or exempt from re-review, and the form does not offer that combination.
+
+**An author may be their own technical reviewer.** `validate_review_assignment()` refuses the
+author as a *scholarly* reviewer only, so a technical requirement can be met by the person
+who wrote the version. That is the recorded intent of the scope — "the limited check the
+recorded decision allows an author to perform on their own course" — and it is why a
+technical requirement is not a substitute for a scholarly one. Left alone deliberately;
+changing it would be a governance decision about what a technical review is for.
+
+**Rejected:** a staff "mark as satisfied" button (a human ticking a box the facts already
+answer, and a satisfaction with no approvals behind it); a stored approval counter on the
+requirement (a second fact to keep true); letting the recount reopen satisfied requirements
+(silent retroactivity); computing the count in TypeScript as well (two implementations of
+one rule); gating on `can_author_version()` (admits every privileged caller); creating
+requirements automatically from the version's catalogue subject tags (tagging is how a
+course is found, a requirement is a governance decision, and deriving one from the other
+would have blocked every tagged course the day it shipped, with waivers as the only exit);
+making a technical check part of the gate (a self-check that gates is a self-approval); and
+requiring a change assessment before a version may be submitted (a new precondition on a
+path teachers already use, decided by nobody).
+
+Implemented in `20261221000100_review_requirements.sql` (five functions and a trigger),
+`lib/review-requirements.ts`, `/api/review/requirements`, and the shared `RequirementPanel`
+and `VersionChecks` components on `/teach/[courseId]`, `/admin/reviews` and
+`/review/[assignmentId]`.

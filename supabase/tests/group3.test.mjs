@@ -309,13 +309,36 @@ export async function run(ctx) {
     await requireSubject(pc.version, 'quran');
     await authorise(reviewer, 'quran');
     const a = await assign(pc.version, reviewer);
-    await decide(a, pc.version, reviewer);   // requirement row is still 'open'
+    await decide(a, pc.version, reviewer);
+
+    // This used to assert that the requirement row was still 'open' after the
+    // approval, which was true only because nothing could ever close one. Since
+    // 20261221000100_review_requirements.sql an approval from a reviewer authorised
+    // for that subject closes it, so the row that has to stay open is a requirement
+    // for a subject nobody here is authorised for — added after the assignment, which
+    // is also what happens when a reviewer finds a subject the version teaches that
+    // nobody asked about.
+    await requireSubject(pc.version, 'fiqh');
+
+    const states = await q(
+      `select sa.code, crr.requirement_status
+         from public.content_review_requirements crr
+         join public.subject_areas sa on sa.id = crr.subject_area_id
+        where crr.course_version_id = $1`, [pc.version]);
+    const byCode = {};
+    for (const row of states.rows) byCode[row.code] = row.requirement_status;
+    assert(byCode.quran === 'satisfied',
+      'an approval from an authorised reviewer did not close the requirement for that subject');
+    assert(byCode.fiqh === 'open',
+      'a requirement nobody is authorised for was closed anyway');
 
     await setStatus(pc.version, 'submitted', teacher);
     await setStatus(pc.version, 'approved', reviewer);
     await rejects(() => setStatus(pc.version, 'published', admin),
       'a version published while a review requirement was still open');
 
+    // Waiving is the product path for this; the update is the same thing said in SQL,
+    // and this suite is about the gate rather than about the waiver.
     await q(`update public.content_review_requirements
                 set requirement_status = 'satisfied' where course_version_id = $1`, [pc.version]);
     await setStatus(pc.version, 'published', admin);

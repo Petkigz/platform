@@ -303,9 +303,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **986 database tests, 700 web tests; TypeScript typecheck and
-production build pass; 103 tables, 231 policies, 134 user-defined triggers,
-238 functions, 102 migrations and 108 app route entries.**
+Verification: **1017 database tests, 713 web tests; TypeScript typecheck and
+production build pass; 103 tables, 231 policies, 135 user-defined triggers,
+244 functions, 103 migrations and 109 app route entries.**
 
 ## Today's sentence
 
@@ -359,7 +359,7 @@ given a surface. Grouped by the feature they belong to:
 | Promotions | `promotion_campaigns`, `promotion_benefits`, `promotion_redemptions` | `commerce.promotions`, off, eligibility and stacking rules undecided |
 | Scholarly panel | `scholarly_panels`, `scholarly_panel_memberships`, `scholarly_panel_cases`, `scholarly_panel_votes` | `teaching.panel`, off and deliberately dormant (P6) |
 | Reviewer machinery — the people | `reviewer_qualifications`, `reviewer_subject_authorizations`, `reviewer_conflict_declarations` | **Now written** by seven functions in `20261220000100_reviewer_register.sql`, on `/admin/reviewers` (governance staff) and `/review` (the reviewer themself). The audit called this group "no admin surface of its own"; the truer account is in the section below — it had no *writer* of any kind, so no reviewer could become active and nothing could be published through the product |
-| Reviewer machinery — the versions | `content_review_requirements`, `technical_review_checks`, `content_change_assessments` | Still unreachable, and still the next unit. Until `content_review_requirements` can be written, `validate_review_assignment()`'s authorisation loop is empty, so any verified reviewer fits any subject |
+| Reviewer machinery — the versions | `content_review_requirements`, `technical_review_checks`, `content_change_assessments` | **Now written** by `20261221000100_review_requirements.sql`, on `/teach/[courseId]`, `/admin/reviews` and `/review/[assignmentId]`. `validate_review_assignment()`'s authorisation loop now has something to loop over, so a version can require a reviewer authorised for a subject — and a requirement can be closed, which nothing could do before |
 | Payouts | `instructor_payouts`, `instructor_payout_items` | `teaching.payouts`, off; ROADMAP already says "3 tables with no fields and no endpoints" |
 | Institutions | `institutions` | `commerce.institutions` and four `institution.*` flags, all off |
 | Money plumbing | `currency_exchange_rates`, `order_adjustments`, `payment_method_references` | Multi-currency reporting and stored payment methods, neither decided |
@@ -1314,6 +1314,95 @@ that whoever decides can see what they are deciding about.
 
 32 database tests, 20 web. One migration, seven functions, no new table, no new flag,
 three new route entries.
+
+
+### What a version needs before it can publish, 2026-10-21
+
+Three tables described the version side of peer review and none of them had a writer:
+`content_review_requirements`, `technical_review_checks` and
+`content_change_assessments`. The first is the one with teeth.
+`enforce_publication_gate()` refuses to publish while any requirement is open, and
+`validate_review_assignment()` refuses to assign a reviewer who is not authorised for
+every subject the version wrote down, at the scope being assigned. With nothing able to
+write a row, both were inert: any verified reviewer fitted any course, however little
+they knew of the subject, and "this course teaches Tajweed, so a reviewer authorised in
+Tajweed must approve it" could not be said at all.
+
+The other direction was inert too, and it was the worse half. Nothing ever set
+`satisfied`. The first requirement anybody wrote would have blocked that version
+forever: the gate would say "1 review requirement still open" and no screen could answer
+it, because closing one took SQL. A capability that can be turned on and never off is
+not a half-built feature, it is a trap — which is why most of this migration is about
+closing requirements honestly rather than opening them.
+
+**One rule, in one place.** A requirement is satisfied when enough approvals exist, in
+its scope, from reviewers authorised for its subject. `refresh_review_requirements()`
+computes that, counting distinct assignments so one reviewer approving twice is one
+approval, and it runs on three occasions: on every approved decision (a trigger), when a
+requirement is written or changed, and when somebody asks. The count exists nowhere as a
+column, so the alternative was computing it twice — once in SQL and once in TypeScript —
+which is how a rule ends up enforced in one of the two. The panel therefore reads the
+recount for status and approvals and the table for everything else, and says which it is
+showing.
+
+**The recount only ever closes a requirement. It never reopens one.** Reopening is an act
+by a person: raising `required_approval_count` puts the row back to `open`, audited, with
+the recount deciding where it lands. The automatic alternative is worse in both
+directions. A reviewer whose authorisation expires next year would silently retract a
+review they validly gave, and a version would stop being publishable for a reason nobody
+chose and nothing on a screen explained. So an approval counts towards closing a
+requirement while the authorisation is live, and stays counted afterwards; a revoked
+authorisation stops new approvals counting, which is a decision about the future rather
+than a correction of the past.
+
+**Who may write what, and the trap that was avoided.** Requirements and change
+classifications: the version's author, or governance staff. Technical checks: the author,
+a reviewer assigned to that version whose assignment is accepted, in progress or
+completed, or governance staff. Waivers: governance staff only, reason required. The
+author test reads `course_versions.created_by` against the session and does **not** call
+`can_author_version()` — that helper short-circuits on `is_privileged()`, so it answers
+"may act as the author", which every member of staff does, a support agent included. The
+`crr_write` policy uses it and that is acceptable for a policy on a table whose real
+rules live elsewhere; here the function is the rule, and a support agent who could write
+what a course needs reviewed could also decide it needed nothing. A test pins the
+refusal from that seat.
+
+**What is deliberately not enforced.** A technical check does not touch the publication
+gate: the table's own comment says it is never a substitute for scholarly approval, and a
+failed check is what a reviewer reads before deciding, not a reason to refuse
+publication. A test publishes a version with a failed check on it, so the absence of
+authority is pinned rather than assumed. A change assessment does not create requirements
+either — it classifies, and the classification is what the next reader sees first. The one
+thing the schema does enforce is that a doctrinal or source change cannot be called low
+risk and cannot skip re-review, and the form does not offer that combination, because a
+dropdown that can produce a value the database throws away is a bug that only appears
+when someone uses it.
+
+**Where it renders.** The author's course page (`/teach/[courseId]`), in a section called
+"Before this can publish": what is required, with how many approvals it has of how many
+it needs, and how many reviewers could close it; a form to require a subject at a scope;
+their technical self-checks; and the classification of what changed. `/admin/reviews`
+shows the same panel folded under each submitted version, with a badge for how many
+requirements are open, plus the one act only governance may perform — waiving, in
+writing, with the reason stored beside their name. `/review/[assignmentId]` shows both
+panels to the reviewer, who may add a technical check of their own and may not change
+what the version requires while they are judging it.
+
+**The line on the panel worth more than the form.** For each open requirement it counts
+how many reviewers could close it, and when that number is zero it says so: "no reviewer
+is authorised for this". Without it, an open requirement is a door that will not open
+with nothing to explain why — and both remedies (grant the subject on `/admin/reviewers`,
+or waive it in writing) were invisible.
+
+**One existing test had to change, and the change is the point.** `group3` asserted that a
+requirement row was still `open` after an authorised reviewer approved it, which was true
+only because nothing could close one. It now asserts the opposite for the subject that
+reviewer holds, and keeps the blocking case with a requirement for a subject nobody is
+authorised for, written after the assignment — which is also what happens when a reviewer
+finds a subject a version teaches that nobody asked about.
+
+31 database tests, 13 web. One migration, five functions and a trigger, no new table, no
+new flag, one new route entry.
 
 
 ## Open external decisions (not to be guessed)

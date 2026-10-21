@@ -68,10 +68,10 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 ## Status
 
-The database stands at **103 tables, RLS on every one, 231 policies, 134
-user-defined triggers, 238 functions and 102 migrations.** The database suite
-passes **986 tests**; the web suite passes **700 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **108 app route entries**.
+The database stands at **103 tables, RLS on every one, 231 policies, 135
+user-defined triggers, 244 functions and 103 migrations.** The database suite
+passes **1017 tests**; the web suite passes **713 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **109 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. `/account`
@@ -94,6 +94,16 @@ applicant, grant the subjects they may judge and hear the conflicts they declare
 `/review` is where a person applies, records their qualifications and stands aside
 from work they cannot judge impartially. Declaring a conflict bars an assignment
 immediately, before anybody reads it, and only a written assessment lifts it.
+
+A course can now be required to be reviewed by somebody who knows the subject.
+`content_review_requirements` says what a version needs — this subject, this scope,
+this many approvals — and two rules read it: publication is refused while one is
+open, and a reviewer who is not authorised for the subject cannot even be assigned.
+Neither rule could fire before, because nothing could write a row, and nothing could
+close one either: a requirement was a door that locked from the inside. An approval
+from a reviewer authorised for the subject now closes it, a governance admin can
+waive it in writing, and the panel says when no living reviewer could close it at
+all.
 
 Free previews now have one consistent gate from the catalogue to content
 access. Teachers can mark draft lessons and individual public-sample resources;

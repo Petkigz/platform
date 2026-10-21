@@ -523,14 +523,10 @@ export async function run(ctx) {
   console.log('\nThe chain this existed for');
 
   await test('the authorised reviewer can now be assigned, approve, and publish', async () => {
-    // The requirement the conflict test created is still 'open', and the gate
-    // refuses to publish over an open requirement. Nothing in the product can
-    // satisfy one yet — content_review_requirements has no writer at all, which is
-    // the next unit — so this is done in SQL to check the rest of the chain.
-    await q(`update public.content_review_requirements
-                set requirement_status = 'satisfied'
-              where course_version_id = $1`, [version]);
-
+    // The requirement the conflict test created is still open, and nothing here
+    // closes it by hand. An approved decision from a reviewer authorised for that
+    // subject is what satisfies it (20261221000100_review_requirements.sql), so the
+    // steps below are the whole product path from an application to a publication.
     const assignment = await asActor(governance,
       `insert into public.content_review_assignments
          (course_version_id, reviewer_profile_id, review_scope, assigned_by,
@@ -543,6 +539,12 @@ export async function run(ctx) {
          (review_assignment_id, course_version_id, review_scope, decision, rationale, decided_by)
        values ($1,$2,'scholarly','approved','Read against the sources and approved.',$3)`,
       [assignment, version, candidateUser]);
+
+    const requirement = (await q(
+      `select requirement_status from public.content_review_requirements
+        where course_version_id = $1`, [version])).rows[0];
+    assert(requirement.requirement_status === 'satisfied',
+      'the approval did not close the requirement written for that subject');
 
     await q(`update public.course_versions
                 set version_status = 'published', decision_by = $2,

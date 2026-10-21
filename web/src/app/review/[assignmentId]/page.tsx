@@ -12,6 +12,9 @@ import {
 import { fetchMediaResourcesForLessons, type LessonMediaResource } from '@/lib/lessons';
 import { fetchPlayableRenditions, groupByAsset, posterFor } from '@/lib/playback';
 import { RenditionPlayer } from '@/app/_shared/rendition-player';
+import { fetchVersionReviewState } from '@/lib/review-requirements';
+import { RequirementPanel } from '@/app/_shared/requirement-panel';
+import { VersionChecks } from '@/app/_shared/version-checks';
 import { ConflictForm } from './conflict-form';
 import { ReviewActions } from './review-actions';
 
@@ -54,6 +57,13 @@ export default async function ReviewAssignmentPage({
 
   const assignment = await fetchAssignment(supabase, assignmentId);
   if (!assignment) notFound();
+
+  // What the version needs before it can publish, what has been checked on it, and
+  // how the change was classified. A reviewer reads this before deciding, and may add
+  // a technical check of their own — that is the one thing here they may write, since
+  // what a version requires and how a change is classified are not theirs to change
+  // while they are judging it.
+  const reviewState = await fetchVersionReviewState(supabase, assignment.courseVersionId);
 
   const sections = await fetchSections(supabase, assignment.courseVersionId).catch(() => []);
   const lessonCount = sections.reduce((n, s) => n + s.lessons.length, 0);
@@ -182,6 +192,32 @@ export default async function ReviewAssignmentPage({
           ? 'You can watch the delivery copies of these lessons while this review is open. You cannot save them, and the file a teacher uploaded is not served to you: what is under review is what a learner will see.'
           : `This assignment is ${ASSIGNMENT_STATUS_LABEL[assignment.status].toLowerCase()}, so its lessons are not playable. Media is served while a review is open, and stops the moment it is not.`}
       </p>
+
+      <div className="outline-h" style={{ marginTop: '1.75rem' }}>
+        <h3>What this version needs, and what has been checked</h3>
+      </div>
+
+      <RequirementPanel
+        versionId={assignment.courseVersionId}
+        requirements={reviewState.requirements}
+        subjects={[]}
+        blockedBecause={reviewState.blockedBecause}
+        recountError={reviewState.recountError}
+        canRequire={false}
+        canWaive={false}
+      />
+
+      <div style={{ marginTop: '1rem' }}>
+        <VersionChecks
+          versionId={assignment.courseVersionId}
+          latestChecks={reviewState.latestChecks}
+          checks={reviewState.checks}
+          assessments={reviewState.assessments}
+          versions={[]}
+          canCheck={assignment.status === 'accepted' || assignment.status === 'in_progress'}
+          canAssess={false}
+        />
+      </div>
 
       <div className="outline-h" style={{ marginTop: '1.75rem' }}>
         <h3>Your decision</h3>

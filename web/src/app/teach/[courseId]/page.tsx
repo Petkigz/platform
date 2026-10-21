@@ -9,6 +9,10 @@ import { fetchAuthoredAssessments, fetchPendingManualResponses } from '@/lib/ass
 import { fetchRejections } from '@/lib/governance';
 import { AppealForm } from './appeal-form';
 import { fetchSubjects, fetchVersionSubjects } from '@/lib/authoring';
+import { fetchSubjectOptions } from '@/lib/review';
+import { fetchVersionReviewState } from '@/lib/review-requirements';
+import { RequirementPanel } from '@/app/_shared/requirement-panel';
+import { VersionChecks } from '@/app/_shared/version-checks';
 import { SubjectPicker } from './subject-picker';
 import { fetchVersionSources } from '@/lib/provenance';
 import { isFlagEnabled } from '@/lib/flags';
@@ -63,13 +67,18 @@ export default async function TeachCoursePage({
 
   // Subject tagging, and the taxonomy it draws from. Tagging is what makes a
   // course findable in the catalogue.
-  const [subjects, currentSubjects, sourcesByLesson, previewsEnabled, assessments, manualResponses] = await Promise.all([
+  const [subjects, currentSubjects, sourcesByLesson, previewsEnabled, assessments, manualResponses, reviewState, subjectOptions] = await Promise.all([
     fetchSubjects(supabase),
     current ? fetchVersionSubjects(supabase, current.id) : Promise.resolve<string[]>([]),
     current ? fetchVersionSources(supabase, current.id) : Promise.resolve({}),
     isFlagEnabled(supabase, 'learning.previews').catch(() => false),
     current ? fetchAuthoredAssessments(supabase, current.id) : Promise.resolve([]),
     fetchPendingManualResponses(supabase, courseId),
+    // What this version needs before it can publish, and what has been checked on it.
+    // The author may write requirements and record checks here; waiving one is a
+    // governance decision and lives on /admin/reviews.
+    current ? fetchVersionReviewState(supabase, current.id) : Promise.resolve(null),
+    fetchSubjectOptions(supabase),
   ]);
 
   return (
@@ -113,6 +122,34 @@ export default async function TeachCoursePage({
             assessments={assessments}
             manualResponses={manualResponses}
           />
+
+          {reviewState && (
+            <section className="section" style={{ marginTop: '1.5rem' }}>
+              <div className="outline-h" style={{ marginTop: 0 }}>
+                <h2 style={{ margin: 0 }}>Before this can publish</h2>
+              </div>
+              <RequirementPanel
+                versionId={current.id}
+                requirements={reviewState.requirements}
+                subjects={subjectOptions}
+                blockedBecause={reviewState.blockedBecause}
+                recountError={reviewState.recountError}
+                canRequire
+                canWaive={false}
+              />
+              <div style={{ marginTop: '1rem' }}>
+                <VersionChecks
+                  versionId={current.id}
+                  latestChecks={reviewState.latestChecks}
+                  checks={reviewState.checks}
+                  assessments={reviewState.assessments}
+                  versions={versions.map((v) => ({ id: v.id, versionNumber: v.versionNumber }))}
+                  canCheck
+                  canAssess
+                />
+              </div>
+            </section>
+          )}
         </>
       )}
 

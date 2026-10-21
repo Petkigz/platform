@@ -5,7 +5,11 @@ import { isSupabaseConfigured } from '@/lib/env';
 import {
   fetchAssignableReviewers,
   fetchPendingVersions,
+  fetchSubjectOptions,
 } from '@/lib/review';
+import { fetchVersionReviewState } from '@/lib/review-requirements';
+import { RequirementPanel } from '@/app/_shared/requirement-panel';
+import { VersionChecks } from '@/app/_shared/version-checks';
 import { AssignForm } from './assign-form';
 
 export const dynamic = 'force-dynamic';
@@ -17,6 +21,13 @@ export const dynamic = 'force-dynamic';
  * `cra_write` is privileged only, so a reviewer cannot claim work and a
  * teacher cannot nominate their own reviewer. Both would quietly defeat the
  * point of having a review step.
+ *
+ * Each version also shows what it needs before it can publish, because assigning a
+ * reviewer without that is guessing: if the version wrote down a subject, then
+ * `validate_review_assignment()` refuses any reviewer who is not authorised for it,
+ * and the dropdown below does not say who is. Governance staff may also waive a
+ * requirement here, which is the only way a version whose subject has no authorised
+ * reviewer ever publishes — and it needs the reason in writing.
  */
 export default async function AdminReviewsPage() {
   if (!isSupabaseConfigured()) redirect('/');
@@ -31,10 +42,25 @@ export default async function AdminReviewsPage() {
   const { data: privileged } = await supabase.rpc('is_privileged', { p_user_id: user.id });
   if (privileged !== true) redirect('/');
 
-  const [versions, reviewers] = await Promise.all([
+  // Reading this page is a staff matter. Waiving a review requirement is a governance
+  // one, so the control is offered to the two roles the database will accept and not
+  // to every privileged caller: a support agent can assign a reviewer and cannot
+  // decide that a course needs no review.
+  const [{ data: governance }, { data: platformAdmin }] = await Promise.all([
+    supabase.rpc('has_role', { p_user_id: user.id, p_role_code: 'governance_admin' }),
+    supabase.rpc('has_role', { p_user_id: user.id, p_role_code: 'platform_admin' }),
+  ]);
+  const isGovernance = governance === true || platformAdmin === true;
+
+  const [versions, reviewers, subjectOptions] = await Promise.all([
     fetchPendingVersions(supabase),
     fetchAssignableReviewers(supabase),
+    fetchSubjectOptions(supabase),
   ]);
+
+  const states = await Promise.all(
+    versions.map((v) => fetchVersionReviewState(supabase, v.id)),
+  );
 
   return (
     <div className="container section">
@@ -78,11 +104,16 @@ export default async function AdminReviewsPage() {
           Nothing has been submitted for review.
         </div>
       ) : (
-        versions.map((v) => (
+        versions.map((v, i) => (
           <div className="card" key={v.id} style={{ marginBottom: '1rem' }}>
             <div className="outline-h" style={{ marginTop: 0 }}>
               <h3 style={{ margin: 0 }}>{v.courseTitle}</h3>
               <span className="badge neutral">Version {v.versionNumber}</span>
+              {states[i] && states[i].openRequirements > 0 && (
+                <span className="badge warn">
+                  {states[i].openRequirements} requirement{states[i].openRequirements === 1 ? '' : 's'} open
+                </span>
+              )}
             </div>
             <p className="meta" style={{ marginTop: '0.5rem' }}>
               /{v.courseSlug}
@@ -92,6 +123,41 @@ export default async function AdminReviewsPage() {
               courseTitle={v.courseTitle}
               reviewers={reviewers}
             />
+            {states[i] && (
+              <details style={{ marginTop: '0.75rem' }}>
+                <summary style={{ cursor: 'pointer', color: 'var(--green-700, #176b45)' }}>
+                  What this version needs before it can publish
+                  {states[i].latestChecks.length > 0
+                    ? ` · ${states[i].latestChecks.filter((c) => c.passed).length}/${states[i].latestChecks.length} checks passed`
+                    : ''}
+                  {states[i].assessments[0]
+                    ? ` · classified as ${states[i].assessments[0].changeClass.replace(/_/g, ' ')}`
+                    : ''}
+                </summary>
+                <div style={{ marginTop: '0.75rem' }}>
+                  <RequirementPanel
+                    versionId={v.id}
+                    requirements={states[i].requirements}
+                    subjects={subjectOptions}
+                    blockedBecause={states[i].blockedBecause}
+                    recountError={states[i].recountError}
+                    canRequire={isGovernance}
+                    canWaive={isGovernance}
+                  />
+                  <div style={{ marginTop: '1rem' }}>
+                    <VersionChecks
+                      versionId={v.id}
+                      latestChecks={states[i].latestChecks}
+                      checks={states[i].checks}
+                      assessments={states[i].assessments}
+                      versions={[]}
+                      canCheck={false}
+                      canAssess={isGovernance}
+                    />
+                  </div>
+                </div>
+              </details>
+            )}
           </div>
         ))
       )}
