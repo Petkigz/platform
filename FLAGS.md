@@ -137,7 +137,7 @@ Three kinds of gate:
 
 ## Controls that are not flags
 
-`platform_settings` holds three rows that are not in the tables above. They are
+`platform_settings` holds five rows that are not in the tables above. They are
 not features to switch on — they are dials that decide how the publication and
 money rules behave, and they shipped with values rather than being absent.
 
@@ -146,11 +146,15 @@ money rules behave, and they shipped with values rather than being absent.
 | `governance.panel_required` | boolean | none | `false` | Whether a scholarly panel must decide before publication. Off means peer review by an authorised reviewer is enough (P6). Flipping it is a settings change, not a migration |
 | `governance.min_approvals` | integer | none | `1` | How many independent approvals a version needs before it may be published |
 | `teaching.revenue_share_percent` | integer | ADMIN | `50` | The teacher's share of a paid order, in whole percent. **Chosen at 50% by the owner on 2026-10-19** (it was seeded 0 while the number was unchosen). Earnings accrue at whatever this says when an order is confirmed, so setting it is a business decision, not a configuration one. Changing it never rewrites earnings already booked — each entry snapshots the share it accrued under. The percentage being settled does not settle the terms around it: tax per country, who bears processing fees, and uniform-or-per-teacher are still open, and `teaching.payouts` stays CODE-gated |
+| `finance.reporting_currency` | text | ADMIN | `USD` | The one currency money is reported in. **USD, per the project record, before any code existed** — the platform charges in whatever a family has and the owner reads a single figure. Original amounts stay authoritative (D4); this decides only what a total is converted into before a person reads it. Changing it re-reports the past at whatever rates are recorded, it does not restate a ledger row |
+| `finance.rate_sanity_factor` | integer | ADMIN | `10` | How many times the previous recorded rate for a pair a new rate may be before recording it needs a written reason. A slipped decimal in a rate is a 100x error in the only number the owner reads and it looks perfectly reasonable on screen, so the writer refuses one and keeps the reason in the audit trail. `0` turns the check off |
 
-Measured, the table holds **90 rows: the 87 flags above plus these three.**
-Eighty-eight are boolean switches and two are integers. Gate types: **43 ADMIN,
-14 ADMIN + SETUP, 31 CODE**, and the two governance controls, which have no gate
-because they are not features.
+Measured, the table holds **93 rows: the 88 flags above plus these five.**
+Ninety-two are boolean switches, three are integers and one is text. Gate types
+across the flags: **42 ADMIN, 14 ADMIN + SETUP, 32 CODE**. The two governance
+controls have no gate because they are not features; the three money controls are
+ADMIN, because a number that changes what a total says is changed from the
+dashboard and not from a migration.
 
 ---
 

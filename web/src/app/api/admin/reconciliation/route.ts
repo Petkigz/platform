@@ -35,6 +35,16 @@ export async function POST(request: Request) {
       if(typeof b.itemId!=='string'||!UUID.test(b.itemId)||typeof b.transactionId!=='string'||!UUID.test(b.transactionId))return NextResponse.json({ok:false,message:'Choose the reconciliation line and internal transaction.'},{status:400});
       if(typeof b.reason!=='string'||b.reason.length>500)return NextResponse.json({ok:false,message:'Reason must be under 500 characters.'},{status:400});
       fn='resolve_reconciliation_item';args={p_item_id:b.itemId,p_financial_transaction_id:b.transactionId,p_reason:b.reason.trim()||null};break;
+    case 'settle':
+      // What actually landed, and the rate it landed at. Separate from matching a
+      // statement line: a line can match and the settled figure can still be net of
+      // a fee, in another currency, at a rate that has to come from the shelf
+      // rather than from whoever is typing.
+      if(typeof b.transactionId!=='string'||!UUID.test(b.transactionId))return NextResponse.json({ok:false,message:'Choose the transaction that settled.'},{status:400});
+      if(typeof b.amountMinor!=='string'||!/^(0|[1-9][0-9]*)$/.test(b.amountMinor))return NextResponse.json({ok:false,message:'Enter what landed, in whole minor units. Zero is allowed; a fee can eat it all.'},{status:400});
+      if(typeof b.currencyCode!=='string'||!/^[A-Z]{3}$/.test(b.currencyCode))return NextResponse.json({ok:false,message:'Use a three-letter uppercase currency code.'},{status:400});
+      if(typeof b.rateId==='string'&&b.rateId.trim()&&!UUID.test(b.rateId.trim()))return NextResponse.json({ok:false,message:'A rate is chosen from the list, not typed in.'},{status:400});
+      fn='record_transaction_settlement';args={p_financial_transaction_id:b.transactionId,p_settlement_amount_minor:b.amountMinor,p_settlement_currency:b.currencyCode,p_rate_id:typeof b.rateId==='string'&&b.rateId.trim()?b.rateId.trim():null};break;
     case 'finalize':
       if(typeof b.reconciliationId!=='string'||!UUID.test(b.reconciliationId))return NextResponse.json({ok:false,message:'Choose a reconciliation.'},{status:400});
       fn='finalize_payment_reconciliation';args={p_reconciliation_id:b.reconciliationId};break;

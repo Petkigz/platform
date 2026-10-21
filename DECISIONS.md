@@ -1416,3 +1416,82 @@ nothing).
 
 Implemented in `20261222000100_adult_learning_shares.sql` (six functions),
 `lib/sharing.ts`, `/api/account/sharing`, and `/account/sharing`.
+
+## What a total in more than one currency means — **DECIDED 2026-10-21**
+
+The platform charges in whatever currency a family has and the owner reads one figure,
+in USD. "USD reporting currency" was in the project record before any code existed, and
+`currency_exchange_rates` was built in the payments migration with an index shaped for
+exactly the question it answers — the newest rate for a pair at a moment. Nothing could
+write to it, `financial_transactions.fx_rate` and its two provenance columns were
+required by a constraint and never set by any function, and every money screen summed
+mixed currencies together. This decides what a converted total is allowed to be.
+
+**The reporting currency is a dial, not a constant.** `finance.reporting_currency`
+lives in the register beside the revenue share, because a number that changes what every
+total says is a business decision an admin makes and `FLAGS.md` records. D4 is untouched:
+the original amount and currency stay authoritative and stored, and conversion happens
+on the way to being read. The same order read tomorrow at a different rate is still the
+same order.
+
+**A rate is a fact a person looked up, and says where.** There is no rate feed in this
+environment and no credential to call one with, so `source` is a sentence — "Bank of
+Uganda, mid rate" — and not a dropdown of integrations that would imply an automatic
+feed. A rate with no source is refused: when a total looks wrong, the source is the only
+thing that makes it checkable. A provider integration later is a second writer of the
+same table under the same requirement, not a replacement for the field.
+
+**An implausible move needs a written reason.** A new rate more than
+`finance.rate_sanity_factor` times the previous one for that pair is refused unless the
+person entering it says why, and the reason is kept in the audit row beside the rate it
+overrides. A slipped decimal is a hundredfold error in the only number the owner reads
+and it looks perfectly reasonable on screen. The guard is a refusal with a way through
+rather than a hard limit, because a currency does sometimes move that far and the person
+entering the rate is the one who knows. Setting the factor to 0 turns the check off, and
+the report still shows the move beside the total it produced.
+
+**A pair nobody recorded converts to nothing.** NULL, never 1, never the last rate on
+the shelf for some other pair. Guessing that an unknown currency is worth a dollar is
+the one mistake here that would be invisible: the total would still look like a total.
+Unconverted money is its own row in the report, the missing pairs are named, and the
+warning says the total is smaller than the truth until a rate exists.
+
+**An inverted rate says it was inverted.** When only the other direction was ever
+recorded, `1/rate` is arithmetic and not a guess, so it is used — flagged `derived`, and
+sourced as derived from the published rate it came from. A total resting on a rate
+nobody ever quoted should say so on the same line as the figure.
+
+**Minor units are per currency, on both sides of the conversion.** 5 000 minor units of
+UGX is 5 000 shillings and 5 000 minor units of USD is 50 dollars, so applying a
+major-unit rate without dividing by one divisor and multiplying by the other is 100x
+either way. The exponents live in `currency_minor_divisor()` and, independently, in
+`lib/money.ts`, because a browser has to display an amount and cannot call a function
+for it. Both copies grew to the full ISO lists — 17 zero-decimal codes and the 7
+three-decimal dinars, neither of which the web copy had — and both are pinned by a test
+on their own side asserting the same codes.
+
+**FX provenance has one source.** `record_transaction_settlement()` refuses a
+cross-currency settlement when no rate is recorded, rather than accepting a rate typed
+in beside it. A settlement cites a row from the shelf or nothing, which is what makes
+`fx_rate`, `fx_source` and `fx_observed_at` mean something. Re-recording is allowed,
+because a provider restates, and the earlier figure stays in the audit row.
+
+**The report does not net.** Credits and debits are totalled separately and no single
+figure is produced, because whether a chargeback offsets the capture it came from, and
+whether a provider fee comes off revenue here or the teacher's payout there, are
+decisions about the business rather than about arithmetic. Recorded as open in
+`NEXT.md`; the report says on its face that it does not net.
+
+**Rejected:** converting stored amounts into USD (D4 — the original currency is
+authoritative, and a ledger that changes when a rate does is not a ledger); defaulting a
+missing rate to 1 or to the last known pair (invisible in a total); a rate feed with no
+credential to call it (a stub that pretends to be automatic is worse than a form); typing
+an FX rate in beside a settlement (two places a rate can come from, and only one of them
+audited); netting debits against credits to produce one revenue figure (an undecided
+policy buried in a sum); and keeping the minor-unit exponents in one language only (the
+browser cannot call the database, so both copies exist and both are tested).
+
+Implemented in `20261223000100_currency_reporting.sql` (eight functions, two controls),
+`lib/currency.ts`, `lib/money.ts`, `/api/admin/exchange-rates`, `/api/admin/money-report`,
+a `settle` action on `/api/admin/reconciliation`, and the screens `/admin/exchange-rates`
+and `/admin/money-report`.

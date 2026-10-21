@@ -303,9 +303,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **1037 database tests, 725 web tests; TypeScript typecheck and
+Verification: **1087 database tests, 755 web tests; TypeScript typecheck and
 production build pass; 103 tables, 231 policies, 135 user-defined triggers,
-250 functions, 104 migrations and 111 app route entries.**
+257 functions, 105 migrations and 115 app route entries.**
 
 ## Today's sentence
 
@@ -362,7 +362,7 @@ given a surface. Grouped by the feature they belong to:
 | Reviewer machinery — the versions | `content_review_requirements`, `technical_review_checks`, `content_change_assessments` | **Now written** by `20261221000100_review_requirements.sql`, on `/teach/[courseId]`, `/admin/reviews` and `/review/[assignmentId]`. `validate_review_assignment()`'s authorisation loop now has something to loop over, so a version can require a reviewer authorised for a subject — and a requirement can be closed, which nothing could do before |
 | Payouts | `instructor_payouts`, `instructor_payout_items` | `teaching.payouts`, off; ROADMAP already says "3 tables with no fields and no endpoints" |
 | Institutions | `institutions` | `commerce.institutions` and four `institution.*` flags, all off |
-| Money plumbing | `currency_exchange_rates`, `order_adjustments`, `payment_method_references` | Multi-currency reporting and stored payment methods, neither decided |
+| Money plumbing | `currency_exchange_rates`, `order_adjustments`, `payment_method_references` | **`currency_exchange_rates` is now written and read** by `20261223000100_currency_reporting.sql`, on `/admin/exchange-rates` and `/admin/money-report`, and it is what stamps `financial_transactions.fx_rate`/`fx_source`/`fx_observed_at` — columns a constraint required and nothing ever set. Multi-currency reporting is therefore built; the open part is what nets against what in the report. `order_adjustments` still has no writer (promotions eligibility and stacking are undecided, and an order's total is not held against its items plus adjustments by anything), and `payment_method_references` needs a provider that can store one |
 | History and diagnostics | `order_status_history`, `publication_events`, `entitlement_events`, `course_enrolment_version_history`, `subscription_history` | **Now read** by `support_case_history()`, on `/support/<caseNumber>` for staff. Still closed to every other read path, which is the point: one function decides what support may see |
 | Diagnostics with no writer | `access_checks` | **Correction to the audit:** nothing has ever inserted a row here — not a trigger, not a function, not a route. Its comment promises a denial log for support agents and the platform does not keep one. Excluded from the console on purpose; an always-empty list would read as "no denial happened" |
 | Other | `adult_learning_shares` | **Now written and read**, by `20261222000100_adult_learning_shares.sql` on `/account/sharing`. The console still reads it too, and its empty section is now a true answer about a feature that exists: nobody has been given sight of this adult's progress. The gap the audit named — no writer, and no predicate that made a share mean anything — is closed at both ends |
@@ -1479,6 +1479,119 @@ any time. A cap is never silent: 25 rows are shown beside the total.
 new route entries.
 
 
+### Money is reported in one currency, and every rate says where it came from, 2026-10-21
+
+The platform charges in whatever currency a family has — UGX in Kampala, NGN in
+Lagos, GBP in Birmingham — and the owner reads one figure, in USD. That was
+decided in the project record before any code existed, and three pieces of it had
+been built in SQL and were unreachable:
+
+- `currency_exchange_rates` existed with an index shaped for exactly one question
+  — the newest rate for a pair at a moment — and **nothing could write to it**.
+- `financial_transactions.fx_rate`, `fx_source` and `fx_observed_at` were
+  *required* by `ft_settlement_needs_fx` whenever a settlement landed in another
+  currency, and no function in the repository ever set one. D4's "FX recorded
+  with source and timestamp" was a constraint with no writer behind it.
+- `settlement_amount_minor` and `settlement_currency` had the same problem:
+  reconciliation could match a provider's statement line to a transaction, but
+  nothing could say what actually landed.
+
+So every money screen summed mixed currencies, which is not a number. 5 000 UGX
+plus 3 USD is meaningless twice over: they are different currencies, and they are
+100x apart in minor units before conversion, because UGX has no minor unit at all.
+
+**`20261223000100_currency_reporting.sql`, eight functions, no new table.**
+
+- `record_exchange_rate(base, quote, rate, source, observed_at?, override_reason?)`
+  — `finance_admin` or `platform_admin`, the pair that guards every other money
+  writer, and deliberately not `is_privileged()`: a support agent may refund an
+  order and must not be able to change the number every total is converted with.
+  The source is required and is a sentence, not a dropdown, because there is no
+  rate feed in this environment and no credential to call one with; a rate is a
+  fact a person looked up and this is where they say where. It refuses a
+  self-pair, a non-positive rate, one above a billion, a future observation, and
+  — the guard that matters — a rate more than `finance.rate_sanity_factor` times
+  the previous one for that pair without a written reason. A slipped decimal in a
+  rate is a hundredfold error in the only number the owner reads, and it looks
+  perfectly reasonable on screen. The reason is kept in the audit row beside the
+  rate it overrides. Setting the factor to 0 turns the check off.
+- `resolve_exchange_rate(base, quote, as_of?)` — the newest observation at or
+  before a moment; or, when only the other direction was ever recorded, its
+  inverse, flagged `derived` and sourced as derived, because an inverted rate was
+  never published by anybody and a total resting on one should say so on the same
+  line. **A pair nobody recorded returns NULL, not 1.** Guessing that an unknown
+  currency is worth a dollar is the one mistake here that would be invisible in
+  the total.
+- `to_reporting_currency(amount_minor, currency, as_of?)` — the conversion, in
+  integer minor units per D4, dividing by the source currency's divisor and
+  multiplying by the reporting currency's. Both divisors matter and this is the
+  easiest error in the file to make: applying a major-unit rate to minor units
+  without them is 100x either way and still looks like a number. Rounding is half
+  away from zero on the reporting unit. A misconfigured `finance.reporting_currency`
+  raises rather than defaulting.
+- `record_transaction_settlement(txn, amount, currency, rate_id?)` — what actually
+  landed, stamping the rate row it used. Cross-currency settlement is **refused
+  when no rate is recorded**, which is the point: FX provenance comes from the
+  rate table, so there is one place a rate is ever written down and no way to
+  type one in beside a settlement. A named rate row is used exactly, in either
+  direction; a same-currency settlement cites no rate and refuses one offered.
+  Re-recording is allowed, because a provider restates, and the earlier figure is
+  kept in the audit row with `restated: true` rather than overwritten silently.
+  A failed or reversed transaction cannot be settled.
+- `report_money_in_reporting_currency(from, to)` — the number the owner reads.
+  Gross, grouped by type, direction and currency, converting every group at the
+  moment the window closes so two rows in one currency cannot use two rates and
+  then be added. It reports the rate beside each figure, lists what it could not
+  convert as its own rows with the missing pairs named, and flags any rate behind
+  it that moved more than the sanity factor even when the writer was satisfied.
+  **It produces no single net figure.** Credits and debits are totalled
+  separately and the response says why: whether a chargeback offsets a capture,
+  and whether a provider fee comes off here or in the payout, are decisions about
+  the business rather than about arithmetic, and a report that made them would
+  bury the answer in a sum nobody reads the terms of. Recorded as open below.
+- Two controls in the register, `finance.reporting_currency` (`USD`) and
+  `finance.rate_sanity_factor` (`10`), and `setting_text()` to read the first.
+
+**A defect found while writing the accessor, and fixed.** `setting_int()`
+documented itself as "falling back to p_default when unset or blank" and did not:
+a SQL function whose query returns no rows returns NULL, so a *missing key*
+ignored the default entirely. It never showed up because every key it is called
+with is seeded — `teaching.revenue_share_percent`, `governance.min_approvals` —
+so the fallback was only ever exercised for a blank value, never an absent one.
+Recreated with the fallback it claimed, and pinned by a test that asks for a key
+that does not exist rather than one that is empty. `setting_text()` is written
+the same way.
+
+**One fact, two copies, both pinned.** Minor-unit exponents live in
+`public.currency_minor_divisor()` and, independently, in `web/src/lib/money.ts`,
+because a browser has to display an amount and cannot call a function for it.
+That is a duplication with no shared runtime rather than a second implementation
+of a rule, and it is held from both sides: `currency_reporting.test.mjs` and
+`currency.test.ts` assert the same three lists — 17 zero-decimal codes, the 7
+three-decimal dinars, and a spread of two-decimal ones. Both lists also grew: the
+web copy had 7 zero-decimal currencies and no three-decimal case at all, so a
+charge in Kuwaiti dinars would have been 10x wrong on both sides. Change one list
+and a test fails on that side.
+
+**Where it renders.** `/admin/exchange-rates`: the shelf, newest first within each
+pair with the one in force named, the record form with the override reason behind
+a collapsed heading that explains what it is for, and a single-amount converter
+that shows the rate and its provenance — which is how a total that looks wrong is
+investigated, since the fix is a recorded rate and never an edited number.
+`/admin/money-report`: the window (its end date inclusive, because the database
+treats the end as exclusive and quietly dropping the last day's money is the
+failure the form must not have), money in and money back separately, the
+unconverted currencies named in a warning that says the total is smaller than the
+truth until a rate exists, outliers beside the figures they produced, what
+teachers are owed in the same currency, and the rates used with their sources.
+Settlement is recorded where the finance admin already is: on
+`/admin/reconciliation`, per resolved statement line, with the rate shelf offered
+as a choice and the response reading back what was stamped rather than "saved".
+
+50 database tests, 30 web. One migration, eight functions (seven new, one
+recreated), no new table, no new flag, two new controls, four new route entries.
+
+
 ## Open external decisions (not to be guessed)
 
 - Payment provider merchant/sandbox credentials and callback verification (P12).
@@ -1497,6 +1610,14 @@ new route entries.
   leaves a person believing they shared something they did not, which is worse here.
   Removing the disclosure means an invite flow with a token, an expiry and a second
   screen; that is a feature to decide on, not a fix to slip in.
+- **What nets against what in the money report.** `/admin/money-report` totals
+  credits and debits separately and refuses to produce one figure, because whether a
+  chargeback offsets the capture it came from, whether a provider fee is deducted
+  from revenue here or from the teacher's payout, and whether a reversed transaction
+  belongs in the period it happened in or the one it was reversed in, are decisions
+  about the business. Each is a one-line change to `report_money_in_reporting_currency()`
+  once made, and guessing would bury the answer in a sum that looks authoritative.
+  The report says on its face that it does not net.
 - **Whether a scholarly authorisation should require a verified qualification in
   that subject.** Raised by the reviewer register (2026-10-21) and deliberately not
   implemented either way: it is a governance policy about who is trusted with what the

@@ -131,6 +131,17 @@ export default async function AdminPage() {
         <Link href="/admin/disputes">Payment disputes</Link> — track and review provider cases (finance/platform admin).
       </p>
       <p>
+        <Link href="/admin/exchange-rates">Exchange rates</Link> — what one
+        currency was worth in another, when, and who said so. Every converted
+        total rests on a row here (finance/platform admin).
+      </p>
+      <p>
+        <Link href="/admin/money-report">Money report</Link> — what moved in a
+        period, in the one currency the platform is read in, with the rate beside
+        every figure and the money it could not convert listed as a gap
+        (finance/platform admin).
+      </p>
+      <p>
         <Link href="/admin/reviews">Assign reviews</Link> — courses waiting
         for a reviewer.
       </p>

@@ -69,9 +69,9 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **103 tables, RLS on every one, 231 policies, 135
-user-defined triggers, 250 functions and 104 migrations.** The database suite
-passes **1037 tests**; the web suite passes **725 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **111 app route entries**.
+user-defined triggers, 257 functions and 105 migrations.** The database suite
+passes **1087 tests**; the web suite passes **755 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **115 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. `/account`
@@ -115,6 +115,24 @@ whose learning has been shared with me, with the terms shown to the reader as
 well as the owner. It sits behind `family.adult_shares`, which ships off; reading
 and revoking are not gated by it, because turning a feature off must not strand
 somebody's privacy decision with no way to end it.
+
+Money is now reported in one currency. The platform charges in whatever a family
+has — UGX in Kampala, NGN in Lagos, GBP in Birmingham — and `currency_exchange_rates`
+had been built with an index shaped for exactly the question it answers while nothing
+could write to it, so every money screen summed mixed currencies together, which is
+not a number. `/admin/exchange-rates` is the shelf: a rate is recorded with a source,
+because a rate nobody can attribute cannot be checked when a total looks wrong, and a
+rate more than ten times the previous one for its pair needs a written reason, because
+a slipped decimal is a hundredfold error that looks reasonable on screen.
+`/admin/money-report` converts a period into `finance.reporting_currency` (USD), names
+the rate beside every figure, and lists the money it could not convert as a gap rather
+than guessing it — an unrecorded pair resolves to nothing, never to 1. It totals
+credits and debits separately and produces no single net figure, because what nets
+against what is a business decision recorded as open rather than assumed by a query.
+The same migration gives `financial_transactions.fx_rate`, `fx_source` and
+`fx_observed_at` their first writer: a settlement in another currency is refused unless
+a rate is recorded, so FX provenance has one source and cannot be typed in beside the
+figure it justifies.
 
 Free previews now have one consistent gate from the catalogue to content
 access. Teachers can mark draft lessons and individual public-sample resources;

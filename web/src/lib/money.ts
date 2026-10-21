@@ -25,10 +25,27 @@ export type Money = {
 const CURRENCY_RE = /^[A-Z]{3}$/;
 
 /**
- * Currencies with no minor unit at all. Charging 100 "cents" of Japanese yen
- * would be a hundred times the intended amount.
+ * Currencies with no minor unit at all (ISO 4217 exponent 0). Charging 100
+ * "cents" of Japanese yen would be a hundred times the intended amount.
+ *
+ * These two lists are duplicated in the database, in
+ * `public.currency_minor_divisor()` (`20261223000100_currency_reporting.sql`),
+ * because converting an amount into the reporting currency has to know the same
+ * fact server-side and a browser cannot call a function for it. Both copies are
+ * pinned against the same codes — here in `money.test.ts` and there in
+ * `supabase/tests/currency_reporting.test.mjs`. Change one and a test fails.
  */
-const ZERO_DECIMAL = new Set(['JPY', 'KRW', 'VND', 'CLP', 'ISK', 'UGX', 'RWF']);
+const ZERO_DECIMAL = new Set([
+  'BIF', 'CLP', 'DJF', 'GNF', 'ISK', 'JPY', 'KMF', 'KRW', 'PYG', 'RWF',
+  'UGX', 'UYI', 'VND', 'VUV', 'XAF', 'XOF', 'XPF',
+]);
+
+/**
+ * Currencies with three decimal places (ISO 4217 exponent 3), all of them
+ * dinars. Treating one as two-decimal is a ten-times error, which is why they
+ * get a list of their own rather than falling through to the common case.
+ */
+const THREE_DECIMAL = new Set(['BHD', 'IQD', 'JOD', 'KWD', 'LYD', 'OMR', 'TND']);
 
 export class MoneyError extends Error {}
 
@@ -41,7 +58,9 @@ export function minorUnitDivisor(currency: Currency): number {
   if (!isCurrency(currency)) {
     throw new MoneyError(`'${String(currency)}' is not an ISO 4217 code`);
   }
-  return ZERO_DECIMAL.has(currency) ? 1 : 100;
+  if (ZERO_DECIMAL.has(currency)) return 1;
+  if (THREE_DECIMAL.has(currency)) return 1000;
+  return 100;
 }
 
 /**
