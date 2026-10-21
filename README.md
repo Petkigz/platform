@@ -69,9 +69,9 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **103 tables, RLS on every one, 231 policies, 135
-user-defined triggers, 244 functions and 103 migrations.** The database suite
-passes **1017 tests**; the web suite passes **713 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **109 app route entries**.
+user-defined triggers, 250 functions and 104 migrations.** The database suite
+passes **1037 tests**; the web suite passes **725 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **111 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. `/account`
@@ -104,6 +104,17 @@ close one either: a requirement was a door that locked from the inside. An appro
 from a reviewer authorised for the subject now closes it, a governance admin can
 waive it in writing, and the panel says when no living reviewer could close it at
 all.
+
+An adult can now share their own learning, and take it back. Adult learning is
+private by default, including inside a family, and `adult_learning_shares` had
+said so since the first week — three scopes, an expiry, a revocation the status
+is tied to — while nothing wrote a row and nothing read one either, so a share
+would have granted nobody anything. `/account/sharing` is both seats: who can see
+my learning, granted to one account for one scope for a length you choose, and
+whose learning has been shared with me, with the terms shown to the reader as
+well as the owner. It sits behind `family.adult_shares`, which ships off; reading
+and revoking are not gated by it, because turning a feature off must not strand
+somebody's privacy decision with no way to end it.
 
 Free previews now have one consistent gate from the catalogue to content
 access. Teachers can mark draft lessons and individual public-sample resources;

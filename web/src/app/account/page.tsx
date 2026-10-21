@@ -51,6 +51,16 @@ export default async function AccountPage() {
           <p className="muted">This account signs in with a phone code, so there is no password to reset.</p>
         )}
       </section>
+      <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
+        <h2 style={{ marginTop: 0 }}>Sharing my learning</h2>
+        <p className="muted">
+          Your progress and certificates are private, including to your family. You can
+          share them with one account at a time, for a scope you choose, and end it
+          whenever you like.{' '}
+          <Link href="/account/sharing">Who can see my learning</Link>
+        </p>
+      </section>
+
       <p style={{ marginTop: '1.5rem' }}><Link href="/learn">Back to my learning</Link></p>
     </div>
   );

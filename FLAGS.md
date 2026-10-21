@@ -75,7 +75,7 @@ Three kinds of gate:
 | `family.guardian_verification` | Manual review of guardians | ADMIN + SETUP | Evidence handling defined; retention policy; **your own review capacity** — this is a human queue |
 | `family.child_login` | Child has their own login | CODE | Trusted linking workflow; safeguarding; age assurance; retention for child data |
 | `family.plans` | Family plan with included child slots | ADMIN + SETUP | Slot pricing; reduction rules; payments on |
-| `family.adult_shares` | Adult learner shares progress with someone | ADMIN | Scope model; revocation UI; privacy disclosure text |
+| `family.adult_shares` | Adult learner shares progress with someone | ADMIN | **Built on `/account/sharing` (2026-10-21), and the three open items are settled.** Scope model: the schema's three — progress, achievements, or both — one active share per person per scope, and changing the terms means revoking first so the record is never edited. Revocation UI: an "end it" on every live share, for the person who granted it or governance staff. Privacy disclosure text: on the panel, in the grant form, and to the reader, who sees the terms they are reading under. Off gates every writer; reading and revoking stay available while it is off, because turning a feature off must not strand a privacy decision with no way to end it. Still open: the grant form discloses whether an email address has an account, as `invite_family_member()` always has, and removing that needs an invite flow with a token |
 | `family.engagement` | Badges, streaks, visible progress for children | ADMIN | Mechanics actually designed — currently `gamif: 0`, `badge: 0`, `streak: 0` |
 
 ## Teaching

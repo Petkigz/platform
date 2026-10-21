@@ -303,9 +303,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **1017 database tests, 713 web tests; TypeScript typecheck and
+Verification: **1037 database tests, 725 web tests; TypeScript typecheck and
 production build pass; 103 tables, 231 policies, 135 user-defined triggers,
-244 functions, 103 migrations and 109 app route entries.**
+250 functions, 104 migrations and 111 app route entries.**
 
 ## Today's sentence
 
@@ -365,7 +365,7 @@ given a surface. Grouped by the feature they belong to:
 | Money plumbing | `currency_exchange_rates`, `order_adjustments`, `payment_method_references` | Multi-currency reporting and stored payment methods, neither decided |
 | History and diagnostics | `order_status_history`, `publication_events`, `entitlement_events`, `course_enrolment_version_history`, `subscription_history` | **Now read** by `support_case_history()`, on `/support/<caseNumber>` for staff. Still closed to every other read path, which is the point: one function decides what support may see |
 | Diagnostics with no writer | `access_checks` | **Correction to the audit:** nothing has ever inserted a row here — not a trigger, not a function, not a route. Its comment promises a denial log for support agents and the platform does not keep one. Excluded from the console on purpose; an always-empty list would read as "no denial happened" |
-| Other | `adult_learning_shares` | **Now read** by the same console, where empty is a real answer ("nobody can see your progress"). Still never written by the product: no screen or route creates a share, only SQL can. The adult privacy story is the gap, not the panel |
+| Other | `adult_learning_shares` | **Now written and read**, by `20261222000100_adult_learning_shares.sql` on `/account/sharing`. The console still reads it too, and its empty section is now a true answer about a feature that exists: nobody has been given sight of this adult's progress. The gap the audit named — no writer, and no predicate that made a share mean anything — is closed at both ends |
 
 **Two functions were genuinely unreachable**, in the stronger sense that nothing
 called them at all — not a route, not a policy, not a trigger, not another
@@ -1405,6 +1405,80 @@ finds a subject a version teaches that nobody asked about.
 new flag, one new route entry.
 
 
+### An adult can share their learning, and take it back, 2026-10-21
+
+`adult_learning_shares` was designed in the first week with the whole rule already in it:
+"Adult learning is private by default, including inside a family. A share must be
+explicit, scoped and revocable." Three scopes, an expiry that has to be in the future, a
+revocation timestamp the status is tied to by a CHECK, one active share per person per
+scope, and a trigger refusing to route a child's learning through this table or an
+adult's to their own account. Nothing ever inserted a row.
+
+The support console built two units ago reads the table and reports it, and says so
+honestly — empty means nobody has been given sight of this adult's progress, which was a
+true statement about a feature that did not exist. What the audit recorded as "the adult
+privacy story is the gap" was really two gaps, and the second was the worse one: **no
+predicate read the table either**, so a row written by hand would not have granted
+anybody anything. A share that grants nothing is not a half-built feature; it is a
+privacy control that tells somebody they have given access they have not.
+
+**Six functions.** `share_adult_learning` (the learner themself, one active share per
+person per scope, and changing the terms means revoking first so the record of what was
+granted is never edited), `revoke_adult_learning_share` (the person who granted it, or
+governance staff), `may_read_shared_learning` (the predicate that makes a grant mean
+something), `shared_learning_overview` (what the reader may see, with the terms they are
+seeing it under), `my_learning_shares` (the owner's list), and `resolve_share_grantee`
+(the email address a person types into the account a share is granted to). All audited
+under `family.share_*`, all revoked from `public` and `anon`.
+
+**Expiry is corrected when somebody looks.** `expires_at` is the fact and
+`status = 'expired'` is a bookkeeping copy of it, and nothing in the schema flips one to
+the other. With no scheduler here, a share that ran out would keep reading `active` in
+the table while conferring nothing — the worst kind of disagreement, because the row a
+person reads says access and the rule that decides access says otherwise. Both readers
+therefore correct what they see, audited, before returning anything: a small write
+inside a read, chosen over a table that lies until somebody runs a script. The
+correction never touches a revocation, because who ended a share is part of the record.
+
+**The predicate refuses what the column would allow.** `may_read_shared_learning()`
+requires `status = 'active'` *and* an expiry that has not passed, and answers false for
+a kind that is not `progress` or `achievements` rather than treating it as neither — so
+a caller cannot typo its way into a share it does not hold. A scope of
+`progress_and_achievements` covers both; a narrower one covers one, and the overview
+reports which of the two the reader may see so a panel cannot imply more than was
+granted.
+
+**Granting is gated by `family.adult_shares`; reading and revoking are not.** The flag
+ships off and every writer is refused by the database while it is off, so the panel says
+so rather than offering a form that cannot work. But a share granted while the flag was
+on has to stay revocable after it goes off — turning a feature off must not strand
+somebody's privacy decision with no way to end it. The same rule the support history
+follows.
+
+**One disclosure, recorded rather than hidden.** The grant form asks for an email
+address, because nobody knows their friend's uuid, and `resolve_share_grantee()` answers
+whether an account exists. That is a disclosure. It is not new — `invite_family_member()`
+has answered "no such user" since the family tables were built — and the alternative is
+worse: a flow that shares with a named person either discloses that or silently does
+nothing, and a person who believes they shared something and did not is the outcome this
+product cannot accept. Nothing beyond existence is disclosed: no email comes back, no
+learner, no progress, and a suspended or closed account is refused rather than resolved.
+Removing the disclosure entirely means an invite flow with a token and an expiry, which
+is a different feature; it is recorded as open below rather than half-built here.
+
+**Where it renders.** `/account/sharing`, linked from `/account`: who can see my
+learning, with what and until when, and an "end it" on each; a grant form that finds the
+person and shows the name it found, with a line saying the platform cannot prove which
+account is whose, which is why the length of the share is offered beside its scope — a
+week is a cheaper mistake than forever. Below it, the other seat: whose learning has
+been shared with me, each with the terms, the enrolments and lesson counts or the
+certificates the scope covers, and a note that the person who granted it can end it at
+any time. A cap is never silent: 25 rows are shown beside the total.
+
+20 database tests, 12 web. One migration, six functions, no new table, no new flag, two
+new route entries.
+
+
 ## Open external decisions (not to be guessed)
 
 - Payment provider merchant/sandbox credentials and callback verification (P12).
@@ -1417,6 +1491,12 @@ new flag, one new route entry.
   place to discover a deployment setting.
 - Payout policy/preconditions, tax and jurisdiction treatment, and disbursement
   credentials.
+- **Whether sharing with a named person may disclose that their account exists.**
+  `/account/sharing` resolves an email address to an account and says so when there is
+  none, as `invite_family_member()` has always done. The alternative — a silent no-op —
+  leaves a person believing they shared something they did not, which is worse here.
+  Removing the disclosure means an invite flow with a token, an expiry and a second
+  screen; that is a feature to decide on, not a fix to slip in.
 - **Whether a scholarly authorisation should require a verified qualification in
   that subject.** Raised by the reviewer register (2026-10-21) and deliberately not
   implemented either way: it is a governance policy about who is trusted with what the

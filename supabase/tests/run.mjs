@@ -62,6 +62,7 @@ import { run as mediaUploadAbandonment } from './media_upload_abandonment.test.m
 import { run as supportCaseHistory } from './support_case_history.test.mjs';
 import { run as reviewerRegister } from './reviewer_register.test.mjs';
 import { run as reviewRequirements } from './review_requirements.test.mjs';
+import { run as adultLearningShares } from './adult_learning_shares.test.mjs';
 
 const ctx = await createHarness();
 const suites = [];
@@ -120,6 +121,7 @@ for (const [name, fn] of [
   ['support case history', supportCaseHistory],
   ['reviewer register', reviewerRegister],
   ['review requirements', reviewRequirements],
+  ['adult learning shares', adultLearningShares],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],

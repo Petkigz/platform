@@ -140,6 +140,7 @@ against the actual route list in the production build, not from memory.
 |---|---|
 | `/` | Marketing home |
 | `/account` | Account settings: display name, preferred language, IANA time zone |
+| `/account/sharing` | Who can see my learning, and whose learning I can see *(added, 2026-10-21)*: an adult grants one account one scope — progress, certificates, or both — for a length they choose, sees every grant with who, what and until when, and ends any of them. Below it, the other seat: what has been shared with me, with the terms the reader is reading under, the enrolments and lesson counts or the certificates the scope covers, and a line saying the person who granted it can end it at any time. Gated by `family.adult_shares`, which ships off — but reading and revoking are not gated, so a share granted while it was on stays revocable after it is turned off. The grant form resolves an email address to an account and says when there is none, which discloses that an account exists; the alternative is a share that silently does nothing |
 | `/courses/[slug]/preview/[lessonId]` | A free preview lesson, gated by `learning.previews` |
 | `/learn/[enrolmentId]` | The learner dashboard for one enrolment |
 | `/paths` | Guided learning-path catalogue |
@@ -164,7 +165,7 @@ Nine of the seventeen are administration screens. Section 7 has since gained row
 | | |
 |---|---|
 | Numbered screen IDs | **50**, plus 19a, 19b, 20a, 20b, 20c, 31a, 31b and 31c — **58 rows** |
-| Built | **43 inventoried**, plus **19 built but never inventoried** above — **62 in the app** |
+| Built | **43 inventoried**, plus **20 built but never inventoried** above — **63 in the app** |
 | Ready to design now | **11** |
 | Blocked | **5** |
 

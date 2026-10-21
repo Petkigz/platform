@@ -1338,3 +1338,81 @@ Implemented in `20261221000100_review_requirements.sql` (five functions and a tr
 `lib/review-requirements.ts`, `/api/review/requirements`, and the shared `RequirementPanel`
 and `VersionChecks` components on `/teach/[courseId]`, `/admin/reviews` and
 `/review/[assignmentId]`.
+
+## Who may see an adult's learning — **DECIDED 2026-10-21**
+
+Adult learning is private by default, including inside a family. That sentence was
+written into the comment on `adult_learning_shares` in the first week, with the table
+built to match it — three scopes, an expiry that has to be in the future, a revocation
+timestamp the status is tied to by a CHECK, one active share per person per scope — and
+nothing ever wrote a row. This decides what a share is worth, who may grant and end one,
+and what the panel is allowed to say.
+
+**A share is the only route in, and it names one account.** No "share with my family",
+no "share with my teacher", no group. Family membership is a different relation with
+different rules (a guardian sees a child's learning because of the child, not because of
+a preference), and a group grant would make the answer to "who can see this?" depend on
+membership of something else that changes without the learner being asked again. One
+account, one scope, one row.
+
+**A share is never edited.** Changing the terms means revoking and granting again, so the
+record of what was granted, to whom, when, and when it ended is never rewritten. The
+unique index allows one *active* share per person per scope, which is what makes this
+possible: a revoked or expired row stays as history and a new grant sits beside it.
+
+**`expires_at` is the fact; `status` is a copy of it, and readers correct it.** There is
+no scheduler here, so without a correction a lapsed share would keep reading `active`
+while granting nothing — the row a person reads would say access and the rule deciding
+access would say otherwise. Both readers flip lapsed rows to `expired`, audited, before
+returning anything. It is a write inside a read and it is deliberate; the alternative is
+a table that lies until somebody runs a script. The correction never touches a
+revocation, because who ended a share is part of the record.
+
+**The predicate is stricter than the column.** `may_read_shared_learning()` requires an
+active status *and* an unpassed expiry, and answers false for a kind that is neither
+`progress` nor `achievements` rather than treating it as neither. A caller cannot typo
+its way into a share it does not hold, and a scope of both covers both while a narrower
+one covers one — the overview reports which of the two the reader holds, so no panel can
+imply more than was granted.
+
+**The flag gates granting, and does not gate reading or revoking.** `family.adult_shares`
+ships off and the database refuses every writer while it is off, so the panel says so
+instead of offering a form that cannot work. But a share granted while it was on has to
+stay revocable after it is turned off: switching a feature off must not strand somebody's
+privacy decision with no way to end it. The same rule the support history follows.
+
+**Revoking belongs to the person who granted it, or to governance staff.** Not to the
+person shared with — they did not grant it and their consent is not what is being
+withdrawn — and not to every privileged caller. "Administrator" in the policy's own
+comment is read as `governance_admin` or `platform_admin`, because a support agent who
+can read a case and refund an order should not be able to end somebody's privacy
+decision.
+
+**Naming a person discloses that their account exists, and that is recorded rather than
+hidden.** The form asks for an email address because nobody knows their friend's uuid,
+and `resolve_share_grantee()` answers whether an account has it. `invite_family_member()`
+has answered the same question the same way since the family tables were built. The
+alternative — resolving nothing and granting nothing — leaves a person believing they
+shared something they did not, which for a privacy control is the worse failure. Nothing
+beyond existence is disclosed: no email comes back, no learner, no progress, and a
+suspended or closed account is refused rather than resolved. Removing the disclosure
+means an invite flow with a token and an expiry, recorded as open in `NEXT.md`.
+
+**The panel says what it cannot know.** The name shown after a lookup is whatever that
+account set, and this platform has no way to prove which account belongs to whom. So the
+form prints the name it found, asks the person to check it, and offers the length of the
+share beside its scope: a week is a cheaper mistake than forever.
+
+**Rejected:** sharing with a family or a group (the answer to "who can see this?" would
+depend on membership of something that changes without the learner being asked); letting
+somebody request access (a request is pressure, and privacy by default means the grant
+starts with the owner); editing a share in place (the record of what was granted would
+stop being a record); a scheduler or cron to expire shares (a new moving part to keep
+alive, when two readers can correct what they see); gating reads and revocations on the
+flag (stranded privacy decisions); routing a child's progress through this table (the
+trigger refuses it, and a child's visibility is a guardian question with its own rules);
+and an email lookup that hides whether an account exists (a share that silently does
+nothing).
+
+Implemented in `20261222000100_adult_learning_shares.sql` (six functions),
+`lib/sharing.ts`, `/api/account/sharing`, and `/account/sharing`.
