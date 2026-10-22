@@ -1983,3 +1983,42 @@ recorded outbox, templates that name what they are for, and a configuration poin
 plugs into. Until a provider is chosen the outbox records what would have been sent and the
 screens say so, rather than pretending a message arrived.
 
+## One course purchase covers one learner — **DECIDED 2026-10-22**, superseding the record above
+
+Asked the first time as "does a purchase cover the family or one child", the answer was a
+middle one: up to a set number. Asked the second time with the three shapes and what each
+costs, the answer was **each learner separately**. The later answer wins; nothing had been
+built on the family model, so there is nothing to unwind, and the record above stays as the
+history of how the question was put.
+
+What this settles:
+
+- **An order names the learner it is for.** The price is per learner, so "who is this for" is
+  asked before payment rather than inferred afterwards. An order without a learner cannot be
+  fulfilled under this rule, which is why the column belongs on the order and not in a note.
+- **The duplicate refusal is per learner and per course version**, not per account: the same
+  child cannot be sold access they already hold, a sibling may buy the same course, a
+  renewal after expiry is allowed, and a new version is its own purchase.
+- **Fulfilment grants one profile.** `record_payment_success()` no longer walks every active
+  member of the account; it grants the learner the order names. This is the piece that
+  changes money behaviour, so it ships with the order column rather than before it.
+- **A family is not a discount unit.** Two children on one account pay twice. The account is
+  still the payer, the guardian and the place the cards live — it is simply no longer the
+  thing a purchase covers.
+
+Unchanged: subscriptions already carry `child_allowance`/`adult_allowance` slots and are a
+different product; a plan covering several learners is a plan, not a course purchase.
+
+## The other three answers, 2026-10-22 — recorded, and two already built
+
+- **Sharing with an address that has no account sends an invitation with a token.** Written up
+  above; the flow is the next unit after the per-learner purchase, and the outbox it needs
+  now exists.
+- **Plan checkout is gated on `commerce.subscriptions`.** Built in
+  `20261232000100_plan_checkout_gate.sql` the same day, with the course writer's
+  `checkout:disabled` key.
+- **The email/SMS provider is the first external blocker to prepare for.** The preparation is
+  built: `20261233000100_outbound_messages.sql` records what would be sent, renders named
+  templates, refuses an unfilled placeholder, and ships every row as `queued` because nothing
+  can send. Choosing and configuring a provider remains the owner's.
+

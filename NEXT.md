@@ -2162,14 +2162,14 @@ Settled on 2026-10-22 and no longer open, all six written up in `DECISIONS.md`:
   has to explain itself in a sentence a parent can act on, because an eligibility
   rule is a way to tell a family no at checkout and ease of use is the dominant
   principle.
-- **Buying a course the family already owns** — refuse a purchase that would grant
-  nothing new. *Re-scoped on 2026-10-22*: one purchase covers **up to a set number
-  of learners**, not every profile on the account and not strictly one. So the
-  refusal is due only when the account's remaining places are zero — a family of
-  twins buys once, and a family that has used its places buys again for the next
-  child. The message names who already has access and until when, so it reads as
-  reassurance rather than rejection. The number is `commerce.family_learner_cap`;
-  renewals, other versions and other accounts are unaffected.
+- **Buying a course a learner already owns** — refuse a purchase that would grant
+  nothing new. *Re-scoped on 2026-10-22, superseding the family model recorded
+  earlier that day*: **one purchase covers one learner.** So the order names the
+  learner it is for, the refusal is per learner and per course version, a sibling
+  buying the same course is an ordinary purchase, and fulfilment grants the named
+  profile rather than every profile on the account. The message names who already
+  has access and until when, so it reads as reassurance rather than rejection.
+  Renewals after expiry, new versions and other learners are unaffected.
 - **How a price's market is chosen** — the buyer's country, resolved in the
   writer: an exact match, then the default the price declares for its currency,
   then a refusal rather than a guess. The consequence is that
