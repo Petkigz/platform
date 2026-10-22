@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1240 database tests, 809 web tests; TypeScript typecheck and
+Verification: **1248 database tests, 813 web tests; TypeScript typecheck and
 production build pass; 108 tables, 233 policies, 138 user-defined triggers,
-280 functions, 121 migrations and 123 app route entries.**
+283 functions, 122 migrations and 124 app route entries.**
 
 ## Today's sentence
 
@@ -2220,6 +2220,43 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### A price can be checked before it is paid, 2026-10-22
+
+The last piece of the promotions chain, and the one that was recorded as open when
+the code was first redeemed: the buy page could show the list price, but not the price
+*after* a code, because the only thing that knew what a code was worth was the order
+itself. A family typed a code and learned the total at the payment screen.
+
+`20261240000100_course_order_quote.sql` adds `quote_course_order()` — and, more
+importantly, takes the two decisions it needs away from being made twice:
+
+- `resolve_course_checkout()` is now **the only resolution** of learner, course
+  version, market, price and payer account. `create_course_order()` was rebuilt on it,
+  so the quotation and the order cannot price the same purchase differently.
+- `promotion_quote()` is now **the only place a code is valued**. Every eligibility
+  rule and the discount arithmetic moved out of `apply_promotion_to_order()` — which
+  now calls it and writes the redemption, the adjustment, the totals and the audit
+  row. A preview cannot disagree with the charge, because there is only one answer.
+
+The quote **creates nothing**: no order, no billing account, no redemption, no audit
+row about an order. That is tested, not asserted in prose — a first-time buyer with no
+account asks the price and still has no account afterwards, and previewing a campaign
+with one use left does not spend it. A preview takes no row lock either: holding one
+for a question would let anybody freeze a campaign by typing its code.
+
+On the buy page, **Check the price** shows the list price, what the code takes off and
+what would be charged, and says plainly that nothing is held back by asking. Any edit
+to the learner or the code clears the figure, because a total shown against a code that
+has since changed is a wrong number that looks right.
+
+Eight database tests and three web tests. What the quote deliberately does not do is
+reserve: between the quote and the order a campaign can be switched off, a limit can be
+taken, or the learner's access can arrive — and the order is refused then, with the same
+sentence the preview would have given.
+
+**Still open, deliberately:** taking a code off a pending order. `apply_promotion_to_order()`
+exists for an order that already has one, but there is no screen that uses it and no
+writer that removes one, so a family who types the wrong code has to start again.
 ### Sharing an address is an invitation, and both answers look the same, 2026-10-22
 
 `/account/sharing` shared with an *account*: the form resolved an email address

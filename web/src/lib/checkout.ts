@@ -330,6 +330,103 @@ export async function createOrder(
   };
 }
 
+/** What `quote_course_order()` returns. Money is a decimal string throughout. */
+type CourseQuoteRow = {
+  listMinor?: string;
+  discountMinor?: string;
+  totalMinor?: string;
+  currencyCode?: string;
+  promotionCode?: string | null;
+  promotionName?: string | null;
+  title?: string;
+};
+
+export type CourseQuote = {
+  list: Money;
+  discount: Money;
+  total: Money;
+  currencyCode: string;
+  /** The code as the campaign spells it, or null when none was quoted. */
+  promotionCode: string | null;
+  promotionName: string | null;
+  title: string;
+};
+
+/**
+ * What this course would cost this learner, after an optional code — without
+ * creating anything.
+ *
+ * The checkout used to be the first place a family learned the price, because the
+ * only thing that knew what a code was worth was the order. That is a bad way to
+ * find out: the next screen is a payment. This asks the same question of the same
+ * two functions the charge uses, so the answer cannot differ from the bill.
+ *
+ * Nothing is reserved. Between the quote and the order a campaign can be switched
+ * off, a limit can be taken, or the learner's access can arrive, and the order is
+ * refused then with the sentence this preview would have given. The result carries
+ * that fact in its wording rather than pretending to hold anything.
+ *
+ * The three parts are checked to add up before they are returned: a quotation whose
+ * discount does not explain its total is worse than no quotation at all, and a
+ * rounding difference between here and the writer should be loud.
+ */
+export async function quoteCourseOrder(
+  supabase: SupabaseClient,
+  args: {
+    courseId: string;
+    learnerProfileId: string;
+    country?: string | null;
+    promotionCode?: string | null;
+  },
+): Promise<
+  { ok: true; quote: CourseQuote }
+  | { ok: false; code: CheckoutErrorCode; message: string }
+> {
+  if (!args.learnerProfileId) {
+    return { ok: false, code: 'error', message: 'Choose the learner this course is for.' };
+  }
+
+  const { data, error } = await supabase.rpc('quote_course_order', {
+    p_course_id: args.courseId,
+    p_learner_profile_id: args.learnerProfileId,
+    p_buyer_country: args.country ?? null,
+    p_promotion_code: args.promotionCode?.trim() ? args.promotionCode.trim() : null,
+  });
+
+  if (error) return { ok: false, ...mapCourseOrderRefusal(error.message) };
+
+  const row = data as CourseQuoteRow | null;
+  if (!row || row.listMinor === undefined || row.totalMinor === undefined || !row.currencyCode) {
+    return { ok: false, code: 'error', message: 'The price could not be worked out.' };
+  }
+
+  const currency = row.currencyCode;
+  const list = fromMinor(row.listMinor, currency);
+  const discount = fromMinor(row.discountMinor ?? '0', currency);
+  const total = fromMinor(row.totalMinor, currency);
+
+  if (list.amountMinor - discount.amountMinor !== total.amountMinor) {
+    return {
+      ok: false,
+      code: 'error',
+      message: 'The price came back inconsistent, so it is not being shown.',
+    };
+  }
+
+  return {
+    ok: true,
+    quote: {
+      list,
+      discount,
+      total,
+      currencyCode: currency,
+      promotionCode: typeof row.promotionCode === 'string' ? row.promotionCode : null,
+      promotionName: typeof row.promotionName === 'string' ? row.promotionName : null,
+      title: typeof row.title === 'string' && row.title !== '' ? row.title : 'This course',
+    },
+  };
+}
+
 export type CreatePlanOrderArgs = {
   planVersionId: string;
   priceId: string;

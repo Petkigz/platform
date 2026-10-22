@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
   createOrder,
   createPlanOrder,
+  quoteCourseOrder,
   describeOrderAdjustment,
   describeOrderBreakdown,
   recordPaymentAttempt,
@@ -728,4 +729,132 @@ test('an adjustment reads as a line on the invoice, and a withdrawn one says so'
     voided_reason: null,
   });
   assert.match(unknown, /something_new/, 'an unlabelled type was silently renamed');
+});
+
+// ---------------------------------------------------------------------------
+// The quote
+//
+// A preview is only useful if it is the same answer the charge will give, and only
+// safe if asking costs nothing. These tests hold both: the three parts have to add
+// up before anything is shown, and the refusal sentences are the writer's own.
+// ---------------------------------------------------------------------------
+
+function quoteClient(data: unknown, error: { message: string } | null = null) {
+  const rpcCalls: { fn: string; args: Record<string, unknown> }[] = [];
+  const client = {
+    rpc: async (fn: string, args: Record<string, unknown>) => {
+      rpcCalls.push({ fn, args });
+      return { data, error };
+    },
+    from: (t: string) => {
+      throw new Error(`quoteCourseOrder read '${t}' directly`);
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any;
+  return { client, rpcCalls };
+}
+
+test('a quote is asked by ids, and its three parts have to add up', async () => {
+  const { client, rpcCalls } = quoteClient({
+    title: 'Tajweed',
+    listMinor: '30000',
+    discountMinor: '6000',
+    totalMinor: '24000',
+    currencyCode: 'UGX',
+    promotionCode: 'EID24',
+    promotionName: 'Eid offer',
+  });
+
+  const result = await quoteCourseOrder(client, {
+    courseId: 'course-1',
+    learnerProfileId: 'learner-1',
+    country: 'UG',
+    promotionCode: ' eid24 ',
+  });
+
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+
+  assert.equal(result.quote.list.amountMinor, 30000n);
+  assert.equal(result.quote.discount.amountMinor, 6000n);
+  assert.equal(result.quote.total.amountMinor, 24000n);
+  assert.equal(result.quote.currencyCode, 'UGX');
+  assert.equal(result.quote.promotionCode, 'EID24');
+  assert.equal(result.quote.title, 'Tajweed');
+
+  assert.deepEqual(rpcCalls, [{
+    fn: 'quote_course_order',
+    args: {
+      p_course_id: 'course-1',
+      p_learner_profile_id: 'learner-1',
+      p_buyer_country: 'UG',
+      // Trimmed here, exactly as the checkout trims it, so the preview and the
+      // order are looking at the same string.
+      p_promotion_code: 'eid24',
+    },
+  }]);
+
+  for (const forbidden of ['amount_minor', 'amountMinor', 'discount_minor', 'user_id']) {
+    assert.equal(Object.keys(rpcCalls[0]?.args ?? {}).includes(forbidden), false,
+      `the quote was told '${forbidden}'`);
+  }
+});
+
+test('a quote whose parts do not add up is refused rather than shown', async () => {
+  const { client } = quoteClient({
+    listMinor: '30000',
+    discountMinor: '6000',
+    totalMinor: '25000',
+    currencyCode: 'UGX',
+  });
+
+  const result = await quoteCourseOrder(client, {
+    courseId: 'course-1',
+    learnerProfileId: 'learner-1',
+  });
+
+  assert.equal(result.ok, false, 'an inconsistent quote was shown');
+  if (!result.ok) assert.equal(result.code, 'error');
+
+  for (const broken of [
+    { listMinor: '30000', totalMinor: '30000' },              // no currency
+    { totalMinor: '30000', currencyCode: 'UGX' },             // no list
+    { listMinor: '30000', currencyCode: 'UGX' },              // no total
+    null,
+  ]) {
+    const stub = quoteClient(broken);
+    const refused = await quoteCourseOrder(stub.client, {
+      courseId: 'course-1', learnerProfileId: 'learner-1',
+    });
+    assert.equal(refused.ok, false, 'an unreadable quote was accepted');
+  }
+
+  const noLearner = await quoteCourseOrder(client, {
+    courseId: 'course-1', learnerProfileId: '',
+  });
+  assert.equal(noLearner.ok, false);
+});
+
+test('a code the writer refuses comes back as the sentence the checkout would give', async () => {
+  const cases: Array<[string, string]> = [
+    ['promotion:unknown_code', 'promotion_refused'],
+    ['promotion:not_in_market', 'promotion_refused'],
+    ['promotion:limit_reached_total', 'promotion_refused'],
+    ['checkout:no_price_for_country', 'not_sold_here'],
+    ['checkout:already_owned', 'already_entitled'],
+    ['checkout:disabled', 'checkout_disabled'],
+  ];
+
+  for (const [message, code] of cases) {
+    const { client } = quoteClient(null, { message });
+    const result = await quoteCourseOrder(client, {
+      courseId: 'course-1', learnerProfileId: 'learner-1', promotionCode: 'X',
+    });
+    assert.equal(result.ok, false, `${message} was not refused`);
+    if (!result.ok) {
+      assert.equal(result.code, code, `${message} mapped to ${result.code}`);
+      assert.equal(/promotion:|checkout:/.test(result.message), false,
+        `${message} leaked its key into the sentence`);
+    }
+  }
 });

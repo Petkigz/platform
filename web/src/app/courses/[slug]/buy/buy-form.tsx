@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { format, fromMinor } from '@/lib/money';
 
 /**
  * The checkout form.
@@ -47,6 +48,67 @@ export function BuyForm({
   const [promotionCode, setPromotionCode] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [tone, setTone] = useState<'info' | 'error'>('info');
+
+  // What the price checker found, and whether it is still about the box as it stands.
+  // Any change to the learner or the code clears it: a total shown against a code
+  // somebody has since edited is a wrong number that looks right.
+  const [quote, setQuote] = useState<{
+    list: string;
+    discount: string;
+    total: string;
+    code: string | null;
+    hasDiscount: boolean;
+  } | null>(null);
+  const [quoteError, setQuoteError] = useState<string | null>(null);
+  const [quoting, setQuoting] = useState(false);
+
+  async function checkPrice() {
+    setQuoting(true);
+    setQuoteError(null);
+    try {
+      const res = await fetch('/api/checkout/quote', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          courseId,
+          learnerProfileId: learnerId || undefined,
+          promotionCode: promotionCode.trim() || undefined,
+        }),
+      });
+
+      const json = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        message?: string;
+        error?: string;
+        quote?: {
+          listMinor: string;
+          discountMinor: string;
+          totalMinor: string;
+          currencyCode: string;
+          promotionCode: string | null;
+        };
+      };
+
+      if (!res.ok || !json.ok || !json.quote) {
+        setQuote(null);
+        setQuoteError(
+          json.message ?? json.error ?? 'That price could not be worked out. Try again.',
+        );
+        return;
+      }
+
+      const { quote: found } = json;
+      setQuote({
+        list: format(fromMinor(found.listMinor, found.currencyCode)),
+        discount: format(fromMinor(found.discountMinor, found.currencyCode)),
+        total: format(fromMinor(found.totalMinor, found.currencyCode)),
+        code: found.promotionCode,
+        hasDiscount: found.discountMinor !== '0' && found.discountMinor !== '',
+      });
+    } finally {
+      setQuoting(false);
+    }
+  }
 
   async function buy() {
     setMessage(null);
@@ -107,7 +169,7 @@ export function BuyForm({
           <select
             id="learner"
             value={learnerId}
-            onChange={(e) => setLearnerId(e.target.value)}
+            onChange={(e) => { setLearnerId(e.target.value); setQuote(null); }}
           >
             {learners.map((learner) => (
               <option key={learner.id} value={learner.id}>
@@ -132,18 +194,53 @@ export function BuyForm({
         <label htmlFor="promotion" className="eyebrow">
           Promotion code <span className="meta">(optional)</span>
         </label>
-        <input
-          id="promotion"
-          value={promotionCode}
-          onChange={(e) => setPromotionCode(e.target.value)}
-          placeholder="EID24"
-          autoCapitalize="characters"
-          autoComplete="off"
-          maxLength={32}
-        />
+        <div className="row" style={{ flexWrap: 'wrap' }}>
+          <input
+            id="promotion"
+            value={promotionCode}
+            onChange={(e) => { setPromotionCode(e.target.value); setQuote(null); }}
+            placeholder="EID24"
+            autoCapitalize="characters"
+            autoComplete="off"
+            maxLength={32}
+          />
+          <button
+            type="button"
+            className="btn secondary"
+            onClick={checkPrice}
+            disabled={quoting}
+          >
+            {quoting ? 'Checking…' : 'Check the price'}
+          </button>
+        </div>
         <p className="muted">
           The discount is applied to the order before you pay. One code per order.
         </p>
+
+        {quoteError && (
+          <div className="notice warn" role="status" style={{ marginTop: '0.5rem' }}>
+            {quoteError}
+          </div>
+        )}
+
+        {quote && (
+          <div className="notice" role="status" style={{ marginTop: '0.5rem' }}>
+            {!quote.hasDiscount ? (
+              <span>
+                The price is <strong>{quote.total}</strong>.
+              </span>
+            ) : (
+              <span>
+                Price <strong>{quote.list}</strong>
+                {quote.code ? ` · code ${quote.code}` : ''} takes off{' '}
+                <strong>{quote.discount}</strong> · you pay <strong>{quote.total}</strong>.
+              </span>
+            )}{' '}
+            <span className="meta">
+              Nothing is held back by checking: pay now and exactly this is charged.
+            </span>
+          </div>
+        )}
       </div>
 
       {providers.length > 1 && (

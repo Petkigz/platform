@@ -2178,3 +2178,31 @@ share, or the sentence explaining why not — comes from the database.
 **Still open:** delivery. The invitation is queued and cannot leave until an email provider
 exists; that is the first external blocker and the only thing standing between this flow and a
 stranger being able to accept.
+## A price is quoted from the same two functions that charge it — **DECIDED 2026-10-22**
+
+When the code was first redeemed at checkout, showing the discounted total before the payment
+handoff was recorded as open, because it needed a quote that creates nothing. It is built now,
+and the decision that mattered was not "add a preview" but **where the preview gets its
+answer**:
+
+- **One resolution.** `resolve_course_checkout()` is the only place that decides which course
+  version, market, price, currency and payer account a purchase means. `create_course_order()`
+  was rebuilt on it rather than left alongside it. A second pricing path would eventually
+  disagree, and the disagreement would show up as a family quoted one number and charged
+  another.
+- **One valuation.** `promotion_quote()` holds every eligibility rule and the discount
+  arithmetic. `apply_promotion_to_order()` calls it and writes; `quote_course_order()` calls it
+  and returns. Neither decides what a code is worth.
+- **A quote writes nothing and locks nothing.** No order, no billing account, no redemption, no
+  order audit row — and no `for update` on the campaign, because holding a row lock for a
+  question would let anybody freeze a promotion by typing its code. Previewing a campaign with
+  one use left must not spend it, and that is a test rather than a promise.
+- **A quote is not a reservation.** Between the quote and the order a campaign can be switched
+  off, a limit can be taken, or the learner's access can arrive. The order is refused then, in
+  the same words the preview would have used: the preview is a prediction, the order is the
+  decision. The screen says so instead of implying the price is held.
+- **The screen forgets.** Any change to the learner or the code clears the shown total. A figure
+  displayed against a code that has since been edited is a wrong number that looks right.
+
+**Still open:** taking a code off a pending order. The writer to apply one already exists and
+has no screen; nothing removes one.

@@ -74,6 +74,7 @@ import { run as messages } from './messages.test.mjs';
 import { run as promotions } from './promotions.test.mjs';
 import { run as promotionRedemption } from './promotion_redemption.test.mjs';
 import { run as shareInvitations } from './share_invitations.test.mjs';
+import { run as orderQuote } from './order_quote.test.mjs';
 
 // Settings that are global by design: one row, read by code far from the suite
 // that changes it. The revenue share decides what every accrual computes; the
@@ -156,6 +157,7 @@ for (const [name, fn] of [
   ['promotions', promotions],
   ['promotion redemption', promotionRedemption],
   ['share invitations', shareInvitations],
+  ['order quote', orderQuote],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],
