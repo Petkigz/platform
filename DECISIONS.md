@@ -2530,3 +2530,35 @@ owner's to move without a deploy.
 app's database. That is the residual risk of any offline feature and it is named rather than
 implied. Also open: an editing screen for `plans.tier` — the column exists and the admin plan
 flow does not set it yet.
+## Analytics is kept forever, and that has consequences — **DECIDED 2026-10-22**
+
+The owner: **"everything is kept and is stored forever because you never know what might
+happen."** That settles the retention question `delivery.analytics` had been held on, and it
+is the opposite of the default most platforms choose. It is a legitimate choice — a platform
+that teaches children and adults wants to be able to answer a question two years later — but
+it is not free, and the costs are written here rather than discovered later.
+
+**What it decides.** Behavioural data about learners, teachers and courses is retained
+indefinitely. Nothing expires, nothing is sampled away, and no scheduled job prunes it. The
+policy itself is the decision; the instrumentation is still to be built.
+
+**Consequence one: erasure no longer means deletion for these rows.** `erase_my_account()`
+deletes what a person wrote and de-identifies what the platform recorded. Analytics joins the
+second list by necessity: a row saying "learner X finished lesson 3" is not something a
+person wrote, and deleting it would break every figure that counts completions. So it is
+kept and **de-identified** — the actor reference becomes null, the row stays. That is already
+how orders and certificates are handled, and it is the only way "kept forever" and "closed
+account" can both be true.
+
+**Consequence two: the store is append-only and cannot be rewritten.** A table that is only
+ever inserted into can be partitioned by month and dropped as a partition if law ever
+requires it, which a table everyone updates cannot. It also means a schema mistake is
+permanent: an event captured wrongly is wrong forever, so the event vocabulary is closed and
+versioned before the first row is written.
+
+**Consequence three: volume is unbounded.** This is the one place where "keep everything"
+meets a bill. The mitigation is not sampling — that would be keeping less than promised —
+but writing fewer, better events and storing them cheaply.
+
+**Open:** the event vocabulary — what is actually captured — and the reporting built on it.
+Both are design work, not a retention question, and neither is built yet.
