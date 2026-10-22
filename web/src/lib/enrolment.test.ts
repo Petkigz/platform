@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { offeringFromAnswer, offeringLabel, type Offering } from './enrolment.ts';
+import {
+  claimOwnLearnerProfile,
+  offeringFromAnswer,
+  offeringLabel,
+  type Offering,
+} from './enrolment.ts';
 
 /**
  * The reader's answer is the only thing between the price the database resolved
@@ -121,4 +126,65 @@ test('the label says what kind of thing this is, and never says Free to a sold c
 
   const offering = offeringFromAnswer(paid);
   assert.match(offeringLabel(offering), /30000/, 'a paid label did not show the amount');
+});
+
+// ---------------------------------------------------------------------------
+// Becoming a learner
+// ---------------------------------------------------------------------------
+
+function claimStub(data: unknown, error: { message: string } | null = null) {
+  const calls: string[] = [];
+  const client = {
+    rpc: async (fn: string) => {
+      calls.push(fn);
+      return { data, error };
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any;
+  return { client, calls };
+}
+
+test('claiming a learner profile is one call and nothing sent with it', async () => {
+  const { client, calls } = claimStub({
+    learnerProfileId: 'learner-1',
+    created: true,
+    learnerType: 'adult',
+    ageBand: '18+',
+  });
+
+  const result = await claimOwnLearnerProfile(client);
+
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+  assert.equal(result.learnerProfileId, 'learner-1');
+  assert.equal(result.created, true);
+  assert.deepEqual(calls, ['claim_own_learner_profile'],
+    'the claim was made by more than the one writer');
+});
+
+test('the writer decides whether anything was created', async () => {
+  const { client } = claimStub({ learnerProfileId: 'learner-1', created: false });
+  const result = await claimOwnLearnerProfile(client);
+  assert.equal(result.ok, true);
+  if (result.ok) assert.equal(result.created, false, 'a second press claimed a new profile');
+});
+
+test('a refusal is shown in the writer’s words, and an unreadable answer is refused', async () => {
+  const archived = claimStub(null, {
+    message: 'a learner profile for this account was removed, so it cannot be recreated here. Contact us and we will sort it out',
+  });
+  const refused = await claimOwnLearnerProfile(archived.client);
+  assert.equal(refused.ok, false);
+  if (!refused.ok) assert.match(refused.message, /removed/);
+
+  const signedOut = claimStub(null, { message: 'sign in to start learning' });
+  const anon = await claimOwnLearnerProfile(signedOut.client);
+  assert.equal(anon.ok, false);
+  if (!anon.ok) assert.match(anon.message, /Sign in/);
+
+  for (const broken of [{}, { learnerProfileId: '' }, null, 'nonsense']) {
+    const stub = claimStub(broken);
+    const outcome = await claimOwnLearnerProfile(stub.client);
+    assert.equal(outcome.ok, false, `${JSON.stringify(broken)} was accepted`);
+  }
 });

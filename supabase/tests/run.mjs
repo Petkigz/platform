@@ -76,6 +76,7 @@ import { run as promotionRedemption } from './promotion_redemption.test.mjs';
 import { run as shareInvitations } from './share_invitations.test.mjs';
 import { run as orderQuote } from './order_quote.test.mjs';
 import { run as promotionRemoval } from './promotion_removal.test.mjs';
+import { run as ownLearnerProfile } from './own_learner_profile.test.mjs';
 
 // Settings that are global by design: one row, read by code far from the suite
 // that changes it. The revenue share decides what every accrual computes; the
@@ -160,6 +161,7 @@ for (const [name, fn] of [
   ['share invitations', shareInvitations],
   ['order quote', orderQuote],
   ['promotion removal', promotionRemoval],
+  ['own learner profile', ownLearnerProfile],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],

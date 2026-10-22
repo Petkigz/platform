@@ -141,6 +141,46 @@ export async function ownLearnerProfileId(
   return (data as { id: string } | null)?.id ?? null;
 }
 
+export type ClaimLearnerOutcome =
+  | { ok: true; learnerProfileId: string; created: boolean }
+  | { ok: false; message: string };
+
+/**
+ * Become a learner on this account.
+ *
+ * Every learner flow starts from a `learner_profile`, and until this existed nothing in
+ * the application could create an adult one: `/family` creates children, and the
+ * checkout needs a learner to name. A person who signed up found "there is nobody to buy
+ * this for yet" and a link to a screen that only adds a child.
+ *
+ * Idempotent by design — the writer returns the existing profile on a second call — so a
+ * page may offer the button without first asking whether it is needed, and a double-click
+ * costs nothing. It also refuses to revive a profile that was archived or deleted, which
+ * is a moderation decision rather than something a button should overturn.
+ */
+export async function claimOwnLearnerProfile(
+  supabase: SupabaseClient,
+): Promise<ClaimLearnerOutcome> {
+  const { data, error } = await supabase.rpc('claim_own_learner_profile');
+  if (error) {
+    return {
+      ok: false,
+      message: /sign in/i.test(error.message)
+        ? 'Sign in to start learning.'
+        : error.message,
+    };
+  }
+
+  const reply = (data && typeof data === 'object' ? data : {}) as Record<string, unknown>;
+  const learnerProfileId =
+    typeof reply.learnerProfileId === 'string' ? reply.learnerProfileId : '';
+  if (!learnerProfileId) {
+    return { ok: false, message: 'The learner profile came back without an id.' };
+  }
+
+  return { ok: true, learnerProfileId, created: reply.created === true };
+}
+
 export async function resolveOffering(
   supabase: SupabaseClient,
   args: {

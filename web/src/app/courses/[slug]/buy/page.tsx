@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ClaimLearner } from '@/components/claim-learner';
 import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -85,14 +86,18 @@ export default async function BuyPage({
         </div>
 
         <div className="notice warn">
-          <strong>There is nobody to buy this for yet.</strong> A course purchase
-          covers one learner, so add a learner profile first — your own, or a
-          child&apos;s in your family.
+          <strong>There is nobody to buy this for yet.</strong> A course purchase covers
+          one learner, so there has to be one to name — you on this account, or a
+          child&apos;s profile in your family.
         </div>
 
-        <p style={{ marginTop: '1.5rem' }}>
-          <Link href="/family" className="btn">Add a learner</Link>{' '}
-          <Link href={`/courses/${course.slug}`} className="btn secondary">
+        <div style={{ marginTop: '1rem' }}>
+          <ClaimLearner label="Buy it for myself" note="This makes you a learner on this account. It is not a second account." />
+        </div>
+
+        <p style={{ marginTop: '1rem' }}>
+          <Link href="/family" className="btn secondary">Add a child instead</Link>{' '}
+          <Link href={`/courses/${course.slug}`} className="btn ghost">
             Back to the course
           </Link>
         </p>

@@ -2234,3 +2234,27 @@ Three consequences follow, and each is deliberate:
 **Open, but not a decision:** whether a paid order should ever accept a *backdated* code — a
 family who bought at full price and then finds the code. That is a refund or a goodwill
 credit, and both already exist; it is not a re-price of the past.
+## An adult becomes a learner on their own account — **DECIDED 2026-10-22**
+
+Nothing in the application created an adult `learner_profile`. `/family` creates children, and
+enrolment, checkout, progress, certificates, reviews and sharing all start from a profile — so
+a new adult met "there is nobody to buy this for yet" and a link to a screen that only adds a
+child. `claim_own_learner_profile()` is the writer, and the decisions around it are:
+
+- **One writer, and it takes no arguments.** There is nothing to point at somebody else with;
+  the profile is always the caller's. A screen that inserted the row directly would be a second
+  path to the same outcome, which is the failure this repository keeps finding.
+- **Idempotent, deliberately.** The second call returns the existing profile with
+  `created: false` rather than raising. Pages therefore do not have to ask whether the button is
+  needed before offering it, and a double-click reads "you are ready" rather than a unique
+  violation. The unique index on `linked_user_id` is the real guarantee; idempotency is the
+  courtesy.
+- **A removed profile is not revived by a button.** Archiving or soft-deleting was a decision,
+  and self-service is not the place to overturn moderation. The refusal says to contact support
+  instead.
+- **No flag.** Being able to learn is not an experiment: it is the first step of every learner
+  flow, and a feature flag on it would mean a platform where nothing can be enrolled in.
+
+**Open, not built:** an adult may have a family of their own *and* learn themselves — the two
+are independent rows, and this writer does not create or join a family. Nothing prevents it;
+nothing has asked for it yet.

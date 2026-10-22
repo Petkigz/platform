@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ClaimLearner } from '@/components/claim-learner';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
@@ -169,6 +170,14 @@ export default async function LearnPage() {
       {rows.length === 0 && !error ? (
         <div className="card">
           <p className="empty">No enrolments yet.</p>
+          {!myProfileId && (
+            <>
+              <p className="muted">
+                Enrolling needs a learner profile, and this account does not have one yet.
+              </p>
+              <ClaimLearner note="A course is always for a named learner. This makes you one on this account." />
+            </>
+          )}
           <Link href="/catalogue" className="btn">Browse the catalogue</Link>
         </div>
       ) : (

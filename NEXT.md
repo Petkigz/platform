@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1254 database tests, 816 web tests; TypeScript typecheck and
+Verification: **1261 database tests, 819 web tests; TypeScript typecheck and
 production build pass; 108 tables, 233 policies, 138 user-defined triggers,
-284 functions, 123 migrations and 125 app route entries.**
+285 functions, 124 migrations and 126 app route entries.**
 
 ## Today's sentence
 
@@ -2219,6 +2219,32 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### An adult can become a learner, 2026-10-22
+
+Found while closing the sharing unit: nothing in the application created an **adult
+learner profile**. `/family` creates children, the checkout needs a learner to name, and
+`/learn`, `/account/sharing`, reviews, progress and certificates all begin from a
+profile — so a person who signed up met "there is nobody to buy this for yet" and a link
+to a screen that can only add a child. The first step of every learner flow was missing.
+
+`20261242000100_own_learner_profile.sql` adds `claim_own_learner_profile()`, and it is
+the only way an adult profile is created. Three properties, each a decision:
+
+- **Idempotent.** A second call returns the same profile with `created: false`, so a page
+  may offer the button without first asking whether it is needed, and a double-click
+  costs nothing. `learner_profiles_linked_user_key` means a second row could not exist
+  anyway — but a unique violation is the wrong sentence for a double-click.
+- **It does not undo moderation.** A profile that exists but is archived or soft-deleted
+  is refused, not revived: that state was a decision, and a button on an account page is
+  not the place to overturn it.
+- **The name comes from the account.** `lp_display_name_not_blank` already guarantees a
+  profile has a name, so the account's display name is the source rather than a field
+  that asks the same question twice.
+
+**Learn on this account** is one component, used on `/account`, on an empty `/learn`, on
+the checkout that has nobody to sell to, and on `/family` where a family would be the
+wrong answer. Seven database tests and three web tests.
 
 ### A code can be taken off an unpaid order, 2026-10-22
 

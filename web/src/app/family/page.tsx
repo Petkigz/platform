@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ClaimLearner } from '@/components/claim-learner';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
@@ -59,6 +60,11 @@ export default async function FamilyPage() {
           password.
         </p>
         <CreateFamily />
+        <p className="muted" style={{ marginTop: '1rem' }}>
+          A family is for children. To learn yourself, you do not need one — use your own
+          account.
+        </p>
+        <ClaimLearner label="Learn on this account" />
         <p style={{ marginTop: '1.5rem' }}>
           <Link href="/learn">Back to my learning</Link>
         </p>

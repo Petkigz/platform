@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
+import { ClaimLearner } from '@/components/claim-learner';
 import { ProfileForm } from './profile-form';
 
 export const dynamic = 'force-dynamic';
@@ -12,11 +13,20 @@ export default async function AccountPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/sign-in?next=/account');
 
-  const { data, error } = await supabase
-    .from('user_profiles')
-    .select('display_name, preferred_language, timezone, account_status')
-    .eq('user_id', user.id)
-    .maybeSingle();
+  const [{ data, error }, { data: learnerRows }] = await Promise.all([
+    supabase
+      .from('user_profiles')
+      .select('display_name, preferred_language, timezone, account_status')
+      .eq('user_id', user.id)
+      .maybeSingle(),
+    // Whether this account is a learner of its own. Every learner flow needs one, and
+    // until the writer behind the button below existed there was no way to get one.
+    supabase
+      .from('learner_profiles')
+      .select('id, display_name')
+      .eq('linked_user_id', user.id)
+      .is('deleted_at', null),
+  ]);
   if (error) throw new Error(error.message);
   if (!data) redirect('/learn');
   const profile = data as unknown as {
@@ -25,6 +35,7 @@ export default async function AccountPage() {
     timezone: string | null;
     account_status: string;
   };
+  const ownLearner = ((learnerRows ?? []) as { id: string; display_name: string }[])[0] ?? null;
 
   return (
     <div className="container section">
@@ -35,6 +46,33 @@ export default async function AccountPage() {
         Signed in as <strong>{user.email ?? user.phone ?? 'unknown'}</strong>
         {' · '}account status: {profile.account_status}
       </div>
+      <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
+        <h2 style={{ marginTop: 0 }}>Learning as yourself</h2>
+        {ownLearner ? (
+          <>
+            <p className="muted">
+              This account learns as <strong>{ownLearner.display_name}</strong>. Courses you
+              enrol in or buy belong to that learner, and nobody else&apos;s progress is
+              mixed into it.
+            </p>
+            <p>
+              <Link href="/learn">Go to my learning</Link>
+              {' · '}
+              <Link href="/account/sharing">Who can see my progress</Link>
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="muted">
+              You do not have a learner profile yet. One is needed before you can enrol in
+              a course, buy one, or share your progress — a course is always for a named
+              learner, and this is how you become one.
+            </p>
+            <ClaimLearner note="This does not create a second account. It adds you as a learner to this one." />
+          </>
+        )}
+      </section>
+
       <ProfileForm initial={{
         displayName: profile.display_name,
         preferredLanguage: profile.preferred_language,
