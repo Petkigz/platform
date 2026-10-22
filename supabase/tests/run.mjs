@@ -10,6 +10,7 @@ import { run as group5 } from './group5.test.mjs';
 import { run as appContract } from './app.test.mjs';
 import { run as authorization } from './authorization.test.mjs';
 import { run as catalogue } from './catalogue.test.mjs';
+import { run as catalogueSearch } from './catalogue_search.test.mjs';
 import { run as enrolment } from './enrolment.test.mjs';
 import { run as progress } from './progress.test.mjs';
 import { run as assessment } from './assessment.test.mjs';
@@ -104,6 +105,7 @@ for (const [name, fn] of [
   ['app', appContract],
   ['authorization', authorization],
   ['catalogue', catalogue],
+  ['catalogue search', catalogueSearch],
   ['enrolment', enrolment],
   ['progress', progress],
   ['assessment', assessment],

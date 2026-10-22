@@ -23,8 +23,8 @@ Status:
 | 2 | About the platform | READY |
 | 3 | Young Learners entry | READY |
 | 4 | Adult Learners entry | READY |
-| 5 | Course catalogue | **BUILT** — `/catalogue`. The `subject_areas` taxonomy is still empty, so subject chips show nothing yet |
-| 6 | Search and filter | **BUILT** — `/catalogue?q=&subject=&audience=` |
+| 5 | Course catalogue | **BUILT** — `/catalogue`, with subject chips from the seeded `subject_areas` taxonomy |
+| 6 | Search and filter | **BUILT** — `/catalogue?q=&subject=&audience=`, matched and ranked by `search_catalogue()` across course name, subject and a public teacher's name |
 | 7 | Pricing and subscriptions | **BUILT as a screen** — `/plans` renders configured plan versions and their prices. No price points have been *set*, so it is an empty state until someone decides what a subscription costs. Taking payment still needs P12 |
 
 ## 2. Access — 3  *(missing from the source list entirely)*

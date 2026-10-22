@@ -55,7 +55,7 @@ Three kinds of gate:
 | `platform.legal` | Terms, privacy, child policy, refund policy, content licence | CODE | **Nothing exists.** GDPR/UK GDPR, COPPA, Uganda DPA 2019, Kenya DPA, Nigeria NDPR |
 | `platform.incident` | Breach detection, response and notification | CODE | 72-hour GDPR notification; owner; runbook; templates |
 | `platform.takedown` | Copyright and content takedown notices | CODE | Notice process; counter-notice; repeat-infringer policy |
-| `platform.search` | Course and lesson search | ADMIN | **No search infrastructure designed.** Postgres FTS or a dedicated index — `LIKE` will not survive a real catalogue |
+| `platform.search` | Course and lesson search | ADMIN | **Catalogue search is built and deliberately not gated** (2026-10-22): `search_catalogue()` ranks the title, the subject, a public teacher's name and the description, requires every word, and is `security invoker` so it shows only what the caller may read. The flag stays in the register for **lesson-content** search, which is not built: that needs an index over lesson bodies and a decision about whether a paid lesson's text may be searched before it is bought |
 | `platform.terms_versioning` | Versioned terms with recorded acceptance | CODE | **Nothing exists.** Must store which version each user accepted, with a timestamp |
 | `platform.age_assurance` | Age checks gating the child model and COPPA | CODE | **Nothing exists.** Method undecided |
 | `platform.data_export` | Learner data portability / export | CODE | GDPR right; cheaper to design than retrofit across 85 tables |

@@ -2281,3 +2281,36 @@ corrected — a child grows, and a name gets typed wrong.
 **Not decided, and worth recording:** there is still no self-service way to *delete* a learner
 profile, and no way to move a child between families. Both are moderation actions today, done
 by staff, and both would need an audit trail of their own before they became buttons.
+## Search is one function, and it is not a flag — **DECIDED 2026-10-22**
+
+The catalogue had a search box before this, and it was thinner than it looked: `ilike` over
+a course's title and description, ordered alphabetically. A course **filed under Fiqh** was
+unfindable unless the word also appeared in its blurb, and a **teacher could not be found by
+name at all** — which is a strange gap on a platform built by a teacher with an audience.
+
+`search_catalogue()` is now the only definition of a match: title, then subject, then a
+public teacher's name, then the description, with every word required. `strpos()` rather
+than `like`, so a typed `%` matches nothing rather than everything.
+
+Two decisions inside it are worth stating separately, because both were tempting to do the
+other way:
+
+**It is `security invoker`, not `definer.`** A definer function could have searched every
+course and every teacher profile and been faster to write. It would also have shown a
+visitor a course that is suspended, retired, or not yet published, and the name of a teacher
+whose profile they have not made public. The dependency is deliberate: **a teacher is
+findable by name exactly when they are findable at all.** Their search visibility follows
+the same policy as their public page, so there is one answer to "is this teacher listed".
+The price is that a teacher who is public but whose flag is off is not searchable — which
+is correct, because in that state they have no public page either.
+
+**It is not behind `platform.search`.** Search is navigation. The catalogue already
+filtered before any flag existed, and putting the index of the shelf behind a switch that
+ships off hides the shelf. `platform.search` stays in the register as the promise it was —
+search across *lesson bodies* — which is genuinely a different feature: it needs an index,
+and it needs a decision about whether the words inside a paid lesson may be searched by
+someone who has not bought it. Recorded, not built.
+
+**Not decided:** whether relevance should eventually weigh price, language or the learner's
+age band, or whether results should be personalised. Today the order is explainable in one
+sentence, which is the property I would not trade for a better click-through rate yet.

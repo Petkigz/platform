@@ -100,6 +100,14 @@ export async function fetchCatalogue(
   { q, subject, audience }: CatalogueFilters,
   limit = 60,
 ): Promise<CatalogueCourse[]> {
+  // A query goes to the one function that defines what a match is. Browsing — no
+  // query — stays here, because a listing and a search are different questions: one
+  // wants everything on the shelf in alphabetical order, the other wants the best
+  // answer first.
+  if (q && q.trim().length > 0) {
+    return searchCatalogue(supabase, { q, subject, audience }, limit);
+  }
+
   let query = supabase
     .from('courses')
     .select(COURSE_COLUMNS)
@@ -110,13 +118,6 @@ export async function fetchCatalogue(
 
   if (audience && audience !== 'all') {
     query = query.in('audience', [audience, 'both']);
-  }
-
-  if (q && q.trim().length > 0) {
-    // ilike rather than full-text search: no index dependency, and good
-    // enough until there is a catalogue big enough to need ranking.
-    const term = q.trim().replace(/[%_,]/g, ' ');
-    query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%`);
   }
 
   if (subject && subject !== 'all') {
@@ -142,6 +143,85 @@ export async function fetchCatalogue(
   const { data, error } = await query;
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as CatalogueCourse[];
+}
+
+export type CatalogueHit = { courseId: string; score: number };
+
+/**
+ * Read the search function's reply.
+ *
+ * The client is untyped, so this is the boundary: anything that is not
+ * `{course_id, score}` is discarded rather than rendered, and a repeated id is
+ * dropped — a course shown twice because it matched twice is still a defect.
+ */
+export function parseSearchHits(data: unknown): CatalogueHit[] {
+  if (!Array.isArray(data)) return [];
+  const seen = new Set<string>();
+  const hits: CatalogueHit[] = [];
+
+  for (const row of data) {
+    if (!row || typeof row !== 'object') continue;
+    const record = row as Record<string, unknown>;
+    const courseId = typeof record.course_id === 'string' ? record.course_id : '';
+    if (courseId.length === 0 || seen.has(courseId)) continue;
+    seen.add(courseId);
+    const score =
+      typeof record.score === 'number' && Number.isFinite(record.score)
+        ? record.score
+        : 0;
+    hits.push({ courseId, score });
+  }
+
+  return hits;
+}
+
+/** Put rows back in the order they were ranked. */
+export function orderByIds<T extends { id: string }>(
+  rows: T[],
+  ids: string[],
+): T[] {
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  return ids.flatMap((id) => {
+    const row = byId.get(id);
+    return row ? [row] : [];
+  });
+}
+
+/**
+ * Search the catalogue.
+ *
+ * The function decides what matches and in what order — title, subject, teacher,
+ * description, every word required. The rows are then read through the *same*
+ * select the browse path uses, so a card cannot render differently because it was
+ * found rather than listed. `in('id', …)` has no order of its own, which is why the
+ * ranking is re-applied here rather than trusted to the database.
+ */
+export async function searchCatalogue(
+  supabase: SupabaseClient,
+  { q, subject, audience }: { q: string; subject?: string; audience?: string },
+  limit = 60,
+): Promise<CatalogueCourse[]> {
+  const { data, error } = await supabase.rpc('search_catalogue', {
+    p_query: q,
+    p_subject: subject && subject !== 'all' ? subject : null,
+    p_audience: audience && audience !== 'all' ? audience : null,
+    p_limit: limit,
+  });
+  if (error) throw new Error(error.message);
+
+  const hits = parseSearchHits(data);
+  if (hits.length === 0) return [];
+
+  const { data: rows, error: readError } = await supabase
+    .from('courses')
+    .select(COURSE_COLUMNS)
+    .in('id', hits.map((hit) => hit.courseId));
+  if (readError) throw new Error(readError.message);
+
+  return orderByIds(
+    (rows ?? []) as unknown as CatalogueCourse[],
+    hits.map((hit) => hit.courseId),
+  );
 }
 
 export async function fetchSubjectAreas(

@@ -89,7 +89,7 @@ export default async function CataloguePage({
       <h1>Find a course</h1>
       <p className="lede">
         Every course is reviewed before publication. Browse by subject, or
-        search by title.
+        search for a course, a subject or a teacher.
       </p>
 
       <form method="get" action="/catalogue" className="search">
@@ -97,7 +97,7 @@ export default async function CataloguePage({
           type="search"
           name="q"
           defaultValue={q ?? ''}
-          placeholder={'Search courses\u2026'}
+          placeholder={'Search courses, subjects, teachers\u2026'}
           aria-label="Search courses"
         />
         <select name="audience" defaultValue={audience ?? 'all'} aria-label="Audience">
@@ -126,8 +126,9 @@ export default async function CataloguePage({
 
       {visible.length === 0 ? (
         <p className="empty">
-          No courses yet. Once a teacher publishes one it will appear here —
-          nothing is shown until it has passed review.
+          {q && q.trim().length > 0
+            ? `Nothing matched \u201c${q.trim()}\u201d. Try a subject, or a teacher\u2019s name.`
+            : 'No courses yet. Once a teacher publishes one it will appear here — nothing is shown until it has passed review.'}
         </p>
       ) : (
         <div className="grid cols-2">

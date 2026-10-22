@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1263 database tests, 821 web tests; TypeScript typecheck and
+Verification: **1272 database tests, 827 web tests; TypeScript typecheck and
 production build pass; 108 tables, 233 policies, 139 user-defined triggers,
-286 functions, 125 migrations and 126 app route entries.**
+287 functions, 126 migrations and 126 app route entries.**
 
 ## Today's sentence
 
@@ -2220,6 +2220,33 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### Search finds a subject and a teacher, and ranks what it finds, 2026-10-22
+
+The catalogue has taken a `q` since the first version of the page, and it was thinner than
+it looked: it matched `title` and `description` with `ilike`, in alphabetical order, and it
+knew nothing about the two things a buyer most often types. A course **filed under Fiqh**
+was unfindable unless the word also appeared in its blurb. A **teacher** could not be found
+by name at all, even when they had a public profile and an audience.
+
+`search_catalogue()` is now the single definition of a match: title (a title that starts
+with the term wins outright), then subject names on the published version, then the
+teacher's display name, then the description. Every word must match somewhere — a query is
+an AND, so "fiqh marriage" does not return every course that mentions marriage. It uses
+`strpos()` rather than `like`, so a `%` typed into the box is a character that matches
+nothing rather than a pattern that matches everything.
+
+The function is `security invoker`, so it sees only what the caller may already read. That
+is the whole security story and it has one deliberate consequence: **a teacher is findable
+by name only when their profile is published and public**, the same condition that gives
+them a public page. Lifting that rule would have turned the search box into a way to
+enumerate teachers who had not chosen to be listed. Suspended, retired and unpublished
+courses are not searchable either, and each of those is a test.
+
+It is **not behind a flag.** `platform.search` remains in the register as the promise it
+was, but search is navigation: the catalogue already filtered before any flag existed, and
+putting the index of the shelf behind a switch that ships off would hide the shelf. The
+client sends a query to the function and an empty box to the ordinary listing, so clearing
+the box browses rather than emptying the page.
 ### A learner profile has one writer, and its identity is not editable, 2026-10-22
 
 The audit of 2026-10-20 recorded that `add_child_to_family()` was called by tests only,
