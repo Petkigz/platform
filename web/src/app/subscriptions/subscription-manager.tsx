@@ -16,12 +16,27 @@ type Subscription = {
 };
 type Learner = { id: string; display_name: string; learner_type: string; age_band: string | null };
 
+/** What a plan gives, as `my_plan_summary()` reports it. */
+export type PlanContents = {
+  tier: string;
+  features: Array<{ code: string; label: string }>;
+  subjects: string[];
+};
+
 function date(value: string | null): string {
   if (!value) return 'Not started';
   return new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(new Date(value));
 }
 
-export function SubscriptionManager({ subscriptions, learners }: { subscriptions: Subscription[]; learners: Learner[] }) {
+export function SubscriptionManager({
+  subscriptions,
+  learners,
+  contents = {},
+}: {
+  subscriptions: Subscription[];
+  learners: Learner[];
+  contents?: Record<string, PlanContents>;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -59,11 +74,43 @@ export function SubscriptionManager({ subscriptions, learners }: { subscriptions
             const availableLearners = learners.filter((l) => !allocated.has(l.id));
             const canAllocate = subscription.status === 'active';
             const canCancel = ['pending','trialing','active','past_due','paused'].includes(subscription.status);
+            const plan = contents[subscription.id];
             return (
               <article className="card" key={subscription.id}>
                 <p className="eyebrow">{version?.billing_interval ?? 'subscription'} · {subscription.status}</p>
-                <h2>{subscription.plans?.name ?? 'Learning plan'}</h2>
+                <h2>
+                  {subscription.plans?.name ?? 'Learning plan'}{' '}
+                  {plan && (
+                    <span className={`badge ${plan.tier === 'plus' ? 'ok' : 'neutral'}`}>
+                      {plan.tier === 'plus' ? 'Plus' : 'Basic'}
+                    </span>
+                  )}
+                </h2>
                 <p>Current paid period: {date(subscription.current_period_start)} – {date(subscription.current_period_end)}</p>
+                {plan && (
+                  <div>
+                    <h3>What this plan includes</h3>
+                    {plan.features.length === 0
+                      && plan.subjects.length === 0
+                      ? <p className="muted">The course itself.</p>
+                      : (
+                        <ul>
+                          {plan.features.map((feature) => (
+                            <li key={feature.code}>{feature.label}</li>
+                          ))}
+                          {plan.subjects.length > 0 && (
+                            <li>Every course in {plan.subjects.join(', ')}</li>
+                          )}
+                        </ul>
+                      )}
+                    {plan.tier !== 'plus' && (
+                      <p className="muted" style={{ fontSize: '0.9rem' }}>
+                        Plus adds watching lessons inside the app with no connection.{' '}
+                        <a href="/plans">Compare the plans</a>
+                      </p>
+                    )}
+                  </div>
+                )}
                 {subscription.cancelled_at && <p className="notice">Cancelled. Access already paid for continues until {date(subscription.current_period_end)}.</p>}
                 <h3>Allocated learners</h3>
                 {subscription.family_plan_allocations.filter((a) => a.status === 'active').length === 0

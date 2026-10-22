@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 
 import { createClient } from '@/lib/supabase/client';
@@ -57,6 +58,7 @@ export function RenditionPlayer({
   canDownload,
   courseTitle = '',
   learnerProfileId = null,
+  saveNote = null,
 }: {
   displayName: string;
   lessonId: string;
@@ -67,6 +69,11 @@ export function RenditionPlayer({
   courseTitle?: string;
   /** Whose save this is. A guardian saving a child's lesson records the child. */
   learnerProfileId?: string | null;
+  /**
+   * Why the save button is absent, when it is absent for a reason the learner
+   * can act on. A missing button with no sentence sells nothing.
+   */
+  saveNote?: string | null;
 }) {
   const choices = renditionChoices(renditions);
   const initial = pickStreamRendition(renditions, null);
@@ -270,6 +277,13 @@ export function RenditionPlayer({
           </button>
         )}
         {savedHere && <a className="secondary" href="/downloads">On this device</a>}
+
+        {saveNote && (
+          <p className="muted" style={{ fontSize: '0.9rem', margin: 0 }}>
+            {saveNote}{' '}
+            <Link href="/plans">See what Plus includes</Link>
+          </p>
+        )}
 
         {error && (
           <button type="button" className="secondary" onClick={() => void load(chosen.id)}>

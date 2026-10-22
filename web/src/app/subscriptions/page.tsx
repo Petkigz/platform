@@ -2,7 +2,17 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import { SubscriptionManager } from './subscription-manager';
+import { SubscriptionManager, type PlanContents } from './subscription-manager';
+
+type PlanSummaryRow = {
+  subscriptionId: string;
+  tier: string;
+  planName: string;
+  interval: string;
+  currentPeriodEnd: string | null;
+  features: Array<{ code: string; label: string }>;
+  subjects: string[];
+};
 
 export const dynamic = 'force-dynamic';
 
@@ -31,14 +41,31 @@ export default async function SubscriptionsPage() {
   if (subsResult.error) throw new Error(subsResult.error.message);
   if (learnersResult.error) throw new Error(learnersResult.error.message);
 
+  // What each plan actually gives, in words. Read from a function rather than
+  // joined here, because the shelf and the contents are one answer and the
+  // storefront and this page must not be able to disagree about them.
+  const { data: summaryData } = await supabase.rpc('my_plan_summary');
+  const contents: Record<string, PlanContents> = {};
+  for (const row of (summaryData ?? []) as PlanSummaryRow[]) {
+    contents[row.subscriptionId] = {
+      tier: row.tier,
+      features: row.features ?? [],
+      subjects: row.subjects ?? [],
+    };
+  }
+
   return (
     <div className="container section">
       <p className="eyebrow">Your account</p>
       <h1>My subscriptions</h1>
-      <p className="lede">Manage household learner slots. Cancelling stops the next period; access already paid for remains until the period ends.</p>
+      <p className="lede">
+        What your plan includes, who is using it, and what happens when it ends. Cancelling stops
+        the next period; access already paid for remains until the period ends.
+      </p>
       <SubscriptionManager
         subscriptions={(subsResult.data ?? []) as never[]}
         learners={(learnersResult.data ?? []) as never[]}
+        contents={contents}
       />
       <p style={{ marginTop: '1.5rem' }}><Link href="/plans">Browse subscription plans</Link></p>
     </div>

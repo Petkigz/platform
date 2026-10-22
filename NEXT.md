@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1363 database tests, 856 web tests; TypeScript typecheck and
+Verification: **1374 database tests, 856 web tests; TypeScript typecheck and
 production build pass; 115 tables, 239 policies, 146 user-defined triggers,
-323 functions, 138 migrations and 136 app route entries.**
+326 functions, 139 migrations and 136 app route entries.**
 
 ## Today's sentence
 
@@ -2298,6 +2298,35 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
+
+### Say why a lesson cannot be saved, and what a plan actually gives, 2026-10-22
+
+Two silences, one about selling and one about telling.
+
+**The Save button that was not there.** `may_download_lesson()` answers yes or no, and the
+lesson page rendered nothing when the answer was no. A learner on Basic saw a lesson, no way to
+keep it, and no reason — so the feature Plus exists to sell was invisible to the only person who
+could buy it. `lesson_download_standing()` decomposes the same predicate into a reason with a
+sentence, and the player shows it under the video. `needs_plus` is the only reason that becomes
+a link: pointing somebody who has not bought the course at the Plus shelf would sell them a
+benefit they still cannot use.
+
+The decomposition is held against the predicate it explains. A test builds five states — flag
+off, not entitled, entitled without Plus, entitled with Plus, no media — and asserts that
+`allowed` equals `may_download_lesson()` combined with the flag in **every** one. The standing
+never decides anything; it only says why.
+
+**`/subscriptions` said nothing about what you were paying for.** It now leads each card with
+the shelf and a sentence list of what the plan carries, from `my_plan_summary()`: a Plus
+subscriber sees "Watch lessons inside the app with no connection", a Basic subscriber sees the
+catalogue their plan covers and one line saying what Plus adds.
+
+**And a leak, found by the test written to check the opposite.** The first `my_plan_summary()`
+was `security definer` and relied on the RLS policy on `subscriptions` to limit it — which does
+not apply inside a definer function. It returned every subscription on the platform. The test
+"somebody else's plan is not in the summary" failed on the first run; membership is now an
+explicit check in the function, with a comment saying why, because the next definer function
+that reads a per-person table will make the same mistake.
 
 ### Everything is kept, so the store had to be built to keep it, 2026-10-22
 

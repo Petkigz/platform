@@ -42,7 +42,7 @@ Status:
 | 11 | Child home | READY — `/family` shows each child's courses and progress; the child-facing home itself is not designed |
 | 12 | Age-band selection | READY |
 | 13 | Course page | **BUILT** — `/courses/[slug]` |
-| 14 | Video lesson | **BUILT** — `/learn/[enrolmentId]/lesson/[lessonId]` |
+| 14 | Video lesson | **BUILT** — `/learn/[enrolmentId]/lesson/[lessonId]`. *(2026-10-22)* When saving is switched on but the learner cannot save, the player now says **why** — `lesson_download_standing()` returns `needs_plus`, `not_entitled`, `feature_off`, `no_media` or `allowed`, and only the Plus case is turned into a link, because telling somebody who has not bought the course to buy a plan would sell them something still useless |
 | 15 | Interactive lesson | READY — shares the lesson route, no interactive player yet |
 | 16 | Quiz | **BUILT** — `/learn/[enrolmentId]/assessment/[assessmentId]`. Four question types (`single_choice`, `multiple_choice`, `true_false`, `short_answer`); the answer key is a protected column. No question bank, no timed sittings |
 | 17 | Results | **BUILT** — same route; score, attempt count, pass state, and the teacher's comments on marked answers. Deliberately does not list which automatic questions were right, so a result cannot be read as an answer key |
@@ -162,6 +162,7 @@ against the actual route list in the production build, not from memory.
 | `/admin/disputes` | Payment disputes |
 | `/admin/financial-adjustments` | Manual financial adjustments |
 | `/teach/[courseId]/reports` | A teacher's own numbers *(added 2026-10-22)*: total events, distinct learners and people, counts per event, the ten most-opened lessons and lesson opens by day, over 7/30/90 days. **Aggregates only** — the database returns no learner reference, so this page cannot show who did what. Course author or staff; with the flag off it says so instead of showing zeros |
+| `/subscriptions` | My subscriptions *(what the plan includes added 2026-10-22)*: each plan with its **Basic/Plus shelf**, the paid period, and what it carries in words — "Watch lessons inside the app with no connection" for Plus, the subject catalogue for a plan that sells one. A Basic subscriber is told in one line what Plus adds, and can compare. From `my_plan_summary()`, which checks billing-account membership itself because a definer function does not inherit the subscriptions policy |
 | `/admin/analytics` | What people do, by event and by day *(added 2026-10-22)*: totals over a 7/30/90/365-day window, the busiest event's daily bars, and the top catalogue search terms. Reads only — the switch that records is `delivery.analytics` on `/admin`. Aggregates only: counts and distinct people, never a list of who. Staff only |
 | `/admin/plans` | Subscription plans, versions, entitlements and prices. Each plan is created on, or moved between, the **Basic** and **Plus** shelves; a Basic plan cannot be given a Plus feature, and a Plus plan cannot drop to Basic while its terms still carry one |
 | `/admin/reconciliation` | Payment reconciliation |

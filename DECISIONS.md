@@ -2504,6 +2504,34 @@ processing agreement, and it is the one part of live classes that cannot be buil
 **Also open:** whether a recording is offered to learners who missed the class, and how long
 it is kept. Nothing produces a recording yet, so nothing has to decide that today — but the
 moment a provider is connected, it is the next question.
+## A Plus benefit nobody can see is a Plus benefit nobody buys — **DECIDED 2026-10-22**
+
+Two silences followed from the offline decision, and both cost money in different ways.
+
+**The button.** `may_download_lesson()` answers yes or no, and the lesson page hid the Save
+button when the answer was no. A learner on Basic therefore saw a page with no way to save and
+no explanation — so the one thing Plus sells was invisible to exactly the person it is sold to.
+`lesson_download_standing()` now decomposes the same predicate into a reason: `signed_out`,
+`feature_off`, `not_entitled`, `needs_plus`, `no_media` or `allowed`, each with a sentence.
+**Only `needs_plus` is turned into a link**, because telling somebody who has not bought the
+course to buy a plan would sell them something that is still useless to them.
+
+That is an explanation, not a second rule, and the test holds it to that: for every case, the
+standing's `allowed` must equal `may_download_lesson()` and the feature flag combined. Two
+predicates that drift is how a screen promises something the writer then refuses.
+
+**The page.** `/subscriptions` listed periods and learner slots and never said what the plan
+*includes*. It now shows the shelf (Basic or Plus), the paid period, and the contents in words —
+"Watch lessons inside the app with no connection" — from `my_plan_summary()`, with one line
+naming what Plus adds for anyone on Basic.
+
+**A first draft of that function leaked every subscription on the platform.** It is `security
+definer`, so the RLS policy on `subscriptions` does not apply to the query inside it; the draft
+relied on the policy and returned the whole table. The test that reads one stranger's summary is
+what caught it, and the fix is written in the function as a comment: *a definer function has to
+state the rule itself.* That lesson applies to every `security definer` function here that reads
+a table with a per-person policy, and worth checking the next time one is written.
+
 ## A saved lesson is kept by the app, not handed to the phone — **DECIDED 2026-10-22**
 
 Two sentences from the owner, and both change the design:

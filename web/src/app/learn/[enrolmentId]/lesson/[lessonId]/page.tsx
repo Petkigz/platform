@@ -32,6 +32,15 @@ type EnrolmentRow = {
   courses: { id: string; title: string }[] | null;
 };
 
+/** Why a lesson can or cannot be saved, as `lesson_download_standing()` says it. */
+type SaveStanding = {
+  enabled: boolean;
+  allowed: boolean;
+  reason: 'allowed' | 'signed_out' | 'feature_off' | 'not_entitled' | 'needs_plus' | 'no_media' | 'no_lesson';
+  needsPlus: boolean;
+  message: string;
+};
+
 type ProgressRow = {
   lesson_id: string;
   status: string;
@@ -164,13 +173,17 @@ export default async function LessonPage({
   const renditionsByAsset = groupByAsset(renditions);
 
   // Saving is a paid feature with its own predicate, deliberately not
-  // can_access_lesson(): a free preview may be watched but not kept.
+  // can_access_lesson(): a free preview may be watched but not kept. The
+  // standing answers the same question with a reason attached, so a learner on
+  // Basic is told what Plus is instead of seeing a button that is not there.
   let canDownload = false;
+  let saveStanding: SaveStanding | null = null;
   if (offlineOn && hasMedia) {
-    const { data: maySave } = await supabase.rpc('may_download_lesson', {
+    const { data } = await supabase.rpc('lesson_download_standing', {
       p_lesson_id: lesson.id,
     });
-    canDownload = maySave === true;
+    saveStanding = (data ?? null) as SaveStanding | null;
+    canDownload = saveStanding?.allowed === true;
   }
 
   const courseTitle = enrolment.courses?.[0]?.title ?? 'the course';
@@ -273,6 +286,11 @@ export default async function LessonPage({
                         canDownload={canDownload}
                         courseTitle={courseTitle}
                         learnerProfileId={enrolment.learner_profile_id}
+                        saveNote={
+                          saveStanding && !saveStanding.allowed && saveStanding.needsPlus
+                            ? saveStanding.message
+                            : null
+                        }
                       />
                     ) : r.mediaAssetId ? (
                       // The master exists but nothing has encoded a delivery copy
