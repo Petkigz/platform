@@ -2089,6 +2089,12 @@ on `/admin/media` (or the upload form) is the obvious next piece, and is recorde
 
 ## Open external decisions (not to be guessed)
 
+- **An email/SMS provider — the first external blocker, chosen 2026-10-22.** Three
+  built things are waiting on it and none of them can be finished honestly without
+  one: the invite flow above, purchase receipts, and the password-recovery mail
+  that Supabase sends through its own default sender. Preparing for it means the
+  sending surface, templates and a recorded outbox that a provider can be plugged
+  into without touching a caller; it does not mean choosing a vendor in code.
 - Payment provider merchant/sandbox credentials and callback verification (P12).
 - **R2 credentials, and one bucket setting that comes with them.** No credential
   exists in this environment, so no byte has been sent to a real bucket. When
@@ -2109,12 +2115,10 @@ on `/admin/media` (or the upload form) is the obvious next piece, and is recorde
   VPN, but cannot express "cheaper in Uganda than in Kenya" in the same money.
   If that wins, `resolve_course_price()` becomes a currency rule and the web
   path does not change. §`DECISIONS.md`, 2026-10-22.
-- **Whether sharing with a named person may disclose that their account exists.**
-  `/account/sharing` resolves an email address to an account and says so when there is
-  none, as `invite_family_member()` has always done. The alternative — a silent no-op —
-  leaves a person believing they shared something they did not, which is worse here.
-  Removing the disclosure means an invite flow with a token, an expiry and a second
-  screen; that is a feature to decide on, not a fix to slip in.
+- **Sharing with an address that has no account.** Answered on 2026-10-22: it
+  sends an invite carrying a token, so the screen neither no-ops nor discloses
+  whether the address is registered. The flow (token, expiry, a second screen) is
+  built in the sharing unit, which is parked behind the email provider.
 - **What nets against what in the money report.** `/admin/money-report` totals
   credits and debits separately and refuses to produce one figure, because whether a
   chargeback offsets the capture it came from, whether a provider fee is deducted
@@ -2160,12 +2164,13 @@ Settled on 2026-10-22 and no longer open, all six written up in `DECISIONS.md`:
   rule is a way to tell a family no at checkout and ease of use is the dominant
   principle.
 - **Buying a course the family already owns** — refuse a purchase that would grant
-  nothing new, per billing account and course version. That is the grain the
-  fulfilment already uses, so one purchase covers every learner profile on the
-  account: twins are two profiles on one account, the first purchase enrols both,
-  and no second child is ever the one refused. The message names who already has
-  access and until when, so it reads as reassurance rather than rejection.
-  Renewals, other versions and other accounts are all unaffected.
+  nothing new. *Re-scoped on 2026-10-22*: one purchase covers **up to a set number
+  of learners**, not every profile on the account and not strictly one. So the
+  refusal is due only when the account's remaining places are zero — a family of
+  twins buys once, and a family that has used its places buys again for the next
+  child. The message names who already has access and until when, so it reads as
+  reassurance rather than rejection. The number is `commerce.family_learner_cap`;
+  renewals, other versions and other accounts are unaffected.
 - **How a price's market is chosen** — the buyer's country, resolved in the
   writer: an exact match, then the default the price declares for its currency,
   then a refusal rather than a guess. The consequence is that
@@ -2181,7 +2186,7 @@ Settled on 2026-10-22 and no longer open, all six written up in `DECISIONS.md`:
   left, with uploads in flight counting from initiation so a stalled transfer
   cannot be used to slip past it.
 
-**Four of the six are built. Two remain.** In build order:
+**Five of the six are built. One remains.** In build order:
 
 1. ~~A discount shared at the revenue-share rate~~ **Built** — `20261227000100`,
    `discount_sharing.test.mjs`. A teacher now bears half a half-price discount
@@ -2195,10 +2200,11 @@ Settled on 2026-10-22 and no longer open, all six written up in `DECISIONS.md`:
    price id is no longer accepted by the writer at all. Whether a market should
    be a country is still asked below, and this is the answer it assumes.
 4. ~~The 50 GB quota behind `platform.cost_controls`.~~ **Built** — `20261229000100`.
-5. **Verified qualification required for every authorisation**, plus making the
-   subject mandatory when a qualification is recorded. Next.
+5. ~~Verified qualification required for every authorisation~~ **Built** —
+   `20261231000100`, `reviewer_register.test.mjs` (38 tests), plus the mandatory
+   subject at recording. The owner decides a credential; a convened board may.
 6. **Promotions**, in the three stages above — the largest of the six by some way.
-   Nothing is written for it yet beyond the three tables.
+   Nothing is written for it yet beyond the three tables. Next.
 - Automatic subscription renewal worker and provider support.
 - Legal review and any locale-specific safeguarding/child-consent requirements.
 

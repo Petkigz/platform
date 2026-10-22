@@ -1915,3 +1915,71 @@ recorded, and the register screen will not submit without it. `set_reviewer_auth
 refuses an active authorisation without a verified, unexpired qualification in that exact
 subject, technical scope included, and `is_authorised_reviewer()` checks again so an expiry
 or a rejection ends the authorisation that rested on it.
+
+## What one course purchase buys — **DECIDED 2026-10-22**
+
+Asked because the duplicate-purchase refusal was scoped to the billing account: one purchase
+granted every learner profile on the account. That is right for twins and wrong for a
+household of six, and the owner's answer is neither extreme — **one purchase covers up to a
+set number of learners.**
+
+Counted on learner profiles, not on accounts and not on adults. An adult who buys a course
+for themselves is one learner; a parent with four children may cover all four with one
+purchase if the number allows it, and must buy again beyond it. The number is a setting
+(`commerce.family_learner_cap`) rather than a constant, because the owner has not named it
+yet and a number that decides what a family pays is a business decision, not a deploy. The
+value the platform ships with is provisional and changing it is a dashboard change.
+
+**A purchase holds places, not just grants.** A family may buy before the second child is
+added to the account, so fulfilment cannot simply grant the profiles that exist at the
+moment of payment and forget the rest. Each order creates a place per covered learner; a
+profile on the account claims a place when that learner first opens the course, and an
+unclaimed place not expiring is what makes "up to" true rather than "the children you had
+at checkout". A refund takes back the places that order created and the grants they produced,
+and no others — which is why a place names its order.
+
+Still open: **what happens at the cap** — refuse the extra learner, or charge again in the
+same flow. The writer refuses when no place remains and offers the purchase path, because
+that is the reversible reading; if the answer is to charge automatically, the refusal becomes
+a prompt and nothing else in the model changes.
+
+## Sharing with an address that has no account — **DECIDED 2026-10-22**
+
+Asked because `/account/sharing` resolves an email address to an account and says so when
+there is none, like `invite_family_member()` always has. Both easy options are wrong: a
+silent no-op leaves the sharer believing something was shared, and a disclosure lets anyone
+test whether an address is registered here.
+
+**Decided: send an invitation carrying a token.** The screen says an invitation was sent and
+nothing about whether the address is registered. The token is single-use, expires, is bound
+to the invited address and to the resource being shared, and is accepted only while signed
+in as that address — so possession of the mail is not enough on its own. The response has the
+same shape whether or not an account exists, which is what makes the non-disclosure real
+rather than cosmetic.
+
+Parked behind the email provider. An invitation nobody receives is a worse no-op than the
+one being fixed, so the flow ships with the sending surface, not before it.
+
+## Plan checkout is gated like course checkout — **DECIDED 2026-10-22**
+
+`create_plan_order()` is reachable while `commerce.subscriptions` is off: the catalogue and
+the screens hide plans, but the writer does not refuse one. A flag that hides a surface and
+not the writer is decoration, and the course path already does this correctly
+(`create_course_order()` refuses while `commerce.checkout` is off).
+
+**Decided: the plan writer refuses while the flag is off, and the read path does not offer a
+plan the writer would refuse.** Same shape as the course path, same refusal vocabulary, so a
+caller sees one behaviour rather than two. Built in the unit after this record.
+
+## The first external blocker to prepare for is email/SMS — **DECIDED 2026-10-22**
+
+Among the things that cannot be finished without somebody outside the platform — a payment
+merchant, R2 credentials, an ffmpeg host, an email/SMS provider — the provider is first.
+
+Three built things are already waiting on it: the invite above, purchase receipts, and the
+password-recovery mail Supabase currently sends through its own default sender. Preparing
+for it is the cheapest work that does not guess a vendor: one sending function with a
+recorded outbox, templates that name what they are for, and a configuration point a provider
+plugs into. Until a provider is chosen the outbox records what would have been sent and the
+screens say so, rather than pretending a message arrived.
+
