@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1348 database tests, 856 web tests; TypeScript typecheck and
+Verification: **1355 database tests, 856 web tests; TypeScript typecheck and
 production build pass; 115 tables, 239 policies, 146 user-defined triggers,
-320 functions, 135 migrations and 135 app route entries.**
+321 functions, 136 migrations and 136 app route entries.**
 
 ## Today's sentence
 
@@ -2252,6 +2252,29 @@ was described in a comment and stored nowhere. It is deliberately **not unique p
 market may sell two Basic plans at two prices. What makes a plan the VIP one is the tier
 *and* the feature grant its live version carries — neither alone should be able to hand out
 the feature.
+
+### A teacher may count their course, not their children, 2026-10-22
+
+The analytics decision ended with an open question: the data exists, so what may an author see
+about it? The answer splits cleanly, and the split is the design.
+
+**Aggregates for the author.** `teacher_course_analytics()` returns one course's numbers to the
+teacher who wrote it, or to staff: total events, distinct learners, distinct people signed in,
+counts per event, the ten most-opened lessons, and lesson opens by day. Over 7, 30 or 90 days.
+
+**No learner references, anywhere.** Not "hidden by the screen" — the function does not select
+them, and a test asserts that neither the teacher's user id nor the learner's profile id appears
+anywhere in the returned JSON. The number of people who opened lesson three is a fact about the
+course; a list of *who* opened it is a fact about children. A per-learner view already exists
+where it belongs: the cohort progress screen, behind its own flag and its own opt-in. Two
+questions, two permissions, and the line between them is drawn in SQL rather than in a template.
+
+**The refusal is a sentence.** With capture off, the teacher is told analytics is not enabled
+rather than shown a page of zeros — an empty report and a switched-off report are different
+facts, and a dashboard that cannot tell them apart is lying gently.
+
+`/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
+figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
 ### Everything is kept, so the store had to be built to keep it, 2026-10-22
 

@@ -2580,6 +2580,14 @@ that reads a payload is `analytics_search_terms()`, because knowing what was sea
 whole reason a search is recorded. The flag moves from CODE to ADMIN: the pipeline is built, so
 switching capture on is the owner's decision rather than a deploy.
 
-**Still open:** the reports a teacher sees about their own course. The data now exists; what a
-teacher may read about their learners is a separate permission question and is not answered
-here.
+**Settled the same day: what an author may read.** `teacher_course_analytics()` returns
+aggregates for one course to the teacher who wrote it (or to staff): total events, distinct
+learners, distinct signed-in people, counts per event, the ten most-opened lessons, and lesson
+opens by day. It returns **no learner reference at all**, because the number of people who opened
+lesson three is a fact about the course while a list of who opened it is a fact about children.
+A per-learner view already exists where it belongs — the cohort progress screen, behind its own
+flag and its own opt-in. With capture off the teacher is told analytics is not enabled rather
+than shown zeros, since an empty report and a switched-off report are different facts.
+
+**Still open:** certificates and revenue are not in the teacher report; they have their own
+screens and their own questions.
