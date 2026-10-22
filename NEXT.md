@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1219 database tests, 806 web tests; TypeScript typecheck and
+Verification: **1230 database tests, 808 web tests; TypeScript typecheck and
 production build pass; 107 tables, 232 policies, 138 user-defined triggers,
-277 functions, 119 migrations and 122 app route entries.**
+278 functions, 120 migrations and 122 app route entries.**
 
 ## Today's sentence
 
@@ -2216,6 +2216,48 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### A code is redeemed, once, at the moment the order is made, 2026-10-22
+
+Promotions had writers and no way to use one. This is the redemption half — the
+last piece of the six decisions from earlier the same day.
+
+`20261238000100_promotion_redemption.sql` adds `apply_promotion_to_order()` and
+re-creates `create_course_order()` with an optional code. The code is applied
+**inside the order transaction**, so a mistyped or ineligible code creates no
+order at all: no stray pending row, no family wondering whether they were
+charged. The old three-argument signature is dropped, not left as an overload.
+
+Six refusals, each a different sentence because each tells the family something
+different: unknown code, not running (not active, or outside its window), a
+country the campaign does not name, a course the campaign does not name, a
+buyer who is not a new customer, and the three limits — total, per person, and
+per family, the family being the billing account because one guardian buys for
+several children.
+
+Two money rules are deliberate. A **percentage rounds once**, in the currency
+being charged, because it follows the local price and there is nothing to
+convert. A **fixed amount must match the order's currency**, which the campaign
+writer has already checked against each named market's price; the redemption
+check is the second line of defence. And a code **cannot make an order free** —
+the ledger refuses a zero capture, so "everything off" would hand the family an
+order that can never settle. It is refused with a sentence that says to contact
+us instead.
+
+The discount is a `promotion` adjustment carrying the redemption id, so the
+totals identity, the discount-sharing rule and the earnings split read it without
+knowing promotions exist. `create_course_order()` now returns `discountMinor` and
+`promotionCode` alongside the amount.
+
+The buy form has an optional "Promotion code" field; the route passes it through
+untouched and the writer decides its worth. Eleven database tests, two web tests
+holding the sentences, and the checkout contract test that no discount is ever
+sent from the browser.
+
+**Not built yet, and next:** showing the discounted price *before* the handoff
+(a preview needs a quote function that does not create an order), and taking a
+code off an order. Neither blocks a purchase today because the code is applied
+when the order is created.
 
 ### Each role lands in its own area, 2026-10-22
 

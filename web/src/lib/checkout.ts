@@ -41,6 +41,7 @@ export type CheckoutErrorCode =
   | 'conflict'
   | 'checkout_disabled'
   | 'forbidden'
+  | 'promotion_refused'
   | 'error';
 
 export type CreateOrderResult =
@@ -196,6 +197,64 @@ const COURSE_ORDER_REFUSALS: Record<string, { code: CheckoutErrorCode; message: 
     code: 'forbidden',
     message: 'That learner is not on your account. Refresh the page and choose again.',
   },
+  // Promotion codes. The key is `promotion:<reason>`, and each reason is a
+  // different sentence because each one tells the family something different —
+  // "that code has ended" and "that code has been used up" are not the same
+  // problem, and neither is "it is not for this course".
+  unknown_code: {
+    code: 'promotion_refused',
+    message: 'That code is not one we recognise. Check it and try again.',
+  },
+  not_active: {
+    code: 'promotion_refused',
+    message: 'That code is not running at the moment.',
+  },
+  not_running: {
+    code: 'promotion_refused',
+    message: 'That code has ended, or has not started yet.',
+  },
+  not_in_market: {
+    code: 'promotion_refused',
+    message: 'That code is not available in your country.',
+  },
+  not_for_this_course: {
+    code: 'promotion_refused',
+    message: 'That code is not for this course.',
+  },
+  new_customers_only: {
+    code: 'promotion_refused',
+    message: 'That code is only for people who have not bought anything before.',
+  },
+  limit_reached_total: {
+    code: 'promotion_refused',
+    message: 'That code has been used up.',
+  },
+  limit_reached_person: {
+    code: 'promotion_refused',
+    message: 'You have already used that code as often as it allows.',
+  },
+  limit_reached_family: {
+    code: 'promotion_refused',
+    message: 'Your family has already used that code as often as it allows.',
+  },
+  would_be_free: {
+    code: 'promotion_refused',
+    message:
+      'That code would make the course entirely free, which this checkout cannot take. ' +
+      'Contact us and we will enrol you directly.',
+  },
+  currency_mismatch: {
+    code: 'promotion_refused',
+    message: 'That code is written in a different currency from this course. Contact us.',
+  },
+  nothing_off: {
+    code: 'promotion_refused',
+    message: 'That code takes nothing off this order.',
+  },
+  already_applied: {
+    code: 'promotion_refused',
+    message: 'This order already has a code on it. An order takes one.',
+  },
 };
 
 /** Split `checkout:<key>` back out of a Postgres error message. */
@@ -203,7 +262,10 @@ export function mapCourseOrderRefusal(message: string): {
   code: CheckoutErrorCode;
   message: string;
 } {
-  const key = /checkout:([a-z_]+)/i.exec(message)?.[1]?.toLowerCase();
+  // Two prefixes, one table. `checkout:` is the order's own refusal and
+  // `promotion:` is the code's; the reasons are distinct words, so a single
+  // lookup covers both without ambiguity.
+  const key = /(?:checkout|promotion):([a-z_]+)/i.exec(message)?.[1]?.toLowerCase();
   const mapped = key ? COURSE_ORDER_REFUSALS[key] : undefined;
   if (mapped) return mapped;
   return { code: 'error', message };
@@ -229,7 +291,13 @@ export function mapCourseOrderRefusal(message: string): {
  */
 export async function createOrder(
   supabase: SupabaseClient,
-  args: { courseId: string; learnerProfileId: string; country?: string | null },
+  args: {
+    courseId: string;
+    learnerProfileId: string;
+    country?: string | null;
+    /** What the buyer typed. The writer decides whether it applies. */
+    promotionCode?: string | null;
+  },
 ): Promise<CreateOrderResult> {
   if (!args.learnerProfileId) {
     return { ok: false, code: 'error', message: 'Choose the learner this course is for.' };
@@ -239,6 +307,9 @@ export async function createOrder(
     p_course_id: args.courseId,
     p_learner_profile_id: args.learnerProfileId,
     p_buyer_country: args.country ?? null,
+    // A code, never a discount. The writer decides what it is worth; a blank
+    // box is sent as null so the order is created exactly as before.
+    p_promotion_code: args.promotionCode?.trim() ? args.promotionCode.trim() : null,
   });
 
   if (error) return { ok: false, ...mapCourseOrderRefusal(error.message) };

@@ -434,10 +434,14 @@ export async function run(ctx) {
   await test('a price id can no longer be posted to the writer', async () => {
     const offer = await sellableCourse({ title: 'No Price Id' });
     const args = (await scalar(
-      `select pg_get_function_arguments('public.create_course_order(uuid,uuid,text)'::regprocedure) as a`
+      `select pg_get_function_arguments('public.create_course_order(uuid,uuid,text,text)'::regprocedure) as a`
     )).a;
     assert(/p_buyer_country/.test(args) && !/p_price_id/.test(args),
       `the writer still accepts a price id: ${args}`);
+    // A code is not a discount: the writer takes the words the buyer typed and
+    // decides what they are worth. Nothing here can name an amount off.
+    assert(/p_promotion_code/.test(args) && !/discount/.test(args),
+      `the writer accepts something other than a code: ${args}`);
 
     const buyer = await newBuyer('No Price Id Buyer');
     // A price id is a uuid, and a uuid is not a country. The value is only

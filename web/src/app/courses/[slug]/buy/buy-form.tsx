@@ -42,6 +42,9 @@ export function BuyForm({
   const [learnerId, setLearnerId] = useState(defaultLearnerId);
   const chosen = providers.find((p) => p.id === providerId);
   const needsNumber = chosen?.requiresMsisdn ?? false;
+  // Optional, and deliberately not required: a family with no code should not
+  // have to dismiss a field to buy a course.
+  const [promotionCode, setPromotionCode] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [tone, setTone] = useState<'info' | 'error'>('info');
 
@@ -54,6 +57,7 @@ export function BuyForm({
       body: JSON.stringify({
         courseId,
         learnerProfileId: learnerId || undefined,
+        promotionCode: promotionCode.trim() || undefined,
         msisdn: msisdn || undefined,
         provider: providerId || undefined,
       }),
@@ -123,6 +127,24 @@ export function BuyForm({
           covers one learner; a sibling needs their own purchase.
         </p>
       )}
+
+      <div>
+        <label htmlFor="promotion" className="eyebrow">
+          Promotion code <span className="meta">(optional)</span>
+        </label>
+        <input
+          id="promotion"
+          value={promotionCode}
+          onChange={(e) => setPromotionCode(e.target.value)}
+          placeholder="EID24"
+          autoCapitalize="characters"
+          autoComplete="off"
+          maxLength={32}
+        />
+        <p className="muted">
+          The discount is applied to the order before you pay. One code per order.
+        </p>
+      </div>
 
       {providers.length > 1 && (
         <fieldset>

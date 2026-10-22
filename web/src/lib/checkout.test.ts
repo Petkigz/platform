@@ -191,6 +191,7 @@ test('the order is created by the writer, from ids and nothing else', async () =
       p_course_id: 'course-1',
       p_learner_profile_id: 'learner-1',
       p_buyer_country: 'UG',
+      p_promotion_code: null,
     },
   }]);
 
@@ -422,6 +423,7 @@ test('a course order names its learner, and a broken form is refused before the 
     p_course_id: 'course-1',
     p_learner_profile_id: 'learner-7',
     p_buyer_country: null,
+    p_promotion_code: null,
   });
 });
 
@@ -438,6 +440,55 @@ test('a learner who is not the payer\'s is refused in a sentence, not a raw key'
   assert.equal(result.code, 'forbidden');
   assert.match(result.message, /not on your account/i);
   assert.equal(result.message.includes('checkout:'), false);
+});
+
+test('a promotion code is sent as typed and never as a discount', async () => {
+  const { client, rpcCalls } = (() => {
+    const stub = stubClient(baseData());
+    const calls: { fn: string; args: Record<string, unknown> }[] = [];
+    stub.client.rpc = async (fn: string, args: Record<string, unknown>) => {
+      calls.push({ fn, args });
+      return { data: { orderId: 'order-1', amountMinor: '24000', currencyCode: 'UGX' }, error: null };
+    };
+    return { client: stub.client, rpcCalls: calls };
+  })();
+
+  await createOrder(client, {
+    courseId: 'course-1', learnerProfileId: 'learner-1', promotionCode: '  eid24  ',
+  });
+
+  const args = rpcCalls[0]?.args ?? {};
+  assert.equal(args.p_promotion_code, 'eid24', 'the code was not trimmed and passed through');
+  for (const forbidden of ['discount_minor', 'discountMinor', 'percent', 'amount_minor']) {
+    assert.equal(Object.hasOwn(args, forbidden), false,
+      `the client sent '${forbidden}' — a discount is the writer's to decide`);
+  }
+});
+
+test('each promotion refusal is a different sentence, and none leaks the key', async () => {
+  const cases: [string, RegExp][] = [
+    ['unknown_code', /not one we recognise/i],
+    ['not_active', /not running/i],
+    ['not_running', /ended|not started/i],
+    ['not_in_market', /country/i],
+    ['not_for_this_course', /not for this course/i],
+    ['new_customers_only', /not bought anything before/i],
+    ['limit_reached_total', /used up/i],
+    ['limit_reached_person', /already used that code/i],
+    ['limit_reached_family', /family has already used/i],
+    ['would_be_free', /entirely free/i],
+  ];
+  for (const [key, pattern] of cases) {
+    const { client } = writerClient({ data: null, error: { message: `promotion:${key}` } });
+    const result = await createOrder(client, {
+      courseId: 'course-1', learnerProfileId: 'learner-1', promotionCode: 'X',
+    });
+    assert.equal(result.ok, false, `promotion:${key} was accepted`);
+    if (result.ok) continue;
+    assert.equal(result.code, 'promotion_refused', `promotion:${key} mapped to ${result.code}`);
+    assert.match(result.message, pattern, `promotion:${key} said '${result.message}'`);
+    assert.equal(result.message.includes('promotion:'), false, 'the raw key reached the payer');
+  }
 });
 
 test('plan checkout refuses while subscriptions are off, in the course checkout words', async () => {

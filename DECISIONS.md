@@ -2109,3 +2109,28 @@ owner to `/admin` — is a page that reads the session once and is worth doing w
 chrome together, rather than by making every page dynamic to hide a link that already
 explains itself.
 
+## How a code is redeemed — **DECIDED 2026-10-22** (build, not a new choice)
+
+The six decisions of 2026-10-22 left promotions with an open question: how a buyer uses a
+code, and what "stacking" means. Both are settled by the rule that was already recorded — the
+code the buyer types is the one applied, **one code per order** — and by three money rules
+that follow from the rest of the system rather than from taste:
+
+- **Applied inside the order transaction.** A code that cannot be used creates no order at
+  all. A stray pending order is a support conversation about money that never moved.
+- **A percentage rounds once, in the charged currency.** It follows the local price, so
+  nothing is converted; a fixed amount must match the order's currency, because a discount
+  written in shillings aimed at a market priced in dollars is a different gift.
+- **A code cannot make an order free.** The ledger refuses a zero capture, so a 100% discount
+  would create an order that can never settle. Refused, with a sentence pointing at support
+  rather than at the checkout.
+
+The three limits are checked in the same statement as the redemption, under a row lock on
+the campaign, so two checkouts racing for the last use cannot both win.
+
+**Still open, deliberately:** showing the discounted total *before* the payment handoff. It
+needs a quote function that creates nothing, and the buy form currently applies the code at
+the moment the order is made. A family therefore learns the final price at the order rather
+than on the page — acceptable while the only live provider is a sandbox, and the next piece
+of this feature.
+

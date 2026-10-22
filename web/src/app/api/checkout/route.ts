@@ -29,6 +29,8 @@ type Body = {
    * not configured and get a confusing failure from the adapter.
    */
   provider?: unknown;
+  /** A promotion code the buyer typed. Never a discount — the writer decides. */
+  promotionCode?: unknown;
 };
 
 /**
@@ -78,6 +80,9 @@ export async function POST(request: Request) {
   const planVersionId = typeof body.planVersionId === 'string' ? body.planVersionId.trim() : '';
   const learnerProfileId = typeof body.learnerProfileId === 'string' ? body.learnerProfileId.trim() : '';
   const priceId = typeof body.priceId === 'string' ? body.priceId.trim() : '';
+  const promotionCode = typeof body.promotionCode === 'string'
+    ? body.promotionCode.trim().slice(0, 32)
+    : '';
 
   if (Boolean(courseId) === Boolean(planVersionId)) {
     return NextResponse.json(
@@ -141,12 +146,12 @@ export async function POST(request: Request) {
     if (offering.kind === 'not_sold_here') {
       // Let the writer say why: it holds the reason and the country, and it is
       // the only place allowed to decide that a sale cannot happen.
-      result = await createOrder(supabase, { courseId, learnerProfileId, country });
+      result = await createOrder(supabase, { courseId, learnerProfileId, country, promotionCode });
     } else {
       // The writer takes the payer from the session's own claims; there is no
       // user id to hand it, and no amount, product, price or billing account
-      // either.
-      result = await createOrder(supabase, { courseId, learnerProfileId, country });
+      // either. A plan has no promotion path yet, so a code is not forwarded.
+      result = await createOrder(supabase, { courseId, learnerProfileId, country, promotionCode });
     }
   }
   if (!result.ok) {
@@ -168,6 +173,7 @@ export async function POST(request: Request) {
                 result.code === 'not_paid_course' ||
                 result.code === 'not_sold_here' ||
                 result.code === 'already_entitled' ||
+                result.code === 'promotion_refused' ||
                 result.code === 'conflict'
               ? 409
               : 400;

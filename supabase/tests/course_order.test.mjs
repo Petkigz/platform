@@ -137,10 +137,12 @@ export async function run(ctx) {
 
   await test('the writer takes a course and the country the request came from', async () => {
     const args = (await scalar(
-      `select pg_get_function_arguments('public.create_course_order(uuid,uuid,text)'::regprocedure) as a`
+      `select pg_get_function_arguments('public.create_course_order(uuid,uuid,text,text)'::regprocedure) as a`
     )).a;
     assert(
-      args === 'p_course_id uuid, p_learner_profile_id uuid, p_buyer_country text DEFAULT NULL::text',
+      args ===
+        'p_course_id uuid, p_learner_profile_id uuid, p_buyer_country text DEFAULT NULL::text, ' +
+          'p_promotion_code text DEFAULT NULL::text',
       `the writer accepts '${args}' — an amount, a price or a billing account ` +
       `in this list would be a thing the caller gets to choose`);
 
