@@ -70,6 +70,28 @@ export async function run(ctx) {
     });
   });
 
+  await test('a learner cannot open a course, and a teacher can', async () => {
+    // The role boundary: teaching is an appointment. A signed-in person with no
+    // instructor role is a learner, and a learner's account is not a shop.
+    const learner = await newUser('authoring-learner@example.com');
+    await newProfile(learner, 'Learner');
+
+    await asUser(learner, async () => {
+      await rejects(() => q(
+        `insert into public.courses (slug, title, created_by)
+         values ('learner-course', 'A learner course', $1)`, [learner]),
+        /row-level security|violates row-level security/i);
+    });
+
+    // An instructor still can, and the row names them.
+    await asUser(teacher, async () => {
+      const made = await q(
+        `insert into public.courses (slug, title, created_by)
+         values ('teacher-course', 'A teacher course', $1) returning id`, [teacher]);
+      assert(made.rows.length === 1, 'a teacher could not open a course');
+    });
+  });
+
   await test('a course cannot be created by anyone but its author', async () => {
     await asUser(other, async () => {
       await rejects(() => q(

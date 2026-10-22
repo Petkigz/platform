@@ -176,6 +176,10 @@ export default async function AdminPage() {
         need a written reason.
       </p>
       <p>
+        <Link href="/admin/promotions">Promotions</Link> — codes and offers, which
+        countries each applies in, and how many times a family may use one.
+      </p>
+      <p>
         <Link href="/admin/roles">Roles</Link> — who may do what. Every check in
         the database reads these; granting or revoking needs a written reason.
       </p>

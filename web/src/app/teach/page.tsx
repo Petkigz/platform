@@ -24,6 +24,30 @@ export default async function TeachPage() {
 
   if (!user) redirect('/sign-in?next=/teach');
 
+  // Teaching is an appointment (decided 2026-10-22): the database refuses a
+  // course insert without the role, and this page says why rather than showing a
+  // form that will fail. The owner holds every control and is a teacher besides.
+  const [{ data: instructor }, { data: owner }] = await Promise.all([
+    supabase.rpc('has_role', { p_user_id: user.id, p_role_code: 'instructor' }),
+    supabase.rpc('has_role', { p_user_id: user.id, p_role_code: 'platform_admin' }),
+  ]);
+  if (instructor !== true && owner !== true) {
+    return (
+      <div className="container section">
+        <p className="eyebrow">Teaching</p>
+        <h1>This is the teaching area</h1>
+        <p className="notice warn">
+          <strong>Teaching here is by appointment.</strong> The platform owner creates a
+          teacher account; until then your account is a learner&apos;s, and a learner&apos;s
+          account cannot open a course. If you would like to teach, ask the owner to add you.
+        </p>
+        <p style={{ marginTop: '1.5rem' }}>
+          <Link href="/learn" className="btn">Go to my learning</Link>
+        </p>
+      </div>
+    );
+  }
+
   const courses = await fetchMyCourses(supabase, user.id);
 
   return (
@@ -34,6 +58,12 @@ export default async function TeachPage() {
         You keep the copyright on everything here. Publishing stops nothing
         you have already sold — learners who enrolled keep their access even
         if you retire the course later.
+      </p>
+
+      <p>
+        <Link href="/teach/promotions">Promotions</Link> — run an offer on your
+        own courses, in the countries you choose, with a limit on how many times
+        a family may use it.
       </p>
 
       {courses.length === 0 ? (

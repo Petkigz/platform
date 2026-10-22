@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1218 database tests, 794 web tests; TypeScript typecheck and
-production build pass; 107 tables, 231 policies, 138 user-defined triggers,
-276 functions, 118 migrations and 118 app route entries.**
+Verification: **1219 database tests, 803 web tests; TypeScript typecheck and
+production build pass; 107 tables, 232 policies, 138 user-defined triggers,
+277 functions, 119 migrations and 121 app route entries.**
 
 ## Today's sentence
 
@@ -2216,6 +2216,44 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### Every control is a screen, and a learner is a learner, 2026-10-22
+
+The owner's rule, recorded in `DECISIONS.md` and written out person by person in
+`docs/decisions/role-surfaces.md`: the people using this platform do not write
+code, so anything routine has to be a field on a screen, and each role's power
+ends where their work does.
+
+**A leak closed.** `courses_insert` allowed any signed-in person to open a course
+attributed to themselves, and `/teach` never asked for a role — so a learner's
+account could open a shop. Teaching is an appointment (`teaching.applications`
+ships off, the cohort is curated), so the policy now requires `instructor` or
+`platform_admin`, and the teaching pages explain the area rather than offering a
+form that cannot work. Writing an existing course is unchanged: `can_write_course`
+still answers "the author or staff", because a teacher who loses the role still
+owns what they wrote.
+
+**Promotions got the screens they were missing.** `/admin/promotions` and
+`/teach/promotions` create a campaign with form fields — code, name, percentage or
+fixed amount, countries as checkboxes read from live prices, courses, the three
+limits including per-family, and a window — then switch it on, pause it, archive
+it and change its limits without a migration. `web/src/lib/promotions.ts` holds
+the validation and turns the database's refusals into sentences; the database
+still decides who may do what, so a teacher editing the request to name somebody
+else's course is refused by SQL.
+
+**A campaign owner can see their own usage.** The redemption read policy only
+admitted the person who redeemed and staff, which made a per-family limit
+invisible to the person who set it.
+
+**Deliberately next, not sneaked in: a role landing page.** The masthead is still
+the same for everybody, and a signed-in owner lands on `/` like a visitor. Making
+the header role-aware means reading the session in the layout and making every
+page dynamic to hide links that already explain themselves; a landing page that
+sends each role to its own home is the better shape and is the next UI unit.
+
+Measured: database suite **1219 passing**, web suite **803** (9 new), 119
+migrations, 121 app routes.
 
 ### A promotion can be limited per family, and the limit can be changed, 2026-10-22
 

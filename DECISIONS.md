@@ -2075,3 +2075,37 @@ so that "two per family" can actually be counted when it lands. Counting the red
 would answer a different question and would over-count a guardian paying for two children
 from one account.
 
+## Every control is a screen, and each role's power ends at its own work — **DECIDED 2026-10-22**
+
+The people who will use this platform do not write code. That is a requirement on the
+product, not a preference about the UI: **anything routine has to be a field or a button on
+the screen of the person who is allowed to do it.** A writer that only a SQL prompt can
+reach is an unfinished feature, and so is a policy whose only explanation is a migration.
+
+The roles are the owner's words: a teacher signs in as a teacher, a scholar as a scholar, the
+platform owner as the admin with every control, and a learner as a learner — and each one's
+power ends exactly where their work does. Written out in
+`docs/decisions/role-surfaces.md`, which names for every person what they land on, what they
+may do, what they may not, and — the part that matters — **which policy or function enforces
+it**. A hidden button is a convenience; the policy is the control.
+
+Three consequences, applied the same day:
+
+- **A learner could open a course.** `courses_insert` allowed any signed-in person to insert
+  one attributed to themselves, and `/teach` did not ask for a role. Teaching is an
+  appointment — `teaching.applications` ships off and the cohort is curated — so the policy
+  now requires `instructor` or `platform_admin`, and the page explains the area instead of
+  offering a form that cannot work.
+- **Promotions were writers without screens**, which is exactly the failure this decision
+  names. `/admin/promotions` and `/teach/promotions` now create, switch on, pause, archive
+  and re-limit a campaign with form fields, and the validation speaks in sentences.
+- **A campaign owner could not see their own usage**, so a per-family limit was invisible to
+  the person who set it. Campaign owners can now read their own redemptions and nobody else's.
+
+**The next piece of UI, not this one: a role landing page.** Today the masthead is the same
+for everyone and `/` is the landing for a signed-in owner as much as for a visitor. The
+better arrangement — a learner to `/learn`, a teacher to `/teach`, a scholar to `/review`, the
+owner to `/admin` — is a page that reads the session once and is worth doing with the role
+chrome together, rather than by making every page dynamic to hide a link that already
+explains itself.
+
