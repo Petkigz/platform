@@ -259,6 +259,7 @@ export default async function LessonPage({
                           posterFor(renditionsByAsset.get(r.mediaAssetId) ?? [])?.id ?? null
                         }
                         canDownload={canDownload}
+                        courseTitle={courseTitle}
                       />
                     ) : r.mediaAssetId ? (
                       // The master exists but nothing has encoded a delivery copy

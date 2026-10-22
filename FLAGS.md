@@ -26,7 +26,7 @@ Three kinds of gate:
 | `learning.certificates.simple` | Completion certificate for a learner | ADMIN | Template chosen; certificate numbering scheme |
 | `learning.certificates.verification` | Public verify-a-certificate page | ADMIN + SETUP | Verification page deployed; revocation policy written; token format fixed |
 | `learning.discussion` | Per-lesson questions and replies | ADMIN | Moderation policy; who answers (teacher vs. peers); abuse handling |
-| `learning.offline` | Download lessons for offline use | CODE | The entitlement rule is decided and enforced: `may_download_lesson()` requires entitlement to the version, an active `offline_downloads` feature grant on the plan being paid for, and verified first-party media — so a Plus plan carries it and a Basic plan does not (2026-10-20). **The byte path now exists:** `/api/media/download` checks this flag and then `may_download_lesson()`, and signs a short-lived URL with `response-content-disposition: attachment`, so the button saves a file rather than opening a tab. Still open: the protected-media decision — **the saved file is an ordinary MP4 with no DRM, so this buys convenience on a metered connection and not protection** — plus device limits and download expiry |
+| `learning.offline` | Save a lesson to a device, inside the app, for a Plus plan | ADMIN | **Built 2026-10-22.** The predicate (`may_download_lesson()`) has required a Plus plan carrying `offline_downloads` since 2026-10-20; what was missing was the record. `save_offline_lesson()` books a save against a named device with an expiry, honest about the cap (`learning.offline_max_devices`, default 3) and the clock (`learning.offline_expiry_days`, default 30). Bytes are fetched once and kept in the app's own IndexedDB — not the file manager — and the lesson page's old file-download button was replaced by **Save on this device**. `/downloads` lists what is here, what has lapsed, and what it is using. Removing a device ends its saves. Still open: protected media (nothing encrypts the stored bytes), and the plan tier has a column and no editing screen yet |
 | `learning.paths` | Structured multi-course learning paths | ADMIN | Path content authored |
 | `learning.audience_sections` | Separate Young Learners and Adult Learner entry experiences | ADMIN | Learner switcher designed — a parent who also studies must move between their own learning and a child's |
 | `learning.age_bands` | Age-band navigation inside Young Learners | ADMIN | Bands chosen. Use `age_band`, **not** dates of birth |
@@ -138,7 +138,7 @@ Three kinds of gate:
 
 ## Controls that are not flags
 
-`platform_settings` holds eight rows that are not in the tables above. They are
+`platform_settings` holds ten rows that are not in the tables above. They are
 not features to switch on — they are dials that decide how the publication and
 money rules behave, and they shipped with values rather than being absent.
 
@@ -151,10 +151,12 @@ money rules behave, and they shipped with values rather than being absent.
 | `media.upload_quota_gb_per_teacher` | integer | ADMIN | `50` | Cumulative master bytes one uploader may store, in GiB. **Chosen at 50 GB on 2026-10-22** — about a day of 1080p video, which is invisible to almost every teacher while stopping one account consuming the storage budget. Counted on masters, not on the renditions derived from them (the ladder stores about 2.1x the master and is the platform's choice, not the teacher's); quarantined and pending masters count, withdrawn ones do not. Enforced only while `platform.cost_controls` is on, at initiate, through `media_upload_allowance()`; a value below 1 raises `media:quota_misconfigured` rather than silently blocking or allowing everything |
 | `governance.scholar_board_active` | boolean | ADMIN | `false` | Whether a scholarly board is convened and may check reviewer credentials. Off means the platform owner alone decides whether a qualification passes. Turning it on grants nothing by itself: only a holder of `scholarly_panel_member` gains the power, and only the owner may appoint or remove one — enforced by a trigger on `user_role_assignments`, not by this switch |
 | `finance.rate_sanity_factor` | integer | ADMIN | `10` | How many times the previous recorded rate for a pair a new rate may be before recording it needs a written reason. A slipped decimal in a rate is a 100x error in the only number the owner reads and it looks perfectly reasonable on screen, so the writer refuses one and keeps the reason in the audit trail. `0` turns the check off |
+| `learning.offline_max_devices` | integer | ADMIN | `3` | How many devices one learner may keep saved lessons on at once. Counted on devices that actually hold a live save, so an old phone with nothing on it is not a slot. Adding a fourth refuses with the number in the sentence |
+| `learning.offline_expiry_days` | integer | ADMIN | `30` | How long a saved lesson stays playable before it asks to be refreshed. A saved lesson is a subscription artefact, not a purchase: it lapses with the plan, and this number is the clock |
 | `delivery.live_room_base` | text | ADMIN | empty | Base URL of the live-room host, e.g. `https://meet.example.org`. A room is this plus `/room/<slug>`. Empty is the shipped state and means live rooms are not connected yet — `join_live_session()` refuses with that sentence rather than handing out a URL that does not carry a class. The platform owns the schedule and the door; the video is somebody else's product |
 
-Measured, the table holds **96 rows: the 88 flags above plus these eight.**
-Ninety are boolean switches, four are integers and two are text. Gate types
+Measured, the table holds **98 rows: the 88 flags above plus these ten.**
+Ninety are boolean switches, six are integers and two are text. Gate types
 across the flags: **43 ADMIN, 14 ADMIN + SETUP, 31 CODE**. The two governance
 policy controls have no gate because they are not features; the money
 controls are ADMIN, because a number that changes what a total says is changed

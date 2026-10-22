@@ -261,7 +261,7 @@ export async function run(ctx) {
     const inDb = new Map(rows.map((r) => [r.key, r]));
 
     assert(flags.size >= 86, `FLAGS.md documented only ${flags.size} flags`);
-    assert(controls.size === 8, `expected the 8 controls in FLAGS.md, found ${controls.size}`);
+    assert(controls.size === 10, `expected the 10 controls in FLAGS.md, found ${controls.size}`);
 
     // Neither side may hold a key the other lacks. Reported as a set rather
     // than a count, because a count hides a swap.

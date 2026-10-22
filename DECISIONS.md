@@ -2495,3 +2495,38 @@ processing agreement, and it is the one part of live classes that cannot be buil
 **Also open:** whether a recording is offered to learners who missed the class, and how long
 it is kept. Nothing produces a recording yet, so nothing has to decide that today — but the
 moment a provider is connected, it is the next question.
+## A saved lesson is kept by the app, not handed to the phone — **DECIDED 2026-10-22**
+
+Two sentences from the owner, and both change the design:
+
+> "offline downloads work like youtube downloads, they only exist in the app locally but
+> not in their file manager"
+
+> "for a user to be able to download they would require to be subscribed to a plus plan, a
+> plan on top of the basic plan with more features, more like the vip package."
+
+**The plan.** Downloads need a **Plus** plan. Basic buys the course; Plus keeps it. That was
+already the rule in `may_download_lesson()`; what was missing is `plans.tier`, so "the VIP
+package" was a sentence in a comment rather than a column a screen could read. A plan is Plus
+only if its tier says so **and** its live version carries `offline_downloads` — two
+independent signals, so neither a mislabelled plan nor a stray grant hands out the feature.
+
+**The storage.** The old button signed a URL with `Content-Disposition: attachment`, which
+is a file in the Downloads folder. That is now retired: the save becomes a **record**
+(lesson + device + expiry), the bytes are fetched once and kept in the app's own IndexedDB,
+and the lesson is played from a blob URL this origin creates. Nothing is written to the file
+manager, and no page navigates to the file.
+
+**What this can and cannot promise.** It cannot stop a determined person copying a stream,
+and it does not pretend to. It makes the app the only *supported* place a saved lesson
+exists, and it makes a save revocable, countable and expirable in a way a loose file is not.
+
+**Expiry and devices, both settled here.** A saved lesson is a subscription artefact, so it
+lapses with the plan: 30 days by default, then it asks to be refreshed. Three devices by
+default, counted only while they hold a live save. Both are settings, so both are the
+owner's to move without a deploy.
+
+**Open:** protected media. Nothing encrypts the stored bytes; a rooted device can read the
+app's database. That is the residual risk of any offline feature and it is named rather than
+implied. Also open: an editing screen for `plans.tier` — the column exists and the admin plan
+flow does not set it yet.

@@ -165,6 +165,7 @@ export default async function LearnPage() {
         <Link href="/saved">
           Saved courses{savedCount > 0 ? ` (${savedCount})` : ''}
         </Link>{' · '}
+        <Link href="/downloads">On this device</Link>{' · '}
         <form action="/sign-out" method="post" style={{ display: 'inline' }}>
           <button
             type="submit"

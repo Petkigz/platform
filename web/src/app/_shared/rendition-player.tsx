@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
+import { createClient } from '@/lib/supabase/client';
+import { deviceKey, storeLesson } from '@/lib/offline';
+
 import {
   PROFILE_LABEL,
   formatByteSize,
@@ -33,6 +36,17 @@ type PlaybackResponse = {
  * watched slowly outlives a URL minted at page load, so the player has to be
  * able to ask again.
  */
+/** What the learner would call this device, guessed from what it reports. */
+function deviceLabel(): string {
+  const agent = typeof navigator === 'undefined' ? '' : navigator.userAgent;
+  if (/iPhone/i.test(agent)) return 'iPhone';
+  if (/iPad/i.test(agent)) return 'iPad';
+  if (/Android/i.test(agent)) return 'Android device';
+  if (/Macintosh/i.test(agent)) return 'Mac';
+  if (/Windows/i.test(agent)) return 'Windows PC';
+  return 'This browser';
+}
+
 export function RenditionPlayer({
   displayName,
   lessonId,
@@ -40,6 +54,7 @@ export function RenditionPlayer({
   renditions,
   posterRenditionId,
   canDownload,
+  courseTitle = '',
 }: {
   displayName: string;
   lessonId: string;
@@ -47,6 +62,7 @@ export function RenditionPlayer({
   renditions: PlayableRendition[];
   posterRenditionId: string | null;
   canDownload: boolean;
+  courseTitle?: string;
 }) {
   const choices = renditionChoices(renditions);
   const initial = pickStreamRendition(renditions, null);
@@ -58,6 +74,11 @@ export function RenditionPlayer({
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [savedHere, setSavedHere] = useState(false);
+
+  // Built once: the Supabase client is a plain object, but creating one per
+  // render inside an async handler would be a new session lookup each press.
+  const [supabase] = useState(() => createClient());
 
   const chosen = choices.find((r) => r.profile === profile) ?? choices[0] ?? null;
 
@@ -122,27 +143,63 @@ export function RenditionPlayer({
     setSaving(true);
     setError('');
     try {
+      // Decided 2026-10-22: a saved lesson lives in the app, not in the device's
+      // file manager. This books the save with the database, fetches the bytes
+      // while the signed URL is briefly alive, and keeps them in this origin's own
+      // storage. Nothing is written through a download attribute and no page
+      // navigates to the file.
+      const key = deviceKey();
+      const booking = await supabase.rpc('save_offline_lesson', {
+        p_lesson_id: lessonId,
+        p_device_key: key,
+        p_device_label: deviceLabel(),
+      });
+
+      if (booking.error) throw new Error(booking.error.message);
+
+      const saved = booking.data as
+        | {
+            saved?: boolean;
+            message?: string;
+            downloadId?: string;
+            expiresAt?: string;
+          }
+        | null;
+
+      if (saved?.saved !== true) {
+        throw new Error(saved?.message ?? 'This lesson cannot be saved on this plan.');
+      }
+
       const query = new URLSearchParams({ lesson: lessonId, resource: resourceId });
       const response = await fetch(`/api/media/download?${query.toString()}`, {
         cache: 'no-store',
       });
-      const result = (await response.json().catch(() => ({}))) as PlaybackResponse & {
-        data?: { url: string; filename: string };
+      const result = (await response.json().catch(() => ({}))) as {
+        data?: { url: string };
+        message?: string;
       };
       if (!response.ok || !result.data?.url) {
-        throw new Error(result.message ?? 'That lesson could not be saved.');
+        throw new Error(result.message ?? 'That lesson could not be fetched to save.');
       }
-      // The signed URL carries `response-content-disposition: attachment`, so
-      // this saves rather than navigates. The `download` attribute is what a
-      // same-origin file would need; a cross-origin one ignores it, which is why
-      // the header is signed instead.
-      const anchor = document.createElement('a');
-      anchor.href = result.data.url;
-      anchor.download = result.data.filename;
-      anchor.rel = 'noopener';
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
+
+      const bytes = await fetch(result.data.url);
+      if (!bytes.ok) throw new Error('That lesson could not be fetched to save.');
+      const blob = await bytes.blob();
+
+      await storeLesson(
+        {
+          downloadId: String(saved.downloadId ?? ''),
+          lessonId,
+          title: displayName,
+          courseTitle,
+          savedAt: new Date().toISOString(),
+          expiresAt: saved.expiresAt ?? new Date().toISOString(),
+          bytes: blob.size,
+        },
+        blob,
+      );
+
+      setSavedHere(true);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'That lesson could not be saved.');
     } finally {
@@ -202,11 +259,12 @@ export function RenditionPlayer({
           ))}
         </select>
 
-        {canDownload && (
+        {canDownload && !savedHere && (
           <button type="button" className="secondary" onClick={() => void save()} disabled={saving}>
-            {saving ? 'Preparing…' : 'Save for offline'}
+            {saving ? 'Saving…' : 'Save on this device'}
           </button>
         )}
+        {savedHere && <a className="secondary" href="/downloads">On this device</a>}
 
         {error && (
           <button type="button" className="secondary" onClick={() => void load(chosen.id)}>
@@ -219,6 +277,9 @@ export function RenditionPlayer({
       {error && <p className="muted">{error}</p>}
       <p className="muted" style={{ fontSize: '0.85rem' }}>
         Playback links are short-lived and are tied to your access to this lesson.
+        {canDownload
+          ? ' A saved lesson stays inside the app rather than in your file manager, and stops working when the plan or the date says so.'
+          : ''}
       </p>
     </div>
   );

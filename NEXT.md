@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1317 database tests, 846 web tests; TypeScript typecheck and
-production build pass; 111 tables, 236 policies, 144 user-defined triggers,
-306 functions, 132 migrations and 133 app route entries.**
+Verification: **1326 database tests, 849 web tests; TypeScript typecheck and
+production build pass; 113 tables, 238 policies, 144 user-defined triggers,
+311 functions, 133 migrations and 134 app route entries.**
 
 ## Today's sentence
 
@@ -2219,6 +2219,39 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### A saved lesson lives in the app, and needs a Plus plan, 2026-10-22
+
+Two answers in one: *"offline downloads work like youtube downloads — they only exist in
+the app locally but not in their file manager"* and *"a user requires a subscription to a
+plus plan, on top of the basic plan, more like the vip package."*
+
+The entitlement half already existed — `may_download_lesson()` has demanded an
+`offline_downloads` grant on a subscription since 2026-10-20. What did not exist was
+anything that could make a *save* mean something, and the old button on the lesson page
+does the opposite of what was asked: it signs a URL with `attachment` and hands the file to
+the browser's downloads folder.
+
+So the save is now a record. `save_offline_lesson()` books a lesson against a **device** —
+a random key the app generates and keeps, not a fingerprint — with an **expiry**, and it
+honours two settings the owner controls: `learning.offline_max_devices` (3) and
+`learning.offline_expiry_days` (30). It refuses before registering a device when the cap is
+full, because registering first and refusing after leaves an empty device row the learner
+sees and cannot explain. Devices count only while they hold a live save. Removing a device
+ends its saves; a lapsed save is shown as lapsed rather than deleted, because "why did this
+stop" deserves an answer.
+
+The bytes go into this origin's IndexedDB. The button is now **Save on this device**, the
+signed URL is fetched once and never navigated to, and `/downloads` lists what is here,
+what it is using, and what has expired. The claim is deliberately narrow and honest: this
+does not make copying impossible — nothing can — it makes the *app* the only supported
+place a saved lesson exists.
+
+`plans.tier` is now a column (`basic` or `plus`), because "a plan on top of the basic one"
+was described in a comment and stored nowhere. It is deliberately **not unique per tier**: a
+market may sell two Basic plans at two prices. What makes a plan the VIP one is the tier
+*and* the feature grant its live version carries — neither alone should be able to hand out
+the feature.
 
 ### Live classes are built, not bought, 2026-10-22
 
