@@ -40,6 +40,7 @@ export type CheckoutErrorCode =
   | 'already_entitled'
   | 'conflict'
   | 'checkout_disabled'
+  | 'forbidden'
   | 'error';
 
 export type CreateOrderResult =
@@ -182,7 +183,19 @@ const COURSE_ORDER_REFUSALS: Record<string, { code: CheckoutErrorCode; message: 
   already_owned: {
     code: 'already_entitled',
     message:
-      'Everyone on this account already has this course, so buying it again would add nothing.',
+      'That learner already has this course, so buying it again would add nothing.',
+  },
+  // One purchase covers one learner, so the learner has to be named. A request
+  // without one is a broken form, not a refusal the payer caused.
+  learner_required: {
+    code: 'error',
+    message: 'Choose the learner this course is for.',
+  },
+  // The learner exists but is not this payer's. Said plainly, because the
+  // commonest cause is a stale page after a family change.
+  learner_not_yours: {
+    code: 'forbidden',
+    message: 'That learner is not on your account. Refresh the page and choose again.',
   },
 };
 
@@ -210,13 +223,22 @@ export function mapCourseOrderRefusal(message: string): {
  * country, so neither the payer nor the amount can be named by the request. The
  * country is passed because only the HTTP layer can see it; the writer consults
  * it once, for an account that has none, and never again.
+ *
+ * The learner *is* named, because one purchase covers one learner (2026-10-22).
+ * The writer checks that the learner is the caller or somebody in their family;
+ * this argument chooses who the course is for, never who is paying.
  */
 export async function createOrder(
   supabase: SupabaseClient,
-  args: { courseId: string; country?: string | null },
+  args: { courseId: string; learnerProfileId: string; country?: string | null },
 ): Promise<CreateOrderResult> {
+  if (!args.learnerProfileId) {
+    return { ok: false, code: 'error', message: 'Choose the learner this course is for.' };
+  }
+
   const { data, error } = await supabase.rpc('create_course_order', {
     p_course_id: args.courseId,
+    p_learner_profile_id: args.learnerProfileId,
     p_buyer_country: args.country ?? null,
   });
 

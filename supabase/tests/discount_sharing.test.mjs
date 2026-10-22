@@ -102,10 +102,10 @@ export async function run(ctx) {
     buyerSeq += 1;
     const userId = await newUser(`ds-buyer-${buyerSeq}@example.com`);
     await newProfile(userId, name);
-    await q(
+    const learnerId = (await q(
       `insert into public.learner_profiles (display_name, learner_type, age_band, linked_user_id)
-       values ($1,'adult','18+',$2)`, [name, userId]);
-    return { userId, name };
+       values ($1,'adult','18+',$2) returning id`, [name, userId])).rows[0].id;
+    return { userId, learnerId, name };
   }
 
   /** A published one-time course sold by `author`, with a product and a price. */
@@ -132,8 +132,8 @@ export async function run(ctx) {
   async function pendingOrder(buyer, amountMinor = 50000, author = teacher) {
     const offer = await sellableCourse(author, amountMinor);
     const made = await withCheckoutOn(() =>
-      asActor(buyer.userId, 'select public.create_course_order($1) as r',
-        [offer.course]));
+      asActor(buyer.userId, 'select public.create_course_order($1,$2) as r',
+        [offer.course, buyer.learnerId]));
     return { ...offer, orderId: made.rows[0].r.orderId };
   }
 
@@ -437,9 +437,14 @@ export async function run(ctx) {
       userId: teacher,
       name: 'Teacher Buying Own',
     };
+    // One purchase covers one learner, so even a teacher buying their own
+    // course has to be a learner on it.
+    const teacherLearner = (await q(
+      `insert into public.learner_profiles (display_name, learner_type, age_band, linked_user_id)
+       values ('Teacher Buying Own','adult','18+',$1) returning id`, [teacher])).rows[0].id;
     const made = await withCheckoutOn(() =>
-      asActor(teacher, 'select public.create_course_order($1) as r',
-        [offer.course]));
+      asActor(teacher, 'select public.create_course_order($1,$2) as r',
+        [offer.course, teacherLearner]));
 
     await asActor(finance, 'select public.add_order_adjustment($1,$2,$3,null,$4,null)',
       [made.rows[0].r.orderId, 'manual_discount', 2000, 'Self purchase']);

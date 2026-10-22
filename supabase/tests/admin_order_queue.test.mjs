@@ -73,10 +73,10 @@ export async function run(ctx) {
     buyerSeq += 1;
     const userId = await newUser(`oq-buyer-${buyerSeq}@example.com`);
     await newProfile(userId, name);
-    await q(
+    const learnerId = (await q(
       `insert into public.learner_profiles (display_name, learner_type, age_band, linked_user_id)
-       values ($1,'adult','18+',$2)`, [name, userId]);
-    return { userId, name };
+       values ($1,'adult','18+',$2) returning id`, [name, userId])).rows[0].id;
+    return { userId, learnerId, name };
   }
 
   async function sellableCourse(amountMinor = 30000) {
@@ -103,8 +103,8 @@ export async function run(ctx) {
   async function queuedOrder(buyer, amountMinor = 30000) {
     const offer = await sellableCourse(amountMinor);
     const made = await withCheckoutOn(() =>
-      asActor(buyer.userId, 'select public.create_course_order($1) as r',
-        [offer.course]));
+      asActor(buyer.userId, 'select public.create_course_order($1,$2) as r',
+        [offer.course, buyer.learnerId]));
     return { ...offer, orderId: made.rows[0].r.orderId };
   }
 

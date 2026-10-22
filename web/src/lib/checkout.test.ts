@@ -177,7 +177,7 @@ function writerClient(
 test('the order is created by the writer, from ids and nothing else', async () => {
   const { client, rpcCalls, calls } = writerClient({ data: ORDER_ROW, error: null });
 
-  const result = await createOrder(client, { courseId: 'course-1', country: 'UG' });
+  const result = await createOrder(client, { learnerProfileId: 'learner-1', courseId: 'course-1', country: 'UG' });
   assert.equal(result.ok, true);
   if (!result.ok) return;
 
@@ -187,7 +187,11 @@ test('the order is created by the writer, from ids and nothing else', async () =
 
   assert.deepEqual(rpcCalls, [{
     fn: 'create_course_order',
-    args: { p_course_id: 'course-1', p_buyer_country: 'UG' },
+    args: {
+      p_course_id: 'course-1',
+      p_learner_profile_id: 'learner-1',
+      p_buyer_country: 'UG',
+    },
   }]);
 
   const argKeys = Object.keys(rpcCalls[0]?.args ?? {});
@@ -216,7 +220,7 @@ test('a refusal key becomes a code and a sentence, and the key never leaks', asy
       data: null,
       error: { message: `checkout:${key}` },
     });
-    const result = await createOrder(client, { courseId: 'course-1', country: 'UG' });
+    const result = await createOrder(client, { learnerProfileId: 'learner-1', courseId: 'course-1', country: 'UG' });
     assert.equal(result.ok, false, `checkout:${key} was not refused`);
     if (result.ok) continue;
     assert.equal(result.code, code, `checkout:${key} mapped to '${result.code}'`);
@@ -232,7 +236,7 @@ test('a course with no price for the country is refused without blaming the paye
   // that, because "that price is not available" would read as a broken link.
   for (const key of ['no_price_for_country', 'price_ambiguous']) {
     const { client } = writerClient({ data: null, error: { message: `checkout:${key}` } });
-    const result = await createOrder(client, { courseId: 'course-1', country: 'TZ' });
+    const result = await createOrder(client, { learnerProfileId: 'learner-1', courseId: 'course-1', country: 'TZ' });
     assert.equal(result.ok, false, `${key} was accepted`);
     if (result.ok) continue;
     assert.equal(result.code, 'not_sold_here', `${key} mapped to ${result.code}`);
@@ -241,28 +245,28 @@ test('a course with no price for the country is refused without blaming the paye
   }
 });
 
-test('an already-owned refusal reassures, and does not accuse the payer', async () => {
-  // A course purchase grants every learner profile on the account that pays, so
-  // the commonest way to meet this is a guardian who does not know the family is
-  // already covered — including the case that looks like a second child. The
-  // sentence has to say the account is covered, not that the person did
-  // something wrong.
+test('an already-owned refusal names the learner, and does not accuse the payer', async () => {
+  // One purchase covers one learner (2026-10-22), so the commonest way to meet
+  // this is a double tap, or a guardian buying twice for the same child. The
+  // sentence has to say which learner is covered — not "you already own this",
+  // which reads as an accusation and is also wrong when the buyer is a parent
+  // and the learner is their child.
   const { client } = writerClient({
     data: null,
     error: { message: 'checkout:already_owned' },
   });
-  const result = await createOrder(client, { courseId: 'course-1', country: 'UG' });
+  const result = await createOrder(client, { learnerProfileId: 'learner-1', courseId: 'course-1', country: 'UG' });
   assert.equal(result.ok, false);
   if (result.ok) return;
 
   assert.equal(result.code, 'already_entitled');
-  assert.match(result.message, /everyone on this account/i,
-    'the refusal blames the person rather than describing the account');
+  assert.match(result.message, /that learner/i,
+    'the refusal does not say who is already covered');
   assert.match(result.message, /add nothing/i,
     'the refusal does not say why it was stopped, so it reads as an error');
-  // "You already own this" is the wrong sentence here: it is not one person's
-  // access that blocks the sale, and a parent buying for a second child would
-  // read it as a refusal to let them.
+  // "You already own this" is the wrong sentence here: a parent buying for a
+  // child would read it as a refusal to let them, and the payer is often not
+  // the learner.
   assert.equal(/^you already/i.test(result.message), false,
     `the refusal accuses the payer: '${result.message}'`);
   assert.equal(result.message.includes('checkout:'), false,
@@ -277,7 +281,7 @@ test('a refusal nobody mapped is loud rather than friendly', async () => {
     error: { message: 'checkout:some_new_reason' },
   });
 
-  const result = await createOrder(client, { courseId: 'course-1', country: 'UG' });
+  const result = await createOrder(client, { learnerProfileId: 'learner-1', courseId: 'course-1', country: 'UG' });
   assert.equal(result.ok, false);
   if (result.ok) return;
   assert.equal(result.code, 'error');
@@ -290,7 +294,7 @@ test('a database error that is not a refusal is passed through as an error', asy
     error: { message: 'connection terminated unexpectedly' },
   });
 
-  const result = await createOrder(client, { courseId: 'course-1', country: 'UG' });
+  const result = await createOrder(client, { learnerProfileId: 'learner-1', courseId: 'course-1', country: 'UG' });
   assert.equal(result.ok, false);
   if (result.ok) return;
   assert.equal(result.code, 'error');
@@ -306,7 +310,7 @@ test('a result with no amount is refused rather than charged as zero', async () 
     null,
   ]) {
     const { client } = writerClient({ data, error: null });
-    const result = await createOrder(client, { courseId: 'course-1', country: 'UG' });
+    const result = await createOrder(client, { learnerProfileId: 'learner-1', courseId: 'course-1', country: 'UG' });
     assert.equal(result.ok, false, `${JSON.stringify(data)} was accepted as an order`);
     if (result.ok) continue;
     assert.equal(result.code, 'error');
@@ -322,7 +326,7 @@ test('the amount stays exact whatever its size', async () => {
     error: null,
   });
 
-  const result = await createOrder(client, { courseId: 'course-1', country: 'UG' });
+  const result = await createOrder(client, { learnerProfileId: 'learner-1', courseId: 'course-1', country: 'UG' });
   assert.equal(result.ok, true);
   if (!result.ok) return;
   assert.equal(result.amount.amountMinor, 1234567890123n);
@@ -395,6 +399,45 @@ test('plan checkout sends ids, not an amount, and keeps pending orders payment-g
   }]);
   assert.equal(Object.hasOwn(rpcCalls[0]?.args ?? {}, 'amount_minor'), false,
     'the client must not supply or influence the amount');
+});
+
+test('a course order names its learner, and a broken form is refused before the database', async () => {
+  const { client, rpcCalls } = (() => {
+    const stub = stubClient(baseData());
+    const calls: { fn: string; args: Record<string, unknown> }[] = [];
+    stub.client.rpc = async (fn: string, args: Record<string, unknown>) => {
+      calls.push({ fn, args });
+      return { data: null, error: null };
+    };
+    return { client: stub.client, rpcCalls: calls };
+  })();
+
+  const missing = await createOrder(client, { courseId: 'course-1', learnerProfileId: '' });
+  assert.equal(missing.ok, false);
+  if (!missing.ok) assert.match(missing.message, /learner/i);
+  assert.equal(rpcCalls.length, 0, 'a request with no learner reached the database');
+
+  await createOrder(client, { courseId: 'course-1', learnerProfileId: 'learner-7' });
+  assert.deepEqual(rpcCalls[0]?.args, {
+    p_course_id: 'course-1',
+    p_learner_profile_id: 'learner-7',
+    p_buyer_country: null,
+  });
+});
+
+test('a learner who is not the payer\'s is refused in a sentence, not a raw key', async () => {
+  const { client } = writerClient({
+    data: null,
+    error: { message: 'checkout:learner_not_yours' },
+  });
+  const result = await createOrder(client, {
+    courseId: 'course-1', learnerProfileId: 'learner-1', country: 'UG',
+  });
+  assert.equal(result.ok, false);
+  if (result.ok) return;
+  assert.equal(result.code, 'forbidden');
+  assert.match(result.message, /not on your account/i);
+  assert.equal(result.message.includes('checkout:'), false);
 });
 
 test('plan checkout refuses while subscriptions are off, in the course checkout words', async () => {

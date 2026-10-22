@@ -17,10 +17,15 @@ import { useRouter } from 'next/navigation';
  */
 export function BuyForm({
   courseId,
+  learners,
+  defaultLearnerId,
   providers,
   providerConfigured,
 }: {
   courseId: string;
+  /** The profiles this purchase may cover: the buyer and their family. */
+  learners: { id: string; name: string; type: string }[];
+  defaultLearnerId: string;
   /** Providers that are configured and usable right now. */
   providers: { id: string; label: string; requiresMsisdn: boolean }[];
   providerConfigured: boolean;
@@ -32,6 +37,9 @@ export function BuyForm({
   // choice, so the selector renders as a single option rather than a decision
   // the payer has to make.
   const [providerId, setProviderId] = useState(providers[0]?.id ?? '');
+  // One purchase covers one learner, so the buyer names them. A single learner
+  // renders as a sentence rather than a decision they have to make.
+  const [learnerId, setLearnerId] = useState(defaultLearnerId);
   const chosen = providers.find((p) => p.id === providerId);
   const needsNumber = chosen?.requiresMsisdn ?? false;
   const [message, setMessage] = useState<string | null>(null);
@@ -45,6 +53,7 @@ export function BuyForm({
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         courseId,
+        learnerProfileId: learnerId || undefined,
         msisdn: msisdn || undefined,
         provider: providerId || undefined,
       }),
@@ -86,6 +95,35 @@ export function BuyForm({
 
   return (
     <div style={{ display: 'grid', gap: '1rem' }}>
+      {learners.length > 1 ? (
+        <div>
+          <label htmlFor="learner" className="eyebrow">
+            Who is this course for?
+          </label>
+          <select
+            id="learner"
+            value={learnerId}
+            onChange={(e) => setLearnerId(e.target.value)}
+          >
+            {learners.map((learner) => (
+              <option key={learner.id} value={learner.id}>
+                {learner.name}
+                {learner.type === 'child' ? ' (child)' : ''}
+              </option>
+            ))}
+          </select>
+          <p className="muted">
+            The course is added to this learner&apos;s account, and it does not
+            cover anybody else.
+          </p>
+        </div>
+      ) : (
+        <p className="meta">
+          This purchase is for {learners[0]?.name ?? 'your learner'}. A course
+          covers one learner; a sibling needs their own purchase.
+        </p>
+      )}
+
       {providers.length > 1 && (
         <fieldset>
           <legend className="eyebrow">Pay with</legend>

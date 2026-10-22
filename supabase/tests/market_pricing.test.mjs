@@ -74,6 +74,9 @@ export async function run(ctx) {
     seq += 1;
     const userId = await newUser(`mp-buyer-${seq}@example.com`);
     await newProfile(userId, name);
+    const learnerId = (await q(
+      `insert into public.learner_profiles (display_name, learner_type, age_band, linked_user_id)
+       values ($1,'adult','18+',$2) returning id`, [name, userId])).rows[0].id;
     if (over.account) {
       const account = (await q(
         `insert into public.billing_accounts
@@ -90,9 +93,9 @@ export async function run(ctx) {
          on conflict (billing_account_id, user_id) do update
            set can_manage_payment_methods = true, status = 'active'`,
         [account, userId, admin]);
-      return { userId, account };
+      return { userId, learnerId, account };
     }
-    return { userId, account: null };
+    return { userId, learnerId, account: null };
   }
 
   /**
@@ -133,7 +136,8 @@ export async function run(ctx) {
 
   const makeOrder = (buyer, courseId, country = null) =>
     withCheckoutOn(() => asActor(buyer.userId,
-      'select public.create_course_order($1,$2) as r', [courseId, country]))
+      'select public.create_course_order($1,$2,$3) as r',
+      [courseId, buyer.learnerId, country]))
       .then((r) => r.rows[0].r);
 
   const resolve = (courseId, country = null, currency = null) =>
@@ -430,7 +434,7 @@ export async function run(ctx) {
   await test('a price id can no longer be posted to the writer', async () => {
     const offer = await sellableCourse({ title: 'No Price Id' });
     const args = (await scalar(
-      `select pg_get_function_arguments('public.create_course_order(uuid,text)'::regprocedure) as a`
+      `select pg_get_function_arguments('public.create_course_order(uuid,uuid,text)'::regprocedure) as a`
     )).a;
     assert(/p_buyer_country/.test(args) && !/p_price_id/.test(args),
       `the writer still accepts a price id: ${args}`);
@@ -441,8 +445,8 @@ export async function run(ctx) {
     const aPriceId = (await scalar('select gen_random_uuid() id')).id;
     await withCheckoutOn(async () => {
       await rejects(() => asActor(buyer.userId,
-        'select public.create_course_order($1,$2)',
-        [offer.course, aPriceId]),
+        'select public.create_course_order($1,$2,$3)',
+        [offer.course, buyer.learnerId, aPriceId]),
       /a country is a two-letter ISO 3166-1 code/);
     });
   });

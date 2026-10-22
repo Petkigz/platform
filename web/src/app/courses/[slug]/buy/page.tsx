@@ -50,20 +50,77 @@ export default async function BuyPage({
   if (!course || course.status !== 'active') notFound();
 
   const learnerProfileId = await ownLearnerProfileId(supabase, user.id);
+
+  // One purchase covers one learner (decided 2026-10-22), so the form has to
+  // say who it is for. RLS limits this list to the caller's own profile and the
+  // learners in families they belong to, and the writer checks the same thing
+  // again — this list is a convenience, not the control.
+  const { data: learnerRows } = await supabase
+    .from('learner_profiles')
+    .select('id,display_name,learner_type')
+    .eq('status', 'active')
+    .is('deleted_at', null)
+    .order('display_name');
+  const learners = ((learnerRows ?? []) as
+    { id: string; display_name: string; learner_type: string }[]).map((row) => ({
+      id: row.id,
+      name: row.display_name,
+      type: row.learner_type,
+    }));
+
+  if (learners.length === 0) {
+    return (
+      <main className="page narrow">
+        <nav className="crumbs">
+          <Link href="/catalogue">Catalogue</Link>
+          <span aria-hidden>›</span>
+          <Link href={`/courses/${course.slug}`}>{course.title}</Link>
+          <span aria-hidden>›</span>
+          <span>Buy</span>
+        </nav>
+
+        <div className="page-head">
+          <p className="eyebrow">Checkout</p>
+          <h1>{course.title}</h1>
+        </div>
+
+        <div className="notice warn">
+          <strong>There is nobody to buy this for yet.</strong> A course purchase
+          covers one learner, so add a learner profile first — your own, or a
+          child&apos;s in your family.
+        </div>
+
+        <p style={{ marginTop: '1.5rem' }}>
+          <Link href="/family" className="btn">Add a learner</Link>{' '}
+          <Link href={`/courses/${course.slug}`} className="btn secondary">
+            Back to the course
+          </Link>
+        </p>
+      </main>
+    );
+  }
+
+  const defaultLearnerId = learners.some((l) => l.id === learnerProfileId)
+    ? (learnerProfileId as string)
+    : learners[0]!.id;
   // A display hint only: the database prefers the country recorded on the
   // buyer's account, and the writer does the same. This is what makes the page
   // right for somebody who has never bought anything.
   const country = countryFromHeaders(await headers());
   const offering = await resolveOffering(supabase, {
     courseId: course.id,
-    learnerProfileId,
+    learnerProfileId: defaultLearnerId,
     country,
   });
 
   // Someone who already owns it should not be looking at a price. resolveOffering
   // answers this, and it is the same function the enrol button uses, so the two
   // cannot disagree about who is entitled.
-  if (offering.kind === 'entitled') redirect('/learn');
+  // With one learner there is nowhere else to buy for, so send them to their
+  // learning. With several, the picked learner may already have it while a
+  // sibling does not — the form says so and lets them choose, rather than
+  // sending the whole family away from a course one child still needs.
+  if (offering.kind === 'entitled' && learners.length === 1) redirect('/learn');
   if (offering.kind === 'free') redirect(`/courses/${slug}`);
 
   // The course is sold, but not on terms this buyer can accept — no price for
@@ -143,6 +200,13 @@ export default async function BuyPage({
         <h1>{course.title}</h1>
       </div>
 
+      {checkoutOpen && offering.kind === 'entitled' && learners.length > 1 && (
+        <div className="notice warn">
+          The learner selected by default already has this course. Choose
+          another learner below if you are buying it for somebody else.
+        </div>
+      )}
+
       {checkoutOpen && providerId === null && (
         <div className="notice warn">
           <strong>No payment provider is connected yet.</strong> You can place
@@ -161,7 +225,14 @@ export default async function BuyPage({
         </div>
       )}
 
-      {checkoutOpen && (
+      {checkoutOpen && offering.kind !== 'paid' && (
+        <div className="notice">
+          This course is not on sale to you at the moment, so there is nothing
+          to pay.
+        </div>
+      )}
+
+      {checkoutOpen && offering.kind === 'paid' && (
         <section className="card">
           <h2>What you will pay</h2>
           {/* Rendered from Money, so what the payer reads is the same integer
@@ -178,6 +249,8 @@ export default async function BuyPage({
 
           <BuyForm
             courseId={course.id}
+            learners={learners}
+            defaultLearnerId={defaultLearnerId}
             providers={providers}
             providerConfigured={providerId !== null}
           />

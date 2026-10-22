@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import { ownLearnerProfileId, resolveOffering } from '@/lib/enrolment';
+import { resolveOffering } from '@/lib/enrolment';
 import {
   createOrder,
   createPlanOrder,
@@ -99,6 +99,13 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
+  // One purchase covers one learner, so a course order names them too.
+  if (!planVersionId && !learnerProfileId) {
+    return NextResponse.json(
+      { error: 'Choose the learner this course is for.' },
+      { status: 400 },
+    );
+  }
 
   const isPlanCheckout = Boolean(planVersionId);
   // The only place the country exists. It is a hint from the hosting layer, and
@@ -114,12 +121,12 @@ export async function POST(request: Request) {
       userId: user.id,
     });
   } else {
-    // A learner who already holds a live entitlement should not be charged
-    // again. resolveOffering is the same decision the enrol button uses.
-    const ownLearnerId = await ownLearnerProfileId(supabase, user.id);
+    // The learner this purchase is for. A learner who already holds a live
+    // entitlement should not be charged again; resolveOffering is the same
+    // decision the enrol button uses.
     const offering = await resolveOffering(supabase, {
       courseId,
-      learnerProfileId: ownLearnerId,
+      learnerProfileId,
       country,
     });
     if (offering.kind === 'entitled') {
@@ -134,12 +141,12 @@ export async function POST(request: Request) {
     if (offering.kind === 'not_sold_here') {
       // Let the writer say why: it holds the reason and the country, and it is
       // the only place allowed to decide that a sale cannot happen.
-      result = await createOrder(supabase, { courseId, country });
+      result = await createOrder(supabase, { courseId, learnerProfileId, country });
     } else {
       // The writer takes the payer from the session's own claims; there is no
       // user id to hand it, and no amount, product, price or billing account
       // either.
-      result = await createOrder(supabase, { courseId, country });
+      result = await createOrder(supabase, { courseId, learnerProfileId, country });
     }
   }
   if (!result.ok) {
@@ -151,8 +158,10 @@ export async function POST(request: Request) {
     const status: number =
       result.code === 'checkout_disabled'
         ? 503
-        : result.code === 'not_found'
-          ? 404
+        : result.code === 'forbidden'
+          ? 403
+          : result.code === 'not_found'
+            ? 404
           : result.code === 'error'
             ? 500
             : result.code === 'price_not_available' ||

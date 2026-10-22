@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1200 database tests, 792 web tests; TypeScript typecheck and
+Verification: **1206 database tests, 794 web tests; TypeScript typecheck and
 production build pass; 105 tables, 230 policies, 138 user-defined triggers,
-273 functions, 115 migrations and 118 app route entries.**
+273 functions, 116 migrations and 118 app route entries.**
 
 ## Today's sentence
 
@@ -2191,8 +2191,10 @@ Settled on 2026-10-22 and no longer open, all six written up in `DECISIONS.md`:
    `discount_sharing.test.mjs`. A teacher now bears half a half-price discount
    rather than none of it.
 2. ~~The duplicate-purchase refusal~~ **Built** — `20261228000100`,
-   four tests in `course_order.test.mjs`. It is scoped to the account and the
-   version, so the family with twins never meets it.
+   four tests in `course_order.test.mjs`. It was scoped to the account and the
+   version here; the grain moved to the learner later the same day (see the
+   newest entry above), so the sibling case is now an ordinary purchase rather
+   than something the guard avoids.
 3. ~~Market resolution by country~~ **Built** — `20261230000100`,
    `market_pricing.test.mjs`, and the web path that reads it. The country comes
    from the request for a first purchase and from the account afterwards; a
@@ -2214,6 +2216,44 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### One purchase, one learner, 2026-10-22
+
+The grain changed on the day it was decided: the first answer covered "up to a
+set number" of children, the second — with the three shapes and their costs on
+the table — was **each learner separately**. Nothing had been built on the first
+answer, so this is one change rather than a correction to something in use.
+
+`20261234000100_course_purchase_learner.sql` adds `orders.learner_profile_id`,
+re-creates `create_course_order(course_id, learner_profile_id, buyer_country)`
+and teaches `record_payment_success()` to grant the named profile. Three things
+move together, which is why they are one unit:
+
+- **The order names the learner.** The payer is usually a guardian and the
+  learner is usually a child, so inferring one from the other is how the wrong
+  profile ends up with access. The writer refuses a learner who is neither the
+  caller nor in a family they belong to (`checkout:learner_not_yours`), and
+  refuses a request with no learner at all (`checkout:learner_required`).
+- **The refusal is per learner and per version.** A sibling buying the same
+  course is an ordinary purchase now; the same child buying it twice is still
+  refused, and still before any account is written. A revoked grant, a
+  subscription grant and another account all still pass, for the same reasons as
+  before.
+- **Fulfilment follows the order.** The account-wide walk survives only as the
+  legacy path for orders written before the column existed — plan orders never
+  reach the loop, and every new course order names a learner.
+
+The buy screen now asks "who is this course for?" when the account has more than
+one learner, and says "this purchase is for X" when it has one. The entitlement
+redirect only fires when there is a single learner: with several, the picked
+learner may already own the course while a sibling does not, and sending the
+whole family to `/learn` would be the old grain leaking through the UI. The
+`/api/checkout` route requires a learner for a course and answers a learner who
+is not the payer's with 403 rather than 400, because the request was well formed.
+
+Measured: database suite **1206 passing** (6 new), web suite **794** (2 new),
+116 migrations, 273 functions, 118 app routes. `orders.learner_profile_id` is
+nullable for the legacy rows, and the column comment says so.
 
 ### The platform writes down what it would send, and says so, 2026-10-22
 

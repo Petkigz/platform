@@ -119,8 +119,17 @@ export async function run(ctx) {
     return { course, version, productId, priceId };
   }
 
-  const callWriter = (actor, courseId, country = null) =>
-    asActor(actor, 'select public.create_course_order($1,$2) as r', [courseId, country]);
+  const callWriterAs = (actor, courseId, learnerId, country = null) =>
+    asActor(actor, 'select public.create_course_order($1,$2,$3) as r',
+      [courseId, learnerId, country]);
+
+  /**
+   * A buyer object carries the learner the purchase is for, because one
+   * purchase covers one learner (2026-10-22). Passing the object rather than
+   * its id keeps every call honest about whose course it is.
+   */
+  const callWriter = (buyer, courseId, country = null) =>
+    callWriterAs(buyer.userId, courseId, buyer.learnerId, country);
 
   // ---------------------------------------------------------------------
   // The shape of the writer
@@ -128,9 +137,10 @@ export async function run(ctx) {
 
   await test('the writer takes a course and the country the request came from', async () => {
     const args = (await scalar(
-      `select pg_get_function_arguments('public.create_course_order(uuid,text)'::regprocedure) as a`
+      `select pg_get_function_arguments('public.create_course_order(uuid,uuid,text)'::regprocedure) as a`
     )).a;
-    assert(args === 'p_course_id uuid, p_buyer_country text DEFAULT NULL::text',
+    assert(
+      args === 'p_course_id uuid, p_learner_profile_id uuid, p_buyer_country text DEFAULT NULL::text',
       `the writer accepts '${args}' — an amount, a price or a billing account ` +
       `in this list would be a thing the caller gets to choose`);
 
@@ -183,7 +193,7 @@ export async function run(ctx) {
     const buyer = await newBuyer('Direct Insert');
 
     // A real order, created the only way one can be now.
-    const made = await withCheckoutOn(() => callWriter(buyer.userId, offer.course));
+    const made = await withCheckoutOn(() => callWriter(buyer, offer.course));
     const orderId = made.rows[0].r.orderId;
     const account = made.rows[0].r.billingAccountId;
 
@@ -221,7 +231,7 @@ export async function run(ctx) {
     const offer = await sellableCourse();
     const buyer = await newBuyer('Adjuster');
 
-    const made = await withCheckoutOn(() => callWriter(buyer.userId, offer.course));
+    const made = await withCheckoutOn(() => callWriter(buyer, offer.course));
     const orderId = made.rows[0].r.orderId;
 
     // order_adjustments_insert asked the same question as the two policies
@@ -251,7 +261,7 @@ export async function run(ctx) {
     const offer = await sellableCourse({ amountMinor: 42500 });
     const buyer = await newBuyer('First Purchase');
 
-    const made = await withCheckoutOn(() => callWriter(buyer.userId, offer.course));
+    const made = await withCheckoutOn(() => callWriter(buyer, offer.course));
     const r = made.rows[0].r;
 
     assert(typeof r.orderId === 'string' && r.orderId.length > 0, 'no order id came back');
@@ -327,7 +337,9 @@ export async function run(ctx) {
     // No withCheckoutOn: not_signed_in has to win, or "turn checkout off"
     // becomes a way to learn that the platform has checkout at all.
     await asAnon(async () => {
-      await rejects(() => q('select public.create_course_order($1)', [offer.course]),
+      await rejects(() => q(
+        'select public.create_course_order($1,$2,$3)',
+        [offer.course, '00000000-0000-4000-8000-000000000001', null]),
         /checkout:not_signed_in/);
     });
   });
@@ -340,7 +352,7 @@ export async function run(ctx) {
       `select value_text from public.platform_settings where key = 'commerce.checkout'`);
     assert(off.value_text === 'false', `commerce.checkout ships as '${off.value_text}'`);
 
-    await rejects(() => callWriter(buyer.userId, offer.course),
+    await rejects(() => callWriter(buyer, offer.course),
       /checkout:disabled/);
 
     const orders = await count('select id from public.orders where placed_by = $1', [buyer.userId]);
@@ -364,7 +376,7 @@ export async function run(ctx) {
       [cheap.productId]);
 
     const kenyan = await newBuyer('Kenyan Buyer');
-    const made = await withCheckoutOn(() => callWriter(kenyan.userId, cheap.course, 'KE'));
+    const made = await withCheckoutOn(() => callWriter(kenyan, cheap.course, 'KE'));
     assert(made.rows[0].r.amountMinor === '99000',
       `a Kenyan buyer was charged ${made.rows[0].r.amountMinor} for the Kenyan price`);
     assert(made.rows[0].r.matched === 'country', 'the order did not say it matched a country');
@@ -375,7 +387,7 @@ export async function run(ctx) {
 
     // No country at all: the price that declares no market is the default.
     const elsewhere = await newBuyer('Unplaced Buyer');
-    const fallback = await withCheckoutOn(() => callWriter(elsewhere.userId, cheap.course));
+    const fallback = await withCheckoutOn(() => callWriter(elsewhere, cheap.course));
     assert(fallback.rows[0].r.amountMinor === '1500',
       `an unplaced buyer was charged ${fallback.rows[0].r.amountMinor} instead of the default price`);
     assert(fallback.rows[0].r.matched === 'default', 'the fallback was not named as the default');
@@ -389,7 +401,7 @@ export async function run(ctx) {
       // The old writer took a price id and trusted it. This one takes a country
       // and it must at least be a country; a price id in that position is a
       // request the writer does not know how to honour.
-      await rejects(() => callWriter(buyer.userId, offer.course, 'UGA'),
+      await rejects(() => callWriter(buyer, offer.course, 'UGA'),
         /a country is a two-letter ISO 3166-1 code/);
     });
 
@@ -412,7 +424,7 @@ export async function run(ctx) {
        values ($1, 5000, 'UGX', 'month', 'active')`, [offer.productId]);
 
     await withCheckoutOn(async () => {
-      await rejects(() => callWriter(buyer.userId, offer.course),
+      await rejects(() => callWriter(buyer, offer.course),
         /checkout:not_one_time/);
     });
   });
@@ -439,7 +451,7 @@ export async function run(ctx) {
         ['expired', expired, /checkout:price_not_available/],
         ['not yet effective', notYet, /checkout:price_not_available/],
       ]) {
-        await rejects(() => callWriter(buyer.userId, offer.course), pattern);
+        await rejects(() => callWriter(buyer, offer.course), pattern);
       }
     });
 
@@ -456,7 +468,7 @@ export async function run(ctx) {
       await withCheckoutOn(async () => {
         // A draft product is not an offer, so its price is not on sale. The
         // same definition the buy page reads decides it.
-        await rejects(() => callWriter(buyer.userId, offer.course),
+        await rejects(() => callWriter(buyer, offer.course),
           /checkout:price_not_available/);
       });
     } finally {
@@ -474,11 +486,11 @@ export async function run(ctx) {
     await q(`update public.courses set status = 'retired' where id = $1`, [archived.course]);
 
     await withCheckoutOn(async () => {
-      await rejects(() => callWriter(buyer.userId, draftCourse),
+      await rejects(() => callWriter(buyer, draftCourse),
         /checkout:course_not_available/);
-      await rejects(() => callWriter(buyer.userId, archived.course),
+      await rejects(() => callWriter(buyer, archived.course),
         /checkout:course_not_available/);
-      await rejects(() => callWriter(buyer.userId, null, null),
+      await rejects(() => callWriter(buyer, null, null),
         /checkout:course_not_available/);
     });
 
@@ -495,8 +507,8 @@ export async function run(ctx) {
     const second = await sellableCourse({ amountMinor: 25000 });
     const buyer = await newBuyer('Repeat Buyer');
 
-    const one = await withCheckoutOn(() => callWriter(buyer.userId, first.course));
-    const two = await withCheckoutOn(() => callWriter(buyer.userId, second.course));
+    const one = await withCheckoutOn(() => callWriter(buyer, first.course));
+    const two = await withCheckoutOn(() => callWriter(buyer, second.course));
 
     assert(one.rows[0].r.billingAccountId === two.rows[0].r.billingAccountId,
       'two purchases opened two billing accounts, so "my orders" is no longer one list');
@@ -527,7 +539,7 @@ export async function run(ctx) {
     // currency rather than touch the first. That made a second account for the
     // same person — and, once a country is recorded on an account, a second
     // country to get wrong. One account, following the price it just paid.
-    const made = await withCheckoutOn(() => callWriter(buyer.userId, offer.course));
+    const made = await withCheckoutOn(() => callWriter(buyer, offer.course));
     const r = made.rows[0].r;
     assert(r.billingAccountId === buyer.usdAccount,
       'the buyer was given a second billing account instead of their own');
@@ -565,7 +577,7 @@ export async function run(ctx) {
       buyer.viewerAccount = account;
     });
 
-    const made = await withCheckoutOn(() => callWriter(buyer.userId, offer.course));
+    const made = await withCheckoutOn(() => callWriter(buyer, offer.course));
     assert(made.rows[0].r.billingAccountId !== buyer.viewerAccount,
       'an order was placed on an account the payer may not pay from');
   });
@@ -588,7 +600,7 @@ export async function run(ctx) {
       mine.account = account;
     });
 
-    const made = await withCheckoutOn(() => callWriter(other.userId, offer.course));
+    const made = await withCheckoutOn(() => callWriter(other, offer.course));
     assert(made.rows[0].r.billingAccountId !== mine.account,
       'an order landed on an account the caller is not a member of');
 
@@ -608,7 +620,7 @@ export async function run(ctx) {
     const offer = await sellableCourse({ amountMinor: 30000 });
     const buyer = await newBuyer('Fulfilled Buyer');
 
-    const made = await withCheckoutOn(() => callWriter(buyer.userId, offer.course));
+    const made = await withCheckoutOn(() => callWriter(buyer, offer.course));
     const orderId = made.rows[0].r.orderId;
 
     await q('select id from public.record_payment_success($1,$2,$3,$4,null,$5)',
@@ -644,7 +656,7 @@ export async function run(ctx) {
     const buyer = await newBuyer('Reader');
     const stranger = await newBuyer('Stranger');
 
-    const made = await withCheckoutOn(() => callWriter(buyer.userId, offer.course));
+    const made = await withCheckoutOn(() => callWriter(buyer, offer.course));
     const orderId = made.rows[0].r.orderId;
 
     const seen = await asUser(buyer.userId, () =>
@@ -680,7 +692,7 @@ export async function run(ctx) {
     const offer = await sellableCourse({ amountMinor: 30000 });
     const buyer = await newBuyer('Bought Twice');
 
-    const first = await withCheckoutOn(() => callWriter(buyer.userId, offer.course));
+    const first = await withCheckoutOn(() => callWriter(buyer, offer.course));
     const orderId = first.rows[0].r.orderId;
     await payOrder(orderId, 'CO-DUP-1');
 
@@ -688,7 +700,7 @@ export async function run(ctx) {
       'select billing_account_id from public.orders where id = $1', [orderId])).billing_account_id;
 
     await withCheckoutOn(() => rejects(
-      () => callWriter(buyer.userId, offer.course),
+      () => callWriter(buyer, offer.course),
       /checkout:already_owned/i));
 
     const orders = await count(
@@ -706,7 +718,7 @@ export async function run(ctx) {
   await test('a lapsed entitlement does not block a purchase', async () => {
     const offer = await sellableCourse({ amountMinor: 15000 });
     const buyer = await newBuyer('Lapsed');
-    const first = await withCheckoutOn(() => callWriter(buyer.userId, offer.course));
+    const first = await withCheckoutOn(() => callWriter(buyer, offer.course));
     await payOrder(first.rows[0].r.orderId, 'CO-DUP-2');
 
     // Revoked: the family lost access, so buying again is a real purchase. A
@@ -720,7 +732,7 @@ export async function run(ctx) {
               where learner_profile_id = $1 and course_version_id = $2`,
       [buyer.learnerId, offer.version]);
 
-    const again = await withCheckoutOn(() => callWriter(buyer.userId, offer.course));
+    const again = await withCheckoutOn(() => callWriter(buyer, offer.course));
     assert(again.rows[0].r.orderId, 'a revoked entitlement still blocked the purchase');
   });
 
@@ -738,8 +750,54 @@ export async function run(ctx) {
              values ($1,'course_version',$2,'subscription','active',now())`,
       [buyer.learnerId, offer.version]);
 
-    const made = await withCheckoutOn(() => callWriter(buyer.userId, offer.course));
+    const made = await withCheckoutOn(() => callWriter(buyer, offer.course));
     assert(made.rows[0].r.orderId, 'a subscription grant blocked an outright purchase');
+  });
+
+  await test('a learner who is not yours cannot be named on an order', async () => {
+    const offer = await sellableCourse();
+    const buyer = await newBuyer('Payer');
+    const stranger = await newBuyer('Not Yours');
+
+    await withCheckoutOn(async () => {
+      await rejects(() => callWriterAs(buyer.userId, offer.course, stranger.learnerId),
+        /checkout:learner_not_yours/);
+      await rejects(() => callWriterAs(buyer.userId, offer.course, null),
+        /checkout:learner_required/);
+    });
+
+    const orders = await count('select id from public.orders where placed_by = $1', [buyer.userId]);
+    assert(orders === 0, `${orders} orders were created for a learner the payer does not hold`);
+  });
+
+  await test('a second learner in the same family buys the same course separately', async () => {
+    const offer = await sellableCourse({ amountMinor: 12000 });
+    const parent = await newBuyer('Parent');
+    const family = (await asActor(parent.userId,
+      'select public.create_family($1) id', ['Course family'])).rows[0].id;
+    const child = (await asActor(parent.userId,
+      'select public.add_child_to_family($1,$2,$3) id', [family, 'Child', '8-10'])).rows[0].id;
+
+    // The child first, paid, so the entitlement exists for that profile only.
+    const forChild = await withCheckoutOn(() => callWriterAs(parent.userId, offer.course, child));
+    const childOrder = forChild.rows[0].r.orderId;
+    await q('select id from public.record_payment_success($1,$2,$3,$4,null,$5)',
+      [childOrder, admin, 'manual', 'CO-SIB-1', 'Cash, receipt CO-SIB-1']);
+
+    const named = await scalar(
+      'select learner_profile_id from public.orders where id = $1', [childOrder]);
+    assert(named.learner_profile_id === child, 'the order does not name the child it was for');
+
+    // The parent's own purchase is a separate, ordinary order: one purchase
+    // covers one learner, so a sibling is never the reason a family is refused.
+    const forParent = await withCheckoutOn(() => callWriter(parent, offer.course));
+    assert(forParent.rows[0].r.orderId, 'a purchase for one learner blocked another learner');
+
+    const grants = await count(
+      `select id from public.entitlement_grants
+        where course_version_id = $1 and source_id = $2 and status = 'active'`,
+      [offer.version, childOrder]);
+    assert(grants === 1, `${grants} entitlements were granted for one child's order`);
   });
 
   await test('another account can buy the course this one already owns', async () => {
@@ -747,10 +805,86 @@ export async function run(ctx) {
     const first = await newBuyer('First Family');
     const second = await newBuyer('Second Family');
 
-    const bought = await withCheckoutOn(() => callWriter(first.userId, offer.course));
+    const bought = await withCheckoutOn(() => callWriter(first, offer.course));
     await payOrder(bought.rows[0].r.orderId, 'CO-DUP-3');
 
-    const other = await withCheckoutOn(() => callWriter(second.userId, offer.course));
+    const other = await withCheckoutOn(() => callWriter(second, offer.course));
+    assert(other.rows[0].r.orderId,
+      'one family owning a course blocked another family from buying it');
+  });
+
+  // ---------------------------------------------------------------------
+  // Buying it twice
+  // ---------------------------------------------------------------------
+
+  await test('a second purchase of the same course is refused and makes no order', async () => {
+    const offer = await sellableCourse();
+    const buyer = await newBuyer('Twice');
+    const first = await withCheckoutOn(() => callWriter(buyer, offer.course));
+    await q(`select public.record_payment_success($1,$2,'manual','CO-2',null,'Receipt CO-2')`,
+      [first.rows[0].r.orderId, admin]);
+
+    const before = await count('select id from public.orders where placed_by = $1', [buyer.userId]);
+    await withCheckoutOn(() => rejects(
+      () => callWriter(buyer, offer.course),
+      /checkout:already_owned/));
+    const after = await count('select id from public.orders where placed_by = $1', [buyer.userId]);
+    assert(after === before, `${after - before} orders were created by a refused purchase`);
+
+    // Put back, so the refusal above was the guard and not the flag.
+    const flag = await scalar(
+      `select value_text from public.platform_settings where key = 'commerce.checkout'`);
+    assert(flag.value_text === 'false', `the checkout flag is '${flag.value_text}'`);
+  });
+
+  await test('a lapsed entitlement does not block a purchase', async () => {
+    const offer = await sellableCourse();
+    const buyer = await newBuyer('Lapsed');
+    const first = await withCheckoutOn(() => callWriter(buyer, offer.course));
+    await q(`select public.record_payment_success($1,$2,'manual','CO-3',null,'Receipt CO-3')`,
+      [first.rows[0].r.orderId, admin]);
+
+    // The learner lost access, so buying again is a real purchase. A rule that
+    // counted any historical entitlement would lock them out of a course they
+    // had already paid for once.
+    await q(`update public.entitlement_grants
+                set status = 'revoked', revoked_at = now(),
+                    revocation_reason = 'Revoked by the family'
+              where learner_profile_id = $1 and course_version_id = $2
+                and source_type = 'purchase'`,
+      [buyer.learnerId, offer.version]);
+
+    const again = await withCheckoutOn(() => callWriter(buyer, offer.course));
+    assert(again.rows[0].r.orderId, 'a revoked purchase blocked buying the course again');
+  });
+
+  await test('a grant from a subscription does not block an outright purchase', async () => {
+    const offer = await sellableCourse();
+    const buyer = await newBuyer('Subscribed');
+
+    // A plan grants this version while the plan is live. Buying the course adds
+    // permanence, and the fulfilment skips only a live `purchase` grant, so the
+    // refusal must ask the same question rather than a stricter one.
+    await q(`insert into public.entitlement_grants
+               (learner_profile_id, scope_type, course_version_id,
+                source_type, status, effective_from)
+             values ($1,'course_version',$2,'subscription','active',now())`,
+      [buyer.learnerId, offer.version]);
+
+    const made = await withCheckoutOn(() => callWriter(buyer, offer.course));
+    assert(made.rows[0].r.orderId, 'a subscription grant blocked an outright purchase');
+  });
+
+  await test('another account can buy a course this one already owns', async () => {
+    const offer = await sellableCourse();
+    const first = await newBuyer('First Family');
+    const second = await newBuyer('Second Family');
+
+    const bought = await withCheckoutOn(() => callWriter(first, offer.course));
+    await q(`select public.record_payment_success($1,$2,'manual','CO-4',null,'Receipt CO-4')`,
+      [bought.rows[0].r.orderId, admin]);
+
+    const other = await withCheckoutOn(() => callWriter(second, offer.course));
     assert(other.rows[0].r.orderId,
       'one family owning a course blocked another family from buying it');
   });
