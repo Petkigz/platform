@@ -2504,6 +2504,37 @@ processing agreement, and it is the one part of live classes that cannot be buil
 **Also open:** whether a recording is offered to learners who missed the class, and how long
 it is kept. Nothing produces a recording yet, so nothing has to decide that today — but the
 moment a provider is connected, it is the next question.
+## A payout request moves no money, and only finance can mark an earning paid — **DECIDED 2026-10-22**
+
+The earnings statement answered "what have I earned" and left "when do I get it" unanswered. The
+tables for a payout existed from the first money migration and nothing drove them.
+
+Three rules now do, and the first is the one that shapes the other two.
+
+**A request is not a payment.** `request_instructor_payout()` writes a request and nothing else:
+no earning changes status, no item is created, no money is claimed. Only
+`complete_instructor_payout()`, by a finance admin, with a provider and a provider reference in
+hand, inserts the items — and the item trigger is what marks an earning `paid`. If a request had
+marked anything paid, the earnings screen would start counting money as sent that never left.
+
+**An earning waits out its refund window.** `teaching.payout_hold_days` (default 14) keeps a sale
+from being paid out before it can be reversed; without it the platform pays a teacher, refunds the
+buyer, and chases the teacher. It is a setting, changed from `/admin/payouts` with a written
+reason, because it is a business decision and should not need a deploy. Setting it to 0 is
+allowed and is a decision somebody can defend; the audit event records who made it.
+
+**One open request per currency, enforced by a unique index** rather than a check the code
+remembers to make. Two requests over the same shillings would pay them twice.
+
+Two smaller ones. The amount on a request is an **estimate**: entries reverse and new ones accrue
+while it waits, so completion recomputes the total from the ledger, pays that, and the queue shows
+"asked for" beside "owes today" so a stale request is visible before it is paid. And the teacher
+must **acknowledge that declaring the income is their own responsibility** — the platform has no
+tax treatment per country, and a checkbox is the honest way to say so rather than a footnote.
+
+`teaching.payouts` remains CODE-gated: a trigger refuses to enable it from the application at any
+privilege level. A provider, per-teacher destinations and tax treatment still do not exist.
+
 ## A teacher can see what they have earned, and cannot mistake it for a balance — **DECIDED 2026-10-22**
 
 The revenue split has been recorded per sale since 2026-11-02: one row, the split snapshotted,

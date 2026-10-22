@@ -172,6 +172,9 @@ export default async function EarningsPage() {
       )}
 
       <p style={{ marginTop: '1.5rem' }}>
+        <Link href="/teach/payouts">Ask to be paid</Link> — what is out of its refund hold, and
+        where every earlier request stands.
+        {' · '}
         <Link href="/teach">Back to teaching</Link>
       </p>
     </main>

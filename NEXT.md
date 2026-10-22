@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1381 database tests, 856 web tests; TypeScript typecheck and
+Verification: **1393 database tests, 860 web tests; TypeScript typecheck and
 production build pass; 115 tables, 239 policies, 146 user-defined triggers,
-327 functions, 140 migrations and 137 app route entries.**
+336 functions, 141 migrations and 141 app route entries.**
 
 ## Today's sentence
 
@@ -2298,6 +2298,33 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
+
+### Asking to be paid, and the refund hold that makes the question safe, 2026-10-22
+
+The earnings statement answered "what have I earned" and left "when do I get it" unanswered.
+`instructor_payouts` and `instructor_payout_items` had existed since the first money migration and
+nothing drove them: no request, no queue, no hold, no place to say "that sale can still be
+refunded".
+
+`/teach/payouts` is the request, `/admin/payouts` is the queue, and the rule that shapes both is
+that **a request moves no money**. `request_instructor_payout()` writes a row and nothing else.
+Only `complete_instructor_payout()`, by finance, with a provider and a reference, inserts the
+items — and the item trigger is what marks an earning `paid`. A request that marked anything paid
+would make the earnings screen count money as sent that never left.
+
+`teaching.payout_hold_days` (14 by default) keeps a sale from being paid before it can be reversed,
+set from the queue screen with a written reason. **One open request per currency** is a partial
+unique index rather than a check the code remembers to make, because two requests over the same
+shillings pay them twice.
+
+The amount on a request is an estimate. Entries reverse and new ones accrue while it waits, so the
+queue shows what was asked for beside what the ledger owes today, and completion pays the current
+figure. The teacher must tick that declaring the income is their own responsibility — the platform
+has no tax treatment per country, and a checkbox is honest where a footnote is not.
+
+`teaching.payouts` is still CODE-gated: a trigger refuses to enable it from the application at any
+privilege level. The request path is dormant until a provider, destination details and a tax
+treatment exist.
 
 ### A teacher's earnings, and the sentence that keeps it honest, 2026-10-22
 

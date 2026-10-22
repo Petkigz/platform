@@ -90,6 +90,7 @@ import { run as courseReports } from './course_reports.test.mjs';
 import { run as mediaStorageMeter } from './media_storage_meter.test.mjs';
 import { run as planStanding } from './plan_standing.test.mjs';
 import { run as earningsStatement } from './earnings_statement.test.mjs';
+import { run as instructorPayouts } from './instructor_payouts.test.mjs';
 
 // Settings that are global by design: one row, read by code far from the suite
 // that changes it. The revenue share decides what every accrual computes; the
@@ -188,6 +189,7 @@ for (const [name, fn] of [
   ['media storage meter', mediaStorageMeter],
   ['plan standing', planStanding],
   ['earnings statement', earningsStatement],
+  ['instructor payouts', instructorPayouts],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],

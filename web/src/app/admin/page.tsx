@@ -176,6 +176,12 @@ export default async function AdminPage() {
         out. Approving is an agreement, not a transfer.
       </p>
       <p>
+        <Link href="/admin/payouts">Teacher payouts</Link> — what teachers have
+        asked to be paid, the refund hold that keeps a sale from being paid out
+        before it can be reversed, and the one action that marks an earning
+        paid. Recording a payout is not sending one.
+      </p>
+      <p>
         <Link href="/admin/reports">Content reports</Link> — problems readers
         flagged in a lesson or an answer. Closing one needs a written note.
       </p>

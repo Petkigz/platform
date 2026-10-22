@@ -101,6 +101,10 @@ export default async function TeachPage() {
         <Link href="/teach/earnings">Earnings</Link> — what your courses have earned, per currency,
         and the sales behind it. Nothing is paid out yet: this is the record, not a balance.
       </p>
+      <p>
+        <Link href="/teach/payouts">Getting paid</Link> — ask for the money your courses have
+        earned once it is out of its refund hold, and see what happened to every earlier request.
+      </p>
 
       <div style={{ marginTop: '1.75rem' }}>
         <div className="outline-h">
