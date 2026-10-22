@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1308 database tests, 841 web tests; TypeScript typecheck and
-production build pass; 109 tables, 234 policies, 143 user-defined triggers,
-299 functions, 131 migrations and 131 app route entries.**
+Verification: **1317 database tests, 846 web tests; TypeScript typecheck and
+production build pass; 111 tables, 236 policies, 144 user-defined triggers,
+306 functions, 132 migrations and 133 app route entries.**
 
 ## Today's sentence
 
@@ -2219,6 +2219,44 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### Live classes are built, not bought, 2026-10-22
+
+The owner's call: *"we build them, because I want the system more intact."* That turns four
+open questions into four pieces of work, and this unit does all four.
+
+**Scheduling.** `live_sessions` holds a course, a title, a host, a start and an end in UTC,
+and — beside them — the zone the teacher typed the time in. "Tuesday at 19:00" belongs to the
+person who set it; a learner in London is shown both hours, in that order.
+`schedule_live_session()` is limited to the course author, refuses a class that ends before it
+starts or runs beyond twelve hours, and validates the zone against `pg_timezone_names`
+because a typo there prints every time wrong forever.
+
+**The door.** A room is a capability, so a session row is *not* readable by every learner —
+the read policy covers the host, the course author and staff only. A learner gets their
+address one at a time from `join_live_session()`, which checks three things in order:
+`can_access_learner()`, then an active enrolment in that course, then the clock. The window
+opens fifteen minutes before and closes thirty minutes after, both stored per session rather
+than fixed in code. A cancelled class is refused with the reason the teacher wrote, because
+"why is this not happening" is the question a learner actually has.
+
+**Recording.** Unchanged from the decision of 2026-10-20 and deliberately not reopened here:
+**the teacher is recorded, learners never are.** The column for a recording reference exists
+and there is no writer that could set it, which is the honest state of a feature whose
+provider is not connected.
+
+**Moderation.** Enforced server-side, not by hiding a button: you cannot schedule on a course
+you do not teach, you cannot join a learner you are not responsible for, and the roll is
+returned by `live_session_roster()` only to the host, the author or staff.
+
+**What is not built, and is not faked:** the room itself. A live room is video, and video is
+somebody's product. `delivery.live_room_base` is the setting that says who hosts it; it ships
+empty, and while it is empty `join_live_session()` returns `no_room_host` with a sentence
+rather than a URL that carries no class. Setting it turns the platform from a schedule into a
+school — the door, the clock, the roll and the entitlement are all already here.
+
+`delivery.live_classes` was a CODE-gated flag with three words behind it. It is now an ADMIN
+flag whose preconditions are one URL, because a provider is an account and not a deploy.
 
 ### Tax and the transfer fee are charged where the buyer is, 2026-10-22
 

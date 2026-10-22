@@ -2464,3 +2464,34 @@ so every order was effectively untaxed and every payment cost was silently eaten
 rate. That is a legal fact per market and it belongs to the owner, entered as rows. Also open:
 whether a refund returns the tax and fee as well — currently a refund is against the order's
 total, and a partial refund policy for charges has not been written.
+## Live classes are built here, and only the teacher is recorded — **DECIDED 2026-10-22**
+
+The owner: **"live classes we build them because I want the system more intact."** So the
+RTC sweep — scheduling, time zones, recording policy, moderation — is ours rather than a
+provider's, and the platform stops being a catalogue with a video link bolted on.
+
+- **Scheduling is ours.** `live_sessions` stores the instant in UTC *and* the zone the
+  teacher typed. A teacher setting "Tuesday 19:00" in Kampala should never convert anything,
+  and a learner in London is shown both hours.
+- **The door is ours**, and it is three checks in order: are you responsible for this
+  learner, are they enrolled in this course, is the window open. A room address is handed
+  out one person at a time and never sits on a listable row.
+- **The window is per session** (15 minutes before, 30 after, both editable) rather than a
+  global rule, because a 20-minute halaqah and a two-hour workshop do not want the same one.
+- **Moderation is server-side.** You cannot schedule on a course you do not teach, you
+  cannot join somebody else's learner, and the roll is readable only by the host, the course
+  author or staff.
+- **Teacher-only recording** stands, as decided 2026-10-20. Learners are never captured. A
+  live class with children on camera is a safeguarding incident with a retention period, and
+  no feature is worth that.
+- **The video itself is somebody else's product.** `delivery.live_room_base` names the host;
+  empty means not connected, and joining says so rather than returning a URL that carries no
+  class. The platform owns the schedule, the door, the clock and the roll — which is the
+  part a school actually administers.
+
+**Not decided here:** which provider hosts the room. That is an account, a price and a data
+processing agreement, and it is the one part of live classes that cannot be built.
+
+**Also open:** whether a recording is offered to learners who missed the class, and how long
+it is kept. Nothing produces a recording yet, so nothing has to decide that today — but the
+moment a provider is connected, it is the next question.

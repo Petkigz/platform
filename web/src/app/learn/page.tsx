@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { fetchSummary } from '@/lib/progress';
 import { fetchEngagement } from '@/lib/engagement';
+import { describeReason, describeWhen, type LiveSession } from '@/lib/live';
 import { EngagementStrip } from '@/components/engagement-strip';
 import { isFlagEnabled } from '@/lib/flags';
 
@@ -125,6 +126,15 @@ export default async function LearnPage() {
   // A streak is a display over progress that already exists, so a failure to read it is
   // silence rather than an error: `fetchEngagement` returns null when the feature is
   // off, when the learner is not the caller's, and when the reply is unreadable.
+  // Live classes, if the owner has switched them on. An rpc that fails is
+  // silence rather than a broken dashboard: a class list is an addition to
+  // learning, not a precondition for it.
+  const liveOn = await isFlagEnabled(supabase, 'delivery.live_classes').catch(() => false);
+  const liveSessions = liveOn
+    ? (((await supabase.rpc('my_live_sessions', { p_course_id: null })).data ??
+        []) as unknown as LiveSession[])
+    : [];
+
   const streaksOn = await isFlagEnabled(supabase, 'learning.streaks').catch(() => false);
   const engagement = streaksOn && myProfileId
     ? await fetchEngagement(supabase, myProfileId)
@@ -165,6 +175,34 @@ export default async function LearnPage() {
           </button>
         </form>
       </p>
+
+      {liveSessions.length > 0 && (
+        <section className="card" style={{ marginTop: '1.25rem' }}>
+          <h2 style={{ marginTop: 0 }}>Live classes</h2>
+          <ul className="lessons">
+            {liveSessions.slice(0, 6).map((session) => (
+              <li key={session.session_id}>
+                <span className="t">
+                  <Link href={`/live/${session.session_id}`}>{session.title}</Link>
+                  <span className="muted">
+                    {' · '}
+                    {session.course_title}
+                    {' · '}
+                    {describeWhen(session.starts_at, session.scheduled_zone)}
+                    {session.attended ? ' · you were there' : ''}
+                  </span>
+                  {session.status === 'cancelled' && (
+                    <span className="muted"> · cancelled: {session.cancelled_reason}</span>
+                  )}
+                  {!session.joinable && session.status !== 'cancelled' && (
+                    <span className="muted"> · {describeReason(session.reason)}</span>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {engagement && (
         <section className="card" style={{ marginTop: '1.25rem' }}>

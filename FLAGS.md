@@ -121,7 +121,7 @@ Three kinds of gate:
 | Flag | Gates | Type | Preconditions before it can be ON |
 |---|---|---|---|
 | `delivery.transcode` | Encode delivery copies (renditions) of an uploaded master, and mark them servable | CODE | **Built and waiting.** `web/src/worker/transcode-worker.ts` signs in as a staff account, reads this flag, downloads a master from R2, plans a ladder from what `ffprobe` actually finds (never upscales, never trusts the declared mime), and for each profile calls `register_media_rendition()` → uploads → `confirm_media_rendition()`, or `fail_media_rendition()` with a reason. Enabling the flag is not enough: it also needs ffmpeg on the worker host, R2 credentials in its environment, an account granted staff at `/admin/roles`, and a playback route that mints rendition URLs — **none of which exist**. `manifest` is in the profile vocabulary and nothing produces one: an HLS manifest is thousands of segment objects and this register holds one row per profile |
-| `delivery.live_classes` | Live teaching sessions | CODE | RTC provider; scheduling and timezones; recording policy; moderation |
+| `delivery.live_classes` | Live teaching sessions | ADMIN | **Built 2026-10-22**, and built rather than bought (the owner's call). Scheduling with the zone a teacher typed beside the UTC instant, a 15-minute-open / 30-minute-close window, `schedule_live_session()` limited to the course author and `cancel_live_session()` demanding a reason a learner reads, joining authorised per person through `join_live_session()` (entitlement + clock + host, in that order), attendance written on arrival and minutes on departure, `my_live_sessions()` for the learner and `live_session_roster()` for the teacher, and screens at `/teach/<course>/live` and `/live/<session>`. **Teacher-only recording**, decided 2026-10-20: learners are never captured; a `recording_reference` column exists with no writer. Remaining before enabling: a room host in `delivery.live_room_base` — the platform owns the schedule and the door, not the video. Without it, joining refuses with a sentence rather than handing out a URL that does not carry a class |
 | `delivery.analytics` | Teachers see per-learner progress for the cohorts they opened | CODE | **Cohort-scoped progress is built** — `can_read_learner_course_progress()` is the predicate, `cohort_learner_progress()` the roster, `/teach/[courseId]/cohorts/[cohortId]` the screen (`SCREENS.md` row 32) — and `learning.cohorts` must also be on, because the predicate checks both. Still open: retention, meaning how long progress stays readable after a class ends or a learner leaves, and event instrumentation beyond lesson progress |
 | `delivery.notifications` | Email / push / SMS | ADMIN + SETUP | Sender domains verified; provider chosen; consent and frequency rules. **The outbox is built and the flag is not the switch that sends**: `queue_message()` renders a named template into `outbound_messages`, `/admin/messages` shows what would be sent, and every row stays `queued` because no provider exists. A row cannot be marked `sent` without a provider and a time — the constraint refuses the claim |
 
@@ -138,7 +138,7 @@ Three kinds of gate:
 
 ## Controls that are not flags
 
-`platform_settings` holds six rows that are not in the tables above. They are
+`platform_settings` holds eight rows that are not in the tables above. They are
 not features to switch on — they are dials that decide how the publication and
 money rules behave, and they shipped with values rather than being absent.
 
@@ -151,11 +151,12 @@ money rules behave, and they shipped with values rather than being absent.
 | `media.upload_quota_gb_per_teacher` | integer | ADMIN | `50` | Cumulative master bytes one uploader may store, in GiB. **Chosen at 50 GB on 2026-10-22** — about a day of 1080p video, which is invisible to almost every teacher while stopping one account consuming the storage budget. Counted on masters, not on the renditions derived from them (the ladder stores about 2.1x the master and is the platform's choice, not the teacher's); quarantined and pending masters count, withdrawn ones do not. Enforced only while `platform.cost_controls` is on, at initiate, through `media_upload_allowance()`; a value below 1 raises `media:quota_misconfigured` rather than silently blocking or allowing everything |
 | `governance.scholar_board_active` | boolean | ADMIN | `false` | Whether a scholarly board is convened and may check reviewer credentials. Off means the platform owner alone decides whether a qualification passes. Turning it on grants nothing by itself: only a holder of `scholarly_panel_member` gains the power, and only the owner may appoint or remove one — enforced by a trigger on `user_role_assignments`, not by this switch |
 | `finance.rate_sanity_factor` | integer | ADMIN | `10` | How many times the previous recorded rate for a pair a new rate may be before recording it needs a written reason. A slipped decimal in a rate is a 100x error in the only number the owner reads and it looks perfectly reasonable on screen, so the writer refuses one and keeps the reason in the audit trail. `0` turns the check off |
+| `delivery.live_room_base` | text | ADMIN | empty | Base URL of the live-room host, e.g. `https://meet.example.org`. A room is this plus `/room/<slug>`. Empty is the shipped state and means live rooms are not connected yet — `join_live_session()` refuses with that sentence rather than handing out a URL that does not carry a class. The platform owns the schedule and the door; the video is somebody else's product |
 
-Measured, the table holds **95 rows: the 88 flags above plus these seven.**
-Ninety are boolean switches, four are integers and one is text. Gate types
-across the flags: **42 ADMIN, 14 ADMIN + SETUP, 32 CODE**. The two governance
-policy controls have no gate because they are not features; the three money
+Measured, the table holds **96 rows: the 88 flags above plus these eight.**
+Ninety are boolean switches, four are integers and two are text. Gate types
+across the flags: **43 ADMIN, 14 ADMIN + SETUP, 31 CODE**. The two governance
+policy controls have no gate because they are not features; the money
 controls are ADMIN, because a number that changes what a total says is changed
 from the dashboard and not from a migration — and so are the upload quota and the
 board control, for the same reason: a number that decides what a teacher may
