@@ -2598,5 +2598,9 @@ A per-learner view already exists where it belongs — the cohort progress scree
 flag and its own opt-in. With capture off the teacher is told analytics is not enabled rather
 than shown zeros, since an empty report and a switched-off report are different facts.
 
-**Still open:** certificates and revenue are not in the teacher report; they have their own
-screens and their own questions.
+**Extended the same day: the stocks as well as the flows.** Enrolment totals (active,
+completed, joined in the window) and certificate totals (issued, revoked) are now part of the
+same report, because those are the first questions a course owner asks — "how many are in it,
+how many finished" — and they are counts of the course rather than of the window. **Money stays
+out:** earnings have their own screen and their own currency question, and a figure in shillings
+beside a page of counts would invite exactly the mixing this schema avoids everywhere else.

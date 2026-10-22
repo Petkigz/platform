@@ -20,6 +20,8 @@ type Report = {
   byEvent: Row[];
   daily: Day[];
   lessons: Lesson[];
+  enrolments: { total: number | string; active: number | string; completed: number | string; joinedInWindow: number | string };
+  certificates: { issued: number | string; revoked: number | string };
 };
 
 const WINDOWS = [7, 30, 90];
@@ -86,6 +88,23 @@ export default async function CourseReportsPage({
         <Link href={`/teach/${courseId}`}>{course.title}</Link> · Reports
       </p>
       <h1>How this course is being used</h1>
+
+      {report && (
+        <div className="stats">
+          <div>
+            <div className="n">{n(report.enrolments?.total)}</div>
+            <div className="l">Enrolled</div>
+          </div>
+          <div>
+            <div className="n">{n(report.enrolments?.completed)}</div>
+            <div className="l">Completed</div>
+          </div>
+          <div>
+            <div className="n">{n(report.certificates?.issued)}</div>
+            <div className="l">Certificates</div>
+          </div>
+        </div>
+      )}
 
       {!enabled ? (
         <div className="notice">

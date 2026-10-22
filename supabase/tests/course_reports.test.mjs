@@ -149,6 +149,37 @@ export async function run(ctx) {
     });
   });
 
+  await test('enrolments and certificates are counted, as stocks', async () => {
+    const mine = await courseOf(teacher, 'Stock Course');
+    const person = await adult('Enrolled Learner');
+    await q(`insert into public.course_enrolments
+               (learner_profile_id, course_id, course_version_id, source, status)
+             values ($1,$2,$3,'free','active')`, [person.learnerId, mine.course, mine.version]);
+    const enrolment = await scalar(
+      `select id from public.course_enrolments
+        where learner_profile_id = $1 and course_id = $2`, [person.learnerId, mine.course]);
+
+    await q(`update public.course_enrolments
+                set status='completed', completed_at=now() where id=$1`, [enrolment.id]);
+    await q(`insert into public.certificates
+               (learner_profile_id, course_enrolment_id, certificate_number, issued_by,
+                learner_display_name, course_title, course_version_number, course_language,
+                criteria_snapshot, template_version)
+             values ($1,$2,$3,$4,'Enrolled Learner','Stock Course',1,'en','{}'::jsonb,1)`,
+    [person.learnerId, enrolment.id, `AS-STOCK-${seq}`, admin]);
+
+    await withAnalytics(async () => {
+      const result = await report(teacher, mine.course);
+      assert(Number(result.enrolments.total) === 1, `total was ${result.enrolments.total}`);
+      assert(Number(result.enrolments.completed) === 1, 'a completed enrolment was not counted');
+      assert(Number(result.enrolments.active) === 0);
+      assert(Number(result.certificates.issued) === 1, 'the certificate was not counted');
+      assert(Number(result.certificates.revoked) === 0);
+      // Stocks, not flows: an enrolment older than the window still counts.
+      assert(Number(result.enrolments.joinedInWindow) === 1);
+    });
+  });
+
   await test('the window and the course id are validated', async () => {
     const mine = await courseOf(teacher, 'Validated');
     await withAnalytics(async () => {

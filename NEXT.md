@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1362 database tests, 856 web tests; TypeScript typecheck and
+Verification: **1363 database tests, 856 web tests; TypeScript typecheck and
 production build pass; 115 tables, 239 policies, 146 user-defined triggers,
-323 functions, 137 migrations and 136 app route entries.**
+323 functions, 138 migrations and 136 app route entries.**
 
 ## Today's sentence
 
