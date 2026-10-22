@@ -114,6 +114,17 @@ export default async function AccountPage() {
         </p>
       </section>
 
+      <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
+        <h2 style={{ marginTop: 0 }}>Closing this account</h2>
+        <p className="muted">
+          Closing removes your name from everything it touched and signs you out for
+          good. Orders, payments, enrolments and certificates are kept without your
+          name on them, because a refund or a checked certificate still needs them. The
+          page lists both sides before anything happens.{' '}
+          <Link href="/account/delete">Close this account</Link>
+        </p>
+      </section>
+
       <p style={{ marginTop: '1.5rem' }}><Link href="/learn">Back to my learning</Link></p>
     </div>
   );

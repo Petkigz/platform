@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1288 database tests, 833 web tests; TypeScript typecheck and
+Verification: **1297 database tests, 836 web tests; TypeScript typecheck and
 production build pass; 108 tables, 233 policies, 140 user-defined triggers,
-290 functions, 129 migrations and 128 app route entries.**
+291 functions, 130 migrations and 130 app route entries.**
 
 ## Today's sentence
 
@@ -2219,6 +2219,46 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### A person can close their account, and the ledger does not go with it, 2026-10-22
+
+The export answered "what do you hold about me". Nothing answered "take it away". D7 had
+already written the shape in a column comment — *financial, governance and certificate
+history is never deleted; personal fields are anonymised instead* — and this is that
+sentence made runnable.
+
+`erase_my_account(p_confirm)` is one definer function with the confirmation inside it, so a
+second client cannot skip the guard. The confirmation is the display name: the one string a
+person chose, shown above the field they type into, impossible to send with a mis-click. The
+rule is one line — **what the person wrote is deleted; what the platform recorded is kept
+and de-identified**:
+
+- Deleted: lesson notes, bookmarks, saved courses, reviews, the words of discussion posts
+  (the thread survives, because other people's replies are not theirs to erase), the text of
+  assignment work, support messages they wrote, live sharing grants, invitations carrying
+  their address, and guardian relationships naming them.
+- Kept, with the name replaced by "Deleted learner": enrolments, progress, certificates —
+  a certificate keeps its number and its course snapshot, because a third party may still be
+  checking it, and it stops naming anybody.
+- Kept untouched: orders, payments, refunds and audit events. An order that loses its payer
+  cannot be refunded and a ledger with holes is not a ledger.
+
+Two guards had to be widened for exactly this and nothing else. `protect_account_status`
+refuses a self-service status change so a suspended person cannot reopen their own account;
+it now accepts the one transition into `closed`, and only when `erase_my_account()` sets a
+transaction-local flag. `protect_certificate_snapshot` freezes an issued certificate; it now
+permits the one change from a name to the tombstone. Neither flag outlives the statement.
+
+Children go with the last adult, not the first. A child belongs to the family, so if another
+adult is still an active member the family and its children stay with them; when the account
+being closed is the last adult, the children are tombstoned too. A teacher with a course in
+review or published is refused, and so is a board member: both are the owner's to end, and
+closing the account would strand work other people rely on.
+
+Signing out is part of it — the route ends the session, because a closed account has nothing
+left to show. **Not built, and named:** the sign-in identity itself. The address lives with
+the auth provider, and deleting it there would cascade through `user_profiles.user_id` into
+the ledger; that step is staff work through the provider, and the page says so.
 
 ### A streak is a memory, not a record, 2026-10-22
 

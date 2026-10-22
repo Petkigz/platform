@@ -68,3 +68,47 @@ export async function saveAccountProfile(
 export function exportFileName(now: Date): string {
   return `ayahspring-data-${now.toISOString().slice(0, 10)}.json`;
 }
+
+export type EraseOutcome =
+  | { ok: true; alreadyClosed: boolean; learnersErased: number }
+  | { ok: false; message: string };
+
+/**
+ * Close the signed-in person's account.
+ *
+ * The decision about what survives is in `erase_my_account()` and nowhere else:
+ * this function sends the confirmation and reports what happened. The database
+ * writes its refusals for a person to read ("you still have a course in review"),
+ * so they are passed through rather than replaced with a code.
+ *
+ * A reply that does not say `closed: true` is treated as a failure. An erasure is
+ * the one operation where believing an ambiguous answer would be worse than
+ * doing nothing.
+ */
+export async function eraseMyAccount(
+  supabase: SupabaseClient,
+  confirm: string,
+): Promise<EraseOutcome> {
+  const typed = confirm.trim();
+  if (!typed) return { ok: false, message: 'Type your name to confirm.' };
+
+  const { data, error } = await supabase.rpc('erase_my_account', { p_confirm: typed });
+  if (error) return { ok: false, message: error.message };
+
+  const reply = data as {
+    closed?: unknown;
+    alreadyClosed?: unknown;
+    learnersErased?: unknown;
+  } | null;
+
+  if (!reply || reply.closed !== true) {
+    return { ok: false, message: 'The account was not closed. Nothing was changed.' };
+  }
+
+  return {
+    ok: true,
+    alreadyClosed: reply.alreadyClosed === true,
+    learnersErased:
+      typeof reply.learnersErased === 'number' ? reply.learnersErased : 0,
+  };
+}

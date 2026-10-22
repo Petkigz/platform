@@ -59,7 +59,7 @@ Three kinds of gate:
 | `platform.search` | Course and lesson search | ADMIN | **Catalogue search is built and deliberately not gated** (2026-10-22): `search_catalogue()` ranks the title, the subject, a public teacher's name and the description, requires every word, and is `security invoker` so it shows only what the caller may read. The flag stays in the register for **lesson-content** search, which is not built: that needs an index over lesson bodies and a decision about whether a paid lesson's text may be searched before it is bought |
 | `platform.terms_versioning` | Versioned terms with recorded acceptance | CODE | **Nothing exists.** Must store which version each user accepted, with a timestamp |
 | `platform.age_assurance` | Age checks gating the child model and COPPA | CODE | **Nothing exists.** Method undecided |
-| `platform.data_export` | Learner data portability / export | CODE | GDPR right; cheaper to design than retrofit across 85 tables |
+| `platform.data_export` | Data export in more than one format, and an import path | CODE | Export itself is built and **ungated** — a right behind a switch that ships off is not a right. Account closure is built and ungated for the same reason (`erase_my_account()`). This flag now covers only the unbuilt part: CSV/PDF and import |
 | `platform.account_merge` | Merge duplicate accounts | CODE | A parent will create two accounts |
 | `platform.withdrawal_right` | EU 14-day withdrawal handling at checkout | CODE | Statutory right on digital content; needs explicit waiver wording for content started immediately |
 | `platform.email_auth` | SPF / DKIM / DMARC and deliverability | ADMIN + SETUP | **Nothing exists.** Resets and receipts land in spam without it |

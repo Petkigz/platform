@@ -2392,3 +2392,44 @@ export and the receipt.
 **Not decided here:** anything social. No leaderboards, no comparison between children,
 no notifications to prompt a return. A streak that shames a six-year-old is not
 encouragement, and nothing in this build asks the platform to hold a reason to return.
+## Closing an account is not deleting the ledger — **DECIDED 2026-10-22**
+
+This answers the question the export entry above deliberately left open. D7 had already
+committed to the shape in a column comment — *financial, governance and certificate history
+is never deleted; personal fields are anonymised instead* — so what was missing was not a
+policy but a runnable act.
+
+The policy, in one line: **what the person wrote is deleted; what the platform recorded is
+kept and de-identified.**
+
+- **Deleted:** notes, bookmarks, saved courses, reviews, the words of discussion posts (the
+  thread stays, because other people's replies are not theirs to erase), the text of
+  assignment work, support messages they wrote, live sharing grants, invitations carrying
+  their address, guardian relationships naming them.
+- **Kept, de-identified:** enrolments, progress, certificates. A certificate keeps its number
+  and its course snapshot because a third party may still be checking it; the holder becomes
+  "Deleted learner".
+- **Kept untouched:** orders, payments, refunds, ledger entries, audit events. An order that
+  loses its payer cannot be refunded, and a ledger with holes is not a ledger.
+
+Three consequences worth stating, because each was a fork:
+
+1. **It is not a hard delete.** A hard delete here would cascade into the money. Erasure in
+   this schema means the person stops being reachable as a person while the record stays
+   auditable. Where a market's law demands the bytes go, that is a per-market legal step with
+   its own retention clock — not a button.
+2. **Children go with the last adult, not the first.** A child belongs to the family. If
+   another adult is still an active member, the child stays with them; closing the last
+   adult's account tombstones the children too.
+3. **Two people cannot close an account for work in flight.** A teacher with a course in
+   review or published, and an active board member, are refused: both are the owner's to end,
+   and closing the account would strand work other people rely on.
+
+**Not built, and named on purpose:** the sign-in identity. The address lives with the auth
+provider; deleting it there cascades through `user_profiles.user_id` into the ledger, so that
+removal is staff work through the provider and the page says so in one sentence rather than
+implying the address is gone.
+
+**Not decided here:** a cooling-off period. Closure is immediate and there is no undo, which
+is the honest version when nothing is retained to restore from. If a grace window is ever
+wanted, it needs a scheduled job — and this platform has deliberately avoided needing one.

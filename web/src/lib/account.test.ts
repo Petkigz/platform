@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  eraseMyAccount,
   exportFileName,
   saveAccountProfile,
   validateAccountProfile,
@@ -67,4 +68,50 @@ test('the export filename is dated and safe to put in a header', () => {
     'ayahspring-data-2026-01-01.json',
   );
   assert.match(exportFileName(new Date()), /^ayahspring-data-\d{4}-\d{2}-\d{2}\.json$/);
+});
+
+test('eraseMyAccount sends the typed name and reports what the database closed', async () => {
+  const calls: { method: string; value: unknown }[] = [];
+  const client = {
+    rpc(name: string, args: unknown) {
+      calls.push({ method: `rpc:${name}`, value: args });
+      return Promise.resolve({
+        data: { closed: true, alreadyClosed: false, learnersErased: 2 },
+        error: null,
+      });
+    },
+  } as unknown as SupabaseClient;
+
+  const result = await eraseMyAccount(client, '  Amina Yusuf ');
+  assert.deepEqual(result, { ok: true, alreadyClosed: false, learnersErased: 2 });
+  assert.deepEqual(calls, [
+    { method: 'rpc:erase_my_account', value: { p_confirm: 'Amina Yusuf' } },
+  ]);
+});
+
+test('eraseMyAccount passes a refusal through in the database’s own words', async () => {
+  const client = {
+    rpc: () =>
+      Promise.resolve({
+        data: null,
+        error: { message: 'you still have a course in review or published' },
+      }),
+  } as unknown as SupabaseClient;
+
+  const result = await eraseMyAccount(client, 'Amina Yusuf');
+  assert.equal(result.ok, false);
+  assert.match(result.ok === false ? result.message : '', /course in review/);
+});
+
+test('eraseMyAccount treats an ambiguous reply as nothing happened', async () => {
+  for (const data of [null, {}, { closed: 'yes' }]) {
+    const client = {
+      rpc: () => Promise.resolve({ data, error: null }),
+    } as unknown as SupabaseClient;
+    const result = await eraseMyAccount(client, 'Amina Yusuf');
+    assert.equal(result.ok, false, `accepted ${JSON.stringify(data)} as a closure`);
+  }
+
+  const blank = await eraseMyAccount({} as unknown as SupabaseClient, '   ');
+  assert.equal(blank.ok, false);
 });
