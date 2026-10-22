@@ -96,7 +96,7 @@ Status:
 | 36 | Users | READY |
 | 37 | Teachers | READY |
 | 38 | Course approval | **BUILT** — `/review/[assignmentId]`: accept or decline with a mandatory rationale, and while the assignment is accepted or in progress, watch the delivery copies of every lesson in the version. A reviewer gets the rendition and not the archive, and cannot save either: an offline copy is a learner's entitlement, and a reviewer holds none |
-| 39 | Payments | **BUILT** — `/orders` shows status from the database, not from a redirect, and shows what the total is made of (subtotal, discount, tax, fee) plus every adjustment on the order including withdrawn ones. Finance records those adjustments on 35e |
+| 39 | Payments | **BUILT** — `/orders` shows status from the database, not from a redirect, and shows what the total is made of (subtotal, discount, tax, fee) plus every adjustment on the order including withdrawn ones. An unpaid order can **gain or lose a promotion code there** *(added 2026-10-22)*: `apply_promotion_to_order()` and `remove_promotion_from_order()` read the session, and neither appears once the order is paid — after that the discount is history and the way out is a refund. Finance records other adjustments on 35e |
 | 40 | Revenue analytics | BLOCKED — `delivery.analytics` is CODE |
 | 41 | Certificates | **BUILT** — `/admin/certificates` |
 | 42 | **Settings and feature flags** | **BUILT** — *critical path, and it was missing from the source list.* `platform_settings` holds all 87 flags plus 3 governance and money controls; `/admin` reads and toggles them, with `code`-gated flags refused by trigger |

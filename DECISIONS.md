@@ -2206,3 +2206,31 @@ answer**:
 
 **Still open:** taking a code off a pending order. The writer to apply one already exists and
 has no screen; nothing removes one.
+## A redemption is append-only, and a void is not an edit — **DECIDED 2026-10-22**
+
+Taking a code off a pending order was the last open item of the promotions chain. It could
+have been built by deleting the redemption row, and that was rejected: `promotion_redemptions`
+has refused every update and delete since it existed, and that refusal is why the row can be
+trusted as the record of what was applied at checkout.
+
+So a removal is a **void**: three new columns (`voided_at`, `voided_by`, `voided_reason`), a
+CHECK that is satisfied only when all three agree, and a trigger that permits exactly one
+transition — a live row voided once, with a person and a reason — while still refusing every
+other column, a second void, and a delete. The redemption stays; the discount does not.
+
+Three consequences follow, and each is deliberate:
+
+- **A voided redemption does not count against a limit.** The three checks in
+  `promotion_quote()` and the "already been redeemed N times" check in `set_promotion_limits()`
+  count live rows only. A typo corrected is not a use spent.
+- **Only while unpaid.** Once money has moved the discount is part of what was charged and of
+  what the teacher's share was computed from. Changing it then is a refund, which is a money
+  decision with its own record. The order page therefore shows the control only on
+  `pending_payment` orders — the buttons disappear rather than failing.
+- **The screen names no code it has not been told.** The adjustment's description is prose and
+  the redemption is not readable by a payer, so the page asks the writer for the code and shows
+  the sentence it returns, rather than parsing a code out of a string to put in a button.
+
+**Open, but not a decision:** whether a paid order should ever accept a *backdated* code — a
+family who bought at full price and then finds the code. That is a refund or a goodwill
+credit, and both already exist; it is not a re-price of the past.

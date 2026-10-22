@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1248 database tests, 813 web tests; TypeScript typecheck and
+Verification: **1254 database tests, 816 web tests; TypeScript typecheck and
 production build pass; 108 tables, 233 policies, 138 user-defined triggers,
-283 functions, 122 migrations and 124 app route entries.**
+284 functions, 123 migrations and 125 app route entries.**
 
 ## Today's sentence
 
@@ -2220,6 +2220,39 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### A code can be taken off an unpaid order, 2026-10-22
+
+The last open item of the promotions chain. A code is redeemed at the moment the order
+is made, which left a family who typed the wrong one with no way back: the order carried
+the wrong total until it expired, and the code stayed spent on the campaign's per-family
+limit — so the code they meant to use could not be used on the order they went on to
+place.
+
+`20261241000100_order_promotion_removal.sql` adds `remove_promotion_from_order()`. The
+interesting decision is what removing means, because `promotion_redemptions` has been
+**append-only since it existed**: it refuses every update and delete, and that refusal is
+the reason the row can be trusted as a record of what was applied at checkout.
+
+Nothing here relaxes it. Three columns were added — `voided_at`, `voided_by`,
+`voided_reason` — with a CHECK that ties them into one fact, and the trigger was re-stated
+to allow exactly one transition: a live row may be voided once, with a person and a
+reason, and **every other column is still refused as before**, as is a second void and a
+delete. A void is a new fact about the row, not an edit of it.
+
+A voided redemption **does not count against a limit**. The three checks in
+`promotion_quote()` and the "already been redeemed N times" check in
+`set_promotion_limits()` now count live rows only, so taking a code off returns the slot
+to the family rather than spending it.
+
+The order page is where this lives: an unpaid order shows **Take the code off**, or a
+code box if it has none, and neither appears once the order is paid. After that the
+discount is part of what was charged and what the teacher's share was computed from; the
+way to change it is a refund, which is a money decision with its own record, not a silent
+re-price.
+
+Six database tests and three web tests. **The promotions chain is now complete**: codes
+are created, aimed, limited, listed, previewed and redeemed, and an unpaid order can gain
+or lose one.
 ### A price can be checked before it is paid, 2026-10-22
 
 The last piece of the promotions chain, and the one that was recorded as open when

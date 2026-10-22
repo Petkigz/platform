@@ -5,6 +5,7 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { format, fromMinor } from '@/lib/money';
 import { describeOrderAdjustment, describeOrderBreakdown } from '@/lib/checkout';
 import { RefundForm } from './refund-form';
+import { PromotionActions } from './promotion-actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -206,9 +207,17 @@ export default async function OrdersPage({
                     </Link>
                   )}
                   {o.status === 'pending_payment' && (
-                    <span className="muted">
-                      Not paid — no access yet
-                    </span>
+                    <>
+                      <span className="muted">
+                        Not paid — no access yet
+                      </span>
+                      <PromotionActions
+                        orderId={o.id}
+                        applied={(o.order_adjustments ?? []).some(
+                          (a) => a.adjustment_type === 'promotion' && !a.voided_at,
+                        )}
+                      />
+                    </>
                   )}
                   {(o.status === 'paid' || o.status === 'partially_refunded') && (
                     <RefundForm

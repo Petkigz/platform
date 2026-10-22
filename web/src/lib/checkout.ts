@@ -255,6 +255,22 @@ const COURSE_ORDER_REFUSALS: Record<string, { code: CheckoutErrorCode; message: 
     code: 'promotion_refused',
     message: 'This order already has a code on it. An order takes one.',
   },
+  none_applied: {
+    code: 'promotion_refused',
+    message: 'There is no code on this order to take off.',
+  },
+  order_not_pending: {
+    code: 'promotion_refused',
+    message: 'This order has already been paid, so its price cannot be changed. Contact us for a refund.',
+  },
+  order_not_found: {
+    code: 'not_found',
+    message: 'That order does not exist.',
+  },
+  not_your_order: {
+    code: 'forbidden',
+    message: 'Only the family that pays for this order can change it.',
+  },
 };
 
 /** Split `checkout:<key>` back out of a Postgres error message. */
@@ -424,6 +440,86 @@ export async function quoteCourseOrder(
       promotionName: typeof row.promotionName === 'string' ? row.promotionName : null,
       title: typeof row.title === 'string' && row.title !== '' ? row.title : 'This course',
     },
+  };
+}
+
+/** What the two order-level promotion writers return. */
+type OrderPromotionRow = {
+  code?: string;
+  campaignName?: string;
+  discountMinor?: string;
+  removedMinor?: string;
+  totalMinor?: string;
+  currencyCode?: string;
+};
+
+export type OrderPromotionResult =
+  | { ok: true; code: string; total: Money; discount: Money }
+  | { ok: false; code: CheckoutErrorCode; message: string };
+
+/**
+ * Putting a code on an order that already exists, and taking one off again.
+ *
+ * The checkout applies a code at the moment the order is made, which leaves two
+ * situations this exists for: a family who placed the order and only then found the
+ * code, and a family who typed the wrong one. Both are corrections to an unpaid
+ * order, and both are refused once it is paid — after that the discount is part of
+ * what was charged, and the way to change it is a refund, not a re-price.
+ *
+ * The order id is the only thing chosen here. Which code applies, whether it applies
+ * at all, and what it is worth are the writer's answers.
+ */
+export async function applyPromotionToOrder(
+  supabase: SupabaseClient,
+  args: { orderId: string; code: string },
+): Promise<OrderPromotionResult> {
+  const code = args.code.trim();
+  if (!args.orderId) return { ok: false, code: 'error', message: 'That order is missing.' };
+  if (code === '') return { ok: false, code: 'error', message: 'Type the code first.' };
+
+  const { data, error } = await supabase.rpc('apply_promotion_to_order', {
+    p_order_id: args.orderId,
+    p_code: code,
+  });
+  if (error) return { ok: false, ...mapCourseOrderRefusal(error.message) };
+
+  const row = data as OrderPromotionRow | null;
+  if (!row?.code || row.discountMinor === undefined
+      || row.totalMinor === undefined || !row.currencyCode) {
+    return { ok: false, code: 'error', message: 'The code was applied but the answer was unreadable.' };
+  }
+
+  return {
+    ok: true,
+    code: row.code,
+    discount: fromMinor(row.discountMinor, row.currencyCode),
+    total: fromMinor(row.totalMinor, row.currencyCode),
+  };
+}
+
+/** Taking a code off a pending order. The writer voids the redemption as well. */
+export async function removePromotionFromOrder(
+  supabase: SupabaseClient,
+  orderId: string,
+): Promise<OrderPromotionResult> {
+  if (!orderId) return { ok: false, code: 'error', message: 'That order is missing.' };
+
+  const { data, error } = await supabase.rpc('remove_promotion_from_order', {
+    p_order_id: orderId,
+  });
+  if (error) return { ok: false, ...mapCourseOrderRefusal(error.message) };
+
+  const row = data as OrderPromotionRow | null;
+  if (!row?.code || row.removedMinor === undefined
+      || row.totalMinor === undefined || !row.currencyCode) {
+    return { ok: false, code: 'error', message: 'The code was taken off but the answer was unreadable.' };
+  }
+
+  return {
+    ok: true,
+    code: row.code,
+    discount: fromMinor(row.removedMinor, row.currencyCode),
+    total: fromMinor(row.totalMinor, row.currencyCode),
   };
 }
 

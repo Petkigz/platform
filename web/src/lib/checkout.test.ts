@@ -2,9 +2,11 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  applyPromotionToOrder,
   createOrder,
   createPlanOrder,
   quoteCourseOrder,
+  removePromotionFromOrder,
   describeOrderAdjustment,
   describeOrderBreakdown,
   recordPaymentAttempt,
@@ -855,6 +857,86 @@ test('a code the writer refuses comes back as the sentence the checkout would gi
       assert.equal(result.code, code, `${message} mapped to ${result.code}`);
       assert.equal(/promotion:|checkout:/.test(result.message), false,
         `${message} leaked its key into the sentence`);
+    }
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Putting a code on a pending order, and taking one off
+// ---------------------------------------------------------------------------
+
+test('a code is applied to an order by id, and the answer is the writer’s', async () => {
+  const { client, rpcCalls } = quoteClient({
+    code: 'EID24',
+    campaignName: 'Eid offer',
+    discountMinor: '6000',
+    totalMinor: '24000',
+    currencyCode: 'UGX',
+  });
+
+  const result = await applyPromotionToOrder(client, { orderId: 'order-1', code: ' eid24 ' });
+
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+  assert.equal(result.code, 'EID24');
+  assert.equal(result.discount.amountMinor, 6000n);
+  assert.equal(result.total.amountMinor, 24000n);
+  assert.deepEqual(rpcCalls, [{
+    fn: 'apply_promotion_to_order',
+    args: { p_order_id: 'order-1', p_code: 'eid24' },
+  }]);
+
+  // An empty box never becomes a round trip.
+  const blank = await applyPromotionToOrder(client, { orderId: 'order-1', code: '   ' });
+  assert.equal(blank.ok, false);
+  assert.equal(rpcCalls.length, 1, 'a blank code was sent anyway');
+});
+
+test('taking a code off says what came off and what is owed now', async () => {
+  const { client, rpcCalls } = quoteClient({
+    code: 'EID24',
+    removedMinor: '6000',
+    totalMinor: '30000',
+    currencyCode: 'UGX',
+  });
+
+  const result = await removePromotionFromOrder(client, 'order-1');
+
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+  assert.equal(result.discount.amountMinor, 6000n);
+  assert.equal(result.total.amountMinor, 30000n);
+  assert.deepEqual(rpcCalls, [{
+    fn: 'remove_promotion_from_order',
+    args: { p_order_id: 'order-1' },
+  }]);
+
+  const missing = await removePromotionFromOrder(client, '');
+  assert.equal(missing.ok, false);
+});
+
+test('a paid order refuses the change in the writer’s own words', async () => {
+  const cases: Array<[string, string]> = [
+    ['promotion:order_not_pending', 'promotion_refused'],
+    ['promotion:none_applied', 'promotion_refused'],
+    ['promotion:already_applied', 'promotion_refused'],
+    ['promotion:not_your_order', 'forbidden'],
+    ['promotion:order_not_found', 'not_found'],
+  ];
+
+  for (const [message, code] of cases) {
+    const { client } = quoteClient(null, { message });
+    for (const call of [
+      () => applyPromotionToOrder(client, { orderId: 'order-1', code: 'X' }),
+      () => removePromotionFromOrder(client, 'order-1'),
+    ]) {
+      const result = await call();
+      assert.equal(result.ok, false, `${message} was not refused`);
+      if (!result.ok) {
+        assert.equal(result.code, code, `${message} mapped to ${result.code}`);
+        assert.equal(/promotion:/.test(result.message), false,
+          `${message} leaked its key into the sentence`);
+      }
     }
   }
 });
