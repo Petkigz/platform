@@ -175,11 +175,10 @@ const COURSE_ORDER_REFUSALS: Record<string, { code: CheckoutErrorCode; message: 
       'This course is priced in more than one currency for your country. Contact us so ' +
       'we can set the right one before you pay.',
   },
-  // A course purchase grants every learner profile on the account that pays, so
-  // an account that already holds this version can only be charged for access it
-  // has. Said as reassurance rather than a refusal, because the commonest way to
-  // meet this is a guardian who does not know the family is already covered —
-  // including the case that looks like a second child and is not.
+  // One purchase covers one learner (2026-10-22), so this is about that learner
+  // and this version: a double tap, or a guardian buying twice for the same
+  // child. Said as reassurance rather than a refusal, and it names the learner
+  // rather than the payer, because the payer is often not the learner.
   already_owned: {
     code: 'already_entitled',
     message:
