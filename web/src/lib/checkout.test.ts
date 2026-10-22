@@ -756,7 +756,7 @@ function quoteClient(data: unknown, error: { message: string } | null = null) {
   return { client, rpcCalls };
 }
 
-test('a quote is asked by ids, and its three parts have to add up', async () => {
+test('a quote is asked by ids, and its parts have to add up', async () => {
   const { client, rpcCalls } = quoteClient({
     title: 'Tajweed',
     listMinor: '30000',
@@ -780,6 +780,10 @@ test('a quote is asked by ids, and its three parts have to add up', async () => 
   assert.equal(result.quote.list.amountMinor, 30000n);
   assert.equal(result.quote.discount.amountMinor, 6000n);
   assert.equal(result.quote.total.amountMinor, 24000n);
+  // No register rule in this fixture, so nothing was added — and the three parts
+  // still have to account for the total.
+  assert.equal(result.quote.tax.amountMinor, 0n);
+  assert.equal(result.quote.fee.amountMinor, 0n);
   assert.equal(result.quote.currencyCode, 'UGX');
   assert.equal(result.quote.promotionCode, 'EID24');
   assert.equal(result.quote.title, 'Tajweed');
@@ -939,4 +943,48 @@ test('a paid order refuses the change in the writer’s own words', async () => 
       }
     }
   }
+});
+
+test('a quote carries tax and the transfer fee, and refuses parts that miss the total', async () => {
+  const withCharges = quoteClient({
+    title: 'Tajweed',
+    listMinor: '30000',
+    discountMinor: '0',
+    taxMinor: '5400',
+    feeMinor: '354',
+    chargeLabels: { tax: 'VAT', fee: 'Mobile money fee' },
+    totalMinor: '35754',
+    currencyCode: 'UGX',
+  });
+
+  const result = await quoteCourseOrder(withCharges.client, {
+    courseId: 'course-1',
+    learnerProfileId: 'learner-1',
+    country: 'UG',
+  });
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+  assert.equal(result.quote.tax.amountMinor, 5400n);
+  assert.equal(result.quote.fee.amountMinor, 354n);
+  assert.equal(result.quote.total.amountMinor, 35754n);
+  assert.equal(result.quote.taxLabel, 'VAT');
+  assert.equal(result.quote.feeLabel, 'Mobile money fee');
+
+  // A total that does not equal list − discount + tax + fee is not shown, because
+  // the buyer cannot check it.
+  const inconsistent = quoteClient({
+    title: 'Tajweed',
+    listMinor: '30000',
+    discountMinor: '0',
+    taxMinor: '5400',
+    totalMinor: '30000',
+    currencyCode: 'UGX',
+  });
+  const broken = await quoteCourseOrder(inconsistent.client, {
+    courseId: 'course-1',
+    learnerProfileId: 'learner-1',
+    country: 'UG',
+  });
+  assert.equal(broken.ok, false);
+  assert.match(broken.ok === false ? broken.message : '', /inconsistent/i);
 });

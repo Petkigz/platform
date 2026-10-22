@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1297 database tests, 836 web tests; TypeScript typecheck and
-production build pass; 108 tables, 233 policies, 140 user-defined triggers,
-291 functions, 130 migrations and 130 app route entries.**
+Verification: **1308 database tests, 841 web tests; TypeScript typecheck and
+production build pass; 109 tables, 234 policies, 143 user-defined triggers,
+299 functions, 131 migrations and 131 app route entries.**
 
 ## Today's sentence
 
@@ -2219,6 +2219,48 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### Tax and the transfer fee are charged where the buyer is, 2026-10-22
+
+`orders` has had `tax_minor` and `fee_minor` since it was written and
+`order_adjustments` has had `tax` and `fee` types the whole time. Nothing ever wrote
+either, so every order this platform priced was taxed at zero and had its payment cost
+absorbed. Both are now real, and the rule is the owner's: **the buyer pays, and the amount
+follows where they are.**
+
+`market_charges` is a register, not a formula in code — a row says "for this country, in
+this currency, this kind of charge is this percentage plus this fixed amount, clamped
+between these bounds, from this date". A rate is a fact about a jurisdiction and
+jurisdictions change without telling the software, so the owner maintains it at
+`/admin/tax` through `set_market_charge()` and `retire_market_charge()`, both limited to a
+finance or platform admin and both audited.
+
+**No rule means no charge.** That is the safe default rather than an oversight: a platform
+registered for a tax nowhere must not invent a line on somebody's receipt, and a missing row
+can never overcharge. When a registration exists, a row is added and the next order carries
+it.
+
+Precedence is the one prices already use, so there is one mental model rather than two: a
+rule naming the buyer's country beats one that does not, a rule naming the currency beats
+one that does not, and a later start beats an earlier one.
+
+Tax is computed on the amount actually payable — items less live discounts and promotions —
+because charging tax on a price the buyer did not pay is how a discount becomes a lie. The
+transfer fee is computed on the amount being moved, goods plus tax, which is what a processor
+charges a percentage of. Both are `tax`/`fee` adjustments, so `recompute_order_totals()`
+already adds them and `describeOrderBreakdown()` already prints them.
+
+The seam that makes this safe is `rule_id` on an adjustment. A row the system computed
+records which rule produced it; such a row is recalculated whenever the payable amount
+changes, refuses to be voided or edited by hand, and disappears when its rule stops applying.
+A row without one is a human decision and the system never touches it. That distinction is
+what lets a discount applied to an existing order re-derive the tax correctly — the trigger
+does it once, in one place, rather than four writers each remembering.
+
+A paid order is history: `refresh_order_charges()` refuses it, so the total a ledger row was
+written against cannot move when a rate changes later. The checkout shows both lines before
+the buyer pays, with the label the market uses — "VAT", "Mobile money fee" — and the quote is
+refused if its parts do not add up to its total.
 
 ### A person can close their account, and the ledger does not go with it, 2026-10-22
 

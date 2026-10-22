@@ -55,9 +55,15 @@ export function BuyForm({
   const [quote, setQuote] = useState<{
     list: string;
     discount: string;
+    tax: string;
+    fee: string;
+    taxLabel: string;
+    feeLabel: string;
     total: string;
     code: string | null;
     hasDiscount: boolean;
+    hasTax: boolean;
+    hasFee: boolean;
   } | null>(null);
   const [quoteError, setQuoteError] = useState<string | null>(null);
   const [quoting, setQuoting] = useState(false);
@@ -83,6 +89,9 @@ export function BuyForm({
         quote?: {
           listMinor: string;
           discountMinor: string;
+          taxMinor: string;
+          feeMinor: string;
+          chargeLabels?: { tax?: string | null; fee?: string | null };
           totalMinor: string;
           currencyCode: string;
           promotionCode: string | null;
@@ -98,12 +107,21 @@ export function BuyForm({
       }
 
       const { quote: found } = json;
+      const currency = found.currencyCode;
+      const nonZero = (minor: string | undefined) =>
+        minor !== undefined && minor !== '0' && minor !== '';
       setQuote({
-        list: format(fromMinor(found.listMinor, found.currencyCode)),
-        discount: format(fromMinor(found.discountMinor, found.currencyCode)),
-        total: format(fromMinor(found.totalMinor, found.currencyCode)),
+        list: format(fromMinor(found.listMinor, currency)),
+        discount: format(fromMinor(found.discountMinor, currency)),
+        tax: format(fromMinor(found.taxMinor, currency)),
+        fee: format(fromMinor(found.feeMinor, currency)),
+        taxLabel: found.chargeLabels?.tax ?? 'Tax',
+        feeLabel: found.chargeLabels?.fee ?? 'Fee',
+        total: format(fromMinor(found.totalMinor, currency)),
         code: found.promotionCode,
-        hasDiscount: found.discountMinor !== '0' && found.discountMinor !== '',
+        hasDiscount: nonZero(found.discountMinor),
+        hasTax: nonZero(found.taxMinor),
+        hasFee: nonZero(found.feeMinor),
       });
     } finally {
       setQuoting(false);
@@ -225,16 +243,39 @@ export function BuyForm({
 
         {quote && (
           <div className="notice" role="status" style={{ marginTop: '0.5rem' }}>
-            {!quote.hasDiscount ? (
+            {!quote.hasDiscount && !quote.hasTax && !quote.hasFee ? (
               <span>
                 The price is <strong>{quote.total}</strong>.
               </span>
             ) : (
-              <span>
-                Price <strong>{quote.list}</strong>
-                {quote.code ? ` · code ${quote.code}` : ''} takes off{' '}
-                <strong>{quote.discount}</strong> · you pay <strong>{quote.total}</strong>.
-              </span>
+              <>
+                <span>
+                  Price <strong>{quote.list}</strong>
+                  {quote.hasDiscount ? (
+                    <>
+                      {quote.code ? ` · code ${quote.code}` : ''} takes off{' '}
+                      <strong>{quote.discount}</strong>
+                    </>
+                  ) : null}
+                  {quote.hasTax ? (
+                    <>
+                      {' '}· {quote.taxLabel.toLowerCase()} <strong>{quote.tax}</strong>
+                    </>
+                  ) : null}
+                  {quote.hasFee ? (
+                    <>
+                      {' '}· {quote.feeLabel.toLowerCase()} <strong>{quote.fee}</strong>
+                    </>
+                  ) : null}
+                  {' '}· you pay <strong>{quote.total}</strong>.
+                </span>{' '}
+                {quote.hasTax || quote.hasFee ? (
+                  <span className="meta">
+                    The tax and the fee are set by where you are and are paid by you;
+                    neither is kept by the course.
+                  </span>
+                ) : null}
+              </>
             )}{' '}
             <span className="meta">
               Nothing is held back by checking: pay now and exactly this is charged.

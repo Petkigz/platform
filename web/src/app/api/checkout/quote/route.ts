@@ -110,6 +110,9 @@ export async function POST(request: Request) {
       // not where that rule starts bending.
       listMinor: quote.list.amountMinor.toString(),
       discountMinor: quote.discount.amountMinor.toString(),
+      taxMinor: quote.tax.amountMinor.toString(),
+      feeMinor: quote.fee.amountMinor.toString(),
+      chargeLabels: { tax: quote.taxLabel, fee: quote.feeLabel },
       totalMinor: quote.total.amountMinor.toString(),
       currencyCode: quote.currencyCode,
       promotionCode: quote.promotionCode,

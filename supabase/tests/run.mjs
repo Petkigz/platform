@@ -79,6 +79,7 @@ import { run as orderQuote } from './order_quote.test.mjs';
 import { run as orderReceipt } from './order_receipt.test.mjs';
 import { run as exportMyData } from './export_my_data.test.mjs';
 import { run as eraseMyAccount } from './erase_my_account.test.mjs';
+import { run as marketCharges } from './market_charges.test.mjs';
 import { run as learnerStreaks } from './learner_streaks.test.mjs';
 import { run as promotionRemoval } from './promotion_removal.test.mjs';
 import { run as ownLearnerProfile } from './own_learner_profile.test.mjs';
@@ -169,6 +170,7 @@ for (const [name, fn] of [
   ['order receipt', orderReceipt],
   ['export my data', exportMyData],
   ['account erasure', eraseMyAccount],
+  ['market charges', marketCharges],
   ['learner streaks', learnerStreaks],
   ['promotion removal', promotionRemoval],
   ['own learner profile', ownLearnerProfile],

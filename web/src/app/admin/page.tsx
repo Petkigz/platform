@@ -136,6 +136,11 @@ export default async function AdminPage() {
         <Link href="/admin/disputes">Payment disputes</Link> — track and review provider cases (finance/platform admin).
       </p>
       <p>
+        <Link href="/admin/tax">Tax and transfer fees</Link> — what a buyer is
+        charged on top of the price, by the country they buy from. No rule means
+        no charge (finance/platform admin).
+      </p>
+      <p>
         <Link href="/admin/exchange-rates">Exchange rates</Link> — what one
         currency was worth in another, when, and who said so. Every converted
         total rests on a row here (finance/platform admin).

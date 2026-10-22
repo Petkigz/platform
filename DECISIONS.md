@@ -2433,3 +2433,34 @@ implying the address is gone.
 **Not decided here:** a cooling-off period. Closure is immediate and there is no undo, which
 is the honest version when nothing is retained to restore from. If a grace window is ever
 wanted, it needs a scheduled job — and this platform has deliberately avoided needing one.
+## Tax and the cost of moving money are the buyer's, and follow their country — **DECIDED 2026-10-22**
+
+Confirmed by the owner: **taxes and transfer fees are paid by the user, depending on their
+location.** Neither is absorbed by the platform.
+
+That settles a gap the schema had carried from the start: `orders.tax_minor`,
+`orders.fee_minor` and the `tax`/`fee` adjustment types existed and nothing ever wrote them,
+so every order was effectively untaxed and every payment cost was silently eaten.
+
+- **The buyer pays both.** The price is what the course costs; tax and the transfer fee are
+  added on top, shown as their own lines before payment.
+- **The amount follows the buyer's country** — the same country that already decides the
+  price: the billing account's once recorded, otherwise the connection's. It is never a value
+  the browser can assert.
+- **The register is data, not code.** `market_charges` holds the rates; the owner edits them
+  at `/admin/tax`. A rate is a fact about a jurisdiction, and a hard-coded rate is a change
+  waiting for a deploy.
+- **No rule means no charge.** This platform is registered for tax nowhere today, and
+  inventing a levy to look thorough would be fraud in the other direction. The absence is
+  stated on the screen.
+- **Tax is on what is paid, not on the list price,** so a promotion reduces it. The transfer
+  fee is on what moves, so it includes the tax.
+- **A computed line is not a discount.** It carries `rule_id`, cannot be edited or voided by
+  hand, and is re-derived when the payable amount changes.
+- **A paid order never moves.** The charges on it are history, and a correction after payment
+  is a financial adjustment or a refund, in writing.
+
+**Not decided here:** which countries this platform is actually registered in, and at what
+rate. That is a legal fact per market and it belongs to the owner, entered as rows. Also open:
+whether a refund returns the tax and fee as well — currently a refund is against the order's
+total, and a partial refund policy for charges has not been written.

@@ -350,6 +350,9 @@ export async function createOrder(
 type CourseQuoteRow = {
   listMinor?: string;
   discountMinor?: string;
+  taxMinor?: string;
+  feeMinor?: string;
+  chargeLabels?: { tax?: string | null; fee?: string | null } | null;
   totalMinor?: string;
   currencyCode?: string;
   promotionCode?: string | null;
@@ -360,6 +363,13 @@ type CourseQuoteRow = {
 export type CourseQuote = {
   list: Money;
   discount: Money;
+  /** Tax for the buyer's country, from the register. Zero when nothing applies. */
+  tax: Money;
+  /** The cost of moving the money, borne by the buyer. Zero when nothing applies. */
+  fee: Money;
+  /** What those two lines are called in this market: 'VAT', 'Mobile money fee'. */
+  taxLabel: string;
+  feeLabel: string;
   total: Money;
   currencyCode: string;
   /** The code as the campaign spells it, or null when none was quoted. */
@@ -419,9 +429,18 @@ export async function quoteCourseOrder(
   const currency = row.currencyCode;
   const list = fromMinor(row.listMinor, currency);
   const discount = fromMinor(row.discountMinor ?? '0', currency);
+  const tax = fromMinor(row.taxMinor ?? '0', currency);
+  const fee = fromMinor(row.feeMinor ?? '0', currency);
   const total = fromMinor(row.totalMinor, currency);
 
-  if (list.amountMinor - discount.amountMinor !== total.amountMinor) {
+  // Every part has to account for the total. A tax line that does not add up is
+  // worse than no tax line: it is a number the buyer cannot check.
+  const expected =
+    list.amountMinor -
+    discount.amountMinor +
+    tax.amountMinor +
+    fee.amountMinor;
+  if (expected !== total.amountMinor) {
     return {
       ok: false,
       code: 'error',
@@ -434,6 +453,10 @@ export async function quoteCourseOrder(
     quote: {
       list,
       discount,
+      tax,
+      fee,
+      taxLabel: row.chargeLabels?.tax ?? 'Tax',
+      feeLabel: row.chargeLabels?.fee ?? 'Fee',
       total,
       currencyCode: currency,
       promotionCode: typeof row.promotionCode === 'string' ? row.promotionCode : null,
