@@ -13,7 +13,7 @@ export default async function AccountPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/sign-in?next=/account');
 
-  const [{ data, error }, { data: learnerRows }] = await Promise.all([
+  const [{ data, error }, { data: learnerRows }, { data: methodsData }] = await Promise.all([
     supabase
       .from('user_profiles')
       .select('display_name, preferred_language, timezone, account_status')
@@ -26,6 +26,9 @@ export default async function AccountPage() {
       .select('id, display_name')
       .eq('linked_user_id', user.id)
       .is('deleted_at', null),
+    // How this account actually signs in. A person who arrived through Google
+    // has no password, and a password-reset form would be a dead end for them.
+    supabase.rpc('my_sign_in_methods'),
   ]);
   if (error) throw new Error(error.message);
   if (!data) redirect('/learn');
@@ -36,6 +39,11 @@ export default async function AccountPage() {
     account_status: string;
   };
   const ownLearner = ((learnerRows ?? []) as { id: string; display_name: string }[])[0] ?? null;
+  const methods = (methodsData ?? null) as {
+    providers: string[];
+    hasPassword: boolean;
+    summary: string;
+  } | null;
 
   return (
     <div className="container section">
@@ -79,14 +87,22 @@ export default async function AccountPage() {
         timezone: profile.timezone,
       }} />
       <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
-        <h2 style={{ marginTop: 0 }}>Password</h2>
-        {user.email ? (
+        <h2 style={{ marginTop: 0 }}>How you sign in</h2>
+        <p className="muted">
+          {methods?.summary ?? 'Your sign-in methods could not be read just now.'}
+        </p>
+        {methods?.hasPassword ? (
           <p className="muted">
-            Send a secure password reset link to your sign-in email. The link expires according to your authentication provider&rsquo;s settings.
-            {' '}<Link href="/forgot-password">Send reset link</Link>
+            Send a secure password reset link to your sign-in email. The link expires according to your
+            authentication provider&rsquo;s settings.{' '}
+            <Link href="/forgot-password">Send reset link</Link>
           </p>
         ) : (
-          <p className="muted">This account signs in with a phone code, so there is no password to reset.</p>
+          <p className="muted">
+            {methods && methods.providers.includes('google')
+              ? 'There is no password on this account, so there is nothing to reset — keep using Google to sign in.'
+              : 'This account signs in with a phone code, so there is no password to reset.'}
+          </p>
         )}
       </section>
       <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>

@@ -2504,6 +2504,26 @@ processing agreement, and it is the one part of live classes that cannot be buil
 **Also open:** whether a recording is offered to learners who missed the class, and how long
 it is kept. Nothing produces a recording yet, so nothing has to decide that today — but the
 moment a provider is connected, it is the next question.
+## Google sign-in is configuration, so its flag is not CODE-gated — **DECIDED 2026-10-22**
+
+Every other provider-shaped feature here ships `code`-gated, because the missing piece is code. This
+one is different: Supabase Auth already implements the flow, and what is missing is a Google OAuth
+client and a provider setting. So `auth.google_sign_in` is `admin_setup` — the owner configures it
+once and flips it from `/admin`, with no deploy. The flag still ships **off**, because a button that
+cannot work is worse than no button, and the sign-in screen would rather show two methods that do
+work than three where one throws.
+
+Three smaller rules. The name Google supplies is used, **capped at 80 characters**: a claim is not a
+verified fact about a person, but it is the name they use, and an uncapped one is a way to write a
+kilobyte into every screen that greets them. The callback's destination is **sanitised**, never
+forwarded, because an open redirect on a sign-in callback is the classic phishing component. And
+`/account` asks `my_sign_in_methods()` before offering a password reset: a Google account has no
+password, so a reset form is a dead end that looks like a broken product.
+
+Account linking is Supabase's: if the address already has a password account, Google's verified
+address links the two. That behaviour is why the address must be verified first, and verifying it
+is Google's job.
+
 ## A renewal projection is committed terms, not forecast income — **DECIDED 2026-10-22**
 
 A subscription pins the plan version it bought, and the price attaches to that version. So the

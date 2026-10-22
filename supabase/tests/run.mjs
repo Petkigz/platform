@@ -94,6 +94,7 @@ import { run as instructorPayouts } from './instructor_payouts.test.mjs';
 import { run as teacherLiability } from './teacher_liability.test.mjs';
 import { run as notifications } from './notifications.test.mjs';
 import { run as renewalProjection } from './renewal_projection.test.mjs';
+import { run as googleSignIn } from './google_sign_in.test.mjs';
 
 // Settings that are global by design: one row, read by code far from the suite
 // that changes it. The revenue share decides what every accrual computes; the
@@ -196,6 +197,7 @@ for (const [name, fn] of [
   ['teacher liability', teacherLiability],
   ['notifications', notifications],
   ['renewal projection', renewalProjection],
+  ['google sign in', googleSignIn],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],

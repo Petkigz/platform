@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1411 database tests, 860 web tests; TypeScript typecheck and
+Verification: **1422 database tests, 864 web tests; TypeScript typecheck and
 production build pass; 115 tables, 239 policies, 146 user-defined triggers,
-342 functions, 144 migrations and 144 app route entries.**
+343 functions, 145 migrations and 145 app route entries.**
 
 ## Today's sentence
 
@@ -2300,6 +2300,25 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
+
+### Sign in with Google, and the name Google already knows, 2026-10-22
+
+Supabase Auth runs the flow: Google returns a code to Supabase, Supabase returns to
+`/auth/callback`, and the deployment exchanges it for a session. No Google secret is in this
+repository.
+
+What the platform owed that flow was four things it does not get for free. A **flag**
+(`auth.google_sign_in`) so a button is never drawn before the provider is configured — a button
+that fails is worse than no button. A **name** that is a person's rather than the local part of
+their address, read from `full_name` then `name`, capped at 80 characters so a hostile claim cannot
+write a kilobyte into every greeting. An **honest answer to "how do I sign in here"**, so `/account`
+does not offer a password reset to somebody who has no password. And a **sanitised return path**:
+relative, no `//`, no backslash, because a sign-in callback that forwards anywhere is a phishing
+kit's favourite component.
+
+The flag is `admin_setup`, not `code`: the only missing piece is configuration, and
+`docs/google-sign-in.md` lists the five steps. Once they are done the owner flips it from
+`/admin` — no deploy.
 
 ### What renews, and why that is not a forecast, 2026-10-22
 
