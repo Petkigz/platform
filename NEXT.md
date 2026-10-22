@@ -303,9 +303,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **1131 database tests, 756 web tests; TypeScript typecheck and
+Verification: **1142 database tests, 772 web tests; TypeScript typecheck and
 production build pass; 103 tables, 228 policies, 136 user-defined triggers,
-262 functions, 107 migrations and 115 app route entries.**
+263 functions, 108 migrations and 117 app route entries.**
 
 ## Today's sentence
 
@@ -362,7 +362,7 @@ given a surface. Grouped by the feature they belong to:
 | Reviewer machinery — the versions | `content_review_requirements`, `technical_review_checks`, `content_change_assessments` | **Now written** by `20261221000100_review_requirements.sql`, on `/teach/[courseId]`, `/admin/reviews` and `/review/[assignmentId]`. `validate_review_assignment()`'s authorisation loop now has something to loop over, so a version can require a reviewer authorised for a subject — and a requirement can be closed, which nothing could do before |
 | Payouts | `instructor_payouts`, `instructor_payout_items` | `teaching.payouts`, off; ROADMAP already says "3 tables with no fields and no endpoints" |
 | Institutions | `institutions` | `commerce.institutions` and four `institution.*` flags, all off |
-| Money plumbing | `currency_exchange_rates`, `order_adjustments`, `payment_method_references` | **`currency_exchange_rates` is now written and read** by `20261223000100_currency_reporting.sql`, on `/admin/exchange-rates` and `/admin/money-report`, and it is what stamps `financial_transactions.fx_rate`/`fx_source`/`fx_observed_at` — columns a constraint required and nothing ever set. Multi-currency reporting is therefore built; the open part is what nets against what in the report. `orders` and `order_items` are now **writer-only**: `20261224000100_course_order_writer.sql` dropped `orders_insert` and `order_items_insert`, so a course order exists only if `create_course_order()` made it (see today's section — the policies had let a payer write the total and the product themselves). `order_adjustments` is now **written by `add_order_adjustment()`/`void_order_adjustment()` and read on `/orders`** — its client-side insert policy is dropped and an order's total is held against its items plus its live adjustments by a trigger before it can be paid (`20261225000100`). What is missing is the finance screen that drives the two writers, which is the next unit; until then they are reachable only by a client that calls the RPC. Promotions remain refused by the writer because eligibility and stacking are undecided. `payment_method_references` needs a provider that can store one |
+| Money plumbing | `currency_exchange_rates`, `order_adjustments`, `payment_method_references` | **`currency_exchange_rates` is now written and read** by `20261223000100_currency_reporting.sql`, on `/admin/exchange-rates` and `/admin/money-report`, and it is what stamps `financial_transactions.fx_rate`/`fx_source`/`fx_observed_at` — columns a constraint required and nothing ever set. Multi-currency reporting is therefore built; the open part is what nets against what in the report. `orders` and `order_items` are now **writer-only**: `20261224000100_course_order_writer.sql` dropped `orders_insert` and `order_items_insert`, so a course order exists only if `create_course_order()` made it (see today's section — the policies had let a payer write the total and the product themselves). `order_adjustments` is now **written by `add_order_adjustment()`/`void_order_adjustment()` and read on `/orders`** — its client-side insert policy is dropped and an order's total is held against its items plus its live adjustments by a trigger before it can be paid (`20261225000100`). `/admin/orders` drives both writers and `admin_orders_overview()` reads the queue, so nothing about an order's total is reachable only by hand. Promotions remain refused by the writer because eligibility and stacking are undecided. `payment_method_references` needs a provider that can store one |
 | History and diagnostics | `order_status_history`, `publication_events`, `entitlement_events`, `course_enrolment_version_history`, `subscription_history` | **Now read** by `support_case_history()`, on `/support/<caseNumber>` for staff. Still closed to every other read path, which is the point: one function decides what support may see |
 | Diagnostics with no writer | `access_checks` | **Correction to the audit:** nothing has ever inserted a row here — not a trigger, not a function, not a route. Its comment promises a denial log for support agents and the platform does not keep one. Excluded from the console on purpose; an always-empty list would read as "no denial happened" |
 | Other | `adult_learning_shares` | **Now written and read**, by `20261222000100_adult_learning_shares.sql` on `/account/sharing`. The console still reads it too, and its empty section is now a true answer about a feature that exists: nobody has been given sight of this adult's progress. The gap the audit named — no writer, and no predicate that made a share mean anything — is closed at both ends |
@@ -1829,6 +1829,66 @@ list to hang a pre-payment adjustment on, so the screen that drives them is
 
 24 database tests, 4 web tests. One migration, four functions, one trigger, one
 policy dropped, one column added, two constraints added and one widened.
+
+
+### Finance can see the orders it is allowed to adjust, 2026-10-21
+
+The two writers from earlier today had no screen, and the reason was not the UI.
+`orders_read` is `is_billing_member(billing_account_id)`, so a finance admin cannot
+read a single order through PostgREST. That is the right policy for a payer's
+invoice and it left `add_order_adjustment()` with no way to find the order it
+applies to — a writer reachable only by somebody willing to call an RPC by hand,
+which is the same defect the audit has been closing for twenty units.
+
+**The reader is a function, not a wider policy.** `admin_orders_overview(p_limit)`
+is `SECURITY DEFINER`, gated on `platform_admin` or `finance_admin`, and returns the
+unpaid orders with their five totals as decimal integer strings, their lines with the
+title from each snapshot, and every adjustment on them including withdrawn ones with
+who withdrew it and why. Widening `orders_read` to `staff_only()` was the obvious
+alternative and the wrong one: `is_privileged()` includes `support_agent`, whose job
+is to answer a question about one order that already has a case open, and a policy
+would hand them every order on the platform. A function keeps the answer to "who may
+read every order" in one place, next to the writers it feeds, and it can be shaped —
+limited, capped, newest first — rather than returning a table.
+
+**Only orders that can still be adjusted.** The queue is `draft`, `pending_payment`
+and `awaiting_confirmation`, and excludes deleted ones. A paid order's total is
+history, so a paid row here would be a row whose every button refuses; paid orders
+belong on `/admin/reconciliation` and `/admin/financial-adjustments`, and the page
+links to both rather than leaving somebody to guess where the rest of the money is
+handled. The limit is honoured, defaults to 50 and caps at 200, because a reader
+that returns every unpaid order on the platform is a query that gets slower every
+week.
+
+**The screen.** One card per order, because an adjustment is about *this* order's
+total and a form that asks for an order id is a form that can be pointed at the wrong
+one. Each card shows whose account it is on, the lines, the total and its breakdown;
+a type selector that offers the five types the writer accepts and not `promotion`
+(a dropdown offering a button that always fails is worse than no dropdown); a
+direction selector that appears only for `rounding`, the one type that genuinely goes
+either way; a line selector that appears only when there is more than one line, since
+an adjustment naming a line is a note about what it is for; a mandatory written
+reason; and a withdraw control on every live adjustment, disabled until a reason is
+typed. The response reads the new total back — "the order total is now UGX 41250" —
+because "saved" leaves an admin guessing what they just did to a number.
+
+Above the queue, one figure per currency and never one number for all of them:
+orders on this platform are in whatever currency a family has, and adding a UGX total
+to a USD total produces a figure that looks like money and is not. That is the lesson
+from the money report applied to a much smaller sum.
+
+`lib/order-adjustments.ts` holds the browser half: the five types with what each one
+means, validation that refuses what the writer would refuse (a promotion, a
+contradictory direction, a rounding with no direction, a signed or decimal amount, a
+missing or over-long reason, a malformed id), the reader's jsonb parsed defensively
+with the count recomputed from the array rather than trusted, and the writer's prose
+refusals mapped to statuses. Every one of those rules is also in the database; the
+copy here exists so a finance admin gets a sentence instead of a 400 with a Postgres
+message in it, and the mapping is tested against the exact strings the writers raise,
+so rewording either side fails a test rather than silently degrading to a 400.
+
+11 database tests, 16 web tests. One migration, one function, one page route and one
+API route, no new table, no new flag, no policy added or dropped.
 
 
 ## Open external decisions (not to be guessed)

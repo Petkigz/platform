@@ -69,9 +69,9 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **103 tables, RLS on every one, 228 policies, 136
-user-defined triggers, 262 functions and 107 migrations.** The database suite
-passes **1131 tests**; the web suite passes **756 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **115 app route entries**.
+user-defined triggers, 263 functions and 108 migrations.** The database suite
+passes **1142 tests**; the web suite passes **772 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **117 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. `/account`
@@ -165,6 +165,17 @@ a trigger refuses to let an order become paid while any of its columns disagrees
 rows behind it — which is the moment a capture is written for the total and a teacher's
 earnings are accrued from it. `/orders` shows the breakdown and every adjustment on the
 invoice, including withdrawn ones.
+
+Finance can now see the orders it is allowed to adjust. `/admin/orders` lists every
+order that has not been paid yet — the only kind whose total can still change — with the
+account it belongs to, its lines, and its total broken into subtotal, discount, tax and
+fee, and records a discount, tax, fee, shipping or rounding against one with a written
+reason, or withdraws one with a reason rather than deleting it. The list comes from
+`admin_orders_overview()`, a definer reader gated on the same role pair as the writers,
+because `orders_read` is a payer's own invoice: widening that policy to staff would have
+handed every order on the platform to every privileged role including `support_agent`,
+whose job is one order that already has a case open. Paid orders are absent on purpose —
+their total is history — and the page says where their instruments are.
 
 Free previews now have one consistent gate from the catalogue to content
 access. Teachers can mark draft lessons and individual public-sample resources;

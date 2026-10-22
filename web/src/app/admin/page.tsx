@@ -122,6 +122,11 @@ export default async function AdminPage() {
         <Link href="/admin/plans">Subscription plans</Link> — configure versioned terms, entitlements and recurring prices.
       </p>
       <p>
+        <Link href="/admin/orders">Orders awaiting payment</Link> — the only orders
+        whose total can still change: record a discount, tax, fee or rounding
+        against one, or withdraw one (finance/platform admin).
+      </p>
+      <p>
         <Link href="/admin/financial-adjustments">Financial adjustments</Link> — append-only accounting corrections and earnings clawbacks (finance/platform admin).
       </p>
       <p>

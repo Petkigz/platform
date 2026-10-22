@@ -66,6 +66,7 @@ import { run as adultLearningShares } from './adult_learning_shares.test.mjs';
 import { run as currencyReporting } from './currency_reporting.test.mjs';
 import { run as courseOrder } from './course_order.test.mjs';
 import { run as orderAdjustments } from './order_adjustments.test.mjs';
+import { run as adminOrderQueue } from './admin_order_queue.test.mjs';
 
 const ctx = await createHarness();
 const suites = [];
@@ -128,6 +129,7 @@ for (const [name, fn] of [
   ['currency reporting', currencyReporting],
   ['course order writer', courseOrder],
   ['order adjustments', orderAdjustments],
+  ['admin order queue', adminOrderQueue],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],

@@ -1659,3 +1659,52 @@ one trigger function and trigger, one policy dropped, three constraints added an
 widened), `web/src/lib/checkout.ts` (`describeOrderBreakdown`, `describeOrderAdjustment`),
 `/orders`, `supabase/tests/order_adjustments.test.mjs` and one rewritten test in
 `supabase/tests/course_order.test.mjs`.
+
+## Who may read every order — **DECIDED 2026-10-21**
+
+`orders_read` is `is_billing_member(billing_account_id)`. A payer sees their own invoice
+and nobody else's, which is right, and it also meant a finance admin could not read a
+single order — so `add_order_adjustment()` and `void_order_adjustment()` had no screen,
+because there was no way to find the order to adjust. This decides how finance sees
+orders, and it is not by widening that policy.
+
+**A reader is a function.** `admin_orders_overview(limit)` is `SECURITY DEFINER`, gated on
+`platform_admin` or `finance_admin` — the same pair the two writers require, so a screen
+never shows an order whose buttons would refuse — and it returns shaped data: the five
+totals as decimal integer strings, the lines with their snapshot titles, and every
+adjustment including withdrawn ones. A policy returns a table and cannot be shaped,
+limited, ordered or narrowed to the rows that mean something.
+
+**Not `staff_only()`.** `is_privileged()` includes `support_agent`, whose job is to answer
+a question about one order that already has a case open. Widening the policy would have
+handed every order on the platform to every privileged role, including the one with the
+least privilege, and would have done it in a predicate on a table rather than in a
+function that can be reasoned about, tested and changed. The refusal for a support agent
+is pinned by a test that first asserts the agent *is* privileged, so the test cannot pass
+by ceasing to test the trap.
+
+**Only orders whose total can still change.** The queue is unpaid orders and excludes
+deleted ones. A paid order's total is history — a capture and a teacher's earnings were
+written from it — so a paid row on this screen would be a row whose every button refuses,
+and the instruments that do apply to it live on `/admin/reconciliation` and
+`/admin/financial-adjustments`, which the page links to. The reader is limited, defaults
+to 50 and caps at 200: a query that returns every unpaid order on the platform gets
+slower every week and is not what anybody opening the screen wants.
+
+**One figure per currency, never one number.** The queue header totals the orders it
+shows per currency code. Orders on this platform are in whatever currency a family has,
+and a sum across currencies looks like money and is not — the same mistake the money
+report exists to avoid, in a much smaller place.
+
+**Rejected:** widening `orders_read` to privileged roles (every order to every privileged
+role, including support); a view (a view is still governed by the policy underneath it, so
+it would have needed the same widening); reading orders client-side and filtering in the
+browser (the read would fail before the filter ran); listing paid orders with disabled
+controls (teaches people to click and read errors); asking for an order id on a form
+instead of showing a queue (a finance admin cannot know an id they cannot look up); and a
+new flag for the screen (reading the queue is not a feature to be switched on, and the
+writers it feeds are already gated by role and by the state of the order).
+
+Implemented in `20261226000100_admin_order_queue.sql`, `/admin/orders` with
+`order-queue.tsx`, `/api/admin/orders`, `lib/order-adjustments.ts` and
+`supabase/tests/admin_order_queue.test.mjs`.
