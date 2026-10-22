@@ -8,6 +8,27 @@ import { PayoutPolicyForm, PayoutQueue, type QueueRow } from './payout-queue';
 
 export const dynamic = 'force-dynamic';
 
+type Liability = {
+  asOf: string;
+  holdDays: number;
+  payoutsEnabled: boolean;
+  reportingCurrency: string;
+  byCurrency: {
+    currency: string;
+    owedMinor: string;
+    inHoldMinor: string;
+    payableNowMinor: string;
+    requestedMinor: string;
+    openRequests: number | string;
+    paidMinor: string;
+    reversedMinor: string;
+    teachers: number | string;
+    reportingAmountMinor: string | null;
+  }[];
+  convertedTotalMinor: string | null;
+  unconverted: string[];
+};
+
 type Queue = {
   payoutsEnabled: boolean;
   holdDays: number;
@@ -55,9 +76,13 @@ export default async function AdminPayoutsPage() {
   ]);
   if (finance !== true && platform !== true) redirect('/admin');
 
-  const { data, error } = await supabase.rpc('instructor_payout_queue', { p_limit: 100 });
+  const [{ data, error }, { data: liabilityData }] = await Promise.all([
+    supabase.rpc('instructor_payout_queue', { p_limit: 100 }),
+    supabase.rpc('platform_teacher_liability'),
+  ]);
   if (error) throw new Error(error.message);
   const queue = data as Queue | null;
+  const liability = (liabilityData ?? null) as Liability | null;
 
   const rows: QueueRow[] = (queue?.payouts ?? []).map((p) => {
     const stale =
@@ -99,6 +124,68 @@ export default async function AdminPayoutsPage() {
           start arriving here.
         </div>
       )}
+
+      <div className="card" style={{ marginBottom: '1.5rem' }}>
+        <div className="outline-h" style={{ marginTop: 0 }}>
+          <h3>Owed to teachers right now</h3>
+          {liability?.convertedTotalMinor && (
+            <span className="badge">
+              ≈ {formatMinor(liability.convertedTotalMinor, liability.reportingCurrency)}
+            </span>
+          )}
+        </div>
+        <p className="muted" style={{ marginTop: 0 }}>
+          A balance, not a window of movement: what has accrued and not been reversed or paid, and how much of
+          it is still inside the refund hold. A request is shown beside the balance because it is the same money
+          seen from the other side — asking does not change what is owed.
+        </p>
+        {(liability?.byCurrency ?? []).length === 0 ? (
+          <p className="empty">Nothing is owed to any teacher.</p>
+        ) : (
+          <ul className="lessons">
+            {(liability?.byCurrency ?? []).map((c) => (
+              <li key={c.currency}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
+                  <span>
+                    <strong>
+                      {c.currency}: {formatMinor(c.owedMinor, c.currency)} owed
+                    </strong>
+                    <span className="muted" style={{ display: 'block', fontSize: '0.85rem' }}>
+                      {formatMinor(c.payableNowMinor, c.currency)} payable now ·{' '}
+                      {formatMinor(c.inHoldMinor, c.currency)} inside the refund hold ·{' '}
+                      {String(c.teachers)} teacher(s)
+                    </span>
+                    <span className="muted" style={{ display: 'block', fontSize: '0.85rem' }}>
+                      {Number(c.requestedMinor) > 0
+                        ? `${formatMinor(c.requestedMinor, c.currency)} requested, not yet sent`
+                        : 'no open request'}
+                      {Number(c.paidMinor) > 0 && (
+                        <> · {formatMinor(c.paidMinor, c.currency)} paid to date</>
+                      )}
+                      {Number(c.reversedMinor) > 0 && (
+                        <> · {formatMinor(c.reversedMinor, c.currency)} reversed</>
+                      )}
+                    </span>
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+        {liability && liability.unconverted.length > 0 && (
+          <p className="muted" style={{ fontSize: '0.85rem', marginBottom: 0 }}>
+            No total is shown: {liability.unconverted.join(', ')} have no recorded rate into{' '}
+            {liability.reportingCurrency}. <Link href="/admin/exchange-rates">Record a rate</Link> and the total
+            appears; adding the rest anyway would be a number with a currency it does not have.
+          </p>
+        )}
+        {liability && liability.unconverted.length === 0 && liability.convertedTotalMinor !== null && (
+          <p className="muted" style={{ fontSize: '0.85rem', marginBottom: 0 }}>
+            Converted at the rates recorded on {day(liability.asOf) ?? 'the report date'}; each rate is kept with
+            its source and observation time.
+          </p>
+        )}
+      </div>
 
       <div className="stats" style={{ marginBottom: '1.25rem' }}>
         <div>

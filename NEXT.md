@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1393 database tests, 860 web tests; TypeScript typecheck and
+Verification: **1398 database tests, 860 web tests; TypeScript typecheck and
 production build pass; 115 tables, 239 policies, 146 user-defined triggers,
-336 functions, 141 migrations and 141 app route entries.**
+337 functions, 142 migrations and 141 app route entries.**
 
 ## Today's sentence
 
@@ -2298,6 +2298,21 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
+
+### What the platform owes teachers, as a balance rather than a window, 2026-10-22
+
+`platform_teacher_liability()` answers the question the request queue could not: how much of the cash
+in the bank is not the platform's. It is a balance, not a flow — the earnings statement is one
+teacher's view and the money report is a window of movement, and neither is the number an owner
+carries.
+
+Per currency: owed, of which still inside the refund hold, of which an open request has claimed, and
+what has already been paid. The request is shown **beside** the balance rather than added to it,
+because it is the same money seen from the other side — asking does not change what is owed. A
+converted total appears only when every currency has a recorded rate; otherwise the function names
+the ones it could not convert and shows no total at all.
+
+The panel sits above the queue in `/admin/payouts`.
 
 ### Asking to be paid, and the refund hold that makes the question safe, 2026-10-22
 

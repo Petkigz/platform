@@ -2504,6 +2504,22 @@ processing agreement, and it is the one part of live classes that cannot be buil
 **Also open:** whether a recording is offered to learners who missed the class, and how long
 it is kept. Nothing produces a recording yet, so nothing has to decide that today — but the
 moment a provider is connected, it is the next question.
+## What is owed to teachers is a balance, and it is shown apart from the flows — **DECIDED 2026-10-22**
+
+Three surfaces now describe teacher money and none of them may be mistaken for another. The
+earnings statement is what one teacher has earned. The money report is a window of movement —
+captures, refunds, fees. Neither is the number the owner needs before spending anything: *how much
+of what is in the bank is not mine?*
+
+`platform_teacher_liability()` is that number, per currency, and it is a **balance**: owed, of
+which inside the refund hold, of which an open request has claimed, and paid to date. The open
+request is shown beside the balance and **not added to it** — a request is the same money seen from
+the other side, and adding it would double-count the platform's own promise.
+
+A converted total is offered only when **every** currency has a recorded rate. If one does not, the
+function returns no total and names the currency; converting the rest and leaving one out is how a
+number with a currency it does not have gets into a decision.
+
 ## A payout request moves no money, and only finance can mark an earning paid — **DECIDED 2026-10-22**
 
 The earnings statement answered "what have I earned" and left "when do I get it" unanswered. The
