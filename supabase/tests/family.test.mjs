@@ -246,90 +246,111 @@ export async function run(ctx) {
   // -------------------------------------------------------------------
   // Writing
   // -------------------------------------------------------------------
-  await test('a family member can add a child; an outsider cannot', async () => {
+  await test('a family owner adds a child through the one writer; an outsider cannot', async () => {
     await asUser(parent.userId, async () => {
-      const r = await addChild(familyId, 'Second Kid', '5-7');
+      const r = await q('select public.add_child_to_family($1,$2,$3) id',
+        [familyId, 'Second Kid', '5-7']);
       assert(r.rows.length === 1, 'the owner could not add a child');
     });
 
     await asUser(outsider.userId, async () => {
-      await rejects(() => addChild(familyId, 'Intruder'),
-        'an outsider added a child to someone else\'s family');
+      await rejects(
+        () => q('select public.add_child_to_family($1,$2,$3)', [familyId, 'Intruder', '8-10']),
+        /only the owner may add a child/,
+      );
     });
 
-    // Both inserts ran inside asUser(), which rolls back. What is being
-    // asserted is who was *allowed* to write, not the resulting row count:
-    // the owner's insert returned a row, the outsider's threw.
+    // Both calls ran inside asUser(), which rolls back. What is being asserted is who
+    // was *allowed* to write, not the resulting row count.
     const kids = await count(
       `select 1 from public.learner_profiles
         where family_id = $1 and learner_type = 'child'`, [familyId]);
     assert(kids === 1, `expected the child count to be unchanged at 1, found ${kids}`);
   });
 
-  await test('a family member can read back the child they just added', async () => {
-    // Regression for a real defect. lp_read was written as
-    // is_learner_family_member(id), which joins family_memberships back
-    // through learner_profiles. The SELECT policy is applied to an
-    // INSERT ... RETURNING result too, and at that instant the new tuple is
-    // not visible to the separate SECURITY DEFINER query inside the helper,
-    // so the read-back was refused while a plain insert was allowed:
-    //
-    //   insert ...                      -- allowed
-    //   insert ... returning id         -- refused
-    //
-    // That is the shape every client library uses, so adding a child from the
-    // dashboard would have failed at the first one. is_family_member_of()
-    // decides from the row's own family_id instead, with no join back.
+  await test('the table takes no child insert from anybody but staff', async () => {
+    // `lp_insert` used to admit any active family member, which is how the screen
+    // bypassed the writer: no audit row, no owner check, and a billing manager could
+    // create a profile they could not then read. It is staff-only now.
     await asUser(parent.userId, async () => {
-      const withReturning = await q(
+      await rejects(() => q(
         `insert into public.learner_profiles
            (family_id, display_name, learner_type, age_band)
-         values ($1, 'Return Kid', 'child', '11-13') returning id`, [familyId]);
-      assert(withReturning.rows.length === 1, 'RETURNING id came back empty');
-      assert(withReturning.rows[0].id, 'RETURNING produced no id');
+         values ($1, 'Direct Kid', 'child', '11-13') returning id`, [familyId]),
+      /row-level security|permission denied/);
     });
 
-    // And a billing-only member must still not gain read access through the
-    // widened predicate — the branch it adds excludes billing_manager.
     await asUser(payer.userId, async () => {
-      const kids = await count(
-        `select 1 from public.learner_profiles
-          where family_id = $1 and learner_type = 'child'`, [familyId]);
-      assert(kids === 0, `the billing manager saw ${kids} child profile(s)`);
+      await rejects(() => q(
+        `insert into public.learner_profiles
+           (family_id, display_name, learner_type, age_band)
+         values ($1, 'Payer Kid', 'child', '8-10') returning id`, [familyId]),
+      /row-level security|permission denied/);
+    });
+  });
+
+  await test('the owner can read back the child the writer just added', async () => {
+    // The read-back is the shape every client library uses, and it is what broke once
+    // before: `lp_read` joined back through `learner_profiles`, so a fresh row was
+    // invisible to its own RETURNING. The writer inserts and the owner reads, in one
+    // transaction, as the product does.
+    await asUser(parent.userId, async () => {
+      const made = await q('select public.add_child_to_family($1,$2,$3) id',
+        [familyId, 'Readable Kid', '11-13']);
+      const id = made.rows[0].id;
+      const seen = await q(
+        'select id, display_name from public.learner_profiles where id = $1', [id]);
+      assert(seen.rows.length === 1, 'the owner could not read back the child they added');
+      assert(seen.rows[0].display_name === 'Readable Kid');
     });
   });
 
   await test('a billing_manager cannot add a child either', async () => {
-    // lp_insert admits is_active_family_member, which includes a billing
-    // manager. Reading is correctly denied, so a child they add would be
-    // invisible to them — but they should not be able to add one at all.
-    // Asserting the current behaviour so a change here is a decision, not a
-    // surprise.
-    const before = await count(
-      `select 1 from public.learner_profiles where family_id = $1`, [familyId]);
-
-    let inserted = false;
+    // Paying for a family is not parenting it. The writer refuses because they are not
+    // the owner, and the table refuses because it is no longer a second door.
     await asUser(payer.userId, async () => {
-      try {
-        await addChild(familyId, 'Payer Kid');
-        inserted = true;
-      } catch {
-        inserted = false;
-      }
+      await rejects(
+        () => q('select public.add_child_to_family($1,$2,$3)', [familyId, 'Payer Kid', '8-10']),
+        /only the owner may add a child/,
+      );
     });
 
-    const after = await count(
-      `select 1 from public.learner_profiles where family_id = $1`, [familyId]);
+    // A refused statement aborts the transaction asUser() opened, so the second
+    // assertion needs a transaction of its own.
+    await asUser(payer.userId, async () => {
+      await rejects(() => q(
+        `insert into public.learner_profiles
+           (family_id, display_name, learner_type, age_band)
+         values ($1, 'Payer Kid', 'child', '8-10') returning id`, [familyId]),
+      /row-level security|permission denied/);
+    });
+  });
 
-    if (inserted && after === before + 1) {
-      // Documented gap: a billing-only member can create a child profile they
-      // cannot then read. Harmless in effect — nobody's data is exposed — but
-      // it is a write they should not have, and it is recorded rather than
-      // quietly accepted.
-      console.log('      note: a billing_manager can still insert a child profile');
-    }
-    assert(after === before || after === before + 1,
-      `unexpected child count ${before} -> ${after}`);
+  await test('a rename is an edit; becoming a different person is not', async () => {
+    await asUser(parent.userId, async () => {
+      // The owner may correct the name — that is what editing a profile is for.
+      const renamed = await q(
+        `update public.learner_profiles set display_name = 'Renamed Kid'
+          where id = $1 returning id`, [kidId]);
+      assert(renamed.rows.length === 1, 'the owner could not rename their child');
+
+      // But not turn them into an adult profile attached to another account, which
+      // would hand that child's progress and certificates to somebody else.
+    });
+
+    await asUser(parent.userId, async () => {
+      await rejects(() => q(
+        `update public.learner_profiles
+            set learner_type = 'adult', linked_user_id = $2
+          where id = $1`, [kidId, grandma.userId]),
+      /cannot change how it is linked/);
+    });
+
+    await asUser(parent.userId, async () => {
+      await rejects(() => q(
+        `update public.learner_profiles set family_id = null where id = $1`, [kidId]),
+      /cannot change how it is linked/);
+    });
   });
 
   await test('the summary a parent sees counts only the pinned version', async () => {

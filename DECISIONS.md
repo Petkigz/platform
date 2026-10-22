@@ -2258,3 +2258,26 @@ child. `claim_own_learner_profile()` is the writer, and the decisions around it 
 **Open, not built:** an adult may have a family of their own *and* learn themselves — the two
 are independent rows, and this writer does not create or join a family. Nothing prevents it;
 nothing has asked for it yet.
+## A learner profile has one writer, and identity is not editable — **DECIDED 2026-10-22**
+
+`add_child_to_family()` existed and was called by nobody in the product: `/family` inserted
+into `learner_profiles` directly, and `lp_insert` admitted **any active family member**. So a
+child added through the screen left no audit row, a billing manager could create a profile they
+could not then read, and the owner-only rule lived in a function the application never called.
+Two paths to one outcome is how a rule gets enforced in one of them.
+
+`lp_insert` now admits **staff only**. A child is created by `add_child_to_family()`, an adult
+by `claim_own_learner_profile()`; both are definer functions and neither needs a table-level
+insert policy to work.
+
+The same argument applies to **editing**, and there it was worse than a missing audit row.
+`lp_update` lets a family member edit the row, which a rename needs — but it also allowed
+changing `learner_type`, `linked_user_id` and `family_id`. An owner could therefore turn a
+child's profile into an adult profile linked to an account of their choosing, and with it hand
+that child's progress and certificates to somebody else. A trigger now refuses those three
+columns for anybody but staff, in writing, while a display name or an age band can still be
+corrected — a child grows, and a name gets typed wrong.
+
+**Not decided, and worth recording:** there is still no self-service way to *delete* a learner
+profile, and no way to move a child between families. Both are moderation actions today, done
+by staff, and both would need an audit trail of their own before they became buttons.

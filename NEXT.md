@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1261 database tests, 819 web tests; TypeScript typecheck and
-production build pass; 108 tables, 233 policies, 138 user-defined triggers,
-285 functions, 124 migrations and 126 app route entries.**
+Verification: **1263 database tests, 821 web tests; TypeScript typecheck and
+production build pass; 108 tables, 233 policies, 139 user-defined triggers,
+286 functions, 125 migrations and 126 app route entries.**
 
 ## Today's sentence
 
@@ -2220,6 +2220,30 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### A learner profile has one writer, and its identity is not editable, 2026-10-22
+
+The audit of 2026-10-20 recorded that `add_child_to_family()` was called by tests only,
+while `web/src/lib/family.ts` inserted into `learner_profiles` directly. It was still
+true, and it had a cost: `lp_insert` admitted any active family member, so a child added
+through `/family` left **no audit row**, a billing manager could create a profile they
+could not then read, and the owner-only rule lived in a function nobody called.
+
+`20261243000100_child_profile_one_writer.sql` closes it the way the rest of this schema
+is closed: `lp_insert` now admits staff only. A child is created by
+`add_child_to_family()` and an adult by `claim_own_learner_profile()`; both are definer
+functions, so neither needs a table-level insert policy. `addChild()` calls the writer,
+maps its refusals, and sends no actor and no id.
+
+The same file hardens **updating**. `lp_update` lets a family member edit the row, which
+a rename needs — but it also allowed rewriting `learner_type`, `linked_user_id` and
+`family_id`, so an owner could turn a child's profile into an adult profile attached to
+an account of their choosing and hand that child's progress and certificates to somebody
+else. A trigger now refuses those three columns for anybody but staff, and still allows a
+display name or an age band to be corrected.
+
+The tests say the new truth rather than the old one: the table takes no child insert from
+anybody but staff, the owner still reads back what the writer created, a billing manager is
+refused on both doors, and a rename is allowed while becoming a different person is not.
 ### An adult can become a learner, 2026-10-22
 
 Found while closing the sharing unit: nothing in the application created an **adult

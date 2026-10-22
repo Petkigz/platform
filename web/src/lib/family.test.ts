@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  addChild,
   createFamily,
   inviteFamilyMember,
   acceptFamilyMembership,
@@ -271,5 +272,54 @@ test('not being the owner is refused distinctly from the lockout', async () => {
   if (!r.ok) {
     assert.match(r.message, /only the owner/i);
     assert.doesNotMatch(r.message, /at least one owner/i);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// addChild
+// ---------------------------------------------------------------------------
+
+test('adding a child goes through the writer, with no actor and no id from the client', async () => {
+  const { client, calls } = stubRpc({ data: 'child-1' });
+
+  const result = await addChild(client, {
+    familyId: 'fam-1', displayName: '  Aisha  ', ageBand: '8-10',
+  });
+
+  assert.equal(result.ok, true);
+  if (result.ok) assert.equal(result.childId, 'child-1');
+
+  assert.deepEqual(calls, [{
+    fn: 'add_child_to_family',
+    args: { p_family_id: 'fam-1', p_display_name: 'Aisha', p_age_band: '8-10' },
+  }]);
+  for (const key of Object.keys(calls[0]?.args ?? {})) {
+    assert.equal(/user|actor|linked/i.test(key), false, `the client chose '${key}'`);
+  }
+
+  // A blank name never becomes a round trip, and a missing family is said plainly.
+  const before = calls.length;
+  const blank = await addChild(client, { familyId: 'fam-1', displayName: '   ', ageBand: '8-10' });
+  const noFamily = await addChild(client, { familyId: '', displayName: 'Aisha', ageBand: '8-10' });
+  assert.equal(blank.ok, false);
+  assert.equal(noFamily.ok, false);
+  assert.equal(calls.length, before, 'a form the writer would refuse was sent anyway');
+});
+
+test('a refusal from the writer becomes a code the screen can act on', async () => {
+  const cases: Array<[string, string]> = [
+    ['only the owner may add a child to this family', 'not_owner'],
+    ['sign in to add a child', 'not_owner'],
+    ['family 00000000-0000-4000-8000-000000000000 not found', 'no_family'],
+    ['unsupported age band for a child: 21-30', 'rejected'],
+  ];
+
+  for (const [message, code] of cases) {
+    const { client } = stubRpc({ data: null, error: { message } });
+    const result = await addChild(client, {
+      familyId: 'fam-1', displayName: 'Aisha', ageBand: '8-10',
+    });
+    assert.equal(result.ok, false, `${message} was accepted`);
+    if (!result.ok) assert.equal(result.code, code, `${message} mapped to ${result.code}`);
   }
 });

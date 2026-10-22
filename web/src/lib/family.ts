@@ -195,10 +195,16 @@ export async function fetchChildCourses(
 /**
  * Create a child profile under a family.
  *
- * This is the COPPA-adjacent path, and the constraints doing the work are in
- * the database rather than here: `lp_children_need_age_band` means a child
- * must have an age band, and `lp_no_child_login_yet` means no child can be
- * given a login. Neither can be argued with from the client.
+ * The writer is `add_child_to_family()`, not an insert. The table admitted an insert
+ * from any active family member until 2026-10-22, which is how this function used to
+ * work — and it meant the owner-only rule and the audit row lived in a function nobody
+ * called, while a billing manager could create a profile they could not then read. The
+ * policy is staff-only now, so this is the only way in.
+ *
+ * The constraints doing the rest are the database's: `lp_children_need_age_band` means a
+ * child must have an age band, `lp_no_child_login_yet` means no child can be given a
+ * login, and the writer refuses a band it does not recognise. None can be argued with
+ * from the client.
  */
 export type AddChildOutcome =
   | { ok: true; childId: string }
@@ -212,32 +218,40 @@ export async function addChild(
   if (name.length === 0) {
     return { ok: false, code: 'rejected', message: 'A name is required.' };
   }
+  if (!args.familyId) {
+    return { ok: false, code: 'no_family', message: 'That family is missing.' };
+  }
 
-  const { data, error } = await supabase
-    .from('learner_profiles')
-    .insert({
-      family_id: args.familyId,
-      display_name: name,
-      learner_type: 'child',
-      age_band: args.ageBand,
-    })
-    .select('id')
-    .single();
+  const { data, error } = await supabase.rpc('add_child_to_family', {
+    p_family_id: args.familyId,
+    p_display_name: name,
+    p_age_band: args.ageBand,
+  });
 
   if (error) {
-    // RLS refuses an insert into a family you do not own, and reports it as a
-    // policy violation. Say the useful thing rather than quoting the policy.
-    if (/policy|permission/i.test(error.message)) {
+    if (/only the owner/i.test(error.message)) {
       return {
         ok: false,
         code: 'not_owner',
         message: 'Only the family owner can add a child.',
       };
     }
+    if (/sign in/i.test(error.message)) {
+      return { ok: false, code: 'not_owner', message: 'Sign in to add a child.' };
+    }
+    if (/family .* not found/i.test(error.message)) {
+      return { ok: false, code: 'no_family', message: 'That family does not exist.' };
+    }
     return { ok: false, code: 'rejected', message: error.message };
   }
 
-  return { ok: true, childId: (data as unknown as { id: string }).id };
+  // The writer returns the new profile's id directly.
+  const childId = typeof data === 'string' ? data : '';
+  if (!childId) {
+    return { ok: false, code: 'rejected', message: 'The child was added without an id.' };
+  }
+
+  return { ok: true, childId };
 }
 
 export const AGE_BANDS = ['5-7', '8-10', '11-13', '14-17'] as const;
