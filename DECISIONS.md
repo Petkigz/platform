@@ -1708,3 +1708,174 @@ writers it feeds are already gated by role and by the state of the order).
 Implemented in `20261226000100_admin_order_queue.sql`, `/admin/orders` with
 `order-queue.tsx`, `/api/admin/orders`, `lib/order-adjustments.ts` and
 `supabase/tests/admin_order_queue.test.mjs`.
+
+## Who pays for an order-level discount — **DECIDED 2026-10-22**
+
+Asked because `accrue_instructor_earnings()` computes a teacher's gross from the order's
+*lines*, so a discount recorded with `add_order_adjustment()` came out of the platform's
+margin while the teacher still earned a share of the pre-discount price — and at the
+extreme accrued more than the order collected.
+
+**Decided: the discount is split at the revenue-share rate.** With a 50% share, a 10 000
+UGX discount costs the teacher 5 000 and the platform 5 000. Arithmetically that is the
+teacher's share of the *discounted* line total: gross becomes the line's total less its
+pro-rata portion of the order's live credits, and `net = round(gross × share / 100)` is
+unchanged in form, so `iee_split_agrees` still holds the row to it. Worked example at a
+50% share, subtotal 50 000, discount 10 000, fee 1 250: gross was 50 000 and net 25 000;
+gross becomes 40 000 and net 20 000; the platform collects 41 250 and keeps 21 250 instead
+of 26 250. Each side loses exactly half the discount.
+
+Only **credits** are shared. A fee is the platform's cost and stays the platform's; tax is
+remitted and is nobody's revenue; a rounding credit is shared like any other credit because
+it reduces what was collected.
+
+Two consequences to honour when this is built. The apportionment has to sum exactly to the
+order's credits — with several lines, integer division leaves a residual, and the residual
+goes to the largest line rather than being dropped, because a rounding error in a split is
+money that quietly disappears. And with several teachers on one order the apportionment is
+per teacher's lines, which the accrual already groups by, so the shape of the loop does not
+change.
+
+The test in `order_adjustments.test.mjs` that pins today's behaviour is the thing that
+changes, and it should change to assert the split rather than be deleted: the pinned
+behaviour was recorded so this decision could be made against a fact.
+
+## What a promotion is, and who may use one — **DECIDED 2026-10-22**
+
+Asked because three promotion tables are dormant with no writer, and
+`add_order_adjustment()` refuses the `promotion` type outright: `oa_promotion_agrees`
+requires a `promotion_redemption_id` and nothing can write one.
+
+**Decided: build the full thing — codes plus eligibility rules, stacking and a floor.**
+Not the minimal code-only version. That means: who may use a code (new customers only, a
+named course or plan, a defined audience), whether a promotion may combine with another
+promotion or with a manual discount and in what order, and a floor below which a discount
+cannot take an order.
+
+It will be built in stages, because the first stage is what unblocks code and the rest are
+policy surfaces that can be added without re-cutting it:
+
+1. **Codes and redemptions.** A promotion, its codes, a redemption per use, and
+   `add_order_adjustment()` accepting `promotion` when it is given a redemption id it can
+   verify. Percent or fixed, a validity window, a global cap and a per-account cap. This
+   stage alone makes the refused adjustment type real.
+2. **Eligibility.** New-customer-only, per course or per plan, and an audience. Each rule
+   is evaluated inside the writer, not in the browser, so the answer is the same for every
+   caller.
+3. **Stacking and the floor.** What may combine with what, in what order, and the lowest
+   total a promotion may produce.
+
+One design rule carried into all three stages, because ease of use is the dominant
+principle and every eligibility rule is a way to tell a family no at checkout: a refusal
+says *why* in a sentence a parent can act on — "this code is for families who have not
+bought before", "this code applies to Quran Foundations, not to this course", "this code
+expired on 1 March" — and never just "not eligible". A rule that cannot explain itself
+should not be a rule.
+
+## Buying a course the family already owns — **DECIDED 2026-10-22**
+
+Asked because `create_course_order()` does not look at entitlements, so an account that
+already has active access can pay again for access it has.
+
+**Decided: refuse a purchase that would grant nothing new.** The check is per billing
+account and per course version, against a live `purchase` entitlement — not per learner
+profile — because that is the grain the fulfilment actually uses: `record_payment_success()`
+grants to every learner profile linked to every active member of the account that paid, and
+skips what already exists. So one course purchase already covers every child on a family
+account, including twins, and a second purchase of the same version cannot grant anything.
+
+That is the answer to the twin case, and it inverts the worry. Twins are two learner
+profiles on one billing account, so the first purchase enrols both; nothing about a second
+child is ever refused, because no second purchase is needed. The refusal that does happen —
+the same account buying the same version while access is live — is a double-tap or a
+mistake, and its message has to read as reassurance rather than rejection: name who already
+has access and until when, so a guardian with two children is told they are both covered
+instead of being told no.
+
+Renewals are unaffected: an expired entitlement is not live, so buying again after it lapses
+works. A different course version works, since entitlements are per version. A different
+billing account works — a grandparent paying for the same course is not the same account.
+
+If the grain ever becomes per-learner (a seat per child, the way
+`allocate_subscription_learner()` already works for plans), this rule becomes per-profile
+and twins still never collide, because they are different profiles — but a family would then
+pay per child, which is a pricing decision rather than a duplicate-purchase one, and it is
+asked separately rather than assumed here.
+
+## How a price's market is chosen — **DECIDED 2026-10-22**
+
+Asked because `prices.market` is a two-letter country code inside the uniqueness key
+(target + currency + market + interval), and nothing anywhere chooses between markets:
+`resolveOffering()` lists every market's price to every visitor and `create_course_order()`
+accepts any price id it is handed, so localised pricing is display-only and a payer in
+Kampala can buy at a price set for Nairobi by posting that price id.
+
+**Decided: the buyer's country chooses the price.** A resolution chain, evaluated in the
+writer: an exact match on the payer's country, then a fallback the price itself declares as
+the default for its currency, then a refusal rather than a guess. Two prices a buyer is
+entitled to is an ambiguity in a money path, so it resolves deterministically or it does not
+resolve at all.
+
+The consequence that matters: `create_course_order()` can no longer trust a posted price id.
+It has to derive the price from the course and the buyer's country, and treat an id it is
+given as a hint to check rather than an instruction to follow — otherwise the rule is
+display-only again and the cheapest market becomes everyone's. `billing_accounts.billing_country`
+is the column that carries it, and it is nullable and set by nothing today, so establishing
+it is part of the work and is asked separately.
+
+Rejected: leaving `market` as a reporting label with currency as the only regional signal
+(the cheapest answer, and the one that makes `market` honest about being decorative —
+declined because genuine per-country pricing is wanted), and a country selector on the buy
+page (it puts the choice in the buyer's hands, which is how the cheapest market becomes
+everyone's).
+
+## Authorising a reviewer needs a verified qualification in that subject — **DECIDED 2026-10-22**
+
+Asked because a reviewer must already be an active profile — which requires a recorded
+verification of the person by a named staff member — plus an in-window subject authorisation
+at the scope being assigned, no unresolved conflict, and not be the version's own author.
+What was not required, and was written into the reviewer register as deliberately undecided,
+is a verified *qualification* in the subject being authorised.
+
+**Decided: a verified qualification in that subject is required for every scope, technical
+as well as scholarly.** No authorisation without one. The claim this platform wants to be
+able to defend is that its content is checked by people whose credentials a named person
+looked at, and a rule that holds only for religious subjects leaves the rest resting on
+trust that nothing records.
+
+Three consequences to honour when this is built. `reviewer_qualifications.subject_area_id`
+is nullable, so a qualification recorded without a subject cannot authorise anything — the
+register screen has to make the subject mandatory at the point of recording, or the
+qualification is unusable and the reason should be visible beside it. The check belongs in
+`set_reviewer_authorization()`, where the mistake is being made and the reason can be given,
+and *also* in `is_authorised_reviewer()`, because a qualification can expire or be rejected
+after an authorisation was granted and an authorisation resting on a lapsed credential
+should stop working when the credential does. And verification stays what it is: a named
+person looked at a document held outside the platform, recorded with who and when, because
+the platform cannot read the document itself and must not imply that it did.
+
+## How much a teacher may upload — **DECIDED 2026-10-22**
+
+Asked because `platform.cost_controls` is registered, ships off, and its own note says
+nothing exists — unlimited teacher uploads is how $250/month becomes $3,000. Per-file limits
+are built (an 8 GiB ceiling, multipart above 32 MiB); nothing limited the total.
+
+**Decided: 50 GB per teacher, counted on master bytes.** About a day of 1080p video, which
+removes the quota as a practical limit for almost anybody while still stopping one account
+from consuming the whole storage budget unnoticed.
+
+Counted on masters, not on what is stored, because the rendition ladder — 1080p, 720p, 480p,
+360p plus audio — stores roughly 2.1 times the master and is the platform's choice, not the
+teacher's. Charging a teacher for copies they never asked for would make the quota a
+surprise. The real cost is still the stored figure: 50 GB of masters is about 107 GB in R2,
+which at $0.015/GB-month with free egress is about $1.60 per teacher per month at full
+utilisation, and the costing document's monthly figures assume far less than full
+utilisation.
+
+Shipped as an admin-editable setting rather than a constant, consistent with building
+everything and enabling it from the dashboard, and enforced at initiate — the point where a
+teacher can still be told, rather than at the end of a transfer that already happened. The
+refusal names the space left, because "quota exceeded" without a number is a dead end.
+Multipart uploads in flight count against the quota from the moment they are initiated, so
+a stalled 40 GB upload cannot be used to slip past it, and abandoning one gives the space
+back.

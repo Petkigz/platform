@@ -1903,6 +1903,13 @@ API route, no new table, no new flag, no policy added or dropped.
   place to discover a deployment setting.
 - Payout policy/preconditions, tax and jurisdiction treatment, and disbursement
   credentials.
+- **How `billing_accounts.billing_country` gets set.** Market resolution by country
+  (decided 2026-10-22) reads a column that exists, is nullable, and is written by
+  nothing: the checkout writer creates accounts without one. Until something
+  establishes it, every account resolves to the fallback price and per-country
+  pricing is still display-only. Asked rather than assumed, because the options
+  differ in what a family has to type and in whether they can pick a cheaper
+  country.
 - **Whether sharing with a named person may disclose that their account exists.**
   `/account/sharing` resolves an email address to an account and says so when there is
   none, as `invite_family_member()` has always done. The alternative — a silent no-op —
@@ -1917,44 +1924,6 @@ API route, no new table, no new flag, no policy added or dropped.
   about the business. Each is a one-line change to `report_money_in_reporting_currency()`
   once made, and guessing would bury the answer in a sum that looks authoritative.
   The report says on its face that it does not net.
-- **How a price's market is chosen.** `prices.market` exists, `resolveOffering()`
-  lists every market's price to every visitor, and `create_course_order()` accepts
-  any of them, so localised pricing is currently display-only: a payer in Kampala
-  can buy at a price set for Nairobi by posting that price id. Making it mean
-  something needs a rule for whose market applies — the payer's `country_code`,
-  the billing account's `billing_country`, a selector on the page, or the provider's
-  settlement country — and a decision about what happens when somebody is entitled
-  to two. Not guessed, because the wrong rule either charges a family the price for
-  another country or lets the cheapest market become everyone's.
-- **Who funds an order-level discount.** `accrue_instructor_earnings()` computes a
-  teacher's gross from the order's *lines*, so a discount recorded with
-  `add_order_adjustment()` comes out of the platform's margin and the teacher still
-  earns a share of the pre-discount price. That is defensible for a scholarship the
-  platform chose to give and wrong for a promotion a teacher asked for, and at the
-  extreme it accrues more than the order collected. The options are to leave it (the
-  platform funds every discount), to apportion order-level discounts across the lines
-  (the teacher funds them, pro rata), or to make it a property of the adjustment — a
-  "funded by" the recorder chooses, which is what a real invoice needs and what
-  promotions will need once eligibility and stacking are decided. Pinned as-is by a
-  test in `order_adjustments.test.mjs` so the current answer is a fact on the record
-  rather than an accident.
-- **Whether buying a course the account already owns should be refused.**
-  `record_payment_success()` grants to every linked learner profile of every active
-  member of the billing account, so a second purchase of the same course version is
-  redundant rather than per-child, and the API answers 409 from `resolveOffering()`
-  while the writer itself will happily create the order. If a family is meant to buy
-  the same course twice — one purchase per child, say — then entitlements have to
-  become per-learner before the refusal is added; if not, the writer should refuse.
-  Either answer changes what a parent sees on `/catalogue`, so it is asked rather
-  than assumed.
-
-- **Whether a scholarly authorisation should require a verified qualification in
-  that subject.** Raised by the reviewer register (2026-10-21) and deliberately not
-  implemented either way: it is a governance policy about who is trusted with what the
-  platform teaches, and inferring it would bury the answer in a predicate. Today
-  `is_authorised_reviewer()` reads authorisations only, and `/admin/reviewers` shows a
-  reviewer's verified qualifications beside the grant control so the decision can be
-  made with the evidence on screen.
 - The saved-lessons questions are answered (2026-10-20, `DECISIONS.md`); what
   is left is code. Both delivery models are wanted — live classes recorded and
   saved, and offline download of anything saved — with the download gated to a
@@ -1977,6 +1946,56 @@ Settled on 2026-10-19 and no longer open: the teacher/platform revenue share
 (**50%**), what a course author may see about a learner (**individual progress
 only inside an opted-in cohort**), and when a cohort stops accepting joiners
 (**the teacher sets it, defaulting to the start date**).
+
+Settled on 2026-10-22 and no longer open, all six written up in `DECISIONS.md`:
+
+- **Who pays for an order-level discount** — split at the revenue-share rate. At a
+  50% share a 10 000 UGX discount costs the teacher 5 000 and the platform 5 000,
+  which is the teacher's share of the *discounted* line total, so `net =
+  round(gross × share / 100)` keeps its form and `iee_split_agrees` still holds.
+  Only credits are shared: a fee is the platform's cost and tax is remitted.
+- **What a promotion is** — the full version, not codes alone: codes and
+  redemptions first (which is what unblocks the refused `promotion` adjustment
+  type), then eligibility rules, then stacking order and a floor. Every refusal
+  has to explain itself in a sentence a parent can act on, because an eligibility
+  rule is a way to tell a family no at checkout and ease of use is the dominant
+  principle.
+- **Buying a course the family already owns** — refuse a purchase that would grant
+  nothing new, per billing account and course version. That is the grain the
+  fulfilment already uses, so one purchase covers every learner profile on the
+  account: twins are two profiles on one account, the first purchase enrols both,
+  and no second child is ever the one refused. The message names who already has
+  access and until when, so it reads as reassurance rather than rejection.
+  Renewals, other versions and other accounts are all unaffected.
+- **How a price's market is chosen** — the buyer's country, resolved in the
+  writer: an exact match, then the default the price declares for its currency,
+  then a refusal rather than a guess. The consequence is that
+  `create_course_order()` can no longer trust a posted price id, or localised
+  pricing stays display-only and the cheapest market becomes everyone's.
+- **Whether a scholarly authorisation needs a verified qualification** — yes, in
+  that subject, for every scope including technical. Checked when authorising and
+  again when assigning, because a qualification can expire after the grant.
+- **How much a teacher may upload** — 50 GB per teacher, counted on master bytes
+  and not on the renditions derived from them (the ladder stores about 2.1x the
+  master and is the platform's choice, not the teacher's). An admin-editable
+  setting behind `platform.cost_controls`, enforced at initiate, naming the space
+  left, with uploads in flight counting from initiation so a stalled transfer
+  cannot be used to slip past it.
+
+**None of the six is built yet.** The order they go in, cheapest and most
+load-bearing first:
+
+1. A discount shared at the revenue-share rate — it changes what teachers earn on
+   every discounted order, and the test that pins today's behaviour is the one
+   that changes.
+2. The duplicate-purchase refusal, in `create_course_order()`, with a message that
+   names who already has access.
+3. Market resolution by country — needs `billing_accounts.billing_country` to be
+   established by something first, which is asked below.
+4. The 50 GB quota behind `platform.cost_controls`.
+5. Verified qualification required for every authorisation, plus making the
+   subject mandatory when a qualification is recorded.
+6. Promotions, in the three stages above — the largest of the six by some way.
 - Automatic subscription renewal worker and provider support.
 - Legal review and any locale-specific safeguarding/child-consent requirements.
 
