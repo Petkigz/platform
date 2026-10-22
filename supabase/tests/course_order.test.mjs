@@ -203,11 +203,14 @@ export async function run(ctx) {
     // One asUser block per raising statement — the first refusal aborts its
     // transaction, and a second statement in the same block then reports the
     // aborted transaction rather than the policy.
+    // `order_number` is supplied so the refusal is the policy's rather than the
+    // sequence's. A caller cannot mint a number either — that is a second gate — but
+    // the one under test is the one that decides who may write an order.
     await asUser(buyer.userId, () => rejects(
       () => q(`insert into public.orders
                  (billing_account_id, currency_code, subtotal_minor, discount_minor,
-                  tax_minor, total_minor, status)
-               values ($1,'UGX',50000,0,0,50000,'pending_payment')`, [account]),
+                  tax_minor, total_minor, status, order_number)
+               values ($1,'UGX',50000,0,0,50000,'pending_payment','AS-99999998')`, [account]),
       /row-level security/i));
 
     // The other half, and the one that actually cost money: add a second line

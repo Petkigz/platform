@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1272 database tests, 827 web tests; TypeScript typecheck and
-production build pass; 108 tables, 233 policies, 139 user-defined triggers,
-287 functions, 126 migrations and 126 app route entries.**
+Verification: **1276 database tests, 827 web tests; TypeScript typecheck and
+production build pass; 108 tables, 233 policies, 140 user-defined triggers,
+288 functions, 127 migrations and 127 app route entries.**
 
 ## Today's sentence
 
@@ -2220,6 +2220,30 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### A receipt has a number a person can read out loud, 2026-10-22
+
+`/orders` could say "paid" and nothing more. There was no document and no reference, so a
+parent asking their bank, their employer or their own memory of a transaction had a status
+badge and a UUID — not something anyone reads down a phone.
+
+`orders.order_number` is now assigned by the database: `AS-` and eight digits, unique, in
+creation order, backfilled for every existing row. A trigger refuses to rewrite it, because
+a receipt number that can change is not a receipt number — two documents could otherwise
+claim the same order.
+
+`/orders/[id]/receipt` is the document. Every figure is read from the order rather than
+recomputed: subtotal, each discount with the code that caused it, the total, the payment
+that cleared it and any refunds since. It is print-ready, so "save as PDF" is the browser's
+job rather than ours. An unpaid order opens the same page and says plainly that it is **not
+a receipt** — the same honesty the rest of the money path keeps about confirmation.
+
+Two older tests failed on this change for an instructive reason: a direct insert into
+`orders` was refused by RLS, and now it is refused earlier by the sequence the number comes
+from. Both tests now supply a number explicitly, so what they assert is still the policy
+rather than the side effect — the sequence is a second gate, not the only one.
+
+**Not built:** the receipt is not emailed or attached anywhere, because there is no mail
+provider; and it is not a tax invoice, which the document says.
 ### Search finds a subject and a teacher, and ranks what it finds, 2026-10-22
 
 The catalogue has taken a `q` since the first version of the page, and it was thinner than

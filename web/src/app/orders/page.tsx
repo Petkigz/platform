@@ -151,6 +151,10 @@ export default async function OrdersPage({
                 fromMinor(o.total_minor, o.currency_code),
               );
               const paid = o.status === 'paid';
+              // A receipt exists once money has moved, including for an order that
+              // was later refunded — a refund is a line on the receipt, not a reason
+              // to withdraw it.
+              const settled = ['paid', 'partially_refunded', 'refunded'].includes(o.status);
               // Null when the total is the whole story, which it is for nearly
               // every order: no discount, no tax, no fee.
               const breakdown = describeOrderBreakdown({
@@ -204,6 +208,11 @@ export default async function OrdersPage({
                   {paid && (
                     <Link href="/learn" className="btn secondary">
                       Start learning
+                    </Link>
+                  )}
+                  {settled && (
+                    <Link href={`/orders/${o.id}/receipt`} className="btn ghost">
+                      Receipt
                     </Link>
                   )}
                   {o.status === 'pending_payment' && (

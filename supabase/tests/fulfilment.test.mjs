@@ -312,12 +312,15 @@ export async function run(ctx) {
          values ($1,'UGX','active',$2) returning id`, ['Ordering Payer', userId])).rows[0].id;
     });
 
+    // The number is supplied explicitly so the refusal being tested is the policy's
+    // rather than the sequence's: a caller cannot mint a receipt number either, but
+    // that must not be the only thing standing between a member and an order row.
     await asUser(userId, () => rejects(
       () => q(
         `insert into public.orders
            (billing_account_id, currency_code, subtotal_minor, discount_minor,
-            tax_minor, total_minor, status)
-         values ($1,'UGX',30000,0,0,30000,'pending_payment') returning id`,
+            tax_minor, total_minor, status, order_number)
+         values ($1,'UGX',30000,0,0,30000,'pending_payment','AS-99999999') returning id`,
         [account]),
       /row-level security/i));
 

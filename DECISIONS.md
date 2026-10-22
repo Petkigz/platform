@@ -2314,3 +2314,24 @@ someone who has not bought it. Recorded, not built.
 **Not decided:** whether relevance should eventually weigh price, language or the learner's
 age band, or whether results should be personalised. Today the order is explainable in one
 sentence, which is the property I would not trade for a better click-through rate yet.
+## A receipt is a document, so it has a number — **DECIDED 2026-10-22**
+
+There was no receipt. `/orders` showed a status, a total and a refund form, and the only
+identifier for an order was a UUID — which nobody reads down a phone to a bank, an employer
+or their own memory of a transaction.
+
+`orders.order_number` is `AS-` plus eight digits, matching the certificate numbering already
+in use so that a support conversation about either document sounds the same. It is assigned
+by the database, unique, in creation order, and **cannot be rewritten** — a trigger refuses
+any change. The number is what a receipt cites, so a rewritable number would let two
+documents claim one order.
+
+Two things it deliberately is not. It is **not a secret and not a key**: every read goes
+through the order's own row-level policy, so only somebody who may see the order sees its
+number, and no lookup is built on it. And it is **not a tax invoice**: the document says so
+in one sentence, because claiming otherwise in a market we have not registered in would be a
+lie in writing.
+
+An unpaid order opens the same page and says **"This is not a receipt"** before anything
+else. That is the same principle as the payment confirmation banner: the page reports the
+state of the record, never the state the reader hopes for.
