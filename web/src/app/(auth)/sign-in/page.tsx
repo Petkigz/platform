@@ -19,7 +19,10 @@ import { safeNextPath } from '@/lib/auth';
 function SignIn() {
   const router = useRouter();
   const params = useSearchParams();
-  const next = safeNextPath(params.get('next'));
+  // No `next` means "wherever you belong", not the marketing page: a teacher who
+  // signs in from the header should land in the teaching area, and a learner in
+  // their learning.
+  const next = safeNextPath(params.get('next'), '/dashboard');
 
   const [mode, setMode] = useState<'password' | 'otp'>('password');
   const [email, setEmail] = useState('');

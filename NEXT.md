@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1219 database tests, 803 web tests; TypeScript typecheck and
+Verification: **1219 database tests, 806 web tests; TypeScript typecheck and
 production build pass; 107 tables, 232 policies, 138 user-defined triggers,
-277 functions, 119 migrations and 121 app route entries.**
+277 functions, 119 migrations and 122 app route entries.**
 
 ## Today's sentence
 
@@ -2216,6 +2216,29 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### Each role lands in its own area, 2026-10-22
+
+The last piece recorded by the role decision: a signed-in person should start in
+the place their work happens, not on the page a visitor sees. `/dashboard` reads
+the session once and redirects — the platform owner and governance staff to
+`/admin`, a convened scholarly board to the reviewer register, a teacher to
+`/teach`, a reviewer to `/review`, and a learner to `/learn`. Sign-in now defaults
+to it when there is no `next`, and the footer links it as "Your area".
+
+`homeFor()` in `web/src/lib/auth.ts` is the decision in one pure function, so the
+order of the questions is tested rather than buried in a page: the widest
+authority is asked first, because the owner is usually a teacher too and a
+teacher is often a reviewer. A board member whose board is not convened is
+deliberately **not** sent to the register — it would refuse them, `/admin` would
+refuse them, and the client would bounce to the marketing page — so they fall
+through to whatever else they are.
+
+The masthead stays the same for everybody. A role-aware header means reading the
+session in the layout, which makes every page dynamic to hide links that already
+explain themselves; a landing page costs one redirect instead.
+
+Five web tests.
 
 ### Every control is a screen, and a learner is a learner, 2026-10-22
 

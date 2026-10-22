@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { safeNextPath } from './auth.ts';
+import { homeFor, safeNextPath, type RoleFacts } from './auth.ts';
 
 test('safeNextPath preserves a relative in-app destination', () => {
   assert.equal(safeNextPath('/learn/course?from=sign-in#lesson'), '/learn/course?from=sign-in#lesson');
@@ -10,4 +10,39 @@ test('safeNextPath rejects external, protocol-relative and malformed destination
   for (const value of ['https://evil.example', '//evil.example/path', '/\\evil.example/path', 'javascript:alert(1)', '', null, undefined]) {
     assert.equal(safeNextPath(value), '/learn');
   }
+});
+
+const nobody: RoleFacts = {
+  platformAdmin: false,
+  governanceAdmin: false,
+  boardMember: false,
+  boardActive: false,
+  instructor: false,
+  reviewer: false,
+};
+
+test('each role lands in its own area', () => {
+  assert.equal(homeFor({ ...nobody, platformAdmin: true }), '/admin');
+  assert.equal(homeFor({ ...nobody, governanceAdmin: true }), '/admin');
+  assert.equal(homeFor({ ...nobody, boardMember: true, boardActive: true }), '/admin/reviewers');
+  assert.equal(homeFor({ ...nobody, instructor: true }), '/teach');
+  assert.equal(homeFor({ ...nobody, reviewer: true }), '/review');
+  assert.equal(homeFor(nobody), '/learn', 'a learner is the default, not a failure');
+});
+
+test('the widest authority is asked first, because roles overlap', () => {
+  // The owner is often a teacher too; a teacher is often a reviewer.
+  assert.equal(homeFor({ ...nobody, platformAdmin: true, instructor: true }), '/admin');
+  assert.equal(homeFor({ ...nobody, governanceAdmin: true, reviewer: true }), '/admin');
+  assert.equal(homeFor({ ...nobody, instructor: true, reviewer: true }), '/teach');
+});
+
+test('a board member whose board is not convened is not sent to a door that refuses them', () => {
+  // The register and /admin both refuse them, so the fall-through has to be a
+  // page they may actually open.
+  assert.equal(homeFor({ ...nobody, boardMember: true, boardActive: false }), '/learn');
+  assert.equal(
+    homeFor({ ...nobody, boardMember: true, boardActive: false, reviewer: true }),
+    '/review',
+  );
 });

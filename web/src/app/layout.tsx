@@ -56,6 +56,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 already eight links wide on a phone, and nobody looks for
                 support in the primary navigation until they need it. */}
             <Link href="/support">Help</Link>
+            {/* The way back to your own area once you are signed in. It is a
+                redirect rather than a page, so it costs nothing to link from a
+                static footer. */}
+            <Link href="/dashboard">Your area</Link>
           </div>
         </footer>
       </body>
