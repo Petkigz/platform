@@ -39,11 +39,19 @@ export default async function AdminReviewersPage() {
 
   if (!user) redirect('/sign-in?next=/admin/reviewers');
 
-  const [{ data: governance }, { data: platform }] = await Promise.all([
-    supabase.rpc('has_role', { p_user_id: user.id, p_role_code: 'governance_admin' }),
-    supabase.rpc('has_role', { p_user_id: user.id, p_role_code: 'platform_admin' }),
-  ]);
-  if (governance !== true && platform !== true) redirect('/admin');
+  const [{ data: governance }, { data: platform }, { data: boardMember }, { data: boardActive }] =
+    await Promise.all([
+      supabase.rpc('has_role', { p_user_id: user.id, p_role_code: 'governance_admin' }),
+      supabase.rpc('has_role', { p_user_id: user.id, p_role_code: 'platform_admin' }),
+      supabase.rpc('has_role', { p_user_id: user.id, p_role_code: 'scholarly_panel_member' }),
+      supabase.rpc('setting_bool', { p_key: 'governance.scholar_board_active', p_default: false }),
+    ]);
+
+  // Governance staff run the register. A scholarly board member may open it only
+  // while the owner has the board convened, and then only to check credentials —
+  // the functions themselves enforce that narrower power.
+  const canDecideCredentials = platform === true || (boardActive === true && boardMember === true);
+  if (governance !== true && platform !== true && !canDecideCredentials) redirect('/admin');
 
   const [register, subjects] = await Promise.all([
     fetchReviewerRegister(supabase),
@@ -98,7 +106,19 @@ export default async function AdminReviewersPage() {
         </div>
       )}
 
-      <ReviewerRegister register={register} subjects={subjects} />
+      {!canDecideCredentials && (
+        <div className="notice warn" style={{ marginTop: '1.5rem' }}>
+          Checking a qualification is the platform owner&apos;s decision, or a convened
+          scholarly board&apos;s. You can still verify the person and grant the subjects
+          they may review; the credential itself waits for the owner.
+        </div>
+      )}
+
+      <ReviewerRegister
+        register={register}
+        subjects={subjects}
+        canDecideCredentials={canDecideCredentials}
+      />
 
       <p style={{ marginTop: '1.5rem' }}>
         <Link href="/admin/reviews">Assign reviews</Link>

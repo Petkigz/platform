@@ -1879,3 +1879,39 @@ refusal names the space left, because "quota exceeded" without a number is a dea
 Multipart uploads in flight count against the quota from the moment they are initiated, so
 a stalled 40 GB upload cannot be used to slip past it, and abandoning one gives the space
 back.
+
+## Who decides that a reviewer's credential is real — **DECIDED 2026-10-22**
+
+The register let any governance admin verify a qualification, which makes the claim "a
+governance admin saw a document" rather than "the person who answers for this platform saw
+it". The owner's answer is direct: they are the final authorisation as platform owner and
+decide whether a credential passes; later, when a scholarly board is present and active, it
+can make those decisions; and they appoint and remove the board's members themselves.
+
+**Decided: the platform owner decides a reviewer credential, alone, unless a scholarly board
+is convened.** `verify_reviewer_qualification()` now requires `platform_admin`, or a holder
+of `scholarly_panel_member` while `governance.scholar_board_active` is on. Everything else
+in the reviewer register stays with governance staff — checking the person, granting and
+withdrawing the scopes somebody may review, hearing conflicts — because those are staffing
+decisions and the owner should not be the bottleneck for them.
+
+Convening a board is not creating one. `governance.scholar_board_active` grants nothing by
+itself: only a `scholarly_panel_member` gains the power, and a trigger on
+`user_role_assignments` refuses to appoint or remove one unless the actor is the platform
+owner. So the switch cannot be used by staff to manufacture an authority that decides in the
+owner's place, and dissolving the board leaves no member able to decide. Each verification
+already records who made it and when, so a decision taken by a properly constituted authority
+is not undone by a later change to who holds that authority — the same reasoning that makes
+an earning snapshot the revenue share it accrued under.
+
+This is a delegation the owner can withdraw and cannot be forced into. It is also why the
+board is a role plus a switch rather than an approvals counter: a threshold says "enough
+people agreed", and the question here is "who is authorised to answer for this platform".
+
+**And a qualification must name its subject.** `reviewer_qualifications.subject_area_id` was
+nullable, so a credential could be recorded with no subject and could never authorise
+anything — a row that looks like evidence and is not. It is now mandatory where it is
+recorded, and the register screen will not submit without it. `set_reviewer_authorization()`
+refuses an active authorisation without a verified, unexpired qualification in that exact
+subject, technical scope included, and `is_authorised_reviewer()` checks again so an expiry
+or a rejection ends the authorisation that rested on it.

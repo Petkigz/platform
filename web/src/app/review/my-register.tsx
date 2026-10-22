@@ -49,7 +49,9 @@ export function MyRegister({
   const [qualificationType, setQualificationType] = useState<string>(QUALIFICATION_TYPES[0] ?? '');
   const [title, setTitle] = useState('');
   const [institution, setInstitution] = useState('');
-  const [subjectAreaId, setSubjectAreaId] = useState('');
+  // A qualification without a subject can never authorise anything, so there
+  // is no empty default: the first subject is chosen and the person changes it.
+  const [subjectAreaId, setSubjectAreaId] = useState(subjects[0]?.id ?? '');
   const [conflictType, setConflictType] = useState<string>(CONFLICT_TYPES[0] ?? '');
   const [description, setDescription] = useState('');
 
@@ -227,9 +229,11 @@ export function MyRegister({
         )}
 
         <p className="meta">
-          A qualification you record is <em>pending</em> until a governance admin
-          checks it. Recording one does not authorise you for a subject either — that
-          is a separate decision they make.
+          A qualification you record is <em>pending</em> until it is checked — by the
+          platform owner, or by the scholarly board while the owner has it convened.
+          It must name a subject, because a credential is what authorises you in that
+          subject. Recording one does not authorise you either: granting the subject is
+          a separate decision by governance staff.
         </p>
 
         <details>
@@ -251,8 +255,9 @@ export function MyRegister({
                 value={subjectAreaId}
                 onChange={(e) => setSubjectAreaId(e.target.value)}
                 aria-label="Subject this covers"
+                required
               >
-                <option value="">No particular subject</option>
+                {subjects.length === 0 && <option value="">No subjects exist yet</option>}
                 {subjects.map((s) => (
                   <option key={s.id} value={s.id}>{s.name}</option>
                 ))}

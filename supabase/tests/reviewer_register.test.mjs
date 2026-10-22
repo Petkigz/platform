@@ -249,11 +249,11 @@ export async function run(ctx) {
 
   await test('nobody records a qualification for somebody else except governance staff', async () => {
     await rejects(() => recordQualification(plainUser, candidate.reviewerProfileId,
-      'degree', 'Someone else\'s degree'),
+      'degree', 'Someone else\'s degree', { subject }),
     /you may only record qualifications for your own reviewer profile/);
 
     const onBehalf = await recordQualification(governance, candidate.reviewerProfileId,
-      'experience', 'Ten years teaching adults', { institution: 'AyahSpring' });
+      'experience', 'Ten years teaching adults', { institution: 'AyahSpring', subject });
     const audit = await auditFor('reviewer.qualification_recorded', onBehalf.qualificationId);
     assert(audit[0].detail.recorded_for_someone_else === true,
       'the audit did not say staff recorded it for somebody');
@@ -263,15 +263,15 @@ export async function run(ctx) {
     await rejects(() => recordQualification(candidateUser, candidate.reviewerProfileId,
       'phd', 'Doctorate'), /certificate, degree, ijazah, experience or institutional affiliation/);
     await rejects(() => recordQualification(candidateUser, candidate.reviewerProfileId,
-      'ijazah', '   '), /a qualification needs a title/);
+      'ijazah', '   ', { subject }), /a qualification needs a title/);
   });
 
   await test('checking a qualification records who checked it and when', async () => {
-    const result = await verifyQualification(governance, qualification.qualificationId, 'verified');
+    const result = await verifyQualification(admin, qualification.qualificationId, 'verified');
     assert(result.changed === true, 'verification did not report a change');
     const row = await qualificationRow(qualification.qualificationId);
     assert(row.verification_status === 'verified', 'the qualification was not verified');
-    assert(row.verified_by === governance, 'verification did not name the checker');
+    assert(row.verified_by === admin, 'verification did not name the checker');
     assert(row.verified_at !== null, 'verification was not dated');
     const audit = await auditFor('reviewer.qualification_verified', qualification.qualificationId);
     assert(audit.length === 1, 'checking a qualification was not audited');
@@ -279,21 +279,21 @@ export async function run(ctx) {
 
   await test('a validity window that has already closed cannot be recorded', async () => {
     const lapsed = await recordQualification(candidateUser, candidate.reviewerProfileId,
-      'certificate', 'Certificate that lapsed');
-    await rejects(() => verifyQualification(governance, lapsed.qualificationId, 'verified',
+      'certificate', 'Certificate that lapsed', { subject });
+    await rejects(() => verifyQualification(admin, lapsed.qualificationId, 'verified',
       '2020-01-01T00:00:00Z'), /validity window that closed/);
     // Either decision writes verified_at, so rejecting with a past window would
     // break rq_validity_window just as hard and must be refused with a sentence.
-    await rejects(() => verifyQualification(governance, lapsed.qualificationId, 'rejected',
+    await rejects(() => verifyQualification(admin, lapsed.qualificationId, 'rejected',
       '2020-01-01T00:00:00Z'), /validity window that closed/);
     // A window that is still open is fine, and is stored.
-    const open = await verifyQualification(governance, lapsed.qualificationId, 'verified',
+    const open = await verifyQualification(admin, lapsed.qualificationId, 'verified',
       '2030-01-01T00:00:00Z');
     assert(open.validUntil !== null, 'the validity window was dropped');
   });
 
   await test('deciding twice reports no change, and a reversal is a second decision', async () => {
-    const again = await verifyQualification(governance, qualification.qualificationId, 'verified');
+    const again = await verifyQualification(admin, qualification.qualificationId, 'verified');
     assert(again.changed === false, 'a repeated decision reported a change');
     assert(/already verified/.test(again.note), 'a repeated decision did not say why');
 
@@ -308,7 +308,79 @@ export async function run(ctx) {
       .length === 1, 'the reversal was not audited as a rejection');
 
     // Put it back: later tests read this qualification as verified.
-    await verifyQualification(governance, qualification.qualificationId, 'verified');
+    await verifyQualification(admin, qualification.qualificationId, 'verified');
+  });
+
+  await test('the platform owner checks a credential, and governance staff do not', async () => {
+    // Decided 2026-10-22. Governance staff still check the *person* and grant
+    // the *scope*; the credential is the owner's call, because the owner is who
+    // answers for the claim that a document was seen.
+    const second = await recordQualification(candidateUser, candidate.reviewerProfileId,
+      'certificate', 'A second certificate', { subject });
+    await rejects(() => verifyQualification(governance, second.qualificationId, 'verified'),
+      /only the platform owner, or the scholarly board while it is active/);
+
+    const done = await verifyQualification(admin, second.qualificationId, 'verified');
+    assert(done.changed === true, 'the owner could not check a qualification');
+  });
+
+  const boardMember = await newUser('register-board@example.com');
+  await newProfile(boardMember, 'Board Member');
+  await committed(() => grantRole(boardMember, 'scholarly_panel_member', admin));
+
+  await test('a board decides only while the owner has convened it', async () => {
+    const third = await recordQualification(candidateUser, candidate.reviewerProfileId,
+      'ijazah', 'A third ijazah', { subject });
+
+    // Appointed but not convened: an appointment is not a decision.
+    await rejects(() => verifyQualification(boardMember, third.qualificationId, 'verified'),
+      /only the platform owner, or the scholarly board while it is active/);
+
+    await q(`update public.platform_settings set value_text = 'true'
+              where key = 'governance.scholar_board_active'`);
+    try {
+      const done = await verifyQualification(boardMember, third.qualificationId, 'verified');
+      assert(done.changed === true, 'a convened board could not check a credential');
+    } finally {
+      await q(`update public.platform_settings set value_text = 'false'
+                where key = 'governance.scholar_board_active'`);
+    }
+
+    // And closed again.
+    const fourth = await recordQualification(candidateUser, candidate.reviewerProfileId,
+      'degree', 'A fourth degree', { subject });
+    await rejects(() => verifyQualification(boardMember, fourth.qualificationId, 'verified'),
+      /only the platform owner, or the scholarly board while it is active/);
+  });
+
+  await test('only the owner appoints or removes a board member', async () => {
+    const aspirant = await newUser('register-aspirant@example.com');
+    await newProfile(aspirant, 'Aspirant');
+
+    await rejects(() => asActor(governance,
+      'select public.assign_role($1,$2,$3)',
+      [aspirant, 'scholarly_panel_member', 'Would like to help.']),
+    /only the platform owner may appoint or remove a scholarly board member/);
+
+    const appointed = await asActor(admin,
+      'select public.assign_role($1,$2,$3) as r',
+      [aspirant, 'scholarly_panel_member', 'Convening the board.']);
+    assert(appointed.rows[0].r, 'the owner could not appoint a board member');
+
+    await rejects(() => asActor(governance,
+      'select public.revoke_role($1,$2,$3)',
+      [aspirant, 'scholarly_panel_member', 'Changed my mind.']),
+    /only the platform owner may appoint or remove a scholarly board member/);
+
+    const removed = await asActor(admin,
+      'select public.revoke_role($1,$2,$3) as r',
+      [aspirant, 'scholarly_panel_member', 'Board dissolved.']);
+    assert(removed.rows[0].r === true, 'the owner could not remove a board member');
+  });
+
+  await test('a qualification with no subject is refused, because it could never authorise', async () => {
+    await rejects(() => recordQualification(candidateUser, candidate.reviewerProfileId,
+      'ijazah', 'Subjectless'), /has to name the subject it is in/);
   });
 
   // ---------------------------------------------------------------------
@@ -376,6 +448,52 @@ export async function run(ctx) {
       'the record of the revocation was lost');
     const granted = rows.find((r) => r.status === 'active');
     assert(granted.approver === admin, 'the new authorisation did not name who granted it');
+  });
+
+  await test('no authorisation without a verified qualification in that subject', async () => {
+    const otherSubject = await committed(() => q(
+      `insert into public.subject_areas (code, name, status)
+       values ($1,'Register Fiqh','active') returning id`,
+      [`register.fiqh.${crypto.randomUUID().slice(0, 8)}`]).then((r) => r.rows[0].id));
+
+    // Verified person, verified reviewer, and no credential in this subject:
+    // refused even for technical scope, which is the decision.
+    await rejects(() => authorise(governance, candidate.reviewerProfileId, otherSubject,
+      'technical', 'active'), /no verified qualification in that subject/);
+
+    // A credential in the subject is what unlocks the grant.
+    const fiqh = await recordQualification(candidateUser, candidate.reviewerProfileId,
+      'degree', 'A degree in fiqh', { subject: otherSubject });
+    await verifyQualification(admin, fiqh.qualificationId, 'verified');
+    const granted = await authorise(governance, candidate.reviewerProfileId, otherSubject,
+      'technical', 'active');
+    assert(granted.status === 'active', 'a qualified reviewer could not be authorised');
+
+    // Leave the register as later tests expect it.
+    await authorise(governance, candidate.reviewerProfileId, otherSubject, 'technical', 'revoked');
+  });
+
+  await test('a credential that expires takes the authorisation with it', async () => {
+    // The authorisation row still says active. The credential behind it is what
+    // has moved, which is why is_authorised_reviewer() checks both.
+    // Only rows that were actually checked: a pending one has neither date, and
+    // rq_verification_agrees is right to refuse a half-dated row.
+    await q(`update public.reviewer_qualifications
+                set verified_at = now() - interval '2 days',
+                    valid_until = now() - interval '1 day'
+              where subject_area_id = $1 and verification_status = 'verified'`, [subject]);
+    try {
+      assert(await authorised(candidateUser, subject, 'scholarly') === false,
+        'an expired credential still authorised the reviewer');
+      await rejects(() => authorise(governance, candidate.reviewerProfileId, subject,
+        'scholarly', 'active'), /no verified qualification in that subject/);
+    } finally {
+      await q(`update public.reviewer_qualifications
+                  set verified_at = now(), valid_until = null
+                where subject_area_id = $1 and verification_status = 'verified'`, [subject]);
+    }
+    assert(await authorised(candidateUser, subject, 'scholarly') === true,
+      'restoring the credential did not restore the authorisation');
   });
 
   // ---------------------------------------------------------------------

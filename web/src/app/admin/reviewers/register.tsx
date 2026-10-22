@@ -69,9 +69,16 @@ function matches(entry: ReviewerRegisterEntry, filter: Filter): boolean {
 export function ReviewerRegister({
   register,
   subjects,
+  canDecideCredentials,
 }: {
   register: ReviewerRegisterEntry[];
   subjects: SubjectAreaOption[];
+  /**
+   * Whether this viewer may check a qualification. The platform owner always
+   * may; a scholarly board member only while the owner has convened the board.
+   * Passed down rather than inferred, so the screen and the function agree.
+   */
+  canDecideCredentials: boolean;
 }) {
   const [filter, setFilter] = useState<Filter>('all');
   const shown = register.filter((entry) => matches(entry, filter));
@@ -107,7 +114,12 @@ export function ReviewerRegister({
       ) : (
         <div className="stack" style={{ marginTop: '1rem' }}>
           {shown.map((entry) => (
-            <ReviewerCard key={entry.reviewer.reviewerProfileId} entry={entry} subjects={subjects} />
+            <ReviewerCard
+              key={entry.reviewer.reviewerProfileId}
+              entry={entry}
+              subjects={subjects}
+              canDecideCredentials={canDecideCredentials}
+            />
           ))}
         </div>
       )}
@@ -118,9 +130,11 @@ export function ReviewerRegister({
 function ReviewerCard({
   entry,
   subjects,
+  canDecideCredentials,
 }: {
   entry: ReviewerRegisterEntry;
   subjects: SubjectAreaOption[];
+  canDecideCredentials: boolean;
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -331,7 +345,7 @@ function ReviewerCard({
                   </span>
                 </div>
 
-                {q.verificationStatus === 'pending' && (
+                {q.verificationStatus === 'pending' && canDecideCredentials && (
                   <div className="row" style={{ flexWrap: 'wrap', marginTop: '0.5rem' }}>
                     <input
                       type="date"
@@ -357,10 +371,13 @@ function ReviewerCard({
           )}
 
           <p className="meta">
-            The document behind a qualification is not served to any screen —{' '}
-            <code>evidence_reference</code> is not readable by a client, and a storage
-            key is not a document. Checking one here is a judgement made from a
-            document held outside the platform.
+            {canDecideCredentials
+              ? 'The document behind a qualification is not served to any screen — '
+              : 'Checking a qualification is the platform owner\'s decision, or a convened scholarly board\'s. '}
+            {canDecideCredentials && <code>evidence_reference</code>}
+            {canDecideCredentials && ' is not readable by a client, and a storage key is not a document. '}
+            Checking one is a judgement made from a document held outside the platform,
+            recorded with who made it and when.
           </p>
         </div>
       </details>

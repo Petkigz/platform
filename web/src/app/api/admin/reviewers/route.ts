@@ -56,8 +56,20 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return fail('Sign in first.', 401);
 
-  if (!(await isGovernanceStaff(supabase, user.id))) {
-    return fail('Only a governance admin or platform admin may decide who reviews.', 403);
+  // Governance staff run the register. A scholarly board member may reach one
+  // action — checking a qualification — and only while the owner has convened
+  // the board. The database enforces the same rule; this is the courtesy that
+  // lets a board member use the screen at all.
+  let allowed = await isGovernanceStaff(supabase, user.id);
+  if (!allowed && body.action === 'verify-qualification') {
+    const [{ data: boardMember }, { data: boardActive }] = await Promise.all([
+      supabase.rpc('has_role', { p_user_id: user.id, p_role_code: 'scholarly_panel_member' }),
+      supabase.rpc('setting_bool', { p_key: 'governance.scholar_board_active', p_default: false }),
+    ]);
+    allowed = boardMember === true && boardActive === true;
+  }
+  if (!allowed) {
+    return fail('Only a governance admin, the platform owner, or a convened scholarly board may decide who reviews.', 403);
   }
 
   const idOf = (value: unknown) =>

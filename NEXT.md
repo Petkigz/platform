@@ -305,9 +305,15 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **1169 database tests, 777 web tests; TypeScript typecheck and
-production build pass; 103 tables, 228 policies, 136 user-defined triggers,
-263 functions, 111 migrations and 117 app route entries.**
+The reviewer register now has one authority for the thing it could not answer
+before: who may say a credential is real. The platform owner decides, alone,
+unless they have convened a scholarly board — and only they may appoint a member
+to it. A qualification also has to name its subject now, because one that does
+not can never authorise anything.
+
+Verification: **1190 database tests, 791 web tests; TypeScript typecheck and
+production build pass; 103 tables, 228 policies, 137 user-defined triggers,
+272 functions, 113 migrations and 117 app route entries.**
 
 ## Today's sentence
 
@@ -2203,6 +2209,39 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### A credential is decided by the owner, or by the board the owner convenes, 2026-10-22
+
+Verifying a reviewer's qualification was any governance admin's to do, so what
+the platform could say was "a governance admin saw a document". The owner's
+answer is that they are the final authorisation and decide whether a credential
+passes; a scholarly board may decide later, while it is present and active; and
+they accept its members and appoint or remove them.
+
+`20261231000100_review_credential_authority.sql` re-creates three functions and
+adds a fourth. `verify_reviewer_qualification()` now requires `platform_admin`,
+or a `scholarly_panel_member` while `governance.scholar_board_active` is on — the
+new control, shipped `false`. `set_reviewer_authorization()` refuses an active
+authorisation unless a verified, unexpired qualification exists in that exact
+subject, technical scope included. `is_authorised_reviewer()` checks the
+qualification again, so a credential that expires or is rejected takes the
+authorisation with it rather than leaving a grant standing on nothing.
+`record_reviewer_qualification()` refuses a qualification with no subject, and
+one naming a subject that does not exist.
+
+The seventh non-flag control is a switch, and the trigger `ura_protect_scholar_board`
+is the real lock: appointing or removing a `scholarly_panel_member` requires the
+platform owner. Turning the board on therefore cannot create one, and staff cannot
+manufacture an authority that decides in the owner's place. Governance staff keep
+the rest of the register — checking the person, granting scopes, hearing
+conflicts — and the screen says so in place of the buttons they no longer have.
+
+Measured: database suite **1190 passing** (1190 = 1184 + 6 new; the three
+reviewer suites were re-run and re-counted), web suite **791**, 113 migrations,
+272 functions, 137 triggers, 95 settings, 7 controls. `reviewer_register.test.mjs`
+went 31 → 38 tests; `group3.test.mjs` (27) and `review_requirements.test.mjs` (31)
+had their `authorise()` helpers taught to record a verified qualification, because
+an authorisation without one is now correctly refused.
 
 ### The price follows the buyer, not the request, 2026-10-22
 

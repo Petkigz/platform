@@ -268,20 +268,17 @@ test('ending somebody’s access needs a reason; checking them does not', () => 
   assert.equal(validateReviewerStatusInput({}).ok, false);
 });
 
-test('a qualification needs a kind and a title, and nothing else', () => {
+test('a qualification needs a kind, a title and the subject it is in', () => {
   assert.equal(validateQualificationInput({}).ok, false);
   assert.equal(validateQualificationInput({ qualificationType: 'diploma', title: 'x' }).ok, false);
 
-  const bare = validateQualificationInput({ qualificationType: 'ijazah', title: 'Hafs an Asim' });
-  assert.deepEqual(bare, {
-    ok: true,
-    value: {
-      qualificationType: 'ijazah',
-      title: 'Hafs an Asim',
-      institution: null,
-      subjectAreaId: null,
-    },
+  // Decided 2026-10-22. A subjectless qualification can never authorise
+  // anything, so it is not a record the screen will produce.
+  const subjectless = validateQualificationInput({
+    qualificationType: 'ijazah', title: 'Hafs an Asim',
   });
+  assert.equal(subjectless.ok, false, 'a qualification with no subject was accepted');
+  if (!subjectless.ok) assert.match(subjectless.message, /required/);
 
   const full = validateQualificationInput({
     qualificationType: 'certificate',
@@ -400,6 +397,7 @@ test('nobody sends an actor: every register function reads the session', async (
   await setReviewerStatus(stub.client, { reviewerProfileId: 'p-1', status: 'active', note: null });
   await recordReviewerQualification(stub.client, {
     reviewerProfileId: 'p-1', qualificationType: 'ijazah', title: 'Hafs',
+    subjectAreaId: '6f1a1b6a-0000-4000-8000-000000000003',
   });
   await verifyReviewerQualification(stub.client, { qualificationId: 'q-1', decision: 'verified' });
   await setReviewerAuthorization(stub.client, {

@@ -137,7 +137,7 @@ Three kinds of gate:
 
 ## Controls that are not flags
 
-`platform_settings` holds five rows that are not in the tables above. They are
+`platform_settings` holds six rows that are not in the tables above. They are
 not features to switch on — they are dials that decide how the publication and
 money rules behave, and they shipped with values rather than being absent.
 
@@ -148,16 +148,18 @@ money rules behave, and they shipped with values rather than being absent.
 | `teaching.revenue_share_percent` | integer | ADMIN | `50` | The teacher's share of a paid order, in whole percent. **Chosen at 50% by the owner on 2026-10-19** (it was seeded 0 while the number was unchosen). Earnings accrue at whatever this says when an order is confirmed, so setting it is a business decision, not a configuration one. Changing it never rewrites earnings already booked — each entry snapshots the share it accrued under. The percentage being settled does not settle the terms around it: tax per country, who bears processing fees, and uniform-or-per-teacher are still open, and `teaching.payouts` stays CODE-gated |
 | `finance.reporting_currency` | text | ADMIN | `USD` | The one currency money is reported in. **USD, per the project record, before any code existed** — the platform charges in whatever a family has and the owner reads a single figure. Original amounts stay authoritative (D4); this decides only what a total is converted into before a person reads it. Changing it re-reports the past at whatever rates are recorded, it does not restate a ledger row |
 | `media.upload_quota_gb_per_teacher` | integer | ADMIN | `50` | Cumulative master bytes one uploader may store, in GiB. **Chosen at 50 GB on 2026-10-22** — about a day of 1080p video, which is invisible to almost every teacher while stopping one account consuming the storage budget. Counted on masters, not on the renditions derived from them (the ladder stores about 2.1x the master and is the platform's choice, not the teacher's); quarantined and pending masters count, withdrawn ones do not. Enforced only while `platform.cost_controls` is on, at initiate, through `media_upload_allowance()`; a value below 1 raises `media:quota_misconfigured` rather than silently blocking or allowing everything |
+| `governance.scholar_board_active` | boolean | ADMIN | `false` | Whether a scholarly board is convened and may check reviewer credentials. Off means the platform owner alone decides whether a qualification passes. Turning it on grants nothing by itself: only a holder of `scholarly_panel_member` gains the power, and only the owner may appoint or remove one — enforced by a trigger on `user_role_assignments`, not by this switch |
 | `finance.rate_sanity_factor` | integer | ADMIN | `10` | How many times the previous recorded rate for a pair a new rate may be before recording it needs a written reason. A slipped decimal in a rate is a 100x error in the only number the owner reads and it looks perfectly reasonable on screen, so the writer refuses one and keeps the reason in the audit trail. `0` turns the check off |
 
-Measured, the table holds **94 rows: the 88 flags above plus these six.**
-Eighty-nine are boolean switches, four are integers and one is text. Gate types
+Measured, the table holds **95 rows: the 88 flags above plus these seven.**
+Ninety are boolean switches, four are integers and one is text. Gate types
 across the flags: **42 ADMIN, 14 ADMIN + SETUP, 32 CODE**. The two governance
-controls have no gate because they are not features; the three money controls are
-ADMIN, because a number that changes what a total says is changed from the
-dashboard and not from a migration — and so is the upload quota, for the same
-reason: a number that decides what a teacher may store is a decision, not a
-deploy.
+policy controls have no gate because they are not features; the three money
+controls are ADMIN, because a number that changes what a total says is changed
+from the dashboard and not from a migration — and so are the upload quota and the
+board control, for the same reason: a number that decides what a teacher may
+store, or a switch that lets a board decide instead of the owner, is a decision
+and not a deploy.
 
 ---
 

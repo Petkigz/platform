@@ -41,6 +41,14 @@ export async function run(ctx) {
              select $1, id, $2, 'active', $3, now()
                from public.subject_areas where code = $4
              on conflict do nothing`, [rp, scope, by, subjectCode]);
+    // Since 2026-10-22 an authorisation needs a verified qualification in the
+    // subject as well — is_authorised_reviewer() reads both, and the assignment
+    // trigger below is where this fixture would otherwise fail.
+    await q(`insert into public.reviewer_qualifications
+               (reviewer_profile_id, qualification_type, qualification_title,
+                subject_area_id, verification_status, verified_by, verified_at)
+             select $1, 'experience', 'Fixture qualification', sa.id, 'verified', $2, now()
+               from public.subject_areas sa where sa.code = $3`, [rp, by, subjectCode]);
     return rp;
   }
 

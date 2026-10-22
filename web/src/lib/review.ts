@@ -893,6 +893,13 @@ export type RegisterValidation<T> = { ok: true; value: T } | { ok: false; messag
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+function requiredId(value: unknown, label: string): RegisterValidation<string> {
+  const id = optionalId(value, label);
+  if (!id.ok) return id;
+  if (id.value === null) return { ok: false, message: `${label} is required.` };
+  return { ok: true, value: id.value };
+}
+
 function optionalId(value: unknown, label: string): RegisterValidation<string | null> {
   if (value === null || value === undefined || value === '') return { ok: true, value: null };
   if (typeof value !== 'string' || !UUID.test(value)) {
@@ -958,7 +965,7 @@ export function validateQualificationInput(input: {
   qualificationType: QualificationType;
   title: string;
   institution: string | null;
-  subjectAreaId: string | null;
+  subjectAreaId: string;
 }> {
   const type = typeof input.qualificationType === 'string' ? input.qualificationType : '';
   if (!QUALIFICATION_TYPES.includes(type as QualificationType)) {
@@ -968,7 +975,9 @@ export function validateQualificationInput(input: {
   if (!title.ok) return title;
   const institution = within(input.institution, INSTITUTION_MAX, 'An institution');
   if (!institution.ok) return institution;
-  const subject = optionalId(input.subjectAreaId, 'The subject');
+  // A qualification that names no subject can never authorise anything, so the
+  // screen will not produce one (decided 2026-10-22). The database refuses it too.
+  const subject = requiredId(input.subjectAreaId, 'The subject it is in');
   if (!subject.ok) return subject;
   return {
     ok: true,

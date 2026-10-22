@@ -129,6 +129,14 @@ export async function run(ctx) {
       `insert into public.reviewer_subject_authorizations
          (reviewer_profile_id, subject_area_id, review_scope, status, approver, approved_at)
        values ($1,$2,$3,'active',$4,now())`, [profileId, subjectId, scope, admin]));
+    // A verified qualification in the subject, because since 2026-10-22
+    // is_authorised_reviewer() requires one and the assignment trigger reads it.
+    await committed(() => q(
+      `insert into public.reviewer_qualifications
+         (reviewer_profile_id, qualification_type, qualification_title,
+          subject_area_id, verification_status, verified_by, verified_at)
+       values ($1,'experience','Fixture qualification',$2,'verified',$3,now())`,
+      [profileId, subjectId, admin]));
     return profileId;
   }
 
