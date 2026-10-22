@@ -2504,6 +2504,28 @@ processing agreement, and it is the one part of live classes that cannot be buil
 **Also open:** whether a recording is offered to learners who missed the class, and how long
 it is kept. Nothing produces a recording yet, so nothing has to decide that today — but the
 moment a provider is connected, it is the next question.
+## A message that is about to happen is computed, not stored — **DECIDED 2026-10-22**
+
+With no delivery provider, the platform said nothing to anybody. `/notifications` fixes the half
+that never needed a vendor, and splits it in two on a rule worth writing down.
+
+**Something that happened is stored.** A payout sent, a payout that failed, a request staff
+cancelled: each is written by the function that did it, in the same transaction, with a dedupe key
+so a retried event is one message. It has a read state because a person dismisses it.
+
+**Something about to happen is derived.** A class within a day and a plan renewing within three are
+computed at read time from the rows that already say so. Storing them would mean writing tomorrow's
+message today, then a scheduler to keep it true, then a way to un-write it when the class moves.
+Deriving it means it cannot be stale, duplicated or orphaned, and a cancellation needs no cleanup.
+Derived reminders have **no read state**: they are current, not waiting to be dismissed.
+
+Both halves are gated on the feature they describe. A reminder about a live class cannot appear
+while `delivery.live_classes` is off, because the thing being reminded of is not reachable — the
+same rule as the Plus shelf that a not-entitled learner must not be pointed at.
+
+`notify_user()` is not granted to anybody: it takes a user id, and a caller with it could reach
+anybody. Writers are the definer functions that already decided who is affected.
+
 ## What is owed to teachers is a balance, and it is shown apart from the flows — **DECIDED 2026-10-22**
 
 Three surfaces now describe teacher money and none of them may be mistaken for another. The

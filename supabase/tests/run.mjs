@@ -92,6 +92,7 @@ import { run as planStanding } from './plan_standing.test.mjs';
 import { run as earningsStatement } from './earnings_statement.test.mjs';
 import { run as instructorPayouts } from './instructor_payouts.test.mjs';
 import { run as teacherLiability } from './teacher_liability.test.mjs';
+import { run as notifications } from './notifications.test.mjs';
 
 // Settings that are global by design: one row, read by code far from the suite
 // that changes it. The revenue share decides what every accrual computes; the
@@ -192,6 +193,7 @@ for (const [name, fn] of [
   ['earnings statement', earningsStatement],
   ['instructor payouts', instructorPayouts],
   ['teacher liability', teacherLiability],
+  ['notifications', notifications],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],

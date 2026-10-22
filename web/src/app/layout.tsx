@@ -60,6 +60,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 redirect rather than a page, so it costs nothing to link from a
                 static footer. */}
             <Link href="/dashboard">Your area</Link>
+            {/* Messages are in-app only while no delivery provider exists, so
+                the way in sits beside the way to your area rather than in the
+                masthead, which is deliberately auth-agnostic. */}
+            <Link href="/notifications">Notifications</Link>
           </div>
         </footer>
       </body>
