@@ -2022,3 +2022,36 @@ different product; a plan covering several learners is a plan, not a course purc
   templates, refuses an unfilled placeholder, and ships every row as `queued` because nothing
   can send. Choosing and configuring a provider remains the owner's.
 
+## Promotions belong to the platform, or to the teacher whose course they discount — **DECIDED 2026-10-22**
+
+The owner's rule: promotions are managed by them and sometimes by teachers; different
+promotions run in different regions and countries; and prices already differ between them
+because currencies do not carry the same weight and living costs differ.
+
+**Who.** The platform owner may run a campaign on any course and across any set of markets.
+A teacher may run one on their own courses only, and must name them — an empty course list
+means "every course", which is a platform privilege. Nobody else creates a campaign, and a
+teacher's campaign records the teacher as its owner so a later dispute has an answer. The
+writer derives the owner from the actor rather than accepting it, and the direct write
+policies on `promotion_campaigns` were dropped so there is no second path that skips the
+checks.
+
+**Where.** A campaign names any number of markets, as ISO country codes — the same grain as
+`prices.market`. No markets means every market the course is sold in. A "region" is several
+rows, so a West-Africa campaign is a list, not a new concept. A market the course has no
+live price in is refused when the campaign is created, because a promotion aimed at a place
+where nothing is sold can only disappoint somebody who was told about it.
+
+**What it is worth.** A percentage applies to the local price: ten percent off is ten
+percent in Kampala and in Nairobi, and nothing is converted. A fixed amount carries its own
+currency, and every market it names must price that course in it — a 5 000 shilling discount
+aimed at a dollar market is a different gift, so it is refused at creation rather than at
+checkout, where it would look to a family like a broken code.
+
+**Still open, and next:** how a buyer redeems a code. That unit applies a campaign to a
+pending order (window, usage limits, per-person limit, new-customer rule, market and course
+match), writes a `promotion` adjustment and a redemption snapshot, and makes the existing
+`promotion` adjustment type reachable. Stacking is decided there: one code per order, and
+the code the buyer types is the one applied rather than the best of several, because a
+discount that changes silently is worse than one that is refused.
+

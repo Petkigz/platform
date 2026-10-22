@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1206 database tests, 794 web tests; TypeScript typecheck and
-production build pass; 105 tables, 230 policies, 138 user-defined triggers,
-273 functions, 116 migrations and 118 app route entries.**
+Verification: **1215 database tests, 794 web tests; TypeScript typecheck and
+production build pass; 107 tables, 231 policies, 138 user-defined triggers,
+275 functions, 117 migrations and 118 app route entries.**
 
 ## Today's sentence
 
@@ -2216,6 +2216,45 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### A promotion knows whose it is and where it may be used, 2026-10-22
+
+The owner's rule: they run promotions and sometimes teachers do; different
+promotions run in different regions and countries; and prices already differ by
+market because currencies and living costs differ. The last part was built in
+`20261230000100` (`prices.market` is a country). This unit builds the first two
+and the consequence of the third.
+
+`20261235000100_promotion_ownership_and_markets.sql` adds `owner_type` and
+`instructor_id` to `promotion_campaigns`, a `promotion_campaign_markets` table
+(any number of countries, none meaning "everywhere the course is sold") and a
+`promotion_campaign_courses` table. A "region" is several market rows; it needs
+no new concept.
+
+`create_promotion_campaign()` derives the owner from the actor instead of
+accepting it: platform owner, or a teacher naming their own courses. An empty
+course list is a platform-only privilege, and a teacher naming somebody else's
+course is refused by name. A code is normalised to upper case, so `eid24` and
+`EID24` are one code.
+
+The third part is the interesting one. A **percentage** applies to the local
+price — ten percent off is ten percent in Kampala and in Nairobi, and nothing is
+converted. A **fixed amount** carries its own currency and may only name markets
+whose live price for the course is in that currency: 5 000 shillings off aimed
+at a shilling market is a gift, the same number aimed at a market priced in
+dollars is a different one, and the refusal happens at creation rather than at
+checkout where it would look to a family like a broken code. A market the course
+has no live price in is refused for the same reason.
+
+The direct write policies on `promotion_campaigns` were dropped. A validation
+that one path honours and another skips is not a rule, so the writer is the only
+way in and a staff member inserting a campaign by hand now meets RLS.
+
+Measured: database suite **1215 passing** (9 new), 107 tables, 117 migrations.
+**Redemption is next**: applying a code to a pending order (window, limits,
+market and course match), writing the `promotion` adjustment and the redemption
+snapshot, and deciding stacking — which is recorded as one code per order, the
+one the buyer typed.
 
 ### One purchase, one learner, 2026-10-22
 
