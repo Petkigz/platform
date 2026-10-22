@@ -2357,3 +2357,38 @@ it. Erasure needs one policy answer before it needs code — what survives delet
 default I would propose: financial rows survive, because they are the ledger and the basis
 of a refund; personal fields are stripped; the account is closed rather than erased where
 the law allows. That is a decision for the owner, not for this migration.
+## A streak is a memory, not a record — **DECIDED 2026-10-22**
+
+Every learning product counts streaks, and the obvious build is a table with a row per
+learner per day filled by a job. That build has to be kept true: a midnight rollover that
+can miss, a counter that can drift from the progress it summarises, and a run of days that
+survives after the lessons it counted were removed. For a child, it is also a record of
+when somebody was sitting in front of a screen, held forever, for the sake of a sentence
+on a dashboard.
+
+So the streak is **derived on read** from `lesson_progress.completed_at`. There is no
+`streaks` table, no nightly job, and nothing to migrate when the underlying history
+changes. The consequences are deliberate:
+
+- **A day is local.** The boundary is the learner's `user_profiles.timezone`; for a child
+  with no account it is the reader's; `UTC` is the last resort, and each candidate is
+  checked against `pg_timezone_names` so a bad value falls back rather than raising.
+- **One quiet day does not end it.** The run counts back from today *or* yesterday, so a
+  learner who finished at 23:50 and opens the app at 00:10 has not lapsed.
+- **Badges are thresholds, not awards.** `first_lesson`, `ten_lessons`, `first_course`,
+  `first_certificate` are computed from the same figures, and each carries the day it was
+  earned, taken from the completion that crossed the line rather than from when somebody
+  looked. Nothing can be granted to the wrong learner, and a badge cannot outlive the work
+  that earned it.
+- **Erasure is free.** Deleting progress deletes the streak, because the streak was never
+  stored anywhere else.
+
+The display is one component, used on `/learn` and on each child's card at `/family`. The
+guardian sees the child's name instead of "you", because a strip that says "you" on a
+child's card is a lie about who did the work. It is behind `learning.streaks`, ships off,
+and an unreadable reply renders nothing rather than an empty box — the same rule as the
+export and the receipt.
+
+**Not decided here:** anything social. No leaderboards, no comparison between children,
+no notifications to prompt a return. A streak that shames a six-year-old is not
+encouragement, and nothing in this build asks the platform to hold a reason to return.

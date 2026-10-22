@@ -11,6 +11,8 @@ import {
   fetchFamilyMembers,
   type Family,
 } from '@/lib/family';
+import { fetchEngagement } from '@/lib/engagement';
+import { EngagementStrip } from '@/components/engagement-strip';
 import { AddChild } from './add-child';
 import { CreateFamily } from './create-family';
 
@@ -108,12 +110,20 @@ async function FamilyBlock({
   // every query on the same session.
   supabase: Awaited<ReturnType<typeof createClient>>;
 }) {
+  // A streak is derived from progress that already exists, so a failure to read it is
+  // silence rather than an error: the child's card is still worth showing without it.
+  // The flag is checked once, not once per child.
+  const streaksOn = await isFlagEnabled(supabase, 'learning.streaks').catch(() => false);
+
   const [members, childCourses] = await Promise.all([
     fetchFamilyMembers(supabase, family.id).catch(() => []),
     Promise.all(
       family.children.map(async (c) => ({
         child: c,
         courses: await fetchChildCourses(supabase, c.id).catch(() => []),
+        engagement: streaksOn
+          ? await fetchEngagement(supabase, c.id).catch(() => null)
+          : null,
       })),
     ),
   ]);
@@ -137,7 +147,7 @@ async function FamilyBlock({
         </div>
       ) : (
         <div className="grid cols-2">
-          {childCourses.map(({ child, courses }) => (
+          {childCourses.map(({ child, courses, engagement }) => (
             <div className="card" key={child.id}>
               <h3 style={{ marginTop: 0 }}>{child.displayName}</h3>
               <div className="badges">
@@ -148,6 +158,12 @@ async function FamilyBlock({
                   <span className="badge neutral">{child.status}</span>
                 )}
               </div>
+
+              {engagement && (
+                <div style={{ marginTop: '0.6rem', marginBottom: '0.6rem' }}>
+                  <EngagementStrip engagement={engagement} subject={child.displayName} />
+                </div>
+              )}
 
               {courses.length === 0 ? (
                 <p className="empty" style={{ marginBottom: 0 }}>

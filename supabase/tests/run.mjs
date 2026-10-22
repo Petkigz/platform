@@ -78,6 +78,7 @@ import { run as shareInvitations } from './share_invitations.test.mjs';
 import { run as orderQuote } from './order_quote.test.mjs';
 import { run as orderReceipt } from './order_receipt.test.mjs';
 import { run as exportMyData } from './export_my_data.test.mjs';
+import { run as learnerStreaks } from './learner_streaks.test.mjs';
 import { run as promotionRemoval } from './promotion_removal.test.mjs';
 import { run as ownLearnerProfile } from './own_learner_profile.test.mjs';
 
@@ -166,6 +167,7 @@ for (const [name, fn] of [
   ['order quote', orderQuote],
   ['order receipt', orderReceipt],
   ['export my data', exportMyData],
+  ['learner streaks', learnerStreaks],
   ['promotion removal', promotionRemoval],
   ['own learner profile', ownLearnerProfile],
   ['earnings', earnings],

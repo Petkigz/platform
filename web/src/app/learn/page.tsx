@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { fetchSummary } from '@/lib/progress';
+import { fetchEngagement } from '@/lib/engagement';
+import { EngagementStrip } from '@/components/engagement-strip';
 import { isFlagEnabled } from '@/lib/flags';
 
 export const dynamic = 'force-dynamic';
@@ -120,6 +122,14 @@ export default async function LearnPage() {
     }),
   );
 
+  // A streak is a display over progress that already exists, so a failure to read it is
+  // silence rather than an error: `fetchEngagement` returns null when the feature is
+  // off, when the learner is not the caller's, and when the reply is unreadable.
+  const streaksOn = await isFlagEnabled(supabase, 'learning.streaks').catch(() => false);
+  const engagement = streaksOn && myProfileId
+    ? await fetchEngagement(supabase, myProfileId)
+    : null;
+
   const progressOn = await isFlagEnabled(supabase, 'learning.progress').catch(() => false);
   // Saved courses live here rather than in the masthead: the nav is already
   // eight links wide on a phone, and this is where someone looks for their own
@@ -155,6 +165,12 @@ export default async function LearnPage() {
           </button>
         </form>
       </p>
+
+      {engagement && (
+        <section className="card" style={{ marginTop: '1.25rem' }}>
+          <EngagementStrip engagement={engagement} />
+        </section>
+      )}
 
       {error && (
         <div className="notice error">

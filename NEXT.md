@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1282 database tests, 828 web tests; TypeScript typecheck and
+Verification: **1288 database tests, 833 web tests; TypeScript typecheck and
 production build pass; 108 tables, 233 policies, 140 user-defined triggers,
-289 functions, 128 migrations and 128 app route entries.**
+290 functions, 129 migrations and 128 app route entries.**
 
 ## Today's sentence
 
@@ -2219,6 +2219,38 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### A streak is a memory, not a record, 2026-10-22
+
+A child learning at home has nothing telling them they came back yesterday. The
+encouragement that exists in every learning product — "four days in a row" — was absent,
+and the obvious way to add it is the wrong one: a `streaks` table, a nightly job to roll
+days over, a row per learner per day that can be lost, miscounted, or quietly disagree with
+the progress it claims to summarise.
+
+`learner_engagement()` derives all of it on read, from `lesson_progress.completed_at`. The
+streak is consecutive **local** days ending today or yesterday — a day with nothing in it
+does not break it until it becomes two, because a learner who finished a lesson at 23:50
+and opens the app at 00:10 has not lapsed. The day boundary is the learner's
+`user_profiles.timezone`, falling back to the reader's and then to UTC, each checked against
+`pg_timezone_names` so a bad string cannot raise. The longest run, the lessons finished, the
+courses completed and the certificates issued are counted in the same call, and **nothing is
+written**: there is no table, no job, and no migration to run when a child's history changes.
+Deleting progress removes the streak with it, which is the correct coupling and the one a
+stored counter cannot offer.
+
+Badges are thresholds over the same figures — first lesson, ten lessons, first course,
+first certificate — each carrying the day it was **earned**, computed from the tenth
+completion's own timestamp rather than from when somebody looked. They are a list decided
+by the database, not a table of awards, so a badge cannot be granted to the wrong person or
+survive the work it celebrates.
+
+The strip is one component, rendered on `/learn` for the learner and on each child's card
+at `/family` for a guardian, with the wording changed from "you" to the child's name —
+a strip saying "you" on a child's card would be a lie about who did the work. Behind
+`learning.streaks`, which ships off. Turning it off makes the strip disappear and changes
+nothing else, because there is nothing stored to strand; and an unreadable reply renders
+nothing rather than an empty box, the same rule the export and the receipt follow.
 
 ### A person can take their data out, 2026-10-22
 

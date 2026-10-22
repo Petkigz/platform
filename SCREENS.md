@@ -63,7 +63,7 @@ Status:
 | 22 | Video lesson *(adult chrome)* | **BUILT** — same route as #14, chrome not yet differentiated |
 | 23 | Qur'an / audio player | READY |
 | 24 | Quiz or exam | **BUILT** — same route as #16; an `exam` assessment is a `type`, not a separate screen |
-| 25 | Progress | **BUILT** — `/learn` lists enrolments with lesson completion; per-path progress on `/paths/[slug]`. No certificates-of-progress or streaks |
+| 25 | Progress | **BUILT** — `/learn` lists enrolments with lesson completion; per-path progress on `/paths/[slug]`. A streak and badge strip sits above them and on each child's card at `/family`, derived on read behind `learning.streaks`. No certificates-of-progress |
 | 26 | Certificate | **BUILT** — `/certificates` and `/certificates/[number]`. No printable PDF yet |
 
 ## 5. Learning, shared — 2  *(missing from the source list)*
