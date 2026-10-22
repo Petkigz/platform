@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1191 database tests, 792 web tests; TypeScript typecheck and
-production build pass; 103 tables, 228 policies, 137 user-defined triggers,
-272 functions, 114 migrations and 117 app route entries.**
+Verification: **1200 database tests, 792 web tests; TypeScript typecheck and
+production build pass; 105 tables, 230 policies, 138 user-defined triggers,
+273 functions, 115 migrations and 118 app route entries.**
 
 ## Today's sentence
 
@@ -2214,6 +2214,39 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### The platform writes down what it would send, and says so, 2026-10-22
+
+Three things are waiting on an email/SMS provider: the invitation to an address
+with no account, purchase receipts, and the correspondence that today is only
+read in a dashboard. None of them can be finished by pretending a message left
+the building, so this unit builds the half that does not need a vendor — the
+record and the rendering.
+
+`20261233000100_outbound_messages.sql` adds `message_templates` (the copy a
+person reads about money and invitations, in the database so changing a sentence
+is not a deploy) and `outbound_messages` (the record). `queue_message()` renders
+a named template with the caller's values and refuses two things that would
+otherwise reach a person: an unknown template, and a template with an unfilled
+placeholder — a receipt that says `{{amount}}` is worse than no receipt. A
+signed-in caller must be staff; the system path (a confirmed payment) calls with
+no actor and is attributed to the platform rather than to a person.
+
+Nothing sends. There is no provider, `delivery.notifications` stays off, and
+every row is `queued`. The constraints are what keep that honest when a provider
+arrives: a row cannot be `sent` without a provider and a time, cannot be `failed`
+without a reason, and cannot be edited by a client at all — there is no write
+policy, so rows enter through the function and only a dispatcher will change a
+status.
+
+`/admin/messages` is the reading surface, staff-only and read-only. It says on
+its face that nothing has left the platform. That sentence is the point of the
+unit: before it, the platform could not tell the difference between a message it
+had queued and one it had sent, because it had neither.
+
+Measured: database suite **1200 passing** (9 new), web suite **792**, 105 tables,
+115 migrations, 273 functions, 118 app routes. `delivery.notifications` remains
+off; the provider is still the first external blocker.
 
 ### A flag that the writer does not honour is decoration, 2026-10-22
 

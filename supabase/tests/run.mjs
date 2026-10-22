@@ -70,6 +70,7 @@ import { run as adminOrderQueue } from './admin_order_queue.test.mjs';
 import { run as discountSharing } from './discount_sharing.test.mjs';
 import { run as mediaUploadQuota } from './media_upload_quota.test.mjs';
 import { run as marketPricing } from './market_pricing.test.mjs';
+import { run as messages } from './messages.test.mjs';
 
 // Settings that are global by design: one row, read by code far from the suite
 // that changes it. The revenue share decides what every accrual computes; the
@@ -148,6 +149,7 @@ for (const [name, fn] of [
   ['discount sharing', discountSharing],
   ['media upload quota', mediaUploadQuota],
   ['market pricing', marketPricing],
+  ['messages', messages],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],

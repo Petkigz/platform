@@ -197,6 +197,13 @@ export default async function AdminPage() {
       </p>
 
       <p>
+        <Link href="/admin/messages">Messages</Link> — what the platform would
+        send, rendered and recorded. Nothing leaves the building until a
+        delivery provider is configured, which is why{' '}
+        <code>delivery.notifications</code> ships off.
+      </p>
+
+      <p>
         <Link href="/admin/course-reviews">Course review queue</Link> — learner
         ratings that include words, held until someone reads them. Ratings
         alone are published immediately. Off until{' '}
