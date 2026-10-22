@@ -166,6 +166,16 @@ const COURSE_ORDER_REFUSALS: Record<string, { code: CheckoutErrorCode; message: 
     code: 'price_not_for_this_course',
     message: 'That price does not apply to this course.',
   },
+  // A course purchase grants every learner profile on the account that pays, so
+  // an account that already holds this version can only be charged for access it
+  // has. Said as reassurance rather than a refusal, because the commonest way to
+  // meet this is a guardian who does not know the family is already covered —
+  // including the case that looks like a second child and is not.
+  already_owned: {
+    code: 'already_entitled',
+    message:
+      'Everyone on this account already has this course, so buying it again would add nothing.',
+  },
 };
 
 /** Split `checkout:<key>` back out of a Postgres error message. */

@@ -303,9 +303,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **1156 database tests, 772 web tests; TypeScript typecheck and
+Verification: **1160 database tests, 773 web tests; TypeScript typecheck and
 production build pass; 103 tables, 228 policies, 136 user-defined triggers,
-263 functions, 109 migrations and 117 app route entries.**
+263 functions, 110 migrations and 117 app route entries.**
 
 ## Today's sentence
 
@@ -362,7 +362,7 @@ given a surface. Grouped by the feature they belong to:
 | Reviewer machinery — the versions | `content_review_requirements`, `technical_review_checks`, `content_change_assessments` | **Now written** by `20261221000100_review_requirements.sql`, on `/teach/[courseId]`, `/admin/reviews` and `/review/[assignmentId]`. `validate_review_assignment()`'s authorisation loop now has something to loop over, so a version can require a reviewer authorised for a subject — and a requirement can be closed, which nothing could do before |
 | Payouts | `instructor_payouts`, `instructor_payout_items` | `teaching.payouts`, off; ROADMAP already says "3 tables with no fields and no endpoints" |
 | Institutions | `institutions` | `commerce.institutions` and four `institution.*` flags, all off |
-| Money plumbing | `currency_exchange_rates`, `order_adjustments`, `payment_method_references` | **`currency_exchange_rates` is now written and read** by `20261223000100_currency_reporting.sql`, on `/admin/exchange-rates` and `/admin/money-report`, and it is what stamps `financial_transactions.fx_rate`/`fx_source`/`fx_observed_at` — columns a constraint required and nothing ever set. Multi-currency reporting is therefore built; the open part is what nets against what in the report. `orders` and `order_items` are now **writer-only**: `20261224000100_course_order_writer.sql` dropped `orders_insert` and `order_items_insert`, so a course order exists only if `create_course_order()` made it (see today's section — the policies had let a payer write the total and the product themselves). `order_adjustments` is now **written by `add_order_adjustment()`/`void_order_adjustment()` and read on `/orders`** — its client-side insert policy is dropped and an order's total is held against its items plus its live adjustments by a trigger before it can be paid (`20261225000100`). `/admin/orders` drives both writers and `admin_orders_overview()` reads the queue, so nothing about an order's total is reachable only by hand. A discount is now **shared at the revenue-share rate** by `20261227000100_discount_sharing.sql`, so the teacher's side of a credit is recorded (`instructor_earnings_entries.shared_discount_minor`) instead of being absorbed silently by the platform. Promotions remain refused by the writer until the staged build recorded in `DECISIONS.md` reaches its first stage. `payment_method_references` needs a provider that can store one |
+| Money plumbing | `currency_exchange_rates`, `order_adjustments`, `payment_method_references` | **`currency_exchange_rates` is now written and read** by `20261223000100_currency_reporting.sql`, on `/admin/exchange-rates` and `/admin/money-report`, and it is what stamps `financial_transactions.fx_rate`/`fx_source`/`fx_observed_at` — columns a constraint required and nothing ever set. Multi-currency reporting is therefore built; the open part is what nets against what in the report. `orders` and `order_items` are now **writer-only**: `20261224000100_course_order_writer.sql` dropped `orders_insert` and `order_items_insert`, so a course order exists only if `create_course_order()` made it (see today's section — the policies had let a payer write the total and the product themselves). The writer also refuses a purchase that would grant nothing new (`20261228000100`, `checkout:already_owned`), which is the last thing on the purchase path that could take money for access the account already has. `order_adjustments` is now **written by `add_order_adjustment()`/`void_order_adjustment()` and read on `/orders`** — its client-side insert policy is dropped and an order's total is held against its items plus its live adjustments by a trigger before it can be paid (`20261225000100`). `/admin/orders` drives both writers and `admin_orders_overview()` reads the queue, so nothing about an order's total is reachable only by hand. A discount is now **shared at the revenue-share rate** by `20261227000100_discount_sharing.sql`, so the teacher's side of a credit is recorded (`instructor_earnings_entries.shared_discount_minor`) instead of being absorbed silently by the platform. Promotions remain refused by the writer until the staged build recorded in `DECISIONS.md` reaches its first stage. `payment_method_references` needs a provider that can store one |
 | History and diagnostics | `order_status_history`, `publication_events`, `entitlement_events`, `course_enrolment_version_history`, `subscription_history` | **Now read** by `support_case_history()`, on `/support/<caseNumber>` for staff. Still closed to every other read path, which is the point: one function decides what support may see |
 | Diagnostics with no writer | `access_checks` | **Correction to the audit:** nothing has ever inserted a row here — not a trigger, not a function, not a route. Its comment promises a denial log for support agents and the platform does not keep one. Excluded from the console on purpose; an always-empty list would read as "no denial happened" |
 | Other | `adult_learning_shares` | **Now written and read**, by `20261222000100_adult_learning_shares.sql` on `/account/sharing`. The console still reads it too, and its empty section is now a true answer about a feature that exists: nobody has been given sight of this adult's progress. The gap the audit named — no writer, and no predicate that made a share mean anything — is closed at both ends |
@@ -1971,6 +1971,52 @@ screen.
   beside `record_payment_success()` that writes no financial transaction, or an allowance
   for a zero-amount capture that the ledger is then taught to interpret. Decided by whoever
   wants full scholarships, not by the accrual code.
+
+### A purchase that would grant nothing new is refused, 2026-10-22
+
+`create_course_order()` was careful about everything the buyer could lie about — the
+course, the price, the product behind it, the currency, the account — and silent about the
+one thing it could have asked and didn't: do they already have this? Entitlements are not
+consulted anywhere on the purchase path. An account with live access could buy the same
+version again, pay in full, and receive nothing, because `record_payment_success()` skips a
+grant that already exists. Nobody is defrauded. A family is charged for air and gets a
+refund, which is the expensive way to fix a question that costs one `select`.
+
+**The condition, and why it is that narrow.** Refused when a learner profile belonging to
+an active member of the account that would pay already holds a live `purchase` entitlement
+for this exact course version. Three words in that sentence are doing work:
+
+- **`purchase`** — because that is what the fulfilment skips. A grant that came from a
+  subscription expires with the subscription, so buying the course outright adds
+  permanence and must still work. Asking "do they have any entitlement" would block the one
+  purchase that upgrades them.
+- **the account** — because the grant is per account: fulfilment loops over every learner
+  profile of every active member, so one purchase covers every child. That is also the
+  answer to the case that looks like it should be the exception. Twins are two profiles on
+  one account, the first purchase enrols both, and there is no second purchase to refuse. A
+  rule written per child would have been the one that could reject a twin; this one cannot.
+- **live** — a revoked, suspended or expired grant does not block. A family that lost access
+  is buying it again, which is a real purchase.
+
+**The key is `checkout:already_owned`**, mapped in `web/src/lib/checkout.ts` to
+`already_entitled` — 409, because it is a conflict with the state of the account and not a
+mistake in the request. The sentence matters more than usual here: *"Everyone on this
+account already has this course, so buying it again would add nothing."* Not "you already
+own this", which reads as a refusal to let a parent buy for a second child, and which is
+wrong about who the grant belongs to. A test asserts the reassuring framing rather than
+just the code, and asserts the payer is never shown the raw key.
+
+**A full redefinition, not a wrapper.** The new migration repeats the function body from
+`20261224000100` with one block added after the account is resolved — the check needs the
+account, and the account is created on the fly when the payer has none. Diffing the two
+files shows the block and nothing else, which is the only honest way to carry a change into
+a 250-line definer function: a wrapper would have meant two places that decide what an order
+is.
+
+4 database tests, 1 web test, one migration. The tests cover the refusal, the lapsed grant
+that must not block, the subscription grant that must not block, and a second family buying
+the same course.
+
 
 ## Open external decisions (not to be guessed)
 

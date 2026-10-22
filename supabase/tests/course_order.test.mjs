@@ -642,4 +642,99 @@ export async function run(ctx) {
       count('select id from public.orders where id = $1', [orderId]));
     assert(hidden === 0, `a stranger saw ${hidden} of somebody else's orders`);
   });
+
+  // ---------------------------------------------------------------------
+  // A purchase that would grant nothing new (decided and built 2026-10-22)
+  //
+  // The writer derived everything about an order from the catalogue and never
+  // asked whether the buyer already had the thing, so an account with live
+  // access could pay for it again. The refusal is scoped to a live `purchase`
+  // entitlement for this exact version, on a profile belonging to an active
+  // member of the account that would pay — which is precisely what
+  // record_payment_success() would skip.
+  // ---------------------------------------------------------------------
+
+  /** Pay an order the way the platform does — a privileged actor with evidence. */
+  const payOrder = (orderId, reference) =>
+    q('select id from public.record_payment_success($1,$2,$3,$4,null,$5)',
+      [orderId, admin, 'manual', reference, `Cash, receipt ${reference}`]);
+
+  await test('a second purchase of the same course is refused and makes no order', async () => {
+    const offer = await sellableCourse({ amountMinor: 30000 });
+    const buyer = await newBuyer('Bought Twice');
+
+    const first = await withCheckoutOn(() => callWriter(buyer.userId, offer.course, offer.priceId));
+    const orderId = first.rows[0].r.orderId;
+    await payOrder(orderId, 'CO-DUP-1');
+
+    const accountId = (await scalar(
+      'select billing_account_id from public.orders where id = $1', [orderId])).billing_account_id;
+
+    await withCheckoutOn(() => rejects(
+      () => callWriter(buyer.userId, offer.course, offer.priceId),
+      /checkout:already_owned/i));
+
+    const orders = await count(
+      'select id from public.orders where billing_account_id = $1', [accountId]);
+    assert(orders === 1,
+      `${orders} orders exist after one purchase and one refusal — a refusal wrote a row`);
+
+    // The refusal is the guard, not the flag: checkout was open when it fired.
+    const flag = await scalar(
+      `select value_text from public.platform_settings where key = 'commerce.checkout'`);
+    assert(flag.value_text === 'false',
+      `the checkout flag is '${flag.value_text}' — the suite did not put it back`);
+  });
+
+  await test('a lapsed entitlement does not block a purchase', async () => {
+    const offer = await sellableCourse({ amountMinor: 15000 });
+    const buyer = await newBuyer('Lapsed');
+    const first = await withCheckoutOn(() => callWriter(buyer.userId, offer.course, offer.priceId));
+    await payOrder(first.rows[0].r.orderId, 'CO-DUP-2');
+
+    // Revoked: the family lost access, so buying again is a real purchase. A
+    // rule that counted any historical entitlement would lock them out of the
+    // course they had already paid for once.
+    // eg_revocation_agrees: a revoked grant names when and why, so the row stays
+    // explainable — the same rule the refund path follows.
+    await q(`update public.entitlement_grants
+                set status = 'revoked', revoked_at = now(),
+                    revocation_reason = 'Revoked by the family'
+              where learner_profile_id = $1 and course_version_id = $2`,
+      [buyer.learnerId, offer.version]);
+
+    const again = await withCheckoutOn(() => callWriter(buyer.userId, offer.course, offer.priceId));
+    assert(again.rows[0].r.orderId, 'a revoked entitlement still blocked the purchase');
+  });
+
+  await test('access from a subscription does not block buying the course outright', async () => {
+    const offer = await sellableCourse({ amountMinor: 20000 });
+    const buyer = await newBuyer('Subscribed');
+
+    // A plan grants this version, and that grant ends when the plan does.
+    // Buying the course adds permanence, and the fulfilment would create a new
+    // purchase entitlement — it skips only a live `purchase` row, so this
+    // refusal asks the same question rather than a stricter one.
+    await q(`insert into public.entitlement_grants
+               (learner_profile_id, scope_type, course_version_id,
+                source_type, status, effective_from)
+             values ($1,'course_version',$2,'subscription','active',now())`,
+      [buyer.learnerId, offer.version]);
+
+    const made = await withCheckoutOn(() => callWriter(buyer.userId, offer.course, offer.priceId));
+    assert(made.rows[0].r.orderId, 'a subscription grant blocked an outright purchase');
+  });
+
+  await test('another account can buy the course this one already owns', async () => {
+    const offer = await sellableCourse({ amountMinor: 18000 });
+    const first = await newBuyer('First Family');
+    const second = await newBuyer('Second Family');
+
+    const bought = await withCheckoutOn(() => callWriter(first.userId, offer.course, offer.priceId));
+    await payOrder(bought.rows[0].r.orderId, 'CO-DUP-3');
+
+    const other = await withCheckoutOn(() => callWriter(second.userId, offer.course, offer.priceId));
+    assert(other.rows[0].r.orderId,
+      'one family owning a course blocked another family from buying it');
+  });
 }

@@ -208,6 +208,7 @@ test('a refusal key becomes a code and a sentence, and the key never leaks', asy
     price_window: 'price_not_available',
     not_one_time: 'not_paid_course',
     price_not_for_this_course: 'price_not_for_this_course',
+    already_owned: 'already_entitled',
   };
 
   for (const [key, code] of Object.entries(expected)) {
@@ -224,6 +225,34 @@ test('a refusal key becomes a code and a sentence, and the key never leaks', asy
     assert.ok(result.message.length > 12,
       `'${result.message}' is not a sentence a payer can act on`);
   }
+});
+
+test('an already-owned refusal reassures, and does not accuse the payer', async () => {
+  // A course purchase grants every learner profile on the account that pays, so
+  // the commonest way to meet this is a guardian who does not know the family is
+  // already covered — including the case that looks like a second child. The
+  // sentence has to say the account is covered, not that the person did
+  // something wrong.
+  const { client } = writerClient({
+    data: null,
+    error: { message: 'checkout:already_owned' },
+  });
+  const result = await createOrder(client, { courseId: 'course-1', priceId: 'price-1' });
+  assert.equal(result.ok, false);
+  if (result.ok) return;
+
+  assert.equal(result.code, 'already_entitled');
+  assert.match(result.message, /everyone on this account/i,
+    'the refusal blames the person rather than describing the account');
+  assert.match(result.message, /add nothing/i,
+    'the refusal does not say why it was stopped, so it reads as an error');
+  // "You already own this" is the wrong sentence here: it is not one person's
+  // access that blocks the sale, and a parent buying for a second child would
+  // read it as a refusal to let them.
+  assert.equal(/^you already/i.test(result.message), false,
+    `the refusal accuses the payer: '${result.message}'`);
+  assert.equal(result.message.includes('checkout:'), false,
+    'the payer was shown the raw refusal key');
 });
 
 test('a refusal nobody mapped is loud rather than friendly', async () => {

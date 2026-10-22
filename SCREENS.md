@@ -112,7 +112,7 @@ Status:
 
 | # | Screen | Status |
 |---|---|---|
-| 44 | Checkout | **BUILT** — `/courses/[slug]/buy`. The page renders prices and posts back a price **id**; `create_course_order()` re-derives the offer and writes the order, so nothing about the amount comes from the browser. While `commerce.checkout` is off the page says checkout is not open rather than showing a form that cannot work. The provider hand-off needs P12 |
+| 44 | Checkout | **BUILT** — `/courses/[slug]/buy`. The page renders prices and posts back a price **id**; `create_course_order()` re-derives the offer and writes the order, so nothing about the amount comes from the browser. While `commerce.checkout` is off the page says checkout is not open rather than showing a form that cannot work, and an account that already holds the course is told so rather than being sold it twice — one purchase covers every learner profile on the account, so that message is reassurance, not a rejection. The provider hand-off needs P12 |
 | 45 | Mobile money confirmation *(one screen, MTN and Airtel are parameters, not two designs)* | READY — the buy form takes an E.164 number and handles the `pending` result; needs a provider to prompt |
 | 46 | International card payment | BLOCKED |
 | 47 | Subscription management | **BUILT** — `/subscriptions`: allocate a seat to a household learner, cancel with a reason. Renewal and failed-payment handling need a provider |

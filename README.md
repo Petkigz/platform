@@ -69,8 +69,8 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **103 tables, RLS on every one, 228 policies, 136
-user-defined triggers, 263 functions and 109 migrations.** The database suite
-passes **1156 tests**; the web suite passes **772 tests**. TypeScript typecheck
+user-defined triggers, 263 functions and 110 migrations.** The database suite
+passes **1160 tests**; the web suite passes **773 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **117 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
@@ -176,6 +176,18 @@ because `orders_read` is a payer's own invoice: widening that policy to staff wo
 handed every order on the platform to every privileged role including `support_agent`,
 whose job is one order that already has a case open. Paid orders are absent on purpose —
 their total is history — and the page says where their instruments are.
+
+A purchase that would grant nothing new is refused. `create_course_order()` derived
+everything about an order from the catalogue but never asked whether the buyer already had
+the course, so an account with live access could pay for it again — nobody defrauded,
+because fulfilment skips an entitlement that exists, but a family charged for air and
+refunded later. The refusal fires only when the order would grant nothing at all: a live
+`purchase` entitlement for that exact course version, on a learner profile belonging to an
+active member of the account that would pay — which is precisely what fulfilment skips. A
+subscription grant does not block, because it ends with the subscription and buying outright
+adds permanence; a lapsed entitlement, another version, another course and another account
+all pass. And because the grant is per account, twins are covered by one purchase and are
+never the ones refused.
 
 A discount is now shared with the teacher who gave it. A teacher's gross was the sum of
 the order's lines — the subtotal — so a discount recorded before payment came entirely out
