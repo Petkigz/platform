@@ -2504,6 +2504,24 @@ processing agreement, and it is the one part of live classes that cannot be buil
 **Also open:** whether a recording is offered to learners who missed the class, and how long
 it is kept. Nothing produces a recording yet, so nothing has to decide that today — but the
 moment a provider is connected, it is the next question.
+## A renewal projection is committed terms, not forecast income — **DECIDED 2026-10-22**
+
+A subscription pins the plan version it bought, and the price attaches to that version. So the
+renewal amount for an existing subscriber is readable from the row rather than inferred from
+today's shelf price — and raising the price is a new version, which cannot move a subscriber
+already on the old one. A test raises it and asserts the projection does not move.
+
+What the projection is **not** is income. No renewal engine exists, no merchant account exists, and
+`commerce.checkout` is off: nothing charges any of these. `/admin/renewals` therefore says that
+above the table, and the function returns `automaticRenewal: false` so the screen cannot decide to
+sound more confident than the system is. The number answers "what have we committed to, and when".
+
+Two smaller rules. A past-due subscription is **projected and counted as at risk** rather than
+dropped, because money owed by somebody who has not paid is the most important row on a cash-flow
+page. And where a version carries several market prices the default is used, because a subscription
+does not record its market; the screen names that limitation rather than producing a number that
+looks exact.
+
 ## A message that is about to happen is computed, not stored — **DECIDED 2026-10-22**
 
 With no delivery provider, the platform said nothing to anybody. `/notifications` fixes the half

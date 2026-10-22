@@ -69,9 +69,9 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **115 tables, RLS on every one, 239 policies, 146
-user-defined triggers, 341 functions and 143 migrations.** The database suite
-passes **1405 tests**; the web suite passes **860 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **143 app route entries** (77 pages, 66 API routes).
+user-defined triggers, 342 functions and 144 migrations.** The database suite
+passes **1411 tests**; the web suite passes **860 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **144 app route entries** (78 pages, 66 API routes).
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. `/account`

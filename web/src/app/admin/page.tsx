@@ -176,6 +176,11 @@ export default async function AdminPage() {
         out. Approving is an agreement, not a transfer.
       </p>
       <p>
+        <Link href="/admin/renewals">Renewals</Link> — every live subscription expanded forward at
+        the price it was sold at, by month. It is what has been committed to, not what will arrive:
+        nothing charges a renewal yet.
+      </p>
+      <p>
         <Link href="/admin/payouts">Teacher payouts</Link> — what teachers have
         asked to be paid, the refund hold that keeps a sale from being paid out
         before it can be reversed, and the one action that marks an earning

@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1405 database tests, 860 web tests; TypeScript typecheck and
+Verification: **1411 database tests, 860 web tests; TypeScript typecheck and
 production build pass; 115 tables, 239 policies, 146 user-defined triggers,
-341 functions, 143 migrations and 143 app route entries.**
+342 functions, 144 migrations and 144 app route entries.**
 
 ## Today's sentence
 
@@ -2300,6 +2300,23 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
+
+### What renews, and why that is not a forecast, 2026-10-22
+
+A subscription pins the plan version it bought and the price hangs off that version, so the next
+charge is a fact to read rather than a shelf price to guess at. `platform_renewal_projection()`
+expands each live subscription forward at its own interval until the end of the window and buckets
+the charges by month, per currency, with past-due ones counted separately as at risk.
+
+The important line is the one at the top of `/admin/renewals`: **nothing here charges anybody.**
+There is no renewal engine and no merchant account, so the table is what has been *committed to*,
+not what will arrive. A page that called it forecast revenue would be the same lie as calling
+recorded earnings a balance.
+
+A price change is a new plan version, and an existing subscription stays pinned to the old one — a
+test raises the price and asserts the projection does not move. Where a version carries several
+market prices the default is used, because a subscription does not record its market, and the
+screen says so instead of inventing one.
 
 ### Telling somebody something without a vendor, 2026-10-22
 
