@@ -2504,6 +2504,27 @@ processing agreement, and it is the one part of live classes that cannot be buil
 **Also open:** whether a recording is offered to learners who missed the class, and how long
 it is kept. Nothing produces a recording yet, so nothing has to decide that today — but the
 moment a provider is connected, it is the next question.
+## A teacher can see what they have earned, and cannot mistake it for a balance — **DECIDED 2026-10-22**
+
+The revenue split has been recorded per sale since 2026-11-02: one row, the split snapshotted,
+reversed on refund, corrected by clawback. **Nothing in the web layer ever read that table.** A
+teacher's earnings existed only inside the database.
+
+`my_earnings()` and `/teach/earnings` are the statement, and the design constraint is what they
+refuse to say. **`teaching.payouts` is CODE-gated and off, there is no provider, no destination
+and no tax treatment — no money has ever left this platform.** So the function returns
+`payoutsEnabled` and the page says it above the numbers, in a warning that names what is missing
+rather than a footnote. The figure is called *earned and not reversed*, never "balance": a
+balance is a number somebody can withdraw, and there is nothing to withdraw.
+
+**Currencies are never summed.** One teacher can be owed shillings from one market and dollars
+from another, and adding them would be inventing an exchange rate. Converting is the money
+report's job, at a rate the owner enters and the schema records. The page says that too.
+
+Two smaller rules, both tested: an entry keeps the share it was accrued at — a later rate change
+cannot re-price history — and a reversed entry stays visible as reversed rather than disappearing,
+because "why is this less than I expected" deserves an answer.
+
 ## A Plus benefit nobody can see is a Plus benefit nobody buys — **DECIDED 2026-10-22**
 
 Two silences followed from the offline decision, and both cost money in different ways.

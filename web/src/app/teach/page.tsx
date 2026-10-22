@@ -97,6 +97,10 @@ export default async function TeachPage() {
         {' · '}
         <Link href="/teach/media">Media library</Link> — upload lesson recordings and see which ones are ready to use.
       </p>
+      <p>
+        <Link href="/teach/earnings">Earnings</Link> — what your courses have earned, per currency,
+        and the sales behind it. Nothing is paid out yet: this is the record, not a balance.
+      </p>
 
       <div style={{ marginTop: '1.75rem' }}>
         <div className="outline-h">

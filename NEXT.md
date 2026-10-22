@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1374 database tests, 856 web tests; TypeScript typecheck and
+Verification: **1381 database tests, 856 web tests; TypeScript typecheck and
 production build pass; 115 tables, 239 policies, 146 user-defined triggers,
-326 functions, 139 migrations and 136 app route entries.**
+327 functions, 140 migrations and 137 app route entries.**
 
 ## Today's sentence
 
@@ -2298,6 +2298,31 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
+
+### A teacher's earnings, and the sentence that keeps it honest, 2026-10-22
+
+`instructor_earnings_entries` has been written since the accrual function was built — one row per
+paid sale, the split snapshotted, reversed on refund, corrected by clawback — and **nothing in
+`web/src` named the table**. So the platform could take a teacher's share of a sale and not show
+them a figure about their own work.
+
+`my_earnings()` returns it per currency: earned-and-not-reversed, the gross sale behind it, any
+reversals, any amount already paid, and the entries themselves with the course, the date and the
+share recorded on that row. `/teach/earnings` renders it, linked from `/teach`.
+
+**The hard part is the sentence above the numbers.** `teaching.payouts` ships off, there is no
+payout provider, no destination and no tax treatment, and no money has ever left this platform.
+A page that printed "balance: 250,000 UGX" would be the most damaging lie the product could
+tell, so it says the opposite, in a warning: *nothing has been paid out yet, and this page
+cannot pay you.* The function returns `payoutsEnabled` rather than letting the screen infer it
+from an empty list.
+
+**Currencies are not added together.** Shillings from one market and dollars from another are
+two figures, because a combined number would be an exchange rate nobody recorded. That is the
+money report's job, with a rate the owner enters.
+
+Two rules the tests pin: an entry keeps the share it was accrued at, and a reversed entry stays
+listed as reversed instead of vanishing.
 
 ### Say why a lesson cannot be saved, and what a plan actually gives, 2026-10-22
 
