@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1276 database tests, 827 web tests; TypeScript typecheck and
+Verification: **1282 database tests, 828 web tests; TypeScript typecheck and
 production build pass; 108 tables, 233 policies, 140 user-defined triggers,
-288 functions, 127 migrations and 127 app route entries.**
+289 functions, 128 migrations and 128 app route entries.**
 
 ## Today's sentence
 
@@ -2220,6 +2220,31 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### A person can take their data out, 2026-10-22
+
+`platform.data_export` existed as a flag with nothing behind it. The platform held a
+name, a language, a time zone, the learners somebody is responsible for, what those
+learners studied and finished, the certificates, the orders and receipts, the notes
+written during lessons — and no way to ask for any of it back. That is a statutory right
+in the markets this is sold into, and a parent has the same claim on a child's record.
+
+`export_my_data()` returns one JSON document. It is `security definer` and takes **no
+argument**, which is the whole design: inside it every `where` clause is the boundary,
+so each one is written against the session's own user id and there is nothing a caller
+could pass to point it at somebody else. The scopes are the ones the application already
+uses rather than new ones — `is_learner_family_member()` for a child, and **not** for a
+billing-only member, so paying for a family still does not hand over its learning data.
+
+`/api/account/export` turns it into a download with a dated filename, and `/account`
+offers it under "My data" with a sentence naming exactly what is inside. It is **not
+behind a flag**: a right behind a switch that ships off is not a right. `platform.data_export`
+stays in the register because it is a real promise about a different thing — a
+machine-readable export in more than one format, and an import path.
+
+**Not built, and named on purpose:** erasure. The export says what we hold; it does not
+let anybody delete it. That needs one policy decision before it needs code — what survives
+deletion — and the honest default is that financial records survive (they are the ledger)
+while personal fields are stripped.
 ### A receipt has a number a person can read out loud, 2026-10-22
 
 `/orders` could say "paid" and nothing more. There was no document and no reference, so a

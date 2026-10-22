@@ -2335,3 +2335,25 @@ lie in writing.
 An unpaid order opens the same page and says **"This is not a receipt"** before anything
 else. That is the same principle as the payment confirmation banner: the page reports the
 state of the record, never the state the reader hopes for.
+## Taking your data out is a right, not a feature — **DECIDED 2026-10-22**
+
+`platform.data_export` was an empty flag. The platform held a name, a language, a time
+zone, the learners somebody is responsible for, their progress and certificates, the orders
+and receipts, and the notes written during lessons — and no way to ask for any of it back.
+
+`export_my_data()` returns one JSON document. It is `security definer` and takes **no
+argument**: inside it every `where` clause is the boundary, so each is written against the
+session's user id and there is nothing a caller could pass to point it at another person.
+The scopes are the predicates the screens already use — `is_learner_family_member()` for a
+child, and **not** for a billing-only member, because paying for a family is still not
+parenting it.
+
+It is **not behind a flag.** A right behind a switch that ships off is not a right. The
+register entry stays because it promises something different that is still unbuilt: more
+than one format, and an import path.
+
+**Not decided here: erasure.** Export says what we hold; it does not let anybody delete
+it. Erasure needs one policy answer before it needs code — what survives deletion. The
+default I would propose: financial rows survive, because they are the ledger and the basis
+of a refund; personal fields are stripped; the account is closed rather than erased where
+the law allows. That is a decision for the owner, not for this migration.

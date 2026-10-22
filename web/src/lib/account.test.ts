@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { saveAccountProfile, validateAccountProfile } from './account.ts';
+import {
+  exportFileName,
+  saveAccountProfile,
+  validateAccountProfile,
+} from './account.ts';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 const valid = { displayName: ' Amina Yusuf ', preferredLanguage: 'en-GB', timezone: 'Africa/Kampala' };
@@ -45,4 +49,22 @@ test('invalid or signed-out profile updates never reach the database', async () 
   assert.equal((await saveAccountProfile(client, '', valid)).ok, false);
   assert.equal((await saveAccountProfile(client, 'user-1', { ...valid, displayName: '' })).ok, false);
   assert.equal(touched, false);
+});
+
+// ---------------------------------------------------------------------------
+// Data export filename
+// ---------------------------------------------------------------------------
+
+test('the export filename is dated and safe to put in a header', () => {
+  // Dated so two downloads do not overwrite each other, and ASCII-only so no browser
+  // has to guess about encoding. The Date is UTC-stamped for the same reason.
+  assert.equal(
+    exportFileName(new Date('2026-10-22T23:30:00Z')),
+    'ayahspring-data-2026-10-22.json',
+  );
+  assert.equal(
+    exportFileName(new Date('2026-01-01T00:00:00Z')),
+    'ayahspring-data-2026-01-01.json',
+  );
+  assert.match(exportFileName(new Date()), /^ayahspring-data-\d{4}-\d{2}-\d{2}\.json$/);
 });

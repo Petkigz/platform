@@ -58,3 +58,13 @@ export async function saveAccountProfile(
   if (!data) return { ok: false, message: 'Your profile could not be found. Sign out and back in, then try again.' };
   return { ok: true, profile: data as AccountProfile };
 }
+
+/**
+ * The filename a data export downloads as.
+ *
+ * Dated so that two downloads do not silently overwrite each other in a downloads
+ * folder, and ASCII-only so no browser has to guess about encoding.
+ */
+export function exportFileName(now: Date): string {
+  return `ayahspring-data-${now.toISOString().slice(0, 10)}.json`;
+}

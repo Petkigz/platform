@@ -99,6 +99,21 @@ export default async function AccountPage() {
         </p>
       </section>
 
+      <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
+        <h2 style={{ marginTop: 0 }}>My data</h2>
+        <p className="muted">
+          Download everything we hold about this account as one file: your profile, the
+          learners you are responsible for, what they have studied and finished, your
+          certificates, orders and receipts, your notes, and who you have shared your
+          learning with.
+        </p>
+        <p>
+          <a className="btn secondary" href="/api/account/export" download>
+            Download my data
+          </a>
+        </p>
+      </section>
+
       <p style={{ marginTop: '1.5rem' }}><Link href="/learn">Back to my learning</Link></p>
     </div>
   );
