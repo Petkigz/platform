@@ -19,6 +19,12 @@ export async function run(ctx) {
     newCourse, newVersion, newSection, newLesson,
   } = ctx;
 
+  // The revenue share is one global row, and this suite's arithmetic assumes the
+  // chosen 50 unless a test says otherwise. Set it rather than inherit it: a
+  // suite that runs earlier must not decide what these numbers mean.
+  await q(`update public.platform_settings set value_text = '50'
+            where key = 'teaching.revenue_share_percent'`);
+
   const admin    = await bootstrapAdmin('oa-admin@example.com');
   const teacher  = await newInstructor('oa-teacher@example.com', admin);
   const reviewer = await newReviewer('oa-reviewer@example.com', admin);
@@ -650,7 +656,7 @@ export async function run(ctx) {
     assert(back.status === 'paid', `the order is '${back.status}' after the recompute`);
   });
 
-  await test('an adjustment changes what the payer pays, and what the teacher earns is pinned', async () => {
+  await test('an adjustment changes what the payer pays, and what the teacher earns', async () => {
     const buyer = await newBuyer('End To End');
     const order = await pendingOrder(buyer, { amountMinor: 50000 });
 
@@ -673,26 +679,27 @@ export async function run(ctx) {
       `the ledger captured ${capture.amount_minor}, not the adjusted total`);
 
     const earnings = await scalar(
-      `select gross_amount_minor, net_amount_minor, revenue_share_percent
+      `select gross_amount_minor, shared_discount_minor, net_amount_minor, revenue_share_percent
          from public.instructor_earnings_entries where order_id = $1`, [order.orderId]);
     assert(earnings, 'no earnings were accrued');
 
-    // PINNED, NOT ENDORSED. accrue_instructor_earnings() computes gross as
-    // sum(order_items.line_total_minor) for the teacher's courses — the
-    // SUBTOTAL. So an order-level discount is absorbed by the platform and the
-    // teacher's share is still computed on the pre-discount price, while a fee
-    // is kept by the platform and is not in the gross either. Both halves of
-    // that are defensible for a fee and a tax. For a discount it is an open
-    // business decision — who funds a promotion — and at the extreme it pays
-    // the teacher more than the order collected. Asserted here so the behaviour
-    // is a fact somebody chose rather than something nobody noticed; the
-    // decision is recorded in NEXT.md.
-    assert(Number(earnings.gross_amount_minor) === Number(before.subtotal_minor),
-      `the teacher's gross is ${earnings.gross_amount_minor} on a subtotal of ${before.subtotal_minor}`);
-    assert(Number(earnings.gross_amount_minor) === 50000,
-      `the teacher's gross is ${earnings.gross_amount_minor}, not the sticker price`);
+    // The discount is shared at the revenue-share rate (decided 2026-10-22,
+    // implemented in 20261227000100). This test used to PIN the old behaviour —
+    // gross was the line subtotal, so the whole discount came out of the
+    // platform's margin and a teacher still earned a share of the pre-discount
+    // price. It now asserts the split, which is what the decision changed: at a
+    // 50% share a 10 000 credit on a 50 000 line costs the teacher 5 000 of net
+    // and the platform 5 000, and the fee of 1 250 is neither shared nor
+    // accrued.
+    assert(Number(earnings.shared_discount_minor) === 10000,
+      `the teacher bore ${earnings.shared_discount_minor} of a 10000 discount`);
+    assert(Number(earnings.gross_amount_minor) === 40000,
+      `the teacher's gross is ${earnings.gross_amount_minor}, not the discounted line total`);
+    assert(Number(earnings.gross_amount_minor) + Number(earnings.shared_discount_minor)
+           === Number(before.subtotal_minor),
+      'gross plus what was borne is not the line total, so the row no longer explains itself');
     assert(Number(earnings.gross_amount_minor) !== Number(before.total_minor),
-      'the gross equals the total, so this test is no longer pinning the distinction');
+      'the gross equals the total, so a fee was folded into the teacher’s revenue');
 
     // net is the teacher's share of gross, rounded half away from zero, and
     // `iee_split_agrees` already holds the row to that expression. Recomputed
@@ -706,6 +713,14 @@ export async function run(ctx) {
       (BigInt(earnings.gross_amount_minor) * shareScaled * 2n + 10000n) / 20000n);
     assert(Number(earnings.net_amount_minor) === expectedNet,
       `net is ${earnings.net_amount_minor}, expected ${expectedNet} at a ${share}% share`);
+
+    // The teacher lost half the discount and the platform the other half: of
+    // 25 000 net before the discount, 20 000 after, and of the 41 250 collected
+    // the platform keeps 21 250.
+    assert(25000 - Number(earnings.net_amount_minor) === 5000,
+      `the teacher lost ${25000 - Number(earnings.net_amount_minor)} of a 10000 discount`);
+    assert(Number(capture.amount_minor) - Number(earnings.net_amount_minor) === 21250,
+      `the platform kept ${Number(capture.amount_minor) - Number(earnings.net_amount_minor)}`);
 
     const grants = await count(
       `select id from public.entitlement_grants

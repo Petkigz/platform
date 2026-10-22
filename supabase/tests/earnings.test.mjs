@@ -487,4 +487,9 @@ export async function run(ctx) {
     assert(e.status === 'accrued',
       'a refused reversal must leave the entry untouched');
   });
+
+  // The share is one global row and this suite changes it sixteen times. Put the
+  // chosen value back: a suite that runs later and reads it is not told that this
+  // one happened to end at 70.
+  await setShare(50);
 }

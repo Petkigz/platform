@@ -69,8 +69,8 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **103 tables, RLS on every one, 228 policies, 136
-user-defined triggers, 263 functions and 108 migrations.** The database suite
-passes **1142 tests**; the web suite passes **772 tests**. TypeScript typecheck
+user-defined triggers, 263 functions and 109 migrations.** The database suite
+passes **1156 tests**; the web suite passes **772 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **117 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
@@ -176,6 +176,17 @@ because `orders_read` is a payer's own invoice: widening that policy to staff wo
 handed every order on the platform to every privileged role including `support_agent`,
 whose job is one order that already has a case open. Paid orders are absent on purpose —
 their total is history — and the page says where their instruments are.
+
+A discount is now shared with the teacher who gave it. A teacher's gross was the sum of
+the order's lines — the subtotal — so a discount recorded before payment came entirely out
+of the platform's margin while the teacher still earned a share of the pre-discount price,
+and an order discounted to nothing still accrued more than it collected. The credits are now
+apportioned across the teachers who actually earn from the order, in proportion to their
+lines, with the leftover minor units going to the largest remainders so the split is exact;
+gross is the line total less the teacher's share and `instructor_earnings_entries` records
+what each teacher bore, so a row still explains itself a year later. At the platform's 50%
+share a 10 000 discount costs the teacher 5 000 and the platform 5 000. Only credits are
+shared: a fee is the platform's cost and tax is remitted.
 
 Free previews now have one consistent gate from the catalogue to content
 access. Teachers can mark draft lessons and individual public-sample resources;

@@ -170,6 +170,14 @@ export async function run(ctx) {
       /function public\.set_revenue_share_percent\(integer, unknown, unknown\) does not exist/i,
     );
     await q('rollback');
-    assert((await currentPercent()) === 0);
+
+    // This suite takes the share to 0 to prove the 0% case, and used to leave it
+    // there. Every later suite's accrual reads this setting, so leaking 0 made
+    // four suites that assume the chosen 50 compute a net of nothing — a failure
+    // that only appears in the full run, in files that never touched the share.
+    await q(`update public.platform_settings set value_text = '50'
+              where key = 'teaching.revenue_share_percent'`);
+    assert((await currentPercent()) === 50,
+      'this suite left the revenue share changed; later suites accrue at whatever it says');
   });
 }

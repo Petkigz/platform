@@ -303,9 +303,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **1142 database tests, 772 web tests; TypeScript typecheck and
+Verification: **1156 database tests, 772 web tests; TypeScript typecheck and
 production build pass; 103 tables, 228 policies, 136 user-defined triggers,
-263 functions, 108 migrations and 117 app route entries.**
+263 functions, 109 migrations and 117 app route entries.**
 
 ## Today's sentence
 
@@ -362,7 +362,7 @@ given a surface. Grouped by the feature they belong to:
 | Reviewer machinery — the versions | `content_review_requirements`, `technical_review_checks`, `content_change_assessments` | **Now written** by `20261221000100_review_requirements.sql`, on `/teach/[courseId]`, `/admin/reviews` and `/review/[assignmentId]`. `validate_review_assignment()`'s authorisation loop now has something to loop over, so a version can require a reviewer authorised for a subject — and a requirement can be closed, which nothing could do before |
 | Payouts | `instructor_payouts`, `instructor_payout_items` | `teaching.payouts`, off; ROADMAP already says "3 tables with no fields and no endpoints" |
 | Institutions | `institutions` | `commerce.institutions` and four `institution.*` flags, all off |
-| Money plumbing | `currency_exchange_rates`, `order_adjustments`, `payment_method_references` | **`currency_exchange_rates` is now written and read** by `20261223000100_currency_reporting.sql`, on `/admin/exchange-rates` and `/admin/money-report`, and it is what stamps `financial_transactions.fx_rate`/`fx_source`/`fx_observed_at` — columns a constraint required and nothing ever set. Multi-currency reporting is therefore built; the open part is what nets against what in the report. `orders` and `order_items` are now **writer-only**: `20261224000100_course_order_writer.sql` dropped `orders_insert` and `order_items_insert`, so a course order exists only if `create_course_order()` made it (see today's section — the policies had let a payer write the total and the product themselves). `order_adjustments` is now **written by `add_order_adjustment()`/`void_order_adjustment()` and read on `/orders`** — its client-side insert policy is dropped and an order's total is held against its items plus its live adjustments by a trigger before it can be paid (`20261225000100`). `/admin/orders` drives both writers and `admin_orders_overview()` reads the queue, so nothing about an order's total is reachable only by hand. Promotions remain refused by the writer because eligibility and stacking are undecided. `payment_method_references` needs a provider that can store one |
+| Money plumbing | `currency_exchange_rates`, `order_adjustments`, `payment_method_references` | **`currency_exchange_rates` is now written and read** by `20261223000100_currency_reporting.sql`, on `/admin/exchange-rates` and `/admin/money-report`, and it is what stamps `financial_transactions.fx_rate`/`fx_source`/`fx_observed_at` — columns a constraint required and nothing ever set. Multi-currency reporting is therefore built; the open part is what nets against what in the report. `orders` and `order_items` are now **writer-only**: `20261224000100_course_order_writer.sql` dropped `orders_insert` and `order_items_insert`, so a course order exists only if `create_course_order()` made it (see today's section — the policies had let a payer write the total and the product themselves). `order_adjustments` is now **written by `add_order_adjustment()`/`void_order_adjustment()` and read on `/orders`** — its client-side insert policy is dropped and an order's total is held against its items plus its live adjustments by a trigger before it can be paid (`20261225000100`). `/admin/orders` drives both writers and `admin_orders_overview()` reads the queue, so nothing about an order's total is reachable only by hand. A discount is now **shared at the revenue-share rate** by `20261227000100_discount_sharing.sql`, so the teacher's side of a credit is recorded (`instructor_earnings_entries.shared_discount_minor`) instead of being absorbed silently by the platform. Promotions remain refused by the writer until the staged build recorded in `DECISIONS.md` reaches its first stage. `payment_method_references` needs a provider that can store one |
 | History and diagnostics | `order_status_history`, `publication_events`, `entitlement_events`, `course_enrolment_version_history`, `subscription_history` | **Now read** by `support_case_history()`, on `/support/<caseNumber>` for staff. Still closed to every other read path, which is the point: one function decides what support may see |
 | Diagnostics with no writer | `access_checks` | **Correction to the audit:** nothing has ever inserted a row here — not a trigger, not a function, not a route. Its comment promises a denial log for support agents and the platform does not keep one. Excluded from the console on purpose; an always-empty list would read as "no denial happened" |
 | Other | `adult_learning_shares` | **Now written and read**, by `20261222000100_adult_learning_shares.sql` on `/account/sharing`. The console still reads it too, and its empty section is now a true answer about a feature that exists: nobody has been given sight of this adult's progress. The gap the audit named — no writer, and no predicate that made a share mean anything — is closed at both ends |
@@ -1890,6 +1890,87 @@ so rewording either side fails a test rather than silently degrading to a 400.
 11 database tests, 16 web tests. One migration, one function, one page route and one
 API route, no new table, no new flag, no policy added or dropped.
 
+
+### A discount is shared with the teacher who gave it, 2026-10-22
+
+Yesterday's audit-pinned finding, now decided and built. `accrue_instructor_earnings()`
+computed a teacher's gross as `sum(order_items.line_total_minor)` — the subtotal. So a
+credit recorded by `add_order_adjustment()` came entirely out of the platform's margin
+while the teacher still earned a share of the pre-discount price, and an order discounted
+to nothing accrued a share of the full sticker price. Both were pinned by a test with a
+comment saying the behaviour was pinned and not endorsed; the decision on 2026-10-22 was to
+split it at the revenue-share rate, and this is that split.
+
+**The rule.** `gross = the teacher's lines − their share of the order's live credits`, and
+`net = round(gross × share / 100)` is unchanged in form, so `iee_split_agrees` still holds
+every row to its own constraint. Which means, at a 50% share, a 10 000 UGX discount costs
+the teacher 5 000 of net and the platform 5 000:
+
+| | before | after |
+|---|---|---|
+| capture | 41 250 | 41 250 |
+| teacher gross | 50 000 | 40 000 |
+| teacher net (50%) | 25 000 | 20 000 |
+| platform keeps | 16 250 | 21 250 |
+
+Only **credits** are shared. A fee is the platform's cost and stays the platform's; tax is
+remitted and is nobody's revenue; a rounding credit is shared like any other credit,
+because it reduces what was collected. A voided credit is not shared at all: the rows are
+what the total is derived from, so a withdrawal somebody made cannot cost a teacher money.
+
+**The arithmetic has to be exact.** With several teachers on one order the credits are
+apportioned by line total: an integer base share, and the units left over by that division
+go to the largest remainders, largest line first, then by id. That makes `sum(shared) = the
+order's credits` exactly — a remainder in a split is money that quietly disappears — and
+`gross ≥ 0` always, because a credit can only take a line to zero. Two tests drive it with
+numbers chosen to divide badly (33 333 / 66 667 with a 1 000 discount, and two equal lines
+with a one-unit discount), and both assert the sum rather than only the parts.
+
+Two teachers on one order is not something a writer can produce yet — `create_course_order()`
+sells one course — but the accrual is written for a bundle, so the apportionment is built
+and tested now rather than when the first bundle is sold.
+
+**The row explains itself.** `instructor_earnings_entries.shared_discount_minor` records
+what this teacher bore, so `gross + shared` is their line total and a teacher asking why
+their gross is 40 000 on a course that sells for 50 000 can be shown the answer. It defaults
+to 0, which is accurate for every row that predates it: nothing could credit an order before
+20261225000100. A teacher can read it under `iee_read`; nobody can edit it, because
+`iee_write` is an insert policy for staff and there is no update policy at all.
+
+**A gap this exposed.** `financial_transactions.amount_minor` is `> 0`, so a capture for
+zero is refused — which means **a 100% discount cannot be paid through
+`record_payment_success()` at all**, and a full scholarship is unreachable today. That is
+the right refusal (an order that costs nothing needs a fulfilment path, not a payment of
+nothing) but the fulfilment path does not exist. Recorded below rather than papered over by
+allowing a zero capture, which would put a zero row in the ledger to make a payment that
+never happened.
+
+**And a test-hygiene bug worth its own paragraph.** The first full run failed four suites
+that passed in isolation, all with a net of zero: `revenue_share.test.mjs` took
+`teaching.revenue_share_percent` to 0 to prove the 0% case and **left it there**, so every
+suite after it that accrued earnings did so at a share of nothing — and the failures named
+files that never touched the setting. `earnings.test.mjs` leaked 70 the same way. Both now
+put the chosen value back, both suites that assume 50 set it rather than inherit it, and
+`run.mjs` now **fails the suite that leaked** rather than letting the next one discover it:
+after every suite it checks the two settings that are global by design — the revenue share
+and the checkout flag — against their seeds and records a failure against the suite
+responsible. Three of today's changes are that class of bug, which is why it is now a rule
+rather than a habit.
+
+14 database tests, one migration, one column, one replaced function. No screen changed: no
+page displays a teacher's earnings yet, so the split is visible in the ledger and not on a
+screen.
+
+
+- **An order discounted to nothing cannot be fulfilled.** `financial_transactions.amount_minor`
+  is `> 0`, so `record_payment_success()` refuses to write a capture for zero and a 100%
+  discount cannot be completed: the payer is left holding a pending order for a course that
+  is free. The refusal is right — an order that costs nothing should not produce a payment
+  row — but the fulfilment path it implies does not exist. It needs a way to grant
+  entitlements and accrue at a zero total without a capture: either a `fulfil_free_order()`
+  beside `record_payment_success()` that writes no financial transaction, or an allowance
+  for a zero-amount capture that the ledger is then taught to interpret. Decided by whoever
+  wants full scholarships, not by the accrual code.
 
 ## Open external decisions (not to be guessed)
 

@@ -67,6 +67,19 @@ import { run as currencyReporting } from './currency_reporting.test.mjs';
 import { run as courseOrder } from './course_order.test.mjs';
 import { run as orderAdjustments } from './order_adjustments.test.mjs';
 import { run as adminOrderQueue } from './admin_order_queue.test.mjs';
+import { run as discountSharing } from './discount_sharing.test.mjs';
+
+// Settings that are global by design: one row, read by code far from the suite
+// that changes it. The revenue share decides what every accrual computes; the
+// checkout flag decides whether an order can be placed at all. A suite that
+// changes one and does not put it back breaks a suite that runs later, and the
+// failure names a file that never touched the setting — which is exactly how a
+// leaked 0% share cost four suites a full run on 2026-10-22. Detected here, not
+// silently repaired, so the suite that leaked is the one reported.
+const GLOBAL_SETTINGS = [
+  ['teaching.revenue_share_percent', '50'],
+  ['commerce.checkout', 'false'],
+];
 
 const ctx = await createHarness();
 const suites = [];
@@ -130,6 +143,7 @@ for (const [name, fn] of [
   ['course order writer', courseOrder],
   ['order adjustments', orderAdjustments],
   ['admin order queue', adminOrderQueue],
+  ['discount sharing', discountSharing],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],
@@ -142,6 +156,19 @@ for (const [name, fn] of [
 ]) {
   console.log(`\n--- ${name} ---\n`);
   await fn(ctx);
+
+  for (const [key, seed] of GLOBAL_SETTINGS) {
+    const row = (await ctx.q(
+      `select value_text from public.platform_settings where key = $1`, [key])).rows[0];
+    const value = row ? row.value_text : 'MISSING';
+    if (value !== seed) {
+      ctx.summary().failures.push({
+        name: `${name} left ${key} at ${JSON.stringify(value)}, expected ${JSON.stringify(seed)}`,
+        err: 'a suite changed a global setting without restoring it; the next suite to read it fails instead of this one',
+      });
+    }
+  }
+
   const s = ctx.summary();
   suites.push([name, {
     passed: s.passed - prev.passed,
