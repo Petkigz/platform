@@ -54,6 +54,20 @@ export default async function AdminMediaPage() {
 
   const queue = await fetchMediaModerationQueue(supabase);
 
+  // Who is storing what. The owner runs the bill, so the per-teacher figure is
+  // an administration number, not a teacher-facing one.
+  type StorageRow = {
+    uploader_id: string;
+    display_name: string;
+    files: number;
+    bytes: string | number;
+    quota_bytes: string | number | null;
+    used_percent: number | null;
+    over_quota: boolean;
+  };
+  const { data: storageRows } = await supabase.rpc('media_storage_overview', { p_limit: 20 });
+  const storage = (storageRows ?? []) as StorageRow[];
+
   return (
     <main className="page">
       <nav className="crumbs">
@@ -74,6 +88,37 @@ export default async function AdminMediaPage() {
           governance audit trail.
         </p>
       </div>
+
+      {storage.length > 0 && (
+        <section className="card" style={{ marginBottom: '1.5rem' }}>
+          <div className="outline-h"><h2>Storage by teacher</h2></div>
+          <p className="muted" style={{ fontSize: '0.9rem' }}>
+            Master bytes, biggest first. The allowance is{' '}
+            {storage[0]?.quota_bytes === null || storage[0]?.quota_bytes === undefined
+              ? 'not being enforced on this platform (platform.cost_controls is off)'
+              : `being enforced at ${readableByteSize(Number(storage[0].quota_bytes))} per teacher`}
+            . Withdrawn and deleted files are excluded; pending and held files count, because
+            they are still bytes in a bucket.
+          </p>
+          <ul className="lessons">
+            {storage.map((row) => (
+              <li key={row.uploader_id} style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
+                <span>
+                  <strong>{row.display_name}</strong>{' '}
+                  <span className="muted" style={{ fontSize: '0.85rem' }}>
+                    {row.files} file(s)
+                  </span>
+                </span>
+                <span className="muted">
+                  {readableByteSize(Number(row.bytes))}
+                  {row.used_percent !== null && ` · ${row.used_percent}%`}
+                  {row.over_quota && <span className="badge warn" style={{ marginLeft: '0.5rem' }}>over quota</span>}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {queue.length === 0 && <p className="muted">Nothing has been uploaded yet.</p>}
 

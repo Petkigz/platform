@@ -1876,6 +1876,15 @@ Shipped as an admin-editable setting rather than a constant, consistent with bui
 everything and enabling it from the dashboard, and enforced at initiate — the point where a
 teacher can still be told, rather than at the end of a transfer that already happened. The
 refusal names the space left, because "quota exceeded" without a number is a dead end.
+
+**Settled 2026-10-22: the quota has a meter.** A limit a person cannot see is felt as an
+outage — the first news of 50 GB would have been an upload that bounced. `/teach/media` now
+shows masters used, the space left and a breakdown by file status; `/admin/media` shows who is
+storing what, biggest first. Both read `my_media_storage()` and `media_storage_overview()`,
+which take their figures from `media_upload_allowance()` — the same function the route refuses
+with — so the meter and the refusal cannot disagree. With `platform.cost_controls` off, both
+say there is no cap rather than reporting zero percent, because "0% of nothing" reads as a
+quota that has been reached.
 Multipart uploads in flight count against the quota from the moment they are initiated, so
 a stalled 40 GB upload cannot be used to slip past it, and abandoning one gives the space
 back.

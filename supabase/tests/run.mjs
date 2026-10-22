@@ -87,6 +87,7 @@ import { run as promotionRemoval } from './promotion_removal.test.mjs';
 import { run as ownLearnerProfile } from './own_learner_profile.test.mjs';
 import { run as analyticsEvents } from './analytics_events.test.mjs';
 import { run as courseReports } from './course_reports.test.mjs';
+import { run as mediaStorageMeter } from './media_storage_meter.test.mjs';
 
 // Settings that are global by design: one row, read by code far from the suite
 // that changes it. The revenue share decides what every accrual computes; the
@@ -182,6 +183,7 @@ for (const [name, fn] of [
   ['own learner profile', ownLearnerProfile],
   ['analytics events', analyticsEvents],
   ['course reports', courseReports],
+  ['media storage meter', mediaStorageMeter],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],

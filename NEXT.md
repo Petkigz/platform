@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1355 database tests, 856 web tests; TypeScript typecheck and
+Verification: **1362 database tests, 856 web tests; TypeScript typecheck and
 production build pass; 115 tables, 239 policies, 146 user-defined triggers,
-321 functions, 136 migrations and 136 app route entries.**
+323 functions, 137 migrations and 136 app route entries.**
 
 ## Today's sentence
 
@@ -2252,6 +2252,29 @@ was described in a comment and stored nowhere. It is deliberately **not unique p
 market may sell two Basic plans at two prices. What makes a plan the VIP one is the tier
 *and* the feature grant its live version carries — neither alone should be able to hand out
 the feature.
+
+### The quota a teacher can finally see, 2026-10-22
+
+The 50 GB per-teacher allowance has been enforced since it was decided, and invisible the
+whole time: the first a teacher would hear of it was an upload that bounced. A limit nobody
+can see is felt as an outage, not as a rule.
+
+So there is a meter, and it was built out of the refusal rather than beside it.
+`my_media_storage()` returns the caller's own figures by calling `media_upload_allowance()` —
+the same function `/api/media` refuses with — and adds a breakdown by file status.
+`/teach/media` renders it: masters used, the space left, a bar, and what each status is
+costing. When `platform.cost_controls` is off it says there is no cap rather than drawing a
+percentage of nothing.
+
+`/admin/media` gains the other half: **storage by teacher**, biggest first, with each person's
+share of the allowance and a flag for whoever is over. The owner runs the bill, so that number
+belongs to administration.
+
+Two smaller consequences. The upload form now compares the chosen file with the space left
+*before* hashing a 2 GB master, because a minute of checksum then a refusal is the worst order
+to deliver that news. And the meter counts exactly what the quota counts — masters only,
+soft-deleted excluded, pending and held included — because a second definition of "used" is
+how a screen ends up promising room that the writer then refuses.
 
 ### A teacher may count their course, not their children, 2026-10-22
 

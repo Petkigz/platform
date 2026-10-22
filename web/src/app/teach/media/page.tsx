@@ -8,6 +8,15 @@ import { createClient } from '@/lib/supabase/server';
 import { MasterPlayer } from '@/app/_shared/master-player';
 import { UploadMedia } from './upload-form';
 
+type StorageReading = {
+  enforced: boolean;
+  usedBytes: string;
+  quotaBytes: string | null;
+  remainingBytes: string | null;
+  fileCount: number;
+  byStatus: Array<{ status: string; files: number; bytes: string }>;
+};
+
 export const dynamic = 'force-dynamic';
 
 /**
@@ -39,6 +48,15 @@ export default async function TeachMediaPage() {
   const assets = await fetchMediaAssets(supabase);
   const usable = assets.filter((asset) => asset.status === 'available').length;
 
+  // The same numbers the upload route refuses with. A cap a teacher cannot see
+  // is felt as an outage — the first they would hear of 50 GB is a bounce.
+  const { data: storageData } = await supabase.rpc('my_media_storage');
+  const storage = (storageData ?? null) as StorageReading | null;
+  const usedPercent =
+    storage?.enforced && storage.quotaBytes && Number(storage.quotaBytes) > 0
+      ? Math.min(100, Math.round((Number(storage.usedBytes) / Number(storage.quotaBytes)) * 100))
+      : null;
+
   return (
     <main className="page narrow">
       <nav className="crumbs">
@@ -57,7 +75,86 @@ export default async function TeachMediaPage() {
         </p>
       </div>
 
-      <UploadMedia />
+      {storage && (
+        <section className="card" style={{ marginBottom: '1rem' }}>
+          <div className="outline-h" style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <h2>Storage</h2>
+            <span className="muted" style={{ fontSize: '0.85rem' }}>
+              {storage.fileCount} {storage.fileCount === 1 ? 'master' : 'masters'}
+            </span>
+          </div>
+
+          <p style={{ margin: '0.25rem 0 0.5rem' }}>
+            <strong>{readableByteSize(Number(storage.usedBytes))}</strong>{' '}
+            {storage.enforced && storage.quotaBytes ? (
+              <>of {readableByteSize(Number(storage.quotaBytes))} used</>
+            ) : (
+              <span className="muted">used · no cap is being enforced</span>
+            )}
+          </p>
+
+          {usedPercent !== null && (
+            <div
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={usedPercent}
+              aria-label="Storage used"
+              style={{
+                height: '0.7rem',
+                borderRadius: '999px',
+                background: 'var(--surface-2)',
+                border: '1px solid var(--border)',
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                style={{
+                  width: `${usedPercent}%`,
+                  height: '100%',
+                  background: usedPercent >= 90 ? '#a33' : 'var(--green-800)',
+                }}
+              />
+            </div>
+          )}
+
+          <p className="muted" style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>
+            {storage.enforced && storage.remainingBytes !== null ? (
+              <>
+                {readableByteSize(Number(storage.remainingBytes))} of room left. Counted on the
+                masters you uploaded — the delivery copies made from them are the platform&apos;s,
+                not your allowance. Withdrawn and deleted files do not count; pending and held
+                ones do.
+              </>
+            ) : (
+              <>
+                There is no storage cap on this platform at the moment. Uploads are still limited
+                per file, and every file waits for verification. Counted on the masters you
+                uploaded; withdrawn and deleted files do not count.
+              </>
+            )}
+          </p>
+
+          {storage.byStatus.length > 0 && (
+            <ul className="lessons" style={{ marginTop: '0.5rem' }}>
+              {storage.byStatus.map((row) => (
+                <li key={row.status} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>{MEDIA_STATUS_LABEL[row.status as keyof typeof MEDIA_STATUS_LABEL] ?? row.status}</span>
+                  <span className="muted">
+                    {row.files} file(s) · {readableByteSize(Number(row.bytes))}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+
+      <UploadMedia
+        remainingBytes={storage?.enforced && storage.remainingBytes !== null
+          ? Number(storage.remainingBytes)
+          : null}
+      />
 
       <section className="card">
         <h2>Your files</h2>

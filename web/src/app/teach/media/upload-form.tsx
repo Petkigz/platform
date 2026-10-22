@@ -101,7 +101,7 @@ const PHASE_LABEL: Record<Phase, string> = {
  * lesson. Letting an uploader confirm their own file is the hole
  * `confirm_media_upload()` was written to close.
  */
-export function UploadMedia() {
+export function UploadMedia({ remainingBytes = null }: { remainingBytes?: number | null } = {}) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -136,6 +136,22 @@ export function UploadMedia() {
       setFile(null);
       setName('');
       setMessage(check.message);
+      setTone('error');
+      return;
+    }
+
+    // The quota is checked here as well as at the route, because a teacher
+    // should learn that this file will not fit before hashing a 2 GB master for
+    // a minute, not after. The server is still the authority — this is only the
+    // same number said earlier.
+    if (remainingBytes !== null && next.size > remainingBytes) {
+      setFile(null);
+      setName('');
+      setMessage(
+        `This file is ${readableByteSize(next.size)} and only ` +
+          `${readableByteSize(remainingBytes)} of your storage is left. Withdraw a file you no ` +
+          'longer need, or upload a smaller copy.',
+      );
       setTone('error');
       return;
     }
