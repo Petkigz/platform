@@ -19,6 +19,7 @@ import { fetchLessonStudyTools } from '@/lib/lesson-study-tools';
 import { StudyTools } from './study-tools';
 import { fetchPlayableRenditions, groupByAsset, posterFor } from '@/lib/playback';
 import { RenditionPlayer } from '@/app/_shared/rendition-player';
+import { recordEvent } from '@/lib/analytics-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -106,6 +107,17 @@ export default async function LessonPage({
     enrolment.learner_profile_id,
     lesson.id,
   );
+
+  // An opened lesson, recorded against the learner it was opened for — not the
+  // adult who is signed in, who may be a parent looking at a child's work. This
+  // is also the only place the app learns that a lesson was *reached* rather
+  // than merely completed, which progress alone cannot say.
+  if (entitled) {
+    await recordEvent(supabase, 'lesson.opened', {
+      subjectId: lesson.id,
+      learnerProfileId: enrolment.learner_profile_id,
+    });
+  }
 
   const { data: progressData } = await supabase
     .from('lesson_progress')
@@ -260,6 +272,7 @@ export default async function LessonPage({
                         }
                         canDownload={canDownload}
                         courseTitle={courseTitle}
+                        learnerProfileId={enrolment.learner_profile_id}
                       />
                     ) : r.mediaAssetId ? (
                       // The master exists but nothing has encoded a delivery copy

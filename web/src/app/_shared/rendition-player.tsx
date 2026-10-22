@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { createClient } from '@/lib/supabase/client';
 import { deviceKey, storeLesson } from '@/lib/offline';
+import { track } from '@/lib/analytics';
 
 import {
   PROFILE_LABEL,
@@ -55,6 +56,7 @@ export function RenditionPlayer({
   posterRenditionId,
   canDownload,
   courseTitle = '',
+  learnerProfileId = null,
 }: {
   displayName: string;
   lessonId: string;
@@ -63,6 +65,8 @@ export function RenditionPlayer({
   posterRenditionId: string | null;
   canDownload: boolean;
   courseTitle?: string;
+  /** Whose save this is. A guardian saving a child's lesson records the child. */
+  learnerProfileId?: string | null;
 }) {
   const choices = renditionChoices(renditions);
   const initial = pickStreamRendition(renditions, null);
@@ -200,6 +204,7 @@ export function RenditionPlayer({
       );
 
       setSavedHere(true);
+      void track({ code: 'download.saved', subjectId: lessonId, learnerProfileId });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'That lesson could not be saved.');
     } finally {

@@ -33,6 +33,7 @@ import { SaveButton } from './save-button';
 import { isCourseSaved } from '@/lib/wishlist';
 import { fetchJoinableCohorts } from '@/lib/cohorts';
 import { CohortBrowser } from './cohort-browser';
+import { recordEvent } from '@/lib/analytics-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -115,6 +116,11 @@ export default async function CoursePage({
   );
 
   if (!version) notFound();
+
+  // A course page seen by a signed-in visitor. The subject is the *version*,
+  // because a course can be republished and "which terms were they reading" is
+  // the question a report will ask later.
+  await recordEvent(supabase, 'course.viewed', { subjectId: version.id });
 
   const sections = (version.course_sections ?? [])
     .slice()

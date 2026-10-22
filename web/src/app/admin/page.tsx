@@ -119,6 +119,11 @@ export default async function AdminPage() {
         <Link href="/admin/certificates">Certificates</Link> — issue completion certificates and manage revocations with an audit-ready reason.
       </p>
       <p>
+        <Link href="/admin/analytics">Analytics</Link> — what people do, kept
+        forever, by event and by day. Aggregates only; a closed account keeps its
+        rows and loses its name.
+      </p>
+      <p>
         <Link href="/admin/plans">Subscription plans</Link> — configure versioned terms, entitlements and recurring prices.
       </p>
       <p>

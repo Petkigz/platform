@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { joinLiveSession } from '@/lib/live';
+import { track } from '@/lib/analytics';
 
 /**
  * The door.
@@ -34,6 +35,9 @@ export function JoinButton({
       setBusy(false);
       return;
     }
+    // An entered class, recorded for the learner whose seat it was — the child
+    // when a parent opened the door.
+    void track({ code: 'live.joined', subjectId: sessionId, learnerProfileId });
     window.location.assign(result.roomUrl);
   }
 

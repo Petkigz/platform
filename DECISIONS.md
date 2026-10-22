@@ -2567,5 +2567,19 @@ versioned before the first row is written.
 meets a bill. The mitigation is not sampling — that would be keeping less than promised —
 but writing fewer, better events and storing them cheaply.
 
-**Open:** the event vocabulary — what is actually captured — and the reporting built on it.
-Both are design work, not a retention question, and neither is built yet.
+**Settled 2026-10-22: the vocabulary and the store.** Seven events, closed in
+`analytics_event_codes` and refused at write time if a call site misspells one: a lesson opened,
+a course page viewed, a catalogue search, a plan viewed, checkout started, a lesson saved inside
+the app, a live class entered. `analytics_events` is partitioned by month and append-only — a
+trigger refuses every delete and every update except the de-identification that account erasure
+performs — and `record_analytics_event()` is the only writer. Nothing is recorded for a
+signed-out visitor: there is no anonymous tracking, no cookie, and no identifier, which also
+means "how many strangers visited" becomes a question this platform deliberately cannot answer.
+Staff read aggregates through `analytics_event_totals()` and `analytics_daily()`; the one report
+that reads a payload is `analytics_search_terms()`, because knowing what was searched for is the
+whole reason a search is recorded. The flag moves from CODE to ADMIN: the pipeline is built, so
+switching capture on is the owner's decision rather than a deploy.
+
+**Still open:** the reports a teacher sees about their own course. The data now exists; what a
+teacher may read about their learners is a separate permission question and is not answered
+here.

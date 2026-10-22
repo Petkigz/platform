@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { track } from '@/lib/analytics';
 
 type Price = { id: string; amountLabel: string; currency: string; interval: string; market: string | null };
 type Version = { id: string; versionNumber: number; interval: string; adultAllowance: number; childAllowance: number; prices: Price[]; entitlements: string[] };
@@ -21,6 +22,12 @@ export function PlanStorefront({ plans, learners }: { plans: Plan[]; learners: L
     const priceId = String(data.get('priceId') ?? '');
     const learnerProfileId = String(data.get('learnerProfileId') ?? '');
     setBusy(versionId);
+    void track({
+      code: 'checkout.started',
+      subjectId: versionId,
+      learnerProfileId,
+      properties: { priceId },
+    });
     try {
       const response = await fetch('/api/checkout', {
         method: 'POST',
@@ -63,6 +70,7 @@ export function PlanStorefront({ plans, learners }: { plans: Plan[]; learners: L
         <div className="grid cols-2">
           {plans.flatMap((plan) => plan.versions.map((version) => (
             <article className="card" key={version.id}>
+              <PlanSeen planId={plan.id} />
               <p className="eyebrow">
                 {plan.tier === 'plus' ? 'Plus · the VIP package' : 'Basic'} · {version.interval} plan · version {version.versionNumber}
               </p>
@@ -114,4 +122,19 @@ export function PlanStorefront({ plans, learners }: { plans: Plan[]; learners: L
       )}
     </>
   );
+}
+
+/**
+ * One plan, seen once.
+ *
+ * A tiny client component so a server-rendered storefront can report the view
+ * without turning the whole page into a client component. It fires on mount and
+ * never again, and does nothing at all for a signed-out visitor — the database
+ * refuses to record an actor-less event.
+ */
+function PlanSeen({ planId }: { planId: string }) {
+  useEffect(() => {
+    void track({ code: 'plan.viewed', subjectId: planId });
+  }, [planId]);
+  return null;
 }

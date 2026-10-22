@@ -85,6 +85,7 @@ import { run as offlineSaves } from './offline_saves.test.mjs';
 import { run as learnerStreaks } from './learner_streaks.test.mjs';
 import { run as promotionRemoval } from './promotion_removal.test.mjs';
 import { run as ownLearnerProfile } from './own_learner_profile.test.mjs';
+import { run as analyticsEvents } from './analytics_events.test.mjs';
 
 // Settings that are global by design: one row, read by code far from the suite
 // that changes it. The revenue share decides what every accrual computes; the
@@ -178,6 +179,7 @@ for (const [name, fn] of [
   ['learner streaks', learnerStreaks],
   ['promotion removal', promotionRemoval],
   ['own learner profile', ownLearnerProfile],
+  ['analytics events', analyticsEvents],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],

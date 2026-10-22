@@ -161,6 +161,7 @@ against the actual route list in the production build, not from memory.
 | `/admin/course-reviews` | Held learner review text before it is published |
 | `/admin/disputes` | Payment disputes |
 | `/admin/financial-adjustments` | Manual financial adjustments |
+| `/admin/analytics` | What people do, by event and by day *(added 2026-10-22)*: totals over a 7/30/90/365-day window, the busiest event's daily bars, and the top catalogue search terms. Reads only — the switch that records is `delivery.analytics` on `/admin`. Aggregates only: counts and distinct people, never a list of who. Staff only |
 | `/admin/plans` | Subscription plans, versions, entitlements and prices. Each plan is created on, or moved between, the **Basic** and **Plus** shelves; a Basic plan cannot be given a Plus feature, and a Plus plan cannot drop to Basic while its terms still carry one |
 | `/admin/reconciliation` | Payment reconciliation |
 | `/admin/refunds` | Refund queue |

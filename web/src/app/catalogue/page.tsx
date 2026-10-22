@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { isSupabaseConfigured } from '@/lib/env';
+import { recordEvent } from '@/lib/analytics-server';
 import { createClient } from '@/lib/supabase/server';
 import {
   AUDIENCE_LABEL,
@@ -72,6 +73,14 @@ export default async function CataloguePage({
   // us a version an author can see in draft; the catalogue must not.
   const visible = courses.filter((c) => displayVersion(c) !== null);
   const tops = disciplines(subjects);
+
+  // What people look for is the whole point of search analytics, and the query
+  // is already in hand here. A signed-out search records nothing.
+  if (q && q.trim()) {
+    await recordEvent(supabase, 'search.performed', {
+      properties: { query: q.trim().slice(0, 200), results: visible.length },
+    });
+  }
 
   const qs = (over: Partial<Search>): string => {
     const p = new URLSearchParams();

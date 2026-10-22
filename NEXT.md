@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1333 database tests, 849 web tests; TypeScript typecheck and
-production build pass; 113 tables, 238 policies, 144 user-defined triggers,
-314 functions, 134 migrations and 134 app route entries.**
+Verification: **1348 database tests, 856 web tests; TypeScript typecheck and
+production build pass; 115 tables, 239 policies, 146 user-defined triggers,
+320 functions, 135 migrations and 135 app route entries.**
 
 ## Today's sentence
 
@@ -2252,6 +2252,51 @@ was described in a comment and stored nowhere. It is deliberately **not unique p
 market may sell two Basic plans at two prices. What makes a plan the VIP one is the tier
 *and* the feature grant its live version carries — neither alone should be able to hand out
 the feature.
+
+### Everything is kept, so the store had to be built to keep it, 2026-10-22
+
+The owner's fourth answer that day was a sentence about retention: *"analytics, everything is
+kept and is stored forever because you never know what might happen."* That was recorded, and
+`delivery.analytics` stayed CODE-gated because there was no pipeline behind it. There is now.
+
+**Seven events, decided before the first row.** A lesson opened, a course page viewed, a
+catalogue search, a plan viewed, checkout started, a lesson saved inside the app, a live class
+entered. The list lives in `analytics_event_codes` with a description, a subject type and
+whether the event names a learner — and `record_analytics_event()` refuses anything not on it.
+That is not fussiness: an append-only store makes a wrongly captured event wrong forever, so
+the vocabulary is closed *before* the first write rather than grown by accident afterwards.
+
+**The store cannot be rewritten.** `analytics_events` is partitioned by month on `occurred_at`,
+which is what makes a month droppable as a unit if a law ever asks. A trigger refuses every
+delete and every update except one: nulling the two person references, from inside account
+erasure, with the erasure setting switched on. That is the only rewrite the table accepts, and
+a test pins all three halves of it.
+
+**Erasure keeps the row and loses the name.** `erase_my_account()` now de-identifies analytics
+in the same transaction: "learner X finished lesson 3" is a fact the platform recorded, not
+words the person wrote, and deleting it would break every figure that counts completions. The
+closed account becomes unreachable as a person and the count still says three.
+
+**No anonymous traffic, on purpose.** A signed-out visitor records nothing — no cookie, no
+generated identifier, no session. The honest consequence is written down rather than hidden:
+this platform cannot answer "how many strangers visited", and it should not be able to.
+
+**What is recorded where.** The server components record the page-shaped events (course viewed,
+lesson opened against the *learner's* profile rather than the signed-in adult's, catalogue
+search with its terms and result count); the client records the ones that are actions rather
+than renders (checkout started, a lesson saved to the device, a live class entered). Every call
+is fire-and-forget: instrumentation must never be able to break the page it is watching, so a
+refused or dropped event resolves quietly while a *misspelt code* still raises in the database.
+
+**Reading it.** `/admin/analytics` shows totals per event over a 7/30/90/365-day window, the
+busiest event day by day, and the top catalogue search terms — the one report that reads a
+payload, which is why the flag's precondition now says privacy review. The reading functions
+are staff-only and aggregate; there is no screen anywhere that lists what one learner did.
+`analytics_event_totals()`, `analytics_daily()` and `analytics_search_terms()` are the only
+doors — the table itself is not readable by anybody, staff included.
+
+**The flag stops being a deploy.** `delivery.analytics` moves from CODE to ADMIN. Capture ships
+off: nine months of silence is not recoverable, but neither is a switch nobody asked for.
 
 ### The VIP shelf can finally be stocked, 2026-10-22
 
