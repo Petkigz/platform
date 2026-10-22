@@ -31,7 +31,23 @@ export async function POST(request: Request) {
       if (typeof body.code !== 'string' || typeof body.name !== 'string')
         return fail('A plan code and name are required.');
       fn = 'create_plan';
-      args = { p_code: body.code, p_name: body.name, p_description: typeof body.description === 'string' ? body.description : null };
+      args = {
+        p_code: body.code,
+        p_name: body.name,
+        p_description: typeof body.description === 'string' ? body.description : null,
+        p_tier: typeof body.tier === 'string' ? body.tier : 'basic',
+      };
+      break;
+    case 'remove_entitlement':
+      if (typeof body.entitlementId !== 'string') return fail('Choose an entitlement.');
+      fn = 'remove_plan_entitlement';
+      args = { p_entitlement_id: body.entitlementId };
+      break;
+    case 'set_plan_tier':
+      if (typeof body.planId !== 'string' || typeof body.tier !== 'string')
+        return fail('Choose a plan and a shelf.');
+      fn = 'set_plan_tier';
+      args = { p_plan_id: body.planId, p_tier: body.tier };
       break;
     case 'create_version':
       if (typeof body.planId !== 'string') return fail('Choose a plan first.');

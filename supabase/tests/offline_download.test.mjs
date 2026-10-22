@@ -231,8 +231,9 @@ export async function run(ctx) {
   // -------------------------------------------------------------------------
 
   await test('a plan cannot be sold with a misspelt feature code', async () => {
-    const plan = (await asActor(admin, 'select public.create_plan($1,$2,$3) id',
-      ['typo-plan', 'typo-plan', 'Typo plan'])).rows[0].id;
+    // Plus, so the refusal under test is the vocabulary rather than the shelf.
+    const plan = (await asActor(admin, 'select public.create_plan($1,$2,$3,$4) id',
+      ['typo-plan', 'typo-plan', 'Typo plan', 'plus'])).rows[0].id;
     const version = (await asActor(admin, 'select public.create_plan_version($1,$2,$3,$4,$5) id',
       [plan, 0, 1, 'month', 'Terms'])).rows[0].id;
     // The typo that would otherwise take money and grant nothing, silently.
@@ -264,8 +265,10 @@ export async function run(ctx) {
     // a plan that will be refused on save.
     const codes = (await q('select unnest(public.plan_feature_codes()) as code order by 1')).rows.map((r) => r.code);
     assert(codes.length > 0, 'the vocabulary advertises no codes at all');
-    const plan = (await asActor(admin, 'select public.create_plan($1,$2,$3) id',
-      ['parity-plan', 'parity-plan', 'Parity plan'])).rows[0].id;
+    // Every advertised code has to be sellable somewhere, so this plan is on the
+    // Plus shelf: a Basic plan may not carry the download feature.
+    const plan = (await asActor(admin, 'select public.create_plan($1,$2,$3,$4) id',
+      ['parity-plan', 'parity-plan', 'Parity plan', 'plus'])).rows[0].id;
     const version = (await asActor(admin, 'select public.create_plan_version($1,$2,$3,$4,$5) id',
       [plan, 0, 1, 'month', 'Terms'])).rows[0].id;
     for (const code of codes) {
@@ -303,8 +306,8 @@ export async function run(ctx) {
        values ('E2E household','UG','UGX','active',$1)`, [payer]);
     const account = (await q('select id from public.billing_accounts where created_by=$1', [payer])).rows[0].id;
 
-    const plan = (await asActor(admin, 'select public.create_plan($1,$2,$3) id',
-      ['plus-e2e', 'Plus', 'Carries offline saving'])).rows[0].id;
+    const plan = (await asActor(admin, 'select public.create_plan($1,$2,$3,$4) id',
+      ['plus-e2e', 'Plus', 'Carries offline saving', 'plus'])).rows[0].id;
     const version = (await asActor(admin, 'select public.create_plan_version($1,$2,$3,$4,$5) id',
       [plan, 0, 1, 'month', 'Plus terms'])).rows[0].id;
     await asActor(admin, "select public.add_plan_entitlement($1,'catalogue',$2,null,null)", [version, subject]);

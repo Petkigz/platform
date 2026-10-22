@@ -26,9 +26,9 @@ export async function run(ctx) {
     }
   }
 
-  async function makePlan(code='family-monthly') {
-    return (await asActor(admin, 'select public.create_plan($1,$2,$3) id',
-      [code, 'Family monthly', 'Household access'])).rows[0].id;
+  async function makePlan(code='family-monthly', { tier = 'basic' } = {}) {
+    return (await asActor(admin, 'select public.create_plan($1,$2,$3,$4) id',
+      [code, 'Family monthly', 'Household access', tier])).rows[0].id;
   }
 
   async function makeVersion(planId, interval='month') {
@@ -91,7 +91,9 @@ export async function run(ctx) {
   });
 
   await test('catalogue, product and feature entitlements can be added', async () => {
-    const plan = await makePlan('all-scopes');
+    // The download feature is a Plus benefit, so the plan this test grants it on
+    // has to be on the Plus shelf. That is the rule added in 20261252.
+    const plan = await makePlan('all-scopes', { tier: 'plus' });
     const version = await makeVersion(plan);
     const subject = (await q("select id from public.subject_areas where code='quran' limit 1")).rows[0].id;
     const catalogue = await asActor(admin,
@@ -159,6 +161,93 @@ export async function run(ctx) {
     await q("update public.plans set status='retired' where id=$1",[plan]);
     await rejects(() => asActor(admin,
       "select public.create_plan_version($1,0,1,'month',null)",[plan]), /not found or retired/i);
+  });
+
+  // ---------------------------------------------------------------------------
+  // basic and plus are shelves, not labels
+  // ---------------------------------------------------------------------------
+  // Decided 2026-10-22: downloads live on "a plan on top of the basic plan with
+  // more features, more like the vip package." A tier that nothing enforces is
+  // a word on a form, so these tests check the enforcement, not the column.
+
+  await test('a new plan is born on the basic shelf unless told otherwise', async () => {
+    const plan = (await asActor(admin, 'select public.create_plan($1,$2,$3) id',
+      ['default-tier', 'Default tier', 'No tier asked for'])).rows[0].id;
+    const tier = (await q('select tier from public.plans where id=$1', [plan])).rows[0].tier;
+    assert(tier === 'basic', `a plan created without a tier came out as ${tier}`);
+  });
+
+  await test('a plan cannot be created on a shelf that does not exist', async () => {
+    await rejects(() => asActor(admin, 'select public.create_plan($1,$2,$3,$4)',
+      ['gold-plan', 'Gold', null, 'gold']), /either basic or plus/i);
+  });
+
+  await test('a basic plan may not carry a plus feature', async () => {
+    const plan = await makePlan('basic-downloads');
+    const version = await makeVersion(plan);
+    // The refusal that makes the tier mean something: a Basic plan cannot be
+    // given the benefit the Plus shelf exists to sell.
+    await rejects(() => asActor(admin,
+      "select public.add_plan_entitlement($1,'feature',null,null,'offline_downloads')", [version]),
+    /plus feature/i);
+    const count = (await q('select count(*)::int as n from public.plan_entitlements where plan_version_id=$1',[version])).rows[0].n;
+    assert(count === 0, 'the refused grant was written anyway');
+  });
+
+  await test('moving a plan to plus lets the feature be granted', async () => {
+    const plan = await makePlan('moved-to-plus');
+    const version = await makeVersion(plan);
+    const moved = (await asActor(admin, 'select public.set_plan_tier($1,$2) as result',
+      [plan, 'plus'])).rows[0].result;
+    assert(moved.changed === true && moved.tier === 'plus', JSON.stringify(moved));
+    const id = (await asActor(admin,
+      "select public.add_plan_entitlement($1,'feature',null,null,'offline_downloads') id", [version])).rows[0].id;
+    assert(id, 'the feature was still refused after the plan moved to plus');
+    const audited = (await q(`select detail from public.governance_audit_events
+      where action='plan.tier_changed' and target_id=$1`,[plan])).rows[0];
+    assert(audited && audited.detail.from === 'basic' && audited.detail.to === 'plus',
+      `audit detail was ${JSON.stringify(audited?.detail)}`);
+  });
+
+  await test('setting the tier a plan already has is a quiet no-op', async () => {
+    const plan = await makePlan('same-shelf');
+    const again = (await asActor(admin, 'select public.set_plan_tier($1,$2) as result',
+      [plan, 'basic'])).rows[0].result;
+    assert(again.changed === false, 'an unchanged tier was reported as a change');
+    const events = (await q(`select count(*)::int as n from public.governance_audit_events
+      where action='plan.tier_changed' and target_id=$1`,[plan])).rows[0].n;
+    assert(events === 0, 'a no-op wrote an audit event');
+  });
+
+  await test('a plus plan cannot drop to basic while its terms still carry the feature', async () => {
+    const plan = await makePlan('stuck-plus', { tier: 'plus' });
+    const version = await makeVersion(plan);
+    const entitlement = (await asActor(admin,
+      "select public.add_plan_entitlement($1,'feature',null,null,'offline_downloads') id", [version])).rows[0].id;
+    await rejects(() => asActor(admin, 'select public.set_plan_tier($1,$2)', [plan, 'basic']),
+      /still carries offline_downloads/i);
+    const tier = (await q('select tier from public.plans where id=$1',[plan])).rows[0].tier;
+    assert(tier === 'plus', 'the downgrade happened despite the refusal');
+
+    // And with the grant gone, the downgrade is allowed — the refusal has a way
+    // out rather than trapping the plan on the wrong shelf forever.
+    await asActor(admin, 'select public.remove_plan_entitlement($1)', [entitlement]);
+    const after = (await asActor(admin, 'select public.set_plan_tier($1,$2) as result',
+      [plan, 'basic'])).rows[0].result;
+    assert(after.changed === true && after.tier === 'basic', JSON.stringify(after));
+    const removed = (await q(`select count(*)::int as n from public.governance_audit_events
+      where action='plan.entitlement_removed' and target_id=$1`,[version])).rows[0].n;
+    assert(removed === 1, 'the removal was not audited');
+  });
+
+  await test('only privileged staff may move a plan or remove a grant', async () => {
+    const plan = await makePlan('guarded-shelf');
+    await rejects(() => asActor(stranger, 'select public.set_plan_tier($1,$2)',[plan,'plus']),
+      /only platform staff/i);
+    await rejects(() => asActor(stranger, 'select public.set_plan_tier($1,$2)',[plan,'gold']),
+      /only platform staff/i);
+    await rejects(() => asActor(stranger, 'select public.remove_plan_entitlement($1)',
+      ['00000000-0000-0000-0000-000000000000']), /only platform staff/i);
   });
 
   await test('plan setup is audited', async () => {

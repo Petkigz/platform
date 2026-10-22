@@ -17,7 +17,7 @@ export default async function AdminPlansPage() {
   const [plansResult, subjectsResult, featureResult] = await Promise.all([
     supabase
       .from('plans')
-      .select(`id, code, name, status, description,
+      .select(`id, code, name, status, tier, description,
         plan_versions (
           id, version_number, status, billing_interval, child_allowance, adult_allowance,
           plan_entitlements ( id, scope_type, feature_code, subject_area_id, product_id ),

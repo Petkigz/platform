@@ -50,8 +50,11 @@ export async function run(ctx) {
   const subject = (await q("select id from public.subject_areas where code='quran' limit 1")).rows[0].id;
 
   async function makePlan(code, { adults=1, children=1, interval='month' } = {}) {
+    // Plus, because these plans carry the offline-download feature and a Basic
+    // plan may not (20261252).
     const plan = (await asActor(admin,
-      'select public.create_plan($1,$2,$3) id', [code,code,'Subscription test plan'])).rows[0].id;
+      'select public.create_plan($1,$2,$3,$4) id',
+      [code,code,'Subscription test plan','plus'])).rows[0].id;
     const version = (await asActor(admin,
       'select public.create_plan_version($1,$2,$3,$4,$5) id',
       [plan,children,adults,interval,'Test terms'])).rows[0].id;

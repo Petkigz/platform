@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 
 type Price = { id: string; amountLabel: string; currency: string; interval: string; market: string | null };
 type Version = { id: string; versionNumber: number; interval: string; adultAllowance: number; childAllowance: number; prices: Price[]; entitlements: string[] };
-type Plan = { id: string; code: string; name: string; description: string | null; versions: Version[] };
+type Plan = { id: string; code: string; name: string; description: string | null; tier: string; versions: Version[] };
 type Learner = { id: string; name: string; type: string; ageBand: string | null };
 
 export function PlanStorefront({ plans, learners }: { plans: Plan[]; learners: Learner[] }) {
@@ -63,8 +63,15 @@ export function PlanStorefront({ plans, learners }: { plans: Plan[]; learners: L
         <div className="grid cols-2">
           {plans.flatMap((plan) => plan.versions.map((version) => (
             <article className="card" key={version.id}>
-              <p className="eyebrow">{version.interval} plan · version {version.versionNumber}</p>
-              <h2>{plan.name}</h2>
+              <p className="eyebrow">
+                {plan.tier === 'plus' ? 'Plus · the VIP package' : 'Basic'} · {version.interval} plan · version {version.versionNumber}
+              </p>
+              <h2>
+                {plan.name}{' '}
+                <span className={`badge ${plan.tier === 'plus' ? 'ok' : 'neutral'}`}>
+                  {plan.tier === 'plus' ? 'Plus' : 'Basic'}
+                </span>
+              </h2>
               {plan.description && <p className="muted">{plan.description}</p>}
               <p>{version.adultAllowance} adult slot(s) · {version.childAllowance} child slot(s)</p>
               {version.entitlements.length > 0 && (

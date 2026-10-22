@@ -2526,10 +2526,17 @@ lapses with the plan: 30 days by default, then it asks to be refreshed. Three de
 default, counted only while they hold a live save. Both are settings, so both are the
 owner's to move without a deploy.
 
+**Settled the next day (2026-10-22): the shelf is now settable.** The "editing screen for
+`plans.tier`" that was open below is built: `create_plan()` takes a tier (defaulting to
+**basic**), `set_plan_tier()` moves a plan between shelves and audits it, `add_plan_entitlement()`
+refuses a Plus-only feature on a Basic plan, and `remove_plan_entitlement()` exists so a
+refused downgrade has a way out. `/admin/plans` carries the selector and the badge; `/plans`
+separates the shelves. **The tier is a gate, not a label**: before this, the tier and the
+feature grant were two independent ways to hand out downloads and a mismatch was silent.
+
 **Open:** protected media. Nothing encrypts the stored bytes; a rooted device can read the
 app's database. That is the residual risk of any offline feature and it is named rather than
-implied. Also open: an editing screen for `plans.tier` — the column exists and the admin plan
-flow does not set it yet.
+implied.
 ## Analytics is kept forever, and that has consequences — **DECIDED 2026-10-22**
 
 The owner: **"everything is kept and is stored forever because you never know what might

@@ -25,7 +25,7 @@ Status:
 | 4 | Adult Learners entry | READY |
 | 5 | Course catalogue | **BUILT** — `/catalogue`, with subject chips from the seeded `subject_areas` taxonomy |
 | 6 | Search and filter | **BUILT** — `/catalogue?q=&subject=&audience=`, matched and ranked by `search_catalogue()` across course name, subject and a public teacher's name |
-| 7 | Pricing and subscriptions | **BUILT as a screen** — `/plans` renders configured plan versions and their prices. No price points have been *set*, so it is an empty state until someone decides what a subscription costs. Taking payment still needs P12 |
+| 7 | Pricing and subscriptions | **BUILT as a screen** — `/plans` renders configured plan versions and their prices, Basic above Plus, with the VIP package named on the card. No price points have been *set*, so it is an empty state until someone decides what a subscription costs. Taking payment still needs P12 |
 
 ## 2. Access — 3  *(missing from the source list entirely)*
 
@@ -161,7 +161,7 @@ against the actual route list in the production build, not from memory.
 | `/admin/course-reviews` | Held learner review text before it is published |
 | `/admin/disputes` | Payment disputes |
 | `/admin/financial-adjustments` | Manual financial adjustments |
-| `/admin/plans` | Subscription plans, versions, entitlements and prices |
+| `/admin/plans` | Subscription plans, versions, entitlements and prices. Each plan is created on, or moved between, the **Basic** and **Plus** shelves; a Basic plan cannot be given a Plus feature, and a Plus plan cannot drop to Basic while its terms still carry one |
 | `/admin/reconciliation` | Payment reconciliation |
 | `/admin/refunds` | Refund queue |
 | `/admin/reports` | Abuse and content reports |

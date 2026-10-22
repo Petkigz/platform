@@ -33,6 +33,8 @@ export type PlanView = {
   code: string;
   name: string;
   status: string;
+  /** Which shelf the plan is on. A Plus plan is what a VIP package means here. */
+  tier: string;
   description: string | null;
   plan_versions: VersionView[];
 };
@@ -43,6 +45,8 @@ type PlanAction =
   | 'create_version'
   | 'add_entitlement'
   | 'set_price'
+  | 'set_plan_tier'
+  | 'remove_entitlement'
   | 'activate_version';
 
 function value(data: FormData, key: string): string {
@@ -73,7 +77,13 @@ export function PlanManager({
     let payload: Record<string, unknown> = { action, ...extra };
 
     if (action === 'create_plan') {
-      payload = { ...payload, code: value(data, 'code'), name: value(data, 'name'), description: value(data, 'description') };
+      payload = {
+        ...payload,
+        code: value(data, 'code'),
+        name: value(data, 'name'),
+        description: value(data, 'description'),
+        tier: value(data, 'tier') || 'basic',
+      };
     } else if (action === 'create_version') {
       payload = {
         ...payload,
@@ -91,6 +101,10 @@ export function PlanManager({
         subjectAreaId: value(data, 'subjectAreaId') || null,
         featureCode: value(data, 'featureCode') || null,
       };
+    } else if (action === 'remove_entitlement') {
+      payload = { ...payload, entitlementId: value(data, 'entitlementId') };
+    } else if (action === 'set_plan_tier') {
+      payload = { ...payload, planId: value(data, 'planId'), tier: value(data, 'tier') };
     } else if (action === 'set_price') {
       payload = {
         ...payload,
@@ -126,14 +140,44 @@ export function PlanManager({
           <label>Plan code<input name="code" required pattern="[a-z0-9][a-z0-9_-]*" maxLength={80} placeholder="family-monthly" /></label>
           <label>Name<input name="name" required maxLength={160} placeholder="Family monthly" /></label>
           <label>Description<textarea name="description" rows={2} /></label>
+          <label>
+            Which shelf
+            <select name="tier" defaultValue="basic">
+              <option value="basic">Basic — the course, and learning itself</option>
+              <option value="plus">Plus — the VIP package, with more features</option>
+            </select>
+          </label>
+          <p className="muted" style={{ fontSize: '0.85rem' }}>
+            Downloads are a Plus feature: a Basic plan cannot be given them, so a plan that
+            should carry them has to be created (or moved) here.
+          </p>
           <button className="btn" disabled={pending}>Create draft plan</button>
         </form>
       </div>
 
       {plans.length === 0 ? <p className="empty">No plans yet. Create the first one above.</p> : plans.map((plan) => (
         <section key={plan.id} className="card" style={{ padding: '1.25rem', marginBottom: '1.25rem' }}>
-          <div className="outline-h"><h2>{plan.name}</h2><span className="badge neutral">{plan.status}</span></div>
+          <div className="outline-h">
+            <h2>{plan.name}</h2>
+            <span>
+              <span className={`badge ${plan.tier === 'plus' ? 'ok' : 'neutral'}`}>
+                {plan.tier === 'plus' ? 'Plus' : 'Basic'}
+              </span>{' '}
+              <span className="badge neutral">{plan.status}</span>
+            </span>
+          </div>
           <p><code>{plan.code}</code>{plan.description ? ` · ${plan.description}` : ''}</p>
+          <form onSubmit={(event) => submit(event, 'set_plan_tier')} className="row" style={{ alignItems: 'end', flexWrap: 'wrap' }}>
+            <label>
+              Shelf
+              <select name="tier" defaultValue={plan.tier}>
+                <option value="basic">Basic</option>
+                <option value="plus">Plus</option>
+              </select>
+            </label>
+            <button className="btn ghost" disabled={pending}>Change shelf</button>
+            <input type="hidden" name="planId" value={plan.id} />
+          </form>
           <h3>New terms version</h3>
           <form onSubmit={(event) => submit(event, 'create_version')} className="stack">
             <input type="hidden" name="planId" value={plan.id} />
@@ -156,6 +200,29 @@ export function PlanManager({
                     {entitlement.scope_type === 'catalogue'
                       ? `Catalogue subject: ${subjects.find((s) => s.id === entitlement.subject_area_id)?.name ?? entitlement.subject_area_id}`
                       : entitlement.scope_type === 'feature' ? `Feature: ${entitlement.feature_code}` : `Product: ${entitlement.product_id}`}
+                    {version.status === 'draft' && (
+                      <button
+                        type="button"
+                        className="btn ghost tiny"
+                        style={{ marginLeft: '0.5rem' }}
+                        disabled={pending}
+                        onClick={() => {
+                          void (async () => {
+                            setMessage(null); setSaved(false);
+                            const response = await fetch('/api/admin/plans', {
+                              method: 'POST',
+                              headers: { 'content-type': 'application/json' },
+                              body: JSON.stringify({ action: 'remove_entitlement', entitlementId: entitlement.id }),
+                            });
+                            const result = (await response.json().catch(() => null)) as { ok?: boolean; message?: string } | null;
+                            if (!response.ok || result?.ok !== true) setMessage(result?.message ?? 'Could not remove this entitlement.');
+                            else { setSaved(true); startTransition(() => router.refresh()); }
+                          })();
+                        }}
+                      >
+                        Remove
+                      </button>
+                    )}
                   </li>)}</ul>
                 )}
               </div>

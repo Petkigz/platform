@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1326 database tests, 849 web tests; TypeScript typecheck and
+Verification: **1333 database tests, 849 web tests; TypeScript typecheck and
 production build pass; 113 tables, 238 policies, 144 user-defined triggers,
-311 functions, 133 migrations and 134 app route entries.**
+314 functions, 134 migrations and 134 app route entries.**
 
 ## Today's sentence
 
@@ -2252,6 +2252,45 @@ was described in a comment and stored nowhere. It is deliberately **not unique p
 market may sell two Basic plans at two prices. What makes a plan the VIP one is the tier
 *and* the feature grant its live version carries — neither alone should be able to hand out
 the feature.
+
+### The VIP shelf can finally be stocked, 2026-10-22
+
+`plans.tier` arrived with offline downloads a day ago and nothing could set it:
+`create_plan()` wrote a plan without a tier, so every plan on the platform — including the
+one the owner would have created for the VIP package — shipped as Basic, and the feature
+that only a Plus plan may carry could not be granted to anything. A column nobody can set
+is a column that does not exist.
+
+Three writers now exist, and one rule binds them:
+
+- `create_plan()` takes a fourth argument, `p_tier`, defaulting to **basic**. The default is
+  the point: a plan created without thinking about shelves is never accidentally the VIP
+  one. The old three-argument function was dropped rather than kept alongside — a defaulted
+  fourth parameter plus an existing three-parameter function makes every three-argument call
+  `is not unique`, which is a failure that reads like a bug in the caller.
+- `set_plan_tier()` moves a plan between shelves, audited, and returns `changed:false` when
+  told to do what is already true. A **downgrade is refused while any version of the plan
+  still carries a Plus-only feature**, because a Basic plan handing out a Plus benefit is
+  the catalogue lying about itself.
+- `add_plan_entitlement()` refuses `offline_downloads` on a Basic plan, with the sentence
+  *"offline_downloads is a plus feature; move this plan to the plus shelf first"*. That is
+  what makes the tier a gate rather than a label: before, the tier and the feature grant
+  were two independent ways to hand out downloads, and a mismatch between them was silent.
+
+`plan_feature_requires_tier()` is the closed list those rules read; a code not on it is
+available on any tier, because an unknown code cannot accidentally be restricted to a shelf
+nobody is on.
+
+**And a grant had to become revocable.** A rule that blocks a downgrade is only sensible if
+the thing blocking it can be removed, and nothing could remove an entitlement: a draft that
+was given the wrong one had no route back except abandoning it and inventing a new code.
+`remove_plan_entitlement()` fixes that, on draft versions only, audited. Seven new database
+tests cover the shelf rules, including that the refusal has a way out.
+
+The screens follow. `/admin/plans` has a shelf selector on create, a badge per plan, and a
+"change shelf" form on every plan; each entitlement on a draft has a Remove button.
+`/plans` sorts Basic above Plus and labels each card, with one sentence saying what the VIP
+package is for: the course itself, plus watching it inside the app with no connection.
 
 ### Live classes are built, not bought, 2026-10-22
 
