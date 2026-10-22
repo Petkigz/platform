@@ -69,8 +69,8 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **103 tables, RLS on every one, 228 policies, 136
-user-defined triggers, 263 functions and 110 migrations.** The database suite
-passes **1160 tests**; the web suite passes **773 tests**. TypeScript typecheck
+user-defined triggers, 263 functions and 111 migrations.** The database suite
+passes **1169 tests**; the web suite passes **777 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **117 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
@@ -176,6 +176,17 @@ because `orders_read` is a payer's own invoice: widening that policy to staff wo
 handed every order on the platform to every privileged role including `support_agent`,
 whose job is one order that already has a case open. Paid orders are absent on purpose —
 their total is history — and the page says where their instruments are.
+
+A teacher can now store 50 GB of masters, and no more. `platform.cost_controls` has been
+registered since the flag table was written with a note saying what was missing — *"Nothing
+exists. Unlimited teacher uploads is how $250/month becomes $3,000"* — so per-file limits
+existed and nothing limited the total. The quota counts master bytes, not the renditions
+derived from them (the 1080p/720p/480p/360p ladder stores about 2.1× the master and is the
+platform's choice, not the teacher's), it counts quarantined and pending files because they
+are still bytes in a bucket, and it gives space back when a teacher withdraws a file.
+Enforced at initiate on `/api/media`, where a teacher can still be told, with a refusal that
+names the space left; off by default behind `platform.cost_controls`, so switching it on is
+a decision rather than a deploy.
 
 A purchase that would grant nothing new is refused. `create_course_order()` derived
 everything about an order from the catalogue but never asked whether the buyer already had

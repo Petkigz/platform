@@ -669,3 +669,87 @@ export async function retryMediaRendition(
   if (error) return { ok: false, message: mapRetryError(error.message) };
   return { ok: true };
 }
+
+// ---------------------------------------------------------------------------
+// How much room is left (20261229000100: 50 GB of masters per teacher)
+//
+// The rule lives in the database — `media_upload_allowance()` decides, because
+// whether an upload fits is a question about rows, and a number that can be
+// checked in two places will eventually disagree with itself. What is left here
+// is turning its figures into a sentence, and doing it in integers: every byte
+// count arrives as a decimal string because a file can be larger than 2^53.
+// ---------------------------------------------------------------------------
+
+export type UploadAllowance = {
+  enforced: boolean;
+  allowed: boolean;
+  /** Null when the control is off: no number, rather than a number of zero. */
+  quotaBytes: string | null;
+  usedBytes: string | null;
+  remainingBytes: string | null;
+  declaredBytes: string | null;
+};
+
+const bytes = (raw: unknown): string | null => {
+  if (typeof raw === 'string' && /^[0-9]+$/.test(raw.trim())) return raw.trim();
+  if (typeof raw === 'number' && Number.isFinite(raw) && raw >= 0) return String(Math.trunc(raw));
+  return null;
+};
+
+/** Parse the RPC's jsonb without trusting its shape. */
+export function parseUploadAllowance(raw: unknown): UploadAllowance | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const r = raw as Record<string, unknown>;
+  if (typeof r.enforced !== 'boolean' || typeof r.allowed !== 'boolean') return null;
+  return {
+    enforced: r.enforced,
+    allowed: r.allowed,
+    quotaBytes: bytes(r.quotaBytes),
+    usedBytes: bytes(r.usedBytes),
+    remainingBytes: bytes(r.remainingBytes),
+    declaredBytes: bytes(r.declaredBytes),
+  };
+}
+
+/**
+ * A byte count a person can read.
+ *
+ * Decimal GB, not GiB: the quota is 50 GB as a decision, and "46.6 GB of 50 GB"
+ * is a sentence the person who set the number will recognise. The exact byte
+ * figure stays available in the JSON for anyone who needs it.
+ */
+export function formatBytes(raw: string | null): string {
+  if (raw === null || !/^[0-9]+$/.test(raw)) return 'an unknown amount';
+  const value = BigInt(raw);
+  const units: [bigint, string][] = [
+    [1_000_000_000_000n, 'TB'],
+    [1_000_000_000n, 'GB'],
+    [1_000_000n, 'MB'],
+    [1_000n, 'KB'],
+  ];
+  for (const [size, label] of units) {
+    if (value >= size) {
+      // One decimal, computed in integers: no float rounding of a byte count.
+      const tenths = (value * 10n) / size;
+      return `${tenths / 10n}.${tenths % 10n} ${label}`;
+    }
+  }
+  return `${value} bytes`;
+}
+
+/**
+ * What to tell a teacher whose upload does not fit.
+ *
+ * Names the space left, because "quota exceeded" without a figure is a dead end
+ * — it tells somebody they cannot do the thing and not what they can do instead.
+ */
+export function describeQuotaRefusal(allowance: UploadAllowance | null): string {
+  if (!allowance || !allowance.enforced) {
+    return 'Storage is not accepting this upload right now.';
+  }
+  const remaining = formatBytes(allowance.remainingBytes);
+  const quota = formatBytes(allowance.quotaBytes);
+  const declared = formatBytes(allowance.declaredBytes);
+  return `This file is ${declared} and ${remaining} of your ${quota} allowance is free. `
+    + 'Withdraw a file you no longer need, or upload a smaller one.';
+}

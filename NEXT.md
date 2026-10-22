@@ -241,7 +241,9 @@ renditions exist; no playback or download URL, because serving a learner means a
 rendition and masters are never served; and no teacher screen that offers the
 upload. There is a ceiling on a single file — 8 GiB in SQL, 5 GiB less 5 MiB from a browser — but no quota in
 SQL and none invented in the web layer, because that rule belongs to
-`platform.cost_controls` and is an open decision.
+`platform.cost_controls`, and is no longer open: the number was chosen at 50 GB on
+2026-10-22 and the rule is built (`media.upload_quota_gb_per_teacher`, enforced at
+initiate while the flag is on).
 
 Offline download is now a rule the database enforces. `may_download_lesson()`
 answers one question — may this session save this lesson to a device? — and it
@@ -303,9 +305,9 @@ access; citations and preview settings lock with the published version; public p
 unverified credentials. Public-facing features remain off until reviewed content
 is ready.
 
-Verification: **1160 database tests, 773 web tests; TypeScript typecheck and
+Verification: **1169 database tests, 777 web tests; TypeScript typecheck and
 production build pass; 103 tables, 228 policies, 136 user-defined triggers,
-263 functions, 110 migrations and 117 app route entries.**
+263 functions, 111 migrations and 117 app route entries.**
 
 ## Today's sentence
 
@@ -328,7 +330,7 @@ never started). Updated 2026-10-20.
 | **Media ingest** (D8 = R2) | `media_assets` register with a pending/available/quarantined/deleted state machine and four writer functions; SigV4 signing in `web/src/lib/media-r2.ts`, pinned against AWS's published vector; `POST /api/media` `request_upload` + `confirm_upload`; multipart upload for a file too big for one presigned PUT (`lib/media-multipart.ts` on the server, `lib/multipart-upload.ts` in the browser, four more actions on the same route); `resume_upload`, which finds the caller's own `pending` row by checksum and size and reads back from the bucket the parts storage already holds, so a closed tab costs one part rather than the file; `abandon_media_upload()` and the `/admin/media` panel that reaches it, which is the only place an upload nobody finished can be seen; R2 variables documented in `web/.env.example` | Any R2 credential in this environment, so nothing has been exercised against a real bucket; the bucket's CORS rule, which multipart needs and single-PUT did not | **Nothing** that is a design question. R2 is chosen; when credentials are issued the masters bucket must allow `PUT` from the app's origin and expose `ETag` |
 | **Media delivery** | The whole path, end to end: `media_renditions` register with a closed profile vocabulary and derived object keys; the transcode worker that fills it (`web/src/worker/transcode-worker.ts`, decisions in `lib/transcode.ts`, gated by `delivery.transcode`), which checks the master's SHA-256 against the bytes before it encodes anything; `/api/media/playback` and `/api/media/download` signing short-lived rendition URLs with the database as the only authority on who may watch; a player on the lesson page with a quality selector and a poster; `/teach/media`, where a teacher uploads straight to R2 with a browser-computed checksum; `verify` on `/admin/media`, which asks storage whether the file arrived at the declared size and only then confirms it; and `retry_media_rendition()`, reached from the same screen, which puts a copy that failed to encode back in the queue on a written reason | A host to run the worker on with ffmpeg, R2 credentials and a staff account for it, and a decision about whether a free preview may be watched signed-out | **Nothing** that is a design question. What is left is infrastructure and one product decision |
 | **Offline download** | `may_download_lesson()` requiring entitlement + an `offline_downloads` feature grant + verified first-party media; closed feature vocabulary (`pe_feature_vocabulary`, `plan_feature_codes()`) with the admin plan form offering the list; 17 database tests | Any download route or UI, device registration, device storage limits, download expiry, protected-media handling | **Decisions:** device limits, expiry and protected media (`learning.offline`). It would also serve renditions, which do not exist |
-| **Upload cost control** | A per-file ceiling of 8 GiB that the browser can now actually reach: `lib/digest.ts` hashes a slice at a time so the checksum does not cap the size, and above 32 MiB `lib/multipart-upload.ts` sends 16 MiB parts so the transport does not either — a failed part is retried rather than the file restarted | A cumulative per-teacher byte quota and a spend alert. Resuming needs the same file to be chosen again, because the checksum is what recognises it, so a half-sent file cannot be finished from the library without it; and an unfinished upload whose key was not derived from an asset can be listed but not ended, since the audit trail would have nothing to point at | **Decision:** quota policy (`platform.cost_controls`). Note that `register_media_upload()` is open to **any signed-in user**, not only teachers, because learners attach files to assignment submissions through the same table — so the missing control is a cumulative quota per person, not a role check |
+| **Upload cost control** | A per-file ceiling of 8 GiB that the browser can now actually reach: `lib/digest.ts` hashes a slice at a time so the checksum does not cap the size, and above 32 MiB `lib/multipart-upload.ts` sends 16 MiB parts so the transport does not either — a failed part is retried rather than the file restarted | A cumulative per-teacher byte quota and a spend alert. Resuming needs the same file to be chosen again, because the checksum is what recognises it, so a half-sent file cannot be finished from the library without it; and an unfinished upload whose key was not derived from an asset can be listed but not ended, since the audit trail would have nothing to point at | **Decision:** quota policy (`platform.cost_controls`). Note that `register_media_upload()` is open to **any signed-in user**, not only teachers, because learners attach files to assignment submissions through the same table — so the missing control is a cumulative quota per person, not a role check | **The cumulative quota is now built**: `media.upload_quota_gb_per_teacher` is 50 GB of master bytes, `media_upload_allowance()` answers whether one more upload fits, and `/api/media` refuses with the space left — behind `platform.cost_controls`, which still ships off.
 | **Assignments** | Tasks, self-paced and cohort deadlines, one private submission per learner, drafts and hand-in, marking with immutable feedback, a revision loop with an append-only snapshot, file *references* with type and size ceilings | Byte transfer for submissions (the R2 path exists but is not wired to submissions), scanning, secure delivery to the marker, retention of children's files | **Decision/review:** the safeguarding review of files children send. This one review holds `learning.assignments` **and** `learning.cohorts` |
 | **Cohorts** | Tables, exact-version pinning, opt-in join/leave, capacity serialisation, family opt-in for children, counts on the manager and, since row 32, names and progress on the class page for the teacher who opened it, teacher manager, learner join/leave, the teacher-set `join_closes_at` window, how full each class is on the course page a joiner reads it from (`cohort_places()`, counts only — the roster stays behind `can_read_cohort_member()`), and the teacher's control over the published number (`set_cohort_capacity()`, never below the learners already in the class) | Nothing structural | The same safeguarding review. `learning.cohorts` ships `false` |
 | **Learner analytics** (`SCREENS.md` row 32) | `can_read_learner_course_progress()` as a second branch on the `course_enrolments` and `lesson_progress` read policies; `cohort_learner_progress()`, which returns four columns of a profile rather than the row; `/teach/[courseId]/cohorts/[cohortId]` with a class summary and a roster ordered by need; 19 database tests, most of them negative | Aggregate or platform-wide reporting, event instrumentation beyond lesson progress, export or CSV, anything that follows a learner across courses | **Retention:** how long progress stays readable after a class ends or a learner leaves — a decision, not a default. `delivery.analytics` and `learning.cohorts` both ship `false`, and the predicate checks both |
@@ -2018,6 +2020,67 @@ that must not block, the subscription grant that must not block, and a second fa
 the same course.
 
 
+### A teacher may store 50 GB, and the count says why that number, 2026-10-22
+
+`platform.cost_controls` has been registered since the flag table was written, and its own
+note said what was missing: *"**Nothing exists.** Unlimited teacher uploads is how $250/month
+becomes $3,000"*. A per-file ceiling of 8 GiB existed; nothing limited the total, so one
+teacher with a camera and a fast connection could commit the platform to a storage bill
+nobody chose. The decision of 2026-10-22 was 50 GB — about a day of 1080p video, invisible to
+almost every teacher and a conversation-starter for the one uploading a whole curriculum in
+4K — and this is the rule.
+
+**Counted on masters.** The rendition ladder stores roughly 2.1 times the master, and it
+stores them because the *platform* chose to transcode. Charging a teacher for copies they
+never asked for would make the quota a surprise, so the allowance counts
+`media_assets.byte_size` and nothing else. The cost is still the stored figure: 50 GB of
+masters is about 107 GB in R2, roughly $1.60 per teacher per month at full utilisation.
+
+**What counts and what gives back.** Quarantined and pending masters count — a file held for
+review is still bytes in a bucket, and a quota that could be dodged by uploading something
+that gets held would be no quota at all. A withdrawn master does not: D7 withdrawal is what
+"I no longer store this" means, and the space has to come back, which a test drives through
+`delete_media_asset()` rather than by editing a column.
+
+**Where it is enforced, and why there.** At initiate, on `/api/media`, before anything is
+signed. `media_upload_allowance()` answers whether one more upload fits and returns every
+figure as a decimal integer string; the route turns a refusal into a 413 whose sentence names
+the file size, the space left and the allowance, because "quota exceeded" without a figure
+tells somebody they cannot do the thing and not what they can do instead. `request_upload`
+asks about the bytes it is about to declare; a multipart upload has already registered its
+asset, so those bytes are inside `used` and the check asks for zero new bytes rather than
+counting the file twice.
+
+The alternative — checking in TypeScript — would have been a rule that a second caller could
+disagree with. The alternative — checking inside `register_media_upload()` — is stronger in
+principle and was not done here, for a reason worth writing down: registering an asset stores
+no bytes, and signing does, so the route that signs is where storage is actually committed.
+A direct RPC call to `register_media_upload()` can spend the caller's own allowance but cannot
+put a byte in a bucket, so the bill stays bounded. If a second signing path ever appears, the
+check has to move into the writer with it.
+
+**Off by default, and visibly so.** `platform.cost_controls` ships false, so the allowance
+reports `enforced: false, allowed: true` with `quotaBytes: null` and `remainingBytes: null` —
+null rather than zero, because zero reads as "no space left" and a reader would act on it.
+Turning it on is a settings change. A number below 1 GiB raises
+`media:quota_misconfigured` instead of silently blocking everything or silently allowing
+everything, because a zero in a settings row is far more likely to be a typo than a policy.
+
+**Also fixed in passing:** `FLAGS.md` claimed 93 settings and "ninety-two boolean, three
+integer and one text", which does not add up to 93 and had been wrong for a while. Measured
+now: **94 rows — 89 boolean, four integer, one text.**
+
+9 database tests, 4 web tests, one migration and one control. **Not built:** no screen shows a
+teacher their usage before they trip over it — the refusal names the space left, but a meter
+on `/admin/media` (or the upload form) is the obvious next piece, and is recorded below.
+
+
+- **A teacher cannot see their storage usage until they hit it.** The quota is enforced at
+  initiate and the refusal names the space left, but nothing shows a teacher (or an admin) how
+  much of the 50 GB is in use, so the first warning is a refused upload. `media_upload_allowance()`
+  already returns the figures and `/api/media` already calls it; what is missing is a meter —
+  ideally on the upload form before a file is chosen, and on `/admin/media` per teacher.
+
 ## Open external decisions (not to be guessed)
 
 - Payment provider merchant/sandbox credentials and callback verification (P12).
@@ -2119,7 +2182,7 @@ load-bearing first:
    names who already has access.
 3. Market resolution by country — needs `billing_accounts.billing_country` to be
    established by something first, which is asked below.
-4. The 50 GB quota behind `platform.cost_controls`.
+4. ~~The 50 GB quota behind `platform.cost_controls`.~~ **Built** — `20261229000100`.
 5. Verified qualification required for every authorisation, plus making the
    subject mandatory when a qualification is recorded.
 6. Promotions, in the three stages above — the largest of the six by some way.

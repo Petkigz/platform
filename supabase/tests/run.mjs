@@ -68,6 +68,7 @@ import { run as courseOrder } from './course_order.test.mjs';
 import { run as orderAdjustments } from './order_adjustments.test.mjs';
 import { run as adminOrderQueue } from './admin_order_queue.test.mjs';
 import { run as discountSharing } from './discount_sharing.test.mjs';
+import { run as mediaUploadQuota } from './media_upload_quota.test.mjs';
 
 // Settings that are global by design: one row, read by code far from the suite
 // that changes it. The revenue share decides what every accrual computes; the
@@ -144,6 +145,7 @@ for (const [name, fn] of [
   ['order adjustments', orderAdjustments],
   ['admin order queue', adminOrderQueue],
   ['discount sharing', discountSharing],
+  ['media upload quota', mediaUploadQuota],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],

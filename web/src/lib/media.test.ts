@@ -1,7 +1,14 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { validateRegisterUpload, MAX_UPLOAD_BYTES } from './media.ts';
+import {
+  MAX_UPLOAD_BYTES,
+  describeQuotaRefusal,
+  formatBytes,
+  parseUploadAllowance,
+  validateRegisterUpload,
+} from './media.ts';
+import type { UploadAllowance } from './media.ts';
 
 // ---------------------------------------------------------------------------
 // Registering an upload target.
@@ -579,4 +586,80 @@ test('no ids means no query', async () => {
   assert.deepEqual(await fetchMediaAssetsByIds(client, []), []);
   assert.deepEqual(await fetchMediaAssetsByIds(client, ['   ']), []);
   assert.deepEqual(calls, []);
+});
+
+// ---------------------------------------------------------------------------
+// The upload allowance (20261229000100): 50 GB of masters per teacher.
+// ---------------------------------------------------------------------------
+
+test('an allowance either enforces a number or visibly has none', async () => {
+  const off = parseUploadAllowance({
+    enforced: false, allowed: true, quotaBytes: null,
+    usedBytes: '10737418240', remainingBytes: null, declaredBytes: '0',
+  });
+  assert.ok(off);
+  assert.equal(off.enforced, false);
+  assert.equal(off.usedBytes, '10737418240', 'what is stored is still reported');
+  // Null, not zero: zero reads as "no space left" and a reader would act on it.
+  assert.equal(off.quotaBytes, null);
+  assert.equal(off.remainingBytes, null);
+
+  const on = parseUploadAllowance({
+    enforced: true, allowed: false, quotaBytes: '53687091200',
+    usedBytes: '50000000000', remainingBytes: '3687091200', declaredBytes: '5000000000',
+  });
+  assert.ok(on);
+  assert.equal(on.allowed, false);
+  assert.equal(on.quotaBytes, '53687091200');
+});
+
+test('a malformed allowance is refused rather than guessed at', async () => {
+  assert.equal(parseUploadAllowance(null), null);
+  assert.equal(parseUploadAllowance({}), null);
+  assert.equal(parseUploadAllowance({ enforced: true }), null);
+  // A number where a string belongs is accepted and normalised; a float is not a
+  // byte count, so it is dropped rather than rounded into one.
+  const mixed = parseUploadAllowance({
+    enforced: true, allowed: true, quotaBytes: 53687091200,
+    usedBytes: '0', remainingBytes: '53687091200', declaredBytes: '1.5',
+  });
+  assert.ok(mixed);
+  assert.equal(mixed.quotaBytes, '53687091200');
+  assert.equal(mixed.declaredBytes, null);
+});
+
+test('bytes are formatted in decimal units, from integers', async () => {
+  assert.equal(formatBytes('0'), '0 bytes');
+  assert.equal(formatBytes('999'), '999 bytes');
+  assert.equal(formatBytes('1500'), '1.5 KB');
+  assert.equal(formatBytes('53687091200'), '53.6 GB');
+  assert.equal(formatBytes('1000000000'), '1.0 GB');
+  // Past 2^53, where a Number would quietly lose a byte — and large enough to
+  // reach the next unit, so the ladder above is exercised too.
+  assert.equal(formatBytes('9007199254740993'), '9007.1 TB');
+  assert.equal(formatBytes(null), 'an unknown amount');
+  assert.equal(formatBytes('12.5'), 'an unknown amount');
+});
+
+test('a refusal names the space left rather than only refusing', async () => {
+  const allowance: UploadAllowance = {
+    enforced: true,
+    allowed: false,
+    quotaBytes: '53687091200',
+    usedBytes: '50000000000',
+    remainingBytes: '3687091200',
+    declaredBytes: '5000000000',
+  };
+  const sentence = describeQuotaRefusal(allowance);
+  assert.match(sentence, /5\.0 GB/, 'the file size is not in the sentence');
+  assert.match(sentence, /3\.6 GB/, 'the space left is not in the sentence');
+  assert.match(sentence, /53\.6 GB/, 'the allowance is not in the sentence');
+  assert.match(sentence, /withdraw/i, 'the refusal offers no way forward');
+
+  // Not enforced: say that, rather than inventing a quota of zero.
+  assert.match(
+    describeQuotaRefusal({ ...allowance, enforced: false, allowed: true, quotaBytes: null }),
+    /not accepting/i,
+  );
+  assert.match(describeQuotaRefusal(null), /not accepting/i);
 });

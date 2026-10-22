@@ -16,7 +16,12 @@ import {
   resumeMasterMultipart,
   signMasterPartUploads,
 } from '@/lib/media-multipart';
-import { findResumableUpload, registerMediaUpload } from '@/lib/media';
+import {
+  describeQuotaRefusal,
+  findResumableUpload,
+  parseUploadAllowance,
+  registerMediaUpload,
+} from '@/lib/media';
 import { shouldUploadInParts } from '@/lib/browser-upload';
 import { confirmMediaUpload } from '@/lib/media-verify';
 
@@ -123,6 +128,30 @@ export async function POST(request: Request) {
     // Not a 500: this deployment has no R2 credentials, which is the expected
     // state until they are issued. The message says what is missing.
     return fail(new R2NotConfiguredError().message, 503);
+  }
+
+  // Before anything is signed: does it fit? The rule is in the database —
+  // `media_upload_allowance()` counts master bytes per uploader and is off unless
+  // `platform.cost_controls` is on — because whether a file fits is a question
+  // about rows, and a number checked in two places eventually disagrees with
+  // itself. This route only turns the answer into a 413 with the space left in
+  // it, which is the one thing the database cannot say in a person's units.
+  //
+  // `request_upload` asks about the bytes it is about to declare. A multipart
+  // upload has already registered its asset by the time it is initiated, so those
+  // bytes are inside `used` — asking for zero new bytes verifies the allowance
+  // still holds rather than counting the file twice.
+  if (action === 'request_upload' || action === 'initiate_multipart') {
+    const declared = action === 'request_upload' ? Number(body?.byteSize ?? 0) : 0;
+    const { data: allowanceData, error: allowanceError } = await supabase.rpc(
+      'media_upload_allowance',
+      { p_declared_bytes: Number.isFinite(declared) && declared > 0 ? Math.trunc(declared) : 0 },
+    );
+    if (allowanceError) return fail(allowanceError.message, 500);
+    const allowance = parseUploadAllowance(allowanceData);
+    if (allowance && allowance.enforced && !allowance.allowed) {
+      return fail(describeQuotaRefusal(allowance), 413);
+    }
   }
 
   if (action === 'resume_upload') {
