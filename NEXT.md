@@ -2093,13 +2093,16 @@ on `/admin/media` (or the upload form) is the obvious next piece, and is recorde
   place to discover a deployment setting.
 - Payout policy/preconditions, tax and jurisdiction treatment, and disbursement
   credentials.
-- **How `billing_accounts.billing_country` gets set.** Market resolution by country
-  (decided 2026-10-22) reads a column that exists, is nullable, and is written by
-  nothing: the checkout writer creates accounts without one. Until something
-  establishes it, every account resolves to the fallback price and per-country
-  pricing is still display-only. Asked rather than assumed, because the options
-  differ in what a family has to type and in whether they can pick a cheaper
-  country.
+- **Whether a market belongs to a country at all.** Built 2026-10-22 as
+  `prices.market` = an ISO country code: an exact match, then the price that
+  declares no market, then a refusal. The country is the request's on a first
+  purchase and the account's afterwards, and staff can correct it in writing.
+  What is not settled is whether country is the right *grain*: the alternative
+  is that a currency is the only regional signal — one price per course per
+  currency — which is simpler to explain to a teacher and cannot be gamed by a
+  VPN, but cannot express "cheaper in Uganda than in Kenya" in the same money.
+  If that wins, `resolve_course_price()` becomes a currency rule and the web
+  path does not change. §`DECISIONS.md`, 2026-10-22.
 - **Whether sharing with a named person may disclose that their account exists.**
   `/account/sharing` resolves an email address to an account and says so when there is
   none, as `invite_family_member()` has always done. The alternative — a silent no-op —
@@ -2172,20 +2175,24 @@ Settled on 2026-10-22 and no longer open, all six written up in `DECISIONS.md`:
   left, with uploads in flight counting from initiation so a stalled transfer
   cannot be used to slip past it.
 
-**None of the six is built yet.** The order they go in, cheapest and most
-load-bearing first:
+**Four of the six are built. Two remain.** In build order:
 
-1. A discount shared at the revenue-share rate — it changes what teachers earn on
-   every discounted order, and the test that pins today's behaviour is the one
-   that changes.
-2. The duplicate-purchase refusal, in `create_course_order()`, with a message that
-   names who already has access.
-3. Market resolution by country — needs `billing_accounts.billing_country` to be
-   established by something first, which is asked below.
+1. ~~A discount shared at the revenue-share rate~~ **Built** — `20261227000100`,
+   `discount_sharing.test.mjs`. A teacher now bears half a half-price discount
+   rather than none of it.
+2. ~~The duplicate-purchase refusal~~ **Built** — `20261228000100`,
+   four tests in `course_order.test.mjs`. It is scoped to the account and the
+   version, so the family with twins never meets it.
+3. ~~Market resolution by country~~ **Built** — `20261230000100`,
+   `market_pricing.test.mjs`, and the web path that reads it. The country comes
+   from the request for a first purchase and from the account afterwards; a
+   price id is no longer accepted by the writer at all. Whether a market should
+   be a country is still asked below, and this is the answer it assumes.
 4. ~~The 50 GB quota behind `platform.cost_controls`.~~ **Built** — `20261229000100`.
-5. Verified qualification required for every authorisation, plus making the
-   subject mandatory when a qualification is recorded.
-6. Promotions, in the three stages above — the largest of the six by some way.
+5. **Verified qualification required for every authorisation**, plus making the
+   subject mandatory when a qualification is recorded. Next.
+6. **Promotions**, in the three stages above — the largest of the six by some way.
+   Nothing is written for it yet beyond the three tables.
 - Automatic subscription renewal worker and provider support.
 - Legal review and any locale-specific safeguarding/child-consent requirements.
 
@@ -2196,6 +2203,52 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### The price follows the buyer, not the request, 2026-10-22
+
+`prices.market` had been a label since the table was created. The writer took a
+price id from the caller and accepted any live one, and `resolveOffering()`
+listed every market's price on the buy page — so a payer in Kampala could buy at
+a price set for Nairobi, and the cheapest market was available to anybody who
+could read a network response. Localised pricing was decorative.
+
+`20261230000100_market_by_country.sql` makes the country decide, and takes the
+price id away. `create_course_order(course_id, buyer_country)` resolves the price
+through `resolve_course_price()`: an exact match on the buyer's country, then the
+price that declares no market, then a refusal naming why. Within the band the
+account's currency breaks a tie; a band naming two currencies with no preferred
+one is refused, because picking one would be a coin toss on somebody's money. The
+country comes from the billing account once recorded, and from the request's
+address — resolved by the hosting layer, read by `web/src/lib/geo.ts` — only to
+establish it on an account that has none. A later request from another network
+does not re-price a family. Staff move a country through
+`set_billing_country()`, with a written reason, audited.
+
+The account now follows the price it just bought in rather than opening a second
+account in the price's currency, which the old test pinned and is now flipped:
+one person, one account, and a second account would have meant a second country
+to get wrong. `course_price_for_me()` is the read path and calls the same
+resolver, so the page cannot quote one price and the order charge another.
+
+Two refusals are new and both are about the buyer rather than the course:
+`checkout:no_price_for_country` and `checkout:price_ambiguous`, mapped to
+`not_sold_here` in `web/src/lib/checkout.ts` and rendered as a sentence with
+nothing charged. A sold course with no price here is deliberately **not** shown
+as free — `can_enrol_in_version()` is market-agnostic, so "Free" would be a
+promise the enrolment gate refuses a moment later.
+
+Measured: database suite **1184 passing**, web suite **791**, 112 migrations,
+271 functions, 69 suites, 117 app routes. The new suite is
+`market_pricing.test.mjs` (15 tests); `course_order.test.mjs` was rewritten where
+it asserted a price-id contract (24 tests).
+
+**Recorded, not fixed here.** `create_plan_order()` still takes a posted price id
+and is still not gated on `commerce.subscriptions`, so a plan can be bought while
+that flag is off and a plan price's market is still whatever the browser sent.
+`resolveBillingAccount()` still hardcodes `UGX` for a new account on the plan
+path. Whether a market should be a country at all is asked in the open decisions
+above; if currency wins, the resolver changes and the web path does not.
+
 
 ### Also done since: the authorization matrix
 

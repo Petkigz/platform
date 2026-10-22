@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { enrolInFreeCourse } from '@/lib/enrolment';
+import { countryFromHeaders } from '@/lib/geo';
 
 /**
  * Free enrolment.
@@ -77,6 +78,10 @@ export async function POST(request: Request) {
     userId: user.id,
     courseId,
     learnerProfileId,
+    // A display hint: it decides only whether the course looks paid or free
+    // when the account has no country. The enrolment gate itself is
+    // market-agnostic and refuses a sold course for free either way.
+    country: countryFromHeaders(request.headers),
   });
 
   if (!outcome.ok) {

@@ -1,8 +1,10 @@
 import Link from 'next/link';
+import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { ownLearnerProfileId, resolveOffering } from '@/lib/enrolment';
+import { countryFromHeaders, countryName } from '@/lib/geo';
 import { format } from '@/lib/money';
 import { availableProviders, configuredProviderId } from '@/lib/payments/registry';
 import { isFlagEnabled } from '@/lib/flags';
@@ -13,12 +15,12 @@ export const dynamic = 'force-dynamic';
 /**
  * Buy a course.
  *
- * Prices are rendered here from the database, and the client posts back a price
- * **id** — never an amount. The amount is resolved again server-side in
- * `createOrder`, so tampering with this form cannot change what is charged.
- * That is worth stating plainly because it is the whole reason the form is
- * shaped this way: a checkout that accepts a posted total is a checkout where
- * the total is whatever the caller typed.
+ * The price is resolved here by `course_price_for_me()` — the same function the
+ * order writer uses — so the sentence on this page and the amount on the order
+ * cannot disagree. The form posts a course id, never a price and never an
+ * amount. Before this, the page listed every market's price and posted a price
+ * id, which made the cheapest market available to anybody who could edit a
+ * request.
  */
 export default async function BuyPage({
   params,
@@ -48,9 +50,14 @@ export default async function BuyPage({
   if (!course || course.status !== 'active') notFound();
 
   const learnerProfileId = await ownLearnerProfileId(supabase, user.id);
+  // A display hint only: the database prefers the country recorded on the
+  // buyer's account, and the writer does the same. This is what makes the page
+  // right for somebody who has never bought anything.
+  const country = countryFromHeaders(await headers());
   const offering = await resolveOffering(supabase, {
     courseId: course.id,
     learnerProfileId,
+    country,
   });
 
   // Someone who already owns it should not be looking at a price. resolveOffering
@@ -58,6 +65,51 @@ export default async function BuyPage({
   // cannot disagree about who is entitled.
   if (offering.kind === 'entitled') redirect('/learn');
   if (offering.kind === 'free') redirect(`/courses/${slug}`);
+
+  // The course is sold, but not on terms this buyer can accept — no price for
+  // their country, or two currencies and nothing to choose between them. Saying
+  // so is better than a form that fails after the phone number is typed, and
+  // much better than showing the cheapest market to everybody.
+  if (offering.kind === 'not_sold_here') {
+    const place = countryName(offering.country);
+    return (
+      <main className="page narrow">
+        <nav className="crumbs">
+          <Link href="/catalogue">Catalogue</Link>
+          <span aria-hidden>›</span>
+          <Link href={`/courses/${course.slug}`}>{course.title}</Link>
+          <span aria-hidden>›</span>
+          <span>Buy</span>
+        </nav>
+
+        <div className="page-head">
+          <p className="eyebrow">Checkout</p>
+          <h1>{course.title}</h1>
+        </div>
+
+        <div className="notice warn">
+          <strong>
+            {offering.reason === 'not_one_time'
+              ? 'This course is sold as a subscription, not as a one-off purchase.'
+              : offering.reason === 'price_ambiguous'
+                ? 'This course has more than one price for your country.'
+                : `This course is not priced for ${place ?? 'your country'} yet.`}
+          </strong>{' '}
+          {offering.reason === 'price_ambiguous'
+            ? 'We will not choose a currency on your behalf. Contact us and we will set the right one, then you can buy it.'
+            : offering.reason === 'not_one_time'
+              ? 'Subscriptions are not on sale through this checkout yet. Nothing has been charged.'
+              : 'Nothing has been charged. Contact us and we will open your market, then you can buy it.'}
+        </div>
+
+        <p style={{ marginTop: '1.5rem' }}>
+          <Link href={`/courses/${course.slug}`} className="btn secondary">
+            Back to the course
+          </Link>
+        </p>
+      </main>
+    );
+  }
 
   // Checkout ships off and is opened from the admin dashboard. The order writer
   // refuses while it is closed, so a form that cannot work would only produce a
@@ -111,16 +163,21 @@ export default async function BuyPage({
 
       {checkoutOpen && (
         <section className="card">
-          <h2>Choose an option</h2>
+          <h2>What you will pay</h2>
+          {/* Rendered from Money, so what the payer reads is the same integer
+              minor units the order will carry. */}
+          <p style={{ fontSize: '1.5rem', margin: '0 0 0.25rem' }}>
+            {format(offering.price.amount)}
+          </p>
+          <p className="meta">
+            {offering.match === 'country' && offering.country
+              ? `Priced for ${countryName(offering.country) ?? offering.country}.`
+              : 'The standard price.'}{' '}
+            One-off purchase, not a subscription.
+          </p>
+
           <BuyForm
             courseId={course.id}
-            prices={offering.prices.map((p) => ({
-              id: p.id,
-              // Rendered from Money, so what the payer sees is the same integer
-              // minor units that will be charged.
-              label: format(p.amount),
-              interval: p.billingInterval,
-            }))}
             providers={providers}
             providerConfigured={providerId !== null}
           />

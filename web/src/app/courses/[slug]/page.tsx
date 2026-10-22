@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { isSupabaseConfigured } from '@/lib/env';
 import { createClient } from '@/lib/supabase/server';
@@ -17,6 +18,7 @@ import {
   ownLearnerProfileId,
   resolveOffering,
 } from '@/lib/enrolment';
+import { countryFromHeaders } from '@/lib/geo';
 import { EnrolButton } from './enrol-button';
 import { isFlagEnabled } from '@/lib/flags';
 import {
@@ -136,6 +138,8 @@ export default async function CoursePage({
   const offering = await resolveOffering(supabase, {
     courseId: course.id,
     learnerProfileId,
+    // Display only: the account's recorded country wins inside the database.
+    country: countryFromHeaders(await headers()),
   });
   const lessonCount = sections.reduce(
     (n, s) => n + (s.lessons?.length ?? 0),

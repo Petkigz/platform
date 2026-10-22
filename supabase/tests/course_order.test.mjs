@@ -119,19 +119,19 @@ export async function run(ctx) {
     return { course, version, productId, priceId };
   }
 
-  const callWriter = (actor, courseId, priceId) =>
-    asActor(actor, 'select public.create_course_order($1,$2) as r', [courseId, priceId]);
+  const callWriter = (actor, courseId, country = null) =>
+    asActor(actor, 'select public.create_course_order($1,$2) as r', [courseId, country]);
 
   // ---------------------------------------------------------------------
   // The shape of the writer
   // ---------------------------------------------------------------------
 
-  await test('the writer takes a course and a price and nothing else', async () => {
+  await test('the writer takes a course and the country the request came from', async () => {
     const args = (await scalar(
-      `select pg_get_function_arguments('public.create_course_order(uuid,uuid)'::regprocedure) as a`
+      `select pg_get_function_arguments('public.create_course_order(uuid,text)'::regprocedure) as a`
     )).a;
-    assert(args === 'p_course_id uuid, p_price_id uuid',
-      `the writer accepts '${args}' — an amount, a product or a billing account ` +
+    assert(args === 'p_course_id uuid, p_buyer_country text DEFAULT NULL::text',
+      `the writer accepts '${args}' — an amount, a price or a billing account ` +
       `in this list would be a thing the caller gets to choose`);
 
     const n = (await scalar(
@@ -183,7 +183,7 @@ export async function run(ctx) {
     const buyer = await newBuyer('Direct Insert');
 
     // A real order, created the only way one can be now.
-    const made = await withCheckoutOn(() => callWriter(buyer.userId, offer.course, offer.priceId));
+    const made = await withCheckoutOn(() => callWriter(buyer.userId, offer.course));
     const orderId = made.rows[0].r.orderId;
     const account = made.rows[0].r.billingAccountId;
 
@@ -221,7 +221,7 @@ export async function run(ctx) {
     const offer = await sellableCourse();
     const buyer = await newBuyer('Adjuster');
 
-    const made = await withCheckoutOn(() => callWriter(buyer.userId, offer.course, offer.priceId));
+    const made = await withCheckoutOn(() => callWriter(buyer.userId, offer.course));
     const orderId = made.rows[0].r.orderId;
 
     // order_adjustments_insert asked the same question as the two policies
@@ -251,7 +251,7 @@ export async function run(ctx) {
     const offer = await sellableCourse({ amountMinor: 42500 });
     const buyer = await newBuyer('First Purchase');
 
-    const made = await withCheckoutOn(() => callWriter(buyer.userId, offer.course, offer.priceId));
+    const made = await withCheckoutOn(() => callWriter(buyer.userId, offer.course));
     const r = made.rows[0].r;
 
     assert(typeof r.orderId === 'string' && r.orderId.length > 0, 'no order id came back');
@@ -327,7 +327,7 @@ export async function run(ctx) {
     // No withCheckoutOn: not_signed_in has to win, or "turn checkout off"
     // becomes a way to learn that the platform has checkout at all.
     await asAnon(async () => {
-      await rejects(() => q('select public.create_course_order($1,$2)', [offer.course, offer.priceId]),
+      await rejects(() => q('select public.create_course_order($1)', [offer.course]),
         /checkout:not_signed_in/);
     });
   });
@@ -340,7 +340,7 @@ export async function run(ctx) {
       `select value_text from public.platform_settings where key = 'commerce.checkout'`);
     assert(off.value_text === 'false', `commerce.checkout ships as '${off.value_text}'`);
 
-    await rejects(() => callWriter(buyer.userId, offer.course, offer.priceId),
+    await rejects(() => callWriter(buyer.userId, offer.course),
       /checkout:disabled/);
 
     const orders = await count('select id from public.orders where placed_by = $1', [buyer.userId]);
@@ -351,55 +351,68 @@ export async function run(ctx) {
   // The amount comes from prices, and only for this course
   // ---------------------------------------------------------------------
 
-  await test('the amount charged is the price row, not anything the caller sent', async () => {
+  await test("the buyer's country picks the price, and another market's is not charged", async () => {
     const cheap = await sellableCourse({ amountMinor: 1500 });
-    const buyer = await newBuyer('Cheap Buyer');
 
-    // A second, dearer price on the same product: the writer must charge the
-    // one it was given, and must not pick the highest. A different market,
-    // because two active prices for the same target, currency, market and
-    // interval may not overlap.
-    const dearer = (await q(
+    // A dearer price for Kenya on the same product. It must apply to a Kenyan
+    // buyer and to nobody else — the price is a function of where the buyer is,
+    // not of what the request asked for.
+    await q(
       `insert into public.prices
          (product_id, amount_minor, currency_code, billing_interval, status, market)
-       values ($1, 99000, 'UGX', 'one_time', 'active', 'KE') returning id`,
-      [cheap.productId])).rows[0].id;
+       values ($1, 99000, 'UGX', 'one_time', 'active', 'KE')`,
+      [cheap.productId]);
 
-    const made = await withCheckoutOn(() => callWriter(buyer.userId, cheap.course, dearer));
+    const kenyan = await newBuyer('Kenyan Buyer');
+    const made = await withCheckoutOn(() => callWriter(kenyan.userId, cheap.course, 'KE'));
     assert(made.rows[0].r.amountMinor === '99000',
-      `the writer charged ${made.rows[0].r.amountMinor} for the 99000 price`);
+      `a Kenyan buyer was charged ${made.rows[0].r.amountMinor} for the Kenyan price`);
+    assert(made.rows[0].r.matched === 'country', 'the order did not say it matched a country');
 
-    const order = await scalar('select total_minor from public.orders where id = $1',
+    const order = await scalar('select total_minor, currency_code from public.orders where id = $1',
       [made.rows[0].r.orderId]);
     assert(Number(order.total_minor) === 99000, `the order total is ${order.total_minor}`);
+
+    // No country at all: the price that declares no market is the default.
+    const elsewhere = await newBuyer('Unplaced Buyer');
+    const fallback = await withCheckoutOn(() => callWriter(elsewhere.userId, cheap.course));
+    assert(fallback.rows[0].r.amountMinor === '1500',
+      `an unplaced buyer was charged ${fallback.rows[0].r.amountMinor} instead of the default price`);
+    assert(fallback.rows[0].r.matched === 'default', 'the fallback was not named as the default');
   });
 
-  await test('a price for another course cannot be used against this one', async () => {
-    const mine = await sellableCourse({ amountMinor: 10000 });
-    const theirs = await sellableCourse({ amountMinor: 20000 });
-    const buyer = await newBuyer('Cross Course');
+  await test('a country that is not a country is refused before anything is priced', async () => {
+    const offer = await sellableCourse({ amountMinor: 10000 });
+    const buyer = await newBuyer('Bad Country');
 
     await withCheckoutOn(async () => {
-      await rejects(() => callWriter(buyer.userId, mine.course, theirs.priceId),
-        /checkout:price_not_for_this_course/);
+      // The old writer took a price id and trusted it. This one takes a country
+      // and it must at least be a country; a price id in that position is a
+      // request the writer does not know how to honour.
+      await rejects(() => callWriter(buyer.userId, offer.course, 'UGA'),
+        /a country is a two-letter ISO 3166-1 code/);
     });
 
     const orders = await count('select id from public.orders where placed_by = $1', [buyer.userId]);
-    assert(orders === 0, `${orders} orders were created from a mismatched price`);
+    assert(orders === 0, `${orders} orders were created from an invalid country`);
   });
 
-  await test('a subscription price is not a course purchase', async () => {
+  await test('a product priced only by subscription is not a course purchase', async () => {
     const offer = await sellableCourse();
     const buyer = await newBuyer('Monthly');
 
-    const monthly = (await q(
+    // Retire the one-off price and leave a monthly one: the only thing on sale
+    // is a subscription, which this writer must not sell. record_payment_success()
+    // creates no subscription, so taking it would grant a one-off entitlement
+    // for recurring money.
+    await q(`update public.prices set status = 'retired'
+              where product_id = $1 and billing_interval = 'one_time'`, [offer.productId]);
+    await q(
       `insert into public.prices (product_id, amount_minor, currency_code, billing_interval, status)
-       values ($1, 5000, 'UGX', 'month', 'active') returning id`, [offer.productId])).rows[0].id;
+       values ($1, 5000, 'UGX', 'month', 'active')`, [offer.productId]);
 
     await withCheckoutOn(async () => {
-      // record_payment_success() creates no subscription, so accepting this
-      // would take recurring money and grant a one-off entitlement.
-      await rejects(() => callWriter(buyer.userId, offer.course, monthly),
+      await rejects(() => callWriter(buyer.userId, offer.course),
         /checkout:not_one_time/);
     });
   });
@@ -418,13 +431,15 @@ export async function run(ctx) {
     const notYet = await sellableCourse({ effectiveFrom: future });
 
     await withCheckoutOn(async () => {
+      // A price outside its window, or not active, is not on sale. The window
+      // is applied where "on sale" is defined, so all four answer alike.
       for (const [label, offer, pattern] of [
         ['retired', retired, /checkout:price_not_available/],
         ['draft', draft, /checkout:price_not_available/],
-        ['expired', expired, /checkout:price_window/],
-        ['not yet effective', notYet, /checkout:price_window/],
+        ['expired', expired, /checkout:price_not_available/],
+        ['not yet effective', notYet, /checkout:price_not_available/],
       ]) {
-        await rejects(() => callWriter(buyer.userId, offer.course, offer.priceId), pattern);
+        await rejects(() => callWriter(buyer.userId, offer.course), pattern);
       }
     });
 
@@ -439,10 +454,10 @@ export async function run(ctx) {
     await q(`update public.products set status = 'draft' where id = $1`, [offer.productId]);
     try {
       await withCheckoutOn(async () => {
-        // resolveOffering() only shows prices on active products, so accepting
-        // one here would sell something the catalogue does not offer.
-        await rejects(() => callWriter(buyer.userId, offer.course, offer.priceId),
-          /checkout:price_not_for_this_course/);
+        // A draft product is not an offer, so its price is not on sale. The
+        // same definition the buy page reads decides it.
+        await rejects(() => callWriter(buyer.userId, offer.course),
+          /checkout:price_not_available/);
       });
     } finally {
       await q(`update public.products set status = 'active' where id = $1`, [offer.productId]);
@@ -458,21 +473,13 @@ export async function run(ctx) {
     const archived = await sellableCourse();
     await q(`update public.courses set status = 'retired' where id = $1`, [archived.course]);
 
-    const elsewhere = await sellableCourse({ amountMinor: 1000 });
-    const unknownPrice = (await scalar('select gen_random_uuid() as id')).id;
-
     await withCheckoutOn(async () => {
-      // A perfectly good price for a different course, offered against one with
-      // nothing published: the course is resolved first, so this is "not
-      // available" rather than "wrong price".
-      await rejects(() => callWriter(buyer.userId, draftCourse, elsewhere.priceId),
+      await rejects(() => callWriter(buyer.userId, draftCourse),
         /checkout:course_not_available/);
-      await rejects(() => callWriter(buyer.userId, archived.course, archived.priceId),
+      await rejects(() => callWriter(buyer.userId, archived.course),
         /checkout:course_not_available/);
       await rejects(() => callWriter(buyer.userId, null, null),
         /checkout:course_not_available/);
-      await rejects(() => callWriter(buyer.userId, elsewhere.course, unknownPrice),
-        /checkout:price_not_available/);
     });
 
     const orders = await count('select id from public.orders where placed_by = $1', [buyer.userId]);
@@ -488,8 +495,8 @@ export async function run(ctx) {
     const second = await sellableCourse({ amountMinor: 25000 });
     const buyer = await newBuyer('Repeat Buyer');
 
-    const one = await withCheckoutOn(() => callWriter(buyer.userId, first.course, first.priceId));
-    const two = await withCheckoutOn(() => callWriter(buyer.userId, second.course, second.priceId));
+    const one = await withCheckoutOn(() => callWriter(buyer.userId, first.course));
+    const two = await withCheckoutOn(() => callWriter(buyer.userId, second.course));
 
     assert(one.rows[0].r.billingAccountId === two.rows[0].r.billingAccountId,
       'two purchases opened two billing accounts, so "my orders" is no longer one list');
@@ -499,7 +506,7 @@ export async function run(ctx) {
     assert(accounts === 1, `${accounts} accounts were opened for one payer`);
   });
 
-  await test('an account in another currency is left alone and a matching one is opened', async () => {
+  await test('an account follows the currency of the price it just bought', async () => {
     const offer = await sellableCourse({ amountMinor: 30000, currency: 'UGX' });
     const buyer = await newBuyer('Dollar Account');
 
@@ -516,12 +523,14 @@ export async function run(ctx) {
       buyer.usdAccount = usd;
     });
 
-    const made = await withCheckoutOn(() => callWriter(buyer.userId, offer.course, offer.priceId));
+    // Before this unit the writer opened a second account in the price's
+    // currency rather than touch the first. That made a second account for the
+    // same person — and, once a country is recorded on an account, a second
+    // country to get wrong. One account, following the price it just paid.
+    const made = await withCheckoutOn(() => callWriter(buyer.userId, offer.course));
     const r = made.rows[0].r;
-
-    assert(r.billingAccountId !== buyer.usdAccount,
-      'a UGX order was hung off a USD account, whose billing_currency is documented ' +
-      'as authoritative for the original amount');
+    assert(r.billingAccountId === buyer.usdAccount,
+      'the buyer was given a second billing account instead of their own');
 
     const order = await scalar(
       `select o.currency_code, ba.billing_currency
@@ -530,6 +539,14 @@ export async function run(ctx) {
         where o.id = $1`, [r.orderId]);
     assert(order.currency_code === order.billing_currency.trim(),
       `order in ${order.currency_code} on an account billing in ${order.billing_currency}`);
+
+    const audit = (await q(
+      `select detail from public.governance_audit_events
+        where action = 'commerce.billing_currency_changed' and target_id = $1`,
+      [buyer.usdAccount])).rows;
+    assert(audit.length === 1, 'the currency change was not audited exactly once');
+    assert(audit[0].detail.from === 'USD' && audit[0].detail.to === 'UGX',
+      'the audit did not record the move');
   });
 
   await test('a membership that cannot pay is not used to pay', async () => {
@@ -548,7 +565,7 @@ export async function run(ctx) {
       buyer.viewerAccount = account;
     });
 
-    const made = await withCheckoutOn(() => callWriter(buyer.userId, offer.course, offer.priceId));
+    const made = await withCheckoutOn(() => callWriter(buyer.userId, offer.course));
     assert(made.rows[0].r.billingAccountId !== buyer.viewerAccount,
       'an order was placed on an account the payer may not pay from');
   });
@@ -571,7 +588,7 @@ export async function run(ctx) {
       mine.account = account;
     });
 
-    const made = await withCheckoutOn(() => callWriter(other.userId, offer.course, offer.priceId));
+    const made = await withCheckoutOn(() => callWriter(other.userId, offer.course));
     assert(made.rows[0].r.billingAccountId !== mine.account,
       'an order landed on an account the caller is not a member of');
 
@@ -591,7 +608,7 @@ export async function run(ctx) {
     const offer = await sellableCourse({ amountMinor: 30000 });
     const buyer = await newBuyer('Fulfilled Buyer');
 
-    const made = await withCheckoutOn(() => callWriter(buyer.userId, offer.course, offer.priceId));
+    const made = await withCheckoutOn(() => callWriter(buyer.userId, offer.course));
     const orderId = made.rows[0].r.orderId;
 
     await q('select id from public.record_payment_success($1,$2,$3,$4,null,$5)',
@@ -627,7 +644,7 @@ export async function run(ctx) {
     const buyer = await newBuyer('Reader');
     const stranger = await newBuyer('Stranger');
 
-    const made = await withCheckoutOn(() => callWriter(buyer.userId, offer.course, offer.priceId));
+    const made = await withCheckoutOn(() => callWriter(buyer.userId, offer.course));
     const orderId = made.rows[0].r.orderId;
 
     const seen = await asUser(buyer.userId, () =>
@@ -663,7 +680,7 @@ export async function run(ctx) {
     const offer = await sellableCourse({ amountMinor: 30000 });
     const buyer = await newBuyer('Bought Twice');
 
-    const first = await withCheckoutOn(() => callWriter(buyer.userId, offer.course, offer.priceId));
+    const first = await withCheckoutOn(() => callWriter(buyer.userId, offer.course));
     const orderId = first.rows[0].r.orderId;
     await payOrder(orderId, 'CO-DUP-1');
 
@@ -671,7 +688,7 @@ export async function run(ctx) {
       'select billing_account_id from public.orders where id = $1', [orderId])).billing_account_id;
 
     await withCheckoutOn(() => rejects(
-      () => callWriter(buyer.userId, offer.course, offer.priceId),
+      () => callWriter(buyer.userId, offer.course),
       /checkout:already_owned/i));
 
     const orders = await count(
@@ -689,7 +706,7 @@ export async function run(ctx) {
   await test('a lapsed entitlement does not block a purchase', async () => {
     const offer = await sellableCourse({ amountMinor: 15000 });
     const buyer = await newBuyer('Lapsed');
-    const first = await withCheckoutOn(() => callWriter(buyer.userId, offer.course, offer.priceId));
+    const first = await withCheckoutOn(() => callWriter(buyer.userId, offer.course));
     await payOrder(first.rows[0].r.orderId, 'CO-DUP-2');
 
     // Revoked: the family lost access, so buying again is a real purchase. A
@@ -703,7 +720,7 @@ export async function run(ctx) {
               where learner_profile_id = $1 and course_version_id = $2`,
       [buyer.learnerId, offer.version]);
 
-    const again = await withCheckoutOn(() => callWriter(buyer.userId, offer.course, offer.priceId));
+    const again = await withCheckoutOn(() => callWriter(buyer.userId, offer.course));
     assert(again.rows[0].r.orderId, 'a revoked entitlement still blocked the purchase');
   });
 
@@ -721,7 +738,7 @@ export async function run(ctx) {
              values ($1,'course_version',$2,'subscription','active',now())`,
       [buyer.learnerId, offer.version]);
 
-    const made = await withCheckoutOn(() => callWriter(buyer.userId, offer.course, offer.priceId));
+    const made = await withCheckoutOn(() => callWriter(buyer.userId, offer.course));
     assert(made.rows[0].r.orderId, 'a subscription grant blocked an outright purchase');
   });
 
@@ -730,10 +747,10 @@ export async function run(ctx) {
     const first = await newBuyer('First Family');
     const second = await newBuyer('Second Family');
 
-    const bought = await withCheckoutOn(() => callWriter(first.userId, offer.course, offer.priceId));
+    const bought = await withCheckoutOn(() => callWriter(first.userId, offer.course));
     await payOrder(bought.rows[0].r.orderId, 'CO-DUP-3');
 
-    const other = await withCheckoutOn(() => callWriter(second.userId, offer.course, offer.priceId));
+    const other = await withCheckoutOn(() => callWriter(second.userId, offer.course));
     assert(other.rows[0].r.orderId,
       'one family owning a course blocked another family from buying it');
   });

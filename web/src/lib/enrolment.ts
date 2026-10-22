@@ -16,11 +16,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { fromMinor, format, type Money } from './money.ts';
 
-export type Offering =
-  | { kind: 'free' }
-  | { kind: 'paid'; prices: OfferingPrice[] }
-  /** The learner already holds a live entitlement. */
-  | { kind: 'entitled' };
+export type OfferingCountrySource = 'account' | 'request' | 'none';
 
 export type OfferingPrice = {
   id: string;
@@ -29,24 +25,87 @@ export type OfferingPrice = {
   market: string | null;
 };
 
-type PriceRow = {
-  id: string;
-  amount_minor: string | number;
-  currency_code: string;
-  billing_interval: string;
-  market: string | null;
-  status: string;
-  effective_from: string;
-  effective_until: string | null;
+export type Offering =
+  | { kind: 'free' }
+  /** The learner already holds a live entitlement. */
+  | { kind: 'entitled' }
+  | {
+      kind: 'paid';
+      price: OfferingPrice;
+      /** `country` when a market matched, `default` when no market was declared. */
+      match: 'country' | 'default';
+      country: string | null;
+      countrySource: OfferingCountrySource;
+    }
+  /**
+   * The course is on sale, but not on terms this buyer can accept: no price for
+   * their country, or more than one currency and nothing to choose between
+   * them. It is deliberately not `free` — a sold course can never be enrolled
+   * in for free, and saying "Free" here would be a promise the enrolment gate
+   * refuses a moment later.
+   */
+  | { kind: 'not_sold_here'; reason: string; country: string | null };
+
+/** What `course_price_for_me()` answers. Money is a decimal string. */
+export type CoursePriceAnswer = {
+  resolved?: boolean;
+  reason?: string | null;
+  hasLivePrice?: boolean;
+  country?: string | null;
+  countrySource?: string;
+  priceId?: string;
+  amountMinor?: string;
+  currencyCode?: string;
+  billingInterval?: string;
+  market?: string | null;
+  matched?: string;
 };
 
-type ProductRow = {
-  id: string;
-  status: string;
-  prices: PriceRow[] | null;
-};
+/**
+ * Turn the reader's answer into an offering.
+ *
+ * Pure and exported because the branching is the part worth testing: a course
+ * with no live price anywhere is free, a course with a live price the buyer
+ * cannot have is *not* free, and a paid answer without an amount must never be
+ * treated as zero.
+ */
+export function offeringFromAnswer(answer: CoursePriceAnswer | null | undefined): Offering {
+  const country = typeof answer?.country === 'string' ? answer.country : null;
+  const source: OfferingCountrySource =
+    answer?.countrySource === 'account' || answer?.countrySource === 'request'
+      ? answer.countrySource
+      : 'none';
 
-type PcvRow = { product_id: string; products: ProductRow[] | null };
+  // Nothing live anywhere: the course is genuinely free, which is the
+  // catalogue question rather than the buyer's.
+  if (!answer || answer.hasLivePrice !== true) return { kind: 'free' };
+
+  if (
+    answer.resolved === true &&
+    typeof answer.priceId === 'string' &&
+    typeof answer.amountMinor === 'string' &&
+    typeof answer.currencyCode === 'string'
+  ) {
+    return {
+      kind: 'paid',
+      price: {
+        id: answer.priceId,
+        amount: fromMinor(answer.amountMinor, answer.currencyCode),
+        billingInterval: answer.billingInterval ?? 'one_time',
+        market: answer.market ?? null,
+      },
+      match: answer.matched === 'country' ? 'country' : 'default',
+      country,
+      countrySource: source,
+    };
+  }
+
+  return {
+    kind: 'not_sold_here',
+    reason: answer.reason ?? 'no_price_for_country',
+    country,
+  };
+}
 
 /** The version the learner would actually enrol into: the published one. */
 export async function publishedVersionId(
@@ -64,43 +123,6 @@ export async function publishedVersionId(
 
   if (error) throw new Error(error.message);
   return (data as { id: string } | null)?.id ?? null;
-}
-
-/** Is a live price attached to any product carrying this version? */
-async function pricesForVersion(
-  supabase: SupabaseClient,
-  versionId: string,
-): Promise<OfferingPrice[]> {
-  const { data, error } = await supabase
-    .from('product_course_versions')
-    .select('product_id, products ( id, status, prices ( id, amount_minor, currency_code, billing_interval, market, status, effective_from, effective_until ) )')
-    .eq('course_version_id', versionId);
-
-  if (error) throw new Error(error.message);
-  const rows = (data ?? []) as unknown as PcvRow[];
-
-  const now = new Date().toISOString();
-  const out: OfferingPrice[] = [];
-
-  for (const pcv of rows) {
-    const product = pcv.products?.[0];
-    // A draft or retired product cannot be bought, so it does not make the
-    // course paid. This mirrors the note on products.status in the schema.
-    if (!product || product.status !== 'active') continue;
-
-    for (const p of product.prices ?? []) {
-      if (p.status !== 'active') continue;
-      if (p.effective_from > now) continue;
-      if (p.effective_until && p.effective_until <= now) continue;
-      out.push({
-        id: p.id,
-        amount: fromMinor(p.amount_minor, p.currency_code),
-        billingInterval: p.billing_interval,
-        market: p.market,
-      });
-    }
-  }
-  return out;
 }
 
 /** The learner profile owned by the signed-in user, if they have one. */
@@ -121,7 +143,17 @@ export async function ownLearnerProfileId(
 
 export async function resolveOffering(
   supabase: SupabaseClient,
-  args: { courseId: string; learnerProfileId: string | null },
+  args: {
+    courseId: string;
+    learnerProfileId: string | null;
+    /**
+     * The country the request arrived from, as a display hint. The database
+     * prefers the account's recorded country and ignores this when there is
+     * one, so a tampered value cannot change what a signed-in buyer is charged
+     * — it can only change what a signed-out visitor is shown.
+     */
+    country?: string | null;
+  },
 ): Promise<Offering> {
   const versionId = await publishedVersionId(supabase, args.courseId);
   if (!versionId) return { kind: 'free' };
@@ -137,16 +169,27 @@ export async function resolveOffering(
     if (entitled === true) return { kind: 'entitled' };
   }
 
-  const prices = await pricesForVersion(supabase, versionId);
-  return prices.length > 0 ? { kind: 'paid', prices } : { kind: 'free' };
+  // The price is resolved by the same function `create_course_order()` uses, so
+  // what the page shows and what the order charges cannot disagree. Before this,
+  // the page listed every market's price and the writer accepted any of them.
+  const { data, error } = await supabase.rpc('course_price_for_me', {
+    p_course_id: args.courseId,
+    p_country: args.country ?? null,
+  });
+  if (error) throw new Error(error.message);
+
+  return offeringFromAnswer(data as CoursePriceAnswer | null);
 }
 
 export function offeringLabel(o: Offering): string {
   if (o.kind === 'free') return 'Free';
   if (o.kind === 'entitled') return 'Included in your access';
-  const first = o.prices[0];
-  if (!first) return 'Price coming soon';
-  return format(first.amount);
+  if (o.kind === 'not_sold_here') {
+    if (o.reason === 'not_one_time') return 'Not sold as a one-off course';
+    if (o.reason === 'price_ambiguous') return 'Price needs a correct currency';
+    return 'Not available in your country yet';
+  }
+  return format(o.price.amount);
 }
 
 export type EnrolOutcome =
@@ -158,6 +201,7 @@ export type EnrolErrorCode =
   | 'no_learner_profile'
   | 'no_published_version'
   | 'payment_required'
+  | 'not_sold_here'
   | 'guardian_verification_required'
   | 'not_available'
   | 'already_enrolled';
@@ -256,7 +300,12 @@ export async function enrollableLearners(
 
 export async function enrolInFreeCourse(
   supabase: SupabaseClient,
-  args: { userId: string; courseId: string; learnerProfileId?: string | null },
+  args: {
+    userId: string;
+    courseId: string;
+    learnerProfileId?: string | null;
+    country?: string | null;
+  },
 ): Promise<EnrolOutcome> {
   // Who is learning. Defaults to the caller. When a parent enrols a child the
   // id is supplied by the client — and that is safe only because
@@ -279,7 +328,22 @@ export async function enrolInFreeCourse(
   const offering = await resolveOffering(supabase, {
     courseId: args.courseId,
     learnerProfileId,
+    country: args.country ?? null,
   });
+
+  if (offering.kind === 'not_sold_here') {
+    // Sold, but not on terms this buyer can accept. The enrolment gate refuses a
+    // sold course as a free enrolment on its own, so this is the sentence rather
+    // than the decision.
+    return {
+      ok: false,
+      code: 'not_sold_here',
+      message:
+        "This course is on sale, but not for your country yet. We are opening " +
+        "markets one at a time and would rather tell you than take a payment we " +
+        "cannot price. Contact us and we will let you know when it opens.",
+    };
+  }
 
   if (offering.kind === 'paid') {
     return {

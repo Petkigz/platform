@@ -1,10 +1,11 @@
 /**
  * Creating an order.
  *
- * The rule this file exists to enforce: **the client never supplies an amount.**
- * It supplies a course id and a price id. Everything else — the amount, the
- * product, the currency, the line item, the billing account — follows from rows
- * the platform already owns.
+ * The rule this file exists to enforce: **the client never supplies an amount,
+ * and since 20261230000100 it does not supply a price either.** It supplies a
+ * course id. Everything else — which price applies, in which currency, for which
+ * product, onto which billing account — follows from rows the platform already
+ * owns and from where the request came from.
  *
  * Since 20261224000100_course_order_writer.sql that rule is enforced in the
  * database rather than here. `createOrder` used to re-derive the offer in
@@ -35,7 +36,7 @@ export type CheckoutErrorCode =
   | 'not_found'
   | 'not_paid_course'
   | 'price_not_available'
-  | 'price_not_for_this_course'
+  | 'not_sold_here'
   | 'already_entitled'
   | 'conflict'
   | 'checkout_disabled'
@@ -150,10 +151,6 @@ const COURSE_ORDER_REFUSALS: Record<string, { code: CheckoutErrorCode; message: 
     code: 'price_not_available',
     message: 'That price is not currently available. Pick another and try again.',
   },
-  price_window: {
-    code: 'price_not_available',
-    message: 'That price is outside its validity window.',
-  },
   // A recurring price has its own writer, lifecycle and expiry. Accepting it
   // here would take subscription money and grant a one-off entitlement,
   // because record_payment_success() does not create subscriptions.
@@ -162,9 +159,20 @@ const COURSE_ORDER_REFUSALS: Record<string, { code: CheckoutErrorCode; message: 
     message:
       'Subscriptions are not on sale through this checkout yet. One-off purchases are.',
   },
-  price_not_for_this_course: {
-    code: 'price_not_for_this_course',
-    message: 'That price does not apply to this course.',
+  // The course is on sale somewhere, just not on terms this buyer can accept.
+  // Both are catalogue gaps a person can close, not errors the payer caused, so
+  // both are said plainly and both ask them to come back.
+  no_price_for_country: {
+    code: 'not_sold_here',
+    message:
+      'This course has no price for your country yet, so we would rather not charge you ' +
+      'than guess. Contact us and we will open your market.',
+  },
+  price_ambiguous: {
+    code: 'not_sold_here',
+    message:
+      'This course is priced in more than one currency for your country. Contact us so ' +
+      'we can set the right one before you pay.',
   },
   // A course purchase grants every learner profile on the account that pays, so
   // an account that already holds this version can only be charged for access it
@@ -190,24 +198,26 @@ export function mapCourseOrderRefusal(message: string): {
 }
 
 /**
- * Create a pending order for one course at one price.
+ * Create a pending order for one course.
  *
  * Returns a discriminated result rather than throwing, because every failure
  * mode here is an expected one that the caller has to tell the payer about in
- * different words: the wrong price, a course that is not on sale, a price that
- * has expired. Those are not exceptions.
+ * different words: a course that is not on sale, a country with no price, a
+ * course the family already owns. Those are not exceptions.
  *
- * There is no `userId` argument. The writer takes the actor from the session's
- * own JWT claims, so the payer cannot be named by the request — and neither can
- * the billing account, which it resolves from that actor's memberships.
+ * There is no `userId` argument and no `priceId` argument. The writer takes the
+ * actor from the session's own JWT claims and the price from the buyer's
+ * country, so neither the payer nor the amount can be named by the request. The
+ * country is passed because only the HTTP layer can see it; the writer consults
+ * it once, for an account that has none, and never again.
  */
 export async function createOrder(
   supabase: SupabaseClient,
-  args: { courseId: string; priceId: string },
+  args: { courseId: string; country?: string | null },
 ): Promise<CreateOrderResult> {
   const { data, error } = await supabase.rpc('create_course_order', {
     p_course_id: args.courseId,
-    p_price_id: args.priceId,
+    p_buyer_country: args.country ?? null,
   });
 
   if (error) return { ok: false, ...mapCourseOrderRefusal(error.message) };

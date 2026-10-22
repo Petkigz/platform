@@ -12,6 +12,7 @@ import {
 import { getPaymentProvider } from '@/lib/payments/registry';
 import { PaymentProviderUnavailableError } from '@/lib/payments/provider';
 import { toE164 } from '@/lib/phone';
+import { countryFromHeaders } from '@/lib/geo';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,9 +34,12 @@ type Body = {
 /**
  * POST /api/checkout — open a pending order and hand the payer to the provider.
  *
- * The actor is taken from the session only. `courseId` and `priceId` come from
- * the body and are both validated against each other inside `createOrder`; no
- * amount is accepted here or anywhere else in the request.
+ * The actor is taken from the session only. For a course, `courseId` is the
+ * only thing the body contributes: the price follows from the buyer's country,
+ * which is read from the request headers here because the database cannot see
+ * them. For a plan, `priceId` is still posted and still validated inside
+ * `createPlanOrder`. No amount is accepted here or anywhere else in the
+ * request.
  *
  * Two things this route deliberately does not do:
  *
@@ -75,9 +79,17 @@ export async function POST(request: Request) {
   const learnerProfileId = typeof body.learnerProfileId === 'string' ? body.learnerProfileId.trim() : '';
   const priceId = typeof body.priceId === 'string' ? body.priceId.trim() : '';
 
-  if (!priceId || Boolean(courseId) === Boolean(planVersionId)) {
+  if (Boolean(courseId) === Boolean(planVersionId)) {
     return NextResponse.json(
-      { error: 'Choose exactly one course or plan version, and provide its price id.' },
+      { error: 'Choose exactly one course or plan version.' },
+      { status: 400 },
+    );
+  }
+  // A price is still part of a plan checkout. A course has no price to post:
+  // which one applies is decided by the buyer's country, in the writer.
+  if (planVersionId && !priceId) {
+    return NextResponse.json(
+      { error: 'Choose a price for the plan.' },
       { status: 400 },
     );
   }
@@ -89,6 +101,10 @@ export async function POST(request: Request) {
   }
 
   const isPlanCheckout = Boolean(planVersionId);
+  // The only place the country exists. It is a hint from the hosting layer, and
+  // the writer uses it once — to establish a country on an account that has
+  // none. An account that has one is never re-priced by it.
+  const country = countryFromHeaders(request.headers);
   let result;
   if (isPlanCheckout) {
     result = await createPlanOrder(supabase, {
@@ -101,7 +117,11 @@ export async function POST(request: Request) {
     // A learner who already holds a live entitlement should not be charged
     // again. resolveOffering is the same decision the enrol button uses.
     const ownLearnerId = await ownLearnerProfileId(supabase, user.id);
-    const offering = await resolveOffering(supabase, { courseId, learnerProfileId: ownLearnerId });
+    const offering = await resolveOffering(supabase, {
+      courseId,
+      learnerProfileId: ownLearnerId,
+      country,
+    });
     if (offering.kind === 'entitled') {
       return NextResponse.json({ error: 'You already have access to this course.' }, { status: 409 });
     }
@@ -111,9 +131,16 @@ export async function POST(request: Request) {
         redirect: '/api/enrol',
       }, { status: 409 });
     }
-    // The writer takes the payer from the session's own claims; there is no
-    // user id to hand it, and no amount, product or billing account either.
-    result = await createOrder(supabase, { courseId, priceId });
+    if (offering.kind === 'not_sold_here') {
+      // Let the writer say why: it holds the reason and the country, and it is
+      // the only place allowed to decide that a sale cannot happen.
+      result = await createOrder(supabase, { courseId, country });
+    } else {
+      // The writer takes the payer from the session's own claims; there is no
+      // user id to hand it, and no amount, product, price or billing account
+      // either.
+      result = await createOrder(supabase, { courseId, country });
+    }
   }
   if (!result.ok) {
     // 409 for the expected conflicts, 404 when there is nothing to buy, and 503
@@ -128,9 +155,9 @@ export async function POST(request: Request) {
           ? 404
           : result.code === 'error'
             ? 500
-            : result.code === 'price_not_for_this_course' ||
-                result.code === 'price_not_available' ||
+            : result.code === 'price_not_available' ||
                 result.code === 'not_paid_course' ||
+                result.code === 'not_sold_here' ||
                 result.code === 'already_entitled' ||
                 result.code === 'conflict'
               ? 409

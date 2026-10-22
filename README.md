@@ -69,8 +69,8 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **103 tables, RLS on every one, 228 policies, 136
-user-defined triggers, 263 functions and 111 migrations.** The database suite
-passes **1169 tests**; the web suite passes **777 tests**. TypeScript typecheck
+user-defined triggers, 271 functions and 112 migrations.** The database suite
+passes **1184 tests**; the web suite passes **791 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **117 app route entries**.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
@@ -143,13 +143,24 @@ no price behind it. Both CHECKs on the tables are satisfied by that, and
 `record_payment_success()` fulfils from `order_items.product_id`, so paying the
 order's own total delivered whichever course had been named. The validation existed
 and lived in TypeScript, in one of the two paths to the table.
-`create_course_order(course_id, price_id)` now re-derives the offer from the
-catalogue, resolves the payer's own billing account in the price's currency, and
-writes the order and its single line itself; both insert policies are dropped, so
-the definer writers are the only way an order comes into existence and a payer
-still reads their own invoice. `commerce.checkout` is enforced inside it, which
-makes that flag load-bearing for the first time — it was registered and read by
-nothing, so "ships off" was untrue for checkout specifically.
+`create_course_order(course_id)` now re-derives the offer from the catalogue,
+resolves the payer's own billing account, and writes the order and its single line
+itself; both insert policies are dropped, so the definer writers are the only way
+an order comes into existence and a payer still reads their own invoice.
+`commerce.checkout` is enforced inside it, which makes that flag load-bearing for
+the first time — it was registered and read by nothing, so "ships off" was untrue
+for checkout specifically.
+
+The price is no longer something the buyer's browser can name. Until
+`20261230000100_market_by_country.sql` the writer took a price id and accepted any
+live one, and the buy page listed every market's price set for a course, so a
+payer could buy at another country's price and the cheapest market was open to
+anyone with a network tab. The country now chooses the price: an exact match on
+the buyer's country, then the price that declares no market, then a refusal naming
+why. The country itself comes from the request's address on a first purchase and
+from the billing account afterwards, and only finance staff can move it, in
+writing. `resolve_course_price()` is the single resolver, so the sentence on the
+buy page and the amount on the order cannot disagree.
 
 An order's total is now held against the parts that make it up. `orders_totals_agree`
 kept an order internally consistent and nothing kept it honest about its own rows:

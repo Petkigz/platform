@@ -103,8 +103,8 @@ export async function run(ctx) {
   async function queuedOrder(buyer, amountMinor = 30000) {
     const offer = await sellableCourse(amountMinor);
     const made = await withCheckoutOn(() =>
-      asActor(buyer.userId, 'select public.create_course_order($1,$2) as r',
-        [offer.course, offer.priceId]));
+      asActor(buyer.userId, 'select public.create_course_order($1) as r',
+        [offer.course]));
     return { ...offer, orderId: made.rows[0].r.orderId };
   }
 

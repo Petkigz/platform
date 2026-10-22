@@ -177,7 +177,7 @@ function writerClient(
 test('the order is created by the writer, from ids and nothing else', async () => {
   const { client, rpcCalls, calls } = writerClient({ data: ORDER_ROW, error: null });
 
-  const result = await createOrder(client, { courseId: 'course-1', priceId: 'price-1' });
+  const result = await createOrder(client, { courseId: 'course-1', country: 'UG' });
   assert.equal(result.ok, true);
   if (!result.ok) return;
 
@@ -187,7 +187,7 @@ test('the order is created by the writer, from ids and nothing else', async () =
 
   assert.deepEqual(rpcCalls, [{
     fn: 'create_course_order',
-    args: { p_course_id: 'course-1', p_price_id: 'price-1' },
+    args: { p_course_id: 'course-1', p_buyer_country: 'UG' },
   }]);
 
   const argKeys = Object.keys(rpcCalls[0]?.args ?? {});
@@ -205,9 +205,9 @@ test('a refusal key becomes a code and a sentence, and the key never leaks', asy
     disabled: 'checkout_disabled',
     course_not_available: 'not_found',
     price_not_available: 'price_not_available',
-    price_window: 'price_not_available',
     not_one_time: 'not_paid_course',
-    price_not_for_this_course: 'price_not_for_this_course',
+    no_price_for_country: 'not_sold_here',
+    price_ambiguous: 'not_sold_here',
     already_owned: 'already_entitled',
   };
 
@@ -216,7 +216,7 @@ test('a refusal key becomes a code and a sentence, and the key never leaks', asy
       data: null,
       error: { message: `checkout:${key}` },
     });
-    const result = await createOrder(client, { courseId: 'course-1', priceId: 'price-1' });
+    const result = await createOrder(client, { courseId: 'course-1', country: 'UG' });
     assert.equal(result.ok, false, `checkout:${key} was not refused`);
     if (result.ok) continue;
     assert.equal(result.code, code, `checkout:${key} mapped to '${result.code}'`);
@@ -224,6 +224,20 @@ test('a refusal key becomes a code and a sentence, and the key never leaks', asy
       `the payer was shown the raw refusal key: ${result.message}`);
     assert.ok(result.message.length > 12,
       `'${result.message}' is not a sentence a payer can act on`);
+  }
+});
+
+test('a course with no price for the country is refused without blaming the payer', async () => {
+  // The course is on sale; this country has no price. The sentence has to say
+  // that, because "that price is not available" would read as a broken link.
+  for (const key of ['no_price_for_country', 'price_ambiguous']) {
+    const { client } = writerClient({ data: null, error: { message: `checkout:${key}` } });
+    const result = await createOrder(client, { courseId: 'course-1', country: 'TZ' });
+    assert.equal(result.ok, false, `${key} was accepted`);
+    if (result.ok) continue;
+    assert.equal(result.code, 'not_sold_here', `${key} mapped to ${result.code}`);
+    assert.match(result.message, /country/i, `${key} did not mention the country`);
+    assert.match(result.message, /contact us/i, `${key} gave the payer nothing to do`);
   }
 });
 
@@ -237,7 +251,7 @@ test('an already-owned refusal reassures, and does not accuse the payer', async 
     data: null,
     error: { message: 'checkout:already_owned' },
   });
-  const result = await createOrder(client, { courseId: 'course-1', priceId: 'price-1' });
+  const result = await createOrder(client, { courseId: 'course-1', country: 'UG' });
   assert.equal(result.ok, false);
   if (result.ok) return;
 
@@ -263,7 +277,7 @@ test('a refusal nobody mapped is loud rather than friendly', async () => {
     error: { message: 'checkout:some_new_reason' },
   });
 
-  const result = await createOrder(client, { courseId: 'course-1', priceId: 'price-1' });
+  const result = await createOrder(client, { courseId: 'course-1', country: 'UG' });
   assert.equal(result.ok, false);
   if (result.ok) return;
   assert.equal(result.code, 'error');
@@ -276,7 +290,7 @@ test('a database error that is not a refusal is passed through as an error', asy
     error: { message: 'connection terminated unexpectedly' },
   });
 
-  const result = await createOrder(client, { courseId: 'course-1', priceId: 'price-1' });
+  const result = await createOrder(client, { courseId: 'course-1', country: 'UG' });
   assert.equal(result.ok, false);
   if (result.ok) return;
   assert.equal(result.code, 'error');
@@ -292,7 +306,7 @@ test('a result with no amount is refused rather than charged as zero', async () 
     null,
   ]) {
     const { client } = writerClient({ data, error: null });
-    const result = await createOrder(client, { courseId: 'course-1', priceId: 'price-1' });
+    const result = await createOrder(client, { courseId: 'course-1', country: 'UG' });
     assert.equal(result.ok, false, `${JSON.stringify(data)} was accepted as an order`);
     if (result.ok) continue;
     assert.equal(result.code, 'error');
@@ -308,7 +322,7 @@ test('the amount stays exact whatever its size', async () => {
     error: null,
   });
 
-  const result = await createOrder(client, { courseId: 'course-1', priceId: 'price-1' });
+  const result = await createOrder(client, { courseId: 'course-1', country: 'UG' });
   assert.equal(result.ok, true);
   if (!result.ok) return;
   assert.equal(result.amount.amountMinor, 1234567890123n);

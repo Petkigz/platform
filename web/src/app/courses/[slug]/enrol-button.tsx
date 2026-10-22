@@ -27,7 +27,7 @@ export function EnrolButton({
   learners,
 }: {
   courseId: string;
-  state: 'free' | 'paid' | 'entitled';
+  state: 'free' | 'paid' | 'entitled' | 'not_sold_here';
   signedIn: boolean;
   label: string;
   learners: LearnerOption[];
@@ -50,6 +50,21 @@ export function EnrolButton({
         <a href={`/sign-in?next=/courses/${courseId}`} className="btn secondary">
           I already have an account
         </a>
+      </div>
+    );
+  }
+
+  if (state === 'not_sold_here') {
+    // On sale, but not on terms this buyer can accept. The database would
+    // refuse a free enrolment of a sold course anyway; this is the sentence
+    // rather than the decision, and it names the reason.
+    return (
+      <div>
+        <p className="notice warn" style={{ marginTop: 0 }}>
+          <strong>{label}.</strong> This course is on sale, but not on terms we
+          can offer you yet. Nothing has been charged.{' '}
+          <a href="/support">Contact us</a> and we will open your market.
+        </p>
       </div>
     );
   }

@@ -3,18 +3,12 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 
-type PriceOption = {
-  id: string;
-  label: string;
-  interval: string;
-};
-
 /**
  * The checkout form.
  *
- * It posts a price id and never an amount. The server resolves the amount from
- * the price row, so this component cannot change what is charged no matter what
- * the browser sends.
+ * It posts a course id and a phone number, never a price and never an amount.
+ * The server resolves the price from the buyer's country, so this component
+ * cannot change what is charged no matter what the browser sends.
  *
  * The success handling is deliberately cautious. A `redirect` result means the
  * payer leaves to pay, and the entitlement arrives later via the webhook — not
@@ -23,19 +17,16 @@ type PriceOption = {
  */
 export function BuyForm({
   courseId,
-  prices,
   providers,
   providerConfigured,
 }: {
   courseId: string;
-  prices: PriceOption[];
   /** Providers that are configured and usable right now. */
   providers: { id: string; label: string; requiresMsisdn: boolean }[];
   providerConfigured: boolean;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [priceId, setPriceId] = useState(prices[0]?.id ?? '');
   const [msisdn, setMsisdn] = useState('');
   // Default to the first live provider. With one provider this is the only
   // choice, so the selector renders as a single option rather than a decision
@@ -46,28 +37,14 @@ export function BuyForm({
   const [message, setMessage] = useState<string | null>(null);
   const [tone, setTone] = useState<'info' | 'error'>('info');
 
-  if (prices.length === 0) {
-    return (
-      <p className="muted">
-        There is no price available for this course right now.
-      </p>
-    );
-  }
-
   async function buy() {
     setMessage(null);
-    if (!priceId) {
-      setTone('error');
-      setMessage('Choose an option first.');
-      return;
-    }
 
     const res = await fetch('/api/checkout', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         courseId,
-        priceId,
         msisdn: msisdn || undefined,
         provider: providerId || undefined,
       }),
@@ -109,26 +86,6 @@ export function BuyForm({
 
   return (
     <div style={{ display: 'grid', gap: '1rem' }}>
-      <fieldset style={{ display: 'grid', gap: '0.5rem' }}>
-        {prices.map((p) => (
-          <label key={p.id} className="row" style={{ cursor: 'pointer' }}>
-            <input
-              type="radio"
-              name="price"
-              value={p.id}
-              checked={priceId === p.id}
-              onChange={() => setPriceId(p.id)}
-            />
-            <span>
-              <strong>{p.label}</strong>
-              {p.interval !== 'one_time' && (
-                <span className="muted"> · {p.interval}</span>
-              )}
-            </span>
-          </label>
-        ))}
-      </fieldset>
-
       {providers.length > 1 && (
         <fieldset>
           <legend className="eyebrow">Pay with</legend>

@@ -117,8 +117,8 @@ export async function run(ctx) {
   async function pendingOrder(buyer, over = {}) {
     const offer = await sellableCourse(over);
     const made = await withCheckoutOn(() =>
-      asActor(buyer.userId, 'select public.create_course_order($1,$2) as r',
-        [offer.course, offer.priceId]));
+      asActor(buyer.userId, 'select public.create_course_order($1) as r',
+        [offer.course]));
     return { ...offer, ...made.rows[0].r, buyer };
   }
 
