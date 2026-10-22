@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1190 database tests, 791 web tests; TypeScript typecheck and
+Verification: **1191 database tests, 792 web tests; TypeScript typecheck and
 production build pass; 103 tables, 228 policies, 137 user-defined triggers,
-272 functions, 113 migrations and 117 app route entries.**
+272 functions, 114 migrations and 117 app route entries.**
 
 ## Today's sentence
 
@@ -1704,10 +1704,9 @@ policies dropped, no new table, no new flag.
 
 **Recorded, not fixed here.**
 
-- `create_plan_order()` is **not** gated on `commerce.subscriptions`. Course
-  checkout is now gated and plan checkout is not, which is an asymmetry rather
-  than a decision; it needs the plan writer recreated or a shared gate, and its
-  own suite flipped, so it is its own unit.
+- ~~`create_plan_order()` is **not** gated on `commerce.subscriptions`.~~ Fixed in
+  `20261232000100_plan_checkout_gate.sql`; see the newest entry below. Course and
+  plan checkout now refuse with the same `checkout:disabled` key.
 - `resolveBillingAccount()` still hardcodes `UGX` for a *new* account and is
   still used by the plan path, so a USD-priced plan can hang off a UGX account.
   The course path can no longer do that. Fixing the plan path means knowing the
@@ -2216,6 +2215,33 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### A flag that the writer does not honour is decoration, 2026-10-22
+
+`commerce.subscriptions` ships off and the storefront hides the plans, but
+`create_plan_order()` never looked at it. So the flag described the UI and not the
+platform: anybody who called the writer could open a subscription order for a
+feature that was not on sale. This is the same failure the course path had
+already fixed for `commerce.checkout`, and the fix is deliberately the same
+shape.
+
+`20261232000100_plan_checkout_gate.sql` re-creates the plan writer with the
+guard, refusing `checkout:disabled` with the same key the course writer uses.
+Re-created rather than patched because a plpgsql body cannot be altered in place;
+the body below the guard is the function exactly as it stood. The plans page now
+reads the flag before it reads the catalogue, so a visitor is not shown prices
+the platform will refuse, and the web layer maps the key to
+`checkout_disabled` with its own sentence rather than falling through to a 500.
+
+Two suites had to be taught the default: `subscriptions.test.mjs` toggles the
+flag around its `createOrder()` helper and puts it back in a `finally`, and
+`offline_download.test.mjs` does the same around its one end-to-end plan
+purchase. A new test calls the writer *without* the flag and asserts both the
+refusal and that no order was created — the point of the unit is the state the
+platform ships in, so that is the state the test meets.
+
+Measured: database suite **1191 passing** (1184 → 1191 across this and the
+credential unit), web suite **792**, 114 migrations, 272 functions.
+
 ### A credential is decided by the owner, or by the board the owner convenes, 2026-10-22
 
 Verifying a reviewer's qualification was any governance admin's to do, so what
@@ -2287,9 +2313,10 @@ Measured: database suite **1184 passing**, web suite **791**, 112 migrations,
 `market_pricing.test.mjs` (15 tests); `course_order.test.mjs` was rewritten where
 it asserted a price-id contract (24 tests).
 
-**Recorded, not fixed here.** `create_plan_order()` still takes a posted price id
-and is still not gated on `commerce.subscriptions`, so a plan can be bought while
-that flag is off and a plan price's market is still whatever the browser sent.
+**Recorded, not fixed here.** `create_plan_order()` still takes a posted price id,
+so a plan price's market is still whatever the browser sent. It is no longer
+reachable while `commerce.subscriptions` is off — that half was fixed in
+`20261232000100`.
 `resolveBillingAccount()` still hardcodes `UGX` for a new account on the plan
 path. Whether a market should be a country at all is asked in the open decisions
 above; if currency wins, the resolver changes and the web path does not.

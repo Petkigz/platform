@@ -315,8 +315,18 @@ export async function run(ctx) {
     const lesson = await taughtLesson();
     assert(await may(payer, lesson.lesson) === false, 'saving worked before anything was paid for');
 
-    const order = (await asActor(payer, 'select * from public.create_plan_order($1,$2,$3,$4)',
-      [account, version, price, learner])).rows[0];
+    // commerce.subscriptions ships off, so the plan writer has to be let
+    // through for this end-to-end path; it is put back immediately.
+    const wasOn = (await q(
+      `select value_text from public.platform_settings where key='commerce.subscriptions'`)).rows[0].value_text;
+    await q(`update public.platform_settings set value_text='true' where key='commerce.subscriptions'`);
+    let order;
+    try {
+      order = (await asActor(payer, 'select * from public.create_plan_order($1,$2,$3,$4)',
+        [account, version, price, learner])).rows[0];
+    } finally {
+      await q(`update public.platform_settings set value_text=$1 where key='commerce.subscriptions'`, [wasOn]);
+    }
     await q("select public.record_payment_success($1,$2,'manual','OFFLINE-E2E-1',null,'Receipt OFFLINE-E2E-1')",
       [order.order_id, admin]);
 

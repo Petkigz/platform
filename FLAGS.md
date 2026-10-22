@@ -103,7 +103,7 @@ Three kinds of gate:
 | `commerce.free` | Free courses, no payment | ADMIN | — |
 | `commerce.checkout` | Paid enrolment — **enforced in `create_course_order()`**, the only writer of a course order; while off, `/courses/[slug]/buy` says so instead of offering a form that cannot work | ADMIN + SETUP | **Provider chosen and account approved**; sandbox passing; jurisdiction decided; tax/invoicing decided; refund policy written |
 | `commerce.mobile_money` | MTN MoMo / Airtel Money | ADMIN + SETUP | **Adapters built.** Remaining: merchant agreement; sandbox pass with real credentials; settlement terms. Note both providers' callbacks are unsigned — confirmation is by authenticated re-query, which is implemented. |
-| `commerce.subscriptions` | Monthly and annual plans | ADMIN + SETUP | Plan terms; grace period by market; renewal and proration policy; dunning |
+| `commerce.subscriptions` | Monthly and annual plans | ADMIN + SETUP | Plan terms; grace period by market; renewal and proration policy; dunning. `create_plan_order()` refuses while this is off, so a plan cannot be ordered before those exist |
 | `commerce.promotions` | Discount campaigns | ADMIN | Eligibility rules; stacking rules; abuse limits |
 | `commerce.refunds` | Refund requests and decisions | ADMIN + SETUP | Approval authority limits; escalation path; entitlement effect of a refund |
 | `commerce.referrals` | Referral rewards | CODE | Fraud rules; reward accounting; payout of rewards |

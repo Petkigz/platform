@@ -65,15 +65,41 @@ export async function run(ctx) {
     return { plan,version,price };
   }
 
+  /**
+   * `commerce.subscriptions` ships off, so the writer refuses every call until
+   * it is on. Toggling around the call keeps the default honest: the refusal
+   * test below calls the function directly, and every other test meets the
+   * writer in the state the platform ships it in.
+   */
   async function createOrder(who, plan, learner=adult, accountId=account, priceId=plan.price) {
-    return asActor(who,
-      'select * from public.create_plan_order($1,$2,$3,$4)',
-      [accountId,plan.version,priceId,learner]);
+    const before=(await q(
+      `select value_text from public.platform_settings where key='commerce.subscriptions'`)).rows[0].value_text;
+    await q(`update public.platform_settings set value_text='true' where key='commerce.subscriptions'`);
+    try {
+      return await asActor(who,
+        'select * from public.create_plan_order($1,$2,$3,$4)',
+        [accountId,plan.version,priceId,learner]);
+    } finally {
+      await q(`update public.platform_settings set value_text=$1 where key='commerce.subscriptions'`, [before]);
+    }
   }
 
   const plan = await makePlan('family-subscription');
   let initialOrder = null;
   let subscription = null;
+
+  await test('the plan writer refuses while commerce.subscriptions is off', async () => {
+    const off=(await q(
+      `select value_text from public.platform_settings where key='commerce.subscriptions'`)).rows[0].value_text;
+    assert(off==='false', `commerce.subscriptions ships as '${off}'`);
+
+    await rejects(() => asActor(payer,
+      'select * from public.create_plan_order($1,$2,$3,$4)', [account,plan.version,plan.price,adult]),
+      /checkout:disabled/);
+
+    const orders=(await q('select id from public.orders where placed_by=$1',[payer])).rows.length;
+    assert(orders===0, `${orders} orders were created with subscriptions disabled`);
+  });
 
   await test('checkout resolves the amount from the active plan price and creates pending only', async () => {
     const result = await createOrder(payer,plan);

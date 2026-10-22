@@ -397,6 +397,28 @@ test('plan checkout sends ids, not an amount, and keeps pending orders payment-g
     'the client must not supply or influence the amount');
 });
 
+test('plan checkout refuses while subscriptions are off, in the course checkout words', async () => {
+  // commerce.subscriptions ships off and create_plan_order() now refuses while
+  // it is off. Before this, the plans page hid the catalogue but the writer was
+  // reachable, so "off" was a property of the screen rather than the platform.
+  const { client } = stubClient(baseData());
+  client.rpc = async () => ({ data: null, error: { message: 'checkout:disabled' } });
+
+  const result = await createPlanOrder(client, {
+    planVersionId: 'version-1',
+    priceId: 'price-1',
+    learnerProfileId: 'learner-1',
+    userId: 'user-1',
+  });
+
+  assert.equal(result.ok, false, 'a disabled plan checkout was accepted');
+  if (result.ok) return;
+  assert.equal(result.code, 'checkout_disabled');
+  assert.match(result.message, /not open/i);
+  assert.equal(result.message.includes('checkout:'), false,
+    'the payer was shown the raw refusal key');
+});
+
 test('a payment attempt is recorded with a stable idempotency key', async () => {
   const { client, calls } = stubClient({
     payment_attempts: [],

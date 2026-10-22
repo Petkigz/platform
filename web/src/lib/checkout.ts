@@ -274,14 +274,22 @@ export async function createPlanOrder(
 
   if (error) {
     const message = error.message;
-    const code: CheckoutErrorCode = /not currently available|not available for this plan/i.test(message)
-      ? 'price_not_available'
-      : /already has a pending or unexpired subscription/i.test(message)
-        ? 'conflict'
-        : /not found/i.test(message)
-          ? 'not_found'
-          : 'error';
-    return { ok: false, code, message };
+    const code: CheckoutErrorCode = /checkout:disabled/i.test(message)
+      ? 'checkout_disabled'
+      : /not currently available|not available for this plan/i.test(message)
+        ? 'price_not_available'
+        : /already has a pending or unexpired subscription/i.test(message)
+          ? 'conflict'
+          : /not found/i.test(message)
+            ? 'not_found'
+            : 'error';
+    return {
+      ok: false,
+      code,
+      message: code === 'checkout_disabled'
+        ? 'Subscriptions are not open on this platform yet.'
+        : message,
+    };
   }
 
   const row = (Array.isArray(data) ? data[0] : data) as {

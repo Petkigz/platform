@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
+import { isFlagEnabled } from '@/lib/flags';
 import { format, fromMinor } from '@/lib/money';
 import { PlanStorefront } from './plan-storefront';
 
@@ -21,6 +22,23 @@ export default async function PlansPage() {
     return <div className="container section"><h1>Subscription plans</h1><p className="notice warn">Payments are not configured on this deployment.</p></div>;
   }
   const supabase = await createClient();
+
+  // commerce.subscriptions ships off, and the writer refuses while it is off.
+  // Reading the catalogue anyway would offer a plan the platform will not sell,
+  // so the page says that instead of showing prices it cannot honour.
+  if (!(await isFlagEnabled(supabase, 'commerce.subscriptions'))) {
+    return (
+      <div className="container section">
+        <p className="eyebrow">AyahSpring subscriptions</p>
+        <h1>Choose a learning plan</h1>
+        <p className="notice warn">
+          Subscriptions are not open yet. When they open, the plans and their prices
+          will be listed here; nothing can be bought before then.
+        </p>
+      </div>
+    );
+  }
+
   const [{ data: plansData, error: plansError }, { data: userResult }] = await Promise.all([
     supabase.from('plans').select('id,code,name,description').eq('status','active').is('deleted_at',null).order('name'),
     supabase.auth.getUser(),
