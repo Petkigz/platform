@@ -456,40 +456,15 @@ export async function run(ctx) {
         /only the learner whose progress this is may list/);
     });
 
-    await test('an email address finds an account, and says so when it does not', async () => {
-      const resolve = (actor, email) =>
-        asActor(actor, 'select public.resolve_share_grantee($1) as r', [email])
-          .then((res) => res.rows[0].r);
-
-      const found = await resolve(learnerUser, '  SHARES-FRIEND@example.com ');
-      assert(found.found === true, 'a signed-up account was not found');
-      assert(found.userId === friend, 'the wrong account was resolved');
-      assert(found.displayName === 'A Person Shared With', 'the account came back without a name');
-
-      const missing = await resolve(learnerUser, 'nobody-here@example.com');
-      assert(missing.found === false, 'a missing account was reported as found');
-      assert(/no account has that email address/.test(missing.note || ''),
-        'the answer did not say what was wrong');
-
-      await rejects(() => resolve(learnerUser, 'not an email'), /that is not an email address/);
-      await rejects(() => resolve(learnerUser, '   '), /that is not an email address/);
-
-      // A suspended account cannot be shared with, and the note says so rather than
-      // resolving to an account that is not there to read it.
-      // protect_account_status() refuses an update whose caller is the profile's own
-      // user, and a superuser with no claims reads as exactly that, so the suspension
-      // goes through an administrator's seat.
-      await asActor(admin,
-        `update public.user_profiles set account_status = 'suspended' where user_id = $1`,
-        [stranger]);
-      try {
-        const suspended = await resolve(learnerUser, 'shares-stranger@example.com');
-        assert(suspended.found === false, 'a suspended account was resolved');
-        assert(/not active/.test(suspended.note || ''), 'the answer did not say why');
-      } finally {
-        await asActor(admin,
-          `update public.user_profiles set account_status = 'active' where user_id = $1`,
-          [stranger]);
+    await test('nobody can ask whether an address has an account', async () => {
+      // This function used to answer, and the answer was the disclosure: sharing is
+      // now by invitation, which is created whether or not the address is registered,
+      // so there is nothing left to ask — and nothing left that may answer.
+      for (const email of ['shares-friend@example.com', 'nobody-here@example.com']) {
+        await rejects(
+          () => asActor(learnerUser, 'select public.resolve_share_grantee($1) as r', [email]),
+          /permission denied/i,
+        );
       }
     });
 
@@ -503,13 +478,24 @@ export async function run(ctx) {
           where n.nspname = 'public'
             and p.proname in ('share_adult_learning', 'revoke_adult_learning_share',
                               'my_learning_shares', 'shared_learning_overview',
-                              'may_read_shared_learning', 'resolve_share_grantee')
+                              'may_read_shared_learning')
           group by p.proname`)).rows;
-      assert(rows.length === 6, `expected six functions, found ${rows.length}`);
+      assert(rows.length === 5, `expected five functions, found ${rows.length}`);
       for (const row of rows) {
         assert(row.anon_may === false, `${row.proname} is callable anonymously`);
         assert(row.auth_may === true, `${row.proname} is not callable by a signed-in user`);
       }
+
+      // The one that used to answer "does this address have an account" is callable by
+      // neither seat: an invitation is the only way to learn anything about an address.
+      const resolve = (await q(
+        `select bool_or(has_function_privilege('anon'::name, p.oid, 'execute'::text)) as anon_may,
+                bool_or(has_function_privilege('authenticated'::name, p.oid, 'execute'::text)) as auth_may
+           from pg_proc p
+           join pg_namespace n on n.oid = p.pronamespace
+          where n.nspname = 'public' and p.proname = 'resolve_share_grantee'`)).rows[0];
+      assert(resolve.anon_may === false, 'resolve_share_grantee is callable anonymously');
+      assert(resolve.auth_may === false, 'resolve_share_grantee still answers signed-in callers');
     });
   } finally {
     await setFlag(false);

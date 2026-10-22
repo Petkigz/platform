@@ -3,9 +3,9 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
 import {
-  resolveShareGrantee,
+  acceptShareInvitation,
+  inviteToShare,
   revokeLearningShare,
-  shareMyLearning,
 } from '@/lib/sharing';
 
 export const dynamic = 'force-dynamic';
@@ -13,12 +13,15 @@ export const dynamic = 'force-dynamic';
 /**
  * Sharing an adult's own learning.
  *
- * Nothing here takes an actor and nothing here decides who may do what: the learner
- * whose progress it is grants and revokes, `share_adult_learning()` checks that against
- * the session, and `family.adult_shares` gates the whole thing from the database. The
- * flag is checked here too so that a form on a page that cannot work is not offered at
- * all, and because the difference between "not enabled" and "not yours" is worth
- * telling a person.
+ * Nothing here takes an actor and nothing here decides who may do what: the database
+ * reads the session, `invite_learning_share()` and `accept_learning_share()` enforce
+ * their own rules, and `family.adult_shares` gates the whole thing from there. The flag
+ * is checked here too so that a form on a page that cannot work is not offered at all,
+ * and because the difference between "not enabled" and "not yours" is worth telling
+ * a person.
+ *
+ * There is deliberately no action that asks whether an address has an account. The
+ * invitation reply does not depend on it, and no endpoint here answers it.
  */
 
 function fail(message: string, status: number) {
@@ -46,22 +49,18 @@ export async function POST(request: Request) {
     return fail('Sharing an adult’s learning is not enabled on this platform.', 403);
   }
 
-  if (body.action === 'resolve') {
-    const outcome = await resolveShareGrantee(supabase, body.email);
-    if (!outcome.ok) return fail(outcome.message, statusFor(outcome));
-    return NextResponse.json({ ok: true, account: outcome.value });
-  }
-
-  if (body.action === 'share') {
-    if (typeof body.learnerProfileId !== 'string' || body.learnerProfileId === '') {
-      return fail('You have no learner profile yet.', 422);
-    }
-    const outcome = await shareMyLearning(supabase, {
-      learnerProfileId: body.learnerProfileId,
-      granteeUserId: body.granteeUserId,
+  if (body.action === 'invite') {
+    const outcome = await inviteToShare(supabase, {
+      email: body.email,
       scope: body.scope,
       days: body.days,
     });
+    if (!outcome.ok) return fail(outcome.message, statusFor(outcome));
+    return NextResponse.json({ ok: true, ...outcome.value });
+  }
+
+  if (body.action === 'accept') {
+    const outcome = await acceptShareInvitation(supabase, body.token);
     if (!outcome.ok) return fail(outcome.message, statusFor(outcome));
     return NextResponse.json({ ok: true, ...outcome.value });
   }

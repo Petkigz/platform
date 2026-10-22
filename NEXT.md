@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1230 database tests, 808 web tests; TypeScript typecheck and
-production build pass; 107 tables, 232 policies, 138 user-defined triggers,
-278 functions, 120 migrations and 122 app route entries.**
+Verification: **1240 database tests, 809 web tests; TypeScript typecheck and
+production build pass; 108 tables, 233 policies, 138 user-defined triggers,
+280 functions, 121 migrations and 123 app route entries.**
 
 ## Today's sentence
 
@@ -2114,10 +2114,13 @@ on `/admin/media` (or the upload form) is the obvious next piece, and is recorde
   VPN, but cannot express "cheaper in Uganda than in Kenya" in the same money.
   If that wins, `resolve_course_price()` becomes a currency rule and the web
   path does not change. §`DECISIONS.md`, 2026-10-22.
-- **Sharing with an address that has no account.** Answered on 2026-10-22: it
-  sends an invite carrying a token, so the screen neither no-ops nor discloses
-  whether the address is registered. The flow (token, expiry, a second screen) is
-  built in the sharing unit, which is parked behind the email provider.
+- **Sharing with an address that has no account.** Answered and **built** on
+  2026-10-22: it sends an invitation carrying a token, so the screen neither
+  no-ops nor discloses whether the address is registered. The function that used
+  to answer that question (`resolve_share_grantee()`) is revoked for every
+  signed-in caller. What is left is delivery: invitations are queued in the
+  outbox, and nothing reaches an inbox until `delivery.notifications` has a
+  provider.
 - **What nets against what in the money report.** `/admin/money-report` totals
   credits and debits separately and refuses to produce one figure, because whether a
   chargeback offsets the capture it came from, whether a provider fee is deducted
@@ -2217,6 +2220,49 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### Sharing an address is an invitation, and both answers look the same, 2026-10-22
+
+`/account/sharing` shared with an *account*: the form resolved an email address
+through `resolve_share_grantee()` and said "no account has that email address" when
+there was none. That sentence is a disclosure — anybody signed in could test an
+address and learn whether it is registered here — and the alternative it replaced, a
+button that appears to share and silently does nothing, is worse.
+
+So sharing is now by **invitation**. `20261239000100_share_invitations.sql` adds
+`share_invitations` and two functions. `invite_learning_share(email, scope, days)`
+records an invitation whether or not the address has an account and returns
+`{invitationId, expiresAt}` either way, so the reply has no branch to compare;
+`accept_learning_share(token)` turns the token into an `adult_learning_shares` row.
+
+Three properties make the token safe in an email. Only its **md5 is stored** — 122
+random bits from `gen_random_uuid()`, so the hash protects against somebody reading
+the table, not against guessing. It is **bound to the invited address**: a forwarded
+message is not enough, `accept_learning_share()` compares the signed-in address and
+refuses with "that invitation was sent to a different address". And it **expires and
+works once**: 1–90 days, chosen on the form as a week, a month or three months, and
+the same length carries into the share that accepting creates.
+
+`resolve_share_grantee()` is **revoked for every signed-in caller**, not merely
+unused. Closing the screen while leaving the side door open would have been a
+disclosure with extra steps.
+
+The message is written straight into `outbound_messages` rather than through
+`queue_message()`, which is staff-only: an invitation is sent by the person sharing,
+and opening that function to every signed-in caller would let anybody post arbitrary
+mail through a named template. `invite_learning_share()` is itself the check — it
+knows the sharer, the scope and the address — and it renders the same `invite_email`
+template and writes the same row. Nothing is delivered while
+`delivery.notifications` is off, and the panel says so rather than claiming an email.
+
+`/share/invite/[token]` is the landing page. Accepting is a **button, not a page
+load**, because mail scanners open links before people do; success lands on
+`/account/sharing`, where the accepted share is listed with its terms. Ten database
+tests cover the identical reply, the hash-only token, the address binding, the second
+acceptance, expiry, the flag, and that an accepted invitation actually opens what it
+named. The web contract has eleven tests of its own.
+
+**Not built, and next:** the invitation is not delivered, because no mail provider
+exists. Everything else about it works.
 ### A code is redeemed, once, at the moment the order is made, 2026-10-22
 
 Promotions had writers and no way to use one. This is the redemption half — the

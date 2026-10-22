@@ -2134,3 +2134,47 @@ the moment the order is made. A family therefore learns the final price at the o
 than on the page — acceptable while the only live provider is a sandbox, and the next piece
 of this feature.
 
+## Sharing an address is an invitation, and both answers are the same — **DECIDED 2026-10-22**
+
+`/account/sharing` used to share with an *account*: the form resolved an email address and said
+"no account has that email address" when there was none. Both alternatives are wrong — a silent
+no-op leaves the sharer believing something was shared, and a disclosure lets anybody test an
+address and learn whether it is registered here. So the answer is an **invitation**, created
+whether or not an account exists, with a reply identical in both cases. There is no branch to
+leak.
+
+Four things follow, and each is a decision rather than an implementation detail:
+
+- **A token, stored as a hash.** `share_invitations.token_hash` holds `md5` of 122 random bits
+  from `gen_random_uuid()`. The hash is not the secret's protection — the entropy is — it is
+  what stops a reader of the table from using what they find. Reading `share_invitations` grants
+  nobody access, and the invitee cannot read the table at all: a token is looked up by a
+  function, never by a select, so a leaked hash cannot be probed.
+- **Bound to the address, not to the mail.** A forwarded message is not enough on its own;
+  accepting requires being signed in as the address the token was sent to. The refusal says
+  which address it was sent to in effect ("a different address"), not what it contains.
+- **Expiring and single-use.** An invitation lasts 1–90 days and accepting it once is all it can
+  do. The screen offers a week, a month, three months — never "until I end it", which is a
+  reasonable choice for a share granted to a known person and not for a link sitting in a
+  mailbox. The length chosen carries into the share it creates, so the invitation's promise is
+  the share's term.
+- **`resolve_share_grantee()` is revoked, not abandoned.** Leaving it callable while the screen
+  stopped calling it would leave the disclosure behind a different door. It is closed to `anon`
+  and to `authenticated`; a service-role tool can still call it.
+
+The message is written directly to `outbound_messages` rather than through `queue_message()`,
+which is staff-only. An invitation is sent by the person sharing, and opening that function to
+every signed-in caller would let anybody post arbitrary mail through a named template.
+`invite_learning_share()` is itself the check — it knows the sharer, the scope and the address —
+and it renders the same `invite_email` template and writes the same row, so the outbox and the
+dispatcher see nothing new. Nothing is delivered while `delivery.notifications` has no provider,
+and `/account/sharing` says so on the form instead of claiming that an email went out.
+
+Accepting is a **button, not a page load**. Mail clients and security scanners open links before
+a person does; a GET that granted access would let them accept on somebody else's behalf. The
+landing page therefore shows the signed-in address, and the accept is a POST whose answer — the
+share, or the sentence explaining why not — comes from the database.
+
+**Still open:** delivery. The invitation is queued and cannot leave until an email provider
+exists; that is the first external blocker and the only thing standing between this flow and a
+stranger being able to accept.

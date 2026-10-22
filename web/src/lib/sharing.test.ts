@@ -2,20 +2,23 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  INVITE_EXPIRY_OPTIONS,
+  INVITE_MAX_DAYS,
   SHARE_EXPIRY_OPTIONS,
   SHARE_SCOPES,
   SHARE_SCOPE_LABEL,
   SHARE_STATUS_LABEL,
+  acceptShareInvitation,
   fetchMyLearningShares,
   fetchSharedLearningOverview,
   fetchSharedWithMe,
+  inviteToShare,
   mapSharingError,
-  resolveShareGrantee,
   revokeLearningShare,
-  shareMyLearning,
   validateEmailInput,
   validateExpiryInput,
-  validateShareInput,
+  validateInvitationToken,
+  validateInviteInput,
   type ShareScope,
   type ShareStatus,
 } from './sharing.ts';
@@ -26,6 +29,7 @@ import {
 // The rules under test:
 //
 //   * the form cannot offer a scope, a status or a length the database refuses
+//   * sharing is by invitation, and nothing here asks whether an address has an account
 //   * nobody sends an actor, and a refusal made here never costs a round trip
 //   * the readers are strict: this is a privacy panel, and a row that quietly lost
 //     its scope would tell somebody they had shared less than they had
@@ -118,35 +122,77 @@ test('a length is one of the ones offered, and cannot already have passed', () =
   }
 });
 
-test('a share needs a person, a scope and a length', () => {
-  assert.equal(validateShareInput({ scope: 'progress', days: 0 }).ok, false);
-  assert.equal(validateShareInput({ granteeUserId: GRANTEE, scope: 'everything', days: 0 }).ok, false);
-  assert.equal(validateShareInput({ granteeUserId: GRANTEE, scope: 'progress', days: 12 }).ok, false);
-  assert.deepEqual(validateShareInput({ granteeUserId: GRANTEE, scope: 'achievements', days: 0 }), {
-    ok: true,
-    value: { granteeUserId: GRANTEE, scope: 'achievements' as ShareScope, expiresAt: null },
-  });
+test('an invitation needs an address, a scope and a length it can actually keep', () => {
+  assert.equal(validateInviteInput({ scope: 'progress', days: 7 }).ok, false);
+  assert.equal(validateInviteInput({ email: 'nope', scope: 'progress', days: 7 }).ok, false);
+  assert.equal(validateInviteInput({ email: 'a@b.com', scope: 'everything', days: 7 }).ok, false);
+  assert.equal(validateInviteInput({ email: 'a@b.com', scope: 'progress', days: 0 }).ok, false);
+  assert.equal(validateInviteInput({ email: 'a@b.com', scope: 'progress', days: 91 }).ok, false);
+  // The form offers a week, a month and three months; the database accepts any whole
+  // number of days in 1..90, and so does this — a length the panel does not offer is
+  // not a length the platform refuses.
+  assert.deepEqual(validateInviteInput({ email: 'a@b.com', scope: 'progress', days: 14 }),
+    { ok: true, value: { email: 'a@b.com', scope: 'progress' as ShareScope, days: 14 } });
+  assert.equal(validateInviteInput({ email: 'a@b.com', scope: 'progress', days: 7.5 }).ok, false,
+    'half a day was accepted');
+
+  assert.deepEqual(
+    validateInviteInput({ email: '  Friend@Example.COM ', scope: 'achievements', days: '30' }),
+    { ok: true, value: { email: 'friend@example.com', scope: 'achievements' as ShareScope, days: 30 } },
+  );
+
+  // An invitation is a link in a mailbox, so it always has an end.
+  assert.equal(INVITE_EXPIRY_OPTIONS.some((o) => o.days === 0), false,
+    'an invitation was offered with no end date');
+  for (const option of INVITE_EXPIRY_OPTIONS) {
+    assert.ok(option.days > 0 && option.days <= INVITE_MAX_DAYS, `${option.days} days is out of range`);
+  }
 });
 
-test('nobody sends an actor, and a refusal made here never costs a round trip', async () => {
+test('a token is a uuid or it is not a token', () => {
+  const good = '6f1a1b6a-0000-4000-8000-000000000c03';
+  assert.deepEqual(validateInvitationToken(good), { ok: true, value: good });
+  assert.deepEqual(validateInvitationToken(` ${good.toUpperCase()} `), { ok: true, value: good });
+
+  for (const bad of ['', '   ', 'not-a-token', '6f1a1b6a-0000-4000-8000', null, 42, good + 'x']) {
+    const checked = validateInvitationToken(bad);
+    assert.equal(checked.ok, false, `${String(bad)} was accepted as a token`);
+    if (!checked.ok) assert.match(checked.message, /not complete/);
+  }
+});
+
+test('sharing is an invitation, and nobody sends an actor', async () => {
   const stub = stubSharing({
-    'rpc:resolve_share_grantee': { data: { found: true, userId: GRANTEE, displayName: 'A Friend' } },
-    'rpc:share_adult_learning': { data: { shareId: 's-1', granted: true, note: null } },
+    'rpc:invite_learning_share': {
+      data: { invitationId: 'i-1', expiresAt: '2027-01-01T10:00:00Z' },
+    },
+    'rpc:accept_learning_share': { data: { shareId: 's-1', scope: 'progress' } },
     'rpc:revoke_adult_learning_share': { data: { shareId: 's-1', changed: true, note: null } },
   });
 
-  const found = await resolveShareGrantee(stub.client, 'friend@example.com');
-  assert.equal(found.ok, true);
-  if (found.ok) assert.equal(found.value?.displayName, 'A Friend');
-
-  await shareMyLearning(stub.client, {
-    learnerProfileId: LEARNER, granteeUserId: GRANTEE, scope: 'progress', days: 7,
+  const invited = await inviteToShare(stub.client, {
+    email: 'Friend@Example.com', scope: 'progress', days: 7,
   });
+  assert.equal(invited.ok, true);
+  if (invited.ok) {
+    assert.equal(invited.value.invitationId, 'i-1');
+    assert.equal(invited.value.expiresAt, '2027-01-01T10:00:00Z');
+  }
+
+  const accepted = await acceptShareInvitation(stub.client, '6f1a1b6a-0000-4000-8000-000000000c03');
+  assert.equal(accepted.ok, true);
+  if (accepted.ok) assert.equal(accepted.value.scope, 'progress');
+
   await revokeLearningShare(stub.client, 's-1');
 
   assert.deepEqual(stub.rpcCalls.map((c) => c.fn), [
-    'resolve_share_grantee', 'share_adult_learning', 'revoke_adult_learning_share',
+    'invite_learning_share', 'accept_learning_share', 'revoke_adult_learning_share',
   ]);
+  // The address is normalised before it leaves, and the token is sent as given.
+  assert.equal(stub.rpcCalls[0]?.args.p_email, 'friend@example.com');
+  assert.equal(stub.rpcCalls[0]?.args.p_days, 7);
+  assert.equal(stub.rpcCalls[1]?.args.p_token, '6f1a1b6a-0000-4000-8000-000000000c03');
+
   for (const call of stub.rpcCalls) {
     for (const key of Object.keys(call.args)) {
       assert.equal(/actor|p_user|current_user|on_behalf/i.test(key), false,
@@ -154,55 +200,78 @@ test('nobody sends an actor, and a refusal made here never costs a round trip', 
     }
   }
 
+  // Nothing that could answer "does this address have an account" is ever asked.
+  assert.equal(stub.rpcCalls.some((c) => /resolve|lookup|find/i.test(c.fn)), false,
+    'a lookup was made');
+
   const before = stub.rpcCalls.length;
-  const badEmail = await resolveShareGrantee(stub.client, 'nope');
-  const badShare = await shareMyLearning(stub.client, {
-    learnerProfileId: LEARNER, granteeUserId: '', scope: 'progress', days: 0,
-  });
+  const badEmail = await inviteToShare(stub.client, { email: 'nope', scope: 'progress', days: 7 });
+  const badShare = await inviteToShare(stub.client, { email: 'a@b.com', scope: 'everything', days: 7 });
+  const badAccept = await acceptShareInvitation(stub.client, 'nonsense');
   const badRevoke = await revokeLearningShare(stub.client, '');
   assert.equal(badEmail.ok, false);
   assert.equal(badShare.ok, false);
+  assert.equal(badAccept.ok, false);
   assert.equal(badRevoke.ok, false);
   assert.equal(stub.rpcCalls.length, before, 'a form the database would refuse was sent anyway');
 });
 
-test('an account that was not found is an answer, not an error', async () => {
-  const stub = stubSharing({
-    'rpc:resolve_share_grantee': {
-      data: { found: false, note: 'no account has that email address' },
-    },
+test('a stranger and a member get the same shape of answer', async () => {
+  const reply = { invitationId: 'i-1', expiresAt: '2027-01-01T10:00:00Z' };
+  const stub = stubSharing({ 'rpc:invite_learning_share': { data: reply } });
+
+  const stranger = await inviteToShare(stub.client, {
+    email: 'nobody@example.com', scope: 'progress', days: 7,
+  });
+  const member = await inviteToShare(stub.client, {
+    email: 'somebody@example.com', scope: 'progress', days: 7,
   });
 
-  const outcome = await resolveShareGrantee(stub.client, 'nobody@example.com');
+  assert.equal(stranger.ok, true);
+  assert.equal(member.ok, true);
+  if (stranger.ok && member.ok) {
+    assert.deepEqual(Object.keys(stranger.value).sort(), Object.keys(member.value).sort());
+  }
 
-  assert.equal(outcome.ok, true, 'a missing account was reported as a failure');
-  if (outcome.ok) assert.equal(outcome.value, null);
-
-  const broken = stubSharing({
-    'rpc:resolve_share_grantee': { data: { found: true } },
+  const broken = stubSharing({ 'rpc:invite_learning_share': { data: {} } });
+  const noId = await inviteToShare(broken.client, {
+    email: 'friend@example.com', scope: 'progress', days: 7,
   });
-  const noId = await resolveShareGrantee(broken.client, 'friend@example.com');
-  assert.equal(noId.ok, false, 'an account with no id was accepted');
+  assert.equal(noId.ok, false, 'an invitation with no id was accepted by the client');
 });
 
-test('a grant reports whether it was new, and the answer comes from the database', async () => {
-  const stub = stubSharing({
-    'rpc:share_adult_learning': {
-      data: { shareId: 's-2', granted: false, note: 'this person can already see that' },
+test('a refusal from the token comes back as the sentence it is', async () => {
+  const wrongAddress = stubSharing({
+    'rpc:accept_learning_share': {
+      data: null, error: { message: 'that invitation was sent to a different address' },
     },
   });
 
-  const outcome = await shareMyLearning(stub.client, {
-    learnerProfileId: LEARNER, granteeUserId: GRANTEE, scope: 'progress', days: 0,
-  });
-
-  assert.equal(outcome.ok, true);
-  if (outcome.ok) {
-    assert.equal(outcome.value.granted, false, 'a duplicate grant claimed to be new');
-    assert.match(outcome.value.note ?? '', /already see that/);
+  const outcome = await acceptShareInvitation(wrongAddress.client,
+    '6f1a1b6a-0000-4000-8000-000000000c03');
+  assert.equal(outcome.ok, false);
+  if (!outcome.ok) {
+    assert.equal(outcome.code, 'forbidden',
+      'a link for somebody else was treated as a malformed form');
+    assert.match(outcome.message, /different address/);
   }
-  const args = stub.rpcCalls[0]?.args ?? {};
-  assert.equal(args.p_expires_at, null, 'an open-ended share was given an expiry');
+
+  const spent = stubSharing({
+    'rpc:accept_learning_share': {
+      data: null, error: { message: 'that invitation has already been accepted' },
+    },
+  });
+  const second = await acceptShareInvitation(spent.client,
+    '6f1a1b6a-0000-4000-8000-000000000c03');
+  assert.equal(second.ok, false);
+  if (!second.ok) assert.equal(second.code, 'rejected');
+
+  const malformed = stubSharing({
+    'rpc:accept_learning_share': { data: { shareId: 's-1', scope: 'everything' } },
+  });
+  const junk = await acceptShareInvitation(malformed.client,
+    '6f1a1b6a-0000-4000-8000-000000000c03');
+  assert.equal(junk.ok, false, 'a share with an unknown scope was accepted');
 });
 
 test('the refusals that mean "not yours" are the ones about ownership', () => {
@@ -214,6 +283,12 @@ test('the refusals that mean "not yours" are the ones about ownership', () => {
     ['new row violates row-level security policy for table "adult_learning_shares"', 'forbidden'],
     ['a share that has already ended is not a share', 'rejected'],
     ['that is not an email address', 'rejected'],
+    ['that invitation was sent to a different address', 'forbidden'],
+    ['that invitation has already been accepted', 'rejected'],
+    ['that invitation has expired', 'rejected'],
+    ['that invitation does not exist', 'rejected'],
+    ['that is your own address', 'rejected'],
+    ['an invitation lasts between 1 and 90 days', 'rejected'],
   ];
   for (const [message, code] of cases) {
     const mapped = mapSharingError({ message });

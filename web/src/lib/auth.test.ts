@@ -6,6 +6,15 @@ test('safeNextPath preserves a relative in-app destination', () => {
   assert.equal(safeNextPath('/learn/course?from=sign-in#lesson'), '/learn/course?from=sign-in#lesson');
 });
 
+test('an invitation link survives signing in', () => {
+  // The accept page redirects to sign-in with itself as `next`. If this were dropped the
+  // person would land on their dashboard and the invitation would look broken.
+  const invitation = '/share/invite/6f1a1b6a-0000-4000-8000-000000000c03';
+  assert.equal(safeNextPath(invitation), invitation);
+  assert.equal(safeNextPath(`/sign-in?next=${encodeURIComponent(invitation)}`, '/dashboard'),
+    `/sign-in?next=${encodeURIComponent(invitation)}`);
+});
+
 test('safeNextPath rejects external, protocol-relative and malformed destinations', () => {
   for (const value of ['https://evil.example', '//evil.example/path', '/\\evil.example/path', 'javascript:alert(1)', '', null, undefined]) {
     assert.equal(safeNextPath(value), '/learn');

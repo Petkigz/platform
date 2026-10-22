@@ -3,37 +3,38 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  SHARE_EXPIRY_OPTIONS,
+  INVITE_EXPIRY_OPTIONS,
   SHARE_SCOPES,
   SHARE_SCOPE_LABEL,
   SHARE_STATUS_LABEL,
-  validateEmailInput,
-  validateShareInput,
+  validateInviteInput,
   type MyShare,
 } from '@/lib/sharing';
 
 /**
  * Who can see this adult's learning.
  *
- * The form finds the person before it shares, and shows the name it found, because
- * granting access to an account is not something to do from a text field alone. What it
- * cannot promise is that the name it shows is the person intended: two people can be
- * called the same thing, and this platform has no way to prove which account is whose.
- * That is why the length of the share is offered as well as its scope — a week is a
- * cheaper mistake than forever.
+ * The form asks for an address and then invites it. It does not look the address up
+ * first, because a lookup that says "no account found" tells whoever asked that the
+ * address is not registered here — and that is a fact about a stranger, not a feature.
+ * The invitation is created either way and the reply is the same either way, so there
+ * is nothing on this screen to compare.
  *
- * Revoking is the whole of the control once granted. There is no editing a share, and
- * that is deliberate: changing the terms means ending it and granting a new one, so the
- * record of what was granted, to whom and when is never rewritten.
+ * An invitation is a link in a mailbox, so it always has an end: a week, a month or
+ * three months. The person who receives it signs in as that address, accepts once, and
+ * from then on the share appears on both sides of this page — theirs to read, yours to
+ * end. Ending it is the whole of the control afterwards, because changing the terms
+ * means ending a share and granting a new one, and the record of who saw what and when
+ * is never rewritten.
  */
 export function SharingPanel({
-  learnerProfileId,
   shares,
   enabled,
+  emailEnabled,
 }: {
-  learnerProfileId: string | null;
   shares: MyShare[];
   enabled: boolean;
+  emailEnabled: boolean;
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -42,9 +43,8 @@ export function SharingPanel({
   const [notice, setNotice] = useState<string | null>(null);
 
   const [email, setEmail] = useState('');
-  const [found, setFound] = useState<{ userId: string; displayName: string | null } | null>(null);
   const [scope, setScope] = useState<string>(SHARE_SCOPES[0] ?? 'progress');
-  const [days, setDays] = useState<number>(SHARE_EXPIRY_OPTIONS[0]?.days ?? 0);
+  const [days, setDays] = useState<number>(INVITE_EXPIRY_OPTIONS[0]?.days ?? 7);
 
   async function post(payload: Record<string, unknown>, fallback: string) {
     setBusy(true);
@@ -56,7 +56,7 @@ export function SharingPanel({
       body: JSON.stringify(payload),
     });
     const json = (await res.json().catch(() => null)) as
-      | { ok: boolean; message?: string; note?: string | null; account?: unknown }
+      | { ok: boolean; message?: string; expiresAt?: string | null }
       | null;
     setBusy(false);
 
@@ -64,46 +64,31 @@ export function SharingPanel({
       setError(json?.message ?? fallback);
       return null;
     }
-    if (json.note) setNotice(json.note);
     startTransition(() => router.refresh());
     return json;
   }
 
-  async function find() {
-    const checked = validateEmailInput({ email });
-    if (!checked.ok) {
-      setError(checked.message);
-      return;
-    }
-    const reply = await post({ action: 'resolve', email: checked.value },
-      'That account could not be looked up.');
-    if (!reply) return;
-
-    const account = reply.account as { userId?: string; displayName?: string | null } | null;
-    if (!account || typeof account.userId !== 'string') {
-      setFound(null);
-      setNotice('No account has that email address, so there is nobody to share with.');
-      return;
-    }
-    setFound({ userId: account.userId, displayName: account.displayName ?? null });
-  }
-
-  async function grant() {
-    if (!learnerProfileId) return;
-    const checked = validateShareInput({ granteeUserId: found?.userId ?? '', scope, days });
+  async function invite() {
+    const checked = validateInviteInput({ email, scope, days });
     if (!checked.ok) {
       setError(checked.message);
       return;
     }
     const reply = await post({
-      action: 'share',
-      learnerProfileId,
-      granteeUserId: checked.value.granteeUserId,
+      action: 'invite',
+      email: checked.value.email,
       scope: checked.value.scope,
-      days,
-    }, 'That share could not be granted.');
+      days: checked.value.days,
+    }, 'That invitation could not be sent.');
     if (reply) {
-      setFound(null);
+      // Never "we found them" or "we did not": the answer is the same for both.
+      setNotice(
+        `Invitation recorded for ${checked.value.email}`
+        + (reply.expiresAt
+          ? `, open until ${new Date(reply.expiresAt).toLocaleDateString()}.`
+          : '.')
+        + ' Whoever signs in as that address can accept it once.',
+      );
       setEmail('');
     }
   }
@@ -118,15 +103,6 @@ export function SharingPanel({
         Sharing your learning with somebody is not enabled on this platform yet. Nothing
         here can be granted while <code>family.adult_shares</code> is off, and the
         database refuses the attempt as well as the form.
-      </div>
-    );
-  }
-
-  if (!learnerProfileId) {
-    return (
-      <div className="notice">
-        You have no learner profile yet, so there is nothing to share. You get one when
-        you enrol in your first course.
       </div>
     );
   }
@@ -176,31 +152,30 @@ export function SharingPanel({
 
       <div className="card">
         <div className="outline-h" style={{ marginTop: 0 }}>
-          <h3 style={{ margin: 0 }}>Share with somebody</h3>
+          <h3 style={{ margin: 0 }}>Invite somebody</h3>
         </div>
+
+        <p className="meta" style={{ marginTop: '0.25rem' }}>
+          Enter their email address and they get a link to accept. They do not have to
+          have an account already: if they do, they sign in; if they do not, they make
+          one and the same link works. Nothing is shared until they accept, and you can
+          end it here at any time.
+        </p>
 
         <div className="stack" style={{ marginTop: '0.5rem' }}>
           <div className="row" style={{ flexWrap: 'wrap' }}>
             <input
               type="email"
               value={email}
-              onChange={(e) => { setEmail(e.target.value); setFound(null); }}
-              placeholder="Their account email address"
-              aria-label="Their account email address"
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Their email address"
+              aria-label="Their email address"
               maxLength={320}
             />
-            <button type="button" className="btn secondary" disabled={busy} onClick={find}>
-              {busy ? 'Looking…' : 'Find them'}
+            <button type="button" className="btn" disabled={busy} onClick={invite}>
+              {busy ? 'Inviting…' : 'Invite them'}
             </button>
           </div>
-
-          {found && (
-            <p className="meta" style={{ marginTop: 0 }}>
-              Sharing with <strong>{found.displayName ?? 'that account'}</strong>. Check
-              this is the right person: the name is whatever they set, and this platform
-              cannot prove which account is whose.
-            </p>
-          )}
 
           <div className="row" style={{ flexWrap: 'wrap' }}>
             <select
@@ -215,21 +190,32 @@ export function SharingPanel({
             <select
               value={String(days)}
               onChange={(e) => setDays(Number(e.target.value))}
-              aria-label="How long for"
+              aria-label="How long the invitation stays open"
             >
-              {SHARE_EXPIRY_OPTIONS.map((option) => (
+              {INVITE_EXPIRY_OPTIONS.map((option) => (
                 <option key={option.days} value={String(option.days)}>{option.label}</option>
               ))}
             </select>
-            <button type="button" className="btn" disabled={busy || !found} onClick={grant}>
-              {busy ? 'Sharing…' : 'Share it'}
-            </button>
           </div>
 
           <p className="meta">
-            Ending a share and granting a new one is how the terms change. A share is
-            never edited, so the record of what was granted, to whom and when stays
-            true.
+            The length above is how long the link stays open, and also how long the share
+            lasts once accepted — so a week is a cheaper mistake than three months. When
+            it runs out, invite them again.
+          </p>
+
+          {!emailEnabled && (
+            <p className="meta">
+              Email delivery is switched off, so nothing is emailed yet: the invitation is
+              recorded and waits in the outbox until it is on. The link works as soon as
+              it reaches them.
+            </p>
+          )}
+
+          <p className="meta">
+            An invitation is never answered with whether that address has an account.
+            Every address gets the same reply, which is why nothing here says
+            &ldquo;found&rdquo; or &ldquo;not found&rdquo;.
           </p>
         </div>
       </div>

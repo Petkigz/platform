@@ -54,9 +54,9 @@ export default async function AccountPage() {
       <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
         <h2 style={{ marginTop: 0 }}>Sharing my learning</h2>
         <p className="muted">
-          Your progress and certificates are private, including to your family. You can
-          share them with one account at a time, for a scope you choose, and end it
-          whenever you like.{' '}
+          Your progress and certificates are private, including to your family. Invite
+          somebody by email and they accept it themselves; you choose what they see and
+          how long it lasts, and you can end it whenever you like.{' '}
           <Link href="/account/sharing">Who can see my learning</Link>
         </p>
       </section>

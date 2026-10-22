@@ -30,8 +30,9 @@ export default async function AccountSharingPage() {
 
   if (!user) redirect('/sign-in?next=/account/sharing');
 
-  const [enabled, learnerProfileId, sharedWithMe] = await Promise.all([
+  const [enabled, emailEnabled, learnerProfileId, sharedWithMe] = await Promise.all([
     isFlagEnabled(supabase, 'family.adult_shares').catch(() => false),
+    isFlagEnabled(supabase, 'delivery.notifications').catch(() => false),
     ownLearnerProfileId(supabase, user.id),
     fetchSharedWithMe(supabase, user.id),
   ]);
@@ -56,11 +57,19 @@ export default async function AccountSharingPage() {
         be ended here.
       </p>
 
-      <SharingPanel
-        learnerProfileId={learnerProfileId}
-        shares={mine?.ok ? mine.value : []}
-        enabled={enabled}
-      />
+      {learnerProfileId ? (
+        <SharingPanel
+          shares={mine?.ok ? mine.value : []}
+          enabled={enabled}
+          emailEnabled={emailEnabled}
+        />
+      ) : (
+        <div className="notice">
+          You have no learner profile yet, so there is nothing of your own to share. You
+          get one when you enrol in your first course. If somebody has invited you to see
+          theirs, it is below.
+        </div>
+      )}
 
       {mine && !mine.ok && (
         <div className="notice error" style={{ marginTop: '1rem' }}>
@@ -80,8 +89,8 @@ export default async function AccountSharingPage() {
       {shared.length === 0 ? (
         <div className="empty">
           Nobody has shared their learning with you. If you expected somebody to, they
-          have to grant it themselves — you cannot request it and you cannot see it
-          until they do.
+          invite you from their own sharing page and you open the link in that email —
+          you cannot request it and you cannot see it until you accept.
         </div>
       ) : (
         shared.map((overview) => (

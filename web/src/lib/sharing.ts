@@ -13,6 +13,14 @@
  * the owner, because a person reading somebody's progress should be able to see what
  * they are reading under and until when.
  *
+ * Sharing starts from an email address, never from a search for an account. The
+ * platform used to answer "does this address have an account" — `resolve_share_grantee()`
+ * — and that answer is itself a disclosure: anybody could test an address and learn
+ * whether it is registered here. So the screen invites instead, the invitation is
+ * created whether or not an account exists, and the reply is identical either way.
+ * `accept_learning_share()` is what turns a token into a share, only for the signed-in
+ * address the token was sent to, once, before it expires.
+ *
  * The flag is `family.adult_shares`, ADMIN, and it ships off. Every writer here is
  * refused by the database while it is off, so the panel says so rather than offering a
  * form that cannot work.
@@ -53,7 +61,29 @@ export const SHARE_EXPIRY_OPTIONS: readonly { days: number; label: string }[] = 
   { days: 365, label: 'For a year' },
 ];
 
+/**
+ * How long an invitation can last.
+ *
+ * There is no open-ended choice here, unlike a share granted directly: an invitation is
+ * a link in a mailbox, and a link that never expires is one that can be forwarded and
+ * used years later. The database refuses anything outside 1..90 days as well.
+ */
+export const INVITE_MAX_DAYS = 90;
+
+// Deliberately its own list rather than the share lengths above: "a year" and "until I
+// end it" are fine for a share granted to a known person, and neither is a sane link in
+// an inbox.
+export const INVITE_EXPIRY_OPTIONS: readonly { days: number; label: string }[] = [
+  { days: 7, label: 'For a week' },
+  { days: 30, label: 'For a month' },
+  { days: 90, label: 'For three months' },
+];
+
 export const EMAIL_MAX = 320;
+
+/** A token is a uuid printed by `gen_random_uuid()`; anything else never left here. */
+const TOKEN_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export type MyShare = {
   shareId: string;
@@ -125,10 +155,16 @@ function whole(value: unknown): number {
  */
 export function mapSharingError(error: { message: string }): SharingOutcome<never> {
   const message = error.message;
-  if (/only the learner whose progress this is|sign in first|not enabled on this platform/i.test(message)) {
+  if (/only the learner whose progress this is|sign in first|sign in to accept|not enabled on this platform/i
+    .test(message)) {
     return { ok: false, code: 'forbidden', message };
   }
   if (/has not shared their learning with you|may list who can see it|may revoke it/i.test(message)) {
+    return { ok: false, code: 'forbidden', message };
+  }
+  // An invitation that names the wrong person is a refusal, not a malformed form: the
+  // link is genuine, and it is simply not this reader's to use.
+  if (/sent to a different address/i.test(message)) {
     return { ok: false, code: 'forbidden', message };
   }
   if (/policy|permission denied/i.test(message)) {
@@ -177,68 +213,109 @@ export function validateExpiryInput(input: {
   return { ok: true, value: when.toISOString() };
 }
 
-export function validateShareInput(input: {
-  granteeUserId?: unknown;
+export function validateInviteInput(input: {
+  email?: unknown;
   scope?: unknown;
   days?: unknown;
-}): { ok: true; value: { granteeUserId: string; scope: ShareScope; expiresAt: string | null } }
+}): { ok: true; value: { email: string; scope: ShareScope; days: number } }
   | { ok: false; message: string } {
-  const grantee = typeof input.granteeUserId === 'string' ? input.granteeUserId : '';
-  if (grantee === '') return { ok: false, message: 'Find whose account should see it first.' };
+  const email = validateEmailInput({ email: input.email });
+  if (!email.ok) return email;
   if (!isScope(input.scope)) return { ok: false, message: 'Choose what they may see.' };
 
-  const expiry = validateExpiryInput({ days: input.days });
-  if (!expiry.ok) return expiry;
-
-  return { ok: true, value: { granteeUserId: grantee, scope: input.scope, expiresAt: expiry.value } };
-}
-
-export async function resolveShareGrantee(
-  supabase: SupabaseClient,
-  email: unknown,
-): Promise<SharingOutcome<{ userId: string; displayName: string | null; note: string | null } | null>> {
-  const checked = validateEmailInput({ email });
-  if (!checked.ok) return { ok: false, code: 'rejected', message: checked.message };
-
-  const { data, error } = await supabase.rpc('resolve_share_grantee', { p_email: checked.value });
-  if (error) return mapSharingError(error);
-
-  const reply = (data && typeof data === 'object' ? data : {}) as Record<string, unknown>;
-  const note = text(reply.note);
-  if (reply.found !== true) return { ok: true, value: null };
-  const userId = typeof reply.userId === 'string' ? reply.userId : '';
-  if (userId === '') {
-    return { ok: false, code: 'rejected', message: note ?? 'That account came back without an id.' };
+  const raw = input.days;
+  const days = typeof raw === 'number'
+    ? raw
+    : typeof raw === 'string' && raw !== '' ? Number(raw) : NaN;
+  if (!Number.isFinite(days) || !Number.isInteger(days)
+      || days < 1 || days > INVITE_MAX_DAYS) {
+    return {
+      ok: false,
+      message: `An invitation lasts a whole number of days, between 1 and ${INVITE_MAX_DAYS}.`,
+    };
   }
-  return { ok: true, value: { userId, displayName: text(reply.displayName), note } };
+
+  return { ok: true, value: { email: email.value, scope: input.scope, days } };
 }
 
-export async function shareMyLearning(
+/**
+ * The token in an invitation link.
+ *
+ * Checked here only so that a malformed link says so on the page instead of travelling
+ * to the database to be told the same thing. The server never trusts this: the token is
+ * looked up by its hash, and the hash is the only thing the table holds.
+ */
+export function validateInvitationToken(
+  token: unknown,
+): { ok: true; value: string } | { ok: false; message: string } {
+  const value = typeof token === 'string' ? token.trim().toLowerCase() : '';
+  if (!TOKEN_PATTERN.test(value)) {
+    return {
+      ok: false,
+      message: 'That invitation link is not complete. Ask the person who sent it for a fresh one.',
+    };
+  }
+  return { ok: true, value };
+}
+/**
+ * Invite an address to see this adult's learning.
+ *
+ * This is the only way the screen shares, and that is the point: the invitation is
+ * created whether or not the address has an account, so there is no reply to compare
+ * and nothing to learn from sending one. If the person already has an account they
+ * sign in and accept; if they do not, they create one and accept with the same link.
+ *
+ * The token is not returned to the caller — it exists in the queued message and
+ * nowhere else — so a sharer cannot read somebody's access out of the screen.
+ */
+export async function inviteToShare(
   supabase: SupabaseClient,
-  args: { learnerProfileId: string; granteeUserId: unknown; scope: unknown; days: unknown },
-): Promise<SharingOutcome<{ shareId: string; granted: boolean; note: string | null }>> {
-  const checked = validateShareInput(args);
+  args: { email?: unknown; scope?: unknown; days?: unknown },
+): Promise<SharingOutcome<{ invitationId: string; expiresAt: string | null }>> {
+  const checked = validateInviteInput(args);
   if (!checked.ok) return { ok: false, code: 'rejected', message: checked.message };
 
-  const { data, error } = await supabase.rpc('share_adult_learning', {
-    p_learner_profile_id: args.learnerProfileId,
-    p_grantee_user_id: checked.value.granteeUserId,
+  const { data, error } = await supabase.rpc('invite_learning_share', {
+    p_email: checked.value.email,
     p_scope: checked.value.scope,
-    p_expires_at: checked.value.expiresAt,
+    p_days: checked.value.days,
   });
   if (error) return mapSharingError(error);
 
   const reply = (data && typeof data === 'object' ? data : {}) as Record<string, unknown>;
-  return {
-    ok: true,
-    value: {
-      shareId: typeof reply.shareId === 'string' && reply.shareId !== '' ? reply.shareId : 'unknown',
-      granted: reply.granted === true,
-      note: text(reply.note),
-    },
-  };
+  const invitationId = text(reply.invitationId);
+  if (!invitationId) {
+    return { ok: false, code: 'rejected', message: 'The invitation was recorded without an id.' };
+  }
+  return { ok: true, value: { invitationId, expiresAt: text(reply.expiresAt) } };
 }
 
+/**
+ * Accept an invitation, as the address it was sent to.
+ *
+ * Nothing here chooses who is accepting: `accept_learning_share()` reads the session
+ * and compares it to the address the token is bound to, so a forwarded message is not
+ * enough on its own.
+ */
+export async function acceptShareInvitation(
+  supabase: SupabaseClient,
+  token: unknown,
+): Promise<SharingOutcome<{ shareId: string; scope: ShareScope }>> {
+  const checked = validateInvitationToken(token);
+  if (!checked.ok) return { ok: false, code: 'rejected', message: checked.message };
+
+  const { data, error } = await supabase.rpc('accept_learning_share', {
+    p_token: checked.value,
+  });
+  if (error) return mapSharingError(error);
+
+  const reply = (data && typeof data === 'object' ? data : {}) as Record<string, unknown>;
+  const shareId = text(reply.shareId);
+  if (!shareId || !isScope(reply.scope)) {
+    return { ok: false, code: 'rejected', message: 'The share came back without an id or a scope.' };
+  }
+  return { ok: true, value: { shareId, scope: reply.scope } };
+}
 export async function revokeLearningShare(
   supabase: SupabaseClient,
   shareId: string,
