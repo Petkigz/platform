@@ -2055,3 +2055,23 @@ match), writes a `promotion` adjustment and a redemption snapshot, and makes the
 the code the buyer types is the one applied rather than the best of several, because a
 discount that changes silently is worse than one that is refused.
 
+## A promotion's per-family limit is the campaign's to choose — **DECIDED 2026-10-22**
+
+A promotion on family accounts may be limited to two redemptions per family, or three,
+"dependingly". The unit is the **billing account**, not the person who typed the code: one
+guardian buys for several children, and since a purchase covers one learner, a per-person
+limit would let a household redeem the same offer once per child. That is precisely what the
+cap exists to prevent.
+
+So the number lives on the campaign, beside the total and per-person limits, with null
+meaning no limit. It is **editable after creation** by the platform owner or the teacher who
+owns the campaign, because an offer that turns out too generous is a business decision rather
+than a migration — but a total limit below the redemptions that have already happened is
+refused with both numbers instead of being quietly applied. Every change is audited with the
+before and after values.
+
+`promotion_redemptions.billing_account_id` is added now, before the redemption writer exists,
+so that "two per family" can actually be counted when it lands. Counting the redeeming user
+would answer a different question and would over-count a guardian paying for two children
+from one account.
+

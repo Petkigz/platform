@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1215 database tests, 794 web tests; TypeScript typecheck and
+Verification: **1218 database tests, 794 web tests; TypeScript typecheck and
 production build pass; 107 tables, 231 policies, 138 user-defined triggers,
-275 functions, 117 migrations and 118 app route entries.**
+276 functions, 118 migrations and 118 app route entries.**
 
 ## Today's sentence
 
@@ -2216,6 +2216,27 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### A promotion can be limited per family, and the limit can be changed, 2026-10-22
+
+A promotion on family accounts may be capped at two per family or three,
+depending on the offer. The grain is the billing account, not the person who
+typed the code: one guardian buys for several children and one purchase covers
+one learner, so a per-person limit would let a household use the same offer once
+per child — which is the thing the cap exists to stop.
+
+`20261236000100_promotion_family_limits.sql` adds `per_family_limit` beside the
+two limits that already existed, nullable for "no limit", and
+`set_promotion_limits()` to change all three afterwards. Edits are owner-only and
+audited, and a total below the redemptions that have already happened is refused
+with both numbers rather than silently ignored.
+
+`promotion_redemptions.billing_account_id` is added now, before any redemption
+writer exists, because the limit cannot be counted without it — counting
+`redeemed_by` would answer a different question. It is indexed with the campaign,
+which is the shape the redemption check will ask for.
+
+Measured: database suite **1218 passing** (3 new), 118 migrations, 276 functions.
 
 ### A promotion knows whose it is and where it may be used, 2026-10-22
 

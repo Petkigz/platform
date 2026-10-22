@@ -78,10 +78,12 @@ export async function run(ctx) {
 
   const create = (actor, code, over = {}) => asActor(actor,
     `select public.create_promotion_campaign(
-       $1,$2,$3,$4,$5,$6,$7::text[],$8::uuid[],null,null,null,null,false) id`,
+       $1,$2,$3,$4,$5,$6,$7::text[],$8::uuid[],null,null,$9,$10,false,$11) id`,
     [code, over.name ?? 'Eid offer', over.benefit ?? 'percent_off',
      over.percent ?? 20, over.amount ?? null, over.currency ?? null,
-     over.markets ?? [], over.courses ?? []]);
+     over.markets ?? [], over.courses ?? [],
+     over.totalLimit ?? null, over.perUserLimit ?? null,
+     over.perFamilyLimit ?? null]);
 
   // Two markets, two currencies: the shape the whole unit is about.
   const prices = [
@@ -183,6 +185,65 @@ export async function run(ctx) {
     await create(admin, 'Eid24', { percent: 10 });
     await rejects(() => create(admin, 'eid24', { percent: 10 }),
       /already used by another promotion/);
+  });
+
+  await test('a per-family limit is the campaign\'s to choose — two, three, or none', async () => {
+    const { id: two } = (await create(admin, 'family-two', { perFamilyLimit: 2 })).rows[0];
+    const { id: three } = (await create(admin, 'family-three', { perFamilyLimit: 3 })).rows[0];
+    const { id: none } = (await create(admin, 'family-all', {})).rows[0];
+
+    const limits = (await q(
+      `select code, per_family_limit from public.promotion_campaigns
+        where id = any($1::uuid[]) order by code`, [[two, three, none]])).rows;
+    const byCode = Object.fromEntries(limits.map((r) => [r.code, r.per_family_limit]));
+    assert(byCode['FAMILY-TWO'] === 2, `two was stored as ${byCode['FAMILY-TWO']}`);
+    assert(byCode['FAMILY-THREE'] === 3, `three was stored as ${byCode['FAMILY-THREE']}`);
+    assert(byCode['FAMILY-ALL'] === null, `unlimited was stored as ${byCode['FAMILY-ALL']}`);
+
+    await rejects(() => create(admin, 'family-zero', { perFamilyLimit: 0 }),
+      /at least one redemption/);
+  });
+
+  await test('the limits can be edited afterwards, and never below what happened', async () => {
+    const { id } = (await create(teacher, 'editable-limits', {
+      courses: [offer.course], perFamilyLimit: 2,
+    })).rows[0];
+
+    const changed = (await asActor(teacher,
+      'select public.set_promotion_limits($1,$2,$3,$4) r', [id, 100, 5, 3])).rows[0].r;
+    assert(changed.perFamilyLimit === 3, `the limit became ${changed.perFamilyLimit}`);
+    assert(changed.totalLimit === 100 && changed.perUserLimit === 5,
+      'the other limits were not set');
+
+    // Redemptions exist, so a total limit below them is not a limit at all.
+    await asActor(teacher,
+      `select public.set_promotion_campaign_status($1,'active')`, [id]);
+    for (let i = 0; i < 2; i += 1) {
+      await q(`insert into public.promotion_redemptions
+                 (campaign_id, redeemed_by, benefit_snapshot)
+               values ($1,$2,'{}'::jsonb)`, [id, learner]);
+    }
+
+    await rejects(() => asActor(teacher,
+      'select public.set_promotion_limits($1,$2,$3,$4)', [id, 1, 5, 3]),
+      /already been redeemed 2 times/);
+    await rejects(() => asActor(admin,
+      'select public.set_promotion_limits($1,$2,$3,$4)', [id, 100, 5, 0]),
+      /has to be at least one redemption/);
+  });
+
+  await test('only the campaign owner may edit the limits', async () => {
+    const { id } = (await create(teacher, 'not-yours-to-edit', {
+      courses: [offer.course], perFamilyLimit: 2,
+    })).rows[0];
+
+    await rejects(() => asActor(otherTeacher,
+      'select public.set_promotion_limits($1,$2,$3,$4)', [id, 10, 2, 2]),
+      /only the owner of this campaign/);
+
+    const after = (await q(
+      'select per_family_limit from public.promotion_campaigns where id = $1', [id])).rows[0];
+    assert(after.per_family_limit === 2, 'a refused edit changed the limit anyway');
   });
 
   await test('only the campaign\'s owner can switch it on, and not by direct write', async () => {
