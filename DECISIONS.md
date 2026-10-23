@@ -2545,6 +2545,14 @@ date. A test holds the two together: `allowed` is false exactly when `request_re
 where the owner can change them. `0` means no self-serve refunds; a negative value is clamped to 0
 rather than opening a window that starts before the payment.
 
+**Changing it has a writer and a screen.** The setting arrived by migration, which means the owner could
+move it with an UPDATE against a table they cannot see — the exact shape the role rule rejects. So
+`set_refund_window()` takes a reason, refuses anything outside 0–8760 hours with a sentence naming the bound,
+writes an audit row with the old value beside the new one, and is reachable from a field on `/admin/refunds`,
+next to the queue it governs. It is deliberately not a general settings writer: one of those would let any
+privileged account rewrite the revenue share or the reporting currency under cover of refunds, and a test
+asserts it cannot.
+
 **Known gap, recorded rather than papered over:** the staff form refunds the whole remaining amount.
 A *partial* goodwill refund is still a database action with no screen — the customer's own form has
 the same shape (it asks for the order total), and letting a person type an arbitrary amount on a

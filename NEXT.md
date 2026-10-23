@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1470 database tests, 887 web tests; TypeScript typecheck and
+Verification: **1480 database tests, 891 web tests; TypeScript typecheck and
 production build pass; 117 tables, 241 policies, 146 user-defined triggers,
-348 functions, 149 migrations and 148 app route entries.**
+349 functions, 150 migrations and 149 app route entries.**
 
 ## Today's sentence
 
@@ -2329,6 +2329,14 @@ cheapest proof that the number is a setting and not a constant.
 The staff form refunds whatever is still refundable rather than taking a typed amount — a mistyped
 figure on a goodwill refund is money to chase. A partial goodwill refund is still a database action
 with no screen, and that gap is written down rather than implied.
+
+**And the number itself moved onto a screen.** It arrived by migration, which meant the owner could
+change it with an UPDATE against a table they cannot see — the exact shape the role rule rejects.
+`set_refund_window()` takes a reason, refuses anything outside 0 to 8760 hours with a sentence naming
+the bound it crossed, and writes an audit row with the old value beside the new one; the field sits
+on `/admin/refunds`, above the queue it governs. It is deliberately not a general settings writer —
+one of those would let any privileged account rewrite the revenue share or the reporting currency
+under cover of refunds, and a test asserts it cannot.
 
 ### A statement, so a family can see their own money, 2026-10-23
 

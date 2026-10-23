@@ -574,3 +574,45 @@ test('an order with nothing left is refused with the reason, not an opaque error
   if (!res.ok) assert.match(res.error, /already been returned/);
   assert.equal(calls.some((c) => c.fn === 'request_refund'), false);
 });
+
+// ---------------------------------------------------------------------------
+// Moving the window itself
+// ---------------------------------------------------------------------------
+
+import { setRefundWindow } from './refunds.ts';
+
+test('a window change carries a reason to the database', async () => {
+  const { client, calls } = stubRpc({ data: 48 });
+  const res = await setRefundWindow(client, { hours: '48', reason: 'Eid weeks are busy' });
+  assert.equal(res.ok, true);
+  const call = one(calls, 'rpc call');
+  assert.equal(call.fn, 'set_refund_window');
+  assert.equal(call.args.p_hours, 48);
+  assert.equal(call.args.p_reason, 'Eid weeks are busy');
+});
+
+test('a window with no reason never reaches the database', async () => {
+  const { client, calls } = stubRpc({ data: 48 });
+  const res = await setRefundWindow(client, { hours: '48', reason: '  ' });
+  assert.equal(res.ok, false);
+  assert.equal(calls.length, 0);
+});
+
+test('a window longer than a year is refused before the round trip', async () => {
+  const { client, calls } = stubRpc({ data: 48 });
+  const res = await setRefundWindow(client, { hours: '9000', reason: 'Forever' });
+  assert.equal(res.ok, false);
+  if (!res.ok) assert.match(res.error, /year/);
+  assert.equal(calls.length, 0);
+});
+
+test('a negative window is refused, and zero is not', async () => {
+  const { client, calls } = stubRpc({ data: 0 });
+  const negative = await setRefundWindow(client, { hours: '-1', reason: 'Testing' });
+  assert.equal(negative.ok, false);
+  assert.equal(calls.length, 0);
+
+  const zero = await setRefundWindow(client, { hours: '0', reason: 'Closing self-serve refunds' });
+  assert.equal(zero.ok, true);
+  assert.equal(zero.ok && zero.hours, 0);
+});

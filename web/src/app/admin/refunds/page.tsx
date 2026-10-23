@@ -6,6 +6,7 @@ import { fetchRefundQueue } from '@/lib/refunds';
 import { format, fromMinor } from '@/lib/money';
 import { DecideForm } from './decide-form';
 import { OpenOnBehalfForm } from './open-on-behalf-form';
+import { RefundWindowForm } from './window-form';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,6 +37,16 @@ export default async function AdminRefundsPage() {
   if (privileged !== true) redirect('/');
 
   const queue = await fetchRefundQueue(supabase);
+
+  // The window is read from the register, which staff may read. A page that
+  // enforced a number it could not show would leave the person changing it
+  // guessing at the current value.
+  const { data: windowRow } = await supabase
+    .from('platform_settings')
+    .select('value_text')
+    .eq('key', 'commerce.refund_window_hours')
+    .maybeSingle();
+  const windowHours = Number((windowRow as { value_text?: string } | null)?.value_text ?? 72);
 
   return (
     <main className="page">
@@ -92,6 +103,16 @@ export default async function AdminRefundsPage() {
           because the window did not apply.
         </p>
         <OpenOnBehalfForm />
+      </section>
+
+      <section className="card" style={{ marginTop: '2rem' }}>
+        <h2 style={{ marginTop: 0 }}>How long a customer has</h2>
+        <p className="muted">
+          A refund can be asked for for <strong>{windowHours} hours</strong> after
+          the payment. The clock runs from the payment, not from the request, and it
+          is read in the database — so a browser cannot ask early or late.
+        </p>
+        <RefundWindowForm currentHours={windowHours} />
       </section>
 
       <p className="muted">

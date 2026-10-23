@@ -427,3 +427,57 @@ export async function openRefundOnBehalf(
     currencyCode: standing.currencyCode,
   };
 }
+
+
+export type WindowInput = { hours?: unknown; reason?: unknown };
+export type WindowResult =
+  | { ok: true; hours: number }
+  | { ok: false; status: number; error: string };
+
+const WINDOW_MAX_HOURS = 8760;
+
+/**
+ * Move the self-serve refund window, with a reason.
+ *
+ * The bounds are checked here so the form can say "that is longer than a year"
+ * without a round trip — and again in the database, which is the boundary that
+ * matters. A number that decides whether a family can get their money back
+ * deserves both.
+ */
+export async function setRefundWindow(
+  supabase: SupabaseClient,
+  input: WindowInput,
+): Promise<WindowResult> {
+  const raw = typeof input.hours === 'number' ? String(input.hours) : String(input.hours ?? '').trim();
+  if (!/^\d+$/.test(raw)) {
+    return { ok: false, status: 400, error: 'The window is a whole number of hours.' };
+  }
+  const hours = Number(raw);
+  if (hours > WINDOW_MAX_HOURS) {
+    return { ok: false, status: 400, error: '8760 hours is a year — that is not a policy.' };
+  }
+  const reason = typeof input.reason === 'string' ? input.reason.trim() : '';
+  if (reason.length < 4) {
+    return { ok: false, status: 400, error: 'Say why the window is changing.' };
+  }
+
+  const { data, error } = await supabase.rpc('set_refund_window', {
+    p_hours: hours,
+    p_reason: reason,
+  });
+  if (error) {
+    const msg = error.message.toLowerCase();
+    if (msg.includes('only platform staff')) {
+      return { ok: false, status: 403, error: 'Only staff can change the refund window.' };
+    }
+    if (msg.includes('cannot be negative')) {
+      return { ok: false, status: 400, error: 'Use 0 to close self-serve refunds entirely.' };
+    }
+    if (msg.includes('why the window')) {
+      return { ok: false, status: 400, error: 'Say why the window is changing.' };
+    }
+    return { ok: false, status: 400, error: error.message };
+  }
+
+  return { ok: true, hours: Number(data ?? hours) };
+}
