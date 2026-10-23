@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1431 database tests, 864 web tests; TypeScript typecheck and
-production build pass; 115 tables, 239 policies, 146 user-defined triggers,
-343 functions, 146 migrations and 145 app route entries.**
+Verification: **1440 database tests, 864 web tests; TypeScript typecheck and
+production build pass; 117 tables, 241 policies, 146 user-defined triggers,
+345 functions, 147 migrations and 145 app route entries.**
 
 ## Today's sentence
 
@@ -2300,6 +2300,29 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
+
+### What is waiting, said once, 2026-10-23
+
+Thirteen queues; thirteen pages that each say what is in them; nothing that said *there is something
+in one of them*. `/admin` is where a platform or governance admin lands on sign-in, and it opened on
+ninety-six switches — all off — which is an excellent answer to "what can I turn on" and a poor one
+to "is anything waiting for me".
+
+`staff_attention()` returns the queues the caller may work with the count in each and the page that
+drains it, and `/admin` now opens with them. The filtering happens in the function, not on the
+screen: a count of refund requests is information about the business, so a support agent gets no
+refund row at all rather than a row with a number they are trusted not to read. A zero is returned
+too — a card that disappeared at zero would be indistinguishable from a queue that does not exist —
+and the headline total is the sum of the cards, not a second query that could disagree with them.
+
+Four of the eleven queues sit behind features that ship off. Those are marked **paused**, with the
+flag named, because switching a feature off stops new work arriving and does not empty what is
+already there: those cases still need a person, and a screen that hid them would be saying the
+opposite. Flipping a setting clears the mark and leaves the count, which is the one test that pins
+the distinction.
+
+Nothing is sent. The first external blocker is still a delivery provider, so this is a page rather
+than a digest; what it can do without one is make the page worth visiting.
 
 ### The export carried the young half of a record, 2026-10-22
 

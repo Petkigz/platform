@@ -96,6 +96,7 @@ import { run as notifications } from './notifications.test.mjs';
 import { run as renewalProjection } from './renewal_projection.test.mjs';
 import { run as googleSignIn } from './google_sign_in.test.mjs';
 import { run as dataExport } from './data_export.test.mjs';
+import { run as staffAttention } from './staff_attention.test.mjs';
 
 // Settings that are global by design: one row, read by code far from the suite
 // that changes it. The revenue share decides what every accrual computes; the
@@ -200,6 +201,7 @@ for (const [name, fn] of [
   ['renewal projection', renewalProjection],
   ['google sign in', googleSignIn],
   ['data export', dataExport],
+  ['staff attention', staffAttention],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],

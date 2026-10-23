@@ -92,7 +92,7 @@ Status:
 
 | # | Screen | Status |
 |---|---|---|
-| 35 | Admin home | **BUILT** — `/admin`: flags, queues, and the links to every moderation screen |
+| 35 | Admin home | **BUILT** — `/admin`: **what is waiting**, every queue the signed-in staff member may work with the count in it and the page that drains it (`staff_attention()` — filtered by role in the database, so a support agent gets no refund row rather than a hidden one; a zero is still a card; a queue behind a switched-off feature is marked paused, with the flag named, because cases already in it still need a person), then the flags, then the links to every moderation screen |
 | 36 | Users | READY |
 | 37 | Teachers | READY |
 | 38 | Course approval | **BUILT** — `/review/[assignmentId]`: accept or decline with a mandatory rationale, and while the assignment is accepted or in progress, watch the delivery copies of every lesson in the version. A reviewer gets the rendition and not the archive, and cannot save either: an offline copy is a learner's entitlement, and a reviewer holds none |

@@ -2504,6 +2504,44 @@ processing agreement, and it is the one part of live classes that cannot be buil
 **Also open:** whether a recording is offered to learners who missed the class, and how long
 it is kept. Nothing produces a recording yet, so nothing has to decide that today — but the
 moment a provider is connected, it is the next question.
+## Nothing says that something is waiting, so one screen says all of it — **DECIDED 2026-10-23**
+
+Every queue on this platform has a page that is good at saying *what* is in it: refund requests,
+disputes, reconciliation runs, support cases, appeals, qualifications to check, guardian
+verifications, reported content, held reviews, media needing a look. Not one of them says **that
+there is anything in it**. An owner signing in on a Monday had no way to learn that a chargeback
+was waiting without opening every page in turn, and the page `homeFor()` sends a platform or
+governance admin to on sign-in was a wall of feature switches.
+
+`staff_attention()` answers the question in one call, and `/admin` now opens with it. Three rules.
+
+**Permission is the filter, not the label.** The function is `security definer` and builds only the
+queues the caller may work: money for `finance_admin` and `platform_admin`, governance for
+`governance_admin` and `platform_admin`, support for `support_agent` and `platform_admin`, and the
+content queues for anyone privileged. A support agent does not receive a refund card with the
+number hidden — they receive no refund card. **The count of refunds is itself information about the
+business**, and a function that returned every count and trusted the screen to hide some would hand
+it to anybody who could open a support account. This is the same rule as everywhere else here: a
+permission check in the database, not a CSS class.
+
+**A count of zero is an answer.** Every queue the reader may work is returned, empty or not, with
+the page that drains it. A card that vanished at zero is indistinguishable from a queue that does
+not exist, and the reader would have to remember which ones were missing. The total is the sum of
+the cards that were returned, so the headline cannot disagree with the list under it.
+
+**A queue whose feature is switched off is marked, not hidden.** Guardian verification, support,
+reviews and payouts each sit behind a flag that ships off. Turning one off stops **new** work
+arriving; it does not empty what is already there, and those cases still need a person. The row
+carries `dormant` with the feature's name, and the screen says "paused by a feature switch" rather
+than letting the reader conclude the queue is broken or the zero is real.
+
+**What it deliberately does not do.** It does not send anything: the first external blocker is
+still an email/SMS provider, so this is a screen a person visits rather than a digest that arrives.
+It does not triage or assign. And it does not invent a home route for a finance or support login —
+`homeFor()` knows six role facts and those two are not among them, so such a person reaches `/admin`
+and sees their own shorter list, but signing in does not yet take them there. That is recorded as
+an open item rather than half-built.
+
 ## An export must say what it left out, and when it stopped — **DECIDED 2026-10-22**
 
 `export_my_data()` was built with its boundaries documented and tested, and it carried the young half

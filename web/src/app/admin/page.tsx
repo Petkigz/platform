@@ -8,6 +8,26 @@ import { RevenueShareForm } from './revenue-share-form';
 
 export const dynamic = 'force-dynamic';
 
+/** One queue, exactly as `staff_attention()` shapes it. */
+type AttentionQueue = {
+  code: string;
+  label: string;
+  count: number;
+  href: string;
+  detail: string;
+  feature: string | null;
+  dormant: boolean;
+};
+
+type Attention = {
+  generatedAt: string;
+  waitingCount: number;
+  queues: AttentionQueue[];
+  canSeeFinance: boolean;
+  canSeeGovernance: boolean;
+  canSeeSupport: boolean;
+};
+
 /**
  * The admin flag dashboard.
  *
@@ -18,6 +38,25 @@ export const dynamic = 'force-dynamic';
  * a non-privileged visitor is redirected rather than shown an empty page — an
  * empty dashboard and a forbidden one look identical to the person staring at
  * it, and "you are not staff" is the more useful answer.
+ *
+ * Above the flags sits `staff_attention()`: every queue this person may work,
+ * each with the count in it. This page is where `homeFor()` sends a platform or
+ * governance admin on sign-in, so the first thing they read should be what is
+ * waiting rather than a wall of switches. The queues are filtered in the
+ * database, not here — a card this screen chose not to render would still have
+ * been sent, and the count of refund requests is information a support agent
+ * does not get.
+ *
+ * Three things the block says out loud:
+ *
+ *   - A zero is an answer. Every queue the reader may work is listed, empty or
+ *     not; an absent card would be indistinguishable from a queue that does not
+ *     exist.
+ *   - A queue whose feature is switched off is marked `dormant`, not hidden.
+ *     Turning a feature off stops new work arriving; it does not empty what is
+ *     already there.
+ *   - Nothing is counted twice. The total is the sum of the cards, not a
+ *     separate query that could disagree with them.
  */
 export default async function AdminPage() {
   if (!isSupabaseConfigured()) redirect('/');
@@ -31,6 +70,15 @@ export default async function AdminPage() {
 
   const { data: privileged } = await supabase.rpc('is_privileged', { p_user_id: user.id });
   if (privileged !== true) redirect('/');
+
+  const { data: attentionData, error: attentionError } = await supabase.rpc('staff_attention');
+  if (attentionError) throw new Error(attentionError.message);
+  const attention = attentionData as unknown as Attention | null;
+  const queues = attention?.queues ?? [];
+  const waiting = attention?.waitingCount ?? 0;
+  const busy = queues.filter((q) => q.count > 0);
+  const quiet = queues.filter((q) => q.count === 0);
+  const dormant = queues.filter((q) => q.dormant);
 
   const flags = await fetchFlags(supabase);
   const groups = groupFlags(flags);
@@ -49,7 +97,78 @@ export default async function AdminPage() {
   return (
     <div className="container section">
       <p className="eyebrow">Administration</p>
-      <h1>Feature flags</h1>
+      <h1>What is waiting</h1>
+      <p className="lede">
+        {waiting === 0
+          ? 'Nothing is waiting. Every queue you can work was checked, and every one reads zero.'
+          : `${waiting} ${waiting === 1 ? 'thing is' : 'things are'} waiting across ${
+              busy.length === 1 ? 'one queue' : `${busy.length} queues`
+            }.`}
+      </p>
+
+      {busy.length > 0 ? (
+        <div className="grid cols-3" style={{ marginTop: '1.5rem' }}>
+          {busy.map((q) => (
+          <Link
+            key={q.code}
+            href={q.href}
+            className="card"
+            style={{ display: 'block', padding: '1.1rem 1.25rem' }}
+          >
+            <div style={{ fontSize: '1.8rem', fontWeight: 700, lineHeight: 1.1, color: 'var(--green-800)' }}>
+              {q.count}
+            </div>
+            <div style={{ fontWeight: 600, marginTop: '0.15rem' }}>{q.label}</div>
+            <p className="muted" style={{ fontSize: '0.85rem', margin: '0.35rem 0 0' }}>
+              {q.detail}
+            </p>
+            {q.dormant ? (
+              <p style={{ margin: '0.5rem 0 0' }}>
+                <span className="badge neutral">Paused</span>{' '}
+                <span className="muted" style={{ fontSize: '0.8rem' }}>
+                  <code>{q.feature}</code> is off, so nothing new is arriving. What is
+                  already here still needs a person.
+                </span>
+              </p>
+            ) : null}
+            </Link>
+          ))}
+        </div>
+      ) : null}
+
+      {busy.length === 0 ? (
+        <p className="empty">
+          No queue has anything in it. The switches below are the reason this page
+          exists; nothing on it is asking for you today.
+        </p>
+      ) : null}
+
+      {quiet.length > 0 ? (
+        <p className="muted" style={{ fontSize: '0.85rem', marginTop: '1rem' }}>
+          Also checked and empty:{' '}
+          {quiet.map((q, i) => (
+            <span key={q.code}>
+              {i > 0 ? ', ' : ''}
+              <Link href={q.href}>{q.label}</Link> ({q.count})
+            </span>
+          ))}
+          .
+        </p>
+      ) : null}
+
+      {dormant.length > 0 ? (
+        <div className="notice" style={{ marginTop: '1.25rem' }}>
+          <strong>
+            {dormant.length === 1 ? 'One queue is' : `${dormant.length} queues are`} paused
+            by a feature switch
+          </strong>
+          : {dormant.map((q) => q.label).join(', ')}. Turning a feature off stops new work
+          arriving; it does not empty what is already there, so anything in one of these
+          still needs a person.
+        </div>
+      ) : null}
+
+      <h2 style={{ marginTop: '2.5rem' }}>Feature flags</h2>
       <p className="lede">
         Everything is built and shipped off. Turn features on here as their
         preconditions are met.
@@ -112,9 +231,7 @@ export default async function AdminPage() {
         ))
       )}
 
-      <div className="outline-h" style={{ marginTop: '2rem' }}>
-        <h3>Other administration</h3>
-      </div>
+      <h2 style={{ marginTop: '2.5rem' }}>Other administration</h2>
       <p>
         <Link href="/admin/certificates">Certificates</Link> — issue completion certificates and manage revocations with an audit-ready reason.
       </p>
