@@ -116,6 +116,18 @@ export default async function AccountPage() {
       </section>
 
       <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
+        <h2 style={{ marginTop: 0 }}>What I have paid</h2>
+        <p className="muted">
+          Every payment that has moved on your billing account, and every refund that
+          has come back, with a running total per currency. A refund you have asked for
+          is listed separately until it actually moves, because asking is not receiving.
+        </p>
+        <p>
+          <Link href="/billing">See what I have paid</Link>
+        </p>
+      </section>
+
+      <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
         <h2 style={{ marginTop: 0 }}>My data</h2>
         <p className="muted">
           Download everything we hold about this account as one file: your profile, the

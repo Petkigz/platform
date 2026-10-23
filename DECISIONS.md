@@ -2504,6 +2504,70 @@ processing agreement, and it is the one part of live classes that cannot be buil
 **Also open:** whether a recording is offered to learners who missed the class, and how long
 it is kept. Nothing produces a recording yet, so nothing has to decide that today — but the
 moment a provider is connected, it is the next question.
+## A payer's balance is money that moved, and nothing else — **DECIDED 2026-10-23**
+
+The platform could say what an order was (`/orders`, and a receipt with a number a person can
+read out loud) and what the business took in (`/admin/money-report`, for staff). It could not
+answer the question a parent asks two days after requesting a refund: **what has gone out of my
+account, and what has come back?**
+
+`my_statement()` answers it: per billing account, per currency, a charge for every paid order and a
+refund for every completed one, in date order, each carrying the running total after it. Three
+rules, and the first is the whole decision.
+
+**Only money that moved is in the balance.** A refund *asked for* is not a refund. An *approved*
+one is not either — approval creates a pending transaction, and a refund is a transfer. One *sent
+to the provider* is not a refund until the provider confirms it, which is the change that writes
+the ledger and reverses the teacher's earning. Every one of those states is listed under
+`notYetMoney` with a sentence saying where it has got to, and none of them moves `netMinor`. This
+is the same distinction the money path keeps everywhere else, and a statement is precisely where a
+customer would notice if it were fudged: a platform that showed a pending refund in the balance
+has told them they have their money back.
+
+**Currencies are never added together.** A family that paid in shillings gets a section in
+shillings. Converting would require an exchange rate; the money report does that for staff, with
+the rate beside every figure and the gaps listed. One page inventing a rate would be the only
+screen in the product that did.
+
+**It is the caller's own money, and staff get no shortcut.** The function is `security definer`
+because it must read `payment_disputes`, which is staff-only, so membership is checked explicitly
+inside it rather than left to RLS. That is the mistake that once made `my_plan_summary()` return
+every subscription on the platform. Staff who need the whole picture have the ledger and the money
+report; this answers "what did I pay", and it is the same answer for the owner as for anybody else.
+
+**Why not the ledger itself.** `financial_transactions` is the authority on what moved, and it is
+staff-only on purpose: it carries provider references, provider fees and the settlement figures,
+which are the platform's business rather than a payer's. The statement is a projection over the
+three things a payer may already read — their orders, their refund requests, their refund
+transactions — and a test pins it to the ledger: whatever the statement calls a completed refund is
+exactly the refund the ledger recorded. If the two ever disagree, one of them is lying to somebody.
+
+**What the customer reads is the outcome, not the staff's working notes.** A declined request
+shows as declined with a pointer to Help; the decider's `decision_notes` — whose form invites "what
+you checked" — is a note to colleagues and is not carried by the projection. The same line
+separates internal support notes from the case thread the person who opened it reads. Their own
+words (the reason they gave) do come back to them.
+
+**Two things it says out loud rather than hiding.** A decided dispute does not move the balance,
+because nothing posts the outcome of a dispute to the ledger yet — a case is listed with its state
+and a sentence saying this record has no entry for it. And the page says it is the platform's
+record, not a bank statement: a completed refund may take days to appear, and a bank's own fee
+never appears at all.
+
+**No flag.** Reading what you have paid is not a feature to be switched on; `FLAGS.md` settled the
+same question for the data export — a right behind a switch that ships off is not a right.
+
+## `can_view_invoices` is a column no policy reads — **FOUND 2026-10-23, OPEN**
+
+Every `billing_account_memberships` row carries `can_view_invoices` (default true) and nothing
+reads it: not `orders_read`, not the receipt, not any function or screen. It is not a control, it is
+a default. The statement deliberately does **not** honour it, because honouring it in one place
+while `/orders` ignores it would give the platform two answers to one question, and the weaker one
+would be the one people saw.
+
+Either a writer that sets it arrives with a policy that enforces it (`orders_read`, the receipt,
+`my_statement()`) in the same change, or the column is dropped. Half of that is worse than neither.
+
 ## Nothing says that something is waiting, so one screen says all of it — **DECIDED 2026-10-23**
 
 Every queue on this platform has a page that is good at saying *what* is in it: refund requests,

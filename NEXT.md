@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1440 database tests, 864 web tests; TypeScript typecheck and
+Verification: **1455 database tests, 876 web tests; TypeScript typecheck and
 production build pass; 117 tables, 241 policies, 146 user-defined triggers,
-345 functions, 147 migrations and 145 app route entries.**
+346 functions, 148 migrations and 146 app route entries.**
 
 ## Today's sentence
 
@@ -2300,6 +2300,39 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
+
+### A statement, so a family can see their own money, 2026-10-23
+
+Three things could describe a payment: `/orders` said what an order was, the receipt gave it a
+number and a document, and `/admin/money-report` told staff what the business took in. Nothing
+answered the question asked two days after a refund request — *what has gone out of my account,
+and what has come back?* — and the ledger that could answer it is staff-only for good reasons:
+provider references, provider fees and settlement figures are the platform's business.
+
+`my_statement()` is a projection over the three things a payer may already read. Per billing
+account, per currency, a charge for every paid order and a refund for every completed one, in date
+order, each carrying the running total after it — so the last row equals the net figure and a
+reader can add the column up and get the same number.
+
+The distinction the page is built on: **only money that moved is in the balance.** A refund asked
+for, approved, or sent to a provider is not money, and each is listed under "not counted yet" with
+a sentence saying where it has got to. That is the same line the whole money path draws — a request
+is not a refund, an approval is not a transfer, a redirect is not a payment — and a statement is
+exactly where a customer would notice if it were crossed.
+
+`/billing` renders it, linked from `/orders` and `/account`. It has no flag: reading what you paid
+is not a feature to switch on.
+
+Two things it admits instead of hiding. A **decided dispute** does not move the balance, because
+nothing posts the outcome of a dispute to the ledger yet; the case is listed with its state and a
+sentence saying this record has no entry for it, which will stop being true the day a writer
+exists. And the page says it is the platform's record rather than a bank statement: a completed
+refund may take days to appear, and a bank's own fee never appears at all.
+
+**Found while writing it:** `can_view_invoices` sits on every billing membership and no policy or
+function reads it. The statement does not honour it — honouring it in one place while `orders_read`
+ignores it would give two answers to one question — and it is recorded in `DECISIONS.md` as open
+rather than half-implemented.
 
 ### What is waiting, said once, 2026-10-23
 

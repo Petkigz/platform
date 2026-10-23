@@ -246,6 +246,11 @@ export default async function OrdersPage({
         Access is granted when a payment is confirmed against a verified provider
         event. Returning from a payment screen is not itself confirmation.
       </p>
+
+      <p style={{ marginTop: '1.5rem' }}>
+        <Link href="/billing">What you have paid</Link> — money that has moved, and
+        money that has not yet, across every order on your account.
+      </p>
     </main>
   );
 }
