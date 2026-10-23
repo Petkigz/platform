@@ -107,6 +107,8 @@ export async function run(ctx) {
     }
   }
 
+  // Deliberately ungated: a right behind a switch that ships off is not a right.
+  // Nothing here has to enable anything.
   const exportAs = async (actor) => {
     const result = await asActor(actor, 'select public.export_my_data() d');
     return result.rows[0].d;

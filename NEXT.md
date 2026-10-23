@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1422 database tests, 864 web tests; TypeScript typecheck and
+Verification: **1431 database tests, 864 web tests; TypeScript typecheck and
 production build pass; 115 tables, 239 policies, 146 user-defined triggers,
-343 functions, 145 migrations and 145 app route entries.**
+343 functions, 146 migrations and 145 app route entries.**
 
 ## Today's sentence
 
@@ -2300,6 +2300,24 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
+
+### The export carried the young half of a record, 2026-10-22
+
+`export_my_data()` already existed, was tested, and documented its boundaries well. It carried the
+account, the family, the learners and their study record, orders with refunds, notes, bookmarks and
+shares — and none of the rest: no discussion, no reviews, no submitted work or the marks and
+feedback that came back, no quiz answers, no support cases, no messages, no earnings, no payouts,
+no devices, no activity.
+
+Those are added, and three promises with them. A list stops at 1,000 rows and `meta.truncated`
+names the ones it cut, because a document that silently drops half of a history is worse than one
+that admits it stopped. `notIncluded` says in words what is absent and why, because a reader cannot
+tell an absence from a bug. And every copy writes an audit event with section counts — which
+doubles as the rate limiter, ten an hour.
+
+`/account/export` is new and explains both lists before the button; the account page now links to
+it from the download it already had. The export stays **ungated**: `FLAGS.md` settled that before
+this migration existed, and it is right.
 
 ### Sign in with Google, and the name Google already knows, 2026-10-22
 

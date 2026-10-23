@@ -2504,6 +2504,32 @@ processing agreement, and it is the one part of live classes that cannot be buil
 **Also open:** whether a recording is offered to learners who missed the class, and how long
 it is kept. Nothing produces a recording yet, so nothing has to decide that today — but the
 moment a provider is connected, it is the next question.
+## An export must say what it left out, and when it stopped — **DECIDED 2026-10-22**
+
+`export_my_data()` was built with its boundaries documented and tested, and it carried the young half
+of a record: account, families, learners, orders, notes, bookmarks, shares. What it did not carry was
+most of what a person did here — discussion, reviews, submitted work and the marks and feedback that
+came back, quiz answers, support cases, messages, earnings, payouts, devices, activity.
+
+Three rules now surround the fuller document.
+
+**A list stops at 1,000 rows and says so.** `meta.truncated` names the cut lists and `meta.counts`
+gives the true totals. A document that silently drops half of somebody's history is worse than one
+that admits it stopped.
+
+**What is not included is named.** `notIncluded` says in words why another person's words, the
+sign-in address, internal staff notes, uploaded bytes and credential tokens are absent. Somebody
+reading their own export should not have to infer from an absence — and an absence is exactly what a
+reader cannot distinguish from a bug.
+
+**Every copy is recorded, and ten an hour is the limit.** The export writes one audit event with
+section counts, and that event doubles as the rate limiter's counter. An export is the most personal
+document the platform produces; a script hammering it is either a bug or an attack.
+
+And the export is **not** behind a flag, which `FLAGS.md` had already settled before this migration
+existed: a right behind a switch that ships off is not a right. `platform.data_export` continues to
+gate only the part that is unbuilt — CSV and PDF renderings, and an import path.
+
 ## Google sign-in is configuration, so its flag is not CODE-gated — **DECIDED 2026-10-22**
 
 Every other provider-shaped feature here ships `code`-gated, because the missing piece is code. This

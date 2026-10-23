@@ -128,6 +128,11 @@ export default async function AccountPage() {
             Download my data
           </a>
         </p>
+        <p className="muted" style={{ fontSize: '0.9rem' }}>
+          It now carries more than it did: the discussion posts, reviews and marked work, the
+          support cases, the messages sent to you, and — if you teach — your earnings and payouts.
+          {' '}<Link href="/account/export">What is in it, and what is left out</Link>
+        </p>
       </section>
 
       <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
