@@ -92,6 +92,7 @@ Status:
 
 | # | Screen | Status |
 |---|---|---|
+| 35f | **Controls** *(added 2026-10-23)* | **BUILT** — `/admin/settings`: the numbers behind features that are already on, as opposed to the switches themselves. Nine of them — reporting currency, rate sanity factor, teacher upload quota, device cap, saved-lesson lifetime, live-room host, approvals needed to publish, panel required, board convened — previously had no writer at all and could only be changed with an UPDATE against a table nobody outside the repository can see. `platform_controls()` returns **only the controls the caller may change** (finance admin sees the two money ones, governance admin the two publication ones, support agent none, platform admin all nine), and `set_platform_control()` is an **allowlist** rather than a settings hole: a key not on the list is refused with a sentence saying where it belongs, a feature switch is refused by name and pointed at the dashboard, and a control with its own writer (revenue share, payout hold, refund window) is refused and named, because those writers do more than store a number. Every change needs a written reason, is bounded by rules declared once in `platform_control_rules()`, and is audited with the old value; a no-op writes nothing |
 | 35 | Admin home | **BUILT** — `/admin`: **what is waiting**, every queue the signed-in staff member may work with the count in it and the page that drains it (`staff_attention()` — filtered by role in the database, so a support agent gets no refund row rather than a hidden one; a zero is still a card; a queue behind a switched-off feature is marked paused, with the flag named, because cases already in it still need a person), then the flags, then the links to every moderation screen |
 | 36 | Users | READY |
 | 37 | Teachers | READY |
@@ -177,9 +178,9 @@ against the actual route list in the production build, not from memory.
 | `/admin/reports` | Abuse and content reports |
 | `/admin/roles` | Role assignments |
 
-Nine of these are administration screens. Section 7 has since gained four rows of
-its own, so the production build now emits **twenty admin routes** — the index
-at `/admin` and eighteen beneath it.
+Nine of these are administration screens. Section 7 has since gained rows of its
+own, and the production build now emits **twenty-seven admin routes** — the index
+at `/admin` and twenty-six beneath it.
 
 ## Counts
 

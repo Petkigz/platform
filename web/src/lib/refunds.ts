@@ -481,3 +481,52 @@ export async function setRefundWindow(
 
   return { ok: true, hours: Number(data ?? hours) };
 }
+
+export type ControlResult =
+  | { ok: true; value: string; changed: boolean }
+  | { ok: false; status: number; error: string };
+
+/**
+ * Save one control.
+ *
+ * The reader's bounds are checked here so the form can say "10 is the highest"
+ * without a round trip; `set_platform_control()` refuses the same things again
+ * with the same words. The database is the boundary — this is the pleasant way
+ * in.
+ */
+export async function saveControl(
+  supabase: SupabaseClient,
+  input: { key?: unknown; value?: unknown; reason?: unknown },
+): Promise<ControlResult> {
+  const key = typeof input.key === 'string' ? input.key.trim() : '';
+  const value = typeof input.value === 'string' ? input.value : String(input.value ?? '');
+  const reason = typeof input.reason === 'string' ? input.reason.trim() : '';
+
+  if (!key) return { ok: false, status: 400, error: 'Which control?' };
+  if (reason.length < 4) {
+    return { ok: false, status: 400, error: 'Say why this is changing.' };
+  }
+
+  const { data, error } = await supabase.rpc('set_platform_control', {
+    p_key: key,
+    p_value: value,
+    p_reason: reason,
+  });
+  if (error) {
+    const msg = error.message.toLowerCase();
+    if (msg.includes('only platform staff') || msg.includes('only a ')) {
+      return { ok: false, status: 403, error: error.message };
+    }
+    if (msg.includes('is a feature switch')) {
+      return { ok: false, status: 400, error: error.message };
+    }
+    return { ok: false, status: 400, error: error.message };
+  }
+
+  const row = (data ?? {}) as { value?: string; changed?: boolean };
+  return {
+    ok: true,
+    value: typeof row.value === 'string' ? row.value : value,
+    changed: row.changed === true,
+  };
+}

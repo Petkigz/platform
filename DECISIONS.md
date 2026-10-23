@@ -2504,6 +2504,55 @@ processing agreement, and it is the one part of live classes that cannot be buil
 **Also open:** whether a recording is offered to learners who missed the class, and how long
 it is kept. Nothing produces a recording yet, so nothing has to decide that today — but the
 moment a provider is connected, it is the next question.
+## A control writer is an allowlist, not a settings hole — **DECIDED 2026-10-23**
+
+`platform_settings` holds two kinds of row. Ninety are feature switches, and they have a dashboard.
+The rest are **controls**: the numbers and words that decide how a feature behaves once it is on —
+the reporting currency, the rate sanity factor, the teacher upload quota, the device cap, the
+saved-lesson lifetime, the live-room host, and three governance numbers.
+
+Nine of them could only be changed with an UPDATE against a table nobody outside this repository can
+see. That is the shape the standing role rule rejects.
+
+**The obvious fix is the wrong one.** A function that takes a key and a value and writes whatever it
+is given would be the same hole with a friendlier name: any privileged account could rewrite the
+revenue share, the reporting currency and every feature switch under cover of "settings". So this is
+an **allowlist of nine named controls**, each with its own type, its own bounds and its own owning
+role:
+
+| Control | Type | Bounds | Owned by |
+|---|---|---|---|
+| `finance.reporting_currency` | text | ISO 4217 | finance |
+| `finance.rate_sanity_factor` | integer | 0–1000 | finance |
+| `media.upload_quota_gb_per_teacher` | integer | 1–10 000 | platform |
+| `learning.offline_max_devices` | integer | 1–10 | platform |
+| `learning.offline_expiry_days` | integer | 1–365 | platform |
+| `delivery.live_room_base` | text | empty or `https://` | platform |
+| `governance.min_approvals` | integer | 1–5 | governance |
+| `governance.panel_required` | boolean | on/off | governance |
+| `governance.scholar_board_active` | boolean | on/off | platform |
+
+The bounds live in **one** function, `platform_control_rules()`, and both the reader and the writer
+consult it. Two copies would drift, and the way a drift shows up is a screen offering a value the
+writer refuses.
+
+**Three refusals that make it an allowlist.** A key not on the list is refused with a sentence saying
+where it does belong. A feature switch is refused **by name** and pointed at the dashboard. And a
+control that already has its own writer — the revenue share, the payout hold, the refund window — is
+refused and named, because each of those writers does more than store a number: the revenue share
+snapshots into every future earning, and routing it through a plain value write would bypass that.
+
+**The gate is per control, not per screen.** `platform_controls()` returns only what the caller may
+change — the same rule `staff_attention()` follows. A finance admin sees two money controls, a
+governance admin sees two publication controls, a support agent sees none, and the platform admin
+sees all nine. A control returned but not editable would be a permission question dressed as a layout
+question, and several of these numbers (what a teacher may store, how many people must agree before a
+course teaches) are not values to hand every role. The page says how many others exist and who owns
+them, without naming a value.
+
+**Every change carries a reason and is audited** with the old value beside the new one. A no-op writes
+nothing: an audit trail full of saves that changed nothing is a trail nobody reads.
+
 ## A refund can be asked for for 72 hours, and the clock is the payment's — **DECIDED 2026-10-23**
 
 The owner: *"a customer can only get a refund between the 72 hours that happen after the payment."*

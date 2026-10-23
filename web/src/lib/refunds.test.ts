@@ -616,3 +616,52 @@ test('a negative window is refused, and zero is not', async () => {
   assert.equal(zero.ok, true);
   assert.equal(zero.ok && zero.hours, 0);
 });
+
+// ---------------------------------------------------------------------------
+// Saving a control
+// ---------------------------------------------------------------------------
+
+import { saveControl } from './refunds.ts';
+
+test('a control save carries key, value and reason', async () => {
+  const { client, calls } = stubRpc({ data: { key: 'finance.rate_sanity_factor', value: '25', changed: true } });
+  const res = await saveControl(client, {
+    key: 'finance.rate_sanity_factor',
+    value: '25',
+    reason: 'The provider feed rounds before it reports',
+  });
+  assert.equal(res.ok, true);
+  if (res.ok) assert.equal(res.changed, true);
+  const call = one(calls, 'rpc call');
+  assert.equal(call.fn, 'set_platform_control');
+  assert.equal(call.args.p_key, 'finance.rate_sanity_factor');
+  assert.equal(call.args.p_value, '25');
+});
+
+test('a control save with no reason never reaches the database', async () => {
+  const { client, calls } = stubRpc({ data: { changed: true } });
+  const res = await saveControl(client, { key: 'x', value: '1', reason: '  ' });
+  assert.equal(res.ok, false);
+  assert.equal(calls.length, 0);
+});
+
+test('a save that changed nothing is reported as unchanged, not as a failure', async () => {
+  const { client } = stubRpc({ data: { key: 'x', value: '3', changed: false } });
+  const res = await saveControl(client, { key: 'x', value: '3', reason: 'Pressed twice' });
+  assert.equal(res.ok, true);
+  if (res.ok) assert.equal(res.changed, false);
+});
+
+test('a refusal from the database keeps its own sentence', async () => {
+  // The writer names the right screen for a feature switch, and that sentence is
+  // the whole value of the refusal.
+  const { client } = stubRpc({
+    error: { message: 'learning.discussion is a feature switch — turn it on or off on the flag dashboard, not here' },
+  });
+  const res = await saveControl(client, { key: 'learning.discussion', value: 'true', reason: 'Testing' });
+  assert.equal(res.ok, false);
+  if (!res.ok) {
+    assert.equal(res.status, 400);
+    assert.match(res.error, /flag dashboard/);
+  }
+});

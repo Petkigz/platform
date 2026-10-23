@@ -100,6 +100,7 @@ import { run as staffAttention } from './staff_attention.test.mjs';
 import { run as payerStatement } from './payer_statement.test.mjs';
 import { run as refundWindow } from './refund_window.test.mjs';
 import { run as refundWindowControl } from './refund_window_control.test.mjs';
+import { run as platformControls } from './platform_controls.test.mjs';
 
 // Settings that are global by design: one row, read by code far from the suite
 // that changes it. The revenue share decides what every accrual computes; the
@@ -208,6 +209,7 @@ for (const [name, fn] of [
   ['payer statement', payerStatement],
   ['refund window', refundWindow],
   ['refund window control', refundWindowControl],
+  ['platform controls', platformControls],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],

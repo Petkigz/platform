@@ -233,6 +233,12 @@ export default async function AdminPage() {
 
       <h2 style={{ marginTop: '2.5rem' }}>Other administration</h2>
       <p>
+        <Link href="/admin/settings">Controls</Link> — the numbers behind features
+        that are already on: what a teacher may store, how many devices a learner
+        may save to, how long a saved lesson plays, and the publication threshold.
+        Only the ones your role owns are shown, and each change needs a reason.
+      </p>
+      <p>
         <Link href="/admin/certificates">Certificates</Link> — issue completion certificates and manage revocations with an audit-ready reason.
       </p>
       <p>

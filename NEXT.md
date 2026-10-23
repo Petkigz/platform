@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1480 database tests, 891 web tests; TypeScript typecheck and
+Verification: **1501 database tests, 905 web tests; TypeScript typecheck and
 production build pass; 117 tables, 241 policies, 146 user-defined triggers,
-349 functions, 150 migrations and 149 app route entries.**
+353 functions, 151 migrations and 151 app route entries.**
 
 ## Today's sentence
 
@@ -2300,6 +2300,36 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
+
+### The numbers behind the switches, 2026-10-23
+
+A flag decides *whether* something happens. A control decides *how much, how long or how many* — what
+a teacher may store, how many devices one learner may save to, how long a saved lesson plays, which
+URL carries a live class, how many approvals a course needs before it teaches anything.
+
+Nine of those controls had no writer. They could be changed with an UPDATE against a table nobody
+outside this repository can see, which is the shape the role rule rejects.
+
+The tempting fix is one function that writes whatever key it is given, and that would be the same
+hole with a friendlier name. So it is an **allowlist of nine named controls**, each carrying its own
+type, its own bounds and its own owning role, with the bounds declared once in
+`platform_control_rules()` and read by both the writer and the screen.
+
+The refusals are where the design lives. A key not on the list is refused with a sentence saying
+where it does belong. A feature switch is refused **by name** and pointed at the flag dashboard. And a
+control that already has its own writer — the revenue share, the payout hold, the refund window — is
+refused and named, because those writers do more than store a number: the revenue share snapshots
+into every future earning, and a plain value write would bypass that.
+
+`/admin/settings` renders only the controls the caller may change, because a control sent to the
+browser and then hidden is still sent — and several of these numbers are not values to hand every
+role. A finance admin sees the two money controls, a governance admin the two publication ones, a
+support agent none, and the page says how many others exist without naming a value.
+
+Two details worth keeping. Each control keeps its **own** bounds rather than a shared guess: the
+device cap tops out at ten, the expiry at a year, the quota at ten thousand — one bound for three
+would be wrong for two of them. And the live-room host may be **emptied**, because empty is the
+honest shipped state: joining refuses rather than handing out a URL that carries no class.
 
 ### Three days to change your mind, 2026-10-23
 
