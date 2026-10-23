@@ -402,3 +402,175 @@ test('a queue error propagates rather than becoming an empty queue', async () =>
   const { client } = stubQueue([], { message: 'permission denied' });
   await assert.rejects(() => fetchRefundQueue(client), /permission denied/);
 });
+
+// ---------------------------------------------------------------------------
+// The 72-hour window
+// ---------------------------------------------------------------------------
+//
+// The clock is the database's, and the screen only phrases what it is told.
+// These tests exist because the alternative — subtracting `paid_at` from
+// `Date.now()` in the browser — usually agrees and is wrong exactly when it
+// matters: a laptop that has been asleep, a wrong time zone, a page left open
+// across the boundary.
+
+import {
+  describeRemaining,
+  fetchRefundStanding,
+  normaliseStanding,
+  openRefundOnBehalf,
+} from './refunds.ts';
+
+const standingRow = {
+  orderId: 'order-1',
+  orderNumber: 'AS-00001234',
+  status: 'paid',
+  allowed: true,
+  reason: 'allowed',
+  message: 'A refund can be asked for until 26 Oct 2026 at 09:14 UTC.',
+  windowHours: 72,
+  paidAt: '2026-10-23T09:14:00Z',
+  closesAt: '2026-10-26T09:14:00Z',
+  remainingHours: 71,
+  refundableMinor: '30000',
+  currencyCode: 'UGX',
+  asStaff: false,
+};
+
+test('a standing is read as the database shaped it', () => {
+  const standing = normaliseStanding(standingRow);
+  assert.equal(standing.allowed, true);
+  assert.equal(standing.windowHours, 72);
+  assert.equal(standing.remainingHours, 71);
+  assert.equal(standing.refundableMinor, '30000');
+});
+
+test('a closed window keeps its sentence and its date', () => {
+  const closed = normaliseStanding({
+    ...standingRow,
+    allowed: false,
+    reason: 'window_closed',
+    remainingHours: 0,
+    message: 'A refund can be asked for within 72 hours of payment, and that window closed on 26 Oct 2026 at 09:14 UTC.',
+  });
+  assert.equal(closed.allowed, false);
+  assert.match(closed.message, /closed on/);
+});
+
+test('a malformed standing is refused rather than rendered as zero', () => {
+  assert.throws(() => normaliseStanding({ orderId: 'x' }), /malformed/);
+  assert.throws(
+    () => normaliseStanding({ ...standingRow, refundableMinor: '300.5' }),
+    /minor units/,
+  );
+});
+
+test('hours left is said in a way a person reads quickly', () => {
+  assert.equal(describeRemaining(0), 'The window has closed.');
+  assert.equal(describeRemaining(-3), 'The window has closed.');
+  assert.equal(describeRemaining(null), '');
+  assert.equal(describeRemaining(1), '1 hour left.');
+  assert.equal(describeRemaining(23), '23 hours left.');
+  assert.equal(describeRemaining(24), '1 day left.');
+  assert.equal(describeRemaining(71), '2 days and 23 hours left.');
+});
+
+test('the form only appears when the database says the window is open', async () => {
+  const { client } = stubRpc({ data: standingRow });
+  const standing = await fetchRefundStanding(client, 'order-1');
+  assert.equal(standing?.allowed, true);
+
+  const { client: closedClient } = stubRpc({
+    data: { ...standingRow, allowed: false, reason: 'window_closed' },
+  });
+  const closed = await fetchRefundStanding(closedClient, 'order-1');
+  assert.equal(closed?.allowed, false);
+});
+
+test('a standing that cannot be read does not break the order list', async () => {
+  const { client } = stubRpc({ error: { message: 'permission denied' } });
+  assert.equal(await fetchRefundStanding(client, 'order-1'), null);
+});
+
+test('a refund refused for the window is said in the database words', async () => {
+  const { client } = stubRpc({
+    error: { message: 'the refund window closed on 26 Oct 2026 at 09:14 UTC — a refund can be asked for within 72 hours of payment' },
+  });
+  const res = await requestRefund(client, {
+    orderId: 'order-1',
+    amountMinor: '30000',
+    reason: 'Please',
+  });
+  assert.equal(res.ok, false);
+  if (!res.ok) {
+    assert.equal(res.status, 409);
+    assert.match(res.error, /^The refund window closed on 26 Oct 2026/);
+  }
+});
+
+// A stub for the two queries on-behalf makes: the order lookup, then an RPC.
+function stubBehalf(
+  order: { id: string } | null,
+  standing: unknown = standingRow,
+  rpcError: { message: string } | null = null,
+) {
+  const calls: { fn: string; args: Record<string, unknown> }[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const client: any = {
+    from: () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const chain: any = {
+        select: () => chain,
+        eq: () => chain,
+        maybeSingle: async () => ({ data: order, error: null }),
+      };
+      return chain;
+    },
+    rpc: async (fn: string, args: Record<string, unknown>) => {
+      calls.push({ fn, args });
+      if (fn === 'refund_standing') return { data: standing, error: null };
+      return { data: rpcError ? null : 'req-9', error: rpcError };
+    },
+  };
+  return { client, calls };
+}
+
+test('staff refunds what is left, without typing an amount', async () => {
+  const { client, calls } = stubBehalf({ id: 'order-1' });
+  const res = await openRefundOnBehalf(client, {
+    orderNumber: 'as-00001234',
+    reason: 'Course was sold with the wrong level; agreed on the call',
+  });
+
+  assert.equal(res.ok, true);
+  const refund = one(calls.filter((c) => c.fn === 'request_refund'), 'request_refund call');
+  assert.equal(refund.args.p_amount_minor, 30000);
+  assert.equal(refund.args.p_order_id, 'order-1');
+  // Nothing is decided here: the row it creates is a request.
+  assert.equal(calls.some((c) => c.fn === 'decide_refund_request'), false);
+});
+
+test('an order number that is not one is refused before any query', async () => {
+  const { client, calls } = stubBehalf({ id: 'order-1' });
+  const res = await openRefundOnBehalf(client, { orderNumber: 'nope', reason: 'Because' });
+  assert.equal(res.ok, false);
+  if (!res.ok) assert.equal(res.status, 400);
+  assert.equal(calls.length, 0);
+});
+
+test('a reason is required to open one on behalf', async () => {
+  const { client, calls } = stubBehalf({ id: 'order-1' });
+  const res = await openRefundOnBehalf(client, { orderNumber: 'AS-00001234', reason: '   ' });
+  assert.equal(res.ok, false);
+  assert.equal(calls.length, 0);
+});
+
+test('an order with nothing left is refused with the reason, not an opaque error', async () => {
+  const { client, calls } = stubBehalf(
+    { id: 'order-1' },
+    { ...standingRow, allowed: false, reason: 'nothing_left', refundableMinor: '0' },
+  );
+  const res = await openRefundOnBehalf(client, { orderNumber: 'AS-00001234', reason: 'Goodwill' });
+  assert.equal(res.ok, false);
+  if (!res.ok) assert.match(res.error, /already been returned/);
+  assert.equal(calls.some((c) => c.fn === 'request_refund'), false);
+});

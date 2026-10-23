@@ -5,6 +5,7 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { format, fromMinor } from '@/lib/money';
 import { describeOrderAdjustment, describeOrderBreakdown } from '@/lib/checkout';
 import { RefundForm } from './refund-form';
+import { fetchRefundStanding, type RefundStanding } from '@/lib/refunds';
 import { PromotionActions } from './promotion-actions';
 
 export const dynamic = 'force-dynamic';
@@ -108,6 +109,22 @@ export default async function OrdersPage({
             .is('deleted_at', null)
             .order('created_at', { ascending: false })
         ).data ?? []) as unknown as OrderRow[]);
+
+  // Why a refund can or cannot be asked for, from the database's clock.
+  //
+  // Only the orders that could conceivably be refunded are asked about: a paid
+  // order, or one already partly refunded. Everything else has no button to
+  // explain, and asking about every order a family ever placed would be one
+  // round trip per row on a page that is mostly history.
+  const openOrders = orders.filter(
+    (o) => o.status === 'paid' || o.status === 'partially_refunded',
+  );
+  const standings: Record<string, RefundStanding | null> = {};
+  await Promise.all(
+    openOrders.map(async (o) => {
+      standings[o.id] = await fetchRefundStanding(supabase, o.id);
+    }),
+  );
 
   // The order the payer was just redirected back from, if that is why they are
   // here. Looked up in the list already fetched rather than queried separately,
@@ -228,13 +245,25 @@ export default async function OrdersPage({
                       />
                     </>
                   )}
-                  {(o.status === 'paid' || o.status === 'partially_refunded') && (
-                    <RefundForm
-                      orderId={o.id}
-                      amountMinor={o.total_minor}
-                      currencyCode={o.currency_code}
-                    />
-                  )}
+                  {(o.status === 'paid' || o.status === 'partially_refunded') &&
+                    (standings[o.id]?.allowed ? (
+                      <RefundForm
+                        orderId={o.id}
+                        amountMinor={o.total_minor}
+                        currencyCode={o.currency_code}
+                        closesAt={standings[o.id]?.closesAt ?? null}
+                        remainingHours={standings[o.id]?.remainingHours ?? null}
+                      />
+                    ) : (
+                      // A window that closed is said, not hidden: a button that
+                      // vanished would leave the customer unable to tell a missed
+                      // deadline from a broken page.
+                      <span className="muted" style={{ fontSize: '0.85rem' }}>
+                        {standings[o.id]?.message
+                          ?? 'A refund cannot be asked for on this order.'}{' '}
+                        <Link href="/support">Contact Help</Link>
+                      </span>
+                    ))}
                 </li>
               );
             })}

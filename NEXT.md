@@ -311,9 +311,9 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1455 database tests, 876 web tests; TypeScript typecheck and
+Verification: **1470 database tests, 887 web tests; TypeScript typecheck and
 production build pass; 117 tables, 241 policies, 146 user-defined triggers,
-346 functions, 148 migrations and 146 app route entries.**
+348 functions, 149 migrations and 148 app route entries.**
 
 ## Today's sentence
 
@@ -344,7 +344,7 @@ say what is left instead of what was missing.
 | **Learner analytics** (`SCREENS.md` row 32) | `can_read_learner_course_progress()`, `cohort_learner_progress()`, the class page with a roster ordered by need, `teacher_course_analytics()` with enrolments/completions/certificates, and `/teach/[courseId]/reports` | Export or CSV, anything that follows a learner across courses | **Decision:** how long progress stays readable after a class ends. Until then it stays readable, which is the safer default |
 | **Reviewer access to lesson media** | `may_review_version_media()` — an accepted or in-progress assignment and nothing else — as a third branch of `may_play_rendition()`, with the player wired into `/review/[assignmentId]`; `may_watch_master()`, `master_preview_target()` and `/api/media/master` for the uploader, staff and the version author, with `Watch` on `/teach/media` and `/admin/media`; 19 database tests, most of them refusals | Any copy for a reviewer: no download, no master, no export. Aggregate review analytics | **Nothing.** Decided 2026-10-20: "other teachers" means a reviewer checking quality for a named period, not co-teachers and not any teacher on the platform. The period is the assignment's state, so access ends with the review |
 | **Live classes with teacher-only recording** | Sessions, join windows, attendance, the roster, `/live` and the teacher's scheduling form; the room URL is `delivery.live_room_base + '/room/' + slug`. Teacher-only capture is the rule | The media server: anything that actually carries audio and video | **Decision made** (build in-house); the remaining work is infrastructure, not design |
-| **Payments** | MTN MoMo and Airtel adapters, checkout, orders, refunds, reconciliation, disputes, financial adjustments, subscriptions with entitlement grants that drive access, 50% teacher-share accrual with the split snapshotted per row | Live credentials, callback verification against a real provider, automatic renewal, failed-payment retry, the receipt document, a merchant account | **External:** provider sandbox and merchant credentials (P12). Do not claim any of this works end to end |
+| **Payments** | MTN MoMo and Airtel adapters, checkout, orders, refunds, reconciliation, disputes, financial adjustments, subscriptions with entitlement grants that drive access, 50% teacher-share accrual with the split snapshotted per row, and the **72-hour refund window** (2026-10-23): a customer asks within three days of the payment, staff can still open one afterwards, and a partial goodwill refund has no screen yet | Live credentials, callback verification against a real provider, automatic renewal, failed-payment retry, a merchant account | **External:** provider sandbox and merchant credentials (P12). Do not claim any of this works end to end |
 | **Payouts** (`teaching.payouts`) | The whole request path: `my_earnings()` and `/teach/earnings`, `request_instructor_payout()` with a tax acknowledgement, the refund-hold setting, one open request per currency (unique index), `my_payouts()`, the finance queue at `/admin/payouts` that shows the amount asked for beside what the ledger owes today, cancellation, failure with a reason the teacher reads, and `complete_instructor_payout()` as the only function that marks an earning paid; `platform_teacher_liability()` reports the balance owed per currency | The provider call itself, and per-teacher destination details | **External:** a payout provider, and a tax treatment per country. `teaching.payouts` is CODE-gated and a trigger refuses to enable it at runtime |
 | **Guardian verification** | Tables and flow complete, shipping off. **Not to be deleted** — COPPA makes verifiable parental consent mandatory for US under-13s | Enabling it | **External:** legal review, and it must be on before any US child enrols |
 | **Notifications** | The in-app centre: `/notifications`, a `notifications` table with RLS on the reader, `notify_user()` writing payout sent/failed/cancelled, and two derived reminders computed at read time (a class within a day, a plan renewing within three) each gated on its own flag; 7 tests | Email and SMS delivery — the outbox exists (`outbound_messages`, `message_templates`) and nothing sends | **External:** a delivery provider and its credentials (`delivery.notifications`) |
@@ -2300,6 +2300,35 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
+
+### Three days to change your mind, 2026-10-23
+
+The owner's rule: *a customer can only get a refund between the 72 hours that happen after the
+payment.* There was no clock at all before it — a family could ask a year later and the only limits
+were the refundable balance and a person's judgement.
+
+`request_refund()` now reads `orders.paid_at` and refuses outside the window. The comparison happens
+in the database against the server's clock, because `paid_at` is set by `record_payment_success()`
+from a verified confirmation and a browser cannot be trusted with either end of that.
+
+Three distinctions the rule turns on. It **bounds asking, not deciding**: a request made in the last
+minute of the seventy-second hour can be approved next week, because expiring requests in flight
+would punish the customer for how fast the platform moves. It **lets staff make it right**: support
+opens a request from `/admin/refunds` by order number, attributed to them, with a written reason, and
+the two-person rule still applies — because a rule with no escape hatch gets worked around in SQL,
+where nothing is audited. And a **closed window is said rather than hidden**: `refund_standing()`
+decomposes the writer's own predicate and carries the moment the window shut, so `/orders` prints
+*"A refund can be asked for within 72 hours of payment, and that window closed on 26 Oct 2026 at
+09:14 UTC"* instead of quietly removing a button.
+
+`commerce.refund_window_hours` is a new ADMIN control in `FLAGS.md`, defaulting to 72; `0` closes
+self-serve refunds entirely and a negative value is clamped rather than opening a window before the
+payment. A test flips it to 96 and watches an 80-hour-old order become refundable, which is the
+cheapest proof that the number is a setting and not a constant.
+
+The staff form refunds whatever is still refundable rather than taking a typed amount — a mistyped
+figure on a goodwill refund is money to chase. A partial goodwill refund is still a database action
+with no screen, and that gap is written down rather than implied.
 
 ### A statement, so a family can see their own money, 2026-10-23
 

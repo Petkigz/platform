@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { format, fromMinor } from '@/lib/money';
+import { describeRemaining } from '@/lib/refunds';
 
 /**
  * Ask for a refund.
@@ -20,10 +21,15 @@ export function RefundForm({
   orderId,
   amountMinor,
   currencyCode,
+  closesAt,
+  remainingHours,
 }: {
   orderId: string;
   amountMinor: string | number;
   currencyCode: string;
+  /** When the 72-hour window shuts, from the database's clock. */
+  closesAt?: string | null;
+  remainingHours?: number | null;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -67,14 +73,27 @@ export function RefundForm({
 
   if (!open) {
     return (
-      <button
-        type="button"
-        className="btn secondary"
-        style={{ width: 'auto', margin: 0 }}
-        onClick={() => setOpen(true)}
-      >
-        Request a refund
-      </button>
+      <span style={{ display: 'inline-flex', flexDirection: 'column', gap: '0.2rem' }}>
+        <button
+          type="button"
+          className="btn secondary"
+          style={{ width: 'auto', margin: 0 }}
+          onClick={() => setOpen(true)}
+        >
+          Request a refund
+        </button>
+        {closesAt ? (
+          <span className="muted" style={{ fontSize: '0.78rem' }}>
+            Until {new Date(closesAt).toLocaleString('en-GB', {
+              day: 'numeric', month: 'short', year: 'numeric',
+              hour: '2-digit', minute: '2-digit', timeZone: 'UTC',
+            })} UTC
+            {remainingHours !== null && remainingHours !== undefined
+              ? ` — ${describeRemaining(remainingHours)}`
+              : ''}
+          </span>
+        ) : null}
+      </span>
     );
   }
 

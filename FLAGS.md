@@ -155,17 +155,18 @@ money rules behave, and they shipped with values rather than being absent.
 | `finance.rate_sanity_factor` | integer | ADMIN | `10` | How many times the previous recorded rate for a pair a new rate may be before recording it needs a written reason. A slipped decimal in a rate is a 100x error in the only number the owner reads and it looks perfectly reasonable on screen, so the writer refuses one and keeps the reason in the audit trail. `0` turns the check off |
 | `learning.offline_max_devices` | integer | ADMIN | `3` | How many devices one learner may keep saved lessons on at once. Counted on devices that actually hold a live save, so an old phone with nothing on it is not a slot. Adding a fourth refuses with the number in the sentence |
 | `learning.offline_expiry_days` | integer | ADMIN | `30` | How long a saved lesson stays playable before it asks to be refreshed. A saved lesson is a subscription artefact, not a purchase: it lapses with the plan, and this number is the clock |
+| `commerce.refund_window_hours` | integer | ADMIN | `72` | How long after a payment a customer may ask for a refund. The clock runs from **the payment**, not from the request, and it is read in the database so a browser cannot ask early or late. It bounds **asking, not deciding**: a request made in the last minute of the window can be approved next week. Staff are exempt, because a support call that ends in "the window closed" is how a platform loses a family over a course that was sold wrong — and a rule with no way to make something right gets worked around in SQL, where nothing is audited. `0` means no self-serve refunds; a negative value is clamped to 0 rather than opening the window before the payment |
 | `delivery.live_room_base` | text | ADMIN | empty | Base URL of the live-room host, e.g. `https://meet.example.org`. A room is this plus `/room/<slug>`. Empty is the shipped state and means live rooms are not connected yet — `join_live_session()` refuses with that sentence rather than handing out a URL that does not carry a class. The platform owns the schedule and the door; the video is somebody else's product |
 
-Measured, the table holds **99 rows: the 89 flags above plus these ten.**
-Ninety-one are boolean switches, six are integers and two are text. Gate types
-across the flags: **46 ADMIN, 14 ADMIN + SETUP, 29 CODE**. The two governance
-policy controls have no gate because they are not features; the money
+Measured, the register holds **102 rows: the 90 flags above plus these twelve.**
+Ninety-two are boolean switches, eight are integers and two are text. The two
+governance policy controls have no gate because they are not features; the money
 controls are ADMIN, because a number that changes what a total says is changed
-from the dashboard and not from a migration — and so are the upload quota and the
-board control, for the same reason: a number that decides what a teacher may
-store, or a switch that lets a board decide instead of the owner, is a decision
-and not a deploy.
+from the dashboard and not from a migration — and so are the upload quota, the
+board control and the refund window, for the same reason: a number that decides
+what a teacher may store, a switch that lets a board decide instead of the owner,
+or the length of the window in which a family can ask for their money back, is a
+decision and not a deploy.
 
 ---
 

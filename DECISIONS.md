@@ -2504,6 +2504,52 @@ processing agreement, and it is the one part of live classes that cannot be buil
 **Also open:** whether a recording is offered to learners who missed the class, and how long
 it is kept. Nothing produces a recording yet, so nothing has to decide that today — but the
 moment a provider is connected, it is the next question.
+## A refund can be asked for for 72 hours, and the clock is the payment's — **DECIDED 2026-10-23**
+
+The owner: *"a customer can only get a refund between the 72 hours that happen after the payment."*
+Until now there was no clock at all — a family could ask a year later, and the only limits were the
+refundable balance and somebody's judgement.
+
+Four things the rule has to get right, and they are all about *what* is bounded.
+
+**The clock runs from the payment, not from the request.** `orders.paid_at` is the only moment that
+matters, and it is written by `record_payment_success()` from a verified confirmation — never by a
+browser coming back. The comparison happens in the database, so a client cannot ask early or late by
+moving its own clock.
+
+**It bounds asking, not deciding.** A request made in the last minute of the seventy-second hour is
+valid, and it can be approved tomorrow, next week, or after a provider has been down a fortnight. A
+rule that expired requests in flight would punish the customer for the platform's speed, and would
+turn a refund into a silent decline.
+
+**Staff are exempt, and that is a decision rather than an oversight.** The window is a customer
+policy, not a lock on the business: a course sold wrong, a duplicate charge, a family who could not
+get to a phone inside three days. Support opens a request from `/admin/refunds`, by order number,
+and it refunds whatever is still refundable — the amount is read from the database rather than typed,
+because a mistyped figure on a goodwill refund is money somebody has to chase. The request is
+attributed to the member of staff, `rr_not_self_approved` still stops them approving their own, and
+the audit records `refund.requested_by_staff` with **no window**, because the window did not apply. A
+year from now, "was this inside the policy" is answerable from the trail.
+
+The alternative — no escape hatch — is how a rule gets worked around by editing the database, after
+which nothing is audited at all.
+
+**A closed window is said, not hidden.** A refund button that disappears three days after a purchase
+is a support ticket: the customer cannot tell a missed deadline from a broken page from never being
+eligible. `refund_standing()` decomposes the writer's own predicate — not paid, nothing left, window
+closed, allowed — and carries the moment the window shut, so `/orders` prints the sentence and the
+date. A test holds the two together: `allowed` is false exactly when `request_refund()` refuses.
+
+**It is a setting, and it ships at 72.** `commerce.refund_window_hours` is an ADMIN control in
+`FLAGS.md`, because the length of a policy is a business decision and this platform's decisions live
+where the owner can change them. `0` means no self-serve refunds; a negative value is clamped to 0
+rather than opening a window that starts before the payment.
+
+**Known gap, recorded rather than papered over:** the staff form refunds the whole remaining amount.
+A *partial* goodwill refund is still a database action with no screen — the customer's own form has
+the same shape (it asks for the order total), and letting a person type an arbitrary amount on a
+support call is how a refund becomes a typo.
+
 ## A payer's balance is money that moved, and nothing else — **DECIDED 2026-10-23**
 
 The platform could say what an order was (`/orders`, and a receipt with a number a person can

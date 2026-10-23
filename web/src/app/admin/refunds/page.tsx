@@ -5,6 +5,7 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { fetchRefundQueue } from '@/lib/refunds';
 import { format, fromMinor } from '@/lib/money';
 import { DecideForm } from './decide-form';
+import { OpenOnBehalfForm } from './open-on-behalf-form';
 
 export const dynamic = 'force-dynamic';
 
@@ -73,6 +74,25 @@ export default async function AdminRefundsPage() {
           <DecideForm requestId={item.id} />
         </section>
       ))}
+
+      <section className="card" style={{ marginTop: '2rem' }}>
+        <h2 style={{ marginTop: 0 }}>Open one on a customer&rsquo;s behalf</h2>
+        <p className="muted">
+          A customer can ask for a refund for 72 hours after their payment. After
+          that the window has closed, and this form is how something still gets
+          put right — a course sold wrong, a duplicate charge, a family who could
+          not get to a phone inside three days. The window is a customer policy,
+          not a lock on us.
+        </p>
+        <p className="muted">
+          It refunds whatever is still refundable on the order, and it needs a
+          written reason. The request is attributed to <strong>you</strong>, and
+          because nobody may decide a refund they opened, somebody else has to
+          approve it. The audit trail records it as staff-opened, with no window,
+          because the window did not apply.
+        </p>
+        <OpenOnBehalfForm />
+      </section>
 
       <p className="muted">
         Every decision is written to the governance audit trail with who made it

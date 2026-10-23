@@ -110,6 +110,17 @@ export async function requestRefund(
         error: 'That is more than is left to refund on this order.',
       };
     }
+    if (msg.includes('refund window closed')) {
+      // The database's sentence carries the date the window closed, so it is
+      // passed through rather than replaced with something vaguer. A stale tab
+      // is the usual way a caller reaches this: the button was there when the
+      // page was rendered and the clock ran out while it sat open.
+      return {
+        ok: false,
+        status: 409,
+        error: `${error.message.charAt(0).toUpperCase()}${error.message.slice(1)}.`,
+      };
+    }
     return { ok: false, status: 400, error: error.message };
   }
 
@@ -217,4 +228,202 @@ export async function decideRefund(
   }
 
   return { ok: true };
+}
+
+
+/**
+ * Why a refund can, or cannot, be asked for on one order — the sentence and the
+ * clock, from the database rather than from the browser.
+ *
+ * The page could subtract `paid_at` from `Date.now()` itself and usually agree.
+ * Usually is the problem: the writer reads the server's clock, and a browser
+ * with a wrong time zone, a daylight-saving edge or a laptop that has been
+ * asleep would show a button for a window that is shut. The screen asks the
+ * same function the writer uses.
+ */
+export type RefundStanding = {
+  orderId: string;
+  orderNumber: string | null;
+  status: string;
+  allowed: boolean;
+  reason: 'allowed' | 'not_paid' | 'nothing_left' | 'window_closed' | string;
+  message: string;
+  windowHours: number;
+  paidAt: string | null;
+  closesAt: string | null;
+  remainingHours: number | null;
+  refundableMinor: string;
+  currencyCode: string;
+  asStaff: boolean;
+};
+
+export class RefundStandingError extends Error {}
+
+/** Read one standing. Refuses on a malformed payload rather than rendering NaN. */
+export function normaliseStanding(raw: unknown): RefundStanding {
+  const row = (raw ?? {}) as Record<string, unknown>;
+  if (typeof row.orderId !== 'string' || typeof row.allowed !== 'boolean') {
+    throw new RefundStandingError('the refund standing came back malformed');
+  }
+  const minor = typeof row.refundableMinor === 'number'
+    ? String(row.refundableMinor)
+    : row.refundableMinor;
+  if (typeof minor !== 'string' || !/^\d+$/.test(minor)) {
+    throw new RefundStandingError('the refundable amount is not whole minor units');
+  }
+  return {
+    orderId: row.orderId,
+    orderNumber: typeof row.orderNumber === 'string' ? row.orderNumber : null,
+    status: typeof row.status === 'string' ? row.status : 'unknown',
+    allowed: row.allowed,
+    reason: typeof row.reason === 'string' ? row.reason : 'unknown',
+    message: typeof row.message === 'string' ? row.message : '',
+    windowHours: Number(row.windowHours ?? 0),
+    paidAt: typeof row.paidAt === 'string' ? row.paidAt : null,
+    closesAt: typeof row.closesAt === 'string' ? row.closesAt : null,
+    remainingHours: row.remainingHours === null || row.remainingHours === undefined
+      ? null
+      : Number(row.remainingHours),
+    refundableMinor: minor,
+    currencyCode: typeof row.currencyCode === 'string' ? row.currencyCode : 'XXX',
+    asStaff: row.asStaff === true,
+  };
+}
+
+export async function fetchRefundStanding(
+  supabase: SupabaseClient,
+  orderId: string,
+): Promise<RefundStanding | null> {
+  const { data, error } = await supabase.rpc('refund_standing', { p_order_id: orderId });
+  // A standing the caller may not read is not a reason to fail the page: the
+  // order list is still theirs to see, and the form simply does not appear.
+  if (error) return null;
+  try {
+    return normaliseStanding(data);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * How long is left, in words a person reads quickly.
+ *
+ * `remainingHours` is computed by the database, so this only phrases it. It
+ * never rounds a closed window into an open one: zero is "closed", not "less
+ * than an hour".
+ */
+export function describeRemaining(hours: number | null): string {
+  if (hours === null) return '';
+  if (hours <= 0) return 'The window has closed.';
+  if (hours < 1) return 'Less than an hour left.';
+  if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} left.`;
+  const days = Math.floor(hours / 24);
+  const rest = hours % 24;
+  return `${days} day${days === 1 ? '' : 's'}${rest > 0 ? ` and ${rest} hour${rest === 1 ? '' : 's'}` : ''} left.`;
+}
+
+export type OnBehalfInput = {
+  orderNumber?: unknown;
+  reason?: unknown;
+};
+
+export type OnBehalfResult =
+  | { ok: true; requestId: string; amountMinor: string; currencyCode: string }
+  | { ok: false; status: number; error: string };
+
+/**
+ * Staff open a refund request on a customer's behalf, after the window has closed.
+ *
+ * The window is a customer policy, not a lock on the platform: a course sold
+ * wrong, a duplicate charge, a family who could not get to a phone inside three
+ * days. So this path exists and is deliberately separate in the interface — it
+ * is attributed to the member of staff who opened it, the two-person rule still
+ * stops them approving it, and the database records the action as
+ * `refund.requested_by_staff` rather than as a customer asking.
+ *
+ * The amount is **everything still refundable**, read from the database rather
+ * than typed. A person filling this in from a support call does not want to
+ * retype a figure in a currency they have to read off another screen, and a
+ * mistyped amount on a goodwill refund is money that has to be chased.
+ */
+export async function openRefundOnBehalf(
+  supabase: SupabaseClient,
+  input: OnBehalfInput,
+): Promise<OnBehalfResult> {
+  const orderNumber = typeof input.orderNumber === 'string'
+    ? input.orderNumber.trim().toUpperCase()
+    : '';
+  const reason = typeof input.reason === 'string' ? input.reason.trim() : '';
+
+  if (!/^AS-\d{8}$/.test(orderNumber)) {
+    return { ok: false, status: 400, error: 'An order number looks like AS-00001234.' };
+  }
+  if (!reason) {
+    return { ok: false, status: 400, error: 'Say why this refund is being opened.' };
+  }
+  if (reason.length > REQUEST_REASON_MAX) {
+    return {
+      ok: false,
+      status: 400,
+      error: `Please keep it under ${REQUEST_REASON_MAX} characters.`,
+    };
+  }
+
+  const { data: order, error: lookupError } = await supabase
+    .from('orders')
+    .select('id')
+    .eq('order_number', orderNumber)
+    .maybeSingle();
+  if (lookupError) return { ok: false, status: 400, error: lookupError.message };
+  if (!order) return { ok: false, status: 404, error: `No order ${orderNumber}.` };
+  const orderId = (order as { id: string }).id;
+
+  // The standing is the same function the customer's screen reads, so staff and
+  // the customer can never disagree about whether a window is open.
+  const { data: standingData, error: standingError } = await supabase.rpc('refund_standing', {
+    p_order_id: orderId,
+  });
+  if (standingError) return { ok: false, status: 400, error: standingError.message };
+
+  let standing: RefundStanding;
+  try {
+    standing = normaliseStanding(standingData);
+  } catch {
+    return { ok: false, status: 400, error: 'That order could not be read.' };
+  }
+
+  if (standing.reason === 'not_paid') {
+    return { ok: false, status: 409, error: 'That order has not been paid, so there is nothing to refund.' };
+  }
+  if (standing.reason === 'nothing_left') {
+    return { ok: false, status: 409, error: 'Everything paid on that order has already been returned.' };
+  }
+
+  const amountMinor = BigInt(standing.refundableMinor);
+  if (amountMinor <= 0n) {
+    return { ok: false, status: 409, error: 'There is nothing left to refund on that order.' };
+  }
+
+  const { data, error } = await supabase.rpc('request_refund', {
+    p_order_id: orderId,
+    p_amount_minor: Number(amountMinor),
+    p_reason: reason,
+  });
+  if (error) {
+    const msg = error.message.toLowerCase();
+    if (msg.includes('you are not on the billing account')) {
+      return { ok: false, status: 403, error: 'Only staff can use this form.' };
+    }
+    if (msg.includes('exceeds the refundable balance')) {
+      return { ok: false, status: 409, error: 'That is more than is left to refund on this order.' };
+    }
+    return { ok: false, status: 400, error: error.message };
+  }
+
+  return {
+    ok: true,
+    requestId: String(data),
+    amountMinor: standing.refundableMinor,
+    currencyCode: standing.currencyCode,
+  };
 }
