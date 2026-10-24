@@ -225,7 +225,7 @@ export default async function LessonPage({
   const duration = formatDuration(lesson.durationSeconds);
 
   return (
-    <main className="page narrow">
+    <div className="page">
       <nav className="crumbs">
         <Link href="/learn">Dashboard</Link>
         <span aria-hidden>›</span>
@@ -421,6 +421,6 @@ export default async function LessonPage({
         enabled={discussionOn}
         canPost={entitled}
       />
-    </main>
+    </div>
   );
 }

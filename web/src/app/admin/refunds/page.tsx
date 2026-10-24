@@ -49,7 +49,7 @@ export default async function AdminRefundsPage() {
   const windowHours = Number((windowRow as { value_text?: string } | null)?.value_text ?? 72);
 
   return (
-    <main className="page">
+    <div className="page wide">
       <nav className="crumbs">
         <Link href="/admin">Admin</Link>
         <span aria-hidden>›</span>
@@ -119,6 +119,6 @@ export default async function AdminRefundsPage() {
         Every decision is written to the governance audit trail with who made it
         and when.
       </p>
-    </main>
+    </div>
   );
 }

@@ -36,7 +36,7 @@ export default async function SavedPage() {
   ]);
 
   return (
-    <main className="page">
+    <div className="page">
       <nav className="crumbs">
         <Link href="/learn">My learning</Link>
         <span aria-hidden>›</span>
@@ -79,6 +79,6 @@ export default async function SavedPage() {
         Saving a course does not reserve a seat or hold a price. Prices and
         availability are on the course page.
       </p>
-    </main>
+    </div>
   );
 }

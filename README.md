@@ -73,6 +73,14 @@ user-defined triggers, 376 functions and 161 migrations.** The database suite
 passes **1648 tests**; the web suite passes **1025 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **165 app route entries** (89 pages, 76 API routes).
 
+Every class a screen asks for is defined. The stylesheet had been missing `.page`, `.page-head` and
+`.crumbs` while twenty-five to twenty-eight screens used them — and `.narrow`, which meant a 26rem
+column, was being read as "a page, a bit narrower", so the lesson page laid out a video and a
+discussion thread in 416 pixels. Three widths now exist (46rem, 68rem for tables, 34rem for a column
+of prose) and `npm run check:repo` fails on any `className` token in `web/src` that `globals.css` does
+not define. The same audit found the app rendering two `<main>` landmarks on twenty-five pages: the
+layout owns the one the skip link targets, and pages now open a `<div>`.
+
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. `/account`
 lets a signed-in learner update their display name, preferred language and IANA

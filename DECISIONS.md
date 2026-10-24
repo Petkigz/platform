@@ -2528,6 +2528,50 @@ for both — a warning that fires on missing data is a warning people learn to i
 whether a teacher should be told that a learner outside the band has joined. Both are policy; both would
 need the owner.
 
+## A class a screen asks for does not exist — **DECIDED 2026-10-24**
+
+Three class names were used on twenty-five to twenty-eight screens each and were never written down:
+`.page`, `.page-head` and `.crumbs`. A fourth, `.narrow`, did exist — it meant *a 26rem column*, and it was
+there for a card of prose. Fifteen screens wrote `className="page narrow"`, reading it as *a page, a little
+narrower*, and got the 26rem column. The lesson page was one of them: a video, a discussion thread and a
+sources list, laid out in 416 pixels. Nothing failed. TypeScript does not read class names, the build does not
+read them, and every test passed — the page was simply laid out by accident, on the screen where a learner
+spends the most time.
+
+**A width is decided by what the screen holds, not by how the author felt.** Three, and only three:
+`.page` is **46rem**, `.page.wide` is **68rem** for a screen that is a table of other things — the twelve
+`/admin` pages and teacher media, where the content is a list to scan and each row has its own action —
+and `.page.narrow` is **34rem**, kept for the two screens that genuinely are one column of prose
+(`/account/export`, the buy form). Everything else is `.page`. The lesson page is `.page`: a transcript, a
+thread and a source list are read, not scanned, and 46rem holds a line of text at a readable measure.
+
+**`.page-head` and `.crumbs` now exist because twenty-five screens had already agreed on them.** That is the
+tell for a missing primitive: when the same invented class name appears in page after page, the pages are not
+wrong, the stylesheet is. A crumb separator is a `span[aria-hidden]`, so a screen reader says "Courses,
+Introduction to Tajweed" rather than "Courses slash Introduction".
+
+**Twelve smaller classes were also missing** — `.section-sm`, `.field`, `.radio`, `.info`, `.success`,
+`.outline`, `.linklike`, `.print-revocation`, `.sr-only`, `.ok` — and are now defined for the same reason.
+`.radio` is a card that shows its own selection with `:has(input:checked)`, so the control's state is visible
+without a script; `.sr-only` is the standard clipping, written once.
+
+**`check:repo` now refuses a class one side does not know about.** It reads every literal `className` token in
+`web/src/**/*.tsx` — including the static parts of template literals — and every selector in `globals.css`,
+and fails on a token with no definition. This is deliberately a *token* check, not a CSS engine: it catches
+the name that was invented at the call site, which is the failure that happened. It was proved by writing a
+page with `brand-new-thing` in it and watching the check fail, then deleting the page.
+
+**The same audit found a second, invisible defect: the app rendered two `<main>` landmarks on twenty-five
+pages.** `layout.tsx` renders `<main id="main">` and the skip link targets it; twenty-five page components then
+wrapped their own content in another `<main>`. Nothing looks wrong, because a landmark has no visual effect —
+it is a map for assistive technology, and the map said there were two main regions. Pages now open a `<div>`.
+`global-error.tsx` is the one exception: it replaces the whole document, so it renders its own landmark, and
+the check lists it as allowed by name rather than by pattern.
+
+**Not decided here:** whether `.page` should ever be full-bleed for a media screen, and whether the admin
+tables want a horizontal scroll region rather than a wider page. Both would be answered by a screen that
+needs them, and neither has been built.
+
 ## A shelf says how many it holds — **DECIDED 2026-10-24**
 
 The catalogue had two read paths pretending to be one. Browsing was a PostgREST select with `limit 60`; searching went through

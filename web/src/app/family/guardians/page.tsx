@@ -56,7 +56,7 @@ export default async function FamilyGuardiansPage() {
   const alreadyRequested = new Set(requests.map((r) => r.learnerProfileId));
 
   return (
-    <main className="page narrow">
+    <div className="page">
       <nav className="crumbs">
         <Link href="/family">Family</Link>
         <span aria-hidden>›</span>
@@ -128,6 +128,6 @@ export default async function FamilyGuardiansPage() {
         Being verified does not give you the child&rsquo;s account. It gives you
         a view of their progress, and it can be revoked.
       </p>
-    </main>
+    </div>
   );
 }

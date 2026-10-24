@@ -27,7 +27,7 @@ export default async function ExportPage() {
   const methods = (methodsData ?? null) as SignInMethods | null;
 
   return (
-    <main className="page narrow">
+    <div className="page narrow">
       <nav className="crumbs">
         <Link href="/account">Account</Link>
         <span aria-hidden>›</span>
@@ -161,6 +161,6 @@ export default async function ExportPage() {
       <p style={{ marginTop: '1rem' }}>
         <Link href="/account">Back to account settings</Link>
       </p>
-    </main>
+    </div>
   );
 }

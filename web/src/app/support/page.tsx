@@ -38,7 +38,7 @@ export default async function SupportPage() {
   const cases = await fetchMyCases(supabase);
 
   return (
-    <main className="page narrow">
+    <div className="page">
       <nav className="crumbs">
         <Link href="/">Home</Link>
         <span aria-hidden>›</span>
@@ -111,6 +111,6 @@ export default async function SupportPage() {
         and are never shown to you; your own messages are visible only to the
         people answering.
       </p>
-    </main>
+    </div>
   );
 }

@@ -76,7 +76,7 @@ export default async function NotificationsPage() {
   const unreadIds = recent.filter((m) => m.readAt === null).map((m) => m.id);
 
   return (
-    <main className="page narrow">
+    <div className="page">
       <div className="page-head">
         <p className="eyebrow">Your account</p>
         <h1>Notifications</h1>
@@ -165,6 +165,6 @@ export default async function NotificationsPage() {
         {' · '}
         <Link href="/teach/payouts">Payouts</Link>
       </p>
-    </main>
+    </div>
   );
 }

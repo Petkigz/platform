@@ -96,7 +96,7 @@ export default async function AdminMessagesPage() {
   const messages = (data ?? []) as MessageRow[];
 
   return (
-    <main className="page">
+    <div className="page wide">
       <nav className="crumbs">
         <Link href="/admin">Admin</Link>
         <span aria-hidden>›</span>
@@ -224,6 +224,6 @@ export default async function AdminMessagesPage() {
 
       <h2>Stop writing to an address</h2>
       <SuppressForm />
-    </main>
+    </div>
   );
 }

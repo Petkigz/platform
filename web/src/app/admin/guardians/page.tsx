@@ -45,7 +45,7 @@ export default async function AdminGuardiansPage() {
   const queue = enabled ? await pendingGuardianQueue(supabase) : [];
 
   return (
-    <main className="page">
+    <div className="page wide">
       <nav className="crumbs">
         <Link href="/admin">Admin</Link>
         <span aria-hidden>›</span>
@@ -115,6 +115,6 @@ export default async function AdminGuardiansPage() {
           <DecideForm relationshipId={item.id} />
         </section>
       ))}
-    </main>
+    </div>
   );
 }

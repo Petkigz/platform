@@ -41,7 +41,7 @@ export default async function AdminDiscussionPage() {
   const queue = enabled ? await fetchModerationQueue(supabase) : [];
 
   return (
-    <main className="page">
+    <div className="page wide">
       <nav className="crumbs">
         <Link href="/admin">Admin</Link>
         <span aria-hidden>›</span>
@@ -98,6 +98,6 @@ export default async function AdminDiscussionPage() {
           <ModerateForm postId={item.id} />
         </section>
       ))}
-    </main>
+    </div>
   );
 }

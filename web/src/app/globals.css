@@ -155,6 +155,8 @@ p  { margin: 0 0 1rem; }
 }
 
 .section { padding: 2.5rem 0; }
+/* A section inside a page that already has its own top padding. */
+.section-sm { padding: 1.5rem 0; }
 
 /* --------------------------------------------------------------------------
    Hero
@@ -409,6 +411,35 @@ input:focus, select:focus, textarea:focus {
 .search input { flex: 1; }
 .search select { width: auto; }
 .search .btn { width: auto; margin: 0; }
+/* A labelled field. The label already carries the type; the inner span was an
+   inline element, so the caption and the input ran together on one line. */
+.field { display: block; }
+.field > span {
+  display: block;
+  margin: 0 0 0.3rem;
+}
+
+/* A choice that looks like a choice. Used for payment providers and for
+   promotion scope, where the control was a bare label and a radio dot — no
+   border, no hover, nothing that said "pick one of these". */
+.radio {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  margin: 0;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+.radio:hover { border-color: var(--green-100); background: var(--green-50); }
+.radio:has(input:checked) { border-color: var(--green-600); background: var(--green-50); }
+.radio input { width: auto; flex: none; margin-top: 0.18rem; }
 
 /* --------------------------------------------------------------------------
    Tabs (the sign-in mode switch)
@@ -461,6 +492,9 @@ input:focus, select:focus, textarea:focus {
 }
 .notice.warn { border-left-color: #b58a2a; background: var(--warn-bg); border-color: var(--warn-border); }
 .notice.error { border-left-color: var(--danger); background: var(--danger-bg); border-color: #f0dcdc; color: var(--danger); }
+/* Named so a caller can say "this is information" rather than relying on the
+   base notice being green. `.notice` already is; this states it. */
+.notice.info { border-left-color: var(--green-600); background: var(--green-50); }
 
 .badge {
   display: inline-block;
@@ -474,6 +508,49 @@ input:focus, select:focus, textarea:focus {
   white-space: nowrap;
 }
 .badge.neutral { background: var(--surface-2); border-color: var(--border); color: var(--muted); }
+/* A badge that states an outcome rather than a category. Solid, because a
+   finished lesson should read as finished at a glance and an outline is what
+   every other badge already looks like. */
+.badge.ok {
+  background: var(--green-700);
+  border-color: var(--green-700);
+  color: #ffffff;
+}
+
+/* "Saved." — a confirmation with no colour looked like ordinary paragraph
+   text, which is how a person saves twice. */
+.success { color: var(--green-700); font-weight: 600; }
+
+/* A button that is a sentence: "report this lesson". Distinct from `.btn`
+   because it must not look like the page's primary action. */
+.linklike {
+  display: inline;
+  width: auto;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  font: inherit;
+  color: var(--green-700);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.linklike:hover { color: var(--green-600); }
+
+/* Screen-reader-only, for when an inline style is not available — the skip
+   link in the layout uses both, and a `.sr-only` that does not hide anything
+   is worse than no class at all, because the text becomes visible. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 .course {
   border-top: 1px solid var(--border-soft);
@@ -516,6 +593,10 @@ input:focus, select:focus, textarea:focus {
 .lesson-list .n { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 0.85rem; flex: none; width: 1.6rem; }
 
 .empty { color: var(--muted); font-style: italic; padding: 1rem 0; }
+
+/* A bordered group with no fill: a plan version, a settings block. Distinct
+   from `.card`, which is a raised surface. */
+.outline { border: 1px solid var(--border); border-radius: var(--radius); }
 
 .stats { display: flex; gap: 2rem; flex-wrap: wrap; margin: 1.5rem 0 0; }
 .stats div { min-width: 5rem; }
@@ -588,6 +669,59 @@ footer a { color: var(--text-soft); }
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
+
+/* --------------------------------------------------------------------------
+   The app page, and the width it knows it has
+   --------------------------------------------------------------------------
+   `.container` is the public site: a 60rem column with a gutter, used by the
+   catalogue and the marketing pages. `.page` is the signed-in application, and
+   it was **never defined** — twenty-eight screens were laid out by whatever
+   happened to be around them, and fifteen of those added `.narrow` and got a
+   26rem column instead. The lesson page was one of them: a video, a discussion
+   thread and a list of sources, all in 416 pixels.
+
+   Two widths, one variable, decided by what a screen holds:
+
+     .page          46rem   anything read, scanned or filled in one column
+     .page.wide     68rem   a queue whose row carries several fields at once
+     .page.narrow   34rem   a screen that asks for one thing and nothing else
+
+   The gutter is on the page rather than on a wrapper so a full-bleed child
+   (a player, a table) can escape it deliberately with a negative margin. */
+
+.page {
+  max-width: var(--page-width, 46rem);
+  margin: 0 auto;
+  padding: 2rem 1.25rem 3.5rem;
+}
+
+.page.narrow { --page-width: 34rem; }
+.page.wide   { --page-width: 68rem; }
+
+/* The title block. Without it the eyebrow, heading and lede sat flush against
+   the first card on twenty-seven screens. */
+.page-head { margin: 0 0 1.5rem; }
+.page-head h1 { margin-bottom: 0.4rem; }
+.page-head .eyebrow { margin-bottom: 0.4rem; }
+.page-head > :last-child { margin-bottom: 0; }
+
+/* Breadcrumbs. Twenty-five screens rendered `Dashboard › Course › Section` as
+   ordinary inline links with no separation from the heading below. */
+.crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 1.1rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.crumbs a { color: var(--text-soft); }
+.crumbs a:hover { color: var(--green-700); }
+/* The separator is an aria-hidden span; the last crumb is where you already
+   are, so it is quieter than the links that lead back. */
+.crumbs span[aria-hidden] { color: var(--border); }
 
 /* --------------------------------------------------------------------------
    Shelf paging
@@ -922,4 +1056,8 @@ textarea { resize: vertical; min-height: 4rem; }
   .certificate-sheet h1 { font-size: 34pt; }
   .certificate-learner { font-size: 28pt; }
   .certificate-sheet h2 { font-size: 20pt; }
+  /* A revocation must survive the print: the sheet is what somebody takes to an
+     employer, and a certificate that prints without the reason it was revoked
+     is the one document this page exists to prevent. */
+  .print-revocation { display: block !important; color: #a12828; }
 }

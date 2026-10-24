@@ -2301,6 +2301,25 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### A class a screen asks for does not exist, 2026-10-24
+
+`.page`, `.page-head` and `.crumbs` were used on 28, 27 and 25 screens and had never been written into
+`globals.css`. The one nearby name that did exist, `.narrow`, meant a 26rem column, so the fifteen screens that
+wrote `page narrow` — meaning *a page* — were squeezed into 416 pixels. The lesson page was among them, holding
+a video, a discussion thread and a list of sources.
+
+Three widths now exist and the choice is made by what the screen holds: `.page` 46rem, `.page.wide` 68rem for
+the twelve `/admin` pages and teacher media, `.page.narrow` 34rem for the two screens that are one column of
+prose. `.page-head`, `.crumbs` and the twelve other stray classes (`.field`, `.radio`, `.notice.info`,
+`.section-sm`, `.outline`, `.linklike`, `.sr-only`, `.success`, `.badge.ok`, `.print-revocation`) are defined.
+
+`check:repo` gained a fourth check: every literal `className` token in `web/src/**/*.tsx` must be defined in
+`globals.css`. A name invented at the call site now fails the build gate instead of quietly rendering.
+
+The audit turned up a second defect with no visual symptom: `layout.tsx` renders `<main id="main">` — the skip
+link's target — and 25 page components rendered a second `<main>` inside it. Pages now use a `<div>`;
+`global-error.tsx`, which replaces the whole document, keeps its own. A fifth check enforces it.
+
 ### A shelf says how many it holds, 2026-10-24
 
 The catalogue had two read paths that disagreed, and three defects lived in the gap. Browsing never filtered `suspended_at`, so a

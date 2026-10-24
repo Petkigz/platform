@@ -63,7 +63,7 @@ export default async function TeacherPayoutsPage() {
   ]);
   if (instructor !== true && owner !== true) {
     return (
-      <main className="page narrow">
+      <div className="page">
         <h1>Payouts</h1>
         <p className="notice warn">
           Only a teacher has payouts. Teaching here is by appointment — ask the platform owner for the
@@ -72,7 +72,7 @@ export default async function TeacherPayoutsPage() {
         <p>
           <Link href="/teach">Back to teaching</Link>
         </p>
-      </main>
+      </div>
     );
   }
 
@@ -100,7 +100,7 @@ export default async function TeacherPayoutsPage() {
   }));
 
   return (
-    <main className="page narrow">
+    <div className="page">
       <nav className="crumbs">
         <Link href="/teach">Teaching</Link>
         <span aria-hidden>›</span>
@@ -222,6 +222,6 @@ export default async function TeacherPayoutsPage() {
         The figures here are recorded earnings. <Link href="/teach/earnings">The earnings statement</Link> shows
         the sales behind them; <Link href="/admin/payouts">finance</Link> works the queue.
       </p>
-    </main>
+    </div>
   );
 }

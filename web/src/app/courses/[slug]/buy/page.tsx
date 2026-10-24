@@ -71,7 +71,7 @@ export default async function BuyPage({
 
   if (learners.length === 0) {
     return (
-      <main className="page narrow">
+      <div className="page narrow">
         <nav className="crumbs">
           <Link href="/catalogue">Catalogue</Link>
           <span aria-hidden>›</span>
@@ -101,7 +101,7 @@ export default async function BuyPage({
             Back to the course
           </Link>
         </p>
-      </main>
+      </div>
     );
   }
 
@@ -135,7 +135,7 @@ export default async function BuyPage({
   if (offering.kind === 'not_sold_here') {
     const place = countryName(offering.country);
     return (
-      <main className="page narrow">
+      <div className="page narrow">
         <nav className="crumbs">
           <Link href="/catalogue">Catalogue</Link>
           <span aria-hidden>›</span>
@@ -169,7 +169,7 @@ export default async function BuyPage({
             Back to the course
           </Link>
         </p>
-      </main>
+      </div>
     );
   }
 
@@ -191,7 +191,7 @@ export default async function BuyPage({
   }));
 
   return (
-    <main className="page narrow">
+    <div className="page narrow">
       <nav className="crumbs">
         <Link href="/catalogue">Catalogue</Link>
         <span aria-hidden>›</span>
@@ -267,6 +267,6 @@ export default async function BuyPage({
         You will see the order in{' '}
         <Link href="/orders">your orders</Link> either way.
       </p>
-    </main>
+    </div>
   );
 }

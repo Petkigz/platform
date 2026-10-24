@@ -132,7 +132,7 @@ export default async function OrdersPage({
   const returned = pending ? orders.find((o) => o.id === pending) : undefined;
 
   return (
-    <main className="page narrow">
+    <div className="page">
       <div className="page-head">
         <p className="eyebrow">Account</p>
         <h1>My orders</h1>
@@ -280,6 +280,6 @@ export default async function OrdersPage({
         <Link href="/billing">What you have paid</Link> — money that has moved, and
         money that has not yet, across every order on your account.
       </p>
-    </main>
+    </div>
   );
 }

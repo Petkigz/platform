@@ -54,7 +54,7 @@ export default async function AdminPromotionsPage() {
   const markets = ((marketRows ?? []) as { market: string }[]).map((row) => row.market);
 
   return (
-    <main className="page">
+    <div className="page wide">
       <nav className="crumbs">
         <Link href="/admin">Admin</Link>
         <span aria-hidden>›</span>
@@ -87,6 +87,6 @@ export default async function AdminPromotionsPage() {
         scope="platform"
         canCreate={isOwner === true}
       />
-    </main>
+    </div>
   );
 }

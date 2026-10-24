@@ -34,7 +34,7 @@ export default async function TeachPromotionsPage() {
   ]);
   if (instructor !== true && owner !== true) {
     return (
-      <main className="page narrow">
+      <div className="page">
         <nav className="crumbs">
           <Link href="/learn">My learning</Link>
           <span aria-hidden>›</span>
@@ -52,7 +52,7 @@ export default async function TeachPromotionsPage() {
         <p style={{ marginTop: '1.5rem' }}>
           <Link href="/learn" className="btn">Back to my learning</Link>
         </p>
-      </main>
+      </div>
     );
   }
 
@@ -70,7 +70,7 @@ export default async function TeachPromotionsPage() {
   const markets = ((marketRows ?? []) as { market: string }[]).map((row) => row.market);
 
   return (
-    <main className="page">
+    <div className="page">
       <nav className="crumbs">
         <Link href="/teach">Teach</Link>
         <span aria-hidden>›</span>
@@ -101,6 +101,6 @@ export default async function TeachPromotionsPage() {
         scope="teacher"
         canCreate
       />
-    </main>
+    </div>
   );
 }

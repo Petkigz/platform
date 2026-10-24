@@ -74,7 +74,7 @@ export default async function PublicLessonPreview({
   const resources = (rows ?? []) as unknown as PreviewResource[];
 
   return (
-    <main className="container section" style={{ maxWidth: 820 }}>
+    <div className="container section" style={{ maxWidth: 820 }}>
       <p className="eyebrow"><Link href={`/courses/${course.slug}`}>{course.title}</Link> · Free preview</p>
       <h1>{lesson.title}</h1>
       <p className="muted">A sample from version {currentVersion.version_number}.</p>
@@ -104,6 +104,6 @@ export default async function PublicLessonPreview({
       <p style={{ marginTop: '1.5rem' }}>
         <Link href={`/courses/${course.slug}`}>Back to course</Link>
       </p>
-    </main>
+    </div>
   );
 }

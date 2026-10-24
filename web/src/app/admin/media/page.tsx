@@ -69,7 +69,7 @@ export default async function AdminMediaPage() {
   const storage = (storageRows ?? []) as StorageRow[];
 
   return (
-    <main className="page">
+    <div className="page wide">
       <nav className="crumbs">
         <Link href="/admin">Admin</Link>
         <span aria-hidden>›</span>
@@ -187,6 +187,6 @@ export default async function AdminMediaPage() {
         rather than files. Only staff can verify, quarantine, withdraw, retry or
         abandon, and an uploader can never promote their own file.
       </p>
-    </main>
+    </div>
   );
 }

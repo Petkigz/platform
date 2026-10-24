@@ -70,7 +70,7 @@ export default async function AdminTeachersPage({
   }
 
   return (
-    <main className="page">
+    <div className="page wide">
       <nav className="crumbs">
         <Link href="/admin">Admin</Link>
         <span aria-hidden>›</span>
@@ -174,6 +174,6 @@ export default async function AdminTeachersPage({
         with a written reason. What they have earned is on{' '}
         <Link href="/admin/payouts">payouts</Link>, per currency — never here.
       </p>
-    </main>
+    </div>
   );
 }

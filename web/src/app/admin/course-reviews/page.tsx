@@ -39,7 +39,7 @@ export default async function AdminCourseReviewsPage() {
   ]);
 
   return (
-    <main className="page">
+    <div className="page wide">
       <nav className="crumbs">
         <Link href="/admin">Admin</Link>
         <span aria-hidden>›</span>
@@ -93,6 +93,6 @@ export default async function AdminCourseReviewsPage() {
         <Link href="/admin/reviews">Assign reviews</Link>, and nothing on this
         page can approve a course version.
       </p>
-    </main>
+    </div>
   );
 }

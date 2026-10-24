@@ -80,7 +80,7 @@ export default async function EarningsPage() {
   const entries = statement?.entries ?? [];
 
   return (
-    <main className="page narrow">
+    <div className="page">
       <nav className="crumbs">
         <Link href="/teach">Teaching</Link>
         <span aria-hidden>›</span>
@@ -177,6 +177,6 @@ export default async function EarningsPage() {
         {' · '}
         <Link href="/teach">Back to teaching</Link>
       </p>
-    </main>
+    </div>
   );
 }

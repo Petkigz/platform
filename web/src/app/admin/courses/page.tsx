@@ -73,7 +73,7 @@ export default async function AdminCoursesPage({
   const shelf: Shelf = parseShelf(data);
 
   return (
-    <main className="page">
+    <div className="page wide">
       <nav className="crumbs">
         <Link href="/admin">Admin</Link>
         <span aria-hidden>›</span>
@@ -193,6 +193,6 @@ export default async function AdminCoursesPage({
         <Link href="/admin/reviews">review</Link>. Changing who teaches is on{' '}
         <Link href="/admin/roles">roles</Link>.
       </p>
-    </main>
+    </div>
   );
 }

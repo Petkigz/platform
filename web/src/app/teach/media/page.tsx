@@ -58,7 +58,7 @@ export default async function TeachMediaPage() {
       : null;
 
   return (
-    <main className="page narrow">
+    <div className="page wide">
       <nav className="crumbs">
         <Link href="/teach">Teaching</Link>
         <span aria-hidden>›</span>
@@ -200,6 +200,6 @@ export default async function TeachMediaPage() {
           <Link href="/support">contact support</Link>.
         </p>
       </section>
-    </main>
+    </div>
   );
 }

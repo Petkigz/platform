@@ -67,7 +67,7 @@ export default async function AdminUsersPage({
   }
 
   return (
-    <main className="page">
+    <div className="page wide">
       <nav className="crumbs">
         <Link href="/admin">Admin</Link>
         <span aria-hidden>›</span>
@@ -170,6 +170,6 @@ export default async function AdminUsersPage({
         <Link href="/admin/roles">Roles</Link>, with a written reason. This page
         reads; it does not change anybody.
       </p>
-    </main>
+    </div>
   );
 }

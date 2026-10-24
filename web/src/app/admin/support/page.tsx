@@ -45,7 +45,7 @@ export default async function AdminSupportPage({
   ]);
 
   return (
-    <main className="page">
+    <div className="page wide">
       <nav className="crumbs">
         <Link href="/admin">Admin</Link>
         <span aria-hidden>›</span>
@@ -140,6 +140,6 @@ export default async function AdminSupportPage({
         to a resolved case reopens it, so a resolution rate here means answered,
         not merely marked.
       </p>
-    </main>
+    </div>
   );
 }

@@ -59,7 +59,7 @@ export default async function SupportCasePage({
   const open = supportCaseRow.status !== 'closed';
 
   return (
-    <main className="page narrow">
+    <div className="page">
       <nav className="crumbs">
         <Link href="/support">Help</Link>
         <span aria-hidden>›</span>
@@ -160,6 +160,6 @@ export default async function SupportCasePage({
         isStaff={isStaff}
         myUserId={user.id}
       />
-    </main>
+    </div>
   );
 }
