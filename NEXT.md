@@ -2301,6 +2301,21 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### When a page breaks, it says so in its own voice, 2026-10-24
+
+There was no `error.tsx`, `global-error.tsx` or `not-found.tsx` anywhere in the app, so a thrown error fell
+through to Next's default screen: a bare sentence, no way back, no reference.
+
+`not-found.tsx` tells the two kinds of visitor apart — a mistyped address and a retired course — and sends
+both to the catalogue rather than the marketing home, because somebody who was reading a course wants
+another course. `error.tsx` takes the blame, quotes `error.digest` as the reference, offers a retry, and
+sends a payer to `/orders` before they pay again rather than saying "nothing was charged". `global-error.tsx`
+is the root-layout failure: its own `<html>`/`<body>`, inline styles, and plain full-page links, because in
+that state the router may be the thing that is broken.
+
+**Open:** no telemetry provider is configured, so the client error is only logged to the browser console;
+the digest is what ties it to the server's log.
+
 ### A child's own page, 2026-10-24
 
 Screen 11. A child has no login, so a child home cannot be a second site: `/family/[childId]` is the
