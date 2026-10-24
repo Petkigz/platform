@@ -590,6 +590,54 @@ footer a { color: var(--text-soft); }
 }
 
 /* --------------------------------------------------------------------------
+   Shelf paging
+   --------------------------------------------------------------------------
+   The count is quiet and the pager is quiet. A disabled "Previous" is a span
+   rather than a link that goes nowhere, so the keyboard does not stop on it. */
+
+.shelf-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 0 0 1rem;
+}
+
+.shelf-count {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pager .btn {
+  width: auto;
+  margin: 0;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.88rem;
+}
+
+.pager .btn.disabled {
+  opacity: 0.45;
+  cursor: default;
+  color: var(--muted);
+}
+
+.pager-at {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
    Progress
    -------------------------------------------------------------------------- */
 

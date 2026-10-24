@@ -8,7 +8,10 @@ import { recordEvent } from '@/lib/analytics-server';
 import { createClient } from '@/lib/supabase/server';
 import { countryFromHeaders } from '@/lib/geo';
 import { fetchCourseCards } from '@/lib/catalogue-cards';
+import { fetchCataloguePage } from '@/lib/catalogue';
+import { offsetFor, pageNumber, PAGE_SIZE } from '@/lib/paging';
 import { CourseShelfCard } from '../_shared/course-shelf-card';
+import { ShelfPager } from '../_shared/shelf-pager';
 import {
   AUDIENCE_LABEL,
   DIFFICULTY_LABEL,
@@ -24,7 +27,7 @@ import {
 export const metadata: Metadata = { title: 'Catalogue' };
 export const dynamic = 'force-dynamic';
 
-type Search = { q?: string; subject?: string; audience?: string };
+type Search = { q?: string; subject?: string; audience?: string; page?: string };
 
 export default async function CataloguePage({
   searchParams,
@@ -33,20 +36,31 @@ export default async function CataloguePage({
 }) {
   if (!isSupabaseConfigured()) redirect('/');
 
-  const { q, subject, audience } = await searchParams;
+  const { q, subject, audience, page: pageParam } = await searchParams;
   const supabase = await createClient();
 
-  const [subjects, courses, doors] = await Promise.all([
+  // The page number is a request, not a fact: a stale link or a hand-typed
+  // address is clamped here, and the offset sent to the database is always a
+  // whole page.
+  const page = pageNumber(pageParam);
+
+  const [subjects, shelf, doors] = await Promise.all([
     fetchSubjectAreas(supabase),
-    fetchCatalogue(supabase, { q, subject, audience }),
+    fetchCataloguePage(supabase, { q, subject, audience }, {
+      limit: PAGE_SIZE,
+      offset: offsetFor(page),
+    }),
     // The two doors, once the owner opens them. A door nobody can see is not a
     // door, and the catalogue is where everybody arrives first.
     isFlagEnabled(supabase, 'learning.audience_sections').catch(() => false),
   ]);
 
   // A course is only shelf-ready if it has a published version. RLS may show
-  // us a version an author can see in draft; the catalogue must not.
-  const visible = courses.filter((c) => displayVersion(c) !== null);
+  // us a version an author can see in draft; the catalogue must not. The
+  // database already excludes those now, so this is a belt on a belt — it costs
+  // one filter and it keeps the guarantee local to the page that renders the
+  // cards.
+  const visible = shelf.courses.filter((c) => displayVersion(c) !== null);
   const tops = disciplines(subjects);
 
   // One call for the whole shelf: what each course contains and what it would
@@ -66,14 +80,16 @@ export default async function CataloguePage({
     });
   }
 
+  // A chip is a filter change, so it always returns to the first page: staying
+  // on page four of a different subject would show nothing and look broken.
   const qs = (over: Partial<Search>): string => {
     const p = new URLSearchParams();
-    const merged = { q, subject, audience, ...over };
+    const merged = { q, subject, audience, ...over, page: undefined };
     for (const [k, v] of Object.entries(merged)) {
       if (v && v !== 'all') p.set(k, v);
     }
-    const s = p.toString();
-    return s ? `/catalogue?${s}` : '/catalogue';
+    const text = p.toString();
+    return text ? `/catalogue?${text}` : '/catalogue';
   };
 
   return (
@@ -130,16 +146,38 @@ export default async function CataloguePage({
 
       {visible.length === 0 ? (
         <p className="empty">
-          {q && q.trim().length > 0
-            ? `Nothing matched \u201c${q.trim()}\u201d. Try a subject, or a teacher\u2019s name.`
-            : 'No courses yet. Once a teacher publishes one it will appear here — nothing is shown until it has passed review.'}
+          {page > 1
+            ? 'There is nothing on this page. It may be past the end of the shelf.'
+            : q && q.trim().length > 0
+              ? `Nothing matched \u201c${q.trim()}\u201d. Try a subject, or a teacher\u2019s name.`
+              : 'No courses yet. Once a teacher publishes one it will appear here — nothing is shown until it has passed review.'}
         </p>
       ) : (
-        <div className="grid cols-2">
-          {visible.map((c) => (
-            <CourseShelfCard key={c.id} course={c} card={cards.get(c.id) ?? null} />
-          ))}
-        </div>
+        <>
+          <ShelfPager
+            basePath="/catalogue"
+            params={{ q, subject, audience }}
+            total={shelf.total}
+            shown={shelf.shown}
+            offset={shelf.offset}
+            limit={shelf.limit}
+          />
+          <div className="grid cols-2">
+            {visible.map((c) => (
+              <CourseShelfCard key={c.id} course={c} card={cards.get(c.id) ?? null} />
+            ))}
+          </div>
+          {/* Repeated under the grid, because after reading twelve cards the
+              top of the page is a long way up. */}
+          <ShelfPager
+            basePath="/catalogue"
+            params={{ q, subject, audience }}
+            total={shelf.total}
+            shown={shelf.shown}
+            offset={shelf.offset}
+            limit={shelf.limit}
+          />
+        </>
       )}
     </div>
   );

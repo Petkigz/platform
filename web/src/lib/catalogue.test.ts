@@ -3,11 +3,14 @@ import test from 'node:test';
 
 import {
   fetchCatalogue,
+  fetchCataloguePage,
   orderByIds,
+  parseCataloguePage,
   parseSearchHits,
   searchCatalogue,
   type CatalogueCourse,
 } from './catalogue.ts';
+import { PAGE_SIZE } from './paging.ts';
 
 // ---------------------------------------------------------------------------
 // Catalogue search.
@@ -117,44 +120,110 @@ test('rows come back in the order they were ranked, and a missing row is skipped
 // The call
 // ---------------------------------------------------------------------------
 
-test('the search sends the query and sends "all" as nothing at all', async () => {
+const envelope = (over: Record<string, unknown> = {}) => ({
+  total: 1,
+  shown: 1,
+  offset: 0,
+  limit: 24,
+  ordered: [{ courseId: 'a', score: 12 }],
+  ...over,
+});
+
+test('one call answers both browsing and searching', async () => {
+  // This used to be two: a PostgREST select for browsing and a different
+  // function for a query. The two disagreed — the browse path never filtered a
+  // suspended course, and it applied the subject filter after the limit — so
+  // the disagreement *was* the bug. There is one question now.
   const { client, calls } = stubClient({
-    rpcData: [{ course_id: 'a', score: 12 }],
+    rpcData: envelope(),
     rows: [course('a', 'Alpha')],
   });
 
-  const found = await searchCatalogue(client, {
-    q: 'fiqh', subject: 'all', audience: 'all',
-  });
+  const found = await fetchCatalogue(client, { q: 'fiqh', subject: 'all', audience: 'all' });
 
   assert.deepEqual(found.map((row) => row.id), ['a']);
-  assert.deepEqual(calls[0], {
-    kind: 'rpc',
-    name: 'search_catalogue',
-    args: { p_query: 'fiqh', p_subject: null, p_audience: null, p_limit: 60 },
+  assert.equal(calls[0]?.kind, 'rpc');
+  assert.equal(calls[0]?.name, 'catalogue_page');
+  assert.deepEqual(calls[0]?.args, {
+    p_query: 'fiqh',
+    p_subject: null,
+    p_audience: null,
+    p_band: null,
+    p_limit: PAGE_SIZE,
+    p_offset: 0,
   });
 });
 
-test('an empty result never reads the courses table', async () => {
-  const { client, calls } = stubClient({ rpcData: [] });
-
-  assert.deepEqual(await searchCatalogue(client, { q: 'nothing' }), []);
-  assert.equal(calls.length, 1, 'an empty search still fetched rows');
-});
-
-test('a query goes through the function; browsing does not', async () => {
-  const searching = stubClient({
-    rpcData: [{ course_id: 'a', score: 3 }],
+test('a blank query and "all" go as nothing at all', async () => {
+  const { client, calls } = stubClient({
+    rpcData: envelope({ ordered: [{ courseId: 'a', score: 0 }] }),
     rows: [course('a', 'Alpha')],
   });
-  await fetchCatalogue(searching.client, { q: '  fiqh  ' });
-  assert.equal(searching.calls[0]?.kind, 'rpc', 'a query bypassed the search function');
 
-  const browsing = stubClient({ rows: [course('a', 'Alpha')] });
-  const listed = await fetchCatalogue(browsing.client, { q: '   ' });
-  assert.equal(listed.length, 1);
-  assert.ok(browsing.calls.every((call) => call.kind === 'select'),
-    'a blank query called the search function');
+  await fetchCatalogue(client, { q: '   ', subject: 'all', audience: 'all', band: '8-10' });
+
+  assert.deepEqual(calls[0]?.args, {
+    p_query: null,
+    p_subject: null,
+    p_audience: null,
+    p_band: '8-10',
+    p_limit: PAGE_SIZE,
+    p_offset: 0,
+  });
+});
+
+test('an empty page never reads the courses table', async () => {
+  const { client, calls } = stubClient({
+    rpcData: envelope({ total: 0, shown: 0, ordered: [] }),
+  });
+
+  const page = await fetchCataloguePage(client, { q: 'nothing' });
+  assert.deepEqual(page.courses, []);
+  assert.equal(page.total, 0);
+  assert.equal(calls.length, 1, 'an empty page still fetched rows');
+});
+
+test('the envelope carries the true total, not the size of the page', async () => {
+  const { client } = stubClient({
+    rpcData: envelope({ total: 137, shown: 1, offset: 24, limit: 24 }),
+    rows: [course('a', 'Alpha')],
+  });
+
+  const page = await fetchCataloguePage(client, {}, { limit: 24, offset: 24 });
+  assert.equal(page.total, 137);
+  assert.equal(page.shown, 1);
+  assert.equal(page.offset, 24);
+  assert.equal(page.courses.length, 1);
+});
+
+test('the page is sent to the database as a page, not fetched whole', async () => {
+  const { client, calls } = stubClient({
+    rpcData: envelope({ total: 137, offset: 48, limit: 24 }),
+    rows: [course('a', 'Alpha')],
+  });
+
+  await fetchCataloguePage(client, { subject: 'quran' }, { limit: 24, offset: 48 });
+  assert.equal(calls[0]?.args?.p_offset, 48);
+  assert.equal(calls[0]?.args?.p_limit, 24);
+  assert.equal(calls[0]?.args?.p_subject, 'quran');
+});
+
+test('shown describes what was delivered, not what was promised', async () => {
+  // A page that says twenty-four and delivers twenty must describe the twenty,
+  // or the range label claims courses the reader is not looking at.
+  const parsed = parseCataloguePage({
+    total: 137, shown: 24, offset: 0, limit: 24, ordered: [{ courseId: 'a' }],
+  });
+  assert.equal(parsed.shown, 1);
+  assert.equal(parsed.total, 137);
+});
+
+test('a malformed envelope becomes an empty page rather than a crash', () => {
+  for (const junk of [null, undefined, 'nonsense', 42, {}]) {
+    const parsed = parseCataloguePage(junk);
+    assert.equal(parsed.total, 0, `${String(junk)} produced a total`);
+    assert.deepEqual(parsed.hits, []);
+  }
 });
 
 test('a refusal from the database is raised rather than shown as no results', async () => {
@@ -164,7 +233,7 @@ test('a refusal from the database is raised rather than shown as no results', as
   await assert.rejects(() => searchCatalogue(client, { q: 'fiqh' }), /permission denied/);
 
   const reading = stubClient({
-    rpcData: [{ course_id: 'a', score: 1 }],
+    rpcData: envelope(),
     rowsError: { message: 'policy failure' },
   });
   await assert.rejects(() => searchCatalogue(reading.client, { q: 'fiqh' }), /policy failure/);

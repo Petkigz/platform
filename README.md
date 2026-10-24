@@ -69,8 +69,8 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **119 tables, RLS on every one, 243 policies, 146
-user-defined triggers, 375 functions and 160 migrations.** The database suite
-passes **1629 tests**; the web suite passes **1011 tests**. TypeScript typecheck
+user-defined triggers, 376 functions and 161 migrations.** The database suite
+passes **1648 tests**; the web suite passes **1025 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **165 app route entries** (89 pages, 76 API routes).
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
@@ -436,6 +436,14 @@ that failed or was cancelled is how somebody finds out that money did not arrive
 and a hand-written row does not get round it, because the lock lives in the read
 path as well as the writer. A reminder whose feature ships off says it is not in
 use yet rather than pretending the switch does something.
+
+A shelf now says how many it holds. `catalogue_page()` answers what is on the
+catalogue, in what order and how many there are altogether, so `/catalogue`,
+`/young` and `/adults` page twenty-four at a time and write `Showing 25–48 of
+137` rather than ending quietly. It also closed three defects that came from
+having two read paths: a suspended course stayed browsable while search hid it,
+sixty was a silent limit, and the subject filter ran after the limit instead of
+before it.
 
 (The trigger count is user-defined triggers. `pg_trigger` also holds 1007
 internal constraint triggers; counting them gives 1140, which is the number

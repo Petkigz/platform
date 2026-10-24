@@ -5,10 +5,12 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
-import { fetchCatalogue } from '@/lib/catalogue';
+import { fetchCataloguePage } from '@/lib/catalogue';
+import { offsetFor, pageNumber, PAGE_SIZE } from '@/lib/paging';
 import { countryFromHeaders } from '@/lib/geo';
 import { fetchCourseCards } from '@/lib/catalogue-cards';
 import { CourseShelfCard } from '../_shared/course-shelf-card';
+import { ShelfPager } from '../_shared/shelf-pager';
 
 export const metadata: Metadata = {
   title: 'Adults',
@@ -35,15 +37,26 @@ export const dynamic = 'force-dynamic';
  * switch as its sibling, and redirects to the catalogue while it is off. One
  * door without the other would be worse than no doors at all.
  */
-export default async function AdultsPage() {
+export default async function AdultsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   if (!isSupabaseConfigured()) redirect('/');
+
+  const { page: pageParam } = await searchParams;
+  const page = pageNumber(pageParam);
 
   const supabase = await createClient();
   const on = await isFlagEnabled(supabase, 'learning.audience_sections').catch(() => false);
   if (!on) redirect('/catalogue');
 
-  const courses = await fetchCatalogue(supabase, { audience: 'adult' });
-  const visible = courses.filter((course) => course.audience !== 'child');
+  const shelf = await fetchCataloguePage(
+    supabase,
+    { audience: 'adult' },
+    { limit: PAGE_SIZE, offset: offsetFor(page) },
+  );
+  const visible = shelf.courses.filter((course) => course.audience !== 'child');
 
   // What each card contains and what it would cost this visitor, in one call.
   const cards = await fetchCourseCards(
@@ -70,15 +83,36 @@ export default async function AdultsPage() {
 
       {visible.length === 0 ? (
         <p className="empty" style={{ marginTop: '1.5rem' }}>
-          No courses for adults have been published yet. Everything here has to
-          pass review first.
+          {page > 1
+            ? 'There is nothing on this page. It may be past the end of the shelf.'
+            : 'No courses for adults have been published yet. Everything here has to pass review first.'}
         </p>
       ) : (
-        <div className="grid cols-2" style={{ marginTop: '1.5rem' }}>
-          {visible.map((course) => (
-            <CourseShelfCard key={course.id} course={course} card={cards.get(course.id) ?? null} />
-          ))}
-        </div>
+        <>
+          <div style={{ marginTop: '1.5rem' }}>
+            <ShelfPager
+              basePath="/adults"
+              params={{}}
+              total={shelf.total}
+              shown={shelf.shown}
+              offset={shelf.offset}
+              limit={shelf.limit}
+            />
+          </div>
+          <div className="grid cols-2">
+            {visible.map((course) => (
+              <CourseShelfCard key={course.id} course={course} card={cards.get(course.id) ?? null} />
+            ))}
+          </div>
+          <ShelfPager
+            basePath="/adults"
+            params={{}}
+            total={shelf.total}
+            shown={shelf.shown}
+            offset={shelf.offset}
+            limit={shelf.limit}
+          />
+        </>
       )}
 
       <p className="muted" style={{ marginTop: '2rem' }}>

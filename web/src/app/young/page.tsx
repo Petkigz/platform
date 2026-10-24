@@ -5,11 +5,13 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
-import { fetchCatalogue } from '@/lib/catalogue';
+import { fetchCataloguePage } from '@/lib/catalogue';
+import { offsetFor, pageNumber, PAGE_SIZE } from '@/lib/paging';
 import { countryFromHeaders } from '@/lib/geo';
 import { fetchCourseCards } from '@/lib/catalogue-cards';
-import { AGE_BANDS, bandFits, isAgeBand, type AgeBand } from '@/lib/audience';
+import { AGE_BANDS, isAgeBand, type AgeBand } from '@/lib/audience';
 import { CourseShelfCard } from '../_shared/course-shelf-card';
+import { ShelfPager } from '../_shared/shelf-pager';
 
 export const metadata: Metadata = {
   title: 'Young learners',
@@ -40,7 +42,7 @@ export const dynamic = 'force-dynamic';
 export default async function YoungLearnersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ band?: string }>;
+  searchParams: Promise<{ band?: string; page?: string }>;
 }) {
   if (!isSupabaseConfigured()) redirect('/');
 
@@ -50,13 +52,19 @@ export default async function YoungLearnersPage({
 
   const bandsOn = await isFlagEnabled(supabase, 'learning.age_bands').catch(() => false);
 
-  const { band } = await searchParams;
+  const { band, page: pageParam } = await searchParams;
   const chosen: AgeBand | null = bandsOn && isAgeBand(band) ? band : null;
+  const page = pageNumber(pageParam);
 
-  const courses = await fetchCatalogue(supabase, { audience: 'child' });
-  const visible = courses.filter(
-    (course) => course.audience !== 'adult' && bandFits(course.age_bands, chosen),
+  // The band is filtered in SQL, alongside the audience, so the total the pager
+  // reports is the number of courses this door actually holds — filtering a
+  // twenty-four course page in TypeScript would make the count a lie.
+  const shelf = await fetchCataloguePage(
+    supabase,
+    { audience: 'child', band: chosen ?? undefined },
+    { limit: PAGE_SIZE, offset: offsetFor(page) },
   );
+  const visible = shelf.courses.filter((course) => course.audience !== 'adult');
 
   // What each card contains and what it would cost this parent. One call for
   // the shelf; a door that hides the price makes a parent open every card.
@@ -107,16 +115,38 @@ export default async function YoungLearnersPage({
 
       {visible.length === 0 ? (
         <p className="empty">
-          {chosen
-            ? `Nothing is listed for ages ${chosen} yet. Try another age, or the whole catalogue.`
-            : 'No courses for young learners have been published yet. Everything here has to pass review first.'}
+          {page > 1
+            ? 'There is nothing on this page. It may be past the end of the shelf.'
+            : chosen
+              ? `Nothing is listed for ages ${chosen} yet. Try another age, or the whole catalogue.`
+              : 'No courses for young learners have been published yet. Everything here has to pass review first.'}
         </p>
       ) : (
-        <div className="grid cols-2" style={{ marginTop: '1rem' }}>
-          {visible.map((course) => (
-            <CourseShelfCard key={course.id} course={course} card={cards.get(course.id) ?? null} />
-          ))}
-        </div>
+        <>
+          <div style={{ marginTop: '1rem' }}>
+            <ShelfPager
+              basePath="/young"
+              params={{ band: chosen ?? undefined }}
+              total={shelf.total}
+              shown={shelf.shown}
+              offset={shelf.offset}
+              limit={shelf.limit}
+            />
+          </div>
+          <div className="grid cols-2">
+            {visible.map((course) => (
+              <CourseShelfCard key={course.id} course={course} card={cards.get(course.id) ?? null} />
+            ))}
+          </div>
+          <ShelfPager
+            basePath="/young"
+            params={{ band: chosen ?? undefined }}
+            total={shelf.total}
+            shown={shelf.shown}
+            offset={shelf.offset}
+            limit={shelf.limit}
+          />
+        </>
       )}
 
       <p className="muted" style={{ marginTop: '2rem' }}>

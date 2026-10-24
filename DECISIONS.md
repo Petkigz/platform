@@ -2528,6 +2528,59 @@ for both — a warning that fires on missing data is a warning people learn to i
 whether a teacher should be told that a learner outside the band has joined. Both are policy; both would
 need the owner.
 
+## A shelf says how many it holds — **DECIDED 2026-10-24**
+
+The catalogue had two read paths pretending to be one. Browsing was a PostgREST select with `limit 60`; searching went through
+`search_catalogue()`, which built its own shelf. Three defects lived in the gap, and all three were measured rather than reasoned about.
+
+**A suspended course stayed browsable.** The browse query filtered `status`, `deleted_at` and nothing else; search filtered
+`suspended_at`. Suspension is how the platform takes something down, so the one screen a visitor actually browses was the one screen
+that ignored it. That is the worst possible place for the two paths to disagree.
+
+**Sixty was silent.** A catalogue of 137 courses showed the first sixty alphabetically and said nothing — no count, no paging, no
+truncation flag. The tail of the alphabet was simply unreachable, and a visitor had no way to know it existed.
+
+**The subject filter ran after the limit.** It was applied in TypeScript to the sixty rows that had already been chosen, so a subject
+whose courses sort past the sixtieth title returned *nothing at all* — not "no courses in this subject", an empty page for a subject
+that exists.
+
+**One function now answers both.** `catalogue_page(query, subject, audience, band, limit, offset)` decides what is on the shelf, what
+matches, the order and the true total, and returns a page of ranked ids with that total in an envelope. Subject, audience and age band
+are filtered in SQL, so the count cannot disagree with the list; filtering a page after it has been chosen is exactly how the third
+defect happened.
+
+**Filtering in SQL is what makes a band honest too.** `/young` used to fetch sixty courses and drop the ones outside the chosen band
+in TypeScript, so its total would have been the number of courses fetched, not the number it holds. The band rule moved into the
+function with the same semantics: a course that states no band is open to every age, and asking for a band a course does not state
+excludes it.
+
+**`search_catalogue()` survives, and delegates.** It is the ranking primitive the search suite holds, and a caller that wants only ids
+and scores should not have to read a page envelope. It no longer decides anything — everything comes from `catalogue_page()` — so
+there is one definition of what matches, in one place.
+
+**A page of twenty-four, and it says so.** Each shelf renders either `5 courses` (everything fits; there is no limit to disclose) or
+`Showing 25–48 of 137`. A limit that is not disclosed is read as the whole shelf, and "we have twenty-four courses" is a sentence
+somebody repeats to a colleague.
+
+**Page numbers are requests, not facts.** `?page=-4`, `?page=abc`, `?page=1e9` arrive from stale links, hand-typed addresses and
+crawlers. They clamp to a real page — never throw, never wrap to a negative offset, never ask the database for a billion rows — and the
+clamp lives in `paging.ts` so the URL and the SQL cannot disagree about what page one means.
+
+**A paging link keeps every filter.** Page two of "tafsir, children" is still "tafsir, children", because a Next link that quietly
+drops the subject is the most common way a paged list starts showing the wrong thing from page two onward. `page=1` is never written
+into a URL, so the first page has exactly one address.
+
+**A filter change returns to page one.** Otherwise subject chips and audience filters would keep the reader on page four of a
+different shelf, which looks broken rather than empty.
+
+**The front page stops offering doors that are shut.** `/young` and `/adults` redirect to the catalogue while
+`learning.audience_sections` is off, and the landing page was linking to both anyway — a link that refuses, on the one page a stranger
+sees first. With the flag off the two cards link to `/catalogue?audience=…` instead, which lands where the click was always going to
+end up.
+
+**Not decided here:** a default order other than alphabetical. Newest, most-enrolled and "recommended" are all defensible and all
+imply a ranking signal the platform does not have yet; alphabetical is at least explainable.
+
 ## A course says who teaches it — **DECIDED 2026-10-24**
 
 The course page named nobody. Not the author, not a link, nothing — so a course that had passed review and been

@@ -110,6 +110,7 @@ import { run as courseAudience } from './course_audience.test.mjs';
 import { run as courseShelf } from './course_shelf.test.mjs';
 import { run as practiceCheck } from './practice_check.test.mjs';
 import { run as catalogueCards } from './catalogue_cards.test.mjs';
+import { run as cataloguePage } from './catalogue_page.test.mjs';
 
 // Settings that are global by design: one row, read by code far from the suite
 // that changes it. The revenue share decides what every accrual computes; the
@@ -228,6 +229,7 @@ for (const [name, fn] of [
   ['course shelf', courseShelf],
   ['practice check', practiceCheck],
   ['catalogue cards', catalogueCards],
+  ['catalogue page', cataloguePage],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],

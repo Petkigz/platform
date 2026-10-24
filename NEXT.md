@@ -2301,6 +2301,26 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### A shelf says how many it holds, 2026-10-24
+
+The catalogue had two read paths that disagreed, and three defects lived in the gap. Browsing never filtered `suspended_at`, so a
+course taken down for a safeguarding reason stayed browsable while search hid it. Sixty was a silent limit: no count, no paging, no
+truncation flag, so the tail of the alphabet was unreachable. And the subject filter ran in TypeScript *after* the limit, so a subject
+sorting past the sixtieth title returned an empty page for a subject that exists.
+
+`catalogue_page(query, subject, audience, band, limit, offset)` now answers both: it filters subject, audience and age band in SQL,
+excludes suspended courses, and returns a page of ranked ids with the true total. `search_catalogue()` is kept and delegates, so one
+definition of a match remains.
+
+On the web, `paging.ts` owns the arithmetic — `PAGE_SIZE` 24, a page number that clamps rather than throws, `rangeLabel()` for
+`Showing 25–48 of 137` or `5 courses`, and `pageHref()` which keeps every filter and never writes `page=1`. `ShelfPager` renders it
+above and below each grid on `/catalogue`, `/young` and `/adults`.
+
+The landing page's two doors now check `learning.audience_sections` before linking to `/young` and `/adults`; while it is off they
+link to `/catalogue?audience=…`, which is where those routes redirect anyway.
+
+**Open:** a default order other than alphabetical. Newest and most-enrolled both imply a ranking signal the platform does not have.
+
 ### A course says who teaches it, 2026-10-24
 
 The course page named nobody at all — no author, no link — so a reviewed, well-taught course looked like uploaded

@@ -13,6 +13,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { PAGE_SIZE } from './paging.ts';
 
 export type CatalogueCourse = {
   id: string;
@@ -88,63 +89,124 @@ export type CatalogueFilters = {
   q?: string;
   subject?: string;
   audience?: string;
+  /** One age band, for the children's door. Absent means every age. */
+  band?: string;
 };
 
 /**
- * Courses for the public catalogue.
+ * Courses for the public catalogue — one page of them, with the true total.
  *
- * No filter names the current user. What comes back is whatever the viewer's
- * own policies allow, which for an anonymous visitor is the published
- * catalogue and for a signed-in learner is the same plus nothing sensitive.
+ * Everything is decided by `catalogue_page()`: which courses are on the shelf,
+ * what a match is, what order they come in, and how many there are altogether.
+ * This function's job is the boundary — send the filters, read the ranked ids
+ * back defensively, then fetch the rows through the same select the rest of the
+ * catalogue uses so a card cannot render differently because it arrived by a
+ * different route.
+ *
+ * **Why the rows are fetched after the ids rather than returned by the
+ * function.** The function answers "which courses, in what order"; the rows
+ * carry nested versions, subjects and languages that PostgREST already knows
+ * how to shape. Keeping the row shape in one place (COURSE_COLUMNS) is worth
+ * one extra round trip on a page of twenty-four.
+ */
+export async function fetchCataloguePage(
+  supabase: SupabaseClient,
+  filters: CatalogueFilters,
+  { limit = PAGE_SIZE, offset = 0 }: { limit?: number; offset?: number } = {},
+): Promise<CataloguePageResult> {
+  const q = filters.q?.trim() ?? '';
+
+  const { data, error } = await supabase.rpc('catalogue_page', {
+    p_query: q.length > 0 ? q : null,
+    p_subject: filters.subject && filters.subject !== 'all' ? filters.subject : null,
+    p_audience: filters.audience && filters.audience !== 'all' ? filters.audience : null,
+    p_band: filters.band ?? null,
+    p_limit: limit,
+    p_offset: offset,
+  });
+  if (error) throw new Error(error.message);
+
+  const page = parseCataloguePage(data);
+  if (page.hits.length === 0) {
+    return { courses: [], total: page.total, shown: 0, offset: page.offset, limit: page.limit };
+  }
+
+  const { data: rows, error: readError } = await supabase
+    .from('courses')
+    .select(COURSE_COLUMNS)
+    .in('id', page.hits.map((hit) => hit.courseId));
+  if (readError) throw new Error(readError.message);
+
+  return {
+    courses: orderByIds(
+      (rows ?? []) as unknown as CatalogueCourse[],
+      page.hits.map((hit) => hit.courseId),
+    ),
+    total: page.total,
+    shown: page.shown,
+    offset: page.offset,
+    limit: page.limit,
+  };
+}
+
+/**
+ * The courses on one page, without the envelope.
+ *
+ * Kept for the callers that only want the list, so the paging arithmetic lives
+ * in exactly one place.
  */
 export async function fetchCatalogue(
   supabase: SupabaseClient,
-  { q, subject, audience }: CatalogueFilters,
-  limit = 60,
+  filters: CatalogueFilters,
+  limit = PAGE_SIZE,
 ): Promise<CatalogueCourse[]> {
-  // A query goes to the one function that defines what a match is. Browsing — no
-  // query — stays here, because a listing and a search are different questions: one
-  // wants everything on the shelf in alphabetical order, the other wants the best
-  // answer first.
-  if (q && q.trim().length > 0) {
-    return searchCatalogue(supabase, { q, subject, audience }, limit);
-  }
+  const page = await fetchCataloguePage(supabase, filters, { limit, offset: 0 });
+  return page.courses;
+}
 
-  let query = supabase
-    .from('courses')
-    .select(COURSE_COLUMNS)
-    .eq('status', 'active')
-    .is('deleted_at', null)
-    .order('title', { ascending: true })
-    .limit(limit);
+export type CataloguePageResult = {
+  courses: CatalogueCourse[];
+  /** Everything on the shelf that matches — not the size of this page. */
+  total: number;
+  /** How many rows this page actually carries. */
+  shown: number;
+  offset: number;
+  limit: number;
+};
 
-  if (audience && audience !== 'all') {
-    query = query.in('audience', [audience, 'both']);
-  }
+export type ParsedPage = {
+  total: number;
+  shown: number;
+  offset: number;
+  limit: number;
+  hits: CatalogueHit[];
+};
 
-  if (subject && subject !== 'all') {
-    // Subject taxonomy hangs off the version, not the course, so filtering
-    // server-side would need a join through two tables. Narrow here instead —
-    // the catalogue is small and this keeps the query legible.
-    const { data, error } = await query;
-    if (error) throw new Error(error.message);
-    // The client is untyped (no generated Database schema yet), so PostgREST's
-    // inferred row type is a placeholder. This cast is the boundary where that
-    // gets asserted — it is the thing to revisit once `supabase gen types`
-    // runs in CI.
-    return ((data ?? []) as unknown as CatalogueCourse[]).filter((c) => {
-      const v = displayVersion(c);
-      return (
-        v?.course_version_subjects?.some(
-          (s) => s.subject_areas?.[0]?.code === subject,
-        ) ?? false
-      );
-    });
-  }
+/**
+ * Read the envelope.
+ *
+ * The client is untyped, so this is the boundary: counts that are not numbers
+ * become zero, and `shown` is taken from the hits that survived parsing rather
+ * than trusted from the payload — a page that says it carries twenty-four rows
+ * and delivers twenty must describe what it delivered, or the range label lies
+ * about which courses the reader is looking at.
+ */
+export function parseCataloguePage(value: unknown): ParsedPage {
+  const raw = (value ?? {}) as Record<string, unknown>;
+  const hits = parseSearchHits(raw.ordered);
 
-  const { data, error } = await query;
-  if (error) throw new Error(error.message);
-  return (data ?? []) as unknown as CatalogueCourse[];
+  const count = (input: unknown, fallback: number): number =>
+    typeof input === 'number' && Number.isFinite(input) && input >= 0
+      ? Math.floor(input)
+      : fallback;
+
+  return {
+    total: count(raw.total, hits.length),
+    shown: hits.length,
+    offset: count(raw.offset, 0),
+    limit: count(raw.limit, hits.length),
+    hits,
+  };
 }
 
 export type CatalogueHit = { courseId: string; score: number };
@@ -164,7 +226,12 @@ export function parseSearchHits(data: unknown): CatalogueHit[] {
   for (const row of data) {
     if (!row || typeof row !== 'object') continue;
     const record = row as Record<string, unknown>;
-    const courseId = typeof record.course_id === 'string' ? record.course_id : '';
+    // The ranked array comes from `catalogue_page()`'s envelope, which is
+    // camelCase JSON; `search_catalogue()` still answers in its table's
+    // snake_case. One parser, both spellings, because a second parser for the
+    // same idea is where the two start to disagree.
+    const raw = record.courseId ?? record.course_id;
+    const courseId = typeof raw === 'string' ? raw : '';
     if (courseId.length === 0 || seen.has(courseId)) continue;
     seen.add(courseId);
     const score =
@@ -190,40 +257,25 @@ export function orderByIds<T extends { id: string }>(
 }
 
 /**
- * Search the catalogue.
+ * Ranked ids for a query.
  *
- * The function decides what matches and in what order — title, subject, teacher,
- * description, every word required. The rows are then read through the *same*
- * select the browse path uses, so a card cannot render differently because it was
- * found rather than listed. `in('id', …)` has no order of its own, which is why the
- * ranking is re-applied here rather than trusted to the database.
+ * Now a thin wrapper: `catalogue_page()` decides what matches and in what
+ * order, for browsing and searching alike. It remains because "give me the
+ * ranking, not a page of it" is a different question from "give me a page", and
+ * because a caller reconciling search with a listing should be able to ask both
+ * without re-implementing either.
  */
 export async function searchCatalogue(
   supabase: SupabaseClient,
-  { q, subject, audience }: { q: string; subject?: string; audience?: string },
+  filters: CatalogueFilters,
   limit = 60,
 ): Promise<CatalogueCourse[]> {
-  const { data, error } = await supabase.rpc('search_catalogue', {
-    p_query: q,
-    p_subject: subject && subject !== 'all' ? subject : null,
-    p_audience: audience && audience !== 'all' ? audience : null,
-    p_limit: limit,
-  });
-  if (error) throw new Error(error.message);
-
-  const hits = parseSearchHits(data);
-  if (hits.length === 0) return [];
-
-  const { data: rows, error: readError } = await supabase
-    .from('courses')
-    .select(COURSE_COLUMNS)
-    .in('id', hits.map((hit) => hit.courseId));
-  if (readError) throw new Error(readError.message);
-
-  return orderByIds(
-    (rows ?? []) as unknown as CatalogueCourse[],
-    hits.map((hit) => hit.courseId),
+  const page = await fetchCataloguePage(
+    supabase,
+    { ...filters, band: filters.band },
+    { limit, offset: 0 },
   );
+  return page.courses;
 }
 
 export async function fetchSubjectAreas(

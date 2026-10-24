@@ -72,6 +72,7 @@ const STEPS = [
 const DOORS = [
   {
     href: '/young',
+    audience: 'child',
     label: 'For children',
     body:
       'Written for young learners and held by a parent or guardian\u2019s account. Progress, ' +
@@ -79,6 +80,7 @@ const DOORS = [
   },
   {
     href: '/adults',
+    audience: 'adult',
     label: 'For adults',
     body:
       'Study for yourself, at your own level, with certificates you can show to anyone who ' +
@@ -89,12 +91,19 @@ const DOORS = [
 export default async function Home() {
   const configured = isSupabaseConfigured();
   const supabase = configured ? await createClient() : null;
-  const [subjects, learningPathsEnabled] = supabase
+  // Two flags, both asked here rather than inside the cards: `learning.paths`
+  // decides whether a third hero button exists, and `learning.audience_sections`
+  // decides whether the two doors are walkable. With that one off, `/young` and
+  // `/adults` redirect to the catalogue — so linking to them from the front
+  // page would be a link that refuses, which is the one thing a landing page
+  // must not do.
+  const [subjects, learningPathsEnabled, doorsOpen] = supabase
     ? await Promise.all([
         fetchSubjectAreas(supabase).then(disciplines),
-        isFlagEnabled(supabase, 'learning.paths'),
+        isFlagEnabled(supabase, 'learning.paths').catch(() => false),
+        isFlagEnabled(supabase, 'learning.audience_sections').catch(() => false),
       ])
-    : [[], false];
+    : [[], false, false];
 
   return (
     <>
@@ -173,7 +182,16 @@ export default async function Home() {
                 <h3 style={{ marginTop: 0 }}>{door.label}</h3>
                 <p className="muted" style={{ margin: 0, fontSize: '0.93rem' }}>{door.body}</p>
                 <p style={{ margin: '0.85rem 0 0', fontSize: '0.93rem' }}>
-                  <Link href={door.href}>Look at what is there &rarr;</Link>
+                  {/* Two doors only exist once they open. Until then the
+                      catalogue is the way in, and it carries the same choice as
+                      a filter, so the link goes where it actually lands. */}
+                  {doorsOpen ? (
+                    <Link href={door.href}>Look at what is there &rarr;</Link>
+                  ) : (
+                    <Link href={`/catalogue?audience=${door.audience}`}>
+                      See them in the catalogue &rarr;
+                    </Link>
+                  )}
                 </p>
               </div>
             ))}
