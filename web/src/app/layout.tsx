@@ -55,6 +55,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             {/* Help lives in the footer rather than the masthead: the nav is
                 already eight links wide on a phone, and nobody looks for
                 support in the primary navigation until they need it. */}
+            <Link href="/about">About</Link>
             <Link href="/support">Help</Link>
             {/* The way back to your own area once you are signed in. It is a
                 redirect rather than a page, so it costs nothing to link from a

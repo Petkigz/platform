@@ -100,6 +100,11 @@ export default async function Home() {
               </div>
             ))}
           </div>
+
+          <p className="muted" style={{ marginTop: '1.25rem' }}>
+            <Link href="/about">How a course gets here, and what happens to a
+            child&rsquo;s data &rarr;</Link>
+          </p>
         </div>
       </section>
     </>

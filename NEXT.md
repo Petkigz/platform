@@ -2301,6 +2301,30 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### About the platform, 2026-10-24
+
+Screen 2 — `/about` — was the last unblocked marketing screen in the inventory. It is static: no
+database read and no flag, so it renders on an empty deployment.
+
+It describes the review pipeline (author → verified reviewer → owner publishes → the version freezes),
+the appointment of teachers, why a child is a learner and not an account, and why there is no date of
+birth in the system. Nothing on it quotes a number, a testimonial or a price.
+
+**Open:** there is no public teacher index — `/teachers/[slug]` exists but nothing lists the teachers, so
+the About page does not link to one.
+
+### The ages are said where the decision is made, 2026-10-24
+
+A course's bands were only used to filter two shelves. Now `/courses/[slug]` prints them under the badges,
+and the enrol control prints `bandMismatch()` for the selected learner — a sentence, not a gate.
+
+`bandMismatch(courseBands, learnerBand)` in `audience.ts` returns null when either side is silent, so a
+course with no bands and a learner with no band both say nothing. `describeBands()` orders them by their
+lower bound, so a course ticked 11–13 before 8–10 still reads "Ages 8–10 and 11–13".
+
+**Open:** nothing blocks or asks for confirmation on a mismatch yet; that is a policy the owner has not
+set. **Also open:** the teacher is not told when a learner outside the band joins their cohort.
+
 ### Every course, and who it is for, 2026-10-24
 
 U72 gave the author a picker and left the staff override as a function with no page. `course_shelf()` and

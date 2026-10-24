@@ -20,7 +20,7 @@ Status:
 | # | Screen | Status |
 |---|---|---|
 | 1 | Landing page | **BUILT** — `/` |
-| 2 | About the platform | READY |
+| 2 | About the platform | **BUILT** — `/about`, linked from the footer and from the landing page. It answers the question a parent asks before trusting a site with a child: how a course gets here (author → verified reviewer → owner publishes → the version freezes), why a child is a learner and not an account, and why there is no date of birth anywhere. Static on purpose — no database read, no flag — so it renders even on an empty deployment, which is the state a first visitor might otherwise read as a broken site. Every claim on it describes something the database enforces rather than a promise; it quotes no number, no testimonial and no price, because none of those would be true today |
 | 3 | Young Learners entry | **BUILT** — `/young`. *(2026-10-24)* **A door, not a filter.** The catalogue has had an audience filter since it existed, which only helps somebody who already knows there are two audiences; this is the same shelf with the decision made. Behind `learning.audience_sections` (off — the owner flips it in the dashboard, which is why both flags are in the register). With `learning.age_bands` on it grows a row of age chips (`/young?band=11-13`), and it says in as many words that a child does not hold an account |
 | 4 | Adult Learners entry | **BUILT** — `/adults`. The sibling door: no age chips, because there is one adult band (18+) and a row of one chip is a control that cannot change anything. Same switch, same reasoning; the catalogue links to both doors while the switch is on, so a door is reachable from where everyone arrives |
 | 5 | Course catalogue | **BUILT** — `/catalogue`, with subject chips from the seeded `subject_areas` taxonomy |
@@ -191,7 +191,7 @@ at `/admin` and twenty-eight beneath it.
 | Numbered screen IDs | **50**, plus 19a, 19b, 20a, 20b, 20c, 31a, 31b, 31c, 33b, 35a, 35b, 35c, 35d, 35e, 35f, 35g, 35h and 43b — **68 rows** |
 | Routed | **81 page routes** in the production build. Three are not screens anybody designs (`/_not-found`, `/sign-out`, `/auth/confirm`), so **78 screens are routed** |
 | Built but never inventoried | **18**, listed in section 11 |
-| Ready to design now | **5** |
+| Ready to design now | **4** |
 | Blocked | **5** |
 
 The 67 rows and the 78 routed screens are not the same number and should not be.
