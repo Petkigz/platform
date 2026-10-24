@@ -2528,6 +2528,34 @@ for both — a warning that fires on missing data is a warning people learn to i
 whether a teacher should be told that a learner outside the band has joined. Both are policy; both would
 need the owner.
 
+## The front door says only what is true — **DECIDED 2026-10-24**
+
+Screen 1. The landing page was a hero, a chip row and three cards. It is the only page a stranger reads before
+deciding whether this is for them, so it is where "as premium as possible" has to start — and where the
+temptation to sound bigger than the product is strongest.
+
+**Nothing on it is invented.** No learner counter, no testimonial, no logo of an institution that has not
+endorsed anything. The platform is young, and a front page that invents its own size is the first thing a
+careful parent catches; once caught, every other sentence on the site is discounted. The panel that replaces
+social proof makes four claims the database already enforces — an author cannot approve their own course, a
+child has no login, a certificate number stays checkable after the course is withdrawn, and progress belongs
+to one named learner.
+
+**The two limits are said on the page, not in a footnote.** Teaching is by appointment, and no provider moves
+money yet. Both sit in the teacher band beside the 50% share, because a band that advertises the share and
+omits the limits is a promise the next screen breaks.
+
+**One display face, and only here.** `.display` is the certificate's serif — system fonts, nothing downloaded,
+so there is no flash of unstyled text and no font request to block on — used on the landing page and nowhere
+inside the application. Lessons are read for an hour; marketing is read for ten seconds, and they should not
+sound the same.
+
+**The unconfigured notice is furniture, not content.** It sits below the closing call rather than in the hero,
+so a deployment with no database still shows a front door instead of an error dressed as marketing.
+
+**Not decided here:** photography or illustration. The page is CSS-only geometry today; imagery is a brand
+decision with real cost — art direction, a photographer, hosting — and nothing on the page depends on it.
+
 ## You choose what you are told — **DECIDED 2026-10-24**
 
 Screen 49. The in-app centre already existed: three stored kinds written by the payout functions, two

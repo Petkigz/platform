@@ -2301,6 +2301,21 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### The front door, 2026-10-24
+
+Screen 1, and the first piece of the design work rather than a feature. The landing page now carries a hero
+with a display face (`.display` — the certificate's serif, system fonts only), a panel of four claims the
+database already enforces, the subject chips, two doors to `/young` and `/adults`, the three steps from
+choosing a learner to keeping the proof, and a teacher band that states the 50% share beside the two limits —
+teaching is by appointment, and no provider moves money yet.
+
+No counters, no testimonials, no institution logos: a front page that invents its own size is the first thing
+a careful parent catches. The setup notice moved below the closing call, so a deployment with no database
+shows a front door rather than an error in the hero.
+
+**Open:** imagery. The page is CSS-only geometry; photography or illustration is a brand decision with a real
+cost and nothing here depends on it.
+
 ### You choose what you are told, 2026-10-24
 
 Screen 49. The centre was already there — three stored kinds, two computed reminders, a badge, mark-as-read —

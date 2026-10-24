@@ -188,6 +188,152 @@ p  { margin: 0 0 1rem; }
 .hero-actions .btn { width: auto; margin: 0; padding: 0.65rem 1.3rem; }
 
 /* --------------------------------------------------------------------------
+   Front door
+   --------------------------------------------------------------------------
+   The one page a stranger sees first, so it is allowed a display face. The
+   serif is the certificate's serif: the same voice on the way in and on the
+   way out. Nothing is downloaded — these are fonts every device already has,
+   so the page cannot flash, cannot block on a font request, and renders the
+   same offline as the certificate sheet. */
+
+.display {
+  font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua',
+               'Times New Roman', serif;
+  font-size: clamp(2.1rem, 4.6vw, 3.15rem);
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  color: var(--green-900);
+  margin: 0 0 1rem;
+  text-wrap: balance;
+}
+
+.hero-grid { display: grid; gap: 2.25rem; align-items: center; }
+@media (min-width: 54rem) {
+  .hero-grid {
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+    gap: 3.25rem;
+  }
+}
+
+.lede.wide { max-width: 31rem; font-size: 1.08rem; }
+
+/* One quiet sentence under the buttons: what it costs to look, and who a
+   course is actually for. It is the promise the rest of the product keeps,
+   so it belongs on the front door rather than only in the terms. */
+.hero-note {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  max-width: 33rem;
+  margin: 1.4rem 0 0;
+  font-size: 0.87rem;
+  color: var(--muted);
+}
+.hero-note::before {
+  content: '';
+  flex: none;
+  width: 0.4rem;
+  height: 0.4rem;
+  margin-top: 0.5rem;
+  background: var(--green-600);
+  transform: rotate(45deg);
+}
+
+/* The panel exists so the hero has weight on a wide screen without an image:
+   a white card on the tinted field, lifted by a hairline and a warm shadow. */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 1.25rem 2.5rem -1.5rem rgba(6, 61, 34, 0.28),
+              0 1px 2px rgba(6, 61, 34, 0.05);
+  padding: 1.6rem 1.5rem;
+  position: relative;
+}
+.panel::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: linear-gradient(90deg, var(--green-700), var(--green-500));
+}
+.panel h2 {
+  margin: 0.35rem 0 1rem;
+  font-size: 1.02rem;
+  letter-spacing: 0.01em;
+}
+
+.assurances { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.05rem; }
+.assurances li {
+  position: relative;
+  padding-left: 1.3rem;
+  font-size: 0.9rem;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+.assurances li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.42rem;
+  width: 0.42rem;
+  height: 0.42rem;
+  background: var(--green-600);
+  transform: rotate(45deg);
+}
+.assurances strong { display: block; color: var(--green-900); font-size: 0.95rem; }
+
+/* Numbered, because the three of them are a sequence rather than a feature
+   list: who is learning, then the learning, then the proof of it. */
+.steps { display: grid; gap: 1.5rem; margin-top: 1.5rem; }
+@media (min-width: 46rem) { .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.75rem; } }
+.step { border-top: 2px solid var(--green-100); padding-top: 0.9rem; }
+.step .n {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--green-600);
+}
+.step h3 { margin: 0.4rem 0 0.3rem; font-size: 1.02rem; }
+.step p { margin: 0; font-size: 0.92rem; color: var(--text-soft); }
+
+/* A deep band for the one invitation on the page. Deep green rather than the
+   page tint, because it is the only place the platform speaks as itself. */
+.band {
+  background: linear-gradient(155deg, var(--green-800) 0%, var(--green-900) 100%);
+  color: #ffffff;
+  padding: 3rem 0;
+  margin-top: 3rem;
+}
+.band .eyebrow { color: var(--green-100); }
+.band h2 { color: #ffffff; font-size: clamp(1.4rem, 2.6vw, 1.9rem); margin: 0 0 0.75rem; letter-spacing: -0.015em; }
+.band p { color: rgba(255, 255, 255, 0.84); margin: 0 0 0.75rem; max-width: 38rem; }
+.band p:last-of-type { margin-bottom: 0; }
+.band-inner { display: grid; gap: 1.75rem; align-items: center; }
+@media (min-width: 54rem) { .band-inner { grid-template-columns: minmax(0, 1.5fr) auto; gap: 2.5rem; } }
+.band-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+.band .btn {
+  width: auto;
+  margin: 0;
+  padding: 0.6rem 1.15rem;
+  background: #ffffff;
+  border-color: #ffffff;
+  color: var(--green-900);
+}
+.band .btn:hover { background: var(--green-50); border-color: var(--green-50); color: var(--green-900); }
+.band .btn.ghost { background: transparent; border-color: rgba(255, 255, 255, 0.45); color: #ffffff; }
+.band .btn.ghost:hover { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.7); color: #ffffff; }
+
+.closing { padding: 3rem 0 2.5rem; text-align: center; }
+.closing h2 { margin: 0 0 0.6rem; font-size: clamp(1.3rem, 2.4vw, 1.7rem); }
+.closing p { margin: 0 auto 1.4rem; max-width: 34rem; color: var(--text-soft); }
+.closing .actions { display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; }
+.closing .btn { width: auto; margin: 0; padding: 0.6rem 1.2rem; }
+
+/* --------------------------------------------------------------------------
    Buttons
    -------------------------------------------------------------------------- */
 
