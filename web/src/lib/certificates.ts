@@ -21,6 +21,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { normaliseCertificateNumber } from './certificate-number.ts';
 
 export type Certificate = {
   id: string;
@@ -102,8 +103,11 @@ export async function verifyCertificate(
   supabase: SupabaseClient,
   certificateNumber: string,
 ): Promise<Verification> {
-  const number = certificateNumber.trim().toUpperCase();
-  if (number.length === 0) return { found: false };
+  // One normaliser for the whole platform: the page, the API and the printed
+  // certificate must agree on what a number is, or a link that works in one
+  // place fails in another.
+  const number = normaliseCertificateNumber(certificateNumber);
+  if (number === null) return { found: false };
 
   const { data, error } = await supabase.rpc('verify_certificate', {
     p_certificate_number: number,

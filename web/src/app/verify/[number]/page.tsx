@@ -1,8 +1,9 @@
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { verifyCertificate } from '@/lib/certificates';
+import { normaliseCertificateNumber } from '@/lib/certificate-number';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,20 +25,31 @@ export default async function VerifyPage({
 }: {
   params: Promise<{ number: string }>;
 }) {
+  const { number } = await params;
+
+  // The address is typed by hand as often as it is clicked, and a link from a
+  // chat app may have been lower-cased on the way. Normalising here means
+  // `/verify/as-2026-1` and `/verify/AS-2026-…` cannot disagree about what was
+  // asked; the `/verify` page redirects to this canonical form.
+  // Next hands this over already URL-decoded, so it is not decoded again — a
+  // second pass would turn a literal `%25` into `%` and could throw on a
+  // malformed escape the router let through.
+  const canonical = normaliseCertificateNumber(number);
+  if (!canonical) notFound();
+
   if (!isSupabaseConfigured()) redirect('/');
 
-  const { number } = await params;
   const supabase = await createClient();
-  const result = await verifyCertificate(supabase, number).catch(() => null);
+  const result = await verifyCertificate(supabase, canonical).catch(() => null);
 
-  const notFound = !result || !result.found;
+  const missing = !result || !result.found;
 
   return (
     <div className="container section" style={{ maxWidth: '44rem' }}>
       <p className="eyebrow">AyahSpring</p>
       <h1>Verify a certificate</h1>
 
-      {notFound ? (
+      {missing ? (
         <div className="notice warn">
           <strong>No certificate matches that number.</strong>
           <p style={{ marginBottom: 0, marginTop: '0.5rem' }}>
@@ -63,7 +75,7 @@ export default async function VerifyPage({
         </div>
       )}
 
-      {!notFound && (
+      {!missing && (
         <div className="card" style={{ marginTop: '1.5rem' }}>
           <dl className="facts">
             <div>

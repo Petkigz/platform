@@ -2301,6 +2301,24 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### The front door to a certificate, 2026-10-24
+
+Screen 48 was built and unreachable. `/verify/AS-2026-00000001` answers anybody without a session, but `/verify` — the
+address a person holding a printed certificate would try — was a 404, so the claim "a certificate you can still check
+years later" was only true for people who already had the link.
+
+`/verify` is now a page: a GET form, no account, no session. `normaliseCertificateNumber()` accepts any case, missing
+separators, the dashes a PDF substitutes, and a whole pasted URL, and refuses anything it cannot map exactly; a
+parseable number is redirected to the canonical `/verify/AS-…`. `certificates.ts` and the segment route use the same
+normaliser, so the three cannot disagree.
+
+The sheet prints its own verification address under the number, taken from `NEXT_PUBLIC_SITE_URL` and never from the
+`Host` header — an attacker-chosen host on a downloadable PDF is a phishing page. With the variable unset it prints
+the path, which is still exact for anybody who got the certificate from its holder. The footer carries the door.
+
+**Open:** a QR code on the certificate. It would help an employer and needs an image pipeline plus a decision about
+what the code encodes.
+
 ### The shelf card, 2026-10-24
 
 Screen 5. A catalogue card now answers the two questions a buyer asks before opening anything: what is in it and

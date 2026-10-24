@@ -57,6 +57,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 support in the primary navigation until they need it. */}
             <Link href="/about">About</Link>
             <Link href="/support">Help</Link>
+            {/* The one door a stranger needs: an employer or a school holding a
+                printed certificate has a number and nothing else, and there is
+                no account for them to sign into. It sits in the footer because
+                the people who need it are not the people browsing a catalogue. */}
+            <Link href="/verify">Check a certificate</Link>
             {/* The way back to your own area once you are signed in. It is a
                 redirect rather than a page, so it costs nothing to link from a
                 static footer. */}

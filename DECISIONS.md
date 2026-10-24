@@ -2528,6 +2528,44 @@ for both — a warning that fires on missing data is a warning people learn to i
 whether a teacher should be told that a learner outside the band has joined. Both are policy; both would
 need the owner.
 
+## A certificate number needs somewhere to put it — **DECIDED 2026-10-24**
+
+Screen 48 was already built: `/verify/AS-2026-00000001` answers anybody, without a session, and `verify_certificate()`
+is executable by `anon` precisely so that it can. What did not exist was `/verify`.
+
+That one missing route undid the platform's loudest claim. *A certificate you can still check years later* was
+reachable only through a link from inside the product — fine for the holder, useless to the employer, the school or
+the parent holding a printed certificate with a number in the corner. The address a person would actually try was a
+404.
+
+**A number is not typed the way it is stored.** `certificates.certificate_number` is `AS-2026-00000001` and is
+compared as exact text, which is right for a unique key and wrong for a human being. `normaliseCertificateNumber()`
+accepts any case, missing or extra separators, the en and em dashes a PDF substitutes, and a whole pasted URL, taking
+the last path segment. It then **refuses anything that does not map exactly** — seven digits, nine digits, another
+prefix — because a lookup that lands on the wrong certificate is worse than one that asks the person to try again.
+There is exactly one normaliser; the page, the segment route and `verifyCertificate()` all use it, so a link cannot
+work in one place and fail in another.
+
+**A typed number becomes a link.** A parseable number is redirected to its canonical `/verify/AS-…`, so the answer has
+an address somebody can keep, print or email. The segment page normalises too, which is what makes a lower-cased link
+from a chat app still resolve.
+
+**The printed certificate carries an address, and never the `Host` header.** A PDF has no clickable link, so the sheet
+prints the address under the number. It comes from `NEXT_PUBLIC_SITE_URL`; with the variable unset it prints the path
+alone. It is deliberately **not** derived from the request: `Host` is the one part of a request a visitor chooses, and
+an attacker's host printed onto a downloadable certificate turns a verification page into a phishing page. A path that
+is slightly less convenient is still exact for anybody who received the certificate from its holder.
+
+**The door is in the footer.** The person who needs verification has never heard of the platform and is not browsing a
+catalogue. The footer is auth-agnostic and on every page, which is exactly the right shelf for it.
+
+**Refusing is a 404, and that is deliberate.** `/verify/nonsense` renders the not-found page rather than a
+certificate-shaped error, because a URL segment that is not a number is not a failed lookup — it is not a lookup. The
+form at `/verify` is where a mistyped number gets a sentence that quotes the shape.
+
+**Not decided here:** whether a certificate should carry a QR code. It would help the employer, and it needs an image
+pipeline and a decision about what the code encodes; the printed address is the cheap version of the same thing.
+
 ## A shelf card says what is in it and what it costs — **DECIDED 2026-10-24**
 
 The catalogue showed a title, a description and four badges. Two questions a buyer asks before opening anything —

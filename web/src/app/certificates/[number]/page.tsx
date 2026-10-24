@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { verificationAddress } from '@/lib/site';
 import { isSupabaseConfigured } from '@/lib/env';
 import { fetchCertificateForHolder } from '@/lib/certificates';
 import { PrintCertificateButton } from './print-button';
@@ -26,6 +27,8 @@ export default async function CertificatePage({
         day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
       })
     : 'Date not recorded';
+
+  const verifyAddress = verificationAddress(certificate.certificateNumber);
 
   return (
     <div className="container section certificate-page">
@@ -64,6 +67,12 @@ export default async function CertificatePage({
             <div className="certificate-number-block">
               <span className="certificate-meta">Certificate number</span>
               <strong>{certificate.certificateNumber}</strong>
+              {/* A printed certificate has no clickable link, so the address is
+                  printed too. It is the configured origin when the deployment
+                  has one, and the path alone otherwise — never the request's
+                  Host header, which is the one part of the request a visitor
+                  can choose. */}
+              <span className="certificate-meta">{verifyAddress}</span>
               <Link href={`/verify/${encodeURIComponent(certificate.certificateNumber)}`}>
                 Verify this certificate
               </Link>

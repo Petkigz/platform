@@ -125,7 +125,7 @@ Status:
 
 | # | Screen | Status |
 |---|---|---|
-| 48 | **Public certificate verification page** | **BUILT** — `/verify/[number]`, open to anyone with the number. Implemented as a page rather than a public REST endpoint |
+| 48 | **Public certificate verification page** | **BUILT** — `/verify/[number]`, open to anyone with the number. Implemented as a page rather than a public REST endpoint. *(2026-10-24)* **It has a front door now.** `/verify` was a 404 — the platform's loudest claim, *a certificate you can still check years later*, was reachable only by a link from inside the product, which is no use to an employer holding a printed certificate. `/verify` is the page where a number is typed: no account, no session, a GET form so the address is shareable. `normaliseCertificateNumber()` accepts the number in any case, without its separators, with the en dashes a PDF substitutes, or pasted as a whole URL — and **refuses anything it cannot map exactly**, because a lookup that lands on the wrong certificate is worse than one that asks again. A parseable number is redirected to its canonical `/verify/AS-…`, and the segment page normalises too, so a lower-cased link still works. The certificate sheet prints the address under the number (`NEXT_PUBLIC_SITE_URL`, or the path alone when unset — never the request's `Host`, which a visitor chooses) and the footer carries the door, because the person who needs it is not the person browsing a catalogue |
 
 ## 10. Mobile-specific — 2
 
@@ -165,6 +165,7 @@ against the actual route list in the production build, not from memory.
 | `/admin/disputes` | Payment disputes |
 | `/admin/financial-adjustments` | Manual financial adjustments |
 | `/teach/[courseId]/reports` | A teacher's own numbers *(added 2026-10-22)*: total events, distinct learners and people, counts per event, the ten most-opened lessons and lesson opens by day, over 7/30/90 days. **Aggregates only** — the database returns no learner reference, so this page cannot show who did what. Course author or staff; with the flag off it says so instead of showing zeros |
+| `/verify` | Where a certificate number is typed *(added 2026-10-24)*: a public lookup with no account and no session, for the employer or school holding a printed certificate. Accepts the number in any case, without separators, or pasted as a URL, and redirects to the canonical `/verify/AS-…`; anything it cannot map exactly is refused with a sentence rather than guessed |
 | `/auth/callback` | Where Google comes back to *(added 2026-10-22)*: exchanges the code for a session and forwards to a sanitised destination; a refusal returns to sign-in with the reason in words rather than an error page |
 | `/account/export` | What is in your data export and what is not *(added 2026-10-22)*: the sections the document carries, the five things it deliberately leaves out with a reason for each, the 1,000-row limit and why every copy is audited. The download button itself lives on `/account` |
 | `/notifications` | The in-app message centre *(added 2026-10-22)*: "Coming up" — a live class within a day and a plan renewing within three, computed at read time and each gated on its own flag — and "Recent" — payout sent, failed or staff-cancelled, with a read state and one mark-all button. It says plainly that no email or text has been sent. *(2026-10-24)* Below the feed: one switch per kind, the two money-failure kinds shown on and disabled with the reason, and a line saying when a reminder is a choice in advance because its feature is not switched on here |
@@ -189,7 +190,7 @@ at `/admin` and twenty-eight beneath it.
 | | |
 |---|---|
 | Numbered screen IDs | **50**, plus 19a, 19b, 20a, 20b, 20c, 31a, 31b, 31c, 33b, 35a, 35b, 35c, 35d, 35e, 35f, 35g, 35h and 43b — **68 rows** |
-| Routed | **88 page routes** in the production build. Three are not screens anybody designs (`/_not-found`, `/sign-out`, `/auth/confirm`), so **85 screens are routed** |
+| Routed | **89 page routes** in the production build. Three are not screens anybody designs (`/_not-found`, `/sign-out`, `/auth/confirm`), so **86 screens are routed** |
 | Built but never inventoried | **34**, listed in section 11 |
 | Ready to design now | **1** |
 | Blocked | **5** |
