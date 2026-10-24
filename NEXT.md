@@ -2301,6 +2301,24 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### An About page describes rules, not switches, 2026-10-24
+
+The About page — the one a parent reads before trusting a site with a child — said the young learners' and
+adults' doors "are separate pages rather than a filter on one list". Both doors redirect to
+`/catalogue?audience=…` while `learning.audience_sections` is off, which is the filter the sentence said did not
+exist. The page reads no flag and no database on purpose (it has to render on an empty deployment), so it had no
+way to be right about a switch — and it wrote about one anyway.
+
+It has been rewritten so that every sentence is true whether a feature is on or off: a course declares its
+audience and ages as columns, the catalogue can be narrowed either way, the review pipeline refuses an
+unauthorised reviewer and an author's own scholarly approval, a published version is frozen, a child has no
+login, and no date of birth is stored. Optional surfaces — a teacher's public page, reviews, guardian
+verification — are written in the conditional, in the same words the screens use. `/verify` is now linked from
+the certificate claim, so the one claim a stranger can test is one click away.
+
+`check:repo` gained a sixth check: every literal internal link — `href`, `redirect()`, `router.push()` and
+`router.replace()` — must resolve to a route read out of the App Router. 165 routes, 0 broken.
+
 ### A class a screen asks for does not exist, 2026-10-24
 
 `.page`, `.page-head` and `.crumbs` were used on 28, 27 and 25 screens and had never been written into

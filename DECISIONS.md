@@ -2528,6 +2528,60 @@ for both — a warning that fires on missing data is a warning people learn to i
 whether a teacher should be told that a learner outside the band has joined. Both are policy; both would
 need the owner.
 
+## An About page describes rules, not switches — **DECIDED 2026-10-24**
+
+The About page exists to answer the question a parent asks before trusting a site with a child, and its own
+doc comment promised that every sentence on it was "checkable against the product rather than a promise about
+the future". Three sentences were not.
+
+**The doors were the sharp one.** The page said children and adults "are two shelves from the start: the young
+learners' door and the adults' door are separate pages rather than a filter on one list". That is true only
+while `learning.audience_sections` is on — and it ships off. With the flag off, `/young` and `/adults` redirect
+to `/catalogue?audience=…`, which is precisely *the filter on one list* the page said did not exist. The page
+that could not be wrong was wrong, on the one subject it was written about.
+
+**The cause is structural, not editorial.** The page reads no database and no flag, on purpose: it has to
+render on a deployment where the catalogue is still empty, because a first visitor reading a blank page would
+conclude the site is broken. But a page that cannot see a switch cannot describe one — and the earlier version
+did, by writing about an optional surface in the present tense.
+
+**The rule: every sentence is either enforced for everybody, or written in the conditional.** "A course
+declares who it is for" is a column. "The catalogue can be narrowed to one audience" is a function that exists
+either way. "When a teacher publishes a page, the course page names them; when they have not, it says the
+course was written by an appointed teacher and approved by a reviewer" is exactly what the course page does in
+both states. "A published version is frozen", "a child has no login", "there is no date of birth anywhere" are
+enforcements and hold regardless of every switch. Nothing on the page asserts what is on *today* — not the
+doors, not reviews, not public profiles, not guardian verification. If a claim cannot be written that way, it
+does not go on the page.
+
+**Two claims were also too strong for the schema and are now exactly as strong as it is.** "Each teacher has a
+public page" is false twice — `teaching.public_profile` gates the route and a profile has to be published — so
+it became the conditional above, which is what `WhoTeaches` already renders. "A reviewer whose qualification
+has not been checked cannot approve anything" became the two things the database actually refuses: an
+assignment in a subject the reviewer holds no live authorisation for, and an author giving their own course
+the scholarly approval that publishes it.
+
+**Guardian verification is described as a gate, not as a feature.** The COPPA-shaped machinery exists — a
+guardian relationship, a verification step, a record of consent — and it is off pending legal review. The page
+says the platform *can hold* those three and that turning the requirement on for a country is the owner's
+decision with legal advice; it does not claim the switch is on, and it does not promise when it will be.
+
+**Every claim worth checking is one click from the claim.** `/verify` exists now (U82), so "a certificate
+carries a number anyone can look up" links to the page that looks it up, with no account. The page also states
+the one commercial rule a parent needs: looking costs nothing, and one purchase covers one learner.
+
+**A second check came out of this.** `check:repo` #6 reads every route out of the App Router — `page.tsx` and
+`route.ts`, group folders removed, `[param]` matching one segment — and refuses a literal internal link,
+`redirect()`, `router.push()` or `router.replace()` that lands on nothing. A link to a 404 is a string
+TypeScript has no opinion about, and the drift this page suffered from is the same shape: a sentence on one
+side of the app describing a page that is not there on the other. It found none today, which is the point of
+adding it while that is true.
+
+**Not decided here:** whether the About page should name the people who run the platform, and whether it
+should say which features are currently on for the visitor's own account. The first needs a governance answer;
+the second would mean the page reads a session, which would cost it the property that makes it render on an
+empty deployment.
+
 ## A class a screen asks for does not exist — **DECIDED 2026-10-24**
 
 Three class names were used on twenty-five to twenty-eight screens each and were never written down:

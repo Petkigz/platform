@@ -81,6 +81,12 @@ of prose) and `npm run check:repo` fails on any `className` token in `web/src` t
 not define. The same audit found the app rendering two `<main>` landmarks on twenty-five pages: the
 layout owns the one the skip link targets, and pages now open a `<div>`.
 
+The About page was rewritten the same way: it made a claim about a feature that
+ships switched off. It reads no flag and no database — it has to render on an
+empty deployment — so it now describes rules rather than switch states, and
+`check:repo` fails any internal link (`href`, `redirect()`, `router.push()`) that
+does not resolve to a route in the App Router.
+
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. `/account`
 lets a signed-in learner update their display name, preferred language and IANA

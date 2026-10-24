@@ -16,6 +16,13 @@
 //   3. Conflict markers left in a file. A three-way apply that half-succeeded
 //      produces markers that TypeScript, SQL and Markdown all tolerate in
 //      different ways, and the build is the last place you want to find them.
+//   4. A class a screen asks for that the stylesheet never defines. `.page` and
+//      `.crumbs` were used on twenty-five-plus screens and did not exist; every
+//      screen laid out by accident and every test passed.
+//   5. A page that opens a second `<main>`. The layout provides the landmark the
+//      skip link targets, so a page-level one makes two. Nothing looks wrong.
+//   6. A link to a route that is not there. `href="/tachers"` is a valid string;
+//      TypeScript has no opinion, and the page renders a link to a 404.
 //
 // Node builtins only, so this runs before `npm ci` and costs nothing.
 
@@ -207,6 +214,80 @@ const MIGRATION = /^(\d{14})_([a-z0-9][a-z0-9_]*)\.sql$/;
     fail('landmarks', `${file} renders its own <main>; the layout already provides one`);
   }
   process.stdout.write(`landmarks: ${offenders.length} stray <main> element(s)\n`);
+}
+
+// ---------------------------------------------------------------------------
+// 6. Every internal link points at a route that exists
+// ---------------------------------------------------------------------------
+// The About page once promised a door that redirected elsewhere, and a page
+// elsewhere linked to a screen that had been renamed. A link to a 404 is not a
+// type error: `href="/tachers"` is a perfectly good string, TypeScript has no
+// opinion about it, and the page renders a link that goes nowhere.
+//
+// So the routes are read out of the App Router — every `page.tsx` and
+// `route.ts`, with group folders `(auth)` removed and `[param]` matched as one
+// segment — and every literal internal link is resolved against them. Template
+// literals that build a path from a value (`/courses/${slug}`) are skipped,
+// because their target is not knowable here; `redirect()`, `router.push()` and
+// `router.replace()` count as links, since they navigate the same way.
+{
+  const appDir = join(root, 'web', 'src', 'app');
+  const routes = [];
+  const collect = (dir, segments) => {
+    for (const entry of readdirSync(dir)) {
+      const full = join(dir, entry);
+      if (statSync(full).isDirectory()) {
+        const isGroup = entry.startsWith('(') && entry.endsWith(')');
+        collect(full, isGroup ? segments : [...segments, entry.startsWith('[') ? '*' : entry]);
+      } else if (entry === 'page.tsx' || entry === 'route.ts') {
+        routes.push('/' + segments.join('/'));
+      }
+    }
+  };
+  collect(appDir, []);
+
+  const resolves = (href) => routes.some((route) => {
+    if (route === href) return true;
+    const want = route.split('/');
+    const have = href.split('/');
+    if (want.length !== have.length) return false;
+    return want.every((segment, i) => segment === '*' || segment.toLowerCase() === have[i].toLowerCase());
+  });
+
+  const LINK = [
+    /href\s*=\s*["'](\/[^"'`]*)["']/g,
+    /redirect\(\s*["'](\/[^"'`]*)["']\s*\)/g,
+    /\.(?:push|replace)\(\s*["'](\/[^"'`]*)["']\s*\)/g,
+  ];
+
+  const broken = [];
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir)) {
+      const full = join(dir, entry);
+      if (statSync(full).isDirectory()) {
+        if (entry === 'node_modules' || entry === '.next') continue;
+        walk(full);
+      } else if (entry.endsWith('.tsx') || entry.endsWith('.ts')) {
+        const text = readFileSync(full, 'utf8');
+        for (const pattern of LINK) {
+          for (const match of text.matchAll(pattern)) {
+            const literal = match[1];
+            if (literal.includes('${')) continue;
+            const path = (literal.split('?')[0].split('#')[0] || '/').replace(/\/+$/, '') || '/';
+            if (!resolves(path)) broken.push([full.slice(root.length + 1), literal]);
+          }
+        }
+      }
+    }
+  };
+  walk(join(root, 'web', 'src'));
+
+  for (const [file, href] of broken.sort()) {
+    fail('links', `${file} links to ${href}, which is not a route`);
+  }
+  process.stdout.write(
+    `links: ${routes.length} routes, ${broken.length} broken internal link(s)\n`,
+  );
 }
 
 // ---------------------------------------------------------------------------
