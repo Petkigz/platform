@@ -188,13 +188,19 @@ async function FamilyBlock({
                         }}
                       />
                     </div>
-                    <div className="meta" style={{ marginTop: '0.4rem' }}>
+                    <div className="muted" style={{ marginTop: '0.4rem' }}>
                       {c.lessonsDone} of {c.lessonsTotal} lessons ·{' '}
                       {Math.round(c.percentComplete)}%
                     </div>
                   </div>
                 ))
               )}
+
+              <p style={{ marginTop: '0.75rem', marginBottom: 0 }}>
+                <Link href={`/family/${child.id}`}>
+                  Open {child.displayName}&rsquo;s learning
+                </Link>
+              </p>
             </div>
           ))}
         </div>

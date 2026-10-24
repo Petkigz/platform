@@ -2301,6 +2301,20 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### A child's own page, 2026-10-24
+
+Screen 11. A child has no login, so a child home cannot be a second site: `/family/[childId]` is the
+guardian's session narrowed to one learner — name, courses, progress, and one button that reads Start,
+Carry on or Look again. No billing, no family administration, no other child.
+
+`learnerCoursesInOrder()` splits in-progress from finished by **enrolment status rather than percentage**:
+a course at 100% with a quiz outstanding is still in progress. Withdrawn, suspended and expired enrolments
+never reach the page. RLS decides who may open it — everyone else gets a 404 rather than a refusal that
+would confirm the child exists.
+
+**Open:** the page keeps the site masthead, because the account is still the guardian's and the App Router
+has one root layout; a genuinely chrome-free mode would be a different decision about shared devices.
+
 ### About the platform, 2026-10-24
 
 Screen 2 — `/about` — was the last unblocked marketing screen in the inventory. It is static: no

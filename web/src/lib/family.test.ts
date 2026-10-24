@@ -8,6 +8,7 @@ import {
   acceptFamilyMembership,
   revokeFamilyMembership,
   MEMBERSHIP_TYPES,
+  learnerCoursesInOrder,
 } from './family.ts';
 
 // ---------------------------------------------------------------------------
@@ -322,4 +323,34 @@ test('a refusal from the writer becomes a code the screen can act on', async () 
     assert.equal(result.ok, false, `${message} was accepted`);
     if (!result.ok) assert.equal(result.code, code, `${message} mapped to ${result.code}`);
   }
+});
+
+test('a child\u2019s home shows what is in progress, then what is finished', () => {
+  const course = (status: string, percentComplete: number, lessonsDone: number) => ({
+    enrolmentId: `e-${status}-${percentComplete}`,
+    courseTitle: 'A course',
+    courseSlug: 'a-course',
+    status,
+    lessonsDone,
+    lessonsTotal: 10,
+    percentComplete,
+  });
+
+  const { active, finished } = learnerCoursesInOrder([
+    course('completed', 100, 10),
+    course('active', 40, 4),
+    course('withdrawn', 10, 1),
+    course('active', 100, 10),
+  ]);
+
+  // Finished is the enrolment's word, not the progress bar's: a course sitting
+  // at 100% with a quiz outstanding is still in progress.
+  assert.deepEqual(active.map((c) => c.percentComplete), [40, 100]);
+  assert.deepEqual(finished.map((c) => c.percentComplete), [100]);
+  assert.equal(
+    learnerCoursesInOrder([course('withdrawn', 10, 1)]).active.length
+      + learnerCoursesInOrder([course('withdrawn', 10, 1)]).finished.length,
+    0,
+    'a withdrawn course reached a child\u2019s shelf',
+  );
 });

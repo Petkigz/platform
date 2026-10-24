@@ -146,6 +146,26 @@ export async function fetchFamilyMembers(
  * Deliberately the same shape as the adult dashboard, because a parent
  * comparing two children should not have to read two different layouts.
  */
+/**
+ * What a child's home shows: what they are doing, then what they finished.
+ *
+ * The split is by **enrolment status, not by the percentage**. A course can read
+ * 100% and still be `active` — the last completion rule may be a quiz that has
+ * not been passed, and calling that "finished" on a child's own page would be a
+ * promise the platform has not kept. Withdrawn, suspended and expired
+ * enrolments are not shown at all: they are a fact for the guardian, not a
+ * thing to put on a child's shelf.
+ */
+export function learnerCoursesInOrder(courses: ChildCourse[]): {
+  active: ChildCourse[];
+  finished: ChildCourse[];
+} {
+  return {
+    active: courses.filter((c) => c.status === 'active'),
+    finished: courses.filter((c) => c.status === 'completed'),
+  };
+}
+
 export async function fetchChildCourses(
   supabase: SupabaseClient,
   childLearnerId: string,
