@@ -2504,6 +2504,59 @@ processing agreement, and it is the one part of live classes that cannot be buil
 **Also open:** whether a recording is offered to learners who missed the class, and how long
 it is kept. Nothing produces a recording yet, so nothing has to decide that today — but the
 moment a provider is connected, it is the next question.
+## The outbox is a state machine, and it sends nothing — **DECIDED 2026-10-24**
+
+`outbound_messages` has existed since 2026-10-19 and has never had a state machine. A row was
+`queued`, and then somebody claimed it was `sent`. That is not a delivery system, it is a table
+where a hopeful agent writes a word, and the word cannot be checked: the constraint that `sent`
+names a provider proves somebody typed a provider, not that a provider answered.
+
+**Five things were missing, and each is a separate decision.**
+
+1. **A claim has to be a lease.** `claim_outbound_messages()` hands out the next eligible rows
+   for **five minutes** with `for update skip locked`, recording `claimed_at`, `claimed_until`
+   and `claimed_by`. Two dispatchers running at once cannot both take the same row — the second
+   steps over the locked one rather than queueing behind it — and a dispatcher that dies holding
+   a row has its lease expire back into the queue. Without the expiry, one crash strands a
+   receipt in flight forever and nobody finds out.
+2. **A failure has to be a clock, not a status.** A retryable error sets `next_attempt_at` 5
+   minutes out, then 15, an hour, four hours, twelve. The row stays `queued` and is simply not
+   eligible; `delivery_backoff_minutes()` is the single place the schedule lives, so the queue
+   cannot disagree with itself about how long to wait. The point is not politeness to the
+   provider: an outage that gets worse because our retry loop hammers it is an outage we caused.
+3. **A ceiling has to end it.** At `delivery.max_attempts` (default **5**, bounds 1–10) the row
+   becomes `failed`, keeps `dead_lettered_at`, and is audited as `delivery.dead_lettered` with
+   the error it died on. The constraint `om_dead_letter_agrees` makes the moment part of the
+   state: a row cannot be `failed` without saying when, and cannot carry a moment without being
+   failed. This is the only state a person has to act on, and it is the only state the screen
+   offers a button for.
+4. **A bad address has to be remembered, not just marked.** `message_suppressions` holds a
+   normalised address per channel. A bounce writes there in the same statement that suppresses
+   the message, because a bounce that only marks one row leaves the next row to bounce too. The
+   list is checked **inside `queue_message()`**, so the message that would have gone out tomorrow
+   is written as `suppressed` with the reason — the platform still records that it owed somebody
+   a message and chose not to send it. And it is deliberately **not an exception**: `queue_message()`
+   runs inside payment confirmation, and refusing a payment already taken because the receipt
+   could not be emailed would trade a family's money for our tidiness.
+5. **There has to be a way back.** `retry_outbound_message()` puts a dead letter back in the
+   queue, resets the attempts, needs a written reason, and audits the error it died on — and it
+   **refuses while the address is suppressed**, because sending to it again is the one thing the
+   list exists to prevent. Lifting a suppression is a separate, deliberate act.
+
+**What is not decided, and must not be implied:** nothing sends. There is no provider, no
+credential, and no HTTP call in this repository — `claim_outbound_messages()` refuses outright
+while `delivery.notifications` is off, which it ships as. A dispatcher will be a worker that
+signs in as a staff account, because there is no `service_role` in this schema; the transcode
+worker does the same, and the consequence is the one worth having: a machine writer is subject
+to the same refusals as a person and its sends are attributable. When the provider is chosen,
+the work is an adapter that calls `claim` → send → `record_delivery_outcome`, and every rule
+above already holds. **The email/SMS provider remains the first external blocker.**
+
+**A control came with it.** `delivery.max_attempts` is the thirteenth control because the number
+that decides when to give up is a policy, not a deploy — and it is bounded in
+`platform_control_rules()` like the rest (1–10, because 0 would mean a message nobody ever tries
+and 11 is a wait longer than the day it is trying to cross).
+
 ## A control writer is an allowlist, not a settings hole — **DECIDED 2026-10-23**
 
 `platform_settings` holds two kinds of row. Ninety are feature switches, and they have a dashboard.

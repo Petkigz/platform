@@ -347,7 +347,7 @@ say what is left instead of what was missing.
 | **Payments** | MTN MoMo and Airtel adapters, checkout, orders, refunds, reconciliation, disputes, financial adjustments, subscriptions with entitlement grants that drive access, 50% teacher-share accrual with the split snapshotted per row, and the **72-hour refund window** (2026-10-23): a customer asks within three days of the payment, staff can still open one afterwards, and a partial goodwill refund has no screen yet | Live credentials, callback verification against a real provider, automatic renewal, failed-payment retry, a merchant account | **External:** provider sandbox and merchant credentials (P12). Do not claim any of this works end to end |
 | **Payouts** (`teaching.payouts`) | The whole request path: `my_earnings()` and `/teach/earnings`, `request_instructor_payout()` with a tax acknowledgement, the refund-hold setting, one open request per currency (unique index), `my_payouts()`, the finance queue at `/admin/payouts` that shows the amount asked for beside what the ledger owes today, cancellation, failure with a reason the teacher reads, and `complete_instructor_payout()` as the only function that marks an earning paid; `platform_teacher_liability()` reports the balance owed per currency | The provider call itself, and per-teacher destination details | **External:** a payout provider, and a tax treatment per country. `teaching.payouts` is CODE-gated and a trigger refuses to enable it at runtime |
 | **Guardian verification** | Tables and flow complete, shipping off. **Not to be deleted** — COPPA makes verifiable parental consent mandatory for US under-13s | Enabling it | **External:** legal review, and it must be on before any US child enrols |
-| **Notifications** | The in-app centre: `/notifications`, a `notifications` table with RLS on the reader, `notify_user()` writing payout sent/failed/cancelled, and two derived reminders computed at read time (a class within a day, a plan renewing within three) each gated on its own flag; 7 tests | Email and SMS delivery — the outbox exists (`outbound_messages`, `message_templates`) and nothing sends | **External:** a delivery provider and its credentials (`delivery.notifications`) |
+| **Notifications** | The in-app centre: `/notifications`, a `notifications` table with RLS on the reader, `notify_user()` writing payout sent/failed/cancelled, and two derived reminders computed at read time (a class within a day, a plan renewing within three) each gated on its own flag; 7 tests. The outbox has a state machine *(2026-10-24)*: a five-minute claim lease, a 5/15/60/240/720-minute backoff, a dead letter at `delivery.max_attempts`, a do-not-send list a bounce writes to, and a retry that needs a written reason | Email and SMS delivery — nothing sends, and the adapter is the missing piece | **External:** a delivery provider and its credentials (`delivery.notifications`) |
 | **Product analytics** (`delivery.analytics`) | 7 event codes, monthly partitions, a table with RLS and no read policy, `record_analytics_event()` returning `{recorded, reason}`; teacher course reports and platform reporting read aggregates, never a person | Event instrumentation beyond the coded set | **Decision:** a retention policy is *not* run — analytics are kept forever by the owner's decision of 2026-10-22 |
 | **Visual identity** | White and green theme settled; tokens in `web/src/app/globals.css`; every screen uses the same card/badge/notice vocabulary | Type, logo, illustration; 0 of the 50 inventoried screens designed | **Decision:** the owner's. Not a blocker for any backend work |
 
@@ -2300,6 +2300,54 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
+
+### The outbox learns how to give up, 2026-10-24
+
+The platform has had an outbox since 19 October and no idea what to do with a message that did
+not go. A row was `queued`, and then something claimed it was `sent` — which is a table where an
+agent writes a hopeful word, and the word cannot be checked. `om_sent_has_provider` proves that
+somebody typed a provider, not that a provider answered.
+
+`20261270000100_delivery_contract.sql` gives the queue the five things it was missing.
+
+**A claim is a lease.** `claim_outbound_messages(limit)` hands out the next eligible rows for five
+minutes with `for update skip locked`, writing `claimed_at`, `claimed_until` and `claimed_by`.
+Two dispatchers running at once cannot both take the same row, and a dispatcher that dies holding
+one has its lease expire back into the queue rather than stranding a receipt in flight forever.
+It refuses outright while `delivery.notifications` is off, because a queue that says "ready" when
+the feature is off is the wrong way round.
+
+**A failure is a clock.** `record_delivery_outcome()` is the only door and only settles a claimed
+row. An `error` leaves the row `queued` with `next_attempt_at` 5 minutes out, then 15, an hour,
+four hours, twelve — `delivery_backoff_minutes()` is the one place that schedule lives. This is
+not politeness to the provider: an outage that gets worse because our retry loop hammers it is an
+outage we caused.
+
+**A ceiling ends it.** At `delivery.max_attempts` (default 5) the row becomes `failed`, keeps the
+moment it died, and is audited as `delivery.dead_lettered` with the error. `om_dead_letter_agrees`
+makes the moment part of the state, the same way `om_claim_agrees` makes the three lease columns
+move together. A dead letter is the only state that needs a person.
+
+**A bad address is remembered.** A bounce writes to `message_suppressions` in the same statement
+that suppresses the message — a bounce that only marked one row would leave the next one to bounce
+too. The list is checked inside `queue_message()`, so tomorrow's receipt is written as
+`suppressed` with the reason. Deliberately not an exception: `queue_message()` runs inside payment
+confirmation, and refusing a payment already taken because the receipt could not be emailed trades
+a family's money for our tidiness.
+
+**There is a way back.** `/admin/messages` grows a dead-letter list with a **Try again** that needs
+a written reason, resets the attempt count, and audits the error the message died on. It refuses
+while the address is suppressed, and says so — lifting a suppression is a separate, deliberate act.
+A form beside it stops mail to one address by hand, for the family who writes in because the mail
+is reaching somebody else, and reports how many queued messages it stopped with it.
+
+`delivery.max_attempts` is the thirteenth control on `/admin/settings`, bounded 1–10: zero would
+mean a message nobody ever tries, and eleven is a wait longer than the day it is trying to cross.
+
+**Nothing sends.** No provider, no credential, no HTTP call — the screen says so in its first
+sentence. What is decided here is every rule that has to hold *before* an HTTP call is safe to
+make, which is the part a provider's SDK cannot supply. The email/SMS provider is still the first
+external blocker; the adapter that arrives with it is `claim` → send → `record_delivery_outcome`.
 
 ### The numbers behind the switches, 2026-10-23
 

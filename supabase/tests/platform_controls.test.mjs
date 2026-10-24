@@ -85,7 +85,7 @@ export async function run(ctx) {
     const result = await controlsFor(supportAgent);
     assert(result.controls.length === 0,
       `a support agent saw ${result.controls.length} control(s)`);
-    assert(result.totalControls === 9, `the register holds ${result.totalControls}`);
+    assert(result.totalControls === 10, `the register holds ${result.totalControls}`);
     assert(result.mineCount === 0, 'the count disagrees with the list');
   });
 
@@ -113,10 +113,10 @@ export async function run(ctx) {
       'a governance admin can convene the scholarly board');
   });
 
-  await test('a platform admin sees all nine', async () => {
+  await test('a platform admin sees all ten', async () => {
     const result = await controlsFor(admin);
-    assert(result.controls.length === 9, `saw ${result.controls.length}`);
-    assert(result.mineCount === 9 && result.totalControls === 9, 'the counts disagree');
+    assert(result.controls.length === 10, `saw ${result.controls.length}`);
+    assert(result.mineCount === 10 && result.totalControls === 10, 'the counts disagree');
     for (const row of result.controls) {
       assert(typeof row.value === 'string', `${row.key} has no value`);
       assert(row.label && row.note && row.note.length > 20,
@@ -311,7 +311,7 @@ export async function run(ctx) {
     // catches it: every declared rule must be reachable and must carry bounds or
     // a prefix where its type needs one.
     const rules = (await q('select * from public.platform_control_rules()')).rows;
-    assert(rules.length === 9, `${rules.length} rules`);
+    assert(rules.length === 10, `${rules.length} rules`);
     for (const r of rules) {
       if (r.value_type === 'integer') {
         assert(r.min_value !== null && r.max_value !== null,

@@ -139,7 +139,7 @@ Three kinds of gate:
 
 ## Controls that are not flags
 
-`platform_settings` holds ten rows that are not in the tables above. They are
+`platform_settings` holds eleven rows that are not in the tables above. They are
 not features to switch on — they are dials that decide how the publication and
 money rules behave, and they shipped with values rather than being absent.
 
@@ -157,9 +157,10 @@ money rules behave, and they shipped with values rather than being absent.
 | `learning.offline_expiry_days` | integer | ADMIN | `30` | How long a saved lesson stays playable before it asks to be refreshed. A saved lesson is a subscription artefact, not a purchase: it lapses with the plan, and this number is the clock |
 | `commerce.refund_window_hours` | integer | ADMIN | `72` | How long after a payment a customer may ask for a refund. The clock runs from **the payment**, not from the request, and it is read in the database so a browser cannot ask early or late. It bounds **asking, not deciding**: a request made in the last minute of the window can be approved next week. Staff are exempt, because a support call that ends in "the window closed" is how a platform loses a family over a course that was sold wrong — and a rule with no way to make something right gets worked around in SQL, where nothing is audited. `0` means no self-serve refunds; a negative value is clamped to 0 rather than opening the window before the payment |
 | `delivery.live_room_base` | text | ADMIN | empty | Base URL of the live-room host, e.g. `https://meet.example.org`. A room is this plus `/room/<slug>`. Empty is the shipped state and means live rooms are not connected yet — `join_live_session()` refuses with that sentence rather than handing out a URL that does not carry a class. The platform owns the schedule and the door; the video is somebody else's product |
+| `delivery.max_attempts` | integer | ADMIN | `5` | How many times one message is tried before it becomes a dead letter. Each retry waits longer — 5 minutes, 15, an hour, four hours, twelve — so a provider that is down for ten minutes is retried inside the outage and one that is down for a day has stopped being hammered after two attempts. Reaching the ceiling is the only failure that needs a person: the row turns `failed`, the moment is recorded, and the outbox screen offers a retry that requires a written reason. Below 1 would mean a message nobody ever tries, so 1 is the floor; above 10 the wait is already twelve hours and another try is not worth a day of the queue |
 
-Measured, the register holds **102 rows: the 90 flags above plus these twelve.**
-Ninety-two are boolean switches, eight are integers and two are text. The two
+Measured, the register holds **103 rows: the 90 flags above plus these thirteen.**
+Ninety-two are boolean switches, nine are integers and two are text. The two
 governance policy controls have no gate because they are not features; the money
 controls are ADMIN, because a number that changes what a total says is changed
 from the dashboard and not from a migration — and so are the upload quota, the

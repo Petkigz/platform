@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic';
  * save to, how long a saved lesson plays, which URL carries a live class, how
  * many approvals a course needs before it teaches anything.
  *
- * Until now nine of them could only be changed with an UPDATE against a table
+ * Until now ten of them could only be changed with an UPDATE against a table
  * nobody outside this repository can see, which is the shape the standing role
  * rule rejects.
  *

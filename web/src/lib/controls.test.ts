@@ -61,7 +61,7 @@ const booleanControl: Control = {
 
 const payload = {
   generatedAt: '2026-10-23T10:00:00Z',
-  totalControls: 9,
+  totalControls: 10,
   mineCount: 2,
   controls: [integerControl, textControl],
 };
@@ -70,7 +70,7 @@ test('a control set is read as the database shaped it', () => {
   const set = parseControls(payload);
   assert.equal(set.controls.length, 2);
   assert.equal(set.mineCount, 2);
-  assert.equal(set.totalControls, 9);
+  assert.equal(set.totalControls, 10);
 });
 
 test('a payload with no list is refused rather than shown as an empty page', () => {
