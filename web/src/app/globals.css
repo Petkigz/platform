@@ -29,7 +29,11 @@
   /* Text. */
   --text:        #0f231a;
   --text-soft:   #3f574b;
-  --muted:       #6b7f75;
+  /* Was #6b7f75, which measured 3.98:1 on the page background — under the 4.5
+     that AA asks of normal text, and this is the colour of every secondary
+     sentence in the product. `check:repo` #9 now measures the tokens instead of
+     trusting the eye, which is what found it. */
+  --muted:       #5c6f65;
 
   /* Feedback. */
   --danger:      #b23c3c;

@@ -2528,6 +2528,36 @@ for both — a warning that fires on missing data is a warning people learn to i
 whether a teacher should be told that a learner outside the band has joined. Both are policy; both would
 need the owner.
 
+## The muted voice of the site was not readable enough — **DECIDED 2026-10-24**
+
+`--muted` was `#6b7f75`. Measured against the surfaces it is actually used on, it is **3.98:1 on the page
+background, 4.27:1 on a card, 4.13:1 on the tinted card and 3.96:1 on the pale green** — under the 4.5:1 that
+WCAG AA asks of normal text, on all four. `--muted` is the colour of every secondary sentence in the product:
+the description under a course title, the note under a form, the footer, the certificate's small print, the
+pager's "Showing 25–48 of 137".
+
+**Nothing looked wrong, which is the point.** A colour that is 0.4 of a ratio point short of a threshold is
+invisible to a designer's eye and to a review; the only thing that catches it is arithmetic. It is now
+`#5c6f65`: **5.00:1 on the page background**, 5.36 on white, 5.19 on the tinted card, 4.64 on pale green. The
+hue is the same green-grey, four steps darker; nothing about the design language moved, and every screen that
+uses secondary text got slightly easier to read.
+
+**`check:repo` #9 measures it rather than trusting the eye.** It parses the `:root` block out of `globals.css`
+and computes WCAG's ratio — sRGB linearised, weighted .2126/.7152/.0722, `(L1 + .05) / (L2 + .05)` — over the
+twenty foreground/background pairs the stylesheet actually puts together. The lowest is now `green-600` on the
+page background at 4.85:1. Setting `--muted` back to the old value fails four pairs, which is how the change
+was proved.
+
+**Rules for the check, so it stays honest.** A pair that names a token that does not exist fails — it does not
+silently skip, because a rename would otherwise retire the test without anyone noticing. `white` is supplied by
+the check itself, because the stylesheet writes it as a literal rather than a token. And 3:1 is not accepted
+for anything: every pair in the list is normal-sized text, so the threshold is 4.5 everywhere.
+
+**Found while measuring, and deliberately not changed:** large-text colour pairs already pass, `--danger` on its
+pale background is 5.35:1, white on `--green-600` is 5.20:1, and the `--warn-border` hairline is 1.32:1 — a
+border, not text. WCAG's 3:1 for meaningful boundaries applies to it, but the warning is carried by the words
+inside the box and by an icon-free label, so the border is decoration and is left alone.
+
 ## The chrome says where you are — **DECIDED 2026-10-24**
 
 Two things the frame of every page never said.

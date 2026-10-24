@@ -27,6 +27,9 @@
 //      it pushes the document wider than the screen.
 //   8. A form control with no name. A placeholder disappears on the first
 //      keystroke and is not a name; three controls had nothing at all.
+//   9. Text that is not readable on the surface behind it. `--muted` measured
+//      3.98:1 on the page background and it is the whole muted voice of the
+//      site; the eye said it was fine.
 //
 // Node builtins only, so this runs before `npm ci` and costs nothing.
 
@@ -409,6 +412,87 @@ const MIGRATION = /^(\d{14})_([a-z0-9][a-z0-9_]*)\.sql$/;
     fail('labels', `${where} is a form control with no accessible name`);
   }
   process.stdout.write(`labels: ${files.length} files, ${controls.length} unnamed control(s)\n`);
+}
+
+// ---------------------------------------------------------------------------
+// 9. The text colours are readable on the surfaces they are used on
+// ---------------------------------------------------------------------------
+// `--muted` was #6b7f75: 3.98:1 on the page background, 4.27:1 on a card, and
+// 4.13:1 on the tinted one. AA asks 4.5:1 of normal text, and this is the
+// colour of every secondary sentence in the product — the entire muted voice of
+// the site sat between a fifth and a half of a ratio point under the line. It
+// looked fine, which is exactly why it has to be measured.
+//
+// The maths is WCAG's: sRGB channels linearised, weighted .2126/.7152/.0722,
+// and (L1 + .05) / (L2 + .05). The pairs below are the combinations the
+// stylesheet actually puts together; anything under 4.5 fails. Large text would
+// be allowed 3:1, and nothing here is large.
+{
+  const css = readFileSync(join(root, 'web', 'src', 'app', 'globals.css'), 'utf8');
+  const rootBlock = css.match(/:root\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+  const tokens = new Map();
+  for (const match of rootBlock.matchAll(/--([a-z0-9-]+):\s*(#[0-9a-fA-F]{6})\s*;/g)) {
+    tokens.set(match[1], match[2].toLowerCase());
+  }
+
+  const channel = (value) => {
+    const v = value / 255;
+    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  };
+  const luminance = (hex) => {
+    const [r, g, b] = hex.replace('#', '').match(/../g).map((h) => channel(parseInt(h, 16)));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const ratio = (a, b) => {
+    const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+    return (light + 0.05) / (dark + 0.05);
+  };
+
+  // Every pair the stylesheet actually puts behind or in front of text.
+  const PAIRS = [
+    ['text', 'bg'],
+    ['text', 'surface'],
+    ['text-soft', 'bg'],
+    ['text-soft', 'surface'],
+    ['text-soft', 'green-50'],
+    ['muted', 'bg'],
+    ['muted', 'surface'],
+    ['muted', 'surface-2'],
+    ['muted', 'green-50'],
+    ['green-600', 'surface'],
+    ['green-600', 'bg'],
+    ['green-700', 'surface'],
+    ['green-700', 'bg'],
+    ['green-700', 'green-100'],
+    ['green-800', 'green-50'],
+    ['green-900', 'green-100'],
+    ['white', 'green-700'],
+    ['white', 'green-600'],
+    ['white', 'green-800'],
+    ['danger', 'danger-bg'],
+  ];
+
+  // White is written as a literal throughout the stylesheet rather than as a
+  // token, so it is the one name this map has to supply itself.
+  const colour = (name) => (name === 'white' ? '#ffffff' : tokens.get(name));
+
+  let lowest = { ratio: Infinity, pair: '' };
+  for (const [fgName, bgName] of PAIRS) {
+    const fg = colour(fgName);
+    const bg = colour(bgName);
+    if (!fg || !bg) {
+      fail('contrast', `--${fg ?? '?'} or --${bg ?? '?'} is missing from :root, so the pair cannot be measured`);
+      continue;
+    }
+    const value = ratio(fg, bg);
+    if (value < lowest.ratio) lowest = { ratio: value, pair: `${fgName} on ${bgName}` };
+    if (value < 4.5) {
+      fail('contrast', `${fgName} on ${bgName} is ${value.toFixed(2)}:1, under the 4.5 AA asks of normal text`);
+    }
+  }
+  process.stdout.write(
+    `contrast: ${PAIRS.length} pairs, lowest ${lowest.ratio.toFixed(2)}:1 (${lowest.pair})\n`,
+  );
 }
 
 // ---------------------------------------------------------------------------

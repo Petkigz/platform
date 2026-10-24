@@ -2301,6 +2301,19 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### The muted voice of the site was not readable enough, 2026-10-24
+
+`--muted` measured 3.98:1 on the page background, 4.27 on a card, 4.13 on the tinted card and 3.96 on pale green
+— under the 4.5 AA asks of normal text, on all four surfaces. It is the colour of every secondary sentence in
+the product, and it looked fine.
+
+It is `#5c6f65` now: 5.00 on the page background, 5.36 on white, 5.19 on the tinted card, 4.64 on pale green.
+
+`check:repo` #9 parses `:root` from `globals.css` and computes WCAG's ratio over the twenty pairs the
+stylesheet actually composes; the lowest is `green-600` on the page background at 4.85. A pair naming a missing
+token fails rather than skipping — a rename must not retire the check — and no pair is allowed 3:1, because none
+of them is large text.
+
 ### The chrome says where you are, 2026-10-24
 
 The masthead never marked the section you were in — eight identical links, no `aria-current` anywhere — and
