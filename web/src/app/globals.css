@@ -548,6 +548,48 @@ footer a { color: var(--text-soft); }
 }
 
 /* --------------------------------------------------------------------------
+   Shelf card — a course as it appears in the catalogue
+   --------------------------------------------------------------------------
+   The two questions a buyer asks before opening anything are answered here:
+   how much is in it, and what it costs. The price sits on the title's own line
+   because it is the thing the eye goes looking for; the content line sits under
+   the description because it is the thing that decides whether the price is
+   fair. */
+
+.card-head {
+  display: flex;
+  gap: 0.9rem;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.card-head .course { flex: 1; min-width: 0; }
+
+.card-price {
+  flex: none;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  color: var(--green-800);
+  background: var(--green-50);
+  border: 1px solid var(--green-100);
+  border-radius: 999px;
+  padding: 0.14rem 0.6rem;
+}
+/* Something this buyer cannot have is not a price, so it is not styled like
+   one: a pill that looks like a charge for a course nobody can buy here is the
+   kind of detail that turns into a support case. */
+.card-price.unavailable { color: var(--muted); background: var(--surface-2); border-color: var(--border); }
+.card-price.included  { color: var(--green-800); background: transparent; border-style: dashed; }
+
+.card-content {
+  margin: 0.55rem 0 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
    Progress
    -------------------------------------------------------------------------- */
 

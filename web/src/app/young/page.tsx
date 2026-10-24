@@ -1,19 +1,15 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
-import {
-  AUDIENCE_LABEL,
-  DIFFICULTY_LABEL,
-  displayVersion,
-  fetchCatalogue,
-  languagesFor,
-  subjectNames,
-  type CatalogueCourse,
-} from '@/lib/catalogue';
+import { fetchCatalogue } from '@/lib/catalogue';
+import { countryFromHeaders } from '@/lib/geo';
+import { fetchCourseCards } from '@/lib/catalogue-cards';
 import { AGE_BANDS, bandFits, isAgeBand, type AgeBand } from '@/lib/audience';
+import { CourseShelfCard } from '../_shared/course-shelf-card';
 
 export const metadata: Metadata = {
   title: 'Young learners',
@@ -21,34 +17,6 @@ export const metadata: Metadata = {
 };
 
 export const dynamic = 'force-dynamic';
-
-function CourseCard({ course }: { course: CatalogueCourse }) {
-  const version = displayVersion(course);
-  return (
-    <article className="card">
-      <Link href={`/courses/${course.slug}`} className="course" style={{ display: 'block' }}>
-        <span className="title">{course.title}</span>
-      </Link>
-      {course.description && (
-        <p className="muted" style={{ fontSize: '0.92rem', margin: '0.4rem 0 0' }}>
-          {course.description.length > 180
-            ? `${course.description.slice(0, 180).trimEnd()}…`
-            : course.description}
-        </p>
-      )}
-      <div className="badges" style={{ marginTop: '0.7rem' }}>
-        <span className="badge">{AUDIENCE_LABEL[course.audience] ?? course.audience}</span>
-        <span className="badge">{DIFFICULTY_LABEL[course.difficulty] ?? course.difficulty}</span>
-        {languagesFor(course).map((l) => (
-          <span key={l} className="badge neutral">{l.toUpperCase()}</span>
-        ))}
-        {subjectNames(version).slice(0, 3).map((s) => (
-          <span key={s} className="badge neutral">{s}</span>
-        ))}
-      </div>
-    </article>
-  );
-}
 
 /**
  * The Young Learners door — screen 3.
@@ -88,6 +56,14 @@ export default async function YoungLearnersPage({
   const courses = await fetchCatalogue(supabase, { audience: 'child' });
   const visible = courses.filter(
     (course) => course.audience !== 'adult' && bandFits(course.age_bands, chosen),
+  );
+
+  // What each card contains and what it would cost this parent. One call for
+  // the shelf; a door that hides the price makes a parent open every card.
+  const cards = await fetchCourseCards(
+    supabase,
+    visible.map((course) => course.id),
+    countryFromHeaders(await headers()),
   );
 
   return (
@@ -138,7 +114,7 @@ export default async function YoungLearnersPage({
       ) : (
         <div className="grid cols-2" style={{ marginTop: '1rem' }}>
           {visible.map((course) => (
-            <CourseCard key={course.id} course={course} />
+            <CourseShelfCard key={course.id} course={course} card={cards.get(course.id) ?? null} />
           ))}
         </div>
       )}

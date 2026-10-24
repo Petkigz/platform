@@ -2301,6 +2301,24 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### The shelf card, 2026-10-24
+
+Screen 5. A catalogue card now answers the two questions a buyer asks before opening anything: what is in it and
+what it would cost *them*. `catalogue_cards(ids, country)` answers for a whole shelf in one call, taking each price
+from `course_price_for_me()` — the same resolver the order writer uses — and returning `sections`, `lessons`,
+`minutes`, `timedLessons` and the offering per course.
+
+The lesson count needs the definer's privileges because an anonymous visitor may see only preview lessons, so the
+function answers **only** about courses the public shelf would show: a draft, suspended or retired course is skipped
+rather than counted, which keeps it from becoming an oracle for unpublished work.
+
+On the web, `catalogue-cards.ts` parses the reply through the same `offeringFromAnswer()`/`offeringLabel()` the
+course page uses, writes `1h 35m+` when some lessons declare no length, and is shared by the catalogue, `/young`
+and `/adults` through one card component.
+
+**Open:** a teacher's name on a card — blocked by `teaching.public_profile`, which ships off, so most cards would
+show an empty line.
+
 ### The front door, 2026-10-24
 
 Screen 1, and the first piece of the design work rather than a feature. The landing page now carries a hero

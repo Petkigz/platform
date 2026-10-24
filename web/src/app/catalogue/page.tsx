@@ -1,10 +1,14 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
 import { recordEvent } from '@/lib/analytics-server';
 import { createClient } from '@/lib/supabase/server';
+import { countryFromHeaders } from '@/lib/geo';
+import { fetchCourseCards } from '@/lib/catalogue-cards';
+import { CourseShelfCard } from '../_shared/course-shelf-card';
 import {
   AUDIENCE_LABEL,
   DIFFICULTY_LABEL,
@@ -21,39 +25,6 @@ export const metadata: Metadata = { title: 'Catalogue' };
 export const dynamic = 'force-dynamic';
 
 type Search = { q?: string; subject?: string; audience?: string };
-
-function CourseCard({ c }: { c: CatalogueCourse }) {
-  const version = displayVersion(c);
-  const subjects = subjectNames(version);
-  const languages = languagesFor(c);
-
-  return (
-    <article className="card">
-      <Link href={`/courses/${c.slug}`} className="course" style={{ display: 'block' }}>
-        <span className="title">{c.title}</span>
-      </Link>
-
-      {c.description && (
-        <p className="muted" style={{ fontSize: '0.92rem', margin: '0.4rem 0 0' }}>
-          {c.description.length > 180
-            ? `${c.description.slice(0, 180).trimEnd()}\u2026`
-            : c.description}
-        </p>
-      )}
-
-      <div className="badges" style={{ marginTop: '0.7rem' }}>
-        <span className="badge">{AUDIENCE_LABEL[c.audience] ?? c.audience}</span>
-        <span className="badge">{DIFFICULTY_LABEL[c.difficulty] ?? c.difficulty}</span>
-        {languages.map((l) => (
-          <span key={l} className="badge neutral">{l.toUpperCase()}</span>
-        ))}
-        {subjects.slice(0, 3).map((s) => (
-          <span key={s} className="badge neutral">{s}</span>
-        ))}
-      </div>
-    </article>
-  );
-}
 
 export default async function CataloguePage({
   searchParams,
@@ -77,6 +48,15 @@ export default async function CataloguePage({
   // us a version an author can see in draft; the catalogue must not.
   const visible = courses.filter((c) => displayVersion(c) !== null);
   const tops = disciplines(subjects);
+
+  // One call for the whole shelf: what each course contains and what it would
+  // cost this visitor. The country is a display hint — the database prefers the
+  // account's recorded country when there is one.
+  const cards = await fetchCourseCards(
+    supabase,
+    visible.map((c) => c.id),
+    countryFromHeaders(await headers()),
+  );
 
   // What people look for is the whole point of search analytics, and the query
   // is already in hand here. A signed-out search records nothing.
@@ -157,7 +137,7 @@ export default async function CataloguePage({
       ) : (
         <div className="grid cols-2">
           {visible.map((c) => (
-            <CourseCard key={c.id} c={c} />
+            <CourseShelfCard key={c.id} course={c} card={cards.get(c.id) ?? null} />
           ))}
         </div>
       )}

@@ -109,6 +109,7 @@ import { run as notificationPrefs } from './notification_preferences.test.mjs';
 import { run as courseAudience } from './course_audience.test.mjs';
 import { run as courseShelf } from './course_shelf.test.mjs';
 import { run as practiceCheck } from './practice_check.test.mjs';
+import { run as catalogueCards } from './catalogue_cards.test.mjs';
 
 // Settings that are global by design: one row, read by code far from the suite
 // that changes it. The revenue share decides what every accrual computes; the
@@ -226,6 +227,7 @@ for (const [name, fn] of [
   ['course audience', courseAudience],
   ['course shelf', courseShelf],
   ['practice check', practiceCheck],
+  ['catalogue cards', catalogueCards],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],

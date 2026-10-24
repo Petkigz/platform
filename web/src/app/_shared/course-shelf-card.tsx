@@ -1,0 +1,85 @@
+import Link from 'next/link';
+import {
+  AUDIENCE_LABEL,
+  DIFFICULTY_LABEL,
+  displayVersion,
+  languagesFor,
+  subjectNames,
+  type CatalogueCourse,
+} from '@/lib/catalogue';
+import { cardPrice, contentLine, isPriced, type CourseCard } from '@/lib/catalogue-cards';
+
+/**
+ * One course, as it appears on any shelf.
+ *
+ * This was three near-identical copies — the catalogue, the children's door and
+ * the adults' door — which is three places to change whenever a card gains a
+ * field and two places to forget. It is a server component with no client
+ * JavaScript: a shelf of forty cards should cost nothing to render.
+ *
+ * Two questions are answered above the badges: **what is in it** (sections,
+ * lessons, a duration where one is known) and **what it costs me** (resolved by
+ * the same reader the enrol button uses, per visitor, in that course's own
+ * currency). Everything else on the card is what the course says about itself.
+ *
+ * A `card` of null is a shelf that could not be answered. The card still
+ * renders — the course exists and its title is not in doubt — but the price and
+ * the content line are silent rather than guessed.
+ */
+export function CourseShelfCard({
+  course,
+  card,
+}: {
+  course: CatalogueCourse;
+  card?: CourseCard | null;
+}) {
+  const version = displayVersion(course);
+  const price = cardPrice(card);
+  const content = contentLine(card);
+
+  // Three states, three styles. A figure is a charge; "Included" is access the
+  // buyer already holds; "Free" is the platform's own, and anything else —
+  // "Not available in your country yet" — is deliberately not dressed up as a
+  // price, because a pill that looks like a charge for a course nobody here can
+  // buy is a support case waiting to happen.
+  const tone =
+    card === null || card === undefined
+      ? 'card-price unavailable'
+      : isPriced(card) || card.offering.kind === 'free'
+        ? 'card-price'
+        : card.offering.kind === 'entitled'
+          ? 'card-price included'
+          : 'card-price unavailable';
+
+  return (
+    <article className="card">
+      <div className="card-head">
+        <Link href={`/courses/${course.slug}`} className="course" style={{ display: 'block' }}>
+          <span className="title">{course.title}</span>
+        </Link>
+        {price && <span className={tone}>{price}</span>}
+      </div>
+
+      {course.description && (
+        <p className="muted" style={{ fontSize: '0.92rem', margin: '0.4rem 0 0' }}>
+          {course.description.length > 180
+            ? `${course.description.slice(0, 180).trimEnd()}\u2026`
+            : course.description}
+        </p>
+      )}
+
+      {content && <p className="card-content">{content}</p>}
+
+      <div className="badges" style={{ marginTop: '0.7rem' }}>
+        <span className="badge">{AUDIENCE_LABEL[course.audience] ?? course.audience}</span>
+        <span className="badge">{DIFFICULTY_LABEL[course.difficulty] ?? course.difficulty}</span>
+        {languagesFor(course).map((l) => (
+          <span key={l} className="badge neutral">{l.toUpperCase()}</span>
+        ))}
+        {subjectNames(version).slice(0, 3).map((s) => (
+          <span key={s} className="badge neutral">{s}</span>
+        ))}
+      </div>
+    </article>
+  );
+}

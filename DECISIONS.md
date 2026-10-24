@@ -2528,6 +2528,47 @@ for both — a warning that fires on missing data is a warning people learn to i
 whether a teacher should be told that a learner outside the band has joined. Both are policy; both would
 need the owner.
 
+## A shelf card says what is in it and what it costs — **DECIDED 2026-10-24**
+
+The catalogue showed a title, a description and four badges. Two questions a buyer asks before opening anything —
+**how much is in it** and **what would it cost me** — were answered only on the course page, so a shelf of forty
+courses was forty clicks to find out whether anything on it was a two-hour introduction or a thirty-lesson course,
+and whether it was free.
+
+**One call for the whole shelf.** `catalogue_cards(ids, country)` answers per card; a page that asked
+`course_price_for_me()` sixty times would be sixty round trips, and the first slow catalogue would be the reason
+somebody rewrote it badly.
+
+**The price comes from the resolver the order uses.** The function calls `course_price_for_me()` rather than
+reimplementing the market lookup, because a shelf that computes its own price is a shelf that can disagree with the
+button on the next page — and the person who discovers the disagreement is the buyer. The cost is one small lookup
+per card, which is the price of never being wrong about money.
+
+**The lesson count needs the definer's privileges, so it may only answer about the public shelf.** An anonymous
+visitor may read only preview lessons, so an invoker function would report "1 lesson" for a twenty-lesson course.
+Reading it with the definer's rights would make the function an oracle for drafts, so a course that is not active,
+not deleted, not suspended, or has no published version is **not answered at all** — the id is skipped, exactly as
+`search_catalogue()` declines to rank a course it will not show.
+
+**A duration is a floor or it is nothing.** A lesson's length is optional and often absent for text and interactive
+lessons, so the reply carries `minutes` *and* `timedLessons`; the card writes `1h 35m+` when the two disagree, and
+stays silent when no lesson declares a length. "20 min" for a course where one of three lessons has no stated length
+is a claim the data does not support.
+
+**Three price states, three styles.** A figure is a charge; **Free** is the platform's own; **Included in your
+access** is access the reader already holds; *Not available in your country yet* is not dressed as a price at all,
+because a pill that looks like a charge for a course nobody here can buy becomes a support case.
+
+**Nothing is summed.** Each card carries one offering in one currency. There is no total, no "from", and no
+cross-currency figure anywhere in the reply or on the page.
+
+**One card, three shelves.** The catalogue, the children's door and the adults' door had three near-identical
+card bodies. They are now one server component (`_shared/course-shelf-card.tsx`) with no client JavaScript.
+
+**Not decided here:** whether a card should show a teacher's name. It cannot yet — `instructor_public_profiles_read`
+requires `teaching.public_profile`, which ships off, so most courses would render an empty line. When that flag is
+on, the name belongs on the card and this is the place to add it.
+
 ## The front door says only what is true — **DECIDED 2026-10-24**
 
 Screen 1. The landing page was a hero, a chip row and three cards. It is the only page a stranger reads before
