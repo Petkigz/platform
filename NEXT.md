@@ -2301,6 +2301,47 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### The switchboard belongs to the owner, 2026-10-24
+
+`/admin` is one address with four kinds of staff behind it. The queues at the top were
+already filtered in the database — a count that is not sent cannot be read — so the page
+was honest about the work and careless about the doors.
+
+A support agent saw a revenue-share field, ninety feature switches and a wall of money
+links. Every one of them would have refused them, and the *toggles would not have*: the
+write policy on `platform_settings` was `is_privileged()`, so a support agent could turn
+`commerce.checkout` on with one UPDATE. That policy was never decided; it was written
+before there was more than one kind of staff member.
+
+**The register now says which kind of row it is.** `setting_kind` is `flag` (90 feature
+switches) or `control` (13 dials). A BEFORE trigger, `enforce_setting_authority`, refuses
+a non-owner writing a flag, and hands a control to `may_write_setting()` — which asks
+`may_change_control()` for the ten in the allowlist and names the three bespoke writers
+with the role each actually checks. A control can no longer be changed by writing the
+table and skipping its bounds, its reason and its audit. The guard compares every column,
+not just the value: demoting a `code` flag to `admin` and then flipping it is two writes
+that each look harmless alone.
+
+**Then the screen caught up with the table.** `/admin` groups its links by whose work they
+are, using the three booleans `staff_attention()` was already returning and nobody was
+reading, and the switchboard is rendered only for the platform admin. Everyone else gets
+one sentence naming whose the switches are — not "permission denied", which reads as a
+fault to report, but a fact with a person in it.
+
+**And the landing gap closed.** `homeFor()` asked about the owner, the board, the teacher
+and the reviewer, then fell through to `/learn` for everybody else — so a finance-only or
+support-only login landed on a catalogue of somebody else's courses. Both are staff; both
+now land in the console.
+
+Tests: 11 new database tests — the 90/13 split, a support agent reading 103 rows and
+refused a flip, finance and governance refused one each, the owner allowed, a `gate_type`
+demotion refused at the first write, a sessionless write still allowed (migrations are
+one), a control refused through the table but accepted through all four of its writers,
+the allowlist's own roles unchanged, and a learner reading an empty register and updating
+nothing. One existing flags test was rewritten rather than deleted: it pinned "a
+non-platform privileged role can read and write", which was the bug. 9 new web tests cover
+the role matrix, the sentence a non-owner reads, and the two staff landings.
+
 ### The outbox learns how to give up, 2026-10-24
 
 The platform has had an outbox since 19 October and no idea what to do with a message that did

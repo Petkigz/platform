@@ -35,13 +35,16 @@ export default async function DashboardPage() {
     return data === true;
   };
 
-  const [platformAdmin, governanceAdmin, boardMember, instructor, reviewer] = await Promise.all([
-    role('platform_admin'),
-    role('governance_admin'),
-    role('scholarly_panel_member'),
-    role('instructor'),
-    role('reviewer'),
-  ]);
+  const [platformAdmin, governanceAdmin, financeAdmin, supportAgent, boardMember, instructor, reviewer] =
+    await Promise.all([
+      role('platform_admin'),
+      role('governance_admin'),
+      role('finance_admin'),
+      role('support_agent'),
+      role('scholarly_panel_member'),
+      role('instructor'),
+      role('reviewer'),
+    ]);
 
   // Asked only when it can matter: the board question is a setting read.
   const boardActive = boardMember
@@ -51,5 +54,14 @@ export default async function DashboardPage() {
       })).data === true
     : false;
 
-  redirect(homeFor({ platformAdmin, governanceAdmin, boardMember, boardActive, instructor, reviewer }));
+  redirect(homeFor({
+    platformAdmin,
+    governanceAdmin,
+    financeAdmin,
+    supportAgent,
+    boardMember,
+    boardActive,
+    instructor,
+    reviewer,
+  }));
 }

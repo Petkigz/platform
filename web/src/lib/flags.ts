@@ -158,8 +158,13 @@ export async function setFlag(
 
   if (error) {
     // An admin_setup flag is allowed through: the gate is a warning about
-    // external readiness, not a prohibition. Only `code` is refused, and only
-    // by the database.
+    // external readiness, not a prohibition. Only `code` is refused by the
+    // gate, and since 2026-10-24 only the platform admin may write a switch at
+    // all — the table's trigger refuses everybody else, and its sentence is the
+    // one worth showing.
+    if (error.code === '42501' || /only the platform admin/i.test(error.message)) {
+      return { ok: false, code: 'not_privileged', message: error.message };
+    }
     return { ok: false, code: 'rejected', message: error.message };
   }
 

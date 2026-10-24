@@ -5,6 +5,7 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { fetchFlags, groupFlags } from '@/lib/flags';
 import { FlagToggle } from './flag-toggle';
 import { RevenueShareForm } from './revenue-share-form';
+import { consoleSections, switchboardNotice, type StaffFacts } from '@/lib/admin-console';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,6 +19,57 @@ type AttentionQueue = {
   feature: string | null;
   dormant: boolean;
 };
+
+type ConsoleLink = { href: string; label: string; note: string };
+
+/**
+ * The screens below the queues, grouped by who may open them.
+ *
+ * Each group matches the gate its page actually enforces — the money screens
+ * redirect anybody without `finance_admin` or `platform_admin`, so a support
+ * agent is not shown them here. A link that refuses is worse than no link: it
+ * teaches the reader that this page cannot be trusted to know what they may do.
+ *
+ * A screen whose page gate is `is_privileged` is in `sharedLinks`, whoever it
+ * belongs to conceptually. Being honest about the gate beats being tidy about
+ * the filing.
+ */
+const moneyLinks: ConsoleLink[] = [
+  { href: '/admin/orders', label: 'Orders awaiting payment', note: 'the only orders whose total can still change: record a discount, tax, fee or rounding against one, or withdraw one' },
+  { href: '/admin/refunds', label: 'Refund requests', note: 'money going back out. Approving is an agreement, not a transfer' },
+  { href: '/admin/financial-adjustments', label: 'Financial adjustments', note: 'append-only accounting corrections and earnings clawbacks' },
+  { href: '/admin/reconciliation', label: 'Payment reconciliation', note: 'signed statement rows against the internal ledger' },
+  { href: '/admin/disputes', label: 'Payment disputes', note: 'a chargeback has a deadline; the provider decides what happens if it passes' },
+  { href: '/admin/tax', label: 'Tax and transfer fees', note: 'what a buyer is charged on top of the price, by the country they buy from' },
+  { href: '/admin/exchange-rates', label: 'Exchange rates', note: 'what one currency was worth in another, when, and who said so' },
+  { href: '/admin/money-report', label: 'Money report', note: 'what moved in a period, in the one currency the platform is read in, with the rate beside every figure' },
+  { href: '/admin/renewals', label: 'Renewals', note: 'every live subscription expanded forward at the price it was sold at. Committed, not arrived — nothing charges a renewal yet' },
+  { href: '/admin/payouts', label: 'Teacher payouts', note: 'what teachers have asked to be paid, and the refund hold that keeps a sale from leaving before it can be reversed' },
+];
+
+const publicationLinks: ConsoleLink[] = [
+  { href: '/admin/reviews', label: 'Assign reviews', note: 'courses waiting for a reviewer' },
+  { href: '/admin/reviewers', label: 'Reviewer register', note: 'who applied to review, who has been checked, and what each may judge. Nothing publishes until somebody here is verified' },
+];
+
+const supportLinks: ConsoleLink[] = [
+  { href: '/admin/support', label: 'Support queue', note: 'requests people opened from Help. Turning the feature off stops new ones; it does not close what is in flight' },
+];
+
+const sharedLinks: ConsoleLink[] = [
+  { href: '/admin/settings', label: 'Controls', note: 'the numbers behind features that are already on. Only the ones your role owns are shown, and each change needs a reason' },
+  { href: '/admin/reports', label: 'Content reports', note: 'problems readers flagged in a lesson or an answer. Closing one needs a written note' },
+  { href: '/admin/media', label: 'Uploaded media', note: 'every master anybody has uploaded. Quarantine and withdrawal both need a written reason' },
+  { href: '/admin/course-reviews', label: 'Course review queue', note: 'learner ratings that include words, held until someone reads them' },
+  { href: '/admin/discussion', label: 'Discussion queue', note: 'learner questions and peer answers held for review' },
+  { href: '/admin/messages', label: 'Messages', note: 'what the platform would send, rendered and recorded. Nothing leaves the building until a provider is configured' },
+  { href: '/admin/plans', label: 'Subscription plans', note: 'versioned terms, entitlements and recurring prices' },
+  { href: '/admin/certificates', label: 'Certificates', note: 'issue completion certificates and record revocations with a reason' },
+  { href: '/admin/analytics', label: 'Analytics', note: 'what people do, kept forever, by event and by day. Aggregates only' },
+  { href: '/admin/guardians', label: 'Guardian verification', note: 'adults asking to be recognised as a child’s parent' },
+  { href: '/admin/appeals', label: 'Appeals', note: 'teachers contesting a rejection. You cannot decide an appeal against your own decision' },
+  { href: '/admin/roles', label: 'Roles', note: 'who may do what. Every check in the database reads these' },
+];
 
 type Attention = {
   generatedAt: string;
@@ -40,12 +92,19 @@ type Attention = {
  * it, and "you are not staff" is the more useful answer.
  *
  * Above the flags sits `staff_attention()`: every queue this person may work,
- * each with the count in it. This page is where `homeFor()` sends a platform or
- * governance admin on sign-in, so the first thing they read should be what is
- * waiting rather than a wall of switches. The queues are filtered in the
- * database, not here — a card this screen chose not to render would still have
- * been sent, and the count of refund requests is information a support agent
- * does not get.
+ * each with the count in it. This page is where `homeFor()` sends every staff
+ * member on sign-in, so the first thing they read should be what is waiting
+ * rather than a wall of switches. The queues are filtered in the database, not
+ * here — a card this screen chose not to render would still have been sent, and
+ * the count of refund requests is information a support agent does not get.
+ *
+ * Below the queues the page is **grouped by whose work it is**, from the same
+ * three booleans `staff_attention()` already returns. The switchboard — the flag
+ * register and the revenue share — is only rendered for the platform admin,
+ * because only the platform admin may write either; the table refuses anybody
+ * else, so a control here would be a promise the database would not keep.
+ * Everyone else is told whose the switches are, in one sentence, rather than
+ * shown ninety toggles that would each fail.
  *
  * Three things the block says out loud:
  *
@@ -74,21 +133,43 @@ export default async function AdminPage() {
   const { data: attentionData, error: attentionError } = await supabase.rpc('staff_attention');
   if (attentionError) throw new Error(attentionError.message);
   const attention = attentionData as unknown as Attention | null;
+
+  // Four kinds of staff share this address. The queues were already filtered in
+  // the database; this decides what else they are shown — and, for anyone who is
+  // not the owner, whether the switchboard is on the page at all.
+  const { data: platformRole } = await supabase.rpc('has_role', {
+    p_user_id: user.id,
+    p_role_code: 'platform_admin',
+  });
+  const facts: StaffFacts = {
+    platformAdmin: platformRole === true,
+    financeAdmin: attention?.canSeeFinance === true,
+    governanceAdmin: attention?.canSeeGovernance === true,
+    supportAgent: attention?.canSeeSupport === true,
+  };
+  const sections = consoleSections(facts);
+
   const queues = attention?.queues ?? [];
   const waiting = attention?.waitingCount ?? 0;
   const busy = queues.filter((q) => q.count > 0);
   const quiet = queues.filter((q) => q.count === 0);
   const dormant = queues.filter((q) => q.dormant);
 
-  const flags = await fetchFlags(supabase);
+  // The register is only read for the person who may change it. A support agent
+  // reading ninety switches they cannot flip is ninety opportunities to believe
+  // this page is broken.
+  const flags = sections.switchboard ? await fetchFlags(supabase) : [];
   const groups = groupFlags(flags);
-  const { data: shareSetting, error: shareError } = await supabase
-    .from('platform_settings')
-    .select('value_text')
-    .eq('key', 'teaching.revenue_share_percent')
-    .maybeSingle();
-  if (shareError) throw new Error(shareError.message);
-  const revenueSharePercent = Number(shareSetting?.value_text ?? 0);
+  let revenueSharePercent = 0;
+  if (sections.switchboard) {
+    const { data: shareSetting, error: shareError } = await supabase
+      .from('platform_settings')
+      .select('value_text')
+      .eq('key', 'teaching.revenue_share_percent')
+      .maybeSingle();
+    if (shareError) throw new Error(shareError.message);
+    revenueSharePercent = Number(shareSetting?.value_text ?? 0);
+  }
 
   const on = flags.filter((f) => f.enabled).length;
   const deployGated = flags.filter((f) => f.gateType === 'code').length;
@@ -168,196 +249,129 @@ export default async function AdminPage() {
         </div>
       ) : null}
 
-      <h2 style={{ marginTop: '2.5rem' }}>Feature flags</h2>
-      <p className="lede">
-        Everything is built and shipped off. Turn features on here as their
-        preconditions are met.
-      </p>
+      {sections.switchboard ? (
+        <>
+          <h2 style={{ marginTop: '2.5rem' }}>Feature flags</h2>
+          <p className="lede">
+            Everything is built and shipped off. Turn features on here as their
+            preconditions are met.
+          </p>
 
-      <RevenueShareForm currentPercent={revenueSharePercent} />
+          <RevenueShareForm currentPercent={revenueSharePercent} />
 
-      <div className="stats">
-        <div>
-          <div className="n">{on}</div>
-          <div className="l">Enabled</div>
-        </div>
-        <div>
-          <div className="n">{flags.length - on}</div>
-          <div className="l">Off</div>
-        </div>
-        <div>
-          <div className="n">{setupGated}</div>
-          <div className="l">Need external setup</div>
-        </div>
-        <div>
-          <div className="n">{deployGated}</div>
-          <div className="l">Need a deploy</div>
-        </div>
-      </div>
-
-      <div className="notice" style={{ marginTop: '1.5rem' }}>
-        A flag marked <strong>needs a deploy</strong> cannot be switched on
-        here, and the refusal is enforced in the database rather than by hiding
-        the control. Each one carries the precondition that has to be true
-        first — a flag with no written precondition is a bug waiting to be
-        enabled.
-      </div>
-
-      {flags.length === 0 ? (
-        <p className="empty">The flag register is empty.</p>
-      ) : (
-        groups.map((g) => (
-          <div key={g.group}>
-            <div className="outline-h">
-              <h3>{g.group}</h3>
-              <span className="muted" style={{ fontSize: '0.85rem' }}>
-                {g.flags.filter((f) => f.enabled).length} / {g.flags.length} on
-              </span>
+          <div className="stats">
+            <div>
+              <div className="n">{on}</div>
+              <div className="l">Enabled</div>
             </div>
-            <div className="card">
-              <ul className="lessons">
-                {g.flags.map((f) => (
-                  <FlagToggle
-                    key={f.key}
-                    flagKey={f.key}
-                    enabled={f.enabled}
-                    gateType={f.gateType}
-                    preconditions={f.preconditions}
-                  />
-                ))}
-              </ul>
+            <div>
+              <div className="n">{flags.length - on}</div>
+              <div className="l">Off</div>
+            </div>
+            <div>
+              <div className="n">{setupGated}</div>
+              <div className="l">Need external setup</div>
+            </div>
+            <div>
+              <div className="n">{deployGated}</div>
+              <div className="l">Need a deploy</div>
             </div>
           </div>
-        ))
+
+          <div className="notice" style={{ marginTop: '1.5rem' }}>
+            A flag marked <strong>needs a deploy</strong> cannot be switched on
+            here, and the refusal is enforced in the database rather than by hiding
+            the control. Each one carries the precondition that has to be true
+            first — a flag with no written precondition is a bug waiting to be
+            enabled.
+          </div>
+
+          {flags.length === 0 ? (
+            <p className="empty">The flag register is empty.</p>
+          ) : (
+            groups.map((g) => (
+              <div key={g.group}>
+                <div className="outline-h">
+                  <h3>{g.group}</h3>
+                  <span className="muted" style={{ fontSize: '0.85rem' }}>
+                    {g.flags.filter((f) => f.enabled).length} / {g.flags.length} on
+                  </span>
+                </div>
+                <div className="card">
+                  <ul className="lessons">
+                    {g.flags.map((f) => (
+                      <FlagToggle
+                        key={f.key}
+                        flagKey={f.key}
+                        enabled={f.enabled}
+                        gateType={f.gateType}
+                        preconditions={f.preconditions}
+                      />
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ))
+          )}
+        </>
+      ) : (
+        <div className="notice" style={{ marginTop: '2.5rem' }}>
+          {switchboardNotice(facts)}
+        </div>
       )}
 
-      <h2 style={{ marginTop: '2.5rem' }}>Other administration</h2>
-      <p>
-        <Link href="/admin/settings">Controls</Link> — the numbers behind features
-        that are already on: what a teacher may store, how many devices a learner
-        may save to, how long a saved lesson plays, and the publication threshold.
-        Only the ones your role owns are shown, and each change needs a reason.
-      </p>
-      <p>
-        <Link href="/admin/certificates">Certificates</Link> — issue completion certificates and manage revocations with an audit-ready reason.
-      </p>
-      <p>
-        <Link href="/admin/analytics">Analytics</Link> — what people do, kept
-        forever, by event and by day. Aggregates only; a closed account keeps its
-        rows and loses its name.
-      </p>
-      <p>
-        <Link href="/admin/plans">Subscription plans</Link> — configure versioned terms, entitlements and recurring prices.
-      </p>
-      <p>
-        <Link href="/admin/orders">Orders awaiting payment</Link> — the only orders
-        whose total can still change: record a discount, tax, fee or rounding
-        against one, or withdraw one (finance/platform admin).
-      </p>
-      <p>
-        <Link href="/admin/financial-adjustments">Financial adjustments</Link> — append-only accounting corrections and earnings clawbacks (finance/platform admin).
-      </p>
-      <p>
-        <Link href="/admin/reconciliation">Payment reconciliation</Link> — compare statement rows to settled transactions (finance/platform admin).
-      </p>
-      <p>
-        <Link href="/admin/disputes">Payment disputes</Link> — track and review provider cases (finance/platform admin).
-      </p>
-      <p>
-        <Link href="/admin/tax">Tax and transfer fees</Link> — what a buyer is
-        charged on top of the price, by the country they buy from. No rule means
-        no charge (finance/platform admin).
-      </p>
-      <p>
-        <Link href="/admin/exchange-rates">Exchange rates</Link> — what one
-        currency was worth in another, when, and who said so. Every converted
-        total rests on a row here (finance/platform admin).
-      </p>
-      <p>
-        <Link href="/admin/money-report">Money report</Link> — what moved in a
-        period, in the one currency the platform is read in, with the rate beside
-        every figure and the money it could not convert listed as a gap
-        (finance/platform admin).
-      </p>
-      <p>
-        <Link href="/admin/reviews">Assign reviews</Link> — courses waiting
-        for a reviewer.
-      </p>
-      <p>
-        <Link href="/admin/reviewers">Reviewer register</Link> — who applied to
-        review, who has been checked, what each may judge, and what each has stood
-        aside from (governance/platform admin). Nothing can be published until
-        somebody here is verified.
-      </p>
-      <p>
-        <Link href="/admin/guardians">Guardian verification</Link> — adults
-        asking to be recognised as a child&rsquo;s parent. Off until{' '}
-        <code>family.guardian_verification</code> is enabled.
-      </p>
-      <p>
-        <Link href="/admin/refunds">Refund requests</Link> — money going back
-        out. Approving is an agreement, not a transfer.
-      </p>
-      <p>
-        <Link href="/admin/renewals">Renewals</Link> — every live subscription expanded forward at
-        the price it was sold at, by month. It is what has been committed to, not what will arrive:
-        nothing charges a renewal yet.
-      </p>
-      <p>
-        <Link href="/admin/payouts">Teacher payouts</Link> — what teachers have
-        asked to be paid, the refund hold that keeps a sale from being paid out
-        before it can be reversed, and the one action that marks an earning
-        paid. Recording a payout is not sending one.
-      </p>
-      <p>
-        <Link href="/admin/reports">Content reports</Link> — problems readers
-        flagged in a lesson or an answer. Closing one needs a written note.
-      </p>
-      <p>
-        <Link href="/admin/media">Uploaded media</Link> — every master anybody
-        has uploaded. Quarantine holds one for review and withdraws every copy
-        derived from it; withdrawing ends its use but keeps the object. Both
-        need a written reason.
-      </p>
-      <p>
-        <Link href="/admin/promotions">Promotions</Link> — codes and offers, which
-        countries each applies in, and how many times a family may use one.
-      </p>
-      <p>
-        <Link href="/admin/roles">Roles</Link> — who may do what. Every check in
-        the database reads these; granting or revoking needs a written reason.
-      </p>
-      <p>
-        <Link href="/admin/appeals">Appeals</Link> — teachers contesting a
-        reviewer&rsquo;s rejection. You cannot decide an appeal against your own
-        decision.
-      </p>
-      <p>
-        <Link href="/admin/discussion">Discussion queue</Link> — learner
-        questions and peer answers held for review. Empty until{' '}
-        <code>learning.discussion</code> is enabled.
-      </p>
-      <p>
-        <Link href="/admin/support">Support queue</Link> — requests people
-        opened from <Link href="/support">Help</Link>. Turning{' '}
-        <code>platform.support</code> off stops new ones; it does not close the
-        cases already in flight, which stay answerable here.
-      </p>
+      {sections.money ? (
+        <>
+          <h2 style={{ marginTop: '2.5rem' }}>Money</h2>
+          <p className="lede">
+            What was charged, what goes back, what is owed to a teacher, and the
+            rates every converted figure rests on. Every writer here needs a
+            written reason.
+          </p>
+          {moneyLinks.map((link) => (
+            <p key={link.href}>
+              <Link href={link.href}>{link.label}</Link> — {link.note}
+            </p>
+          ))}
+        </>
+      ) : null}
 
-      <p>
-        <Link href="/admin/messages">Messages</Link> — what the platform would
-        send, rendered and recorded. Nothing leaves the building until a
-        delivery provider is configured, which is why{' '}
-        <code>delivery.notifications</code> ships off.
-      </p>
+      {sections.publication ? (
+        <>
+          <h2 style={{ marginTop: '2.5rem' }}>Publication</h2>
+          {publicationLinks.map((link) => (
+            <p key={link.href}>
+              <Link href={link.href}>{link.label}</Link> — {link.note}
+            </p>
+          ))}
+        </>
+      ) : null}
 
-      <p>
-        <Link href="/admin/course-reviews">Course review queue</Link> — learner
-        ratings that include words, held until someone reads them. Ratings
-        alone are published immediately. Off until{' '}
-        <code>learning.reviews</code> is enabled, and never part of scholarly
-        review.
-      </p>
+      {sections.support ? (
+        <>
+          <h2 style={{ marginTop: '2.5rem' }}>Support</h2>
+          {supportLinks.map((link) => (
+            <p key={link.href}>
+              <Link href={link.href}>{link.label}</Link> — {link.note}
+            </p>
+          ))}
+        </>
+      ) : null}
+
+      {sections.moderation ? (
+        <>
+          <h2 style={{ marginTop: '2.5rem' }}>Everyone&rsquo;s work</h2>
+          <p className="lede">
+            Any member of staff may work these. They are listed for every role
+            because none of them is one role&rsquo;s private queue.
+          </p>
+          {sharedLinks.map((link) => (
+            <p key={link.href}>
+              <Link href={link.href}>{link.label}</Link> — {link.note}
+            </p>
+          ))}
+        </>
+      ) : null}
 
       <p style={{ marginTop: '1.5rem' }}>
         <Link href="/learn">Back to my learning</Link>

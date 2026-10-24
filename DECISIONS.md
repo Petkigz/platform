@@ -2504,6 +2504,51 @@ processing agreement, and it is the one part of live classes that cannot be buil
 **Also open:** whether a recording is offered to learners who missed the class, and how long
 it is kept. Nothing produces a recording yet, so nothing has to decide that today — but the
 moment a provider is connected, it is the next question.
+## A switch belongs to the platform admin, and the table says so — **DECIDED 2026-10-24**
+
+`platform_settings` holds two kinds of row. Reading it is staff work: knowing that
+`commerce.checkout` is off is part of being staff, and code asks through `setting_bool()`.
+Writing it was also `is_privileged()` — not a decision, just the policy that was written
+before there was more than one kind of staff member. The consequence was concrete: a
+support agent, whose job is other people's cases and who cannot approve a refund, could
+issue one UPDATE and turn checkout on, or `platform.support` off.
+
+**The register now says which kind each row is.** `setting_kind` is `flag` (90 rows, the
+feature switches) or `control` (13 rows, the dials with their own writers). That column
+is the distinction FLAGS.md has always made in prose and the schema never made in a form
+a trigger could read.
+
+**A flag needs the platform admin.** Not "staff" — the owner. A support agent reading the
+register is a staff member being informed; a support agent flipping it is staff making a
+product decision. Enforced by a BEFORE trigger on the table (`enforce_setting_authority`),
+so it holds whichever door the write comes through: the dashboard, PostgREST, or a
+hand-written UPDATE. The refusal says the key and what may be done with it — `may be read,
+not flipped`.
+
+**A control goes to its own writer's gate.** The guard calls `may_write_setting()`, which
+asks `may_change_control()` for the ten in the allowlist and names the three bespoke ones
+with the role each writer actually checks (the revenue share and the payout hold are
+finance-or-owner; the refund window is any staff, because it bounds asking rather than
+deciding). A direct table write that its writer would have refused is refused, so a
+control cannot be changed by skipping its bounds, its written reason and its audit.
+
+**The comparison covers every column, not just the value.** Changing `gate_type` from
+`code` to `admin` and then flipping the flag is two writes that each look harmless alone;
+the first one is the hole. Only `updated_at` and `updated_by` are set aside, so a writer
+that touched the row to record who did it is not asked twice.
+
+**The screen had to change with it.** `/admin` was offering a revenue-share field, ninety
+toggles and a wall of money links to every staff role. The queues at the top were already
+filtered in the database — a count that is not sent cannot be read — but the links were
+not. The console now groups its links by whose work they are, from the three booleans
+`staff_attention()` already returned, and renders the switchboard only for the owner. A
+link that refuses is worse than no link; it teaches the reader that the page cannot be
+trusted to know what they may do.
+
+**And a finance-only or support-only login landed on `/learn`** — a learner page, shown to
+the staff member who most needs a "what is waiting" list. `homeFor()` now sends every staff
+role to the console.
+
 ## The outbox is a state machine, and it sends nothing — **DECIDED 2026-10-24**
 
 `outbound_messages` has existed since 2026-10-19 and has never had a state machine. A row was

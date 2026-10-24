@@ -42,6 +42,22 @@ control.
    holds the validation and the sentences; the database still decides who may do
    what.
 
+4. **The staff console offered work to people who would be refused for it.** A
+   support agent saw a revenue-share field, ninety feature switches and a wall of
+   money links; the queues above them were already filtered in the database, so
+   the page was honest about the counts and careless about the doors. `/admin`
+   now groups its links by whose work they are, using the three booleans
+   `staff_attention()` already returned, and the switchboard — the flag register
+   and the revenue share — is rendered only for the platform admin. Behind the
+   screen, `platform_settings_authority_guard` refuses any other account writing
+   a switch, so the page and the table now say the same thing.
+
+5. **A finance-only or support-only login landed on `/learn`.** `homeFor()` asked
+   about the owner, the board, the teacher and the reviewer, and fell through to
+   the learner page for everybody else — so the one staff member who most needs a
+   "what is waiting" list was shown a catalogue. Both are staff, and both now
+   land in the console, filtered to their own queues and their own links.
+
 ## What is deliberately not done yet
 
 **The masthead is the same for everybody.** It lists Catalogue, My learning, My

@@ -24,11 +24,23 @@ test('safeNextPath rejects external, protocol-relative and malformed destination
 const nobody: RoleFacts = {
   platformAdmin: false,
   governanceAdmin: false,
+  financeAdmin: false,
+  supportAgent: false,
   boardMember: false,
   boardActive: false,
   instructor: false,
   reviewer: false,
 };
+
+test('a staff member who is not the owner lands on the staff console, not on a learner page', () => {
+  // The standing gap: a finance-only or support-only login used to fall through
+  // every branch and land on `/learn`, which shows them nothing they can work.
+  assert.equal(homeFor({ ...nobody, financeAdmin: true }), '/admin');
+  assert.equal(homeFor({ ...nobody, supportAgent: true }), '/admin');
+  assert.equal(homeFor({ ...nobody, financeAdmin: true, supportAgent: true }), '/admin');
+  // And holding a learner-facing role as well does not send them backwards.
+  assert.equal(homeFor({ ...nobody, financeAdmin: true, instructor: true }), '/admin');
+});
 
 test('each role lands in its own area', () => {
   assert.equal(homeFor({ ...nobody, platformAdmin: true }), '/admin');

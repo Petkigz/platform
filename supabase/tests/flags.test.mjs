@@ -230,23 +230,33 @@ export async function run(ctx) {
     });
   });
 
-  await test('a non-platform privileged role can read and write', async () => {
-    // governance_admin is privileged but not platform_admin. The register is
-    // staff-readable, not admin-only — the dashboard is for whoever runs the
-    // platform day to day.
+  await test('a non-platform privileged role reads the register and cannot flip it', async () => {
+    // governance_admin is privileged but not platform_admin. Reading is staff
+    // work — knowing a feature is off is part of the job. Writing is not: a
+    // switch is the owner's decision, and since 2026-10-24 the table refuses a
+    // non-owner rather than trusting the dashboard to hide the toggle.
+    //
+    // Two transactions, because a statement that raises aborts the one it is
+    // in — the read has to finish before the refusal is provoked.
     await asUser(staffId, async () => {
       const seen = await count(`select 1 from public.platform_settings`);
       assert(seen >= 86, `a governance admin read only ${seen} flags`);
-
-      const key = (await q(
-        `select key from public.platform_settings where gate_type = 'admin' limit 1`)).rows[0].key;
-      await q(`update public.platform_settings set value_text = 'true' where key = $1`, [key]);
-      const v = (await q(
-        'select value_text v from public.platform_settings where key = $1', [key])).rows[0].v;
-      assert(v === 'true', 'a governance admin could not enable an admin flag');
-
-      await q(`update public.platform_settings set value_text = 'false' where key = $1`, [key]);
     });
+
+    const row = (await q(
+      `select key, value_text from public.platform_settings
+        where gate_type = 'admin' and setting_kind = 'flag' limit 1`)).rows[0];
+
+    await rejects(
+      () => asUser(staffId, async () => {
+        await q(`update public.platform_settings set value_text = $1 where key = $2`,
+          [row.value_text === 'true' ? 'false' : 'true', row.key]);
+      }),
+      /only the platform admin/);
+
+    const after = (await q(
+      'select value_text v from public.platform_settings where key = $1', [row.key])).rows[0].v;
+    assert(after === row.value_text, 'the switch moved');
   });
 
   // -------------------------------------------------------------------

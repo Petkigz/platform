@@ -137,9 +137,27 @@ Three kinds of gate:
 | `platform.audit` | Audit log of privileged actions | ADMIN | — |
 | `platform.maintenance_mode` | Read-only mode | ADMIN | — |
 
+## Who may flip one
+
+**The platform admin, and nobody else** *(decided 2026-10-24)*. The register is
+readable by every staff role — knowing that `commerce.checkout` is off is part of
+being staff, and `setting_bool()` is how code asks. Writing is not: a switch is a
+product decision about what the platform does, which is the owner's, and the
+three other staff roles each have a job that does not include deciding it.
+
+Until 2026-10-24 the write policy was `is_privileged()`, which meant a support
+agent could turn checkout on with one UPDATE. No screen offered it, and that was
+the whole of the protection — an offer is not a permission check. It is now
+enforced by `platform_settings_authority_guard`, a trigger on the table, so the
+refusal is the same whichever door the write comes through:
+`only the platform admin may change a feature switch; commerce.checkout may be
+read, not flipped`. The same trigger gives each control its own writer's gate, so
+a control cannot be changed by writing the table and skipping its bounds, its
+reason and its audit.
+
 ## Controls that are not flags
 
-`platform_settings` holds eleven rows that are not in the tables above. They are
+`platform_settings` holds thirteen rows that are not in the tables above. They are
 not features to switch on — they are dials that decide how the publication and
 money rules behave, and they shipped with values rather than being absent.
 

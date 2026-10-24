@@ -23,10 +23,20 @@ export function safeNextPath(candidate: string | null | undefined, fallback = '/
  * has the board convened. Otherwise the register refuses them, `/admin` refuses
  * them for the same reason, and sending them there would be a redirect loop that
  * ends on the marketing page — so they fall through to whatever else they are.
+ *
+ * A finance admin or a support agent used to fall all the way through to
+ * `/learn`, which is a screen for a learner: the one staff member who most needs
+ * a "what is waiting" list landed on a catalogue of somebody else's courses.
+ * Both are staff, and `/admin` is where staff work starts — filtered to their own
+ * queues and their own links, which is the whole point of the page.
  */
 export type RoleFacts = {
   platformAdmin: boolean;
   governanceAdmin: boolean;
+  /** Holds `finance_admin`. Staff, but not the owner. */
+  financeAdmin: boolean;
+  /** Holds `support_agent`. Staff, but not the owner. */
+  supportAgent: boolean;
   boardMember: boolean;
   boardActive: boolean;
   instructor: boolean;
@@ -35,6 +45,9 @@ export type RoleFacts = {
 
 export function homeFor(roles: RoleFacts): string {
   if (roles.platformAdmin || roles.governanceAdmin) return '/admin';
+  // Every other staff member belongs in the console too: it opens with their own
+  // queues and their own links, and the switches below are not shown to them.
+  if (roles.financeAdmin || roles.supportAgent) return '/admin';
   if (roles.boardMember && roles.boardActive) return '/admin/reviewers';
   if (roles.instructor) return '/teach';
   if (roles.reviewer) return '/review';
