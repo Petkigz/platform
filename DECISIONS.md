@@ -2504,6 +2504,49 @@ processing agreement, and it is the one part of live classes that cannot be buil
 **Also open:** whether a recording is offered to learners who missed the class, and how long
 it is kept. Nothing produces a recording yet, so nothing has to decide that today — but the
 moment a provider is connected, it is the next question.
+## A lesson remembers where you were, and that is not progress — **DECIDED 2026-10-24**
+
+`lesson_progress.last_video_position` has existed since the first progress migration, documented as
+"resume position, in seconds, only meaningful for timed media", and no code has ever written it. Every
+player in the product starts at zero. A learner who closes a forty-minute recitation at minute
+thirty-one finds minute one the next evening — for a Qur'an course that is the difference between
+memorising a passage and never getting past its opening.
+
+The column was already the right shape, so this is a writer, a reader, and one decision that is easy
+to get wrong.
+
+**A position is not a percentage.** Moving a player does not complete a lesson, and a completed
+lesson does not become unfinished because somebody reopened it and listened to the first minute
+again. `record_lesson_position()` touches `last_video_position` and the timestamps, moves `not_started`
+to `in_progress`, and refuses to move anything that is `completed` or `skipped` — a progress bar that
+drops to 40% because the introduction was rewatched is a bug report waiting to happen.
+
+**Whose place it is comes from the same helper the policy uses.** The function is `security definer`,
+so it does not run under RLS; it calls `can_access_learner()` explicitly, which is what the table's
+policy calls. A parent keeping a child's place, and a child's own account once child login exists,
+therefore pass for the same reason rather than by a second rule that could disagree.
+
+**The lesson must be in the pinned version.** D5 pins an enrolment to one course version, and a
+position against a lesson that version does not contain is a row nobody can explain later. The
+lesson's version is reached through its section, which is where the pin actually lives.
+
+**One read for the whole enrolment.** A lesson list wants "resume at 12:31" beside twenty rows, and
+a call per row would be twenty round trips to paint a sidebar. `lesson_positions()` returns the map
+in one.
+
+**The player's rules are where the judgement lives, and they are pure functions.** Resume only past
+fifteen seconds, and not within twenty seconds of the end: ten seconds in is not "where you were",
+and resuming at the end starts, finishes and looks broken. Save on a ten-second drift, and forcibly
+on pause, on end and on `pagehide` — `timeupdate` fires four times a second, which would be 14 000
+writes for an hour of recitation. Resume once per mount, because a quality switch re-fires
+`loadedmetadata` and resuming again would throw the learner backwards.
+
+**Screen 23 is the same idea with a passage in it.** A recitation is not a podcast: the learner
+repeats after the reciter and returns to one passage. The player adds slower speeds (0.5×–1.5×),
+two buttons that mark the passage and loop it, and the saved place — and keeps the native controls,
+because media keys, the lock screen and screen readers come free and a custom transport bar would
+give them up for a nicer play button.
+
 ## A directory is about people, and holds no money — **DECIDED 2026-10-24**
 
 Screens 36 and 37 — Users and Teachers — have been `READY` since the inventory was written and

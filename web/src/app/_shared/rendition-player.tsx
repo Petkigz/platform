@@ -1,11 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type RefObject } from 'react';
 
 import { createClient } from '@/lib/supabase/client';
 import { deviceKey, storeLesson } from '@/lib/offline';
 import { track } from '@/lib/analytics';
+import { useMediaPosition } from './use-media-position';
 
 import {
   PROFILE_LABEL,
@@ -59,6 +60,8 @@ export function RenditionPlayer({
   courseTitle = '',
   learnerProfileId = null,
   saveNote = null,
+  enrolmentId = null,
+  resumeAt = null,
 }: {
   displayName: string;
   lessonId: string;
@@ -74,7 +77,17 @@ export function RenditionPlayer({
    * can act on. A missing button with no sentence sells nothing.
    */
   saveNote?: string | null;
+  /** The enrolment a saved place belongs to. Null means the player does not keep one. */
+  enrolmentId?: string | null;
+  /** Where the database says this learner stopped, read on the server. */
+  resumeAt?: number | null;
 }) {
+  const { ref: mediaRef, notice, saveError, handlers } = useMediaPosition({
+    enrolmentId,
+    lessonId,
+    resumeAt,
+  });
+
   const choices = renditionChoices(renditions);
   const initial = pickStreamRendition(renditions, null);
   const [profile, setProfile] = useState<RenditionProfile>(
@@ -227,6 +240,7 @@ export function RenditionPlayer({
 
       {video ? (
         <video
+          ref={mediaRef as RefObject<HTMLVideoElement>}
           controls
           playsInline
           preload="metadata"
@@ -239,16 +253,19 @@ export function RenditionPlayer({
             borderRadius: '0.75rem',
             background: '#101510',
           }}
+          {...handlers}
         >
           Your browser cannot play this video.
         </video>
       ) : (
         <audio
+          ref={mediaRef as RefObject<HTMLAudioElement>}
           controls
           preload="metadata"
           src={url ?? undefined}
           aria-label={displayName}
           style={{ width: '100%' }}
+          {...handlers}
         >
           Your browser cannot play this audio.
         </audio>

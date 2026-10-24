@@ -42,7 +42,7 @@ Status:
 | 11 | Child home | READY — `/family` shows each child's courses and progress; the child-facing home itself is not designed |
 | 12 | Age-band selection | READY |
 | 13 | Course page | **BUILT** — `/courses/[slug]` |
-| 14 | Video lesson | **BUILT** — `/learn/[enrolmentId]/lesson/[lessonId]`. *(2026-10-22)* When saving is switched on but the learner cannot save, the player now says **why** — `lesson_download_standing()` returns `needs_plus`, `not_entitled`, `feature_off`, `no_media` or `allowed`, and only the Plus case is turned into a link, because telling somebody who has not bought the course to buy a plan would sell them something still useless |
+| 14 | Video lesson | **BUILT** — `/learn/[enrolmentId]/lesson/[lessonId]`. *(2026-10-24)* **Every player now resumes where the learner stopped** (`lesson_positions()` reads the whole enrolment in one call; the write is throttled to one every ten seconds plus the edges — pause, end, leaving the page — and resumes once per mount so a quality switch does not throw the learner back). *(2026-10-22)* When saving is switched on but the learner cannot save, the player now says **why** — `lesson_download_standing()` returns `needs_plus`, `not_entitled`, `feature_off`, `no_media` or `allowed`, and only the Plus case is turned into a link, because telling somebody who has not bought the course to buy a plan would sell them something still useless |
 | 15 | Interactive lesson | READY — shares the lesson route, no interactive player yet |
 | 16 | Quiz | **BUILT** — `/learn/[enrolmentId]/assessment/[assessmentId]`. Four question types (`single_choice`, `multiple_choice`, `true_false`, `short_answer`); the answer key is a protected column. No question bank, no timed sittings |
 | 17 | Results | **BUILT** — same route; score, attempt count, pass state, and the teacher's comments on marked answers. Deliberately does not list which automatic questions were right, so a result cannot be read as an answer key |
@@ -61,7 +61,7 @@ Status:
 | 20c | **Assignment hand-in and feedback** *(added — was missing from the inventory)* | **BUILT** — `/learn/[enrolmentId]/assignment/[assignmentId]`, text draft, submit, private mark/feedback, and revise: marked work can be reopened as a draft with the marked version kept below it. Behind `learning.assignments`; secure file transfer/viewing is not connected, so the flag stays off |
 | 21 | Course details | **BUILT** — `/courses/[slug]`: outline, preview lesson, enrolment, ratings and reviews behind `learning.reviews` |
 | 22 | Video lesson *(adult chrome)* | **BUILT** — same route as #14, chrome not yet differentiated |
-| 23 | Qur'an / audio player | READY |
+| 23 | Qur'an / audio player | **BUILT** *(2026-10-24)* — the audio player on `/learn/[enrolmentId]/lesson/[lessonId]`. A recitation is not a podcast: the two things a learner does with one are **repeat after it** and **go back to the same passage**, and a bare `<audio controls>` supports neither when the passage is forty seconds inside nine minutes. So it adds exactly three things to the native player — **slower speeds** (0.5× to 1.5×, because repeating after a reciter needs the reciter to wait), **two buttons that mark the passage being repeated** and loop it, and **the saved place**: `record_lesson_position()` writes `last_video_position`, which the schema has carried since the first progress migration and nothing had ever written. Native controls stay, so media keys, the lock screen and screen readers keep working. Moving a player is **not progress**: the percentage and the completed state are untouched, and a finished lesson reopened does not become unfinished |
 | 24 | Quiz or exam | **BUILT** — same route as #16; an `exam` assessment is a `type`, not a separate screen |
 | 25 | Progress | **BUILT** — `/learn` lists enrolments with lesson completion; per-path progress on `/paths/[slug]`. A streak and badge strip sits above them and on each child's card at `/family`, derived on read behind `learning.streaks`. No certificates-of-progress |
 | 26 | Certificate | **BUILT** — `/certificates` and `/certificates/[number]`. No printable PDF yet |
@@ -190,7 +190,7 @@ at `/admin` and twenty-eight beneath it.
 | Numbered screen IDs | **50**, plus 19a, 19b, 20a, 20b, 20c, 31a, 31b, 31c, 33b, 35a, 35b, 35c, 35d, 35e, 35f, 35g and 43b — **67 rows** |
 | Routed | **81 page routes** in the production build. Three are not screens anybody designs (`/_not-found`, `/sign-out`, `/auth/confirm`), so **78 screens are routed** |
 | Built but never inventoried | **18**, listed in section 11 |
-| Ready to design now | **9** |
+| Ready to design now | **8** |
 | Blocked | **5** |
 
 The 67 rows and the 78 routed screens are not the same number and should not be.

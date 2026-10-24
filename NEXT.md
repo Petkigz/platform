@@ -2301,6 +2301,43 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### A lesson remembers where you were, 2026-10-24
+
+`lesson_progress.last_video_position` has been in the schema since the first progress migration and
+nothing has ever written it, so every player started at zero. A learner who closes a forty-minute
+recitation at minute thirty-one found minute one the next evening.
+
+`record_lesson_position(enrolment, lesson, seconds)` is the writer. It checks whose learning it is
+through `can_access_learner()` — the same helper the RLS policy uses, called explicitly because a
+definer function does not run under RLS — refuses a lesson from a version the learner is not pinned
+to, clamps the number into one day, and **never moves a completed or skipped lesson**: a position is
+not a percentage, and a progress bar that drops because somebody rewatched the introduction is a bug
+report waiting to happen.
+
+`lesson_positions(enrolment)` returns the whole map in one call, because a lesson list wants to say
+"resume at 12:31" beside twenty rows and a call per row would be twenty round trips to paint a
+sidebar.
+
+On the page, every player now keeps its place: the uploaded-rendition player for video and audio,
+the external video, and the new recitation player. Resume is honoured only past fifteen seconds and
+not within twenty of the end — ten seconds is not a place, and resuming at the end starts, finishes
+and looks broken. Saves drift by ten seconds and are forced on pause, on end and on `pagehide`,
+because `timeupdate` fires four times a second and an hour of recitation would otherwise be 14 000
+writes. Resume happens once per mount, so switching quality does not throw the learner backwards.
+
+**Screen 23, the Qur'an player**, is the same idea with a passage in it. A learner repeats after a
+reciter and returns to one passage, and dragging a scrubber to find forty seconds inside nine
+minutes is not a skill anybody has on a phone. So: speeds from 0.5× to 1.5×, two buttons that mark
+the passage and loop it, the saved place — and the native controls, because media keys, the lock
+screen and screen readers come free and a custom transport bar would trade them for a nicer play
+button.
+
+Tests: 11 new database tests — a position kept, an overwrite rather than a second row, negative and
+absurd values clamped, a completed lesson staying completed with its percentage intact, the map in
+one call with no zero entries, a stranger unable to write or read either way, a signed-out caller
+refused, a lesson from another version refused, an unknown enrolment refused, and a guardian keeping
+a place for a child on their family account. 8 new web tests cover the resume threshold, the end of a
+lesson, the time format, the speed ladder and the four states of a marked passage.
 ### Who is here, and who teaches, 2026-10-24
 
 Two of the fifty screens have been `READY` since the inventory was written and have never had a

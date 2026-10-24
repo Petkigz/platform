@@ -19,6 +19,7 @@ import { fetchLessonStudyTools } from '@/lib/lesson-study-tools';
 import { StudyTools } from './study-tools';
 import { fetchPlayableRenditions, groupByAsset, posterFor } from '@/lib/playback';
 import { RenditionPlayer } from '@/app/_shared/rendition-player';
+import { AudioPlayer, VideoWithResume } from '@/app/_shared/media-resume';
 import { recordEvent } from '@/lib/analytics-server';
 
 export const dynamic = 'force-dynamic';
@@ -138,6 +139,19 @@ export default async function LessonPage({
   const progress = progressData as unknown as ProgressRow | null;
   const done = progress?.status === 'completed';
 
+  // Where this learner stopped, for every lesson in the enrolment, in one call.
+  // `last_video_position` has been in the schema since the first progress
+  // migration and nothing wrote it until now, so every player used to start at
+  // zero — including a forty-minute recitation reopened the next evening.
+  const { data: positionsData } = await supabase.rpc('lesson_positions', {
+    p_enrolment_id: enrolmentId,
+  });
+  const positions = (positionsData ?? {}) as Record<string, number>;
+  const savedPosition = positions[lesson.id];
+  const resumeAt: number | null = entitled && typeof savedPosition === 'number'
+    ? savedPosition
+    : null;
+
   // Discussion is behind a flag, off by default, because the moderation policy
   // behind it is a human queue with a retention obligation attached. The thread
   // is only fetched when it is on — no reason to query a table nobody can see.
@@ -248,28 +262,21 @@ export default async function LessonPage({
                   <span className="n">{RESOURCE_LABEL[r.resourceType]}</span>
                   <span className="t" style={{ minWidth: 0, flex: 1 }}>
                     {r.externalUrl && nativeKind === 'video' ? (
-                      <div style={{ display: 'grid', gap: '0.4rem' }}>
-                        <strong>{r.displayName}</strong>
-                        <video
-                          controls
-                          playsInline
-                          preload="metadata"
-                          src={r.externalUrl}
-                          aria-label={r.displayName}
-                          style={{ width: '100%', maxHeight: '70vh', borderRadius: '0.75rem', background: '#101510' }}
-                        >
-                          Your browser cannot play this video.{' '}
-                          <a href={r.externalUrl} target="_blank" rel="noreferrer">Open the video directly</a>.
-                        </video>
-                      </div>
+                      <VideoWithResume
+                        name={r.displayName}
+                        src={r.externalUrl}
+                        enrolmentId={enrolmentId}
+                        lessonId={lesson.id}
+                        resumeAt={resumeAt}
+                      />
                     ) : r.externalUrl && nativeKind === 'audio' ? (
-                      <div style={{ display: 'grid', gap: '0.4rem' }}>
-                        <strong>{r.displayName}</strong>
-                        <audio controls preload="metadata" src={r.externalUrl} aria-label={r.displayName} style={{ width: '100%' }}>
-                          Your browser cannot play this audio.{' '}
-                          <a href={r.externalUrl} target="_blank" rel="noreferrer">Open the audio directly</a>.
-                        </audio>
-                      </div>
+                      <AudioPlayer
+                        name={r.displayName}
+                        src={r.externalUrl}
+                        enrolmentId={enrolmentId}
+                        lessonId={lesson.id}
+                        resumeAt={resumeAt}
+                      />
                     ) : r.externalUrl ? (
                       <a href={r.externalUrl} target="_blank" rel="noreferrer">
                         {r.displayName}
@@ -286,6 +293,8 @@ export default async function LessonPage({
                         canDownload={canDownload}
                         courseTitle={courseTitle}
                         learnerProfileId={enrolment.learner_profile_id}
+                        enrolmentId={enrolmentId}
+                        resumeAt={resumeAt}
                         saveNote={
                           saveStanding && !saveStanding.allowed && saveStanding.needsPlus
                             ? saveStanding.message
