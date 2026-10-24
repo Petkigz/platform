@@ -2301,6 +2301,22 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### A phone shakes this site apart, 2026-10-24
+
+The header was one flex row — mark, eight links, two buttons — with no rule below the desktop breakpoint, so at
+390 pixels the links squeezed, wrapped inside themselves and pushed the document wider than the screen. The
+page could be dragged sideways.
+
+Below 54rem it is now two rows: brand and buttons, then a nav that scrolls sideways with `nowrap` instead of
+squeezing, all eight links still in the DOM. The header stops being sticky on a phone — two rows of chrome
+pinned to the top cost a tenth of the screen. Tap targets are 2.5rem.
+
+The overflow underneath was larger than the header: `input` has an intrinsic width of about twenty characters
+and would not shrink inside a flex row, so a label, two fields and a button came to 478 pixels of content in
+320 of space. `input, select, textarea { min-width: 0 }` lets the row decide, and `.row` wraps at 40rem. Tabs
+scroll rather than squeezing five labels to two letters, the pager wraps, and the billing and receipt tables
+sit in a `.scroll-x` box — `check:repo` #7 now refuses a table without one.
+
 ### The header did not know you were signed in, 2026-10-24
 
 The masthead offered "Sign in" and "Get started" to everybody, including a learner who had just signed in — on

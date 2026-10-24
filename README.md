@@ -100,6 +100,13 @@ can be static. It now renders the signed-out pair on the server and asks
 `GET /api/session` once after hydration: signed in, the two buttons become
 "Your area" and "Sign out" — a POST, because the route refuses GET.
 
+The site works at 360 pixels. The header was one flex row of eight links and
+two buttons with no rule below the desktop breakpoint, and `input` would not
+shrink inside a flex row, so a search form was 478 pixels of content in a
+320-pixel screen. The header is two rows below 54rem with a scrolling nav, the
+form controls can shrink, tabs scroll, and a table must sit in a `.scroll-x`
+box (`check:repo` #7).
+
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. `/account`
 lets a signed-in learner update their display name, preferred language and IANA

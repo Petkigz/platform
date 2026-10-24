@@ -76,6 +76,7 @@ function CurrencyCard({ section }: { section: CurrencySection }) {
       {section.moved.length === 0 ? (
         <p className="empty">Nothing has moved in {code}.</p>
       ) : (
+        <div className="scroll-x">
         <table style={{ width: '100%', marginTop: '1.25rem', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ textAlign: 'left', fontSize: '0.8rem', color: 'var(--muted)' }}>
@@ -121,6 +122,7 @@ function CurrencyCard({ section }: { section: CurrencySection }) {
             ))}
           </tbody>
         </table>
+        </div>
       )}
 
       {section.notYetMoney.length > 0 ? (

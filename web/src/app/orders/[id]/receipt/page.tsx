@@ -232,6 +232,7 @@ export default async function ReceiptPage({
           )}
         </dl>
 
+        <div className="scroll-x">
         <table className="receipt-lines">
           <thead>
             <tr>
@@ -258,6 +259,7 @@ export default async function ReceiptPage({
             )}
           </tbody>
         </table>
+        </div>
 
         <div className="receipt-total">
           <dl className="facts">

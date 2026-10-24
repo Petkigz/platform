@@ -23,6 +23,8 @@
 //      skip link targets, so a page-level one makes two. Nothing looks wrong.
 //   6. A link to a route that is not there. `href="/tachers"` is a valid string;
 //      TypeScript has no opinion, and the page renders a link to a 404.
+//   7. A table with no scrolling wrapper. A table cannot reflow, so on a phone
+//      it pushes the document wider than the screen.
 //
 // Node builtins only, so this runs before `npm ci` and costs nothing.
 
@@ -290,6 +292,42 @@ const MIGRATION = /^(\d{14})_([a-z0-9][a-z0-9_]*)\.sql$/;
   process.stdout.write(
     `links: ${routes.length} routes, ${broken.length} broken internal link(s)\n`,
   );
+}
+
+// ---------------------------------------------------------------------------
+// 7. A table cannot reflow, so it scrolls inside its own box
+// ---------------------------------------------------------------------------
+// Everything else in this app is a column of blocks and reflows to 360 pixels.
+// A table is the one thing that cannot: it has columns. On a phone, an
+// unwrapped table pushes the whole document wider than the screen and every
+// page can be dragged sideways — which is what the masthead did before it was
+// given a rule for that width.
+//
+// The check is at file level on purpose: it cannot tell whether this particular
+// table is two columns wide and harmless. It asks that the page thought about
+// it, by naming the wrapper `.scroll-x`.
+{
+  const offenders = [];
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir)) {
+      const full = join(dir, entry);
+      if (statSync(full).isDirectory()) {
+        if (entry === 'node_modules' || entry === '.next') continue;
+        walk(full);
+      } else if (entry.endsWith('.tsx')) {
+        const text = readFileSync(full, 'utf8');
+        if (/<table[\s>]/.test(text) && !/className="scroll-x"/.test(text)) {
+          offenders.push(full.slice(root.length + 1));
+        }
+      }
+    }
+  };
+  walk(join(root, 'web', 'src'));
+
+  for (const file of offenders.sort()) {
+    fail('tables', `${file} renders a <table> without a .scroll-x wrapper`);
+  }
+  process.stdout.write(`tables: ${offenders.length} unwrapped table(s)\n`);
 }
 
 // ---------------------------------------------------------------------------

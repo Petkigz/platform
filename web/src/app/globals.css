@@ -118,6 +118,71 @@ a:hover { color: var(--green-600); text-decoration: underline; }
 .masthead-actions { margin-left: auto; display: flex; gap: 0.5rem; align-items: center; }
 .masthead-actions .btn { width: auto; margin: 0; padding: 0.42rem 0.9rem; font-size: 0.9rem; }
 
+/* A phone.
+   The masthead is one flex row on a desktop — the mark, eight links and two
+   buttons — and there was no rule below the desktop breakpoint at all. At 390
+   pixels the links squeezed, wrapped inside themselves and pushed the document
+   wider than the screen, so the whole site could be dragged sideways.
+
+   Below 54rem it is two rows: who you are, then a shelf of destinations that
+   scrolls sideways instead of squeezing. The shelf keeps every link one tap
+   away and needs no menu to open, which means no script, no focus trap and no
+   flash of a closed header while the page hydrates.
+
+   The header also stops being sticky here. Two rows of chrome pinned to the
+   top of a phone would cost about a tenth of the screen on every scroll, and
+   the thing a phone reader needs most is the page. */
+@media (max-width: 53.99rem) {
+  .masthead { position: static; }
+
+  .masthead-inner {
+    flex-wrap: wrap;
+    gap: 0.35rem 0.75rem;
+    padding: 0.7rem 0 0.25rem;
+  }
+
+  .brand { order: 1; }
+  .masthead-actions { order: 2; margin-left: auto; }
+
+  /* A tap target is 44 pixels, not 33. */
+  .masthead-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.5rem;
+    padding: 0 1rem;
+  }
+
+  .nav {
+    order: 3;
+    flex-basis: 100%;
+    margin-right: 0;
+    gap: 1.15rem;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    /* Bleed to the screen edges so the row of links runs off the side rather
+       than stopping short of it — a cut-off link is how a phone says "there is
+       more this way". The padding puts the first link back on the gutter. */
+    margin-inline: -1.25rem;
+    padding: 0 1.25rem 0.45rem;
+  }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav a { padding: 0.5rem 0; }
+}
+
+/* A row of controls wraps rather than pushing the page wider. */
+@media (max-width: 40rem) {
+  .row { flex-wrap: wrap; }
+
+  /* Tabs scroll instead of shrinking every label to two letters. */
+  .tabs { overflow-x: auto; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs a, .tabs button { flex: 0 0 auto; white-space: nowrap; }
+}
+
 /* --------------------------------------------------------------------------
    Type
    -------------------------------------------------------------------------- */
@@ -392,6 +457,11 @@ input, select, textarea {
   font-family: inherit;
   font-size: 1rem;
 }
+/* An input has an intrinsic width of about twenty characters. Inside a flex
+   row that is a floor it cannot go below, so a label and two fields on a phone
+   added up to more than the screen and the page scrolled sideways. `min-width:
+   0` lets the flex algorithm shrink it; the width still comes from the row. */
+input, select, textarea { min-width: 0; }
 input::placeholder { color: var(--muted); }
 input:focus, select:focus, textarea:focus {
   outline: 2px solid var(--green-500);
@@ -749,7 +819,12 @@ footer a { color: var(--text-soft); }
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-wrap: wrap;
 }
+
+/* A table is the one thing that cannot reflow: it has columns. On a narrow
+   screen it scrolls inside its own box, so the page does not. */
+.scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
 .pager .btn {
   width: auto;

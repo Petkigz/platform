@@ -2528,6 +2528,45 @@ for both — a warning that fires on missing data is a warning people learn to i
 whether a teacher should be told that a learner outside the band has joined. Both are policy; both would
 need the owner.
 
+## A phone shakes this site apart — **DECIDED 2026-10-24**
+
+Everything below the header reflows: the grids collapse at 46rem, the hero stacks, the certificate has its own
+rule at 600px. The header never had one. It was a single flex row — the mark, eight navigation links and two
+buttons, gap 1.5rem — and at 390 pixels the links squeezed and wrapped inside themselves. The page then scrolled
+sideways, so the whole site could be dragged left and right under a thumb.
+
+**The arithmetic, because "it looked fine on my screen" is how this happens.** A label with `flex: 0 0 6.5rem`
+does not shrink (104px), an `<input>` has an intrinsic width of about twenty characters and `width: 100%` does
+not change that floor (~170px), a `<select>` is as wide as its longest option, a `.btn` has 1rem of padding each
+side, and there are three gaps of 8px between them. On a 360-pixel screen that is 478 pixels of content in 320
+pixels of space. Nothing errors; the document is simply wider than the phone.
+
+**The header is two rows below 54rem.** Who you are — mark and the two buttons — then a shelf of destinations
+that scrolls sideways instead of squeezing. Not a hamburger menu: a menu needs a button, a focus trap, an
+Escape handler and a state that has to survive hydration, and this product's header is the one piece of chrome
+on every page. A scrollable shelf keeps all eight links in the DOM (so a crawler sees the same navigation a
+reader does), needs no script, and cannot flash. A link cut off at the right edge is the affordance.
+
+**The header also stops being sticky on a phone.** Two rows pinned to the top cost about a tenth of the screen
+on every scroll, and the thing a phone reader needs is the page. On a desktop the one-row header stays sticky
+because it earns its 60 pixels.
+
+**`input { min-width: 0 }` is the fix underneath all of it.** A flex item will not shrink below its intrinsic
+width unless it is told to, and for a form control that intrinsic width is a whole line of text. Setting the
+floor to zero lets the row decide, which is what a row is for. With that, the sign-in form's country-code and
+number pair fits on a 360-pixel screen instead of overflowing, and the admin search form wraps its extra
+controls onto a second line.
+
+**A row wraps at 40rem, tabs scroll, the pager wraps, and a table gets its own box.** A `.tabs` strip of five
+labels was shrinking each to two letters; it now scrolls with the labels intact. `.pager` was squeezing
+"Showing 25–48 of 137" between two buttons; it wraps. And a table is the one thing that cannot reflow — it has
+columns — so the billing statement and the receipt line items now sit inside `.scroll-x`, which scrolls in its
+own box. `check:repo` #7 refuses a page with a `<table>` and no wrapper, because the next table will be written
+by somebody looking at a desktop.
+
+**Not done here:** the app is not a mobile app. This is the web product at 360 pixels; the Expo client is still
+unbuilt, and the offline download surface (`/downloads`) is the only part designed for a device.
+
 ## The header did not know you were signed in — **DECIDED 2026-10-24**
 
 The masthead is in the root layout and it offered every visitor "Sign in" and "Get started". A learner who had
