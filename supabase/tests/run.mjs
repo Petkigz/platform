@@ -105,6 +105,7 @@ import { run as deliveryContract } from './delivery_contract.test.mjs';
 import { run as settingAuthority } from './setting_authority.test.mjs';
 import { run as staffDirectory } from './staff_directory.test.mjs';
 import { run as resumePosition } from './resume_position.test.mjs';
+import { run as courseAudience } from './course_audience.test.mjs';
 
 // Settings that are global by design: one row, read by code far from the suite
 // that changes it. The revenue share decides what every accrual computes; the
@@ -218,6 +219,7 @@ for (const [name, fn] of [
   ['setting authority', settingAuthority],
   ['staff directory', staffDirectory],
   ['resume position', resumePosition],
+  ['course audience', courseAudience],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],

@@ -14,6 +14,7 @@ import { fetchVersionReviewState } from '@/lib/review-requirements';
 import { RequirementPanel } from '@/app/_shared/requirement-panel';
 import { VersionChecks } from '@/app/_shared/version-checks';
 import { SubjectPicker } from './subject-picker';
+import { AudiencePicker } from './audience-picker';
 import { fetchVersionSources } from '@/lib/provenance';
 import { isFlagEnabled } from '@/lib/flags';
 
@@ -44,12 +45,19 @@ export default async function TeachCoursePage({
 
   const { data: course } = await supabase
     .from('courses')
-    .select('id, slug, title, created_by')
+    .select('id, slug, title, created_by, audience, age_bands')
     .eq('id', courseId)
     .is('deleted_at', null)
     .single();
 
-  const row = course as unknown as { id: string; slug: string; title: string; created_by: string } | null;
+  const row = course as unknown as {
+    id: string;
+    slug: string;
+    title: string;
+    created_by: string;
+    audience: 'child' | 'adult' | 'both';
+    age_bands: string[] | null;
+  } | null;
 
   // `courses_read` admits any active course to any signed-in user, so this
   // checks authorship explicitly. Without it, /teach/<anyone's course> would
@@ -106,6 +114,11 @@ export default async function TeachCoursePage({
               without touching what learners are already studying.
             </div>
           )}
+          <AudiencePicker
+            courseId={row.id}
+            initialAudience={row.audience}
+            initialBands={row.age_bands ?? []}
+          />
           <SubjectPicker
             version={current}
             subjects={subjects}

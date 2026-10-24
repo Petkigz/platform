@@ -20,6 +20,8 @@ export type CatalogueCourse = {
   title: string;
   description: string | null;
   audience: 'child' | 'adult' | 'both';
+  /** Empty means every band the audience allows. */
+  age_bands: string[] | null;
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   course_versions: CatalogueVersion[] | null;
 };
@@ -42,7 +44,7 @@ export type SubjectArea = {
 };
 
 const COURSE_COLUMNS =
-  'id, slug, title, description, audience, difficulty, ' +
+  'id, slug, title, description, audience, age_bands, difficulty, ' +
   'course_versions ( id, version_number, language, version_status, ' +
   'course_version_subjects ( subject_areas ( code, name ) ) )';
 

@@ -2301,6 +2301,31 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### A course says who it is for, 2026-10-24
+
+`courses.audience` has been there since the first migration and nothing joined it to a learner.
+`courses.age_bands` closes the gap: five bands (5-7, 8-10, 11-13, 14-17, 18+), an empty array
+meaning every band the audience allows, and a constraint that refuses an audience and a band that
+disagree.
+
+`set_course_audience(course, audience, bands)` is the only writer. Author, platform admin or
+governance admin; it normalises the order, drops duplicates, refuses *"18+ is not a band the child
+audience may claim"*, audits both sides, and returns `changed: false` without an audit row when
+nothing moved. It takes a **course** id, because who a course is for is not part of the published
+version D5 freezes.
+
+On the web: `audience.ts` (`AGE_BANDS`, `bandFits`, `audienceFits`, `validateAudience`,
+`audienceSummary`), the audience picker on `/teach/[courseId]` beside the subject picker, and the
+two doors — `/young` and `/adults` — with the band chips on the young one, both behind
+`learning.audience_sections` and `learning.age_bands`, which are in the register, off, and the
+owner's to flip in `/admin/settings`.
+
+**Open:** the staff override for a governance admin has no screen of its own — the function admits
+them, but the only page that renders the picker is the author's course page. A staff-wide course
+shelf is the next thing that wants building if governance is to curate audiences routinely.
+**Also open:** the band is never shown on a course card in the catalogue, only used to filter, and
+nothing yet warns a teacher who enrols a six-year-old in an eleven-to-thirteen course.
+
 ### A lesson remembers where you were, 2026-10-24
 
 `lesson_progress.last_video_position` has been in the schema since the first progress migration and

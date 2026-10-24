@@ -21,8 +21,8 @@ Status:
 |---|---|---|
 | 1 | Landing page | **BUILT** — `/` |
 | 2 | About the platform | READY |
-| 3 | Young Learners entry | READY |
-| 4 | Adult Learners entry | READY |
+| 3 | Young Learners entry | **BUILT** — `/young`. *(2026-10-24)* **A door, not a filter.** The catalogue has had an audience filter since it existed, which only helps somebody who already knows there are two audiences; this is the same shelf with the decision made. Behind `learning.audience_sections` (off — the owner flips it in the dashboard, which is why both flags are in the register). With `learning.age_bands` on it grows a row of age chips (`/young?band=11-13`), and it says in as many words that a child does not hold an account |
+| 4 | Adult Learners entry | **BUILT** — `/adults`. The sibling door: no age chips, because there is one adult band (18+) and a row of one chip is a control that cannot change anything. Same switch, same reasoning; the catalogue links to both doors while the switch is on, so a door is reachable from where everyone arrives |
 | 5 | Course catalogue | **BUILT** — `/catalogue`, with subject chips from the seeded `subject_areas` taxonomy |
 | 6 | Search and filter | **BUILT** — `/catalogue?q=&subject=&audience=`, matched and ranked by `search_catalogue()` across course name, subject and a public teacher's name |
 | 7 | Pricing and subscriptions | **BUILT as a screen** — `/plans` renders configured plan versions and their prices, Basic above Plus, with the VIP package named on the card. No price points have been *set*, so it is an empty state until someone decides what a subscription costs. Taking payment still needs P12 |
@@ -40,7 +40,7 @@ Status:
 | # | Screen | Status |
 |---|---|---|
 | 11 | Child home | READY — `/family` shows each child's courses and progress; the child-facing home itself is not designed |
-| 12 | Age-band selection | READY |
+| 12 | Age-band selection | **BUILT** — everywhere it is asked: the chips on `/young` (behind `learning.age_bands`), and the author's picker on `/teach/[courseId]`. `set_course_audience()` refuses an audience and a band that disagree — *"18+ is not a band the child audience may claim"* — and audits both sides of every change |
 | 13 | Course page | **BUILT** — `/courses/[slug]` |
 | 14 | Video lesson | **BUILT** — `/learn/[enrolmentId]/lesson/[lessonId]`. *(2026-10-24)* **Every player now resumes where the learner stopped** (`lesson_positions()` reads the whole enrolment in one call; the write is throttled to one every ten seconds plus the edges — pause, end, leaving the page — and resumes once per mount so a quality switch does not throw the learner back). *(2026-10-22)* When saving is switched on but the learner cannot save, the player now says **why** — `lesson_download_standing()` returns `needs_plus`, `not_entitled`, `feature_off`, `no_media` or `allowed`, and only the Plus case is turned into a link, because telling somebody who has not bought the course to buy a plan would sell them something still useless |
 | 15 | Interactive lesson | READY — shares the lesson route, no interactive player yet |
@@ -190,7 +190,7 @@ at `/admin` and twenty-eight beneath it.
 | Numbered screen IDs | **50**, plus 19a, 19b, 20a, 20b, 20c, 31a, 31b, 31c, 33b, 35a, 35b, 35c, 35d, 35e, 35f, 35g and 43b — **67 rows** |
 | Routed | **81 page routes** in the production build. Three are not screens anybody designs (`/_not-found`, `/sign-out`, `/auth/confirm`), so **78 screens are routed** |
 | Built but never inventoried | **18**, listed in section 11 |
-| Ready to design now | **8** |
+| Ready to design now | **5** |
 | Blocked | **5** |
 
 The 67 rows and the 78 routed screens are not the same number and should not be.

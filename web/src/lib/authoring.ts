@@ -577,6 +577,85 @@ export async function setSubjects(
   return { ok: true, value: { count: Number(data) } };
 }
 
+/**
+ * Say who a course is for — the audience and the age bands inside it.
+ *
+ * This lives on the **course**, not the version. D5 freezes a version and its
+ * whole subtree on publication, but who a course is for is not part of what was
+ * published: it is the fact that decides which door the course appears behind,
+ * and it has to be fixable without cutting a new version because somebody
+ * spotted the wrong band.
+ *
+ * The database is the authority on what is allowed. `set_course_audience()`
+ * normalises the order, refuses a band the audience cannot claim, and audits
+ * every real change with both sides, so this only forwards and reports.
+ */
+export type AudienceValue = 'child' | 'adult' | 'both';
+
+export type AudienceWrite = {
+  courseId: string;
+  audience: AudienceValue;
+  ageBands: string[];
+  changed: boolean;
+};
+
+export async function setAudience(
+  supabase: SupabaseClient,
+  args: { courseId: string; audience: string; ageBands: string[] },
+): Promise<WriteOutcome<AudienceWrite>> {
+  if (!['child', 'adult', 'both'].includes(args.audience)) {
+    return {
+      ok: false,
+      code: 'rejected',
+      message: 'Choose young learners, adults, or both.',
+    };
+  }
+
+  const { data, error } = await supabase.rpc('set_course_audience', {
+    p_course_id: args.courseId,
+    p_audience: args.audience,
+    p_age_bands: args.ageBands,
+  });
+
+  if (error) {
+    const m = error.message.toLowerCase();
+    // The function's own refusals name the band that is wrong, so they are
+    // passed through rather than replaced with something vaguer.
+    if (
+      m.includes('no such course') ||
+      m.includes('may change who a course is for') ||
+      m.includes('is not a band the') ||
+      m.includes('an audience is child, adult or both') ||
+      m.includes('sign in to say who a course is for')
+    ) {
+      return { ok: false, code: 'rejected', message: error.message };
+    }
+    return classify(error);
+  }
+
+  const row = data as unknown as AudienceWrite | null;
+  if (!row) {
+    return { ok: false, code: 'rejected', message: 'Nothing came back from the database.' };
+  }
+  return { ok: true, value: row };
+}
+
+/** The course and its published audience, as the author's editor needs them. */
+export async function fetchCourseAudience(
+  supabase: SupabaseClient,
+  courseId: string,
+): Promise<{ audience: AudienceValue; ageBands: string[] } | null> {
+  const { data } = await supabase
+    .from('courses')
+    .select('audience, age_bands')
+    .eq('id', courseId)
+    .maybeSingle();
+
+  const row = data as unknown as { audience: AudienceValue; age_bands: string[] | null } | null;
+  if (!row) return null;
+  return { audience: row.audience, ageBands: row.age_bands ?? [] };
+}
+
 /** The subject codes currently on a version. */
 export async function fetchVersionSubjects(
   supabase: SupabaseClient,

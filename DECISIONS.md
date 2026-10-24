@@ -2504,6 +2504,49 @@ processing agreement, and it is the one part of live classes that cannot be buil
 **Also open:** whether a recording is offered to learners who missed the class, and how long
 it is kept. Nothing produces a recording yet, so nothing has to decide that today — but the
 moment a provider is connected, it is the next question.
+## A course says who it is for — **DECIDED 2026-10-24**
+
+`courses.audience` (child, adult, both) and `learner_profiles.age_band` have both existed since the
+first schema, and nothing ever joined them. A six-year-old and a fifteen-year-old were shown the
+same shelf, and the only way to narrow it was a dropdown on the catalogue — which helps the person
+who already knows the platform has two audiences, and nobody else.
+
+**Empty bands mean every band the audience allows.** `courses.age_bands` defaults to `{}`, and an
+empty array is not "no ages": it is "all of them, inside the audience". That is what every course
+already on the platform means, so the migration changes the meaning of nothing, and the reader
+(`bandFits`) returns true for a course with no bands rather than hiding the back catalogue behind a
+question nobody was asked.
+
+**An audience and its bands cannot disagree.** A `child` course may claim 5-7, 8-10, 11-13 and
+14-17 and never 18+; an `adult` course may claim only 18+. The constraint is checked in
+`set_course_audience()`, not in the form, because the audience is a safeguarding signal: a row that
+says "child" and "18+" together is useless exactly at the moment somebody relies on it. The refusal
+names the band — *"18+ is not a band the child audience may claim"* — because "invalid value" sends
+an author to read SQL to find out what they did wrong.
+
+**It is an editorial decision, and the author owns it.** The author, the platform admin or a
+governance admin may set it; every real change is audited as `course.audience_changed` with the
+audience *and* the bands on both sides, and an identical write returns `changed: false` and records
+nothing. The author is the person who knows what they wrote; governance is the second pair of eyes.
+
+**The audience lives on the course, not the version.** D5 freezes a published version and its whole
+subtree — sections, lessons, assessments. Who a course is for is not part of what was published: it
+decides which door the course stands behind, and getting a band wrong must not require cutting a new
+version. That is why `set_course_audience()` takes a course id.
+
+**The two doors are pages, not a filter.** `/young` and `/adults` are the same shelf with the
+decision already made, because a parent choosing for a child and an adult choosing for themselves
+arrive with different questions — one needs to be told that a child is a learner and not an account,
+the other needs to see depth rather than a children's catalogue with the children taken out. Both
+ship behind `learning.audience_sections`, which is off and is the owner's to flip in the dashboard;
+`learning.age_bands` adds the chips on `/young`. While the switch is off both routes redirect to the
+catalogue, because one door without the other would be worse than no doors, and while it is on the
+catalogue links to both so a door is reachable from where everybody arrives.
+
+**Not decided here:** whether the age chips become a remembered preference, and whether a teacher's
+enrolment should warn when a child is enrolled in a course outside their band. Neither is needed for
+the shelf to be honest.
+
 ## A lesson remembers where you were, and that is not progress — **DECIDED 2026-10-24**
 
 `lesson_progress.last_video_position` has existed since the first progress migration, documented as

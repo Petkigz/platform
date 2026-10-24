@@ -66,6 +66,7 @@ function course(id: string, title: string): CatalogueCourse {
     title,
     description: null,
     audience: 'both',
+    age_bands: [],
     difficulty: 'beginner',
     course_versions: [],
   };

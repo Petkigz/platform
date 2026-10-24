@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { isSupabaseConfigured } from '@/lib/env';
+import { isFlagEnabled } from '@/lib/flags';
 import { recordEvent } from '@/lib/analytics-server';
 import { createClient } from '@/lib/supabase/server';
 import {
@@ -64,9 +65,12 @@ export default async function CataloguePage({
   const { q, subject, audience } = await searchParams;
   const supabase = await createClient();
 
-  const [subjects, courses] = await Promise.all([
+  const [subjects, courses, doors] = await Promise.all([
     fetchSubjectAreas(supabase),
     fetchCatalogue(supabase, { q, subject, audience }),
+    // The two doors, once the owner opens them. A door nobody can see is not a
+    // door, and the catalogue is where everybody arrives first.
+    isFlagEnabled(supabase, 'learning.audience_sections').catch(() => false),
   ]);
 
   // A course is only shelf-ready if it has a published version. RLS may show
@@ -100,6 +104,17 @@ export default async function CataloguePage({
         Every course is reviewed before publication. Browse by subject, or
         search for a course, a subject or a teacher.
       </p>
+
+      {doors && (
+        <div className="row" style={{ gap: '0.4rem', flexWrap: 'wrap', margin: '1rem 0' }}>
+          <Link className="badge" href="/young" style={{ padding: '0.35rem 0.7rem' }}>
+            Learning is for a child
+          </Link>
+          <Link className="badge" href="/adults" style={{ padding: '0.35rem 0.7rem' }}>
+            Learning is for me
+          </Link>
+        </div>
+      )}
 
       <form method="get" action="/catalogue" className="search">
         <input
