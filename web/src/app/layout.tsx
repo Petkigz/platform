@@ -1,16 +1,48 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
+import { siteOrigin } from '@/lib/site';
+import { BrandMark } from './_shared/brand-mark';
 import './globals.css';
 
+const description =
+  'Islamic learning for children and adults, worldwide. Qur\u2019an, Arabic, ' +
+  'Fiqh, Hadith and more \u2014 taught by qualified teachers.';
+
+// A share card is only useful with an absolute address in it: a crawler has no
+// page to resolve `/opengraph-image` against. The origin is the same configured
+// one the certificate prints (`NEXT_PUBLIC_SITE_URL`), never the Host header —
+// so an unconfigured deployment emits relative URLs and looks unstyled when
+// shared, rather than trusting whatever host the requester typed.
+const origin = siteOrigin();
+
 export const metadata: Metadata = {
+  ...(origin ? { metadataBase: new URL(origin) } : {}),
   title: {
     default: 'AyahSpring',
     template: '%s · AyahSpring',
   },
-  description:
-    'Islamic learning for children and adults, worldwide. Qur\u2019an, Arabic, ' +
-    'Fiqh, Hadith and more \u2014 taught by qualified teachers.',
+  description,
+  applicationName: 'AyahSpring',
+  openGraph: {
+    type: 'website',
+    siteName: 'AyahSpring',
+    locale: 'en',
+    title: 'AyahSpring',
+    description,
+    // Without a configured origin there is no absolute address to put in the
+    // card, and a card that points at `localhost` is worse than no card: a chat
+    // client that cannot fetch it shows a broken box. The build warns, which is
+    // the reminder to set NEXT_PUBLIC_SITE_URL — the same variable the printed
+    // certificate needs.
+    ...(origin ? {} : { images: [] }),
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'AyahSpring',
+    description,
+    ...(origin ? {} : { images: [] }),
+  },
 };
 
 // The masthead is deliberately auth-agnostic so pages stay statically
@@ -24,7 +56,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <header className="masthead">
           <div className="container masthead-inner">
             <Link href="/" className="brand">
-              <span className="mark" aria-hidden="true" />
+              <BrandMark className="mark" />
               AyahSpring
             </Link>
 

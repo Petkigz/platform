@@ -349,7 +349,7 @@ say what is left instead of what was missing.
 | **Guardian verification** | Tables and flow complete, shipping off. **Not to be deleted** — COPPA makes verifiable parental consent mandatory for US under-13s | Enabling it | **External:** legal review, and it must be on before any US child enrols |
 | **Notifications** | The in-app centre: `/notifications`, a `notifications` table with RLS on the reader, `notify_user()` writing payout sent/failed/cancelled, and two derived reminders computed at read time (a class within a day, a plan renewing within three) each gated on its own flag; 7 tests. The outbox has a state machine *(2026-10-24)*: a five-minute claim lease, a 5/15/60/240/720-minute backoff, a dead letter at `delivery.max_attempts`, a do-not-send list a bounce writes to, and a retry that needs a written reason | Email and SMS delivery — nothing sends, and the adapter is the missing piece | **External:** a delivery provider and its credentials (`delivery.notifications`) |
 | **Product analytics** (`delivery.analytics`) | 7 event codes, monthly partitions, a table with RLS and no read policy, `record_analytics_event()` returning `{recorded, reason}`; teacher course reports and platform reporting read aggregates, never a person | Event instrumentation beyond the coded set | **Decision:** a retention policy is *not* run — analytics are kept forever by the owner's decision of 2026-10-22 |
-| **Visual identity** | White and green theme settled; tokens in `web/src/app/globals.css`; every screen uses the same card/badge/notice vocabulary | Type, logo, illustration; 0 of the 50 inventoried screens designed | **Decision:** the owner's. Not a blocker for any backend work |
+| **Visual identity** | White and green theme settled; tokens in `web/src/app/globals.css`; every screen uses the same card/badge/notice vocabulary. *(2026-10-24)* **The mark is a file now** — sixteen points in `web/src/lib/brand.ts`, drawn by `<BrandMark>` in the masthead and on the certificate and receipt (which had a *different* mark: a rotated square), as `app/icon.svg` (favicon), `app/apple-icon.png` (rendered from the same points by `scripts/make-apple-icon.mjs`) and `app/opengraph-image.tsx` (the 1200×630 share card), with `manifest.ts` giving Android the icon and the green. `brand.test.ts` fails if the favicon and the header stop agreeing | Type, illustration; 0 of the 50 inventoried screens designed | **Decision:** the owner's — the shape is the one the header already drew, so nothing is decided that was not already on screen. Not a blocker for any backend work |
 
 ### Found by audit, 2026-10-20
 
@@ -2300,6 +2300,24 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
+
+### A mark with no file behind it, 2026-10-24
+
+The header's eight-pointed star existed only as a `clip-path` on an empty `<span>`, so there was no favicon, no
+app icon and no share card: a link to the site pasted into WhatsApp rendered as a bare URL. Auditing that found
+the certificate and receipt were drawing a *different* mark — a rotated rounded square — on the two documents
+that leave the building.
+
+The sixteen points now live in `web/src/lib/brand.ts` and four surfaces read them: `<BrandMark>` (header,
+certificate, receipt), `app/icon.svg`, `app/apple-icon.png` (rendered by `scripts/make-apple-icon.mjs`) and
+`app/opengraph-image.tsx`. `brand.test.ts` checks the geometry — sixteen vertices on two radii across eight
+spokes — and fails if the favicon's polygon stops matching the header's. `manifest.ts` gives Android the icon
+and the brand green without claiming offline.
+
+`metadataBase` comes from `siteOrigin()`; with no `NEXT_PUBLIC_SITE_URL` the pages emit no `og:image` at all
+rather than one pointing at localhost, and the build warns.
+
+`check:repo` #4 now ignores CSS comments — its own new commentary had been counted as two defined classes.
 
 ### An About page describes rules, not switches, 2026-10-24
 

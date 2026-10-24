@@ -70,7 +70,7 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 The database stands at **119 tables, RLS on every one, 243 policies, 146
 user-defined triggers, 376 functions and 161 migrations.** The database suite
-passes **1648 tests**; the web suite passes **1025 tests**. TypeScript typecheck
+passes **1648 tests**; the web suite passes **1030 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **165 app route entries** (89 pages, 76 API routes).
 
 Every class a screen asks for is defined. The stylesheet had been missing `.page`, `.page-head` and
@@ -86,6 +86,13 @@ ships switched off. It reads no flag and no database — it has to render on an
 empty deployment — so it now describes rules rather than switch states, and
 `check:repo` fails any internal link (`href`, `redirect()`, `router.push()`) that
 does not resolve to a route in the App Router.
+
+The brand mark is one shape in one place. It was a CSS `clip-path` on an
+empty `<span>` in the header — a real shape with no file behind it, so there
+was no favicon, no app icon and no share card, and the certificate had quietly
+grown a different mark. The sixteen points are now in `web/src/lib/brand.ts`
+and the header, certificate, receipt, favicon, app icon and 1200x630 share card
+all draw them; `brand.test.ts` fails if the favicon and the header disagree.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. `/account`

@@ -140,7 +140,9 @@ const MIGRATION = /^(\d{14})_([a-z0-9][a-z0-9_]*)\.sql$/;
 // is, and that is where the drift was.
 {
   const cssPath = join(root, 'web', 'src', 'app', 'globals.css');
-  const css = readFileSync(cssPath, 'utf8');
+  // Comments are stripped first: this file's prose mentions `brand.ts` and
+  // `page.tsx`, and a filename is not a class.
+  const css = readFileSync(cssPath, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
   const defined = new Set([...css.matchAll(/\.([a-zA-Z][a-zA-Z0-9_-]*)/g)].map((m) => m[1]));
 
   const used = new Map();

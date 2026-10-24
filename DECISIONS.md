@@ -2528,6 +2528,51 @@ for both — a warning that fires on missing data is a warning people learn to i
 whether a teacher should be told that a learner outside the band has joined. Both are policy; both would
 need the owner.
 
+## A mark with no file behind it — **DECIDED 2026-10-24**
+
+The brand mark was a CSS `clip-path` on an empty `<span>`. That is a real shape and it rendered correctly, in the
+one place it was written: the masthead. It could not become a favicon, an app icon, a share card, or anything on
+paper, because none of those can read a `<span>`.
+
+**And the certificate had quietly grown a different mark.** `.certificate-mark` — used on the certificate and the
+receipt, the two documents that leave the building — was a rotated rounded square outline. Same green, different
+shape. Two surfaces that both say "AyahSpring" did not show the same thing, and nobody had noticed because they
+are never on screen together.
+
+**The sixteen points are the source of truth.** They are in `web/src/lib/brand.ts` — unchanged from the CSS
+version, so the masthead looks exactly as it did — and four things read them: the `<BrandMark>` React component
+(header, certificate, receipt), `app/icon.svg` (favicon), `app/apple-icon.png` (iOS, rendered from the same
+points by `scripts/make-apple-icon.mjs`, which is committed because a PNG with no generator is a file nobody
+can change), and `app/opengraph-image.tsx` (the share card, which draws the star as an SVG data URI because it
+is rendered by a layout engine rather than a browser).
+
+**The duplication is tested rather than trusted.** The component is TypeScript and the favicon is a static file,
+so the same polygon is written twice. `brand.test.ts` parses both and fails if they disagree, and asserts the
+shape itself: sixteen vertices alternating between two radii on eight spokes — the star is two squares rotated
+through each other, which is also why the axial outer points sit at 50 and the diagonal ones at 49.5.
+
+**The card is a claim, so it claims only what is settled.** 1200×630, white, a hairline of green down the left
+edge, the star, the name, the sentence the landing page already makes, the three steps, and two true lines at
+the foot: the subjects, and that browsing needs no account. No price, no learner count, no testimonial — the
+same rule as the About page, for the same reason.
+
+**A share card needs an absolute address, and this one does not invent it.** `metadataBase` comes from
+`siteOrigin()` — the configured `NEXT_PUBLIC_SITE_URL`, never the `Host` header — and with no origin configured
+the metadata emits **no** `og:image` rather than one pointing at `localhost`, which a chat client would fetch
+and then show as a broken box. The build warns; the warning is the reminder to set the variable the printed
+certificate already needs.
+
+**`manifest.webmanifest` does not claim offline.** It gives Android the icon, the name and the theme colour, and
+`display: 'standalone'` opens without browser chrome — with no service worker, a lost connection shows the
+browser's own offline page. Same rule as the About page: describe what exists.
+
+**Also fixed here:** `check:repo` #4 now strips CSS comments before reading selectors, because this change's own
+commentary mentioned `brand.ts` and `page.tsx` and the check counted both as defined classes.
+
+**Not decided here:** typography (still the system stack, and the certificate's serif is Georgia), illustration,
+and whether the star should get a wordmark lock-up of its own. The owner has not chosen a typeface, and choosing
+one is a decision about the brand rather than a gap in the build.
+
 ## An About page describes rules, not switches — **DECIDED 2026-10-24**
 
 The About page exists to answer the question a parent asks before trusting a site with a child, and its own

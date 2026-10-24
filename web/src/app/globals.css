@@ -99,16 +99,16 @@ a:hover { color: var(--green-600); text-decoration: underline; }
 
 /* An eight-point star — the simplest unit of Islamic geometric pattern, and
    abstract enough to carry no imagery. */
+/* The star used to be a `clip-path` on an empty span, which meant the shape had
+   no file behind it and could not become a favicon or a share card. It is an
+   SVG now (`_shared/brand-mark.tsx`, points in `lib/brand.ts`); the class only
+   sizes it and gives it the brand green through `currentColor`. */
 .mark {
   width: 1.55rem;
   height: 1.55rem;
   flex: none;
-  background: var(--green-700);
-  clip-path: polygon(
-    50% 0%, 61% 20%, 85% 15%, 80% 39%, 100% 50%,
-    80% 61%, 85% 85%, 61% 80%, 50% 100%, 39% 80%,
-    15% 85%, 20% 61%, 0% 50%, 20% 39%, 15% 15%, 39% 20%
-  );
+  display: block;
+  color: var(--green-700);
 }
 
 .nav { display: flex; gap: 1.1rem; font-size: 0.92rem; margin-right: auto; }
@@ -967,7 +967,10 @@ textarea { resize: vertical; min-height: 4rem; }
 }
 .certificate-inner { display: flex; min-height: 520px; flex-direction: column; align-items: center; justify-content: center; }
 .certificate-brand { display: flex; align-items: center; gap: 0.55rem; color: var(--green-800); font-size: 1.05rem; font-weight: 800; letter-spacing: 0.04em; }
-.certificate-mark { width: 1rem; height: 1rem; border: 2px solid currentColor; border-radius: 0.2rem 0.7rem 0.2rem 0.7rem; transform: rotate(45deg); }
+/* The certificate and the receipt drew their own mark: a rotated rounded
+   square outline, related to the star in the masthead by colour and nothing
+   else. One brand is one shape, so this is the star at a smaller size. */
+.certificate-mark { width: 1rem; height: 1rem; flex: none; color: var(--green-700); vertical-align: -0.12em; }
 .certificate-kicker { margin: 2.25rem 0 0.25rem; color: var(--green-700); font-size: 0.8rem; font-weight: 750; letter-spacing: 0.2em; text-transform: uppercase; }
 .certificate-sheet h1 { margin: 0; color: var(--green-900); font-family: Georgia, 'Times New Roman', serif; font-size: clamp(2rem, 5vw, 3.6rem); font-weight: 500; }
 .certificate-intro { margin: 1.75rem 0 0.25rem; color: var(--muted); }

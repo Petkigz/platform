@@ -5,6 +5,7 @@ import { verificationAddress } from '@/lib/site';
 import { isSupabaseConfigured } from '@/lib/env';
 import { fetchCertificateForHolder } from '@/lib/certificates';
 import { PrintCertificateButton } from './print-button';
+import { BrandMark } from '../../_shared/brand-mark';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,7 +46,7 @@ export default async function CertificatePage({
 
       <article className={`certificate-sheet ${certificate.status === 'revoked' ? 'is-revoked' : ''}`}>
         <div className="certificate-inner">
-          <div className="certificate-brand"><span className="certificate-mark" aria-hidden="true" /> AyahSpring</div>
+          <div className="certificate-brand"><BrandMark className="certificate-mark" size={16} /> AyahSpring</div>
           <p className="certificate-kicker">Certificate of completion</p>
           <h1>Certificate of Achievement</h1>
           <p className="certificate-intro">This is to recognise that</p>

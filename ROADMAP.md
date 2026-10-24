@@ -29,7 +29,7 @@ partly complete.** The roadmap starts where the project already is.
 
 ## Phase 2 — Design and technical planning  (5/6 done)
 
-- [~] Create the visual identity and design system — **colour settled: white and green. Tokens in `web/src/app/globals.css`. Type, logo and illustration still open**
+- [~] Create the visual identity and design system — **colour settled: white and green. Tokens in `web/src/app/globals.css`. The mark is one eight-pointed star in `web/src/lib/brand.ts`, used by the header, favicon, app icon, share card, certificate and receipt. Type and illustration still open**
 - [~] Design the key web and mobile screens — **50 screens inventoried, 0 designed.** 38 are unblocked.
 - [x] Choose the programming languages and frameworks — *Next.js + TypeScript, Supabase/PostgreSQL, Expo/React Native*
 - [x] Design the database and backend architecture — *85 tables, 121 endpoints, modular monolith*

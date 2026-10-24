@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { format, fromMinor } from '@/lib/money';
 import { PrintReceiptButton } from './print-button';
+import { BrandMark } from '../../../_shared/brand-mark';
 
 export const dynamic = 'force-dynamic';
 
@@ -195,7 +196,7 @@ export default async function ReceiptPage({
         <header className="receipt-head">
           <div>
             <p className="receipt-brand">
-              <span className="certificate-mark" aria-hidden="true" /> AyahSpring
+              <BrandMark className="certificate-mark" size={16} /> AyahSpring
             </p>
             <h1>{settled ? 'Receipt' : 'Order'}</h1>
           </div>
