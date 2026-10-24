@@ -48,6 +48,7 @@ const moneyLinks: ConsoleLink[] = [
 ];
 
 const publicationLinks: ConsoleLink[] = [
+  { href: '/admin/courses', label: 'Courses', note: 'every course, which door it stands behind and how many learners it holds. Changing an audience is recorded against your name, with both sides of the change' },
   { href: '/admin/teachers', label: 'Teachers', note: 'everyone who may teach here, what each has published and how many learners their courses hold' },
   { href: '/admin/reviews', label: 'Assign reviews', note: 'courses waiting for a reviewer' },
   { href: '/admin/reviewers', label: 'Reviewer register', note: 'who applied to review, who has been checked, and what each may judge. Nothing publishes until somebody here is verified' },

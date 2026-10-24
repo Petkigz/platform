@@ -2504,6 +2504,38 @@ processing agreement, and it is the one part of live classes that cannot be buil
 **Also open:** whether a recording is offered to learners who missed the class, and how long
 it is kept. Nothing produces a recording yet, so nothing has to decide that today — but the
 moment a provider is connected, it is the next question.
+## A shelf the doors are decided from — **DECIDED 2026-10-24**
+
+U72 let a course say who it is for, and gave the author a picker on their own course page. The database
+also admitted the platform admin and a governance admin — the safety hatch for a course behind the wrong
+door whose author is unreachable. That power existed as a function in a migration and nothing else, and
+the owner's rule says every routine change is done on a screen by whoever may make it. A function is not
+a screen.
+
+**`course_shelf()` gates on the two roles that may change an audience, not on `is_privileged`.** A support
+agent is privileged: they can refund an order and answer a question about an account. Repointing a
+children's course is not that, and "staff" is not one permission.
+
+**It counts learners and names none.** How many live enrolments a course holds is a fact about the
+course, and it is the difference between a course somebody studies and one nobody opened. Who they are is
+a fact about people; the payload carries no learner identifier at all, and a test asserts it.
+
+**It carries no money.** Not a price, not revenue, not a lifetime value. Earnings are per currency and
+have their own screens; a shelf with an amount column is the third place two currencies get added by eye.
+
+**Retired courses stay on the list.** The course nobody can find by browsing the catalogue is exactly the
+one whose audience is wrong, and the catalogue does not show retired courses.
+
+**A LIMIT says it is a limit**, in the payload (`total`, `shown`, `truncated`) and in the sentence above
+the list, because a list of fifty that stays quiet becomes "we have fifty courses" by the end of the week.
+
+**The page refuses to render a row it does not understand.** `parseShelf()` throws on a column the screen
+does not show and on a lifecycle it has not been taught, rather than defaulting an unknown status to
+"draft" — on a page whose job is being right about who may see what, a guess is worse than an error.
+
+**Not decided here:** whether a governance admin may also unpublish or retire a course from this shelf.
+Today it changes the audience and nothing else; the lifecycle belongs to the author and the review trail.
+
 ## A course says who it is for — **DECIDED 2026-10-24**
 
 `courses.audience` (child, adult, both) and `learner_profiles.age_band` have both existed since the

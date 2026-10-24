@@ -2301,6 +2301,21 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### Every course, and who it is for, 2026-10-24
+
+U72 gave the author a picker and left the staff override as a function with no page. `course_shelf()` and
+`/admin/courses` are that page: every course, its author, the door it stands behind, the ages it claims,
+published versions and live learners — with the audience editable inline through the same
+`set_course_audience()` the author's picker calls.
+
+The reader gates on `platform_admin` or `governance_admin` (not `is_privileged`), excludes nothing on
+account of lifecycle, returns no learner identifier and no money, and reports `total` / `shown` /
+`truncated`. `parseShelf()` refuses an unknown column or an unknown lifecycle rather than guessing.
+
+**Open:** retiring or unpublishing a course is still not on this shelf. **Also open:** the shelf lists
+courses; it does not show the lessons inside one, so "this course is filed under the wrong subject" still
+sends the reader to the author's page.
+
 ### A course says who it is for, 2026-10-24
 
 `courses.audience` has been there since the first migration and nothing joined it to a learner.
