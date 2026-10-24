@@ -70,8 +70,8 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 The database stands at **119 tables, RLS on every one, 243 policies, 146
 user-defined triggers, 376 functions and 161 migrations.** The database suite
-passes **1648 tests**; the web suite passes **1030 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **165 app route entries** (89 pages, 76 API routes).
+passes **1648 tests**; the web suite passes **1038 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **166 app route entries** (89 pages, 77 API routes).
 
 Every class a screen asks for is defined. The stylesheet had been missing `.page`, `.page-head` and
 `.crumbs` while twenty-five to twenty-eight screens used them — and `.narrow`, which meant a 26rem
@@ -93,6 +93,12 @@ was no favicon, no app icon and no share card, and the certificate had quietly
 grown a different mark. The sixteen points are now in `web/src/lib/brand.ts`
 and the header, certificate, receipt, favicon, app icon and 1200x630 share card
 all draw them; `brand.test.ts` fails if the favicon and the header disagree.
+
+The masthead used to offer "Sign in" and "Get started" to a learner who had just
+signed in, on every page, because the root layout stays auth-agnostic so pages
+can be static. It now renders the signed-out pair on the server and asks
+`GET /api/session` once after hydration: signed in, the two buttons become
+"Your area" and "Sign out" — a POST, because the route refuses GET.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. `/account`

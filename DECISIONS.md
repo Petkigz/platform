@@ -2528,6 +2528,47 @@ for both — a warning that fires on missing data is a warning people learn to i
 whether a teacher should be told that a learner outside the band has joined. Both are policy; both would
 need the owner.
 
+## The header did not know you were signed in — **DECIDED 2026-10-24**
+
+The masthead is in the root layout and it offered every visitor "Sign in" and "Get started". A learner who had
+just signed in saw the same two buttons, on every screen, for the rest of the session; the way to their own area
+was a footer link they had to know about. The comment above `<main id="main">` explains why: the layout is
+deliberately auth-agnostic so pages stay statically renderable.
+
+**That reason is real, so it is not the thing that changed.** Reading the session in the layout — `cookies()`,
+`getUser()`, a middleware header — makes every route dynamic, including the About page whose whole point is that
+it renders on a deployment with no data. Paying for a header button with the property that a first visitor can
+always load the site is a bad trade.
+
+**So the header asks after it has rendered.** `MastheadActions` is a client component that renders the
+signed-out pair (exactly what the server sent, so hydration agrees) and calls `GET /api/session` once on mount.
+Signed in, it swaps to "Your area" and "Sign out". If the request fails, is aborted, or comes back with anything
+but `signedIn: true`, the pair stays as it was — the failure mode is a stale header, never a signed-in learner
+being asked to sign in again.
+
+**The endpoint returns a boolean and a first name, and nothing else.** No user id, no email, no role list: the
+header is on every page and is not the place to enumerate who somebody is. `cache-control: no-store`, because a
+cached "signed in" answer after a sign-out offers a button that redirects to sign-in, and a cached "signed out"
+answer does the reverse.
+
+**Signing out is a form POST.** `/sign-out` is a route handler that accepts POST only — it calls
+`supabase.auth.signOut()` and redirects — so a `<Link href="/sign-out">` would be a 405. `mastheadActions()`
+carries the method, and a test asserts it, because that is exactly the kind of detail that gets "simplified" back
+into a link.
+
+**The name is in the accessible name, not on the screen.** On a shared family device — the ordinary case here,
+since a parent's account holds a child's learning — who is signed in matters. The visible header has no room for
+it next to eight nav links on a phone; the "Your area" button's `aria-label` says "Your area — signed in as
+Amina".
+
+**The rule the tests pin:** a signed-in header may never offer `/sign-in` or `/sign-up`, and a signed-out header
+may never offer `/dashboard`. That is the defect stated as a property rather than as a screenshot.
+
+**Not fixed here, deliberately:** the landing page's hero still says "Create a free account" to a signed-in
+reader, and so does the About page. Fixing those means either making those pages dynamic or repeating this
+client-component pattern in a marketing block; the header is the surface that is on every screen, and the hero
+is a call to action aimed at strangers who are, in fact, the people who see it.
+
 ## A mark with no file behind it — **DECIDED 2026-10-24**
 
 The brand mark was a CSS `clip-path` on an empty `<span>`. That is a real shape and it rendered correctly, in the

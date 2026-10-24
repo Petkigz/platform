@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { siteOrigin } from '@/lib/site';
 import { BrandMark } from './_shared/brand-mark';
+import { MastheadActions } from './_shared/masthead-actions';
 import './globals.css';
 
 const description =
@@ -71,10 +72,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <Link href="/certificates">Certificates</Link>
             </nav>
 
-            <div className="masthead-actions">
-              <Link href="/sign-in" className="btn ghost">Sign in</Link>
-              <Link href="/sign-up" className="btn">Get started</Link>
-            </div>
+            {/* Auth-agnostic on the server, refined after hydration: see
+                `_shared/masthead-actions.tsx`. */}
+            <MastheadActions />
           </div>
         </header>
 

@@ -2301,6 +2301,24 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### The header did not know you were signed in, 2026-10-24
+
+The masthead offered "Sign in" and "Get started" to everybody, including a learner who had just signed in — on
+every screen, for the whole session. It was auth-agnostic on purpose (the layout must not call `cookies()` or
+every page becomes dynamic, including the About page that has to render on an empty deployment).
+
+`MastheadActions` is a client component that renders the signed-out pair the server sent and asks
+`GET /api/session` once after hydration; signed in, it becomes "Your area" and "Sign out". The endpoint returns
+`{signedIn, name}` and nothing else, with `cache-control: no-store`. Sign-out is a form POST because the route
+refuses GET. The name goes into the "Your area" button's accessible name rather than the visible header, which
+has no room for it on a phone.
+
+`lib/session.ts` holds the part worth testing: what a session response may mean, that whitespace is not a name,
+and that a signed-in header never offers `/sign-in` or `/sign-up` — 8 tests.
+
+Still open on this theme: the landing hero and the About page's closing button still say "Create a free account"
+to a signed-in reader.
+
 ### A mark with no file behind it, 2026-10-24
 
 The header's eight-pointed star existed only as a `clip-path` on an empty `<span>`, so there was no favicon, no
