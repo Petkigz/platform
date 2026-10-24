@@ -20,6 +20,9 @@ import { StudyTools } from './study-tools';
 import { fetchPlayableRenditions, groupByAsset, posterFor } from '@/lib/playback';
 import { RenditionPlayer } from '@/app/_shared/rendition-player';
 import { AudioPlayer, VideoWithResume } from '@/app/_shared/media-resume';
+import { fetchAssessmentsForVersion, fetchQuestions } from '@/lib/assessment';
+import { practiceForLesson } from '@/lib/practice';
+import { PracticeCheck, type PracticeItem } from './practice-check';
 import { recordEvent } from '@/lib/analytics-server';
 
 export const dynamic = 'force-dynamic';
@@ -155,12 +158,30 @@ export default async function LessonPage({
   // Discussion is behind a flag, off by default, because the moderation policy
   // behind it is a human queue with a retention obligation attached. The thread
   // is only fetched when it is on — no reason to query a table nobody can see.
-  const [discussionOn, provenanceOn, previewsOn, studyToolsOn] = await Promise.all([
+  const [discussionOn, provenanceOn, previewsOn, studyToolsOn, practiceOn] = await Promise.all([
     isFlagEnabled(supabase, 'learning.discussion'),
     isFlagEnabled(supabase, 'learning.provenance'),
     isFlagEnabled(supabase, 'learning.previews').catch(() => false),
     isFlagEnabled(supabase, 'learning.notes_bookmarks').catch(() => false),
+    isFlagEnabled(supabase, 'learning.assessments').catch(() => false),
   ]);
+  // A practice assessment attached to this lesson is the "interactive" half of
+  // the lesson: a question you answer while you are still reading. Only
+  // practice ones — a graded quiz has an attempt limit and its own sitting.
+  const practiceItems: PracticeItem[] = practiceOn
+    ? await Promise.all(
+        practiceForLesson(
+          await fetchAssessmentsForVersion(supabase, lesson.courseVersionId),
+          lesson.id,
+        ).map(async (a) => ({
+          id: a.id,
+          title: a.title,
+          instructions: a.instructions,
+          questions: await fetchQuestions(supabase, a.id).catch(() => []),
+        })),
+      ).then((items) => items.filter((i) => i.questions.length > 0))
+    : [];
+
   const [thread, sources, studyTools] = await Promise.all([
     discussionOn ? fetchThread(supabase, { lessonId: lesson.id, myUserId: user.id }) : Promise.resolve([]),
     provenanceOn ? fetchLessonSources(supabase, lesson.id) : Promise.resolve([]),
@@ -321,6 +342,10 @@ export default async function LessonPage({
           </ul>
         )}
       </section>
+
+      {entitled && practiceItems.length > 0 && (
+        <PracticeCheck items={practiceItems} />
+      )}
 
       {provenanceOn && (
         <section className="card">

@@ -2528,6 +2528,39 @@ for both — a warning that fires on missing data is a warning people learn to i
 whether a teacher should be told that a learner outside the band has joined. Both are policy; both would
 need the owner.
 
+## A lesson can check you without grading you — **DECIDED 2026-10-24**
+
+Screen 15 — "interactive lesson" — was the last unblocked screen in the inventory, and the platform had
+almost all of it: sections, lessons, video, audio, sources, notes, discussion. The missing half was the
+one that makes a lesson interactive rather than a page with a video on it.
+
+An assessment could already hang off a single lesson and could already be a `practice` assessment. What
+could not be done was **check an answer**: the only route was `start_attempt()` → `submit()` →
+`grade_response()`, which creates an attempt, consumes one of the attempt limit, records a score and can
+move a completion rule. Doing that to somebody reading a paragraph and wondering whether they followed it
+is absurd.
+
+**A check is not an attempt.** `check_lesson_answer()` writes nothing at all — no attempt, no response, no
+score, no progress — and it is `stable` because it must be.
+
+**It is the second function ever allowed to read `answer_key`**, after `grade_response()`, and the key never
+appears in the reply: only the verdict and, when it is fair to show it, the explanation.
+
+**It compares the way the marker compares.** A practice check that is more forgiving than the graded quiz
+would teach a learner their answer was right when the exam will say otherwise. Multiple choice is sorted
+on both sides — the quiz client already sends sorted arrays — and a short answer is trimmed, because a
+trailing space is not a second answer. Nothing else is normalised.
+
+**The explanation is a reward for being wrong as much as for being right** — but only on a practice
+assessment. On a graded one it waits until the answer is right, so an inline check cannot leak the quiz.
+
+**Entitlement is the materials' entitlement**: a live enrolment pinned to the version the question belongs
+to, whose learner the caller may act for, so a parent checking a child's practice and an adult checking
+their own pass for the same reason.
+
+**Not decided here:** whether a practice check should ever be recorded (a "you have answered 4 of 6" for
+the teacher). Today it leaves no trace, which is the point.
+
 ## A shelf the doors are decided from — **DECIDED 2026-10-24**
 
 U72 let a course say who it is for, and gave the author a picker on their own course page. The database

@@ -107,6 +107,7 @@ import { run as staffDirectory } from './staff_directory.test.mjs';
 import { run as resumePosition } from './resume_position.test.mjs';
 import { run as courseAudience } from './course_audience.test.mjs';
 import { run as courseShelf } from './course_shelf.test.mjs';
+import { run as practiceCheck } from './practice_check.test.mjs';
 
 // Settings that are global by design: one row, read by code far from the suite
 // that changes it. The revenue share decides what every accrual computes; the
@@ -222,6 +223,7 @@ for (const [name, fn] of [
   ['resume position', resumePosition],
   ['course audience', courseAudience],
   ['course shelf', courseShelf],
+  ['practice check', practiceCheck],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],

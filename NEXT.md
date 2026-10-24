@@ -2301,6 +2301,20 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### A lesson can check you, 2026-10-24
+
+Screen 15. `check_lesson_answer(question, answer)` is read-only: no attempt, no response, no score. It reads
+`answer_key` and returns `{correct, explanation}`, comparing the way `grade_response()` compares (multiple
+choice sorted, short answer trimmed).
+
+On the web, `practice.ts` decides which assessments belong in the lesson (practice only, attached to this
+lesson), whether an answer is worth sending, and passes refusals through as sentences. `/api/learn/check`
+forwards to the function; `practice-check.tsx` renders the questions at the bottom of the lesson page with
+a Check button and an explanation either way.
+
+**Open:** nothing is recorded, so a teacher cannot see that a learner answered the practice questions.
+**Also open:** the check has no rate limit — it is a read, but it reads the answer key.
+
 ### When a page breaks, it says so in its own voice, 2026-10-24
 
 There was no `error.tsx`, `global-error.tsx` or `not-found.tsx` anywhere in the app, so a thrown error fell
