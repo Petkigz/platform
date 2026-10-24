@@ -35,6 +35,8 @@ import { isCourseSaved } from '@/lib/wishlist';
 import { fetchJoinableCohorts } from '@/lib/cohorts';
 import { CohortBrowser } from './cohort-browser';
 import { recordEvent } from '@/lib/analytics-server';
+import { fetchCourseTeacher, teacherAttribution } from '@/lib/course-teacher';
+import { WhoTeaches } from '../../_shared/who-teaches';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,6 +66,7 @@ function describeBands(bands: string[]): string {
 type CourseDetail = CatalogueCourse & {
   status: string;
   deleted_at: string | null;
+  created_by: string;
 };
 
 type VersionWithStructure = NonNullable<CatalogueCourse['course_versions']>[number] & {
@@ -101,7 +104,7 @@ export default async function CoursePage({
   const { data, error } = await supabase
     .from('courses')
     .select(
-      'id, slug, title, description, audience, age_bands, difficulty, status, deleted_at, ' +
+      'id, slug, title, description, audience, age_bands, difficulty, status, deleted_at, created_by, ' +
         'course_versions ( id, version_number, language, version_status, ' +
         'course_version_subjects ( subject_areas ( code, name ) ), ' +
         'course_sections ( id, title, position, ' +
@@ -161,6 +164,14 @@ export default async function CoursePage({
     (n, s) => n + (s.lessons?.length ?? 0),
     0,
   );
+
+  // Who wrote it. Row level security answers: a draft profile, a flag that is
+  // off, or an author who is not a teacher all come back as no row, and
+  // `teacherAttribution()` has an honest sentence for that case rather than a
+  // blank line. A failure here must not take the course page down with it —
+  // the course is readable whether or not its teacher can be named.
+  const teacher = await fetchCourseTeacher(supabase, course.created_by).catch(() => null);
+  const attribution = teacherAttribution(teacher);
 
   // Ratings and reviews. Read only when the flag is on: the tables exist either
   // way, but an empty review section on every course page is a promise the
@@ -270,6 +281,9 @@ export default async function CoursePage({
       </div>
 
       <div>
+        <h2>Who teaches this</h2>
+        <WhoTeaches attribution={attribution} />
+
         <h2>Course outline</h2>
         {sections.length === 0 ? (
           <p className="empty">The outline is not published yet.</p>

@@ -2528,6 +2528,41 @@ for both — a warning that fires on missing data is a warning people learn to i
 whether a teacher should be told that a learner outside the band has joined. Both are policy; both would
 need the owner.
 
+## A course says who teaches it — **DECIDED 2026-10-24**
+
+The course page named nobody. Not the author, not a link, nothing — so a course that had passed review and been
+taught for a year looked exactly like content somebody had uploaded. For a platform whose claim is *taught, not just
+hosted*, and whose owner is a teacher arriving with an audience, that was the wrong hole to leave.
+
+**The disclosure boundary is not re-decided here.** A public profile is readable only while
+`teaching.public_profile` is on, the teacher holds the instructor role, and the profile is published — the policy
+already says so (2026-11-19) and this page does not add a second, softer rule beside it. The course page asks for the
+profile by `user_id` and lets row level security answer. A draft profile, a flag that is off, or an author who is not
+a teacher all come back as no row.
+
+**So the page has an honest thing to say when nobody is named**, and it is not an apology: the course was written by
+a teacher appointed by the platform and approved by a reviewer before publication — an author cannot approve their
+own course, which the status machine enforces — and *this teacher has not published a public page*. The absence is a
+privacy choice, not a lesser course.
+
+**Never a blank attribution.** A profile whose display name is only spaces is treated as no profile at all.
+"Taught by " with nothing after it is worse than the sentence above.
+
+**Never a link the database would not serve.** The slug is checked against the same shape as the table's check
+constraint before an href is built, because an address assembled from an unvalidated string is how a redirect gets
+introduced later. A bad slug still shows the name — it only loses the link.
+
+**A failure to look does not take the page down.** The profile read is wrapped: if it throws, the course renders with
+the unnamed sentence. A course is readable whether or not its teacher can be named.
+
+**The loop closes at the teacher's end too.** `/teach/profile` used to print the public address as inert code. It is
+now a link, with one sentence saying whether it is live or waiting for the platform setting — because a teacher who
+shares an address that 404s has been let down by the product, not by their audience.
+
+**Not decided here:** whether the catalogue card should carry the teacher's name. It cannot until
+`teaching.public_profile` is on, and the card is already carrying price and content; the course page is where the
+buying decision is made and where the name belongs first.
+
 ## A certificate number needs somewhere to put it — **DECIDED 2026-10-24**
 
 Screen 48 was already built: `/verify/AS-2026-00000001` answers anybody, without a session, and `verify_certificate()`

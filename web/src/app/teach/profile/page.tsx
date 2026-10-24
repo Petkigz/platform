@@ -44,7 +44,17 @@ export default async function TeacherProfilePage() {
       <h1>My public teacher profile</h1>
       <p className="lede">Introduce yourself and link the social channels where your students already follow you. Your profile will list your public courses.</p>
       {profile?.status === 'published' && (
-        <p className="notice">Saved as published at <code>/teachers/{profile.slug}</code>. Public visibility also depends on the platform setting.</p>
+        <div className="notice">
+          <p style={{ marginTop: 0 }}>
+            <strong>This is the address to give your students.</strong>{' '}
+            <Link href={`/teachers/${profile.slug}`}>/teachers/{profile.slug}</Link>
+          </p>
+          <p style={{ marginBottom: 0 }}>
+            {publicEnabled
+              ? 'It is live now, and every course you have published links to it from its own page.'
+              : 'It is saved as published, but public teacher pages are switched off on this platform — the address will answer 404 until an administrator turns on “Public teacher profile”. Your courses are still published and readable meanwhile.'}
+          </p>
+        </div>
       )}
       <ProfileForm initial={initial} publicEnabled={publicEnabled} />
       <p style={{ marginTop: '1.5rem' }}><Link href="/teach">Back to teaching</Link></p>

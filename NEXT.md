@@ -2301,6 +2301,26 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### A course says who teaches it, 2026-10-24
+
+The course page named nobody at all — no author, no link — so a reviewed, well-taught course looked like uploaded
+content. It now has a "Who teaches this" block.
+
+It reads `instructor_public_profiles` by `user_id` and lets row level security answer: the existing policy requires
+`teaching.public_profile`, the instructor role and a published profile, so a draft profile or a flag that is off comes
+back as no row. This unit does not add a second, softer visibility rule beside the settled disclosure boundary.
+
+When there is no row the block says something true — appointed teacher, approved by a reviewer, author cannot approve
+their own course, and the teacher has not published a page — rather than leaving a blank line. A name of only spaces
+is treated as no name; a slug that is not a slug shows the name but links nowhere; a failed read falls back to the
+sentence rather than throwing.
+
+`/teach/profile` now prints the public address as a link and says whether it is live or waiting for the platform
+setting, because a teacher sharing a 404 has been let down by the product.
+
+**Open:** the name on a catalogue card — it needs the same flag on, and the card is already carrying price and
+content.
+
 ### The front door to a certificate, 2026-10-24
 
 Screen 48 was built and unreachable. `/verify/AS-2026-00000001` answers anybody without a session, but `/verify` — the
