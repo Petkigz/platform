@@ -106,3 +106,30 @@ export function audienceSummary(audience: string, bands: readonly string[] | nul
   const labels = AGE_BANDS.filter((band) => known.includes(band)).map((band) => BAND_LABEL[band]);
   return `${door} · ${labels.join(', ')}`;
 }
+
+/**
+ * A quiet sentence when a learner is outside a course's stated ages, or null.
+ *
+ * This is a note, not a gate. Nothing in the platform refuses an enrolment on
+ * the strength of an age band — a child who reads two years ahead is exactly
+ * the case a hard rule gets wrong, and refusing is a safeguarding decision the
+ * owner has not made. What the platform owes the person clicking "enrol" is to
+ * say out loud what the author wrote, so the choice is not made blind.
+ *
+ * Unknown or absent bands say nothing at all: a guardian who has not recorded
+ * an age has not made a claim this can contradict.
+ */
+export function bandMismatch(
+  courseBands: readonly string[] | null | undefined,
+  learnerBand: string | null | undefined,
+): string | null {
+  if (!isAgeBand(learnerBand)) return null;
+  if (bandFits(courseBands, learnerBand)) return null;
+
+  const suited = (courseBands ?? [])
+    .filter(isAgeBand)
+    .sort((a, b) => AGE_BANDS.indexOf(a) - AGE_BANDS.indexOf(b))
+    .map((band) => BAND_LABEL[band]);
+
+  return `Written for ${suited.join(', ')} — ${BAND_LABEL[learnerBand]} is outside that.`;
+}

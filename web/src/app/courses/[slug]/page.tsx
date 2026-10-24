@@ -20,6 +20,7 @@ import {
 } from '@/lib/enrolment';
 import { countryFromHeaders } from '@/lib/geo';
 import { EnrolButton } from './enrol-button';
+import { BAND_LABEL, isAgeBand } from '@/lib/audience';
 import { isFlagEnabled } from '@/lib/flags';
 import {
   canReviewCourse,
@@ -51,6 +52,15 @@ type Section = {
 
 // `status` and `deleted_at` are selected here but not on the catalogue query,
 // because the catalogue filters on them rather than displaying them.
+/** "Ages 8–10 and 11–13", in age order, whatever order the author ticked. */
+function describeBands(bands: string[]): string {
+  return bands
+    .filter(isAgeBand)
+    .sort((a, b) => Number(a.split('-')[0]) - Number(b.split('-')[0]))
+    .map((b) => BAND_LABEL[b])
+    .join(' and ');
+}
+
 type CourseDetail = CatalogueCourse & {
   status: string;
   deleted_at: string | null;
@@ -91,7 +101,7 @@ export default async function CoursePage({
   const { data, error } = await supabase
     .from('courses')
     .select(
-      'id, slug, title, description, audience, difficulty, status, deleted_at, ' +
+      'id, slug, title, description, audience, age_bands, difficulty, status, deleted_at, ' +
         'course_versions ( id, version_number, language, version_status, ' +
         'course_version_subjects ( subject_areas ( code, name ) ), ' +
         'course_sections ( id, title, position, ' +
@@ -205,6 +215,12 @@ export default async function CoursePage({
 
         {course.description && <p className="lede">{course.description}</p>}
 
+        {course.age_bands && course.age_bands.length > 0 && (
+          <p className="muted" style={{ marginTop: '-0.5rem' }}>
+            Written for {describeBands(course.age_bands)}.
+          </p>
+        )}
+
         <div className="stats">
           <div>
             <div className="n">{sections.length}</div>
@@ -223,10 +239,12 @@ export default async function CoursePage({
         <EnrolButton
           courseId={course.id}
           state={offering.kind}
+          bands={course.age_bands ?? []}
           learners={learners.map((l) => ({
             id: l.id,
             name: l.name,
             isSelf: l.isSelf,
+            ageBand: l.ageBand,
           }))}
           signedIn={Boolean(user)}
           label={offeringLabel(offering)}

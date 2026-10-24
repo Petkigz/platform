@@ -3,8 +3,15 @@
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { bandMismatch } from '@/lib/audience';
 
-export type LearnerOption = { id: string; name: string; isSelf: boolean };
+export type LearnerOption = {
+  id: string;
+  name: string;
+  isSelf: boolean;
+  /** A child's band, so the button can say when a course is out of their range. */
+  ageBand: string | null;
+};
 
 /**
  * The enrol button.
@@ -25,12 +32,15 @@ export function EnrolButton({
   signedIn,
   label,
   learners,
+  bands,
 }: {
   courseId: string;
   state: 'free' | 'paid' | 'entitled' | 'not_sold_here';
   signedIn: boolean;
   label: string;
   learners: LearnerOption[];
+  /** The course's stated ages. Empty means every age the audience allows. */
+  bands: string[];
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -40,6 +50,8 @@ export function EnrolButton({
   const [learnerId, setLearnerId] = useState<string>(
     learners[0]?.id ?? '',
   );
+  const chosen = learners.find((l) => l.id === learnerId) ?? null;
+  const mismatch = chosen ? bandMismatch(bands, chosen.ageBand) : null;
 
   if (!signedIn) {
     return (
@@ -131,6 +143,13 @@ export function EnrolButton({
             Enrolling for a child puts the course on their record, not yours.
           </p>
         </div>
+      )}
+
+      {mismatch && (
+        <p className="muted">
+          {chosen && !chosen.isSelf ? `${chosen.name}: ` : ''}
+          {mismatch} You can still enrol — this is a note, not a refusal.
+        </p>
       )}
 
       <div className="hero-actions">

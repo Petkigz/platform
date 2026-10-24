@@ -7,6 +7,7 @@ import {
   audienceFits,
   audienceSummary,
   bandFits,
+  bandMismatch,
   parseBands,
   validateAudience,
 } from './audience.ts';
@@ -78,4 +79,24 @@ test('the course says who it is for in words', () => {
   );
   assert.equal(audienceSummary('adult', ['18+']), 'Adults · Adults');
   assert.equal(audienceSummary('both', []), 'All ages · suited to every age in that group');
+});
+
+test('a learner outside the ages gets a sentence, not a refusal', () => {
+  assert.equal(
+    bandMismatch(['11-13'], '8-10'),
+    'Written for Ages 11–13 — Ages 8–10 is outside that.',
+  );
+  assert.equal(
+    bandMismatch(['11-13', '8-10'], '8-10'),
+    null,
+  );
+});
+
+test('nothing is said when nothing is known', () => {
+  // No band on the course means every age; no band on the learner means no
+  // claim to contradict. Both are silence, not a warning.
+  assert.equal(bandMismatch([], '8-10'), null);
+  assert.equal(bandMismatch(null, '8-10'), null);
+  assert.equal(bandMismatch(['11-13'], null), null);
+  assert.equal(bandMismatch(['11-13'], 'grown-up'), null);
 });

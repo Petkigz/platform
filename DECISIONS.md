@@ -2504,6 +2504,30 @@ processing agreement, and it is the one part of live classes that cannot be buil
 **Also open:** whether a recording is offered to learners who missed the class, and how long
 it is kept. Nothing produces a recording yet, so nothing has to decide that today — but the
 moment a provider is connected, it is the next question.
+## The ages are said where the decision is made — **DECIDED 2026-10-24**
+
+A course has known who it is for since U72, and until now that fact was only used to filter two shelves.
+The person who actually chooses — a parent enrolling a child, an adult enrolling themselves — met the
+course page and was told nothing.
+
+**The course page says the ages in words**, under the badges, in the order the author ticked them, and
+nothing at all when the author left every band open. Silence is the correct rendering of "every age":
+a line that says "suitable for all ages" on every course would train the eye to skip the one that matters.
+
+**A mismatch is a sentence, not a refusal.** When the person selected in the enrol control is outside the
+course's stated ages, the page says so — *"Written for Ages 11–13 — Ages 8–10 is outside that. You can
+still enrol — this is a note, not a refusal."* The platform does not know whether that child reads ahead,
+whether the guardian is choosing deliberately, or whether the teacher would welcome them; refusing would
+be a safeguarding policy, and that decision belongs to the owner, not to a column.
+
+**Nothing is said when nothing is known.** No band on the course means every age. No band on the learner
+means nobody made a claim that could be contradicted. Both are silence, and `bandMismatch()` returns null
+for both — a warning that fires on missing data is a warning people learn to ignore.
+
+**Not decided here:** whether enrolment should ever be blocked or require a guardian's confirmation, and
+whether a teacher should be told that a learner outside the band has joined. Both are policy; both would
+need the owner.
+
 ## A shelf the doors are decided from — **DECIDED 2026-10-24**
 
 U72 let a course say who it is for, and gave the author a picker on their own course page. The database
