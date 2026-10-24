@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { MarkAllRead } from './notification-actions';
+import { NotificationPreferences } from './preferences';
+import { parsePreferences, type Preference } from '@/lib/notification-prefs';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Notifications' };
@@ -61,6 +63,13 @@ export default async function NotificationsPage() {
   const { data, error } = await supabase.rpc('my_notifications', { p_limit: 50 });
   if (error) throw new Error(error.message);
   const centre = (data ?? null) as Centre | null;
+
+  // A page that shows a feed and hides the switches that shape it is a page
+  // somebody has to leave to use. The switches sit below the feed because the
+  // feed is what a person came for.
+  const { data: prefRows, error: prefError } = await supabase.rpc('my_notification_preferences');
+  if (prefError) throw new Error(prefError.message);
+  const preferences: Preference[] = parsePreferences(prefRows ?? []);
 
   const reminders = centre?.reminders ?? [];
   const recent = centre?.recent ?? [];
@@ -146,6 +155,10 @@ export default async function NotificationsPage() {
           </>
         )}
       </section>
+
+      <div id="preferences" style={{ marginTop: '2rem', scrollMarginTop: '1rem' }}>
+        <NotificationPreferences initial={preferences} />
+      </div>
 
       <p style={{ marginTop: '1.5rem' }}>
         <Link href="/dashboard">Your area</Link>

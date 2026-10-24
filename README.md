@@ -68,10 +68,10 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 ## Status
 
-The database stands at **118 tables, RLS on every one, 242 policies, 146
-user-defined triggers, 370 functions and 158 migrations.** The database suite
-passes **1605 tests**; the web suite passes **971 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **163 app route entries** (88 pages, 75 API routes).
+The database stands at **119 tables, RLS on every one, 243 policies, 146
+user-defined triggers, 374 functions and 159 migrations.** The database suite
+passes **1617 tests**; the web suite passes **981 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **164 app route entries** (88 pages, 76 API routes).
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. `/account`
@@ -424,6 +424,19 @@ becomes available only when staff confirm it. An uploader cannot promote their
 own file — that hole was found by running the sequence, not by reading the
 policy.
 
+A message inside the product no longer arrives uninvited. `/notifications` holds
+what happened — a payout sent, failed or staff-cancelled — and what is about to
+happen, computed at read time from the live-class and subscription rows so a
+reminder cannot go stale. Both halves now respect a choice:
+`notification_preferences` keeps one row per person per kind, and
+`my_notifications()` and `notification_badge()` filter on it, so a muted kind is
+hidden and uncounted while the message itself is kept and comes back still unread
+when it is switched on again. Two kinds cannot be switched off at all — a payout
+that failed or was cancelled is how somebody finds out that money did not arrive —
+and a hand-written row does not get round it, because the lock lives in the read
+path as well as the writer. A reminder whose feature ships off says it is not in
+use yet rather than pretending the switch does something.
+
 (The trigger count is user-defined triggers. `pg_trigger` also holds 1007
 internal constraint triggers; counting them gives 1140, which is the number
 that produced an earlier, inflated figure in this file.)
@@ -490,6 +503,7 @@ assignments and the revision loop that makes feedback actionable:
 - `cohorts`, `cohort_members` — a published course version freezes its lessons and quizzes, so dated group work needs a class alongside the immutable version. Membership writes are session-bound; learners see only themselves and their family, not the roster; joining requires an exact-version enrolment. Registration closes at a teacher-set `join_closes_at`, defaulting to the start date and movable while the class runs; shutting the window governs arriving, not staying. `learning.cohorts` ships off pending the safeguarding review of files children send.
 - `course_assignments`, `assignment_submissions`, `assignment_submission_assets` — a separate task can be created after publication, carry an enrolment-relative or cohort-absolute deadline, and receive one private learner hand-in with text and verified file references. Marks/feedback are private and audited; no bytes or public object keys are stored. `learning.assignments` ships off until safe upload, scanning, delivery/retention and late-join policy are reviewed.
 - `assignment_submission_revisions` — feedback a learner cannot answer is decoration, so marked work can be reopened as a draft and handed in again. The version that was marked is snapshotted here before the live row is cleared: append-only by trigger, readable exactly where its submission is readable, and it holds file *ids* rather than bytes. Reopening past a deadline is refused on a task that does not accept late work, because the alternative is a learner trading a grade for a draft they can never submit.
+- `notification_preferences` — the message table is a record of what the platform did, so a person's choice lives beside it rather than in it: one row per person per kind, absent meaning on, and two kinds the writer refuses because they report money that did not arrive. Muting therefore hides a message without deleting it, and a hand-written row cannot silence one.
 
 Learning paths reuse the existing `learning_paths` and `learning_path_items`
 tables; this work adds their audited writers and the teacher/learner screens,

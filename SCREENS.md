@@ -131,7 +131,7 @@ Status:
 
 | # | Screen | Status |
 |---|---|---|
-| 49 | Notifications and preferences | READY |
+| 49 | Notifications and preferences | **BUILT** — `/notifications`: the feed, and the switches that shape it. Five kinds — three stored by the payout functions (sent, failed, staff-cancelled) and two computed at read time (a class within the day, a plan renewing within three) — and `my_notification_preferences()` returns every one of them with `enabled`, `locked` and `available`. **Two kinds cannot be silenced**: a payout that failed or was cancelled is how a person finds out their money did not arrive, so the writer refuses with a sentence and a hand-written row is ignored rather than obeyed. **A muted message is kept and not counted** — the row stays, `notification_badge()` and `my_notifications()` filter it, and unmuting brings it back still unread; muting a *reminder* is therefore not deleting it, because a reminder is computed from rows that are still there rather than stored as a message. `locked` and `available` are different sentences: the two reminders depend on features that ship off, so the screen says "not in use on this platform yet" instead of implying something arrives either way, and the choice is still saved. Switches sit under the feed at `/notifications#preferences`; `/account` carries the unread count, because the masthead is deliberately auth-agnostic and a badge there would make every page depend on the session; `POST /api/notifications/preferences` is the only writer |
 | 50 | Offline / downloaded lessons | BLOCKED — entitlement rules, protected media, storage limits all undecided |
 
 ---
@@ -167,7 +167,7 @@ against the actual route list in the production build, not from memory.
 | `/teach/[courseId]/reports` | A teacher's own numbers *(added 2026-10-22)*: total events, distinct learners and people, counts per event, the ten most-opened lessons and lesson opens by day, over 7/30/90 days. **Aggregates only** — the database returns no learner reference, so this page cannot show who did what. Course author or staff; with the flag off it says so instead of showing zeros |
 | `/auth/callback` | Where Google comes back to *(added 2026-10-22)*: exchanges the code for a session and forwards to a sanitised destination; a refusal returns to sign-in with the reason in words rather than an error page |
 | `/account/export` | What is in your data export and what is not *(added 2026-10-22)*: the sections the document carries, the five things it deliberately leaves out with a reason for each, the 1,000-row limit and why every copy is audited. The download button itself lives on `/account` |
-| `/notifications` | The in-app message centre *(added 2026-10-22)*: "Coming up" — a live class within a day and a plan renewing within three, computed at read time and each gated on its own flag — and "Recent" — payout sent, failed or staff-cancelled, with a read state and one mark-all button. It says plainly that no email or text has been sent |
+| `/notifications` | The in-app message centre *(added 2026-10-22)*: "Coming up" — a live class within a day and a plan renewing within three, computed at read time and each gated on its own flag — and "Recent" — payout sent, failed or staff-cancelled, with a read state and one mark-all button. It says plainly that no email or text has been sent. *(2026-10-24)* Below the feed: one switch per kind, the two money-failure kinds shown on and disabled with the reason, and a line saying when a reminder is a choice in advance because its feature is not switched on here |
 | `/teach/payouts` | Getting paid *(added 2026-10-22)*: per currency, what is out of its refund hold and what is still inside it, an inert request form while `teaching.payouts` is off (with the three missing pieces named), and every earlier request with its status, destination and provider reference. A teacher can cancel their own request; only finance can mark one paid |
 | `/admin/renewals` | Renewal projection *(added 2026-10-22)*: every live subscription expanded at its own interval and the price pinned to the version it bought, bucketed by month, per currency, with past-due charges counted as at risk and a 3/6/12-month window. **It states above the numbers that it is committed terms, not income** — nothing charges a renewal yet |
 | `/admin/payouts` | Finance's payout queue *(added 2026-10-22)*: **owed to teachers right now** as a balance per currency — in the refund hold, claimed by an open request, paid to date — with a converted total only when every rate exists; requests with the amount asked for beside what the ledger owes today (a stale request says so), completion that requires the provider and reference, a failure reason the teacher reads, and the refund-hold setting with a written reason |
@@ -189,9 +189,9 @@ at `/admin` and twenty-eight beneath it.
 | | |
 |---|---|
 | Numbered screen IDs | **50**, plus 19a, 19b, 20a, 20b, 20c, 31a, 31b, 31c, 33b, 35a, 35b, 35c, 35d, 35e, 35f, 35g, 35h and 43b — **68 rows** |
-| Routed | **81 page routes** in the production build. Three are not screens anybody designs (`/_not-found`, `/sign-out`, `/auth/confirm`), so **78 screens are routed** |
-| Built but never inventoried | **18**, listed in section 11 |
-| Ready to design now | **4** |
+| Routed | **88 page routes** in the production build. Three are not screens anybody designs (`/_not-found`, `/sign-out`, `/auth/confirm`), so **85 screens are routed** |
+| Built but never inventoried | **34**, listed in section 11 |
+| Ready to design now | **1** |
 | Blocked | **5** |
 
 The 67 rows and the 78 routed screens are not the same number and should not be.

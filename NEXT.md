@@ -2301,6 +2301,29 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### You choose what you are told, 2026-10-24
+
+Screen 49. The centre was already there — three stored kinds, two computed reminders, a badge, mark-as-read —
+and nothing in it could be changed. `notification_preferences` (one row per person per kind,
+`primary key (user_id, kind)`) plus `my_notification_preferences()` and `set_notification_preference()` close
+that. Both the feed and the badge now call `notification_enabled()`, so a muted kind is hidden and not counted
+while the row stays — and unmuting brings it back still unread.
+
+`payout_failed` and `payout_cancelled` are locked: the writer refuses them, `notification_enabled()` ignores a
+hand-written row, and the screen shows them on and disabled with the reason. The two reminders are *not*
+locked but are reported as `available = false` while `delivery.live_classes` and `commerce.subscriptions` are
+off, because a switch for a message nobody computes should not read as though it works.
+
+On the web, `notification-prefs.ts` labels the five kinds, parses the reply, throws on a kind it cannot label,
+and returns `null` from `availabilityNote()` for a live one. `/notifications` renders the switches under the
+feed (`#preferences`); `/account` carries the unread count so the centre is discoverable without making the
+masthead auth-aware; `POST /api/notifications/preferences` forwards the change and shows the database's answer
+rather than the optimistic one.
+
+**Open:** no announcement path — a teacher cannot send a notice to a class, and that would be a new kind with
+its own consent question. **Also open:** email and push remain unconfigured, so every switch today decides
+in-app visibility only, which the page says.
+
 ### A lesson can check you, 2026-10-24
 
 Screen 15. `check_lesson_answer(question, answer)` is read-only: no attempt, no response, no score. It reads

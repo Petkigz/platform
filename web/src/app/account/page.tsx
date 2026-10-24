@@ -13,7 +13,7 @@ export default async function AccountPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/sign-in?next=/account');
 
-  const [{ data, error }, { data: learnerRows }, { data: methodsData }] = await Promise.all([
+  const [{ data, error }, { data: learnerRows }, { data: methodsData }, { data: badgeData }] = await Promise.all([
     supabase
       .from('user_profiles')
       .select('display_name, preferred_language, timezone, account_status')
@@ -29,6 +29,10 @@ export default async function AccountPage() {
     // How this account actually signs in. A person who arrived through Google
     // has no password, and a password-reset form would be a dead end for them.
     supabase.rpc('my_sign_in_methods'),
+    // The unread count, so the centre is discoverable from the one page a person
+    // already opens when they want to change something about their account self.
+    // A failure here must not take the settings page down with it.
+    supabase.rpc('notification_badge'),
   ]);
   if (error) throw new Error(error.message);
   if (!data) redirect('/learn');
@@ -39,6 +43,7 @@ export default async function AccountPage() {
     account_status: string;
   };
   const ownLearner = ((learnerRows ?? []) as { id: string; display_name: string }[])[0] ?? null;
+  const unread = typeof badgeData === 'number' ? badgeData : 0;
   const methods = (methodsData ?? null) as {
     providers: string[];
     hasPassword: boolean;
@@ -124,6 +129,25 @@ export default async function AccountPage() {
         </p>
         <p>
           <Link href="/billing">See what I have paid</Link>
+        </p>
+      </section>
+
+      <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
+        <h2 style={{ marginTop: 0 }}>What I am told</h2>
+        <p className="muted">
+          Messages from the platform appear in your notification centre, not in an inbox or
+          a text message — no delivery provider is configured yet. {unread > 0
+            ? `You have ${unread} unread.`
+            : 'Nothing is waiting for you.'}{' '}
+          You choose which kinds you want, except for notices that money owed to you did not
+          arrive: those always come.
+        </p>
+        <p>
+          <Link href="/notifications">
+            {unread > 0 ? `Notifications (${unread} unread)` : 'Notifications'}
+          </Link>
+          {' · '}
+          <Link href="/notifications#preferences">Choose what you are told</Link>
         </p>
       </section>
 

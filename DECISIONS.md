@@ -2528,6 +2528,50 @@ for both — a warning that fires on missing data is a warning people learn to i
 whether a teacher should be told that a learner outside the band has joined. Both are policy; both would
 need the owner.
 
+## You choose what you are told — **DECIDED 2026-10-24**
+
+Screen 49. The in-app centre already existed: three stored kinds written by the payout functions, two
+reminders computed at read time, a badge, and mark-as-read. What a person could not do was change any of it.
+
+**Two kinds cannot be silenced.** `payout_failed` and `payout_cancelled` are how somebody finds out their money
+did not arrive, and a preference screen is exactly where that switch gets flipped by accident — "off" is often
+the first option in a list, and a person tidying their messages switches all of them off. A platform that lets
+someone silence the only message telling them a payout failed has built a switch whose sole effect is to hide a
+problem. `set_notification_preference()` refuses with a sentence rather than a greyed control, and
+`notification_enabled()` returns true for both whatever the table says — the check does not live only in the
+writer, because the table is writable: a hand-written `enabled = false` row was tested, not assumed.
+
+**A muted message is kept and not counted.** The row is the record of what the platform did; deleting it
+because somebody does not want to be interrupted rewrites the history the page is for. `my_notifications()` and
+`notification_badge()` filter on the preference instead, so a muted message disappears from the feed and from
+the count, the row stays, and unmuting brings it back still unread.
+
+**Muting a reminder is not the same as answering it.** A reminder is not a row — it is computed from
+`live_sessions` and `subscriptions`, which is what stops it going stale. Muting one therefore has to stop it
+being computed, not mark it dismissed; there is nothing to delete and nothing to acknowledge.
+
+**`locked` and `available` say different things.** Locked is a rule that cannot change — *you may not*. Available
+is a fact about this deployment — *not yet*. Both reminders depend on features that ship off
+(`delivery.live_classes`, `commerce.subscriptions`), so the reply carries availability from those same flags and
+the screen says so in the row rather than implying that something arrives either way. The switch still works: a
+choice made in advance is a choice, not an error.
+
+**Every kind is listed, always.** A screen that only shows what has already been changed cannot be used to change
+anything back. The vocabulary is closed in a CHECK constraint, and `parsePreferences()` throws on a kind this
+screen cannot label instead of rendering an unlabelled switch.
+
+**The two helpers are granted to nobody.** `notification_enabled(user, kind)` takes a person's id; granting it
+would let anybody who knows a user id ask whether that person silenced their class reminders. It is only ever
+called from SECURITY DEFINER functions, so the grant was removed rather than reasoned about.
+
+**Where it is.** The switches sit under the feed at `/notifications#preferences`, and `/account` carries a card
+with the unread count — the masthead is deliberately auth-agnostic, and a badge there would make every page
+depend on the session. `POST /api/notifications/preferences` is the only writer route.
+
+**Not decided here:** whether a teacher may send an announcement to a class. That is not a notification kind, and
+no table for it exists. **Also open:** whether any of these should also go by email or push once a provider is
+configured — today the screen says no provider is configured, rather than implying one is.
+
 ## A lesson can check you without grading you — **DECIDED 2026-10-24**
 
 Screen 15 — "interactive lesson" — was the last unblocked screen in the inventory, and the platform had

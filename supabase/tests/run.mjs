@@ -105,6 +105,7 @@ import { run as deliveryContract } from './delivery_contract.test.mjs';
 import { run as settingAuthority } from './setting_authority.test.mjs';
 import { run as staffDirectory } from './staff_directory.test.mjs';
 import { run as resumePosition } from './resume_position.test.mjs';
+import { run as notificationPrefs } from './notification_preferences.test.mjs';
 import { run as courseAudience } from './course_audience.test.mjs';
 import { run as courseShelf } from './course_shelf.test.mjs';
 import { run as practiceCheck } from './practice_check.test.mjs';
@@ -221,6 +222,7 @@ for (const [name, fn] of [
   ['setting authority', settingAuthority],
   ['staff directory', staffDirectory],
   ['resume position', resumePosition],
+  ['notification preferences', notificationPrefs],
   ['course audience', courseAudience],
   ['course shelf', courseShelf],
   ['practice check', practiceCheck],
