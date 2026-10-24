@@ -115,6 +115,16 @@ a:hover { color: var(--green-600); text-decoration: underline; }
 .nav a { color: var(--text-soft); font-weight: 500; }
 .nav a:hover { color: var(--green-700); text-decoration: none; }
 
+/* Where you are. The underline is for the eye; `aria-current="page"` is the
+   part that tells a screen reader, and neither existed before. It is drawn
+   under the link rather than colouring it alone, because green text beside
+   green text is not a difference everybody can see. */
+.nav a[aria-current='page'] {
+  color: var(--green-800);
+  font-weight: 650;
+  box-shadow: inset 0 -2px 0 var(--green-600);
+}
+
 .masthead-actions { margin-left: auto; display: flex; gap: 0.5rem; align-items: center; }
 .masthead-actions .btn { width: auto; margin: 0; padding: 0.42rem 0.9rem; font-size: 0.9rem; }
 

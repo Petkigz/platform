@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { siteOrigin } from '@/lib/site';
 import { BrandMark } from './_shared/brand-mark';
 import { MastheadActions } from './_shared/masthead-actions';
+import { NavLink } from './_shared/nav-link';
 import './globals.css';
 
 const description =
@@ -62,14 +63,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             </Link>
 
             <nav className="nav" aria-label="Main">
-              <Link href="/catalogue">Catalogue</Link>
-              <Link href="/learn">My learning</Link>
-              <Link href="/family">My family</Link>
-              <Link href="/plans">Plans</Link>
-              <Link href="/subscriptions">Subscriptions</Link>
-              <Link href="/teach">Teach</Link>
-              <Link href="/review">Review</Link>
-              <Link href="/certificates">Certificates</Link>
+              <NavLink href="/catalogue">Catalogue</NavLink>
+              <NavLink href="/learn">My learning</NavLink>
+              <NavLink href="/family">My family</NavLink>
+              <NavLink href="/plans">Plans</NavLink>
+              <NavLink href="/subscriptions">Subscriptions</NavLink>
+              <NavLink href="/teach">Teach</NavLink>
+              <NavLink href="/review">Review</NavLink>
+              <NavLink href="/certificates">Certificates</NavLink>
             </nav>
 
             {/* Auth-agnostic on the server, refined after hydration: see

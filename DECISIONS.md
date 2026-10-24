@@ -2528,6 +2528,44 @@ for both — a warning that fires on missing data is a warning people learn to i
 whether a teacher should be told that a learner outside the band has joined. Both are policy; both would
 need the owner.
 
+## The chrome says where you are — **DECIDED 2026-10-24**
+
+Two things the frame of every page never said.
+
+**Which section you are in.** The masthead is eight identical links. A sighted reader works it out from the
+heading underneath; a screen-reader user worked it out from nothing, because `aria-current` appeared nowhere in
+the chrome. It does now, in `lib/nav.ts` and `_shared/nav-link.tsx`, and it is in the HTML the server sends —
+verified by building the app and reading `aria-current="page"` out of the prerendered document, not by trusting
+that it would appear after hydration.
+
+**The rule has an edge case, which is why it is a module and not a `startsWith`.** `/learn` is the current
+section on `/learn` and on `/learn/abc/lesson/xyz`; it is *not* the current section on `/learned` or on
+`/learn-paths`, and a bare `startsWith` says it is on both. `/` is only ever itself, because every path begins
+with a slash. Trailing slashes, queries and fragments are stripped first. Six tests, and the ones that matter
+are the negatives — a prefix is not a segment.
+
+**Whether every form control has a name.** Three did not: the discussion reply box, the question box beside it,
+and the file input in the media uploader. All three relied on a placeholder, which disappears on the first
+keystroke, is not what a screen reader announces as the field's name, and is not what a voice-control user has
+to say to reach it. They have `aria-label`s now.
+
+**The useful part is that this was measured rather than assumed.** The first scan said 107 unnamed controls;
+the second said 42; both were wrong, because a naive `[^>]*` regex stops at the `>` inside an arrow function in
+an attribute, and a `htmlFor` built from a template literal (`htmlFor={`quality-${id}`}`) is invisible to a
+string match. The scanner now walks each tag tracking brace and quote depth, and matches `id={`x-${y}`}` against
+`htmlFor={`x-${y}`}`. The answer is **316 named, 0 unnamed** — so the finding is that the app is in good shape
+and three controls had slipped, which is a different and better sentence than the one the first scan suggested.
+
+**`check:repo` #8 keeps it at zero.** Any `<input>`, `<select>` or `<textarea>` without `aria-label`,
+`aria-labelledby`, a matching `htmlFor`, or a wrapping `<label>` fails the gate. Proved with a probe that had
+only a placeholder.
+
+**Not done here:** heading order. A source-level count of `<h1>` per file is useless — several pages return
+different branches, each with its own heading, so two `<h1>`s in a file is usually exactly one on screen — and
+the pages with none are redirects or render their heading in a shared component. Checking that properly needs
+the rendered page, which is a different kind of check to the ones in `repo-check.mjs`, and is left alone rather
+than approximated into false positives.
+
 ## A phone shakes this site apart — **DECIDED 2026-10-24**
 
 Everything below the header reflows: the grids collapse at 46rem, the hero stacks, the certificate has its own

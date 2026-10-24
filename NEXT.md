@@ -2301,6 +2301,21 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### The chrome says where you are, 2026-10-24
+
+The masthead never marked the section you were in — eight identical links, no `aria-current` anywhere — and
+three form controls had no name at all: the discussion reply box, the question box beside it, and the media
+uploader's file input, all relying on a placeholder.
+
+`lib/nav.ts` decides which link is current (`/learn` matches `/learn/x` but not `/learned`), `NavLink` applies
+it, and the attribute is in the prerendered HTML — checked by reading a built `about.html`, not assumed. The
+three controls have `aria-label`s.
+
+The scan that found them was wrong twice before it was right: a `[^>]*` regex stops at the `>` in an arrow
+function, and template-literal `id`/`htmlFor` pairs are invisible to a string match. Corrected, the answer is
+316 named and 0 unnamed. `check:repo` #8 now refuses an `<input>`, `<select>` or `<textarea>` with no name,
+proved with a placeholder-only probe.
+
 ### A phone shakes this site apart, 2026-10-24
 
 The header was one flex row — mark, eight links, two buttons — with no rule below the desktop breakpoint, so at

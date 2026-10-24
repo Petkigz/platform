@@ -142,6 +142,7 @@ export function Discussion({
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
                   placeholder={`Reply to ${p.authorName}`}
+                  aria-label={`Your reply to ${p.authorName}`}
                   style={{ flex: 1 }}
                 />
                 <button
@@ -165,6 +166,7 @@ export function Discussion({
             value={replyTo ? '' : draft}
             onChange={(e) => setDraft(e.target.value)}
             placeholder="Ask a question about this lesson"
+            aria-label="Ask a question about this lesson"
             disabled={replyTo !== null}
           />
           <div className="row">

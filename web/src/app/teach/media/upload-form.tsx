@@ -369,6 +369,7 @@ export function UploadMedia({ remainingBytes = null }: { remainingBytes?: number
         <input
           ref={inputRef}
           type="file"
+          aria-label="Choose a video or audio file to upload"
           onChange={(event) => choose(event.target.files?.[0] ?? null)}
           disabled={busy}
         />

@@ -25,6 +25,8 @@
 //      TypeScript has no opinion, and the page renders a link to a 404.
 //   7. A table with no scrolling wrapper. A table cannot reflow, so on a phone
 //      it pushes the document wider than the screen.
+//   8. A form control with no name. A placeholder disappears on the first
+//      keystroke and is not a name; three controls had nothing at all.
 //
 // Node builtins only, so this runs before `npm ci` and costs nothing.
 
@@ -328,6 +330,85 @@ const MIGRATION = /^(\d{14})_([a-z0-9][a-z0-9_]*)\.sql$/;
     fail('tables', `${file} renders a <table> without a .scroll-x wrapper`);
   }
   process.stdout.write(`tables: ${offenders.length} unwrapped table(s)\n`);
+}
+
+// ---------------------------------------------------------------------------
+// 8. Every form control has a name
+// ---------------------------------------------------------------------------
+// A placeholder is not a label: it disappears as soon as somebody types, it is
+// not read as the field's name by most screen readers, and it is not what a
+// voice-control user has to say to reach the field. Three controls had no name
+// at all — the discussion reply box, the question box beside it, and the file
+// input in the uploader.
+//
+// The rule is satisfied by `aria-label`, by `aria-labelledby`, by an `id` with a
+// matching `htmlFor` in the same file (including the template-literal form,
+// `id={`quality-${x}`}` beside `htmlFor={`quality-${x}`}`), or by being wrapped
+// in a `<label>`. Reading a JSX tag is the fiddly part: an arrow function in an
+// attribute contains a `>`, so the tag is scanned with brace and quote depth
+// rather than with a regex.
+{
+  const controls = [];
+  const files = [];
+
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir)) {
+      const full = join(dir, entry);
+      if (statSync(full).isDirectory()) {
+        if (entry === 'node_modules' || entry === '.next') continue;
+        walk(full);
+      } else if (entry.endsWith('.tsx')) {
+        files.push(full);
+      }
+    }
+  };
+  walk(join(root, 'web', 'src'));
+
+  // The opening tag, brace-aware.
+  const tagAt = (text, start) => {
+    let depth = 0;
+    let quote = null;
+    for (let i = start; i < text.length; i += 1) {
+      const c = text[i];
+      if (quote) {
+        if (c === quote && text[i - 1] !== '\\') quote = null;
+        continue;
+      }
+      if (c === '"' || c === "'" || c === '`') { quote = c; continue; }
+      if (c === '{') depth += 1;
+      else if (c === '}') depth -= 1;
+      else if (c === '>' && depth === 0) return text.slice(start, i + 1);
+    }
+    return '';
+  };
+
+  for (const file of files) {
+    const text = readFileSync(file, 'utf8');
+    const htmlFor = new Set([...text.matchAll(/htmlFor=["']([^"'{}]+)["']/g)].map((m) => m[1]));
+    const htmlForExpr = new Set([...text.matchAll(/htmlFor=\{`([^`]*)`\}/g)].map((m) => m[1]));
+
+    for (const match of text.matchAll(/<(input|select|textarea)\b/g)) {
+      const tag = tagAt(text, match.index);
+      if (/aria-label=|aria-labelledby=|type="hidden"/.test(tag)) continue;
+
+      const idExpr = tag.match(/\bid=\{`([^`]*)`\}/)?.[1];
+      if (idExpr && htmlForExpr.has(idExpr)) continue;
+
+      const id = tag.match(/\bid=["']([^"'{}]+)["']/)?.[1];
+      if (id && htmlFor.has(id)) continue;
+
+      const before = text.slice(Math.max(0, match.index - 400), match.index);
+      if (before.lastIndexOf('<label') > before.lastIndexOf('</label>')) continue;
+
+      const line = text.slice(0, match.index).split('\n').length;
+      controls.push(`${file.slice(root.length + 1)}:${line}`);
+    }
+  }
+
+  for (const where of controls.sort()) {
+    fail('labels', `${where} is a form control with no accessible name`);
+  }
+  process.stdout.write(`labels: ${files.length} files, ${controls.length} unnamed control(s)\n`);
 }
 
 // ---------------------------------------------------------------------------

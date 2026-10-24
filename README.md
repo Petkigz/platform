@@ -70,7 +70,7 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 The database stands at **119 tables, RLS on every one, 243 policies, 146
 user-defined triggers, 376 functions and 161 migrations.** The database suite
-passes **1648 tests**; the web suite passes **1038 tests**. TypeScript typecheck
+passes **1648 tests**; the web suite passes **1043 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **166 app route entries** (89 pages, 77 API routes).
 
 Every class a screen asks for is defined. The stylesheet had been missing `.page`, `.page-head` and
@@ -106,6 +106,10 @@ shrink inside a flex row, so a search form was 478 pixels of content in a
 320-pixel screen. The header is two rows below 54rem with a scrolling nav, the
 form controls can shrink, tabs scroll, and a table must sit in a `.scroll-x`
 box (`check:repo` #7).
+
+The masthead marks the section you are in with `aria-current="page"` — in the
+server's HTML, not applied after hydration — and every form control has an
+accessible name (`check:repo` #8): the count is 316 named, 0 unnamed.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. `/account`
