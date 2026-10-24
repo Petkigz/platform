@@ -103,6 +103,7 @@ import { run as refundWindowControl } from './refund_window_control.test.mjs';
 import { run as platformControls } from './platform_controls.test.mjs';
 import { run as deliveryContract } from './delivery_contract.test.mjs';
 import { run as settingAuthority } from './setting_authority.test.mjs';
+import { run as staffDirectory } from './staff_directory.test.mjs';
 
 // Settings that are global by design: one row, read by code far from the suite
 // that changes it. The revenue share decides what every accrual computes; the
@@ -214,6 +215,7 @@ for (const [name, fn] of [
   ['platform controls', platformControls],
   ['delivery contract', deliveryContract],
   ['setting authority', settingAuthority],
+  ['staff directory', staffDirectory],
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],

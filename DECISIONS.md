@@ -2504,6 +2504,42 @@ processing agreement, and it is the one part of live classes that cannot be buil
 **Also open:** whether a recording is offered to learners who missed the class, and how long
 it is kept. Nothing produces a recording yet, so nothing has to decide that today — but the
 moment a provider is connected, it is the next question.
+## A directory is about people, and holds no money — **DECIDED 2026-10-24**
+
+Screens 36 and 37 — Users and Teachers — have been `READY` since the inventory was written and
+have never had a page. Neither is a queue: everything else in the console is about work waiting
+for a person, and these two answer a question about people. `staff_directory()` returns them as
+one call with a `kind`, so the shape, the search and the refusals are declared once.
+
+**An account is not a child.** A child is a `learner_profiles` row inside a family, with no login
+while `child_login` is off. The Users list is accounts, so the children of the platform are not in
+it by name — not because a filter was applied, but because the schema says they are not accounts.
+The useful number beside an adult is how many learner profiles hang off their account, which is
+the answer to "is this family here" without being a list of children.
+
+**A directory holds no money.** No balance, no lifetime value, no total spent, no currency. The
+money screens exist and are gated; a directory with an amount in it is the one screen where two
+currencies get added together by eye. The reader enforces this in the other direction too: the
+fields a row may carry are an **allowlist** in `web/src/lib/directory.ts`, so a column added to
+the database makes the page fail until somebody deliberately admits it.
+
+**Who may look is two different questions.** Finding an account is support's job, so every staff
+role may search accounts by name or by email — the email because "find the account for this
+address" is what a support message actually asks, and a directory that cannot be searched by the
+thing the person quotes is useless. Who teaches, what they have published and how many learners
+they hold is a platform decision, and the roster is the owner's and governance's: `instructor` is
+granted by appointment, governance checks a teacher's qualification, and a support agent does not
+need either.
+
+**The roster counts published, not written.** A course counts as published once one of its
+versions is, once however many versions it has — the wrapper's own `status` is a lifecycle, not a
+publication. Learners are distinct people across everything a teacher wrote: a number, never a
+list, because who is enrolled is the cohort screen behind its own flag.
+
+**A limited list says it is limited.** `Showing 50 of 120`, and the parser derives truncation from
+the arithmetic as well as the flag, because silence about a LIMIT is how a list of fifty becomes
+"we have fifty accounts" in somebody's head.
+
 ## A switch belongs to the platform admin, and the table says so — **DECIDED 2026-10-24**
 
 `platform_settings` holds two kinds of row. Reading it is staff work: knowing that

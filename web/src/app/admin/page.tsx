@@ -48,6 +48,7 @@ const moneyLinks: ConsoleLink[] = [
 ];
 
 const publicationLinks: ConsoleLink[] = [
+  { href: '/admin/teachers', label: 'Teachers', note: 'everyone who may teach here, what each has published and how many learners their courses hold' },
   { href: '/admin/reviews', label: 'Assign reviews', note: 'courses waiting for a reviewer' },
   { href: '/admin/reviewers', label: 'Reviewer register', note: 'who applied to review, who has been checked, and what each may judge. Nothing publishes until somebody here is verified' },
 ];
@@ -57,6 +58,7 @@ const supportLinks: ConsoleLink[] = [
 ];
 
 const sharedLinks: ConsoleLink[] = [
+  { href: '/admin/users', label: 'Users', note: 'every account on the platform, searchable by name or email — accounts, not children' },
   { href: '/admin/settings', label: 'Controls', note: 'the numbers behind features that are already on. Only the ones your role owns are shown, and each change needs a reason' },
   { href: '/admin/reports', label: 'Content reports', note: 'problems readers flagged in a lesson or an answer. Closing one needs a written note' },
   { href: '/admin/media', label: 'Uploaded media', note: 'every master anybody has uploaded. Quarantine and withdrawal both need a written reason' },

@@ -2301,6 +2301,48 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### Who is here, and who teaches, 2026-10-24
+
+Two of the fifty screens have been `READY` since the inventory was written and have never had a
+page: Users (36) and Teachers (37). Everything else in the console is about work waiting for a
+person; these answer a question about people, and both are asked in the first week.
+
+`staff_directory(kind, search, limit)` returns either list, so the shape, the search and the
+refusals are declared once. Search matches the display name and the email address,
+case-insensitively, with the LIKE metacharacters escaped — a search box where `%` returns
+everything is a search box that dumps the platform.
+
+**Accounts, not children.** A child is a learner profile inside a family and has no login while
+`child_login` is off, so the children of the platform do not appear in the Users list by name.
+The number beside an adult is how many learner profiles hang off the account.
+
+**No money anywhere in a directory.** No balance, no lifetime value, no currency. The money
+screens are gated and a roster with an amount column is where two currencies get added by eye.
+The reader allow-lists the fields a row may carry, so a column added later fails the page until
+somebody admits it deliberately.
+
+**Two different questions about who may look.** Finding an account is support's job, so every
+staff role may search accounts. Who teaches, what they published and how many learners they hold
+is the owner's and governance's — `instructor` is granted by appointment, and governance checks
+the qualification behind it.
+
+**The roster counts published, not written.** A course counts as published once one of its
+versions is, and once however many versions it has. Learners are distinct people across a
+teacher's courses: a number, never a list.
+
+Both screens say when they are cut short — `Showing 50 of 120` — and the parser derives truncation
+from the arithmetic as well as the flag, because a list of fifty that says nothing becomes "we
+have fifty accounts" in somebody's head.
+
+Tests: 19 new database tests — a learner and a signed-out caller refused; support reading accounts
+and refused the roster; the owner and governance allowed it and finance not; an unknown kind
+refused by name; roles in the row and no money field; an account with no role reading as an empty
+list; a suspended account still listed, an erased one not; case-insensitive and substring name
+search; email search; `%` searched literally rather than dumping everyone; the limit and its
+truncation flag agreeing with the arithmetic; a teacher with no course on the roster with a zero;
+a draft version counting as a course but not a publication; two versions publishing once; only
+holders of `instructor` on the roster; and a revoked role removing somebody. 9 new web tests cover
+the parse, the field allowlist, truncation honesty and the role labels.
 ### The switchboard belongs to the owner, 2026-10-24
 
 `/admin` is one address with four kinds of staff behind it. The queues at the top were
