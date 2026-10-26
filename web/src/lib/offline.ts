@@ -8,10 +8,35 @@
  * under this origin, are never written through a `download` attribute, and are
  * played from a blob URL created at read time.
  *
- * The two pieces that can be tested without a browser are the clock and the
- * device key; the IndexedDB surface is thin and deliberately dumb, so there is
- * no logic in it that could disagree with the database.
+ * And, since 2026-10-24, **sealed**: what is written is AES-GCM ciphertext, not
+ * the lesson. The key comes from `/api/offline/key` and is minted only while the
+ * save is live, so a lapsed copy on disk is unreadable through the app even
+ * though the bytes are still there. `openSavedLesson()` is the only way bytes
+ * leave storage, which is what makes that true rather than advisory.
+ *
+ * THE UPGRADE
+ * -----------
+ * Version 1 of this store held plain lesson blobs. They are deleted when the
+ * database opens at version 2: a plaintext copy cannot be turned into a sealed
+ * one without the key, and pretending to keep it would leave on disk exactly
+ * what this change exists to remove. A learner loses a save and re-downloads it
+ * once; the alternative is a permanent hole behind a feature that claims to be
+ * protected.
+ *
+ * The pieces that can be tested without a browser are the clock and the device
+ * key; the IndexedDB surface is thin and deliberately dumb, so there is no logic
+ * in it that could disagree with the database.
  */
+
+import {
+  OfflineVaultError,
+  fromBase64Url,
+  importSaveKey,
+  openBytes,
+  plaintextSize,
+  sealBytes,
+  toArrayBuffer,
+} from './offline-vault.ts';
 
 export type SavedLesson = {
   downloadId: string;
@@ -21,6 +46,15 @@ export type SavedLesson = {
   savedAt: string;
   expiresAt: string;
   bytes: number;
+  /**
+   * What the bytes are, recorded at save time from the response.
+   *
+   * A saved copy has no file name for a browser to read a type from, and
+   * `application/octet-stream` makes it download instead of play. Guessing from
+   * magic bytes was the alternative and it is guesswork: the fetch that produced
+   * the bytes already knew.
+   */
+  mimeType: string;
   /** Filled by the reader, not stored: whether the clock has passed. */
   lapsed: boolean;
 };
@@ -71,15 +105,21 @@ export function deviceKey(): string {
 
 const DB_NAME = 'ayahspring-offline';
 const STORE = 'lessons';
+/** 2 = sealed. 1 held plain blobs and is deleted on upgrade, never read. */
+const DB_VERSION = 2;
 
 function open(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = window.indexedDB.open(DB_NAME, 1);
+    const request = window.indexedDB.open(DB_NAME, DB_VERSION);
     request.onupgradeneeded = () => {
       const db = request.result;
-      if (!db.objectStoreNames.contains(STORE)) {
-        db.createObjectStore(STORE, { keyPath: 'lessonId' });
+      // A plaintext store from version 1 is dropped rather than migrated: its
+      // blobs cannot be sealed without a key that was never minted for them,
+      // and keeping them would preserve the exact thing this version removes.
+      if (db.objectStoreNames.contains(STORE)) {
+        db.deleteObjectStore(STORE);
       }
+      db.createObjectStore(STORE, { keyPath: 'lessonId' });
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
@@ -102,14 +142,59 @@ function run<T>(
   );
 }
 
-type StoredLesson = Omit<SavedLesson, 'lapsed'> & { blob: Blob };
+type StoredLesson = Omit<SavedLesson, 'lapsed'> & { sealed: ArrayBuffer };
 
-/** Keep a lesson. The bytes never leave this origin. */
+/**
+ * Ask the server for the key to this save.
+ *
+ * The key is per save and expires with it. A 410 means the save lapsed or was
+ * removed, which is a sentence the screen can show — not a network fault.
+ */
+export async function fetchSaveKey(downloadId: string): Promise<Uint8Array> {
+  const response = await fetch('/api/offline/key', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ downloadId }),
+    cache: 'no-store',
+  });
+
+  const body = (await response.json().catch(() => null)) as
+    | { ok?: boolean; key?: string; message?: string }
+    | null;
+
+  if (!response.ok || body?.ok !== true || typeof body.key !== 'string') {
+    throw new OfflineVaultError(
+      'key',
+      body?.message ?? 'This saved lesson cannot be opened on this device.',
+    );
+  }
+
+  return fromBase64Url(body.key);
+}
+
+/**
+ * Keep a lesson, sealed.
+ *
+ * Sealing happens here rather than in the player so that there is exactly one
+ * writer to this store and no code path can put an unsealed blob in it. The size
+ * recorded is the plaintext's, because that is what the reader is deciding
+ * about when they look at their storage, and ciphertext size would be a
+ * meaningless number sixteen bytes larger.
+ */
 export async function storeLesson(
   lesson: Omit<SavedLesson, 'lapsed'>,
   blob: Blob,
 ): Promise<void> {
-  const record: StoredLesson = { ...lesson, blob };
+  const raw = await fetchSaveKey(lesson.downloadId);
+  const key = await importSaveKey(raw);
+  const sealed = await sealBytes(key, new Uint8Array(await blob.arrayBuffer()));
+
+  const record: StoredLesson = {
+    ...lesson,
+    bytes: blob.size,
+    mimeType: lesson.mimeType || blob.type || 'video/mp4',
+    sealed: sealed.buffer.slice(sealed.byteOffset, sealed.byteOffset + sealed.byteLength) as ArrayBuffer,
+  };
   await run('readwrite', (store) => store.put(record));
 }
 
@@ -117,18 +202,51 @@ export async function storeLesson(
 export async function listSaved(now: Date = new Date()): Promise<SavedLesson[]> {
   const all = await run<StoredLesson[]>('readonly', (store) => store.getAll() as IDBRequest<StoredLesson[]>);
   return all
-    .map(({ blob: _blob, ...rest }) => ({ ...rest, lapsed: !isPlayable(rest.expiresAt, now) }))
+    .map(({ sealed, ...rest }) => ({
+      ...rest,
+      // The recorded plaintext size, not the envelope's: a reader looking at
+      // "how much of my phone is this" is owed the size of the lesson.
+      bytes: rest.bytes || plaintextSize(new Uint8Array(sealed)),
+      lapsed: !isPlayable(rest.expiresAt, now),
+    }))
     .sort((a, b) => a.title.localeCompare(b.title));
 }
 
-/** A URL for the player, created at read time and revoked when it stops. */
-export async function lessonBlobUrl(lessonId: string): Promise<string | null> {
+/**
+ * The saved copy, decrypted, as a URL the player can play.
+ *
+ * This is the only way bytes leave this store. Three refusals happen before any
+ * decryption: there is no record, the clock has passed, or the server will not
+ * mint the key — and the last of those is the one that matters, because it is
+ * the server's answer about the learner's plan rather than this device's.
+ *
+ * The URL is created at read time. The caller must revoke it; a player that
+ * forgot would keep the decrypted lesson alive in memory for the life of the
+ * tab, which is the one thing this design is trying to avoid.
+ */
+export async function openSavedLesson(
+  lessonId: string,
+  now: Date = new Date(),
+): Promise<{ url: string; type: string } | null> {
   const record = await run<StoredLesson | undefined>(
     'readonly',
     (store) => store.get(lessonId) as IDBRequest<StoredLesson | undefined>,
   );
   if (!record) return null;
-  return URL.createObjectURL(record.blob);
+
+  if (!isPlayable(record.expiresAt, now)) {
+    throw new OfflineVaultError(
+      'key',
+      'This saved lesson has lapsed. Save it again while you are online to keep it.',
+    );
+  }
+
+  const raw = await fetchSaveKey(record.downloadId);
+  const key = await importSaveKey(raw);
+  const plain = await openBytes(key, new Uint8Array(record.sealed));
+
+  const type = record.mimeType || 'video/mp4';
+  return { url: URL.createObjectURL(new Blob([toArrayBuffer(plain)], { type })), type };
 }
 
 export async function removeStored(lessonId: string): Promise<void> {

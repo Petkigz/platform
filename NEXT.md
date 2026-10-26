@@ -2301,6 +2301,18 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### A saved lesson could not be played, 2026-10-24
+
+`/downloads` could list a saved lesson and not open one, and the bytes in IndexedDB were the lesson itself.
+
+`lib/offline-vault.ts` seals bytes as AES-256-GCM under an `AFP1` header; `lib/offline-key.ts` derives a per-save key
+by HKDF from `OFFLINE_VAULT_SECRET` and decides whether a save may still be opened at all; `/api/offline/key` mints
+it only for a live save. `openSavedLesson()` is now the only way bytes leave storage, and `/downloads` plays them in
+the page with the blob revoked on close. The version-1 plaintext store is dropped on upgrade. 24 tests.
+
+Set `OFFLINE_VAULT_SECRET` (32 random bytes, base64) before turning `learning.offline` on — without it the platform
+refuses to save rather than storing a lesson in the clear.
+
 ### A search engine was told nothing about the courses, 2026-10-24
 
 `lib/structured-data.ts` builds the graph and `JsonLdScript` emits it. The layout carries the platform and the site;

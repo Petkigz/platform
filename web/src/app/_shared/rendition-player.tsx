@@ -219,6 +219,7 @@ export function RenditionPlayer({
           savedAt: new Date().toISOString(),
           expiresAt: saved.expiresAt ?? new Date().toISOString(),
           bytes: blob.size,
+          mimeType: blob.type || bytes.headers.get('content-type') || 'video/mp4',
         },
         blob,
       );

@@ -2528,6 +2528,44 @@ for both — a warning that fires on missing data is a warning people learn to i
 whether a teacher should be told that a learner outside the band has joined. Both are policy; both would
 need the owner.
 
+## A saved lesson could not be played — **DECIDED 2026-10-24**
+
+The offline feature shipped two halves and one of them was missing. `save_offline_lesson()` booked a save, the
+player fetched the bytes and wrote them into this origin's IndexedDB — and **nothing could open them**. `/downloads`
+listed the saves with a *Ready offline* badge; `lessonBlobUrl()` existed and had no caller. The bytes were there and
+unreachable, which made "saved for offline" a promise the product did not keep. And what sat in storage was the
+lesson itself, in the clear.
+
+**Both are fixed in the same place.** What is written is now AES-256-GCM ciphertext under a fixed header
+(`AFP1` + nonce + ciphertext-with-tag), sealed with a key derived per save by HKDF-SHA256 from a server-only secret
+and the save's id. The key is minted by `/api/offline/key` only while the save row says the copy is still the
+learner's — not removed, not past its clock — so a lapsed save on disk is unreadable *through the app* even though
+its bytes are still there.
+
+**Per save, not per account.** Two lessons on one device are sealed with two keys: losing one does not open the
+other, and revoking one does not require re-downloading the rest.
+
+**This is not DRM and the screen says so.** A client that keeps the key it was handed keeps its copy; no browser
+technology prevents that. What is gained is narrower and true: nothing durable on disk is plaintext, and nothing out
+of date opens. Claiming more would be the kind of lie this codebase has spent a hundred units removing.
+
+**It fails closed.** With `OFFLINE_VAULT_SECRET` unset the key route refuses, the save fails with the reason, and
+nothing is written. A development fallback would have meant every saved lesson on every deployment sealed with a
+key in this repository — the same as plaintext with extra steps. The flag is ADMIN and off, so no deployment loses
+a working feature to this.
+
+**The old format is deleted, not migrated.** Version 1 of the store held plain blobs. They cannot be sealed without
+a key that was never minted for them, and keeping them would preserve exactly what this change exists to remove.
+Opening the database at version 2 drops the store; a learner loses a save and re-downloads once.
+
+**Refusals are named.** A file that is not ours says it was written by an older version; a truncated one says so; a
+failed tag says it was altered *or* the key is no longer issued, because GCM genuinely cannot tell those apart and
+picking one would be wrong half the time.
+
+**And a saved lesson can be watched.** `/downloads` plays it in the page, in an `<audio>` or `<video>` whose blob URL
+is revoked when the player closes; a lapsed copy is disabled with the reason on the button, and the server's
+sentence — not the device's — is what a failure shows.
+
 ## A search engine was told nothing about the courses — **DECIDED 2026-10-24**
 
 Every page had a title and a description; none of them had structure. A crawler reading the course page saw a
