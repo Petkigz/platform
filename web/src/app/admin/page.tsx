@@ -45,6 +45,7 @@ const moneyLinks: ConsoleLink[] = [
   { href: '/admin/disputes', label: 'Payment disputes', note: 'a chargeback has a deadline; the provider decides what happens if it passes' },
   { href: '/admin/tax', label: 'Tax and transfer fees', note: 'what a buyer is charged on top of the price, by the country they buy from' },
   { href: '/admin/exchange-rates', label: 'Exchange rates', note: 'what one currency was worth in another, when, and who said so' },
+  { href: '/admin/revenue', label: 'Revenue analytics', note: 'what sold in a period by currency, course, plan and teacher, with refunds beside the sale and never netted out of sight' },
   { href: '/admin/money-report', label: 'Money report', note: 'what moved in a period, in the one currency the platform is read in, with the rate beside every figure' },
   { href: '/admin/renewals', label: 'Renewals', note: 'every live subscription expanded forward at the price it was sold at. Committed, not arrived — nothing charges a renewal yet' },
   { href: '/admin/payouts', label: 'Teacher payouts', note: 'what teachers have asked to be paid, and the refund hold that keeps a sale from leaving before it can be reversed' },

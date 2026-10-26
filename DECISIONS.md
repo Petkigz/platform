@@ -4341,3 +4341,55 @@ same report, because those are the first questions a course owner asks — "how 
 how many finished" — and they are counts of the course rather than of the window. **Money stays
 out:** earnings have their own screen and their own currency question, and a figure in shillings
 beside a page of counts would invite exactly the mixing this schema avoids everywhere else.
+
+## Revenue is reported on the day it was paid, in the currency it was paid in, with refunds beside it — **DECIDED 2026-10-26**
+
+Three questions were open the moment the revenue screen existed, and each has an
+answer that is worse to leave to whoever writes the next query.
+
+**Which date puts a sale in a window.** `orders.paid_at` — the day the money
+arrived — not when the row was created, not when the report runs. A June sale
+recorded late belongs in June. For the same reason a teacher's earning is placed
+by the sale's date, falling back to `accrued_at` only for an entry with no order
+behind it (a correction, a clawback), which is then the only date it has. A refund
+is placed by `refunded_at`. A sale and its reversal are therefore allowed to fall
+in different months, and that is the point: the report is a record of what
+happened in each period, not a running balance that quietly rewrites the past.
+
+**Which figure to show.** Gross, refunded and net, as three columns, always. Never
+one net figure. A refund is a thing that happened to a customer's money and the
+platform should be able to read it afterwards; collapsing the two is how a business
+discovers, a year late, that it refunds more than it sells. A `cancelled` order is
+not in the report at all — it never took anything — while a `refunded` one stays
+in, because it did, and gave it back.
+
+**Whether to add currencies.** No. There is a figure per currency and no total.
+The platform charges whatever currency a family buys in, and a single total across
+them would be an exchange rate nobody recorded. Converting is
+`/admin/money-report`'s job, at a rate a person entered on
+`/admin/exchange-rates`, with the rate printed beside the figure. Two screens with
+different jobs, rather than one screen that does both in whichever order it happens
+to run.
+
+Two smaller decisions follow from them. **Plans are reported apart from courses** —
+a month of a subscription is not a course sale that recurred, and the two answer
+different questions. **A course is named only when the product behind a sale maps
+to exactly one course**; a two-course bundle is listed under the product rather
+than split by guesswork. The by-course refund attribution is proportional to line
+value, and by design it can drift by a minor unit on an order with three or more
+lines; the per-currency figure is the one that ties out exactly, which is why the
+page checks that one against itself before printing.
+
+**What the report will not do: recompute what a teacher earned.** That number comes
+from `instructor_earnings_entries`, where the revenue share was snapshotted on the
+day of the sale. Recomputing at today's rate would give a second answer to a
+question that already has one, and it would be the wrong answer the moment the
+share changes. A reversed entry is shown as reversed rather than subtracted, so the
+reversal stays visible.
+
+The flag question was misattributed for months: screen 40 was blocked on
+`delivery.analytics`, which governs **learner behaviour events** (a page viewed, a
+lesson opened) and has nothing to do with a sale. Revenue is recorded by the
+purchase path. Reading it is gated on `finance_admin` or `platform_admin` in the
+database, the same pair every money screen uses — a teacher's view of their own
+work is `/teach/earnings`, and no teacher may read the platform's whole book.

@@ -69,8 +69,8 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **120 tables, RLS on every one, 245 policies, 150
-user-defined triggers, 388 functions and 167 migrations.** The database suite
-passes **1726 tests**; the web suite passes **1223 tests**. TypeScript typecheck
+user-defined triggers, 389 functions and 168 migrations.** The database suite
+passes **1742 tests**; the web suite passes **1236 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **172 app route entries** (91 pages, 81 API routes).
 
 Every class a screen asks for is defined. The stylesheet had been missing `.page`, `.page-head` and
@@ -203,6 +203,20 @@ The same migration gives `financial_transactions.fx_rate`, `fx_source` and
 `fx_observed_at` their first writer: a settlement in another currency is refused unless
 a rate is recorded, so FX provenance has one source and cannot be typed in beside the
 figure it justifies.
+
+`/admin/revenue` answers the other money question, and answers it without converting
+anything: what sold, by currency, by course, by plan and by teacher, with what was
+refunded beside it. Gross, refunded and net are three columns rather than one net
+figure, because a report that subtracts silently is how a platform finds out a year
+late that it refunds more than it sells. Currencies are never added — that is what the
+money report is for, at a rate somebody recorded — and plans are kept apart from
+courses. A sale is attributed to a course only when its product maps to exactly one;
+a two-course bundle is listed under the product rather than guessed at. Teacher figures
+are read from `instructor_earnings_entries` with the share snapshotted on the day of the
+sale, never recomputed at today's rate, and a reversed entry is shown as reversed
+instead of being quietly subtracted. The page checks the report against itself
+(`net = gross − refunded`, no refund above what was taken, no currency twice) and says
+so rather than choosing a figure when it disagrees.
 
 An order is now created by the platform rather than by the browser.
 `orders_insert` and `order_items_insert` decided who could write the money rows by
