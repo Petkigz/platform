@@ -2528,6 +2528,40 @@ for both — a warning that fires on missing data is a warning people learn to i
 whether a teacher should be told that a learner outside the band has joined. Both are policy; both would
 need the owner.
 
+## A search engine was told nothing about the courses — **DECIDED 2026-10-24**
+
+Every page had a title and a description; none of them had structure. A crawler reading the course page saw a
+heading, some prose and an outline, and had to guess that it was looking at a course — so a course could not appear
+in the one place people look for courses. The page also announced itself as the slug with its dashes removed
+("the pillars of islam"): the URL, not the course.
+
+**Structured data is a claim, and the page has to make it.** Every field emitted is derived from a row the page
+renders:
+
+* `offers` only when `offering.kind === 'paid'` — the case where a price was actually shown to this reader. A course
+  with no price for somebody carries no offer. An offer of `0` would say "free", which is a different course.
+* `aggregateRating` only when reviews are on **and** somebody has rated. Ratings are real rows; `0` is a claim that
+  nobody has rated, which is not the same statement as "ratings are not open yet".
+* `hasPart` carries the **real lesson titles**. The first draft emitted "Lesson 1", "Lesson 2" — filler that reads
+  as data. A placeholder name in structured data is a lie with a schema behind it.
+* Deliberately absent: `hasCourseInstance` (a live class is scheduled per cohort and this page promises none),
+  `coursePrerequisites` (nothing enforces them), `educationalCredentialAwarded` (a completion certificate is not a
+  recognised credential), `timeRequired` (the platform never says how long a course takes).
+
+**The escaping is the dangerous part.** JSON-LD is injected inside a `<script>` element, so a course called
+`</script><img onerror=…>` would close the element and become markup — course titles are author-supplied text.
+`serialise()` escapes `<`, `>`, `&`, U+2028 and U+2029 to `\uXXXX`, which is still valid JSON and still parses back
+to exactly the original string. Verified end to end: a hostile title renders inert in the HTML and round-trips
+unchanged through a JSON parser.
+
+**With no configured origin, no absolute URL is invented.** `NEXT_PUBLIC_SITE_URL` is the same variable the printed
+certificate depends on; without it the graph carries paths and no `logo`, because a relative logo is a broken image
+to every consumer. Same reasoning as the share card, same answer.
+
+**The page's own metadata was fixed at the same time** — a real title, the author's summary, and a canonical URL
+without the query string, so shared links carrying tracking parameters do not split one page's standing across
+copies of itself.
+
 ## The catalogue's own vocabulary had no screen — **DECIDED 2026-10-24**
 
 `subject_areas` is what the catalogue filter, every subject badge and every course card read. It is seeded with

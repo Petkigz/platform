@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { siteOrigin } from '@/lib/site';
+import { organisationJsonLd, websiteJsonLd } from '@/lib/structured-data';
+import { JsonLdScript } from './_shared/json-ld';
 import { BrandMark } from './_shared/brand-mark';
 import { MastheadActions } from './_shared/masthead-actions';
 import { NavLink } from './_shared/nav-link';
@@ -105,6 +107,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <Link href="/notifications">Notifications</Link>
           </div>
         </footer>
+
+      {/* The platform, named, and the site it lives on. Two separate nodes
+          because they answer two different questions: what this is, and where
+          it is. `origin` is null on an unconfigured deployment, and both graphs
+          then omit their URL rather than invent one. */}
+      <JsonLdScript data={organisationJsonLd(origin)} />
+      <JsonLdScript data={websiteJsonLd(origin)} />
+
       </body>
     </html>
   );

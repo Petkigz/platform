@@ -2301,6 +2301,21 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### A search engine was told nothing about the courses, 2026-10-24
+
+`lib/structured-data.ts` builds the graph and `JsonLdScript` emits it. The layout carries the platform and the site;
+each course page carries a `Course` and a `BreadcrumbList`. Every field comes from a row the page renders: no offer
+unless a price was shown, no rating unless somebody rated, real lesson titles rather than "Lesson 1", and none of
+the fields the platform cannot promise.
+
+Escaping is the part that matters: `<`, `>`, `&`, U+2028 and U+2029 become `\uXXXX` so an author-supplied course
+title cannot close the script element. Checked with a hostile title, which renders inert and parses back unchanged.
+
+`generateMetadata` on a course page now returns the title and summary the author wrote, plus a canonical URL,
+instead of the slug with its dashes turned into spaces.
+
+19 tests.
+
 ### The catalogue's own vocabulary had no screen, 2026-10-24
 
 `subject_areas` had no writer outside SQL and write policies wide enough for any staff role. `/admin/subjects` now

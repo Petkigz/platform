@@ -36,6 +36,9 @@ import { fetchJoinableCohorts } from '@/lib/cohorts';
 import { CohortBrowser } from './cohort-browser';
 import { recordEvent } from '@/lib/analytics-server';
 import { fetchCourseTeacher, teacherAttribution } from '@/lib/course-teacher';
+import { breadcrumbJsonLd, courseJsonLd } from '@/lib/structured-data';
+import { siteOrigin } from '@/lib/site';
+import { JsonLdScript } from '../../_shared/json-ld';
 import { WhoTeaches } from '../../_shared/who-teaches';
 
 export const dynamic = 'force-dynamic';
@@ -73,13 +76,47 @@ type VersionWithStructure = NonNullable<CatalogueCourse['course_versions']>[numb
   course_sections?: Section[] | null;
 };
 
+/**
+ * What a search result says about this course.
+ *
+ * It used to be the slug with its dashes turned into spaces — "the pillars of
+ * islam" — which is the URL, not the course. A learner deciding whether to tap a
+ * result reads the title and the description, and the page has both: the author
+ * wrote a title and a summary, and they are what the page itself shows.
+ *
+ * The canonical URL removes the query string. A course page is reachable with
+ * tracking parameters and with `?` noise from shared links, and telling a search
+ * engine that those are separate pages splits the one page's standing across
+ * copies of itself.
+ */
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  return { title: slug.replace(/-/g, ' ') };
+  if (!isSupabaseConfigured()) return { title: slug.replace(/-/g, ' ') };
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from('courses')
+    .select('title, description')
+    .eq('slug', slug)
+    .is('deleted_at', null)
+    .maybeSingle();
+
+  // A missing course is the page's business: it calls notFound(). Returning the
+  // slug here keeps the two paths from disagreeing about what exists.
+  if (!data) return { title: slug.replace(/-/g, ' '), alternates: { canonical: `/courses/${slug}` } };
+
+  const title = String(data.title ?? slug);
+  const description = typeof data.description === 'string' ? data.description.trim() : '';
+
+  return {
+    title,
+    ...(description ? { description, openGraph: { title, description } } : {}),
+    alternates: { canonical: `/courses/${slug}` },
+  };
 }
 
 /**
@@ -204,8 +241,52 @@ export default async function CoursePage({
       ])
     : [false, [] as Awaited<ReturnType<typeof fetchJoinableCohorts>>];
 
+  // Structured data, from the same rows the page renders. The price is included
+  // only when this reader was shown one — `offering.kind === 'paid'` is exactly
+  // the case where the page puts a number in front of them.
+  const origin = siteOrigin();
+  const lessonTitles = sections.flatMap((s) =>
+    (s.lessons ?? [])
+      .slice()
+      .sort((a, b) => a.position - b.position)
+      .map((l) => l.title),
+  );
+
+  const graph = courseJsonLd(
+    {
+      title: course.title,
+      description: course.description?.trim() ?? null,
+      path: `/courses/${course.slug}`,
+      language: version.language,
+      subjects,
+      level: DIFFICULTY_LABEL[course.difficulty] ?? null,
+      lessons: lessonTitles,
+      offer:
+        offering.kind === 'paid'
+          ? {
+              amountMinor: String(offering.price.amount.amountMinor),
+              currency: offering.price.amount.currency,
+            }
+          : null,
+      rating: reviewsOn ? { average: reviewSummary.average, count: reviewSummary.count } : null,
+      teacherName: teacher?.displayName?.trim() ? teacher.displayName.trim() : null,
+    },
+    origin,
+  );
+
+  const crumbs = breadcrumbJsonLd(
+    [
+      { name: 'Home', path: '/' },
+      { name: 'Catalogue', path: '/catalogue' },
+      { name: course.title, path: `/courses/${course.slug}` },
+    ],
+    origin,
+  );
+
   return (
     <div className="container section" style={{ display: 'grid', gap: '1.5rem' }}>
+      <JsonLdScript data={graph} />
+      <JsonLdScript data={crumbs} />
       <div>
         <p className="eyebrow">
           <Link href="/catalogue">Catalogue</Link>
