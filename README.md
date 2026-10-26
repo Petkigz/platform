@@ -68,10 +68,10 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 ## Status
 
-The database stands at **122 tables, RLS on every one, 247 policies, 151
-user-defined triggers, 394 functions and 169 migrations.** The database suite
-passes **1765 tests**; the web suite passes **1253 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **174 app route entries** (92 pages, 82 API routes).
+The database stands at **123 tables, RLS on every one, 248 policies, 151
+user-defined triggers, 400 functions and 170 migrations.** The database suite
+passes **1786 tests**; the web suite passes **1268 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **176 app route entries** (93 pages, 83 API routes).
 
 Every class a screen asks for is defined. The stylesheet had been missing `.page`, `.page-head` and
 `.crumbs` while twenty-five to twenty-eight screens used them — and `.narrow`, which meant a 26rem

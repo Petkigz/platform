@@ -5,6 +5,7 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { ClaimLearner } from '@/components/claim-learner';
 import { ProfileForm } from './profile-form';
 import { PhoneForm } from './phone-form';
+import { MergeLink } from './merge/merge-panel';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +16,7 @@ export default async function AccountPage() {
   if (!user) redirect('/sign-in?next=/account');
 
   const [{ data, error }, { data: learnerRows }, { data: methodsData }, { data: badgeData },
-         { data: phoneData }] = await Promise.all([
+         { data: phoneData }, { data: mergeData }] = await Promise.all([
     supabase
       .from('user_profiles')
       .select('display_name, preferred_language, timezone, account_status')
@@ -39,6 +40,9 @@ export default async function AccountPage() {
     // A flag that is off means no card: an empty field for a feature nobody
     // switched on is an invitation to type into a dead form.
     supabase.rpc('my_phone'),
+    // A merge request waiting on this account is the one thing on this page
+    // somebody has to act on, so the count comes with it.
+    supabase.rpc('my_merge_requests'),
   ]);
   if (error) throw new Error(error.message);
   if (!data) redirect('/learn');
@@ -51,6 +55,10 @@ export default async function AccountPage() {
   const ownLearner =
     ((learnerRows ?? []) as { id: string; display_name: string; family_id: string | null }[])[0] ?? null;
   const unread = typeof badgeData === 'number' ? badgeData : 0;
+  const merge = (mergeData ?? null) as { enabled?: boolean; incoming?: unknown[] } | null;
+  const mergeWaiting = merge?.enabled === true && Array.isArray(merge.incoming)
+    ? merge.incoming.length
+    : 0;
   const phone = (phoneData ?? null) as {
     enabled?: boolean;
     phoneE164?: string | null;
@@ -142,6 +150,23 @@ export default async function AccountPage() {
           </p>
         )}
       </section>
+      {merge?.enabled === true && (
+        <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
+          <h2 style={{ marginTop: 0 }}>Two accounts, one person</h2>
+          <p className="muted">
+            If you signed up twice, the accounts can be folded together. The one you
+            keep survives; the other is closed, and both have to agree before
+            anything moves.{' '}
+            {mergeWaiting > 0
+              ? `Someone is asking to merge an account into this one.`
+              : 'Nothing is waiting on this account.'}
+          </p>
+          <p>
+            <MergeLink waiting={mergeWaiting} />
+          </p>
+        </section>
+      )}
+
       <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
         <h2 style={{ marginTop: 0 }}>Sharing my learning</h2>
         <p className="muted">

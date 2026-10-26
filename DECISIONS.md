@@ -4431,3 +4431,46 @@ external blocker, so the card on `/account` says the number is how staff reach y
 and the address the platform will message when it can. A number stored before the
 switch is turned off is still returned to its owner — hiding it would not remove
 it — and the flag gates writing, not reading.
+
+## A merge moves assets and obligations, never history — **DECIDED 2026-10-26**
+
+Two accounts for one person is the predictable consequence of email-and-Google
+sign-up, and the worst outcome is not the duplication: it is that somebody's
+course, certificate or money ends up on the account they no longer open.
+
+**A merge is started by the account being absorbed and completed only by the
+account that survives.** Each side had to sign in, which is the smallest proof
+that one person controls both. There is no email to click because there is no
+email provider; the request waits on the other account's own settings screen and
+expires after fourteen days.
+
+**Assets and obligations move:** the learning record with its enrolments,
+progress and certificates, roles, messages, the phone number, guardianship,
+billing memberships, and everything the account authored. **Actions do not:**
+`orders.placed_by`, `refund_requests.decided_by` and every audit event keep
+naming the account that did the thing. Rewriting them so the survivor appears to
+have done everything destroys the only record of what actually happened, and the
+closed profile is still there to be named.
+
+**It refuses in four cases, by name:** a payout in flight (money already moving
+between two parties); a billing account shared with somebody else (their money
+needs their agreement, not one person's); two learner records in different
+households; and two learner records that have both started the same course. The
+last is the one that matters — the platform cannot choose which of two progress
+records is real, so it says the course's name and stops. Every refusal is shown
+before the button, not after it.
+
+**It is irreversible, so it takes the same proof as closing an account:** typing
+your own name. The absorbed account is then closed and anonymised the way closing
+it by hand would be, and **its learner record is archived rather than deleted**.
+Where the survivor already holds the same fact — a review of the same course, an
+attempt at the same assessment — the survivor's row is kept and the other stays
+with the archived record, and the number left behind is reported rather than
+dropped silently.
+
+Two smaller consequences. The learner and enrolment guards deliberately refuse to
+change who a record belongs to; the merge is the one path allowed through them,
+and it does it the way migrations do — by acting with no user attached for the
+duration of the move, then restoring the actor before it closes the account. And
+a merge does not delete the absorbed account's sign-in: that lives at the auth
+provider and has to be deleted there, which the screen says plainly.
