@@ -31,6 +31,7 @@ import { run as governance } from './governance.test.mjs';
 import { run as earnings } from './earnings.test.mjs';
 import { run as roles } from './roles.test.mjs';
 import { run as subjects } from './subjects.test.mjs';
+import { run as subjectVocabulary } from './subject_vocabulary.test.mjs';
 import { run as signup } from './signup.test.mjs';
 import { run as resources } from './resources.test.mjs';
 import { run as media } from './media.test.mjs';
@@ -233,6 +234,7 @@ for (const [name, fn] of [
   ['earnings', earnings],
   ['roles', roles],
   ['subjects', subjects],
+  ['subject_vocabulary', subjectVocabulary],
   ['signup', signup],
   ['resources', resources],
   ['media', media],

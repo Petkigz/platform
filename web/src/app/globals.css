@@ -861,6 +861,56 @@ footer a { color: var(--text-soft); }
 }
 
 /* --------------------------------------------------------------------------
+   Admin: the subject vocabulary
+   --------------------------------------------------------------------------
+   One row per subject, indented by depth. The list is the vocabulary of the
+   whole catalogue, so it is allowed to be long: a grid of cards would make
+   "which subject sits under which" unreadable at 37 entries. */
+.subject-form {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1rem;
+}
+.subject-form .btn { justify-self: start; }
+.subject-list { list-style: none; margin: 1rem 0 0; padding: 0; }
+.subject-row {
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.subject-row:first-child { border-top: 1px solid var(--border); }
+.subject-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 0.65rem;
+}
+.subject-name { font-weight: 650; }
+.subject-code {
+  font-size: 0.85rem;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.05rem 0.4rem;
+}
+/* The actions sit at the end of the row on a wide screen and wrap beneath it on
+   a phone, where a row of buttons beside a long name would crush the name. */
+.subject-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.subject-uses { margin: 0.25rem 0 0; font-size: 0.9rem; }
+.subject-retired .subject-name { color: var(--muted); text-decoration: line-through; }
+.subject-rename { display: grid; gap: 0.6rem; flex: 1 1 100%; }
+.subject-rename .btn { justify-self: start; }
+
+@media (max-width: 40rem) {
+  .subject-actions { margin-left: 0; flex-basis: 100%; }
+}
+
+/* --------------------------------------------------------------------------
    Admin: what is missing
    --------------------------------------------------------------------------
    The checklist above the queues, on a platform that is still being set up.

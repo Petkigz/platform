@@ -2528,6 +2528,49 @@ for both — a warning that fires on missing data is a warning people learn to i
 whether a teacher should be told that a learner outside the band has joined. Both are policy; both would
 need the owner.
 
+## The catalogue's own vocabulary had no screen — **DECIDED 2026-10-24**
+
+`subject_areas` is what the catalogue filter, every subject badge and every course card read. It is seeded with
+37 entries and, until this unit, the only way to add, rename or retire one was SQL against production. The owner
+could not maintain the vocabulary of their own catalogue: a power with no screen is not a power, and this was the
+one first-run step the setup checklist could not offer a button for.
+
+**The write policy was wider than any screen it has.** Both existing policies used `is_privileged()` — any staff
+role — so a support agent reading a ticket could have added a subject. The page is now gated on `governance_admin`
+or `platform_admin`, and `can_manage_subjects()` enforces the same pair in the database. A screen narrower than
+the table it edits is a screen whose ownership claim is false.
+
+**Retiring a subject would have quietly blanked live badges.** `subject_areas_read` hides retired rows from every
+reader, and a badge is a join through `course_version_subjects` to that row. So retiring a subject a published
+course is tagged with would have removed the badge from a live course — and the tag could not be put back, because
+D5 freezes subject mapping at publication. `guard_subject_retirement()` refuses retirement while any version in
+`draft`, `submitted`, `approved` or `published` carries the tag, and its refusal names how many block it. Drafts
+and approved versions are included on purpose: the alternative is a trap that springs later, at publication, when
+the author can no longer fix what went wrong.
+
+**The people who maintain the vocabulary can see retired subjects.** A second read policy for
+`can_manage_subjects()`. Two facts forced it: the screen that retires a subject must list what it retired, and
+— verified by attempting it — a governance admin could not retire anything at all before this, because PostgreSQL
+checks the updated row against the SELECT policies and the new row is retired, therefore invisible, therefore
+refused.
+
+**A code is an identifier, not a label.** The add form takes one; the row does not offer to change it. Fixing a
+typo in what a learner reads is a rename, and the audit records both names so the log can reconstruct what changed.
+A typed capital or space is corrected rather than refused — the constraint is about the identifier's shape, not
+about the typist.
+
+**Every change is audited**, by trigger, into `governance_audit_events`: created, renamed, retired, reactivated,
+recoded, with the actor and the before/after. Retirement and reactivation are separate actions rather than one
+"updated", because "who hid this from learners" is the question a log like this gets asked.
+
+**The setup checklist gained its missing step.** U97 wrote that the subject gap had no surface, so a subject-less
+deployment was a note rather than a task. `/admin/subjects` exists now, so it is a step — first in the list, and
+only when there are none, because a deployment with 37 subjects has nothing to do here.
+
+**Not done here:** recoding through the screen. The API leaves no path to change a code, because every migration,
+import and tag refers to it by value; a recode is a migration-shaped act and should be treated as one when a
+reason to want it appears.
+
 ## An empty platform said nothing was waiting — **DECIDED 2026-10-24**
 
 The admin home is a queue screen. It calls `staff_attention()` and counts the work waiting inside features that

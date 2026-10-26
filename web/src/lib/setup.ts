@@ -13,9 +13,9 @@
  *
  * **Only steps that can be done from a screen appear**, because the rule here is
  * that a routine change is a field or a button on somebody's screen. Subjects
- * are the exception and are labelled as such: they arrive from the seed
- * migration, and a step whose only instruction is "run SQL" is not a step, it
- * is a note.
+ * are a step now that `/admin/subjects` exists — before that screen they were a
+ * note, because the only instruction would have been "run SQL". They are listed
+ * first: a course cannot be filed under a subject that does not exist.
  *
  * **The panel disappears when the list is empty.** A checklist that stays ticked
  * on a working platform is furniture; the admin home is a queue page, and a
@@ -34,7 +34,7 @@ export type SetupFacts = {
 };
 
 export type SetupStep = {
-  key: 'reviewers' | 'courses' | 'published';
+  key: 'subjects' | 'reviewers' | 'courses' | 'published';
   title: string;
   /** What is true today, in one sentence. */
   detail: string;
@@ -52,6 +52,19 @@ export type SetupStep = {
  */
 export function setupSteps(facts: SetupFacts): SetupStep[] {
   return [
+    // Only when there are none. A deployment with subjects has nothing to do
+    // here — they arrive with the seed migration, and a step that says "add a
+    // subject" beside 37 of them would be noise on a working platform.
+    ...(facts.subjects > 0
+      ? []
+      : [{
+          key: 'subjects' as const,
+          title: 'A subject to file courses under',
+          detail:
+            'The seed migration creates the usual ones. This deployment has none, so no course can be tagged yet.',
+          href: '/admin/subjects',
+          done: false,
+        }]),
     {
       key: 'reviewers',
       title: 'A reviewer who is verified',
@@ -91,19 +104,17 @@ export function outstandingSteps(facts: SetupFacts): SetupStep[] {
 }
 
 /**
- * The subject line, which is not a step.
+ * The subject line beside the panel.
  *
- * Subjects come from the seed migration and there is no screen that adds one.
- * A step with no button would be an instruction the reader cannot follow, so it
- * is reported as a fact beside the panel — and when it is zero the sentence says
- * plainly that something is wrong with the deployment rather than inviting an
- * action that does not exist.
+ * A fact rather than a step when there are subjects: they arrive with the seed
+ * migration, and the panel is for what is missing. When there are none, the
+ * panel carries the step — see `setupSteps()`.
  */
 export function subjectsNote(facts: SetupFacts): string {
   if (facts.subjects > 0) {
     return `Courses are filed under ${facts.subjects} subject ${facts.subjects === 1 ? 'area' : 'areas'}.`;
   }
-  return 'No subject areas exist. They are created by the seed migration, so a deployment that has none is not finished migrating.';
+  return 'No subject areas exist yet, so nothing can be tagged.';
 }
 
 /**

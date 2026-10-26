@@ -9,7 +9,7 @@ const working: SetupFacts = { subjects: 6, courses: 3, published: 2, reviewers: 
 test('a fresh deployment has every step outstanding, in dependency order', () => {
   const steps = setupSteps(fresh);
 
-  assert.deepEqual(steps.map((s) => s.key), ['reviewers', 'courses', 'published']);
+  assert.deepEqual(steps.map((s) => s.key), ['subjects', 'reviewers', 'courses', 'published']);
   assert.ok(steps.every((s) => !s.done));
 });
 
@@ -18,10 +18,12 @@ test('a working platform has nothing outstanding and no panel', () => {
 });
 
 test('each step is done by its own fact, not by a later one', () => {
-  const reviewerOnly = outstandingSteps({ ...fresh, reviewers: 1 });
+  const base = { ...fresh, subjects: 6 };
+
+  const reviewerOnly = outstandingSteps({ ...base, reviewers: 1 });
   assert.deepEqual(reviewerOnly.map((s) => s.key), ['courses', 'published']);
 
-  const courseOnly = outstandingSteps({ ...fresh, reviewers: 1, courses: 1 });
+  const courseOnly = outstandingSteps({ ...base, reviewers: 1, courses: 1 });
   assert.deepEqual(courseOnly.map((s) => s.key), ['published'], 'a draft course published nothing');
 });
 
@@ -47,17 +49,20 @@ test('singular and plural are not the same sentence', () => {
   assert.match(one[2]!.detail, /1 version is published/);
 });
 
-test('subjects are a fact, not a step with no button', () => {
-  assert.equal(setupSteps(fresh).some((s) => s.key === ('subjects' as never)), false);
-  assert.match(subjectsNote({ ...fresh, subjects: 6 }), /6 subject areas/);
-  assert.match(subjectsNote({ ...fresh, subjects: 1 }), /1 subject area\./);
+test('subjects are a step only when there are none, and it points at a screen', () => {
+  const withNone = setupSteps(fresh);
+  assert.equal(withNone[0]!.key, 'subjects');
+  assert.equal(withNone[0]!.href, '/admin/subjects');
+
+  const withSome = setupSteps({ ...fresh, subjects: 6 });
+  assert.equal(withSome.some((step) => step.key === 'subjects'), false,
+    'a working platform was told to add subjects beside 37 of them');
 });
 
-test('a deployment with no subjects is named as unfinished, not as a task', () => {
-  const note = subjectsNote(fresh);
-
-  assert.match(note, /seed migration/);
-  assert.doesNotMatch(note, /add a subject/i, 'the note asked for an action no screen offers');
+test('the subject line reports a count, and says what its absence stops', () => {
+  assert.match(subjectsNote({ ...fresh, subjects: 6 }), /6 subject areas/);
+  assert.match(subjectsNote({ ...fresh, subjects: 1 }), /1 subject area\./);
+  assert.match(subjectsNote(fresh), /nothing can be tagged/);
 });
 
 test('an empty queue line does not claim the work is done', () => {
@@ -69,8 +74,8 @@ test('an empty queue line does not claim the work is done', () => {
 });
 
 test('with work outstanding the number is singular or plural, not "1 things"', () => {
-  assert.match(emptyQueueLede({ ...fresh, reviewers: 1, courses: 1 }) ?? '', /one thing/);
-  assert.match(emptyQueueLede({ ...fresh, reviewers: 1 }) ?? '', /2 things/);
+  assert.match(emptyQueueLede({ ...fresh, subjects: 6, reviewers: 1, courses: 1 }) ?? '', /one thing/);
+  assert.match(emptyQueueLede({ ...fresh, subjects: 6, reviewers: 1 }) ?? '', /2 things/);
 });
 
 test('a set-up platform with empty queues keeps the page’s own sentence', () => {

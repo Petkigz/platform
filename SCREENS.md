@@ -149,6 +149,7 @@ against the actual route list in the production build, not from memory.
 | `/account` | Account settings: display name, preferred language, IANA time zone, and **whether this account is a learner** *(added 2026-10-22)*. If it is not, the page offers **Learn on this account**, which calls `claim_own_learner_profile()` — the only writer that creates an adult learner profile. Every learner flow (enrol, buy, progress, certificates, sharing) needs one, and before this there was no way to get one: `/family` adds children |
 | `/downloads` | On this device *(added 2026-10-22)*: what is saved, how long each has left, what it is using, and a Remove that clears both the app's storage and the server's record. Read from IndexedDB, so the list works with no network — the server is asked only on removal. Gated by `learning.offline`, but the page and removal stay reachable when it is off, so a save made while it was on is never trapped |
 | `/teach/[courseId]/live` | A course's live classes *(added 2026-10-22)*: schedule a class (date, local time, length, the zone the time is in), every upcoming session with its time in the teacher's zone, and the finished ones with their cancellation reason if any. The schedule form converts a wall-clock time in a named zone to an instant — the bug it avoids is `new Date('…T19:00')` being read in the server's zone |
+| `/admin/subjects` | The subject vocabulary *(added 2026-10-24)*: every subject area with its code, the code it sits under, whether it is active or retired, and how many course versions are filed under it. Add, rename, retire and bring back — each a field or a button. Retirement is refused while anything live is filed under it, because a retired subject is hidden from readers and its badge would vanish from a course whose tags are frozen. Gated on `governance_admin` or `platform_admin`, the same pair `can_manage_subjects()` enforces in the database |
 | `/live/[sessionId]` | One live class *(added 2026-10-22)*: a learner sees the time in the teacher's zone and their own, a door that opens inside the window, and the reason it is shut when it is; the host sees the roll with arrival times and minutes, and can mark a learner gone. Reached from `/learn` (upcoming classes) and from the teacher's list |
 | `/admin/tax` | Tax and transfer fees *(added 2026-10-22)*: every live rule with its country, currency, rate and bounds; a form that adds one (percentage typed as a percentage, fixed part, optional floor and ceiling, and a note for the support case); and a retire button that demands a reason. Retired rules stay listed because orders were billed under them. Finance or platform admin only, and both writers audit the change |
 | `/account/delete` | Close this account *(added 2026-10-22)*: what is deleted and what is kept, side by side, then a field that must match the display name before the button becomes available. Calls `erase_my_account(p_confirm)` through `POST /api/account/erase`, which ends the session. Idempotent, and it refuses a teacher with work in flight and a board member |
@@ -190,12 +191,12 @@ at `/admin` and twenty-eight beneath it.
 | | |
 |---|---|
 | Numbered screen IDs | **50**, plus 19a, 19b, 20a, 20b, 20c, 31a, 31b, 31c, 33b, 35a, 35b, 35c, 35d, 35e, 35f, 35g, 35h and 43b — **68 rows** |
-| Routed | **89 page routes** in the production build. Three are not screens anybody designs (`/_not-found`, `/sign-out`, `/auth/confirm`), so **86 screens are routed** |
-| Built but never inventoried | **34**, listed in section 11 |
+| Routed | **90 page routes** in the production build. Three are not screens anybody designs (`/_not-found`, `/sign-out`, `/auth/confirm`), so **87 screens are routed** |
+| Built but never inventoried | **35**, listed in section 11 |
 | Ready to design now | **1** |
 | Blocked | **5** |
 
-The 67 rows and the 78 routed screens are not the same number and should not be.
+The 68 rows and the 87 routed screens are not the same number and should not be.
 Some rows are states of one screen — the four mobile home/learning rows are
 responsive states of #11 and #14 — while some screens in section 11 answer to
 several rows, and three routes are not screens at all. Both numbers are given,

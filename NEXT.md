@@ -2301,6 +2301,20 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### The catalogue's own vocabulary had no screen, 2026-10-24
+
+`subject_areas` had no writer outside SQL and write policies wide enough for any staff role. `/admin/subjects` now
+lists every subject with its code, parent, state and how much of the catalogue is filed under it, and offers add,
+rename, retire and bring back.
+
+Three rules came with it, all enforced in the database as well as the screen: only `governance_admin` or
+`platform_admin` may write (`can_manage_subjects()`); a subject with any draft, submitted, approved or published
+version tagged cannot be retired (`guard_subject_retirement()`, whose message names the count); and every insert or
+update is audited with both sides of the change. A second read policy was needed because RLS checks an updated row
+against the SELECT policies — without it the admins could not see what they had just retired.
+
+16 web tests and 17 database tests. The setup checklist's subject note became a step.
+
 ### An empty platform said nothing was waiting, 2026-10-24
 
 The admin home counted queue work, so a fresh deployment read "Nothing is waiting. Every queue you can work was
