@@ -2528,6 +2528,48 @@ for both — a warning that fires on missing data is a warning people learn to i
 whether a teacher should be told that a learner outside the band has joined. Both are policy; both would
 need the owner.
 
+## The catalogue only ever searched the cover — **DECIDED 2026-10-24**
+
+`search_catalogue()` matches a course's title, its subjects, its teacher and its description. A lesson called
+"The conditions of prayer" inside "Fiqh for adults" was unfindable, and the words a learner remembers are usually
+the words in the lesson.
+
+**The lesson had to be searched without opening the course up.** A lesson has a title and an introduction, and the
+two are not equally public: the course page prints the whole outline — titles, sections, previews — to anybody.
+The introduction is the lesson's own text, and echoing a snippet of it in a search result would show somebody who
+has not bought the course something the product never showed them.
+
+So `search_lessons()` matches **titles for anyone who may read the version** and **introductions only where
+`can_access_lesson_now()` says the caller may study the lesson** (or they authored or review it). The snippet is
+built from the *visible* text — title for a stranger, title and introduction for a learner — so the rule holds by
+construction rather than by a filter somebody has to remember to add.
+
+**Previews are a switch, and the search found that out.** The `lessons_read` policy allows an anonymous visitor a
+lesson only when it is a preview **and** `learning.previews` is on. With the flag off — its default — an anonymous
+search returns nothing at all, including preview lessons. That is the honest behaviour rather than a bug, and the
+suite now asserts both sides, restoring the flag afterwards.
+
+**Only published versions, and only active courses.** A draft is a teacher's working copy; a search box is not a
+way to read one.
+
+**The parser is `websearch_to_tsquery`.** What people type includes quotes, `-`, `(`, `&` and apostrophes, and
+`to_tsquery` turns a harmless em dash into a 42601. Six of those are in the tests, and the assertion is that the
+call returns rather than that it finds anything.
+
+**Ranking is weighted, not alphabetical.** A title match outranks an introduction that mentions the word in
+passing, because somebody typing "tayammum" wants the lesson named after it.
+
+**The snippet is parsed, not injected.** `<mark>` comes back from the database and is split into parts by
+`/lib/lesson-search.ts` and rendered as elements. A lesson title is author-supplied text; a title containing
+`<img onerror=…>` becomes a lesson with that name, and the page shows the characters.
+
+**Three nothings became four.** The catalogue's empty state already distinguished *past the end of the shelf*,
+*nothing matched anywhere* and *no courses yet*. There is now a fourth — no course matched but lessons did — and
+saying "Nothing matched" over a list of matches would be the page contradicting itself.
+
+**Behind `learning.lesson_search`,** an ADMIN flag with no precondition: the index and the function ship with it,
+and the switch decides only whether the catalogue shows the second list.
+
 ## A saved lesson could not be played — **DECIDED 2026-10-24**
 
 The offline feature shipped two halves and one of them was missing. `save_offline_lesson()` booked a save, the

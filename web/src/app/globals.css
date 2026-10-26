@@ -861,6 +861,30 @@ footer a { color: var(--text-soft); }
 }
 
 /* --------------------------------------------------------------------------
+   Catalogue: lessons inside courses
+   --------------------------------------------------------------------------
+   A second list under the shelf. It is deliberately plainer than a course card
+   — a lesson is not a thing to buy, it is a place inside something already on
+   the shelf — and the snippet is where the match is, which is the only reason
+   the row exists. */
+.lesson-hits { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: 0.9rem; }
+.lesson-hits li {
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.hit-title { font-weight: 650; }
+.hit-why { margin: 0.25rem 0 0; font-size: 0.95rem; }
+.hit-why mark {
+  background: var(--green-50);
+  color: var(--green-800);
+  border-radius: 3px;
+  padding: 0 0.15rem;
+}
+.hit-where { margin: 0.3rem 0 0; font-size: 0.85rem; }
+
+/* --------------------------------------------------------------------------
    Admin: the subject vocabulary
    --------------------------------------------------------------------------
    One row per subject, indented by depth. The list is the vocabulary of the

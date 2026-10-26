@@ -2301,6 +2301,16 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### The catalogue only ever searched the cover, 2026-10-24
+
+`search_lessons()` searches lesson titles and introductions with a weighted GIN index. Titles match for anyone who
+may read the version; an introduction only for somebody who may study that lesson, and the snippet is built from the
+visible text so hidden words cannot leak. Published versions of active courses only, `websearch_to_tsquery` so
+punctuation never raises, and title matches outrank passing mentions.
+
+The catalogue shows an "Inside lessons" list under the shelf, with `<mark>` snippets parsed into elements rather than
+injected as HTML. Behind `learning.lesson_search` (ADMIN, no precondition). 12 web tests and 12 database tests.
+
 ### A saved lesson could not be played, 2026-10-24
 
 `/downloads` could list a saved lesson and not open one, and the bytes in IndexedDB were the lesson itself.

@@ -4,6 +4,9 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
+import { emptyShelfMessage } from '@/lib/lesson-search';
+import { fetchLessonHits } from '@/lib/lesson-search-query';
+import { LessonHits } from '../_shared/lesson-hits';
 import { recordEvent } from '@/lib/analytics-server';
 import { createClient } from '@/lib/supabase/server';
 import { countryFromHeaders } from '@/lib/geo';
@@ -69,6 +72,7 @@ export default async function CataloguePage({
   if (!isSupabaseConfigured()) redirect('/');
 
   const { q, subject, audience, page: pageParam } = await searchParams;
+  const searching = typeof q === 'string' && q.trim().length > 0;
   const supabase = await createClient();
 
   // The page number is a request, not a fact: a stale link or a hand-typed
@@ -103,6 +107,14 @@ export default async function CataloguePage({
     visible.map((c) => c.id),
     countryFromHeaders(await headers()),
   );
+
+  // Lessons that match, when the flag is on. A second list rather than a second
+  // search: `search_lessons()` matches the lesson's own words, and who may see
+  // which words is decided inside it.
+  const lessonSearchOn = searching
+    ? await isFlagEnabled(supabase, 'learning.lesson_search').catch(() => false)
+    : false;
+  const lessonHits = lessonSearchOn ? await fetchLessonHits(supabase, q ?? '') : [];
 
   // What people look for is the whole point of search analytics, and the query
   // is already in hand here. A signed-out search records nothing.
@@ -178,11 +190,7 @@ export default async function CataloguePage({
 
       {visible.length === 0 ? (
         <p className="empty">
-          {page > 1
-            ? 'There is nothing on this page. It may be past the end of the shelf.'
-            : q && q.trim().length > 0
-              ? `Nothing matched \u201c${q.trim()}\u201d. Try a subject, or a teacher\u2019s name.`
-              : 'No courses yet. Once a teacher publishes one it will appear here — nothing is shown until it has passed review.'}
+          {emptyShelfMessage({ page, query: q ?? null, lessonHits: lessonHits.length })}
         </p>
       ) : (
         <>
@@ -211,6 +219,10 @@ export default async function CataloguePage({
           />
         </>
       )}
+
+      {/* Under the shelf, and under the empty state too: a search that matched
+          no course but three lessons must not end in "nothing matched". */}
+      <LessonHits hits={lessonHits} courseCount={visible.length} />
     </div>
   );
 }
