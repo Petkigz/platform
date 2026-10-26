@@ -40,6 +40,7 @@ import { run as products } from './products.test.mjs';
 import { run as families } from './families.test.mjs';
 import { run as familyAdultLearner } from './family_adult_learner.test.mjs';
 import { run as featureTiers } from './feature_tiers.test.mjs';
+import { run as learnerProgressRecord } from './learner_progress_record.test.mjs';
 import { run as assessments } from './assessments.test.mjs';
 import { run as revenueShare } from './revenue_share.test.mjs';
 import { run as plans } from './plans.test.mjs';
@@ -246,6 +247,7 @@ for (const [name, fn] of [
   ['families', families],
   ['family_adult_learner', familyAdultLearner],
   ['feature_tiers', featureTiers],
+  ['learner_progress_record', learnerProgressRecord],
   ['assessments', assessments],
 ]) {
   console.log(`\n--- ${name} ---\n`);

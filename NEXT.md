@@ -2301,6 +2301,15 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### Progress had a strip and no record, 2026-10-24
+
+Screen 18 is built at `/progress`: the streak and the best ever, lifetime totals, twelve weeks of study days as a
+calendar, the whole badge catalogue with what each unearned one still needs, current courses and certificates. Nothing
+is stored — every number derives from `lesson_progress`, enrolments and certificates through
+`learner_progress_record()`, with the day-runs extracted into `learner_study_runs()` so the strip and the page cannot
+disagree about which day a lesson counted for. A guardian opens a child's with `?learner=<id>`. Behind
+`learning.streaks`. 16 database tests and 22 web tests.
+
 ### What the VIP package contains was a constant in SQL, 2026-10-24
 
 `/admin/plans` grows a **Which features need Plus** panel backed by `feature_tier_requirements`, so which shelf a feature

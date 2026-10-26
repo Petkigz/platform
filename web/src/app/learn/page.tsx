@@ -234,6 +234,13 @@ export default async function LearnPage() {
       {engagement && (
         <section className="card" style={{ marginTop: '1.25rem' }}>
           <EngagementStrip engagement={engagement} />
+          {/* The strip is the summary; the record is where a learner goes to see
+              the calendar, the badges they have not earned yet, and when each
+              one was. Only offered when the feature is on, which is exactly when
+              `engagement` exists. */}
+          <p style={{ margin: '0.75rem 0 0' }}>
+            <Link href="/progress">Your whole record</Link>
+          </p>
         </section>
       )}
 

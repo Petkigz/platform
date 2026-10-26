@@ -2528,6 +2528,43 @@ for both — a warning that fires on missing data is a warning people learn to i
 whether a teacher should be told that a learner outside the band has joined. Both are policy; both would
 need the owner.
 
+## Progress had a strip and no record — **DECIDED 2026-10-24**
+
+Screen 18 was the last numbered screen still marked BLOCKED, and the stated reason was honest if unhelpful:
+*"engagement mechanics undesigned"*. What existed was `learner_engagement()` and a strip on `/learn`: a streak, four
+totals, and whichever badges had already been earned. Two things were missing, and only one of them was a page.
+
+**A badge nobody has earned was invisible.** The strip drew the earned ones and said nothing about the rest, so a
+learner could not see what was ahead — a milestone you cannot see is a surprise that arrives or does not, which is
+not a mechanic. The catalogue is now fixed and small (eight badges: 1, 10 and 50 lessons; 1 and 3 courses; a
+certificate; a 7- and a 30-day run), and every one of them is drawn, earned or not, with what it still needs said as
+*"Two more lessons"* rather than *"2/10"*. The page is for a seven-year-old as well as an adult, and the
+seven-year-old is the one who needs the sentence.
+
+**Nothing is stored, and that is the design.** A badge is a threshold over rows the platform already writes, so it
+cannot drift from the progress it describes, cannot be lost to a bug, and does not need a nightly job to keep it
+honest. The cost is a computation per view; at this size that is nothing, and it buys the guarantee.
+
+**`20261247` declined to date streak badges,** on the grounds that the data could not support "you earned a 7-day
+streak on Tuesday" without a table that exists only to say so. That was too pessimistic: a run of consecutive days has
+a start, so the day the run reached seven has a date — and this page reads it back. A streak badge is measured on the
+**longest** run ever, so a streak that later breaks does not un-earn it; nothing recorded can be un-recorded.
+
+**Days are the learner's days.** The calendar and the streak are computed in the learner's own time zone, and in the
+reader's for a child with no account — the same rule `learner_engagement()` already used. Two different answers to
+"which day was that" would be worse than one, so the second implementation of that rule was extracted into
+`learner_study_runs()` and both call it.
+
+**Three nothings, told apart.** The page distinguishes the feature being off (and says progress is still being
+recorded), a learner the reader may not read ("Not your record", not a refusal that confirms they exist), and the
+record failing to load. Showing "nothing yet" for any of those would be lying about at least two.
+
+**Days after today are never marked.** A future square could only be "not studied", which is a small daily accusation
+about a day nobody has lived through yet.
+
+Behind `learning.streaks`, which already meant "daily streaks and milestone badges" — no new flag, because turning
+this on turns on nothing that flag was not already about.
+
 ## What the VIP package contains was a constant in SQL — **DECIDED 2026-10-24**
 
 `plan_feature_requires_tier()` was a closed CASE with one entry: `offline_downloads` needs Plus. The gate was real — a

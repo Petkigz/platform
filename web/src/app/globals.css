@@ -861,6 +861,51 @@ footer a { color: var(--text-soft); }
 }
 
 /* --------------------------------------------------------------------------
+   The study calendar
+   --------------------------------------------------------------------------
+   Twelve weeks of days, oldest to newest, as GitHub draws them but with the
+   platform's own colours: a filled square is a day a lesson was finished. The
+   grid is `display: flex` rather than CSS grid on purpose — the number of
+   columns is decided by the data, and a fixed template would leave a ragged
+   last column on a fortnight-old account. */
+.study-calendar { display: flex; flex-direction: column; gap: 0.25rem; overflow-x: auto; padding-bottom: 0.25rem; }
+.study-calendar-months { display: flex; gap: 3px; align-items: end; padding-left: 1rem; }
+.study-calendar-gutter { width: 0; }
+.study-calendar-month {
+  flex: 0 0 12px;
+  width: 12px;
+  font-size: 0.7rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: visible;
+}
+.study-calendar-body { display: flex; gap: 3px; }
+.study-calendar-weekdays {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 1rem;
+  font-size: 0.65rem;
+  color: var(--muted);
+  text-align: right;
+  line-height: 12px;
+}
+.study-calendar-week { display: flex; flex-direction: column; gap: 3px; }
+.study-day {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--border);
+  display: block;
+}
+.study-day.on { background: var(--green-600); }
+
+/* A badge card says what it is worth at a glance: earned ones carry the green
+   edge, unearned ones stay quiet so the earned ones read as the wall. */
+.badge-card { padding: 1rem; border-left: 3px solid var(--border); }
+.badge-card.earned { border-left-color: var(--green-600); }
+
+/* --------------------------------------------------------------------------
    Catalogue: lessons inside courses
    --------------------------------------------------------------------------
    A second list under the shelf. It is deliberately plainer than a course card

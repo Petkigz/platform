@@ -229,6 +229,14 @@ async function FamilyBlock({
                 <Link href={`/family/${child.id}`}>
                   Open {child.displayName}&rsquo;s learning
                 </Link>
+                {engagement && (
+                  <>
+                    {' · '}
+                    <Link href={`/progress?learner=${child.id}`}>
+                      Progress and badges
+                    </Link>
+                  </>
+                )}
               </p>
             </div>
           ))}
