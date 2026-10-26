@@ -221,6 +221,12 @@ const COURSE_ORDER_REFUSALS: Record<string, { code: CheckoutErrorCode; message: 
     code: 'promotion_refused',
     message: 'That code is not for this course.',
   },
+  // A referral code used by the person it belongs to. Refused in the database
+  // because a self-referral is not a discount, it is a hole in the programme.
+  self_referral: {
+    code: 'promotion_refused',
+    message: 'That is your own invitation code, so it cannot be used on your own purchase. It is for the friend you send it to.',
+  },
   new_customers_only: {
     code: 'promotion_refused',
     message: 'That code is only for people who have not bought anything before.',

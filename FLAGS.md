@@ -108,7 +108,7 @@ Three kinds of gate:
 | `commerce.subscriptions` | Monthly and annual plans | ADMIN + SETUP | Plan terms; grace period by market; renewal and proration policy; dunning. `create_plan_order()` refuses while this is off, so a plan cannot be ordered before those exist |
 | `commerce.promotions` | Discount campaigns | ADMIN | Eligibility rules; stacking rules; abuse limits. **Ownership, markets and the fixed-amount rule are built** (2026-10-22): `create_promotion_campaign()` lets the platform owner run a campaign on any course and a teacher on their own, names any set of country markets, refuses a fixed amount aimed at a market priced in another currency, and records a per-family limit (two, three, none) that `set_promotion_limits()` can change later. **Redemption at checkout is built** (2026-10-22): a code typed on the buy form is applied inside `create_course_order()`, one code per order, with the window, market, course, new-customer rule and the three limits enforced. The flag still ships off — turn it on when the first real campaign is ready, since a code that reaches checkout while this is off is simply not offered **A price can be checked before paying** (2026-10-22): `quote_course_order()` answers what the course would cost after a code and **creates nothing** — no order, no account, no redemption, so previewing a limited code cannot spend it. It calls `resolve_course_checkout()` and `promotion_quote()`, the same two functions the charge uses, and the order writer was rebuilt on them so a preview cannot disagree with the bill A code can also be **taken off a pending order** (2026-10-22): `remove_promotion_from_order()` voids the redemption — the row stays, append-only, with the person, the time and the reason — withdraws the adjustment, recomputes the total and returns the campaign slot, so a typo does not cost the family their code. The three limits count live redemptions only, and `set_promotion_limits()` counts the same way. Refused once the order is paid |
 | `commerce.refunds` | Refund requests and decisions | ADMIN + SETUP | Approval authority limits; escalation path; entitlement effect of a refund |
-| `commerce.referrals` | Referral rewards | CODE | Fraud rules; reward accounting; payout of rewards |
+| `commerce.referrals` | Invite a friend: they get a discount on their first purchase, you get a code for your next one | ADMIN | **Built 2026-10-26, and it pays nobody.** A referral is a discount code with a person's name on it, so every benefit is a promotion and nothing needs a payout provider. `my_referral_code()` mints one code per person, on a campaign priced at the friend's percentage and locked to a first purchase with one use; the code then goes through `apply_promotion_to_order()` like every other discount, which is why checkout needed no change and "one code per order" already holds. `promotion_redemptions` records the introduction through `track_referral_redemption()`, which refuses a person using their own code and refuses a second referral for somebody already referred — the first inviter keeps the credit, and the second code still discounts the order. When the order is paid, `reward_referral()` mints the referrer a code that **does not start until `commerce.refund_window_hours` has passed**, so the ordinary refund cancels it before it can be used; a staff-approved refund after that archives the code and marks the conversion `reversed`, and a code already redeemed stays redeemed, which is a limit of discount codes rather than of this build. The four numbers (friend's percentage, reward percentage, rewards per account a year, reward lifetime) are **controls on `/admin/settings`**, with bounds, a written reason and an audit entry — not a separate page and not constants. `/account/referrals` shows the person their code, who joined, and which rewards are live, waiting or gone; `/referral/<code>` tells a visitor what the code is worth and nothing else. `my_referrals()` never shows a referee's email, only their first name. No reward percentage, cap or expiry is invented here: the shipped values are the owner's to change, and changing one does not re-price a code already shared. |
 | `commerce.institutions` | Madrasahs, Islamic schools and organisations buying seats | CODE | Invoicing; bulk enrolment; B2B terms; purchase orders. **Not in the project record at all** |
 | `commerce.sponsorship` | Zakat / sadaqah sponsoring a learner's seat | CODE | Eligibility rules; donor receipts; whether it counts as zakat needs a scholar's ruling |
 | `commerce.scholarships` | Funded and free seats | ADMIN | Allocation rules; who approves; renewal |
@@ -158,7 +158,7 @@ reason and its audit.
 
 ## Controls that are not flags
 
-`platform_settings` holds thirteen rows that are not in the tables above. They are
+`platform_settings` holds seventeen rows that are not in the tables above. They are
 not features to switch on — they are dials that decide how the publication and
 money rules behave, and they shipped with values rather than being absent.
 
@@ -177,9 +177,14 @@ money rules behave, and they shipped with values rather than being absent.
 | `commerce.refund_window_hours` | integer | ADMIN | `72` | How long after a payment a customer may ask for a refund. The clock runs from **the payment**, not from the request, and it is read in the database so a browser cannot ask early or late. It bounds **asking, not deciding**: a request made in the last minute of the window can be approved next week. Staff are exempt, because a support call that ends in "the window closed" is how a platform loses a family over a course that was sold wrong — and a rule with no way to make something right gets worked around in SQL, where nothing is audited. `0` means no self-serve refunds; a negative value is clamped to 0 rather than opening the window before the payment |
 | `delivery.live_room_base` | text | ADMIN | empty | Base URL of the live-room host, e.g. `https://meet.example.org`. A room is this plus `/room/<slug>`. Empty is the shipped state and means live rooms are not connected yet — `join_live_session()` refuses with that sentence rather than handing out a URL that does not carry a class. The platform owns the schedule and the door; the video is somebody else's product |
 | `delivery.max_attempts` | integer | ADMIN | `5` | How many times one message is tried before it becomes a dead letter. Each retry waits longer — 5 minutes, 15, an hour, four hours, twelve — so a provider that is down for ten minutes is retried inside the outage and one that is down for a day has stopped being hammered after two attempts. Reaching the ceiling is the only failure that needs a person: the row turns `failed`, the moment is recorded, and the outbox screen offers a retry that requires a written reason. Below 1 would mean a message nobody ever tries, so 1 is the floor; above 10 the wait is already twelve hours and another try is not worth a day of the queue |
+| `commerce.referral_referee_percent` | integer | ADMIN | `10` | What a friend gets off their first purchase when they use an invitation code, in whole percent. `0` makes inviting pointless without switching the feature off. A code already shared keeps the percentage it was created with, because the friend was told what it was worth — so changing this re-prices nothing that already exists |
+| `commerce.referral_reward_percent` | integer | ADMIN | `10` | What the person who invited them gets off their own next purchase, once the qualifying order has stayed paid for the refund window. `0` stops rewards while still recording who invited whom |
+| `commerce.referral_max_per_year` | integer | ADMIN | `10` | How many rewards one account may earn in twelve months. A cap is what makes a referral programme uninteresting to somebody farming their own invitations; reaching it marks the conversion `capped` rather than hiding the introduction |
+| `commerce.referral_reward_expiry_days` | integer | ADMIN | `90` | How long a reward code stays usable once it starts. A reward with no expiry is a liability nobody is tracking. A refund of the qualifying order archives the campaign outright |
 
-Measured, the register holds **103 rows: the 90 flags above plus these thirteen.**
-Ninety-two are boolean switches, nine are integers and two are text. The two
+
+Measured, the register holds **108 rows: the 91 flags above plus these seventeen.**
+Ninety-three are boolean switches, thirteen are integers and two are text. The two
 governance policy controls have no gate because they are not features; the money
 controls are ADMIN, because a number that changes what a total says is changed
 from the dashboard and not from a migration — and so are the upload quota, the
@@ -199,16 +204,16 @@ now holds the register, `/admin` reads and toggles it, and `/api/admin/flags`
 writes it. A trigger refuses to enable a `code`-gated flag at runtime, so the
 dashboard cannot promise what needs a deploy.
 
-**2. Thirty-one of these cannot be runtime toggles.**
-`gate_type='code'` on 31 flags — `offline`, `child_login`, `multi_language`,
-`ai_support`, `panel`, `applications`, `payouts`, `referrals`, `institutions`,
-`live_classes`, `analytics`, and — counted properly — 11 `platform.*` legal,
-safety and data ones, 5 `teaching.*`, 5 `learning.*`, 4 `institution.*`,
-3 `commerce.*`, 2 `delivery.*` and `family.child_login`. Each needs a deploy, a provider, or a
+**2. Twenty-six of these cannot be runtime toggles.**
+`gate_type='code'` on 26 flags — 9 `platform.*` legal, safety and data ones,
+5 `teaching.*`, 4 `learning.*`, 4 `institution.*`, 2 `commerce.*`,
+`delivery.transcode` and `family.child_login`. Each needs a deploy, a provider, or a
 policy that does not exist. Building them "to completion" means building them
-against guesses, so the tables and the flags exist and the work waits.
+against guesses, so the tables and the flags exist and the work waits. The
+count falls as units land: `commerce.referrals` left this list on 2026-10-26
+when it was built as a discount rather than a payout.
 
-A further **14 are ADMIN + SETUP**: the toggle is real, but a provider, a sender
+A further **15 are ADMIN + SETUP**: the toggle is real, but a provider, a sender
 domain or a written policy has to be finished first. Those are the ones where
 turning it on too early does damage.
 

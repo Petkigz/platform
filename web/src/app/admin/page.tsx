@@ -59,6 +59,10 @@ const publicationLinks: ConsoleLink[] = [
   { href: '/admin/reviewers', label: 'Reviewer register', note: 'who applied to review, who has been checked, and what each may judge. Nothing publishes until somebody here is verified' },
 ];
 
+const referralLinks: ConsoleLink[] = [
+  { href: '/admin/referrals', label: 'Invitations', note: 'who invited whom, what it earned and what the yearly cap or a refund stopped. Both rewards are discounts on a course — nothing is paid out, so there is no balance here' },
+];
+
 const supportLinks: ConsoleLink[] = [
   { href: '/admin/support', label: 'Support queue', note: 'requests people opened from Help. Turning the feature off stops new ones; it does not close what is in flight' },
 ];
@@ -346,7 +350,7 @@ export default async function AdminPage() {
             rates every converted figure rests on. Every writer here needs a
             written reason.
           </p>
-          {moneyLinks.map((link) => (
+          {[...moneyLinks, ...referralLinks].map((link) => (
             <p key={link.href}>
               <Link href={link.href}>{link.label}</Link> — {link.note}
             </p>

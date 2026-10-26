@@ -4474,3 +4474,63 @@ and it does it the way migrations do — by acting with no user attached for the
 duration of the move, then restoring the actor before it closes the account. And
 a merge does not delete the absorbed account's sign-in: that lives at the auth
 provider and has to be deleted there, which the screen says plainly.
+
+## An invitation is a discount with a name on it, not a payment — **DECIDED 2026-10-26**
+
+`commerce.referrals` sat in the register for weeks with three preconditions in
+front of it: fraud rules, reward accounting, and the payout of rewards. The
+third is what kept it shut. Paying a referrer means paying somebody, and there
+is no payout provider — so a "referral reward" screen would have been a promise
+of money that no code in this repository could keep. That is the one thing this
+project does not do.
+
+**So the reward is not money. It is a discount, on both sides.** A friend who is
+new gets a percentage off their first course; the person who invited them gets a
+percentage off their own next course. Discounts already exist, already have a
+limit, an expiry, a market rule and an append-only redemption trail, and already
+reach checkout through the one writer that can take money off an order. Nothing
+had to be invented to pay them, because nothing is paid.
+
+**Every referral code is an ordinary promotion campaign with a referrer attached.**
+`my_referral_code()` mints one per account — `AYA-XXXXXX` — and creates the
+campaign behind it in the same transaction, priced at the friend's percentage
+and limited to one use by an account that has not bought before. The consequence
+that matters: the friend's code goes through `apply_promotion_to_order()`, so
+"one code per order", the market rule and the three limits are exactly as
+enforced as they are for a campaign the owner wrote by hand. There is no second
+path that discounts an order.
+
+**An introduction is recorded once, for good.** `track_referral_redemption()`
+writes `referral_conversions` when a referral code is redeemed, refuses a person
+redeeming their own code, and refuses a second conversion for somebody already
+referred. A second inviter's code still discounts the purchase — it is a
+promotion like any other — but the first introduction keeps the credit. The
+unique index on the referee is the rule, not the trigger logic.
+
+**The reward waits for the money to stay.** A code minted at payment would be a
+reward for a purchase that can still be refunded, so the reward campaign's window
+opens only after `commerce.refund_window_hours` has passed. A refund inside the
+window cancels the reward before it exists; a staff-approved refund afterwards
+archives the campaign and marks the conversion `reversed`. A code already spent
+is not clawed back — that is a limit of discount codes rather than of this build,
+and it is written down instead of being discovered.
+
+**Changing a percentage never re-prices a code already shared.** The campaign
+carries the percentage it was minted with, and the friend was told what it was
+worth. The four numbers — friend's percentage, inviter's percentage, rewards a
+year, reward lifetime — are **controls**, not a page of their own: they live on
+`/admin/settings` beside every other policy value, bounded, with a written reason
+and an audit row. A yearly cap is the anti-farming rule that exists, and reaching
+it marks the conversion `capped` rather than hiding that somebody was invited.
+
+**What is deliberately absent:** no fraud score, no device fingerprint, no
+"one household may not invite itself" rule. Those are the owner's to write, and
+inventing a threshold would be inventing a policy. What exists is the mechanism
+and its seams: a self-referral refused in the database, one referral per person
+ever, a yearly cap, and every attempt recorded where staff can read it.
+
+**The friend's name is not the reward.** `/account/referrals` shows the inviter
+the first names of people who joined and nothing else — no email, no surname, no
+purchases, no progress. Being invited by somebody is not permission for them to
+watch what you learn. The invitation landing page shows the inviter's first name
+and the discount, and is readable without an account.

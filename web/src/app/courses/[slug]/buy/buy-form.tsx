@@ -22,6 +22,7 @@ export function BuyForm({
   defaultLearnerId,
   providers,
   providerConfigured,
+  defaultCode,
 }: {
   courseId: string;
   /** The profiles this purchase may cover: the buyer and their family. */
@@ -30,6 +31,12 @@ export function BuyForm({
   /** Providers that are configured and usable right now. */
   providers: { id: string; label: string; requiresMsisdn: boolean }[];
   providerConfigured: boolean;
+  /**
+   * A referral code this browser arrived with. Pre-filled so a friend's link
+   * does what it said it would — and editable, because a person who types a
+   * different code means it.
+   */
+  defaultCode?: string | null;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -45,7 +52,7 @@ export function BuyForm({
   const needsNumber = chosen?.requiresMsisdn ?? false;
   // Optional, and deliberately not required: a family with no code should not
   // have to dismiss a field to buy a course.
-  const [promotionCode, setPromotionCode] = useState('');
+  const [promotionCode, setPromotionCode] = useState(defaultCode?.trim() ?? '');
   const [message, setMessage] = useState<string | null>(null);
   const [tone, setTone] = useState<'info' | 'error'>('info');
 

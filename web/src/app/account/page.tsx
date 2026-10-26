@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
+import { isFlagEnabled } from '@/lib/flags';
 import { ClaimLearner } from '@/components/claim-learner';
 import { ProfileForm } from './profile-form';
 import { PhoneForm } from './phone-form';
@@ -15,8 +16,11 @@ export default async function AccountPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/sign-in?next=/account');
 
-  const [{ data, error }, { data: learnerRows }, { data: methodsData }, { data: badgeData },
-         { data: phoneData }, { data: mergeData }] = await Promise.all([
+  const [referralsOn, { data, error }, { data: learnerRows }, { data: methodsData },
+         { data: badgeData }, { data: phoneData }, { data: mergeData }] = await Promise.all([
+    // Inviting a friend is a link, not a form, so the card is only worth showing
+    // when there is something at the other end of it.
+    isFlagEnabled(supabase, 'commerce.referrals').catch(() => false),
     supabase
       .from('user_profiles')
       .select('display_name, preferred_language, timezone, account_status')
@@ -163,6 +167,18 @@ export default async function AccountPage() {
           </p>
           <p>
             <MergeLink waiting={mergeWaiting} />
+          </p>
+        </section>
+      )}
+
+      {referralsOn && (
+        <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
+          <h2 style={{ marginTop: 0 }}>Invite a friend</h2>
+          <p className="muted">
+            A friend who is new here gets a discount on their first course, and you get one
+            on your next once their payment has stayed past the refund window. Both are
+            discounts, not money, so there is nothing to pay out.{' '}
+            <Link href="/account/referrals">Your invitation code</Link>
           </p>
         </section>
       )}

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ClaimLearner } from '@/components/claim-learner';
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
@@ -9,6 +9,7 @@ import { countryFromHeaders, countryName } from '@/lib/geo';
 import { format } from '@/lib/money';
 import { availableProviders, configuredProviderId } from '@/lib/payments/registry';
 import { isFlagEnabled } from '@/lib/flags';
+import { REFERRAL_COOKIE, cleanReferralCode } from '@/lib/referrals';
 import { BuyForm } from './buy-form';
 
 export const dynamic = 'force-dynamic';
@@ -112,6 +113,12 @@ export default async function BuyPage({
   // buyer's account, and the writer does the same. This is what makes the page
   // right for somebody who has never bought anything.
   const country = countryFromHeaders(await headers());
+
+  // A code somebody arrived with. It is only a starting value for the box: the
+  // discount is decided by `apply_promotion_to_order()` when the order is
+  // written, and a code that is wrong or stale is refused there with a sentence
+  // rather than silently charged.
+  const referralCode = cleanReferralCode((await cookies()).get(REFERRAL_COOKIE)?.value);
   const offering = await resolveOffering(supabase, {
     courseId: course.id,
     learnerProfileId: defaultLearnerId,
@@ -258,6 +265,7 @@ export default async function BuyPage({
             defaultLearnerId={defaultLearnerId}
             providers={providers}
             providerConfigured={providerId !== null}
+            defaultCode={referralCode}
           />
         </section>
       )}
