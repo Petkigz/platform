@@ -9,6 +9,7 @@ type Row = {
   course_id: string;
   course_slug: string;
   course_title: string;
+  is_preview: boolean;
   snippet: string;
   matched_in: 'title' | 'description';
   rank: number;
@@ -47,6 +48,7 @@ export async function fetchLessonHits(
     courseId: row.course_id,
     courseSlug: row.course_slug,
     courseTitle: row.course_title,
+    isPreview: row.is_preview === true,
     snippet: row.snippet ?? '',
     matchedIn: row.matched_in === 'description' ? 'description' : 'title',
     rank: typeof row.rank === 'number' ? row.rank : 0,

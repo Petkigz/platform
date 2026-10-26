@@ -89,7 +89,7 @@ export async function run(ctx) {
   }
 
   const search = async (who, term) =>
-    (await as(who, `select lesson_id, lesson_title, snippet, matched_in, course_id, rank
+    (await as(who, `select lesson_id, lesson_title, snippet, matched_in, course_id, rank, is_preview
                       from public.search_lessons($1, 20)`, [term])).rows;
 
   const fiqh = await publishedCourseWithLesson({
@@ -169,6 +169,11 @@ export async function run(ctx) {
 
       assert(ids.includes(sampleLesson), 'the preview lesson is not searchable by a visitor');
       assert(!ids.includes(closedLesson), 'a members-only lesson was returned to an anonymous visitor');
+
+      // The result says it is a preview, which is what lets the catalogue send
+      // a visitor to the lesson itself rather than to the course outline.
+      const preview = rows.find((r) => r.lesson_id === sampleLesson);
+      assert(preview.is_preview === true, 'a preview lesson did not report itself as one');
     } finally {
       await q(`update public.platform_settings set value_text = 'false' where key = 'learning.previews'`);
     }
@@ -232,6 +237,24 @@ export async function run(ctx) {
     assert(row, 'the title match vanished');
     assert(!/invalidat/i.test(row.snippet),
       `a hidden description reached the snippet: ${row.snippet}`);
+  });
+
+  await test('a lesson behind its course is not reported as a preview', async () => {
+    const course = await newCourse(teacher, { status: 'active' });
+    const version = await newVersion(course, teacher);
+    const section = await newSection(version);
+    const ordinary = await addLesson(section, {
+      title: 'Rulings on travel', description: 'When a journey shortens a prayer.', position: 1,
+    });
+
+    await transition(version, 'submitted', teacher);
+    await transition(version, 'approved', reviewer);
+    await satisfyReview(version, reviewer, admin);
+    await transition(version, 'published', admin);
+
+    const hit = (await search(learner.userId, 'travel')).find((r) => r.lesson_id === ordinary);
+    assert(hit, 'the fixture lesson was not found');
+    assert(hit.is_preview === false, 'an ordinary lesson claimed to be a preview');
   });
 
   await test('the caller is told which of the two matched', async () => {

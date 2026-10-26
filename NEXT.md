@@ -2325,7 +2325,10 @@ visible text so hidden words cannot leak. Published versions of active courses o
 punctuation never raises, and title matches outrank passing mentions.
 
 The catalogue shows an "Inside lessons" list under the shelf, with `<mark>` snippets parsed into elements rather than
-injected as HTML. Behind `learning.lesson_search` (ADMIN, no precondition). 12 web tests and 12 database tests.
+injected as HTML. A preview lesson links to its own address (`/courses/<slug>/preview/<id>`), which is the one place a
+visitor can actually open it; everything else links to its course, where the outline and the enrolment button are.
+`search_lessons()` reports `is_preview` for exactly that decision. Behind `learning.lesson_search` (ADMIN, no
+precondition). 14 web tests and 13 database tests.
 
 ### A saved lesson could not be played, 2026-10-24
 

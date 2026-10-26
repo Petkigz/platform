@@ -1,6 +1,12 @@
 import Link from 'next/link';
 
-import { lessonResultsLede, matchLabel, snippetParts, type LessonHit } from '@/lib/lesson-search';
+import {
+  lessonDestination,
+  lessonResultsLede,
+  matchLabel,
+  snippetParts,
+  type LessonHit,
+} from '@/lib/lesson-search';
 
 /**
  * Lessons that matched, under the courses that matched.
@@ -32,7 +38,7 @@ export function LessonHits({
       <ul className="lesson-hits">
         {hits.map((hit) => (
           <li key={hit.lessonId}>
-            <Link className="hit-title" href={`/courses/${hit.courseSlug}`}>
+            <Link className="hit-title" href={lessonDestination(hit)}>
               {hit.lessonTitle}
             </Link>
             <p className="hit-why">
@@ -41,6 +47,7 @@ export function LessonHits({
               )}
             </p>
             <p className="hit-where muted">
+              {hit.isPreview ? 'Preview · ' : ''}
               {hit.courseTitle}
               {hit.sectionTitle ? ` · ${hit.sectionTitle}` : ''}
               {' · '}

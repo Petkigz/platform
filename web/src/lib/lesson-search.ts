@@ -20,10 +20,28 @@ export type LessonHit = {
   courseId: string;
   courseSlug: string;
   courseTitle: string;
+  /** A preview opens on its own address, for anybody. */
+  isPreview: boolean;
   snippet: string;
   matchedIn: 'title' | 'description';
   rank: number;
 };
+
+/**
+ * Where a result goes when it is clicked.
+ *
+ * A preview lesson has its own page and opens for a visitor who is not enrolled;
+ * anything else lives behind its course, so the course page — where the outline,
+ * the price and the enrolment button are — is the right destination. Sending a
+ * stranger straight at a lesson they cannot open would be a link that ends in a
+ * refusal, and sending a visitor who *can* open a preview to the outline would
+ * hide the thing they just searched for.
+ */
+export function lessonDestination(hit: Pick<LessonHit, 'courseSlug' | 'lessonId' | 'isPreview'>): string {
+  return hit.isPreview
+    ? `/courses/${hit.courseSlug}/preview/${hit.lessonId}`
+    : `/courses/${hit.courseSlug}`;
+}
 
 /** One piece of a snippet: text, or text that matched. */
 export type SnippetPart = { text: string; mark: boolean };

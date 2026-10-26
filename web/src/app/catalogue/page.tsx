@@ -161,8 +161,15 @@ export default async function CataloguePage({
           type="search"
           name="q"
           defaultValue={q ?? ''}
-          placeholder={'Search courses, subjects, teachers\u2026'}
-          aria-label="Search courses"
+          // The box says what it searches. When lesson search is on, that is a
+          // second kind of result, and a placeholder that promised only courses
+          // would make the lesson list look like a mistake.
+          placeholder={
+            lessonSearchOn
+              ? 'Search courses, lessons, subjects, teachers\u2026'
+              : 'Search courses, subjects, teachers\u2026'
+          }
+          aria-label={lessonSearchOn ? 'Search courses and lessons' : 'Search courses'}
         />
         <select name="audience" defaultValue={audience ?? 'all'} aria-label="Audience">
           <option value="all">All ages</option>

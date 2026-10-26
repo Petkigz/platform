@@ -2618,6 +2618,12 @@ call returns rather than that it finds anything.
 **Ranking is weighted, not alphabetical.** A title match outranks an introduction that mentions the word in
 passing, because somebody typing "tayammum" wants the lesson named after it.
 
+**A result has to open somewhere.** The first version linked every lesson hit to its course, which is right for a lesson
+behind a paywall and wrong for a preview: a preview opens on its own address, and sending a visitor to the outline to hunt
+for the lesson a search just found is a worse answer than the search. `search_lessons()` therefore returns `is_preview`,
+and the link follows it — preview to the lesson, anything else to the course. The return type had to be dropped and
+recreated; the grants are re-issued identically, including for `anon`, so the door stays the same width.
+
 **The snippet is parsed, not injected.** `<mark>` comes back from the database and is split into parts by
 `/lib/lesson-search.ts` and rendered as elements. A lesson title is author-supplied text; a title containing
 `<img onerror=…>` becomes a lesson with that name, and the page shows the characters.

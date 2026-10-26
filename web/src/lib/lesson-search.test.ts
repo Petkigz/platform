@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { emptyShelfMessage, lessonResultsLede, matchLabel, snippetParts } from './lesson-search.ts';
+import {
+  emptyShelfMessage,
+  lessonDestination,
+  lessonResultsLede,
+  matchLabel,
+  snippetParts,
+} from './lesson-search.ts';
 
 test('a marked snippet splits into text and matches', () => {
   const parts = snippetParts('A careful look at what <mark>invalidates</mark> a fast.');
@@ -74,4 +80,23 @@ test('with no hits the message suggests the new third thing to search', () => {
 
 test('a query of only spaces is not a search', () => {
   assert.match(emptyShelfMessage({ page: 1, query: '   ', lessonHits: 0 }), /No courses yet/);
+});
+
+test('a preview opens as a lesson; anything else opens as its course', () => {
+  const base = { courseSlug: 'fiqh-for-adults', lessonId: 'abc-123' };
+
+  assert.equal(
+    lessonDestination({ ...base, isPreview: true }),
+    '/courses/fiqh-for-adults/preview/abc-123',
+  );
+  assert.equal(lessonDestination({ ...base, isPreview: false }), '/courses/fiqh-for-adults');
+});
+
+test('the destination never invents a route for a lesson behind its course', () => {
+  // There is no /learn/<slug>/<lesson> route; a link that 404s would be worse
+  // than the outline.
+  const url = lessonDestination({ courseSlug: 'prayer', lessonId: 'x', isPreview: false });
+
+  assert.doesNotMatch(url, /\/learn\//);
+  assert.match(url, /^\/courses\//);
 });
