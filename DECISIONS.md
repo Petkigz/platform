@@ -2528,6 +2528,32 @@ for both — a warning that fires on missing data is a warning people learn to i
 whether a teacher should be told that a learner outside the band has joined. Both are policy; both would
 need the owner.
 
+## What the VIP package contains was a constant in SQL — **DECIDED 2026-10-24**
+
+`plan_feature_requires_tier()` was a closed CASE with one entry: `offline_downloads` needs Plus. The gate was real — a
+Basic plan could not be granted downloads — but the *decision* lived in a migration, so "what is in the VIP package?"
+needed a developer, a pull request and a deploy. Every other plan decision was already a form on `/admin/plans`: create
+a plan, move it to Plus, grant the feature, price it. One rule staying in code made the screen a half-truth, and it is
+the same defect the plan screen itself was built to fix: **a rule nobody can edit from a screen is not a policy, it is
+a constant.**
+
+**The map is a table.** `feature_tier_requirements` holds one row per code that needs more than Basic — seeded with
+`offline_downloads → plus`, so nothing changed on the day it landed. Absence means Basic, which keeps the old safe
+default: a code nobody has restricted is available on any shelf, because an unknown code must not accidentally become
+restricted to a shelf nobody is on. `plan_feature_requires_tier()` reads it, and had to stop claiming `immutable` — a
+function that reads a table cannot promise to return the same answer forever, and the marker would have let the planner
+serve a stale one.
+
+**Raising a requirement is guarded; lowering it is not.** A Basic plan that already carries the feature would become a
+catalogue that says "Plus only" while the plan kept handing it out. So moving a feature up is refused while any Basic
+plan's terms still carry it, naming the plan. Moving one down is always allowed: nothing promises a feature is
+*exclusive* to Plus, only that a Basic plan may hold it. The screen shows the blocker **before** the click.
+
+**Table, not a free-text setting.** The code has to be in the closed vocabulary (`plan_feature_codes()`), so a typo
+cannot quietly create a restriction on a code no plan will ever carry — the same discipline the entitlement form already
+follows. Staff only, audited as `plan_feature.requirement_changed` with the shelf it moved from, and the table has RLS
+on with a staff read policy and **no write policy at all**: the definer writer is the only door.
+
 ## A parent could not learn in their own family — **DECIDED 2026-10-24**
 
 A family held children and nothing else. `claim_own_learner_profile()` creates the signed-in adult's own profile

@@ -2301,6 +2301,14 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### What the VIP package contains was a constant in SQL, 2026-10-24
+
+`/admin/plans` grows a **Which features need Plus** panel backed by `feature_tier_requirements`, so which shelf a feature
+requires is the owner's decision instead of a migration. Raising a feature to Plus is refused while a Basic plan still
+grants it (the plan is named, before the click); lowering is always allowed. The map is read through
+`plan_feature_tier_rules()` and written only through `set_feature_tier_requirement()`, staff only and audited. 16 database
+tests and 9 web tests.
+
 ### A parent could not learn in their own family, 2026-10-24
 
 `claim_family_adult_learner(family)` puts the signed-in adult's own learner profile inside a family they belong to,

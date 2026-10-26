@@ -49,6 +49,12 @@ export async function POST(request: Request) {
       fn = 'set_plan_tier';
       args = { p_plan_id: body.planId, p_tier: body.tier };
       break;
+    case 'set_feature_requirement':
+      if (typeof body.featureCode !== 'string' || typeof body.minTier !== 'string')
+        return fail('Choose a feature and a shelf.');
+      fn = 'set_feature_tier_requirement';
+      args = { p_feature_code: body.featureCode, p_min_tier: body.minTier };
+      break;
     case 'create_version':
       if (typeof body.planId !== 'string') return fail('Choose a plan first.');
       if (!Number.isInteger(body.childAllowance) || !Number.isInteger(body.adultAllowance))

@@ -3,6 +3,15 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 
+import {
+  featureLabel,
+  TIER_CHOICES,
+  tierChangeBlocked,
+  tierRuleExplanation,
+  tierSavedMessage,
+  type PlanTier,
+} from '@/lib/plan-features';
+
 type PriceView = {
   id: string;
   amount_minor: number;
@@ -39,6 +48,12 @@ export type PlanView = {
   plan_versions: VersionView[];
 };
 export type SubjectView = { id: string; code: string; name: string };
+/** Which shelf a feature needs, with the Basic plans that would block a raise. */
+export type FeatureRuleView = {
+  featureCode: string;
+  minTier: 'basic' | 'plus';
+  blockingPlans: string | null;
+};
 
 type PlanAction =
   | 'create_plan'
@@ -46,6 +61,7 @@ type PlanAction =
   | 'add_entitlement'
   | 'set_price'
   | 'set_plan_tier'
+  | 'set_feature_requirement'
   | 'remove_entitlement'
   | 'activate_version';
 
@@ -58,10 +74,12 @@ export function PlanManager({
   plans,
   featureCodes,
   subjects,
+  featureRules,
 }: {
   plans: PlanView[];
   featureCodes: string[];
   subjects: SubjectView[];
+  featureRules: FeatureRuleView[];
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -105,6 +123,12 @@ export function PlanManager({
       payload = { ...payload, entitlementId: value(data, 'entitlementId') };
     } else if (action === 'set_plan_tier') {
       payload = { ...payload, planId: value(data, 'planId'), tier: value(data, 'tier') };
+    } else if (action === 'set_feature_requirement') {
+      payload = {
+        ...payload,
+        featureCode: value(data, 'featureCode'),
+        minTier: value(data, 'minTier'),
+      };
     } else if (action === 'set_price') {
       payload = {
         ...payload,
@@ -121,10 +145,24 @@ export function PlanManager({
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    const result = (await response.json().catch(() => null)) as { ok?: boolean; message?: string } | null;
+    const result = (await response.json().catch(() => null)) as
+      | { ok?: boolean; message?: string; data?: { changed?: boolean } }
+      | null;
     if (!response.ok || result?.ok !== true) {
       setMessage(result?.message ?? 'The plan change could not be saved.');
       return;
+    }
+    if (action === 'set_feature_requirement') {
+      // The shelf change has its own sentence, because "Saved" does not tell
+      // anybody which way the rule moved — and for the feature that gates
+      // downloads, that is the whole point of the change.
+      setMessage(
+        tierSavedMessage({
+          featureCode: String(payload.featureCode ?? ''),
+          minTier: (payload.minTier === 'plus' ? 'plus' : 'basic') as PlanTier,
+          changed: result?.data?.changed !== false,
+        }),
+      );
     }
     setSaved(true);
     form.reset();
@@ -133,6 +171,57 @@ export function PlanManager({
 
   return (
     <>
+      {/*
+        Which shelf each feature needs. This used to be a CASE statement in SQL,
+        so the answer to "what is in the VIP package?" needed a developer. It is
+        the owner's decision, so it is a form.
+      */}
+      <div className="card" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
+        <h2 style={{ marginTop: 0 }}>Which features need Plus</h2>
+        <p className="muted">
+          The shelf is a real gate: a Basic plan cannot be given a feature that
+          needs Plus. Moving one <em>down</em> is always allowed; moving one
+          <em> up</em> is refused while a Basic plan still grants it, because the
+          catalogue would say Plus-only while that plan kept handing it out.
+        </p>
+
+        {featureRules.length === 0 ? (
+          <p className="empty">No sellable features yet.</p>
+        ) : featureRules.map((rule) => {
+          const blocked = tierChangeBlocked(rule, 'plus');
+          return (
+            <form
+              key={rule.featureCode}
+              onSubmit={(event) => submit(event, 'set_feature_requirement')}
+              className="row"
+              style={{ alignItems: 'end', flexWrap: 'wrap', gap: '0.75rem' }}
+            >
+              <input type="hidden" name="featureCode" value={rule.featureCode} />
+              <div style={{ minWidth: '14rem' }}>
+                <strong>{featureLabel(rule.featureCode)}</strong>
+                <div className="muted" style={{ fontSize: '0.85rem' }}>
+                  {tierRuleExplanation(rule)}
+                </div>
+                {blocked && (
+                  <div className="notice" style={{ marginTop: '0.5rem', fontSize: '0.85rem' }}>
+                    {blocked}
+                  </div>
+                )}
+              </div>
+              <label>
+                Needs at least
+                <select name="minTier" defaultValue={rule.minTier}>
+                  {TIER_CHOICES.map((choice) => (
+                    <option key={choice.value} value={choice.value}>{choice.label}</option>
+                  ))}
+                </select>
+              </label>
+              <button className="btn ghost" disabled={pending}>Save shelf</button>
+            </form>
+          );
+        })}
+      </div>
+
       <div className="card" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
         <h2>Create a plan</h2>
         <p className="muted">A plan is a stable public identity. Terms and prices belong to versioned terms below.</p>
@@ -148,8 +237,8 @@ export function PlanManager({
             </select>
           </label>
           <p className="muted" style={{ fontSize: '0.85rem' }}>
-            Downloads are a Plus feature: a Basic plan cannot be given them, so a plan that
-            should carry them has to be created (or moved) here.
+            Downloads need a Plus plan today, and a Basic plan cannot be given them. Which
+            shelf a feature needs is the panel above, so that rule can move without a deploy.
           </p>
           <button className="btn" disabled={pending}>Create draft plan</button>
         </form>
