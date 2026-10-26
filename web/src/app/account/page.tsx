@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { ClaimLearner } from '@/components/claim-learner';
 import { ProfileForm } from './profile-form';
+import { PhoneForm } from './phone-form';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +14,8 @@ export default async function AccountPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/sign-in?next=/account');
 
-  const [{ data, error }, { data: learnerRows }, { data: methodsData }, { data: badgeData }] = await Promise.all([
+  const [{ data, error }, { data: learnerRows }, { data: methodsData }, { data: badgeData },
+         { data: phoneData }] = await Promise.all([
     supabase
       .from('user_profiles')
       .select('display_name, preferred_language, timezone, account_status')
@@ -33,6 +35,10 @@ export default async function AccountPage() {
     // already opens when they want to change something about their account self.
     // A failure here must not take the settings page down with it.
     supabase.rpc('notification_badge'),
+    // Whether the platform collects phone numbers at all, and the one it has.
+    // A flag that is off means no card: an empty field for a feature nobody
+    // switched on is an invitation to type into a dead form.
+    supabase.rpc('my_phone'),
   ]);
   if (error) throw new Error(error.message);
   if (!data) redirect('/learn');
@@ -45,6 +51,11 @@ export default async function AccountPage() {
   const ownLearner =
     ((learnerRows ?? []) as { id: string; display_name: string; family_id: string | null }[])[0] ?? null;
   const unread = typeof badgeData === 'number' ? badgeData : 0;
+  const phone = (phoneData ?? null) as {
+    enabled?: boolean;
+    phoneE164?: string | null;
+    phoneCountry?: string | null;
+  } | null;
   const methods = (methodsData ?? null) as {
     providers: string[];
     hasPassword: boolean;
@@ -105,6 +116,13 @@ export default async function AccountPage() {
         preferredLanguage: profile.preferred_language,
         timezone: profile.timezone,
       }} />
+      {phone?.enabled === true && (
+        <PhoneForm
+          initialPhone={phone.phoneE164 ?? null}
+          initialCountry={phone.phoneCountry ?? null}
+        />
+      )}
+
       <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
         <h2 style={{ marginTop: 0 }}>How you sign in</h2>
         <p className="muted">

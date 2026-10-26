@@ -4393,3 +4393,41 @@ lesson opened) and has nothing to do with a sale. Revenue is recorded by the
 purchase path. Reading it is gated on `finance_admin` or `platform_admin` in the
 database, the same pair every money screen uses — a teacher's view of their own
 work is `/teach/earnings`, and no teacher may read the platform's whole book.
+
+## A phone number is stored as one string, and formatting is a display concern — **DECIDED 2026-10-26**
+
+The platform had no phone number of its own. `auth.users.phone` holds whatever
+the sign-in provider took, in whatever notation was typed, and nothing else knew
+about it. That is fine while nothing calls anybody and fatal the moment anything
+does: an SMS provider routes E.164 or nothing, and two spellings of one number are
+two people.
+
+So there is now **one stored form**: `+256772123456`, in
+`user_contact_details.phone_e164`, with the country it was entered under beside
+it. `normalise_phone_number()` is the only way in: it accepts a national number
+with or without the trunk prefix, `+` or `00`, spaces, dashes, dots and brackets,
+and a number pasted without its `+` when reading it that way gives a length the
+country actually has. It refuses everything else with a sentence — a number one
+digit short says so, and a number that says `+44` under a chosen Uganda is refused
+with **both** codes named rather than filed under Uganda and displayed wrongly
+later. A BEFORE trigger re-normalises every row, so a writer that forgets the
+function cannot store a number the rest of the platform cannot dial.
+
+The country table is **generated, not typed**: 245 countries from libphonenumber's
+metadata, each with its dial code, its national digit range and the trunk prefix
+it writes but never dials. The generator is `scripts/generate-phone-data.mjs` and
+the output is checked in, so the build has no new dependency and the data has a
+provenance. Italy is the reason the trunk prefix is per country rather than "strip
+a leading 0": there the zero is part of the number, its row carries no prefix, and
+a test says so.
+
+Formatting lives in `web/src/lib/phone.ts` and never touches what is stored. The
+grouping comes from the metadata where it is unambiguous and falls back to even
+groups of three where it is not; the account screen shows the E.164 value beside
+the friendly one so nobody has to trust the spacing.
+
+**What this does not do.** Nothing sends an SMS. The provider is still the first
+external blocker, so the card on `/account` says the number is how staff reach you
+and the address the platform will message when it can. A number stored before the
+switch is turned off is still returned to its owner — hiding it would not remove
+it — and the flag gates writing, not reading.
