@@ -2301,6 +2301,27 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### Nobody could find this site, 2026-10-24
+
+No `robots.txt`, no `sitemap.xml` — so a crawler's only guide was links, and the links include every signed-in
+area and every `/api/` route.
+
+`lib/crawl.ts` now owns the rules: four unconditional public pages, four gated ones (`/young` and `/adults`
+redirect while `learning.audience_sections` is off, so a sitemap must not list them), nineteen disallowed
+prefixes. `robots.txt` is a route handler so the text the tests assert on is the text a crawler receives; the
+sitemap is Next's convention reading the same module.
+
+Two indexation rules came out of it. `/verify/<number>` prints a learner's name and was indexable — it is
+`noindex, nofollow` now, and deliberately absent from `robots.txt`, because a disallowed page is never fetched
+and the directive would never be read. And a search result is a query, not a page: `?q=` is `noindex, follow`,
+while a filtered shelf stays indexable under a canonical address that keeps only the parameters that change the
+shelf and never writes `page=1`.
+
+No configured origin means an empty sitemap and no `Sitemap:` line, rather than an address invented from the
+`Host` header. Without a database the sitemap degrades to the static pages instead of returning an error.
+
+`check:repo` #10 resolves all three lists against the real route tree. 17 tests.
+
 ### The muted voice of the site was not readable enough, 2026-10-24
 
 `--muted` measured 3.98:1 on the page background, 4.27 on a card, 4.13 on the tinted card and 3.96 on pale green

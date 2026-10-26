@@ -30,6 +30,9 @@
 //   9. Text that is not readable on the surface behind it. `--muted` measured
 //      3.98:1 on the page background and it is the whole muted voice of the
 //      site; the eye said it was fine.
+//  10. Crawl rules that describe a version of the app that no longer exists: a
+//      sitemap entry for a dead route, a `Disallow` for a renamed one, or a
+//      gated page whose source never reads a flag.
 //
 // Node builtins only, so this runs before `npm ci` and costs nothing.
 
@@ -43,6 +46,31 @@ const problems = [];
 const fail = (check, message) => problems.push(`${check}: ${message}`);
 
 const MIGRATION = /^(\d{14})_([a-z0-9][a-z0-9_]*)\.sql$/;
+
+/**
+ * Every route the App Router serves: `page.tsx` and `route.ts`, with group
+ * folders `(auth)` removed and `[param]` standing for one segment.
+ *
+ * Two checks need this — links must resolve to one, and the crawl rules must
+ * describe real ones — so it is read once here rather than twice slightly
+ * differently.
+ */
+function appRoutes() {
+  const routes = [];
+  const collect = (dir, segments) => {
+    for (const entry of readdirSync(dir)) {
+      const full = join(dir, entry);
+      if (statSync(full).isDirectory()) {
+        const isGroup = entry.startsWith('(') && entry.endsWith(')');
+        collect(full, isGroup ? segments : [...segments, entry.startsWith('[') ? '*' : entry]);
+      } else if (entry === 'page.tsx' || entry === 'route.ts') {
+        routes.push('/' + segments.join('/'));
+      }
+    }
+  };
+  collect(join(root, 'web', 'src', 'app'), []);
+  return routes;
+}
 
 // ---------------------------------------------------------------------------
 // 1. Migrations are named so their order is not ambiguous
@@ -240,20 +268,7 @@ const MIGRATION = /^(\d{14})_([a-z0-9][a-z0-9_]*)\.sql$/;
 // because their target is not knowable here; `redirect()`, `router.push()` and
 // `router.replace()` count as links, since they navigate the same way.
 {
-  const appDir = join(root, 'web', 'src', 'app');
-  const routes = [];
-  const collect = (dir, segments) => {
-    for (const entry of readdirSync(dir)) {
-      const full = join(dir, entry);
-      if (statSync(full).isDirectory()) {
-        const isGroup = entry.startsWith('(') && entry.endsWith(')');
-        collect(full, isGroup ? segments : [...segments, entry.startsWith('[') ? '*' : entry]);
-      } else if (entry === 'page.tsx' || entry === 'route.ts') {
-        routes.push('/' + segments.join('/'));
-      }
-    }
-  };
-  collect(appDir, []);
+  const routes = appRoutes();
 
   const resolves = (href) => routes.some((route) => {
     if (route === href) return true;
@@ -492,6 +507,104 @@ const MIGRATION = /^(\d{14})_([a-z0-9][a-z0-9_]*)\.sql$/;
   }
   process.stdout.write(
     `contrast: ${PAIRS.length} pairs, lowest ${lowest.ratio.toFixed(2)}:1 (${lowest.pair})\n`,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 10. The crawl rules describe the app that exists
+// ---------------------------------------------------------------------------
+// `robots.txt` and `sitemap.xml` are written from two lists in
+// `web/src/lib/crawl.ts`, and a list is a claim about the application. Every
+// failure this check looks for has the same shape: the rules keep describing
+// yesterday.
+//
+//   - a sitemap entry for a path that is no longer a route, so a crawler is
+//     sent to a 404 and reports the sitemap as broken;
+//   - a `Disallow` for a path that no longer exists, so a rename leaves a rule
+//     that protects nothing and the new name is crawlable;
+//   - a gated route whose page never reads a flag, so the page is either always
+//     there or never, and the sitemap's conditional is a fiction;
+//   - a public page that is also disallowed, which is a contradiction a crawler
+//     resolves by doing whatever it likes.
+//
+// The lists are read out of the TypeScript source rather than imported, so this
+// stays a builtins-only script that runs before `npm ci`.
+{
+  const crawlPath = join(root, 'web', 'src', 'lib', 'crawl.ts');
+  const crawl = readFileSync(crawlPath, 'utf8');
+  const routes = appRoutes();
+
+  const block = (name) => {
+    const start = crawl.indexOf(`export const ${name}`);
+    if (start === -1) return '';
+    const end = crawl.indexOf('];', start);
+    return end === -1 ? '' : crawl.slice(start, end);
+  };
+
+  const publicBlock = block('PUBLIC_ROUTES');
+  const gatedBlock = block('GATED_ROUTES');
+  const disallowedBlock = block('DISALLOWED_PREFIXES');
+
+  const publicPaths = [...publicBlock.matchAll(/path:\s*'([^']+)'/g)].map((m) => m[1]);
+  const gated = [...gatedBlock.matchAll(/path:\s*'([^']+)'[^}]*?flag:\s*'([^']+)'/gs)].map((m) => ({
+    path: m[1],
+    flag: m[2],
+  }));
+  const disallowed = [...disallowedBlock.matchAll(/'(\/[^']*)'/g)].map((m) => m[1]);
+
+  // A parse that finds nothing is a check that passes for the wrong reason.
+  if (publicPaths.length === 0) fail('crawl', 'no public routes were read out of lib/crawl.ts');
+  if (disallowed.length === 0) fail('crawl', 'no disallowed prefixes were read out of lib/crawl.ts');
+
+  const serves = (path) =>
+    routes.some((route) => {
+      if (route === path) return true;
+      const want = route.split('/');
+      const have = path.split('/');
+      if (want.length !== have.length) return false;
+      return want.every((segment, i) => segment === '*' || segment === have[i]);
+    });
+
+  for (const path of publicPaths) {
+    if (!serves(path)) fail('crawl', `the sitemap lists ${path}, which is not a route`);
+    if (disallowed.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))) {
+      fail('crawl', `${path} is listed as public and as disallowed`);
+    }
+  }
+
+  for (const route of gated) {
+    if (!serves(route.path)) {
+      fail('crawl', `the sitemap gates ${route.path}, which is not a route`);
+      continue;
+    }
+
+    // The page must actually consult a flag; otherwise the gating is a claim
+    // about a switch nobody reads.
+    const file = join(root, 'web', 'src', 'app', route.path.replace(/^\//, ''), 'page.tsx');
+    let source = '';
+    try {
+      source = readFileSync(file, 'utf8');
+    } catch {
+      fail('crawl', `${route.path} has no page.tsx to check its flag against`);
+      continue;
+    }
+    if (!/isFlagEnabled|setting_bool/.test(source)) {
+      fail('crawl', `${route.path} is gated in the sitemap but its page never reads a flag`);
+    }
+    if (!source.includes(route.flag) && !/isFlagEnabled\([^)]*\)/.test(source)) {
+      fail('crawl', `${route.path} is gated on ${route.flag}, which its page does not mention`);
+    }
+  }
+
+  for (const prefix of disallowed) {
+    const covers = routes.some((route) =>
+      prefix.endsWith('/') ? route.startsWith(prefix) : route === prefix || route.startsWith(`${prefix}/`),
+    );
+    if (!covers) fail('crawl', `robots.txt disallows ${prefix}, which is not a route any more`);
+  }
+
+  process.stdout.write(
+    `crawl: ${publicPaths.length} public, ${gated.length} gated, ${disallowed.length} disallowed, all real\n`,
   );
 }
 

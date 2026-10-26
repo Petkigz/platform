@@ -70,8 +70,8 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 The database stands at **119 tables, RLS on every one, 243 policies, 146
 user-defined triggers, 376 functions and 161 migrations.** The database suite
-passes **1648 tests**; the web suite passes **1043 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **166 app route entries** (89 pages, 77 API routes).
+passes **1648 tests**; the web suite passes **1060 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **167 app route entries** (89 pages, 78 API routes).
 
 Every class a screen asks for is defined. The stylesheet had been missing `.page`, `.page-head` and
 `.crumbs` while twenty-five to twenty-eight screens used them — and `.narrow`, which meant a 26rem
@@ -115,6 +115,13 @@ Text colour is measured, not eyeballed: `check:repo` #9 reads the design tokens
 and computes WCAG contrast over the twenty pairs the stylesheet composes. It
 found `--muted` at 3.98:1 on the page background — the whole muted voice of the
 site, under the 4.5 AA asks of normal text. It is 5.00:1 now.
+
+Crawlers have rules: `robots.txt` disallows the nineteen signed-in prefixes,
+`sitemap.xml` lists only pages that exist right now — a gated page is listed
+only while its switch is on, because `/young` redirects while
+`learning.audience_sections` is off. A search result is `noindex, follow`; a
+filtered shelf is indexable under a canonical address; and `/verify/<number>`,
+which prints a learner's name, is `noindex, nofollow`.
 
 Signing up produces a usable account: a trigger on `auth.users` creates the
 `user_profiles` row that every foreign key in the schema depends on. `/account`

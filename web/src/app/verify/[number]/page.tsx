@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
@@ -6,6 +7,26 @@ import { verifyCertificate } from '@/lib/certificates';
 import { normaliseCertificateNumber } from '@/lib/certificate-number';
 
 export const dynamic = 'force-dynamic';
+
+/**
+ * Not indexed, and not followed.
+ *
+ * This page prints the holder's name, the course and the date. It is public on
+ * purpose — the certificate number is the capability, and an employer holding a
+ * certificate must be able to check it without an account — but "anybody with
+ * the number may look" is a different promise from "a search engine may keep a
+ * copy". A learner's name does not belong in an index because a link to their
+ * certificate was pasted into a group chat.
+ *
+ * `noindex` rather than a `Disallow` in robots.txt: a disallowed URL is never
+ * fetched, so the directive would never be read, and an employer's link checker
+ * would be blocked for no benefit. The number is unguessable, so nothing here
+ * is exposed by being crawlable — it is exposed by being *kept*.
+ */
+export const metadata: Metadata = {
+  title: 'Certificate verification',
+  robots: { index: false, follow: false },
+};
 
 /**
  * Public certificate verification.

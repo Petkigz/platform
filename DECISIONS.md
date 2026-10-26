@@ -2528,6 +2528,64 @@ for both — a warning that fires on missing data is a warning people learn to i
 whether a teacher should be told that a learner outside the band has joined. Both are policy; both would
 need the owner.
 
+## Nobody could find this site — **DECIDED 2026-10-24**
+
+There was no `robots.txt` and no `sitemap.xml`. A search engine had nothing but links to follow, and the links
+include `/admin`, `/learn`, `/teach`, `/account`, `/orders` and `/api/…` — every one of which redirects to
+sign-in, and every one of which is crawled before the redirect is discovered. For a site with no inbound links,
+"not in the index" is the difference between existing and not existing.
+
+**Three distinctions decide everything below, and they are not interchangeable.**
+
+`robots.txt` stops a crawler *requesting* a URL. It does not stop a URL being *indexed* if it is found another
+way. A `noindex` meta tag stops it being kept, but only if the page is fetched — which a `Disallow` prevents.
+So the private surfaces get a `Disallow`; the one public page that must not be kept gets a `noindex`; and where
+both matter, both are used.
+
+**The verification page prints a learner's name, and it was indexable.** `/verify/<number>` is public on
+purpose — the number is the capability, and an employer holding a certificate must be able to check it without
+an account. But "anybody with the number may look" is a different promise from "a search engine may keep a
+copy". It now sends `noindex, nofollow`. It is deliberately **not** in `robots.txt`: a disallowed URL is never
+fetched, so the directive would never be read, and an employer's own link checker would be blocked for no
+benefit. The number is unguessable, so nothing is exposed by being crawlable — the exposure is in being kept.
+
+**A search result is a query, not a page.** `?q=anything` is an unbounded set of addresses a crawler can
+generate for itself, each holding a thin and different list. Those are `noindex, follow` — not indexed, links
+still followed, so a course found through a search is still discoverable. A *filtered* shelf (`?subject=quran`)
+is a real landing page and stays indexable, but under a canonical address that keeps only the parameters that
+change what is on the shelf, in a fixed order, never writing `page=1` — the same rule `pageHref()` already
+applies to the links, so the canonical and the pager cannot disagree about what page one is called.
+
+**A sitemap is a promise, so it never lists a redirect.** `/young` and `/adults` redirect to the catalogue while
+`learning.audience_sections` is off. `GATED_ROUTES` carries the flag each optional page depends on, and the
+sitemap includes them only when the switch is on — otherwise a crawler follows the entry, lands somewhere else,
+and reports the listed address as "page with redirect". `/plans` and `/paths` do not redirect but say "not open
+yet" with their switches off, which is true and useful to a reader and worthless in an index; they are gated the
+same way.
+
+**No origin, no sitemap.** Every URL in one must be absolute. Inventing an origin from the `Host` header would
+publish a sitemap pointing wherever the requester typed — the defect the printed certificate already avoids.
+With no `NEXT_PUBLIC_SITE_URL` the sitemap is empty (a valid file that claims nothing), `robots.txt` omits its
+`Sitemap:` line rather than writing a relative one, and `metadataBase` is absent so no `og:image` is emitted.
+
+**It degrades instead of failing.** No Supabase, a timeout, a function that has moved — each produces the static
+pages rather than a 500. A sitemap that throws is worse than a short one: a crawler that gets an error gives up
+on the whole file, including the parts that were fine.
+
+**`robots.txt` is a route handler, not Next's `robots.ts` convention.** The rules live in `lib/crawl.ts` and
+`robotsTxt()` renders them, and the tests assert on the text a crawler actually receives. The typed convention
+would mean writing the same list a second time as data and trusting the two to agree.
+
+**`check:repo` #10 keeps the lists honest.** They are a claim about the application, and they keep describing
+yesterday: a sitemap entry for a renamed route, a `Disallow` protecting a page that no longer exists, a gated
+route whose page never reads a flag, a page that is both public and disallowed. The check reads the three lists
+out of `crawl.ts` and resolves them against the real route tree. Verified by renaming `/about` to `/about-us` and
+adding a `/helpdesk` disallow — both were caught, both were undone.
+
+**Not done here:** structured data (`Course`, `Organization` JSON-LD) — worth doing when there are courses and a
+review policy to describe; `hreflang`, which belongs with `learning.multi_language`; and a sitemap index, which
+would be dead weight before the catalogue holds five thousand courses.
+
 ## The muted voice of the site was not readable enough — **DECIDED 2026-10-24**
 
 `--muted` was `#6b7f75`. Measured against the surfaces it is actually used on, it is **3.98:1 on the page

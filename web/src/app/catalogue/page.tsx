@@ -10,6 +10,7 @@ import { countryFromHeaders } from '@/lib/geo';
 import { fetchCourseCards } from '@/lib/catalogue-cards';
 import { fetchCataloguePage } from '@/lib/catalogue';
 import { offsetFor, pageNumber, PAGE_SIZE } from '@/lib/paging';
+import { canonicalCataloguePath } from '@/lib/crawl';
 import { CourseShelfCard } from '../_shared/course-shelf-card';
 import { ShelfPager } from '../_shared/shelf-pager';
 import {
@@ -24,10 +25,41 @@ import {
   type CatalogueCourse,
 } from '@/lib/catalogue';
 
-export const metadata: Metadata = { title: 'Catalogue' };
 export const dynamic = 'force-dynamic';
 
 type Search = { q?: string; subject?: string; audience?: string; page?: string };
+
+/**
+ * What a crawler is told about this page, and under which address.
+ *
+ * Two rules, and both matter more than they look.
+ *
+ * **A search result is a query, not a page.** `?q=anything` is an unbounded set
+ * of addresses a crawler can generate for itself, each with a thin, different
+ * list on it. Those are not indexed; the links inside them are still followed,
+ * so a course reached through a search is still discoverable.
+ *
+ * **A filtered shelf is a page.** `?subject=quran` is a real, useful landing
+ * page and stays indexable — but under a canonical address that keeps only the
+ * parameters that change the shelf. `?subject=quran&utm_source=whatsapp` and
+ * `?subject=quran` are the same shelf, and one of them is what the index
+ * should hold. `page=1` is the plain catalogue, because `pageHref()` already
+ * refuses to write it.
+ */
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<Search>;
+}): Promise<Metadata> {
+  const { q, subject, audience, page } = await searchParams;
+  const searching = typeof q === 'string' && q.trim().length > 0;
+
+  return {
+    title: searching ? `Search: ${q.trim().slice(0, 60)}` : 'Catalogue',
+    alternates: { canonical: canonicalCataloguePath({ q, subject, audience, page }) },
+    ...(searching ? { robots: { index: false, follow: true } } : {}),
+  };
+}
 
 export default async function CataloguePage({
   searchParams,
