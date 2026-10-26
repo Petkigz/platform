@@ -2301,6 +2301,21 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### A lesson had no next one, 2026-10-24
+
+The foot of a lesson offered one button — "Back to course" — so finishing lesson three of forty meant going back
+to the list to find lesson four.
+
+`lib/outline.ts` flattens a course into its reading order (sections by position, lessons inside each, ties broken
+by id so the answer is stable) and `lessonNeighbours()` returns the pair plus "Lesson 3 of 4". `fetchOutline()`
+reads the enrolment's pinned version and is only called for a reader who may open the lessons, so a preview
+viewer is never pointed at a lesson the database refuses.
+
+`LessonNav` names the lessons rather than saying "Next", and falls back to "Course contents" and "Back to
+course" at the ends so the row always has two working buttons. Ten tests; the edges are the cross-section
+neighbour, the single-lesson course, the untitled lesson that must keep its place, and the lesson that is not in
+the outline.
+
 ### The front door greeted a member like a visitor, 2026-10-24
 
 The landing page offered "Create a free account" twice to everybody — including a learner who had just signed in.

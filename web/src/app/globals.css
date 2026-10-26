@@ -861,6 +861,55 @@ footer a { color: var(--text-soft); }
 }
 
 /* --------------------------------------------------------------------------
+   Lesson navigation
+   --------------------------------------------------------------------------
+   Two buttons and a counter. The buttons carry lesson titles, which can be
+   long, so the label truncates rather than wrapping the row onto three lines;
+   the title is also in the link's accessible name in full. */
+.lesson-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem 1rem;
+  margin-top: 1rem;
+}
+.lesson-nav-side { display: flex; min-width: 0; }
+.lesson-nav-right { justify-content: flex-end; }
+.lesson-nav .btn {
+  display: inline-flex;
+  width: auto;
+  max-width: 100%;
+  margin: 0;
+  gap: 0.45rem;
+  align-items: center;
+}
+.lesson-nav-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.lesson-nav-dir { flex: none; }
+.lesson-nav-at {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* On a phone the counter goes between the two buttons on its own line rather
+   than squeezing a title to two letters. */
+@media (max-width: 40rem) {
+  .lesson-nav { justify-content: stretch; }
+  .lesson-nav-side { flex: 1 1 100%; }
+  .lesson-nav-right { justify-content: flex-end; }
+  .lesson-nav .btn { width: 100%; justify-content: center; }
+  .lesson-nav-at { order: 2; width: 100%; text-align: center; }
+}
+
+/* --------------------------------------------------------------------------
    Progress
    -------------------------------------------------------------------------- */
 

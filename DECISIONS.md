@@ -2528,6 +2528,46 @@ for both — a warning that fires on missing data is a warning people learn to i
 whether a teacher should be told that a learner outside the band has joined. Both are policy; both would
 need the owner.
 
+## A lesson had no next one — **DECIDED 2026-10-24**
+
+At the foot of a lesson there was one button: "Back to course". A learner who finished lesson three of forty
+returned to the course page, found the list, scrolled to lesson four and clicked it — on a phone, on a metered
+connection, which is the shape of most of this product's use. Every other decision here has been about honesty
+in small print; this one is about the loop the product exists for.
+
+**The hard part is the order, so the order is a module.** A course is sections, and lessons inside sections, each
+with its own `position`. The next lesson is the next in that flat reading order — not the next in the section,
+not the next by id — and the two position columns have to be combined. `flattenOutline()` sorts sections, then
+lessons inside each, and breaks a tie by id so the same course offers the same next lesson on every request;
+without that, PostgREST's row order is the order, and "next" becomes a fact about a query plan.
+`lessonNeighbours()` returns the pair plus a one-based index. Ten tests, and the ones that matter are the edges:
+the last lesson of a section has a next in the following section, a single-lesson course has neither neighbour,
+an untitled lesson keeps its place in the order instead of being dropped, and a lesson that is not in the
+outline gets no neighbours rather than a neighbour picked from a list that does not contain it.
+
+**It reads the pinned version, and only for a reader who may open the lessons.** `fetchOutline()` is scoped by
+`course_version_id` — the same version `fetchLesson()` has just confirmed the lesson belongs to — because a
+learner on v1 must not be pointed at a v2 lesson they cannot open. It is only called when `canAccessLesson()`
+says yes: a preview viewer is entitled to a handful of previews, and a "next" for them would walk into a lesson
+the database refuses.
+
+**The button names the lesson.** "Next: Wudu in practice →" tells a learner what is coming; "Next" pushes them
+through. The previous button names its lesson too, because somebody who clicked Next by mistake needs to
+recognise where they were. When there is no previous lesson the left button becomes "Course contents", and when
+there is no next the right one becomes "Back to course" — so the row always has two working buttons and never a
+dead one.
+
+**The counter is text, not a control.** "Lesson 3 of 4" sits between the buttons as plain tabular figures; on a
+phone it takes its own line instead of squeezing two titles into two letters.
+
+**A failed outline read loses the navigation, not the lesson.** `fetchOutline()` returns an empty list on error
+rather than throwing: the page already has the video, the thread and the sources on it, and a convenience that
+fails should be absent rather than fatal.
+
+**Not done here:** the course page's lesson list still does not mark which lesson you last opened, which is the
+other half of "carry on where you stopped". Progress and resume positions exist per lesson; what is missing is
+the one-line answer above the list.
+
 ## The front door greeted a member like a visitor — **DECIDED 2026-10-24**
 
 The landing page offered "Create a free account" to everybody, twice: in the hero and again in the closing call.

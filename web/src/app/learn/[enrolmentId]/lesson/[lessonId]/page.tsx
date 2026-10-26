@@ -24,6 +24,9 @@ import { fetchAssessmentsForVersion, fetchQuestions } from '@/lib/assessment';
 import { practiceForLesson } from '@/lib/practice';
 import { PracticeCheck, type PracticeItem } from './practice-check';
 import { recordEvent } from '@/lib/analytics-server';
+import { fetchOutline } from '@/lib/outline-query';
+import { lessonNeighbours } from '@/lib/outline';
+import { LessonNav } from '@/app/_shared/lesson-nav';
 
 export const dynamic = 'force-dynamic';
 
@@ -120,6 +123,16 @@ export default async function LessonPage({
     enrolment.learner_profile_id,
     lesson.id,
   );
+
+  // Where this lesson sits in the course, for the two buttons at the foot of
+  // the page. Read from the version the enrolment is pinned to — the same
+  // version `fetchLesson()` just checked the lesson belongs to — because a
+  // learner on v1 must not be told the next lesson is a v2 lesson they cannot
+  // open. Only asked when the reader may open the lessons at all: a preview
+  // viewer sees a handful of them, and offering "next" would walk them into one
+  // they are not entitled to.
+  const steps = entitled ? await fetchOutline(supabase, lesson.courseVersionId) : [];
+  const here = lessonNeighbours(steps, lesson.id);
 
   // An opened lesson, recorded against the learner it was opened for — not the
   // adult who is signed in, who may be a parent looking at a child's work. This
@@ -389,7 +402,7 @@ export default async function LessonPage({
               lessonId={lesson.id}
               initiallyDone={false}
             />
-            <Link className="btn" href={`/learn/${enrolmentId}`}>
+            <Link className="btn secondary" href={`/learn/${enrolmentId}`}>
               Back to course
             </Link>
           </div>
@@ -397,10 +410,22 @@ export default async function LessonPage({
       )}
 
       {entitled && done && (
-        <p className="muted">
-          Marked complete.{' '}
-          <Link href={`/learn/${enrolmentId}`}>Back to course</Link>
+        <p className="muted" style={{ marginBottom: 0 }}>
+          Marked complete.
         </p>
+      )}
+
+      {/* The one thing a player must do is continue. A learner who has just
+          finished lesson three of forty should not have to go back to a list to
+          find lesson four. */}
+      {entitled && steps.length > 0 && (
+        <LessonNav
+          enrolmentId={enrolmentId}
+          previous={here.previous}
+          next={here.next}
+          index={here.index}
+          total={here.total}
+        />
       )}
 
       {/*
