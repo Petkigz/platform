@@ -2301,6 +2301,19 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### The front door greeted a member like a visitor, 2026-10-24
+
+The landing page offered "Create a free account" twice to everybody — including a learner who had just signed in.
+The masthead had the same defect and was fixed first; this is the page everybody sees first.
+
+The landing page is already `force-dynamic` and already reads the database, so `getUser()` joined the existing
+`Promise.all` and the correct button is in the server's HTML. `frontDoorCta()` and `closingCopy()` live in
+`lib/session.ts`: a signed-in reader gets "Continue learning" and a sentence about their own enrolments rather
+than an invitation to join. Both branches were rendered with the session forced present and absent, then
+reverted.
+
+About keeps its "Create a free account" on purpose — it is a brochure for strangers and stays static.
+
 ### Nobody could find this site, 2026-10-24
 
 No `robots.txt`, no `sitemap.xml` — so a crawler's only guide was links, and the links include every signed-in

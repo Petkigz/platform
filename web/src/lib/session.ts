@@ -84,3 +84,42 @@ export function mastheadActions(session: SessionSummary): MastheadAction[] {
 export function accountLabel(session: SessionSummary): string {
   return session.name ? `Your area — signed in as ${session.name}` : 'Your area';
 }
+
+export type CallToAction = { label: string; href: string };
+
+/**
+ * The second button on the front door.
+ *
+ * The landing page offered "Create a free account" to everybody, including
+ * somebody who had just signed in — the same defect the masthead had, on the
+ * busier surface. The hero is not the masthead: it is a page that already reads
+ * the database, so it can read the session while it is there rather than asking
+ * afterwards, and a signed-in reader gets the door to their own work.
+ *
+ * `/learn` rather than `/dashboard`: the dashboard is a redirector that chooses
+ * a destination, and a button that goes through a redirect to reach a known
+ * place is one hop more than it needs to be.
+ */
+export function frontDoorCta(signedIn: boolean): CallToAction {
+  return signedIn
+    ? { label: 'Continue learning', href: '/learn' }
+    : { label: 'Create a free account', href: '/sign-up' };
+}
+
+/**
+ * The sentence above the closing button, which was also written for a stranger.
+ *
+ * "Create an account when you find one you want to keep" is an instruction to
+ * somebody who has already done it. The signed-in version says what is actually
+ * true for them — their enrolments, progress and certificates are already in
+ * one place — and it is a different sentence rather than the same one with a
+ * word changed, because a front door that greets a member like a visitor is
+ * how a product feels like a brochure.
+ */
+export function closingCopy(signedIn: boolean): string {
+  return signedIn
+    ? 'Every published course is listed with what it contains and who teaches it. ' +
+        'Your enrolments, progress and certificates are in one place.'
+    : 'Every published course is listed with what it contains and who teaches it. ' +
+        'Create an account when you find one you want to keep.';
+}

@@ -1,7 +1,14 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { accountLabel, firstName, mastheadActions, parseSession } from './session.ts';
+import {
+  accountLabel,
+  closingCopy,
+  firstName,
+  frontDoorCta,
+  mastheadActions,
+  parseSession,
+} from './session.ts';
 
 test('anything that is not a session is nobody', () => {
   for (const junk of [null, undefined, '', 'signed in', 42, [], {}, { signedIn: 'true' }, { signedIn: 1 }]) {
@@ -56,4 +63,24 @@ test('signing out is a POST, because the route refuses GET', () => {
 test('the accessible name says who is signed in when it is known', () => {
   assert.equal(accountLabel({ signedIn: true, name: 'Amina' }), 'Your area — signed in as Amina');
   assert.equal(accountLabel({ signedIn: true, name: null }), 'Your area');
+});
+
+test('the front door stops offering sign-up to somebody who signed up', () => {
+  assert.equal(frontDoorCta(false).href, '/sign-up');
+  assert.equal(frontDoorCta(true).href, '/learn');
+  assert.notEqual(frontDoorCta(true).href, '/sign-up');
+});
+
+test('the signed-in front door button goes somewhere that exists', () => {
+  assert.equal(frontDoorCta(true).href, '/learn');
+  assert.ok(frontDoorCta(true).label.length > 0);
+});
+
+test('the closing sentence is not the visitor sentence with a word changed', () => {
+  const visitor = closingCopy(false);
+  const member = closingCopy(true);
+
+  assert.match(visitor, /Create an account/);
+  assert.doesNotMatch(member, /Create an account/);
+  assert.notEqual(visitor, member);
 });

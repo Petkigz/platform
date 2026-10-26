@@ -3,6 +3,7 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { createClient } from '@/lib/supabase/server';
 import { disciplines, fetchSubjectAreas } from '@/lib/catalogue';
 import { isFlagEnabled } from '@/lib/flags';
+import { closingCopy, frontDoorCta } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 
@@ -97,13 +98,23 @@ export default async function Home() {
   // `/adults` redirect to the catalogue — so linking to them from the front
   // page would be a link that refuses, which is the one thing a landing page
   // must not do.
-  const [subjects, learningPathsEnabled, doorsOpen] = supabase
+  //
+  // The session is read here too, because this page already reads the database
+  // and the front door must not offer "Create a free account" to somebody who
+  // has just made one. It costs one call beside three that were happening
+  // anyway — which is why the landing page can do this and the About page
+  // cannot: About is static on purpose, and this page is dynamic already.
+  const [subjects, learningPathsEnabled, doorsOpen, user] = supabase
     ? await Promise.all([
         fetchSubjectAreas(supabase).then(disciplines),
         isFlagEnabled(supabase, 'learning.paths').catch(() => false),
         isFlagEnabled(supabase, 'learning.audience_sections').catch(() => false),
+        supabase.auth.getUser().then(({ data }) => data.user).catch(() => null),
       ])
-    : [[], false, false];
+    : [[], false, false, null];
+
+  const signedIn = user !== null;
+  const cta = frontDoorCta(signedIn);
 
   return (
     <>
@@ -120,7 +131,7 @@ export default async function Home() {
 
               <div className="hero-actions">
                 <Link href="/catalogue" className="btn">Browse the catalogue</Link>
-                <Link href="/sign-up" className="btn secondary">Create a free account</Link>
+                <Link href={cta.href} className="btn secondary">{cta.label}</Link>
                 {learningPathsEnabled && (
                   <Link href="/paths" className="btn secondary">Explore learning paths</Link>
                 )}
@@ -245,13 +256,10 @@ export default async function Home() {
       <section className="closing">
         <div className="container">
           <h2>Start with the catalogue.</h2>
-          <p>
-            Every published course is listed with what it contains and who teaches it. Create
-            an account when you find one you want to keep.
-          </p>
+          <p>{closingCopy(signedIn)}</p>
           <div className="actions">
             <Link href="/catalogue" className="btn">Browse the catalogue</Link>
-            <Link href="/sign-up" className="btn secondary">Create a free account</Link>
+            <Link href={cta.href} className="btn secondary">{cta.label}</Link>
           </div>
         </div>
       </section>

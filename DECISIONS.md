@@ -2528,6 +2528,43 @@ for both — a warning that fires on missing data is a warning people learn to i
 whether a teacher should be told that a learner outside the band has joined. Both are policy; both would
 need the owner.
 
+## The front door greeted a member like a visitor — **DECIDED 2026-10-24**
+
+The landing page offered "Create a free account" to everybody, twice: in the hero and again in the closing call.
+Somebody who had just signed in, or who had been using the product for a year, arrived at `/` and was invited to
+join it. The masthead had the same defect and was fixed first, because it is on every page; this is the page
+everybody sees first, which makes it the worse of the two.
+
+**It is fixed on the server, not after hydration.** The landing page is `force-dynamic` and already reads the
+database for the subjects and two flags, so `getUser()` joins that `Promise.all` — one call beside three that
+were happening anyway. The front door renders the right button the first time, with no moment where a member is
+shown a sign-up form that then changes.
+
+**The two paths are different on purpose.** The masthead cannot read the session server-side without making
+every route dynamic — including the About page, whose whole point is that it renders on a deployment with no
+data — so it asks `/api/session` after hydration and starts from the signed-out pair. The landing page has no
+such constraint. Two mechanisms, two reasons, both written down where they are used; the rule is not "ask the
+API", it is "do not make a page dynamic to learn a name you could have been told".
+
+**The copy changed too, not only the link.** "Create an account when you find one you want to keep" is an
+instruction to somebody who has already done it. The signed-in version says what is true for them — their
+enrolments, progress and certificates are already in one place — because a front door that addresses a member
+like a visitor is how a product starts to feel like a brochure. `closingCopy()` and `frontDoorCta()` are in
+`lib/session.ts` so the two branches are tested rather than described, and the test asserts the signed-in button
+never points at `/sign-up`.
+
+**Both branches were rendered, not reasoned about.** With the session forced present the page shows "Continue
+learning" twice and the member sentence; with it absent, "Create a free account" four times (two buttons, each
+appearing again in the RSC payload). The revert was checked afterwards.
+
+**The About page keeps its "Create a free account", deliberately.** It is written for the stranger who arrived
+from a search result or a footer link, it stays static, and the masthead on top of it already tells a member who
+they are. That was an oversight when the masthead was fixed; it is a decision now.
+
+**Not done here:** what a signed-in *teacher* or administrator should get as a second button. `/learn` is right
+for a learner and merely harmless for the others — their work is one click away in the masthead — and choosing
+per role would mean the front door branching on a role list, which is a different screen's job.
+
 ## Nobody could find this site — **DECIDED 2026-10-24**
 
 There was no `robots.txt` and no `sitemap.xml`. A search engine had nothing but links to follow, and the links
