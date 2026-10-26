@@ -2528,6 +2528,47 @@ for both — a warning that fires on missing data is a warning people learn to i
 whether a teacher should be told that a learner outside the band has joined. Both are policy; both would
 need the owner.
 
+## An empty platform said nothing was waiting — **DECIDED 2026-10-24**
+
+The admin home is a queue screen. It calls `staff_attention()` and counts the work waiting inside features that
+already exist. On a fresh deployment every queue reads zero, so the first thing the owner ever saw was:
+
+> **Nothing is waiting.** Every queue you can work was checked, and every one reads zero.
+
+Both sentences are true and the pair is useless. Nothing is waiting *because nothing exists yet*, and the person
+reading it is the one person who could create the first thing. A page that reports no work while the platform is
+empty is not neutral — it reads as done.
+
+**So the page now knows two kinds of nothing.** `emptyQueueLede()` distinguishes *no work* from *no platform*: with
+nothing waiting but steps outstanding it says "Nothing is waiting, because nothing is here yet — the platform
+still needs three things before anybody can study", and with everything in place it falls back to the original
+sentence, which is then accurate.
+
+**The three things are read, not assumed.** `fetchSetupFacts()` counts four things with `head: true` and
+`count: 'exact'` — no rows fetched: active subject areas, courses, published versions, active reviewers. A reviewer
+cannot be active without a verification row (the schema refuses it), so counting active reviewers is the same
+question as counting verified ones.
+
+**The order is a dependency, not a preference.** Reviewer, then a course, then something published: a course cannot
+publish without a verified reviewer for its subject, so a list that began with "publish something" would send the
+owner to a screen whose action refuses. Each step says what it unlocks rather than what it is.
+
+**Subjects are a note, not a step.** Courses are filed under subject areas that arrive from the seed migration, and
+there is no screen that adds one — so a fourth checklist item whose only instruction would be "run SQL" is not a
+step, it is an instruction the reader cannot follow. When there are none the sentence says the deployment has not
+finished migrating instead of inviting an action that does not exist.
+
+**A failed count shows the panel rather than hiding it.** Erring towards "you have none" costs a checklist item
+that turns out to be done; erring the other way reproduces the defect this exists to fix.
+
+**It disappears when the list is empty,** and only the platform admin sees it — they are the only role that can
+create the first reviewer or publish the first course. A support agent shown three things they cannot do is three
+more reasons to believe the page is broken.
+
+**Not done here:** a subject-area admin screen. It is the one first-run step with no surface, and it should exist
+before the platform is handed to anyone who is not comfortable in SQL — but it is a screen, with its own rules
+about renaming a code that courses are already filed under, and it is not this unit.
+
 ## The dashboard did not lead where it said it led — **DECIDED 2026-10-24**
 
 Screen 20 is described in the inventory as *"Adult home, led by 'continue where you stopped'"*. It opened with a

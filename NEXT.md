@@ -2301,6 +2301,19 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### An empty platform said nothing was waiting, 2026-10-24
+
+The admin home counted queue work, so a fresh deployment read "Nothing is waiting. Every queue you can work was
+checked, and every one reads zero" — accurate, and it reads as done when nothing exists yet.
+
+`lib/setup.ts` reads four facts (active subjects, courses, published versions, active reviewers) and names the
+three things missing, in dependency order: a verified reviewer, a course, something published. Each links to the
+screen that does it. The lede now separates *no work* from *no platform*. Subjects are a note rather than a step,
+because they arrive from the seed migration and no screen adds one — and that gap is named as the next thing to
+build.
+
+The panel renders only for the platform admin and disappears when the list is empty. 11 tests.
+
 ### The dashboard did not lead where it said it led, 2026-10-24
 
 Screen 20 is described as "led by continue where you stopped" and it opened with a greeting, live classes and

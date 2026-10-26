@@ -6,6 +6,9 @@ import { fetchFlags, groupFlags } from '@/lib/flags';
 import { FlagToggle } from './flag-toggle';
 import { RevenueShareForm } from './revenue-share-form';
 import { consoleSections, switchboardNotice, type StaffFacts } from '@/lib/admin-console';
+import { emptyQueueLede, outstandingSteps } from '@/lib/setup';
+import { fetchSetupFacts } from './setup-query';
+import { SetupPanel } from './setup-panel';
 
 export const dynamic = 'force-dynamic';
 
@@ -174,6 +177,11 @@ export default async function AdminPage() {
     revenueSharePercent = Number(shareSetting?.value_text ?? 0);
   }
 
+  // Is there anything here yet? Only the platform admin can create the first
+  // reviewer or publish the first course, so only they are shown the list.
+  const setupFacts = sections.switchboard ? await fetchSetupFacts(supabase) : null;
+  const setupSteps = setupFacts ? outstandingSteps(setupFacts) : [];
+
   const on = flags.filter((f) => f.enabled).length;
   const deployGated = flags.filter((f) => f.gateType === 'code').length;
   const setupGated = flags.filter((f) => f.gateType === 'admin_setup').length;
@@ -184,11 +192,16 @@ export default async function AdminPage() {
       <h1>What is waiting</h1>
       <p className="lede">
         {waiting === 0
-          ? 'Nothing is waiting. Every queue you can work was checked, and every one reads zero.'
+          ? (setupFacts && emptyQueueLede(setupFacts))
+            ?? 'Nothing is waiting. Every queue you can work was checked, and every one reads zero.'
           : `${waiting} ${waiting === 1 ? 'thing is' : 'things are'} waiting across ${
               busy.length === 1 ? 'one queue' : `${busy.length} queues`
             }.`}
       </p>
+
+      {setupFacts && (
+        <SetupPanel facts={setupFacts} steps={setupSteps} />
+      )}
 
       {busy.length > 0 ? (
         <div className="grid cols-3" style={{ marginTop: '1.5rem' }}>
