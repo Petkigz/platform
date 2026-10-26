@@ -2528,6 +2528,39 @@ for both — a warning that fires on missing data is a warning people learn to i
 whether a teacher should be told that a learner outside the band has joined. Both are policy; both would
 need the owner.
 
+## A parent could not learn in their own family — **DECIDED 2026-10-24**
+
+A family held children and nothing else. `claim_own_learner_profile()` creates the signed-in adult's own profile
+with `family_id` null, and `add_child_to_family()` writes `learner_type = 'child'` unconditionally — so the adult who
+ran a family account had two disconnected identities: the family with the plan and the seats, and their own learner
+outside it, invisible on /family. The gap showed up in a function that already assumed the other world:
+`allocate_subscription_learner()` has an `'adult'` slot type and the rule *"an adult slot may only be assigned to your
+own learner profile"* — a seat no screen could fill.
+
+**It could not be an update, because the guard is right.** `guard_learner_profile_identity()` freezes `family_id` for
+everybody but staff, and that stops an owner turning a child's profile into an adult linked to an account of their
+choosing. The fix is one exception written in **rows, not intent**, because a trigger cannot see intent: an *adult*
+profile whose `linked_user_id` is the actor may move to `null` or to a family the actor is an active member of.
+`learner_type` and `linked_user_id` stay frozen, a child's `family_id` stays frozen, and a profile still cannot move
+into a family it does not belong to — all four refusals are tested.
+
+**One more condition, in the same guard so it holds on every path:** a profile may not leave a family while it holds
+an active seat on the family plan. Otherwise the family keeps paying for a learner it can no longer see, and the
+allocation row names a person outside it. The screen says this before the click; the refusal is not the first the
+person hears of it.
+
+**Joining moves the profile, never copies it.** Same id, same enrolments, same progress, same certificates — the
+thing an adult with three half-finished courses is actually afraid of. A learner already in another family is refused
+with a sentence rather than silently moved.
+
+**Four states, two buttons.** *No learner yet* and *alone* get the join control; *in this family* gets leave;
+*in another family* gets an explanation and no button. A control that cannot work is a trap, not a safeguard.
+
+The writers are `claim_family_adult_learner()` and `release_family_adult_learner()`, both audited
+(`family.adult_learner_joined` / `_released`), and `/family` reads them back through `family_adult_learners()`, whose
+visibility filter is written out because a definer function reads the table as its owner and RLS does not apply
+inside it. A billing-only member may learn here as themselves and still cannot add a child.
+
 ## The catalogue only ever searched the cover — **DECIDED 2026-10-24**
 
 `search_catalogue()` matches a course's title, its subjects, its teacher and its description. A lesson called

@@ -2301,6 +2301,14 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### A parent could not learn in their own family, 2026-10-24
+
+`claim_family_adult_learner(family)` puts the signed-in adult's own learner profile inside a family they belong to,
+creating it there if they have none and **moving the existing one** — same progress — if it was outside. The identity
+guard learned exactly one exception, for the actor's own adult profile, and now also refuses to let a profile leave a
+family while it holds an active seat on the family plan. `/family` grows a card with four states and two buttons; the
+one state that cannot be joined explains itself instead. 16 database tests and 12 web tests.
+
 ### The catalogue only ever searched the cover, 2026-10-24
 
 `search_lessons()` searches lesson titles and introductions with a weighted GIN index. Titles match for anyone who

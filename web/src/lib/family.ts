@@ -472,3 +472,143 @@ export async function revokeFamilyMembership(
 
   return { ok: true };
 }
+
+// ---------------------------------------------------------------------------
+// An adult learning inside the family
+// ---------------------------------------------------------------------------
+// `fetchFamilies()` deliberately returns children only — an adult profile in the
+// same family is a person with their own login, not somebody to be supervised.
+// But "not a child on the dashboard" had quietly become "not in the family at
+// all": the parent's own learner profile was created outside any family by
+// `claim_own_learner_profile()`, so it never appeared here and the family plan's
+// adult seat had nobody to point at.
+//
+// The three functions below are that missing half. Joining and leaving go
+// through the writers, never through an update: `guard_learner_profile_identity`
+// freezes `family_id` for everybody but staff, and the one exception it makes is
+// for these two calls.
+
+/** The signed-in adult's own learner profile, including which family it is in. */
+export async function fetchOwnLearner(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<{ id: string; displayName: string; familyId: string | null } | null> {
+  const { data, error } = await supabase
+    .from('learner_profiles')
+    .select('id, display_name, family_id, learner_type')
+    .eq('linked_user_id', userId)
+    .eq('learner_type', 'adult')
+    .is('deleted_at', null)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  const row = data as
+    | { id: string; display_name: string; family_id: string | null }
+    | null;
+  if (!row) return null;
+
+  return { id: row.id, displayName: row.display_name, familyId: row.family_id };
+}
+
+export type FamilyAdult = {
+  learnerProfileId: string;
+  displayName: string;
+  userId: string | null;
+  ageBand: string | null;
+  status: string;
+  isMe: boolean;
+};
+
+export async function fetchFamilyAdults(
+  supabase: SupabaseClient,
+  familyId: string,
+): Promise<FamilyAdult[]> {
+  const { data, error } = await supabase.rpc('family_adult_learners', {
+    p_family_id: familyId,
+  });
+
+  if (error) throw new Error(error.message);
+
+  type Row = {
+    learner_profile_id: string;
+    display_name: string;
+    linked_user_id: string | null;
+    age_band: string | null;
+    status: string;
+    is_me: boolean;
+  };
+
+  return ((data ?? []) as unknown as Row[]).map((r) => ({
+    learnerProfileId: r.learner_profile_id,
+    displayName: r.display_name,
+    userId: r.linked_user_id,
+    ageBand: r.age_band,
+    status: r.status,
+    isMe: r.is_me === true,
+  }));
+}
+
+export type AdultFamilyOutcome =
+  | { ok: true; learnerProfileId: string; created: boolean; joined: boolean; displayName: string | null }
+  | { ok: false; code: 'rejected' | 'no_family' | 'seat_held'; message: string };
+
+export async function joinFamilyAsLearner(
+  supabase: SupabaseClient,
+  familyId: string,
+): Promise<AdultFamilyOutcome> {
+  const { data, error } = await supabase.rpc('claim_family_adult_learner', {
+    p_family_id: familyId,
+  });
+
+  if (error) {
+    if (/not a member of this family/i.test(error.message)) {
+      return { ok: false, code: 'rejected', message: 'You are not a member of that family.' };
+    }
+    if (/not found/i.test(error.message)) {
+      return { ok: false, code: 'no_family', message: 'That family does not exist.' };
+    }
+    return { ok: false, code: 'rejected', message: error.message };
+  }
+
+  const row = (Array.isArray(data) ? data[0] : data) as
+    | { learnerProfileId?: string; created?: boolean; joined?: boolean; displayName?: string | null }
+    | null;
+
+  if (!row?.learnerProfileId) {
+    return { ok: false, code: 'rejected', message: 'The family answered without a learner.' };
+  }
+
+  return {
+    ok: true,
+    learnerProfileId: row.learnerProfileId,
+    created: row.created === true,
+    joined: row.joined === true,
+    displayName: row.displayName ?? null,
+  };
+}
+
+export async function leaveFamilyAsLearner(
+  supabase: SupabaseClient,
+  familyId: string,
+): Promise<AdultFamilyOutcome> {
+  const { error } = await supabase.rpc('release_family_adult_learner', {
+    p_family_id: familyId,
+  });
+
+  if (error) {
+    if (/seat on the family plan/i.test(error.message)) {
+      return {
+        ok: false,
+        code: 'seat_held',
+        message:
+          'This learning holds a seat on the family plan. Whoever manages the plan has to release that seat first.',
+      };
+    }
+    if (/does not learn inside that family/i.test(error.message)) {
+      return { ok: false, code: 'rejected', message: 'This account does not learn inside that family.' };
+    }
+    return { ok: false, code: 'rejected', message: error.message };
+  }
+
+  return { ok: true, learnerProfileId: '', created: false, joined: false, displayName: null };
+}

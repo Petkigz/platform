@@ -23,7 +23,7 @@ export default async function AccountPage() {
     // until the writer behind the button below existed there was no way to get one.
     supabase
       .from('learner_profiles')
-      .select('id, display_name')
+      .select('id, display_name, family_id')
       .eq('linked_user_id', user.id)
       .is('deleted_at', null),
     // How this account actually signs in. A person who arrived through Google
@@ -42,7 +42,8 @@ export default async function AccountPage() {
     timezone: string | null;
     account_status: string;
   };
-  const ownLearner = ((learnerRows ?? []) as { id: string; display_name: string }[])[0] ?? null;
+  const ownLearner =
+    ((learnerRows ?? []) as { id: string; display_name: string; family_id: string | null }[])[0] ?? null;
   const unread = typeof badgeData === 'number' ? badgeData : 0;
   const methods = (methodsData ?? null) as {
     providers: string[];
@@ -68,8 +69,17 @@ export default async function AccountPage() {
               enrol in or buy belong to that learner, and nobody else&apos;s progress is
               mixed into it.
             </p>
+            <p className="muted">
+              {ownLearner.family_id
+                ? 'Your learning is inside a family account, so one family plan can cover you alongside its children. You manage that on the family page.'
+                : 'Your learning sits on its own. If you run a family account, you can move it in beside the children so one plan covers everybody — same profile, same progress.'}
+            </p>
             <p>
               <Link href="/learn">Go to my learning</Link>
+              {' · '}
+              <Link href="/family">
+                {ownLearner.family_id ? 'My family' : 'Learn inside my family'}
+              </Link>
               {' · '}
               <Link href="/account/sharing">Who can see my progress</Link>
             </p>
@@ -80,6 +90,10 @@ export default async function AccountPage() {
               You do not have a learner profile yet. One is needed before you can enrol in
               a course, buy one, or share your progress — a course is always for a named
               learner, and this is how you become one.
+            </p>
+            <p className="muted">
+              If you run a family account, you can become a learner there instead, and be part
+              of the family from the start — <Link href="/family">My family</Link>.
             </p>
             <ClaimLearner note="This does not create a second account. It adds you as a learner to this one." />
           </>

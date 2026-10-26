@@ -38,6 +38,7 @@ import { run as resources } from './resources.test.mjs';
 import { run as media } from './media.test.mjs';
 import { run as products } from './products.test.mjs';
 import { run as families } from './families.test.mjs';
+import { run as familyAdultLearner } from './family_adult_learner.test.mjs';
 import { run as assessments } from './assessments.test.mjs';
 import { run as revenueShare } from './revenue_share.test.mjs';
 import { run as plans } from './plans.test.mjs';
@@ -242,6 +243,7 @@ for (const [name, fn] of [
   ['media', media],
   ['products', products],
   ['families', families],
+  ['family_adult_learner', familyAdultLearner],
   ['assessments', assessments],
 ]) {
   console.log(`\n--- ${name} ---\n`);

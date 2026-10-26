@@ -8,9 +8,13 @@ import {
   AGE_BAND_LABEL,
   fetchChildCourses,
   fetchFamilies,
+  fetchFamilyAdults,
   fetchFamilyMembers,
+  fetchOwnLearner,
   type Family,
 } from '@/lib/family';
+import { adultFamilyState } from '@/lib/family-adult';
+import { FamilyAdultCard } from './family-adult';
 import { fetchEngagement } from '@/lib/engagement';
 import { EngagementStrip } from '@/components/engagement-strip';
 import { AddChild } from './add-child';
@@ -46,9 +50,13 @@ export default async function FamilyPage() {
 
   if (!user) redirect('/sign-in?next=/family');
 
-  const [families, audienceSections] = await Promise.all([
+  const [families, audienceSections, ownLearner] = await Promise.all([
     fetchFamilies(supabase),
     isFlagEnabled(supabase, 'learning.audience_sections').catch(() => false),
+    // The signed-in adult's own profile, if they have one. Read here rather
+    // than per family: it is one row, and every family on the page has to
+    // explain the same thing about it.
+    fetchOwnLearner(supabase, user.id).catch(() => null),
   ]);
 
   if (families.length === 0) {
@@ -63,8 +71,9 @@ export default async function FamilyPage() {
         </p>
         <CreateFamily />
         <p className="muted" style={{ marginTop: '1rem' }}>
-          A family is for children. To learn yourself, you do not need one — use your own
-          account.
+          A family holds children, and it can hold you as well — the adult who runs it can
+          learn here too, beside them, so one plan covers everybody. Until you have a family
+          you do not need one to learn: your own account is enough.
         </p>
         <ClaimLearner label="Learn on this account" />
         <p style={{ marginTop: '1.5rem' }}>
@@ -86,7 +95,7 @@ export default async function FamilyPage() {
       )}
 
       {families.map((f: Family) => (
-        <FamilyBlock key={f.id} family={f} supabase={supabase} />
+        <FamilyBlock key={f.id} family={f} supabase={supabase} ownLearner={ownLearner} />
       ))}
 
       <p style={{ marginTop: '1.5rem' }}>
@@ -104,18 +113,20 @@ export default async function FamilyPage() {
 async function FamilyBlock({
   family,
   supabase,
+  ownLearner,
 }: {
   family: Family;
   // The request-scoped client. Passing it down rather than re-creating keeps
   // every query on the same session.
   supabase: Awaited<ReturnType<typeof createClient>>;
+  ownLearner: Awaited<ReturnType<typeof fetchOwnLearner>>;
 }) {
   // A streak is derived from progress that already exists, so a failure to read it is
   // silence rather than an error: the child's card is still worth showing without it.
   // The flag is checked once, not once per child.
   const streaksOn = await isFlagEnabled(supabase, 'learning.streaks').catch(() => false);
 
-  const [members, childCourses] = await Promise.all([
+  const [members, childCourses, adults] = await Promise.all([
     fetchFamilyMembers(supabase, family.id).catch(() => []),
     Promise.all(
       family.children.map(async (c) => ({
@@ -126,9 +137,14 @@ async function FamilyBlock({
           : null,
       })),
     ),
+    // Who learns here as an adult besides the children. A failure is silence:
+    // the family and its children are still worth showing without this card.
+    fetchFamilyAdults(supabase, family.id).catch(() => []),
   ]);
 
   const active = members.filter((m) => m.status === 'active');
+  const state = adultFamilyState(ownLearner, family.id);
+  const others = adults.filter((a) => !a.isMe);
 
   return (
     <div style={{ marginTop: '1.75rem' }}>
@@ -139,6 +155,19 @@ async function FamilyBlock({
           {family.children.length} child{family.children.length === 1 ? '' : 'ren'}
         </span>
       </div>
+
+      <FamilyAdultCard
+        familyId={family.id}
+        familyName={family.name ?? 'this family'}
+        state={state}
+        displayName={ownLearner?.displayName ?? null}
+      />
+
+      {others.length > 0 && (
+        <p className="muted" style={{ fontSize: '0.85rem', marginTop: '-0.5rem' }}>
+          Also learning here: {others.map((a) => a.displayName).join(', ')}.
+        </p>
+      )}
 
       {family.children.length === 0 ? (
         <div className="card">
