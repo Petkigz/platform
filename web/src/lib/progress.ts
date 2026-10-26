@@ -27,6 +27,13 @@ export type ProgressRow = {
   progress_percent: number;
   last_video_position: number | null;
   completed_at: string | null;
+  /**
+   * The last time anything was written about this lesson — set by every status
+   * change, and by the resume writer. It is what "carry on where you stopped"
+   * orders by, so it is read wherever progress is; a row without it is a row
+   * that has never been touched, which cannot happen and is handled anyway.
+   */
+  last_seen_at?: string | null;
 };
 
 export type ProgressSummary = {
@@ -96,7 +103,7 @@ export async function fetchProgress(
 ): Promise<Map<string, ProgressRow>> {
   const { data, error } = await supabase
     .from('lesson_progress')
-    .select('id, lesson_id, status, progress_percent, last_video_position, completed_at')
+    .select('id, lesson_id, status, progress_percent, last_video_position, completed_at, last_seen_at')
     .eq('course_enrolment_id', enrolmentId);
 
   if (error) throw new Error(error.message);

@@ -70,7 +70,7 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 The database stands at **119 tables, RLS on every one, 243 policies, 146
 user-defined triggers, 376 functions and 161 migrations.** The database suite
-passes **1648 tests**; the web suite passes **1073 tests**. TypeScript typecheck
+passes **1648 tests**; the web suite passes **1087 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **167 app route entries** (89 pages, 78 API routes).
 
 Every class a screen asks for is defined. The stylesheet had been missing `.page`, `.page-head` and
@@ -122,6 +122,11 @@ only while its switch is on, because `/young` redirects while
 `learning.audience_sections` is off. A search result is `noindex, follow`; a
 filtered shelf is indexable under a canonical address; and `/verify/<number>`,
 which prints a learner's name, is `noindex, nofollow`.
+
+The course page answers "where was I?" before it shows a percentage: the most
+recently touched unfinished lesson, else the first unfinished one in reading
+order, else nothing — and it words that as "Start the course", "Carry on where
+you stopped" or "Next up" rather than "Continue" for everyone.
 
 A lesson now has a next one: `lib/outline.ts` flattens a course into its reading
 order across sections and `LessonNav` offers "← Wudu in practice · Lesson 3 of 4 ·

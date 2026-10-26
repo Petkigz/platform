@@ -861,6 +861,37 @@ footer a { color: var(--text-soft); }
 }
 
 /* --------------------------------------------------------------------------
+   Carry on
+   --------------------------------------------------------------------------
+   The first thing on a course page for a learner who has been here before:
+   the lesson, where it sits, and one button. It sits above the progress bar
+   because it is the only thing on the page that is an action. */
+.carry-on {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+  margin-bottom: 1.25rem;
+  border-left: 3px solid var(--green-600);
+}
+.carry-on-body { min-width: 0; }
+.carry-on .eyebrow { margin-bottom: 0.3rem; }
+.carry-on-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 650;
+  color: var(--green-900);
+}
+.carry-on-title a { color: inherit; }
+.carry-on-meta { margin: 0.15rem 0 0; font-size: 0.88rem; }
+.carry-on .carry-on-action { width: auto; margin: 0; flex: none; }
+
+@media (max-width: 40rem) {
+  .carry-on .carry-on-action { width: 100%; }
+}
+
+/* --------------------------------------------------------------------------
    Lesson navigation
    --------------------------------------------------------------------------
    Two buttons and a counter. The buttons carry lesson titles, which can be

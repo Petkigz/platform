@@ -2528,6 +2528,48 @@ for both — a warning that fires on missing data is a warning people learn to i
 whether a teacher should be told that a learner outside the band has joined. Both are policy; both would
 need the owner.
 
+## The course page never said where you were — **DECIDED 2026-10-24**
+
+A learner opened a course they had started last week. The page showed a progress bar, "3 of 40 lessons complete
+· 8%", and a list of forty lessons. The question they arrived with — *where was I?* — was answered by scanning
+the list for the one without a tick. On a phone, that is twenty rows down.
+
+**The rule is not "the last lesson you touched".** A learner who watched the end of lesson three and marked it
+complete last night has touched lesson three, and a button that takes them back to it does nothing. Carrying on
+means *unfinished* work, in this order:
+
+1. the most recently touched lesson that is **not finished** — a resume, whether they stopped two minutes in or
+   two minutes from the end;
+2. otherwise the **first unfinished lesson in the course's reading order** — they finished what they were doing
+   and the next thing is next;
+3. otherwise nothing. Every lesson they can see is done, and a "carry on" button on a finished course is a lie.
+
+**`skipped` counts as finished.** It was a decision, not a place — the database already refuses to turn a skipped
+lesson back into `in_progress` behind the learner's back — so pointing somebody at a lesson they deliberately
+passed over would be the product arguing with them.
+
+**The order needs a tie-break, and the data does not have one.** `lesson_progress.last_seen_at` is written by
+every status change and by the resume writer, so it is a real "when", but two rows can share a millisecond — a
+marks-complete and a resume save in the same request, or a seeded fixture. The sort breaks the tie on lesson id,
+so the same course answers the same twice; without it the answer depends on the order PostgREST returned rows in,
+which is a fact about a query plan.
+
+**A row for a lesson outside this version is ignored, not offered.** Re-pinning a course leaves progress rows for
+lessons the learner can no longer open. `continuePoint()` measures every candidate against the outline it is
+given, so a stale row cannot become a button that 404s.
+
+**The words are three states, because the learner is in one of three.** "Start the course · Open lesson 1" for
+somebody who has never opened it; "Carry on where you stopped · Continue lesson 3" for somebody inside one; "Next
+up · Open lesson 2" for somebody who finished one and has not met the next. The same card saying "Continue" to a
+first-time visitor is the kind of small wrongness that makes a product feel automated.
+
+**It costs no extra query.** The course page already reads the sections and every progress row; the outline is
+flattened from what is in hand and the rule runs on it. The card sits above the progress bar because it is the
+only thing on the page that is an action — a percentage is a report, and a report should not come first.
+
+**Not done here:** the same button on `/learn`, where the list of enrolments could carry one per course. That
+belongs with the dashboard's own layout, and the course page is where a learner already is when they need it.
+
 ## A lesson had no next one — **DECIDED 2026-10-24**
 
 At the foot of a lesson there was one button: "Back to course". A learner who finished lesson three of forty

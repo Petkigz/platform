@@ -2301,6 +2301,21 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### The course page never said where you were, 2026-10-24
+
+A learner returning to a 40-lesson course saw "3 of 40 complete · 8%" and a list; finding the lesson without a
+tick was the work. The page now opens with "Carry on where you stopped · The conditions of prayer · Lesson 3 of
+4 · Prayer" and one button.
+
+`continue-point.ts` owns the rule: the most recently touched **unfinished** lesson, else the first unfinished
+lesson in reading order, else nothing — because "last touched" would point a learner back at the lesson they just
+completed. `skipped` counts as finished; rows for lessons outside the pinned version are ignored; ties on
+`last_seen_at` break on lesson id so the answer is stable. `carryOnHeading()` words it three ways — "Start the
+course", "Carry on where you stopped", "Next up" — since a first-time visitor told to "Continue" is the small
+wrongness that makes a product feel automated.
+
+No extra query: the page already had the sections and the progress rows. 14 tests.
+
 ### A lesson had no next one, 2026-10-24
 
 The foot of a lesson offered one button — "Back to course" — so finishing lesson three of forty meant going back

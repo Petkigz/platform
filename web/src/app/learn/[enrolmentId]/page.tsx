@@ -3,6 +3,9 @@ import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { fetchCompletion, fetchProgress, fetchSummary } from '@/lib/progress';
+import { flattenOutline } from '@/lib/outline';
+import { carryOnHeading, continuePoint } from '@/lib/continue-point';
+import { CarryOn } from '@/app/_shared/carry-on';
 import { fetchAssessmentsForVersion } from '@/lib/assessment';
 import { isFlagEnabled } from '@/lib/flags';
 import { MarkComplete } from './mark-complete';
@@ -167,6 +170,14 @@ export default async function CourseViewPage({
 
   const pct = Math.round(summary.percentComplete);
 
+  // Where to carry on from. Built from the sections this page already read, so
+  // the answer is about the version the learner is pinned to and costs no extra
+  // query; `continue-point.ts` owns the rule and the words.
+  const outline = flattenOutline(sections);
+  const progressRows = [...progress.values()];
+  const carryOn = continuePoint(outline, progressRows);
+  const carryCopy = carryOn ? carryOnHeading(carryOn, progressRows.length > 0) : null;
+
   return (
     <div className="container section">
       <p className="eyebrow">
@@ -183,6 +194,13 @@ export default async function CourseViewPage({
           Progress tracking is not enabled yet. You can still read the course
           and play its lessons; nothing is being recorded.
         </div>
+      )}
+
+      {/* The question a returning learner arrives with is "where was I?", and
+          the page answered it with a percentage and a list they had to scan.
+          Above the progress bar, because it is the first thing to act on. */}
+      {progressOn && carryOn && carryCopy && (
+        <CarryOn enrolmentId={enrolmentId} point={carryOn} copy={carryCopy} />
       )}
 
       {progressOn && (
