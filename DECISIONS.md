@@ -2528,6 +2528,40 @@ for both — a warning that fires on missing data is a warning people learn to i
 whether a teacher should be told that a learner outside the band has joined. Both are policy; both would
 need the owner.
 
+## The dashboard did not lead where it said it led — **DECIDED 2026-10-24**
+
+Screen 20 is described in the inventory as *"Adult home, led by 'continue where you stopped'"*. It opened with a
+greeting, then live classes, then every enrolment as an equal card. A learner with six courses, one of them two
+lessons from the end, was shown six identical invitations and left to work out which one was warm.
+
+**`enrolled_at` is the wrong signal, and it is the obvious one.** Newest enrolment first would put a course bought
+last month and never opened above the course the learner was inside yesterday. Ordering by *activity* — the newest
+`lesson_progress.last_seen_at` among a course's lessons — is a fact about the learner; enrolment date is a fact
+about a purchase. So: touched beats untouched whatever the dates say, then the newest activity, and only then the
+newest enrolment for courses that have never been opened.
+
+**Null is not activity.** A progress row can carry `last_seen_at` null, and it means nothing at all; treating it as
+"very old" instead of "absent" would rank a course with a meaningless row below one with no row, which is a
+distinction the learner never made. It falls back to the enrolment date like any untouched course. The first test
+I wrote asserted the opposite and failed, which is how the rule got pinned down.
+
+**Three candidates, then stop.** The warmest course is usually the answer, but not always: somebody who finished
+their newest course yesterday should be offered the one before it, not a finished course whose "carry on" leads
+nowhere. `CANDIDATES = 3` covers that in a fixed, small number of reads — one query for every progress row of
+every enrolment, one for the outlines of at most three versions — rather than a query per course, which would
+make a large library slow in order to decide whether to show a card.
+
+**All finished means no card.** If every candidate has nothing left to do, `fetchCarryOn()` returns null and no
+card is rendered. A "carry on" button that opens a course with nothing left in it is worse than the absence of
+one, and the completed courses are still listed underneath.
+
+**A failed read is no card, not a broken page.** The dashboard is where a learner lands; losing the accelerator
+must not lose the enrolments, their progress or their links.
+
+**Not done here:** the per-course "Continue" on each card further down. The lead card answers the question once;
+repeating the query for every row is the cost this design exists to avoid, and a learner who wants a different
+course can still open it and find the carrying-on card there.
+
 ## The course page never said where you were — **DECIDED 2026-10-24**
 
 A learner opened a course they had started last week. The page showed a progress bar, "3 of 40 lessons complete

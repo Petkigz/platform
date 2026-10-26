@@ -2301,6 +2301,21 @@ facts, and a dashboard that cannot tell them apart is lying gently.
 `/teach/[courseId]/reports` is the screen, linked from the course page. The daily and per-lesson
 figures are bars drawn with a `div`, because a chart library is a dependency and this is a count.
 
+### The dashboard did not lead where it said it led, 2026-10-24
+
+Screen 20 is described as "led by continue where you stopped" and it opened with a greeting, live classes and
+every enrolment as an equal card.
+
+`dashboard.ts` ranks enrolments by activity — the newest `lesson_progress.last_seen_at` — before enrolment date,
+because a course bought last month and never opened must not outrank the one the learner was inside yesterday.
+A null timestamp is absence, not age. `fetchCarryOn()` then reads every progress row once and the outlines of at
+most three candidate versions, and stops at the first course with something left to do; all finished means no
+card rather than a button that opens a finished course. A failed read is no card, not a broken dashboard.
+
+The card is the same `CarryOn` component the course page uses, at the top of `/learn`, above live classes.
+
+19 tests across `dashboard.ts` and `continue-point.ts`.
+
 ### The course page never said where you were, 2026-10-24
 
 A learner returning to a 40-lesson course saw "3 of 40 complete · 8%" and a list; finding the lesson without a

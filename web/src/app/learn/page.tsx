@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { fetchSummary } from '@/lib/progress';
+import { fetchCarryOn } from '@/lib/dashboard-query';
+import { CarryOn } from '@/app/_shared/carry-on';
 import { fetchEngagement } from '@/lib/engagement';
 import { describeReason, describeWhen, type LiveSession } from '@/lib/live';
 import { EngagementStrip } from '@/components/engagement-strip';
@@ -18,6 +20,8 @@ type Enrolment = {
   status: string;
   enrolled_at: string;
   learner_profile_id: string;
+  /** The pinned version — what the carry-on card reads the outline from. */
+  course_version_id: string;
   learner_profiles: { display_name: string; learner_type: string }[] | null;
   courses: { title: string; slug: string }[] | null;
   course_versions: { version_number: number; language: string }[] | null;
@@ -82,7 +86,7 @@ export default async function LearnPage() {
   const { data: enrolments, error } = await supabase
     .from('course_enrolments')
     .select(
-      'id, status, enrolled_at, learner_profile_id, ' +
+      'id, status, enrolled_at, learner_profile_id, course_version_id, ' +
         'learner_profiles ( display_name, learner_type ), ' +
         'courses ( title, slug ), course_versions ( version_number, language )',
     )
@@ -141,6 +145,19 @@ export default async function LearnPage() {
     : null;
 
   const progressOn = await isFlagEnabled(supabase, 'learning.progress').catch(() => false);
+
+  // What this page is supposed to lead with: where the learner left off.
+  //
+  // One query for the activity of every enrolment, then at most three outlines
+  // for the courses worth offering. Three is `CANDIDATES`: the warmest course is
+  // usually the answer, and the cap covers the case where it is not — somebody
+  // who finished their newest course yesterday should be offered the one before
+  // it rather than a finished course whose "carry on" leads nowhere — without
+  // letting a large library turn one card into fifty queries.
+  const lead = progressOn && rows.length > 0
+    ? await fetchCarryOn(supabase, rows)
+    : null;
+
   // Saved courses live here rather than in the masthead: the nav is already
   // eight links wide on a phone, and this is where someone looks for their own
   // things. The link appears whether or not the flag is on, because a list
@@ -176,6 +193,15 @@ export default async function LearnPage() {
           </button>
         </form>
       </p>
+
+      {/* The screen is described as "led by continue where you stopped", and it
+          was not: the greeting, then live classes, then every enrolment as an
+          equal card. This is the card that makes the description true. */}
+      {lead && (
+        <div style={{ marginTop: '1.25rem' }}>
+          <CarryOn enrolmentId={lead.enrolmentId} point={lead.point} copy={lead.copy} />
+        </div>
+      )}
 
       {liveSessions.length > 0 && (
         <section className="card" style={{ marginTop: '1.25rem' }}>
