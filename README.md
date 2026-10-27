@@ -68,11 +68,11 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 ## Status
 
-The database stands at **141 tables, RLS on every one, 267 policies, 164
-user-defined triggers, 483 functions and 180 migrations.** The database suite
-passes **1902 tests**; the web suite passes **1402 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **207 app route entries** — 111
-pages, 87 API routes, and the metadata routes it generates.
+The database stands at **143 tables, RLS on every one, 269 policies, 165
+user-defined triggers, 490 functions and 181 migrations.** The database suite
+passes **1912 tests**; the web suite passes **1411 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **210 app route entries** — 112
+pages, 89 API routes, and the metadata routes it generates.
 
 **The policies are drafts, and the database says so.** Seven documents — terms,
 privacy, children, refunds, teaching, safeguarding, takedown — describe what the
@@ -116,6 +116,16 @@ waived, and cannot close without a recorded change. Choosing not to tell a body 
 decision with a reason, kept on the record rather than deleted. Nothing there detects
 a breach and nothing sends a notification: the learner notice is written and held, and
 the screen says so beside the field.
+
+**A takedown that withholds instead of deleting.** `platform.takedown` named its own
+gap — the notice process existed and the withholding action did not. It does now, and
+it is one clause in `can_read_version()`: a version with a live notice disappears from
+the catalogue, from enrolment, from the player and from offline keys in the same
+moment, while its author, reviewers and staff keep reading it. The teacher answers on
+their own page, the person who took the notice does not get to decide it, and
+rejecting the notice restores everything. Nothing is deleted and no money moves —
+the material is the evidence the decision rests on, and what a hold should do to money
+already taken is recorded as an open decision rather than invented.
 
 Every class a screen asks for is defined. The stylesheet had been missing `.page`, `.page-head` and
 `.crumbs` while twenty-five to twenty-eight screens used them — and `.narrow`, which meant a 26rem

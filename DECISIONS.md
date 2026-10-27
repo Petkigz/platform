@@ -4967,3 +4967,38 @@ written and *held*, and the screen says "not sent" in the same breath as it offe
 the field. `platform.incident` stays `CODE` and says all three of those things. The
 named incident lead, the notification deadlines and the notice wording are the
 owner's.
+
+## Withhold first, decide afterwards — **DECIDED 2026-10-27**
+
+The takedown flag named its own gap: the notice process was written, and *"the
+withholding action itself on a course or a lesson"* needed a code change. This is it.
+
+**One clause, not thirty queries.** Every learner-facing read of course content
+already asks `can_read_version()`. So a hold is a single additional condition there:
+a version with a live notice is not readable by a learner, and it is readable by its
+author, by reviewers and by staff. That one clause takes the material out of the
+catalogue, out of enrolment, out of the player and out of offline keys at the same
+moment, and rejecting the notice puts all of it back — because the hold is a query
+rather than a copy of its answer.
+
+**Deletion was the obvious alternative and it is wrong.** Deleting the material
+destroys the evidence the decision needs, cannot be appealed, and cannot be undone if
+the claim turns out to be mistaken. A hold is reversible in one status change. The
+table is a record of a *claim*, not a verdict, and the thing claimed stays exactly
+where it was.
+
+**The teacher answers, and the person who took the notice does not decide it.** The
+claim is shown to the author on their own teaching page, in the words it was sent,
+and they answer once — because a process that takes their answer by email makes the
+answer invisible, and one that lets the accuser rule makes the answer pointless.
+`takedown:self_decision` refuses it, the same separation the appeals queue uses.
+
+**A hold changes no money.** Nothing in the takedown path touches an order, a refund
+or a teacher's earnings, and the screen says so, because the money question is the
+first question either party asks. What a hold *should* do to money already taken is a
+decision the owner has not made, and it is recorded as open rather than guessed —
+the same rule that keeps every other invented policy out of this repository.
+
+**Nothing lifts on a timer.** A review date is recorded, and the register says when
+it has passed. It does not release: material contested by a rights holder going back
+up at midnight, unattended, would be the worst possible default. Somebody decides.

@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { fetchMyCourses } from '@/lib/authoring';
 import { myScreeningSentence, screeningStatusLabel, type MyScreening } from '@/lib/screening';
+import { teacherHeadline, type MyTakedown } from '@/lib/takedowns';
+import { TakedownAnswer } from './takedown-answer';
 import { NewCourse } from './new-course';
 
 export const dynamic = 'force-dynamic';
@@ -55,12 +57,15 @@ export default async function TeachPage() {
     );
   }
 
-  const [courses, screeningResult] = await Promise.all([
+  const [courses, screeningResult, takedownResult] = await Promise.all([
     fetchMyCourses(supabase, user.id),
     supabase.rpc('my_screening_status'),
+    supabase.rpc('my_takedown_notices'),
   ]);
   if (screeningResult.error) throw new Error(screeningResult.error.message);
+  if (takedownResult.error) throw new Error(takedownResult.error.message);
   const screening = (screeningResult.data ?? { recorded: false }) as unknown as MyScreening;
+  const takedown = (takedownResult.data ?? { notices: [], held: 0 }) as unknown as MyTakedown;
 
   return (
     <div className="container section">
@@ -71,6 +76,14 @@ export default async function TeachPage() {
         you have already sold — learners who enrolled keep their access even
         if you retire the course later.
       </p>
+
+      {teacherHeadline(takedown) && (
+        <p className="notice warn" style={{ maxWidth: '48rem' }}>
+          <strong>{teacherHeadline(takedown)}</strong> The claim is below, in the words it was
+          sent, and you can answer it there.
+        </p>
+      )}
+      <TakedownAnswer mine={takedown} />
 
       <p>
         <Link href="/teach/promotions">Promotions</Link> — run an offer on your
