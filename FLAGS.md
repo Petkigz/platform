@@ -40,7 +40,7 @@ Three kinds of gate:
 | `learning.wishlist` | Saved courses, with an optional private note | ADMIN | Retention and account-deletion policy decided. Saving works without checkout — a course can be free or unpublished — but taking payment for a saved one still needs `commerce.checkout` |
 | `learning.streaks` | Daily streaks and milestone badges for learners | ADMIN | None — derived from progress that already exists; no new data collected. A streak is computed in the learner's own time zone (the reader's for a child with no account) and nothing is stored, so turning it off removes a display and loses nothing. On: a strip on `/learn` and each child's card at `/family`, both linking to **`/progress`** — the whole record: twelve weeks of study days as a calendar, the eight-badge catalogue with earned **and not-yet-earned** states (an unearned badge says what it still needs), the date each badge was earned, current courses and certificates. A guardian opens a child's with `?learner=<id>`, which `can_access_learner()` decides. Off: the page says progress is still being recorded rather than showing half of one |
 | `learning.cohorts` | Dated groups taking a published course version together | ADMIN | Data rules and teacher/course plus learner join/leave screens are built. Each cohort carries `join_closes_at`, set by the teacher and defaulting to the start date; the teacher can move it while the class is a draft or open, and closing it governs arriving rather than staying. The late-join rule is settled (2026-10-19). Remaining before enabling: the safeguarding review of files children send, which arrives with the assignment media path. Roster is private: course author/staff can read membership rows but the UI shows counts only; learners see only themselves and family. A learner/guardian opts in; the author cannot silently add a learner |
-| `learning.multi_language` | Interface and content in more languages | CODE | Translation workflow; per-locale content; RTL support; who translates |
+| `learning.multi_language` | Courses say which language they are taught in, and the catalogue filters by it | ADMIN | **Built 2026-10-26, and it is not an interface translation.** A course carries a language code, its author picks it on the course page, the catalogue filters by it in SQL so the count and the list agree, and every title and description is rendered with `dir="auto"` so Arabic, Urdu, Persian and Hebrew lay themselves out correctly inside an English page. The chip row only offers a language somebody has actually written in, because a filter that returns nothing makes the site look empty. **What is not built: the screens are still English.** Translating them needs translators and a review process, not code — `/account/accessibility` says so under "What is not here yet", and so does this row. `platform.accessibility` keeps the rest: RTL for the *interface*, Arabic typography and licensed fonts |
 | `learning.ai_support` | Safeguarded AI study help | CODE | Safeguarding policy; provider chosen; cost ceiling; **must refuse to issue rulings and refer to a teacher** |
 | `learning.ai_quiz_gen` | Generate quiz questions from lesson transcripts | ADMIN + SETUP | Provider and cost ceiling; teacher reviews every generated question before use |
 | `learning.recitation` | Qur'an recitation feedback | CODE | Quranic ASR accuracy validated; **start with letter-level makharij on short surahs only** — a wrong correction on religious content is worse than none |
@@ -204,20 +204,23 @@ now holds the register, `/admin` reads and toggles it, and `/api/admin/flags`
 writes it. A trigger refuses to enable a `code`-gated flag at runtime, so the
 dashboard cannot promise what needs a deploy.
 
-**2. Twenty of these cannot be runtime toggles.**
-`gate_type='code'` on 20 flags — 9 `platform.*` legal, safety and data ones,
-4 `teaching.*`, 4 `learning.*`, and three one-offs: `commerce.institutions`,
+**2. Nineteen of these cannot be runtime toggles.**
+`gate_type='code'` on 19 flags — 9 `platform.*` legal, safety and data ones,
+4 `teaching.*`, 3 `learning.*`, and three one-offs: `commerce.institutions`,
 `delivery.transcode` and `family.child_login`. Each needs a deploy, a provider,
 or a policy that does not exist. Building them "to completion" means building
 them against guesses, so the tables and the flags exist and the work waits — and
 the list is re-counted from `platform_settings` rather than from prose, because
-four units left it in one day and a stale total outlives the reason it was
+five units left it in one day and a stale total outlives the reason it was
 written. On 2026-10-26 `commerce.referrals`, `commerce.sponsorship`,
-`teaching.applications` and all four `institution.*` flags became ADMIN. The
-institution ones are the interesting case: `institution.sso` moved with the
-other three although SAML and OIDC are still missing, because the part that can
-exist — a verified email domain — is built, and a switch nobody can turn on
-while the feature works is a worse lie than a screen that says what is absent.
+`teaching.applications`, `learning.multi_language` and all four `institution.*`
+flags became ADMIN. Two of those are worth reading twice: `institution.sso`
+moved although SAML and OIDC are still missing, because the part that can exist
+— a verified email domain — is built; `learning.multi_language` moved although
+the interface is still English, because a course saying which language it is
+taught in is the half that needs no translator. A switch nobody can turn on
+while the feature it names works is a worse lie than a screen that says what is
+absent.
 
 A further **15 are ADMIN + SETUP**: the toggle is real, but a provider, a sender
 domain or a written policy has to be finished first. Those are the ones where

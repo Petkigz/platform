@@ -14,6 +14,7 @@ import { fetchCourseCards } from '@/lib/catalogue-cards';
 import { fetchCataloguePage } from '@/lib/catalogue';
 import { offsetFor, pageNumber, PAGE_SIZE } from '@/lib/paging';
 import { canonicalCataloguePath } from '@/lib/crawl';
+import { parseLanguages, textProps } from '@/lib/language';
 import { CourseShelfCard } from '../_shared/course-shelf-card';
 import { ShelfPager } from '../_shared/shelf-pager';
 import {
@@ -30,7 +31,7 @@ import {
 
 export const dynamic = 'force-dynamic';
 
-type Search = { q?: string; subject?: string; audience?: string; page?: string };
+type Search = { q?: string; subject?: string; audience?: string; lang?: string; page?: string };
 
 /**
  * What a crawler is told about this page, and under which address.
@@ -54,12 +55,12 @@ export async function generateMetadata({
 }: {
   searchParams: Promise<Search>;
 }): Promise<Metadata> {
-  const { q, subject, audience, page } = await searchParams;
+  const { q, subject, audience, lang, page } = await searchParams;
   const searching = typeof q === 'string' && q.trim().length > 0;
 
   return {
     title: searching ? `Search: ${q.trim().slice(0, 60)}` : 'Catalogue',
-    alternates: { canonical: canonicalCataloguePath({ q, subject, audience, page }) },
+    alternates: { canonical: canonicalCataloguePath({ q, subject, audience, lang, page }) },
     ...(searching ? { robots: { index: false, follow: true } } : {}),
   };
 }
@@ -71,7 +72,7 @@ export default async function CataloguePage({
 }) {
   if (!isSupabaseConfigured()) redirect('/');
 
-  const { q, subject, audience, page: pageParam } = await searchParams;
+  const { q, subject, audience, lang, page: pageParam } = await searchParams;
   const searching = typeof q === 'string' && q.trim().length > 0;
   const supabase = await createClient();
 
@@ -80,15 +81,20 @@ export default async function CataloguePage({
   // whole page.
   const page = pageNumber(pageParam);
 
-  const [subjects, shelf, doors] = await Promise.all([
+  const [subjects, shelf, doors, languageChips, languageOn] = await Promise.all([
     fetchSubjectAreas(supabase),
-    fetchCataloguePage(supabase, { q, subject, audience }, {
+    fetchCataloguePage(supabase, { q, subject, audience, language: lang }, {
       limit: PAGE_SIZE,
       offset: offsetFor(page),
     }),
     // The two doors, once the owner opens them. A door nobody can see is not a
     // door, and the catalogue is where everybody arrives first.
     isFlagEnabled(supabase, 'learning.audience_sections').catch(() => false),
+    // The languages somebody has actually written in, not the whole register:
+    // a row of chips where eleven return an empty shelf makes the site look
+    // empty. `course_languages()` already applies that rule.
+    supabase.rpc('course_languages').then(({ data }) => parseLanguages(data), () => []),
+    isFlagEnabled(supabase, 'learning.multi_language').catch(() => false),
   ]);
 
   // A course is only shelf-ready if it has a published version. RLS may show
@@ -128,7 +134,7 @@ export default async function CataloguePage({
   // on page four of a different subject would show nothing and look broken.
   const qs = (over: Partial<Search>): string => {
     const p = new URLSearchParams();
-    const merged = { q, subject, audience, ...over, page: undefined };
+    const merged = { q, subject, audience, lang, ...over, page: undefined };
     for (const [k, v] of Object.entries(merged)) {
       if (v && v !== 'all') p.set(k, v);
     }
@@ -195,6 +201,33 @@ export default async function CataloguePage({
         ))}
       </div>
 
+      {languageOn && languageChips.length > 1 && (
+        // The language chips are only worth a row when there is a choice to
+        // make: one language is a label, not a filter.
+        <div className="chips" aria-label="Language the course is taught in">
+          <Link
+            href={qs({ lang: undefined })}
+            className="chip"
+            aria-current={!lang || lang === 'all' ? 'true' : undefined}
+          >
+            Any language
+          </Link>
+          {languageChips.map((language) => (
+            <Link
+              key={language.code}
+              href={qs({ lang: language.code })}
+              className="chip"
+              aria-current={lang === language.code ? 'true' : undefined}
+            >
+              {/* The chip shows the name in its own script, with its own name
+                  alongside — a reader of Arabic should not have to find
+                  "Arabic" in English to filter by it. */}
+              <span {...textProps(language.code)}>{language.nativeName}</span>
+            </Link>
+          ))}
+        </div>
+      )}
+
       {visible.length === 0 ? (
         <p className="empty">
           {emptyShelfMessage({ page, query: q ?? null, lessonHits: lessonHits.length })}
@@ -203,7 +236,7 @@ export default async function CataloguePage({
         <>
           <ShelfPager
             basePath="/catalogue"
-            params={{ q, subject, audience }}
+            params={{ q, subject, audience, lang }}
             total={shelf.total}
             shown={shelf.shown}
             offset={shelf.offset}
@@ -218,7 +251,7 @@ export default async function CataloguePage({
               top of the page is a long way up. */}
           <ShelfPager
             basePath="/catalogue"
-            params={{ q, subject, audience }}
+            params={{ q, subject, audience, lang }}
             total={shelf.total}
             shown={shelf.shown}
             offset={shelf.offset}

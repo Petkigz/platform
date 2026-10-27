@@ -38,6 +38,7 @@ import { recordEvent } from '@/lib/analytics-server';
 import { fetchCourseTeacher, teacherAttribution } from '@/lib/course-teacher';
 import { breadcrumbJsonLd, courseJsonLd } from '@/lib/structured-data';
 import { siteOrigin } from '@/lib/site';
+import { parseLanguages, textProps, type Language } from '@/lib/language';
 import { JsonLdScript } from '../../_shared/json-ld';
 import { WhoTeaches } from '../../_shared/who-teaches';
 
@@ -142,6 +143,7 @@ export default async function CoursePage({
     .from('courses')
     .select(
       'id, slug, title, description, audience, age_bands, difficulty, status, deleted_at, created_by, ' +
+        'language_code, ' +
         'course_versions ( id, version_number, language, version_status, ' +
         'course_version_subjects ( subject_areas ( code, name ) ), ' +
         'course_sections ( id, title, position, ' +
@@ -166,6 +168,23 @@ export default async function CoursePage({
   );
 
   if (!version) notFound();
+
+  // The language, read from the register so the name can be printed in words
+  // rather than as a two-letter code. A missing row means English, which is
+  // what the column defaults to.
+  const languageRegister: Language[] = parseLanguages(
+    (await supabase.rpc('course_languages')).data,
+  );
+  const taughtLanguage =
+    languageRegister.find((entry) => entry.code === (course.language_code ?? 'en')) ?? null;
+  const taughtIn =
+    taughtLanguage && taughtLanguage.code !== 'en'
+      ? `Taught in ${taughtLanguage.englishName}${
+          taughtLanguage.nativeName !== taughtLanguage.englishName
+            ? ` — ${taughtLanguage.nativeName}`
+            : ''
+        }.`
+      : null;
 
   // A course page seen by a signed-in visitor. The subject is the *version*,
   // because a course can be republished and "which terms were they reading" is
@@ -292,7 +311,11 @@ export default async function CoursePage({
           <Link href="/catalogue">Catalogue</Link>
           {subjects[0] ? ` · ${subjects[0]}` : ''}
         </p>
-        <h1>{course.title}</h1>
+        {/* `dir="auto"` on the title and the description: a course may be named
+            in Arabic and this page is English. Without it the browser lays an
+            Arabic title out backwards, which reads as a layout fault rather
+            than as a language. */}
+        <h1 {...textProps(course.language_code)}>{course.title}</h1>
 
         <div className="badges" style={{ marginBottom: '1rem' }}>
           <span className="badge">{AUDIENCE_LABEL[course.audience] ?? course.audience}</span>
@@ -305,7 +328,20 @@ export default async function CoursePage({
           ))}
         </div>
 
-        {course.description && <p className="lede">{course.description}</p>}
+        {course.description && (
+          <p className="lede" {...textProps(course.language_code)}>
+            {course.description}
+          </p>
+        )}
+
+        {taughtIn && (
+          // The question a learner asks before they open anything. Only shown
+          // when there is something to say: English is the default, and a line
+          // declaring it on every page is noise.
+          <p className="muted" style={{ marginTop: '-0.5rem' }}>
+            {taughtIn}
+          </p>
+        )}
 
         {course.age_bands && course.age_bands.length > 0 && (
           <p className="muted" style={{ marginTop: '-0.5rem' }}>

@@ -112,9 +112,14 @@ export async function run(ctx) {
   await test('demoting a flag so it can be flipped is refused at the first write', async () => {
     // gate_type = 'code' refuses to be enabled; leaving gate_type editable for
     // staff would make that a two-step formality.
+    //
+    // The subject has to be a flag that is *still* code-gated. `learning.
+    // multi_language` was the example until it was built, at which point this
+    // test began passing for the wrong reason: the row it was rewriting was
+    // already admin, so nothing was demoted and nothing was refused.
     await rejects(
       () => as(support, `update public.platform_settings set gate_type = 'admin'
-                          where key = 'learning.multi_language'`),
+                          where key = 'learning.recitation'`),
       /only the platform admin/);
   });
 

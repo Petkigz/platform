@@ -24,6 +24,13 @@ export type CatalogueCourse = {
   /** Empty means every band the audience allows. */
   age_bands: string[] | null;
   difficulty: 'beginner' | 'intermediate' | 'advanced';
+  /**
+   * The language the course is taught in. Absent on a row read before the
+   * language column existed, which is why every reader treats it as optional —
+   * a missing language is English, and a card that guessed otherwise would be
+   * telling a learner something the database did not say.
+   */
+  language_code?: string | null;
   course_versions: CatalogueVersion[] | null;
 };
 
@@ -45,7 +52,7 @@ export type SubjectArea = {
 };
 
 const COURSE_COLUMNS =
-  'id, slug, title, description, audience, age_bands, difficulty, ' +
+  'id, slug, title, description, audience, age_bands, difficulty, language_code, ' +
   'course_versions ( id, version_number, language, version_status, ' +
   'course_version_subjects ( subject_areas ( code, name ) ) )';
 
@@ -91,6 +98,8 @@ export type CatalogueFilters = {
   audience?: string;
   /** One age band, for the children's door. Absent means every age. */
   band?: string;
+  /** One language code, from the chip row. Absent or `all` means every one. */
+  language?: string;
 };
 
 /**
@@ -123,6 +132,8 @@ export async function fetchCataloguePage(
     p_band: filters.band ?? null,
     p_limit: limit,
     p_offset: offset,
+    p_language:
+      filters.language && filters.language !== 'all' ? filters.language : null,
   });
   if (error) throw new Error(error.message);
 

@@ -640,6 +640,52 @@ export async function setAudience(
   return { ok: true, value: row };
 }
 
+/**
+ * Say which language the course is taught in.
+ *
+ * A language sits on the course, not on the version, so this is not blocked by
+ * a published version the way a curriculum write is — a teacher correcting the
+ * language of a live course is fixing a label, not rewriting what learners
+ * already study. The database checks who may say and which languages are
+ * available; this function only turns its refusals into sentences.
+ */
+export async function setLanguage(
+  supabase: SupabaseClient,
+  args: { courseId: string; languageCode: string },
+): Promise<WriteOutcome<{ languageCode: string; changed?: boolean }>> {
+  if (!/^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$/.test(args.languageCode)) {
+    return { ok: false, code: 'rejected', message: 'Choose a language from the list.' };
+  }
+
+  const { data, error } = await supabase.rpc('set_course_language', {
+    p_course_id: args.courseId,
+    p_language: args.languageCode,
+  });
+
+  if (error) {
+    const m = error.message.toLowerCase();
+    if (m.includes('language:not_available')) {
+      return {
+        ok: false,
+        code: 'rejected',
+        message: 'That language is not one a course may be filed under here.',
+      };
+    }
+    if (m.includes('language:not_yours')) {
+      return { ok: false, code: 'rejected', message: 'Only this course’s author may say.' };
+    }
+    if (m.includes('language:course_not_found')) {
+      return { ok: false, code: 'rejected', message: 'That course no longer exists.' };
+    }
+    if (m.includes('language:not_signed_in')) {
+      return { ok: false, code: 'rejected', message: 'Sign in again and try once more.' };
+    }
+    return classify(error);
+  }
+
+  return { ok: true, value: data as unknown as { languageCode: string; changed?: boolean } };
+}
+
 /** The course and its published audience, as the author's editor needs them. */
 export async function fetchCourseAudience(
   supabase: SupabaseClient,

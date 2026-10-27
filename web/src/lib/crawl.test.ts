@@ -130,6 +130,15 @@ test('the canonical catalogue keeps what changes the shelf, in a fixed order', (
   );
 });
 
+test('a language filter is a page of its own, and “all” is the plain catalogue', () => {
+  assert.equal(canonicalCataloguePath({ lang: 'ar' }), '/catalogue?lang=ar');
+  assert.equal(canonicalCataloguePath({ lang: 'all' }), '/catalogue');
+  assert.equal(
+    canonicalCataloguePath({ subject: 'quran', lang: 'ar', page: '2' }),
+    '/catalogue?subject=quran&lang=ar&page=2',
+  );
+});
+
 test('a nonsense page number is dropped rather than echoed', () => {
   assert.equal(canonicalCataloguePath({ page: '0' }), '/catalogue');
   assert.equal(canonicalCataloguePath({ page: 'abc' }), '/catalogue');

@@ -4732,3 +4732,40 @@ nobody has connected), and no dyslexia-friendly font (licensing, and a free
 substitute would be a claim without the property that makes the claim true). The
 page lists all three under "What is not here yet" rather than leaving them to be
 discovered.
+
+## A course says which language it is taught in; the interface does not claim to be translated — **DECIDED 2026-10-26**
+
+`learning.multi_language` was registered with four preconditions: a translation
+workflow, per-locale content, RTL support, and a decision about who translates.
+Three of the four need **a person who speaks the language**. So this unit builds
+the fact a learner needs before they open anything — *what language is this
+course in?* — and states plainly that the screens are still English.
+
+**One language per course, on the course.** Not per version and not per lesson: a
+course is taught in one language, and a version is a revision of the same
+teaching. It sits on `courses`, so correcting the label of a live course is a
+label change rather than an edit blocked by the published-version guard.
+
+**Direction is the browser's job, not ours.** Every title, description and lesson
+name is rendered with `dir="auto"` rather than `dir="rtl"` for an Arabic course,
+because a title may be transliterated or mixed ("Tajweed — التجويد") and the
+Unicode first-strong-character rule handles that better than a column can. `lang`
+is set only when the code parses as a BCP-47 tag, so a bad row cannot put an
+attribute on the page that a screen reader mispronounces.
+
+**A filter may only offer something that returns courses.** The chip row comes
+from `course_languages()`, which lists languages with at least one live course
+(plus English, so the row is never empty on a new deployment). A row of fourteen
+chips where eleven empty the shelf is worse than four that work.
+
+**Filtering is in SQL, beside the other filters.** The language predicate lives
+inside `catalogue_page()`, so the count and the list cannot disagree — the exact
+defect the subject filter had before it moved. The parameter is **appended**, not
+inserted, because `search_catalogue()` and the sitemap call the function
+positionally and moving an argument would silently change what they ask for.
+
+**What this does not claim.** No interface translation, no per-locale content, no
+Arabic typography or licensed fonts — `platform.accessibility` still holds those
+and stays CODE-gated. `/account/accessibility` lists them under "What is not here
+yet". A learner reading the site in English who wants an Arabic course can now
+find it, which is the part that needed no translator.

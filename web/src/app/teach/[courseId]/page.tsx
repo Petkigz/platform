@@ -15,6 +15,8 @@ import { RequirementPanel } from '@/app/_shared/requirement-panel';
 import { VersionChecks } from '@/app/_shared/version-checks';
 import { SubjectPicker } from './subject-picker';
 import { AudiencePicker } from './audience-picker';
+import { LanguagePicker } from './language-picker';
+import { parseLanguages } from '@/lib/language';
 import { fetchVersionSources } from '@/lib/provenance';
 import { isFlagEnabled } from '@/lib/flags';
 
@@ -45,7 +47,7 @@ export default async function TeachCoursePage({
 
   const { data: course } = await supabase
     .from('courses')
-    .select('id, slug, title, created_by, audience, age_bands')
+    .select('id, slug, title, created_by, audience, age_bands, language_code')
     .eq('id', courseId)
     .is('deleted_at', null)
     .single();
@@ -57,12 +59,28 @@ export default async function TeachCoursePage({
     created_by: string;
     audience: 'child' | 'adult' | 'both';
     age_bands: string[] | null;
+    language_code: string | null;
   } | null;
 
   // `courses_read` admits any active course to any signed-in user, so this
   // checks authorship explicitly. Without it, /teach/<anyone's course> would
   // render the curriculum editor for a course you do not own.
   if (!row || row.created_by !== user.id) notFound();
+
+  // The whole register for the picker: a teacher writing the first Arabic
+  // course must be able to say so, so this is not the chip row's list of
+  // languages somebody has already used.
+  const languageRegister = parseLanguages(
+    (await supabase.from('languages').select('code, native_name, english_name, direction')
+      .eq('is_available', true).order('sort_order'))
+      .data?.map((l) => ({
+        code: l.code,
+        nativeName: l.native_name,
+        englishName: l.english_name,
+        direction: l.direction,
+        courses: 0,
+      })) ?? [],
+  );
 
   const versions = await fetchVersions(supabase, courseId);
   const draft = versions.find((v) => v.status === 'draft');
@@ -118,6 +136,11 @@ export default async function TeachCoursePage({
             courseId={row.id}
             initialAudience={row.audience}
             initialBands={row.age_bands ?? []}
+          />
+          <LanguagePicker
+            courseId={row.id}
+            initialCode={row.language_code ?? 'en'}
+            languages={languageRegister}
           />
           <SubjectPicker
             version={current}

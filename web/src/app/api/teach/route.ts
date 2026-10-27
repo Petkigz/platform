@@ -8,7 +8,7 @@ import {
 } from '@/lib/assessment';
 import {
   addLesson, addLessonResource, addSection, createCourse, createCourseVersionFrom,
-  moveCourseContent, setAudience, setLessonPreview, setSubjects,
+  moveCourseContent, setAudience, setLanguage, setLessonPreview, setSubjects,
   type MoveDirection, type ReorderableContentType,
   transitionVersion, validateAddResource, type AddResourceAccess, type ResourceType,
 } from '@/lib/authoring';
@@ -43,6 +43,7 @@ export async function POST(request: Request) {
     courseId?: unknown;
     audience?: unknown;
     ageBands?: unknown;
+    languageCode?: unknown;
     title?: unknown;
     type?: unknown;
     versionId?: unknown;
@@ -317,6 +318,28 @@ export async function POST(request: Request) {
       await setSubjects(supabase, {
         versionId: b.versionId,
         codes: (b.codes as unknown[]).filter((c): c is string => typeof c === 'string'),
+      }),
+    );
+  }
+
+  // ---------------------------------------------------------------------
+  if (b.action === 'set_language') {
+    // Which language a course is taught in sits on the course, not the version,
+    // so — like who it is for — it is not blocked by a published version.
+    if (!isUuid(b.courseId) || typeof b.languageCode !== 'string') {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: 'rejected',
+          message: 'A course and a language code are required.',
+        },
+        { status: 400 },
+      );
+    }
+    return json(
+      await setLanguage(supabase, {
+        courseId: b.courseId,
+        languageCode: b.languageCode,
       }),
     );
   }

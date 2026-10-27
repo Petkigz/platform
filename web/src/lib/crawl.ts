@@ -208,13 +208,15 @@ export function buildSitemap(
  * Order is fixed rather than preserved, so two spellings of the same filter are
  * one canonical URL.
  */
-const KEPT_PARAMS = ['q', 'subject', 'audience', 'band', 'page'] as const;
+const KEPT_PARAMS = ['q', 'subject', 'audience', 'band', 'lang', 'page'] as const;
 
 export function canonicalCataloguePath(params: {
   q?: string;
   subject?: string;
   audience?: string;
   band?: string;
+  /** A language code from the chip row. `all` is dropped like every other default. */
+  lang?: string;
   page?: string;
 }): string {
   const search = new URLSearchParams();

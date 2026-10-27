@@ -151,6 +151,7 @@ test('one call answers both browsing and searching', async () => {
     p_band: null,
     p_limit: PAGE_SIZE,
     p_offset: 0,
+    p_language: null,
   });
 });
 
@@ -169,7 +170,25 @@ test('a blank query and "all" go as nothing at all', async () => {
     p_band: '8-10',
     p_limit: PAGE_SIZE,
     p_offset: 0,
+    p_language: null,
   });
+});
+
+test('a language filter goes through, and “all” goes as nothing', async () => {
+  const { client, calls } = stubClient({
+    rpcData: envelope({ ordered: [{ courseId: 'a', score: 0 }] }),
+    rows: [course('a', 'Alpha')],
+  });
+
+  await fetchCatalogue(client, { language: 'ar' });
+  assert.equal(calls[0]?.args?.p_language, 'ar');
+
+  const second = stubClient({
+    rpcData: envelope({ ordered: [{ courseId: 'a', score: 0 }] }),
+    rows: [course('a', 'Alpha')],
+  });
+  await fetchCatalogue(second.client, { language: 'all' });
+  assert.equal(second.calls[0]?.args?.p_language, null);
 });
 
 test('an empty page never reads the courses table', async () => {
