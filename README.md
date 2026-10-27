@@ -69,9 +69,9 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **143 tables, RLS on every one, 269 policies, 165
-user-defined triggers, 490 functions and 182 migrations.** The database suite
-passes **1920 tests**; the web suite passes **1411 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **210 app route entries** — 112
+user-defined triggers, 498 functions and 183 migrations.** The database suite
+passes **1931 tests**; the web suite passes **1425 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **211 app route entries** — 112
 pages, 89 API routes, and the metadata routes it generates.
 
 **The policies were drafts, and the database said so.** Seven documents — terms,
@@ -123,6 +123,24 @@ waived, and cannot close without a recorded change. Choosing not to tell a body 
 decision with a reason, kept on the record rather than deleted. Nothing there detects
 a breach and nothing sends a notification: the learner notice is written and held, and
 the screen says so beside the field.
+
+**Guardian consent is a method and a date, not a checkbox.** The owner's answer to
+the children's question was to build verifiable parental consent and integrate it
+fully, and the machinery had a hole: a relationship could be `active` with no
+lifetime, no method and no way for a parent to open the case that makes anybody look
+at it. `/family/guardians` now submits the relationship and the case in one call — a
+required statement in the parent's own words, a method, a write-only evidence
+reference — and `/admin/guardians` decides it: verify for a stated number of months,
+reject with a reason the parent reads, or ask for more. The expiry lives in one
+predicate, `guardian_consent_is_current()`, behind the thirteen policies that call
+`can_access_learner()` and behind the child-enrolment trigger, so a lapse pauses
+access everywhere at once and deletes nothing; a withdrawal clears the permissions and
+keeps the parent's reason. The evidence reference is write-only for everybody —
+including the reviewer — because a queue that hands out a pointer to somebody's
+identity documents is a queue nobody should trust. The flag stays off and means
+enforcement, not permission: an owner can record and review consents first, then turn
+enforcement on, and both screens say that turning it on lapses every earlier
+verification, since those were approved without a lifetime.
 
 **A takedown that withholds instead of deleting.** `platform.takedown` named its own
 gap — the notice process existed and the withholding action did not. It does now, and

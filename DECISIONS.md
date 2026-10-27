@@ -5068,3 +5068,57 @@ a document is now either waiting on a question or carrying the record of who ans
 it, and an answered document with nobody's name on the change is the failure. A new
 suite holds the answers to their words, refuses an invented contact detail anywhere in
 the register, and publishes a document and rolls it back to prove the path works.
+
+## Consent is a method and a date, and a lapse deletes nothing — **DECIDED 2026-10-27**
+
+The owner's answer to the children's question was not *"add a checkbox"*; it was
+*build verifiable guardian consent and integrate it fully*. That means the machinery
+had to answer four questions it could not answer before: **who asked, how the
+relationship was established, when it stops counting, and how it ends.**
+
+**A verification is not a boolean.** `guardian_relationships` had `status` and
+`verified_at`, and no lifetime, so "verified" meant "verified once, for ever" — which
+is not what a parent's consent to a platform is, and is not what a regulator reads it
+as. It now carries `consent_method`, `consent_expires_at` and the `policy_versions` row
+that was in force at the moment it was given. Twelve months by default, one to
+thirty-six allowed, computed from the decision rather than typed, so two reviewers in
+the same week give the same answer and nobody has to remember a date.
+
+**The expiry lives in one place.** `guardian_consent_is_current()` is called by
+`is_verified_guardian_of()`, which is what thirteen policies and the child-enrolment
+trigger already ask. So a lapse bites everywhere at once — progress, files,
+certificates, enrolment — and there is no screen or endpoint that has to remember to
+check a date. A lapse **pauses**: nothing is deleted, no permission is silently
+rewritten, and the parent's own view says "this ran out on <date>" rather than leaving
+them to work it out from a refusal.
+
+**A withdrawal is an act, not a setting.** The parent can end it, with a reason that is
+kept, and the permissions are cleared in the same call. Any open case dies with it,
+because leaving one pending would have a reviewer approve a consent that no longer
+exists. The reason is shown to the other guardian and to staff: a withdrawal is a
+record, not a silent deletion.
+
+**The evidence is write-only, for everybody.** A column-level `revoke` does not beat a
+table-level grant — measured, not assumed: the reference stayed readable while the
+first attempt was in place. So the grant is withdrawn at table level and every readable
+column granted back. The queue reports `referenceGiven` and never the reference; the
+parent's own view does not carry it either. A reviewer needs to know evidence exists,
+not to hold a pointer to somebody's identity documents.
+
+**Asking again cannot widen what was narrowed.** Re-submitting a lapsed consent goes
+through the same table trigger as before, and it carries the previous permissions
+forward rather than resetting them to everything: asking again is not a way of talking
+your way back to a permission a reviewer refused. The decision writes what it grants,
+and only governance staff or the owner decide.
+
+**The flag means enforcement, not permission.** Recording a consent works with
+`family.guardian_verification` off, and so does deciding one; the flag decides whether
+a lapse removes access. That split is what makes turning it on possible: an owner can
+review a queue first and enforce second. Turning it on does make every verification
+approved before today lapse at once, because those were approved without a lifetime,
+and both screens and the flag's own preconditions say so in those words.
+
+**What is still not ours to write.** No policy version is claimed where none is in
+force — `policyInForce: false` is rendered as a sentence, not a blank — and the review
+itself remains a human queue with a real cost. The code is finished; the capacity and
+the evidence storage are the owner's, and the flag stays off until they exist.
