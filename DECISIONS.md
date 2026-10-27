@@ -4534,3 +4534,52 @@ the first names of people who joined and nothing else — no email, no surname, 
 purchases, no progress. Being invited by somebody is not permission for them to
 watch what you learn. The invitation landing page shows the inviter's first name
 and the discount, and is readable without an account.
+
+## A sponsored seat is a decision and a receipt, not a product — **DECIDED 2026-10-26**
+
+`commerce.sponsorship` carried three preconditions for weeks: eligibility rules,
+donor receipts, and a scholar's ruling on whether a sponsored seat counts as
+zakat. Only the first is a coding question, and the owner answered it: **a learner
+asks, the owner or finance decides, and a donor covers a seat they never see the
+name of.** This entry is that answer turned into rules.
+
+**The request is written, and it is private.** `apply_for_sponsorship()` takes a
+learner the caller may buy for — their own, or a child in a family they belong to,
+the same check checkout makes — a course that is on sale, and a sentence about
+the situation. That sentence is read by whoever decides and by nobody else; it is
+in its own column precisely so a pool query cannot pick it up by accident.
+
+**Approval is a role, not a favour.** `can_decide_sponsorship()` is the platform
+admin or a finance admin, and every decision needs a written reason — approving
+mints a seat code (`SPN-XXXXXX`) that carries no identity, declining keeps the
+reason where the applicant reads it. A support agent reading the desk is being
+informed; a support agent deciding who receives a free course is a different act
+and not one their job contains.
+
+**What a donor sees is what the platform can defend.** A seat code, the course,
+who the course is for, and the price *in the donor's own market* — the same rule
+every other price follows. Not a name, an age, a household, or a word of the
+reason. `sponsorship_pool()` returns exactly those fields, so there is no field a
+future redesign could start rendering.
+
+**A pledge is not a payment.** There is no provider that can take a sponsorship,
+so taking a seat records a pledge and says plainly how the money is handled;
+`record_sponsorship_payment()` is staff recording a reference, and *that* is what
+grants the seat — an `entitlement_grants` row with source `scholarship`, then an
+enrolment, in that order because enrolment demands an existing entitlement.
+Recording the same payment twice changes nothing.
+
+**A sponsored seat is not a sale.** No order is created, no tax line applies, and
+no teacher earning accrues — an earning is a share of a sale, and nobody sold
+anything. The grant's source says `scholarship` so a revenue report cannot
+mistake one for the other.
+
+**Neither side learns who the other is.** The applicant's board has no donor
+field; the donor's board has no learner field. That is enforced by two separate
+functions rather than by hiding a column, because a column that exists is a column
+somebody eventually renders.
+
+**The zakat question stays the owner's.** Whether a gift counts as zakat, sadaqah
+or neither is a scholar's ruling, and the platform says so on every screen rather
+than offering an opinion. The mechanism works the same either way, which is why
+it can ship while that question is still open.

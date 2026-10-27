@@ -16,11 +16,14 @@ export default async function AccountPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/sign-in?next=/account');
 
-  const [referralsOn, { data, error }, { data: learnerRows }, { data: methodsData },
+  const [referralsOn, sponsorshipOn, { data, error }, { data: learnerRows }, { data: methodsData },
          { data: badgeData }, { data: phoneData }, { data: mergeData }] = await Promise.all([
     // Inviting a friend is a link, not a form, so the card is only worth showing
     // when there is something at the other end of it.
     isFlagEnabled(supabase, 'commerce.referrals').catch(() => false),
+    // Sponsoring is two-sided: a person may be asking for a seat or paying for
+    // one, and the card leads to whichever is theirs.
+    isFlagEnabled(supabase, 'commerce.sponsorship').catch(() => false),
     supabase
       .from('user_profiles')
       .select('display_name, preferred_language, timezone, account_status')
@@ -167,6 +170,18 @@ export default async function AccountPage() {
           </p>
           <p>
             <MergeLink waiting={mergeWaiting} />
+          </p>
+        </section>
+      )}
+
+      {sponsorshipOn && (
+        <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
+          <h2 style={{ marginTop: 0 }}>Sponsored seats</h2>
+          <p className="muted">
+            A course can be paid for by somebody else. Ask for one if it is out of reach, or pay
+            for a seat that is waiting — the two sides never learn who the other is.{' '}
+            <Link href="/account/sponsorship">What I have asked for and sponsored</Link>{' '}
+            · <Link href="/sponsor">Seats waiting</Link>
           </p>
         </section>
       )}

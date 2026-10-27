@@ -59,6 +59,10 @@ const publicationLinks: ConsoleLink[] = [
   { href: '/admin/reviewers', label: 'Reviewer register', note: 'who applied to review, who has been checked, and what each may judge. Nothing publishes until somebody here is verified' },
 ];
 
+const sponsorshipLinks: ConsoleLink[] = [
+  { href: '/admin/sponsorships', label: 'Sponsored seats', note: 'learners asking for a course, and donors paying for one. Deciding needs a written reason and recording a payment needs a reference; a sponsored seat is not an order, so it carries no tax and no teacher earning' },
+];
+
 const referralLinks: ConsoleLink[] = [
   { href: '/admin/referrals', label: 'Invitations', note: 'who invited whom, what it earned and what the yearly cap or a refund stopped. Both rewards are discounts on a course — nothing is paid out, so there is no balance here' },
 ];
@@ -350,7 +354,7 @@ export default async function AdminPage() {
             rates every converted figure rests on. Every writer here needs a
             written reason.
           </p>
-          {[...moneyLinks, ...referralLinks].map((link) => (
+          {[...moneyLinks, ...sponsorshipLinks, ...referralLinks].map((link) => (
             <p key={link.href}>
               <Link href={link.href}>{link.label}</Link> — {link.note}
             </p>
