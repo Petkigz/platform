@@ -37,12 +37,18 @@ export default async function TeachPage() {
         <p className="eyebrow">Teaching</p>
         <h1>This is the teaching area</h1>
         <p className="notice warn">
-          <strong>Teaching here is by appointment.</strong> The platform owner creates a
-          teacher account; until then your account is a learner&apos;s, and a learner&apos;s
-          account cannot open a course. If you would like to teach, ask the owner to add you.
+          <strong>Teaching here is by appointment.</strong> The platform owner appoints a
+          teacher; until then your account is a learner&apos;s, and a learner&apos;s account
+          cannot open a course.
+        </p>
+        <p>
+          You may <strong>ask</strong> — send your qualifications and a sample lesson, and the
+          owner reads it. Applying is not being appointed: nothing is granted until somebody
+          decides, in writing.
         </p>
         <p style={{ marginTop: '1.5rem' }}>
-          <Link href="/learn" className="btn">Go to my learning</Link>
+          <Link href="/teach/apply" className="btn">Apply to teach</Link>{' '}
+          <Link href="/learn" className="btn secondary">Go to my learning</Link>
         </p>
       </div>
     );

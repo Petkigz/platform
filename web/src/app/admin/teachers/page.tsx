@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { directorySummary, parseDirectory, DirectoryError } from '@/lib/directory';
+import { parseQueue } from '@/lib/teaching';
+import { TeachingQueue } from './teaching-queue';
 
 export const metadata = { title: 'Teachers' };
 export const dynamic = 'force-dynamic';
@@ -28,7 +30,12 @@ function when(value: string): string {
  * course being taken" does not need the names.
  *
  * Owner or governance only — support finding an account is a different question
- * and lives on `/admin/users`.
+ * and lives on `/admin/users`. That is also exactly who may appoint: the queue
+ * below this roster is the appointment, and `can_appoint_teacher()` is the same
+ * test on the database side.
+ *
+ * The roster and the queue share a screen because they are one question — "who
+ * may teach here?" — and an appointment changes both halves of it at once.
  */
 export default async function AdminTeachersPage({
   searchParams,
@@ -52,12 +59,17 @@ export default async function AdminTeachersPage({
   const { q } = await searchParams;
   const query = typeof q === 'string' ? q.trim() : '';
 
-  const { data, error } = await supabase.rpc('staff_directory', {
-    p_kind: 'teachers',
-    p_search: query.length > 0 ? query : null,
-    p_limit: 100,
-  });
+  const [{ data, error }, { data: queueData, error: queueError }] = await Promise.all([
+    supabase.rpc('staff_directory', {
+      p_kind: 'teachers',
+      p_search: query.length > 0 ? query : null,
+      p_limit: 100,
+    }),
+    supabase.rpc('teaching_application_queue'),
+  ]);
   if (error) throw new Error(error.message);
+
+  const queue = queueError ? null : parseQueue(queueData);
 
   let teachers;
   try {
@@ -108,6 +120,30 @@ export default async function AdminTeachersPage({
         )}
       </form>
 
+      {queueError && (
+        <div className="notice error">
+          The applications queue could not be read: {queueError.message}
+        </div>
+      )}
+
+      {queue && (
+        <section style={{ marginBottom: '2rem' }}>
+          <div className="notice">
+            <strong>
+              {queue.open
+                ? 'Applications to teach are open.'
+                : 'Applications to teach are closed — nobody can send one, and this queue only shrinks.'}
+            </strong>{' '}
+            The switch is <code>teaching.applications</code> on <Link href="/admin">the dashboard</Link>.
+            Closing it stops new applications; it changes no decision and removes no teacher.
+          </div>
+          <div style={{ marginTop: '1rem' }}>
+            <TeachingQueue queue={queue} />
+          </div>
+        </section>
+      )}
+
+      <h2>Everyone appointed</h2>
       <p className="muted">{directorySummary(teachers, 'teacher')}</p>
 
       <div className="notice">
@@ -170,8 +206,8 @@ export default async function AdminTeachersPage({
       )}
 
       <p className="muted" style={{ marginTop: '1.5rem' }}>
-        Appointing or removing a teacher is on <Link href="/admin/roles">Roles</Link>,
-        with a written reason. What they have earned is on{' '}
+        A teacher may also be appointed by hand on <Link href="/admin/roles">Roles</Link>, with a
+        written reason, or removed there. What they have earned is on{' '}
         <Link href="/admin/payouts">payouts</Link>, per currency — never here.
       </p>
     </div>

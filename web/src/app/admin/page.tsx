@@ -53,7 +53,7 @@ const moneyLinks: ConsoleLink[] = [
 
 const publicationLinks: ConsoleLink[] = [
   { href: '/admin/courses', label: 'Courses', note: 'every course, which door it stands behind and how many learners it holds. Changing an audience is recorded against your name, with both sides of the change' },
-  { href: '/admin/teachers', label: 'Teachers', note: 'everyone who may teach here, what each has published and how many learners their courses hold' },
+  { href: '/admin/teachers', label: 'Teachers', note: 'the people asking to teach, and everyone who may teach here with what each has published and how many learners their courses hold. Approving an application is the appointment: it grants the role, with your reason against the applicant' },
   { href: '/admin/reviews', label: 'Assign reviews', note: 'courses waiting for a reviewer' },
   { href: '/admin/subjects', label: 'Subject areas', note: 'the vocabulary of the catalogue: what a learner can filter by, and what a badge on a course card may say. A subject in use by a live course cannot be retired' },
   { href: '/admin/reviewers', label: 'Reviewer register', note: 'who applied to review, who has been checked, and what each may judge. Nothing publishes until somebody here is verified' },

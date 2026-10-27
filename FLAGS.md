@@ -95,7 +95,7 @@ Three kinds of gate:
 | `teaching.screening` | Teacher screening and conduct acknowledgement | CODE | Screening policy; record retention; who verifies |
 | `teaching.peer_review` | One other teacher reviews before publish | ADMIN | Who reviews: the reviewer register on `/admin/reviewers` — a person applies on `/review`, a governance admin checks them, then grants the subjects and scopes they may judge. What has to be reviewed: `content_review_requirements`, written by the author or governance staff on `/teach/[courseId]` and `/admin/reviews`, which makes publication wait for an approval from somebody authorised for that subject and makes an unauthorised reviewer unassignable. What happens on disagreement: a `revision_requested` or `rejected` decision, or a conflict declaration, which bars that reviewer from the assignment at once and keeps barring them until staff hear it in writing. A requirement an approval cannot reach is waived by governance staff, in writing. **The flag is not what gates publication.** `enforce_publication_gate()` always needs `governance.min_approvals` scholarly approvals (default 1) and no open requirement, so the dials that actually switch peer review on and off are `governance.min_approvals` and `governance.panel_required`, both settable here |
 | `teaching.panel` | Scholarly panel with quorum and voting | CODE | Quorum policy; voting rules; conflict declarations; appeals. **Currently open — do not build until decided** |
-| `teaching.applications` | Open applications to teach — unknown teachers apply | CODE | Currently a curated cohort by decision. **Build the queue, keep it closed** — cheapest way to preserve the option. Needs a vetting process, terms for teachers, and rejection handling |
+| `teaching.applications` | Applying to teach: send your qualifications and a sample lesson, and the owner reads it | ADMIN | **Built 2026-10-26, and it still grants nothing on submit.** The oldest note beside this flag was *"build the queue, keep it closed"*, and the queue is now built: `submit_teaching_application()` records a headline, the qualifications in the applicant's own words, and a **link to a sample lesson** an owner can actually watch — free text rather than a dropdown, because a schema for somebody else's ijazah is the platform inventing credentials. **Teaching stays by appointment.** Submitting creates one row and nothing else: no role, no course, no profile, tested as three separate assertions. The `instructor` role is granted by `decide_teaching_application()`, which is staff-only, needs a written reason, and writes both the decision and a `role.assigned` entry against the applicant. Rejection handling is the reason itself — the applicant reads it on `/teach/apply` and may apply again, since people improve and a second look is cheaper than losing a teacher. One open application at a time; an existing teacher cannot apply for the role they hold. What approving does not do: it does not publish anything. An approved teacher still passes the publication gate — review, scholarly approval, the version workflow — exactly as before |
 | `teaching.payouts` | Teachers earn and get paid | CODE | Revenue share decided; payout provider; tax treatment; minimum thresholds; dispute process |
 
 ## Money
@@ -204,14 +204,17 @@ now holds the register, `/admin` reads and toggles it, and `/api/admin/flags`
 writes it. A trigger refuses to enable a `code`-gated flag at runtime, so the
 dashboard cannot promise what needs a deploy.
 
-**2. Twenty-six of these cannot be runtime toggles.**
-`gate_type='code'` on 26 flags — 9 `platform.*` legal, safety and data ones,
-5 `teaching.*`, 4 `learning.*`, 4 `institution.*`, 2 `commerce.*`,
-`delivery.transcode` and `family.child_login`. Each needs a deploy, a provider, or a
-policy that does not exist. Building them "to completion" means building them
-against guesses, so the tables and the flags exist and the work waits. The
-count falls as units land: `commerce.referrals` left this list on 2026-10-26
-when it was built as a discount rather than a payout.
+**2. Twenty-four of these cannot be runtime toggles.**
+`gate_type='code'` on 24 flags — 9 `platform.*` legal, safety and data ones,
+4 `teaching.*`, 4 `learning.*`, 4 `institution.*`, and three one-offs:
+`commerce.institutions`, `delivery.transcode` and `family.child_login`. Each
+needs a deploy, a provider, or a policy that does not exist. Building them "to
+completion" means building them against guesses, so the tables and the flags
+exist and the work waits — and the list is re-counted from
+`platform_settings` rather than from prose, because three units left it in one
+day and a stale total outlives the reason it was written. The count fell as the
+units landed: `commerce.referrals`, `commerce.sponsorship` and
+`teaching.applications` all became ADMIN on 2026-10-26.
 
 A further **15 are ADMIN + SETUP**: the toggle is real, but a provider, a sender
 domain or a written policy has to be finished first. Those are the ones where

@@ -132,6 +132,12 @@ export default function AboutPage() {
         wrote it.
       </p>
       <p className="muted">
+        You may ask. <Link href="/teach/apply">Applying to teach</Link> sends your
+        qualifications and a link to a lesson you have taught, and the owner reads
+        both. Applying grants nothing — it is a request for an appointment, and
+        the answer is a written decision you can read.
+      </p>
+      <p className="muted">
         A teacher may publish a page about themselves. When they have, the course
         page names them and links to it; when they have not, the course page says
         the course was written by an appointed teacher and approved by a

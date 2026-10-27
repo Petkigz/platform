@@ -45,6 +45,7 @@ import { run as phoneNumbers } from './phone_numbers.test.mjs';
 import { run as accountMerge } from './account_merge.test.mjs';
 import { run as referrals } from './referrals.test.mjs';
 import { run as sponsorship } from './sponsorship.test.mjs';
+import { run as teachingApplications } from './teaching_applications.test.mjs';
 import { run as revenueBreakdown } from './revenue_breakdown.test.mjs';
 import { run as assessments } from './assessments.test.mjs';
 import { run as revenueShare } from './revenue_share.test.mjs';
@@ -258,6 +259,7 @@ for (const [name, fn] of [
   ['account_merge', accountMerge],
   ['referrals', referrals],
   ['sponsorship', sponsorship],
+  ['teaching_applications', teachingApplications],
   ['assessments', assessments],
 ]) {
   console.log(`\n--- ${name} ---\n`);

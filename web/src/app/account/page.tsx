@@ -17,7 +17,8 @@ export default async function AccountPage() {
   if (!user) redirect('/sign-in?next=/account');
 
   const [referralsOn, sponsorshipOn, { data, error }, { data: learnerRows }, { data: methodsData },
-         { data: badgeData }, { data: phoneData }, { data: mergeData }] = await Promise.all([
+         { data: badgeData }, { data: phoneData }, { data: mergeData },
+         applicationsOn, { data: teachesHere }] = await Promise.all([
     // Inviting a friend is a link, not a form, so the card is only worth showing
     // when there is something at the other end of it.
     isFlagEnabled(supabase, 'commerce.referrals').catch(() => false),
@@ -50,6 +51,11 @@ export default async function AccountPage() {
     // A merge request waiting on this account is the one thing on this page
     // somebody has to act on, so the count comes with it.
     supabase.rpc('my_merge_requests'),
+    // Applying to teach. The card is only shown while the owner has the door
+    // open, and it is not shown to somebody who already teaches — an invitation
+    // to apply for a role you hold is a screen that has not read its own data.
+    isFlagEnabled(supabase, 'teaching.applications').catch(() => false),
+    supabase.rpc('has_role', { p_user_id: user.id, p_role_code: 'instructor' }),
   ]);
   if (error) throw new Error(error.message);
   if (!data) redirect('/learn');
@@ -182,6 +188,17 @@ export default async function AccountPage() {
             for a seat that is waiting — the two sides never learn who the other is.{' '}
             <Link href="/account/sponsorship">What I have asked for and sponsored</Link>{' '}
             · <Link href="/sponsor">Seats waiting</Link>
+          </p>
+        </section>
+      )}
+
+      {applicationsOn && teachesHere !== true && (
+        <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
+          <h2 style={{ marginTop: 0 }}>Teaching here</h2>
+          <p className="muted">
+            Teaching is by appointment — nobody becomes a teacher by signing up. If you would like
+            to teach, you can send your qualifications and a link to a lesson you have given, and
+            the owner reads it. <Link href="/teach/apply">Apply to teach</Link>.
           </p>
         </section>
       )}

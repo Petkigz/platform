@@ -4583,3 +4583,67 @@ somebody eventually renders.
 or neither is a scholar's ruling, and the platform says so on every screen rather
 than offering an opinion. The mechanism works the same either way, which is why
 it can ship while that question is still open.
+
+## Applying is not appointing: the teaching role is created by a decision — **DECIDED 2026-10-26**
+
+`teaching.applications` was the oldest "build the queue, keep it closed" note in
+`FLAGS.md`. The note gave three reasons it stayed shut: there was no vetting
+process, no rejection handling, and no place for a person to say what they know.
+A flag cannot answer any of those. A queue and a written decision can, so the
+answer here is the process rather than the door.
+
+**What the owner decided (2026-10-26):** people may apply, with their
+qualifications and a sample lesson, and the owner reviews them. Nothing is
+automatic. That sentence is the whole unit, and the two halves of it are held
+apart on purpose.
+
+**Submitting creates an application and nothing else.** One row in
+`teaching_applications`. No role, no course, no profile, no page — and the
+database suite asserts each of those three separately rather than asserting the
+absence of a role and trusting the rest. `submit_teaching_application()` is open
+to any signed-in person while the owner's switch is on, and it is the only write
+in this feature that a non-staff actor can make.
+
+**Approving is what appoints.** `decide_teaching_application()` is the only
+place in the codebase where `instructor` is created automatically, and it is
+narrower than the platform's other staff checks: `can_appoint_teacher()` names
+the **owner and governance**, the same pair the teacher roster already gated on.
+That is deliberately less than `is_privileged()`, because a support agent handles
+tickets and appointing a teacher is not a ticket — the reviewer register made the
+same distinction, and this follows it. The decision needs a written reason,
+because the applicant reads it; there is no silent decline.
+
+**One transaction, two records.** The role row and the decision row are written by
+one function, and the audit carries both a `teaching.application_approved` event
+and a `role.assigned` event against the applicant, marked `via:
+teaching_application`. A two-step screen would create a state where an
+application is approved and the appointment never happened, which is exactly the
+kind of half-done power that a written register is supposed to make impossible.
+Approval is also idempotent against the existing partial unique index: somebody
+who already holds the role is not granted it twice.
+
+**Appointment is not publication.** Approving a teacher changes what they *may*
+do, not what learners see. Every course they write still goes through review,
+scholarly approval and the version workflow — the same gate every existing
+teacher passes. Saying so on the admin screen is not decoration: an owner who
+believes approving publishes something would be surprised by the next screen.
+
+**The application is a person's own words, not a form's categories.** The
+qualifications are free text, because a dropdown of credentials would be the
+platform inventing a schema for somebody else's ijazah, and an invented schema is
+a claim about what counts. The sample lesson is a **link**, not an upload: there
+is no media path for applicants, and a link is something an owner can watch
+before deciding rather than something to take on trust.
+
+**Rejection handling is the reason, and a second look is cheap.** A declined
+applicant reads the note on `/teach/apply` and may apply again; people improve,
+and a queue that never lets anybody return is a queue that loses teachers. One
+open application at a time, so one person is not two rows in a queue somebody has
+to read. Withdrawing needs no reason and no confirmation: changing your mind is
+not something to justify.
+
+**What this does not settle.** Whether a teacher must hold a verified
+qualification *before* their first course publishes is the publication gate's
+question and is already answered there (`teaching.applications` only governs who
+may be appointed). Teacher payouts, revenue-share fine print and screening policy
+remain the owner's, and the queue makes no promise about any of them.
