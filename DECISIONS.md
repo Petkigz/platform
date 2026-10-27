@@ -4812,6 +4812,14 @@ not because it is secret, but because an agreement read out of a text that then
 changes is not an agreement. With nothing approved, the page says so in one
 sentence instead of looking empty.
 
+**The register can grow without a deploy.** Seven documents were seeded, which
+would have left the eighth — an incident runbook, a screening standard, a panel
+procedure — needing an insert by hand, and a register somebody cannot add to is
+out of date by the second decision. `create_policy_document()` adds a slot with
+an address, a title, a summary and who it is for; the first version is written
+and approved like every other one, so a new document is unreadable until somebody
+finishes it.
+
 **What this does not claim.** Nothing here is legal advice and no document is
 asserted to satisfy GDPR, COPPA, the Uganda DPA or anything else. The drafts name
 the questions a lawyer or the owner must answer — governing law, limitation of

@@ -297,6 +297,17 @@ export function describePolicyError(message: string | null | undefined): string 
   if (text.includes('policy:not_in_force')) {
     return 'That document is not in force yet, so there is nothing to agree to.';
   }
+  if (text.includes('policy:slug_invalid')) {
+    return 'The address may only use lower-case letters, numbers and single dashes, and must start with a letter.';
+  }
+  if (text.includes('policy:title_required')) return 'Give the document a title, between 3 and 120 characters.';
+  if (text.includes('policy:summary_required')) {
+    return 'Write the one sentence a person reads in the list, between 10 and 400 characters.';
+  }
+  if (text.includes('policy:audience_invalid')) return 'Choose who the document is written for.';
+  if (text.includes('policy:exists')) {
+    return 'There is already a document at that address. Choose another slug, or edit that one.';
+  }
   if (text.includes('policy:not_found')) return 'That document does not exist.';
   if (text.includes('policy:already_decided')) {
     return 'That version has already been decided. Write a new draft instead of rewriting this one.';

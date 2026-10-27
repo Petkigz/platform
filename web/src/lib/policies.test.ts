@@ -207,6 +207,11 @@ test('a database refusal becomes a sentence somebody can act on', () => {
   assert.match(describePolicyError('policy:not_allowed'), /Only the platform owner/);
   assert.match(describePolicyError('policy:not_in_force'), /not in force yet/);
   assert.match(describePolicyError('policy:not_found'), /does not exist/);
+  assert.match(describePolicyError('policy:slug_invalid'), /lower-case letters/);
+  assert.match(describePolicyError('policy:title_required'), /title/);
+  assert.match(describePolicyError('policy:summary_required'), /one sentence/);
+  assert.match(describePolicyError('policy:audience_invalid'), /written for/);
+  assert.match(describePolicyError('policy:exists'), /already a document/);
   assert.match(describePolicyError('policy:already_decided'), /already been decided/);
   assert.match(describePolicyError('policy:not_signed_in'), /Sign in/);
   // An unexpected message is passed through rather than swallowed: a refusal

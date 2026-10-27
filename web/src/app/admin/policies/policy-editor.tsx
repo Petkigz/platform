@@ -45,6 +45,10 @@ export function PolicyEditor({
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<Notice | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [newDoc, setNewDoc] = useState({
+    slug: '', title: '', summary: '', audience: 'everyone', acceptance: false,
+  });
 
   if (!register) {
     return (
@@ -55,6 +59,12 @@ export function PolicyEditor({
   }
 
   const documents = register.documents;
+
+  /** Open a document's editor by slug, for the one just created. */
+  async function openDocumentBySlug(slug: string) {
+    const doc = register?.documents.find((row) => row.slug === slug);
+    if (doc) await openDocument(doc);
+  }
 
   async function openDocument(doc: RegisterDocument) {
     setNotice(null);
@@ -160,6 +170,38 @@ export function PolicyEditor({
     }
   }
 
+  async function createDocument() {
+    setNotice(null);
+    setBusy(true);
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.rpc('create_policy_document', {
+        p_slug: newDoc.slug.trim().toLowerCase(),
+        p_title: newDoc.title,
+        p_summary: newDoc.summary,
+        p_audience: newDoc.audience,
+        p_acceptance_required: newDoc.acceptance,
+      });
+      if (error) {
+        setNotice({ tone: 'error', text: describePolicyError(error.message) });
+        return;
+      }
+      const created = data as { slug?: string } | null;
+      setNotice({
+        tone: 'done',
+        text: `Added ${newDoc.title.trim()}. It has no text yet: open it and write the first version.`,
+      });
+      setNewDoc({ slug: '', title: '', summary: '', audience: 'everyone', acceptance: false });
+      setAdding(false);
+      if (created?.slug) await openDocumentBySlug(created.slug);
+      router.refresh();
+    } catch {
+      setNotice({ tone: 'error', text: 'Could not reach the server. Nothing was added.' });
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const openInEditor = documents.find((doc) => doc.slug === open) ?? null;
   const typedDecisions = decisionCount(body);
   const publishable = canPublish(typedDecisions);
@@ -173,6 +215,88 @@ export function PolicyEditor({
         >
           {notice.text}
         </div>
+      )}
+
+      {isOwner && (
+        <section className="card" style={{ display: 'grid', gap: '0.5rem' }}>
+          <h2 style={{ margin: 0 }}>Add a document</h2>
+          <p className="muted" style={{ margin: 0 }}>
+            For anything the platform owes in writing that does not exist yet — an incident
+            runbook, a screening standard, a panel procedure. It is a slot, not a text: the
+            first version is written and approved like every other one, and nothing reaches a
+            reader until it is.
+          </p>
+          {!adding ? (
+            <p style={{ margin: 0 }}>
+              <button type="button" className="btn secondary" onClick={() => setAdding(true)} disabled={busy}>
+                Add a document
+              </button>
+            </p>
+          ) : (
+            <div style={{ display: 'grid', gap: '0.5rem' }}>
+              <label htmlFor="new-policy-title">Title</label>
+              <input
+                id="new-policy-title"
+                type="text"
+                value={newDoc.title}
+                onChange={(event) => setNewDoc({ ...newDoc, title: event.target.value })}
+                placeholder="Incident response"
+                disabled={busy}
+              />
+              <label htmlFor="new-policy-slug">Address</label>
+              <input
+                id="new-policy-slug"
+                type="text"
+                value={newDoc.slug}
+                onChange={(event) => setNewDoc({ ...newDoc, slug: event.target.value })}
+                placeholder="incident-response"
+                disabled={busy}
+              />
+              <p className="muted" style={{ margin: 0, fontSize: '0.85rem' }}>
+                Lower-case letters, numbers and dashes. It becomes /policies/&lt;address&gt;.
+              </p>
+              <label htmlFor="new-policy-summary">One sentence for the list</label>
+              <input
+                id="new-policy-summary"
+                type="text"
+                value={newDoc.summary}
+                onChange={(event) => setNewDoc({ ...newDoc, summary: event.target.value })}
+                placeholder="What happens when something goes wrong, and who is told."
+                disabled={busy}
+              />
+              <label htmlFor="new-policy-audience">Written for</label>
+              <select
+                id="new-policy-audience"
+                value={newDoc.audience}
+                onChange={(event) => setNewDoc({ ...newDoc, audience: event.target.value })}
+                disabled={busy}
+              >
+                <option value="everyone">Everyone</option>
+                <option value="child">Children and their guardians</option>
+                <option value="teacher">Teachers</option>
+                <option value="institution">Institutions</option>
+              </select>
+              <label htmlFor="new-policy-acceptance" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <input
+                  id="new-policy-acceptance"
+                  type="checkbox"
+                  checked={newDoc.acceptance}
+                  onChange={(event) => setNewDoc({ ...newDoc, acceptance: event.target.checked })}
+                  disabled={busy}
+                />
+                Accounts must agree to it, not only read it
+              </label>
+              <p style={{ margin: 0, display: 'flex', gap: '0.5rem' }}>
+                <button type="button" className="btn" onClick={createDocument} disabled={busy}>
+                  {busy ? 'Adding…' : 'Add it'}
+                </button>
+                <button type="button" className="btn secondary" onClick={() => setAdding(false)} disabled={busy}>
+                  Cancel
+                </button>
+              </p>
+            </div>
+          )}
+        </section>
       )}
 
       <ul className="stack" style={{ listStyle: 'none', padding: 0 }}>

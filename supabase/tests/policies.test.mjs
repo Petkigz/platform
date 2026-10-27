@@ -278,6 +278,65 @@ export async function run(ctx) {
     assert(draft.body.length > 200, 'the editor did not receive the text');
   });
 
+  await test('the owner can add a document, and it reaches nobody until approved', async () => {
+    await rejects(
+      () => call(learner, 'create_policy_document($1,$2,$3)',
+        ['incident-response', 'Incident response', 'What happens when something goes wrong.']),
+      /not_allowed/);
+    await rejects(
+      () => call(governance, 'create_policy_document($1,$2,$3)',
+        ['incident-response', 'Incident response', 'What happens when something goes wrong.']),
+      /not_allowed/);
+
+    // The slug is an address and the checks are named, because the screen that
+    // shows them is written by whoever reads the refusal.
+    await rejects(
+      () => call(admin, 'create_policy_document($1,$2,$3)',
+        ['Incident Response!', 'Incident response', 'What happens when something goes wrong.']),
+      /slug_invalid/);
+    await rejects(
+      () => call(admin, 'create_policy_document($1,$2,$3)', ['incident-response', 'No', 'Too short.']),
+      /title_required/);
+    await rejects(
+      () => call(admin, 'create_policy_document($1,$2,$3)', ['incident-response', 'Incident response', 'short']),
+      /summary_required/);
+    await rejects(
+      () => call(admin, 'create_policy_document($1,$2,$3,$4)',
+        ['incident-response', 'Incident response', 'What happens when something goes wrong.', 'nobody']),
+      /audience_invalid/);
+
+    const created = await call(admin, 'create_policy_document($1,$2,$3,$4,$5)',
+      ['incident-response', 'Incident response (draft)', 'What happens when something goes wrong, and who is told.', 'everyone', false]);
+    eq(created.slug, 'incident-response', 'the slug it was given');
+
+    const again = await call(admin, 'create_policy_document($1,$2,$3)',
+      ['incident-response', 'Incident response', 'What happens when something goes wrong.'])
+      .then(() => null).catch((e) => e);
+    assert(/policy:exists/.test(String(again?.message ?? '')), 'the same slug was accepted twice');
+
+    // It is in the register, it has no version, and it is therefore not in force.
+    const register = await call(admin, 'policy_register()');
+    const row = register.documents.find((doc) => doc.slug === 'incident-response');
+    assert(row, 'the new document is not on the register');
+    eq(row.live, null, 'a document added with no text is somehow in force');
+    eq(row.draft, null, 'a document added with no text has a draft');
+    eq(row.acceptedAccounts, 0, 'accounts that agreed to nothing');
+
+    // And a visitor still sees nothing: no approved text, so no page.
+    eq(await asAnon(() => q(`select public.policy_page('incident-response') as r`)).then(
+      (res) => res.rows[0].r), null, 'a document with no version produced a page');
+
+    // The first version is written and approved through the ordinary path.
+    const saved = await call(admin, 'save_policy_draft($1,$2,$3)',
+      ['incident-response', `${'## What this is\n\n' + 'A runbook nobody has written yet. '.repeat(10)}`,
+        'First draft.']);
+    eq(saved.versionNumber, 1, 'the first version of a new document');
+    const approved = await call(admin, 'approve_policy_version($1,$2,$3)',
+      [saved.id, '2026-12-01', 'The owner wrote the runbook.']);
+    eq(approved.status, 'in_force', 'the first version of the new document');
+    eq(approved.replaced, null, 'a document that had no version to replace');
+  });
+
   await test('the switches now describe what is built, and not what is not', async () => {
     const rows = (await q(
       `select key, gate_type, preconditions from public.platform_settings
