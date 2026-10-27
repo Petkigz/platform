@@ -68,10 +68,11 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 ## Status
 
-The database stands at **137 tables, RLS on every one, 263 policies, 163
-user-defined triggers, 464 functions and 178 migrations.** The database suite
-passes **1881 tests**; the web suite passes **1384 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **198 app route entries** (109 pages, 89 API routes).
+The database stands at **138 tables, RLS on every one, 264 policies, 164
+user-defined triggers, 468 functions and 179 migrations.** The database suite
+passes **1890 tests**; the web suite passes **1392 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **205 app route entries** — 110
+pages, 86 API routes, and the metadata routes it generates.
 
 **The policies are drafts, and the database says so.** Seven documents — terms,
 privacy, children, refunds, teaching, safeguarding, takedown — describe what the
@@ -92,6 +93,18 @@ panel with a quorum the owner sets, seats people who are both appointed and chec
 opens a case against an unpublished version and records the decision; `/panel` is
 where a seated member votes. A case cannot close below quorum, cannot be approved
 while more voted to reject, and a convened panel cannot be emptied below its quorum.
+
+**A register of what was checked about the adults who teach.** The safeguarding
+policy had said the honest thing — screening is not built, and the gap is stated
+rather than implied by a badge — and the gap is now a record instead of an absence.
+`/admin/screenings` holds one row per check: what kind, when, when it lapses, who
+recorded it. The reference to the document is write-only (no client role may read
+that column back) and the row is append-only (a trigger refuses every update and
+delete), because a record of what somebody was told is worth less than nothing if
+it can be edited afterwards. A teacher reads their own record on `/teach`. What it
+still does not do is block anything: refusing a child-facing course from an adult
+with no current check needs a standard the owner has not set, and `FLAGS.md` says
+so in the same paragraph that names what does exist.
 
 Every class a screen asks for is defined. The stylesheet had been missing `.page`, `.page-head` and
 `.crumbs` while twenty-five to twenty-eight screens used them — and `.narrow`, which meant a 26rem

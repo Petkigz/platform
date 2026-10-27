@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { fetchMyCourses } from '@/lib/authoring';
+import { myScreeningSentence, screeningStatusLabel, type MyScreening } from '@/lib/screening';
 import { NewCourse } from './new-course';
 
 export const dynamic = 'force-dynamic';
@@ -54,7 +55,12 @@ export default async function TeachPage() {
     );
   }
 
-  const courses = await fetchMyCourses(supabase, user.id);
+  const [courses, screeningResult] = await Promise.all([
+    fetchMyCourses(supabase, user.id),
+    supabase.rpc('my_screening_status'),
+  ]);
+  if (screeningResult.error) throw new Error(screeningResult.error.message);
+  const screening = (screeningResult.data ?? { recorded: false }) as unknown as MyScreening;
 
   return (
     <div className="container section">
@@ -71,6 +77,32 @@ export default async function TeachPage() {
         own courses, in the countries you choose, with a limit on how many times
         a family may use it.
       </p>
+
+      {/* The teacher is told what is on file about them. Reading it is not asking
+          permission: it is the one place a person can check a record that is held
+          about them, and a record they cannot see is one they cannot correct. */}
+      <div className="card" style={{ marginBottom: '1.5rem' }}>
+        <h2 style={{ marginTop: 0 }}>Screening</h2>
+        <p style={{ marginBottom: '0.35rem' }}>
+          <strong>
+            {screening.recorded
+              ? screening.outcome === 'failed'
+                ? 'Did not pass'
+                : screening.expired
+                  ? 'Lapsed'
+                  : screeningStatusLabel('checked')
+              : screeningStatusLabel('none')}
+          </strong>
+        </p>
+        <p style={{ marginBottom: 0 }}>{myScreeningSentence(screening)}</p>
+        {!screening.recorded && (
+          <p className="muted" style={{ marginBottom: 0, fontSize: '0.9rem' }}>
+            Nothing here blocks your teaching. If the owner starts asking for a check before a
+            course facing children can publish, they will say so here first — not in an email you
+            did not read.
+          </p>
+        )}
+      </div>
 
       {courses.length === 0 ? (
         <div className="empty" style={{ marginBottom: '1.5rem' }}>

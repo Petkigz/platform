@@ -57,6 +57,7 @@ const publicationLinks: ConsoleLink[] = [
   { href: '/admin/reviews', label: 'Assign reviews', note: 'courses waiting for a reviewer' },
   { href: '/admin/subjects', label: 'Subject areas', note: 'the vocabulary of the catalogue: what a learner can filter by, and what a badge on a course card may say. A subject in use by a live course cannot be retired' },
   { href: '/admin/reviewers', label: 'Reviewer register', note: 'who applied to review, who has been checked, and what each may judge. Nothing publishes until somebody here is verified' },
+  { href: '/admin/screenings', label: 'Teacher screening', note: 'every appointed teacher and whether a check is on file: what kind, when, when it lapses, who recorded it. The reference to the document is stored and never shown again, and a record cannot be edited — a new check supersedes it. Nothing is blocked by a missing record yet' },
 ];
 
 const institutionLinks: ConsoleLink[] = [

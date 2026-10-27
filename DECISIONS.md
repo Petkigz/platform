@@ -4881,3 +4881,44 @@ is required. There is no per-member **recusal**: a member who must not decide a 
 records an abstention with the reason in writing, which stays on the case, but a row
 that says "I stepped aside" does not exist. That is named in `FLAGS.md` rather than
 implied by the presence of a vote button.
+
+## A register of checks, and the standard left unwritten — **DECIDED 2026-10-27**
+
+The safeguarding policy said it plainly: *a teacher who works with children is
+expected to have been checked, and screening is not built into this platform yet.*
+That was honest and useless — a gap stated is a gap somebody still has to fill by
+hand, in a spreadsheet, with no record of who was told what.
+
+**What exists now is the record, and only the record.** `/admin/screenings` holds
+one row per check on one adult who teaches: what kind it was, when it was done,
+when it lapses, who recorded it, and where the document is held. The owner or
+governance staff write it; nobody else. A learner is never screened — the writer
+refuses a person without the teacher role, because the person being checked is the
+adult standing in front of children, not the child.
+
+**The reference is write-only.** It records where the document lives and no client
+role can read the column back — not the teacher it is about, not staff, not
+support. That is the same rule the reviewer register follows for identity papers,
+for the same reason: a table read must not hand anybody a way to fetch somebody's
+identity documents. It also means the platform cannot show the evidence it asks
+staff to judge. That is stated rather than papered over: verifying a check remains
+a judgement made outside the platform until a signed evidence route exists.
+
+**The row is append-only.** A trigger refuses every update and every delete. A
+later check is a new row, and the latest one is the status. Editing a record of
+what an adult was told about a child-safety check is the one thing such a record
+must not permit.
+
+**Nothing is blocked, and the screen says so.** Refusing a child-facing course from
+an adult with no current check is the part that would need a standard: what a check
+is, who performs it, how long it lasts, which countries need which. None of that is
+invented here. So a missing record blocks nothing today, `platform.safeguarding`
+stays `CODE`, and the console prints above the list that it blocks nothing — a
+column of *no check on file* invites the reader to assume it does, and that
+assumption is the failure this whole entry exists to prevent.
+
+**What the owner still decides.** What a check is. Who performs it. How long it
+lasts. Who is the named safeguarding lead. And whether the enforcement gets built
+at all — a platform that teaches adults in countries where no such register exists
+may reasonably answer differently from one that teaches children in the United
+Kingdom.
