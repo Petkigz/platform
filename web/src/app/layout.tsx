@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+
+import { A11Y_BOOT } from '@/lib/a11y';
 import Link from 'next/link';
 import { siteOrigin } from '@/lib/site';
 import { organisationJsonLd, websiteJsonLd } from '@/lib/structured-data';
@@ -55,6 +57,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body>
+        {/*
+          Reading preferences are applied before the first paint. The script is
+          tiny, inline and reads one cookie; a person who needs larger text must
+          never see a flash of the small one. It sets the same attributes the
+          account page writes, from the same list — see lib/a11y.ts.
+        */}
+        <script dangerouslySetInnerHTML={{ __html: A11Y_BOOT }} />
         <a href="#main" className="sr-only" style={srOnly}>Skip to content</a>
 
         <header className="masthead">

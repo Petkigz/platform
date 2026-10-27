@@ -1379,3 +1379,50 @@ textarea { resize: vertical; min-height: 4rem; }
      is the one document this page exists to prevent. */
   .print-revocation { display: block !important; color: #a12828; }
 }
+
+/* --------------------------------------------------------------------------
+   Reading preferences — set on <html> by the boot script in the layout
+   --------------------------------------------------------------------------
+   Three settings a person owns, applied to the document element so every page
+   inherits them: a text size, stronger outlines, and motion that can be turned
+   off even when the device does not ask. The selectors are attributes rather
+   than classes because the markup never changes — this is the same page at a
+   different size, not a different page.
+
+   Nothing here removes an element or reorders one. A layout that only works at
+   one size is not a layout; the single-column rules at the largest size are the
+   honest admission that some tables need more room than a phone has.
+   -------------------------------------------------------------------------- */
+
+html[data-text='large'] { font-size: 112.5%; }
+html[data-text='larger'] { font-size: 125%; }
+
+/* At the largest step, a two-column card row becomes one column: the alternative
+   is a column so narrow that a word breaks mid-syllable. */
+html[data-text='larger'] .row,
+html[data-text='larger'] .stats { flex-wrap: wrap; }
+html[data-text='larger'] .stats > div { min-width: 100%; }
+
+/* Stronger outlines: darker secondary text, heavier borders, no pale grey. */
+html[data-contrast='high'] {
+  --muted:       #33473c;
+  --border:      #9db3a6;
+  --border-soft: #b9cabf;
+  --surface-2:   #ffffff;
+  --bg:          #ffffff;
+}
+html[data-contrast='high'] .card,
+html[data-contrast='high'] .notice,
+html[data-contrast='high'] table th,
+html[data-contrast='high'] table td { border-color: var(--border); }
+html[data-contrast='high'] :focus-visible { outline-width: 3px; outline-color: var(--green-800); }
+
+/* Motion: the device's own setting is honoured above; this is the person's
+   override for a device that does not ask. */
+html[data-motion='reduce'] *,
+html[data-motion='reduce'] *::before,
+html[data-motion='reduce'] *::after {
+  transition: none !important;
+  animation: none !important;
+  scroll-behavior: auto !important;
+}

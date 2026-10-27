@@ -4699,3 +4699,36 @@ scheduler, and the page says so rather than promising an integration.
 **What is still missing, and stays missing.** `commerce.institutions` — invoicing,
 bulk seats, purchase orders — needs B2B terms and a payment provider, and no
 screen offers them. Being able to say that is the point of building the rest.
+
+## Reading is a setting, and the defaults have to be good enough without it — **DECIDED 2026-10-26**
+
+The platform teaches five-year-olds and adults, worldwide. "Readable" is not one
+size, so three settings now belong to the person: text size in three steps,
+contrast, and motion. They are in a cookie rather than a database row, because
+they describe a **screen**, not a person — a laptop and a phone want different
+sizes, and a shared machine should not inherit somebody else's choice. The page
+says that, so nobody expects it to follow them.
+
+**Applied before the first paint.** A person who needs larger text must not see a
+flash of the small text on every page load, so a small inline script in the root
+layout reads the cookie and sets three attributes on `<html>` before anything
+renders. It checks each value against its own list rather than trusting the
+cookie, and the same list drives the page's control, so the two cannot drift.
+
+**The settings do not hide anything.** Every rule is on the document element and
+inherits: nothing is removed, reordered or conditioned. At the largest size the
+two-column rows become one column, because the alternative is a column narrow
+enough to break a word mid-syllable — the honest admission that some layouts need
+more room than a phone has.
+
+**The defaults are the product, not the fallback.** Focus outlines, the skip
+link, the device's own reduced-motion request and measured colour pairs are all
+in place with nothing set. A preference is an addition for a particular person,
+never a repair of a page that was unusable.
+
+**What is refused, and said out loud.** No language switch (that is the next
+unit, and it needs translators rather than code), no text-to-speech (a provider
+nobody has connected), and no dyslexia-friendly font (licensing, and a free
+substitute would be a claim without the property that makes the claim true). The
+page lists all three under "What is not here yet" rather than leaving them to be
+discovered.

@@ -226,6 +226,15 @@ export default async function AccountPage() {
       </section>
 
       <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
+        <h2 style={{ marginTop: 0 }}>How this reads</h2>
+        <p className="muted">
+          Text size, contrast and motion — applied the moment you choose one, for this browser.
+          Nothing here needs saving, and nothing else changes about the page.{' '}
+          <Link href="/account/accessibility">Reading preferences</Link>
+        </p>
+      </section>
+
+      <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
         <h2 style={{ marginTop: 0 }}>My institution</h2>
         <p className="muted">
           A madrasah, school or organisation you belong to. If your email address is at a domain
