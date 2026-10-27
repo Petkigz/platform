@@ -354,16 +354,18 @@ export async function run(ctx) {
     // Legal still needs a document: the decisions, and the people to name.
     eq(of('platform.legal').gate_type, 'admin_setup', 'the legal register');
 
-    // A flag that said nothing existed while the table exists is a lie that
-    // survives until somebody reads it. Only incident may still say so.
+    // A flag that says nothing exists while the machinery exists is a lie that
+    // survives until somebody reads it. Every one of the seven is past that now:
+    // the incident register was the last, and it names the three things still
+    // missing (detection, delivery, a deadline) instead of claiming a blank page.
     for (const row of rows) {
-      const saysNothing = /Nothing exists/.test(row.preconditions);
-      if (row.key === 'platform.incident') {
-        assert(saysNothing, 'incident response does claim something exists');
-      } else {
-        assert(!saysNothing, `${row.key} still says "Nothing exists"`);
-      }
+      assert(!/Nothing exists/.test(row.preconditions),
+        `${row.key} still says "Nothing exists"`);
     }
+    assert(/incident register/i.test(of('platform.incident').preconditions),
+      'incident response does not name the register that exists');
+    assert(/detection/i.test(of('platform.incident').preconditions),
+      'incident response does not say detection is missing');
     assert(/draft/i.test(of('platform.legal').preconditions), 'legal does not mention the drafts');
     assert(/screening/i.test(of('platform.safeguarding').preconditions),
       'safeguarding does not name the screening gap');

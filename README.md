@@ -68,11 +68,11 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 ## Status
 
-The database stands at **138 tables, RLS on every one, 264 policies, 164
-user-defined triggers, 468 functions and 179 migrations.** The database suite
-passes **1890 tests**; the web suite passes **1392 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **205 app route entries** — 110
-pages, 86 API routes, and the metadata routes it generates.
+The database stands at **141 tables, RLS on every one, 267 policies, 164
+user-defined triggers, 483 functions and 180 migrations.** The database suite
+passes **1902 tests**; the web suite passes **1402 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **207 app route entries** — 111
+pages, 87 API routes, and the metadata routes it generates.
 
 **The policies are drafts, and the database says so.** Seven documents — terms,
 privacy, children, refunds, teaching, safeguarding, takedown — describe what the
@@ -105,6 +105,17 @@ it can be edited afterwards. A teacher reads their own record on `/teach`. What 
 still does not do is block anything: refusing a child-facing course from an adult
 with no current check needs a standard the owner has not set, and `FLAGS.md` says
 so in the same paragraph that names what does exist.
+
+**An incident register with clocks it does not invent.** `platform.incident` was the
+last flag row that could say "nothing exists" and be right. `/admin/incidents` now
+records what happened, when it was found, what kinds of data were involved, and how
+many people — counts, never a list of names — then every body that has to be told
+with a **deadline typed by a person** and the telling recorded against it, including
+its lateness. An incident cannot resolve while an obligation is neither told nor
+waived, and cannot close without a recorded change. Choosing not to tell a body is a
+decision with a reason, kept on the record rather than deleted. Nothing there detects
+a breach and nothing sends a notification: the learner notice is written and held, and
+the screen says so beside the field.
 
 Every class a screen asks for is defined. The stylesheet had been missing `.page`, `.page-head` and
 `.crumbs` while twenty-five to twenty-eight screens used them — and `.narrow`, which meant a 26rem

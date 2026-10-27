@@ -86,6 +86,7 @@ const sharedLinks: ConsoleLink[] = [
   { href: '/admin/messages', label: 'Messages', note: 'what the platform would send, rendered and recorded. Nothing leaves the building until a provider is configured' },
   { href: '/admin/plans', label: 'Subscription plans', note: 'versioned terms, entitlements and recurring prices' },
   { href: '/admin/panels', label: 'Scholarly panels', note: 'the owner convenes a panel and sets its quorum; staff open a case against an unpublished version; seated members vote and the chair records the decision. A case cannot close below quorum, and with governance.panel_required off nothing waits on it' },
+  { href: '/admin/incidents', label: 'Incidents', note: 'what happened, who has to be told and by when, and the timeline as it happens. Counts, never a list of names; every deadline is typed by a person because the rule differs by market. Nothing here detects a breach and nothing sends a notification' },
   { href: '/admin/policies', label: 'Policies and terms', note: 'every document with the versions that have been in force and the draft waiting now. Publishing needs a date and a written reason, and is refused while a question only you can answer is still marked in the text' },
   { href: '/admin/certificates', label: 'Certificates', note: 'issue completion certificates and record revocations with a reason' },
   { href: '/admin/analytics', label: 'Analytics', note: 'what people do, kept forever, by event and by day. Aggregates only' },

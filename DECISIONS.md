@@ -4922,3 +4922,48 @@ lasts. Who is the named safeguarding lead. And whether the enforcement gets buil
 at all — a platform that teaches adults in countries where no such register exists
 may reasonably answer differently from one that teaches children in the United
 Kingdom.
+
+## A register with clocks, and no clock of its own invention — **DECIDED 2026-10-27**
+
+`platform.incident` was the last row in the flag register that could say **"Nothing
+exists"** and be telling the truth: no detection, no runbook, no notification
+template. What is built now is not a policy sentence wearing the word "built". It is
+the three things a platform actually needs in the first week of a breach — a record,
+the obligations with their clocks, and a timeline written as it happens.
+
+**The record holds counts, never people.** `412 people, of whom 30 are children`,
+picked from the tables already in the product plus a note on the harm somebody
+wrote. There is no field for a name, no join that could produce one, and the detail
+function cannot return a list because the table has nothing to return. This is the
+same rule the institution report follows, and it matters more here: the register
+that names every affected child would be the most dangerous table on the platform,
+and it is the one table that would be built without anybody noticing it had been.
+
+**Every deadline is typed by a person, and that is the design.** 72 hours, 30 days,
+"without undue delay", per-country supervisory authorities, per-state statutes — a
+default computed here would be wrong somewhere, and wrong in the way that is hardest
+to catch: it would look authoritative. So `due_at` is entered, the register makes it
+impossible to overlook (hours left, hours late, a count at the top of the screen),
+and the *rule* stays where it belongs, with the owner.
+
+**Two refusals are the whole value of the thing.** An incident cannot resolve while
+an obligation is neither told nor waived, and it cannot close without a recorded
+change. Both are the failure modes a register exists to prevent — the body nobody
+told, and the lesson nobody wrote down.
+
+**Deciding not to tell somebody is a decision.** A waiver needs a written reason and
+stays on the record as `Decided against`. Without it there are only two outcomes for
+an outstanding obligation — told, or quietly dropped — and the second is how a
+deadline that mattered disappears from a register that otherwise looks complete.
+
+**The timeline is append-only**, with a trigger that refuses every update and
+delete. A reopening clears the closure and resolution dates rather than leaving a
+status of `open` beside a date that says it once closed; the history that matters is
+already in the log.
+
+**What is still missing is named, not implied.** Nothing detects a breach. Nothing
+sends a notification — there is no email or SMS provider, so the learner notice is
+written and *held*, and the screen says "not sent" in the same breath as it offers
+the field. `platform.incident` stays `CODE` and says all three of those things. The
+named incident lead, the notification deadlines and the notice wording are the
+owner's.
