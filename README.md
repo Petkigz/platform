@@ -69,15 +69,22 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **143 tables, RLS on every one, 269 policies, 165
-user-defined triggers, 490 functions and 181 migrations.** The database suite
-passes **1912 tests**; the web suite passes **1411 tests**. TypeScript typecheck
+user-defined triggers, 490 functions and 182 migrations.** The database suite
+passes **1920 tests**; the web suite passes **1411 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **210 app route entries** — 112
 pages, 89 API routes, and the metadata routes it generates.
 
-**The policies are drafts, and the database says so.** Seven documents — terms,
+**The policies were drafts, and the database said so.** Seven documents — terms,
 privacy, children, refunds, teaching, safeguarding, takedown — describe what the
 platform actually does and mark every question only the owner can answer with
-`[OWNER DECISION: …]`. `approve_policy_version()` refuses to put any of them in
+`[OWNER DECISION: …]`. On 2026-10-27 the owner answered twenty-two of the
+twenty-three: Ugandan law and courts, the PDPO under the 2019 Act, retention of
+three and seven years, nothing sold until a merchant of record is connected, no
+under-13s until guardian verification works, a teacher check that says plainly it is
+not a criminal-record check, and a 50% teacher share with its fine print.
+**One marker is left in the whole register** — the operator's name and contact
+details, which no migration may invent — and the children's, safeguarding and
+takedown documents point at it rather than repeating it. `approve_policy_version()` refuses to put any of them in
 force while a marker remains, so a policy is either unfinished and legible or
 finished and binding. `/policies` lists them publicly and marks the unapproved
 ones rather than showing a draft; `/admin/policies` is where the owner answers,

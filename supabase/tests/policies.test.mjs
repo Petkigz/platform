@@ -96,23 +96,33 @@ export async function run(ctx) {
     eq(live.length, 0, 'a policy was live without being approved');
   });
 
-  await test('every draft names the decisions it is waiting for', async () => {
+  await test('a draft either waits on a decision or records that the owner made it', async () => {
+    // The original rule was "every seeded draft carries a marker", because a legal
+    // position written as though it were settled is the one thing a policy must not
+    // do. Once the owner answers, that rule inverts: a text with no markers has to
+    // say who decided it. Either state is honest; an undecided text with no marker is
+    // the failure, and so is an answered text with nobody's name on the change.
     const rows = (await q(
-      `select d.slug, v.body, public.policy_open_decisions(v.body) as open
+      `select d.slug, v.body, v.change_note, public.policy_open_decisions(v.body) as open
          from public.policy_documents d
          join public.policy_versions v on v.document_id = d.id
         where v.status = 'draft'`)).rows;
 
     for (const row of rows) {
-      assert(row.open > 0,
-        `${row.slug} has no [OWNER DECISION] marker — somebody wrote a legal position as if it were settled`);
+      if (row.open > 0) continue;
+      assert(/owner answered the decisions/i.test(row.change_note ?? ''),
+        `${row.slug} has no [OWNER DECISION] marker and no record of who decided — somebody wrote a legal position as if it were settled`);
     }
+    // At least one document still carries a marker, or the marker machinery itself
+    // has quietly stopped being exercised.
+    assert(rows.some((row) => row.open > 0), 'no draft has an open decision at all');
     eq(await scalar(`select public.policy_open_decisions('nothing here') as n`).then((r) => r.n),
       0, 'a clean text counts zero');
   });
 
   await test('a draft with an open decision cannot be put in force', async () => {
-    const draft = await draftOf('terms');
+    // The privacy notice, because it is the document that still asks something.
+    const draft = await draftOf('privacy');
     await rejects(
       () => call(admin, 'approve_policy_version($1,$2,$3)',
         [draft.id, '2026-11-01', 'Ready to publish.']),

@@ -5002,3 +5002,69 @@ the same rule that keeps every other invented policy out of this repository.
 **Nothing lifts on a timer.** A review date is recorded, and the register says when
 it has passed. It does not release: material contested by a rights holder going back
 up at midnight, unattended, would be the worst possible default. Somebody decides.
+
+## Twenty-two of twenty-three: the owner answered — **DECIDED 2026-10-27**
+
+The seven seeded policies contained twenty-three `[OWNER DECISION: …]` markers, and
+the database refused to put any of them in force while one remained. That was
+deliberate: a term is either decided by the person it binds or it is a guess wearing
+a clause number. The owner answered them, and the answers are in the drafts — not in
+a comment, not in this file alone, but in the text a reader will see.
+
+**Jurisdiction is where the operator is.** Ugandan law governs, the courts of Uganda
+hear disputes, and the supervisory authority is the Personal Data Protection Office
+under the Data Protection and Privacy Act, 2019. The alternative — a Delaware entity
+and an English address — was never on the table: a governing-law clause pointing at a
+country the operator does not inhabit is tested once and fails, and the cost of
+pretending is worse than the cost of being small and legible.
+
+**Nothing is sold yet, and the text says so.** A merchant of record is the plan; until
+one is connected the catalogue is free. That single fact is why the refunds policy
+carries **no withdrawal waiver**: a waiver is only worth asking for once content is
+delivered the instant somebody pays, and offering one now would be asking people to
+give up a right in exchange for a feature that does not exist. When selling begins the
+statutory period is honoured in full — the 72-hour window sits *on top of* it and
+never instead of it.
+
+**No one under 13, anywhere, until guardian verification works.** The owner's answer
+was not "let them in and record a click"; it was *build the verification properly and
+integrate it fully*. The database already refuses a child profile without a verified
+guardian and the switch is off. The children's policy says that plainly rather than
+describing a future as though it were the present, and the build is the next unit
+rather than a paragraph of intent.
+
+**A check on a teacher, honestly named.** A government photo identity document, two
+named references who can be reached, and a written self-declaration, recorded by the
+owner or governance staff in the screening register and valid for 24 months. The text
+then says the uncomfortable part out loud: **this is not a criminal-record check**,
+because no such check is available to this platform in most of the countries it
+serves. A badge that means nothing is worse than a sentence that means something.
+
+**Retention is three and seven.** A support case for three years after closure; a
+safeguarding or screening record for seven years after the person turns 18, or after
+it is made if they were already an adult. Analytics still stay forever, as decided
+earlier; this is about the records that name a person.
+
+**The teacher keeps half.** Fifty per cent, which is what
+`teaching.revenue_share_percent` has said since 2026-10-19 — today's answer confirms
+the number rather than changing it, and the fine print is written for the first time:
+earnings accrue on confirmation, are paid monthly on the 15th for the previous month,
+a balance transfers at USD 50 and rolls over below that, the teacher bears the
+transfer fee, and a closing account is paid at the next run regardless of the
+minimum. Nothing is paid out today because no provider is connected, and the screen
+that shows a balance says so.
+
+**One question is left, and it is not a decision.** A privacy notice must name the
+data controller. That is a fact only the owner possesses, and inventing a name or an
+email address would be worse than leaving the marker visible. So the register keeps
+exactly one: `[OWNER DECISION: the name and contact details of the operator of this
+platform.]`, in the privacy notice. The children's, safeguarding and takedown
+documents say *"the operator named in the privacy notice"* instead of repeating the
+fact in four places — one string to type, and no way for four copies to drift apart.
+
+**The docs changed with the decision.** The policy test that insisted every seeded
+draft still carried a marker was inverted, because it had stopped describing a virtue:
+a document is now either waiting on a question or carrying the record of who answered
+it, and an answered document with nobody's name on the change is the failure. A new
+suite holds the answers to their words, refuses an invented contact detail anywhere in
+the register, and publishes a document and rolls it back to prove the path works.

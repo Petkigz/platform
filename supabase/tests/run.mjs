@@ -111,6 +111,7 @@ import { run as panels } from './panels.test.mjs';
 import { run as screening } from './screening.test.mjs';
 import { run as incidents } from './incidents.test.mjs';
 import { run as takedowns } from './takedowns.test.mjs';
+import { run as policyDecisions } from './policy_decisions.test.mjs';
 import { run as renewalProjection } from './renewal_projection.test.mjs';
 import { run as googleSignIn } from './google_sign_in.test.mjs';
 import { run as dataExport } from './data_export.test.mjs';
@@ -235,6 +236,7 @@ for (const [name, fn] of [
   ['screening', screening],
   ['incidents', incidents],
   ['takedowns', takedowns],
+  ['policy_decisions', policyDecisions],
   ['renewal projection', renewalProjection],
   ['google sign in', googleSignIn],
   ['data export', dataExport],
