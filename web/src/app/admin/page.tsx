@@ -59,6 +59,10 @@ const publicationLinks: ConsoleLink[] = [
   { href: '/admin/reviewers', label: 'Reviewer register', note: 'who applied to review, who has been checked, and what each may judge. Nothing publishes until somebody here is verified' },
 ];
 
+const institutionLinks: ConsoleLink[] = [
+  { href: '/admin/institutions', label: 'Institutions', note: 'madrasahs, schools and organisations with their own page: open one, check the DNS record behind a domain claim, and change who administers it. An institution sees counts of its own members and never a learner’s name, and it cannot buy seats — invoicing needs terms and a provider nobody has' },
+];
+
 const sponsorshipLinks: ConsoleLink[] = [
   { href: '/admin/sponsorships', label: 'Sponsored seats', note: 'learners asking for a course, and donors paying for one. Deciding needs a written reason and recording a payment needs a reference; a sponsored seat is not an order, so it carries no tax and no teacher earning' },
 ];
@@ -366,6 +370,12 @@ export default async function AdminPage() {
         <>
           <h2 style={{ marginTop: '2.5rem' }}>Publication</h2>
           {publicationLinks.map((link) => (
+            <p key={link.href}>
+              <Link href={link.href}>{link.label}</Link> — {link.note}
+            </p>
+          ))}
+          <h3 style={{ marginTop: '1.5rem' }}>Institutions</h3>
+          {institutionLinks.map((link) => (
             <p key={link.href}>
               <Link href={link.href}>{link.label}</Link> — {link.note}
             </p>

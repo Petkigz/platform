@@ -4647,3 +4647,55 @@ qualification *before* their first course publishes is the publication gate's
 question and is already answered there (`teaching.applications` only governs who
 may be appointed). Teacher payouts, revenue-share fine print and screening policy
 remain the owner's, and the queue makes no promise about any of them.
+
+## An institution is a name and a count, not a way to buy seats — **DECIDED 2026-10-26**
+
+`institutions` was the tenancy root from the first migration and had never had a
+member, a colour, a report or a screen. Four flags sat beside it — branding,
+reporting, api, sso — each one waiting for something the platform did not have.
+This unit builds what can exist and says, on the screen, what cannot.
+
+**An institution administrator is not staff.** The appointment is a membership
+row, not a platform role: `can_appoint_teacher()` still refuses them, they cannot
+publish a course, they cannot see a learner's name, and they cannot move money.
+The one thing they can do is the thing the institution actually owns — its name,
+its domain and its own counts.
+
+**Branding is a tone, not a colour picker.** The platform is white and green
+because this is a Muslim site, and a partner typing `#ff00ff` would be undoing
+that on a page the platform still serves. Five named tones are what a stylesheet
+can honour. The logo is a **link** to a file the institution already hosts,
+because there is no upload path for institutions and inventing one would mean a
+media pipeline per tenant. A custom domain and true white-labeling need DNS and
+trademark permission, and neither is claimed here.
+
+**Domain identity is built; single sign-on is not.** An administrator claims a
+domain and publishes the token as a DNS TXT record; a staff member records that
+they looked; then an account whose address is at that domain may **ask to join**.
+Nothing is automatic and no account is created. SAML and OIDC are a provider
+nobody has connected, so there is no "sign in with your school account" button
+anywhere, and both the page and the flag's preconditions say why. This is the
+reason `institution.sso` moved to ADMIN while remaining half a feature: the half
+that exists is switchable, and a flag nobody may turn on while its feature works
+is the worse lie.
+
+**A report is counts, not records.** Members, the learner profiles linked to
+them and the other children in their families, those profiles' live enrolments in
+the window, completions and certificates — per course, per month. The payload
+carries **no name, no learner id and no email**, and the database test asserts
+that over the whole JSON rather than on one field, because a field that survives
+a refactor is the one that leaks. A count of one can still point at somebody, so
+the screen says that instead of inventing a suppression threshold; a threshold is
+a policy, and the owner has not set one.
+
+**An API key is a hash before it is a row.** The secret is generated in the web
+app, shown once, and only its SHA-256 is stored — so a database dump cannot be
+replayed as a key and the console cannot show it again. One endpoint exists, the
+same report the screen prints, with a ceiling of 240 calls an hour per key
+counted in SQL, and a refusal that does not charge itself for the call it did not
+serve. **No webhooks**: nothing here can call out, because there is no queue or
+scheduler, and the page says so rather than promising an integration.
+
+**What is still missing, and stays missing.** `commerce.institutions` — invoicing,
+bulk seats, purchase orders — needs B2B terms and a payment provider, and no
+screen offers them. Being able to say that is the point of building the rest.

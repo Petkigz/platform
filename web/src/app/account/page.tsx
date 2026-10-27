@@ -226,6 +226,16 @@ export default async function AccountPage() {
       </section>
 
       <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
+        <h2 style={{ marginTop: 0 }}>My institution</h2>
+        <p className="muted">
+          A madrasah, school or organisation you belong to. If your email address is at a domain
+          one of them has verified, you can join it; once you are in, it sees counts of its people
+          and never your name or what you studied.{' '}
+          <Link href="/institution">Where I belong</Link>
+        </p>
+      </section>
+
+      <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
         <h2 style={{ marginTop: 0 }}>What I have paid</h2>
         <p className="muted">
           Every payment that has moved on your billing account, and every refund that

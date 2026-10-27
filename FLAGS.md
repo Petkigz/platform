@@ -112,10 +112,10 @@ Three kinds of gate:
 | `commerce.institutions` | Madrasahs, Islamic schools and organisations buying seats | CODE | Invoicing; bulk enrolment; B2B terms; purchase orders. **Not in the project record at all** |
 | `commerce.sponsorship` | Sponsor a seat: a learner asks, staff decide, a donor covers the course and never learns who they helped | ADMIN | **Built 2026-10-26, and it is not a payment processor.** The owner's answer settled the eligibility question: *a learner asks, the owner or finance decides, a donor covers the seat they never see the name of*. `apply_for_sponsorship()` refuses a learner who is not the caller's, a course that is not on sale, and a course the learner already holds; `decide_sponsorship_application()` is platform or finance only, with a written reason either way, and approving mints a **seat code** (`SPN-XXXXXX`) that carries no identity. `sponsorship_pool()` lists approved seats with the course, who it is for and the price **in the reader's own market** — no name, no age, no household, and not one word of the applicant's note, which only staff deciding the request ever read. `pledge_sponsorship()` resolves the price through the same `resolve_course_price()` checkout uses, so a sponsor never types an amount, and refuses the applicant's own seat. **A pledge is not a payment**: there is no card or mobile-money provider, so `record_sponsorship_payment()` is staff recording a reference — and *that* is what grants the seat, as an `entitlement_grants` row and an enrolment with source `scholarship`, in that order because enrolment demands an existing entitlement. Recording the same payment twice changes nothing. A sponsored seat creates **no order, no tax line and no teacher earning** — nobody sold anything. What is still the owner's, and is said on the screens rather than guessed: whether a sponsored seat counts as **zakat** is a scholar's ruling this platform does not make, and a fund that pays for seats without an individual donor is `commerce.scholarships`, still CODE-gated |
 | `commerce.scholarships` | Funded and free seats | ADMIN | Allocation rules; who approves; renewal |
-| `institution.branding` | Co-branded or white-label for a partner institution | CODE | Trademark permission; theming; separate domain |
-| `institution.reporting` | Per-institution progress reporting | CODE | Aggregation and privacy rules for minors |
-| `institution.api` | Public API and webhooks for institutional integrations | CODE | API keys, rate limits, versioning, documentation |
-| `institution.sso` | SAML / OIDC for institutional staff | CODE | Identity provider support; account linking |
+| `institution.branding` | An institution's own name, tagline, tone and logo on its own screens | ADMIN | **Built 2026-10-26.** An administrator sets a display name, a tagline, one of five named tones and an https link to a logo they already host. It is not white-label and not a separate domain: a custom domain needs DNS and a brand needs trademark permission, and neither exists. The tone is a choice from five because the platform is white and green on purpose — a colour picker would let a partner undo that on a page the platform still serves |
+| `institution.reporting` | Per-institution progress reporting — counts, never a row per person | ADMIN | **Built 2026-10-26.** Counts of members, learner profiles in those members' families, enrolments, completions and certificates, per course and per month, over a window of at most two years. The payload carries no name, no learner id and no email, and the database test asserts that over the whole JSON rather than one field. A count of one can still identify somebody, so the screen says so — a suppression threshold would be a policy the owner has not set, and inventing one is worse than saying it |
+| `institution.api` | A key an institution can use to read its own report from its own systems | ADMIN | **Built 2026-10-26.** The secret is generated in the web app and only its SHA-256 ever reaches the database, so it is shown once and cannot be recovered; revoking records a written reason and takes effect immediately. One endpoint exists — the same report the screen prints — with a ceiling of 240 calls an hour per key, counted per hour in SQL. **No webhooks**: nothing here can call out, because there is no queue or scheduler behind it, and the page says so |
+| `institution.sso` | Domain identity: a verified email domain lets an account at that domain ask to join | ADMIN | **Half built, and the half that is built is honest.** An administrator claims a domain and publishes a TXT record; a staff member records that they checked it; an account whose address is at that domain may then join — nothing automatic, no account created. **SAML and OIDC are still unbuilt**: they need a provider nobody has connected, so there is no single-sign-on login button anywhere, and the screen says that instead of showing one that cannot work. The switch is ADMIN because the domain half works; a flag that could not be turned on while its feature worked would be the worse lie |
 
 ## Delivery
 
@@ -204,17 +204,20 @@ now holds the register, `/admin` reads and toggles it, and `/api/admin/flags`
 writes it. A trigger refuses to enable a `code`-gated flag at runtime, so the
 dashboard cannot promise what needs a deploy.
 
-**2. Twenty-four of these cannot be runtime toggles.**
-`gate_type='code'` on 24 flags — 9 `platform.*` legal, safety and data ones,
-4 `teaching.*`, 4 `learning.*`, 4 `institution.*`, and three one-offs:
-`commerce.institutions`, `delivery.transcode` and `family.child_login`. Each
-needs a deploy, a provider, or a policy that does not exist. Building them "to
-completion" means building them against guesses, so the tables and the flags
-exist and the work waits — and the list is re-counted from
-`platform_settings` rather than from prose, because three units left it in one
-day and a stale total outlives the reason it was written. The count fell as the
-units landed: `commerce.referrals`, `commerce.sponsorship` and
-`teaching.applications` all became ADMIN on 2026-10-26.
+**2. Twenty of these cannot be runtime toggles.**
+`gate_type='code'` on 20 flags — 9 `platform.*` legal, safety and data ones,
+4 `teaching.*`, 4 `learning.*`, and three one-offs: `commerce.institutions`,
+`delivery.transcode` and `family.child_login`. Each needs a deploy, a provider,
+or a policy that does not exist. Building them "to completion" means building
+them against guesses, so the tables and the flags exist and the work waits — and
+the list is re-counted from `platform_settings` rather than from prose, because
+four units left it in one day and a stale total outlives the reason it was
+written. On 2026-10-26 `commerce.referrals`, `commerce.sponsorship`,
+`teaching.applications` and all four `institution.*` flags became ADMIN. The
+institution ones are the interesting case: `institution.sso` moved with the
+other three although SAML and OIDC are still missing, because the part that can
+exist — a verified email domain — is built, and a switch nobody can turn on
+while the feature works is a worse lie than a screen that says what is absent.
 
 A further **15 are ADMIN + SETUP**: the toggle is real, but a provider, a sender
 domain or a written policy has to be finished first. Those are the ones where
