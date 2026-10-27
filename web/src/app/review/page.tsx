@@ -51,6 +51,10 @@ export default async function ReviewPage() {
         Assignments come from platform staff. You cannot assign yourself, and
         you cannot approve a course you wrote.
       </p>
+      <p className="muted">
+        If you sit on a scholarly panel, the cases waiting for your vote are on{' '}
+        <a href="/panel">your panel page</a>.
+      </p>
 
       <div style={{ marginTop: '1.5rem' }}>
         <MyRegister entry={entry} subjects={subjects} />

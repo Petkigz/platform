@@ -91,6 +91,7 @@ export const DISALLOWED_PREFIXES: readonly string[] = [
   '/live',
   '/notifications',
   '/orders',
+  '/panel',
   '/review',
   '/saved',
   '/share',

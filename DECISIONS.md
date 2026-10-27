@@ -4827,3 +4827,57 @@ liability, the named controller, the supervisory authority, retention for suppor
 and safeguarding records, the copyright agent, the screening standard — and
 `platform.legal` stays ADMIN + SETUP until those are answered. `platform.incident`
 still says **nothing exists**, because nothing does.
+
+## The board decides only when it is sitting — and until now it could not decide at all — **DECIDED 2026-10-27**
+
+The scholarly panel was the last item in the decisions category that was not a
+document. Four tables — panels, memberships, cases, votes — had existed since
+2026-10-18 and the publication gate already read them: with
+`governance.panel_required` on, a version publishes only if a panel case for it is
+**approved**. Nothing could approve a case. There was no writer for a decision and
+no update policy on the case table, so switching that setting on would have blocked
+every publication on the platform for ever, silently, with no screen to explain it.
+The gap was found while writing this unit and is closed by it.
+
+**The owner's rule is the design.** *The board decides only when it is present and
+active.* A panel is a slot with a quorum the owner chooses — asked for on the
+screen, never defaulted quietly — and it sits `inactive` until convened. Convening
+is refused while fewer people are seated than the quorum. A case is opened only on
+a convened panel, against a version that has not published. A vote requires an
+active seat **and** a sitting panel; a panel that has been closed decides nothing,
+and a member cannot vote twice.
+
+**A seat is an appointment plus a check.** The owner appoints board members (the
+existing role trigger already refused anybody else), and `add_panel_member()`
+requires both that appointment and an active — that is, checked — reviewer profile.
+Appointing is the owner's on `/admin/roles`; checking the person is governance's on
+`/admin/reviewers`. Neither is inferred from the other, which is why a person who
+has been checked but not appointed is offered on the console with the missing half
+named.
+
+**A vote is the voter's own.** The reviewer is resolved from the session inside
+`cast_panel_vote()`, never from the request, so nobody votes as somebody else. The
+direction of other members' votes is hidden from a member until they have voted;
+the count of votes cast is not, so it is clear when the quorum is near. That is a
+deliberate limit on what `my_panel_work()` returns, because a panel case has no
+member read policy at all.
+
+**The quorum is enforced on the way out, not only on the way in.** A case cannot be
+closed below quorum, and cannot be recorded as approved while more members voted to
+reject (or as rejected while more voted to approve). That second rule is not a
+majority policy — it refuses a contradiction. Whether approval needs a simple
+majority, two-thirds or unanimity is the owner's, and the tally sits beside the
+choice rather than behind a rule invented here.
+
+**Removing somebody is a decision about the board, not a row edit.** A convened
+panel cannot be taken below its quorum by a removal: the board would then be unable
+to decide anything and the failure would surface later as a case nobody can close.
+The refusal names the counts and says to close the panel first.
+
+**What is still open, and stays open.** The quorum numbers, the majority, and
+whether publication requires a panel at all — `governance.panel_required` is still
+off, so peer review is enough today and a panel is a body that can be used before it
+is required. There is no per-member **recusal**: a member who must not decide a case
+records an abstention with the reason in writing, which stays on the case, but a row
+that says "I stepped aside" does not exist. That is named in `FLAGS.md` rather than
+implied by the presence of a vote button.

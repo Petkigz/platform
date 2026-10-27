@@ -69,9 +69,9 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **137 tables, RLS on every one, 263 policies, 163
-user-defined triggers, 454 functions and 177 migrations.** The database suite
-passes **1870 tests**; the web suite passes **1376 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **196 app route entries** (107 pages, 89 API routes).
+user-defined triggers, 464 functions and 178 migrations.** The database suite
+passes **1881 tests**; the web suite passes **1384 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **198 app route entries** (109 pages, 89 API routes).
 
 **The policies are drafts, and the database says so.** Seven documents — terms,
 privacy, children, refunds, teaching, safeguarding, takedown — describe what the
@@ -83,6 +83,15 @@ ones rather than showing a draft; `/admin/policies` is where the owner answers,
 publishes with a date and a written reason, and sees who agreed to what — and
 where an eighth document (an incident runbook, a screening standard) is added
 without SQL and then written and approved like the rest.
+
+**The scholarly panel can finally decide something.** The four panel tables had
+existed since 2026-10-18 and nothing could close a case, while the publication gate
+looked for an *approved* one — so switching `governance.panel_required` on would
+have blocked every publication on the platform for ever. `/admin/panels` convenes a
+panel with a quorum the owner sets, seats people who are both appointed and checked,
+opens a case against an unpublished version and records the decision; `/panel` is
+where a seated member votes. A case cannot close below quorum, cannot be approved
+while more voted to reject, and a convened panel cannot be emptied below its quorum.
 
 Every class a screen asks for is defined. The stylesheet had been missing `.page`, `.page-head` and
 `.crumbs` while twenty-five to twenty-eight screens used them — and `.narrow`, which meant a 26rem

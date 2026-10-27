@@ -107,6 +107,7 @@ import { run as instructorPayouts } from './instructor_payouts.test.mjs';
 import { run as teacherLiability } from './teacher_liability.test.mjs';
 import { run as notifications } from './notifications.test.mjs';
 import { run as policies } from './policies.test.mjs';
+import { run as panels } from './panels.test.mjs';
 import { run as renewalProjection } from './renewal_projection.test.mjs';
 import { run as googleSignIn } from './google_sign_in.test.mjs';
 import { run as dataExport } from './data_export.test.mjs';
@@ -227,6 +228,7 @@ for (const [name, fn] of [
   ['teacher liability', teacherLiability],
   ['notifications', notifications],
   ['policies', policies],
+  ['panels', panels],
   ['renewal projection', renewalProjection],
   ['google sign in', googleSignIn],
   ['data export', dataExport],
