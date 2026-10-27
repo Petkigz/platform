@@ -18,10 +18,12 @@ control.
 | **Guardian** (a learner with a family) | `/family` | Add child profiles, enrol them, see their progress, grant and revoke adult sharing | Act as the child (child login is a separate, flagged capability), read another family's children | `is_learner_family_member()`, `family_memberships` policies |
 | **Teacher** | `/teach` | Open courses, author versions, upload media, publish through review, see cohort analytics, run their own promotions, read what they earn, ask to be paid | Create a course without the role; discount somebody else's course; publish without review; read a learner's data outside an opted-in cohort | `courses_insert`, `create_promotion_campaign()`, `can_write_course()`, `is_cohort_teacher()` |
 | **Scholar** (reviewer) | `/review` | Apply to review, record qualifications, review what they are assigned, declare conflicts | Review without a verified qualification in the subject; assign themselves work; check somebody else's credential | `is_authorised_reviewer()`, `verify_reviewer_qualification()`, `cra_write` (staff only) |
-| **Governance staff** | `/admin` | Check a reviewer's person, grant and withdraw review scopes, hear conflicts, run the reviewer register | Decide a credential (the owner, or a convened board), publish content themselves, change money | `record_reviewer_qualification()`, `set_reviewer_authorization()`, RLS on the register |
+| **Institution administrator** *(2026-10-26)* | `/institution` | Brand their institution, claim its domain, create and revoke its API keys, read a report of its own counts, appoint another administrator inside it | Appoint a teacher, publish a course, see a learner's name or a row per person, buy seats, move money, hold any platform staff power | `is_institution_admin()`, `institution_report_data()` (counts only), `can_appoint_teacher()` (does not consult this at all) |
+| **Institution member** *(2026-10-26)* | `/institution` | Read the institution's name and its report, leave it | See the domain tokens, the key list or the branding fields | `my_institution()` returns domains and keys only to an administrator |
+| **Governance staff** | `/admin` |  Check a reviewer's person, grant and withdraw review scopes, hear conflicts, run the reviewer register | Decide a credential (the owner, or a convened board), publish content themselves, change money | `record_reviewer_qualification()`, `set_reviewer_authorization()`, RLS on the register |
 | **Support agent** | `/admin/support` | Read and answer support cases, triage reports and appeals | See passwords, change a payment, manage plans or promotions, appoint a teacher | `is_privileged()` plus the money-family policies that exclude support |
 | **Finance staff** | `/admin/orders` | Adjust orders, reconcile payments, see the money report, manage refunds, work the payout queue, set the refund hold | Publish courses, decide credentials, create promotions | `add_order_adjustment()`, `is_finance()` predicates |
-| **Platform owner** | `/admin` | Everything: flags, roles, plans and prices, promotions, credentials, merchants and keys in the deployment's environment (never in a screen) | Nothing is above them; the record in `DECISIONS.md` is what constrains the use of that power | `platform_admin` in `has_role()`, owner-only triggers |
+| **Platform owner** | `/admin` | Everything: flags, roles, plans and prices, promotions, credentials, merchants and keys in the deployment's environment (never in a screen), open an institution and name its first administrator | Nothing is above them; the record in `DECISIONS.md` is what constrains the use of that power | `platform_admin` in `has_role()`, owner-only triggers |
 
 ## The three boundaries that were leaks
 
@@ -82,3 +84,37 @@ in. That belongs with the landing page above.
 **Nothing here is a substitute for the policies.** If a screen and a policy
 disagree, the policy is right and the screen is a bug — `authorization.test.mjs`
 and the suite per feature are where that is caught.
+
+## Where an institution's power stops — **2026-10-26**
+
+An institution administrator is the first role on this map that is **not staff**.
+They hold a membership row, not a platform role, and the difference is the whole
+point: a madrasah's head teacher may brand their institution and read a count of
+its people, and may not do one thing more.
+
+**What they may do:** set a display name, a tagline, one of five tones and an
+https logo link; claim a domain and publish the TXT record; create and revoke API
+keys; read a report of counts; appoint another administrator inside their own
+institution; leave.
+
+**What they may not do, and what refuses it:**
+
+| Attempt | Refused by |
+|---|---|
+| Appoint a teacher | `can_appoint_teacher()` names the owner and governance — an institution administrator is never consulted |
+| Publish a course | `courses_insert` requires `instructor` or `platform_admin`; authorship is a teaching appointment |
+| See a learner's name | `institution_report_data()` counts profiles and returns no id, name or email; the test asserts it over the whole JSON |
+| Read a member's email | `my_institution()` returns a membership list to nobody — only aggregates |
+| Buy seats | `commerce.institutions` is off; there is no invoicing, no purchase order and no bulk enrolment |
+| Move money | Every money writer is gated on `finance_admin` or `platform_admin` |
+| Verify their own domain | `verify_institution_domain()` requires `platform_admin` or `governance_admin` — claiming and checking are deliberately different people |
+
+**Claiming and checking are two people.** The administrator proves control of the
+domain by publishing a token; a staff member records that they looked. One person
+holding both halves would make "verified" mean "typed their own domain", which is
+precisely the badge that is supposed to mean something.
+
+**A key is a credential, not a role.** It reads one payload — the same counts the
+screen prints — with a per-key hourly ceiling, and it can do nothing else. There
+are no webhooks: nothing on this platform calls out to an institution, and the
+page says so rather than implying an integration exists.
