@@ -7,6 +7,7 @@ import { ClaimLearner } from '@/components/claim-learner';
 import { ProfileForm } from './profile-form';
 import { PhoneForm } from './phone-form';
 import { MergeLink } from './merge/merge-panel';
+import { outstandingSentence, type PolicyStanding } from '@/lib/policies';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,7 +19,7 @@ export default async function AccountPage() {
 
   const [referralsOn, sponsorshipOn, { data, error }, { data: learnerRows }, { data: methodsData },
          { data: badgeData }, { data: phoneData }, { data: mergeData },
-         applicationsOn, { data: teachesHere }] = await Promise.all([
+         applicationsOn, { data: teachesHere }, { data: standingData }] = await Promise.all([
     // Inviting a friend is a link, not a form, so the card is only worth showing
     // when there is something at the other end of it.
     isFlagEnabled(supabase, 'commerce.referrals').catch(() => false),
@@ -56,6 +57,9 @@ export default async function AccountPage() {
     // to apply for a role you hold is a screen that has not read its own data.
     isFlagEnabled(supabase, 'teaching.applications').catch(() => false),
     supabase.rpc('has_role', { p_user_id: user.id, p_role_code: 'instructor' }),
+    // What this account still owes in agreements. A failure here must not take
+    // the settings page down with it, so it is read last and read leniently.
+    supabase.rpc('my_policy_standing'),
   ]);
   if (error) throw new Error(error.message);
   if (!data) redirect('/learn');
@@ -68,6 +72,9 @@ export default async function AccountPage() {
   const ownLearner =
     ((learnerRows ?? []) as { id: string; display_name: string; family_id: string | null }[])[0] ?? null;
   const unread = typeof badgeData === 'number' ? badgeData : 0;
+  const standing = (standingData ?? null) as PolicyStanding | null;
+  const outstanding = Number(standing?.outstanding ?? 0);
+  const owed = outstanding > 0 ? (standing?.acceptanceRequired ?? []).filter((r) => !r.acceptedAt) : [];
   const merge = (mergeData ?? null) as { enabled?: boolean; incoming?: unknown[] } | null;
   const mergeWaiting = merge?.enabled === true && Array.isArray(merge.incoming)
     ? merge.incoming.length
@@ -92,6 +99,25 @@ export default async function AccountPage() {
         Signed in as <strong>{user.email ?? user.phone ?? 'unknown'}</strong>
         {' · '}account status: {profile.account_status}
       </div>
+      {outstanding > 0 && (
+        <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem', borderColor: 'var(--accent)' }}>
+          <h2 style={{ marginTop: 0 }}>Before you carry on</h2>
+          <p className="muted">
+            {outstandingSentence(outstanding)} Read and agree, and the time you did is kept
+            against your account. Nothing else on this page is held back meanwhile.
+          </p>
+          <ul className="stack" style={{ margin: '0.5rem 0' }}>
+            {owed.map((row) => (
+              <li key={row.slug}>
+                <Link href={`/policies/${row.slug}`}>
+                  {row.title} — version {row.versionNumber}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
         <h2 style={{ marginTop: 0 }}>Learning as yourself</h2>
         {ownLearner ? (
@@ -233,6 +259,19 @@ export default async function AccountPage() {
           <Link href="/account/accessibility">Reading preferences</Link>
         </p>
       </section>
+
+      {outstanding === 0 && (
+        <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
+          <h2 style={{ marginTop: 0 }}>Terms and privacy</h2>
+          <p className="muted">
+            The terms, the privacy notice and the terms for teachers, each versioned.
+            {standing && standing.history.length > 0
+              ? ' The versions you have agreed to are listed with the time you agreed.'
+              : ' Nothing is waiting for your agreement.'}{' '}
+            <Link href="/policies">Read them</Link>
+          </p>
+        </section>
+      )}
 
       <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
         <h2 style={{ marginTop: 0 }}>My institution</h2>

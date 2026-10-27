@@ -38,6 +38,10 @@ export const PUBLIC_ROUTES: readonly StaticRoute[] = [
   { path: '/catalogue', priority: 0.9, changeFrequency: 'daily' },
   { path: '/about', priority: 0.5, changeFrequency: 'monthly' },
   { path: '/verify', priority: 0.5, changeFrequency: 'monthly' },
+  // The register of terms. Public on purpose: a term you must accept before
+  // signing up has to be readable before signing up, and an index of them is
+  // how somebody checks the platform has one.
+  { path: '/policies', priority: 0.4, changeFrequency: 'monthly' },
 ];
 
 /**

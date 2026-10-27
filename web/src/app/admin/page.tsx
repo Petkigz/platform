@@ -84,6 +84,7 @@ const sharedLinks: ConsoleLink[] = [
   { href: '/admin/discussion', label: 'Discussion queue', note: 'learner questions and peer answers held for review' },
   { href: '/admin/messages', label: 'Messages', note: 'what the platform would send, rendered and recorded. Nothing leaves the building until a provider is configured' },
   { href: '/admin/plans', label: 'Subscription plans', note: 'versioned terms, entitlements and recurring prices' },
+  { href: '/admin/policies', label: 'Policies and terms', note: 'every document with the versions that have been in force and the draft waiting now. Publishing needs a date and a written reason, and is refused while a question only you can answer is still marked in the text' },
   { href: '/admin/certificates', label: 'Certificates', note: 'issue completion certificates and record revocations with a reason' },
   { href: '/admin/analytics', label: 'Analytics', note: 'what people do, kept forever, by event and by day. Aggregates only' },
   { href: '/admin/guardians', label: 'Guardian verification', note: 'adults asking to be recognised as a child’s parent' },

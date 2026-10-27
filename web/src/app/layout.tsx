@@ -100,6 +100,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 already eight links wide on a phone, and nobody looks for
                 support in the primary navigation until they need it. */}
             <Link href="/about">About</Link>
+            {/* The terms belong where a person looks for them, not only on the
+                screen they are forced to open. It is public and it is short. */}
+            <Link href="/policies">Terms and privacy</Link>
             <Link href="/support">Help</Link>
             {/* The one door a stranger needs: an employer or a school holding a
                 printed certificate has a number and nothing else, and there is

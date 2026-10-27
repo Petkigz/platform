@@ -68,10 +68,19 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 ## Status
 
-The database stands at **134 tables, RLS on every one, 259 policies, 159
-user-defined triggers, 442 functions and 175 migrations.** The database suite
-passes **1858 tests**; the web suite passes **1362 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **200 app route entries** (106 pages, 94 API routes).
+The database stands at **137 tables, RLS on every one, 263 policies, 163
+user-defined triggers, 453 functions and 176 migrations.** The database suite
+passes **1869 tests**; the web suite passes **1376 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **196 app route entries** (107 pages, 89 API routes).
+
+**The policies are drafts, and the database says so.** Seven documents — terms,
+privacy, children, refunds, teaching, safeguarding, takedown — describe what the
+platform actually does and mark every question only the owner can answer with
+`[OWNER DECISION: …]`. `approve_policy_version()` refuses to put any of them in
+force while a marker remains, so a policy is either unfinished and legible or
+finished and binding. `/policies` lists them publicly and marks the unapproved
+ones rather than showing a draft; `/admin/policies` is where the owner answers,
+publishes with a date and a written reason, and sees who agreed to what.
 
 Every class a screen asks for is defined. The stylesheet had been missing `.page`, `.page-head` and
 `.crumbs` while twenty-five to twenty-eight screens used them — and `.narrow`, which meant a 26rem

@@ -433,7 +433,9 @@ that must not be skipped:
 2. *Files from children to adults are a safeguarding question before they are a
    feature.* Who may receive them, what is retained, who can see them after a
    guardian asks, and what happens to a recording of a child's voice when an
-   account is deleted. `platform.safeguarding` is CODE-gated and unbuilt.
+   account is deleted. `platform.safeguarding` is CODE-gated, and what is
+   unbuilt is the screening record; the conduct policy itself is now a draft in
+   the register with those questions marked.
 
 **Marking stays with the course author.** The existing manual-marking queue is
 already restricted to the author and privileged staff, anonymised and audited. No
@@ -4769,3 +4771,51 @@ Arabic typography or licensed fonts — `platform.accessibility` still holds tho
 and stays CODE-gated. `/account/accessibility` lists them under "What is not here
 yet". A learner reading the site in English who wants an Arabic course can now
 find it, which is the part that needed no translator.
+
+## A policy is published only when it is finished, and the database decides what "finished" means — **DECIDED 2026-10-27**
+
+Seven areas were parked on *a decision or a document*: terms, privacy, the child
+policy, refunds and withdrawal, safeguarding, takedown and the terms for teachers.
+The instruction was to build them without inventing what they say. So the unit
+builds the **structure a decision is recorded in**, and refuses to let any of it
+pass for a decision that has not been made.
+
+**A draft carries its own unanswered questions.** Each document ships as a draft
+that describes what the platform actually does — the 72-hour refund window, the
+child profile with no login, the 50% share, analytics kept forever, the counts an
+institution sees — and marks every place that needs the owner with
+`[OWNER DECISION: …]`. Those are not placeholders to tidy: they are the list of
+what is left.
+
+**The refusal is enforced, not advisory.** `approve_policy_version()` raises
+`policy:decisions_open` while any marker remains, and the editor counts them as
+somebody types so the refusal is seen before the click. Approval is
+platform-admin only, and needs a written reason, which is kept with the version.
+A policy can therefore be unfinished and legible, or finished and binding — never
+unfinished and binding.
+
+**A version in force is immutable.** It cannot be edited (the text somebody agreed
+to *is* the record of their consent) and cannot be deleted, only retired when a
+new version takes over. One live version per document is a partial unique index,
+so "the terms" can never mean two texts at once. A change is a new version with
+its own number and effective date.
+
+**Acceptance names a document, never a version id.** `accept_policy(slug)`
+resolves the version that is live *at the moment of the click*, so a page left
+open across a publication cannot collect agreement to a text nobody is reading.
+Accepting twice is not an error and not a second row; a new version makes the old
+acceptance history and asks the account again.
+
+**The public page is honest about the gap.** `/policies` lists every document and
+says which are not in force. The text of an unapproved draft is not shown —
+not because it is secret, but because an agreement read out of a text that then
+changes is not an agreement. With nothing approved, the page says so in one
+sentence instead of looking empty.
+
+**What this does not claim.** Nothing here is legal advice and no document is
+asserted to satisfy GDPR, COPPA, the Uganda DPA or anything else. The drafts name
+the questions a lawyer or the owner must answer — governing law, limitation of
+liability, the named controller, the supervisory authority, retention for support
+and safeguarding records, the copyright agent, the screening standard — and
+`platform.legal` stays ADMIN + SETUP until those are answered. `platform.incident`
+still says **nothing exists**, because nothing does.
