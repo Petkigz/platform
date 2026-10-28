@@ -1,5 +1,6 @@
-// The owner answered — all twenty-three. This suite is the record of what was
-// decided, and the proof that the register now holds no unanswered question.
+// The owner answered — all twenty-three — and then published. This suite is the
+// record of what was decided and the proof that the register holds no unanswered
+// question, in the live text rather than in a draft nobody reads.
 //
 // What it protects:
 //
@@ -14,9 +15,10 @@
 //   * the guard still works: a document with a question in it cannot be put in
 //     force, even though every seeded document is now answered.
 //
-// The publication tests run inside a transaction that is rolled back, so the
-// suite leaves the register exactly as it found it: seven drafts, nothing in
-// force.
+// Since 2026-10-28 the seven documents are in force from that date, published on
+// the owner's recorded instruction because a fresh deployment has no accounts when
+// the migrations run. Nothing here may disturb that; the one test that writes a
+// document does it inside a transaction that is rolled back.
 
 export async function run(ctx) {
   const {
@@ -58,9 +60,11 @@ export async function run(ctx) {
   }
 
   const body = async (slug) => (await q(
-    `select v.body, v.change_note, v.id from public.policy_versions v
+    `select v.body, v.change_note, v.id, v.status, v.effective_at, v.approval_reason,
+            v.approved_by, v.version_number
+       from public.policy_versions v
        join public.policy_documents d on d.id = v.document_id
-      where d.slug = $1 and v.status = 'draft'`, [slug])).rows[0];
+      where d.slug = $1 and v.status = 'in_force'`, [slug])).rows[0];
 
   const governance = await newUser('decisions-governance@example.com');
   await newProfile(governance, 'Decisions Governance');
@@ -71,7 +75,14 @@ export async function run(ctx) {
       `select d.slug, public.policy_open_decisions(v.body) as open, v.body, v.change_note
          from public.policy_documents d
          join public.policy_versions v on v.document_id = d.id
-        where v.status = 'draft'`)).rows;
+        where v.status = 'in_force'`)).rows;
+    // Seven seeded documents. An earlier suite adds an eighth and publishes it, so
+    // this counts the slugs rather than the rows.
+    const slugs = rows.map((r) => r.slug);
+    for (const slug of ['terms', 'privacy', 'children', 'refunds', 'teaching',
+                        'safeguarding', 'takedown']) {
+      assert(slugs.includes(slug), `${slug} is not in force`);
+    }
 
     const total = rows.reduce((sum, r) => sum + r.open, 0);
     assert(total === 0, `the register still holds ${total} open decisions`);
@@ -100,7 +111,7 @@ export async function run(ctx) {
     for (const row of (await q(
       `select d.slug, v.body from public.policy_documents d
          join public.policy_versions v on v.document_id = d.id
-        where v.status = 'draft'`)).rows) {
+        where v.status = 'in_force'`)).rows) {
       assert(!/\b(Inc|Ltd|Limited|LLC|GmbH|PLC)\b/.test(row.body),
         `${row.slug} claims an incorporated entity that has not been registered`);
       assert(!/registration number|company number|registered office/i.test(row.body),
@@ -113,7 +124,7 @@ export async function run(ctx) {
     for (const row of (await q(
       `select d.slug, v.body from public.policy_documents d
          join public.policy_versions v on v.document_id = d.id
-        where v.status = 'draft'`)).rows) {
+        where v.status = 'in_force'`)).rows) {
       for (const m of row.body.matchAll(/[\w.+-]+@[\w-]+\.[a-z]{2,}/gi)) emails.add(m[0]);
     }
     assert(emails.size === 1, `the register carries ${[...emails].join(', ')}`);
@@ -142,7 +153,7 @@ export async function run(ctx) {
       'the privacy notice still describes the rule country by country');
   });
 
-  await test('the drafts say what was decided, in the owner’s words', async () => {
+  await test('the documents say what was decided, in the owner’s words', async () => {
     const terms = (await body('terms')).body;
     assert(/courts of Uganda hear any dispute/.test(terms), 'terms: governing law');
     assert(/Ugandan law governs/.test(terms), 'terms: the law');
@@ -183,34 +194,76 @@ export async function run(ctx) {
     assert(/Three upheld notices/.test(takedown), 'takedown: what counts as repeated');
   });
 
-  await test('every document in the register can now be put in force', async () => {
-    // The point of answering all twenty-three. Nothing is published here: each
-    // approval happens in a transaction that is rolled back, so the register stays
-    // as the owner left it, waiting for their date and their reason.
-    const slugs = (await q(
-      `select d.slug, v.id from public.policy_documents d
+  await test('every document is in force, dated, and records the instruction', async () => {
+    const SEEDED = ['terms', 'privacy', 'children', 'refunds', 'teaching',
+                    'safeguarding', 'takedown'];
+
+    // The publication record is version 1 of each seeded document. A later suite
+    // amends the terms — which replaces the live version and retires it — so the
+    // question "what was published on the instruction" is asked of version 1, not
+    // of whatever happens to be live now.
+    const published = (await q(
+      `select d.slug, v.status, v.effective_at, v.approved_by, v.approval_reason,
+              v.approved_at
+         from public.policy_documents d
          join public.policy_versions v on v.document_id = d.id
-        where v.status = 'draft' order by d.slug`)).rows;
-    assert(slugs.length >= 7, `expected the seven documents, found ${slugs.length}`);
+        where v.version_number = 1
+          and d.slug = any($1::text[])
+        order by d.slug`, [SEEDED])).rows;
+    assert(published.length === 7, `expected seven published documents, found ${published.length}`);
 
-    // An earlier suite may already have published a version of its own; this test
-    // is about what *it* changes, so the count is measured either side of the loop.
-    const liveBefore = (await q(
-      `select count(*)::int n from public.policy_versions where status = 'in_force'`)).rows[0].n;
-
-    for (const row of slugs) {
-      const result = await whileRolledBack(admin, async () => (
-        await q('select public.approve_policy_version($1,$2,$3) as r',
-          [row.id, '2026-11-01', 'The owner answered every question in this text.'])
-      ).rows[0].r);
-      assert(result.status === 'in_force', `${row.slug} would not publish`);
+    for (const row of published) {
+      assert(row.status === 'in_force' || row.status === 'retired',
+        `${row.slug} version 1 is ${row.status}, so it was never published`);
+      assert(new Date(row.effective_at).toISOString().slice(0, 10) === '2026-10-28',
+        `${row.slug} takes effect on ${row.effective_at}`);
+      assert(row.approved_at, `${row.slug} has no approval time`);
+      // No account existed when the migrations ran, so the record is the
+      // instruction — not a name that did not click a button.
+      assert(row.approved_by === null, `${row.slug} names an approver`);
+      assert(/^Owner instruction, 2026-10-28/.test(row.approval_reason),
+        `${row.slug} does not record the owner's instruction`);
     }
 
-    // And nothing survived the rollback.
-    const liveAfter = (await q(
-      `select count(*)::int n from public.policy_versions where status = 'in_force'`)).rows[0].n;
-    assert(liveAfter === liveBefore,
-      `${liveAfter - liveBefore} documents went into force during a rolled-back test`);
+    // Every one of them still has a live version, and a visitor reads all seven.
+    const live = await whileRolledBack(admin, async () => (
+      await q('select public.policies_in_force() as r')).rows[0].r);
+    assert(Array.isArray(live) && live.length >= 7, 'the public register is missing documents');
+    for (const slug of SEEDED) {
+      assert(live.some((row) => row.slug === slug), `${slug} is not readable by a visitor`);
+    }
+  });
+
+  await test('the constraint still requires a reason, and an approver unless instructed', async () => {
+    // The widening is narrow on purpose: `approved_by` may be null only when the
+    // reason begins "Owner instruction". Anything else is refused by the table.
+    // Written as the table's owner rather than as an app role: an `authenticated`
+    // session is refused by RLS before the constraint is ever consulted, and a
+    // probe that tests the wrong layer proves nothing.
+    await q('begin');
+    try {
+      await q('savepoint constraint_probe');
+      await rejects(
+        () => q(`update public.policy_versions
+                   set approved_by = null, approval_reason = 'Looks fine to me.'
+                 where status = 'in_force'
+                   and document_id = (select id from public.policy_documents where slug = 'terms')`),
+        /pv_in_force_needs_approval|violates check constraint/);
+      await q('rollback to savepoint constraint_probe');
+
+      // And the instruction form is still accepted: the reason is what the row
+      // says it is, and nothing is published with an empty one.
+      await q('savepoint reason_probe');
+      await rejects(
+        () => q(`update public.policy_versions
+                   set approval_reason = '   '
+                 where status = 'in_force'
+                   and document_id = (select id from public.policy_documents where slug = 'terms')`),
+        /pv_in_force_needs_approval|violates check constraint/);
+      await q('rollback to savepoint reason_probe');
+    } finally {
+      await q('rollback');
+    }
   });
 
   await test('the guard still refuses a question, even though none is planted', async () => {
@@ -250,14 +303,14 @@ export async function run(ctx) {
   await test('the flag row says the questions are answered, and names the only step left', async () => {
     const row = (await q(
       `select preconditions from public.platform_settings where key = 'platform.legal'`)).rows[0];
-    assert(/answered as of 2026-10-28/.test(row.preconditions),
-      'the legal flag does not record that the decisions were made');
-    assert(/nothing is left to type/i.test(row.preconditions),
-      'the legal flag still asks for something to be typed');
+    assert(/Published 2026-10-28/.test(row.preconditions),
+      'the legal flag does not record that the documents were published');
     assert(/privacy@ayahspring\.com/.test(row.preconditions),
       'the legal flag does not name the contact the notice gives');
-    assert(/publish each draft/i.test(row.preconditions),
-      'the legal flag does not name the one step left');
+    assert(/a change is a new version/i.test(row.preconditions),
+      'the legal flag does not say how a published document changes');
+    assert(!/publish each draft/i.test(row.preconditions),
+      'the legal flag still tells the owner to publish drafts that are published');
     assert(!/answer those markers/i.test(row.preconditions),
       'the legal flag still asks for markers that are answered');
   });

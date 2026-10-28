@@ -101,8 +101,11 @@ export async function run(ctx) {
       [parent.childId, 'parent', 'video_call', 'vault/consent/amina.pdf', STATEMENT]);
     eq(submitted.status, 'pending', 'a submitted consent is a request');
     eq(submitted.referenceGiven, true, 'the evidence reference was recorded');
-    eq(submitted.policyVersionId, null,
-      'a policy version with no policy in force — the platform must not claim agreement to nothing');
+    // The children's policy was published on 2026-10-28, so a consent now records
+    // the version that was in force when it was given. Before that date there was
+    // no version, and the right answer was a null rather than a claim.
+    assert(submitted.policyVersionId !== null,
+      'a consent was recorded without naming the children’s policy it agreed to');
     caseId = submitted.caseId;
     relationshipId = submitted.relationshipId;
 
@@ -128,7 +131,7 @@ export async function run(ctx) {
     eq(row.referenceGiven, true, 'the queue knows evidence exists');
     eq('evidenceReference' in row, false, 'the queue hands out the reference');
     assert(/my daughter/.test(row.statement), 'the queue carries the parent’s own words');
-    eq(register.policyInForce, false, 'a policy is claimed to be in force');
+    eq(register.policyInForce, true, 'the published children’s policy is not reported as in force');
     eq(register.enforced, false, 'verification is enforced while the flag is off');
   });
 
@@ -219,6 +222,7 @@ export async function run(ctx) {
       // The parent is told, in a word, rather than left guessing.
       const mine = await call(parent.owner, 'my_guardian_consents()');
       eq(mine.consents[0].status, 'lapsed', 'the state the parent sees');
+      eq(mine.policyInForce, true, 'the children’s policy is published');
 
       // Staff see it too, counted, so a lapse is not invisible to the queue.
       const register = await call(governance, 'guardian_consent_register()');
@@ -332,8 +336,8 @@ export async function run(ctx) {
 
     const register = await call(admin, 'guardian_consent_register()');
     assert(register.counts.children >= 2, 'the children in families are counted');
-    eq(register.policyInForce, false,
-      'no children’s policy is in force, and the register says so rather than implying one');
+    eq(register.policyInForce, true,
+      'the published children’s policy is not reported by the register');
     // A verification approved before this migration carries no expiry, and that is
     // reported as a fact rather than hidden.
     eq(typeof register.counts.noExpiry, 'number', 'verifications without an expiry are counted');

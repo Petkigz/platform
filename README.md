@@ -69,8 +69,8 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **143 tables, RLS on every one, 269 policies, 165
-user-defined triggers, 498 functions and 184 migrations.** The database suite
-passes **1932 tests**; the web suite passes **1425 tests**. TypeScript typecheck
+user-defined triggers, 498 functions and 185 migrations.** The database suite
+passes **1931 tests**; the web suite passes **1425 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **211 app route entries** — 112
 pages, 89 API routes, and the metadata routes it generates.
 
@@ -90,6 +90,10 @@ rather than repeating it. **No marker is left anywhere**, and answering the last
 exposed a second defect worth naming: the privacy notice had described the under-13
 rule country by country while the children's policy carried the absolute one, so the
 weaker sentence was the one a parent read first. Both now say the same thing.
+**All seven were published on 2026-10-28**, in force from that date: the instruction
+is recorded on each version because a deployment has no accounts to name when the
+migrations run, and a change from here is a new version that retires the one it
+replaces and keeps every signature it was given.
 `approve_policy_version()` still refuses to put a document in force while a marker
 remains — proved on a draft written in the test — so a policy is either unfinished
 and legible or finished and binding. `/policies` lists them publicly and marks the unapproved

@@ -5158,3 +5158,46 @@ real is the owner's act — a date and a written reason, on `/admin/policies` �
 a version in force binds the people who use the platform and freezes at that moment.
 No migration does that in the owner's name, and the flag row now says so instead of
 asking for a fact that has been supplied.
+
+## Published — **DECIDED 2026-10-28**
+
+The owner's instruction was two words: *publish them.* The seven documents have
+been drafts since they were written, because a policy is only binding once somebody
+puts it in force with a date and a reason, and now they are in force from
+**2026-10-28** — the day of the instruction, which is also the day the last question
+was answered.
+
+**Why this is a migration rather than a click.** Publishing normally happens from
+`/admin/policies`, by a signed-in platform admin, and that path stays exactly as it
+was. But a deployment starts with an empty database: when the migrations finish there
+are no accounts at all, so there is nobody to click and nothing to sign. Recording the
+publication in the migration is what makes the intention survive into the deployment
+instead of waiting for the owner to remember to return. The guard is unchanged — a
+document with a `[OWNER DECISION: …]` still cannot be published, and the migration
+refuses rather than publishing it — and the same migration is harmless on a database
+where they were already published from the screen.
+
+**One invariant was widened, narrowly and in writing.** `pv_in_force_needs_approval`
+required an approver, because "somebody approved this" is the entire value of an
+approval record. Here there is no account to name — not because the approver is
+unknown, but because none exists yet. Rather than invent a user, the constraint now
+accepts a second, narrower form: `approved_by` may be null **only** when the approval
+reason begins *Owner instruction*, and the reason is still mandatory, still shown
+wherever the version is, and still frozen with the version. Anything else — a missing
+reason, or a null approver with any other note — is refused by the table, and there is
+a test that tries both. A later version approved by a signed-in admin names that
+account as before.
+
+**The date is the date.** `effective_at` is what a reader is told, and the platform
+treats an `in_force` version as binding immediately — it does not wait for the date to
+arrive. So publishing with a future date would put a page in force that said it was
+not yet in force, which is the same species of lie as a policy written as though
+settled. If a notice period is ever wanted, the honest way to have one is to publish
+on the day it begins.
+
+**What publication changes on screen.** `/policies` now links all seven to their text
+with a version and a date instead of marking them as not yet in force. Terms, the
+privacy notice and the teacher terms are agreed to, and an account is asked for each
+live version — so anybody who signed up before today is asked once, against the text
+they are actually bound by. A change is a new version: it retires the one it replaces,
+keeps every signature that version was given, and asks again.
