@@ -5122,3 +5122,39 @@ and both screens and the flag's own preconditions say so in those words.
 force — `policyInForce: false` is rendered as a sentence, not a blank — and the review
 itself remains a human queue with a real cost. The code is finished; the capacity and
 the evidence storage are the owner's, and the flag stays off until they exist.
+
+## The operator is named, and the name does not lie — **DECIDED 2026-10-28**
+
+The twenty-third question was not a decision. A privacy notice has to name the
+controller, and only the person running the platform can supply that. The answer
+arrived on 2026-10-28: **AyahSpring**, operated from Uganda, reachable at
+**privacy@ayahspring.com**. It is now in the notice, and no marker remains anywhere
+in the register.
+
+**The offered suffix was declined, and that is the decision worth recording.** The
+owner suggested "AyahSpring Inc." It would have taken ten seconds and it would have
+been false. "Inc." is not a decoration on a name; it states that a corporation is
+registered in a jurisdiction that uses the word. There is no such corporation. The
+operator is a person in Uganda, Ugandan law governs, and the only registration that
+exists is a domain. A notice that names an entity nobody can find is worse than one
+that names a trading name, because a regulator, a customer and a court can each
+check it and each of them would be right. So the notice says what is true — a trading
+name, a country and an address — and the day there is a registered company its
+registered name replaces this line in a new version of the document. The same rule is
+now a test: no document may contain `Inc`, `Ltd`, `LLC` or a registration number, and
+the whole register may contain exactly one email address.
+
+**Filling the gap found a second defect.** The privacy notice described the children's
+rule in its old, weaker form — "does not knowingly enrol a child under 13 *there*",
+meaning only where verification had been switched on — while the children's policy
+carried the owner's answer of 2026-10-27, which is absolute: nobody under 13, anywhere,
+in any country. Two documents, two rules, and the lenient one was in the notice a
+parent reads first. The privacy notice now states the owner's rule, and a test
+compares the two sentences so they cannot drift apart again.
+
+**What is left is not code.** Every document is answerable and provable: the suite
+publishes all seven inside a transaction and rolls them back. Publishing them for
+real is the owner's act — a date and a written reason, on `/admin/policies` — because
+a version in force binds the people who use the platform and freezes at that moment.
+No migration does that in the owner's name, and the flag row now says so instead of
+asking for a fact that has been supplied.

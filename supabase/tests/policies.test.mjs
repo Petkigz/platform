@@ -46,6 +46,19 @@ export async function run(ctx) {
   const scalar = async (sql, params = []) => (await q(sql, params)).rows[0];
   const call = async (actor, fn, params = []) =>
     (await asActor(actor, `select public.${fn} as r`, params)).rows[0].r;
+
+  /** Work that must leave no trace: run it inside a transaction, then undo it. */
+  async function whileRolledBack(actor, work) {
+    await q('begin');
+    await q(`select set_config('request.jwt.claims',$1,true)`,
+      [JSON.stringify({ sub: actor, role: 'authenticated' })]);
+    await q('set local role authenticated');
+    try {
+      return await work();
+    } finally {
+      await q('rollback');
+    }
+  }
   const eq = (actual, expected, what) =>
     assert(actual === expected,
       `${what}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
@@ -113,25 +126,51 @@ export async function run(ctx) {
       assert(/owner answered the decisions/i.test(row.change_note ?? ''),
         `${row.slug} has no [OWNER DECISION] marker and no record of who decided — somebody wrote a legal position as if it were settled`);
     }
-    // At least one document still carries a marker, or the marker machinery itself
-    // has quietly stopped being exercised.
-    assert(rows.some((row) => row.open > 0), 'no draft has an open decision at all');
+    // The marker machinery itself must still be exercised. Since 2026-10-28 no
+    // planted document carries an open question, so the counter is proved on a
+    // text that does — otherwise a broken counter and a fully answered register
+    // would look exactly the same.
+    const counted = await scalar(
+      `select public.policy_open_decisions($1) as n`,
+      ['One thing. [OWNER DECISION: a question.] Another. [OWNER DECISION: another.]']);
+    eq(counted.n, 2, 'the open-decision counter');
     eq(await scalar(`select public.policy_open_decisions('nothing here') as n`).then((r) => r.n),
       0, 'a clean text counts zero');
   });
 
   await test('a draft with an open decision cannot be put in force', async () => {
-    // The privacy notice, because it is the document that still asks something.
-    const draft = await draftOf('privacy');
-    await rejects(
-      () => call(admin, 'approve_policy_version($1,$2,$3)',
-        [draft.id, '2026-11-01', 'Ready to publish.']),
-      /decisions_open/);
+    // Every seeded draft is answered now, so the guard is proved on a text written
+    // here with one question still in it — and rolled back, because a draft left
+    // behind would be a document nobody meant to write.
+    const takedown = await draftOf('takedown');
+    await whileRolledBack(admin, async () => {
+      const saved = (await q('select public.save_policy_draft($1,$2,$3) as r',
+        ['takedown',
+         `${takedown.body}\n\n[OWNER DECISION: who decides an appeal against a takedown.]`,
+         'A draft with one question left in it.'])).rows[0].r;
+      eq(saved.openDecisions, 1, 'the saved draft counts its open decision');
 
-    // The refusal left everything where it was: still a draft, still nothing live.
-    const after = await scalar('select status from public.policy_versions where id = $1', [draft.id]);
-    eq(after.status, 'draft', 'the refused version');
-    assert(!(await liveOf('terms')), 'a refused approval produced a live version');
+      // A refused statement aborts the surrounding transaction, so the refusal is
+      // taken at a savepoint and the state is read back from it.
+      await q('savepoint refused');
+      await rejects(
+        () => q('select public.approve_policy_version($1,$2,$3)',
+          [saved.id, '2026-11-01', 'Ready to publish.']),
+        /decisions_open/);
+      await q('rollback to savepoint refused');
+
+      // The refusal left everything where it was: still a draft, still not live.
+      const after = (await q('select status from public.policy_versions where id = $1',
+        [saved.id])).rows[0];
+      eq(after.status, 'draft', 'the refused version');
+    });
+
+    // And the seeded register is untouched by any of it.
+    const live = await scalar(
+      `select count(*)::int n from public.policy_versions v
+         join public.policy_documents d on d.id = v.document_id
+        where d.slug = 'takedown' and v.status = 'in_force'`);
+    eq(live.n, 0, 'a refused approval produced a live version');
   });
 
   await test('a decision needs a written reason, and only the owner may give one', async () => {
@@ -269,7 +308,7 @@ export async function run(ctx) {
 
     const board = await call(governance, 'policy_register()');
     assert(board.documents.length >= 7, 'governance cannot see the register');
-    assert(board.counts.openDecisions > 0, 'the open decisions are not counted');
+    eq(board.counts.openDecisions, 0, 'the open decisions counted after the owner answered');
     // Governance reads; it does not write. The refusal is the same one the
     // approval test makes, checked here on the other writer.
     await rejects(

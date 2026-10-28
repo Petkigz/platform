@@ -69,24 +69,30 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **143 tables, RLS on every one, 269 policies, 165
-user-defined triggers, 498 functions and 183 migrations.** The database suite
-passes **1931 tests**; the web suite passes **1425 tests**. TypeScript typecheck
+user-defined triggers, 498 functions and 184 migrations.** The database suite
+passes **1932 tests**; the web suite passes **1425 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **211 app route entries** — 112
 pages, 89 API routes, and the metadata routes it generates.
 
 **The policies were drafts, and the database said so.** Seven documents — terms,
 privacy, children, refunds, teaching, safeguarding, takedown — describe what the
 platform actually does and mark every question only the owner can answer with
-`[OWNER DECISION: …]`. On 2026-10-27 the owner answered twenty-two of the
-twenty-three: Ugandan law and courts, the PDPO under the 2019 Act, retention of
-three and seven years, nothing sold until a merchant of record is connected, no
-under-13s until guardian verification works, a teacher check that says plainly it is
-not a criminal-record check, and a 50% teacher share with its fine print.
-**One marker is left in the whole register** — the operator's name and contact
-details, which no migration may invent — and the children's, safeguarding and
-takedown documents point at it rather than repeating it. `approve_policy_version()` refuses to put any of them in
-force while a marker remains, so a policy is either unfinished and legible or
-finished and binding. `/policies` lists them publicly and marks the unapproved
+`[OWNER DECISION: …]`. The owner answered twenty-two on 2026-10-27 — Ugandan law
+and courts, the PDPO under the 2019 Act, retention of three and seven years, nothing
+sold until a merchant of record is connected, no under-13s until guardian
+verification works, a teacher check that says plainly it is not a criminal-record
+check, and a 50% teacher share with its fine print — and the twenty-third on
+2026-10-28, which was not a decision but a fact: **the operator is AyahSpring,
+operated from Uganda, reachable at privacy@ayahspring.com.** The notice says exactly
+that and not `Inc.`, because a suffix is a claim about a registration nobody has
+made; the children's, safeguarding and takedown documents point at the one line
+rather than repeating it. **No marker is left anywhere**, and answering the last one
+exposed a second defect worth naming: the privacy notice had described the under-13
+rule country by country while the children's policy carried the absolute one, so the
+weaker sentence was the one a parent read first. Both now say the same thing.
+`approve_policy_version()` still refuses to put a document in force while a marker
+remains — proved on a draft written in the test — so a policy is either unfinished
+and legible or finished and binding. `/policies` lists them publicly and marks the unapproved
 ones rather than showing a draft; `/admin/policies` is where the owner answers,
 publishes with a date and a written reason, and sees who agreed to what — and
 where an eighth document (an incident runbook, a screening standard) is added
