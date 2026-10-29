@@ -204,23 +204,30 @@ now holds the register, `/admin` reads and toggles it, and `/api/admin/flags`
 writes it. A trigger refuses to enable a `code`-gated flag at runtime, so the
 dashboard cannot promise what needs a deploy.
 
-**2. Nineteen of these cannot be runtime toggles.**
-`gate_type='code'` on 19 flags — 9 `platform.*` legal, safety and data ones,
-4 `teaching.*`, 3 `learning.*`, and three one-offs: `commerce.institutions`,
-`delivery.transcode` and `family.child_login`. Each needs a deploy, a provider,
-or a policy that does not exist. Building them "to completion" means building
-them against guesses, so the tables and the flags exist and the work waits — and
-the list is re-counted from `platform_settings` rather than from prose, because
-five units left it in one day and a stale total outlives the reason it was
+**2. Fifteen of these cannot be runtime toggles.**
+`gate_type='code'` on 15 flags, and every one of them names something that still
+does not exist: a provider, a written policy, a legal decision, or a design that
+was never done. They are `learning.ai_support`, `learning.recitation`,
+`learning.ijazah`, `platform.safeguarding`, `platform.incident`,
+`platform.takedown`, `platform.age_assurance`, `platform.data_export`,
+`platform.withdrawal_right`, `platform.accessibility`, `family.child_login`,
+`teaching.screening`, `teaching.payouts`, `commerce.institutions` and
+`delivery.transcode`. Each needs a deploy, a provider, or a policy that does not
+exist, and building them "to completion" would mean building against guesses.
+
+The list is re-counted from `platform_settings` rather than from prose, because
+five units left it stale in one day and a stale total outlives the reason it was
 written. On 2026-10-26 `commerce.referrals`, `commerce.sponsorship`,
 `teaching.applications`, `learning.multi_language` and all four `institution.*`
-flags became ADMIN. Two of those are worth reading twice: `institution.sso`
-moved although SAML and OIDC are still missing, because the part that can exist
-— a verified email domain — is built; `learning.multi_language` moved although
-the interface is still English, because a course saying which language it is
-taught in is the half that needs no translator. A switch nobody can turn on
-while the feature it names works is a worse lie than a screen that says what is
-absent.
+flags became ADMIN, and on 2026-10-28 `teaching.content_licence` followed: its
+gate was written and the decision to refuse an upload belongs to the owner, so
+the switch moved to `/admin/settings` where the owner can reach it. Some of those
+moves are worth reading twice. `institution.sso` moved although SAML and OIDC are
+still missing, because the part that can exist — a verified email domain — is
+built; `learning.multi_language` moved although the interface is still English,
+because a course saying which language it is taught in is the half that needs no
+translator. A switch nobody can turn on while the feature it names works is a
+worse lie than a screen that says what is absent.
 
 A further **15 are ADMIN + SETUP**: the toggle is real, but a provider, a sender
 domain or a written policy has to be finished first. Those are the ones where
