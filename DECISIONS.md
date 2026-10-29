@@ -5201,3 +5201,62 @@ privacy notice and the teacher terms are agreed to, and an account is asked for 
 live version — so anybody who signed up before today is asked once, against the text
 they are actually bound by. A change is a new version: it retires the one it replaces,
 keeps every signature that version was given, and asks again.
+
+## Email goes out through a free tier, and the free tier's limits are written down — **DECIDED 2026-10-28**
+
+The owner's constraint was blunt and it settles several arguments at once: *nothing
+may be built that requires paying a platform yet*, because there is no investment
+money. That rules out a merchant of record with a monthly fee, a paid SMS gateway,
+and any provider whose "free" is a trial with a countdown. It does **not** rule out
+email, because Resend's free tier is permanent: **3,000 messages a month, 100 a day,
+no card.** That is more mail than a platform with no learners can produce, and enough
+for the first few hundred.
+
+**What was built is the call in the middle, not a vendor.** The database half of
+delivery has been finished since 2026-12-70 — claim with a five-minute lease, backoff,
+dead letter, suppression list, and a constraint that refuses `sent` without a
+provider's own reference. The dispatcher is now `web/src/lib/email/`, and the vendor
+is a string in an environment variable. Two rules shaped it:
+
+**1. Only a provider's reference makes a message sent.** A 2xx with no `id` is not a
+delivery, a thrown request is not a delivery, and every other path ends in `retry` or
+`bounce`. This is not pedantry: `record_delivery_outcome()` refuses to settle a
+message without a reference, so a dispatcher that guessed would be writing fiction
+into an audit trail that exists to answer "did this parent get their receipt".
+
+**2. Suppression needs a confident signal, because it is the one irreversible thing
+here.** A hard bounce means the mailbox does not exist. A **401 means our API key is
+wrong** — the address is perfectly good, and suppressing it would silently cut a
+parent off from every future receipt with no way back that anybody would think to
+look for. So the only 4xx that suppresses is one that *names the recipient*; a
+malformed subject, an unverified sender domain and a bad key all retry, and a
+persistent one becomes a dead letter, which is a thing a person fixes. There is a
+test for the inverse case specifically, because it is the mistake that costs someone
+their access rather than costing an attempt.
+
+**A deployment with no key claims nothing.** The provider is resolved *before* the
+first claim. Claiming starts a message's attempt counter, so a run without
+credentials would burn all five attempts against a 401 and dead-letter the entire
+outbox in a single pass — silent, plausible-looking, and destroying the record of
+what people were owed.
+
+**Who runs it.** A scheduler calls `POST /api/cron/dispatch-messages` with
+`CRON_SECRET`; the worker **signs in as a staff account** rather than using the
+service role, because the database only lets a privileged *person* claim or settle.
+That is the design already recorded, and it still holds for one reason: a machine
+writer is subject to the same refusals a human is, and every send is attributable to
+somebody. And because a scheduler that has quietly stopped looks exactly like an
+empty queue, `/admin/messages` has a **Send what is due now** button that runs the
+identical pass with the viewer's own session. A button cannot be more permissive than
+a cron job, and a cron job cannot do anything a person could not.
+
+**The limits are stated rather than discovered.** 100 messages a day is the free
+tier's cap. Past it, sends fail, retry on the backoff, and dead-letter for a person to
+release — nothing is lost, nothing is delivered. The first paid upgrade is $20/month
+at 50,000, and the trigger for buying it is 100 messages in a day, which will be a
+good day.
+
+**What is left is not money and not code.** Three DNS records for the sending domain
+(DKIM, SPF, DMARC), and a scheduler pointed at the route. Both free. Until the records
+exist, receipts land in spam, which is indistinguishable from not sending them — so
+`platform.email_auth` stays off and says exactly that.

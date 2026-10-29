@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { deliveryNote, parseStanding, OutboxError } from '@/lib/outbox';
+import { resolveEmailProvider } from '@/lib/email/provider';
+import { DispatchNow } from './dispatch-now';
 import { RetryForm } from './retry-form';
 import { SuppressForm } from './suppress-form';
 
@@ -95,6 +97,12 @@ export default async function AdminMessagesPage() {
 
   const messages = (data ?? []) as MessageRow[];
 
+  // Which provider this deployment can actually use. Read on the server so the
+  // key never travels; `resolveEmailProvider` answers with a sentence, never a
+  // credential, and the screen repeats that sentence rather than inventing a
+  // status of its own.
+  const provider = resolveEmailProvider(process.env);
+
   return (
     <div className="page wide">
       <nav className="crumbs">
@@ -113,12 +121,29 @@ export default async function AdminMessagesPage() {
         </p>
       </div>
 
-      <div className={`notice${standing.deliveryEnabled ? '' : ' warn'}`}>
+      <div className={`notice${standing.deliveryEnabled && provider.kind !== 'none' ? '' : ' warn'}`}>
         {deliveryNote(standing)}
-        {standing.deliveryEnabled
-          ? ' A provider still has to be configured before a claimed message can leave.'
+        {standing.deliveryEnabled && provider.kind === 'none'
+          ? ` ${provider.reason}`
+          : ''}
+        {standing.deliveryEnabled && provider.kind === 'resend'
+          ? ` Mail goes through Resend from ${provider.from}.`
           : ''}
       </div>
+
+      <section className="card">
+        <h2>Sending</h2>
+        <p className="muted">
+          {standing.deliveryEnabled
+            ? 'A scheduled run sends what is due every few minutes. This button runs '
+              + 'the same pass immediately, with your own session — so a scheduler '
+              + 'that has quietly stopped is something you can check rather than '
+              + 'something you find out about from a parent.'
+            : 'Delivery is off, so nothing is claimed and nothing sends. Turn it on '
+              + 'once the provider below is configured.'}
+        </p>
+        <DispatchNow disabled={!standing.deliveryEnabled} />
+      </section>
 
       <dl className="facts">
         <div>
