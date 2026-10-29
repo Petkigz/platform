@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
+import { LOCALES } from './i18n/locales.ts';
+
 /**
  * The wiring, not the logic.
  *
@@ -55,18 +57,66 @@ test('the Arabic rules survive a stylesheet edit', () => {
   assert.doesNotMatch(globals, /@font-face[\s\S]{0,200}?(Naskh|Amiri|Scheherazade)/iu);
 });
 
-test('the shell says out loud that it is English and left to right', () => {
+test('the shell says out loud which language it is in', () => {
   const layout = read('../app/layout.tsx');
-  assert.match(layout, /<html lang="en" dir="ltr">/u);
+
+  // `lang` and `dir` come from the register now, not from a constant. That is
+  // what a screen reader and a bidi algorithm read, so it is the two attributes
+  // and not the words on the page that decide whether an Arabic page is Arabic.
+  assert.match(layout, /<html lang=\{code\} dir=\{directionOf\(code\)\}>/u);
+
+  // Both sources the choice can come from: the cookie this browser set, and the
+  // device's own `Accept-Language` when it has not set one.
+  assert.match(layout, /LOCALE_COOKIE/u);
+  assert.match(layout, /accept-language/u);
+
+  // `og:locale` was fixed at `'en'` while everything around it was translated: a
+  // link shared into an Arabic group previewed in English. The share card now
+  // takes the same code the page does, in the hook that can read it.
+  assert.match(layout, /openGraph: \{ \.\.\.baseMetadata\.openGraph, locale: code/u);
+
+  // And the way to change it is reachable from every page.
+  assert.match(layout, /href="\/language"/u);
 });
 
-test('the accessibility page does not claim a translation', () => {
+test('every right-to-left language in the register is named as one', () => {
   const page = read('../app/account/accessibility/page.tsx');
-  // The sentence that has to stay, in some form: the interface is English.
-  assert.match(page, /interface[^.]{0,80}English/iu);
-  assert.match(page, /No right-to-left interface/u);
+  const sentence = page.match(/Right-to-left is for ([^.]+)\./u)?.[1] ?? '';
+  assert.notEqual(sentence, '', 'the accessibility page no longer lists the RTL languages');
+
+  const rtl = LOCALES.filter((locale) => locale.dir === 'rtl');
+  assert.ok(rtl.length > 0);
+  for (const locale of rtl) {
+    assert.ok(
+      sentence.includes(locale.englishName),
+      `${locale.code} is right-to-left but the page does not say so`,
+    );
+  }
+  // The other direction matters too: a left-to-right language claimed as RTL
+  // would be the same defect seen from the other side.
+  for (const locale of LOCALES.filter((l) => l.dir === 'ltr' && l.code !== 'en')) {
+    assert.ok(
+      !sentence.includes(locale.englishName),
+      `the page calls ${locale.code} right-to-left`,
+    );
+  }
+});
+
+test('the accessibility page tells the truth about the translation', () => {
+  const page = read('../app/account/accessibility/page.tsx');
+
+  // The sentence that had to go: "the interface itself is in English".
+  assert.doesNotMatch(page, /interface itself is in English/iu);
+
+  // What replaced it has to admit that a translation can be partial rather than
+  // imply that thirteen languages means thirteen finished ones — and it has to
+  // point at the page that prints the number instead of asserting it here.
+  assert.match(page, /how much of it is actually translated/iu);
+  assert.match(page, /href="\/language"/u);
+
   // And it must still admit what it has not got, rather than listing only what
   // works.
   assert.match(page, /No text-to-speech/u);
   assert.match(page, /No dyslexia-friendly font/u);
 });
+

@@ -42,6 +42,11 @@ export const PUBLIC_ROUTES: readonly StaticRoute[] = [
   // signing up has to be readable before signing up, and an index of them is
   // how somebody checks the platform has one.
   { path: '/policies', priority: 0.4, changeFrequency: 'monthly' },
+  // The language switch, and the one settings page that needs no account. It is
+  // public because the interface opens in the device's own language: somebody
+  // handed a phone in a language they do not read has to be able to fix that
+  // before there is an account to fix it from.
+  { path: '/language', priority: 0.3, changeFrequency: 'monthly' },
 ];
 
 /**

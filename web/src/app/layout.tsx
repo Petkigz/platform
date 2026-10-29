@@ -1,7 +1,11 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import { cookies, headers } from 'next/headers';
 
 import { A11Y_BOOT } from '@/lib/a11y';
+import {
+  LOCALE_COOKIE, chooseLocale, directionOf, localeByCode, translator,
+} from '@/lib/i18n';
 import Link from 'next/link';
 import { siteOrigin } from '@/lib/site';
 import { organisationJsonLd, websiteJsonLd } from '@/lib/structured-data';
@@ -22,7 +26,30 @@ const description =
 // shared, rather than trusting whatever host the requester typed.
 const origin = siteOrigin();
 
-export const metadata: Metadata = {
+/**
+ * The card a chat client shows, in the language the page is in.
+ *
+ * `og:locale` was fixed at `'en'` while everything around it was translated. A
+ * link shared into an Arabic group would preview in English — the one piece of
+ * the page whose language a reader cannot change after the fact.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  const t = translator(code);
+
+  return {
+    ...baseMetadata,
+    openGraph: { ...baseMetadata.openGraph, locale: code, description: t('footer.tagline') },
+    description: t('footer.tagline'),
+  };
+}
+
+const baseMetadata: Metadata = {
   ...(origin ? { metadataBase: new URL(origin) } : {}),
   title: {
     default: 'AyahSpring',
@@ -33,6 +60,8 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     siteName: 'AyahSpring',
+    // Overridden by `generateMetadata`, which knows the reader's language. This
+    // is the value a crawler sees, and English is what a crawler is asking for.
     locale: 'en',
     title: 'AyahSpring',
     description,
@@ -51,11 +80,38 @@ export const metadata: Metadata = {
   },
 };
 
-// The masthead is deliberately auth-agnostic so pages stay statically
-// renderable. Anything that needs the session reads it in the page.
-export default function RootLayout({ children }: { children: ReactNode }) {
+/**
+ * The language of the interface, decided here rather than on each page.
+ *
+ * (The masthead stays auth-agnostic — `MastheadActions` asks `/api/session` after
+ * mount — so this layout never needs the session itself.)
+ *
+ * `chooseLocale` reads the cookie a person set, then `Accept-Language`, then
+ * English — and the answer sets `lang` and `dir` on the document, which is the
+ * whole of what a screen reader and a bidi algorithm need. That is also why every
+ * page now renders per request: the alternative is to send English and swap it in
+ * the browser, which shows the wrong language to exactly the reader this exists
+ * for.
+ *
+ * Nothing here translates a course. A teacher's title stays in its author's
+ * language, with the `lang`/`dir` handling in `lib/arabic.ts` — the interface and
+ * the content choose their languages independently, which is the only way a
+ * French reader can study an Arabic course.
+ */
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const jar = await cookies();
+  const hdrs = await headers();
+
+  const { code } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+
+  const t = translator(code);
+  const locale = localeByCode(code);
+
   return (
-    <html lang="en" dir="ltr">
+    <html lang={code} dir={directionOf(code)}>
       <body>
         {/*
           Reading preferences are applied before the first paint. The script is
@@ -64,7 +120,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           account page writes, from the same list — see lib/a11y.ts.
         */}
         <script dangerouslySetInnerHTML={{ __html: A11Y_BOOT }} />
-        <a href="#main" className="sr-only" style={srOnly}>Skip to content</a>
+        <a href="#main" className="sr-only" style={srOnly}>{t('skip.toContent')}</a>
 
         <header className="masthead">
           <div className="container masthead-inner">
@@ -73,20 +129,27 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               AyahSpring
             </Link>
 
-            <nav className="nav" aria-label="Main">
-              <NavLink href="/catalogue">Catalogue</NavLink>
-              <NavLink href="/learn">My learning</NavLink>
-              <NavLink href="/family">My family</NavLink>
-              <NavLink href="/plans">Plans</NavLink>
-              <NavLink href="/subscriptions">Subscriptions</NavLink>
-              <NavLink href="/teach">Teach</NavLink>
-              <NavLink href="/review">Review</NavLink>
-              <NavLink href="/certificates">Certificates</NavLink>
+            <nav className="nav" aria-label={t('nav.main')}>
+              <NavLink href="/catalogue">{t('nav.catalogue')}</NavLink>
+              <NavLink href="/learn">{t('nav.learn')}</NavLink>
+              <NavLink href="/family">{t('nav.family')}</NavLink>
+              <NavLink href="/plans">{t('nav.plans')}</NavLink>
+              <NavLink href="/subscriptions">{t('nav.subscriptions')}</NavLink>
+              <NavLink href="/teach">{t('nav.teach')}</NavLink>
+              <NavLink href="/review">{t('nav.review')}</NavLink>
+              <NavLink href="/certificates">{t('nav.certificates')}</NavLink>
             </nav>
 
             {/* Auth-agnostic on the server, refined after hydration: see
                 `_shared/masthead-actions.tsx`. */}
-            <MastheadActions />
+            <MastheadActions
+              labels={{
+                signIn: t('action.signIn'),
+                getStarted: t('action.getStarted'),
+                signOut: t('action.signOut'),
+                area: t('footer.area'),
+              }}
+            />
           </div>
         </header>
 
@@ -94,29 +157,36 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 
         <footer>
           <div className="container">
-            <span>© {new Date().getFullYear()} AyahSpring</span>
-            <span>Islamic learning for children and adults, worldwide.</span>
+            <span>{t('footer.rights', { year: new Date().getFullYear() })}</span>
+            <span>{t('footer.tagline')}</span>
             {/* Help lives in the footer rather than the masthead: the nav is
                 already eight links wide on a phone, and nobody looks for
                 support in the primary navigation until they need it. */}
-            <Link href="/about">About</Link>
+            <Link href="/about">{t('footer.about')}</Link>
             {/* The terms belong where a person looks for them, not only on the
                 screen they are forced to open. It is public and it is short. */}
-            <Link href="/policies">Terms and privacy</Link>
-            <Link href="/support">Help</Link>
+            <Link href="/policies">{t('footer.terms')}</Link>
+            <Link href="/support">{t('footer.help')}</Link>
             {/* The one door a stranger needs: an employer or a school holding a
                 printed certificate has a number and nothing else, and there is
                 no account for them to sign into. It sits in the footer because
                 the people who need it are not the people browsing a catalogue. */}
-            <Link href="/verify">Check a certificate</Link>
+            <Link href="/verify">{t('footer.verify')}</Link>
             {/* The way back to your own area once you are signed in. It is a
                 redirect rather than a page, so it costs nothing to link from a
                 static footer. */}
-            <Link href="/dashboard">Your area</Link>
+            <Link href="/dashboard">{t('footer.area')}</Link>
             {/* Messages are in-app only while no delivery provider exists, so
                 the way in sits beside the way to your area rather than in the
                 masthead, which is deliberately auth-agnostic. */}
-            <Link href="/notifications">Notifications</Link>
+            <Link href="/notifications">{t('footer.notifications')}</Link>
+            {/* The language sits in the footer rather than the masthead: it is
+                changed once, by the few people the device guessed wrong for, and
+                the nav is already eight links wide on a phone. It is public, so
+                somebody who cannot read the page can fix that before signing up. */}
+            <Link href="/language" lang={code} dir={locale.dir}>
+              {t('language.title')}
+            </Link>
           </div>
         </footer>
 

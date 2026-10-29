@@ -70,9 +70,10 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 The database stands at **147 tables, RLS on every one, 271 policies, 166
 user-defined triggers, 518 functions and 191 migrations.** The database suite
-passes **1995 tests**; the web suite passes **1543 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **213 app route entries** — 113
-pages, 90 API routes, and the metadata routes it generates.
+passes **1995 tests**; the web suite passes **1560 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **221 app route entries** — 120
+pages and seven generated entries (`/_not-found`, four icons and manifest, the
+robots file, the sitemap), plus 94 API routes.
 
 **The policies were drafts, and the database said so.** Seven documents — terms,
 privacy, children, refunds, teaching, safeguarding, takedown — describe what the
@@ -251,6 +252,28 @@ column matching `score|grade|rating|mastery|proficiency`. A passage is archived,
 never deleted, so its reviews survive; and while the flag is off `my_hifz()`
 returns `{enabled:false}` rather than an empty list that would read as "nothing
 memorised".
+
+**The interface speaks thirteen languages, and the device picks first.**
+`/language` is public, because the language is decided before anybody signs in:
+`lib/i18n/` holds a register of English, Arabic, Urdu, Persian, Turkish,
+Indonesian, Malay, Bengali, Hindi, French, Spanish, Portuguese and Swahili, and
+the root layout sets `<html lang dir>` from `chooseLocale()` — the cookie if this
+browser set one, otherwise the first language in `Accept-Language` the register
+actually has, otherwise English. Every string falls back to English, so a
+half-translated catalogue renders sentences rather than blanks; each language
+prints **how much of it is translated**, counted from its own file, and all
+thirteen are at 100% today. The picker's first option is *my device's language*,
+which deletes the cookie — a default somebody cannot return to is not a default.
+The choice lives on the browser, not the account, and the page says so: a shared
+family tablet should speak to each of its readers, and the sign-in page has to be
+readable before there is an account to hold a preference. Arabic, Urdu and
+Persian turn the whole shell around, because the rules that place things are
+written in logical properties (`margin-inline-start`, `border-inline-start`)
+rather than left and right; the certificate and the receipt declare `dir="ltr"`
+because their words are English and untranslated. **Courses are not translated:**
+a title, a lesson and a teacher's page stay in the language their author wrote
+them in, and every catalogue says so in its own words. The feature has no flag —
+English is the fallback, so it cannot be half-on.
 
 Crawlers have rules: `robots.txt` disallows the twenty signed-in prefixes,
 `sitemap.xml` lists only pages that exist right now — a gated page is listed

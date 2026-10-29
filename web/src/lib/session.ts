@@ -60,17 +60,35 @@ export function firstName(name: unknown): string | null {
  * prevent — and signing out is a form POST rather than a link, because the
  * route refuses GET.
  */
-export function mastheadActions(session: SessionSummary): MastheadAction[] {
+/** The four words the masthead can say, so a page in another language can. */
+export type MastheadLabels = {
+  signIn: string;
+  getStarted: string;
+  signOut: string;
+  area: string;
+};
+
+const ENGLISH_MASTHEAD: MastheadLabels = {
+  signIn: 'Sign in',
+  getStarted: 'Get started',
+  signOut: 'Sign out',
+  area: 'Your area',
+};
+
+export function mastheadActions(
+  session: SessionSummary,
+  labels: MastheadLabels = ENGLISH_MASTHEAD,
+): MastheadAction[] {
   if (!session.signedIn) {
     return [
-      { label: 'Sign in', href: '/sign-in', emphasis: 'ghost', method: 'get' },
-      { label: 'Get started', href: '/sign-up', emphasis: 'primary', method: 'get' },
+      { label: labels.signIn, href: '/sign-in', emphasis: 'ghost', method: 'get' },
+      { label: labels.getStarted, href: '/sign-up', emphasis: 'primary', method: 'get' },
     ];
   }
 
   return [
-    { label: 'Sign out', href: '/sign-out', emphasis: 'ghost', method: 'post' },
-    { label: 'Your area', href: '/dashboard', emphasis: 'primary', method: 'get' },
+    { label: labels.signOut, href: '/sign-out', emphasis: 'ghost', method: 'post' },
+    { label: labels.area, href: '/dashboard', emphasis: 'primary', method: 'get' },
   ];
 }
 
@@ -81,8 +99,8 @@ export function mastheadActions(session: SessionSummary): MastheadAction[] {
  * holds a child's learning — who is signed in is information the visible header
  * has no room for and the accessible name has plenty of.
  */
-export function accountLabel(session: SessionSummary): string {
-  return session.name ? `Your area — signed in as ${session.name}` : 'Your area';
+export function accountLabel(session: SessionSummary, area = 'Your area'): string {
+  return session.name ? `${area} — signed in as ${session.name}` : area;
 }
 
 export type CallToAction = { label: string; href: string };

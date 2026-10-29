@@ -45,6 +45,13 @@ test('the API prefix is matched with its trailing slash and without it', () => {
   assert.equal(isDisallowed('/api/session'), true);
 });
 
+test('the language switch is reachable by a crawler and by a stranger', () => {
+  // It is the one settings page that must work before sign-in, because the
+  // interface opens in the language the device asks for.
+  assert.ok(PUBLIC_ROUTES.some((route) => route.path === '/language'));
+  assert.equal(isDisallowed('/language'), false);
+});
+
 test('nothing public is accidentally disallowed', () => {
   for (const route of PUBLIC_ROUTES) {
     assert.equal(isDisallowed(route.path), false, `${route.path} is public but disallowed`);

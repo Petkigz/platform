@@ -45,7 +45,17 @@ export default async function CertificatePage({
         </div>
       )}
 
-      <article className={`certificate-sheet ${certificate.status === 'revoked' ? 'is-revoked' : ''}`}>
+      {/* The sheet declares its own direction. Everything printed on it — the
+          kicker, the wording, the footer, the verification address — is English
+          and untranslated, so an Arabic interface must not turn it around; the
+          only non-Latin thing in the frame is the learner's name, which
+          `ArabicBlock` isolates on its own. Inheriting `dir` from `<html>` would
+          have made this page's direction a property of the reader rather than of
+          the document. */}
+      <article
+        className={`certificate-sheet ${certificate.status === 'revoked' ? 'is-revoked' : ''}`}
+        dir="ltr"
+      >
         <div className="certificate-inner">
           <div className="certificate-brand"><BrandMark className="certificate-mark" size={16} /> AyahSpring</div>
           <p className="certificate-kicker">Certificate of completion</p>

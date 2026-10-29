@@ -192,7 +192,10 @@ export default async function ReceiptPage({
         </div>
       )}
 
-      <article className="receipt-sheet">
+      {/* English words on an untranslated document: the sheet keeps its own
+          direction rather than inheriting the interface's. See the certificate
+          for the same reasoning. */}
+      <article className="receipt-sheet" dir="ltr">
         <header className="receipt-head">
           <div>
             <p className="receipt-brand">

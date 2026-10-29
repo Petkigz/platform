@@ -115,7 +115,7 @@ a:hover { color: var(--green-600); text-decoration: underline; }
   color: var(--green-700);
 }
 
-.nav { display: flex; gap: 1.1rem; font-size: 0.92rem; margin-right: auto; }
+.nav { display: flex; gap: 1.1rem; font-size: 0.92rem; margin-inline-end: auto; }
 .nav a { color: var(--text-soft); font-weight: 500; }
 .nav a:hover { color: var(--green-700); text-decoration: none; }
 
@@ -129,7 +129,7 @@ a:hover { color: var(--green-600); text-decoration: underline; }
   box-shadow: inset 0 -2px 0 var(--green-600);
 }
 
-.masthead-actions { margin-left: auto; display: flex; gap: 0.5rem; align-items: center; }
+.masthead-actions { margin-inline-start: auto; display: flex; gap: 0.5rem; align-items: center; }
 .masthead-actions .btn { width: auto; margin: 0; padding: 0.42rem 0.9rem; font-size: 0.9rem; }
 
 /* A phone.
@@ -156,7 +156,7 @@ a:hover { color: var(--green-600); text-decoration: underline; }
   }
 
   .brand { order: 1; }
-  .masthead-actions { order: 2; margin-left: auto; }
+  .masthead-actions { order: 2; margin-inline-start: auto; }
 
   /* A tap target is 44 pixels, not 33. */
   .masthead-actions .btn {
@@ -170,7 +170,7 @@ a:hover { color: var(--green-600); text-decoration: underline; }
   .nav {
     order: 3;
     flex-basis: 100%;
-    margin-right: 0;
+    margin-inline-end: 0;
     gap: 1.15rem;
     overflow-x: auto;
     flex-wrap: nowrap;
@@ -349,7 +349,7 @@ p  { margin: 0 0 1rem; }
 .assurances { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.05rem; }
 .assurances li {
   position: relative;
-  padding-left: 1.3rem;
+  padding-inline-start: 1.3rem;
   font-size: 0.9rem;
   color: var(--text-soft);
   line-height: 1.5;
@@ -357,7 +357,7 @@ p  { margin: 0 0 1rem; }
 .assurances li::before {
   content: '';
   position: absolute;
-  left: 0;
+  inset-inline-start: 0;
   top: 0.42rem;
   width: 0.42rem;
   height: 0.42rem;
@@ -566,7 +566,7 @@ input:focus, select:focus, textarea:focus {
 
 .notice {
   border: 1px solid var(--border);
-  border-left: 3px solid var(--green-600);
+  border-inline-start: 3px solid var(--green-600);
   background: var(--green-50);
   border-radius: var(--radius-sm);
   padding: 0.8rem 1rem;
@@ -574,11 +574,11 @@ input:focus, select:focus, textarea:focus {
   font-size: 0.9rem;
   color: var(--text-soft);
 }
-.notice.warn { border-left-color: #b58a2a; background: var(--warn-bg); border-color: var(--warn-border); }
-.notice.error { border-left-color: var(--danger); background: var(--danger-bg); border-color: #f0dcdc; color: var(--danger); }
+.notice.warn { border-inline-start-color: #b58a2a; background: var(--warn-bg); border-color: var(--warn-border); }
+.notice.error { border-inline-start-color: var(--danger); background: var(--danger-bg); border-color: #f0dcdc; color: var(--danger); }
 /* Named so a caller can say "this is information" rather than relying on the
    base notice being green. `.notice` already is; this states it. */
-.notice.info { border-left-color: var(--green-600); background: var(--green-50); }
+.notice.info { border-inline-start-color: var(--green-600); background: var(--green-50); }
 
 .badge {
   display: inline-block;
@@ -668,22 +668,35 @@ input:focus, select:focus, textarea:focus {
    English gloss inside an Arabic paragraph still begins where English does. */
 [dir='rtl'] { text-align: start; }
 
-/* Every rule in this file that can appear INSIDE a right-to-left content block
-   and draws a physical side. There are three, and they are listed because the
-   list is short enough to be exact.
+/* Mirrored: how this file now handles a right-to-left page.
 
-   The rest of the stylesheet is one of two things, and neither needs a mirror:
-   a layout rule whose positioning comes from flex or grid, which follow
-   `direction` on their own; or a rule belonging to the English shell — the
-   masthead, the crumbs, a receipt's number block — which never sits inside one
-   of these blocks, because the interface is English and left to right by
-   decision (see DECISIONS.md, 2026-10-29). The shell is not mirrored, and this
-   comment is the place that says so rather than leaving it to be discovered by
-   somebody who turns `dir` on and finds half a page moved. */
-[dir='rtl'] .sidebar,
-[dir='rtl'] .aside { border-left: 0; border-right: 1px solid var(--border); }
-[dir='rtl'] blockquote { border-left: 0; border-right: 3px solid var(--green-100); padding-left: 0; padding-right: 1rem; }
-[dir='rtl'] ul.lessons li .n { margin-right: 0; margin-left: 0.75rem; }
+   Two mechanisms, and only two, so a reader can tell which one a rule uses:
+
+   1. **Logical properties in the shell.** Everything that hung a side on the
+      edge of the screen — the nav's auto margin, the notice's accent bar, the
+      bullet in an assurances list, a receipt's target column — now says
+      `margin-inline-start`, `border-inline-start`, `inset-inline-start` or
+      `text-align: start/end`. In a left-to-right page those compute to exactly
+      the physical side they replaced, so nothing moved; in a right-to-left page
+      the same rule mirrors on its own.
+
+   2. **`dir` on the content block.** A course title, a lesson heading or a
+      learner's name carries `dir` from `lib/arabic.ts`, and `text-align: start`
+      below makes an Arabic block sit against the edge it is read from.
+
+   What is *not* here is a list of `[dir='rtl']` overrides for the shell. There
+   used to be one, from the unit that first handled Arabic names, and its premise
+   — "the interface is English, so only a content block can be RTL" — stopped
+   being true when the interface itself gained thirteen languages. The shell is
+   mirrored by construction now, and the three overrides it replaced pointed at
+   classes (`.sidebar`, `.aside`) that no longer exist in any page. */
+
+/* Left alignment set anywhere would otherwise follow the element into an RTL
+   block and pin its text to the wrong edge. One rule, stated once.
+   The two print documents are exempt by construction: the certificate and the
+   receipt carry `dir="ltr"` in their own markup, because their words are English
+   and untranslated and a reader's language must not turn them around. */
+[dir='rtl'] { text-align: start; }
 
 /* Screen-reader-only, for when an inline style is not available — the skip
    link in the layout uses both, and a `.sr-only` that does not hide anything
@@ -933,7 +946,7 @@ footer a { color: var(--text-soft); }
    columns is decided by the data, and a fixed template would leave a ragged
    last column on a fortnight-old account. */
 .study-calendar { display: flex; flex-direction: column; gap: 0.25rem; overflow-x: auto; padding-bottom: 0.25rem; }
-.study-calendar-months { display: flex; gap: 3px; align-items: end; padding-left: 1rem; }
+.study-calendar-months { display: flex; gap: 3px; align-items: end; padding-inline-start: 1rem; }
 .study-calendar-gutter { width: 0; }
 .study-calendar-month {
   flex: 0 0 12px;
@@ -951,7 +964,7 @@ footer a { color: var(--text-soft); }
   width: 1rem;
   font-size: 0.65rem;
   color: var(--muted);
-  text-align: right;
+  text-align: end;
   line-height: 12px;
 }
 .study-calendar-week { display: flex; flex-direction: column; gap: 3px; }
@@ -966,8 +979,8 @@ footer a { color: var(--text-soft); }
 
 /* A badge card says what it is worth at a glance: earned ones carry the green
    edge, unearned ones stay quiet so the earned ones read as the wall. */
-.badge-card { padding: 1rem; border-left: 3px solid var(--border); }
-.badge-card.earned { border-left-color: var(--green-600); }
+.badge-card { padding: 1rem; border-inline-start: 3px solid var(--border); }
+.badge-card.earned { border-inline-start-color: var(--green-600); }
 
 /* --------------------------------------------------------------------------
    Catalogue: lessons inside courses
@@ -1029,7 +1042,7 @@ footer a { color: var(--text-soft); }
 /* The actions sit at the end of the row on a wide screen and wrap beneath it on
    a phone, where a row of buttons beside a long name would crush the name. */
 .subject-actions {
-  margin-left: auto;
+  margin-inline-start: auto;
   display: flex;
   gap: 0.4rem;
   flex-wrap: wrap;
@@ -1040,7 +1053,7 @@ footer a { color: var(--text-soft); }
 .subject-rename .btn { justify-self: start; }
 
 @media (max-width: 40rem) {
-  .subject-actions { margin-left: 0; flex-basis: 100%; }
+  .subject-actions { margin-inline-start: 0; flex-basis: 100%; }
 }
 
 /* --------------------------------------------------------------------------
@@ -1050,7 +1063,7 @@ footer a { color: var(--text-soft); }
    It is an ordered list because the order is a dependency, and the numbers are
    the only decoration: a first owner needs to know what to do first, not what
    the screen could look like. */
-.setup-panel { margin-bottom: 1.5rem; border-left: 3px solid var(--green-600); }
+.setup-panel { margin-bottom: 1.5rem; border-inline-start: 3px solid var(--green-600); }
 .setup-steps { list-style: none; margin: 0.75rem 0 0; padding: 0; display: grid; gap: 0.85rem; }
 .setup-steps li { display: flex; gap: 0.75rem; align-items: flex-start; }
 .setup-n {
@@ -1083,7 +1096,7 @@ footer a { color: var(--text-soft); }
   justify-content: space-between;
   gap: 0.75rem 1.25rem;
   margin-bottom: 1.25rem;
-  border-left: 3px solid var(--green-600);
+  border-inline-start: 3px solid var(--green-600);
 }
 .carry-on-body { min-width: 0; }
 .carry-on .eyebrow { margin-bottom: 0.3rem; }
@@ -1403,7 +1416,7 @@ textarea { resize: vertical; min-height: 4rem; }
 .receipt-payment { margin-top: 2rem; border-top: 1px solid var(--line, rgba(23, 116, 75, 0.18)); padding-top: 1.25rem; }
 .receipt-payment h2 { margin: 0 0 0.5rem; font-size: 1rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
 .receipt-payment p { margin: 0; }
-.receipt-refunds { margin: 0.75rem 0 0; padding-left: 1.1rem; color: var(--muted); }
+.receipt-refunds { margin: 0.75rem 0 0; padding-inline-start: 1.1rem; color: var(--muted); }
 .receipt-foot { margin-top: 2.25rem; border-top: 1px solid var(--line, rgba(23, 116, 75, 0.18)); padding-top: 1rem; font-size: 0.85rem; color: var(--muted); }
 .receipt-foot p { margin: 0.2rem 0; }
 

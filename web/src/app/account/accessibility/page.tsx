@@ -65,7 +65,8 @@ export default async function AccessibilityPage() {
           <li>
             <strong>Your device’s own settings are honoured.</strong> If your system asks for less
             motion, the platform already reduces it; the setting above is for a device that does
-            not ask.
+            not ask. The same is true of language: the interface opens in the language this device
+            asks for, and <Link href="/language">the language page</Link> is where it is changed.
           </li>
           <li>
             <strong>Text and background colours are measured, not eyeballed.</strong> Every colour
@@ -97,17 +98,25 @@ export default async function AccessibilityPage() {
         <h2 style={{ marginTop: 0 }}>What is not here yet</h2>
         <ul>
           <li>
-            <strong>The interface itself is in English.</strong> This has not changed and is not
-            going to change by itself. Course content, names and certificates appear in whatever
-            language they were written in, and Arabic among them is displayed properly — but the
-            buttons, labels and sentences around them are English. Translating the interface needs
-            translators, and the platform does not claim a translation it does not have.
+            <strong>The interface is translated, and it says how completely.</strong> Thirteen
+            languages are offered and each one states how much of it is actually translated. All
+            thirteen are complete today; the number is on{' '}
+            <Link href="/language">the language page</Link> so that a language which falls behind
+            shows it, rather than serving one English sentence among translated ones. Course titles,
+            lessons and comments stay in the language their author wrote them in, whatever language
+            the buttons are in.
           </li>
           <li>
-            <strong>No right-to-left interface.</strong> A page whose content is Arabic still has
-            its navigation, buttons and headings arranged for an English reader. Making the whole
-            shell run right to left is a separate job from rendering Arabic text correctly, and
-            only the second one is done.
+            <strong>Right-to-left is for Arabic, Urdu and Persian.</strong> Choosing one of those
+            three turns the whole page around: the masthead, the nav, the notices and the footer
+            mirror, because the rules that place them are written in logical properties rather
+            than left and right. A right-to-left course shown to a reader whose interface is
+            left-to-right is handled separately, and is what the paragraphs above describe.
+          </li>
+          <li>
+            <strong>The choice is kept on this browser, not on your account.</strong> Language is
+            read before anybody signs in, so it is stored in a cookie; the same person on a
+            different device gets that device's language until they change it there too.
           </li>
           <li>
             <strong>No text-to-speech.</strong> Reading a lesson aloud needs a speech provider

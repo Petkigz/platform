@@ -4772,6 +4772,16 @@ and stays CODE-gated. `/account/accessibility` lists them under "What is not her
 yet". A learner reading the site in English who wants an Arabic course can now
 find it, which is the part that needed no translator.
 
+> *(Superseded in part, 2026-10-29.)* The interface **is** translated now, in
+> thirteen languages, and `platform.accessibility`'s typography half is built —
+> see "The device chooses first, the person overrules" below. What survives from
+> this section, and survives intact, is the split it drew: a course has one
+> language of its own, `dir="auto"` decides a mixed title, a filter offers only
+> what returns courses, and the language predicate stays inside `catalogue_page()`
+> rather than beside it. Interface translation did not merge the two languages —
+> it is what makes it possible to study an Arabic course while the buttons are in
+> French.
+
 ## A policy is published only when it is finished, and the database decides what "finished" means — **DECIDED 2026-10-27**
 
 Seven areas were parked on *a decision or a document*: terms, privacy, the child
@@ -5642,3 +5652,81 @@ page is not restricted to adults, and it is not offered to children by default
 either. A guardian may open a child's list with `?learner=<id>` — the same
 predicate, `can_access_learner()`, that guards a child's progress and
 certificates — and every action records which account pressed the button.
+
+## The device chooses first, the person overrules — **DECIDED 2026-10-29**
+
+The interface now speaks thirteen languages: English, Arabic, Urdu, Persian,
+Turkish, Indonesian, Malay, Bengali, Hindi, French, Spanish, Portuguese and
+Swahili. The instruction was specific — *"the language needs to be of the region
+the customer is in… the customer uses the default language the device they are
+using is in by default but they have to have an option which enables them to
+change the language"* — so the order of authority is the whole design.
+
+**One function decides, and every surface asks it.** `chooseLocale()` reads, in
+order: the cookie this browser set, then the first language in `Accept-Language`
+that exists in the register, then English. The root layout calls it once for
+`<html lang dir>`, once more for the share card's `og:locale`, and `/language`
+calls it to explain itself. Nothing else reads a language from anywhere, so a
+page cannot be half in one language and half in another.
+
+**A cookie, not a column on the account.** Three reasons, in the order they
+mattered. *The choice has to exist before sign-in*: `/language` is the only
+settings screen that asks for no account, because somebody handed a phone whose
+language they do not read must be able to fix that before there is an account to
+fix it from — an account column cannot be read on a sign-in page. *One account,
+several readers*: a family shares a tablet, and the parent reading in Arabic and
+the child reading in English are the same account on the same evening; a column
+would make one of them wrong. *And it costs no migration*: two free tiers, no
+column to backfill, no policy to revisit. The honest cost is stated on the page
+rather than discovered later — the choice is **per browser**, so the same person
+on a second device gets that device's language until they choose there too.
+
+**The register is a shelf, not a promise.** A language is offered because a
+catalogue file for it exists in `web/src/lib/i18n/messages/`, and English is both
+the source and the fallback for every missing string. Each language prints **how
+much of it is actually translated**, counted from its own file: all thirteen are
+at 100% today, and the number is on the page so that adding a string to English
+without translating it shows as 93% rather than as one English sentence hidden in
+an otherwise translated page. Nothing is called "beta" instead of being counted.
+
+**The first option in the picker is not a language.** *My device's language*
+deletes the cookie. A person who chose once must be able to hand the decision
+back, or "the device chooses" becomes a default only the people who never touched
+the setting get to have.
+
+**Translation is interface-only, and the page says so in its own words.** Course
+titles, lesson names, descriptions, comments and teacher pages stay in the
+language their author wrote them in. The two mechanisms are independent on
+purpose: `lib/language.ts` gives a course's own words their `lang` and
+`dir="auto"`, `lib/i18n/` gives the shell its language, and a French reader
+studying an Arabic course gets both facts at once. Every catalogue's `language.notTranslated`
+says this, in that language.
+
+**The policies are not translated, and this is a decision, not an oversight.**
+Seven documents are English; `/policies` does not offer a version in another
+language and no catalogue pretends otherwise. A translation of a contract raises
+the question of which text governs — a legal question for the owner, not a
+string for a file. When somebody decides it, the answer belongs here first.
+
+**Right-to-left is two mechanisms, not a stylesheet of overrides.** The shell
+mirrors because its rules are written in logical properties (`margin-inline-start`,
+`border-inline-start`, `text-align: start`) — the same declarations compute to
+the same pixels in a left-to-right page, so nothing moved when they were changed.
+Content blocks mirror because `dir` is set from the text itself. The two print
+documents — a certificate and a receipt — **declare `dir="ltr"`**, because their
+words are English and untranslated and a reader's language must not turn them
+around; the learner's name inside them is isolated by `ArabicBlock` as before.
+
+**The cost, written down.** Reading cookies and headers in the root layout makes
+every route render per request: the production build now marks all of them `ƒ`
+instead of `○`. That is the price of getting the language right in the server's
+own HTML. The alternative — render English, swap in the browser — shows a flash
+of the wrong language to exactly the reader this feature exists for, and a
+privacy note has to be read once, not after a flicker.
+
+**What is still refused.** No machine translation at request time: it costs a
+card, and a machine's sentence presented as the platform's words is a claim
+nobody reviewed. No language toggle hidden behind an account. No claim that a
+course is available in a language its author did not write it in. And no flag:
+this is not a feature gate that can be switched off into a broken site — the
+English catalogue is the fallback, so the feature cannot be half-on.

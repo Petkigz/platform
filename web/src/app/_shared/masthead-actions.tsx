@@ -3,7 +3,10 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
-import { accountLabel, mastheadActions, NOBODY, parseSession, type SessionSummary } from '@/lib/session';
+import {
+  accountLabel, mastheadActions, NOBODY, parseSession,
+  type MastheadLabels, type SessionSummary,
+} from '@/lib/session';
 
 /**
  * The two buttons at the right of the masthead.
@@ -14,7 +17,7 @@ import { accountLabel, mastheadActions, NOBODY, parseSession, type SessionSummar
  * as it was: the worst outcome here is a header that is slightly stale, never
  * one that offers a signed-in learner a sign-in button again.
  */
-export function MastheadActions() {
+export function MastheadActions({ labels }: { labels?: MastheadLabels } = {}) {
   const [session, setSession] = useState<SessionSummary>(NOBODY);
 
   useEffect(() => {
@@ -38,9 +41,10 @@ export function MastheadActions() {
 
   return (
     <div className="masthead-actions">
-      {mastheadActions(session).map((action) => {
+      {mastheadActions(session, labels).map((action) => {
         const className = action.emphasis === 'primary' ? 'btn' : 'btn ghost';
-        const label = action.href === '/dashboard' ? accountLabel(session) : action.label;
+        const label =
+          action.href === '/dashboard' ? accountLabel(session, labels?.area) : action.label;
 
         if (action.method === 'post') {
           return (

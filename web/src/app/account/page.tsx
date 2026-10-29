@@ -257,6 +257,8 @@ export default async function AccountPage() {
           Text size, contrast and motion — applied the moment you choose one, for this browser.
           Nothing here needs saving, and nothing else changes about the page.{' '}
           <Link href="/account/accessibility">Reading preferences</Link>
+          {' · '}
+          <Link href="/language">Language</Link>
         </p>
       </section>
 
