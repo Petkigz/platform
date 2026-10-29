@@ -1,4 +1,7 @@
 import type { LocaleCode } from '../locales.ts';
+import { AFRICA_EAST } from './africa-east.ts';
+import { AFRICA_SOUTH } from './africa-south.ts';
+import { AFRICA_WEST } from './africa-west.ts';
 import type { Messages } from './en.ts';
 
 /**
@@ -23,6 +26,13 @@ import type { Messages } from './en.ts';
  * number takes care of itself. Nothing else in the application knows the list.
  */
 export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = {
+  // The African catalogues live in their own files: thirty-odd languages in one
+  // object is a file nobody can review. Same shape, merged here so nothing else
+  // in the application has to know how they are stored.
+  ...AFRICA_EAST,
+  ...AFRICA_WEST,
+  ...AFRICA_SOUTH,
+
   ar: {
     'skip.toContent': 'تخطَّ إلى المحتوى',
     'nav.main': 'القائمة الرئيسية',
@@ -47,6 +57,10 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'action.signOut': 'تسجيل الخروج',
     'action.save': 'حفظ',
     'action.cancel': 'إلغاء',
+    'region.africa': 'أفريقيا',
+    'region.middleEast': 'الشرق الأوسط',
+    'region.asia': 'آسيا',
+    'region.west': 'أوروبا والأمريكتان',
     'language.title': 'اللغة',
     'language.lede':
       'تُعرض الواجهة باللغة التي تختارها هنا. يبدأ هذا المتصفح بلغة جهازك ويتبعها حتى تختار لغة أخرى.',
@@ -64,6 +78,9 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.coverageAll': 'هذه اللغة مترجمة بالكامل.',
     'language.browser':
       'يُحفظ الاختيار على هذا المتصفح لا في حسابك، لذا سيسأل جهاز آخر لغته الخاصة.',
+    'language.reviewed': 'قرأ هذه الترجمة متحدث أصلي للغة.',
+    'language.unreviewed':
+      'لم يقرأ هذه الترجمة بعد متحدث أصلي للغة. كتبها من بنوا المنصة — وإن بدت لك كلمة خطأ فذلك خطأ نتحمله نحن.',
     'language.notTranslated':
       'ترجمة الواجهة فقط. تظهر عناوين الدورات والدروس وصفحات المعلّمين والسياسات المنشورة باللغة التي كُتبت بها.',
   },
@@ -92,6 +109,10 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'action.signOut': 'سائن آؤٹ',
     'action.save': 'محفوظ کریں',
     'action.cancel': 'منسوخ',
+    'region.africa': 'افریقہ',
+    'region.middleEast': 'مشرقِ وسطیٰ',
+    'region.asia': 'ایشیا',
+    'region.west': 'یورپ اور امریکہ',
     'language.title': 'زبان',
     'language.lede':
       'انٹرفیس اُس زبان میں دکھایا جاتا ہے جو آپ یہاں منتخب کریں۔ یہ براؤزر پہلے آپ کے ڈیوائس کی زبان استعمال کرتا ہے اور آپ کے انتخاب تک اسی پر چلتا ہے۔',
@@ -109,6 +130,9 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.coverageAll': 'یہ زبان مکمل ترجمہ شدہ ہے۔',
     'language.browser':
       'یہ انتخاب اِس براؤزر پر محفوظ ہوتا ہے، آپ کے اکاؤنٹ میں نہیں، اس لیے دوسرا ڈیوائس اپنی زبان پوچھے گا۔',
+    'language.reviewed': 'اس ترجمے کو مادری زبان بولنے والے نے پڑھا ہے۔',
+    'language.unreviewed':
+      'ابھی تک کسی مادری زبان بولنے والے نے اس ترجمے کو نہیں پڑھا۔ یہ پلیٹ فارم بنانے والوں نے لکھا ہے — اگر کوئی لفظ آپ کو غلط لگے تو وہ ہماری غلطی ہے۔',
     'language.notTranslated':
       'صرف انٹرفیس کا ترجمہ۔ کورسز کے عنوانات، اسباق، اساتذہ کے صفحات اور شائع شدہ پالیسیاں اسی زبان میں نظر آتی ہیں جس میں لکھی گئی تھیں۔',
   },
@@ -137,6 +161,10 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'action.signOut': 'خروج',
     'action.save': 'ذخیره',
     'action.cancel': 'لغو',
+    'region.africa': 'آفریقا',
+    'region.middleEast': 'خاورمیانه',
+    'region.asia': 'آسیا',
+    'region.west': 'اروپا و قاره‌های آمریکا',
     'language.title': 'زبان',
     'language.lede':
       'رابط به زبانی نمایش داده می‌شود که اینجا انتخاب می‌کنید. این مرورگر با زبان دستگاه شما آغاز می‌شود و تا زمانی که زبان دیگری انتخاب نکنید همان را دنبال می‌کند.',
@@ -154,6 +182,9 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.coverageAll': 'این زبان کامل ترجمه شده است.',
     'language.browser':
       'این انتخاب در همین مرورگر نگه داشته می‌شود، نه در حساب شما؛ بنابراین دستگاهی دیگر زبان خودش را می‌پرسد.',
+    'language.reviewed': 'یک گویشور بومی این ترجمه را خوانده است.',
+    'language.unreviewed':
+      'هنوز هیچ گویشور بومی این ترجمه را نخوانده است. آن را سازندگان این سکو نوشته‌اند — اگر واژه‌ای به نظرتان نادرست آمد، آن اشتباه از ماست.',
     'language.notTranslated':
       'فقط ترجمهٔ رابط کاربری. عنوان دوره‌ها، درس‌ها، صفحه‌های مدرّسان و سیاست‌های منتشرشده به زبانی که نوشته شده‌اند نمایش داده می‌شوند.',
   },
@@ -182,6 +213,10 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'action.signOut': 'Çıkış yap',
     'action.save': 'Kaydet',
     'action.cancel': 'İptal',
+    'region.africa': 'Afrika',
+    'region.middleEast': 'Orta Doğu',
+    'region.asia': 'Asya',
+    'region.west': 'Avrupa ve Amerika',
     'language.title': 'Dil',
     'language.lede':
       'Arayüz burada seçtiğiniz dilde gösterilir. Bu tarayıcı, cihazınızın istediği dille başlar ve siz bir dil seçene kadar onu izler.',
@@ -199,6 +234,9 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.coverageAll': 'Bu dil tamamen çevrildi.',
     'language.browser':
       'Seçim hesabınızda değil bu tarayıcıda saklanır; başka bir cihaz kendi dilini sorar.',
+    'language.reviewed': 'Bu çeviriyi bir ana dili konuşuru okudu.',
+    'language.unreviewed':
+      'Bu çeviriyi henüz ana dili konuşuru okumadı. Platformu kuranlar yazdı — bir kelime size yanlış görünüyorsa, o hata bizim.',
     'language.notTranslated':
       'Yalnızca arayüz çevirisi. Kurs başlıkları, dersler, öğretmen sayfaları ve yayımlanmış politikalar yazıldıkları dilde görünür.',
   },
@@ -227,6 +265,10 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'action.signOut': 'Keluar',
     'action.save': 'Simpan',
     'action.cancel': 'Batal',
+    'region.africa': 'Afrika',
+    'region.middleEast': 'Timur Tengah',
+    'region.asia': 'Asia',
+    'region.west': 'Eropa dan Amerika',
     'language.title': 'Bahasa',
     'language.lede':
       'Antarmuka ditampilkan dalam bahasa yang Anda pilih di sini. Peramban ini dimulai dengan bahasa perangkat Anda dan mengikutinya sampai Anda memilih bahasa lain.',
@@ -244,6 +286,9 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.coverageAll': 'Bahasa ini diterjemahkan sepenuhnya.',
     'language.browser':
       'Pilihan disimpan di peramban ini, bukan di akun Anda, jadi perangkat lain akan menanyakan bahasanya sendiri.',
+    'language.reviewed': 'Seorang penutur asli telah membaca terjemahan ini.',
+    'language.unreviewed':
+      'Belum ada penutur asli yang membaca terjemahan ini. Terjemahan ini ditulis oleh orang-orang yang membangun platform — bila ada kata yang tampak keliru bagi Anda, itu kesalahan kami.',
     'language.notTranslated':
       'Hanya antarmuka yang diterjemahkan. Judul kursus, pelajaran, halaman pengajar, dan kebijakan yang diterbitkan tampil dalam bahasa saat ditulis.',
   },
@@ -272,6 +317,10 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'action.signOut': 'Keluar',
     'action.save': 'Simpan',
     'action.cancel': 'Batal',
+    'region.africa': 'Afrika',
+    'region.middleEast': 'Timur Tengah',
+    'region.asia': 'Asia',
+    'region.west': 'Eropah dan Amerika',
     'language.title': 'Bahasa',
     'language.lede':
       'Antara muka dipaparkan dalam bahasa yang anda pilih di sini. Pelayar ini bermula dengan bahasa peranti anda dan mengikutinya sehingga anda memilih bahasa lain.',
@@ -289,6 +338,9 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.coverageAll': 'Bahasa ini diterjemah sepenuhnya.',
     'language.browser':
       'Pilihan disimpan pada pelayar ini, bukan pada akaun anda, jadi peranti lain akan menanyakan bahasanya sendiri.',
+    'language.reviewed': 'Seorang penutur jati telah membaca terjemahan ini.',
+    'language.unreviewed':
+      'Belum ada penutur jati yang membaca terjemahan ini. Ia ditulis oleh mereka yang membina platform ini — jika ada perkataan yang kelihatan salah kepada anda, itu kesilapan kami.',
     'language.notTranslated':
       'Hanya antara muka diterjemahkan. Tajuk kursus, pelajaran, halaman pengajar dan dasar yang diterbitkan dipaparkan dalam bahasa ia ditulis.',
   },
@@ -317,6 +369,10 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'action.signOut': 'সাইন আউট',
     'action.save': 'সংরক্ষণ',
     'action.cancel': 'বাতিল',
+    'region.africa': 'আফ্রিকা',
+    'region.middleEast': 'মধ্যপ্রাচ্য',
+    'region.asia': 'এশিয়া',
+    'region.west': 'ইউরোপ ও আমেরিকা',
     'language.title': 'ভাষা',
     'language.lede':
       'আপনি এখানে যে ভাষা বাছেন, ইন্টারফেস সেই ভাষায় দেখানো হয়। এই ব্রাউজার আপনার ডিভাইসের ভাষা দিয়ে শুরু হয় এবং আপনি অন্য ভাষা না বাছা পর্যন্ত তা অনুসরণ করে।',
@@ -334,6 +390,9 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.coverageAll': 'এই ভাষা সম্পূর্ণ অনূদিত।',
     'language.browser':
       'পছন্দটি এই ব্রাউজারে রাখা হয়, আপনার অ্যাকাউন্টে নয়; তাই অন্য ডিভাইস নিজের ভাষা জিজ্ঞাসা করবে।',
+    'language.reviewed': 'একজন মাতৃভাষী এই অনুবাদটি পড়েছেন।',
+    'language.unreviewed':
+      'এখনও কোনো মাতৃভাষী এই অনুবাদটি পড়েননি। এটি প্ল্যাটফর্মটি যাঁরা তৈরি করেছেন তাঁরাই লিখেছেন — কোনো শব্দ আপনার কাছে ভুল মনে হলে সেই ভুল আমাদের।',
     'language.notTranslated':
       'শুধু ইন্টারফেসের অনুবাদ। কোর্সের শিরোনাম, পাঠ, শিক্ষকের পাতা এবং প্রকাশিত নীতিমালা যে ভাষায় লেখা হয়েছে সেই ভাষাতেই দেখা যায়।',
   },
@@ -362,6 +421,10 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'action.signOut': 'साइन आउट',
     'action.save': 'सहेजें',
     'action.cancel': 'रद्द करें',
+    'region.africa': 'अफ़्रीका',
+    'region.middleEast': 'मध्य पूर्व',
+    'region.asia': 'एशिया',
+    'region.west': 'यूरोप और अमेरिका',
     'language.title': 'भाषा',
     'language.lede':
       'इंटरफ़ेस उस भाषा में दिखाया जाता है जो आप यहाँ चुनते हैं। यह ब्राउज़र आपके डिवाइस की भाषा से शुरू होता है और आपके चुनने तक उसी का पालन करता है।',
@@ -379,6 +442,9 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.coverageAll': 'यह भाषा पूरी तरह अनूदित है।',
     'language.browser':
       'चुनाव इस ब्राउज़र पर रखा जाता है, आपके खाते में नहीं; इसलिए दूसरा डिवाइस अपनी भाषा पूछेगा।',
+    'language.reviewed': 'एक मातृभाषी ने इस अनुवाद को पढ़ा है।',
+    'language.unreviewed':
+      'अभी तक किसी मातृभाषी ने इस अनुवाद को नहीं पढ़ा है। इसे प्लेटफ़ॉर्म बनाने वालों ने लिखा है — कोई शब्द आपको ग़लत लगे तो वह ग़लती हमारी है।',
     'language.notTranslated':
       'केवल इंटरफ़ेस का अनुवाद। पाठ्यक्रम शीर्षक, पाठ, शिक्षक पृष्ठ और प्रकाशित नीतियाँ उसी भाषा में दिखती हैं जिसमें वे लिखी गई थीं।',
   },
@@ -407,6 +473,10 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'action.signOut': 'Se déconnecter',
     'action.save': 'Enregistrer',
     'action.cancel': 'Annuler',
+    'region.africa': 'Afrique',
+    'region.middleEast': 'Moyen-Orient',
+    'region.asia': 'Asie',
+    'region.west': 'Europe et Amériques',
     'language.title': 'Langue',
     'language.lede':
       'L’interface s’affiche dans la langue que vous choisissez ici. Ce navigateur commence par la langue demandée par votre appareil et la suit jusqu’à ce que vous en choisissiez une.',
@@ -425,6 +495,9 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.coverageAll': 'Cette langue est entièrement traduite.',
     'language.browser':
       'Le choix est conservé sur ce navigateur, pas sur votre compte : un autre appareil demandera sa propre langue.',
+    'language.reviewed': 'Un locuteur natif a relu cette traduction.',
+    'language.unreviewed':
+      'Aucun locuteur natif n’a encore relu cette traduction. Elle a été écrite par ceux qui ont construit la plateforme — si un mot vous paraît faux, c’est notre erreur.',
     'language.notTranslated':
       'Traduction de l’interface uniquement. Les titres de cours, les leçons, les pages des enseignants et les politiques publiées restent dans la langue où ils ont été écrits.',
   },
@@ -453,6 +526,10 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'action.signOut': 'Cerrar sesión',
     'action.save': 'Guardar',
     'action.cancel': 'Cancelar',
+    'region.africa': 'África',
+    'region.middleEast': 'Oriente Medio',
+    'region.asia': 'Asia',
+    'region.west': 'Europa y América',
     'language.title': 'Idioma',
     'language.lede':
       'La interfaz se muestra en el idioma que elijas aquí. Este navegador empieza con el idioma que pide tu dispositivo y lo sigue hasta que elijas uno.',
@@ -470,6 +547,9 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.coverageAll': 'Este idioma está totalmente traducido.',
     'language.browser':
       'La elección se guarda en este navegador, no en tu cuenta, así que otro dispositivo preguntará por su propio idioma.',
+    'language.reviewed': 'Un hablante nativo ha revisado esta traducción.',
+    'language.unreviewed':
+      'Ningún hablante nativo ha revisado todavía esta traducción. La escribieron quienes construyeron la plataforma: si una palabra le parece incorrecta, el error es nuestro.',
     'language.notTranslated':
       'Solo se traduce la interfaz. Los títulos de los cursos, las lecciones, las páginas de los docentes y las políticas publicadas aparecen en el idioma en que se escribieron.',
   },
@@ -498,6 +578,10 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'action.signOut': 'Sair',
     'action.save': 'Guardar',
     'action.cancel': 'Cancelar',
+    'region.africa': 'África',
+    'region.middleEast': 'Oriente Médio',
+    'region.asia': 'Ásia',
+    'region.west': 'Europa e Américas',
     'language.title': 'Idioma',
     'language.lede':
       'A interface é apresentada no idioma que escolher aqui. Este navegador começa com o idioma pedido pelo seu dispositivo e segue-o até escolher outro.',
@@ -515,6 +599,9 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.coverageAll': 'Este idioma está totalmente traduzido.',
     'language.browser':
       'A escolha é guardada neste navegador, não na sua conta, por isso outro dispositivo perguntará pelo seu próprio idioma.',
+    'language.reviewed': 'Um falante nativo revisou esta tradução.',
+    'language.unreviewed':
+      'Nenhum falante nativo revisou esta tradução ainda. Ela foi escrita por quem construiu a plataforma — se alguma palavra lhe parecer errada, o erro é nosso.',
     'language.notTranslated':
       'Apenas a interface é traduzida. Os títulos dos cursos, as aulas, as páginas dos professores e as políticas publicadas aparecem no idioma em que foram escritos.',
   },
@@ -543,6 +630,10 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'action.signOut': 'Toka',
     'action.save': 'Hifadhi',
     'action.cancel': 'Ghairi',
+    'region.africa': 'Afrika',
+    'region.middleEast': 'Mashariki ya Kati',
+    'region.asia': 'Asia',
+    'region.west': 'Ulaya na Amerika',
     'language.title': 'Lugha',
     'language.lede':
       'Kiolesura kinaonyeshwa kwa lugha unayochagua hapa. Kivinjari hiki huanza na lugha inayotakiwa na kifaa chako na kuifuata hadi uchague nyingine.',
@@ -561,6 +652,9 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.coverageAll': 'Lugha hii imetafsiriwa kikamilifu.',
     'language.browser':
       'Chaguo huhifadhiwa kwenye kivinjari hiki, si kwenye akaunti yako, kwa hiyo kifaa kingine kitauliza lugha yake yenyewe.',
+    'language.reviewed': 'Mzungumzaji wa asili amesoma tafsiri hii.',
+    'language.unreviewed':
+      'Hakuna mzungumzaji wa asili aliyesoma tafsiri hii bado. Iliandikwa na waliojenga jukwaa — neno likionekana dogo kwako, kosa hilo ni letu.',
     'language.notTranslated':
       'Ni kiolesura pekee kinatafsiriwa. Majina ya kozi, masomo, kurasa za walimu na sera zilizochapishwa huonekana katika lugha ziliyoandikwa.',
   },

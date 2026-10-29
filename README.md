@@ -70,7 +70,7 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 The database stands at **147 tables, RLS on every one, 271 policies, 166
 user-defined triggers, 518 functions and 191 migrations.** The database suite
-passes **1995 tests**; the web suite passes **1560 tests**. TypeScript typecheck
+passes **1995 tests**; the web suite passes **1564 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **221 app route entries** — 120
 pages and seven generated entries (`/_not-found`, four icons and manifest, the
 robots file, the sitemap), plus 94 API routes.
@@ -253,16 +253,23 @@ never deleted, so its reviews survive; and while the flag is off `my_hifz()`
 returns `{enabled:false}` rather than an empty list that would read as "nothing
 memorised".
 
-**The interface speaks thirteen languages, and the device picks first.**
+**The interface speaks thirty-three languages, and the device picks first.**
 `/language` is public, because the language is decided before anybody signs in:
-`lib/i18n/` holds a register of English, Arabic, Urdu, Persian, Turkish,
-Indonesian, Malay, Bengali, Hindi, French, Spanish, Portuguese and Swahili, and
-the root layout sets `<html lang dir>` from `chooseLocale()` — the cookie if this
-browser set one, otherwise the first language in `Accept-Language` the register
-actually has, otherwise English. Every string falls back to English, so a
+`lib/i18n/` holds a register of thirty-three languages and the root layout sets
+`<html lang dir>` from `chooseLocale()` — the cookie if this browser set one,
+otherwise the first language in `Accept-Language` the register actually has,
+otherwise English. **Twenty-one of them are African** — Swahili, Amharic, Oromo,
+Somali, Tigrinya, Kinyarwanda, Luganda, Malagasy, Lingala, Hausa, Yoruba, Igbo,
+Wolof, Fulfulde, Bambara, Zulu, Xhosa, Afrikaans, Shona, Sesotho and Chichewa —
+and they are grouped first in the picker, because this platform is operated from
+Uganda and an interface that files Luganda under Portuguese has said something
+about who it expects to read it. Every string falls back to English, so a
 half-translated catalogue renders sentences rather than blanks; each language
 prints **how much of it is translated**, counted from its own file, and all
-thirteen are at 100% today. The picker's first option is *my device's language*,
+thirty-three are at 100% today. It also prints what the coverage number cannot:
+**no first-language speaker has read any of the thirty-two non-English
+catalogues yet**, said in the reader's own language rather than in a footnote.
+Coverage is a count; a native reader is a claim. The picker's first option is *my device's language*,
 which deletes the cookie — a default somebody cannot return to is not a default.
 The choice lives on the browser, not the account, and the page says so: a shared
 family tablet should speak to each of its readers, and the sign-in page has to be

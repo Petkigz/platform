@@ -8,15 +8,25 @@ import {
   coverageOf,
   directionOf,
   fill,
+  localeByCode,
+  localeGroups,
   localeLabel,
   matchLocale,
   messagesFor,
+  regionLabel,
   safeNextPath,
   translatedLocales,
   translator,
 } from './i18n/index.ts';
 import { CATALOGUES } from './i18n/messages/catalogues.ts';
 import { en } from './i18n/messages/en.ts';
+
+const REGION_HEADINGS = [
+  'region.africa',
+  'region.middleEast',
+  'region.asia',
+  'region.west',
+] as const;
 
 // The interface's own language. What is tested here is the part that decides
 // *which* language a page is rendered in, and the part that decides what a
@@ -110,6 +120,71 @@ test('every offered language actually translates something', () => {
   }
 });
 
+test('every language in the register has a catalogue, and says so about itself', () => {
+  // The register is the offer; the catalogues are the goods. A row here with no
+  // file behind it is a language the picker promises and the page cannot deliver.
+  for (const locale of LOCALES) {
+    assert.ok(
+      locale.code === 'en' || CATALOGUES[locale.code],
+      `${locale.code} is offered but has no catalogue`,
+    );
+    assert.equal(typeof locale.reviewed, 'boolean', `${locale.code} does not say whether it was reviewed`);
+    // Every catalogue carries both halves of the review sentence, translated.
+    const messages = CATALOGUES[locale.code];
+    if (messages) {
+      assert.ok(messages['language.unreviewed'], `${locale.code} has no unreviewed sentence`);
+      assert.ok(messages['language.reviewed'], `${locale.code} has no reviewed sentence`);
+    }
+  }
+
+  // English is the source and is not a translation, so it is reviewed by
+  // definition — and nothing else may claim a speaker has read it yet.
+  assert.equal(localeByCode('en').reviewed, true);
+  const claimed = LOCALES.filter((l) => l.reviewed && l.code !== 'en').map((l) => l.code);
+  assert.deepEqual(claimed, [], 'a catalogue claims a native reviewer that nobody recorded');
+});
+
+test('the African languages are in the register, and Africa is the first block', () => {
+  // The instruction was not "add a few languages": it was that the interface
+  // should be in the language of the region the customer is in. Africa is the
+  // region this platform is operated from, so it is the block a reader meets
+  // first — after English, which is the source.
+  const african = ['am', 'om', 'so', 'ti', 'rw', 'lg', 'mg', 'ln', 'ha', 'yo', 'ig',
+                   'wo', 'ff', 'bm', 'zu', 'xh', 'af', 'sn', 'st', 'ny', 'sw'];
+  const codes = LOCALES.map((l) => l.code);
+  for (const code of african) {
+    assert.ok(codes.includes(code as never), `${code} is missing from the register`);
+    assert.ok(
+      CATALOGUES[code as keyof typeof CATALOGUES],
+      `${code} is in the register but has no catalogue`,
+    );
+  }
+  assert.equal(LOCALES.filter((l) => l.region === 'Africa').length, african.length);
+
+  const groups = localeGroups();
+  assert.equal(groups[0]?.region, 'Africa');
+  // English is pinned above the blocks rather than filed under a continent.
+  assert.ok(!groups.some((g) => g.locales.some((l) => l.code === 'en')));
+  // And every block a reader sees has a translated heading to put over it.
+  for (const group of groups) {
+    assert.ok(REGION_HEADINGS.includes(regionLabel(group.region) as never));
+  }
+});
+
+test('every African catalogue is complete, not a sample', () => {
+  // A picker built on hope is worse than a short list: a language at 40% looks
+  // translated in the menu and reads as English on the page. These twenty-one
+  // were written whole.
+  for (const locale of LOCALES.filter((l) => l.region === 'Africa')) {
+    const coverage = coverageOf(locale.code);
+    assert.equal(
+      coverage.percent,
+      100,
+      `${locale.code} is offered at ${coverage.percent}% — finish it or take it out`,
+    );
+  }
+});
+
 test('English is complete, and a language with no catalogue is not offered', () => {
   assert.deepEqual(coverageOf('en'), { translated: Object.keys(en).length, total: Object.keys(en).length, percent: 100 });
   const offered = translatedLocales().map((l) => l.code);
@@ -158,6 +233,22 @@ test('a form can only send somebody to a page on this site', () => {
   assert.equal(safeNextPath(''), '/language');
   assert.equal(safeNextPath(null), '/language');
   assert.equal(safeNextPath('/account', '/fallback'), '/account');
+});
+
+test('the picker is grouped, and no block is empty', () => {
+  const groups = localeGroups();
+  assert.ok(groups.length >= 3);
+  for (const group of groups) {
+    assert.ok(group.locales.length > 0, `${group.region} is drawn with nothing in it`);
+    for (const locale of group.locales) {
+      assert.equal(locale.region, group.region);
+    }
+  }
+  // Every offered language is in exactly one block — plus English, which is
+  // pinned above them — and none is lost between the blocks.
+  const shown = [...groups.flatMap((g) => g.locales.map((l) => l.code)), 'en'];
+  assert.deepEqual(shown.sort(), translatedLocales().map((l) => l.code).sort());
+  assert.equal(new Set(shown).size, shown.length);
 });
 
 test('the cookie name is a cookie name', () => {

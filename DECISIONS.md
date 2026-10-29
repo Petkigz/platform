@@ -5655,9 +5655,12 @@ certificates — and every action records which account pressed the button.
 
 ## The device chooses first, the person overrules — **DECIDED 2026-10-29**
 
-The interface now speaks thirteen languages: English, Arabic, Urdu, Persian,
-Turkish, Indonesian, Malay, Bengali, Hindi, French, Spanish, Portuguese and
-Swahili. The instruction was specific — *"the language needs to be of the region
+The interface now speaks thirty-three languages. Eight were the worldwide set —
+English, Arabic, Urdu, Persian, Turkish, Indonesian, Malay, Bengali, Hindi,
+French, Spanish and Portuguese — and **twenty-one are African**: Swahili,
+Amharic, Oromo, Somali, Tigrinya, Kinyarwanda, Luganda, Malagasy, Lingala,
+Hausa, Yoruba, Igbo, Wolof, Fulfulde, Bambara, Zulu, Xhosa, Afrikaans, Shona,
+Sesotho and Chichewa. The instruction was specific — *"the language needs to be of the region
 the customer is in… the customer uses the default language the device they are
 using is in by default but they have to have an option which enables them to
 change the language"* — so the order of authority is the whole design.
@@ -5684,10 +5687,42 @@ on a second device gets that device's language until they choose there too.
 **The register is a shelf, not a promise.** A language is offered because a
 catalogue file for it exists in `web/src/lib/i18n/messages/`, and English is both
 the source and the fallback for every missing string. Each language prints **how
-much of it is actually translated**, counted from its own file: all thirteen are
-at 100% today, and the number is on the page so that adding a string to English
-without translating it shows as 93% rather than as one English sentence hidden in
-an otherwise translated page. Nothing is called "beta" instead of being counted.
+much of it is actually translated**, counted from its own file: all thirty-three
+are at 100% today, and the number is on the page so that adding a string to
+English without translating it shows as 93% rather than as one English sentence
+hidden in an otherwise translated page. Nothing is called "beta" instead of being
+counted.
+
+**Africa is not a subsection.** The twenty-one African languages are grouped
+first in the picker, above the Middle East, Asia and Europe, and the register
+puts them before French and Portuguese. A platform operated from Uganda that
+lists Portuguese above Luganda has told its neighbours where they think they
+rank. Within the African block the order is the register's, because there is no
+defensible ranking of Hausa against Zulu and inventing one would be a claim
+about audiences nobody has measured.
+
+**Twenty-one African languages is not "all of Africa", and the page does not say
+it is.** Nigeria alone has more than five hundred languages. What is here is the
+set for which a complete catalogue was actually written — every key in `en.ts`,
+not a sample — and a language joins the list when its file is finished, never
+when somebody intends to finish it. The West African and Southern African files
+say the same thing in their own headers, because the person most likely to read
+them is the next translator.
+
+**Translated is not the same as read by a speaker, and both are on the page.**
+`reviewed` in `locales.ts` is `false` for all thirty-two non-English catalogues:
+they were written by the people who built the platform, not by native speakers.
+The settings page prints that as a sentence *in the reader's own language*, so a
+Yoruba reader is told in Yoruba that no Yoruba speaker has checked it — and told
+that if a word looks wrong, the mistake is ours. This is the same rule as the
+coverage number applied to a claim a number cannot make. Flipping one boolean is
+the whole change when a speaker signs off; there is no paragraph to remember to
+edit, and a test fails if a catalogue claims a reviewer nobody recorded.
+
+**Orthography is kept.** Hausa and Fulfulde keep their hooked letters (ɓ, ɗ, ƙ),
+Yoruba its tone marks, Zulu and Xhosa their noun-class prefixes (`iSitifiketi`,
+`isiZulu`). Stripping a language to ASCII so it renders in an older font is not a
+translation; it is a different text.
 
 **The first option in the picker is not a language.** *My device's language*
 deletes the cookie. A person who chose once must be able to hand the decision

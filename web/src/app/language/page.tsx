@@ -6,7 +6,9 @@ import {
   chooseLocale,
   coverageOf,
   localeByCode,
+  localeGroups,
   localeLabel,
+  regionLabel,
   translatedLocales,
   translator,
 } from '@/lib/i18n';
@@ -40,9 +42,10 @@ export default async function LanguagePage() {
   const current = localeByCode(code);
   const coverage = coverageOf(code);
   const locales = translatedLocales();
+  const groups = localeGroups();
   // Nothing is listed until it is worth listing: with every catalogue complete
-  // the list would be thirteen rows of "100%", which trains a reader to skim the
-  // one number on this page that matters. The day a string is added to the
+  // the list would be thirty-three rows of "100%", which trains a reader to skim
+  // the one number on this page that matters. The day a string is added to the
   // English catalogue and not translated, its language appears here.
   const incomplete = locales
     .map((locale) => ({ locale, coverage: coverageOf(locale.code) }))
@@ -74,6 +77,13 @@ export default async function LanguagePage() {
         <p className="muted" style={{ marginTop: 0 }}>
           {sourceLine}
         </p>
+        {/* The honest half. "Translated" and "read by somebody who speaks it" are
+            two different claims, and only the first is true for almost all of
+            this list — so the page makes the second claim itself, per language,
+            from the register rather than from a sentence typed once and forgotten. */}
+        <p style={{ margin: '0 0 0.4rem', fontSize: '0.9rem' }}>
+          {current.reviewed ? t('language.reviewed') : t('language.unreviewed')}
+        </p>
       </section>
 
       <section className="card" style={{ marginBottom: '1.5rem' }}>
@@ -92,10 +102,18 @@ export default async function LanguagePage() {
               {/* The first option is not a language: it hands the decision back
                   to the device, which is where it starts for everybody. */}
               <option value="device">{t('language.deviceOption')}</option>
-              {locales.map((locale) => (
-                <option key={locale.code} value={locale.code}>
-                  {localeLabel(locale)}
-                </option>
+              {/* English first and outside the blocks: it is the source of every
+                  string on this page, and the language a reader falls back to
+                  when a translation reads wrongly. */}
+              <option value="en">{localeLabel(localeByCode('en'))}</option>
+              {groups.map((group) => (
+                <optgroup key={group.region} label={t(regionLabel(group.region))}>
+                  {group.locales.map((locale) => (
+                    <option key={locale.code} value={locale.code}>
+                      {localeLabel(locale)}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
             </select>
             <button type="submit" className="btn">

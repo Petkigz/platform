@@ -44,6 +44,10 @@ export const en = {
   'action.save': 'Save',
   'action.cancel': 'Cancel',
 
+  'region.africa': 'Africa',
+  'region.middleEast': 'Middle East',
+  'region.asia': 'Asia',
+  'region.west': 'Europe and the Americas',
   'language.title': 'Language',
   'language.lede':
     'The interface is shown in the language you choose here. This browser starts with the language your device asks for, and follows it until you choose one.',
@@ -58,6 +62,9 @@ export const en = {
   'language.coverage': '{percent}% of these interface strings are translated into {language}. Anything not yet translated is shown in English.',
   'language.coverageAll': 'This language is fully translated.',
   'language.browser': 'The choice is kept on this browser, not on your account, so another device will ask its own device which language to use.',
+  'language.reviewed': 'A first-language speaker has read this translation.',
+  'language.unreviewed':
+    'No first-language speaker has read this translation yet. It was written by the people who built the platform — if a word looks wrong to you, that is a mistake we owe you.',
   'language.notTranslated':
     'Interface translation only. Course titles, lessons, teacher pages and the published policies appear in the language they were written in.',
 } as const;

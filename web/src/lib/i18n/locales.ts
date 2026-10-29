@@ -43,7 +43,30 @@ export type LocaleCode =
   | 'fr'
   | 'es'
   | 'pt'
-  | 'sw';
+  | 'sw'
+  // East Africa and the Horn.
+  | 'am'
+  | 'om'
+  | 'so'
+  | 'ti'
+  | 'rw'
+  | 'lg'
+  | 'mg'
+  | 'ln'
+  // West and Central Africa.
+  | 'ha'
+  | 'yo'
+  | 'ig'
+  | 'wo'
+  | 'ff'
+  | 'bm'
+  // Southern Africa.
+  | 'zu'
+  | 'xh'
+  | 'af'
+  | 'sn'
+  | 'st'
+  | 'ny';
 
 export type Locale = {
   code: LocaleCode;
@@ -52,6 +75,26 @@ export type Locale = {
   /** What an English reader calls it, for a page written in English. */
   englishName: string;
   dir: Direction;
+  /**
+   * Which block of the picker this language belongs to.
+   *
+   * Not geography for its own sake: with thirty-three languages in one list, a
+   * reader looking for Wolof should not have to read past Malay to find it.
+   * `Africa` comes first, because a platform operated from Uganda that lists
+   * Portuguese above Luganda has told its neighbours where they rank.
+   */
+  region: 'Africa' | 'Middle East' | 'Asia' | 'Europe and the Americas';
+  /**
+   * Has a first-language speaker read this catalogue?
+   *
+   * Not the same claim as "it is translated", and the settings page says both
+   * separately rather than letting the coverage number imply the second. Every
+   * translation here was written by the people who built the platform; until a
+   * speaker has gone through it, this stays `false` and the page admits it. The
+   * moment somebody reads one, flipping this flag is the whole change — the
+   * sentence is generated from the register, not typed into a page.
+   */
+  reviewed: boolean;
 };
 
 /**
@@ -64,20 +107,46 @@ export type Locale = {
  * without the stylesheet knowing breaks its own layout.
  */
 export const LOCALES: readonly Locale[] = [
-  { code: 'en', nativeName: 'English', englishName: 'English', dir: 'ltr' },
-  { code: 'ar', nativeName: 'العربية', englishName: 'Arabic', dir: 'rtl' },
-  { code: 'ur', nativeName: 'اردو', englishName: 'Urdu', dir: 'rtl' },
-  { code: 'fa', nativeName: 'فارسی', englishName: 'Persian', dir: 'rtl' },
-  { code: 'tr', nativeName: 'Türkçe', englishName: 'Turkish', dir: 'ltr' },
-  { code: 'id', nativeName: 'Bahasa Indonesia', englishName: 'Indonesian', dir: 'ltr' },
-  { code: 'ms', nativeName: 'Bahasa Melayu', englishName: 'Malay', dir: 'ltr' },
-  { code: 'bn', nativeName: 'বাংলা', englishName: 'Bengali', dir: 'ltr' },
-  { code: 'hi', nativeName: 'हिन्दी', englishName: 'Hindi', dir: 'ltr' },
-  { code: 'fr', nativeName: 'Français', englishName: 'French', dir: 'ltr' },
-  { code: 'es', nativeName: 'Español', englishName: 'Spanish', dir: 'ltr' },
-  { code: 'pt', nativeName: 'Português', englishName: 'Portuguese', dir: 'ltr' },
-  { code: 'sw', nativeName: 'Kiswahili', englishName: 'Swahili', dir: 'ltr' },
-] as const;
+  { code: 'en', nativeName: 'English', englishName: 'English', dir: 'ltr', reviewed: true, region: 'Europe and the Americas' },
+  { code: 'ar', nativeName: 'العربية', englishName: 'Arabic', dir: 'rtl', reviewed: false, region: 'Middle East' },
+  { code: 'ur', nativeName: 'اردو', englishName: 'Urdu', dir: 'rtl', reviewed: false, region: 'Asia' },
+  { code: 'fa', nativeName: 'فارسی', englishName: 'Persian', dir: 'rtl', reviewed: false, region: 'Middle East' },
+  { code: 'sw', nativeName: 'Kiswahili', englishName: 'Swahili', dir: 'ltr', reviewed: false, region: 'Africa' },
+
+  // Africa first, after English and the three right-to-left languages, because
+  // this is where the platform's own teaching is: an interface that lists
+  // Zulu under Portuguese is telling a reader who is welcome and who is not.
+  { code: 'am', nativeName: 'አማርኛ', englishName: 'Amharic', dir: 'ltr', reviewed: false, region: 'Africa' },
+  { code: 'ha', nativeName: 'Hausa', englishName: 'Hausa', dir: 'ltr', reviewed: false, region: 'Africa' },
+  { code: 'yo', nativeName: 'Yorùbá', englishName: 'Yoruba', dir: 'ltr', reviewed: false, region: 'Africa' },
+  { code: 'ig', nativeName: 'Igbo', englishName: 'Igbo', dir: 'ltr', reviewed: false, region: 'Africa' },
+  { code: 'om', nativeName: 'Afaan Oromoo', englishName: 'Oromo', dir: 'ltr', reviewed: false, region: 'Africa' },
+  { code: 'so', nativeName: 'Soomaali', englishName: 'Somali', dir: 'ltr', reviewed: false, region: 'Africa' },
+  { code: 'ti', nativeName: 'ትግርኛ', englishName: 'Tigrinya', dir: 'ltr', reviewed: false, region: 'Africa' },
+  { code: 'wo', nativeName: 'Wolof', englishName: 'Wolof', dir: 'ltr', reviewed: false, region: 'Africa' },
+  { code: 'ff', nativeName: 'Fulfulde', englishName: 'Fulfulde', dir: 'ltr', reviewed: false, region: 'Africa' },
+  { code: 'bm', nativeName: 'Bamanankan', englishName: 'Bambara', dir: 'ltr', reviewed: false, region: 'Africa' },
+  { code: 'rw', nativeName: 'Ikinyarwanda', englishName: 'Kinyarwanda', dir: 'ltr', reviewed: false, region: 'Africa' },
+  { code: 'lg', nativeName: 'Luganda', englishName: 'Luganda', dir: 'ltr', reviewed: false, region: 'Africa' },
+  { code: 'zu', nativeName: 'isiZulu', englishName: 'Zulu', dir: 'ltr', reviewed: false, region: 'Africa' },
+  { code: 'xh', nativeName: 'isiXhosa', englishName: 'Xhosa', dir: 'ltr', reviewed: false, region: 'Africa' },
+  { code: 'af', nativeName: 'Afrikaans', englishName: 'Afrikaans', dir: 'ltr', reviewed: false, region: 'Africa' },
+  { code: 'sn', nativeName: 'chiShona', englishName: 'Shona', dir: 'ltr', reviewed: false, region: 'Africa' },
+  { code: 'st', nativeName: 'Sesotho', englishName: 'Sesotho', dir: 'ltr', reviewed: false, region: 'Africa' },
+  { code: 'ny', nativeName: 'Chichewa', englishName: 'Chichewa', dir: 'ltr', reviewed: false, region: 'Africa' },
+  { code: 'ln', nativeName: 'Lingála', englishName: 'Lingala', dir: 'ltr', reviewed: false, region: 'Africa' },
+  { code: 'mg', nativeName: 'Malagasy', englishName: 'Malagasy', dir: 'ltr', reviewed: false, region: 'Africa' },
+
+  // The wider world, in the order a reader is likely to look for it.
+  { code: 'tr', nativeName: 'Türkçe', englishName: 'Turkish', dir: 'ltr', reviewed: false, region: 'Middle East' },
+  { code: 'id', nativeName: 'Bahasa Indonesia', englishName: 'Indonesian', dir: 'ltr', reviewed: false, region: 'Asia' },
+  { code: 'ms', nativeName: 'Bahasa Melayu', englishName: 'Malay', dir: 'ltr', reviewed: false, region: 'Asia' },
+  { code: 'bn', nativeName: 'বাংলা', englishName: 'Bengali', dir: 'ltr', reviewed: false, region: 'Asia' },
+  { code: 'hi', nativeName: 'हिन्दी', englishName: 'Hindi', dir: 'ltr', reviewed: false, region: 'Asia' },
+  { code: 'fr', nativeName: 'Français', englishName: 'French', dir: 'ltr', reviewed: false, region: 'Europe and the Americas' },
+  { code: 'es', nativeName: 'Español', englishName: 'Spanish', dir: 'ltr', reviewed: false, region: 'Europe and the Americas' },
+  { code: 'pt', nativeName: 'Português', englishName: 'Portuguese', dir: 'ltr', reviewed: false, region: 'Europe and the Americas' },
+];
 
 export const DEFAULT_LOCALE: LocaleCode = 'en';
 

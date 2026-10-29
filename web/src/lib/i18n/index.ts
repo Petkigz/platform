@@ -92,6 +92,46 @@ export function coverageOf(code: LocaleCode): Coverage {
   };
 }
 
+export type LocaleGroup = { region: Locale['region']; locales: Locale[] };
+
+/**
+ * The picker, in blocks — Africa first.
+ *
+ * Thirty-three languages in one flat list is a list nobody reads to the end, and
+ * the order of the blocks is itself a statement: a platform operated from Uganda
+ * that puts Portuguese above Luganda has told its neighbours where they rank.
+ * Only languages with a catalogue appear in a block; an empty block is not drawn.
+ */
+export function localeGroups(): LocaleGroup[] {
+  const order: Array<Locale['region']> = [
+    'Africa',
+    'Middle East',
+    'Asia',
+    'Europe and the Americas',
+  ];
+  // English is not in a block: it is the source catalogue and the fallback, so it
+  // is pinned above the blocks rather than filed under a continent. A reader who
+  // wants English should not have to find Europe first.
+  const available = translatedLocales().filter((l) => l.code !== DEFAULT_LOCALE);
+  return order
+    .map((region) => ({ region, locales: available.filter((l) => l.region === region) }))
+    .filter((group) => group.locales.length > 0);
+}
+
+/** The translated name of a picker block, for the language being displayed. */
+export function regionLabel(region: Locale['region']): MessageKey {
+  switch (region) {
+    case 'Africa':
+      return 'region.africa';
+    case 'Middle East':
+      return 'region.middleEast';
+    case 'Asia':
+      return 'region.asia';
+    default:
+      return 'region.west';
+  }
+}
+
 /** Every language that has a catalogue at all, English first. */
 export function translatedLocales(): Locale[] {
   return LOCALES.filter((locale) => locale.code === DEFAULT_LOCALE || CATALOGUES[locale.code]);

@@ -109,10 +109,12 @@ test('the accessibility page tells the truth about the translation', () => {
   assert.doesNotMatch(page, /interface itself is in English/iu);
 
   // What replaced it has to admit that a translation can be partial rather than
-  // imply that thirteen languages means thirteen finished ones — and it has to
-  // point at the page that prints the number instead of asserting it here.
-  assert.match(page, /how much of it is actually translated/iu);
+  // imply that many languages means many finished ones — and it has to point at
+  // the page that prints the number instead of asserting it here.
+  assert.match(page, /actually\s+translated/iu);
   assert.match(page, /href="\/language"/u);
+  // And the claim a coverage number cannot make: that a native speaker read it.
+  assert.match(page, /native\s+speaker/iu);
 
   // And it must still admit what it has not got, rather than listing only what
   // works.

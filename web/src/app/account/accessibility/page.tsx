@@ -98,9 +98,9 @@ export default async function AccessibilityPage() {
         <h2 style={{ marginTop: 0 }}>What is not here yet</h2>
         <ul>
           <li>
-            <strong>The interface is translated, and it says how completely.</strong> Thirteen
-            languages are offered and each one states how much of it is actually translated. All
-            thirteen are complete today; the number is on{' '}
+            <strong>The interface is translated, and it says how completely.</strong> Thirty-three
+            languages are offered, twenty-one of them African, and each one states how much of it is
+            actually translated. All of them are complete today; the number is on{' '}
             <Link href="/language">the language page</Link> so that a language which falls behind
             shows it, rather than serving one English sentence among translated ones. Course titles,
             lessons and comments stay in the language their author wrote them in, whatever language
@@ -117,6 +117,13 @@ export default async function AccessibilityPage() {
             <strong>The choice is kept on this browser, not on your account.</strong> Language is
             read before anybody signs in, so it is stored in a cookie; the same person on a
             different device gets that device's language until they change it there too.
+          </li>
+          <li>
+            <strong>Most translations have not been read by a native speaker.</strong> They were
+            written by the people who built the platform, and a wrong word in a language we do not
+            speak is a mistake we owe the reader. The language page says so for every language it
+            offers — including, today, all thirty-two that are not English — and the sentence is a
+            flag in the language register rather than a paragraph somebody has to remember to edit.
           </li>
           <li>
             <strong>No text-to-speech.</strong> Reading a lesson aloud needs a speech provider
