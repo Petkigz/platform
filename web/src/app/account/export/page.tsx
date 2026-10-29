@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { describeProvider, type SignInMethods } from '@/lib/oauth';
+import { exportFormatSentence } from '@/lib/csv';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Export your data' };
@@ -50,11 +51,32 @@ export default async function ExportPage() {
           It is generated when you ask for it, so it is current at that moment. Ten copies an hour is
           the limit, which protects the platform rather than restricting you.
         </p>
-        <p style={{ marginTop: '1rem' }}>
-          <a className="btn" href="/api/account/export" download>
-            Download my data
-          </a>
-        </p>
+        <div style={{ marginTop: '1rem', display: 'grid', gap: '0.75rem' }}>
+          <div>
+            <a className="btn" href="/api/account/export" download>
+              Download everything (JSON)
+            </a>
+            <p className="muted" style={{ fontSize: '0.85rem', margin: '0.35rem 0 0' }}>
+              {exportFormatSentence('json')}
+            </p>
+          </div>
+          <div>
+            <a className="btn secondary" href="/api/account/export?format=csv" download>
+              Download everything (spreadsheet)
+            </a>
+            <p className="muted" style={{ fontSize: '0.85rem', margin: '0.35rem 0 0' }}>
+              {exportFormatSentence('csv')}
+            </p>
+          </div>
+          <div>
+            <Link className="btn secondary" href="/account/export/print">
+              Read it here, or save it as a PDF
+            </Link>
+            <p className="muted" style={{ fontSize: '0.85rem', margin: '0.35rem 0 0' }}>
+              {exportFormatSentence('print')}
+            </p>
+          </div>
+        </div>
         <p className="muted" style={{ fontSize: '0.85rem', marginBottom: 0 }}>
           Every download is recorded in the audit trail, with the date and how many rows each section
           held. That record is how a surprise copy of somebody&rsquo;s data becomes traceable.

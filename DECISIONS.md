@@ -5310,3 +5310,39 @@ other — "you agreed to the licence" is not a review.
 asks everybody again, because the acceptance row points at a version rather than a
 document. That is the same rule that stops an in-force version being edited: a
 change to the terms has to be a change a person can see.
+
+## Your data, in a format you already have — **DECIDED 2026-10-28**
+
+The export existed and it was JSON. That is an export for a developer: correct,
+complete, and unreadable to the parent who wants to check what the platform holds
+about their family. A right to a copy of your data that arrives in a format you
+cannot open is a right on paper.
+
+**Three formats now, one answer.** `export_my_data()` still assembles the whole
+record in one definer function with no arguments, and the JSON, the CSV and the
+printable page are three *views* of that one answer. The CSV is flattened in
+`web/src/lib/csv.ts` rather than in SQL, deliberately: a second SQL function would
+be a second definition of "what the platform holds about me", and two definitions
+drift. A field added to the export appears in the spreadsheet without anybody
+remembering to add it, because the flattener walks whatever keys arrive.
+
+**No PDF library.** A dependency that draws tables the browser already draws, to
+produce a file the browser already produces from its own print dialog, is a large
+amount of code for a worse result. `/account/export/print` is an ordinary page;
+"saved as PDF" is the user's own dialog. The certificate view has worked this way
+since it was built.
+
+**A cell is data, never a formula.** A display name of `=HYPERLINK(...)` is a name,
+and Excel will happily run it. Every cell beginning `=`, `+`, `-`, `@`, a tab or a
+carriage return is prefixed with an apostrophe, which spreadsheets treat as "this
+is text" and do not display. The file is a read-only copy of somebody's own data;
+there is no reason to hand them something executable. The CSV also carries a
+UTF-8 byte-order mark, without which Excel on Windows turns every Arabic name into
+mojibake.
+
+**Import stays unbuilt, and that is the honest state.** Import is not the mirror of
+export: a file from somewhere else has to be mapped into courses, learners and
+enrolments that nobody wrote, and guessing that mapping invents records rather
+than importing them. `platform.data_export` remains CODE-gated with that written
+down as the remaining precondition, because a flag that claims a feature is
+complete when half of it is missing is the worse lie.

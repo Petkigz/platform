@@ -325,7 +325,13 @@ export default async function AccountPage() {
         <p>
           <a className="btn secondary" href="/api/account/export" download>
             Download my data
-          </a>
+          </a>{' '}
+          <a className="btn secondary" href="/api/account/export?format=csv" download>
+            As a spreadsheet
+          </a>{' '}
+          <Link className="btn secondary" href="/account/export/print">
+            Read or print it
+          </Link>
         </p>
         <p className="muted" style={{ fontSize: '0.9rem' }}>
           It now carries more than it did: the discussion posts, reviews and marked work, the
