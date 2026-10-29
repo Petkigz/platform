@@ -5408,3 +5408,45 @@ written agreement about refunds when a school leaves mid-year; and a decision on
 whether seats expire. Nothing in the migration invents an expiry, because an
 expiry date nobody chose would take a course away from a child in the middle of a
 year.
+
+## Detection that counts and refuses to judge — **DECIDED 2026-10-28**
+
+The incident register was built on 2026-10-27 and the flag said the honest thing:
+*"the register exists; the detection does not."* That was right, and the reason it
+mattered is that an incident register is only as good as the moment somebody
+remembers it exists — and the person who would remember is the person already
+dealing with the thing.
+
+**What detection means here, and what it deliberately is not.** It counts the
+auditable actions that would matter if something went wrong — role changes, data
+exports, account closures, guardian consent withdrawals, takedowns, institution
+API keys, quarantined media — by action and by day, and puts them beside the date
+an incident was last written down. It has **no score, no threshold, no
+"suspicious" label, no automatic incident and no notification.** A screen saying
+*"14 data exports on Tuesday, and nothing written down since March"* is
+information. A screen saying *"anomaly detected"* is an accusation made by a
+number nobody chose, applied to somebody who cannot see it.
+
+That is the same rule the rest of the platform follows about eligibility and fraud
+scores, applied to security: the platform assembles facts, a person decides. There
+is a test that greps the entire payload for `score`, `suspicious`, `anomaly`,
+`threshold`, `risk` and `severity`, and fails if any appears.
+
+**The watched list is a set of prefixes, not a set of names.**
+`security_signal_actions()` returns `role.`, `account.`, `data.`, `takedown.` and a
+few exact names. A hand-written list of actions silently stops covering the thing
+that was just built; a prefix keeps counting the family. An action the screen has
+not been taught is shown tidied rather than hidden, because a signal nobody can
+read is the failure this exists to fix.
+
+**What it cannot do is written on the screen, not only in a comment.** It sees
+only what is audited — a break-in that leaves no audit row is invisible — and it
+notifies nobody, because delivery is the outbox and the outbox has no provider
+until a key is set. An empty table says "nothing in the watched families
+happened", not "nothing happened", because the difference between those two
+sentences is the difference between a tool and a reassurance.
+
+**The flag stays CODE.** Detection that can see one kind of evidence, on a
+platform with no scheduled job and no provider, is not a finished detection
+feature — and a switch that claimed otherwise would be turned on by somebody who
+thought they were covered.

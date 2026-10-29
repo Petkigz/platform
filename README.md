@@ -69,8 +69,8 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **143 tables, RLS on every one, 269 policies, 165
-user-defined triggers, 498 functions and 188 migrations.** The database suite
-passes **1961 tests**; the web suite passes **1488 tests**. TypeScript typecheck
+user-defined triggers, 498 functions and 189 migrations.** The database suite
+passes **1968 tests**; the web suite passes **1496 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **211 app route entries** — 112
 pages, 89 API routes, and the metadata routes it generates.
 

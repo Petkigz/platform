@@ -4,6 +4,14 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { IncidentDesk } from './incident-desk';
 import type { IncidentRegister } from '@/lib/incidents';
+import {
+  SIGNALS_NOTICE,
+  incidentGapSentence,
+  parseSecuritySignals,
+  signalDay,
+  signalLabel,
+  signalsSentence,
+} from '@/lib/incidents';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,8 +43,14 @@ export default async function AdminIncidentsPage() {
   ]);
   if (platform !== true && governance !== true) redirect('/');
 
-  const { data, error } = await supabase.rpc('incident_register');
+  const [{ data, error }, { data: signalsData }] = await Promise.all([
+    supabase.rpc('incident_register'),
+    // Not an error if it fails: the register is the page, and a signal card that
+    // cannot be read must not stop somebody opening an incident.
+    supabase.rpc('security_signals'),
+  ]);
   if (error) throw new Error(error.message);
+  const signals = parseSecuritySignals(signalsData);
   const register = (data ?? {
     incidents: [],
     counts: {
@@ -58,6 +72,56 @@ export default async function AdminIncidentsPage() {
         notification is typed by a person — nothing here derives one, because the rule differs
         by market and a guessed deadline would look authoritative while being wrong.
       </p>
+
+      {signals && (
+        <section className="card" style={{ maxWidth: '52rem', marginBottom: '1.5rem' }}>
+          <h2 style={{ marginTop: 0 }}>What has happened, counted</h2>
+          <p style={{ marginBottom: '0.35rem' }}>
+            <strong>{signalsSentence(signals)}</strong>
+          </p>
+          <p className="muted" style={{ marginBottom: '0.75rem' }}>
+            {incidentGapSentence(signals)}
+          </p>
+
+          {signals.actions.length > 0 ? (
+            <div className="scroll-x">
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <th scope="col" style={{ textAlign: 'left', borderBottom: '1px solid var(--border)', padding: '0.35rem' }}>Action</th>
+                    <th scope="col" style={{ textAlign: 'right', borderBottom: '1px solid var(--border)', padding: '0.35rem' }}>Times</th>
+                    <th scope="col" style={{ textAlign: 'left', borderBottom: '1px solid var(--border)', padding: '0.35rem' }}>Most recent</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {signals.actions.map((row) => (
+                    <tr key={row.action}>
+                      <td style={{ borderBottom: '1px solid var(--border)', padding: '0.35rem' }}>
+                        {signalLabel(row.action)}
+                      </td>
+                      <td style={{ textAlign: 'right', borderBottom: '1px solid var(--border)', padding: '0.35rem' }}>
+                        {row.events}
+                      </td>
+                      <td style={{ borderBottom: '1px solid var(--border)', padding: '0.35rem' }}>
+                        {signalDay(row.lastAt)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="muted" style={{ marginBottom: 0 }}>
+              Nothing in the watched families happened in this window. That is not a clean bill of
+              health — it is an absence of the things this page can see.
+            </p>
+          )}
+
+          <p className="muted" style={{ fontSize: '0.9rem', marginTop: '0.75rem', marginBottom: 0 }}>
+            {SIGNALS_NOTICE}
+          </p>
+        </section>
+      )}
 
       <IncidentDesk register={register} />
 

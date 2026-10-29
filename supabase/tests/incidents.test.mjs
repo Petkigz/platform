@@ -257,11 +257,15 @@ export async function run(ctx) {
   await test('the flag says what is built, and is no longer able to say nothing exists', async () => {
     const row = (await q(
       `select gate_type, preconditions from public.platform_settings where key = 'platform.incident'`)).rows[0];
-    eq(row.gate_type, 'code', 'detection and delivery are still missing, so the gate is code');
+    eq(row.gate_type, 'code', 'detection and delivery are still incomplete, so the gate is code');
     eq(/Nothing exists/.test(row.preconditions), false, 'the register exists');
     assert(/incident register/i.test(row.preconditions), 'and the preconditions name it');
-    assert(/detection/i.test(row.preconditions), 'while naming detection as still absent');
-    assert(/email or SMS provider/i.test(row.preconditions), 'and delivery');
+    // Since 2026-10-28 the flag has to describe a detection that counts and does
+    // not judge, and name delivery as still absent rather than imply coverage.
+    assert(/detection/i.test(row.preconditions), 'while naming detection');
+    assert(/counts and does not judge/i.test(row.preconditions),
+      'and saying what the detection refuses to be');
+    assert(/notifies nobody/i.test(row.preconditions), 'and that it delivers nothing');
   });
 
   await test('nobody reads the tables directly; the functions are the only door', async () => {

@@ -389,3 +389,169 @@ export function describeIncidentError(message: string | null | undefined, hint?:
 export const SEVERITIES: readonly IncidentSeverity[] = ['critical', 'major', 'minor'];
 
 export const CATEGORIES = Object.keys(CATEGORY_LABEL) as readonly string[];
+
+// ---------------------------------------------------------------------------
+// What looks unusual — counted, never judged
+// ---------------------------------------------------------------------------
+
+/**
+ * The signals beside the register.
+ *
+ * This is the shape `security_signals()` returns, and it is deliberately dull:
+ * counts of auditable actions by action and by day, the last date an incident was
+ * written down, and how much watched activity has happened since. There is no
+ * score, no threshold and no flag here, because deciding that something is a
+ * breach is a person's job — and a number that decided it would be a threshold
+ * nobody chose, applied to somebody who could not see it.
+ *
+ * The one thing this parser is strict about is the same thing the institution
+ * report is strict about: a field it does not know is dropped, so a later change
+ * to the database cannot start rendering something this screen was never meant to
+ * show.
+ */
+export type SignalAction = { action: string; events: number; lastAt: string | null };
+export type SignalDay = { day: string; events: number };
+
+export type SecuritySignals = {
+  window: { days: number; from: string | null; to: string | null };
+  actions: SignalAction[];
+  days: SignalDay[];
+  events: number;
+  incidents: {
+    recordedInWindow: number;
+    open: number;
+    lastRecordedAt: string | null;
+    signalsSinceLast: number;
+  };
+};
+
+function signalRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function signalText(value: unknown): string | null {
+  return typeof value === 'string' && value.length > 0 ? value : null;
+}
+
+function signalWhole(value: unknown): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return Math.trunc(value);
+  if (typeof value === 'string' && value.trim() !== '' && Number.isFinite(Number(value))) {
+    return Math.trunc(Number(value));
+  }
+  return 0;
+}
+
+export function parseSecuritySignals(input: unknown): SecuritySignals | null {
+  const row = signalRecord(input);
+  if (!row) return null;
+  const window = signalRecord(row.window) ?? {};
+  const incidents = signalRecord(row.incidents) ?? {};
+
+  const actions: SignalAction[] = [];
+  for (const entry of Array.isArray(row.actions) ? row.actions : []) {
+    const item = signalRecord(entry);
+    if (!item || typeof item.action !== 'string') continue;
+    actions.push({
+      action: item.action,
+      events: signalWhole(item.events),
+      lastAt: signalText(item.lastAt),
+    });
+  }
+
+  const days: SignalDay[] = [];
+  for (const entry of Array.isArray(row.days) ? row.days : []) {
+    const item = signalRecord(entry);
+    if (!item || typeof item.day !== 'string') continue;
+    days.push({ day: item.day, events: signalWhole(item.events) });
+  }
+
+  return {
+    window: {
+      days: signalWhole(window.days),
+      from: signalText(window.from),
+      to: signalText(window.to),
+    },
+    actions,
+    days,
+    events: signalWhole(row.events),
+    incidents: {
+      recordedInWindow: signalWhole(incidents.recordedInWindow),
+      open: signalWhole(incidents.open),
+      lastRecordedAt: signalText(incidents.lastRecordedAt),
+      signalsSinceLast: signalWhole(incidents.signalsSinceLast),
+    },
+  };
+}
+
+/** `data.exported` → `Data exports`. The screen is read, not parsed. */
+export function signalLabel(action: string): string {
+  const known: Record<string, string> = {
+    'role.assigned': 'Roles granted',
+    'role.revoked': 'Roles taken away',
+    'account.closed_by_owner': 'Accounts closed',
+    'account.merged': 'Accounts merged',
+    'account.merge_requested': 'Merges requested',
+    'account.merge_declined': 'Merges declined',
+    'guardian.consent_revoked': 'Guardian consent withdrawn',
+    'data.exported': 'Data exports',
+    'takedown.held': 'Content held after a takedown notice',
+    'takedown.decided': 'Takedown decisions',
+    'takedown.answered': 'Takedown answers',
+    'institution.api_key_created': 'Institution API keys created',
+    'institution.api_key_revoked': 'Institution API keys revoked',
+    'media.upload_quarantined': 'Uploads quarantined',
+  };
+  if (known[action]) return known[action]!;
+  // An action the screen has not been taught is shown as it is, tidied — never
+  // hidden, because a signal nobody can see is the failure mode this exists to
+  // fix.
+  const words = action.replace(/[._]/g, ' ').trim();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+/** `2026-10-29` → `29 October`. Days, not instants: nobody needs a timezone here. */
+export function signalDay(date: string | null): string {
+  if (!date) return '';
+  const parsed = new Date(`${date.slice(0, 10)}T00:00:00Z`);
+  if (Number.isNaN(parsed.getTime())) return date.slice(0, 10);
+  return parsed.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', timeZone: 'UTC' });
+}
+
+/**
+ * The line at the top of the card.
+ *
+ * Every sentence here is a fact and none is a conclusion. The distinction is the
+ * point of the whole feature, so it is made in the words a person reads, not only
+ * in the SQL comment.
+ */
+export function signalsSentence(signals: SecuritySignals): string {
+  if (signals.events === 0 && signals.incidents.lastRecordedAt === null) {
+    return 'Nothing in the watched families has happened in this window, and no incident has ever been recorded.';
+  }
+  if (signals.events === 0) {
+    return 'Nothing in the watched families has happened in this window.';
+  }
+  const actions = signals.actions.length;
+  return `${signals.events} of the watched actions happened in the last ${signals.window.days} days, across ${actions} ${actions === 1 ? 'kind' : 'kinds'}.`;
+}
+
+/** What the card says about the gap between activity and the register. */
+export function incidentGapSentence(signals: SecuritySignals): string {
+  if (signals.incidents.signalsSinceLast === 0) {
+    return 'Nothing watched has happened since an incident was last written down.';
+  }
+  const when = signals.incidents.lastRecordedAt ? signalDay(signals.incidents.lastRecordedAt) : null;
+  const tail = when
+    ? `the last one was written down on ${when}`
+    : 'none has ever been written down';
+  return `${signals.incidents.signalsSinceLast} watched ${signals.incidents.signalsSinceLast === 1 ? 'action has' : 'actions have'} happened since — ${tail}.`;
+}
+
+/** Said once, on the card, so the distinction cannot be lost. */
+export const SIGNALS_NOTICE =
+  'This counts auditable actions and does not judge them. There is no score, no threshold and no ' +
+  'automatic incident: whether any of this is a breach is a decision for a person, and it is made ' +
+  'by opening a case below. It can only see what is audited — a break-in that leaves no audit row ' +
+  'is invisible here — and it notifies nobody.';
