@@ -47,6 +47,7 @@ import { run as referrals } from './referrals.test.mjs';
 import { run as sponsorship } from './sponsorship.test.mjs';
 import { run as teachingApplications } from './teaching_applications.test.mjs';
 import { run as institutions } from './institutions.test.mjs';
+import { run as institutionSeats } from './institution_seats.test.mjs';
 import { run as courseLanguage } from './course_language.test.mjs';
 import { run as revenueBreakdown } from './revenue_breakdown.test.mjs';
 import { run as assessments } from './assessments.test.mjs';
@@ -279,6 +280,7 @@ for (const [name, fn] of [
   ['sponsorship', sponsorship],
   ['teaching_applications', teachingApplications],
   ['institutions', institutions],
+  ['institution_seats', institutionSeats],
   ['course_language', courseLanguage],
   ['assessments', assessments],
 ]) {

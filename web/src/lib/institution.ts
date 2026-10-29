@@ -379,6 +379,31 @@ export function institutionRefusal(message: string): { code: string; message: st
     admin_not_found: 'That account does not exist.',
     bad_key: 'That key is not valid.',
     rate_limited: 'This key has used its allowance for this hour. Try again later.',
+
+    // Seats. Each sentence names what the person reading it can do next, which
+    // is why "the code is used" and "the code was withdrawn" are not one line.
+    seats_closed:
+      'Institution seats are switched off at the moment. Nothing was bought, issued or claimed.',
+    invoice_required:
+      'Record the invoice or transfer reference. A seat with no record of payment is a seat somebody will argue about.',
+    seats_out_of_range: 'Choose between 1 and 500 seats for one order.',
+    money_incomplete:
+      'Give both the price per seat and the currency, or neither. Half a price is not a record.',
+    order_not_found: 'That order could not be found.',
+    no_codes: 'No codes were sent.',
+    codes_out_of_range: 'Issue between 1 and 200 codes at a time.',
+    not_enough_seats:
+      'That is more codes than the order has left. The order is the limit — issue the rest on a new one.',
+    bad_code: 'That code does not look like one of ours. Check it and try again.',
+    code_unknown: 'No seat matches that code. Check it, or ask the school that gave it to you.',
+    code_used: 'That code has already been used. Ask the school for another seat.',
+    code_voided: 'That code was withdrawn by the school, so it no longer works. Ask them for another.',
+    code_not_found: 'That code could not be found.',
+    course_unavailable: 'That course is not open for new learners at the moment.',
+    not_your_learner: 'That learner is not one you manage.',
+    already_enrolled:
+      'You are already enrolled in that course, so the code has not been used. Give it to somebody who is not.',
+    not_found: 'That institution could not be found.',
   };
   if (key && sentences[key]) return { code: key, message: sentences[key]! };
   return { code: 'unknown', message: 'That did not work, and nothing changed.' };

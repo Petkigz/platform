@@ -109,7 +109,7 @@ Three kinds of gate:
 | `commerce.promotions` | Discount campaigns | ADMIN | Eligibility rules; stacking rules; abuse limits. **Ownership, markets and the fixed-amount rule are built** (2026-10-22): `create_promotion_campaign()` lets the platform owner run a campaign on any course and a teacher on their own, names any set of country markets, refuses a fixed amount aimed at a market priced in another currency, and records a per-family limit (two, three, none) that `set_promotion_limits()` can change later. **Redemption at checkout is built** (2026-10-22): a code typed on the buy form is applied inside `create_course_order()`, one code per order, with the window, market, course, new-customer rule and the three limits enforced. The flag still ships off — turn it on when the first real campaign is ready, since a code that reaches checkout while this is off is simply not offered **A price can be checked before paying** (2026-10-22): `quote_course_order()` answers what the course would cost after a code and **creates nothing** — no order, no account, no redemption, so previewing a limited code cannot spend it. It calls `resolve_course_checkout()` and `promotion_quote()`, the same two functions the charge uses, and the order writer was rebuilt on them so a preview cannot disagree with the bill A code can also be **taken off a pending order** (2026-10-22): `remove_promotion_from_order()` voids the redemption — the row stays, append-only, with the person, the time and the reason — withdraws the adjustment, recomputes the total and returns the campaign slot, so a typo does not cost the family their code. The three limits count live redemptions only, and `set_promotion_limits()` counts the same way. Refused once the order is paid |
 | `commerce.refunds` | Refund requests and decisions | ADMIN + SETUP | Approval authority limits; escalation path; entitlement effect of a refund |
 | `commerce.referrals` | Invite a friend: they get a discount on their first purchase, you get a code for your next one | ADMIN | **Built 2026-10-26, and it pays nobody.** A referral is a discount code with a person's name on it, so every benefit is a promotion and nothing needs a payout provider. `my_referral_code()` mints one code per person, on a campaign priced at the friend's percentage and locked to a first purchase with one use; the code then goes through `apply_promotion_to_order()` like every other discount, which is why checkout needed no change and "one code per order" already holds. `promotion_redemptions` records the introduction through `track_referral_redemption()`, which refuses a person using their own code and refuses a second referral for somebody already referred — the first inviter keeps the credit, and the second code still discounts the order. When the order is paid, `reward_referral()` mints the referrer a code that **does not start until `commerce.refund_window_hours` has passed**, so the ordinary refund cancels it before it can be used; a staff-approved refund after that archives the code and marks the conversion `reversed`, and a code already redeemed stays redeemed, which is a limit of discount codes rather than of this build. The four numbers (friend's percentage, reward percentage, rewards per account a year, reward lifetime) are **controls on `/admin/settings`**, with bounds, a written reason and an audit entry — not a separate page and not constants. `/account/referrals` shows the person their code, who joined, and which rewards are live, waiting or gone; `/referral/<code>` tells a visitor what the code is worth and nothing else. `my_referrals()` never shows a referee's email, only their first name. No reward percentage, cap or expiry is invented here: the shipped values are the owner's to change, and changing one does not re-price a code already shared. |
-| `commerce.institutions` | Madrasahs, Islamic schools and organisations buying seats | CODE | Invoicing; bulk enrolment; B2B terms; purchase orders. **Not in the project record at all** |
+| `commerce.institutions` | Madrasahs, Islamic schools and organisations buying seats | ADMIN | **Built 2026-10-28: seats, invoices and claim codes.** A school buys seats for one published course version; a member of staff records the invoice on `/admin/institutions` (no payment provider is involved, so the money moves outside the platform and the page says so); the school's own administrator issues one code per seat on `/institution/seats`; a parent or pupil redeems a code at `/institution/claim`, and the seat becomes an entitlement with source `institution` and an enrolment carrying the institution id. Codes are stored as SHA-256 and shown once, with only the last four characters kept in the clear. **The school never learns who redeemed a seat** — its page is counts, a date, a price and a course title. Still the owner's: an invoice or bursary for the first order, a written agreement on refunds when a school leaves mid-year, and a decision on whether seats expire (nothing here invents one) |
 | `commerce.sponsorship` | Sponsor a seat: a learner asks, staff decide, a donor covers the course and never learns who they helped | ADMIN | **Built 2026-10-26, and it is not a payment processor.** The owner's answer settled the eligibility question: *a learner asks, the owner or finance decides, a donor covers the seat they never see the name of*. `apply_for_sponsorship()` refuses a learner who is not the caller's, a course that is not on sale, and a course the learner already holds; `decide_sponsorship_application()` is platform or finance only, with a written reason either way, and approving mints a **seat code** (`SPN-XXXXXX`) that carries no identity. `sponsorship_pool()` lists approved seats with the course, who it is for and the price **in the reader's own market** — no name, no age, no household, and not one word of the applicant's note, which only staff deciding the request ever read. `pledge_sponsorship()` resolves the price through the same `resolve_course_price()` checkout uses, so a sponsor never types an amount, and refuses the applicant's own seat. **A pledge is not a payment**: there is no card or mobile-money provider, so `record_sponsorship_payment()` is staff recording a reference — and *that* is what grants the seat, as an `entitlement_grants` row and an enrolment with source `scholarship`, in that order because enrolment demands an existing entitlement. Recording the same payment twice changes nothing. A sponsored seat creates **no order, no tax line and no teacher earning** — nobody sold anything. What is still the owner's, and is said on the screens rather than guessed: whether a sponsored seat counts as **zakat** is a scholar's ruling this platform does not make, and a fund that pays for seats without an individual donor is `commerce.scholarships`, still CODE-gated |
 | `commerce.scholarships` | Funded and free seats | ADMIN | Allocation rules; who approves; renewal |
 | `institution.branding` | An institution's own name, tagline, tone and logo on its own screens | ADMIN | **Built 2026-10-26.** An administrator sets a display name, a tagline, one of five named tones and an https link to a logo they already host. It is not white-label and not a separate domain: a custom domain needs DNS and a brand needs trademark permission, and neither exists. The tone is a choice from five because the platform is white and green on purpose — a colour picker would let a partner undo that on a page the platform still serves |
@@ -204,30 +204,31 @@ now holds the register, `/admin` reads and toggles it, and `/api/admin/flags`
 writes it. A trigger refuses to enable a `code`-gated flag at runtime, so the
 dashboard cannot promise what needs a deploy.
 
-**2. Fifteen of these cannot be runtime toggles.**
-`gate_type='code'` on 15 flags, and every one of them names something that still
-does not exist: a provider, a written policy, a legal decision, or a design that
-was never done. They are `learning.ai_support`, `learning.recitation`,
-`learning.ijazah`, `platform.safeguarding`, `platform.incident`,
-`platform.takedown`, `platform.age_assurance`, `platform.data_export`,
-`platform.withdrawal_right`, `platform.accessibility`, `family.child_login`,
-`teaching.screening`, `teaching.payouts`, `commerce.institutions` and
-`delivery.transcode`. Each needs a deploy, a provider, or a policy that does not
-exist, and building them "to completion" would mean building against guesses.
+**2. Fourteen of these cannot be runtime toggles.**
+`gate_type='code'` on 14 flags, and every one names something that still does not
+exist: a provider, a written policy, a legal decision, or a design that was never
+done. They are `learning.ai_support`, `learning.recitation`, `learning.ijazah`,
+`platform.safeguarding`, `platform.incident`, `platform.takedown`,
+`platform.age_assurance`, `platform.data_export`, `platform.withdrawal_right`,
+`platform.accessibility`, `family.child_login`, `teaching.screening`,
+`teaching.payouts` and `delivery.transcode`. Each needs a deploy, a provider, or a
+policy that does not exist, and building them "to completion" would mean building
+against guesses.
 
 The list is re-counted from `platform_settings` rather than from prose, because
 five units left it stale in one day and a stale total outlives the reason it was
 written. On 2026-10-26 `commerce.referrals`, `commerce.sponsorship`,
 `teaching.applications`, `learning.multi_language` and all four `institution.*`
-flags became ADMIN, and on 2026-10-28 `teaching.content_licence` followed: its
-gate was written and the decision to refuse an upload belongs to the owner, so
-the switch moved to `/admin/settings` where the owner can reach it. Some of those
-moves are worth reading twice. `institution.sso` moved although SAML and OIDC are
-still missing, because the part that can exist — a verified email domain — is
-built; `learning.multi_language` moved although the interface is still English,
-because a course saying which language it is taught in is the half that needs no
-translator. A switch nobody can turn on while the feature it names works is a
-worse lie than a screen that says what is absent.
+flags became ADMIN. On 2026-10-28 `teaching.content_licence` followed, because the
+gate was written and the decision to refuse an upload belongs to the owner; then
+`commerce.institutions` followed, because a school buying seats turned out to need
+no payment provider at all — an invoice, a code and a claim. Some of those moves
+are worth reading twice. `institution.sso` moved although SAML and OIDC are still
+missing, because the part that can exist — a verified email domain — is built;
+`learning.multi_language` moved although the interface is still English, because a
+course saying which language it is taught in is the half that needs no translator.
+A switch nobody can turn on while the feature it names works is a worse lie than a
+screen that says what is absent.
 
 A further **15 are ADMIN + SETUP**: the toggle is real, but a provider, a sender
 domain or a written policy has to be finished first. Those are the ones where

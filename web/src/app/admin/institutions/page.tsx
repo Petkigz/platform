@@ -4,7 +4,9 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { SSO_NOTICE, parseDirectory } from '@/lib/institution';
+import { SEAT_PAYMENT_NOTICE, parseSeatDirectory } from '@/lib/seats';
 import { InstitutionsDesk } from './institutions-desk';
+import { RecordSeats } from './record-seats';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,8 +35,20 @@ export default async function AdminInstitutionsPage() {
   ]);
   if (platform !== true && governance !== true) redirect('/admin');
 
-  const { data, error } = await supabase.rpc('institution_directory');
+  const [{ data, error }, { data: seatsData }, { data: courseRows }] = await Promise.all([
+    supabase.rpc('institution_directory'),
+    supabase.rpc('institution_seat_directory'),
+    // Only what the form needs to offer a choice. The database resolves the
+    // published edition itself, so a course with nothing published is refused
+    // with a sentence rather than silently pinned to a draft.
+    supabase.from('courses').select('id,title').eq('status', 'active').is('deleted_at', null).order('title'),
+  ]);
   const directory = parseDirectory(data);
+  const seats = parseSeatDirectory(seatsData);
+  const courses = ((courseRows ?? []) as { id: string; title: string }[]).map((row) => ({
+    id: row.id,
+    title: row.title,
+  }));
 
   return (
     <div className="page wide">

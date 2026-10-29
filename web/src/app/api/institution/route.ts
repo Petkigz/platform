@@ -1,9 +1,10 @@
-import { createHash, randomBytes } from 'node:crypto';
+import { createHash, randomBytes, randomInt } from 'node:crypto';
 import { NextResponse } from 'next/server';
 
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { institutionRefusal } from '@/lib/institution';
+import { generateSeatCode, formatSeatCode, seatCodeTail } from '@/lib/seats';
 
 /**
  * The institution console's writes.
@@ -222,6 +223,141 @@ export async function POST(request: Request) {
       p_institution: institutionId,
       p_user_id: userId,
       p_make_admin: makeAdmin,
+      p_reason: reason,
+    });
+    if (error) return fail(error.message);
+    return NextResponse.json({ ok: true, ...(data as object) });
+  }
+
+  // -------------------------------------------------------------------------
+  // Seats
+  // -------------------------------------------------------------------------
+  //
+  // `recordSeats` is the staff half: an invoice, recorded. `issueSeats` and
+  // `voidSeat` are the school's half. All three go through this one route so a
+  // refusal is turned into a sentence in one place rather than three.
+
+  if (action === 'recordSeats') {
+    const institutionId = str(body.institutionId);
+    const courseId = str(body.courseId);
+    const seats = Number(body.seats);
+    const invoiceReference = str(body.invoiceReference);
+    const reason = str(body.reason);
+
+    if (!institutionId || !courseId) {
+      return NextResponse.json(
+        { ok: false, message: 'Which institution, and which course?' },
+        { status: 400 },
+      );
+    }
+    if (!Number.isInteger(seats) || seats < 1 || seats > 500) {
+      return NextResponse.json(
+        { ok: false, code: 'seats_out_of_range', message: 'Choose between 1 and 500 seats for one order.' },
+        { status: 400 },
+      );
+    }
+    if (!invoiceReference) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: 'invoice_required',
+          message:
+            'Record the invoice or transfer reference. A seat with no record of payment is a seat somebody will argue about.',
+        },
+        { status: 400 },
+      );
+    }
+    if (!reason) {
+      return NextResponse.json(
+        { ok: false, code: 'reason_required', message: 'Write a reason. Somebody will read it.' },
+        { status: 400 },
+      );
+    }
+
+    // A price is either recorded in full — minor units and a currency — or not
+    // at all. Half of one would be a number the owner never said.
+    const priceRaw = body.unitPrice;
+    const currency = str(body.currency)?.toUpperCase() ?? null;
+    let unitPriceMinor: number | null = null;
+    if (priceRaw !== undefined && priceRaw !== null && String(priceRaw).trim() !== '') {
+      const amount = Number(priceRaw);
+      if (!Number.isFinite(amount) || amount < 0) {
+        return NextResponse.json(
+          { ok: false, message: 'A price is a number of zero or more.' },
+          { status: 400 },
+        );
+      }
+      if (!currency || !/^[A-Z]{3}$/.test(currency)) {
+        return NextResponse.json(
+          {
+            ok: false,
+            code: 'money_incomplete',
+            message: 'Give both the price per seat and the currency, or neither. Half a price is not a record.',
+          },
+          { status: 400 },
+        );
+      }
+      unitPriceMinor = Math.round(amount * 100);
+    }
+
+    const { data, error } = await supabase.rpc('record_institution_seat_order', {
+      p_institution: institutionId,
+      p_course: courseId,
+      p_seats: seats,
+      p_invoice_reference: invoiceReference,
+      p_reason: reason,
+      p_unit_price_minor: unitPriceMinor,
+      p_currency: unitPriceMinor === null ? null : currency,
+      p_note: str(body.note),
+    });
+    if (error) return fail(error.message);
+    return NextResponse.json({ ok: true, ...(data as object) });
+  }
+
+  if (action === 'issueSeats') {
+    const orderId = str(body.orderId);
+    const count = Number(body.count);
+    if (!orderId) return NextResponse.json({ ok: false, message: 'Which order?' }, { status: 400 });
+    if (!Number.isInteger(count) || count < 1 || count > 200) {
+      return NextResponse.json(
+        { ok: false, code: 'codes_out_of_range', message: 'Issue between 1 and 200 codes at a time.' },
+        { status: 400 },
+      );
+    }
+
+    // The codes are made here and never stored. Only a hash and the last four
+    // characters cross the wire, exactly as API keys do — so this response is
+    // the only place the codes will ever exist.
+    const codes = Array.from({ length: count }, () => generateSeatCode((max) => randomInt(max)));
+    const { data, error } = await supabase.rpc('issue_institution_seat_codes', {
+      p_order: orderId,
+      p_codes: codes.map((code) => ({
+        hash: createHash('sha256').update(code).digest('hex'),
+        tail: seatCodeTail(code),
+      })),
+    });
+    if (error) return fail(error.message);
+
+    return NextResponse.json({
+      ok: true,
+      ...(data as object),
+      codes: codes.map(formatSeatCode),
+      shownOnce: true,
+    });
+  }
+
+  if (action === 'voidSeat') {
+    const codeId = str(body.codeId);
+    const reason = str(body.reason);
+    if (!codeId) return NextResponse.json({ ok: false, message: 'Which code?' }, { status: 400 });
+    if (!reason) {
+      return NextResponse.json(
+        { ok: false, code: 'reason_required', message: 'Write a reason. Somebody will read it.' },
+        { status: 400 },
+      );
+    }
+    const { data, error } = await supabase.rpc('void_institution_seat_code', {
+      p_code: codeId,
       p_reason: reason,
     });
     if (error) return fail(error.message);

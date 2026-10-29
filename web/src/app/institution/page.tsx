@@ -115,7 +115,20 @@ export default async function InstitutionPage({
       )}
 
       {board && board.joined && (
-        <InstitutionConsole board={board} report={report} window={{ from, to }} />
+        <>
+          <p className="muted">
+            <Link href="/institution/seats">Seats</Link> — the courses this institution has bought,
+            the codes to hand out, and how many have been claimed. A seat is one learner for one
+            course, and the school never sees which learner took which.
+          </p>
+          <InstitutionConsole board={board} report={report} window={{ from, to }} />
+        </>
+      )}
+
+      {!board && (
+        <p className="muted">
+          Have a code from a school? <Link href="/institution/claim">Claim your seat</Link>.
+        </p>
       )}
     </div>
   );

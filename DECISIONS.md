@@ -5346,3 +5346,65 @@ enrolments that nobody wrote, and guessing that mapping invents records rather
 than importing them. `platform.data_export` remains CODE-gated with that written
 down as the remaining precondition, because a flag that claims a feature is
 complete when half of it is missing is the worse lie.
+
+## A school buys seats, and never learns who sits in them — **DECIDED 2026-10-28**
+
+`commerce.institutions` sat in the register as CODE with the most honest
+precondition in the file: *"Invoicing; bulk enrolment; B2B terms; purchase
+orders. Not in the project record at all."* The institution half of the platform
+was built — memberships, branding, counts, API keys, domain identity — and the
+commerce half had never been designed. A madrasah could join. It could not buy
+anything.
+
+**The unlock was noticing that this needs no payment provider.** A school pays by
+bank transfer, or against an invoice, or hands over cash at the office. That money
+never touches the platform; a member of staff records the reference, and the seats
+exist. That is why this feature could be built to completion while everything
+card-shaped stays blocked on a merchant of record: it is a written record of money
+that moved somewhere else, and the pages say so in as many words rather than
+implying a checkout.
+
+**A seat is a code, not a membership.** The obvious design — every member of the
+institution gets the course — is wrong twice over. It would give a course to every
+member forever regardless of how many the school paid for, and it would make the
+institution's roster a gate on somebody's learning. A code is a thing the school
+hands to a pupil, on paper, and the platform does not know who they are until they
+redeem it. Then it knows, privately:
+
+**The school never learns who redeemed a seat.** This is the rule the institution
+report already follows — counts, never a row per person — and it matters more here
+because the alternative is a school holding a list of which children took which
+course. `institution_seat_summary()` returns counts, a date, a price, a course
+title and the last four characters of each code. It returns no learner, no name,
+no account, no profile id. There is a test that greps the whole payload for the
+learner ids and the display name it just claimed with, and fails if either appears.
+
+**The codes are stored like passwords.** SHA-256, generated in the web app, shown
+once, with the last four characters in the clear so an office can match "the code
+ending 4F2A" when a parent rings. A database dump cannot be replayed into thirty
+free courses. A code is refused if it contains a character the alphabet excludes —
+`I`, `L`, `O`, `0`, `1` — because those are the ones people mistype, and quietly
+turning an `O` into a `0` would spend somebody else's seat.
+
+**A refused claim spends nothing.** A code given to a pupil who is already
+enrolled is refused and stays unspent, which is the whole reason to check before
+writing. Two parents redeeming at the same second at the start of term is not a
+rare event, so the row is locked before it is read.
+
+**The seat is a grant, and the enrolment is a consequence.** The claim writes an
+`entitlement_grants` row with `source_type = 'institution'` first, then an
+enrolment carrying the institution id — because `can_enrol_in_version()` consults
+the ledger, and the claim must not be a path that bypasses the gate. Every
+existing rule still applies, including guardian verification when the owner turns
+that on.
+
+**Withdrawing changes no money and deletes nothing.** Voiding an unused code stops
+it working. Voiding a claimed seat revokes the entitlement and leaves the
+enrolment, the progress and anything completed exactly where it was. A school that
+takes a seat back is not erasing a term's work.
+
+**What is still the owner's.** An invoice or a bursary for the first order; a
+written agreement about refunds when a school leaves mid-year; and a decision on
+whether seats expire. Nothing in the migration invents an expiry, because an
+expiry date nobody chose would take a course away from a child in the middle of a
+year.
