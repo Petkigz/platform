@@ -2,6 +2,11 @@ import type { LocaleCode } from '../locales.ts';
 import { AFRICA_EAST } from './africa-east.ts';
 import { AFRICA_SOUTH } from './africa-south.ts';
 import { AFRICA_WEST } from './africa-west.ts';
+import { AUTH } from './auth-east.ts';
+import { AUTH_EXTRA } from './auth-extra.ts';
+import { AUTH_SOUTH } from './auth-south.ts';
+import { AUTH_WEST } from './auth-west.ts';
+import { AUTH_WORLD } from './auth-world.ts';
 import type { Messages } from './en.ts';
 
 /**
@@ -25,14 +30,29 @@ import type { Messages } from './en.ts';
  * Adding a language is: a row in `locales.ts`, a block here, and the coverage
  * number takes care of itself. Nothing else in the application knows the list.
  */
-export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = {
-  // The African catalogues live in their own files: thirty-odd languages in one
-  // object is a file nobody can review. Same shape, merged here so nothing else
-  // in the application has to know how they are stored.
-  ...AFRICA_EAST,
-  ...AFRICA_WEST,
-  ...AFRICA_SOUTH,
+/**
+ * Layers, merged per language.
+ *
+ * The catalogues are written in groups — Africa by region, then the sign-in and
+ * sign-up screens for everybody — and a language appears in more than one file.
+ * A shallow spread would silently replace Amharic's frame with Amharic's auth
+ * block and lose twenty-two strings, so this merges **per language**, and the
+ * coverage number would be the thing that noticed if it ever stopped.
+ */
+function merge(
+  ...parts: Array<Partial<Record<LocaleCode, Partial<Messages>>>>
+): Partial<Record<LocaleCode, Partial<Messages>>> {
+  const out: Partial<Record<LocaleCode, Partial<Messages>>> = {};
+  for (const part of parts) {
+    for (const [code, messages] of Object.entries(part)) {
+      const key = code as LocaleCode;
+      out[key] = { ...(out[key] ?? {}), ...messages };
+    }
+  }
+  return out;
+}
 
+const BASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
   ar: {
     'skip.toContent': 'تخطَّ إلى المحتوى',
     'nav.main': 'القائمة الرئيسية',
@@ -656,6 +676,21 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.unreviewed':
       'Hakuna mzungumzaji wa asili aliyesoma tafsiri hii bado. Iliandikwa na waliojenga jukwaa — neno likionekana dogo kwako, kosa hilo ni letu.',
     'language.notTranslated':
-      'Ni kiolesura pekee kinatafsiriwa. Majina ya kozi, masomo, kurasa za walimu na sera zilizochapishwa huonekana katika lugha ziliyoandikwa.',
+      'Ni kiolesura pekee kinatafsiriwa. Majina ya kozi, masomo, kurasa za walimu na sera zilizochapishwa huonekana katika lugha zilizyoandikwa.',
   },
 };
+
+export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
+  // The frame: navigation, footer, the language page.
+  AFRICA_EAST,
+  AFRICA_WEST,
+  AFRICA_SOUTH,
+  BASE,
+  // The two screens a person meets before they trust the site.
+  AUTH,
+  AUTH_WEST,
+  AUTH_SOUTH,
+  AUTH_WORLD,
+  // The hints, the two "or" lines, and the three confirmations.
+  AUTH_EXTRA,
+);

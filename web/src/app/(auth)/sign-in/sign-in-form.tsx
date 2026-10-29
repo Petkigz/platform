@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { toE164, isE164 } from '@/lib/phone';
 import { oauthRedirectUrl } from '@/lib/oauth';
+import { useT } from '@/lib/i18n/client';
 
 /**
  * D3: both email+password and phone OTP.
@@ -25,6 +26,7 @@ export function SignInForm({
   initialError: string | null;
 }) {
   const router = useRouter();
+  const t = useT();
 
   const [mode, setMode] = useState<'password' | 'otp'>('password');
   const [email, setEmail] = useState('');
@@ -56,7 +58,9 @@ export function SignInForm({
       if (err) throw err;
       // On success the browser is already navigating to Google.
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Google sign-in could not start.');
+      // A provider's own words, in English: Supabase Auth wrote the reason and
+      // translating it would be a guess. Our own refusals are ours.
+      setError(err instanceof Error ? err.message : t('auth.somethingWrong'));
       setBusy(false);
     }
   }
@@ -88,17 +92,15 @@ export function SignInForm({
         // D3: whatever the user typed, what leaves this browser is E.164.
         const normalised = toE164(phone, countryCode);
         if (!normalised) {
-          throw new Error(
-            'That does not look like a valid phone number. Include the country code, e.g. +256772123456.',
-          );
+          throw new Error(t('auth.invalidPhone'));
         }
         const { error: err } = await supabase.auth.signInWithOtp({ phone: normalised });
         if (err) throw err;
         setSentPhone(normalised);
-        setSent(`If an account exists for ${normalised}, a code is on its way.`);
+        setSent(t('auth.codeSent', { phone: normalised }));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.');
+      setError(err instanceof Error ? err.message : t('auth.somethingWrong'));
     } finally {
       setBusy(false);
     }
@@ -112,9 +114,9 @@ export function SignInForm({
       const { error: err } = await createClient().auth.signInWithOtp({ phone: sentPhone });
       if (err) throw err;
       setOtpCode('');
-      setSent(`A new code has been sent to ${sentPhone}.`);
+      setSent(t('auth.codeResent', { phone: sentPhone }));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not resend the code.');
+      setError(err instanceof Error ? err.message : t('auth.somethingWrong'));
     } finally {
       setBusy(false);
     }
@@ -125,8 +127,8 @@ export function SignInForm({
   return (
     <div className="narrow">
     <div className="card">
-      <h1>Sign in</h1>
-      <p className="muted">Welcome back.</p>
+      <h1>{t('auth.signInTitle')}</h1>
+      <p className="muted">{t('auth.signInLede')}</p>
 
       {googleEnabled && (
         <>
@@ -137,10 +139,10 @@ export function SignInForm({
             onClick={signInWithGoogle}
             disabled={busy}
           >
-            Continue with Google
+            {t('auth.google')}
           </button>
           <p className="muted" style={{ textAlign: 'center', margin: '0.75rem 0', fontSize: '0.85rem' }}>
-            or use one of these
+            {t('auth.orGoogle')}
           </p>
         </>
       )}
@@ -151,14 +153,14 @@ export function SignInForm({
           aria-current={mode === 'password' ? 'page' : undefined}
           onClick={(e) => { e.preventDefault(); setMode('password'); }}
         >
-          Email and password
+          {t('auth.tabPassword')}
         </a>
         <a
           href="#otp"
           aria-current={mode === 'otp' ? 'page' : undefined}
           onClick={(e) => { e.preventDefault(); setMode('otp'); }}
         >
-          Phone code
+          {t('auth.tabPhone')}
         </a>
       </div>
 
@@ -168,7 +170,7 @@ export function SignInForm({
       <form onSubmit={onSubmit}>
         {mode === 'password' ? (
           <>
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">{t('auth.email')}</label>
             <input
               id="email"
               type="email"
@@ -177,7 +179,7 @@ export function SignInForm({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">{t('auth.password')}</label>
             <input
               id="password"
               type="password"
@@ -189,10 +191,10 @@ export function SignInForm({
           </>
         ) : (
           <>
-            <label htmlFor="phone">Mobile number</label>
+            <label htmlFor="phone">{t('auth.mobile')}</label>
             <div className="row">
               <input
-                aria-label="Country code"
+                aria-label={t('auth.countryCode')}
                 value={countryCode}
                 disabled={Boolean(sentPhone) || busy}
                 onChange={(e) => setCountryCode(e.target.value)}
@@ -211,12 +213,12 @@ export function SignInForm({
             </div>
             <p className="muted" style={{ fontSize: '0.8rem', marginTop: '0.4rem' }}>
               {phoneIsE164
-                ? 'Already in international format.'
-                : `Will be sent as ${toE164(phone, countryCode) ?? '—'}`}
+                ? t('auth.international')
+                : t('auth.phoneAs', { phone: toE164(phone, countryCode) ?? '—' })}
             </p>
             {sentPhone && (
               <>
-                <label htmlFor="otp-code">Text message code</label>
+                <label htmlFor="otp-code">{t('auth.otpCode')}</label>
                 <input
                   id="otp-code"
                   type="text"
@@ -230,7 +232,7 @@ export function SignInForm({
                 />
                 <div className="row">
                   <button type="button" className="btn secondary" disabled={busy} onClick={resendCode}>
-                    Resend code
+                    {t('auth.resendCode')}
                   </button>
                   <button
                     type="button"
@@ -243,7 +245,7 @@ export function SignInForm({
                       setError(null);
                     }}
                   >
-                    Change number
+                    {t('auth.changeNumber')}
                   </button>
                 </div>
               </>
@@ -252,13 +254,19 @@ export function SignInForm({
         )}
 
         <button type="submit" disabled={busy}>
-          {busy ? 'Working…' : mode === 'password' ? 'Sign in' : sentPhone ? 'Verify code' : 'Send code'}
+          {busy
+            ? t('auth.working')
+            : mode === 'password'
+              ? t('auth.signInTitle')
+              : sentPhone
+                ? t('auth.verifyCode')
+                : t('auth.sendCode')}
         </button>
       </form>
 
       <p style={{ marginTop: '1rem' }}>
-        {mode === 'password' && <><Link href="/forgot-password">Forgot password?</Link>{' · '}</>}
-        <Link href="/sign-up">Create an account</Link>
+        {mode === 'password' && <><Link href="/forgot-password">{t('auth.forgot')}</Link>{' · '}</>}
+        <Link href="/sign-up">{t('auth.noAccount')}</Link>
       </p>
     </div>
     </div>

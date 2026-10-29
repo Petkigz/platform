@@ -5752,6 +5752,23 @@ documents — a certificate and a receipt — **declare `dir="ltr"`**, because t
 words are English and untranslated and a reader's language must not turn them
 around; the learner's name inside them is isolated by `ArabicBlock` as before.
 
+**A form is translated by one provider, and it carries one language.**
+`lib/i18n/client.tsx` holds the reader's catalogue and hands it to every client
+component below the root layout. The server picks the language and merges English
+behind it; the browser receives **only that one catalogue**, so a page in Yoruba
+does not ship thirty-three of them to display one. `useT()` outside the provider
+returns English rather than throwing — the same fallback the catalogue itself
+follows, so a component rendered in a test or an error boundary still says a
+sentence.
+
+**The provider's sentence is not ours to translate.** A wrong password, an
+unconfirmed address, a rate limit: Supabase Auth writes those, and a translation
+would be a guess printed as a fact — the same rule that stopped the platform
+writing legal text it had not been given. Our own refusals (a phone number that
+cannot be parsed, a form that failed for no reason the provider named) are ours,
+and are translated in all thirty-three languages. A test pins both halves so the
+distinction is not quietly "tidied" later.
+
 **The cost, written down.** Reading cookies and headers in the root layout makes
 every route render per request: the production build now marks all of them `ƒ`
 instead of `○`. That is the price of getting the language right in the server's

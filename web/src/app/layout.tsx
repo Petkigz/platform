@@ -4,8 +4,9 @@ import { cookies, headers } from 'next/headers';
 
 import { A11Y_BOOT } from '@/lib/a11y';
 import {
-  LOCALE_COOKIE, chooseLocale, directionOf, localeByCode, translator,
+  LOCALE_COOKIE, chooseLocale, directionOf, localeByCode, messagesFor, translator,
 } from '@/lib/i18n';
+import { I18nProvider } from '@/lib/i18n/client';
 import Link from 'next/link';
 import { siteOrigin } from '@/lib/site';
 import { organisationJsonLd, websiteJsonLd } from '@/lib/structured-data';
@@ -153,7 +154,14 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           </div>
         </header>
 
-        <main id="main">{children}</main>
+        {/* The one catalogue the reader needs, handed to every client
+            component below: a form is in the same language as the page that
+            opened it, and no other language is shipped to their browser. */}
+        <main id="main">
+          <I18nProvider locale={code} messages={messagesFor(code)}>
+            {children}
+          </I18nProvider>
+        </main>
 
         <footer>
           <div className="container">

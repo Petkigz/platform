@@ -62,6 +62,43 @@ export const en = {
   'language.coverage': '{percent}% of these interface strings are translated into {language}. Anything not yet translated is shown in English.',
   'language.coverageAll': 'This language is fully translated.',
   'language.browser': 'The choice is kept on this browser, not on your account, so another device will ask its own device which language to use.',
+  // Sign-in and sign-up. The two screens a person meets before they have any
+  // reason to trust the site, so they are the first forms translated rather than
+  // the last.
+  'auth.signInTitle': 'Sign in',
+  'auth.signUpTitle': 'Create an account',
+  'auth.signInLede': 'Welcome back.',
+  'auth.signUpLede':
+    'For an adult. Children learn under a family account, not their own login.',
+  'auth.email': 'Email',
+  'auth.password': 'Password',
+  'auth.mobile': 'Mobile number',
+  'auth.countryCode': 'Country code',
+  'auth.otpCode': 'Text message code',
+  'auth.tabPassword': 'Email and password',
+  'auth.tabPhone': 'Phone code',
+  'auth.google': 'Continue with Google',
+  'auth.sendCode': 'Send code',
+  'auth.verifyCode': 'Verify code',
+  'auth.resendCode': 'Resend code',
+  'auth.changeNumber': 'Change number',
+  'auth.forgot': 'Forgot password?',
+  'auth.noAccount': 'Create an account',
+  'auth.haveAccount': 'Already have an account?',
+  'auth.working': 'Working…',
+  'auth.invalidPhone':
+    'That does not look like a valid phone number. Include the country code.',
+  'auth.somethingWrong': 'Something went wrong.',
+  'auth.orGoogle': 'or use one of these',
+  'auth.orCreate': 'or create an account with an email or a phone number',
+  'auth.phoneAs': 'Will be stored as {phone}',
+  'auth.international': 'Already in international format.',
+  'auth.passwordNote': 'We never store it. Supabase Auth holds the credential.',
+  'auth.codeSent': 'If an account exists for {phone}, a code is on its way.',
+  'auth.codeResent': 'A new code has been sent to {phone}.',
+  'auth.checkEmail': 'Account created. Check your email to confirm the address, then sign in.',
+  'auth.accountCreated': 'Account created for {phone}.',
+
   'language.reviewed': 'A first-language speaker has read this translation.',
   'language.unreviewed':
     'No first-language speaker has read this translation yet. It was written by the people who built the platform — if a word looks wrong to you, that is a mistake we owe you.',

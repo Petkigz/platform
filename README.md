@@ -70,7 +70,7 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 The database stands at **147 tables, RLS on every one, 271 policies, 166
 user-defined triggers, 518 functions and 191 migrations.** The database suite
-passes **1995 tests**; the web suite passes **1564 tests**. TypeScript typecheck
+passes **1995 tests**; the web suite passes **1573 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **221 app route entries** — 120
 pages and seven generated entries (`/_not-found`, four icons and manifest, the
 robots file, the sitemap), plus 94 API routes.
@@ -269,6 +269,15 @@ prints **how much of it is translated**, counted from its own file, and all
 thirty-three are at 100% today. It also prints what the coverage number cannot:
 **no first-language speaker has read any of the thirty-two non-English
 catalogues yet**, said in the reader's own language rather than in a footnote.
+It is not only the frame. **Sign-in and sign-up are translated too** — headings,
+the two mode tabs, every field label, both "or" lines, the phone-format hint, the
+confirmations and our own refusals — carried to the browser by one provider that
+ships *only* the reader's own catalogue, merged with English behind it. A test
+reads both form files and fails on a sentence of three or more English words left
+in the markup. The words a **provider** returns are not translated: a wrong
+password is Supabase Auth's sentence, and rewriting it would be a guess presented
+as a fact.
+
 Coverage is a count; a native reader is a claim. The picker's first option is *my device's language*,
 which deletes the cookie — a default somebody cannot return to is not a default.
 The choice lives on the browser, not the account, and the page says so: a shared

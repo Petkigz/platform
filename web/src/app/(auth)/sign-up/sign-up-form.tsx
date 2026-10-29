@@ -5,8 +5,10 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { toE164 } from '@/lib/phone';
 import { oauthRedirectUrl } from '@/lib/oauth';
+import { useT } from '@/lib/i18n/client';
 
 export function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
+  const t = useT();
   const [mode, setMode] = useState<'email' | 'phone'>('email');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -35,7 +37,7 @@ export function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
       });
       if (err) throw err;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Google sign-up could not start.');
+      setError(err instanceof Error ? err.message : t('auth.somethingWrong'));
       setBusy(false);
     }
   }
@@ -52,23 +54,19 @@ export function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
       if (mode === 'email') {
         const { error: err } = await supabase.auth.signUp({ email, password });
         if (err) throw err;
-        setDone(
-          'Account created. Check your email to confirm the address, then sign in.',
-        );
+        setDone(t('auth.checkEmail'));
       } else {
         // D3: phone stored in E.164, so it is one account however it was typed.
         const normalised = toE164(phone, countryCode);
         if (!normalised) {
-          throw new Error(
-            'That does not look like a valid phone number. Include the country code.',
-          );
+          throw new Error(t('auth.invalidPhone'));
         }
         const { error: err } = await supabase.auth.signUp({ phone: normalised, password });
         if (err) throw err;
-        setDone(`Account created for ${normalised}.`);
+        setDone(t('auth.accountCreated', { phone: normalised }));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.');
+      setError(err instanceof Error ? err.message : t('auth.somethingWrong'));
     } finally {
       setBusy(false);
     }
@@ -77,17 +75,17 @@ export function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
   return (
     <div className="narrow">
     <div className="card">
-      <h1>Create an account</h1>
-      <p className="muted">An adult account. Children learn under a family, not their own login.</p>
+      <h1>{t('auth.signUpTitle')}</h1>
+      <p className="muted">{t('auth.signUpLede')}</p>
 
       <div className="tabs">
         <a href="#email" aria-current={mode === 'email' ? 'page' : undefined}
            onClick={(e) => { e.preventDefault(); setMode('email'); }}>
-          Email
+          {t('auth.email')}
         </a>
         <a href="#phone" aria-current={mode === 'phone' ? 'page' : undefined}
            onClick={(e) => { e.preventDefault(); setMode('phone'); }}>
-          Mobile number
+          {t('auth.mobile')}
         </a>
       </div>
 
@@ -103,10 +101,10 @@ export function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
             onClick={signUpWithGoogle}
             disabled={busy}
           >
-            Continue with Google
+            {t('auth.google')}
           </button>
           <p className="muted" style={{ textAlign: 'center', margin: '0.75rem 0', fontSize: '0.85rem' }}>
-            or create an account with an email or a phone number
+            {t('auth.orCreate')}
           </p>
         </>
       )}
@@ -114,37 +112,39 @@ export function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
       <form onSubmit={onSubmit}>
         {mode === 'email' ? (
           <>
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">{t('auth.email')}</label>
             <input id="email" type="email" autoComplete="email" required
                    value={email} onChange={(e) => setEmail(e.target.value)} />
           </>
         ) : (
           <>
-            <label htmlFor="phone">Mobile number</label>
+            <label htmlFor="phone">{t('auth.mobile')}</label>
             <div className="row">
-              <input aria-label="Country code" value={countryCode}
+              <input aria-label={t('auth.countryCode')} value={countryCode}
                      onChange={(e) => setCountryCode(e.target.value)} />
               <input id="phone" type="tel" inputMode="tel" autoComplete="tel" required
                      placeholder="0772 123 456"
                      value={phone} onChange={(e) => setPhone(e.target.value)} />
             </div>
             <p className="muted" style={{ fontSize: '0.8rem', marginTop: '0.4rem' }}>
-              Stored as {toE164(phone, countryCode) ?? '—'}
+              {t('auth.phoneAs', { phone: toE164(phone, countryCode) ?? '—' })}
             </p>
           </>
         )}
 
-        <label htmlFor="password">Password</label>
+        <label htmlFor="password">{t('auth.password')}</label>
         <input id="password" type="password" autoComplete="new-password" required
                minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} />
         <p className="muted" style={{ fontSize: '0.8rem' }}>
-          We never store it. Supabase Auth holds the credential.
+          {t('auth.passwordNote')}
         </p>
 
-        <button type="submit" disabled={busy}>{busy ? 'Working…' : 'Create account'}</button>
+        <button type="submit" disabled={busy}>
+          {busy ? t('auth.working') : t('auth.signUpTitle')}
+        </button>
       </form>
 
-      <p style={{ marginTop: '1rem' }}><Link href="/sign-in">Already have an account?</Link></p>
+      <p style={{ marginTop: '1rem' }}><Link href="/sign-in">{t('auth.haveAccount')}</Link></p>
     </div>
     </div>
   );
