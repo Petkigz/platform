@@ -1,3 +1,4 @@
+import { ArabicBlock } from '@/app/_shared/arabic-text';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -50,11 +51,16 @@ export default async function CertificatePage({
           <p className="certificate-kicker">Certificate of completion</p>
           <h1>Certificate of Achievement</h1>
           <p className="certificate-intro">This is to recognise that</p>
-          <p className="certificate-learner">{certificate.learnerDisplayName}</p>
+          {/* The learner's own name, in whatever script they wrote it. A
+              certificate is the page that gets printed and framed, so an Arabic
+              name set in a Latin face at negative tracking — which is what this
+              heading inherits — is the difference between a document somebody
+              shows an employer and one they apologise for. */}
+          <ArabicBlock as="p" className="certificate-learner" text={certificate.learnerDisplayName} />
           <p className="certificate-copy">
             has completed the learning requirements for
           </p>
-          <h2>{certificate.courseTitle}</h2>
+          <ArabicBlock as="h2" text={certificate.courseTitle} />
           <p className="certificate-copy">
             Version {certificate.courseVersionNumber}
             {certificate.courseLanguage ? ` · ${certificate.courseLanguage}` : ''}

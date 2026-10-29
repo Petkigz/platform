@@ -8,6 +8,8 @@ import {
   type CatalogueCourse,
 } from '@/lib/catalogue';
 import { cardPrice, contentLine, isPriced, type CourseCard } from '@/lib/catalogue-cards';
+import { textProps } from '@/lib/language';
+import { ArabicInline } from '@/app/_shared/arabic-text';
 
 /**
  * One course, as it appears on any shelf.
@@ -55,16 +57,27 @@ export function CourseShelfCard({
     <article className="card">
       <div className="card-head">
         <Link href={`/courses/${course.slug}`} className="course" style={{ display: 'block' }}>
-          <span className="title">{course.title}</span>
+          {/* A shelf is where a course in Arabic is first met, so this is the one
+              place the title has to be readable without opening anything. The
+              stored language code gives the block its `lang`; the runs inside it
+              get the face and the spacing, because a mixed title should not set
+              its English half in a Naskh font. */}
+          <span className="title" {...textProps(course.language_code)}>
+            <ArabicInline text={course.title} />
+          </span>
         </Link>
         {price && <span className={tone}>{price}</span>}
       </div>
 
       {course.description && (
         <p className="muted" style={{ fontSize: '0.92rem', margin: '0.4rem 0 0' }}>
-          {course.description.length > 180
-            ? `${course.description.slice(0, 180).trimEnd()}\u2026`
-            : course.description}
+          <ArabicInline
+            text={
+              course.description.length > 180
+                ? `${course.description.slice(0, 180).trimEnd()}\u2026`
+                : course.description
+            }
+          />
         </p>
       )}
 

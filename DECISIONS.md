@@ -5450,3 +5450,81 @@ sentences is the difference between a tool and a reassurance.
 platform with no scheduled job and no provider, is not a finished detection
 feature — and a switch that claimed otherwise would be turned on by somebody who
 thought they were covered.
+
+## Arabic is a script, not a font setting — **DECIDED 2026-10-29**
+
+The flag said `rtl: 0` and was read as one unfinished job. It is two, and only
+one of them is free.
+
+**What was actually broken.** Not the button order. A Qur'anic line quoted in a
+lesson, a teacher who signed up with her name in Arabic, a five-year-old whose
+name on a certificate is Arabic — each of those sat inside an English page and
+failed in three ways at once. A screen reader pronounced the letters with an
+English voice, which is noise and is invisible to anybody who can see the page.
+The punctuation of a mixed line jumped to the wrong end, so `(الفاتحة)` closed its
+bracket in the wrong place. And the stylesheet's tracking — added because it makes
+Latin text more legible — pulled apart letters that are supposed to be joined.
+Three failures, three different fixes, none of them needing a translator.
+
+**The split, and it is the whole decision.** Making the *interface* run right to
+left, and translating it, needs translators and a review process, and the platform
+has neither. Making *content* render correctly in the script it was written in
+needs a font stack, two CSS lines and a `lang` attribute. The second is built; the
+first is not, and `/account/accessibility` now says exactly that — "the interface
+itself is in English", "no right-to-left interface" — instead of letting a reader
+infer a translation from a page that renders Arabic well.
+
+**The font is the device's, not a download.** A Naskh webfont is roughly 400 KB
+against a platform whose whole free tier is 500 MB of database and 5 GB of egress.
+Every phone in the market this is built for already ships a Naskh face, so the
+stack asks the device for the one it has: Noto Naskh Arabic, Amiri, Scheherazade
+New, Traditional Arabic, Geeza Pro. A device with none of them falls back to a
+serif that still joins its letters, which is the failure mode that matters less
+than a page that never loads.
+
+**Two lines in `globals.css` earn their place.** `line-height: 2`, because the
+harakat sit above and below the letter and clip at the 1.55 the rest of the site
+uses. `letter-spacing: 0`, because Arabic is cursive — carried with an
+`!important` that is the only one in the file outside the print and
+reduced-motion blocks, on the one property where a later heading rule would
+silently destroy the text rather than merely restyle it.
+
+**Detected from the script, never from the person.** `lib/arabic.ts` uses
+`\p{Script_Extensions=Arabic}`, not `\p{Script=Arabic}`: the vowel marks are
+`Script=Inherited` with Arabic extensions, so the stricter test shatters `بِسْمِ`
+into five runs. That also catches ﷺ (U+FDFA), which is how the Prophet's name is
+usually written inside an English sentence — the commonest case on the site and
+the one a naive range misses. It never guesses a language from a name or a
+country: a teacher called Yusuf may write in English.
+
+**A stored fact beats a detection.** Where a course already carries a language
+code, the page uses `textProps()` and believes the column. Where a person's name
+or a lesson title arrives with no such column — and a five-year-old should not be
+made to fill in a language field to write their own name — the scripts are read
+from the text. The two are complements; neither overrules the other.
+
+**Direction is decided by counting letters, not by the first character.** A block
+whose first word is Latin and whose body is Arabic should read as Arabic once it
+has found its feet, so `majorityDirection()` weighs letters and skips digits and
+punctuation. Inline runs are still isolated with `<bdi>` inside whatever direction
+the block settled on, so an English gloss inside an Arabic paragraph stays the
+way English goes.
+
+**The shell is not mirrored, and the stylesheet says so.** Three rules in
+`globals.css` draw a physical side that can end up *inside* a right-to-left block
+— a sidebar's rule, a quotation's bar, a numbered lesson list — and those three
+are listed together, which is the whole list. Everything else is either flex or
+grid, which follow `direction` themselves, or belongs to the English shell that
+never sits inside one of these blocks. A comment claiming "the stylesheet
+mirrors" would be a claim nobody checked; a list of three is one that can be.
+
+**What is still refused, and by whom.** A dyslexia-friendly font is licensed and
+none is embedded — the flag row keeps it, with the price implied rather than
+invented. Text-to-speech needs a provider nobody has connected. Both stay in
+"what is not here yet" on the page, beside the interface sentence.
+
+**Nothing here is a translation and the page does not imply one.** The
+stylesheets, the check that measures twenty colour pairs (lowest 4.85:1) and the
+`<html lang="en" dir="ltr">` all say the same thing: the shell is English and
+left to right, and the words inside it are set in whatever script their author
+used.

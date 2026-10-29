@@ -1,3 +1,4 @@
+import { ArabicBlock, ArabicInline } from '@/app/_shared/arabic-text';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -41,9 +42,11 @@ export default async function PublicTeacherPage({ params }: { params: Promise<{ 
     <div className="container section">
       <p className="eyebrow">AyahSpring teacher</p>
       <header className="card">
-        <h1 style={{ marginTop: 0 }}>{profile.displayName}</h1>
-        {profile.headline && <p className="lede">{profile.headline}</p>}
-        {profile.biography && <p style={{ whiteSpace: 'pre-wrap' }}>{profile.biography}</p>}
+        <ArabicBlock as="h1" style={{ marginTop: 0 }} text={profile.displayName} />
+        {profile.headline && <ArabicBlock className="lede" text={profile.headline} />}
+        {profile.biography && (
+          <ArabicBlock as="div" style={{ whiteSpace: 'pre-wrap' }} text={profile.biography} />
+        )}
         {socials.length > 0 && (
           <nav aria-label="Teacher links" className="row" style={{ flexWrap: 'wrap', marginTop: '1rem' }}>
             {socials.map(([name, url]) => <a key={name} href={url} target="_blank" rel="noreferrer" className="chip">{name}</a>)}
@@ -52,7 +55,9 @@ export default async function PublicTeacherPage({ params }: { params: Promise<{ 
       </header>
 
       <section className="section">
-        <h2>Courses by {profile.displayName}</h2>
+        <h2>
+          Courses by <ArabicInline text={profile.displayName} />
+        </h2>
         {courses.length === 0 ? (
           <p className="empty">No published courses yet.</p>
         ) : (

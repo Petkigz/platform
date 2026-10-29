@@ -39,6 +39,7 @@ import { fetchCourseTeacher, teacherAttribution } from '@/lib/course-teacher';
 import { breadcrumbJsonLd, courseJsonLd } from '@/lib/structured-data';
 import { siteOrigin } from '@/lib/site';
 import { parseLanguages, textProps, type Language } from '@/lib/language';
+import { ArabicInline } from '@/app/_shared/arabic-text';
 import { JsonLdScript } from '../../_shared/json-ld';
 import { WhoTeaches } from '../../_shared/who-teaches';
 
@@ -315,7 +316,9 @@ export default async function CoursePage({
             in Arabic and this page is English. Without it the browser lays an
             Arabic title out backwards, which reads as a layout fault rather
             than as a language. */}
-        <h1 {...textProps(course.language_code)}>{course.title}</h1>
+        <h1 {...textProps(course.language_code)}>
+          <ArabicInline text={course.title} />
+        </h1>
 
         <div className="badges" style={{ marginBottom: '1rem' }}>
           <span className="badge">{AUDIENCE_LABEL[course.audience] ?? course.audience}</span>
@@ -330,7 +333,7 @@ export default async function CoursePage({
 
         {course.description && (
           <p className="lede" {...textProps(course.language_code)}>
-            {course.description}
+            <ArabicInline text={course.description} />
           </p>
         )}
 

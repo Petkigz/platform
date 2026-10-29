@@ -55,7 +55,7 @@ export const metadata: Metadata = {
 // renderable. Anything that needs the session reads it in the page.
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" dir="ltr">
       <body>
         {/*
           Reading preferences are applied before the first paint. The script is

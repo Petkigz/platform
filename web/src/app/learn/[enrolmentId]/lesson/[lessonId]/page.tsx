@@ -1,3 +1,4 @@
+import { ArabicInline } from '@/app/_shared/arabic-text';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -252,7 +253,12 @@ export default async function LessonPage({
           {lesson.sectionTitle}
           {duration ? ` · ${duration}` : ''}
         </p>
-        <h1>{lesson.title}</h1>
+        {/* A lesson may be named in Arabic — the course language is a fact about
+            the course, and the title takes it. Marking the run is what lets a
+            screen reader switch voice instead of spelling the letters out. */}
+        <h1>
+          <ArabicInline text={lesson.title} />
+        </h1>
         <div className="row" style={{ gap: '0.5rem', marginTop: '0.75rem' }}>
           {lesson.isPreview && previewsOn && (
             <span className="badge neutral">Preview lesson</span>

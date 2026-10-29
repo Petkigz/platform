@@ -70,7 +70,7 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 The database stands at **143 tables, RLS on every one, 269 policies, 165
 user-defined triggers, 498 functions and 189 migrations.** The database suite
-passes **1968 tests**; the web suite passes **1496 tests**. TypeScript typecheck
+passes **1968 tests**; the web suite passes **1515 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **211 app route entries** — 112
 pages, 89 API routes, and the metadata routes it generates.
 
@@ -204,6 +204,27 @@ Text colour is measured, not eyeballed: `check:repo` #9 reads the design tokens
 and computes WCAG contrast over the twenty pairs the stylesheet composes. It
 found `--muted` at 3.98:1 on the page background — the whole muted voice of the
 site, under the 4.5 AA asks of normal text. It is 5.00:1 now.
+
+**Arabic is set as Arabic, and the interface is still English.** Not a
+translation: content whose author wrote it in Arabic — a course title, a lesson
+name, a teacher's name and biography, the name printed on a certificate, a quoted
+āyah — is rendered in a Naskh face taken from the device (no 400 KB webfont on a
+free tier), with `letter-spacing: 0` because Arabic is cursive and tracking pulls
+joined letters apart, and `line-height: 2` because the harakat clip at the site's
+1.55. A mixed line is split into runs and each Arabic run is wrapped in
+`<bdi lang="ar">`, which is what makes a screen reader switch voice instead of
+spelling the letters out; the block's own direction is decided by counting
+letters, so a heading that quotes one Arabic word does not move and one that is
+Arabic sits against the right edge. Detection reads the text
+(`\p{Script_Extensions=Arabic}`, which counts the vowel marks, and catches ﷺ
+U+FDFA) only where nothing stored a language — a course with a language code keeps
+using it. `globals.css` lists the three rules that can sit *inside* a right-to-left block
+and draw a physical side, which is the whole list; everything else is flex or
+grid (which follow `direction` themselves) or belongs to the English shell, which
+is not mirrored by decision. What this does **not** do, and `/account/accessibility` says in
+those words: the interface is English and left to right, there is no interface
+translation, no right-to-left shell, no dyslexia font (licensed) and no
+text-to-speech (no provider).
 
 Crawlers have rules: `robots.txt` disallows the nineteen signed-in prefixes,
 `sitemap.xml` lists only pages that exist right now — a gated page is listed

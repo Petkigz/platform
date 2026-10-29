@@ -77,6 +77,19 @@ export default async function AccessibilityPage() {
             inside a scroll container rather than pushing the page sideways, and every image that
             is decoration is marked as such.
           </li>
+          <li>
+            <strong>Arabic is set as Arabic.</strong> A course title, a lesson name, a teacher’s
+            name and the name printed on a certificate are read in the script they were written
+            in: the right letter shapes, the right spacing between joined letters, and the reading
+            direction the words themselves ask for. A page that is mostly Arabic runs from right to
+            left. Screen readers are told which passages are Arabic, so they switch voice instead
+            of spelling the letters out one by one.
+          </li>
+          <li>
+            <strong>A mixed name is still one name.</strong> “Surah Al-Fatihah (الفاتحة)” is not
+            forced into one direction: each part is set in its own script and the browser joins
+            them in the order a reader would say them.
+          </li>
         </ul>
       </section>
 
@@ -84,9 +97,17 @@ export default async function AccessibilityPage() {
         <h2 style={{ marginTop: 0 }}>What is not here yet</h2>
         <ul>
           <li>
-            <strong>No language switch yet.</strong> The interface is in English. Courses can be
-            written in any language, but translating the interface needs translators, and the
-            platform does not claim a translation it does not have.
+            <strong>The interface itself is in English.</strong> This has not changed and is not
+            going to change by itself. Course content, names and certificates appear in whatever
+            language they were written in, and Arabic among them is displayed properly — but the
+            buttons, labels and sentences around them are English. Translating the interface needs
+            translators, and the platform does not claim a translation it does not have.
+          </li>
+          <li>
+            <strong>No right-to-left interface.</strong> A page whose content is Arabic still has
+            its navigation, buttons and headings arranged for an English reader. Making the whole
+            shell run right to left is a separate job from rendering Arabic text correctly, and
+            only the second one is done.
           </li>
           <li>
             <strong>No text-to-speech.</strong> Reading a lesson aloud needs a speech provider

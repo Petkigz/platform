@@ -68,6 +68,19 @@ export function parseLanguages(input: unknown): Language[] {
 /**
  * Props for an element holding text whose direction is not known in advance.
  *
+ * **Where this is used, and where `_shared/arabic-text.tsx` is used instead.**
+ * A course row carries a language code, so a course page can say `lang="ar"` on
+ * the block without looking at the words — the person who wrote the course
+ * already said what it is in. Everything here therefore trusts the stored code
+ * and lets the browser read the direction from the text.
+ *
+ * A person's own name, a lesson's title and a certificate's dedication have no
+ * such column: nobody filled in a language for them, and asking a five-year-old
+ * to pick one to write their name is not a form field, it is a barrier. Those
+ * use `ArabicInline` / `ArabicBlock`, which read the scripts in the text itself.
+ * The two are complements, not alternatives: keep the stored code where one
+ * exists, and mark the free text that has none.
+ *
  * `dir="auto"` rather than `dir="rtl"` even for a course filed as Arabic: a
  * title may be transliterated, or mixed, and the browser's own rule is better
  * than ours. `lang` is only set when the code is a plausible tag, so a bad row

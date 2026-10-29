@@ -621,6 +621,70 @@ input:focus, select:focus, textarea:focus {
 }
 .linklike:hover { color: var(--green-600); }
 
+/* --------------------------------------------------------------------------
+   Arabic
+   --------------------------------------------------------------------------
+   Four rules for the text itself, and the third is the one that gets broken.
+
+   1. The font stack names the free Naskh faces first — Noto Naskh Arabic,
+      Amiri, Scheherazade New are all SIL Open Font License and are what a
+      Linux, Android and Apple device respectively are most likely to have —
+      then falls back to whatever the system ships. No webfont is downloaded:
+      an Arabic face is 400 KB, most devices already have one, and a page that
+      blocks on a download to render its own title is worse than a page that
+      renders it in the system's face.
+
+   2. Line height is double. Arabic is written with vowel marks above and below
+      the line; at 1.55 they are clipped, and a clipped harakah changes the
+      word.
+
+   3. NO LETTER-SPACING, EVER. Arabic is cursive: a word is one joined shape,
+      and tracking inserts gaps between letters that are meant to touch. The
+      `!important` is deliberate, and it is the only one in this file that is
+      not a print rule or a reduced-motion rule — both of which exist precisely
+      to override a person's own styling. A heading style that sets tracking
+      for legibility in Latin will silently destroy Arabic, and the next person
+      to add one will not remember this note.
+
+   4. Slightly larger. Arabic glyphs sit lower and read smaller at the same
+      size, so it is set a step up to match the Latin text beside it. */
+.arabic {
+  font-family: 'Noto Naskh Arabic', 'Amiri', 'Scheherazade New',
+               'Traditional Arabic', 'Geeza Pro', 'Segoe UI', 'Arial', serif;
+  letter-spacing: 0 !important;
+  line-height: 2;
+  font-size: 1.15em;
+}
+
+/* An element declared Arabic loses the tracking that headings add — an `<h1>`
+   carries -0.02em, which closes Arabic letters into each other. The font is not
+   forced on the whole element, because a mixed title holds Latin text too and
+   only the runs marked `.arabic` should be set in a Naskh face. */
+[lang='ar'] { letter-spacing: 0 !important; line-height: 1.9; }
+
+/* A block that is mostly Arabic sets its own direction from the content (see
+   lib/arabic.ts), and its alignment follows the start of the writing system
+   rather than the left of the screen. `start` rather than `right`, so an
+   English gloss inside an Arabic paragraph still begins where English does. */
+[dir='rtl'] { text-align: start; }
+
+/* Every rule in this file that can appear INSIDE a right-to-left content block
+   and draws a physical side. There are three, and they are listed because the
+   list is short enough to be exact.
+
+   The rest of the stylesheet is one of two things, and neither needs a mirror:
+   a layout rule whose positioning comes from flex or grid, which follow
+   `direction` on their own; or a rule belonging to the English shell — the
+   masthead, the crumbs, a receipt's number block — which never sits inside one
+   of these blocks, because the interface is English and left to right by
+   decision (see DECISIONS.md, 2026-10-29). The shell is not mirrored, and this
+   comment is the place that says so rather than leaving it to be discovered by
+   somebody who turns `dir` on and finds half a page moved. */
+[dir='rtl'] .sidebar,
+[dir='rtl'] .aside { border-left: 0; border-right: 1px solid var(--border); }
+[dir='rtl'] blockquote { border-left: 0; border-right: 3px solid var(--green-100); padding-left: 0; padding-right: 1rem; }
+[dir='rtl'] ul.lessons li .n { margin-right: 0; margin-left: 0.75rem; }
+
 /* Screen-reader-only, for when an inline style is not available — the skip
    link in the layout uses both, and a `.sr-only` that does not hide anything
    is worse than no class at all, because the text becomes visible. */
