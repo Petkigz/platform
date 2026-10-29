@@ -5213,7 +5213,8 @@ no card.** That is more mail than a platform with no learners can produce, and e
 for the first few hundred.
 
 **What was built is the call in the middle, not a vendor.** The database half of
-delivery has been finished since 2026-12-70 — claim with a five-minute lease, backoff,
+delivery has been finished since the delivery contract migration
+(`20261270000100`) — claim with a five-minute lease, backoff,
 dead letter, suppression list, and a constraint that refuses `sent` without a
 provider's own reference. The dispatcher is now `web/src/lib/email/`, and the vendor
 is a string in an environment variable. Two rules shaped it:
@@ -5587,3 +5588,57 @@ on.
 **What is still refused.** A file from another platform, mapped into learners and
 enrolments nobody wrote. That remains the owner's decision, and it needs a named
 format — the reason has not weakened just because a different import was built.
+
+## A schedule, not a score — **DECIDED 2026-10-29**
+
+`learning.hifz` carried one sentence as its precondition: *"Revision schedule and
+decay model designed."* Neither had been. This is both, and the shape of the
+decision is that the platform supplies the calendar and the learner supplies the
+judgement.
+
+**The ladder is 1, 3, 7, 16, 35, 75, 160 days.** A review called **solid** moves
+a passage up one rung; a review called **shaky** returns it to the first and
+counts a lapse. Seven rungs, each roughly double the one before, and it stops at
+160 rather than running away.
+
+**It is deliberately not SM-2 or FSRS.** Both model a retention curve from large
+data sets, and quoting one here would be a claim about evidence this platform does
+not have: nobody has measured our learners, and an algorithm's authority would
+then be borrowed to justify a date. A ladder that doubles is a rule a learner can
+predict and argue with, and every number on the page comes from `hifz_ladder()`
+rather than from a copy.
+
+**The only input is the learner's own verdict, because it is the only honest
+one.** The platform cannot hear a recitation — `learning.recitation` is CODE-gated
+on an ASR accuracy nobody has validated, and a wrong correction on religious
+content is worse than none. So the page asks two questions and the schedule moves.
+It does not measure how long a review took, how many were done in a row, or how
+this learner compares with any other.
+
+**No score, and a test that enforces it.** `review_hifz_passage()` writes the
+outcome, the rung and the next date. There is no column for a grade, and a test
+reads `information_schema` and fails if either hifz table grows a column matching
+`score|grade|rating|mastery|proficiency`. A lapse is a fact about a date, not a
+mark against a person — the page says "back to tomorrow" and never "you are
+falling behind".
+
+**The passage is the learner's own words.** "Al-Fatihah 1–7", "Ayat al-Kursi",
+"the last three of Al-Baqarah". The platform does not hold the text, does not
+verify the memorisation, and does not carry a surah table: a Qur'an database is a
+different project with its own rights questions, and a tracker that guessed at a
+verse range would be wrong in a way nobody could see.
+
+**Archived, never deleted.** The reviews attached to a passage are a record of
+somebody's work, and the learner may come back to the passage. `archive_hifz_passage()`
+sets a date; nothing is destroyed. Same rule as a revoked certificate.
+
+**Switched off is one fact, not an empty list.** `my_hifz()` returns
+`{enabled:false}` and nothing else while the flag is off, so a learner cannot read
+a turned-off feature as "I have memorised nothing". The link on `/learn` appears
+only when the flag is on.
+
+**Who it is for is the owner's question, and the code does not answer it.** The
+page is not restricted to adults, and it is not offered to children by default
+either. A guardian may open a child's list with `?learner=<id>` — the same
+predicate, `can_access_learner()`, that guards a child's progress and
+certificates — and every action records which account pressed the button.

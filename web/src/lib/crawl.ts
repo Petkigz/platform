@@ -87,6 +87,7 @@ export const DISALLOWED_PREFIXES: readonly string[] = [
   '/dashboard',
   '/downloads',
   '/family',
+  '/hifz',
   '/learn',
   '/live',
   '/notifications',

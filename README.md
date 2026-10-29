@@ -68,11 +68,11 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 ## Status
 
-The database stands at **143 tables, RLS on every one, 269 policies, 165
-user-defined triggers, 498 functions and 190 migrations.** The database suite
-passes **1977 tests**; the web suite passes **1536 tests**. TypeScript typecheck
-and the production build pass; Next.js emits **211 app route entries** — 112
-pages, 89 API routes, and the metadata routes it generates.
+The database stands at **147 tables, RLS on every one, 271 policies, 166
+user-defined triggers, 518 functions and 191 migrations.** The database suite
+passes **1995 tests**; the web suite passes **1543 tests**. TypeScript typecheck
+and the production build pass; Next.js emits **213 app route entries** — 113
+pages, 90 API routes, and the metadata routes it generates.
 
 **The policies were drafts, and the database said so.** Seven documents — terms,
 privacy, children, refunds, teaching, safeguarding, takedown — describe what the
@@ -238,7 +238,21 @@ clean. `import_course_outline()` then appends in one transaction, to a **draft**
 only: all or nothing, after whatever is already there, one audit row, and no
 media — the card says so before the second button is pressed.
 
-Crawlers have rules: `robots.txt` disallows the nineteen signed-in prefixes,
+**Memorisation is a calendar, not a score.** `/hifz` (behind `learning.hifz`) keeps
+what a learner is learning by heart — a label they write themselves, because the
+platform holds no Qur'an text and checks nothing — and the date each passage comes
+back. The schedule is seven rungs, `hifz_ladder()`: 1, 3, 7, 16, 35, 75, 160 days.
+A review called **solid** moves a passage one step along; **shaky** puts it back to
+tomorrow and counts a lapse. It is deliberately not SM-2 or FSRS — those model
+retention from data this platform does not have — and the only input is the
+learner's own verdict, because the platform cannot hear a recitation. Nothing is
+scored: a test reads `information_schema` and fails if either hifz table grows a
+column matching `score|grade|rating|mastery|proficiency`. A passage is archived,
+never deleted, so its reviews survive; and while the flag is off `my_hifz()`
+returns `{enabled:false}` rather than an empty list that would read as "nothing
+memorised".
+
+Crawlers have rules: `robots.txt` disallows the twenty signed-in prefixes,
 `sitemap.xml` lists only pages that exist right now — a gated page is listed
 only while its switch is on, because `/young` redirects while
 `learning.audience_sections` is off. A search result is `noindex, follow`; a
