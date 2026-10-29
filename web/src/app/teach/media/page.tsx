@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 
 import { isSupabaseConfigured } from '@/lib/env';
 import { MEDIA_STATUS_LABEL, fetchMediaAssets, readableByteSize } from '@/lib/media';
+import { parseTeacherTerms, uploadBlockedSentence, type TeacherTerms } from '@/lib/licence';
 import { createClient } from '@/lib/supabase/server';
 
 import { MasterPlayer } from '@/app/_shared/master-player';
@@ -47,6 +48,14 @@ export default async function TeachMediaPage() {
 
   const assets = await fetchMediaAssets(supabase);
   const usable = assets.filter((asset) => asset.status === 'available').length;
+
+  // The same gate `media_assets` enforces on insert. Asking first turns a
+  // refusal after an upload attempt into a sentence before one, and the form is
+  // not shown at all when the database would refuse it — a form that always
+  // fails teaches people to distrust the page.
+  const { data: termsData } = await supabase.rpc('my_teacher_terms');
+  const terms: TeacherTerms = parseTeacherTerms(termsData);
+  const blocked = uploadBlockedSentence(terms);
 
   // The same numbers the upload route refuses with. A cap a teacher cannot see
   // is felt as an outage — the first they would hear of 50 GB is a bounce.
@@ -150,11 +159,23 @@ export default async function TeachMediaPage() {
         </section>
       )}
 
-      <UploadMedia
-        remainingBytes={storage?.enforced && storage.remainingBytes !== null
-          ? Number(storage.remainingBytes)
-          : null}
-      />
+      {blocked ? (
+        <section className="card" style={{ marginBottom: '1rem' }}>
+          <h2 style={{ marginTop: 0 }}>Uploading is paused</h2>
+          <p style={{ marginBottom: '0.5rem' }}>{blocked}</p>
+          <p style={{ marginBottom: 0 }}>
+            <Link href="/teach#teacher-terms" className="btn">
+              {terms.blockedBy === 'not_published' ? 'See where this is published' : 'Agree to the terms'}
+            </Link>
+          </p>
+        </section>
+      ) : (
+        <UploadMedia
+          remainingBytes={storage?.enforced && storage.remainingBytes !== null
+            ? Number(storage.remainingBytes)
+            : null}
+        />
+      )}
 
       <section className="card">
         <h2>Your files</h2>

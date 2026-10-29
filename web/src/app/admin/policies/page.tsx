@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import type { PolicyRegister } from '@/lib/policies';
+import { coverageSentence, outstandingNames, parseCoverage } from '@/lib/licence';
 import { PolicyEditor } from './policy-editor';
 
 export const dynamic = 'force-dynamic';
@@ -26,14 +27,18 @@ export default async function AdminPoliciesPage() {
   const { data: privileged } = await supabase.rpc('is_privileged', { p_user_id: user.id });
   if (privileged !== true) redirect('/');
 
-  const [{ data: registerData, error }, { data: isOwner }] = await Promise.all([
+  const [{ data: registerData, error }, { data: isOwner }, { data: coverageData }] = await Promise.all([
     supabase.rpc('policy_register'),
     supabase.rpc('has_role', { p_user_id: user.id, p_role_code: 'platform_admin' }),
+    // A support or finance admin is privileged enough to reach this page and not
+    // senior enough to read the coverage; the refusal is theirs to ignore.
+    supabase.rpc('teacher_licence_coverage'),
   ]);
   if (error) throw new Error(error.message);
 
   const register = (registerData ?? null) as PolicyRegister | null;
   const counts = register?.counts;
+  const coverage = parseCoverage(coverageData);
 
   return (
     <div className="container section">
@@ -57,6 +62,32 @@ export default async function AdminPoliciesPage() {
             : `${counts.openDecisions} open ${counts.openDecisions === 1 ? 'decision' : 'decisions'}`}
           {!isOwner && ' · you can read this register, not change it'}
         </div>
+      )}
+
+      {coverage && (
+        <section className="card" style={{ maxWidth: '48rem', marginBottom: '1.5rem' }}>
+          <h2 style={{ marginTop: 0 }}>Agreement to the teacher terms</h2>
+          <p style={{ marginBottom: '0.35rem' }}>{coverageSentence(coverage)}</p>
+          {coverage.outstanding.length > 0 && (
+            <p className="muted" style={{ marginBottom: '0.35rem', fontSize: '0.9rem' }}>
+              Still to agree: {outstandingNames(coverage)}.
+            </p>
+          )}
+          <p className="muted" style={{ marginBottom: 0, fontSize: '0.9rem' }}>
+            A teacher agrees on their own teaching page, and the agreement is recorded against the
+            version that was live when they pressed it — publishing a new version asks everybody
+            again. Refusing an upload until they agree is{' '}
+            <strong>{coverage.enforced ? 'on' : 'off'}</strong>
+            {!coverage.enforced && (
+              <>
+                , which means nothing is stopped today. The switch is{' '}
+                <Link href="/admin/settings">in settings</Link>; it belongs on before the first
+                teacher uploads.
+              </>
+            )}
+            .
+          </p>
+        </section>
       )}
 
       <PolicyEditor register={register} isOwner={isOwner === true} />

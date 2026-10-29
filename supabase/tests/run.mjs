@@ -112,6 +112,7 @@ import { run as screening } from './screening.test.mjs';
 import { run as incidents } from './incidents.test.mjs';
 import { run as takedowns } from './takedowns.test.mjs';
 import { run as policyDecisions } from './policy_decisions.test.mjs';
+import { run as contentLicence } from './content_licence.test.mjs';
 import { run as guardianConsent } from './guardian_consent.test.mjs';
 import { run as renewalProjection } from './renewal_projection.test.mjs';
 import { run as googleSignIn } from './google_sign_in.test.mjs';
@@ -238,6 +239,7 @@ for (const [name, fn] of [
   ['incidents', incidents],
   ['takedowns', takedowns],
   ['policy_decisions', policyDecisions],
+  ['content_licence', contentLicence],
   ['guardian_consent', guardianConsent],
   ['renewal projection', renewalProjection],
   ['google sign in', googleSignIn],

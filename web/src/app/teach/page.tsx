@@ -5,6 +5,13 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { fetchMyCourses } from '@/lib/authoring';
 import { myScreeningSentence, screeningStatusLabel, type MyScreening } from '@/lib/screening';
 import { teacherHeadline, type MyTakedown } from '@/lib/takedowns';
+import {
+  needsSignature,
+  parseTeacherTerms,
+  termsSentence,
+  type TeacherTerms,
+} from '@/lib/licence';
+import { AcceptPolicy } from '@/app/policies/[slug]/accept-policy';
 import { TakedownAnswer } from './takedown-answer';
 import { NewCourse } from './new-course';
 
@@ -57,15 +64,18 @@ export default async function TeachPage() {
     );
   }
 
-  const [courses, screeningResult, takedownResult] = await Promise.all([
+  const [courses, screeningResult, takedownResult, termsResult] = await Promise.all([
     fetchMyCourses(supabase, user.id),
     supabase.rpc('my_screening_status'),
     supabase.rpc('my_takedown_notices'),
+    supabase.rpc('my_teacher_terms'),
   ]);
   if (screeningResult.error) throw new Error(screeningResult.error.message);
   if (takedownResult.error) throw new Error(takedownResult.error.message);
+  if (termsResult.error) throw new Error(termsResult.error.message);
   const screening = (screeningResult.data ?? { recorded: false }) as unknown as MyScreening;
   const takedown = (takedownResult.data ?? { notices: [], held: 0 }) as unknown as MyTakedown;
+  const terms: TeacherTerms = parseTeacherTerms(termsResult.data);
 
   return (
     <div className="container section">
@@ -84,6 +94,32 @@ export default async function TeachPage() {
         </p>
       )}
       <TakedownAnswer mine={takedown} />
+
+      {/* The agreement itself, where the work is. `teaching.content_licence` may be
+          off, and the card says so rather than hiding the terms: a teacher is
+          entitled to know what the platform may do with their work whether or not
+          anybody is currently refused for not agreeing. */}
+      <section className="card" id="teacher-terms" style={{ marginBottom: '1.5rem' }}>
+        <h2 style={{ marginTop: 0 }}>The agreement about your work</h2>
+        <p style={{ marginBottom: '0.5rem' }}>
+          You keep the copyright in everything you write. The licence you give the platform is in
+          the <Link href="/policies/teaching">teacher terms</Link>, version{' '}
+          {terms.versionNumber ?? '—'}: store your course, show it to learners entitled to it, and
+          keep offering it to them. A retired course stays available to learners already enrolled
+          in it.
+        </p>
+        <p style={{ marginBottom: needsSignature(terms) ? '0.75rem' : 0 }}>
+          {termsSentence(terms)}
+        </p>
+        {needsSignature(terms) && (
+          <AcceptPolicy
+            slug={terms.slug}
+            title={terms.title}
+            versionNumber={terms.versionNumber as number}
+            acceptedAt={terms.acceptedAt}
+          />
+        )}
+      </section>
 
       <p>
         <Link href="/teach/promotions">Promotions</Link> — run an offer on your

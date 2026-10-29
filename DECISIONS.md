@@ -5260,3 +5260,53 @@ good day.
 (DKIM, SPF, DMARC), and a scheduler pointed at the route. Both free. Until the records
 exist, receipts land in spam, which is indistinguishable from not sending them — so
 `platform.email_auth` stays off and says exactly that.
+
+## The teacher licence had a text and no signature — **DECIDED 2026-10-28**
+
+The `teaching` document went in force on 2026-10-28, and it says the right thing:
+*you keep the copyright in everything you write; by publishing a course you give
+the platform a licence to store it, show it to learners entitled to it, and keep
+offering it to them.* The register records an acceptance against whichever version
+is live at the moment somebody presses the button.
+
+What was missing is the only part that makes a licence a licence: **nobody was
+asked.** `register_media_upload()` took a file from any signed-in account, and no
+screen anywhere said a teacher had to agree to anything first. Filling the
+platform with lessons under terms no teacher had accepted would have been the
+worst kind of quiet — every sentence on `/policies/teaching` true, and none of it
+binding.
+
+**Three choices, each of which could have gone the other way.**
+
+**The refusal lives in a trigger, not in the upload function.** `register_media_upload()`
+already exists twice in this history — 2026-11-07 with five parameters, 2026-12-11
+with the display name moved in front of the defaults — and the second one dropped
+the first. A rule written inside it would be copied a third time by whoever adds a
+fourth parameter, and would then quietly stop applying to half the uploads. A
+`before insert` trigger on `media_assets` applies to every path that creates a
+file, including ones that do not exist yet.
+
+**Two refusals, not one.** *You have not agreed* is closed by the teacher, in one
+press, on the page where they do the work. *Nothing is published* is closed by the
+owner, on `/admin/policies`, and no amount of button-pressing by a teacher will
+touch it. A single "not allowed to upload" would send the wrong person looking for
+the wrong fix, so the database names which it is and the screens say which it is.
+
+**It ships off, and it is now an admin toggle.** Every other gate here ships off
+and the owner turns it on; this one also has a cost when it is on — it takes an
+ability away from a teacher who has not yet agreed — and a platform that refuses
+its first teacher's first upload because of a switch nobody meant to flip is not
+being careful, it is being surprising. The flag was registered `code` because the
+feature did not exist; it is `admin` now because it does, and the switch belongs at
+`/admin/settings` rather than in a deploy. **It should be on before the first
+teacher uploads**, and `/admin/policies` shows the gap in the meantime.
+
+**What it deliberately does not do.** It does not touch publishing. A licence is
+about the file a teacher hands over; review and scholarly approval are a separate
+gate that already exists, and folding them together would let one excuse the
+other — "you agreed to the licence" is not a review.
+
+**Re-acceptance is per version.** Publishing a new version of the teacher terms
+asks everybody again, because the acceptance row points at a version rather than a
+document. That is the same rule that stops an in-force version being edited: a
+change to the terms has to be a change a person can see.
