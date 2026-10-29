@@ -69,8 +69,8 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 ## Status
 
 The database stands at **143 tables, RLS on every one, 269 policies, 165
-user-defined triggers, 498 functions and 189 migrations.** The database suite
-passes **1968 tests**; the web suite passes **1515 tests**. TypeScript typecheck
+user-defined triggers, 498 functions and 190 migrations.** The database suite
+passes **1977 tests**; the web suite passes **1536 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **211 app route entries** — 112
 pages, 89 API routes, and the metadata routes it generates.
 
@@ -225,6 +225,18 @@ is not mirrored by decision. What this does **not** do, and `/account/accessibil
 those words: the interface is English and left to right, there is no interface
 translation, no right-to-left shell, no dyslexia font (licensed) and no
 text-to-speech (no provider).
+
+**A teacher's outline comes in from a spreadsheet.** `platform.data_export` had
+an import half it never had, refused on the honest ground that a stranger's file
+would have to be mapped into records nobody wrote. A teacher's *own* outline is
+not that: `lib/csv-import.ts` reads four named columns — `section`, `lesson`, and
+optionally `description` and `preview` — and refuses an unknown column rather than
+dropping it. `POST /api/teach` offers `import_preview`, which writes nothing and
+returns the sections in order with every problem and its line number, and
+`import_apply`, which re-reads the same text and only writes when the whole file is
+clean. `import_course_outline()` then appends in one transaction, to a **draft**
+only: all or nothing, after whatever is already there, one audit row, and no
+media — the card says so before the second button is pressed.
 
 Crawlers have rules: `robots.txt` disallows the nineteen signed-in prefixes,
 `sitemap.xml` lists only pages that exist right now — a gated page is listed

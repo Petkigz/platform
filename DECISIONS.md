@@ -5528,3 +5528,62 @@ stylesheets, the check that measures twenty colour pairs (lowest 4.85:1) and the
 `<html lang="en" dir="ltr">` all say the same thing: the shell is English and
 left to right, and the words inside it are set in whatever script their author
 used.
+
+## Import is a shape, not a guess — **DECIDED 2026-10-29**
+
+`platform.data_export` was registered with a second half it never had, and the
+flag was honest about why: *"a file from somewhere else has to be mapped into
+courses, learners and enrolments nobody wrote, which is inventing records rather
+than importing them. The owner names a format or it does not happen."* The owner
+has not named a foreign format and this unit does not invent one.
+
+**What changed is whose file it is.** A teacher arrives with a term plan, a
+madrasah syllabus, thirty lesson titles in a spreadsheet. Typing those into a
+form that creates one row per submit is not a missing feature; it is the
+difference between publishing this month and not. Their file is not somebody
+else's schema — it is their own outline, in a shape the platform defines and the
+header row states.
+
+**The shape is four columns.** `section`, `lesson`, and optionally `description`
+and `preview`. Nothing else. A column the parser does not recognise is a refusal
+that names it, never a silent drop: a teacher who imported a `duration` column
+and found it gone would not know whether it was ignored or lost. There is no
+column for media, because a spreadsheet cell is not a place to carry a video —
+the card says so before the button is pressed, so nobody imports expecting a
+finished course.
+
+**Parsing happens on the server, in the route that also writes.** The browser
+posts the file's text, not a prepared structure. Two actions, one reader:
+`import_preview` writes nothing and returns what would be created plus every
+problem with its line number; `import_apply` reads the same text again and
+refuses while any problem remains. A client that sent its own structure could
+describe one outline on screen and write another.
+
+**All or nothing, in one transaction.** A file with an error on line 41 creates
+nothing. The alternative — writing the 40 clean rows — produces a half-outline
+that has to be reconciled against a spreadsheet by hand, which is worse than the
+typing the import replaced. The function validates every section and every title
+before the first insert, and the call is one transaction, so a failure anywhere
+rolls back.
+
+**Appended, never merged.** Positions continue after the content already in the
+draft, so an import into a half-written outline adds to the end instead of
+colliding with it. And it goes into a **draft** only: a published version is
+frozen (D5), and a version under review must not change under the reviewer. Both
+are refused by name, and the card is not rendered on those versions — a button
+that can only fail is worse than no button.
+
+**Limits on one file, not on a curriculum.** 50 sections, 100 lessons per
+section, 300 lessons in a file. A mis-pasted spreadsheet should not create ten
+thousand rows in one request; a course bigger than this is imported in two files
+into the same draft, and the refusal says exactly that.
+
+**No new flag.** Import is authoring. The same `can_author_version()` predicate
+that guards `add_section` and `add_lesson` guards the import, so a teacher who may
+not edit a draft cannot import into it and an owner who has appointed nobody has
+nothing to import. A second switch over one permission is the one that gets left
+on.
+
+**What is still refused.** A file from another platform, mapped into learners and
+enrolments nobody wrote. That remains the owner's decision, and it needs a named
+format — the reason has not weakened just because a different import was built.

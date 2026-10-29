@@ -8,10 +8,15 @@ import {
 } from '@/lib/assessment';
 import {
   addLesson, addLessonResource, addSection, createCourse, createCourseVersionFrom,
-  moveCourseContent, setAudience, setLanguage, setLessonPreview, setSubjects,
+  importOutline, moveCourseContent, setAudience, setLanguage, setLessonPreview,
+  setSubjects,
   type MoveDirection, type ReorderableContentType,
   transitionVersion, validateAddResource, type AddResourceAccess, type ResourceType,
 } from '@/lib/authoring';
+import {
+  importErrorMessage, importSentence, outlineCounts, outlinePayload, parseOutline,
+  summariseOutline,
+} from '@/lib/csv-import';
 
 /**
  * Course authoring writes.
@@ -73,6 +78,7 @@ export async function POST(request: Request) {
     url?: unknown;
     name?: unknown;
     access?: unknown;
+    csv?: unknown;
   };
 
   const uuid = /^[0-9a-f-]{36}$/i;
@@ -236,6 +242,82 @@ export async function POST(request: Request) {
       contentId: b.contentId,
       direction: b.direction as MoveDirection,
     }));
+  }
+
+  // ---------------------------------------------------------------------
+  // Importing an outline. Two actions over one parser: `import_preview` reads the
+  // file and writes nothing, `import_apply` reads the *same* text again and only
+  // writes when it is clean. The browser cannot send a prepared structure, so the
+  // screen a teacher confirmed and the rows that land are the same parse.
+  if (b.action === 'import_preview' || b.action === 'import_apply') {
+    if (!isUuid(b.versionId)) {
+      return NextResponse.json(
+        { ok: false, code: 'rejected', message: 'Choose the draft to import into.' },
+        { status: 400 },
+      );
+    }
+
+    if (typeof b.csv !== 'string' || b.csv.trim() === '') {
+      return NextResponse.json(
+        { ok: false, code: 'rejected', message: 'Choose a CSV file or paste its rows first.' },
+        { status: 400 },
+      );
+    }
+
+    // 400 000 characters is several thousand rows more than the limits allow.
+    // The cap exists so a file that is really a video cannot be posted here.
+    if (b.csv.length > 400_000) {
+      return NextResponse.json(
+        { ok: false, code: 'rejected', message: 'That file is too large to be an outline.' },
+        { status: 413 },
+      );
+    }
+
+    const parsed = parseOutline(b.csv);
+
+    if (b.action === 'import_preview') {
+      return NextResponse.json(
+        {
+          ok: true,
+          value: {
+            counts: outlineCounts(parsed),
+            problems: parsed.problems,
+            summary: summariseOutline(parsed),
+            sentence: importSentence(parsed),
+          },
+        },
+        { status: 200 },
+      );
+    }
+
+    if (parsed.problems.length > 0) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: 'rejected',
+          message:
+            `${parsed.problems.length} ` +
+            `${parsed.problems.length === 1 ? 'line needs' : 'lines need'} fixing before ` +
+            'anything is added.',
+          problems: parsed.problems,
+        },
+        { status: 400 },
+      );
+    }
+
+    const outcome = await importOutline(supabase, {
+      versionId: b.versionId,
+      sections: outlinePayload(parsed),
+    });
+
+    if (!outcome.ok) {
+      return NextResponse.json(
+        { ok: false, code: outcome.code, message: importErrorMessage(outcome.message ?? '') },
+        { status: 400 },
+      );
+    }
+
+    return NextResponse.json({ ok: true, value: outcome.value }, { status: 200 });
   }
 
   // ---------------------------------------------------------------------

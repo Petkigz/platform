@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { fetchVersions } from '@/lib/authoring';
 import { Curriculum } from './curriculum';
+import { ImportOutline } from './import-outline';
 import { AssessmentManager } from './assessment-manager';
 import { fetchAuthoredAssessments, fetchPendingManualResponses } from '@/lib/assessment';
 import { fetchRejections } from '@/lib/governance';
@@ -153,6 +154,11 @@ export default async function TeachCoursePage({
             previewsEnabled={previewsEnabled}
             copyFromVersionId={!draft && current.status === 'published' ? current.id : null}
           />
+          {/* Only on a draft. A published version is frozen (D5), and offering an
+              import into one would be offering a button that can only fail — the
+              database refuses it, and the teacher would have spent a minute
+              preparing a file to find out. */}
+          {current.status === 'draft' && <ImportOutline versionId={current.id} />}
           <AssessmentManager
             version={current}
             assessments={assessments}

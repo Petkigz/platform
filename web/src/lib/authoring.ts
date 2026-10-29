@@ -450,6 +450,37 @@ export async function addLesson(
   return { ok: true, value: { lessonId: (data as unknown as { id: string }).id } };
 }
 
+/**
+ * Import a whole outline into a draft, in one transaction.
+ *
+ * The parse happens before this is called (see `lib/csv-import.ts`) and the
+ * database re-checks every title and every limit. That is not duplication for
+ * its own sake: the browser is a place a request can be forged, so the rule that
+ * matters — nothing is written unless the whole file is clean — has to hold
+ * where the write happens.
+ */
+export async function importOutline(
+  supabase: SupabaseClient,
+  args: { versionId: string; sections: unknown },
+): Promise<WriteOutcome<{ sections: number; lessons: number }>> {
+  if (!args.versionId) {
+    return { ok: false, code: 'rejected', message: 'That course version is missing.' };
+  }
+
+  const { data, error } = await supabase.rpc('import_course_outline', {
+    p_version_id: args.versionId,
+    p_sections: args.sections,
+  });
+
+  if (error) return classify(error);
+
+  const row = data as unknown as { sections?: number; lessons?: number } | null;
+  return {
+    ok: true,
+    value: { sections: Number(row?.sections ?? 0), lessons: Number(row?.lessons ?? 0) },
+  };
+}
+
 export async function setLessonPreview(
   client: SupabaseClient,
   args: { lessonId: string; isPreview: boolean },
