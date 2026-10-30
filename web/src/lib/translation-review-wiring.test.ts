@@ -200,6 +200,10 @@ test('the correction sheet is a plain form, and says where the name goes', () =>
   // policy nobody opens.
   assert.match(page, /This is published if your review is accepted/u);
   assert.match(page, /Never published, never granted to any screen, and not a login/u);
+  // And it does not promise a reply. There is no mail provider, so "only so we
+  // can ask you a question" was a sentence the platform could not keep.
+  assert.ok(!/only so we can ask you a question/.test(page), 'the sheet promises a reply it cannot send');
+  assert.match(page, /no mail provider is\s+connected/u);
 });
 
 test('the route re-checks everything the form offered', () => {

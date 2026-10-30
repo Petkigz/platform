@@ -101,7 +101,7 @@ export default async function ContributePage({
     closed: 'That form is not open at the moment. Nothing was saved.',
     language: 'That is not one of the languages this interface has. Nothing was saved.',
     name: 'Please give the name you would like printed beside the language.',
-    email: 'That does not look like an email address. It is only so we can ask you a question.',
+    email: 'That does not look like an email address. It is kept so we can write back, and nothing is sent from here yet.',
     nothing:
       'Nothing was changed, so there was nothing to send. Edit at least one line, or tick the box if you read the whole catalogue and found it right.',
     placeholder:
@@ -236,11 +236,14 @@ export default async function ContributePage({
             </div>
             <div>
               <label htmlFor="reviewer-email" style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
-                An address, only so we can ask you a question
+                An address we can write to
               </label>
               <input id="reviewer-email" name="email" type="email" autoComplete="email" required style={{ width: '100%' }} />
               <p className="muted" style={{ margin: '0.3rem 0 0', fontSize: '0.82rem' }}>
-                Never published, never granted to any screen, and not a login. No account is created.
+                Never published, never granted to any screen, and not a login.
+                No account is created. <strong>Nothing is sent from here yet</strong> — no mail provider is
+                connected — so a reply is not promised. The address is kept for the day one is, and
+                it is where to ask about a line you sent.
               </p>
             </div>
           </div>
