@@ -48,6 +48,12 @@ export type LocaleCode =
   | 'az'
   | 'ps'
   | 'fa-af'
+  // South and Southeast Asia, 2026-10-30.
+  | 'ta'
+  | 'ne'
+  | 'si'
+  | 'th'
+  | 'dv'
   | 'fr'
   | 'es'
   | 'pt'
@@ -156,6 +162,14 @@ export const LOCALES: readonly Locale[] = [
   { code: 'az', nativeName: 'Azərbaycanca', englishName: 'Azerbaijani', dir: 'ltr', reviewed: false, region: 'Asia' },
   { code: 'ps', nativeName: 'پښتو', englishName: 'Pashto', dir: 'rtl', reviewed: false, region: 'Asia' },
   { code: 'fa-af', nativeName: 'دری', englishName: 'Dari', dir: 'rtl', reviewed: false, region: 'Asia' },
+  { code: 'ta', nativeName: 'தமிழ்', englishName: 'Tamil', dir: 'ltr', reviewed: false, region: 'Asia' },
+  { code: 'ne', nativeName: 'नेपाली', englishName: 'Nepali', dir: 'ltr', reviewed: false, region: 'Asia' },
+  { code: 'si', nativeName: 'සිංහල', englishName: 'Sinhala', dir: 'ltr', reviewed: false, region: 'Asia' },
+  { code: 'th', nativeName: 'ไทย', englishName: 'Thai', dir: 'ltr', reviewed: false, region: 'Asia' },
+  // Dhivehi is written in Thaana, which runs right to left — the first South
+  // Asian script here to do so, and the first right-to-left language in the
+  // register that is not written in the Arabic script.
+  { code: 'dv', nativeName: 'ދިވެހި', englishName: 'Dhivehi', dir: 'rtl', reviewed: false, region: 'Asia' },
   { code: 'fr', nativeName: 'Français', englishName: 'French', dir: 'ltr', reviewed: false, region: 'Europe and the Americas' },
   { code: 'es', nativeName: 'Español', englishName: 'Spanish', dir: 'ltr', reviewed: false, region: 'Europe and the Americas' },
   { code: 'pt', nativeName: 'Português', englishName: 'Portuguese', dir: 'ltr', reviewed: false, region: 'Europe and the Americas' },

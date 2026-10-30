@@ -45,16 +45,25 @@ test('Asia is a block, and it is not empty', () => {
   // reader wanted is missing.
   const asia = localeGroups().find((group) => group.region === 'Asia');
   assert.ok(asia, 'the register has no Asia block');
-  // The five that were there all along, then the five added on 2026-10-30 when
-  // this question was asked. Named individually, because "Asia is present" is
-  // exactly the assertion that passes while the thing a reader wanted is missing.
+  // The five that were there all along, then the ten added across 2026-10-30 when
+  // this question was asked: Central Asia and Afghanistan first, then South Asia
+  // and Thailand. Named individually, because "Asia is present" is exactly the
+  // assertion that passes while the thing a reader wanted is missing.
   assert.deepEqual(
     asia!.locales.map((l) => l.code),
-    ['ur', 'id', 'ms', 'bn', 'hi', 'uz', 'kk', 'az', 'ps', 'fa-af'],
+    [
+      'ur', 'id', 'ms', 'bn', 'hi',
+      'uz', 'kk', 'az', 'ps', 'fa-af',
+      'ta', 'ne', 'si', 'th', 'dv',
+    ],
   );
   assert.deepEqual(
     asia!.locales.map((l) => l.englishName),
-    ['Urdu', 'Indonesian', 'Malay', 'Bengali', 'Hindi', 'Uzbek', 'Kazakh', 'Azerbaijani', 'Pashto', 'Dari'],
+    [
+      'Urdu', 'Indonesian', 'Malay', 'Bengali', 'Hindi',
+      'Uzbek', 'Kazakh', 'Azerbaijani', 'Pashto', 'Dari',
+      'Tamil', 'Nepali', 'Sinhala', 'Thai', 'Dhivehi',
+    ],
   );
 });
 

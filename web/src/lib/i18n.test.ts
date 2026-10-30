@@ -97,11 +97,14 @@ test('every right-to-left language says so, and nothing else does', () => {
   // right-to-left language marked `ltr` renders mirrored text in a left-to-right
   // page, and a left-to-right language marked `rtl` breaks its own layout.
   const rtl = LOCALES.filter((l) => l.dir === 'rtl').map((l) => l.code);
-  assert.deepEqual(rtl.sort(), ['ar', 'fa', 'fa-af', 'ps', 'ur']);
+  assert.deepEqual(rtl.sort(), ['ar', 'dv', 'fa', 'fa-af', 'ps', 'ur']);
   assert.equal(directionOf('fr'), 'ltr');
   assert.equal(directionOf('ar'), 'rtl');
   assert.equal(directionOf('ps'), 'rtl');
   assert.equal(directionOf('fa-af'), 'rtl');
+  // Dhivehi is the first right-to-left language in the register that is not
+  // written in the Arabic script, and the first from South Asia.
+  assert.equal(directionOf('dv'), 'rtl');
   assert.equal(directionOf('uz'), 'ltr');
 });
 

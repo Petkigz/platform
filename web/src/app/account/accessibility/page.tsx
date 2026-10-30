@@ -107,8 +107,10 @@ export default async function AccessibilityPage() {
             the buttons are in.
           </li>
           <li>
-            <strong>Right-to-left is for Arabic, Urdu, Persian, Pashto and Dari.</strong> Choosing
-            one of those five turns the whole page around: the masthead, the nav, the notices and
+            <strong>
+              Right-to-left is for Arabic, Urdu, Persian, Pashto, Dari and Dhivehi.
+            </strong>{' '}
+            Choosing one of those six turns the whole page around: the masthead, the nav, the notices and
             the footer mirror, because the rules that place them are written in logical properties
             rather than left and right. A right-to-left course shown to a reader whose interface is
             left-to-right is handled separately, and is what the paragraphs above describe.

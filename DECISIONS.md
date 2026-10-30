@@ -6200,3 +6200,56 @@ at 100% of the key set, which is a count and not a claim: `reviewed` stays
 `false` for every one of the thirty-seven translations, including these five, and
 `/language` prints that in the reader's own language. The honest next step is not
 another language — it is a speaker of one of them opening the file.
+
+## South Asia, and the first script in the register read right to left — **DECIDED 2026-10-30**
+
+The same question, answered on the same day, one continent over. Asia is not one
+language any more than Africa is; the five Central Asian catalogues answered the
+republics and Afghanistan, and the screen still could not address the Indian
+subcontinent. **Tamil, Nepali, Sinhala, Dhivehi and Thai** are now in the
+register, and they are chosen for the same reason the last five were: where the
+readers are.
+
+**Tamil, because it is older than most of the register.** Around eighty million
+speakers across Tamil Nadu, Sri Lanka, Malaysia, Singapore and the Gulf, and
+Muslim Tamil communities in each of them. It is also the first Dravidian
+language here, which means the register is no longer a set of Indo-European and
+Afro-Asiatic languages with a few exceptions.
+
+**Nepali and Sinhala, because a form is not the same as a language lesson.**
+Nepali is the language of a Hindu-majority country with a Muslim minority of
+about a million and a half, and the language of millions of migrant workers in
+the Gulf whose children read the platform from a phone. Sinhala is the more
+interesting case and it is written down as such: Sri Lanka's Muslims are mostly
+Tamil-speaking, and a Sinhala catalogue is not there because Sinhala is a Muslim
+language. It is there because **the second language of the screen is often the
+one that gets the form filled in** — a parent who reads Sinhala at the school
+gate, or a clerk helping them, can now see what the platform is asking for
+instead of guessing. That is a lower ambition than a first-language translation
+and it is stated rather than dressed up.
+
+**Dhivehi is right-to-left, and it is the first South Asian script that is.**
+It is written in Thaana — an abugida with a peculiar history (it descends from
+Arabic numerals, not from Brahmi) — and it runs right to left. That makes it the
+sixth RTL language in the register and the first that was not already expected:
+the layout mirrors because it was written in logical properties, and the only
+edits needed were `dir: 'rtl'` on its row, `dv` in the exact set the direction
+test asserts, and the sentence on `/account/accessibility` that names the RTL
+languages. **Three edits, and none of them in a component.** A right-to-left
+script arriving without a layout change is what the logical-property rewrite was
+for; this is the second time it has been cashed.
+
+**Thai came with them, and it is Southeast Asia rather than South Asia.** The
+same reasoning that closed the subcontinent applies to the five million Muslims
+of southern Thailand, whose school language and phone language are Thai even
+where the home language is Pattani Malay. It is filed under the same Asia block
+and the same unit because it was written in the same sitting, not because the
+geography is the same — the register groups by where a reader is, and a Thai
+reader is not helped by the block being called something more exact.
+
+**Five whole catalogues, one file each, 191 keys, every placeholder.** The same
+shape as the five before them, for the same reason: a language written from
+nothing has no layering history to imitate. `reviewed: false` on all five, and on
+every one of the forty-two translations. The register is forty-three languages;
+**the number of them a first-language speaker has read is still zero**, and no
+amount of key-count will change that sentence.
