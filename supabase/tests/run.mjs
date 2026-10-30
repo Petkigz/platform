@@ -54,6 +54,7 @@ import { run as ageDeclaration } from './age_declaration.test.mjs';
 import { run as teacherConduct } from './teacher_conduct.test.mjs';
 import { run as childEngagement } from './child_engagement.test.mjs';
 import { run as childLogin } from './child_login.test.mjs';
+import { run as ijazah } from './ijazah.test.mjs';
 import { run as securitySignals } from './security_signals.test.mjs';
 import { run as courseLanguage } from './course_language.test.mjs';
 import { run as revenueBreakdown } from './revenue_breakdown.test.mjs';
@@ -294,6 +295,7 @@ for (const [name, fn] of [
   ['teacher_conduct', teacherConduct],
   ['child_engagement', childEngagement],
   ['child_login', childLogin],
+  ['ijazah', ijazah],
   ['security_signals', securitySignals],
   ['course_language', courseLanguage],
   ['assessments', assessments],

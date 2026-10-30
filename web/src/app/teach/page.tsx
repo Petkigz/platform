@@ -14,6 +14,8 @@ import {
 import { AcceptPolicy } from '@/app/policies/[slug]/accept-policy';
 import { TakedownAnswer } from './takedown-answer';
 import { ConductCard } from './conduct-card';
+import { IjazahCard } from './ijazah-card';
+import { parseAuthorisations } from '@/lib/ijazah';
 import { NewCourse } from './new-course';
 
 export const dynamic = 'force-dynamic';
@@ -65,7 +67,7 @@ export default async function TeachPage() {
     );
   }
 
-  const [courses, screeningResult, takedownResult, termsResult, conductVersion] = await Promise.all([
+  const [courses, screeningResult, takedownResult, termsResult, conductVersion, ijazahResult] = await Promise.all([
     fetchMyCourses(supabase, user.id),
     supabase.rpc('my_screening_status'),
     supabase.rpc('my_takedown_notices'),
@@ -78,6 +80,10 @@ export default async function TeachPage() {
       .eq('policy_documents.slug', 'safeguarding')
       .eq('status', 'in_force')
       .maybeSingle(),
+    // Their own authorisations. Read regardless of `learning.ijazah`: that flag
+    // gates recording, and a record that already exists does not go quiet
+    // because somebody switched the writing off.
+    supabase.rpc('my_ijazah_authorisations'),
   ]);
   if (screeningResult.error) throw new Error(screeningResult.error.message);
   if (takedownResult.error) throw new Error(takedownResult.error.message);
@@ -85,6 +91,7 @@ export default async function TeachPage() {
   const screening = (screeningResult.data ?? { recorded: false }) as unknown as MyScreening;
   const takedown = (takedownResult.data ?? { notices: [], held: 0 }) as unknown as MyTakedown;
   const terms: TeacherTerms = parseTeacherTerms(termsResult.data);
+  const ijazahs = parseAuthorisations(ijazahResult.error ? [] : ijazahResult.data);
   const conductVersionNumber =
     typeof conductVersion.data?.version_number === 'number'
       ? conductVersion.data.version_number
@@ -115,6 +122,9 @@ export default async function TeachPage() {
         policyHref="/policies/safeguarding"
         policyVersion={conductVersionNumber}
       />
+
+      {/* Nothing at all when nothing is recorded: see the card's own comment. */}
+      <IjazahCard authorisations={ijazahs} />
 
       {/* The agreement itself, where the work is. `teaching.content_licence` may be
           off, and the card says so rather than hiding the terms: a teacher is

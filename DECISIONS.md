@@ -5998,3 +5998,48 @@ line removed from the page. A missing sentence is a gap somebody can fill; a
 translated falsehood is read by exactly the people least able to check it. The same
 rule applies to the front page, whose assurance now reads *a child's login is made
 by their guardian*.
+
+**An ijazah is recorded, not verified.** The register had said for months that this
+needed "teacher authorisation rules and a public chain view", and the second half
+was the problem: a public chain view is the moment a platform starts implying it
+has checked a chain of transmission. The owner settled it on 2026-10-30 — **the
+owner alone records who authorised whom, and on what evidence; a scholarly panel
+can come later** — so what exists is a register with three deliberate omissions.
+Nothing is published: no public chain, no badge on a course, no mark on a teacher's
+public profile. Nothing is called verified: the row says who recorded it and when,
+because *recorded* is the only honest word for an owner reading a page and writing
+down what it said. And there is no schema for a science: the scope and the chain
+are free text, because a dropdown of ijazah types would be this platform inventing
+a taxonomy for somebody else's tradition, and the first place such a list is wrong
+is the place a learner would believe it.
+
+**The grantor is a name, the holder is an account.** Most scholars who grant an
+ijazah will never have an account here, and making one for them would be inventing
+a person; so the grantor is free text in their own words. The holder is an account,
+because a record about somebody with no account is a record nobody can act on and
+nobody can show to the person it is about. That asymmetry is the whole data model.
+
+**The evidence is write-only, and withheld even from staff screens.** What the owner
+was shown — a signed page, a sitting, a named person's word — carries a third
+party's name and sometimes a family's, so it lives in one column the holder can
+never select: not hidden in a page, but absent from the column grant, because a
+policy that hides it in the interface still ships it to anyone who opens the
+network tab. The staff register reports *that* evidence was seen rather than
+reproducing it, and the audit event records the grantor and the scope but not the
+evidence.
+
+**Nothing is edited, and nothing is deleted.** The only permitted change is the
+withdrawal itself — status, when, by whom and why — enforced by a trigger that
+compares every other column. A correction is a withdrawal and a new entry, and the
+register keeps both, because a scholar's authorisation is not a record the platform
+may quietly amend: the row is what was seen on the day it was seen. A partial
+unique index stops the same authorisation being entered twice, which is how a
+holder would end up apparently holding two.
+
+**Vocabulary is the safety here, so it is tested.** The sentence on the teacher's
+page — *a record, not a verification* — is exported from one module rather than
+written into one page, so the owner's register and the teacher's card cannot drift
+into two different claims. The tests assert that no rendered line says "verified",
+"checked" or "confirmed", that the caveat says a panel *may* review these rather
+than promising one, and that every refusal arrives as a sentence about something a
+person can fix.

@@ -45,7 +45,7 @@ Three kinds of gate:
 | `learning.ai_quiz_gen` | Generate quiz questions from lesson transcripts | ADMIN + SETUP | Provider and cost ceiling; teacher reviews every generated question before use |
 | `learning.recitation` | Qur'an recitation feedback | CODE | Quranic ASR accuracy validated; **start with letter-level makharij on short surahs only** — a wrong correction on religious content is worse than none |
 | `learning.hifz` | Memorisation tracker with spaced repetition | ADMIN | **Built 2026-10-29, and the schedule is written down rather than borrowed.** `hifz_ladder()` is seven rungs — 1, 3, 7, 16, 35, 75, 160 days — and it is deliberately not SM-2 or FSRS: those model retention from data this platform does not have, and naming one would be a claim about evidence. A review the learner calls **solid** moves a passage up one rung; **shaky** puts it back to the first and counts a lapse. The learner's own verdict is the only input, because the platform cannot hear a recitation (`learning.recitation` is CODE on an accuracy nobody has validated) — so `review_hifz_passage()` writes a date and a rung, never a score, and a test greps the tables for `score`, `grade`, `rating`, `mastery` and `proficiency`. The label is the learner's own words ("Al-Fatihah 1–7"); no surah table, no verse range, nothing the platform would have to guess. `/hifz` shows what is due, what is coming, and how each verdict moves a date; `?learner=<id>` opens a child's list for a guardian, and `can_access_learner()` decides who. A passage is **archived, never deleted**, so its reviews survive. Off, `my_hifz()` returns `{enabled:false}` and nothing else — a switched-off feature must not read as "this learner has memorised nothing". The owner's remaining decision is who it is offered to; the code does not restrict it to adults |
-| `learning.ijazah` | Verified chain of transmission | CODE | Extends `certificates`; needs teacher authorisation rules and a public chain view |
+| `learning.ijazah` | An authorisation to teach, recorded by the owner | ADMIN | **Built 2026-10-30 on the owner's decision that the owner alone records who authorised whom and on what evidence, with a scholarly panel possible later.** The register is `/admin/ijazah`: the grantor's name in their own words (most will never have an account here, and making one would invent a person), the holder's account, the scope as free text, the chain if it was written down, the day it was granted where that is known, and what the owner was shown — **write-only**, held in one column the holder can never select, because it names a third party and the platform should not become a copy of it. Rows cannot be edited or deleted: a correction is a **withdrawal with a reason and a new entry**, and the withdrawal stays on the record. The teacher sees their own on `/teach` under a sentence that says *a record, not a verification*. **Not built, deliberately:** no public chain view, no badge on a course, no mark on a teacher's public profile — publication is the moment the platform starts implying it checked something it has no standing to check. One authorisation per person, grantor and scope, so nobody appears to hold two of the same thing. Off, nothing new can be recorded or withdrawn; what is already recorded stays readable to the person it is about |
 | `learning.provenance` | Source citations shown on every lesson | ADMIN | Draft curriculum citation UI is deployed; seed and review citations on published lessons before enabling |
 | `learning.quran_sync` | Ayah-synchronised audio and text | ADMIN | Timing dataset licensed or generated |
 | `companion.prayer_tools` | Prayer times, qibla, dhikr counter, adhkar | ADMIN | Location handling and privacy; calculation method choice |
@@ -205,10 +205,10 @@ now holds the register, `/admin` reads and toggles it, and `/api/admin/flags`
 writes it. A trigger refuses to enable a `code`-gated flag at runtime, so the
 dashboard cannot promise what needs a deploy.
 
-**2. Twelve of these cannot be runtime toggles.**
-`gate_type='code'` on 12 flags, and every one names something that still does not
+**2. Eleven of these cannot be runtime toggles.**
+`gate_type='code'` on 11 flags, and every one names something that still does not
 exist: a provider, a written policy, a legal decision, or a design that was never
-done. They are `learning.ai_support`, `learning.recitation`, `learning.ijazah`,
+done. They are `learning.ai_support`, `learning.recitation`,
 `platform.incident`, `platform.takedown`, `platform.data_export`,
 `platform.withdrawal_right`, `platform.accessibility`, `family.child_login`,
 `teaching.payouts`, `delivery.transcode` — and `platform.incident` is CODE for a
@@ -230,8 +230,10 @@ missing, because the part that can exist — a verified email domain — is buil
 course saying which language it is taught in is the half that needs no translator.
 On 2026-10-30 two more left this list on the owner's six answers:
 `platform.age_assurance`, because a declaration that says it is a declaration needs
-no provider, and `platform.safeguarding`, because the check, the acknowledgement
-and the named lead now exist and the gate is enforced. `teaching.screening` did not
+no provider, `platform.safeguarding`, because the check, the acknowledgement
+and the named lead now exist and the gate is enforced, and `learning.ijazah`,
+because the owner decided a register of who authorised whom is the owner's own to
+keep and needs no panel to exist first. `teaching.screening` did not
 move — it was **removed**, on the same day, because it was a second name for
 exactly the decision `platform.safeguarding` enforces and its precondition (*no
 acknowledgement, no refusal*) had stopped being true. One decision has one row; a
