@@ -244,8 +244,11 @@ test('the console is the owner’s, and staff may not decide', () => {
   // The state of every line is computed against the built catalogue on the
   // server — the console says what the code says, not what was accepted.
   assert.match(page, /stateIn\(proposal, review\.locale, live\)/u);
-  assert.ok(page.includes('TranslationConsole reviews={reviews} states={states}'),
-    'the console is not handed the server-side verdicts');
+  // The console is handed the server-side verdicts, the per-language coverage and
+  // the audit flags — three things it must not compute for itself in a browser.
+  assert.match(page, /<TranslationConsole[\s\S]*?reviews=\{reviews\}/u);
+  assert.match(page, /<TranslationConsole[\s\S]*?states=\{states\}/u);
+  assert.match(page, /<TranslationConsole[\s\S]*?flags=\{flags\}/u);
 
   const console_ = read('app/admin/translations/translation-console.tsx');
   assert.match(console_, /rpc\('decide_translation_proposal'/u);

@@ -2,17 +2,20 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/server';
+import { LOCALES, translator, type LocaleCode } from '@/lib/i18n';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
-import { translator, type LocaleCode } from '@/lib/i18n';
+import { auditAll, auditProposal } from '@/lib/translation-audit';
 import {
   coverageOfReviews,
+  englishFor,
   parseQueue,
   stateIn,
   type PartCoverage,
   type ProposalState,
   type PublishedReview,
 } from '@/lib/translations';
+import { AuditPanel } from './audit-panel';
 import { TranslationConsole } from './translation-console';
 
 export const dynamic = 'force-dynamic';
@@ -95,6 +98,31 @@ export default async function AdminTranslationsPage() {
     coverage[code] = coverageOfReviews(rows);
   }
 
+  // **The shortlist.** Nine thousand six hundred strings is a wall, so nobody
+  // looks at any of them; this narrows it to the handful where something is
+  // mechanically odd, and says plainly that the rest is a question for a speaker.
+  // Computed here rather than in a component so the client bundle never sees the
+  // catalogues.
+  const names: Record<string, string> = {};
+  for (const locale of LOCALES) names[locale.code] = locale.englishName;
+  const audit = auditAll(names);
+
+  // What the machine can see in each *proposed* line, too: a correction that
+  // pastes the English back is not a correction, and the owner should meet that
+  // before accepting it rather than after.
+  const flags: Record<string, string[]> = {};
+  for (const review of reviews) {
+    for (const proposal of review.proposals) {
+      const findings = auditProposal({
+        locale: review.locale,
+        key: proposal.messageKey,
+        proposed: proposal.proposedText,
+        english: englishFor(proposal.messageKey) ?? '',
+      });
+      if (findings.length > 0) flags[proposal.id] = findings.map((f) => f.kind);
+    }
+  }
+
   const waiting = reviews.filter((r) => r.status === 'submitted');
   const undecided = reviews.reduce(
     (total, review) => total + review.proposals.filter((p) => p.status === 'proposed').length,
@@ -138,7 +166,14 @@ export default async function AdminTranslationsPage() {
         decide · {reviews.length} in total
       </p>
 
-      <TranslationConsole reviews={reviews} states={states} coverage={coverage} />
+      <AuditPanel summaries={audit} />
+
+      <TranslationConsole
+        reviews={reviews}
+        states={states}
+        coverage={coverage}
+        flags={flags}
+      />
     </div>
   );
 }

@@ -32,8 +32,16 @@ export function TranslationConsole({
   reviews,
   states,
   coverage,
+  flags,
 }: {
   reviews: Review[];
+  /**
+   * What the machine noticed about each *proposed* line, worked out on the
+   * server: a correction that pastes the English back, a word in Latin letters,
+   * a placeholder gone. Shown beside the row and never enforced — the owner
+   * decides, and the audit is a second pair of eyes rather than a rule.
+   */
+  flags: Record<string, string[]>;
   /**
    * How much of each language has been read, added up from published reviews and
    * worked out on the server. A part read is one part; the language is only
@@ -207,6 +215,24 @@ export function TranslationConsole({
                       <p style={{ margin: '0 0 0.4rem', fontSize: '0.95rem' }} lang={locale.code} dir={locale.dir}>
                         {proposal.proposedText}
                       </p>
+                      {(flags[proposal.id] ?? []).length > 0 && (
+                        <p className="muted" style={{ margin: '0 0 0.4rem', fontSize: '0.82rem' }}>
+                          A machine noticed:{' '}
+                          {(flags[proposal.id] ?? [])
+                            .map((kind) =>
+                              kind === 'same-as-english'
+                                ? 'this is the English line, word for word'
+                                : kind === 'latin-word'
+                                  ? 'a word in Latin letters'
+                                  : kind === 'foreign-script'
+                                    ? 'a character from another script'
+                                    : kind === 'placeholder'
+                                      ? 'a placeholder does not match the English'
+                                      : kind,
+                            )
+                            .join(' · ')}
+                        </p>
+                      )}
                       {proposal.reason && (
                         <p className="muted" style={{ margin: '0 0 0.4rem', fontSize: '0.85rem' }}>
                           {proposal.reason}

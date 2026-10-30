@@ -6400,3 +6400,35 @@ part read is a published fact.
 **What this does not fix.** Nobody is emailed when a correction is decided —
 there is still no mail provider — so a reviewer finds out from `/language`, from
 that language's card, or by writing to us.
+
+## A machine reads all fifty-one first, and says what it cannot see — **DECIDED 2026-10-30**
+
+**Nine thousand six hundred strings is a wall, so nobody looks at any of them.**
+Asking a volunteer to read 192 lines of somebody else's interface is already a
+favour; asking them to find the wrong ones first is a job. So a lint pass runs
+over every catalogue before a person opens it, and the owner's console shows the
+result: **sixteen findings across twelve languages**, most of them French words
+that are correctly French and an English `spam` inside a Burmese sentence.
+
+**The panel's product is not the sixteen. It is the paragraph under them.** The
+audit can only see facts about text — identical to the English, a character from
+another script, a dropped placeholder, a blank line, a key never translated. It
+cannot see meaning, register, agreement, or whether a sentence reads like
+something a machine wrote, and the panel says all five in its own words, from one
+constant that a test proves is printed. **A clean panel is not a good
+translation; it is a catalogue that will not break when rendered.**
+
+**Findings are shown, never enforced.** The same checks run on an incoming
+correction and appear beside it in the queue — *a machine noticed: this is the
+English line, word for word* — and the Accept button is still there. A rule that
+refused a line for being identical to the English would refuse `Email`, which is
+right in Tagalog, and the owner is the one who decides what a language says.
+
+**Noise is the failure mode, and it is designed against explicitly.** Brands
+(`AyahSpring`, `Google`, `Supabase`, `SMS`, `WhatsApp`) are never findings; a
+line that is only a placeholder, a numeral or a brand is never a finding;
+`{count} min` is never a finding because an abbreviation of a unit is not a
+sentence left untranslated; Latin inside a non-Latin language is only a finding
+for words of four letters or more. The full pass must stay under two hundred
+findings or the test fails — the day it stops being a shortlist is the day it
+becomes a wall again.

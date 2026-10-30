@@ -13,6 +13,7 @@ import {
   translatedLocales,
   translator,
 } from '@/lib/i18n';
+import { auditLine } from '@/lib/translation-audit';
 import {
   SECTIONS,
   defaultSection,
@@ -211,11 +212,33 @@ export default async function ContributePage({
           <div style={{ display: 'grid', gap: '1rem' }}>
             {section.keys.map((key) => {
               const english = englishFor(key) ?? '';
+              // The same checks the owner sees in the console, shown here for the
+              // two kinds a reviewer can act on. Not a warning and not a block: a
+              // line identical to the English is often right, and a Latin word in a
+              // Burmese sentence is sometimes exactly how Burmese writes it. It is
+              // a nudge, so the line they came for is not the one they skip.
+              const hints =
+                target && current
+                  ? auditLine(target.code, key, current(key as never), english).filter(
+                      (f) => f.kind === 'same-as-english' || f.kind === 'latin-word',
+                    )
+                  : [];
               return (
                 <div key={key}>
                   <label htmlFor={`k-${key}`} style={{ display: 'block', marginBottom: '0.2rem' }}>
                     <code style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>{key}</code>
                     <span style={{ display: 'block', fontSize: '0.92rem' }}>{english}</span>
+                    {hints.map((hint) => (
+                      <span
+                        key={hint.kind}
+                        className="muted"
+                        style={{ display: 'block', fontSize: '0.8rem' }}
+                      >
+                        {hint.kind === 'same-as-english'
+                          ? 'This one is the same words as the English. That is often right — if it is not, this is the line to change.'
+                          : `This one still has ${hint.detail.join(', ')} in Latin letters. Right if that is how you write it, wrong if there is a word for it.`}
+                      </span>
+                    ))}
                   </label>
                   <textarea
                     id={`k-${key}`}
