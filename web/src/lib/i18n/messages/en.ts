@@ -152,6 +152,33 @@ export const en = {
   'auth.checkEmail': 'Account created. Check your email to confirm the address, then sign in.',
   'auth.accountCreated': 'Account created for {phone}.',
 
+  // The two doors off the catalogue. They share the shelf's cards and pager, so
+  // translating the shelf and not the doors would leave one English heading on
+  // a page otherwise in Yoruba.
+  'doors.askAdult': 'Looking for yourself?',
+  'doors.askChild': 'Choosing for a child?',
+  'doors.adultsShelf': 'The adults’ shelf',
+  'doors.youngShelf': 'The young learners’ shelf',
+  'doors.wholeCatalogue': 'Whole catalogue',
+  'young.eyebrow': 'Young learners',
+  'young.title': 'For the children first.',
+  'young.lede':
+    'Courses written to be taught to children — recitation, the Arabic alphabet, the stories they should hear first. Every one of them has passed scholarly review before it appears here.',
+  'young.notice':
+    'A child does not sign up on their own. A parent or guardian holds the account, adds the child as a learner, and decides what opens; a teacher may enrol them on their own account. Nothing on this page is a child’s account, and none of it is a child’s data.',
+  'young.everyAge': 'Every age',
+  'young.emptyBand': 'Nothing is listed for ages {band} yet. Try another age, or the whole catalogue.',
+  'young.empty':
+    'No courses for young learners have been published yet. Everything here has to pass review first.',
+  'adults.eyebrow': 'Adults',
+  'adults.title': 'Study it properly.',
+  'adults.lede':
+    'Courses written for adults — Arabic grammar, fiqh, tafsir, tajweed at depth. Every one of them has passed scholarly review before it appears here, and each one you buy is your own: one purchase, one learner.',
+  'adults.notice':
+    'This is your own account, not a child’s. If a child also learns in your family, the learner switcher moves between you without mixing the two.',
+  'adults.empty':
+    'No courses for adults have been published yet. Everything here has to pass review first.',
+
   // The two password screens. Our own sentences only: what Supabase Auth says
   // about a password comes back in its own words and is shown as it arrives.
   'auth.forgotTitle': 'Reset your password',

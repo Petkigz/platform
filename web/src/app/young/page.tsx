@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
@@ -10,6 +10,7 @@ import { offsetFor, pageNumber, PAGE_SIZE } from '@/lib/paging';
 import { countryFromHeaders } from '@/lib/geo';
 import { fetchCourseCards } from '@/lib/catalogue-cards';
 import { AGE_BANDS, isAgeBand, type AgeBand } from '@/lib/audience';
+import { LOCALE_COOKIE, chooseLocale, translator } from '@/lib/i18n';
 import { CourseShelfCard } from '../_shared/course-shelf-card';
 import { ShelfPager } from '../_shared/shelf-pager';
 
@@ -52,6 +53,16 @@ export default async function YoungLearnersPage({
 
   const bandsOn = await isFlagEnabled(supabase, 'learning.age_bands').catch(() => false);
 
+  // The door is translated like the catalogue behind it: a parent who chose
+  // Yoruba on the shelf must not meet an English page at the end of the link.
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code: locale } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  const t = translator(locale);
+
   const { band, page: pageParam } = await searchParams;
   const chosen: AgeBand | null = bandsOn && isAgeBand(band) ? band : null;
   const page = pageNumber(pageParam);
@@ -76,20 +87,11 @@ export default async function YoungLearnersPage({
 
   return (
     <div className="container section">
-      <p className="eyebrow">Young learners</p>
-      <h1>For the children first.</h1>
-      <p className="lede">
-        Courses written to be taught to children — recitation, the Arabic
-        alphabet, the stories they should hear first. Every one of them has
-        passed scholarly review before it appears here.
-      </p>
+      <p className="eyebrow">{t('young.eyebrow')}</p>
+      <h1>{t('young.title')}</h1>
+      <p className="lede">{t('young.lede')}</p>
 
-      <div className="notice">
-        A child does not sign up on their own. A parent or guardian holds the
-        account, adds the child as a learner, and decides what opens; a teacher
-        may enrol them on their own account. Nothing on this page is a child&rsquo;s
-        account, and none of it is a child&rsquo;s data.
-      </div>
+      <div className="notice">{t('young.notice')}</div>
 
       {bandsOn && (
         <div className="row" style={{ gap: '0.4rem', flexWrap: 'wrap', margin: '1.25rem 0' }}>
@@ -98,7 +100,7 @@ export default async function YoungLearnersPage({
             href="/young"
             style={{ padding: '0.35rem 0.7rem' }}
           >
-            Every age
+            {t('young.everyAge')}
           </Link>
           {AGE_BANDS.filter((b) => b !== '18+').map((b) => (
             <Link
@@ -116,10 +118,10 @@ export default async function YoungLearnersPage({
       {visible.length === 0 ? (
         <p className="empty">
           {page > 1
-            ? 'There is nothing on this page. It may be past the end of the shelf.'
+            ? t('catalogue.emptyPage')
             : chosen
-              ? `Nothing is listed for ages ${chosen} yet. Try another age, or the whole catalogue.`
-              : 'No courses for young learners have been published yet. Everything here has to pass review first.'}
+              ? t('young.emptyBand', { band: chosen })
+              : t('young.empty')}
         </p>
       ) : (
         <>
@@ -131,11 +133,17 @@ export default async function YoungLearnersPage({
               shown={shelf.shown}
               offset={shelf.offset}
               limit={shelf.limit}
+              locale={locale}
             />
           </div>
           <div className="grid cols-2">
             {visible.map((course) => (
-              <CourseShelfCard key={course.id} course={course} card={cards.get(course.id) ?? null} />
+              <CourseShelfCard
+                key={course.id}
+                course={course}
+                card={cards.get(course.id) ?? null}
+                locale={locale}
+              />
             ))}
           </div>
           <ShelfPager
@@ -145,13 +153,15 @@ export default async function YoungLearnersPage({
             shown={shelf.shown}
             offset={shelf.offset}
             limit={shelf.limit}
+            locale={locale}
           />
         </>
       )}
 
       <p className="muted" style={{ marginTop: '2rem' }}>
-        Looking for yourself? <Link href="/adults">The adults&rsquo; shelf</Link> is
-        next door, and the <Link href="/catalogue">whole catalogue</Link> has both.
+        {t('doors.askAdult')}{' '}
+        <Link href="/adults">{t('doors.adultsShelf')}</Link> ·{' '}
+        <Link href="/catalogue">{t('doors.wholeCatalogue')}</Link>
       </p>
     </div>
   );

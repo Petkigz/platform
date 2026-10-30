@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
@@ -9,6 +9,7 @@ import { fetchCataloguePage } from '@/lib/catalogue';
 import { offsetFor, pageNumber, PAGE_SIZE } from '@/lib/paging';
 import { countryFromHeaders } from '@/lib/geo';
 import { fetchCourseCards } from '@/lib/catalogue-cards';
+import { LOCALE_COOKIE, chooseLocale, translator } from '@/lib/i18n';
 import { CourseShelfCard } from '../_shared/course-shelf-card';
 import { ShelfPager } from '../_shared/shelf-pager';
 
@@ -51,6 +52,16 @@ export default async function AdultsPage({
   const on = await isFlagEnabled(supabase, 'learning.audience_sections').catch(() => false);
   if (!on) redirect('/catalogue');
 
+  // Same rule as the children's door: the page behind the link speaks whatever
+  // language the shelf it came from was speaking.
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code: locale } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  const t = translator(locale);
+
   const shelf = await fetchCataloguePage(
     supabase,
     { audience: 'adult' },
@@ -62,30 +73,20 @@ export default async function AdultsPage({
   const cards = await fetchCourseCards(
     supabase,
     visible.map((course) => course.id),
-    countryFromHeaders(await headers()),
+    countryFromHeaders(hdrs),
   );
 
   return (
     <div className="container section">
-      <p className="eyebrow">Adults</p>
-      <h1>Study it properly.</h1>
-      <p className="lede">
-        Courses written for adults — Arabic grammar, fiqh, tafsir, tajweed at
-        depth. Every one of them has passed scholarly review before it appears
-        here, and each one you buy is your own: one purchase, one learner.
-      </p>
+      <p className="eyebrow">{t('adults.eyebrow')}</p>
+      <h1>{t('adults.title')}</h1>
+      <p className="lede">{t('adults.lede')}</p>
 
-      <div className="notice">
-        This is your own account, not a child&rsquo;s. If a child also learns in
-        your family, the learner switcher moves between you without mixing the
-        two.
-      </div>
+      <div className="notice">{t('adults.notice')}</div>
 
       {visible.length === 0 ? (
         <p className="empty" style={{ marginTop: '1.5rem' }}>
-          {page > 1
-            ? 'There is nothing on this page. It may be past the end of the shelf.'
-            : 'No courses for adults have been published yet. Everything here has to pass review first.'}
+          {page > 1 ? t('catalogue.emptyPage') : t('adults.empty')}
         </p>
       ) : (
         <>
@@ -97,11 +98,17 @@ export default async function AdultsPage({
               shown={shelf.shown}
               offset={shelf.offset}
               limit={shelf.limit}
+              locale={locale}
             />
           </div>
           <div className="grid cols-2">
             {visible.map((course) => (
-              <CourseShelfCard key={course.id} course={course} card={cards.get(course.id) ?? null} />
+              <CourseShelfCard
+                key={course.id}
+                course={course}
+                card={cards.get(course.id) ?? null}
+                locale={locale}
+              />
             ))}
           </div>
           <ShelfPager
@@ -111,13 +118,15 @@ export default async function AdultsPage({
             shown={shelf.shown}
             offset={shelf.offset}
             limit={shelf.limit}
+            locale={locale}
           />
         </>
       )}
 
       <p className="muted" style={{ marginTop: '2rem' }}>
-        Choosing for a child? The <Link href="/young">young learners&rsquo; shelf</Link>{' '}
-        is next door, and the <Link href="/catalogue">whole catalogue</Link> has both.
+        {t('doors.askChild')}{' '}
+        <Link href="/young">{t('doors.youngShelf')}</Link> ·{' '}
+        <Link href="/catalogue">{t('doors.wholeCatalogue')}</Link>
       </p>
     </div>
   );

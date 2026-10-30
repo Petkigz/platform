@@ -70,7 +70,7 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 The database stands at **147 tables, RLS on every one, 271 policies, 166
 user-defined triggers, 518 functions and 191 migrations.** The database suite
-passes **1995 tests**; the web suite passes **1590 tests**. TypeScript typecheck
+passes **1995 tests**; the web suite passes **1593 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **221 app route entries** — 120
 pages and seven generated entries (`/_not-found`, four icons and manifest, the
 robots file, the sitemap), plus 94 API routes.
@@ -303,6 +303,15 @@ language and their own direction, on a page that may be running in a third. A
 second test file reads the page, the pager and the card and fails on a sentence of
 three or more English words or a hard-coded `aria-label`, and it holds the search
 box to the query the reader actually typed.
+
+**Both doors speak it too.** `/young` and `/adults` are the same shelf with the
+decision already made, drawn from the same cards and the same pager, so they were
+translated with it rather than after it: the two headings, both ledes, the notice
+that says a child holds no login, the age chips, the cross-links and the three
+different empty states. The age a parent picked is a value (`11-13`) and stays one
+in every language — a sentence that said "nothing for those ages" without naming
+which age would read finished and answer nothing, which is why a test passes the
+band through all thirty-three catalogues and checks it comes back.
 
 Coverage is a count; a native reader is a claim. The picker's first option is *my device's language*,
 which deletes the cookie — a default somebody cannot return to is not a default.

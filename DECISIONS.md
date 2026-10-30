@@ -5834,3 +5834,13 @@ password"). Supabase's words are now shown as they arrive and only the refusal w
 generate ourselves — the two fields disagreeing, an empty field — is translated.
 This is the same rule the sign-in form already followed; the password form was
 simply the place it had not reached.
+
+**The doors were translated with the shelf, not after it.** `/young` and
+`/adults` are the same cards and the same pager as `/catalogue`, and they are the
+one place the platform says out loud that a child holds no login. Translating the
+shelf and leaving the doors English would have produced a page that is 90%
+Luganda and 10% the sentence a parent most needs to understand, so the two went
+together. The age band is the only thing on either door that is not a sentence:
+it is a value (`11-13`) and stays one, which a test checks across all thirty-three
+catalogues — "nothing is listed for those ages" without the age is the sort of
+translation that reads finished and answers nothing.

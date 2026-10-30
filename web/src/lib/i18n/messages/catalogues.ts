@@ -10,6 +10,7 @@ import { AUTH_WORLD } from './auth-world.ts';
 import { SHELF_AFRICA } from './shelf-africa.ts';
 import { SHELF_WORLD } from './shelf-world.ts';
 import { AUTH_RESET } from './auth-reset.ts';
+import { DOORS } from './doors.ts';
 import type { Messages } from './en.ts';
 
 /**
@@ -701,4 +702,6 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   SHELF_WORLD,
   // The password screens: a reset link, and the new password after it.
   AUTH_RESET,
+  // The two doors: the children's shelf and the adults' shelf.
+  DOORS,
 );

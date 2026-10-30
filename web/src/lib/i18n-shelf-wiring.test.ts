@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 import { contentLine, formatMinutes } from './catalogue-cards.ts';
+import { LOCALES, translator } from './i18n/index.ts';
 import { emptyShelfMessage } from './lesson-search.ts';
 import { rangeLabel } from './paging.ts';
 
@@ -25,6 +26,8 @@ const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf
 const PAGE = read('../app/catalogue/page.tsx');
 const PAGER = read('../app/_shared/shelf-pager.tsx');
 const CARD = read('../app/_shared/course-shelf-card.tsx');
+const YOUNG = read('../app/young/page.tsx');
+const ADULTS = read('../app/adults/page.tsx');
 
 const FILES: Array<[string, string]> = [
   ['the catalogue page', PAGE],
@@ -149,4 +152,48 @@ test('the pager’s arrows follow the reading direction, not the words', () => {
   assert.match(PAGER, /directionOf\(code\) === 'rtl' \? \['\\u2192', '\\u2190'\]/u);
   assert.match(PAGER, /\{back\} \{t\('catalogue\.previous'\)\}/u);
   assert.match(PAGER, /\{t\('catalogue\.next'\)\} \{forward\}/u);
+});
+
+test('both doors speak the shelf’s language', () => {
+  // The doors are built from the same cards and the same pager as the shelf, so
+  // an English door behind a Yoruba shelf is one heading and one notice away
+  // from the exact defect this unit exists to prevent.
+  for (const [what, source] of [
+    ['the children’s door', YOUNG],
+    ['the adults’ door', ADULTS],
+  ] as const) {
+    assert.match(source, /const \{ code: locale \} = chooseLocale\(\{/u);
+    assert.match(source, /const t = translator\(locale\);/u);
+    const calls = source.match(/t\('(?:young|adults|doors|catalogue)\./gu) ?? [];
+    assert.ok(calls.length >= 5, `${what} only translates ${calls.length} strings`);
+    const pagers = source.match(/<ShelfPager\b[^>]*locale=\{locale\}/gsu) ?? [];
+    assert.equal(pagers.length, 2, `${what} hands the locale to ${pagers.length} pagers`);
+    assert.match(source, /<CourseShelfCard\b[^>]*locale=\{locale\}/su);
+    const literal = source.match(/>\s*[A-Z][a-z]+(?: [a-z']+){2,}\s*</gu) ?? [];
+    assert.deepEqual(literal, [], `${what} still says ${literal[0] ?? ''} in English`);
+  }
+});
+
+test('the age on the children’s door is still named, not dropped', () => {
+  // "Nothing is listed for those ages" without saying which is the kind of
+  // translation that reads finished and answers nothing.
+  for (const locale of LOCALES) {
+    const rendered = translator(locale.code)('young.emptyBand', { band: '11-13' });
+    assert.match(rendered, /11-13/u, `${locale.code} lost the age band`);
+  }
+});
+
+test('a child still has no login, in every language', () => {
+  // The promise a parent came to read. A catalogue entry that exists but is
+  // still the English sentence would pass a coverage count and fail here.
+  for (const locale of LOCALES.filter((l) => l.code !== 'en')) {
+    const notice = translator(locale.code)('young.notice');
+    assert.notEqual(notice, translator('en')('young.notice'), `${locale.code} is still English`);
+    assert.notEqual(notice.trim(), '', `${locale.code} has no sentence at all`);
+    assert.notEqual(
+      translator(locale.code)('young.title'),
+      translator('en')('young.title'),
+      `${locale.code}.young.title is still English`,
+    );
+  }
 });
