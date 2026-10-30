@@ -122,11 +122,22 @@ export function TranslationConsole({
 
   if (reviews.length === 0) {
     return (
-      <p className="muted">
-        Nothing has been submitted yet. Nobody has offered a correction to any of the
-        fifty-one languages, which is the honest state of the translation work and the
-        reason <code>/language</code> still says nobody has read it.
-      </p>
+      <>
+        <p className="muted">
+          Nothing has been submitted yet. Nobody has offered a correction to any of the
+          fifty-one languages, which is the honest state of the translation work and the
+          reason <code>/language</code> still says nobody has read it.
+        </p>
+        {/* The empty state is where the owner actually is, most days, and it should
+            say what to do about it. There is no mail provider, so the platform
+            cannot invite anybody — but the sheet for one language is a URL, and a
+            URL is something a person can send. */}
+        <p className="muted">
+          Nothing here can send an email — no provider is connected. The sheet for one
+          language is a URL, though: <code>/contribute?locale=ta</code>. Send it to
+          somebody who speaks the language and has ten minutes.
+        </p>
+      </>
     );
   }
 

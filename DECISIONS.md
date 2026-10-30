@@ -6369,3 +6369,34 @@ decided — there is still no mail provider — so a reviewer learns the outcome
 `/language` or from writing to us. And the catalogues are still machine-written:
 this makes "read by a person who speaks it" reachable, it does not make it true
 for any language yet.
+
+## The sentence that states the problem is the way to fix it — **DECIDED 2026-10-30**
+
+**`/language` has been printing "no first-language speaker has read this
+translation yet" on fifty catalogues, and offering nowhere to go.** A confession
+with no door in it is a dead end, and the readers most likely to notice a bad
+rendering are exactly the ones who were being told about it and then dismissed.
+
+**So the sentence is the link.** The whole clause — "…if a word looks wrong to
+you, that is a mistake we owe you" — opens the correction sheet for the language
+the reader is looking at, pre-filled. It costs **no new string**: a second
+sentence saying "help us fix it" would have needed fifty-one translations to say
+what the existing one already says, and would have been the sort of
+machine-written line this page is apologising for.
+
+**It is not always a link, and each exception is a fact about the feature.** With
+`platform.translation_reviews` off the sentence stays a sentence, because the
+sheet refuses submissions while it is off and a link to a closed door is a
+promise the page cannot keep. English is excluded: a translation is checked
+*against* English, so there is nothing there to correct. And a language somebody
+has read needs no invitation — it prints the sentence that says so.
+
+**A part is what the link can offer.** The sheet now opens on the navigation
+rather than on `SECTIONS[0]`, which happens to be the skip link: one line, and a
+reviewer who clicks an invitation and lands on a single fragment will click
+back. Ten lines of the row every reader has looked at is a fair first ask, and a
+part read is a published fact.
+
+**What this does not fix.** Nobody is emailed when a correction is decided —
+there is still no mail provider — so a reviewer finds out from `/language`, from
+that language's card, or by writing to us.

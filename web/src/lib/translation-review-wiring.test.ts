@@ -12,6 +12,7 @@ import {
   acceptedBlock,
   coverageOfReviews,
   dayOf,
+  defaultSection,
   parsePublished,
   parseQueue,
   reviewState,
@@ -416,4 +417,41 @@ test('every catalogue can say a translation is partly read', () => {
   // English is the source, and a missing translation must not be what makes the
   // test pass: the English sentence has both placeholders too.
   assert.ok(en['language.partial'].includes('{read}'));
+});
+
+// ---------------------------------------------------------------------------
+// The door
+// ---------------------------------------------------------------------------
+// The page that states the problem used to offer no way to fix it. These tests
+// are about the sentence becoming the link, and about the link not being there
+// when there is nothing behind it.
+
+test('the sentence that says nobody has read it is the way to fix that', () => {
+  const page = read('app/language/page.tsx');
+  // The sentence is the link text. A second sentence saying "help us" would have
+  // needed fifty-one translations to say the same thing the sentence already says.
+  assert.match(page, /<Link href=\{`\/contribute\?locale=\$\{code\}`\}/u);
+  assert.match(page, /\{claim\}/u);
+  // Three reasons it is not always a link, and all three are in the guard.
+  assert.match(page, /const invite = !readBy && sheetOpen && code !== 'en'/u);
+  // A link to a closed door is a lie, so the switch is read here and not only on
+  // the sheet.
+  assert.match(page, /isFlagEnabled\(supabase, 'platform\.translation_reviews'\)/u);
+});
+
+test('the sheet opens on the navigation, not on the skip link', () => {
+  // `SECTIONS[0]` is the skip link: one line, and the first thing a reviewer
+  // would see is a fragment they have never noticed on a page. A link that
+  // arrives at a one-line form is a link that arrives nowhere.
+  assert.equal(defaultSection().prefix, 'nav');
+  assert.ok(!/SECTIONS\[0\]!/.test(read('app/contribute/page.tsx')),
+    'the sheet still falls back to whatever section happens to be first');
+});
+
+test('the owner is told how to hand a language to a speaker', () => {
+  // There is no mail provider, so the platform cannot invite anybody — and the
+  // console is where the owner sits when the queue is empty, which is most days.
+  const console_ = read('app/admin/translations/translation-console.tsx');
+  assert.match(console_, /\/contribute\?locale=ta/u);
+  assert.match(console_, /no provider is connected/u);
 });

@@ -13,7 +13,14 @@ import {
   translatedLocales,
   translator,
 } from '@/lib/i18n';
-import { SECTIONS, englishFor, sectionByPrefix, sectionName, type Section } from '@/lib/translations';
+import {
+  SECTIONS,
+  defaultSection,
+  englishFor,
+  sectionByPrefix,
+  sectionName,
+  type Section,
+} from '@/lib/translations';
 
 export const metadata: Metadata = { title: 'Help us get a language right' };
 export const dynamic = 'force-dynamic';
@@ -90,7 +97,7 @@ export default async function ContributePage({
     chosenLocale && isLocaleCode(chosenLocale) && chosenLocale !== 'en'
       ? localeByCode(chosenLocale)
       : undefined;
-  const section: Section = sectionByPrefix(chosenSection) ?? SECTIONS[0]!;
+  const section: Section = sectionByPrefix(chosenSection) ?? defaultSection();
   // The catalogue as it stands, so each box opens with the line it is
   // correcting rather than an empty rectangle: most corrections are one wrong
   // word inside a long sentence, and retyping the sentence is how a reviewer
@@ -134,9 +141,10 @@ export default async function ContributePage({
       {open && sent && (
         <div className="notice" style={{ maxWidth: '52rem' }}>
           <strong>Thank you — that arrived.</strong> A person reads every submission
-          before anything changes. If your correction is accepted, your name appears
-          beside the language on the <Link href="/language">language page</Link>; your
-          email address is not kept anywhere it can be read from the site.
+          before anything changes. If what you read is published, your name appears
+          beside that part of the language on the <Link href="/language">language
+          page</Link>; your email address is not kept anywhere it can be read from the
+          site.
         </div>
       )}
 

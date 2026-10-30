@@ -3,6 +3,7 @@ import { cookies, headers } from 'next/headers';
 import Link from 'next/link';
 
 import { isSupabaseConfigured } from '@/lib/env';
+import { isFlagEnabled } from '@/lib/flags';
 import { createClient } from '@/lib/supabase/server';
 import { coverageOfReviews, parsePublished, type PublishedReview } from '@/lib/translations';
 
@@ -63,13 +64,23 @@ export default async function LanguagePage() {
   // cannot be reached, and one that has no published reviews all mean **nobody
   // has read this**, which is the conservative claim and the true one today.
   let published = new Map<string, PublishedReview[]>();
+  // Whether the correction sheet is open. Read here, not only on the sheet,
+  // because a link to a closed door is a promise this page cannot keep: with the
+  // switch off the sentence stays a sentence, and the reader is not sent to a
+  // form that will refuse them.
+  let sheetOpen = false;
   if (isSupabaseConfigured()) {
     try {
       const supabase = await createClient();
-      const { data } = await supabase.rpc('published_locale_reviews');
+      const [{ data }, open] = await Promise.all([
+        supabase.rpc('published_locale_reviews'),
+        isFlagEnabled(supabase, 'platform.translation_reviews').catch(() => false),
+      ]);
       published = parsePublished(data);
+      sheetOpen = open;
     } catch {
       published = new Map();
+      sheetOpen = false;
     }
   }
   const reviewers = published.get(code) ?? [];
@@ -79,6 +90,31 @@ export default async function LanguagePage() {
   // true for English alone.
   const parts = coverageOfReviews(reviewers);
   const readBy = parts.complete || current.reviewed;
+
+  const claim = readBy
+    ? t('language.reviewed')
+    : parts.read > 0
+      ? // Partly read is a different sentence, not a shorter one. Saying
+        // "nobody has read this" over three named parts would be as wrong as
+        // claiming the whole thing.
+        t('language.partial', {
+          read: formatNumber(code, parts.read),
+          total: formatNumber(code, parts.total),
+        })
+      : t('language.unreviewed');
+
+  // **The door.** The page states a problem — nobody who speaks this language has
+  // read it — and until now it offered no way to do anything about it. The whole
+  // sentence is the link, because the sentence is the invitation: the last of its
+  // clauses is "if a word looks wrong to you, that is a mistake we owe you", and
+  // a reader who agrees with that should not have to hunt for a form.
+  //
+  // Three reasons it is not always a link: the sheet has to be open (a link to a
+  // closed door is a lie), English is what a translation is checked *against* so
+  // there is nothing to correct, and a language somebody has read needs no
+  // invitation. No new string is introduced: the link text is the sentence that
+  // was already in all fifty-one catalogues.
+  const invite = !readBy && sheetOpen && code !== 'en';
 
   const sourceLine =
     source === 'chosen'
@@ -111,17 +147,13 @@ export default async function LanguagePage() {
             this list — so the page makes the second claim itself, per language,
             from the register rather than from a sentence typed once and forgotten. */}
         <p style={{ margin: '0 0 0.4rem', fontSize: '0.9rem' }}>
-          {readBy
-            ? t('language.reviewed')
-            : parts.read > 0
-              ? // Partly read is a different sentence, not a shorter one. Saying
-                // "nobody has read this" over three named parts would be as wrong
-                // as claiming the whole thing.
-                t('language.partial', {
-                  read: formatNumber(code, parts.read),
-                  total: formatNumber(code, parts.total),
-                })
-              : t('language.unreviewed')}
+          {invite ? (
+            <Link href={`/contribute?locale=${code}`} style={{ textDecoration: 'underline' }}>
+              {claim}
+            </Link>
+          ) : (
+            claim
+          )}
         </p>
         {/* The attribution is a name and a date, not a sentence.
             The sentence above is already translated into all fifty-one

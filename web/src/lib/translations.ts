@@ -262,6 +262,29 @@ export function sectionByPrefix(prefix: string | null | undefined): Section | un
   return SECTIONS.find((s) => s.prefix === prefix);
 }
 
+/**
+ * The part the sheet opens on when nobody has chosen one.
+ *
+ * Not `SECTIONS[0]`, which happens to be the skip link: a reviewer's first sight
+ * of the correction sheet would be one line they have probably never noticed on a
+ * page, and *is this it?* is the wrong first question. The navigation is the row
+ * of words every reader has looked at, and it is ten lines — enough to be worth
+ * doing, small enough to finish in ten minutes.
+ *
+ * If `nav` ever disappears from the English catalogue this falls back to the
+ * largest section rather than throwing: a sheet that opens on nothing is worse
+ * than one that opens on the wrong part.
+ */
+export function defaultSection(): Section {
+  return (
+    sectionByPrefix('nav') ??
+    SECTIONS.reduce(
+      (biggest, section) => (section.keys.length > biggest.keys.length ? section : biggest),
+      SECTIONS[0]!,
+    )
+  );
+}
+
 /** The English sentence a correction is answering to. */
 export function englishFor(key: string): string | undefined {
   return (en as Record<string, string>)[key];
