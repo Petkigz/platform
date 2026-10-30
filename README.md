@@ -254,9 +254,9 @@ never deleted, so its reviews survive; and while the flag is off `my_hifz()`
 returns `{enabled:false}` rather than an empty list that would read as "nothing
 memorised".
 
-**The interface speaks forty-three languages, and the device picks first.**
+**The interface speaks forty-six languages, and the device picks first.**
 `/language` is public, because the language is decided before anybody signs in:
-`lib/i18n/` holds a register of forty-three languages and the root layout sets
+`lib/i18n/` holds a register of forty-six languages and the root layout sets
 `<html lang dir>` from `chooseLocale()` — the cookie if this browser set one,
 otherwise the first language in `Accept-Language` the register actually has,
 otherwise English. **Twenty-one of them are African** — Swahili, Amharic, Oromo,
@@ -264,10 +264,16 @@ Somali, Tigrinya, Kinyarwanda, Luganda, Malagasy, Lingala, Hausa, Yoruba, Igbo,
 Wolof, Fulfulde, Bambara, Zulu, Xhosa, Afrikaans, Shona, Sesotho and Chichewa —
 and they are grouped first in the picker, because this platform is operated from
 Uganda and an interface that files Luganda under Portuguese has said something
-about who it expects to read it. **Fifteen are Asian** — Urdu, Indonesian,
+about who it expects to read it. **Eighteen are Asian** — Urdu, Indonesian,
 Malay, Bengali and Hindi, then Uzbek, Kazakh, Azerbaijani, Pashto, Dari, Tamil,
-Nepali, Sinhala, Thai and Dhivehi. The last ten arrived on 2026-10-30, when a
-reader asked why the picker had no Asian language in it. That question was half right:
+Nepali, Sinhala, Thai, Dhivehi, Kyrgyz, Tajik and Turkmen. The last thirteen
+arrived on 2026-10-30, when a reader asked why the picker had no Asian language
+in it. Central Asia is now complete: all five ex-Soviet republics, in the
+alphabet each of them actually uses — Uzbek and Turkmen in Latin because those
+countries moved in 1993, Kazakh and Kyrgyz and Tajik in Cyrillic because they
+did not. Tajik is Cyrillic Persian and is a separate row from `fa` and `fa-af`
+for the same reason Dari is: one language, three countries, three alphabets,
+three sets of everyday words. That question was half right:
 the five had been there, hidden at the bottom of one long dropdown, and the
 answer to it was to show every language on the page — and then to fill the gap
 Asia actually had, because Central Asia alone is a hundred million Muslim
@@ -282,8 +288,8 @@ Asian script here to do so, and it needed no layout change at all: `dir` on its
 row was the whole of it. Every string falls back to English, so a
 half-translated catalogue renders sentences rather than blanks; each language
 prints **how much of it is translated**, counted from its own file, and all
-forty-three are at 100% today. It also prints what the coverage number cannot:
-**no first-language speaker has read any of the forty-two non-English
+forty-six are at 100% today. It also prints what the coverage number cannot:
+**no first-language speaker has read any of the forty-five non-English
 catalogues yet**, said in the reader's own language rather than in a footnote.
 It is not only the frame. **Sign-in and sign-up are translated too** — headings,
 the two mode tabs, every field label, both "or" lines, the phone-format hint, the
@@ -327,14 +333,14 @@ that says a child holds no login, the age chips, the cross-links and the three
 different empty states. The age a parent picked is a value (`11-13`) and stays one
 in every language — a sentence that said "nothing for those ages" without naming
 which age would read finished and answer nothing, which is why a test passes the
-band through all forty-three catalogues and checks it comes back.
+band through all forty-six catalogues and checks it comes back.
 
 **The front door speaks it too, and it was the last page still in English.** The
 excuse was that it is the page with no session to read a preference from, which
 was never true: `chooseLocale()` reads the cookie and `Accept-Language` for
 anybody, signed in or not. Forty-two `home.*` keys carry the whole page — the
 hero, the panel of three refusals, the subject heading, both doors, the three
-steps, the teacher band and the closing call — in all forty-three languages,
+steps, the teacher band and the closing call — in all forty-six languages,
 written in four files by region (`home-africa-east`, `home-africa-west`,
 `home-africa-south`, `home-world`) so that adding a language is one block.
 Two things on it are values rather than words. The subject count goes through

@@ -54,6 +54,10 @@ export type LocaleCode =
   | 'si'
   | 'th'
   | 'dv'
+  // The rest of Central Asia, closing the region a day later.
+  | 'ky'
+  | 'tg'
+  | 'tk'
   | 'fr'
   | 'es'
   | 'pt'
@@ -170,6 +174,11 @@ export const LOCALES: readonly Locale[] = [
   // Asian script here to do so, and the first right-to-left language in the
   // register that is not written in the Arabic script.
   { code: 'dv', nativeName: 'ދިވެހި', englishName: 'Dhivehi', dir: 'rtl', reviewed: false, region: 'Asia' },
+  // The rest of Central Asia. Kyrgyz and Tajik keep the Cyrillic their readers
+  // learn at school; Turkmen is Latin, because that is what Turkmenistan uses.
+  { code: 'ky', nativeName: 'Кыргызча', englishName: 'Kyrgyz', dir: 'ltr', reviewed: false, region: 'Asia' },
+  { code: 'tg', nativeName: 'Тоҷикӣ', englishName: 'Tajik', dir: 'ltr', reviewed: false, region: 'Asia' },
+  { code: 'tk', nativeName: 'Türkmençe', englishName: 'Turkmen', dir: 'ltr', reviewed: false, region: 'Asia' },
   { code: 'fr', nativeName: 'Français', englishName: 'French', dir: 'ltr', reviewed: false, region: 'Europe and the Americas' },
   { code: 'es', nativeName: 'Español', englishName: 'Spanish', dir: 'ltr', reviewed: false, region: 'Europe and the Americas' },
   { code: 'pt', nativeName: 'Português', englishName: 'Portuguese', dir: 'ltr', reviewed: false, region: 'Europe and the Americas' },

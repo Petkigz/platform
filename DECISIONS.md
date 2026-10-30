@@ -6253,3 +6253,45 @@ nothing has no layering history to imitate. `reviewed: false` on all five, and o
 every one of the forty-two translations. The register is forty-three languages;
 **the number of them a first-language speaker has read is still zero**, and no
 amount of key-count will change that sentence.
+
+## Central Asia, finished — **DECIDED 2026-10-30**
+
+**Kyrgyz, Tajik and Turkmen** close the region the first five opened. A day ago
+the register had nothing for the ex-Soviet republics; it now has all five, and
+the sentence "there is nothing for Central Asia" is no longer true and should not
+be repeated out of habit.
+
+**The alphabet was decided by the reader's school year, not by the reform.** Uzbek
+and Turkmen are Latin, because both countries changed in 1993 and the children now
+at a keyboard learned it that way. Kazakh, Kyrgyz and Tajik are Cyrillic, because
+those countries did not change, and writing a menu in the alphabet a reform
+intends — rather than the one its readers use — is a guess about when somebody was
+born. Kazakhstan's move to Latin is real and staggered; when the reader writing in
+is systematically Latin, the file changes then. Today it is not.
+
+**Tajik is the third Persian, and it is its own row.** `fa`, `fa-af` and `tg` are
+mutually intelligible in speech and unmistakable on a page: three alphabets, three
+vocabularies for everyday things (омӯзиш / آموزش / آموزش, but пиёз not پیاز). The
+register's rule since Dari has been that **a catalogue is the alphabet and the
+country a reader is in**, so Tajik is `tg` and not an entry pointing at `fa`. It
+also cost nothing to do properly: Persian written in Cyrillic is still Persian,
+and a reader in Dushanbe should not be handed Tehran's letters.
+
+**Turkmen is served in Latin only, and that is a real gap.** The Turkmen of
+Afghanistan and Iraq read Arabic script, and this file does not help them. It is
+written down here rather than left implicit: a Turkmen speaker from Herat will
+find `ps`, `fa-af` and `ur` more useful than a Latin transliteration of their own
+language, and pretending otherwise would be a coverage number doing the work of a
+translation.
+
+**Kyrgyz is the first language here where the sentence gets shorter, not longer.**
+It is agglutinative: what English says in five words, Kyrgyz says in one. Translating
+word-for-word back into separated words would produce Kyrgyz that reads like a
+foreigner's — so the copy is shorter than the English in places, and that is the
+translation being correct rather than incomplete.
+
+**Three whole catalogues, 191 keys each, every placeholder.** Forty-six languages
+in the register, forty-five of them translations, forty-seven buttons on
+`/language` — still one plain `POST` form with no JavaScript needed. `reviewed`
+remains `false` on all forty-five, and that is the only number here that has not
+moved since the first African catalogue was written.

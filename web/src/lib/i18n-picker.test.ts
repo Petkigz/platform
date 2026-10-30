@@ -55,6 +55,7 @@ test('Asia is a block, and it is not empty', () => {
       'ur', 'id', 'ms', 'bn', 'hi',
       'uz', 'kk', 'az', 'ps', 'fa-af',
       'ta', 'ne', 'si', 'th', 'dv',
+      'ky', 'tg', 'tk',
     ],
   );
   assert.deepEqual(
@@ -63,6 +64,7 @@ test('Asia is a block, and it is not empty', () => {
       'Urdu', 'Indonesian', 'Malay', 'Bengali', 'Hindi',
       'Uzbek', 'Kazakh', 'Azerbaijani', 'Pashto', 'Dari',
       'Tamil', 'Nepali', 'Sinhala', 'Thai', 'Dhivehi',
+      'Kyrgyz', 'Tajik', 'Turkmen',
     ],
   );
 });
