@@ -41,8 +41,14 @@ test('a choice beats the device, and the device beats English', () => {
     chooseLocale({ chosen: null, acceptLanguage: 'ar-EG,ar;q=0.9' }),
     { code: 'ar', source: 'device' },
   );
+  // Chinese used to be the example of "a language we do not have". It is not any
+  // more, and a device in Shanghai should get the catalogue for Shanghai.
   assert.deepEqual(
     chooseLocale({ chosen: null, acceptLanguage: 'zh-CN,ja;q=0.8' }),
+    { code: 'zh-hans', source: 'device' },
+  );
+  assert.deepEqual(
+    chooseLocale({ chosen: null, acceptLanguage: 'ja,ko;q=0.8' }),
     { code: 'en', source: 'default' },
   );
 });
@@ -51,9 +57,31 @@ test('a region is dropped, and an unknown language is not guessed at', () => {
   assert.equal(matchLocale('fr-CA'), 'fr');
   assert.equal(matchLocale('pt_BR'), 'pt');
   assert.equal(matchLocale('AR'), 'ar');
-  assert.equal(matchLocale('zh-Hans-CN'), null);
   assert.equal(matchLocale(''), null);
   assert.equal(matchLocale(null), null);
+  // A language the register does not have is still not guessed at.
+  assert.equal(matchLocale('ja-JP'), null);
+});
+
+test('Chinese resolves by script, and by region when the script is missing', () => {
+  // The reason `matchLocale` now drops one subtag at a time rather than jumping
+  // from the whole tag to the base: `zh-Hans-CN` has to become `zh-hans` on the
+  // way past, and it used to come back `null` — the largest group of readers on
+  // the platform getting English because the script was thrown away with the
+  // region.
+  assert.equal(matchLocale('zh-Hans'), 'zh-hans');
+  assert.equal(matchLocale('zh-Hans-CN'), 'zh-hans');
+  assert.equal(matchLocale('zh-Hans-SG'), 'zh-hans');
+  assert.equal(matchLocale('zh-Hant'), 'zh-hant');
+  assert.equal(matchLocale('zh-Hant-TW'), 'zh-hant');
+  // Devices send the region, not the script.
+  assert.equal(matchLocale('zh-CN'), 'zh-hans');
+  assert.equal(matchLocale('zh-TW'), 'zh-hant');
+  assert.equal(matchLocale('zh-HK'), 'zh-hant');
+  assert.equal(matchLocale('zh-MO'), 'zh-hant');
+  assert.equal(matchLocale('zh'), 'zh-hans');
+  // And they are genuinely two different catalogues.
+  assert.notEqual(translator('zh-hans')('home.title'), translator('zh-hant')('home.title'));
 });
 
 test('Dari is not Persian, and a device that asks for one gets it', () => {

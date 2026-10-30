@@ -28,6 +28,11 @@ import { ASIA_DV } from './asia-dv.ts';
 import { ASIA_KY } from './asia-ky.ts';
 import { ASIA_TG } from './asia-tg.ts';
 import { ASIA_TK } from './asia-tk.ts';
+import { ASIA_ZH_HANS } from './asia-zh-hans.ts';
+import { ASIA_ZH_HANT } from './asia-zh-hant.ts';
+import { ASIA_VI } from './asia-vi.ts';
+import { ASIA_FIL } from './asia-fil.ts';
+import { ASIA_MY } from './asia-my.ts';
 import type { Messages } from './en.ts';
 
 /**
@@ -741,4 +746,9 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   ASIA_KY,
   ASIA_TG,
   ASIA_TK,
+  ASIA_ZH_HANS,
+  ASIA_ZH_HANT,
+  ASIA_VI,
+  ASIA_FIL,
+  ASIA_MY,
 );

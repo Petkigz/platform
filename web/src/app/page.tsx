@@ -47,7 +47,7 @@ export const dynamic = 'force-dynamic';
  * which is the whole point — a stranger has no account to read a preference
  * from.
  *
- * The copy lives in `lib/i18n/messages/home-*.ts`, in all forty-five other
+ * The copy lives in `lib/i18n/messages/home-*.ts`, in all fifty other
  * languages, and this file only holds **message keys**. Two consequences worth
  * naming, because they are the reason for the shape rather than a style choice:
  *

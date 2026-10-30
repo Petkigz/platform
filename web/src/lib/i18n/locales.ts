@@ -58,6 +58,13 @@ export type LocaleCode =
   | 'ky'
   | 'tg'
   | 'tk'
+  // East and Southeast Asia, where a code carries a script subtag for the first
+  // time: `zh-hans` and `zh-hant` are two catalogues, not one language.
+  | 'zh-hans'
+  | 'zh-hant'
+  | 'vi'
+  | 'fil'
+  | 'my'
   | 'fr'
   | 'es'
   | 'pt'
@@ -179,6 +186,13 @@ export const LOCALES: readonly Locale[] = [
   { code: 'ky', nativeName: 'Кыргызча', englishName: 'Kyrgyz', dir: 'ltr', reviewed: false, region: 'Asia' },
   { code: 'tg', nativeName: 'Тоҷикӣ', englishName: 'Tajik', dir: 'ltr', reviewed: false, region: 'Asia' },
   { code: 'tk', nativeName: 'Türkmençe', englishName: 'Turkmen', dir: 'ltr', reviewed: false, region: 'Asia' },
+  // Two Chinese rows, deliberately: 软件 and 軟體 are the same word to a machine
+  // and different words to the reader. Traditional carries Taiwan's vocabulary.
+  { code: 'zh-hans', nativeName: '简体中文', englishName: 'Chinese, Simplified', dir: 'ltr', reviewed: false, region: 'Asia' },
+  { code: 'zh-hant', nativeName: '繁體中文', englishName: 'Chinese, Traditional', dir: 'ltr', reviewed: false, region: 'Asia' },
+  { code: 'vi', nativeName: 'Tiếng Việt', englishName: 'Vietnamese', dir: 'ltr', reviewed: false, region: 'Asia' },
+  { code: 'fil', nativeName: 'Tagalog', englishName: 'Tagalog', dir: 'ltr', reviewed: false, region: 'Asia' },
+  { code: 'my', nativeName: 'မြန်မာ', englishName: 'Burmese', dir: 'ltr', reviewed: false, region: 'Asia' },
   { code: 'fr', nativeName: 'Français', englishName: 'French', dir: 'ltr', reviewed: false, region: 'Europe and the Americas' },
   { code: 'es', nativeName: 'Español', englishName: 'Spanish', dir: 'ltr', reviewed: false, region: 'Europe and the Americas' },
   { code: 'pt', nativeName: 'Português', englishName: 'Portuguese', dir: 'ltr', reviewed: false, region: 'Europe and the Americas' },
@@ -218,19 +232,36 @@ export function matchLocale(tag: string | null | undefined): LocaleCode | null {
   const cleaned = tag.trim().toLowerCase().replace('_', '-');
   if (cleaned === '') return null;
 
-  // **The whole tag first.** `fa-AF` is Dari and `fa` is Persian — one catalogue
-  // each, and they are not the same file. Until Dari existed, dropping the
-  // region was always safe because every catalogue was a language rather than a
-  // language-and-a-place; the exception is written here rather than discovered by
-  // an Afghan reader being taught in Tehran's vocabulary.
-  if (isLocaleCode(cleaned)) return cleaned;
+  // **The whole tag first, then one subtag shorter each time.** Two things made
+  // this more than a two-step: `fa-AF` is Dari and `fa` is Persian, so the region
+  // can be the difference between two catalogues; and Chinese is a *script* and a
+  // region, so `zh-Hans-CN` has to become `zh-hans` before it can become `zh`.
+  //
+  // Dropping straight from the whole tag to the base — which is what this did
+  // before Chinese arrived — threw the script away with the region, and returned
+  // `null` for the largest group of readers on the platform.
+  const parts = cleaned.split('-');
+  for (let i = parts.length; i >= 1; i -= 1) {
+    const candidate = parts.slice(0, i).join('-');
+    if (isLocaleCode(candidate)) return candidate;
+  }
 
-  const [base] = cleaned.split('-');
-  if (!base) return null;
+  // **Chinese without a script, which is most Chinese devices.** A phone in Taipei
+  // sends `zh-TW` and a phone in Shanghai sends `zh-CN`; neither says "Hans" or
+  // "Hant", and both mean very different files here. The regions that mean
+  // Traditional are named; everything else — including a bare `zh` — is
+  // Simplified, which is what the majority of the world's Chinese readers use and
+  // what CLDR's own default resolves to. It is a guess, it is a documented one,
+  // and the reader can override it on `/language` in one tap.
+  if (parts[0] === 'zh') {
+    return TRADITIONAL_CHINESE_REGIONS.has(parts[1] ?? '') ? 'zh-hant' : 'zh-hans';
+  }
 
-  // `pt-BR` and `pt` are one catalogue. `ar-EG` and `ar` likewise.
-  return isLocaleCode(base) ? base : null;
+  return null;
 }
+
+/** Taiwan, Hong Kong and Macau: the Chinese regions that write Traditional. */
+const TRADITIONAL_CHINESE_REGIONS = new Set(['tw', 'hk', 'mo']);
 
 export type LocaleSource = 'chosen' | 'device' | 'default';
 

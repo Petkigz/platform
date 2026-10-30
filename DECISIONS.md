@@ -6295,3 +6295,42 @@ in the register, forty-five of them translations, forty-seven buttons on
 `/language` — still one plain `POST` form with no JavaScript needed. `reviewed`
 remains `false` on all forty-five, and that is the only number here that has not
 moved since the first African catalogue was written.
+
+## Chinese is two rows, and the parser had to learn subtags — **DECIDED 2026-10-30**
+
+**Simplified (`zh-hans`) and Traditional (`zh-hant`) are two catalogues.** One
+would have been cheaper and wrong: 软件 and 軟體 are the same word to a machine
+and different words to the reader, and the vocabulary diverges even where the
+characters do not — 网络/網路, 视频/影片, 信息/資訊, 用户/使用者. A parent in Taipei
+handed Beijing's words reads a translation that was done for somebody else, which
+is the argument Dari won against Persian two units ago, applied to the largest
+group of readers this platform has.
+
+**That forced a real fix to `matchLocale()`, not a special case.** It used to jump
+from the whole tag straight to the base: `fa-AF` → `fa-af`, else `fr-CA` → `fr`.
+A Chinese tag has **three** parts, and `zh-Hans-CN` fell through both steps and
+came back `null`. The largest language on the platform was getting an English
+page, and the old test asserted that `null` was correct — it was testing the bug.
+It now drops one trailing subtag at a time, which is the general form of what it
+was already doing for two-part tags, and `zh-Hans-CN` resolves to `zh-hans`.
+
+**Chinese without a script is a documented guess.** Phones send `zh-CN`,
+`zh-TW`, or bare `zh` — almost never `zh-Hans`. Taiwan, Hong Kong and Macau are
+named as Traditional; everything else, including bare `zh`, resolves to
+Simplified, because that is the majority and CLDR's own default. `/language` is
+one tap away, and the picker prints both rows in their own characters.
+
+**Vietnamese, Tagalog and Burmese came with it,** and only one of the three needed
+an argument. Vietnamese carries its tone marks in full — `ma` and `má` are
+different words, and a menu with them stripped is a menu a reader has to sound
+out. Tagalog is written in natural Tagalog rather than the 70%-English
+code-switching that fills most Philippine apps, with `pasword`, `akawnt` and
+`email` kept because that is what people say. Burmese is here for a minority that
+has been the target of state violence in living memory, and its file says so
+plainly: nothing in the interface is advocacy, and nothing is silent either — a
+family reading a statute in Burmese gets the same plain sentences as a family
+reading it in Malay.
+
+**Fifty-one languages, fifty translations, fifty-two buttons.** `reviewed` is
+`false` on every one of them. The Chinese rows, the two largest catalogues on the
+platform by readers, have the same status as the smallest: written, never read.
