@@ -110,3 +110,30 @@ export function describeStreak(days: number): string {
   if (days === 1) return '1 day in a row';
   return `${Math.trunc(days)} days in a row`;
 }
+
+/**
+ * Why this page has nothing to show, said honestly.
+ *
+ * Two switches can turn engagement off and they are not the same news. If the
+ * whole platform has no streaks, there is nothing to find and nothing to ask
+ * for. If streaks are on but children are not shown them, the guardian is
+ * looking at a decision somebody made about children — and the sentence has to
+ * say which, or they will hunt for the wrong switch.
+ */
+export function engagementOffSentence(reason: 'disabled' | 'children_off'): string {
+  if (reason === 'children_off') {
+    return (
+      'Streaks and badges are switched on for this platform, but not for children. ' +
+      'That is a separate decision, made by the people running the platform, and every ' +
+      'child on the platform is treated the same way — it is not something you can turn ' +
+      'on for one child. Their learning is still being recorded: the courses and the ' +
+      'certificates are on their family page either way.'
+    );
+  }
+  return (
+    'Streaks and badges are not switched on for this platform yet. Learning is still ' +
+    'being recorded — this page only adds the streak, the calendar and the badges on ' +
+    'top of it — so turning the feature on will show everything that has already been ' +
+    'done.'
+  );
+}

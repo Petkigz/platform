@@ -136,8 +136,18 @@ async function FamilyBlock({
 }) {
   // A streak is derived from progress that already exists, so a failure to read it is
   // silence rather than an error: the child's card is still worth showing without it.
-  // The flag is checked once, not once per child.
-  const streaksOn = await isFlagEnabled(supabase, 'learning.streaks').catch(() => false);
+  // Both switches are checked once, not once per child.
+  //
+  // The second one is `family.engagement`: streaks can exist for adults and still not be
+  // shown for children, and a child's strip is exactly what that switch decides. The
+  // function behind this strip refuses the same way, so the page and the record cannot
+  // disagree — asking here only keeps us from making a request we know will fail.
+  const [streaksOnFlag, childEngagementOn] = await Promise.all([
+    isFlagEnabled(supabase, 'learning.streaks').catch(() => false),
+    isFlagEnabled(supabase, 'family.engagement').catch(() => false),
+  ]);
+  // Both, because a child's streak is two decisions rather than one.
+  const showChildEngagement = streaksOnFlag && childEngagementOn;
 
   const [members, childCourses, adults] = await Promise.all([
     fetchFamilyMembers(supabase, family.id).catch(() => []),
@@ -145,7 +155,7 @@ async function FamilyBlock({
       family.children.map(async (c) => ({
         child: c,
         courses: await fetchChildCourses(supabase, c.id).catch(() => []),
-        engagement: streaksOn
+        engagement: showChildEngagement
           ? await fetchEngagement(supabase, c.id).catch(() => null)
           : null,
       })),

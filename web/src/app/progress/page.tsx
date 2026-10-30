@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { fetchOwnLearner } from '@/lib/family';
 import { fetchProgressRecord } from '@/lib/progress-record-query';
+import { engagementOffSentence } from '@/lib/engagement';
 import { ProgressRecordView } from './progress-record-view';
 
 export const metadata: Metadata = { title: 'Progress and achievements' };
@@ -65,16 +66,12 @@ export default async function ProgressPage({
 
   const outcome = await fetchProgressRecord(supabase, learnerId);
 
-  if (!outcome.ok && outcome.reason === 'disabled') {
+  if (!outcome.ok && (outcome.reason === 'disabled' || outcome.reason === 'children_off')) {
     return (
       <div className="container section">
         <p className="eyebrow">My learning</p>
         <h1>Progress and achievements</h1>
-        <div className="notice">
-          Streaks and badges are not switched on for this platform yet. Your progress is still
-          being recorded — this page only adds the streak, the calendar and the badges on top of
-          it — so turning the feature on will show everything you have already done.
-        </div>
+        <div className="notice">{engagementOffSentence(outcome.reason)}</div>
         <p style={{ marginTop: '1rem' }}>
           <Link href="/learn">Back to my learning</Link>
         </p>

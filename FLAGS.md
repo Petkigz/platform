@@ -78,7 +78,7 @@ Three kinds of gate:
 | `family.child_login` | Child has their own login | CODE | Trusted linking workflow; safeguarding; age assurance; retention for child data |
 | `family.plans` | Family plan with included child slots | ADMIN + SETUP | Slot pricing; reduction rules; payments on |
 | `family.adult_shares` | Adult learner shares progress with someone | ADMIN | **Built on `/account/sharing` (2026-10-21), and the three open items are settled.** Scope model: the schema's three — progress, achievements, or both — one active share per person per scope, and changing the terms means revoking first so the record is never edited. Revocation UI: an "end it" on every live share, for the person who granted it or governance staff. Privacy disclosure text: on the panel, in the grant form, and to the reader, who sees the terms they are reading under. Off gates every writer; reading and revoking stay available while it is off, because turning a feature off must not strand a privacy decision with no way to end it. **Sharing is by invitation** (2026-10-22): the form takes an address and `invite_learning_share()` records an invitation whether or not the address has an account, so the reply cannot disclose one; the message is queued through the outbox (nothing is delivered until `delivery.notifications` has a provider), the token is stored only as an md5 of 122 random bits, bound to the invited address, and usable once before it expires (1–90 days), and `/share/invite/[token]` is where it is accepted by somebody signed in as that address. `resolve_share_grantee()` — the function that answered "does this address have an account" — is revoked for every signed-in caller, not merely unused |
-| `family.engagement` | Badges, streaks, visible progress for children | ADMIN | Mechanics actually designed — currently `gamif: 0`, `badge: 0`, `streak: 0` |
+| `family.engagement` | A child's streak and badges, shown only to the child and the adults in their family | ADMIN | **Designed and built 2026-10-30.** The owner settled the question this flag had been waiting on since it was written: a child's engagement is a **private streak and a shelf of badges, visible to the child and the adults in their family — no points, no leaderboards, and nothing compared across children.** The mechanics live under `learning.streaks` — the strip, the eight-badge catalogue with unearned badges saying what they still need, the twelve-week calendar on `/progress` — and this switch decides whether **children** get them; both must be on for a child, while an adult learner's own streak needs only the mechanics. It is enforced in `may_show_engagement()`, which both readers ask, so the strip at `/family`, the record at `/progress?learner=…` and the refusals cannot disagree. The refusal says *not enabled for children*, which is different news from *not enabled*: a guardian told the wrong one goes looking for a switch that is already on. A second key rather than a default because a streak aimed at a seven-year-old is a parent's decision before it is a product one. Off, no child's engagement renders anywhere, adults are unaffected, and nothing is deleted — because nothing was ever stored |
 
 ## Teaching
 
@@ -92,7 +92,6 @@ Three kinds of gate:
 | `teaching.set_pricing` | Instructor sets price within a platform floor and ceiling | ADMIN + SETUP | Floor/ceiling per market; interacts with `prices`; blocked on the same facts as checkout |
 | `teaching.invite_links` | Shareable link with attribution to the teacher | ADMIN | Attribution model; UTM handling; abuse limits. **The growth engine — teachers already have audiences** |
 | `teaching.content_licence` | Who owns uploaded content and what licence the platform holds | ADMIN | **Built 2026-10-28: the agreement, not just the text.** The `teaching` document went in force on 2026-10-28 and `/policies/teaching` records an acceptance against the version live at the moment it is given. What was missing was anybody being asked. With this on, `media_assets` refuses an upload whose uploader has not agreed, with two named reasons: *agree on your teaching page* (one click) and *the terms are not published* (the owner's, on `/admin/policies`). The gap is on `/admin/policies`: how many appointed teachers, how many have agreed, and who has not. A teacher agrees from a card on `/teach`, so the whole routine is a button rather than a request. **Ships off** — taking an ability away from a teacher is a decision, not a default — and it is now an admin toggle rather than a CODE gate, because the code it needed exists. Publishing a new version asks everybody again, which is why agreement is recorded against a version rather than a document |
-| `teaching.screening` | Teacher screening and conduct acknowledgement | CODE | **Built:** the screening record (`/admin/screenings`: type, date, expiry, who recorded it, reference write-only, rows append-only) and the conduct policy as a draft in the register. **Not built:** a conduct acknowledgement a teacher signs inside the product, and any refusal that turns on it. **The owner decides:** what a check is, who performs it, and whether teaching requires an acknowledgement at all |
 | `teaching.peer_review` | One other teacher reviews before publish | ADMIN | Who reviews: the reviewer register on `/admin/reviewers` — a person applies on `/review`, a governance admin checks them, then grants the subjects and scopes they may judge. What has to be reviewed: `content_review_requirements`, written by the author or governance staff on `/teach/[courseId]` and `/admin/reviews`, which makes publication wait for an approval from somebody authorised for that subject and makes an unauthorised reviewer unassignable. What happens on disagreement: a `revision_requested` or `rejected` decision, or a conflict declaration, which bars that reviewer from the assignment at once and keeps barring them until staff hear it in writing. A requirement an approval cannot reach is waived by governance staff, in writing. **The flag is not what gates publication.** `enforce_publication_gate()` always needs `governance.min_approvals` scholarly approvals (default 1) and no open requirement, so the dials that actually switch peer review on and off are `governance.min_approvals` and `governance.panel_required`, both settable here |
 | `teaching.panel` | Scholarly panel with quorum and voting | ADMIN + SETUP | **Built 2026-10-27, and the trap it closes was real.** With `governance.panel_required` on, the publication gate demands an **approved** panel case; no function could approve one and the case table had an insert policy and no update, so switching it on would have blocked every publication on the platform for ever. Now: the owner opens a panel and sets its quorum, seats people who are both appointed (`scholarly_panel_member`, owner-only) and checked, convenes it (refused below quorum), and a case is opened against an unpublished version. A seated member of a **convened** panel casts one vote — the reviewer is resolved from the session, so nobody votes as anybody else — and the chair, governance or the owner records the decision. A case cannot be closed below quorum, cannot be approved while more voted to reject, and a convened panel cannot be emptied below its quorum by a removal (make it inactive first, which the refusal says). A member sees their cases and their own vote; the direction of other votes is hidden until they have voted. Set-up: decide the quorum and the majority, write the panel procedure into the register, then switch `governance.panel_required` on. Off, peer review is enough to publish |
 | `teaching.applications` | Applying to teach: send your qualifications and a sample lesson, and the owner reads it | ADMIN | **Built 2026-10-26, and it still grants nothing on submit.** The oldest note beside this flag was *"build the queue, keep it closed"*, and the queue is now built: `submit_teaching_application()` records a headline, the qualifications in the applicant's own words, and a **link to a sample lesson** an owner can actually watch — free text rather than a dropdown, because a schema for somebody else's ijazah is the platform inventing credentials. **Teaching stays by appointment.** Submitting creates one row and nothing else: no role, no course, no profile, tested as three separate assertions. The `instructor` role is granted by `decide_teaching_application()`, which is staff-only, needs a written reason, and writes both the decision and a `role.assigned` entry against the applicant. Rejection handling is the reason itself — the applicant reads it on `/teach/apply` and may apply again, since people improve and a second look is cheaper than losing a teacher. One open application at a time; an existing teacher cannot apply for the role they hold. What approving does not do: it does not publish anything. An approved teacher still passes the publication gate — review, scholarly approval, the version workflow — exactly as before |
@@ -184,8 +183,9 @@ money rules behave, and they shipped with values rather than being absent.
 | `platform.safeguarding_lead` | text | ADMIN | `The platform owner, AyahSpring — privacy@ayahspring.com` | Who a safeguarding concern goes to. **Named by the owner on 2026-10-30** — the last precondition `platform.safeguarding` was waiting on. It is an office and a monitored address rather than a person's legal name, so the policy does not have to be rewritten the day somebody steps down. `safeguarding_lead()` reads it and is executable by **anon**, because a person reporting a concern about a child must not have to sign in first. Changing it is an owner action on `/admin/settings`, with a written reason like every other control |
 
 
-Measured, the register holds **109 rows: the 91 flags above plus these eighteen.**
-Ninety-three are boolean switches, thirteen are integers and three are text. The two
+Measured, the register holds **108 rows: the 90 flags above plus these eighteen.**
+Ninety-two are boolean switches, thirteen are integers and three are text (a
+currency, a room's base URL, and the safeguarding lead). The two
 governance policy controls have no gate because they are not features; the money
 controls are ADMIN, because a number that changes what a total says is changed
 from the dashboard and not from a migration — and so are the upload quota, the
@@ -205,16 +205,16 @@ now holds the register, `/admin` reads and toggles it, and `/api/admin/flags`
 writes it. A trigger refuses to enable a `code`-gated flag at runtime, so the
 dashboard cannot promise what needs a deploy.
 
-**2. Fourteen of these cannot be runtime toggles.**
-`gate_type='code'` on 14 flags, and every one names something that still does not
+**2. Twelve of these cannot be runtime toggles.**
+`gate_type='code'` on 12 flags, and every one names something that still does not
 exist: a provider, a written policy, a legal decision, or a design that was never
 done. They are `learning.ai_support`, `learning.recitation`, `learning.ijazah`,
-`platform.safeguarding`, `platform.incident`, `platform.takedown`,
-`platform.age_assurance`, `platform.data_export`, `platform.withdrawal_right`,
-`platform.accessibility`, `family.child_login`, `teaching.screening`,
-`teaching.payouts` and `delivery.transcode`. Each needs a deploy, a provider, or a
-policy that does not exist, and building them "to completion" would mean building
-against guesses.
+`platform.incident`, `platform.takedown`, `platform.data_export`,
+`platform.withdrawal_right`, `platform.accessibility`, `family.child_login`,
+`teaching.payouts`, `delivery.transcode` — and `platform.incident` is CODE for a
+method rather than a missing screen, since detection counts and never judges.
+Each needs a deploy, a provider, or a policy that does not exist, and building
+them "to completion" would mean building against guesses.
 
 The list is re-counted from `platform_settings` rather than from prose, because
 five units left it stale in one day and a stale total outlives the reason it was
@@ -228,10 +228,18 @@ are worth reading twice. `institution.sso` moved although SAML and OIDC are stil
 missing, because the part that can exist — a verified email domain — is built;
 `learning.multi_language` moved although the interface is still English, because a
 course saying which language it is taught in is the half that needs no translator.
+On 2026-10-30 two more left this list on the owner's six answers:
+`platform.age_assurance`, because a declaration that says it is a declaration needs
+no provider, and `platform.safeguarding`, because the check, the acknowledgement
+and the named lead now exist and the gate is enforced. `teaching.screening` did not
+move — it was **removed**, on the same day, because it was a second name for
+exactly the decision `platform.safeguarding` enforces and its precondition (*no
+acknowledgement, no refusal*) had stopped being true. One decision has one row; a
+register that carries two is what the owner reads by mistake.
 A switch nobody can turn on while the feature it names works is a worse lie than a
 screen that says what is absent.
 
-A further **15 are ADMIN + SETUP**: the toggle is real, but a provider, a sender
+A further **17 are ADMIN + SETUP**: the toggle is real, but a provider, a sender
 domain or a written policy has to be finished first. Those are the ones where
 turning it on too early does damage.
 
@@ -244,12 +252,16 @@ these. Four of the six now have their code: refunds are decided at
 What is missing is a provider, a jurisdiction, or a policy decision — and
 `teaching.panel` is still an open question, not a backlog item.
 
-**4. One flag is still blocked on design that was never done.**
-`family.engagement` — child engagement mechanics. It is wanted and undesigned;
-badges, streaks and points for a five-year-old are a safeguarding question
-before they are a feature. `learning.discussion` was in this category and is no
-longer: moderation is settled (authority posts visible, learner posts held) and
-built. `learning.reviews` joined it on the same terms.
+**4. Nothing in this register is still blocked on design that was never done.**
+`family.engagement` was the last one, and the owner designed it on 2026-10-30: a
+private streak and a shelf of badges for the child and their family, with no
+points, no leaderboards and nothing compared across children. That was the whole
+of the "mechanics undesigned" objection, so it is built rather than merely
+permitted. `learning.discussion` left this category earlier on the same terms —
+moderation settled, authority posts visible, learner posts held — and so did
+`learning.reviews`. What remains unbuilt in this register is now blocked on a
+**fact** (a provider, a policy, a jurisdiction) or on the owner's own decision, and
+neither of those is a design that can be finished by writing code.
 
 ---
 

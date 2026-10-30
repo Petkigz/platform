@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { describeStreak, fetchEngagement, parseEngagement } from './engagement.ts';
+import {
+  describeStreak, engagementOffSentence, fetchEngagement, parseEngagement,
+} from './engagement.ts';
 
 // ---------------------------------------------------------------------------
 // Streaks and badges.
@@ -84,4 +86,27 @@ test('a streak is described the way a person would say it', () => {
   assert.equal(describeStreak(4), '4 days in a row');
   assert.equal(describeStreak(-2), 'No streak yet');
   assert.equal(describeStreak(Number.NaN), 'No streak yet');
+});
+
+test('the two ways engagement can be off say different things', () => {
+  // Saying "not switched on for this platform" when streaks are on for adults and off
+  // for children sends a guardian to look for a switch that is already on. The two
+  // sentences must be different, and each must name the thing that is actually true.
+  const platform = engagementOffSentence('disabled');
+  const children = engagementOffSentence('children_off');
+
+  assert.notEqual(platform, children);
+  assert.match(platform, /not switched on for this platform/);
+  assert.match(children, /not for children/);
+  assert.doesNotMatch(children, /not switched on for this platform/);
+
+  // Both must promise the learning is still there, because both are true about that.
+  for (const sentence of [platform, children]) {
+    assert.match(sentence, /still being recorded|still recorded|are still/i);
+  }
+
+  // And the children's sentence must not read as something a parent can change for one
+  // child: it is a platform-wide decision, and pretending otherwise makes support load.
+  assert.match(children, /not something you can turn on for one child/);
+  assert.match(children, /treated the same way/);
 });

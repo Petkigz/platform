@@ -130,6 +130,11 @@ export async function run(ctx) {
   // Everything below runs with the feature on; restored at the end.
   await q(`update public.platform_settings set value_text = 'true' where key = 'learning.streaks'`);
 
+  // A child's record needs both switches, and the children's one ships off
+  // (2026-10-30). The guardian test below is the only one that reads a child, so
+  // it runs with the second key on; `child_engagement` owns the gate itself.
+  await q(`update public.platform_settings set value_text = 'true' where key = 'family.engagement'`);
+
   await test('a stranger cannot read somebody else\'s record', async () => {
     const stranger = await adultLearner('Stranger');
 
@@ -385,6 +390,7 @@ export async function run(ctx) {
     await rejects(() => record(outsider.userId, child), /you cannot read this learner's progress/);
   });
 
-  // Restore the flag so the next suite meets the platform as it ships.
+  // Restore both flags so the next suite meets the platform as it ships.
   await q(`update public.platform_settings set value_text = 'false' where key = 'learning.streaks'`);
+  await q(`update public.platform_settings set value_text = 'false' where key = 'family.engagement'`);
 }

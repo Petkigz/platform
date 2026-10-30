@@ -52,6 +52,7 @@ import { run as courseOutlineImport } from './course_outline_import.test.mjs';
 import { run as hifzTracker } from './hifz_tracker.test.mjs';
 import { run as ageDeclaration } from './age_declaration.test.mjs';
 import { run as teacherConduct } from './teacher_conduct.test.mjs';
+import { run as childEngagement } from './child_engagement.test.mjs';
 import { run as securitySignals } from './security_signals.test.mjs';
 import { run as courseLanguage } from './course_language.test.mjs';
 import { run as revenueBreakdown } from './revenue_breakdown.test.mjs';
@@ -290,6 +291,7 @@ for (const [name, fn] of [
   ['hifz_tracker', hifzTracker],
   ['age_declaration', ageDeclaration],
   ['teacher_conduct', teacherConduct],
+  ['child_engagement', childEngagement],
   ['security_signals', securitySignals],
   ['course_language', courseLanguage],
   ['assessments', assessments],

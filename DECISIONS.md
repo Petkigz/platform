@@ -5909,3 +5909,46 @@ and the person a concern goes to is whoever holds the office. `safeguarding_lead
 is executable by **anon**, because a parent reporting a concern about a child must
 not be asked to create an account first — that is the one function in this area
 where the caller's identity is deliberately irrelevant.
+
+**A child's engagement is a second key, held by the adults.** Two flags claimed
+this feature and only one of them did anything: `learning.streaks` built the whole
+mechanics, `family.engagement` was read by no line of code. The owner's answer of
+2026-10-30 — a private streak and a shelf of badges, visible to the child and the
+adults in their family, with no points, no leaderboards and nothing compared
+across children — settled what the second one had been waiting for, so it is now
+the switch that decides whether **children** get them. Both must be on for a child;
+an adult learner's own record needs only the mechanics. That is not redundancy:
+the one part of this platform designed to make a seven-year-old come back tomorrow
+is a parent's decision before it is a product default, and it is the only place
+where a number about a child is ever shown to an adult.
+
+**One predicate, so no two screens can disagree.** `may_show_engagement()` is
+asked by `learner_engagement()` and `learner_progress_record()`, not by the pages.
+A page that forgot the second key would still be refused by the database, and the
+strip at `/family` and the record at `/progress` cannot tell a guardian two
+different things about one child. It is checked **after** the access check on
+purpose: whether a given learner is a child is not something a stranger should
+learn from an error message.
+
+**Two refusals, two sentences.** *Streaks and badges are not enabled* and *streaks
+and badges are not enabled for children* are different news. A guardian told the
+first when streaks are on everywhere but off for children goes looking for a switch
+that is already on; a page that renders the wrong one is worse than a page that
+renders nothing. Off for children, the adult is told that their learning is still
+recorded and that the courses and certificates are on the family page either way,
+because turning engagement off must not look like losing the learning.
+
+**Nothing compared, and the schema is checked for it.** No points, no score, no
+ranking — and the tests assert there is no function in `public` named for a
+leaderboard, a ranking or points, and no score-like column on the tables that
+describe a learner's work. A promise kept only in prose is a promise that a future
+feature can break without noticing; these two assertions fail loudly if it does.
+
+**One decision has one row.** `teaching.screening` was retired on the same day. It
+had described exactly what `platform.safeguarding` now enforces — a recorded check
+plus a conduct acknowledgement — no code read it, and its precondition ("no
+acknowledgement, no refusal") had stopped being true. A register that carries two
+names for one decision, with a reason that is no longer true, is worse than no
+register: it is what the owner reads before switching something on. If the
+teacher-side screens ever need their own switch it will be a new key, added with
+its own row and its own written precondition — never this one revived by accident.
