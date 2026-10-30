@@ -13,6 +13,7 @@ import {
 } from '@/lib/licence';
 import { AcceptPolicy } from '@/app/policies/[slug]/accept-policy';
 import { TakedownAnswer } from './takedown-answer';
+import { ConductCard } from './conduct-card';
 import { NewCourse } from './new-course';
 
 export const dynamic = 'force-dynamic';
@@ -64,11 +65,19 @@ export default async function TeachPage() {
     );
   }
 
-  const [courses, screeningResult, takedownResult, termsResult] = await Promise.all([
+  const [courses, screeningResult, takedownResult, termsResult, conductVersion] = await Promise.all([
     fetchMyCourses(supabase, user.id),
     supabase.rpc('my_screening_status'),
     supabase.rpc('my_takedown_notices'),
     supabase.rpc('my_teacher_terms'),
+    // The version the acknowledgement would be made against, so the card can name
+    // it rather than saying "the policy" and leaving the teacher to guess which.
+    supabase
+      .from('policy_versions')
+      .select('version_number, policy_documents!inner(slug)')
+      .eq('policy_documents.slug', 'safeguarding')
+      .eq('status', 'in_force')
+      .maybeSingle(),
   ]);
   if (screeningResult.error) throw new Error(screeningResult.error.message);
   if (takedownResult.error) throw new Error(takedownResult.error.message);
@@ -76,6 +85,10 @@ export default async function TeachPage() {
   const screening = (screeningResult.data ?? { recorded: false }) as unknown as MyScreening;
   const takedown = (takedownResult.data ?? { notices: [], held: 0 }) as unknown as MyTakedown;
   const terms: TeacherTerms = parseTeacherTerms(termsResult.data);
+  const conductVersionNumber =
+    typeof conductVersion.data?.version_number === 'number'
+      ? conductVersion.data.version_number
+      : null;
 
   return (
     <div className="container section">
@@ -94,6 +107,14 @@ export default async function TeachPage() {
         </p>
       )}
       <TakedownAnswer mine={takedown} />
+
+      {/* Both facts the publication gate checks, side by side. It renders nothing
+          while the platform is not asking. */}
+      <ConductCard
+        screening={screening}
+        policyHref="/policies/safeguarding"
+        policyVersion={conductVersionNumber}
+      />
 
       {/* The agreement itself, where the work is. `teaching.content_licence` may be
           off, and the card says so rather than hiding the terms: a teacher is

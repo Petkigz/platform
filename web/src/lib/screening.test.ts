@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import {
   SCREENING_NOTHING_BLOCKED,
   describeScreeningError,
+  gateSentence,
   myScreeningSentence,
   screeningCountsSentence,
   screeningLine,
@@ -86,14 +87,18 @@ test('the console says out loud that nothing is enforced', () => {
 });
 
 test('the teacher’s own sentence never implies a pass means approval to teach', () => {
-  assert.match(myScreeningSentence({ recorded: false }), /not a mark against you/i);
+  // The sentence used to say "that is not a mark against you, because the
+  // standard is still being decided". The owner decided it on 2026-10-30, so the
+  // honest version says what is missing and what it stops.
+  assert.match(myScreeningSentence({ recorded: false }), /cannot be published/i);
+  assert.doesNotMatch(myScreeningSentence({ recorded: false }), /still being decided/i);
   assert.match(
     myScreeningSentence({ recorded: true, outcome: 'passed', type: 'Basic disclosure', checkedAt: '2026-10-27', validUntil: '2028-10-27' }),
     /holds until 27 Oct 2028/,
   );
   assert.match(
     myScreeningSentence({ recorded: true, outcome: 'passed', type: 'Basic disclosure', checkedAt: '2026-10-27', expired: true, validUntil: '2026-01-01' }),
-    /not stopped by that yet/i,
+    /cannot be published until a current check/i,
   );
   assert.match(myScreeningSentence({ recorded: true, outcome: 'failed' }), /did not pass/i);
   assert.equal(myScreeningSentence(null), myScreeningSentence({ recorded: false }));
@@ -106,4 +111,24 @@ test('a refusal is a sentence, never a code', () => {
   assert.equal(describeScreeningError('screening:something_new'), 'something new');
   assert.equal(describeScreeningError('', 'the database said no'), 'the database said no');
   assert.match(describeScreeningError(null), /reason was not returned/);
+});
+
+test('the gate sentence names the missing fact, not a code', () => {
+  // A teacher meets a refusal as a sentence. `safeguarding:author_not_cleared`
+  // and `no_screening` are for the database, not for a person.
+  assert.match(gateSentence('no_screening'), /no check is on file/i);
+  assert.match(gateSentence('screening_expired'), /lapsed/i);
+  assert.match(gateSentence('conduct_not_acknowledged'), /not yet read/i);
+  for (const reason of ['no_screening', 'screening_expired', 'conduct_not_acknowledged']) {
+    assert.doesNotMatch(gateSentence(reason), /safeguarding:|_/u);
+  }
+});
+
+test('the clear sentence says where a concern goes, because that is the question left', () => {
+  const lead = 'The platform owner, AyahSpring — privacy@ayahspring.com';
+  assert.match(gateSentence('ok', lead), /privacy@ayahspring\.com/);
+  // Without a lead named there is still a sentence, never an empty string.
+  assert.equal(gateSentence('ok', null).length > 20, true);
+  // An unknown reason is a sentence as well, not the raw string.
+  assert.doesNotMatch(gateSentence('something_odd'), /something_odd/);
 });

@@ -49,6 +49,15 @@ export type MyScreening = {
   checkedAt?: string | null;
   validUntil?: string | null;
   expired?: boolean;
+  /** Whether the live safeguarding and conduct policy has been read and agreed to. */
+  conductAcknowledged?: boolean;
+  /** Whether this teacher may publish a course a child may be shown today. */
+  mayTeachChildren?: boolean;
+  gateReason?: 'ok' | 'no_screening' | 'screening_expired' | 'conduct_not_acknowledged' | 'not_signed_in' | null;
+  /** Who a concern goes to. An office and a monitored address, not a person's name. */
+  lead?: string | null;
+  /** Whether the platform is asking at all — the flag, not the answer. */
+  required?: boolean;
 };
 
 export const SCREENING_STATUS_LABEL: Record<ScreeningStatus, string> = {
@@ -124,8 +133,12 @@ export const SCREENING_NOTHING_BLOCKED =
 /** What the teacher is told about their own record. */
 export function myScreeningSentence(mine: MyScreening | null | undefined): string {
   if (!mine || !mine.recorded) {
-    return 'No check is on file for you. That is not a mark against you — most teachers have '
-      + 'nothing recorded yet, because the standard is still being decided.';
+    // The old sentence said the standard was still being decided. It is not: the
+    // owner settled it on 2026-10-30, so the honest version now explains what is
+    // missing rather than apologising for a gap that has closed.
+    return 'No check is on file for you yet. Whoever appoints teachers records one — the '
+      + 'kind of check, the date and whether it lapses — and until then a course you '
+      + 'write for children cannot be published.';
   }
   const when = day(mine.checkedAt);
   const until = day(mine.validUntil);
@@ -135,9 +148,10 @@ export function myScreeningSentence(mine: MyScreening | null | undefined): strin
       : 'A check recorded against your account did not pass. Whoever recorded it can tell you what happens next.';
   }
   if (mine.expired) {
+    // It now stops something, and saying so is the point of the sentence.
     return until
-      ? `Your last check lapsed on ${until}. Teaching is not stopped by that yet, but a check is out of date.`
-      : 'Your last check has lapsed.';
+      ? `Your last check lapsed on ${until}. A course written for children cannot be published until a current check is recorded.`
+      : 'Your last check has lapsed. A course written for children cannot be published until a current check is recorded.';
   }
   if (until) return `A ${mine.type ?? 'check'} was recorded${when ? ` on ${when}` : ''} and holds until ${until}.`;
   return `A ${mine.type ?? 'check'} was recorded${when ? ` on ${when}` : ''}, with no expiry stated.`;
@@ -172,3 +186,32 @@ export const SCREENING_OUTCOMES: readonly { value: 'passed' | 'failed'; label: s
   { value: 'passed', label: 'Passed' },
   { value: 'failed', label: 'Did not pass' },
 ];
+
+/**
+ * Why a publish is refused, in a sentence.
+ *
+ * The database refuses with a code (`safeguarding:author_not_cleared`) and the
+ * reason in the hint. A teacher should never see either: they should see which of
+ * the two things is missing and where to fix it.
+ */
+export function gateSentence(
+  reason: string | null | undefined,
+  lead?: string | null,
+): string {
+  switch (reason) {
+    case 'no_screening':
+      return 'No check is on file for you, so a course written for children cannot be published yet.';
+    case 'screening_expired':
+      return 'Your last check has lapsed, so a course written for children cannot be published until a current one is recorded.';
+    case 'conduct_not_acknowledged':
+      return 'You have not yet read and agreed to the safeguarding and conduct policy. Agreeing to it is one press, below.';
+    case 'not_signed_in':
+      return 'Sign in first.';
+    case 'ok':
+      return lead
+        ? `You are clear to publish a course for children. A concern about a child goes to ${lead}.`
+        : 'You are clear to publish a course for children.';
+    default:
+      return 'That could not be saved, and the reason was not returned.';
+  }
+}

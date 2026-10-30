@@ -5874,3 +5874,38 @@ is stranded, and no child is hidden from the adult who added them.
 missing declaration, so the rule holds whichever door the call comes through; the
 button is the invitation, not the check. Staff are not exempt, because the
 declaration belongs to the account doing the adding.
+
+**A check is what the person recording it says it is, and the record is the rule.**
+The safeguarding register had one thing missing before it could gate anything:
+*what counts as a check*. The owner settled it on 2026-10-30 as **free text the
+recorder writes** — "Enhanced criminal record", "Basic disclosure", "reference
+taken in Kampala" — because a standard that differs by country cannot be a closed
+list without this platform picking a jurisdiction it has no standing to pick. What
+is enforced is therefore not the *kind* of check but its **existence, outcome and
+date**: the latest row must have passed, and if whoever recorded it set an expiry
+that date must not have gone. Nothing is inferred from a type string.
+
+**A screening and an acknowledgement are different facts.** A screening says
+somebody was vetted. An acknowledgement says the person read the rules they are
+being vetted for — and neither implies the other, which is why they are two rows,
+two screens and two checks in one gate. The acknowledgement is made against the
+**live** version of the policy, resolved inside `acknowledge_conduct()` rather than
+sent by the client: a client that could name a version could agree to a draft, or
+to an old text it had already read. A new version of the policy asks again, because
+the row records what somebody actually read, not that they once clicked a box.
+
+**The gate is on the author, and it fires at publication.** Not at appointment
+(too early: the check may come later and the teacher is not yet visible), not at
+submission (a draft harms nobody), and **not on whoever presses the publish
+button** — an owner publishing on a teacher's behalf must not launder an unchecked
+author into a child-facing course. Adults-only courses are not held to it: a
+safeguarding check is about children, and applying it to a fiqh course for adults
+would be a rule nobody could explain.
+
+**The named lead is an office, not a person.** `platform.safeguarding_lead` reads
+*The platform owner, AyahSpring — privacy@ayahspring.com*: a role and a monitored
+address. A legal name in a policy has to be rewritten the day somebody steps down,
+and the person a concern goes to is whoever holds the office. `safeguarding_lead()`
+is executable by **anon**, because a parent reporting a concern about a child must
+not be asked to create an account first — that is the one function in this area
+where the caller's identity is deliberately irrelevant.

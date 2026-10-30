@@ -85,7 +85,7 @@ export async function run(ctx) {
     const result = await controlsFor(supportAgent);
     assert(result.controls.length === 0,
       `a support agent saw ${result.controls.length} control(s)`);
-    assert(result.totalControls === 14, `the register holds ${result.totalControls}`);
+    assert(result.totalControls === 15, `the register holds ${result.totalControls}`);
     assert(result.mineCount === 0, 'the count disagrees with the list');
   });
 
@@ -113,10 +113,10 @@ export async function run(ctx) {
       'a governance admin can convene the scholarly board');
   });
 
-  await test('a platform admin sees all fourteen', async () => {
+  await test('a platform admin sees all fifteen', async () => {
     const result = await controlsFor(admin);
-    assert(result.controls.length === 14, `saw ${result.controls.length}`);
-    assert(result.mineCount === 14 && result.totalControls === 14, 'the counts disagree');
+    assert(result.controls.length === 15, `saw ${result.controls.length}`);
+    assert(result.mineCount === 15 && result.totalControls === 15, 'the counts disagree');
     for (const row of result.controls) {
       assert(typeof row.value === 'string', `${row.key} has no value`);
       assert(row.label && row.note && row.note.length > 20,
@@ -311,7 +311,7 @@ export async function run(ctx) {
     // catches it: every declared rule must be reachable and must carry bounds or
     // a prefix where its type needs one.
     const rules = (await q('select * from public.platform_control_rules()')).rows;
-    assert(rules.length === 14, `${rules.length} rules`);
+    assert(rules.length === 15, `${rules.length} rules`);
     for (const r of rules) {
       if (r.value_type === 'integer') {
         assert(r.min_value !== null && r.max_value !== null,
@@ -319,7 +319,13 @@ export async function run(ctx) {
         assert(r.min_value < r.max_value, `${r.control_key} has an empty range`);
       }
       if (r.value_type === 'text') {
-        assert(r.control_key === 'finance.reporting_currency' || r.allowed_prefix !== null,
+        // Two text controls are deliberately unconstrained by prefix: a currency
+        // is an ISO code checked by its own writer, and the safeguarding lead is
+        // an office and a monitored address — there is no prefix that would make
+        // it more correct, and inventing one would refuse a perfectly good answer.
+        assert(
+          ['finance.reporting_currency', 'platform.safeguarding_lead'].includes(r.control_key)
+            || r.allowed_prefix !== null,
           `${r.control_key} is free text with no rule`);
       }
     }

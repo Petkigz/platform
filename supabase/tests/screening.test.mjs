@@ -175,15 +175,21 @@ export async function run(ctx) {
     eq(register.counts.checked >= 1, true, 'while the teacher with a current check still counts');
   });
 
-  await test('the flag says what exists and what is still the owner’s', async () => {
+  await test('the flag is now a switch, because the standard and the lead are settled', async () => {
     const flag = (await q(
       `select gate_type, preconditions from public.platform_settings
         where key = 'platform.safeguarding'`)).rows[0];
-    eq(flag.gate_type, 'code',
-      'the register exists but nothing enforces it yet, so the gate is still code');
+    // CODE until 2026-10-30, because "the enforcement needs the standard first"
+    // and then "name the lead before enabling". The owner did both, so the gate
+    // that turns on this flag now exists in set_course_version_status() and the
+    // dashboard may flip it.
+    eq(flag.gate_type, 'admin',
+      'the standard and the lead are decided, so this is a switch and not a deploy');
     assert(!/Nothing exists/.test(flag.preconditions),
       'the preconditions no longer claim nothing exists');
-    assert(/screening register/.test(flag.preconditions),
-      'and they name the register that now exists');
+    assert(/screening/.test(flag.preconditions),
+      'and they name the screening the gate now checks');
+    assert(/safeguarding_lead|lead/.test(flag.preconditions),
+      'and point at the named lead, the other thing the register was waiting for');
   });
 }

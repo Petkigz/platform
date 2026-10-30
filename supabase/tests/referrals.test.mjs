@@ -476,7 +476,7 @@ export async function run(ctx) {
       const board = (await asActor(admin, 'select public.platform_controls() as r')).rows[0].r;
       const mine = board.controls.filter((c) => c.key.startsWith('commerce.referral'));
       eq(mine.length, 4, 'referral controls on the admin settings screen');
-      eq(Number(board.totalControls), 14, 'the whole register of controls');
+      eq(Number(board.totalControls), 15, 'the whole register of controls');
     });
 
     await test('a percentage changed later does not re-price a code already shared', async () => {

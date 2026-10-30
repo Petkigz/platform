@@ -54,19 +54,19 @@ export async function run(ctx) {
   console.log('\nA switch belongs to the platform admin');
   // -------------------------------------------------------------------------
 
-  await test('the register splits into ninety-one flags and seventeen controls', async () => {
+  await test('the register splits into ninety-one flags and eighteen controls', async () => {
     const kinds = (await q(
       `select setting_kind, count(*)::int n from public.platform_settings group by 1`)).rows;
     const byKind = Object.fromEntries(kinds.map((r) => [r.setting_kind, r.n]));
     assert(byKind.flag === 91, `${byKind.flag} flags`);
-    assert(byKind.control === 17, `${byKind.control} controls`);
+    assert(byKind.control === 18, `${byKind.control} controls`);
   });
 
   await test('a support agent may read the register but not flip it', async () => {
     const before = await value('commerce.checkout');
 
     const read = await as(support, 'select count(*)::int n from public.platform_settings');
-    assert(read.rows[0].n === 108, `could read ${read.rows[0].n} rows`);
+    assert(read.rows[0].n === 109, `could read ${read.rows[0].n} rows`);
 
     await rejects(
       () => as(support, `update public.platform_settings set value_text = 'true'
