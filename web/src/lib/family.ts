@@ -228,7 +228,11 @@ export async function fetchChildCourses(
  */
 export type AddChildOutcome =
   | { ok: true; childId: string }
-  | { ok: false; code: 'no_family' | 'not_owner' | 'rejected'; message: string };
+  | {
+      ok: false;
+      code: 'no_family' | 'not_owner' | 'declaration_required' | 'rejected';
+      message: string;
+    };
 
 export async function addChild(
   supabase: SupabaseClient,
@@ -261,6 +265,16 @@ export async function addChild(
     }
     if (/family .* not found/i.test(error.message)) {
       return { ok: false, code: 'no_family', message: 'That family does not exist.' };
+    }
+    // The owner's age-assurance decision, surfaced where it can be acted on:
+    // the page shows the declaration card above this form, so the sentence points
+    // at it rather than saying "not allowed".
+    if (/age:declare_before_adding_a_child/i.test(error.message)) {
+      return {
+        ok: false,
+        code: 'declaration_required',
+        message: 'Declare that you are 18 or older before adding a child.',
+      };
     }
     return { ok: false, code: 'rejected', message: error.message };
   }

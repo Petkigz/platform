@@ -5844,3 +5844,33 @@ together. The age band is the only thing on either door that is not a sentence:
 it is a value (`11-13`) and stays one, which a test checks across all thirty-three
 catalogues — "nothing is listed for those ages" without the age is the sort of
 translation that reads finished and answers nothing.
+
+**Age assurance is a declaration, and the screen says so.** `platform.age_assurance`
+had been deliberately unfinished since October with one honest sentence against
+it: *the method is undecided, and a guessed method is worse than an honest gap.*
+The owner chose the method on 2026-10-30 — **the adult states they are eighteen or
+older and are the guardian of the children they add** — and it is now a shipped
+feature rather than a gap. What makes it honest is not the wording but the
+admission: the card says *we record that you said this and when; we do not check
+it — no document, no card.* Every real alternative costs either money the platform
+does not have (a card or document provider) or somebody's identity document, and a
+platform that cannot afford a provider should say it takes the word rather than
+pretend it looked.
+
+**The statement is versioned, not edited.** `adult_declaration_statement(1)` holds
+the exact words, and the row stores which version was agreed to. A change of
+wording is a new version, so a declaration made today is still readable in the
+words it was made in — the same rule that keeps a certificate readable after the
+course is withdrawn, applied to a promise instead of an achievement.
+
+**Withdrawal is a date, and it does not take a child away.** `withdraw_adult_declaration()`
+sets a timestamp and deletes nothing, and a child already on the account stays.
+Removing a learner is a separate, deliberate act with its own screen; folding it
+into a consent withdrawal would let one click destroy a record of somebody's
+study. Turning the flag off lifts the gate entirely — the rows remain, no family
+is stranded, and no child is hidden from the adult who added them.
+
+**The gate is in the writer, not the button.** `add_child_to_family()` refuses a
+missing declaration, so the rule holds whichever door the call comes through; the
+button is the invitation, not the check. Staff are not exempt, because the
+declaration belongs to the account doing the adding.

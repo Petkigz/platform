@@ -18,6 +18,8 @@ import { FamilyAdultCard } from './family-adult';
 import { fetchEngagement } from '@/lib/engagement';
 import { EngagementStrip } from '@/components/engagement-strip';
 import { AddChild } from './add-child';
+import { AgeDeclarationCard } from './age-declaration';
+import { fetchDeclaration, type AdultDeclaration } from '@/lib/adult-declaration';
 import { CreateFamily } from './create-family';
 
 export const dynamic = 'force-dynamic';
@@ -50,13 +52,16 @@ export default async function FamilyPage() {
 
   if (!user) redirect('/sign-in?next=/family');
 
-  const [families, audienceSections, ownLearner] = await Promise.all([
+  const [families, audienceSections, ownLearner, declaration] = await Promise.all([
     fetchFamilies(supabase),
     isFlagEnabled(supabase, 'learning.audience_sections').catch(() => false),
     // The signed-in adult's own profile, if they have one. Read here rather
     // than per family: it is one row, and every family on the page has to
     // explain the same thing about it.
     fetchOwnLearner(supabase, user.id).catch(() => null),
+    // Read once, not once per family: the declaration belongs to the adult, and
+    // two families on one account must not be able to disagree about it.
+    fetchDeclaration(supabase),
   ]);
 
   if (families.length === 0) {
@@ -95,7 +100,13 @@ export default async function FamilyPage() {
       )}
 
       {families.map((f: Family) => (
-        <FamilyBlock key={f.id} family={f} supabase={supabase} ownLearner={ownLearner} />
+        <FamilyBlock
+          key={f.id}
+          family={f}
+          supabase={supabase}
+          ownLearner={ownLearner}
+          declaration={declaration}
+        />
       ))}
 
       <p style={{ marginTop: '1.5rem' }}>
@@ -114,8 +125,10 @@ async function FamilyBlock({
   family,
   supabase,
   ownLearner,
+  declaration,
 }: {
   family: Family;
+  declaration: AdultDeclaration;
   // The request-scoped client. Passing it down rather than re-creating keeps
   // every query on the same session.
   supabase: Awaited<ReturnType<typeof createClient>>;
@@ -172,6 +185,7 @@ async function FamilyBlock({
       {family.children.length === 0 ? (
         <div className="card">
           <p className="empty">No children yet.</p>
+          <AgeDeclarationCard declaration={declaration} />
           <AddChild familyId={family.id} />
         </div>
       ) : (
@@ -244,6 +258,7 @@ async function FamilyBlock({
       )}
 
       <div style={{ marginTop: '0.75rem' }}>
+        <AgeDeclarationCard declaration={declaration} />
         <AddChild familyId={family.id} />
       </div>
 
