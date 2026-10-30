@@ -7,8 +7,13 @@ import {
   subjectNames,
   type CatalogueCourse,
 } from '@/lib/catalogue';
-import { cardPrice, contentLine, isPriced, type CourseCard } from '@/lib/catalogue-cards';
+import { contentLine, isPriced, type CourseCard } from '@/lib/catalogue-cards';
+import { offeringLabel } from '@/lib/enrolment';
+
+const offeringLabelFor = (card: CourseCard | null | undefined, code: LocaleCode): string | null =>
+  card ? offeringLabel(card.offering, code) : null;
 import { textProps } from '@/lib/language';
+import { isLocaleCode, translator, type LocaleCode } from '@/lib/i18n';
 import { ArabicInline } from '@/app/_shared/arabic-text';
 
 /**
@@ -31,13 +36,20 @@ import { ArabicInline } from '@/app/_shared/arabic-text';
 export function CourseShelfCard({
   course,
   card,
+  locale = 'en',
 }: {
   course: CatalogueCourse;
   card?: CourseCard | null;
+  /** The language the shelf is in — the badges, the price words and the
+      content line follow it. The course's own title does not: it is the
+      author's, and it is rendered as written. */
+  locale?: LocaleCode;
 }) {
+  const code: LocaleCode = isLocaleCode(locale) ? locale : 'en';
+  const t = translator(code);
   const version = displayVersion(course);
-  const price = cardPrice(card);
-  const content = contentLine(card);
+  const price = offeringLabelFor(card, code);
+  const content = contentLine(card, code);
 
   // Three states, three styles. A figure is a charge; "Included" is access the
   // buyer already holds; "Free" is the platform's own, and anything else —
@@ -84,8 +96,22 @@ export function CourseShelfCard({
       {content && <p className="card-content">{content}</p>}
 
       <div className="badges" style={{ marginTop: '0.7rem' }}>
-        <span className="badge">{AUDIENCE_LABEL[course.audience] ?? course.audience}</span>
-        <span className="badge">{DIFFICULTY_LABEL[course.difficulty] ?? course.difficulty}</span>
+        <span className="badge">
+          {course.audience === 'child'
+            ? t('audience.child')
+            : course.audience === 'adult'
+              ? t('audience.adult')
+              : (AUDIENCE_LABEL[course.audience] ?? course.audience)}
+        </span>
+        <span className="badge">
+          {course.difficulty === 'beginner'
+            ? t('difficulty.beginner')
+            : course.difficulty === 'intermediate'
+              ? t('difficulty.intermediate')
+              : course.difficulty === 'advanced'
+                ? t('difficulty.advanced')
+                : (DIFFICULTY_LABEL[course.difficulty] ?? course.difficulty)}
+        </span>
         {languagesFor(course).map((l) => (
           <span key={l} className="badge neutral">{l.toUpperCase()}</span>
         ))}

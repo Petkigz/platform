@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
@@ -15,6 +15,7 @@ import { fetchCataloguePage } from '@/lib/catalogue';
 import { offsetFor, pageNumber, PAGE_SIZE } from '@/lib/paging';
 import { canonicalCataloguePath } from '@/lib/crawl';
 import { parseLanguages, textProps } from '@/lib/language';
+import { LOCALE_COOKIE, chooseLocale, translator } from '@/lib/i18n';
 import { CourseShelfCard } from '../_shared/course-shelf-card';
 import { ShelfPager } from '../_shared/shelf-pager';
 import {
@@ -76,6 +77,18 @@ export default async function CataloguePage({
   const searching = typeof q === 'string' && q.trim().length > 0;
   const supabase = await createClient();
 
+  // The shelf is read in the language the reader is reading the site in. The
+  // courses themselves are not — a title, a description and a teacher's name
+  // stay exactly as their author wrote them, which is the whole point of the
+  // `lang`/`dir` handling inside the card.
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code: locale } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  const t = translator(locale);
+
   // The page number is a request, not a fact: a stale link or a hand-typed
   // address is clamped here, and the offset sent to the database is always a
   // whole page.
@@ -111,7 +124,7 @@ export default async function CataloguePage({
   const cards = await fetchCourseCards(
     supabase,
     visible.map((c) => c.id),
-    countryFromHeaders(await headers()),
+    countryFromHeaders(hdrs),
   );
 
   // Lessons that match, when the flag is on. A second list rather than a second
@@ -144,20 +157,17 @@ export default async function CataloguePage({
 
   return (
     <div className="container section">
-      <p className="eyebrow">Catalogue</p>
-      <h1>Find a course</h1>
-      <p className="lede">
-        Every course is reviewed before publication. Browse by subject, or
-        search for a course, a subject or a teacher.
-      </p>
+      <p className="eyebrow">{t('nav.catalogue')}</p>
+      <h1>{t('catalogue.title')}</h1>
+      <p className="lede">{t('catalogue.lede')}</p>
 
       {doors && (
         <div className="row" style={{ gap: '0.4rem', flexWrap: 'wrap', margin: '1rem 0' }}>
           <Link className="badge" href="/young" style={{ padding: '0.35rem 0.7rem' }}>
-            Learning is for a child
+            {t('catalogue.doorChild')}
           </Link>
           <Link className="badge" href="/adults" style={{ padding: '0.35rem 0.7rem' }}>
-            Learning is for me
+            {t('catalogue.doorAdult')}
           </Link>
         </div>
       )}
@@ -172,22 +182,24 @@ export default async function CataloguePage({
           // would make the lesson list look like a mistake.
           placeholder={
             lessonSearchOn
-              ? 'Search courses, lessons, subjects, teachers\u2026'
-              : 'Search courses, subjects, teachers\u2026'
+              ? t('catalogue.searchPlaceholderLessons')
+              : t('catalogue.searchPlaceholder')
           }
-          aria-label={lessonSearchOn ? 'Search courses and lessons' : 'Search courses'}
+          aria-label={
+            lessonSearchOn ? t('catalogue.searchLabelLessons') : t('catalogue.searchLabel')
+          }
         />
-        <select name="audience" defaultValue={audience ?? 'all'} aria-label="Audience">
-          <option value="all">All ages</option>
-          <option value="child">Young learners</option>
-          <option value="adult">Adults</option>
+        <select name="audience" defaultValue={audience ?? 'all'} aria-label={t('catalogue.audience')}>
+          <option value="all">{t('audience.both')}</option>
+          <option value="child">{t('audience.child')}</option>
+          <option value="adult">{t('audience.adult')}</option>
         </select>
-        <button type="submit" className="btn">Search</button>
+        <button type="submit" className="btn">{t('catalogue.search')}</button>
       </form>
 
       <div className="chips">
         <Link href={qs({ subject: undefined })} className="chip" aria-current={subject ? undefined : 'true'}>
-          All subjects
+          {t('catalogue.allSubjects')}
         </Link>
         {tops.map((s) => (
           <Link
@@ -204,13 +216,13 @@ export default async function CataloguePage({
       {languageOn && languageChips.length > 1 && (
         // The language chips are only worth a row when there is a choice to
         // make: one language is a label, not a filter.
-        <div className="chips" aria-label="Language the course is taught in">
+        <div className="chips" aria-label={t('catalogue.languageRow')}>
           <Link
             href={qs({ lang: undefined })}
             className="chip"
             aria-current={!lang || lang === 'all' ? 'true' : undefined}
           >
-            Any language
+            {t('catalogue.anyLanguage')}
           </Link>
           {languageChips.map((language) => (
             <Link
@@ -230,7 +242,10 @@ export default async function CataloguePage({
 
       {visible.length === 0 ? (
         <p className="empty">
-          {emptyShelfMessage({ page, query: q ?? null, lessonHits: lessonHits.length })}
+          {emptyShelfMessage(
+            { page, query: q ?? null, lessonHits: lessonHits.length },
+            locale,
+          )}
         </p>
       ) : (
         <>
@@ -241,10 +256,16 @@ export default async function CataloguePage({
             shown={shelf.shown}
             offset={shelf.offset}
             limit={shelf.limit}
+            locale={locale}
           />
           <div className="grid cols-2">
             {visible.map((c) => (
-              <CourseShelfCard key={c.id} course={c} card={cards.get(c.id) ?? null} />
+              <CourseShelfCard
+                key={c.id}
+                course={c}
+                card={cards.get(c.id) ?? null}
+                locale={locale}
+              />
             ))}
           </div>
           {/* Repeated under the grid, because after reading twelve cards the
@@ -256,6 +277,7 @@ export default async function CataloguePage({
             shown={shelf.shown}
             offset={shelf.offset}
             limit={shelf.limit}
+            locale={locale}
           />
         </>
       )}

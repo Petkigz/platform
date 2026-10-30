@@ -70,7 +70,7 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 The database stands at **147 tables, RLS on every one, 271 policies, 166
 user-defined triggers, 518 functions and 191 migrations.** The database suite
-passes **1995 tests**; the web suite passes **1573 tests**. TypeScript typecheck
+passes **1995 tests**; the web suite passes **1587 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **221 app route entries** — 120
 pages and seven generated entries (`/_not-found`, four icons and manifest, the
 robots file, the sitemap), plus 94 API routes.
@@ -278,6 +278,21 @@ in the markup. The words a **provider** returns are not translated: a wrong
 password is Supabase Auth's sentence, and rewriting it would be a guess presented
 as a fact.
 
+**The shelf speaks too.** The catalogue is the first screen a stranger meets, so
+it is translated whole: the heading, the lede, both audience doors, the search box
+and its label, the audience select, the subject chips, the language row, the count
+above the grid, "Showing 1–24 of 137", both pagers, the three different empty
+states and the prices on the cards. The count and the timings carry the reader's
+own numerals — Persian ۱, Bengali ১ — taken from `Intl.NumberFormat` rather than
+typed. In an RTL language the pager's arrows turn with the words, because a
+left-pointing arrow beside the Arabic word for "previous" points at the wrong
+page. What is *not* translated is the thing on the card that belongs to its
+author: **a course's title and description stay exactly as written**, in their own
+language and their own direction, on a page that may be running in a third. A
+second test file reads the page, the pager and the card and fails on a sentence of
+three or more English words or a hard-coded `aria-label`, and it holds the search
+box to the query the reader actually typed.
+
 Coverage is a count; a native reader is a claim. The picker's first option is *my device's language*,
 which deletes the cookie — a default somebody cannot return to is not a default.
 The choice lives on the browser, not the account, and the page says so: a shared
@@ -287,8 +302,9 @@ Persian turn the whole shell around, because the rules that place things are
 written in logical properties (`margin-inline-start`, `border-inline-start`)
 rather than left and right; the certificate and the receipt declare `dir="ltr"`
 because their words are English and untranslated. **Courses are not translated:**
-a title, a lesson and a teacher's page stay in the language their author wrote
-them in, and every catalogue says so in its own words. The feature has no flag —
+a title, a description, a lesson and a teacher's page stay in the language their
+author wrote them in, in their own direction, and the catalogue says so in its own
+words. The feature has no flag —
 English is the fallback, so it cannot be half-on.
 
 Crawlers have rules: `robots.txt` disallows the twenty signed-in prefixes,

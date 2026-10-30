@@ -1,5 +1,12 @@
 import Link from 'next/link';
 import { pageHref, pageNumber, pageCount, rangeLabel } from '@/lib/paging';
+import {
+  directionOf,
+  formatNumber,
+  isLocaleCode,
+  translator,
+  type LocaleCode,
+} from '@/lib/i18n';
 
 /**
  * The count above a shelf and the two links under it.
@@ -23,6 +30,7 @@ export function ShelfPager({
   shown,
   offset,
   limit,
+  locale = 'en',
 }: {
   basePath: string;
   params: Record<string, string | number | undefined | null>;
@@ -30,8 +38,18 @@ export function ShelfPager({
   shown: number;
   offset: number;
   limit: number;
+  /** The language the page is in — the count and the two links follow it. */
+  locale?: LocaleCode;
 }) {
-  const label = rangeLabel(offset, shown, total);
+  const code: LocaleCode = isLocaleCode(locale) ? locale : 'en';
+  const t = translator(code);
+
+  // The arrows follow the reading direction, not the words. In Arabic "previous"
+  // sits to the right of "next", so a left-pointing arrow beside the word for
+  // "previous" points the reader at the wrong page. The glyph is the only thing
+  // that changes; the link and its label are the same link and the same label.
+  const [back, forward] = directionOf(code) === 'rtl' ? ['\u2192', '\u2190'] : ['\u2190', '\u2192'];
+  const label = rangeLabel(offset, shown, total, code);
   const pages = pageCount(total, limit);
   const current = pageNumber(Math.floor(offset / Math.max(1, limit)) + 1);
 
@@ -42,28 +60,31 @@ export function ShelfPager({
       <p className="shelf-count">{label}</p>
 
       {pages > 1 && (
-        <nav className="pager" aria-label="Pages">
+        <nav className="pager" aria-label={t('catalogue.pages')}>
           {current > 1 ? (
             <Link className="btn secondary" href={pageHref(basePath, params, current - 1)}>
-              &larr; Previous
+              {back} {t('catalogue.previous')}
             </Link>
           ) : (
             <span className="btn secondary disabled" aria-disabled="true">
-              &larr; Previous
+              {back} {t('catalogue.previous')}
             </span>
           )}
 
           <span className="pager-at">
-            Page {current} of {pages}
+            {t('catalogue.pageOf', {
+              page: formatNumber(code, current),
+              pages: formatNumber(code, pages),
+            })}
           </span>
 
           {current < pages ? (
             <Link className="btn secondary" href={pageHref(basePath, params, current + 1)}>
-              Next &rarr;
+              {t('catalogue.next')} {forward}
             </Link>
           ) : (
             <span className="btn secondary disabled" aria-disabled="true">
-              Next &rarr;
+              {t('catalogue.next')} {forward}
             </span>
           )}
         </nav>

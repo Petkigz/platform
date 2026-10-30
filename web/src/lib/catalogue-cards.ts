@@ -20,6 +20,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { countLabel, formatNumber, isLocaleCode, translator } from './i18n/index.ts';
 import {
   offeringFromAnswer,
   offeringLabel,
@@ -87,14 +88,19 @@ export function parseCards(value: unknown): Map<string, CourseCard> {
 }
 
 /** "2h 05m" / "45 min" — the shortest honest rendering of a running time. */
-export function formatMinutes(minutes: number): string {
+export function formatMinutes(minutes: number, code: string = 'en'): string {
   if (!Number.isFinite(minutes) || minutes <= 0) return '';
+  const locale = (isLocaleCode(code) ? code : 'en') as Parameters<typeof translator>[0];
+  const t = translator(locale);
   const whole = Math.round(minutes);
   const h = Math.floor(whole / 60);
   const m = whole % 60;
-  if (h === 0) return `${m} min`;
-  if (m === 0) return `${h} hr`;
-  return `${h}h ${String(m).padStart(2, '0')}m`;
+  if (h === 0) return t('card.minutes', { count: formatNumber(locale, m) });
+  if (m === 0) return t('card.hours', { count: formatNumber(locale, h) });
+  return t('card.hoursMinutes', {
+    hours: formatNumber(locale, h),
+    minutes: String(m).padStart(2, '0'),
+  });
 }
 
 /**
@@ -104,18 +110,26 @@ export function formatMinutes(minutes: number): string {
  * "20 min" for a course where one of three lessons has no stated length is a
  * claim the data does not support. Missing data is silence, not zero.
  */
-export function contentLine(card: CourseCard | null | undefined): string {
+export function contentLine(card: CourseCard | null | undefined, code: string = 'en'): string {
   if (!card) return '';
 
+  const locale = (isLocaleCode(code) ? code : 'en') as Parameters<typeof translator>[0];
   const parts: string[] = [];
-  if (card.sections > 0) parts.push(`${card.sections} ${card.sections === 1 ? 'section' : 'sections'}`);
-  if (card.lessons > 0) parts.push(`${card.lessons} ${card.lessons === 1 ? 'lesson' : 'lessons'}`);
+  if (card.sections > 0) {
+    parts.push(countLabel(locale, card.sections, { one: 'card.sectionsOne', other: 'card.sectionsOther' }));
+  }
+  if (card.lessons > 0) {
+    parts.push(countLabel(locale, card.lessons, { one: 'card.lessonsOne', other: 'card.lessonsOther' }));
+  }
 
-  const time = card.minutes === null ? '' : formatMinutes(card.minutes);
+  const time = card.minutes === null ? '' : formatMinutes(card.minutes, locale);
   if (time) {
     parts.push(card.timedLessons < card.lessons ? `${time}+` : time);
   }
 
+  // The separator is the same in every language this interface has, and it is
+  // a middle dot rather than a comma because a list of three facts with commas
+  // is a sentence and this is a line of labels.
   return parts.join(' · ');
 }
 

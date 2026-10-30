@@ -62,6 +62,59 @@ export const en = {
   'language.coverage': '{percent}% of these interface strings are translated into {language}. Anything not yet translated is shown in English.',
   'language.coverageAll': 'This language is fully translated.',
   'language.browser': 'The choice is kept on this browser, not on your account, so another device will ask its own device which language to use.',
+  // The shelf. A catalogue that says "Find a course" in Yoruba and
+  // "Showing 25-48 of 137" in English has translated the decoration and left
+  // the sentence that tells you where you are.
+  'catalogue.title': 'Find a course',
+  'catalogue.lede':
+    'Every course is reviewed before publication. Browse by subject, or search for a course, a subject or a teacher.',
+  'catalogue.doorChild': 'Learning is for a child',
+  'catalogue.doorAdult': 'Learning is for me',
+  'catalogue.searchPlaceholder': 'Search courses, subjects, teachers…',
+  'catalogue.searchPlaceholderLessons': 'Search courses, lessons, subjects, teachers…',
+  'catalogue.searchLabel': 'Search courses',
+  'catalogue.searchLabelLessons': 'Search courses and lessons',
+  'catalogue.audience': 'Audience',
+  'catalogue.search': 'Search',
+  'catalogue.allSubjects': 'All subjects',
+  'catalogue.anyLanguage': 'Any language',
+  'catalogue.languageRow': 'Language the course is taught in',
+  'catalogue.pages': 'Pages',
+  'catalogue.previous': 'Previous',
+  'catalogue.next': 'Next',
+  'catalogue.pageOf': 'Page {page} of {pages}',
+  'catalogue.emptyPage': 'There is nothing on this page. It may be past the end of the shelf.',
+  'catalogue.emptyQuery':
+    'Nothing matched “{query}”. Try a subject, a teacher’s name, or a word from a lesson.',
+  'catalogue.emptyQueryLessons': 'No course matched “{query}”, but the lessons below did.',
+  'catalogue.emptyShelf':
+    'No courses yet. Once a teacher publishes one it will appear here — nothing is shown until it has passed review.',
+  'catalogue.countOne': '{count} course',
+  'catalogue.countOther': '{count} courses',
+  'catalogue.showing': 'Showing {from}–{to} of {total}',
+
+  'audience.child': 'Young learners',
+  'audience.adult': 'Adults',
+  'audience.both': 'All ages',
+
+  'difficulty.beginner': 'Beginner',
+  'difficulty.intermediate': 'Intermediate',
+  'difficulty.advanced': 'Advanced',
+
+  'price.free': 'Free',
+  'price.included': 'Included in your access',
+  'price.notOneOff': 'Not sold as a one-off course',
+  'price.ambiguous': 'Price needs a correct currency',
+  'price.notAvailable': 'Not available in your country yet',
+
+  'card.sectionsOne': '{count} section',
+  'card.sectionsOther': '{count} sections',
+  'card.lessonsOne': '{count} lesson',
+  'card.lessonsOther': '{count} lessons',
+  'card.minutes': '{count} min',
+  'card.hours': '{count} hr',
+  'card.hoursMinutes': '{hours}h {minutes}m',
+
   // Sign-in and sign-up. The two screens a person meets before they have any
   // reason to trust the site, so they are the first forms translated rather than
   // the last.

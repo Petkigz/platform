@@ -138,6 +138,52 @@ export function translatedLocales(): Locale[] {
 }
 
 /**
+ * Which plural form a language wants for a count.
+ *
+ * `Intl.PluralRules` knows the rules; what this platform ships is **two forms**,
+ * singular and plural. For English and most of the register that is the whole
+ * system. For a language with a dual — Arabic says a different word for two
+ * than for three — the count of two lands on the plural, which is why the shelf
+ * also prints the number and never relies on the noun alone to say how many.
+ * The limitation is written down in DECISIONS rather than discovered by an
+ * Arabic reader counting two courses.
+ */
+export function pluralForm(code: LocaleCode, count: number): 'one' | 'other' {
+  try {
+    return new Intl.PluralRules(code).select(count) === 'one' ? 'one' : 'other';
+  } catch {
+    return count === 1 ? 'one' : 'other';
+  }
+}
+
+/**
+ * A number as this language writes it.
+ *
+ * Arabic writes ٢٤, Hindi २४, and a page that prints 24 in either is in English
+ * with translated words around it. `Intl` is in the runtime, so there is no
+ * table to maintain and no font that has to carry the digits.
+ */
+export function formatNumber(code: LocaleCode, value: number): string {
+  try {
+    return new Intl.NumberFormat(code).format(value);
+  } catch {
+    return String(value);
+  }
+}
+
+/** A count with its noun, in the right number of forms. */
+export function countLabel(
+  code: LocaleCode,
+  count: number,
+  keys: { one: MessageKey; other: MessageKey },
+): string {
+  const t = translator(code);
+  return t(pluralForm(code, count) === 'one' ? keys.one : keys.other, {
+    count: formatNumber(code, count),
+  });
+}
+
+/**
  * The label on a language in the picker.
  *
  * The name in its own script comes first because that is the name its readers

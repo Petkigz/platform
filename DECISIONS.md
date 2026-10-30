@@ -5782,3 +5782,35 @@ nobody reviewed. No language toggle hidden behind an account. No claim that a
 course is available in a language its author did not write it in. And no flag:
 this is not a feature gate that can be switched off into a broken site — the
 English catalogue is the fallback, so the feature cannot be half-on.
+
+**The shelf is translated; the course on it is not.** The catalogue, its filters,
+its count, its pager and its three empty states are interface and take the
+reader's language. A course's title and description are the author's words, and a
+translated title is a second title nobody wrote — so the card renders them as
+written, in their own language and direction, inside a page that may be running in
+a third. The two mechanisms were already separate (`lib/language.ts` for content,
+`lib/i18n/` for the shell); this unit is the screen where both are visible at
+once, which is why a test asserts that the card passes `course.title` straight
+through and never asks the catalogue for it.
+
+**Two plural forms, and the number is always printed.** The catalogue has one
+`{one}` and one `{other}` sentence per counted noun; `Intl.PluralRules` is used to
+*choose* between them but the register only holds those two. Arabic has a dual and
+Russian-style languages have three or four, and a two-form file cannot say
+"two courses" the way Arabic says it — so `catalogue.countOther` is used for
+everything that is not one, and **the count is printed in every form**, which is
+why the number survives the compromise and a reader can still see exactly how
+many. The alternative was thirty-three hand-written plural rules per noun, and a
+wrong rule is worse than a sentence that reads slightly plainly. If the shelf ever
+has to say it perfectly, the change is a third and fourth form per language, not a
+different mechanism.
+
+**Digits follow the locale's own CLDR data, not our preference.** Numbers on the
+shelf go through `Intl.NumberFormat`, so Persian prints ۱ ۲ ۳ and Bengali ১ ২ ৩
+with their own grouping separators. Arabic, Urdu and Hindi resolve to **Latin**
+numerals, because CLDR's default for the language as a whole is `latn`: the
+Arabic-speaking world is split between Arabic-Indic and Latin digits, and choosing
+one for a reader whose region we have not been told would be inventing it. This is
+asserted in a test rather than left to whichever ICU build is installed, so a
+future upgrade that changes the default is a test failure and a decision, not a
+silent restyling of every number on the site.

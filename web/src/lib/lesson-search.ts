@@ -13,6 +13,8 @@
  * that they are looking at a second kind of result.
  */
 
+import { isLocaleCode, translator } from './i18n/index.ts';
+
 export type LessonHit = {
   lessonId: string;
   lessonTitle: string;
@@ -108,21 +110,29 @@ export function lessonResultsLede(count: number, courseCount: number): string {
  * "nothing matched" beside a list of matches would be the page contradicting
  * itself.
  */
-export function emptyShelfMessage(input: {
-  page: number;
-  query: string | null;
-  lessonHits: number;
-}): string {
-  if (input.page > 1) {
-    return 'There is nothing on this page. It may be past the end of the shelf.';
+export function emptyShelfMessage(
+  input: {
+    page: number;
+    query: string | null;
+    lessonHits: number;
+  },
+  code: string = 'en',
+): string {
+  const locale = (isLocaleCode(code) ? code : 'en') as Parameters<typeof translator>[0];
+  const t = translator(locale);
+
+  if (input.page > 1) return t('catalogue.emptyPage');
+
+  const query = input.query?.trim() ?? '';
+  if (query.length > 0) {
+    // The reader's own search words are quoted back exactly as typed — never
+    // translated, never re-cased — because they are what the platform searched
+    // for, and a "corrected" query is a query nobody can see.
+    return input.lessonHits > 0
+      ? t('catalogue.emptyQueryLessons', { query })
+      : t('catalogue.emptyQuery', { query });
   }
-  if (input.query && input.query.trim().length > 0) {
-    if (input.lessonHits > 0) {
-      return `No course matched “${input.query.trim()}”, but the lessons below did.`;
-    }
-    return `Nothing matched “${input.query.trim()}”. Try a subject, a teacher’s name, or a word from a lesson.`;
-  }
-  return 'No courses yet. Once a teacher publishes one it will appear here — nothing is shown until it has passed review.';
+  return t('catalogue.emptyShelf');
 }
 
 /** How many lesson results to ask for. One screenful, and the same every time. */

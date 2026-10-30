@@ -15,6 +15,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { fromMinor, format, type Money } from './money.ts';
+import { isLocaleCode, translator } from './i18n/index.ts';
 
 export type OfferingCountrySource = 'account' | 'request' | 'none';
 
@@ -221,15 +222,19 @@ export async function resolveOffering(
   return offeringFromAnswer(data as CoursePriceAnswer | null);
 }
 
-export function offeringLabel(o: Offering): string {
-  if (o.kind === 'free') return 'Free';
-  if (o.kind === 'entitled') return 'Included in your access';
-  if (o.kind === 'not_sold_here') {
-    if (o.reason === 'not_one_time') return 'Not sold as a one-off course';
-    if (o.reason === 'price_ambiguous') return 'Price needs a correct currency';
-    return 'Not available in your country yet';
-  }
-  return format(o.price.amount);
+export function offeringLabel(o: Offering, code: string = 'en'): string {
+  // The amount is never translated and never re-formatted here: it is the
+  // number the checkout will charge, produced by the same formatter, in the
+  // course's own currency. Only the words around it change.
+  if (o.kind === 'paid') return format(o.price.amount);
+
+  const locale = (isLocaleCode(code) ? code : 'en') as Parameters<typeof translator>[0];
+  const t = translator(locale);
+  if (o.kind === 'free') return t('price.free');
+  if (o.kind === 'entitled') return t('price.included');
+  if (o.reason === 'not_one_time') return t('price.notOneOff');
+  if (o.reason === 'price_ambiguous') return t('price.ambiguous');
+  return t('price.notAvailable');
 }
 
 export type EnrolOutcome =

@@ -20,6 +20,8 @@
  * whole catalogue from the second page on.
  */
 
+import { countLabel, formatNumber, isLocaleCode, translator } from './i18n/index.ts';
+
 /** Courses per page. Twelve rows of two on a desktop, and not a scroll away. */
 export const PAGE_SIZE = 24;
 
@@ -72,17 +74,33 @@ export function pageCount(total: number, size: number = PAGE_SIZE): number {
  * "Showing 0–0 of 0" underneath it helps nobody. When everything fits on one
  * page it is simply the count, because there is no limit to disclose.
  */
-export function rangeLabel(offset: number, shown: number, total: number): string {
+export function rangeLabel(
+  offset: number,
+  shown: number,
+  total: number,
+  code: string = 'en',
+): string {
   if (!Number.isFinite(total) || total <= 0) return '';
   if (!Number.isFinite(shown) || shown <= 0) return '';
 
   const from = Math.max(0, offset) + 1;
   const to = Math.max(0, offset) + shown;
+  const locale = (isLocaleCode(code) ? code : 'en') as Parameters<typeof translator>[0];
 
+  // Twenty-five of a hundred and thirty-seven is written in the reader's own
+  // digits — Arabic says ٢٥ — because a translated sentence with an English
+  // number in it is still a sentence a reader has to decode.
   if (total <= shown) {
-    return `${total} ${total === 1 ? 'course' : 'courses'}`;
+    return countLabel(locale, total, {
+      one: 'catalogue.countOne',
+      other: 'catalogue.countOther',
+    });
   }
-  return `Showing ${from}\u2013${to} of ${total}`;
+  return translator(locale)('catalogue.showing', {
+    from: formatNumber(locale, from),
+    to: formatNumber(locale, to),
+    total: formatNumber(locale, total),
+  });
 }
 
 /**

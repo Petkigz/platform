@@ -7,6 +7,8 @@ import { AUTH_EXTRA } from './auth-extra.ts';
 import { AUTH_SOUTH } from './auth-south.ts';
 import { AUTH_WEST } from './auth-west.ts';
 import { AUTH_WORLD } from './auth-world.ts';
+import { SHELF_AFRICA } from './shelf-africa.ts';
+import { SHELF_WORLD } from './shelf-world.ts';
 import type { Messages } from './en.ts';
 
 /**
@@ -693,4 +695,7 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   AUTH_WORLD,
   // The hints, the two "or" lines, and the three confirmations.
   AUTH_EXTRA,
+  // The shelf: the catalogue, its filters, its pager and the words on a card.
+  SHELF_AFRICA,
+  SHELF_WORLD,
 );
