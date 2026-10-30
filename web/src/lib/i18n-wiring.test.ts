@@ -19,6 +19,9 @@ const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf
 const SIGN_IN = read('../app/(auth)/sign-in/sign-in-form.tsx');
 const SIGN_UP = read('../app/(auth)/sign-up/sign-up-form.tsx');
 const LAYOUT = read('../app/layout.tsx');
+const FORGOT = read('../app/(auth)/forgot-password/page.tsx');
+const PASSWORD_FORM = read('../app/account/password-form.tsx');
+const PASSWORD_PAGE = read('../app/account/password/page.tsx');
 
 const FORMS: Array<[string, string]> = [
   ['the sign-in form', SIGN_IN],
@@ -86,5 +89,53 @@ test('every phone-number sentence keeps the number it is about', () => {
     const t = translator(locale.code);
     const rendered = t('auth.phoneAs', { phone: '+256772123456' });
     assert.match(rendered, /\+256772123456/u, `${locale.code} lost the number`);
+  }
+});
+
+test('the two password screens are translated, both ends of the journey', () => {
+  // A reset that is asked for in Luganda and completed in English is a reset
+  // that looks broken. Both screens ask the catalogue for their words, and both
+  // are free of English sentences in the markup.
+  for (const [what, source, least] of [
+    ['the reset request', FORGOT, 8],
+    ['the new-password form', PASSWORD_FORM, 4],
+  ] as const) {
+    assert.match(source, /const t = useT\(\);/u, `${what} does not read the catalogue`);
+    const calls = source.match(/t\('auth\./gu) ?? [];
+    assert.ok(calls.length >= least, `${what} only translates ${calls.length} strings`);
+    const literal = source.match(/>\s*[A-Z][a-z]+(?: [a-z']+){2,}\s*</gu) ?? [];
+    assert.deepEqual(literal, [], `${what} still says ${literal[0] ?? ''} in English`);
+  }
+
+  // The page a reset link lands on is a server component, so the language is in
+  // the first byte rather than swapped in after a flash of English.
+  assert.match(PASSWORD_PAGE, /const \{ code \} = chooseLocale\(\{/u);
+  assert.match(PASSWORD_PAGE, /const t = translator\(code\);/u);
+  assert.match(PASSWORD_PAGE, /\{t\('auth\.chooseTitle'\)\}/u);
+});
+
+test('a refused password is quoted, not diagnosed', () => {
+  // Supabase Auth names the rule the password broke. Replacing that with "it may
+  // not meet the account security requirements" is a guess printed as a fact, and
+  // it removes the only sentence that tells the reader what to change.
+  assert.match(PASSWORD_FORM, /setError\(updateError\.message \|\| t\('auth\.somethingWrong'\)\)/u);
+  assert.doesNotMatch(PASSWORD_FORM, /setError\('The password could not be updated/u);
+  // Our own two refusals — the fields disagreeing, and an empty field — stay ours.
+  assert.match(PASSWORD_FORM, /t\('auth\.noMatch'\)/u);
+  assert.match(PASSWORD_FORM, /t\('auth\.enterPassword'\)/u);
+});
+
+test('the reset confirmation does not say whether the address exists', () => {
+  // An address that answers "no such account" is a way to find out who has an
+  // account here. The sentence is a conditional one, and stays that way in every
+  // language — the same promise the sign-in page makes for a phone code.
+  for (const locale of LOCALES.filter((l) => l.code !== 'en')) {
+    const sentence = translator(locale.code)('auth.resetSent');
+    assert.notEqual(sentence.trim(), '', `${locale.code} has no confirmation`);
+    assert.notEqual(
+      sentence,
+      translator('en')('auth.resetSent'),
+      `${locale.code}.auth.resetSent is still the English sentence`,
+    );
   }
 });

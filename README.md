@@ -70,7 +70,7 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 The database stands at **147 tables, RLS on every one, 271 policies, 166
 user-defined triggers, 518 functions and 191 migrations.** The database suite
-passes **1995 tests**; the web suite passes **1587 tests**. TypeScript typecheck
+passes **1995 tests**; the web suite passes **1590 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **221 app route entries** — 120
 pages and seven generated entries (`/_not-found`, four icons and manifest, the
 robots file, the sitemap), plus 94 API routes.
@@ -277,6 +277,17 @@ reads both form files and fails on a sentence of three or more English words lef
 in the markup. The words a **provider** returns are not translated: a wrong
 password is Supabase Auth's sentence, and rewriting it would be a guess presented
 as a fact.
+
+**The password reset is translated at both ends.** Somebody who asks for a link in
+Luganda and lands on an English page concludes the reset failed, so
+`/forgot-password` and the new-password form are interfaces like any other — the
+heading, the address field, the two buttons, the confirmation and our own
+refusals. The confirmation is deliberately the same sentence whether or not the
+address is registered: an address that answers "no such account" is a way to find
+out who has an account here, and a test pins that. The refusal that is *not* ours
+is now quoted as it arrives: the form used to replace Supabase's reason with a
+guess about "account security requirements", which was a diagnosis printed as a
+fact and hid the one sentence that tells the reader what to change.
 
 **The shelf speaks too.** The catalogue is the first screen a stranger meets, so
 it is translated whole: the heading, the lede, both audience doors, the search box

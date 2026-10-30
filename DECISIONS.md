@@ -5814,3 +5814,23 @@ one for a reader whose region we have not been told would be inventing it. This 
 asserted in a test rather than left to whichever ICU build is installed, so a
 future upgrade that changes the default is a test failure and a decision, not a
 silent restyling of every number on the site.
+
+**A reset has two ends, and both are translated.** Asking for a link and then
+landing on an English page is how a translated product tells a reader the reset
+failed, so `/forgot-password` and the new-password form were done together rather
+than leaving the second screen for a later pass. The confirmation is a
+conditional sentence in every language — "if an account uses that address" — for
+the same reason the phone-code confirmation is: an address that answers "no such
+account" turns the form into a way to find out who has an account here. A test
+checks that all thirty-two non-English catalogues actually say something
+different from English, because a copied English string passes every other test.
+
+**The provider's diagnosis is quoted, even when it is less friendly than ours.**
+The password form used to answer a refused password with "it may not meet the
+account security requirements" — a guess, printed as a fact, and it threw away
+the provider's sentence, which is the one that names the rule ("Password should
+be at least 6 characters", "New password should be different from the older
+password"). Supabase's words are now shown as they arrive and only the refusal we
+generate ourselves — the two fields disagreeing, an empty field — is translated.
+This is the same rule the sign-in form already followed; the password form was
+simply the place it had not reached.

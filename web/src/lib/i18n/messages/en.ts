@@ -152,6 +152,29 @@ export const en = {
   'auth.checkEmail': 'Account created. Check your email to confirm the address, then sign in.',
   'auth.accountCreated': 'Account created for {phone}.',
 
+  // The two password screens. Our own sentences only: what Supabase Auth says
+  // about a password comes back in its own words and is shown as it arrives.
+  'auth.forgotTitle': 'Reset your password',
+  'auth.forgotLede':
+    'Enter the email address on your account. We will send a secure link if it is registered.',
+  'auth.sendLink': 'Send reset link',
+  'auth.sending': 'Sending…',
+  'auth.resetSent':
+    'If an account uses that email address, a password reset link is on its way. Check your inbox and spam folder.',
+  'auth.resetFailed':
+    'We could not send a reset link right now. Check the address and try again later.',
+  'auth.backToSignIn': 'Back to sign in',
+  'auth.accountSettings': 'Account settings',
+  'auth.chooseTitle': 'Choose a new password',
+  'auth.chooseLede': 'Set a new password for this account. Your reset link is single-use.',
+  'auth.newPassword': 'New password',
+  'auth.confirmPassword': 'Confirm new password',
+  'auth.noMatch': 'The passwords do not match.',
+  'auth.enterPassword': 'Enter your new password.',
+  'auth.updatePassword': 'Update password',
+  'auth.updating': 'Updating…',
+  'auth.offline': 'Could not reach the server. Check your connection and try again.',
+
   'language.reviewed': 'A first-language speaker has read this translation.',
   'language.unreviewed':
     'No first-language speaker has read this translation yet. It was written by the people who built the platform — if a word looks wrong to you, that is a mistake we owe you.',
