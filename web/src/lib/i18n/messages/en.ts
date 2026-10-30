@@ -200,6 +200,68 @@ export const en = {
   'auth.updating': 'Updating…',
   'auth.offline': 'Could not reach the server. Check your connection and try again.',
 
+  // The front door. It was the last page in English, which was the wrong page to
+  // leave: it is the one a stranger reads before deciding whether this is for
+  // them, and a platform that greets a reader in Yoruba on the shelf and in
+  // English on the way in has told them which of the two it really meant.
+  'home.eyebrow': 'Islamic learning, worldwide',
+  'home.title': 'Learn your deen, at the pace that suits you.',
+  'home.lede':
+    'Qur’an, Arabic, Fiqh, Hadith and more — taught by qualified teachers to children and adults, wherever you are.',
+  'home.browse': 'Browse the catalogue',
+  'home.createAccount': 'Create a free account',
+  'home.continue': 'Continue learning',
+  'home.paths': 'Explore learning paths',
+  'home.note':
+    'Looking costs nothing. You pay when you enrol, for one named learner, and a child is never asked for an email address.',
+  'home.meansEyebrow': 'What that means',
+  'home.meansTitle': 'Three things the platform refuses to do',
+  'home.assure1Title': 'Reviewed before it is listed',
+  'home.assure1Body':
+    'Courses come from qualified teachers and are approved by someone authorised for the subject. An author cannot approve their own work, and every publication is recorded.',
+  'home.assure2Title': 'A child’s login is made by their guardian',
+  'home.assure2Body':
+    'A child learns under a parent’s account by default, and only gets a sign-in of their own if the parent makes it — a username they choose and a password they set, with no email address asked of the child. The parent can remove it again without touching a lesson.',
+  'home.assure3Title': 'A certificate that can still be checked',
+  'home.assure3Body':
+    'Each one carries a number anyone can look up, and it stays verifiable even if the course is later withdrawn.',
+  'home.studyTitle': 'What you can study',
+  'home.studyCountOne': '{count} subject, each taught by a teacher reviewed for it.',
+  'home.studyCountOther': '{count} subjects, each taught by a teacher reviewed for it.',
+  'home.studyEmpty':
+    'Subjects appear here as courses are added. The catalogue is always the full list.',
+  'home.doorChildBody':
+    'Written for young learners, held by a parent or guardian’s account, and given a sign-in of their own only when that adult makes one.',
+  'home.doorAdultBody':
+    'Study for yourself, at your own level, with certificates you can show to anyone who asks.',
+  'home.doorOpen': 'Look at what is there',
+  'home.doorCatalogue': 'See them in the catalogue',
+  'home.howTitle': 'How it works',
+  'home.step': 'Step {number}',
+  'home.step1Title': 'Choose who is learning',
+  'home.step1Body':
+    'Yourself, or a child you are responsible for. A course is bought for one named learner, so a family buying together still knows whose progress is whose.',
+  'home.step2Title': 'Study at your own pace',
+  'home.step2Body':
+    'Lessons, practice questions that check an answer without marking it, and a place that remembers where you stopped on every lesson you have opened.',
+  'home.step3Title': 'Keep something afterwards',
+  'home.step3Body':
+    'Progress, a receipt that is never rewritten, and a certificate whose number can be checked years later.',
+  'home.aboutLink': 'How a course gets here, and what happens to a child’s data',
+  'home.teachEyebrow': 'For teachers',
+  'home.teachTitle': 'Bring your students with you.',
+  'home.teachBody1':
+    'If you already teach, the platform is the part you should not have to build: sections and lessons, review by someone who knows the subject, prices set with staff, and what you have earned shown per currency on one page.',
+  'home.teachBody2':
+    'Teachers keep half of every sale. Teaching here is by appointment — the owner adds teachers one at a time — and no provider moves money yet, so the earnings page says what is owed rather than claiming it has been sent.',
+  'home.teachArea': 'The teaching area',
+  'home.teachReview': 'How courses are reviewed',
+  'home.closingTitle': 'Start with the catalogue.',
+  'home.closingSignedOut':
+    'Every published course is listed with what it contains and who teaches it. Create an account when you find one you want to keep.',
+  'home.closingSignedIn':
+    'Every published course is listed with what it contains and who teaches it. Your enrolments, progress and certificates are in one place.',
+
   'language.reviewed': 'A first-language speaker has read this translation.',
   'language.unreviewed':
     'No first-language speaker has read this translation yet. It was written by the people who built the platform — if a word looks wrong to you, that is a mistake we owe you.',

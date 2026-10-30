@@ -11,6 +11,10 @@ import { SHELF_AFRICA } from './shelf-africa.ts';
 import { SHELF_WORLD } from './shelf-world.ts';
 import { AUTH_RESET } from './auth-reset.ts';
 import { DOORS } from './doors.ts';
+import { HOME_AFRICA_EAST } from './home-africa-east.ts';
+import { HOME_AFRICA_SOUTH } from './home-africa-south.ts';
+import { HOME_AFRICA_WEST } from './home-africa-west.ts';
+import { HOME_WORLD } from './home-world.ts';
 import type { Messages } from './en.ts';
 
 /**
@@ -704,4 +708,9 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   AUTH_RESET,
   // The two doors: the children's shelf and the adults' shelf.
   DOORS,
+  // The front door itself, which used to be the one page in English.
+  HOME_AFRICA_EAST,
+  HOME_AFRICA_WEST,
+  HOME_AFRICA_SOUTH,
+  HOME_WORLD,
 );

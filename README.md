@@ -70,7 +70,7 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 The database stands at **147 tables, RLS on every one, 271 policies, 166
 user-defined triggers, 518 functions and 191 migrations.** The database suite
-passes **2066 tests**; the web suite passes **1614 tests**. TypeScript typecheck
+passes **2066 tests**; the web suite passes **1626 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **221 app route entries** — 120
 pages and seven generated entries (`/_not-found`, four icons and manifest, the
 robots file, the sitemap), plus 94 API routes.
@@ -206,7 +206,7 @@ and computes WCAG contrast over the twenty pairs the stylesheet composes. It
 found `--muted` at 3.98:1 on the page background — the whole muted voice of the
 site, under the 4.5 AA asks of normal text. It is 5.00:1 now.
 
-**Arabic is set as Arabic, and the interface is still English.** Not a
+**Arabic is set as Arabic.** Not a
 translation: content whose author wrote it in Arabic — a course title, a lesson
 name, a teacher's name and biography, the name printed on a certificate, a quoted
 āyah — is rendered in a Naskh face taken from the device (no 400 KB webfont on a
@@ -221,11 +221,12 @@ Arabic sits against the right edge. Detection reads the text
 U+FDFA) only where nothing stored a language — a course with a language code keeps
 using it. `globals.css` lists the three rules that can sit *inside* a right-to-left block
 and draw a physical side, which is the whole list; everything else is flex or
-grid (which follow `direction` themselves) or belongs to the English shell, which
-is not mirrored by decision. What this does **not** do, and `/account/accessibility` says in
-those words: the interface is English and left to right, there is no interface
-translation, no right-to-left shell, no dyslexia font (licensed) and no
-text-to-speech (no provider).
+grid, which follow `direction` themselves and therefore mirror with the shell.
+This paragraph is about **content**, which is a different problem from the
+interface translation built on 2026-10-29: a course title stays in the language
+its author wrote. What this still does **not** do, and
+`/account/accessibility` says in those words: no dyslexia font (none is licensed)
+and no text-to-speech (no provider).
 
 **A teacher's outline comes in from a spreadsheet.** `platform.data_export` had
 an import half it never had, refused on the honest ground that a stranger's file
@@ -312,6 +313,29 @@ different empty states. The age a parent picked is a value (`11-13`) and stays o
 in every language — a sentence that said "nothing for those ages" without naming
 which age would read finished and answer nothing, which is why a test passes the
 band through all thirty-three catalogues and checks it comes back.
+
+**The front door speaks it too, and it was the last page still in English.** The
+excuse was that it is the page with no session to read a preference from, which
+was never true: `chooseLocale()` reads the cookie and `Accept-Language` for
+anybody, signed in or not. Forty-two `home.*` keys carry the whole page — the
+hero, the panel of three refusals, the subject heading, both doors, the three
+steps, the teacher band and the closing call — in all thirty-three languages,
+written in four files by region (`home-africa-east`, `home-africa-west`,
+`home-africa-south`, `home-world`) so that adding a language is one block.
+Two things on it are values rather than words. The subject count goes through
+`countLabel()`, because Swahili says `somo` for one and `masomo` for many: a
+single template with a number in front would have been wrong in exactly the
+languages this page was written for last. The step number is `formatNumber()`-ed,
+so a Persian reader sees ۲ in a sentence that is otherwise theirs. The arrows turn
+with the writing direction. The two door headings borrow `audience.child` and
+`audience.adult` from the catalogue's own filters rather than inventing a second
+pair of names. The **destination** of the two buttons is still `frontDoorCta()`
+and only the label moved into the catalogue — one function decides where a button
+goes, so the header, the front page and the closing band cannot disagree. The
+Supabase setup notice stays in English on purpose: whoever reads it is reading
+`.env.example`. A twelfth test file reads the page and fails on a sentence of
+three or more English words, on a hard-coded `aria-label`, on a lost `{count}` or
+`{number}` in any catalogue, and on an arrow that did not turn.
 
 Coverage is a count; a native reader is a claim. The picker's first option is *my device's language*,
 which deletes the cookie — a default somebody cannot return to is not a default.

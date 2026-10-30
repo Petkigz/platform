@@ -6043,3 +6043,65 @@ into two different claims. The tests assert that no rendered line says "verified
 "checked" or "confirmed", that the caveat says a panel *may* review these rather
 than promising one, and that every refusal arrives as a sentence about something a
 person can fix.
+
+## The front door was translated last, and that was backwards — **DECIDED 2026-10-30**
+
+For four units the front page was the one screen on the site still written in
+English, and the reason given was respectable and wrong: *this is the page with
+no session, so there is nowhere to read a language from.* There was somewhere.
+`chooseLocale()` reads a cookie and an `Accept-Language` header, and neither of
+those needs an account — that is the entire argument for `/language` being
+public. The real reason was order of work, and the real cost was that the page a
+stranger meets first was the only one that never asked what they read.
+
+**The door is the worst page to leave in English.** Every other screen is behind
+a decision the reader has already made. This one is where they make it, and a
+front page in a language somebody reads only with effort has already answered the
+question it was there to ask — the product was built for somebody else's family.
+So the copy moved out of the file entirely: forty-two `home.*` keys in all
+thirty-three languages, written in four regional files rather than one, because
+adding a language should be one block beside the others and not a hunt through a
+framework.
+
+**Two things on that page are values, and neither could be a word.** The subject
+count goes through `countLabel()`, which selects a singular or plural *sentence*
+per language. Swahili says `somo` for one and `masomo` for many; isiZulu
+`isifundo` and `izifundo`. The English habit — one template with a number and an
+`s` — would have produced the right page in English and a broken one in every
+Bantu language the page was written for last. The step number goes through
+`formatNumber()`, so a Persian reader sees ۲ rather than 3 inside a sentence
+that is otherwise theirs, and the number itself is never part of the translation:
+`home.step` holds `{number}` and nothing else, because an ordinal baked into a
+string ("step 1st") is wrong the day a fourth step exists. A test asserts both
+placeholders survive in every one of the thirty-three catalogues — a sentence
+that silently loses its number is worse than an untranslated one, since it reads
+finished.
+
+**The arrows follow the writing, not the words.** In Arabic a right-pointing
+arrow at the end of a link points back at the start of the line, so it reads as
+"go back" beside a link that goes forward. The glyph is the only thing that
+changes, it is chosen by `directionOf(locale)`, and it carries `aria-hidden` so a
+screen reader does not announce "rightwards arrow" after every link.
+
+**The two door headings borrow the catalogue's vocabulary.** They used to say
+"For children" and "For adults"; they now say `audience.child` and
+`audience.adult`, the same two names as the shelf's filter. A front page that
+names an audience differently from the screen it links to is teaching the reader
+a word that will be contradicted one click later.
+
+**One function still decides where the buttons go.** `frontDoorCta()` returns the
+destination (`/sign-up` or `/learn`) and the label was the only part that moved
+into the catalogue. Splitting it the other way — a label and a link both chosen
+in a page — is how a header, a hero and a closing band end up disagreeing about
+where "continue learning" lands. The signed-in and signed-out closing sentences
+are likewise two keys rather than one sentence with a clause swapped, because a
+door that greets a member like a visitor is how a product feels like a brochure.
+
+**Two English strings are left on purpose.** The setup notice — *Supabase is not
+configured* — is read by whoever deploys this, who is at that moment reading
+`.env.example`; translating it into Lingala would be a kindness aimed at the
+wrong person. And the panel that used to carry `aria-label="What is different
+here"` now carries `aria-labelledby` pointing at its own heading, which is both
+translated and what a screen reader wanted in the first place. A test fails on
+any English sentence of three or more words left in the markup and on any
+hard-coded `aria-label`, so these two cannot quietly become three.
