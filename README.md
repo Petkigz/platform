@@ -70,7 +70,7 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 The database stands at **147 tables, RLS on every one, 271 policies, 166
 user-defined triggers, 518 functions and 191 migrations.** The database suite
-passes **2066 tests**; the web suite passes **1626 tests**. TypeScript typecheck
+passes **2066 tests**; the web suite passes **1632 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **221 app route entries** — 120
 pages and seven generated entries (`/_not-found`, four icons and manifest, the
 robots file, the sitemap), plus 94 API routes.
@@ -338,7 +338,12 @@ three or more English words, on a hard-coded `aria-label`, on a lost `{count}` o
 `{number}` in any catalogue, and on an arrow that did not turn.
 
 Coverage is a count; a native reader is a claim. The picker's first option is *my device's language*,
-which deletes the cookie — a default somebody cannot return to is not a default.
+which deletes the cookie — a default somebody cannot return to is not a default. And the
+languages are **on the page rather than inside a dropdown**: they were a single `<select>`,
+which opened on the twenty-one African entries and made the other three continents look
+absent — a reader asked why there was not a single Asian language, when there were five in a
+block below the fold. Each region is now its own block, every language its own button with its
+name in its own script, and the form is still a plain `POST` that works with JavaScript off.
 The choice lives on the browser, not the account, and the page says so: a shared
 family tablet should speak to each of its readers, and the sign-in page has to be
 readable before there is an account to hold a preference. Arabic, Urdu and

@@ -741,6 +741,40 @@ input:focus, select:focus, textarea:focus {
 }
 .chips { display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 0 0 1.5rem; }
 
+/* The language picker: every language visible, grouped by region.
+   It used to be one <select>, which on a phone opened on the twenty-one
+   African entries and hid the other three continents below the fold — a page
+   about languages where the languages are off-screen. A block per region, with
+   the languages as buttons, means nothing is reachable only by scrolling a
+   native dropdown, and the form still works with JavaScript switched off. */
+.locale-blocks { display: grid; gap: 1.15rem; }
+.locale-block { display: grid; gap: 0.15rem; }
+.locale-block-title {
+  margin: 0 0 0.45rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.locale-choices { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.locale-choice {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-soft);
+  cursor: pointer;
+}
+.locale-choice:hover { border-color: var(--green-100); background: var(--green-50); color: var(--green-800); }
+.locale-choice[aria-current='true'] { background: var(--green-700); border-color: var(--green-700); color: #fff; }
+.locale-choice-name { font-weight: 600; }
+.locale-choice-en { font-size: 0.8rem; opacity: 0.85; }
+
 .lesson-list { list-style: none; margin: 0; padding: 0; }
 .lesson-list li {
   display: flex;

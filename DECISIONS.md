@@ -6105,3 +6105,43 @@ here"` now carries `aria-labelledby` pointing at its own heading, which is both
 translated and what a screen reader wanted in the first place. A test fails on
 any English sentence of three or more words left in the markup and on any
 hard-coded `aria-label`, so these two cannot quietly become three.
+
+## A picker that has to be scrolled is a picker with less in it — **DECIDED 2026-10-30**
+
+The first question asked about the language work was not about translation. It
+was: *"there's not a single Asian language — why?"* There were five. Urdu,
+Indonesian, Malay, Bengali and Hindi were in the register, in the catalogue and
+in the dropdown, under a block headed **Asia**, and two more — Persian and
+Turkish — sat under **Middle East** for cultural rather than cartographic
+reasons. The answer to "why can I not see them" was the dropdown: a native
+`<select>` opens at the top of its list, and the top of this list was
+twenty-one African entries. On a phone the other three continents were below the
+fold of a scroll area that gives no sign there is more behind it. **The page was
+right and the page read as wrong, which is the same thing.**
+
+**So the languages left the dropdown.** Each region is now a block with its
+heading drawn on the page, and each language is a button carrying its own name
+in its own script beside the English one, with the language in force marked
+`aria-current`. The `<select>` is gone, and `i18n-picker.test.ts` fails if it
+comes back — the tests name the five Asian languages individually rather than
+asserting "Asia is present", because an assertion that a block exists is exactly
+the kind that passes while the thing a reader wanted is missing.
+
+**Nothing was lost in the change.** It is still one plain form: a single `POST`
+to `/api/locale` with thirty-five submit buttons, so the control still works with
+JavaScript switched off, and the route still refuses anything that is not a
+language in the register and still only follows a `next` that is a path on this
+site. What changed is that the list is no longer behind a scroll — the same
+argument as the shelf's "Showing 1–24 of 137": what is hidden must not read as
+what is absent.
+
+**The register's regions are cultural, and the page does not pretend otherwise.**
+Persian and Turkish are Asian languages filed under Middle East; Arabic is filed
+there too and is spoken across two continents. Splitting those hairs would mean
+filing languages by a geography their speakers do not use, so the blocks keep the
+names readers recognise — and the honest gap this question exposed is a
+different one: **Asia is thinner than its Muslim population warrants.** There is
+nothing for Central Asia (Uzbek, Kazakh, Azerbaijani, Kyrgyz, Tajik, Turkmen),
+nothing for Afghanistan (Pashto, Dari), nothing for East Asia, and only two for
+Southeast Asia. That is a content decision rather than a defect, and it is the
+next unit rather than this one.

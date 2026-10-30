@@ -7,7 +7,6 @@ import {
   coverageOf,
   localeByCode,
   localeGroups,
-  localeLabel,
   regionLabel,
   translatedLocales,
   translator,
@@ -87,41 +86,64 @@ export default async function LanguagePage() {
       </section>
 
       <section className="card" style={{ marginBottom: '1.5rem' }}>
+        <h2 style={{ marginTop: 0 }}>{t('language.change')}</h2>
+        <p className="muted" style={{ marginTop: 0 }}>{t('language.pick')}</p>
         <form action="/api/locale" method="post">
           <input type="hidden" name="next" value="/language" />
-          <label htmlFor="locale" style={{ display: 'block', fontWeight: 600, marginBottom: '0.4rem' }}>
-            {t('language.pick')}
-          </label>
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            <select
-              id="locale"
-              name="locale"
-              defaultValue={source === 'chosen' ? code : 'device'}
-              style={{ flex: '1 1 16rem' }}
-            >
-              {/* The first option is not a language: it hands the decision back
-                  to the device, which is where it starts for everybody. */}
-              <option value="device">{t('language.deviceOption')}</option>
-              {/* English first and outside the blocks: it is the source of every
-                  string on this page, and the language a reader falls back to
-                  when a translation reads wrongly. */}
-              <option value="en">{localeLabel(localeByCode('en'))}</option>
-              {groups.map((group) => (
-                <optgroup key={group.region} label={t(regionLabel(group.region))}>
+          <div className="locale-blocks">
+            {/* Not a language, and first: it hands the decision back to the
+                device, which is where it starts for everybody. */}
+            <div className="locale-block">
+              <div className="locale-choices">
+                <button
+                  type="submit"
+                  name="locale"
+                  value="device"
+                  className="locale-choice"
+                  aria-current={source === 'device' ? 'true' : undefined}
+                >
+                  {t('language.deviceOption')}
+                </button>
+                {/* English outside the blocks: it is the source of every string
+                    on this page and the language a reader falls back to. */}
+                <button
+                  type="submit"
+                  name="locale"
+                  value="en"
+                  className="locale-choice"
+                  aria-current={code === 'en' ? 'true' : undefined}
+                >
+                  <span className="locale-choice-name" lang="en" dir="ltr">
+                    English
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {groups.map((group) => (
+              <div className="locale-block" key={group.region}>
+                <h3 className="locale-block-title">{t(regionLabel(group.region))}</h3>
+                <div className="locale-choices">
                   {group.locales.map((locale) => (
-                    <option key={locale.code} value={locale.code}>
-                      {localeLabel(locale)}
-                    </option>
+                    <button
+                      type="submit"
+                      name="locale"
+                      value={locale.code}
+                      className="locale-choice"
+                      key={locale.code}
+                      aria-current={code === locale.code ? 'true' : undefined}
+                    >
+                      <span className="locale-choice-name" lang={locale.code} dir={locale.dir}>
+                        {locale.nativeName}
+                      </span>
+                      <span className="locale-choice-en">{locale.englishName}</span>
+                    </button>
                   ))}
-                </optgroup>
-              ))}
-            </select>
-            <button type="submit" className="btn">
-              {t('language.change')}
-            </button>
+                </div>
+              </div>
+            ))}
           </div>
         </form>
-
         <p className="muted" style={{ marginBottom: 0, fontSize: '0.9rem' }}>
           {t('language.browser')}
         </p>
