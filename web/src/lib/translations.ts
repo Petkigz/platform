@@ -388,6 +388,36 @@ export function coverageOfReviews(reviews: PublishedReview[]): PartCoverage {
 }
 
 /**
+ * What `/language` is allowed to say about one language, as a fact.
+ *
+ * A three-way answer rather than a boolean, because there are three true
+ * sentences and rounding between them is how a page lies without noticing:
+ * *nobody has read this* over three named parts, or *a first-language speaker has
+ * read this* over a catalogue with thirteen parts left. The page prints one of
+ * them; this decides which.
+ *
+ * It lives here, and not inline in the page, so the end-to-end test can assert
+ * the claim itself rather than a regular expression over the page's source.
+ */
+export type Claim =
+  | { kind: 'reviewed' }
+  | { kind: 'partial'; read: number; total: number }
+  | { kind: 'unreviewed' };
+
+export function claimFor(
+  reviewers: PublishedReview[],
+  registerReviewed = false,
+): Claim {
+  const parts = coverageOfReviews(reviewers);
+  // The register's own `reviewed: true` is the older way a language is called
+  // read, and it is true for English alone. It still wins: a decision recorded by
+  // hand in `locales.ts` is not overturned by there being no database row.
+  if (parts.complete || registerReviewed) return { kind: 'reviewed' };
+  if (parts.read > 0) return { kind: 'partial', read: parts.read, total: parts.total };
+  return { kind: 'unreviewed' };
+}
+
+/**
  * The review line `/language` prints.
  *
  * A name and a date, not a sentence: the sentence above them — “A

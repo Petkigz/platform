@@ -110,6 +110,17 @@ const files: SourceFile[] = readdirSync(MESSAGES)
 const result = plan(payload, files);
 const report = {
   summary: summary(result),
+  // `proposed` is what the payload came to; `edits` is what is permitted, and it
+  // is empty when anything was refused. The report shows both so "one refused,
+  // one fine" is legible without ever suggesting the fine one was written.
+  proposed: result.proposed.map((edit) => ({
+    locale: edit.locale,
+    key: edit.key,
+    before: edit.before,
+    after: edit.after,
+    file: edit.path,
+    inserted: edit.inserted,
+  })),
   applied: result.edits.map((edit) => ({
     locale: edit.locale,
     key: edit.key,
@@ -125,8 +136,8 @@ const report = {
 if (JSON_OUT) {
   console.log(JSON.stringify(report, null, 2));
 } else {
-  for (const edit of result.edits) {
-    const mark = edit.inserted ? '+' : '~';
+  for (const edit of result.proposed) {
+    const mark = result.edits.length > 0 ? (edit.inserted ? '+' : '~') : '·';
     console.log(`${mark} ${edit.locale} ${edit.key}  (${edit.path}${edit.inserted ? ', new line' : ''})`);
   }
   for (const correction of result.already) {

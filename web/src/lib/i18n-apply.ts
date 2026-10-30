@@ -79,7 +79,21 @@ export type Problem = {
 };
 
 export type Plan = {
+  /**
+   * What would be written — **empty whenever `problems` is not**.
+   *
+   * All or nothing is a property of the plan itself and not only of the script
+   * that consumes it: a caller that reached for `edits` and ignored `problems`
+   * would write half a payload, and half a payload means the owner works out
+   * which of eleven corrections landed.
+   */
   edits: Edit[];
+  /**
+   * Every valid edit that was found, whether or not the payload as a whole is
+   * clean. For the report: "these two are fine, that one is stale" is what the
+   * owner needs to see, and it is still not permission to write.
+   */
+  proposed: Edit[];
   problems: Problem[];
   /** Corrections that would change nothing because the file already says it. */
   already: Correction[];
@@ -310,6 +324,37 @@ export function rewrite(
 }
 
 /**
+ * The strings a set of files holds for one language, read back out of the text.
+ *
+ * Not the same as importing `catalogues.ts`: that module is loaded once, at
+ * import time, so it can never answer "what does the file say after this write?".
+ * This reads the literals out of the text itself, which is what makes an
+ * end-to-end test of the whole loop possible — submission, decision, payload,
+ * write, and the value a page would print — without a database or a rebuild.
+ */
+export function readCatalogue(
+  files: SourceFile[],
+  locale: string,
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const file of files) {
+    const lines = file.text.split('\n');
+    for (const block of blocksIn(file.text)) {
+      if (block.code !== locale) continue;
+      for (let line = block.header + 1; line < block.close; line += 1) {
+        const parsed = KEY_LINE.exec(lines[line] ?? '');
+        if (!parsed) continue;
+        const lineStart = lines.slice(0, line).join('\n').length + (line > 0 ? 1 : 0);
+        const colon = lineStart + (lines[line] ?? '').indexOf(':');
+        const literal = literalAt(file.text, colon + 1);
+        if (literal) out[parsed[2] ?? ''] = literal.value;
+      }
+    }
+  }
+  return out;
+}
+
+/**
  * What a payload would change, and everything wrong with it.
  *
  * Pure: it takes the files it is given and returns the plan. The CLI reads the
@@ -437,7 +482,13 @@ export function plan(payload: PayloadReview[], files: SourceFile[]): Plan {
     }
   }
 
-  return { edits, problems, already };
+  return {
+    // The gate. A payload with one bad correction writes none of them.
+    edits: problems.length === 0 ? edits : [],
+    proposed: edits,
+    problems,
+    already,
+  };
 }
 
 function largestFile(files: SourceFile[], locale: string): string | undefined {
@@ -544,6 +595,7 @@ function firstDifference(
 export function summary(plan_: Plan): string {
   const parts: string[] = [];
   if (plan_.edits.length > 0) parts.push(`${plan_.edits.length} to apply`);
+  else if (plan_.proposed.length > 0) parts.push(`${plan_.proposed.length} would apply`);
   if (plan_.already.length > 0) parts.push(`${plan_.already.length} already correct`);
   if (plan_.problems.length > 0) parts.push(`${plan_.problems.length} refused`);
   return parts.length === 0 ? 'nothing to do' : parts.join(', ');

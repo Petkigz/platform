@@ -124,6 +124,28 @@ test('a key that is not in the file is inserted in the catalogue’s own order',
   assert.equal(next, "  ta: {\n    'nav.main': 'x',\n    'nav.learn': 'z',\n    'nav.family': 'y',\n  },\n");
 });
 
+test('a clean line in a dirty payload is proposed and then not permitted', () => {
+  // The gate lives in `plan` and not only in the script, because a caller that
+  // reached for `edits` and ignored `problems` would write half a payload.
+  const files = catalogueFiles();
+  const result = plan(
+    [
+      {
+        locale: 'ta',
+        corrections: [
+          { key: 'nav.main', from: 'முதன்மை', to: 'பிரதான' },
+          { key: 'nav.learn', from: 'not what the file says', to: 'x' },
+        ],
+      },
+    ],
+    files,
+  );
+  assert.equal(result.proposed.length, 1, 'the valid line was not shown in the report');
+  assert.equal(result.edits.length, 0, 'a plan with problems permits a write');
+  assert.match(summary(result), /1 would apply/);
+  assert.equal(apply(files, result.edits)?.length, files.length);
+});
+
 test('a correction is refused when the catalogue has moved past it', () => {
   const files = catalogueFiles();
   const result = plan(

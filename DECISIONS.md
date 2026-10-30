@@ -6466,3 +6466,34 @@ line that changed and not a reformat of the paragraph around it.
 **What is still manual, and stays manual.** Somebody runs a command and commits.
 There is no CI job that applies payloads, because applying a correction is the
 owner's decision and not a build step.
+
+## The loop is tested end to end, and the dry run is a test and not a button — **DECIDED 2026-10-30**
+
+Every piece of the correction flow was tested and the **seam between the pieces
+never was**: that the JSON `translation_review_queue()` returns is the JSON
+`parseQueue()` takes, that what the console hands over is what the script
+accepts, that the text the script writes is the text a page prints, and that the
+read which follows turns *nobody has read this* into *one of sixteen parts* and no
+further. A chain of five green units can still be a chain that does not connect.
+
+So there is one test that walks the whole thing with the real modules and the
+real catalogues: a submission in the database's own shape → parsed → decided →
+payload → planned → written in memory → **read back out of the file text** → the
+claim `/language` would make. Plus the two cases that matter: a stale line stops
+the entire payload, and a partial read applies its corrections and still cannot
+flip the sentence.
+
+**It is a test and not a "dry run" button, and that is the decision.** The
+obvious alternative — seed a sample review into the real queue so the owner can
+click through it — leaves a fake row in a queue exactly one person reads, where
+it can be accepted, published and **printed on `/language` as a person's name
+against a language**. A test that cannot be mistaken for a review is worth more
+than a button that can.
+
+**Two things came out of writing it.** The claim is now `claimFor()` in
+`translations.ts` rather than a ternary inside the page, so the test asserts the
+sentence itself instead of a regular expression over the page's source. And
+`plan()` is now all-or-nothing in its own right: a payload with one refused
+correction permits **no** edits, with the valid ones still reported as
+`proposed`. Before, the gate was only in the CLI, and a caller reaching for
+`edits` would have written half a payload.

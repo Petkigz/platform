@@ -192,8 +192,9 @@ test('/language prints the reviewer only when a review is published', () => {
   // The claim is made from the parts, not from the number of rows: three
   // published reads of three parts is not "a first-language speaker has read
   // this translation", and the page says which of the three sentences applies.
-  assert.match(page, /const parts = coverageOfReviews\(reviewers\)/u);
-  assert.match(page, /const readBy = parts\.complete \|\| current\.reviewed/u);
+  // The decision is `claimFor`, a pure function the end-to-end test asserts on.
+  assert.match(page, /const claim = claimFor\(reviewers, current\.reviewed\)/u);
+  assert.match(page, /const readBy = claim\.kind === 'reviewed'/u);
   // And it is a name and a date, not a second sentence in fifty-one catalogues.
   assert.match(page, /<time dateTime=\{review\.publishedAt\}>/u);
   assert.match(page, /t\('language\.reviewed'\)/u);
@@ -439,7 +440,7 @@ test('the sentence that says nobody has read it is the way to fix that', () => {
   // The sentence is the link text. A second sentence saying "help us" would have
   // needed fifty-one translations to say the same thing the sentence already says.
   assert.match(page, /<Link href=\{`\/contribute\?locale=\$\{code\}`\}/u);
-  assert.match(page, /\{claim\}/u);
+  assert.match(page, /\{sentence\}/u);
   // Three reasons it is not always a link, and all three are in the guard.
   assert.match(page, /const invite = !readBy && sheetOpen && code !== 'en'/u);
   // A link to a closed door is a lie, so the switch is read here and not only on

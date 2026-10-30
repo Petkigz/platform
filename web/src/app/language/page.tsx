@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
 import { createClient } from '@/lib/supabase/server';
-import { coverageOfReviews, parsePublished, type PublishedReview } from '@/lib/translations';
+import { claimFor, parsePublished, type PublishedReview } from '@/lib/translations';
 
 import {
   LOCALE_COOKIE,
@@ -85,23 +85,24 @@ export default async function LanguagePage() {
   }
   const reviewers = published.get(code) ?? [];
   // Added up from the parts, not from the number of rows: three published reads of
-  // three parts is progress, and it is not yet the sentence below. The register's
-  // own `reviewed` flag is the other way a language can be called read, and it is
-  // true for English alone.
-  const parts = coverageOfReviews(reviewers);
-  const readBy = parts.complete || current.reviewed;
+  // three parts is progress, and it is not yet the sentence below. The decision
+  // itself lives in `claimFor`, so the end-to-end test can assert what the page
+  // will say instead of matching a regular expression against this file.
+  const claim = claimFor(reviewers, current.reviewed);
+  const readBy = claim.kind === 'reviewed';
 
-  const claim = readBy
-    ? t('language.reviewed')
-    : parts.read > 0
-      ? // Partly read is a different sentence, not a shorter one. Saying
-        // "nobody has read this" over three named parts would be as wrong as
-        // claiming the whole thing.
-        t('language.partial', {
-          read: formatNumber(code, parts.read),
-          total: formatNumber(code, parts.total),
-        })
-      : t('language.unreviewed');
+  const sentence =
+    claim.kind === 'reviewed'
+      ? t('language.reviewed')
+      : claim.kind === 'partial'
+        ? // Partly read is a different sentence, not a shorter one. Saying
+          // "nobody has read this" over three named parts would be as wrong as
+          // claiming the whole thing.
+          t('language.partial', {
+            read: formatNumber(code, claim.read),
+            total: formatNumber(code, claim.total),
+          })
+        : t('language.unreviewed');
 
   // **The door.** The page states a problem — nobody who speaks this language has
   // read it — and until now it offered no way to do anything about it. The whole
@@ -149,10 +150,10 @@ export default async function LanguagePage() {
         <p style={{ margin: '0 0 0.4rem', fontSize: '0.9rem' }}>
           {invite ? (
             <Link href={`/contribute?locale=${code}`} style={{ textDecoration: 'underline' }}>
-              {claim}
+              {sentence}
             </Link>
           ) : (
-            claim
+            sentence
           )}
         </p>
         {/* The attribution is a name and a date, not a sentence.
