@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 import {
@@ -179,8 +180,17 @@ test('a gated page appears when its switch is on, and only then', () => {
 });
 
 test('every gated route names a flag', () => {
+  // The flag a route hides behind has to be a row in the register, not a string
+  // that merely looks like one. A hard-coded list of namespaces said `platform`
+  // was not one of them long after it was — the check passed only because no
+  // gated route happened to use that namespace. Read the register instead.
+  const register = readFileSync(new URL('../../../FLAGS.md', import.meta.url), 'utf8');
   for (const route of GATED_ROUTES) {
-    assert.match(route.flag, /^(learning|teaching|commerce|admin)\./, `${route.path} has no real flag`);
+    assert.match(route.flag, /^[a-z_]+\.[a-z_]+$/, `${route.path} has no real flag`);
+    assert.ok(
+      register.includes(`| \`${route.flag}\` |`),
+      `${route.path} hides behind ${route.flag}, which is not in FLAGS.md`,
+    );
   }
 });
 

@@ -1,5 +1,10 @@
 import type { Metadata } from 'next';
 import { cookies, headers } from 'next/headers';
+import Link from 'next/link';
+
+import { isSupabaseConfigured } from '@/lib/env';
+import { createClient } from '@/lib/supabase/server';
+import { parsePublished, type PublishedReview } from '@/lib/translations';
 
 import {
   LOCALE_COOKIE,
@@ -50,6 +55,25 @@ export default async function LanguagePage() {
     .map((locale) => ({ locale, coverage: coverageOf(locale.code) }))
     .filter((entry) => entry.coverage.percent < 100);
 
+  // **Who has read this, if anybody.** Read from the database rather than from a
+  // flag in the register, because a review is a fact with a date and a person
+  // attached rather than a boolean somebody edits. Three failure modes all end in
+  // the same place, deliberately: a database that is not configured, one that
+  // cannot be reached, and one that has no published reviews all mean **nobody
+  // has read this**, which is the conservative claim and the true one today.
+  let published = new Map<string, PublishedReview[]>();
+  if (isSupabaseConfigured()) {
+    try {
+      const supabase = await createClient();
+      const { data } = await supabase.rpc('published_locale_reviews');
+      published = parsePublished(data);
+    } catch {
+      published = new Map();
+    }
+  }
+  const reviewers = published.get(code) ?? [];
+  const readBy = reviewers.length > 0 || current.reviewed;
+
   const sourceLine =
     source === 'chosen'
       ? t('language.chosen')
@@ -81,8 +105,24 @@ export default async function LanguagePage() {
             this list — so the page makes the second claim itself, per language,
             from the register rather than from a sentence typed once and forgotten. */}
         <p style={{ margin: '0 0 0.4rem', fontSize: '0.9rem' }}>
-          {current.reviewed ? t('language.reviewed') : t('language.unreviewed')}
+          {readBy ? t('language.reviewed') : t('language.unreviewed')}
         </p>
+        {/* The attribution is a name and a date, not a sentence.
+            The sentence above is already translated into all fifty-one
+            catalogues; a second sentence carrying the name would have needed
+            fifty-one more unreviewed translations to say the same thing, and a
+            name and a date are values — like an age band, or a page number. */}
+        {reviewers.length > 0 && (
+          <ul style={{ margin: '0 0 0.4rem', paddingInlineStart: '0', listStyle: 'none', fontSize: '0.88rem' }}>
+            {reviewers.map((review) => (
+              <li key={`${review.reviewerName}-${review.publishedAt}`}>
+                <strong>{review.reviewerName}</strong>
+                {' · '}
+                <time dateTime={review.publishedAt}>{review.publishedAt.slice(0, 10)}</time>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section className="card" style={{ marginBottom: '1.5rem' }}>

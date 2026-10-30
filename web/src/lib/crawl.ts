@@ -68,6 +68,11 @@ export const GATED_ROUTES: readonly (StaticRoute & { flag: string })[] = [
   { path: '/adults', priority: 0.7, changeFrequency: 'weekly', flag: 'learning.audience_sections' },
   { path: '/plans', priority: 0.6, changeFrequency: 'monthly', flag: 'commerce.subscriptions' },
   { path: '/paths', priority: 0.6, changeFrequency: 'weekly', flag: 'learning.paths' },
+  // The correction sheet. Public, useful, and **not** a promise until the owner
+  // opens it: with `platform.translation_reviews` off the page says the form is
+  // closed, and a sitemap entry that leads to a closed door is a lie about what
+  // is at the address.
+  { path: '/contribute', priority: 0.4, changeFrequency: 'monthly', flag: 'platform.translation_reviews' },
 ];
 
 /**

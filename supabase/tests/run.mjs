@@ -59,6 +59,7 @@ import { run as securitySignals } from './security_signals.test.mjs';
 import { run as courseLanguage } from './course_language.test.mjs';
 import { run as revenueBreakdown } from './revenue_breakdown.test.mjs';
 import { run as assessments } from './assessments.test.mjs';
+import { run as translationReviews } from './translation_reviews.test.mjs';
 import { run as revenueShare } from './revenue_share.test.mjs';
 import { run as plans } from './plans.test.mjs';
 import { run as subscriptions } from './subscriptions.test.mjs';
@@ -152,6 +153,7 @@ import { run as cataloguePage } from './catalogue_page.test.mjs';
 const GLOBAL_SETTINGS = [
   ['teaching.revenue_share_percent', '50'],
   ['commerce.checkout', 'false'],
+  ['platform.translation_reviews', 'false'],
 ];
 
 const ctx = await createHarness();
@@ -298,6 +300,7 @@ for (const [name, fn] of [
   ['ijazah', ijazah],
   ['security_signals', securitySignals],
   ['course_language', courseLanguage],
+  ['translation_reviews', translationReviews],
   ['assessments', assessments],
 ]) {
   console.log(`\n--- ${name} ---\n`);

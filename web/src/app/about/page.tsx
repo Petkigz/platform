@@ -124,6 +124,23 @@ export default function AboutPage() {
         the account, never by themselves.
       </p>
 
+      <h2 style={{ marginTop: '2.5rem' }}>The interface, and who has read it</h2>
+      <p>
+        The interface speaks fifty-one languages. Every one of them was written by the
+        people who built this platform, and <strong>not one has been read by somebody who
+        speaks it</strong>. The language page says so on each catalogue rather than in a
+        footnote, because &ldquo;translated&rdquo; and &ldquo;read by a person who speaks
+        it&rdquo; are two different claims and only the first one is true.
+      </p>
+      <p>
+        If a word looks wrong to you in your own language,{' '}
+        <Link href="/contribute">the correction sheet</Link> is where to say so. It asks for
+        no account, it shows you the English sentence and the current translation side by
+        side, and you change only the lines that are wrong. Your name is printed beside the
+        language if what you sent is accepted; your email address is never published and
+        never becomes a login.
+      </p>
+
       <h2 style={{ marginTop: '2.5rem' }}>Who teaches here</h2>
       <p className="muted">
         Teaching is by appointment. Nobody becomes a teacher by signing up: the

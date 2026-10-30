@@ -59,6 +59,7 @@ const publicationLinks: ConsoleLink[] = [
   { href: '/admin/reviewers', label: 'Reviewer register', note: 'who applied to review, who has been checked, and what each may judge. Nothing publishes until somebody here is verified' },
   { href: '/admin/screenings', label: 'Teacher screening', note: 'every appointed teacher and whether a check is on file: what kind, when, when it lapses, who recorded it. The reference to the document is stored and never shown again, and a record cannot be edited — a new check supersedes it. While `platform.safeguarding` is on, a course a child may be shown cannot be published unless its author holds a passed, unexpired check and has acknowledged the conduct policy' },
   { href: '/admin/ijazah', label: 'Ijazahs', note: 'who authorised whom, for what, and what you were shown. Yours alone to record: a chain of transmission is not something this platform has the standing to check, so the register says “recorded”, never “verified”, and nothing here is visible to a learner' },
+  { href: '/admin/translations', label: 'Translations', note: 'corrections sent by people who speak the language, each shown against the line it replaces and against the catalogue that is actually built. Yours alone to decide: accepting a line does not change the site — the paste block does that — and a language is only described as read when a whole-catalogue review is published with every correction decided' },
 ];
 
 const institutionLinks: ConsoleLink[] = [
