@@ -5,7 +5,14 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
 import { translator, type LocaleCode } from '@/lib/i18n';
-import { parseQueue, stateIn, type ProposalState } from '@/lib/translations';
+import {
+  coverageOfReviews,
+  parseQueue,
+  stateIn,
+  type PartCoverage,
+  type ProposalState,
+  type PublishedReview,
+} from '@/lib/translations';
 import { TranslationConsole } from './translation-console';
 
 export const dynamic = 'force-dynamic';
@@ -65,6 +72,29 @@ export default async function AdminTranslationsPage() {
     }
   }
 
+  // **How near each language is to being describable as read.** A section review
+  // only counts for the part it covered, so the console has to add the published
+  // reviews up per language and say what is still missing. Computed here rather
+  // than in the browser for the same reason as the per-line verdicts: the section
+  // list is the English catalogue, and a client component should not be handed it.
+  const publishedByLocale: Record<string, PublishedReview[]> = {};
+  for (const review of reviews) {
+    if (review.status !== 'published') continue;
+    const rows = (publishedByLocale[review.locale] ??= []);
+    rows.push({
+      locale: review.locale,
+      reviewerName: review.reviewerName,
+      scope: review.scope,
+      section: review.section,
+      publishedAt: review.decidedAt ?? review.createdAt,
+    });
+  }
+  const coverage: Record<string, PartCoverage> = {};
+  for (const review of reviews) coverage[review.locale] ??= coverageOfReviews([]);
+  for (const [code, rows] of Object.entries(publishedByLocale)) {
+    coverage[code] = coverageOfReviews(rows);
+  }
+
   const waiting = reviews.filter((r) => r.status === 'submitted');
   const undecided = reviews.reduce(
     (total, review) => total + review.proposals.filter((p) => p.status === 'proposed').length,
@@ -88,8 +118,9 @@ export default async function AdminTranslationsPage() {
         live in the repository, not in this database, so an accepted line has to reach the
         catalogue file before anything a reader sees is different. Every row below says
         which of those has happened, and the paste block hands you the exact TypeScript.
-        A language is only described as read when you publish a <em>whole-catalogue</em>{' '}
-        review with every correction decided.
+        A language is only described as read when <em>every part</em> of its catalogue has
+        a published read — or when one person has published a whole-catalogue read — with
+        every correction in each of them decided.
       </div>
 
       {!open && (
@@ -107,7 +138,7 @@ export default async function AdminTranslationsPage() {
         decide · {reviews.length} in total
       </p>
 
-      <TranslationConsole reviews={reviews} states={states} />
+      <TranslationConsole reviews={reviews} states={states} coverage={coverage} />
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
 import { createClient } from '@/lib/supabase/server';
 import { isLocaleCode, localeByCode, translator } from '@/lib/i18n';
-import { sectionByPrefix } from '@/lib/translations';
+import { sectionByPrefix, type Scope } from '@/lib/translations';
 
 /**
  * Take a correction sheet and write it down.
@@ -28,6 +28,12 @@ import { sectionByPrefix } from '@/lib/translations';
  *   * **one per key, sixty at most** — the unique constraint and the trigger are
  *     the backstop; this is the sentence a person gets instead of a constraint
  *     name;
+ *   * **the claim** — which is now a choice between three, and each one has to be
+ *     internally consistent. “I read this part” needs a part and may carry no
+ *     corrections at all, because a reviewer who read the footer and found it
+ *     right has done the thing the feature exists for. “I read the whole
+ *     interface” covers no part in particular. “Only these lines” has to have
+ *     lines, or it is a submission that says nothing;
  *   * **the fields are trimmed and bounded** — because a name of 40 000
  *     characters becomes a heading on `/language`.
  *
@@ -75,7 +81,11 @@ export async function POST(request: Request) {
   const name = field('name');
   const email = field('email');
   const note = field('note').slice(0, 2000);
-  const whole = form.get('scope') === 'whole';
+
+  // Three claims, not two. `section` did not exist when this route was written,
+  // and it is the one that matters: it is the only claim a person can finish.
+  const claim = field('scope');
+  const scope: Scope = claim === 'whole' ? 'whole' : claim === 'section' ? 'section' : 'part';
 
   const back = (code: string) =>
     NextResponse.redirect(
@@ -120,7 +130,10 @@ export async function POST(request: Request) {
     });
   }
 
-  if (proposals.length === 0 && !whole) return back('nothing');
+  // A read of one part with nothing to correct is a result, not an empty form:
+  // that reviewer has done the work, and refusing them would teach them not to
+  // bother. A partial read with no corrections says nothing at all.
+  if (proposals.length === 0 && scope === 'part') return back('nothing');
   if (proposals.length > 60) return back('failed');
 
   // Generated here, not by the database: `insert ... returning` needs select, and
@@ -132,7 +145,11 @@ export async function POST(request: Request) {
     locale: locale.code,
     reviewer_name: name,
     reviewer_email: email,
-    scope: whole ? 'whole' : 'part',
+    scope,
+    // The part is stored only when the claim is about a part: a whole-catalogue
+    // read covers no part in particular, and the two columns have a constraint
+    // that says so.
+    section: scope === 'whole' ? null : section.prefix,
     note: note || null,
   });
 

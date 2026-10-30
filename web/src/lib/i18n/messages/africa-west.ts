@@ -70,6 +70,8 @@ export const AFRICA_WEST: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'Ana ajiye zaɓin a wannan burauza, ba a asusunka ba, don haka wata na’ura za ta tambayi nata harshen.',
     'language.reviewed': 'Mai harshen asali ya karanta wannan fassarar.',
+    'language.partial':
+      'Masu magana da harshen asali sun karanta kashi {read} cikin {total} na wannan fassarar.',
     'language.unreviewed':
       'Babu mai harshen asali da ya karanta wannan fassarar tukuna. Wadanda suka gina dandalin ne suka rubuta ta — idan wata kalma ta yi maka kama da kuskure, kuskuren namu ne.',
     'language.notTranslated':
@@ -123,6 +125,8 @@ export const AFRICA_WEST: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'A ń fi yíyàn náà pamọ́ lórí ẹ̀rọ yìí, kì í ṣe lórí àkọsílẹ̀ rẹ, nítorí náà ẹ̀rọ mìíràn yóò béèrè èdè tirẹ̀.',
     'language.reviewed': 'Ẹnì kan tí èdè náà jẹ́ èdè ìbílẹ̀ ti ka ìtúmọ̀ yìí.',
+    'language.partial':
+      'Àwọn tó ń sọ èdè ìbílẹ̀ ti ka apá {read} nínú {total} apá ìtumọ̀ yìí.',
     'language.unreviewed':
       'Kò tíì sí ẹni tí èdè náà jẹ́ èdè ìbílẹ̀ tí ó ti ka ìtúmọ̀ yìí. Àwọn tí wọ́n kọ́ ojú-ìwé yìí ni wọ́n kọ ọ́ — bí ọ̀rọ̀ kan bá dà bí àṣìṣe, àṣìṣe wa ni.',
     'language.notTranslated':
@@ -176,6 +180,8 @@ export const AFRICA_WEST: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'A na-echekwa nhọrọ a na ihe nchọgharị a, ọ bụghị na akaụntụ gị, ya mere ngwaọrụ ọzọ ga-ajụ asụsụ nke ya.',
     'language.reviewed': 'Onye na-asụ asụsụ a dịka asụsụ ala nna agụọla ntụgharị a.',
+    'language.partial':
+      'Ndị na-asụ asụsụ ọmụmụ agụọla akụkụ {read} nke {total} akụkụ ntụgharị a.',
     'language.unreviewed':
       'Ọ dịbeghị onye na-asụ asụsụ a dịka asụsụ ala nna gụrụ ntụgharị a. Ndị wuru ebe a ka dere ya — ọ bụrụ na okwu dị gị ka ihe e mejọrọ, anyị ka mejọrọ ya.',
     'language.notTranslated':
@@ -229,6 +235,8 @@ export const AFRICA_WEST: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'Tann bi ñu koy denc ci browser bii, du ci sa kont, kon beneen masin dafay laaj boppam làkk.',
     'language.reviewed': 'Nit ku waxa làkk mi tekki naan na tafsir bii.',
+    'language.partial':
+      'Nit ñu koy wax ci làkk bi ci njëkk dañu jàng {read} ci {total} wàll yi ci tekki bii.',
     'language.unreviewed':
       'Amuloo nit ku waxa làkk mi tekki tafsir bii. Ku ñu tabax bàjji bi ñu ko bind — su wàll bi yoon laaj, yoon wi ñu la.',
     'language.notTranslated':
@@ -283,6 +291,8 @@ export const AFRICA_WEST: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'Suɓal ngal danndiray e ndee browser, wonaa e konte maa, haray masiin goɗɗum naamnay ɗemngal mun.',
     'language.reviewed': 'Haaloowo ɗemngal mum firde ndee.',
+    'language.partial':
+      'Yimɓe ɓe ɗemngal gadanal woni ɗemngal mum en ndaari {read} e {total} pecce firo ndee.',
     'language.unreviewed':
       'On heɓaani haalooɓe ɗemngal mum firde ndee haa jooni. Ɗum winndiiɓe ɗum ko mahooɓe dingiral ngal — so konngol feeñii maa ko woopde, woopde menen.',
     'language.notTranslated':
@@ -337,6 +347,8 @@ export const AFRICA_WEST: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'Sugandi in bɛ mara nin browser in na, i ka konti kɔnɔ tɛ, o la masin wɛrɛ bɛna a ka kan ɲini.',
     'language.reviewed': 'Mɔgɔ min ka kan jɔyɔrɔ ye, o y’a kalan.',
+    'language.partial':
+      'Mɔgɔ minnu bɛ kuma bɛnkan na, u karan {read} ka bɔ {total} la, fɔlɔfɔlɔ kɔrɔ.',
     'language.unreviewed':
       'Mɔgɔ ma nin falen in kalan ni a ka kan jɔyɔrɔ ye fɔlɔ. Nin ɲɛ sabatigiw ye a sɛbɛn — ni kuma dɔ bɛ i ɲɛ ka a ye ko fili, an ka fili.',
     'language.notTranslated':

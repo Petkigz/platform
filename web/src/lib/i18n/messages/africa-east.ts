@@ -64,6 +64,8 @@ export const AFRICA_EAST: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'ምርጫው በዚህ አሳሽ ላይ ነው የሚቀመጠው፣ በመለያዎ ላይ አይደለም፤ ስለዚህ ሌላ መሣሪያ የራሱን ቋንቋ ይጠይቃል።',
     'language.reviewed': 'የአፍ መፍቻ ቋንቋ ተናጋሪ ይህን ትርጉም አንብቧል።',
+    'language.partial':
+      'የአፍ መፍቻ ቋንቋ ተናጋሪዎች ከ{total} የዚህ ትርጉም ክፍሎች {read} አንብበዋል።',
     'language.unreviewed':
       'እስካሁን የአፍ መፍቻ ቋንቋ ተናጋሪ ይህን ትርጉም አላነበበም። የጻፉት መድረኩን የሠሩት ናቸው — ቃል ስህተት መስሎህ ከሆነ ስህተቱ የእኛ ነው።',
     'language.notTranslated':
@@ -116,6 +118,8 @@ export const AFRICA_EAST: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'Filannoon browser kana irratti qabama, herrega kee irratti miti, kanaaf meeshaan biraa afaan isaa gaafata.',
     'language.reviewed': 'Ammasuu afaan dhalootaa kana dubbiseera.',
+    'language.partial':
+      'Dubbattoonni afaan dhalootaa kutaa {read} keessaa {total} hiika kanaa dubbisaniiru.',
     'language.unreviewed':
       'Ammasuu afaan dhalootaa kana hin dubbisin ta’e. Namoonni waltajjii kana ijaaran isa barreessan — jechi tokko dogoggora fakkeessee yoo sitti dhufu, dogoggorri keenya.',
     'language.notTranslated':
@@ -169,6 +173,8 @@ export const AFRICA_EAST: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'Doorashada waxaa lagu kaydiyaa browser-kan, ma aha akoonkaaga, sidaas darteed aalad kale waxay weydiin doontaa luqaddeeda.',
     'language.reviewed': 'Qof afka hooyo ku hadla ayaa akhriyay tarjumaaddan.',
+    'language.partial':
+      'Dadka ku hadla afka hooyo waxay akhriyeen {read} ka mid ah {total} qaybood ee turjumaaddan.',
     'language.unreviewed':
       'Weli ma jiro qof afka hooyo ku hadla oo akhriyay tarjumaaddan. Waxaa qoray dadkii dhisay madasha — haddii erey khalad kuu muuqdo, khaladka waa keenna.',
     'language.notTranslated':
@@ -220,6 +226,8 @@ export const AFRICA_EAST: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'እቲ ምርጫ ኣብዚ መርበብ እዩ ዝቕመጥ፡ ኣብ ሒሳብካ ኣይኮነን፡ ስለዚ ካልእ መሳርሒ ንዓቱ ቋንቋ ይሓትት።',
     'language.reviewed': 'ብቋንቋ ኣደ ዝዛረብ ሰብ ነዚ ትርጉም ኣንቢብዎ።',
+    'language.partial':
+      'ተዛረብቲ ወላዲ ቋንቋ ካብ {total} ክፍልታት እዛ ትርጉም {read} ኣንቲቦም።',
     'language.unreviewed':
       'ክሳብ ሕጂ ብቋንቋ ኣደ ዝዛረብ ሰብ ነዚ ትርጉም ኣየንበቦን። እቶም መድረኹ ዝሰርሑ እዮም ጽሒፎምዎ — ቃል ጌጋ እንተመሲሉካ እቲ ጌጋ ናትና እዩ።',
     'language.notTranslated':
@@ -272,6 +280,8 @@ export const AFRICA_EAST: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'Guhitamo kubikwa kuri uyu mushakisha, ntabwo kuri konte yawe, bityo igikoresho kindi kizabaza ururimi rwacyo.',
     'language.reviewed': 'Umuntu uvuga uru rurimi nk’ururimi kavukire yigeze iyi nkuramo.',
+    'language.partial':
+      'Abavuga ururimi kavuka basomye ibice {read} muri {total} by’iyi nteruro.',
     'language.unreviewed':
       'Nta muntu uvuga uru rurimi nk’ururimi kavukire wigejeje iyi nkuramo. Yanditswe n’abakoze uru rubuga — niba ijambo rigaragara nk’iryo kwibeshya, ni twe twabikoze.',
     'language.notTranslated':
@@ -324,6 +334,8 @@ export const AFRICA_EAST: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'Okulonda kuno kuterekebwa ku browser eno, si ku akawunti yo, kyetuva essimu endala esaba olulimi lwayo.',
     'language.reviewed': 'Omuntu ayogera olulimi luno nga lulimi lwe eyetegerezza enkyusa eno.',
+    'language.partial':
+      'Abayogera olulimi lw’omu basomye ebitundu {read} ku {total} eby’okuvvuunula kuno.',
     'language.unreviewed':
       'Tewali akyali kwogera olulimi luno nga lulimi lw’omu nnyumba eyetegerezza enkyusa eno. Yawandiikiddwa abo abaazimba omukutu — bw’olaba ekigambo ng’ekyabulungana, kye tukola.',
     'language.notTranslated':
@@ -376,6 +388,8 @@ export const AFRICA_EAST: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'Voatahiry amin’ity mpitety ity ny safidy, fa tsy ao amin’ny kaontinao, ka ny fitaovana hafa dia hangataka ny fiteniny.',
     'language.reviewed': 'Nisy miteny io fiteny io ho tenim-baovao namaky ity fandikana ity.',
+    'language.partial':
+      'Ny miteny ny fitenin-drazany dia namaky ny fizarana {read} amin’ny {total} amin’ity fandikana ity.',
     'language.unreviewed':
       'Mbola tsy misy miteny io fiteny io ho tenim-baovao namaky ity fandikana ity. Nosoratan’ireo nanangana ity sehatra ity izy — raha misy teny toa diso aminao, dia antsika no diso.',
     'language.notTranslated':
@@ -429,6 +443,8 @@ export const AFRICA_EAST: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'Boponi ebombamaka na navigatɛrɛ oyo, kasi na konti na yo te, yango wana apareyɛ mosusu ekosenga monoko na yango.',
     'language.reviewed': 'Moto oyo alakaka monoko oyo lokola monoko ya mboka asomi bobongisi oyo.',
+    'language.partial':
+      'Bato balobaka monoko ya mboka batángi biteni {read} kati ya {total} ya libóngoli yango.',
     'language.unreviewed':
       'Nzokande moto oyo alakaka monoko oyo lokola monoko ya mboka te asomi bobongisi oyo. Ekoma na bato oyo batongi esika oyo — soki liloba emonani na yo lokola libunga, libunga na biso.',
     'language.notTranslated':

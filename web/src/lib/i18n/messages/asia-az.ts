@@ -258,6 +258,8 @@ export const ASIA_AZ: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Hər dərc olunmuş kurs içindəkilərlə və kimin tədris etdiyi ilə siyahıdadır. Qeydiyyatlarınız, irəliləyişiniz və sertifikatlarınız bir yerdədir.',
 
     'language.reviewed': 'Bu tərcüməni ana dili daşıyıcısı oxuyub.',
+    'language.partial':
+      'Ana dili danışanlar bu tərcümənin {total} hissəsindən {read} hissəsini oxuyub.',
     'language.unreviewed':
       'Bu tərcüməni hələ ana dili daşıyıcısı oxumayıb. Onu platformanı quranlar yazıb — bir söz sizə səhv görünürsə, səhv bizimdir.',
     'language.notTranslated':

@@ -263,6 +263,11 @@ export const en = {
     'Every published course is listed with what it contains and who teaches it. Your enrolments, progress and certificates are in one place.',
 
   'language.reviewed': 'A first-language speaker has read this translation.',
+  // Between "nobody has read this" and "somebody has". A part read is a real
+  // fact and it is not the whole claim, so it gets its own sentence rather than
+  // being rounded to either neighbour.
+  'language.partial':
+    'First-language speakers have read {read} of the {total} parts of this translation.',
   'language.unreviewed':
     'No first-language speaker has read this translation yet. It was written by the people who built the platform — if a word looks wrong to you, that is a mistake we owe you.',
   'language.notTranslated':

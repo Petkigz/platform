@@ -273,6 +273,8 @@ export const ASIA_FIL: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Nakalista ang bawat nailathalang kurso kasama ang laman at kung sino ang nagtuturo. Ang iyong mga enrolment, progreso at sertipiko ay nasa isang lugar.',
 
     'language.reviewed': 'May katutubong nagsasalita ng wikang ito na nakabasa ng salin.',
+    'language.partial':
+      'Nabasa na mga katutubong nagsasalita ang {read} sa {total} bahagi ng saling ito.',
     'language.unreviewed':
       'Wala pang katutubong nagsasalita ng wikang ito ang nakabasa ng salin. Isinulat ito ng mga taong bumuo ng platform — kung may salitang mali sa iyong paningin, pagkakamali namin iyon.',
     'language.notTranslated':

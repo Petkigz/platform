@@ -66,6 +66,8 @@ export const AFRICA_SOUTH: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'Ukukhetha kwakho kugcinwa kulesi siphequluli, hhayi ku-akhawunti yakho, ngakho edivayisi enye izocela ulimi lwayo.',
     'language.reviewed': 'Okhuluma lolu limi njengolimi lwakhe useke wafunda le nguqulo.',
+    'language.partial':
+      'Abakhuluma ulimi lwabo bafunde izingxenye {read} kwezingu-{total} zalokhu kuhumusha.',
     'language.unreviewed':
       'Akekho okhuluma lolu limi njengolimi lwakhe oseke wafunda le nguqulo. Iqanjwe yilabo abakha le ndawo — uma igama likubonakala lingalungile, iphutha lethu.',
     'language.notTranslated':
@@ -119,6 +121,8 @@ export const AFRICA_SOUTH: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'Ukukhetha kwakho kugcinwa kwesi sikhangeli, hayi kwi-akhawunti yakho, ngoko esinye isixhobo siza kucela ulwimi lwaso.',
     'language.reviewed': 'Umntu othetha olu lwimi njengolwimi lwakhe ufunde le nguqulelo.',
+    'language.partial':
+      'Abathetha ulwimi lwabo bafunde iinxalenye {read} kwezi-{total} zolu guqulelo.',
     'language.unreviewed':
       'Akukho mntu uthetha olu lwimi njengolwimi lwakhe okwangoku ufunde le nguqulelo. Ibhalwe ngabo bakhe eli qonga — ukuba igama libonakala lingalunganga, impazamo yeyethu.',
     'language.notTranslated':
@@ -172,6 +176,8 @@ export const AFRICA_SOUTH: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'Die keuse word in hierdie blaaier gehou, nie op jou rekening nie, so ’n ander toestel vra sy eie toestel.',
     'language.reviewed': '’n Moedertaalspreker het hierdie vertaling gelees.',
+    'language.partial':
+      'Eerstetaalsprekers het {read} van die {total} dele van hierdie vertaling gelees.',
     'language.unreviewed':
       'Nog geen moedertaalspreker het hierdie vertaling gelees nie. Dit is deur die mense geskryf wat die platform gebou het — as ’n woord vir jou verkeerd lyk, is dit ons fout.',
     'language.notTranslated':
@@ -225,6 +231,8 @@ export const AFRICA_SOUTH: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'Sarudzo inochengetwa pabhurauza rino, kwete paakaunti yako, saka chimwe chishandiso chichakumbira chayo mutauro.',
     'language.reviewed': 'Mumwe mutauri wemutauro uyu akarangarira kushandurwa uku.',
+    'language.partial':
+      'Vatauri vemutauro wekuzvarwa vakaverenga zvikamu {read} pane {total} zveturikirwa iyi.',
     'language.unreviewed':
       'Hapana mutauri wemutauro uyu sezvarangarira kushandurwa uku. Kwakanyorwa nevanovaka chikuva ichi — kana izwi richiita seri riri, kukanganisa kwedu.',
     'language.notTranslated':
@@ -278,6 +286,8 @@ export const AFRICA_SOUTH: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'Khetho e bolokoa ho sebatli sena, eseng ho akhaonto ea hau, kahoo sesebelisoa se seng se tla kopa puo ea sona.',
     'language.reviewed': 'Sebui sa puo ena e le puo ea hae se balile phetolelo ena.',
+    'language.partial':
+      'Batho ba buang puo ya habo ba balile dikarolo tse {read} ho tse {total} tsa phetolelo ena.',
     'language.unreviewed':
       'Ha ho na sebui sa puo ena e le puo ea hae se se kileng sa bala phetolelo ena. E ngotsoe ke ba hahang sethala sena — haeba lentsoe le bonahala le fosahetse, phoso ke ea rona.',
     'language.notTranslated':
@@ -331,6 +341,8 @@ export const AFRICA_SOUTH: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'Chisankho chimasungidwa pa msakatuli ameneyu, osati pa akaunti yanu, kotero chipangizo china chidzapempha chinenero chake.',
     'language.reviewed': 'Wolankhula chinenero ichi monga chinenero chawo anawerenga kumasulira uku.',
+    'language.partial':
+      'Anthu olankhula chinenero chawo anaŵerenga magawo {read} mwa {total} a matembenuzidwe awa.',
     'language.unreviewed':
       'Palibe wolankhula chinenero ichi monga chinenero chawo amene anawerenga kumasulira uku. Zinalembedwa ndi omwe anamanga malo awa — ngati mawu akuoneka olakwika, kulakwitsa kwathu.',
     'language.notTranslated':

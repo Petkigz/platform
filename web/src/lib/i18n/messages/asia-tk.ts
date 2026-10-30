@@ -269,6 +269,8 @@ export const ASIA_TK: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Her çap edilen kurs nämeleri öz içine alýandygy we kimiň öwredýändigi bilen sanawda. Ýazylmalaryňyz, ösüşiňiz we şahadatnamalaryňyz bir ýerde.',
 
     'language.reviewed': 'Bu terjimäni şu diliň ene dilinde gürleýjisi okady.',
+    'language.partial':
+      'Ene dilinde gürleýänler bu terjimäniň {total} bölüminden {read} bölümini okadylar.',
     'language.unreviewed':
       'Bu terjimäni heniz şu diliň ene dilinde gürleýjisi okamady. Ony platformany guran adamlar ýazdy — bir söz size nädogry görünse, bu biziň ýalňyşlygymyz.',
     'language.notTranslated':

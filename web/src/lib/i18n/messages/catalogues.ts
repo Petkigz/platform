@@ -125,6 +125,8 @@ const BASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'يُحفظ الاختيار على هذا المتصفح لا في حسابك، لذا سيسأل جهاز آخر لغته الخاصة.',
     'language.reviewed': 'قرأ هذه الترجمة متحدث أصلي للغة.',
+    'language.partial':
+      'قرأ متحدثون باللغة الأم {read} من {total} أجزاء هذه الترجمة.',
     'language.unreviewed':
       'لم يقرأ هذه الترجمة بعد متحدث أصلي للغة. كتبها من بنوا المنصة — وإن بدت لك كلمة خطأ فذلك خطأ نتحمله نحن.',
     'language.notTranslated':
@@ -177,6 +179,8 @@ const BASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'یہ انتخاب اِس براؤزر پر محفوظ ہوتا ہے، آپ کے اکاؤنٹ میں نہیں، اس لیے دوسرا ڈیوائس اپنی زبان پوچھے گا۔',
     'language.reviewed': 'اس ترجمے کو مادری زبان بولنے والے نے پڑھا ہے۔',
+    'language.partial':
+      'مادری زبان بولنے والوں نے اس ترجمے کے {total} حصوں میں سے {read} پڑھ لیے ہیں۔',
     'language.unreviewed':
       'ابھی تک کسی مادری زبان بولنے والے نے اس ترجمے کو نہیں پڑھا۔ یہ پلیٹ فارم بنانے والوں نے لکھا ہے — اگر کوئی لفظ آپ کو غلط لگے تو وہ ہماری غلطی ہے۔',
     'language.notTranslated':
@@ -229,6 +233,8 @@ const BASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'این انتخاب در همین مرورگر نگه داشته می‌شود، نه در حساب شما؛ بنابراین دستگاهی دیگر زبان خودش را می‌پرسد.',
     'language.reviewed': 'یک گویشور بومی این ترجمه را خوانده است.',
+    'language.partial':
+      'گویشوران بومی {read} از {total} بخش این ترجمه را خوانده‌اند.',
     'language.unreviewed':
       'هنوز هیچ گویشور بومی این ترجمه را نخوانده است. آن را سازندگان این سکو نوشته‌اند — اگر واژه‌ای به نظرتان نادرست آمد، آن اشتباه از ماست.',
     'language.notTranslated':
@@ -281,6 +287,8 @@ const BASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'Seçim hesabınızda değil bu tarayıcıda saklanır; başka bir cihaz kendi dilini sorar.',
     'language.reviewed': 'Bu çeviriyi bir ana dili konuşuru okudu.',
+    'language.partial':
+      'Anadili konuşurları bu çevirinin {total} bölümünden {read} tanesini okudu.',
     'language.unreviewed':
       'Bu çeviriyi henüz ana dili konuşuru okumadı. Platformu kuranlar yazdı — bir kelime size yanlış görünüyorsa, o hata bizim.',
     'language.notTranslated':
@@ -333,6 +341,8 @@ const BASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'Pilihan disimpan di peramban ini, bukan di akun Anda, jadi perangkat lain akan menanyakan bahasanya sendiri.',
     'language.reviewed': 'Seorang penutur asli telah membaca terjemahan ini.',
+    'language.partial':
+      'Penutur asli telah membaca {read} dari {total} bagian terjemahan ini.',
     'language.unreviewed':
       'Belum ada penutur asli yang membaca terjemahan ini. Terjemahan ini ditulis oleh orang-orang yang membangun platform — bila ada kata yang tampak keliru bagi Anda, itu kesalahan kami.',
     'language.notTranslated':
@@ -385,6 +395,8 @@ const BASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'Pilihan disimpan pada pelayar ini, bukan pada akaun anda, jadi peranti lain akan menanyakan bahasanya sendiri.',
     'language.reviewed': 'Seorang penutur jati telah membaca terjemahan ini.',
+    'language.partial':
+      'Penutur jati telah membaca {read} daripada {total} bahagian terjemahan ini.',
     'language.unreviewed':
       'Belum ada penutur jati yang membaca terjemahan ini. Ia ditulis oleh mereka yang membina platform ini — jika ada perkataan yang kelihatan salah kepada anda, itu kesilapan kami.',
     'language.notTranslated':
@@ -437,6 +449,8 @@ const BASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'পছন্দটি এই ব্রাউজারে রাখা হয়, আপনার অ্যাকাউন্টে নয়; তাই অন্য ডিভাইস নিজের ভাষা জিজ্ঞাসা করবে।',
     'language.reviewed': 'একজন মাতৃভাষী এই অনুবাদটি পড়েছেন।',
+    'language.partial':
+      'মাতৃভাষী পাঠকরা এই অনুবাদের {total}টি অংশের মধ্যে {read}টি পড়েছেন।',
     'language.unreviewed':
       'এখনও কোনো মাতৃভাষী এই অনুবাদটি পড়েননি। এটি প্ল্যাটফর্মটি যাঁরা তৈরি করেছেন তাঁরাই লিখেছেন — কোনো শব্দ আপনার কাছে ভুল মনে হলে সেই ভুল আমাদের।',
     'language.notTranslated':
@@ -489,6 +503,8 @@ const BASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'चुनाव इस ब्राउज़र पर रखा जाता है, आपके खाते में नहीं; इसलिए दूसरा डिवाइस अपनी भाषा पूछेगा।',
     'language.reviewed': 'एक मातृभाषी ने इस अनुवाद को पढ़ा है।',
+    'language.partial':
+      'मातृभाषी पाठकों ने इस अनुवाद के {total} भागों में से {read} पढ़ लिए हैं।',
     'language.unreviewed':
       'अभी तक किसी मातृभाषी ने इस अनुवाद को नहीं पढ़ा है। इसे प्लेटफ़ॉर्म बनाने वालों ने लिखा है — कोई शब्द आपको ग़लत लगे तो वह ग़लती हमारी है।',
     'language.notTranslated':
@@ -542,6 +558,8 @@ const BASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'Le choix est conservé sur ce navigateur, pas sur votre compte : un autre appareil demandera sa propre langue.',
     'language.reviewed': 'Un locuteur natif a relu cette traduction.',
+    'language.partial':
+      'Des locuteurs natifs ont relu {read} des {total} parties de cette traduction.',
     'language.unreviewed':
       'Aucun locuteur natif n’a encore relu cette traduction. Elle a été écrite par ceux qui ont construit la plateforme — si un mot vous paraît faux, c’est notre erreur.',
     'language.notTranslated':
@@ -594,6 +612,8 @@ const BASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'La elección se guarda en este navegador, no en tu cuenta, así que otro dispositivo preguntará por su propio idioma.',
     'language.reviewed': 'Un hablante nativo ha revisado esta traducción.',
+    'language.partial':
+      'Hablantes nativos han revisado {read} de las {total} partes de esta traducción.',
     'language.unreviewed':
       'Ningún hablante nativo ha revisado todavía esta traducción. La escribieron quienes construyeron la plataforma: si una palabra le parece incorrecta, el error es nuestro.',
     'language.notTranslated':
@@ -646,6 +666,8 @@ const BASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'A escolha é guardada neste navegador, não na sua conta, por isso outro dispositivo perguntará pelo seu próprio idioma.',
     'language.reviewed': 'Um falante nativo revisou esta tradução.',
+    'language.partial':
+      'Falantes nativos revisaram {read} das {total} partes desta tradução.',
     'language.unreviewed':
       'Nenhum falante nativo revisou esta tradução ainda. Ela foi escrita por quem construiu a plataforma — se alguma palavra lhe parecer errada, o erro é nosso.',
     'language.notTranslated':
@@ -699,6 +721,8 @@ const BASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.browser':
       'Chaguo huhifadhiwa kwenye kivinjari hiki, si kwenye akaunti yako, kwa hiyo kifaa kingine kitauliza lugha yake yenyewe.',
     'language.reviewed': 'Mzungumzaji wa asili amesoma tafsiri hii.',
+    'language.partial':
+      'Wazungumzaji wa lugha ya kwanza wamesoma sehemu {read} kati ya {total} za tafsiri hii.',
     'language.unreviewed':
       'Hakuna mzungumzaji wa asili aliyesoma tafsiri hii bado. Iliandikwa na waliojenga jukwaa — neno likionekana dogo kwako, kosa hilo ni letu.',
     'language.notTranslated':

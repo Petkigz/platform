@@ -249,6 +249,8 @@ export const ASIA_ZH_HANT: Partial<Record<LocaleCode, Partial<Messages>>> = {
       '每一門已發布的課程都列出內容與授課老師。你的報名、進度與證書都在同一個地方。',
 
     'language.reviewed': '已有一位以此語言為母語的人讀過這份翻譯。',
+    'language.partial':
+      '母語者已閱讀本譯文的 {total} 個部分中的 {read} 個。',
     'language.unreviewed':
       '目前還沒有以此語言為母語的人讀過這份翻譯。它是由建立這個平台的人寫的——如果某個詞在你看來不對，那是我們欠你的一個錯誤。',
     'language.notTranslated':

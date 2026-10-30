@@ -6334,3 +6334,38 @@ reading it in Malay.
 **Fifty-one languages, fifty translations, fifty-two buttons.** `reviewed` is
 `false` on every one of them. The Chinese rows, the two largest catalogues on the
 platform by readers, have the same status as the smallest: written, never read.
+
+## A part is a unit, because a whole catalogue was never going to be read — **DECIDED 2026-10-30**
+
+**The review flow shipped yesterday and the queue is empty.** The reason is not
+that people will not read their own language. It is the unit: a review counted
+only if somebody read all **one hundred and ninety-one lines** of a catalogue in
+one sitting, or it could not lift the sentence on `/language` at all. A favour
+that cannot be finished is a favour nobody starts.
+
+**So the unit is a part of the interface** — the navigation, the sign-in screen,
+the front page — and a part read with nothing to correct is a result, not an
+empty form. The sheet asks what was actually read and offers three answers: the
+lines I changed (recorded, its corrections still arrive, never counts as a read),
+every line in this part, or every line in the whole interface. **The default is
+the modest one**, because a form must not put a claim in somebody's mouth; the
+middle answer is the one that moves the number, and the page says so.
+
+**The claim on `/language` did not get weaker.** It is a sentence about the whole
+translation, so it is printed when every part has a published read, or when one
+person has published a whole-catalogue read. Until then the page prints
+`{read} of {total} parts` — a new sentence in all fifty-one catalogues, because
+"nobody has read this" over three named parts would be as wrong as claiming the
+whole thing. The parts are not a second register: they are the key prefixes,
+derived from the English catalogue, and the same list the sheet offers.
+
+**A correction cannot be filed under a part it is not about.** The trigger
+refuses it by name. It costs one existence check and it is worth it: the owner's
+queue has exactly one reader, and a row that cannot be judged without re-reading
+two parts is a row that gets skipped.
+
+**What this does not fix, said plainly.** Nobody is emailed when a correction is
+decided — there is still no mail provider — so a reviewer learns the outcome from
+`/language` or from writing to us. And the catalogues are still machine-written:
+this makes "read by a person who speaks it" reachable, it does not make it true
+for any language yet.

@@ -13,7 +13,7 @@ import {
   translatedLocales,
   translator,
 } from '@/lib/i18n';
-import { SECTIONS, englishFor, sectionByPrefix, type Section } from '@/lib/translations';
+import { SECTIONS, englishFor, sectionByPrefix, sectionName, type Section } from '@/lib/translations';
 
 export const metadata: Metadata = { title: 'Help us get a language right' };
 export const dynamic = 'force-dynamic';
@@ -103,7 +103,7 @@ export default async function ContributePage({
     name: 'Please give the name you would like printed beside the language.',
     email: 'That does not look like an email address. It is kept so we can write back, and nothing is sent from here yet.',
     nothing:
-      'Nothing was changed, so there was nothing to send. Edit at least one line, or tick the box if you read the whole catalogue and found it right.',
+      'Nothing was changed, so there was nothing to send. Edit at least one line — or, if you read the part and found it right, choose that under “How much of it did you read?” and send it as it is.',
     placeholder:
       'One of the lines lost a {placeholder} such as {count} or {year}. Those are filled in by the page that uses the sentence, so a translation without them would print a sentence missing its number. Nothing was saved.',
     failed: 'The submission did not reach us. Nothing was saved — please try again.',
@@ -255,15 +255,59 @@ export default async function ContributePage({
             <textarea id="note" name="note" rows={3} style={{ width: '100%', fontFamily: 'inherit' }} />
           </div>
 
-          <div style={{ marginTop: '1.1rem' }}>
-            <label htmlFor="scope" style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
-              <input id="scope" name="scope" type="checkbox" value="whole" style={{ marginTop: '0.25rem' }} />
-              <span>
-                I read the <strong>whole</strong> catalogue in this language, not only the part
-                above. Only a whole read can make the site say the language has been read.
-              </span>
-            </label>
-          </div>
+          {/* Three claims, and the modest one is the default.
+              The first version of this form asked a yes/no question — "I read the
+              whole catalogue" — and that turned out to be the wrong unit: a
+              hundred and ninety-one lines in one sitting is a favour nobody
+              finished, which is why the queue stayed empty. One part is a
+              Saturday morning. The middle choice is the one that makes the
+              number move, and `part` stays the default because the form must not
+              put a claim in somebody's mouth. */}
+          <fieldset
+            style={{
+              marginTop: '1.2rem',
+              border: '1px solid var(--border, #d8d8d8)',
+              padding: '0.9rem 1rem 1rem',
+            }}
+          >
+            <legend style={{ padding: '0 0.4rem', fontSize: '0.9rem' }}>
+              How much of it did you read?
+            </legend>
+            <p className="muted" style={{ margin: '0 0 0.7rem', fontSize: '0.85rem' }}>
+              Be exact. This is the sentence the site prints, and only what you actually read is
+              counted.
+            </p>
+
+            <div style={{ display: 'grid', gap: '0.7rem' }}>
+              <label htmlFor="scope-part" style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                <input id="scope-part" name="scope" type="radio" value="part" defaultChecked style={{ marginTop: '0.25rem' }} />
+                <span>
+                  <strong>Only the lines I changed.</strong> I fixed what was wrong and I am not
+                  claiming to have read the rest. Your corrections still arrive and can still be
+                  accepted — they just do not count as a read.
+                </span>
+              </label>
+
+              <label htmlFor="scope-section" style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                <input id="scope-section" name="scope" type="radio" value="section" style={{ marginTop: '0.25rem' }} />
+                <span>
+                  <strong>Every line in {sectionName(section.prefix)}.</strong> I read this whole
+                  part, not only the lines I changed. Your name then goes beside this part, and the
+                  language can be described as read once every part has somebody&rsquo;s name
+                  against it.
+                </span>
+              </label>
+
+              <label htmlFor="scope-whole" style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                <input id="scope-whole" name="scope" type="radio" value="whole" style={{ marginTop: '0.25rem' }} />
+                <span>
+                  <strong>Every line in the whole interface.</strong> All {SECTIONS.reduce((total, part) => total + part.keys.length, 0)}{' '}
+                  lines, not only the part above. One person reading everything is enough on its
+                  own.
+                </span>
+              </label>
+            </div>
+          </fieldset>
 
           <p style={{ marginTop: '1.4rem' }}>
             <button type="submit" className="btn">
@@ -272,8 +316,9 @@ export default async function ContributePage({
           </p>
           <p className="muted" style={{ fontSize: '0.85rem' }}>
             Nothing changes on the site straight away. What you send is read by one person,
-            who accepts or rejects each line, and your name appears beside the language only
-            if the whole catalogue has been read.
+            who accepts or rejects each line. Your name appears beside the language when what
+            you read has been published, and the site says the language has been read once
+            every part of it has.
           </p>
         </form>
       )}

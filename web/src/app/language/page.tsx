@@ -4,12 +4,13 @@ import Link from 'next/link';
 
 import { isSupabaseConfigured } from '@/lib/env';
 import { createClient } from '@/lib/supabase/server';
-import { parsePublished, type PublishedReview } from '@/lib/translations';
+import { coverageOfReviews, parsePublished, type PublishedReview } from '@/lib/translations';
 
 import {
   LOCALE_COOKIE,
   chooseLocale,
   coverageOf,
+  formatNumber,
   localeByCode,
   localeGroups,
   regionLabel,
@@ -72,7 +73,12 @@ export default async function LanguagePage() {
     }
   }
   const reviewers = published.get(code) ?? [];
-  const readBy = reviewers.length > 0 || current.reviewed;
+  // Added up from the parts, not from the number of rows: three published reads of
+  // three parts is progress, and it is not yet the sentence below. The register's
+  // own `reviewed` flag is the other way a language can be called read, and it is
+  // true for English alone.
+  const parts = coverageOfReviews(reviewers);
+  const readBy = parts.complete || current.reviewed;
 
   const sourceLine =
     source === 'chosen'
@@ -105,7 +111,17 @@ export default async function LanguagePage() {
             this list — so the page makes the second claim itself, per language,
             from the register rather than from a sentence typed once and forgotten. */}
         <p style={{ margin: '0 0 0.4rem', fontSize: '0.9rem' }}>
-          {readBy ? t('language.reviewed') : t('language.unreviewed')}
+          {readBy
+            ? t('language.reviewed')
+            : parts.read > 0
+              ? // Partly read is a different sentence, not a shorter one. Saying
+                // "nobody has read this" over three named parts would be as wrong
+                // as claiming the whole thing.
+                t('language.partial', {
+                  read: formatNumber(code, parts.read),
+                  total: formatNumber(code, parts.total),
+                })
+              : t('language.unreviewed')}
         </p>
         {/* The attribution is a name and a date, not a sentence.
             The sentence above is already translated into all fifty-one

@@ -266,6 +266,8 @@ export const ASIA_CENTRAL: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Har bir eʼlon qilingan kurs ichida nima borligi va kim oʻqitishi bilan roʻyxatga olingan. Yozilishlaringiz, yutuqlaringiz va sertifikatlaringiz bir joyda.',
 
     'language.reviewed': 'Bu tarjimani ona tilida soʻzlashuvchi oʻqib chiqqan.',
+    'language.partial':
+      'Ona tili soʻzlashuvchilari ushbu tarjimaning {total} qismidan {read} tasini oʻqib chiqdi.',
     'language.unreviewed':
       'Bu tarjimani hali ona tilida soʻzlashuvchi oʻqimagan. Uni platformani qurganlar yozgan — biror soʻz sizga notoʻgʻri tuyulsa, xato bizniki.',
     'language.notTranslated':

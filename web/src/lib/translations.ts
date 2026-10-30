@@ -50,13 +50,29 @@ export type Proposal = {
   decidedAt: string | null;
 };
 
+/**
+ * How much of a catalogue a review covers.
+ *
+ * `whole` is the whole interface in one sitting. `section` is one part of it —
+ * the navigation, the sign-in screen — read properly, which is the unit a person
+ * can actually finish on a Saturday. `part` is the honest catch-all for "I fixed
+ * the lines that were wrong and I am not claiming anything else"; it is recorded,
+ * its corrections can be accepted, and it never counts as a read.
+ *
+ * The distinction is the whole reason this file exists: `section` made the
+ * coverage number reachable, and `part` is what keeps it true.
+ */
+export type Scope = 'whole' | 'section' | 'part';
+
 export type Review = {
   id: string;
   locale: string;
   reviewerName: string;
   /** `null` for everybody but the owner — the column is granted to them alone. */
   reviewerEmail: string | null;
-  scope: 'whole' | 'part';
+  scope: Scope;
+  /** The key prefix this review covers, when it covers one. */
+  section: string | null;
   note: string | null;
   status: 'submitted' | 'published' | 'declined';
   createdAt: string;
@@ -74,6 +90,10 @@ function text(value: unknown): string | null {
 
 function plain(value: unknown): string {
   return typeof value === 'string' ? value : '';
+}
+
+function scopeIn(value: unknown): Scope {
+  return value === 'whole' ? 'whole' : value === 'section' ? 'section' : 'part';
 }
 
 /**
@@ -95,7 +115,8 @@ export function parseQueue(raw: unknown): Review[] {
       locale: plain(r.locale),
       reviewerName: plain(r.reviewer_name ?? (r as Record<string, unknown>).reviewerName),
       reviewerEmail: text(r.reviewer_email ?? (r as Record<string, unknown>).reviewerEmail),
-      scope: r.scope === 'whole' ? 'whole' : 'part',
+      scope: scopeIn(r.scope),
+      section: text(r.section),
       note: text(r.note),
       status:
         r.status === 'published' || r.status === 'declined' ? r.status : 'submitted',
@@ -181,6 +202,12 @@ export function reviewState(review: Review): string {
   if (review.scope === 'part') {
     return `Submitted as a partial read — corrections can be accepted, but it cannot make the language “read”.${open > 0 ? ` ${open} undecided.` : ''}`;
   }
+  if (review.scope === 'section') {
+    const part = sectionName(review.section);
+    return open > 0
+      ? `Reads ${part} — waiting on ${open} correction${open === 1 ? '' : 's'}.`
+      : `Reads ${part}, and every correction is decided. Ready to publish; it counts as that part read.`;
+  }
   return open > 0
     ? `Waiting on ${open} correction${open === 1 ? '' : 's'}.`
     : 'Every correction is decided. Ready to publish.';
@@ -241,6 +268,69 @@ export function englishFor(key: string): string | undefined {
 }
 
 /**
+ * `The navigation` → `the navigation`, for a sentence that begins mid-line.
+ *
+ * The labels are written to stand alone in a list, so they start with a capital;
+ * a sentence that says “Reads The navigation” reads like a title dropped into a
+ * sentence. Unknown prefixes are returned as they are: a part the page does not
+ * know is a part the database should not have, and printing it is more honest
+ * than printing nothing.
+ */
+export function sectionName(prefix: string | null | undefined): string {
+  if (!prefix) return 'the whole catalogue';
+  const label = sectionByPrefix(prefix)?.label ?? prefix;
+  return label.charAt(0).toLowerCase() + label.slice(1);
+}
+
+/**
+ * How much of a catalogue has been read, added up from published reviews.
+ *
+ * The sentence on `/language` is a claim about the **whole** translation, so it
+ * is only made when every part has a published read, or when one person has
+ * published a whole-catalogue read. Nothing here trusts a count stored anywhere:
+ * the parts are derived from the same section list the correction sheet offers,
+ * so a part can only be counted if a reviewer could have been shown it.
+ *
+ * A published read of a part the page no longer has is ignored rather than
+ * counted — it covers keys nobody can see, and counting it would let the claim
+ * appear with a hole behind it.
+ */
+export type PartCoverage = {
+  /** True when one published review covered the whole catalogue. */
+  whole: boolean;
+  /** The prefixes a published review covered. */
+  parts: string[];
+  /** The parts still with nobody's name against them. */
+  missing: Section[];
+  read: number;
+  total: number;
+  /** Whether “a first-language speaker has read this” is a claim the parts support. */
+  complete: boolean;
+};
+
+export function coverageOfReviews(reviews: PublishedReview[]): PartCoverage {
+  const total = SECTIONS.length;
+  const whole = reviews.some((review) => review.scope === 'whole');
+  const parts = [
+    ...new Set(
+      reviews
+        .filter((review) => review.scope === 'section' && review.section)
+        .map((review) => review.section as string)
+        .filter((prefix) => sectionByPrefix(prefix) !== undefined),
+    ),
+  ];
+  const missing = whole ? [] : SECTIONS.filter((section) => !parts.includes(section.prefix));
+  return {
+    whole,
+    parts,
+    missing,
+    read: whole ? total : total - missing.length,
+    total,
+    complete: whole || missing.length === 0,
+  };
+}
+
+/**
  * The review line `/language` prints.
  *
  * A name and a date, not a sentence: the sentence above them — “A
@@ -253,7 +343,9 @@ export function englishFor(key: string): string | undefined {
 export type PublishedReview = {
   locale: string;
   reviewerName: string;
-  scope: 'whole' | 'part';
+  scope: Scope;
+  /** The part this read covered, or `null` for a whole-catalogue read. */
+  section: string | null;
   publishedAt: string;
 };
 
@@ -269,7 +361,8 @@ export function parsePublished(raw: unknown): Map<string, PublishedReview[]> {
     const entry: PublishedReview = {
       locale,
       reviewerName,
-      scope: r.scope === 'part' ? 'part' : 'whole',
+      scope: scopeIn(r.scope),
+      section: text(r.section),
       publishedAt,
     };
     const bucket = byLocale.get(locale);

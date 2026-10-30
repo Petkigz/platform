@@ -263,6 +263,8 @@ export const ASIA_VI: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Mỗi khoá học đã công bố đều được liệt kê cùng nội dung và người dạy. Việc ghi danh, tiến độ và chứng chỉ của bạn ở cùng một chỗ.',
 
     'language.reviewed': 'Một người bản ngữ đã đọc bản dịch này.',
+    'language.partial':
+      'Người bản ngữ đã đọc {read} trong {total} phần của bản dịch này.',
     'language.unreviewed':
       'Chưa có người bản ngữ nào đọc bản dịch này. Nó được viết bởi những người dựng nên nền tảng — nếu một từ có vẻ sai với bạn, đó là lỗi chúng tôi nợ bạn.',
     'language.notTranslated':

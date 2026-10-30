@@ -83,13 +83,18 @@ export async function run(ctx) {
   }
 
   const REVIEW_COLUMNS =
-    'locale, reviewer_name, reviewer_email, scope, note';
+    'locale, reviewer_name, reviewer_email, scope, note, section';
 
   function insertReview(values) {
+    // Older call sites pass five values and mean "no part named"; padding here
+    // keeps every existing assertion about a whole or partial read working
+    // without restating it in each one.
+    const padded = [...values];
+    while (padded.length < 6) padded.push(null);
     return q(
       `insert into public.translation_reviews (${REVIEW_COLUMNS})
-       values ($1, $2, $3, $4, $5)`,
-      values,
+       values ($1, $2, $3, $4, $5, $6)`,
+      padded,
     );
   }
 
@@ -102,6 +107,7 @@ export async function run(ctx) {
       extra.email ?? 'amina@example.com',
       extra.scope ?? 'part',
       extra.note ?? null,
+      extra.section ?? null,
     ]));
     return (await scalar(
       `select id from public.translation_reviews
@@ -416,6 +422,110 @@ export async function run(ctx) {
       `select status, decline_reason from public.translation_reviews where id = $1`, [id]);
     assert(row.status === 'declined', `expected declined, got ${row.status}`);
     assert(/duplicate/.test(row.decline_reason), 'the reason was not kept');
+  });
+
+  // -------------------------------------------------------------------------
+  // A part is a unit
+  // -------------------------------------------------------------------------
+  // A whole-catalogue read is a hundred and ninety-one lines in one sitting, and
+  // nobody has done it. These tests are the smaller unit: one part of the
+  // interface, read properly, recorded with the part it covered.
+  await test('one part of a catalogue can be read on its own', async () => {
+    await setFlag(true);
+    const id = await anonReview({ scope: 'section', section: 'nav', email: 'nav@example.com' });
+    await propose(id, 'nav.main', 'Main', 'Prinċipali', 'si');
+
+    const proposal = await scalar(
+      `select id from public.translation_proposals where review_id = $1`, [id]);
+    await asActor(owner, () => q(
+      `select public.decide_translation_proposal($1, true)`, [proposal.id]));
+    await asActor(owner, () => q(`select public.publish_translation_review($1)`, [id]));
+
+    const row = await scalar(
+      `select section, status from public.translation_reviews where id = $1`, [id]);
+    assert(row.status === 'published', `expected published, got ${row.status}`);
+    assert(row.section === 'nav', `expected the part to be nav, got ${row.section}`);
+
+    // What `/language` reads: the part, so the page can add the parts up.
+    const rows = await asAnon(async () =>
+      (await q('select * from public.published_locale_reviews()')).rows);
+    const mine = rows.find((r) => r.reviewer_name === 'Amina Fernando' && r.section === 'nav');
+    assert(!!mine, 'a published read of one part did not reach the public view');
+    assert(mine.scope === 'section', `expected scope section, got ${mine.scope}`);
+  });
+
+  await test('a part that needed no correction is still a read', async () => {
+    // The reviewer who reads the footer and finds it right is the reviewer the
+    // whole feature is for, and a form that only accepts complaints loses them.
+    await setFlag(true);
+    const id = await anonReview({ scope: 'section', section: 'footer', email: 'clean@example.com' });
+    await asActor(owner, () => q(`select public.publish_translation_review($1)`, [id]));
+    const row = await scalar(
+      `select status, section from public.translation_reviews where id = $1`, [id]);
+    assert(row.status === 'published', `a read with nothing to fix was not published (${row.status})`);
+    assert(row.section === 'footer');
+  });
+
+  await test('a correction cannot be filed under a part it is not about', async () => {
+    await setFlag(true);
+    const id = await anonReview({ scope: 'section', section: 'nav', email: 'stray@example.com' });
+    await rejects(
+      () => propose(id, 'home.title', 'old', 'new'),
+      /translation:wrong_section/,
+    );
+    // …and the one that belongs is accepted, so the refusal is about the part and
+    // not about the trigger refusing everything.
+    await propose(id, 'nav.learn', 'My learning', 'Il-kejl tiegħi');
+  });
+
+  await test('a partial read is still unpublishable, even naming a part', async () => {
+    await setFlag(true);
+    const id = await anonReview({ scope: 'part', section: 'nav', email: 'partialpart@example.com' });
+    await rejects(
+      () => asActor(owner, () => q(`select public.publish_translation_review($1)`, [id])),
+      /translation:partial_read/,
+    );
+  });
+
+  await test('the two columns cannot disagree about what was read', async () => {
+    await setFlag(true);
+    // A whole-catalogue read covers no part in particular.
+    await rejects(
+      () => asAnon(() => insertReview(
+        ['si', 'Amina', 'a@example.com', 'whole', null, 'nav'])),
+      /review_scope_coherent/,
+    );
+    // A section read has to say which section.
+    await rejects(
+      () => asAnon(() => insertReview(
+        ['si', 'Amina', 'a@example.com', 'section', null, null])),
+      /review_scope_coherent/,
+    );
+    // And a part is a key prefix, not a sentence somebody typed.
+    await rejects(
+      () => asAnon(() => insertReview(
+        ['si', 'Amina', 'a@example.com', 'section', null, 'the navigation'])),
+      /review_section_shape/,
+    );
+  });
+
+  await test('the part somebody read cannot be changed afterwards', async () => {
+    await setFlag(true);
+    const id = await anonReview({ scope: 'section', section: 'nav', email: 'relabel@example.com' });
+    await rejects(
+      () => q(`update public.translation_reviews set section = 'home' where id = $1`, [id]),
+      /translation:no_edit/,
+    );
+  });
+
+  await test('the owner\'s queue says which part, and the public view says nothing else', async () => {
+    await setFlag(true);
+    const id = await anonReview({ scope: 'section', section: 'auth', email: 'queuepart@example.com' });
+    const payload = await asActor(owner, async () =>
+      (await scalar('select public.translation_review_queue() as q')).q);
+    const mine = payload.reviews.find((r) => r.id === id);
+    assert(mine.section === 'auth', `the queue lost the part (${mine.section})`);
+    assert(mine.scope === 'section', `the queue lost the scope (${mine.scope})`);
   });
 
   // -------------------------------------------------------------------------

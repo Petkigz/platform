@@ -252,6 +252,8 @@ export const ASIA_ZH_HANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
       '每一门已发布的课程都列有内容与授课老师。你的报名、进度和证书都在一个地方。',
 
     'language.reviewed': '已有一位以此语言为母语的人读过这份译文。',
+    'language.partial':
+      '母语者已阅读本译文的 {total} 个部分中的 {read} 个。',
     'language.unreviewed':
       '目前还没有以此语言为母语的人读过这份译文。它是由搭建这个平台的人写的——如果某个词在你看来不对，那是我们欠你的一个错误。',
     'language.notTranslated':

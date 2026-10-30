@@ -7,8 +7,11 @@ import { createClient } from '@/lib/supabase/client';
 import { localeByCode, type LocaleCode } from '@/lib/i18n';
 import {
   acceptedBlock,
+  coverageOfReviews,
   dayOf,
   reviewState,
+  sectionName,
+  type PartCoverage,
   type ProposalState,
   type Review,
 } from '@/lib/translations';
@@ -28,8 +31,15 @@ import {
 export function TranslationConsole({
   reviews,
   states,
+  coverage,
 }: {
   reviews: Review[];
+  /**
+   * How much of each language has been read, added up from published reviews and
+   * worked out on the server. A part read is one part; the language is only
+   * describable as read when none is missing.
+   */
+  coverage: Record<string, PartCoverage>;
   /**
    * Whether each correction is in the code, worked out on the server against the
    * catalogue that is actually built.
@@ -129,7 +139,8 @@ export function TranslationConsole({
         const block = acceptedBlock(review);
         const undecided = review.proposals.filter((p) => p.status === 'proposed').length;
         const canPublish =
-          review.status === 'submitted' && review.scope === 'whole' && undecided === 0;
+          review.status === 'submitted' && review.scope !== 'part' && undecided === 0;
+        const parts = coverage[review.locale] ?? coverageOfReviews([]);
 
         return (
           <section className="card" key={review.id}>
@@ -139,10 +150,26 @@ export function TranslationConsole({
             <h2 style={{ marginTop: 0, marginBottom: '0.4rem' }}>{review.reviewerName}</h2>
             <p className="muted" style={{ marginTop: 0 }}>
               submitted {dayOf(review.createdAt)}
-              {review.scope === 'whole' ? ' · says they read the whole catalogue' : ' · read part of it'}
+              {review.scope === 'whole'
+                ? ' · says they read the whole catalogue'
+                : review.scope === 'section'
+                  ? ` · read ${sectionName(review.section)}`
+                  : ' · read part of it'}
               {review.reviewerEmail ? ` · ${review.reviewerEmail}` : ''}
             </p>
             <p style={{ marginTop: 0, fontSize: '0.92rem' }}>{reviewState(review)}</p>
+            {/* What this language needs before it can be called read. Three parts
+                out of sixteen is real progress and is not that sentence, and the
+                console says which of the two it is rather than letting the owner
+                guess from a list of cards. */}
+            <p className="muted" style={{ marginTop: 0, fontSize: '0.85rem' }}>
+              {parts.complete
+                ? 'Every part of this language has a published read.'
+                : `${parts.read} of ${parts.total} parts read — still missing ${parts.missing
+                    .slice(0, 4)
+                    .map((section) => sectionName(section.prefix))
+                    .join(', ')}${parts.missing.length > 4 ? ` and ${parts.missing.length - 4} more` : ''}.`}
+            </p>
             {review.note && (
               <p style={{ fontSize: '0.92rem' }}>
                 <strong>Their note:</strong> {review.note}
@@ -257,7 +284,7 @@ export function TranslationConsole({
                 </button>
                 {!canPublish && (
                   <span className="muted" style={{ fontSize: '0.85rem' }}>
-                    {review.scope !== 'whole'
+                    {review.scope === 'part'
                       ? 'A partial read cannot make the language “read”.'
                       : `${undecided} correction${undecided === 1 ? '' : 's'} still undecided.`}
                   </span>
@@ -301,6 +328,9 @@ export function sentenceFor(code: string): string {
   }
   if (code.includes('translation:partial_read')) {
     return 'That submission says they read part of the catalogue. Record the corrections, but the language cannot be described as read.';
+  }
+  if (code.includes('translation:wrong_section')) {
+    return 'One of those corrections is about a different part of the site from the one this submission covers. Decide what you can, and ask them to send the rest under the right part.';
   }
   if (code.includes('translation:undecided')) {
     return 'Decide every correction first. A language marked as read with a queue behind it is a claim made early.';
