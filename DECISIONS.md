@@ -6432,3 +6432,37 @@ sentence left untranslated; Latin inside a non-Latin language is only a finding
 for words of four letters or more. The full pass must stay under two hundred
 findings or the test fails — the day it stops being a shortlist is the day it
 becomes a wall again.
+
+## The last step is a command with a check, not a paste — **DECIDED 2026-10-30**
+
+**The review flow ended in the worst possible place for a person.** Accepting a
+correction produced a block of TypeScript to paste into a file of 192 lines, in
+a language the owner does not read. One unescaped apostrophe is a build failure
+at best and a mangled sentence at worst, and there is no way to check the result
+by eye. That is where a flow stops being used.
+
+**So `npm run i18n:apply -- ta.json --write` is the last step.** The console
+hands over a JSON payload and the command; the script locates the key, checks the
+placeholders against the English, refuses a line the catalogue has moved past,
+writes the file with the escaping already done, wraps a long value the way the
+file wraps its own, and prints a real unified diff. **All or nothing**: if one
+correction in the payload is wrong, nothing is written, because a half-applied
+payload means the owner has to work out which of eleven landed.
+
+**It is a script and not a button, and that is not laziness.** The translations
+live in the repository and the true end of every correction is a commit. A
+serverless route has no filesystem to write and no git to commit with; a button
+that said "applied" while the file said otherwise would be the exact dishonesty
+this whole feature exists to avoid.
+
+**Three rules in the writing, each from a way it goes wrong.** The *file* is the
+truth — a correction carrying the line the reviewer saw is refused if the
+catalogue has moved on, so a later fix is never overwritten by an older one. A
+key that is not in the file is *inserted*, in the English catalogue's own order,
+because a language can be missing a key and that correction is its first
+translation. And a value is only re-wrapped when it overflows, so the diff is the
+line that changed and not a reformat of the paragraph around it.
+
+**What is still manual, and stays manual.** Somebody runs a command and commits.
+There is no CI job that applies payloads, because applying a correction is the
+owner's decision and not a build step.

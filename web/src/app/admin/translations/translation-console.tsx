@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { localeByCode, type LocaleCode } from '@/lib/i18n';
 import {
   acceptedBlock,
+  acceptedPayload,
   coverageOfReviews,
   dayOf,
   reviewState,
@@ -119,7 +120,7 @@ export function TranslationConsole({
   }
 
   async function copy(review: Review) {
-    const block = acceptedBlock(review);
+    const block = acceptedPayload(review);
     try {
       await navigator.clipboard.writeText(block);
       setCopied(review.id);
@@ -155,6 +156,8 @@ export function TranslationConsole({
 
       {reviews.map((review) => {
         const locale = localeByCode(review.locale as LocaleCode);
+        const accepted = review.proposals.filter((p) => p.status === 'accepted').length;
+        const payload = accepted > 0 ? acceptedPayload(review) : '';
         const block = acceptedBlock(review);
         const undecided = review.proposals.filter((p) => p.status === 'proposed').length;
         const canPublish =
@@ -275,29 +278,61 @@ export function TranslationConsole({
               </div>
             )}
 
-            {block && (
+            {accepted > 0 && (
               <div style={{ marginTop: '1.1rem' }}>
                 <h3 style={{ fontSize: '1rem', marginBottom: '0.3rem' }}>
-                  Accepted corrections — paste into the catalogue for {locale.englishName}
+                  {accepted} accepted correction{accepted === 1 ? '' : 's'} for{' '}
+                  {locale.englishName} — ready to apply
                 </h3>
                 <p className="muted" style={{ marginTop: 0, fontSize: '0.85rem' }}>
-                  Accepting a correction does not change the site. These lines do, once they
-                  are in the file — and until then this page keeps saying so.
+                  Accepting a correction does not change the site. Save this as{' '}
+                  <code>{review.locale}.json</code> and run the command below: it checks every
+                  placeholder, refuses any line the catalogue has moved past, writes the file
+                  with the escaping already done, and shows you the diff first. Nothing lands
+                  unless all of it does.
                 </p>
                 <pre
                   style={{
                     overflowX: 'auto',
                     padding: '0.8rem',
                     background: 'var(--surface-muted, #f6f6f4)',
-                    fontSize: '0.82rem',
-                    lineHeight: 1.5,
+                    fontSize: '0.8rem',
+                    lineHeight: 1.45,
+                    maxHeight: '18rem',
                   }}
                 >
-                  {block}
+                  {payload}
                 </pre>
-                <button type="button" className="btn secondary" onClick={() => copy(review)}>
-                  {copied === review.id ? 'Copied' : 'Copy these lines'}
-                </button>
+                <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                  <button type="button" className="btn secondary" onClick={() => copy(review)}>
+                    {copied === review.id ? 'Copied' : 'Copy the JSON'}
+                  </button>
+                  <code style={{ fontSize: '0.82rem' }}>
+                    npm run i18n:apply -- {review.locale}.json --write
+                  </code>
+                </div>
+                {block && (
+                  <details style={{ marginTop: '0.8rem' }}>
+                    <summary style={{ cursor: 'pointer', fontSize: '0.85rem' }} className="muted">
+                      Or paste the lines in by hand
+                    </summary>
+                    <pre
+                      style={{
+                        overflowX: 'auto',
+                        padding: '0.8rem',
+                        background: 'var(--surface-muted, #f6f6f4)',
+                        fontSize: '0.8rem',
+                        lineHeight: 1.45,
+                      }}
+                    >
+                      {block}
+                    </pre>
+                    <p className="muted" style={{ margin: 0, fontSize: '0.8rem' }}>
+                      The same lines, already quoted. The script above is safer: it refuses a
+                      dropped placeholder and a stale line, and this paragraph does not.
+                    </p>
+                  </details>
+                )}
               </div>
             )}
 

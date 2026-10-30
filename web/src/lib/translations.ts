@@ -182,6 +182,40 @@ export function tsLiteral(value: string): string {
  * crept into the paste would be the worst kind of bug — one the reviewer would
  * find in the language they offered to fix.
  */
+/**
+ * The accepted corrections as the payload `npm run i18n:apply` takes.
+ *
+ * This is the shape the last step of the flow actually uses. The paste block
+ * below is kept for the case where somebody would rather edit the file by hand —
+ * it is still correct TypeScript — but the script is what checks the
+ * placeholders, refuses a line the catalogue has moved past, and writes the file
+ * with the escaping already done. Asking a person to do that by eye, in a
+ * language they do not read, was the step most likely to break.
+ *
+ * `from` travels with every correction on purpose: the script compares it
+ * against the catalogue and refuses a correction the file has moved past, which
+ * is the difference between applying a review and overwriting somebody's later
+ * fix.
+ */
+export function acceptedPayload(review: Review): string {
+  return JSON.stringify(
+    {
+      locale: review.locale,
+      reviewer: review.reviewerName.trim(),
+      corrections: review.proposals
+        .filter((proposal) => proposal.status === 'accepted')
+        .sort((a, b) => a.messageKey.localeCompare(b.messageKey))
+        .map((proposal) => ({
+          key: proposal.messageKey,
+          from: proposal.currentText,
+          to: proposal.proposedText.trim(),
+        })),
+    },
+    null,
+    2,
+  );
+}
+
 export function acceptedBlock(review: Review): string {
   return review.proposals
     .filter((p) => p.status === 'accepted')

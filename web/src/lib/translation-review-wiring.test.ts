@@ -256,6 +256,11 @@ test('the console is the owner’s, and staff may not decide', () => {
   assert.match(console_, /rpc\('decline_translation_review'/u);
   // Accepting is not applying, and the console has to say so where the button is.
   assert.match(console_, /Accepting a correction does not change the site/u);
+  // …and it hands over the payload and the command that does apply it, rather
+  // than asking for a paste with no check behind it.
+  assert.ok(console_.includes('npm run i18n:apply -- {review.locale}.json --write'));
+  assert.match(console_, /acceptedPayload\(review\)/u);
+  assert.match(console_, /Or paste the lines in by hand/u);
 });
 
 test('the correction sheet is gated in the sitemap, not promised to a crawler', () => {
