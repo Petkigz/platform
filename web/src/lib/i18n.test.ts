@@ -56,6 +56,18 @@ test('a region is dropped, and an unknown language is not guessed at', () => {
   assert.equal(matchLocale(null), null);
 });
 
+test('Dari is not Persian, and a device that asks for one gets it', () => {
+  // The one catalogue that is a language *and* a place. `fa-AF` is Dari, `fa`
+  // and `fa-IR` are Persian, and an Afghan reader must not be handed Tehran's
+  // vocabulary — nor lose Dari because the region was dropped on the way in.
+  assert.equal(matchLocale('fa-AF'), 'fa-af');
+  assert.equal(matchLocale('fa_af'), 'fa-af');
+  assert.equal(matchLocale('fa'), 'fa');
+  assert.equal(matchLocale('fa-IR'), 'fa');
+  assert.equal(matchLocale('ps-AF'), 'ps');
+  assert.notEqual(translator('fa-af')('home.title'), translator('fa')('home.title'));
+});
+
 test('the device preference is honoured in its own order', () => {
   // German is not a language this interface has, so the first one we do have
   // wins — the header's order, not its q-values re-sorted by hand.
@@ -79,11 +91,18 @@ test('a weight in the header outranks the order it arrived in', () => {
   assert.equal(chooseLocale({ acceptLanguage: '*' }).code, 'en');
 });
 
-test('the three right-to-left languages say so, and nothing else does', () => {
+test('every right-to-left language says so, and nothing else does', () => {
+  // Five since 2026-10-30: Pashto and Dari joined Arabic, Persian and Urdu. This
+  // is not a tidiness check — `dir` is what turns the shell around, so a
+  // right-to-left language marked `ltr` renders mirrored text in a left-to-right
+  // page, and a left-to-right language marked `rtl` breaks its own layout.
   const rtl = LOCALES.filter((l) => l.dir === 'rtl').map((l) => l.code);
-  assert.deepEqual(rtl.sort(), ['ar', 'fa', 'ur']);
+  assert.deepEqual(rtl.sort(), ['ar', 'fa', 'fa-af', 'ps', 'ur']);
   assert.equal(directionOf('fr'), 'ltr');
   assert.equal(directionOf('ar'), 'rtl');
+  assert.equal(directionOf('ps'), 'rtl');
+  assert.equal(directionOf('fa-af'), 'rtl');
+  assert.equal(directionOf('uz'), 'ltr');
 });
 
 test('every catalogue is inside the English key set, and none is empty', () => {

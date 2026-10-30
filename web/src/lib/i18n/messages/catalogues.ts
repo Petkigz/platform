@@ -15,6 +15,11 @@ import { HOME_AFRICA_EAST } from './home-africa-east.ts';
 import { HOME_AFRICA_SOUTH } from './home-africa-south.ts';
 import { HOME_AFRICA_WEST } from './home-africa-west.ts';
 import { HOME_WORLD } from './home-world.ts';
+import { ASIA_AZ } from './asia-az.ts';
+import { ASIA_CENTRAL } from './asia-uz.ts';
+import { ASIA_KK } from './asia-kk.ts';
+import { ASIA_FA_AF } from './asia-fa-af.ts';
+import { ASIA_PS } from './asia-ps.ts';
 import type { Messages } from './en.ts';
 
 /**
@@ -713,4 +718,11 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   HOME_AFRICA_WEST,
   HOME_AFRICA_SOUTH,
   HOME_WORLD,
+  // The Central Asian catalogues: whole files, because they were written from
+  // nothing rather than added to a screen at a time.
+  ASIA_CENTRAL,
+  ASIA_KK,
+  ASIA_AZ,
+  ASIA_PS,
+  ASIA_FA_AF,
 );

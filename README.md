@@ -70,7 +70,7 @@ course as it was, refuses incomplete work, and revokes rather than deletes.
 
 The database stands at **147 tables, RLS on every one, 271 policies, 166
 user-defined triggers, 518 functions and 191 migrations.** The database suite
-passes **2066 tests**; the web suite passes **1632 tests**. TypeScript typecheck
+passes **2066 tests**; the web suite passes **1633 tests**. TypeScript typecheck
 and the production build pass; Next.js emits **221 app route entries** — 120
 pages and seven generated entries (`/_not-found`, four icons and manifest, the
 robots file, the sitemap), plus 94 API routes.
@@ -254,9 +254,9 @@ never deleted, so its reviews survive; and while the flag is off `my_hifz()`
 returns `{enabled:false}` rather than an empty list that would read as "nothing
 memorised".
 
-**The interface speaks thirty-three languages, and the device picks first.**
+**The interface speaks thirty-eight languages, and the device picks first.**
 `/language` is public, because the language is decided before anybody signs in:
-`lib/i18n/` holds a register of thirty-three languages and the root layout sets
+`lib/i18n/` holds a register of thirty-eight languages and the root layout sets
 `<html lang dir>` from `chooseLocale()` — the cookie if this browser set one,
 otherwise the first language in `Accept-Language` the register actually has,
 otherwise English. **Twenty-one of them are African** — Swahili, Amharic, Oromo,
@@ -264,10 +264,18 @@ Somali, Tigrinya, Kinyarwanda, Luganda, Malagasy, Lingala, Hausa, Yoruba, Igbo,
 Wolof, Fulfulde, Bambara, Zulu, Xhosa, Afrikaans, Shona, Sesotho and Chichewa —
 and they are grouped first in the picker, because this platform is operated from
 Uganda and an interface that files Luganda under Portuguese has said something
-about who it expects to read it. Every string falls back to English, so a
+about who it expects to read it. **Ten are Asian** — Urdu, Indonesian, Malay,
+Bengali and Hindi, then Uzbek, Kazakh, Azerbaijani, Pashto and Dari, which
+arrived on 2026-10-30 when a reader asked why the picker had no Asian language in
+it. That question was half right: the five had been there, hidden at the bottom
+of one long dropdown, and the answer to it was to show every language on the page
+— and then to fill the gap Asia actually had, because Central Asia is a hundred
+million Muslim readers the interface could not address at all. Dari is `fa-af`,
+its own catalogue rather than an entry in `fa`: one language, two countries, and
+an Afghan reader should not be handed Tehran's vocabulary. Every string falls back to English, so a
 half-translated catalogue renders sentences rather than blanks; each language
 prints **how much of it is translated**, counted from its own file, and all
-thirty-three are at 100% today. It also prints what the coverage number cannot:
+thirty-eight are at 100% today. It also prints what the coverage number cannot:
 **no first-language speaker has read any of the thirty-two non-English
 catalogues yet**, said in the reader's own language rather than in a footnote.
 It is not only the frame. **Sign-in and sign-up are translated too** — headings,
@@ -312,14 +320,14 @@ that says a child holds no login, the age chips, the cross-links and the three
 different empty states. The age a parent picked is a value (`11-13`) and stays one
 in every language — a sentence that said "nothing for those ages" without naming
 which age would read finished and answer nothing, which is why a test passes the
-band through all thirty-three catalogues and checks it comes back.
+band through all thirty-eight catalogues and checks it comes back.
 
 **The front door speaks it too, and it was the last page still in English.** The
 excuse was that it is the page with no session to read a preference from, which
 was never true: `chooseLocale()` reads the cookie and `Accept-Language` for
 anybody, signed in or not. Forty-two `home.*` keys carry the whole page — the
 hero, the panel of three refusals, the subject heading, both doors, the three
-steps, the teacher band and the closing call — in all thirty-three languages,
+steps, the teacher band and the closing call — in all thirty-eight languages,
 written in four files by region (`home-africa-east`, `home-africa-west`,
 `home-africa-south`, `home-world`) so that adding a language is one block.
 Two things on it are values rather than words. The subject count goes through

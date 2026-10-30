@@ -40,6 +40,14 @@ export type LocaleCode =
   | 'ms'
   | 'bn'
   | 'hi'
+  // Central Asia and Afghanistan — added 2026-10-30, after a reader asked why
+  // the picker had no Asian language. These are the largest Muslim populations
+  // the interface could not address at all.
+  | 'uz'
+  | 'kk'
+  | 'az'
+  | 'ps'
+  | 'fa-af'
   | 'fr'
   | 'es'
   | 'pt'
@@ -143,6 +151,11 @@ export const LOCALES: readonly Locale[] = [
   { code: 'ms', nativeName: 'Bahasa Melayu', englishName: 'Malay', dir: 'ltr', reviewed: false, region: 'Asia' },
   { code: 'bn', nativeName: 'বাংলা', englishName: 'Bengali', dir: 'ltr', reviewed: false, region: 'Asia' },
   { code: 'hi', nativeName: 'हिन्दी', englishName: 'Hindi', dir: 'ltr', reviewed: false, region: 'Asia' },
+  { code: 'uz', nativeName: 'Oʻzbekcha', englishName: 'Uzbek', dir: 'ltr', reviewed: false, region: 'Asia' },
+  { code: 'kk', nativeName: 'Қазақша', englishName: 'Kazakh', dir: 'ltr', reviewed: false, region: 'Asia' },
+  { code: 'az', nativeName: 'Azərbaycanca', englishName: 'Azerbaijani', dir: 'ltr', reviewed: false, region: 'Asia' },
+  { code: 'ps', nativeName: 'پښتو', englishName: 'Pashto', dir: 'rtl', reviewed: false, region: 'Asia' },
+  { code: 'fa-af', nativeName: 'دری', englishName: 'Dari', dir: 'rtl', reviewed: false, region: 'Asia' },
   { code: 'fr', nativeName: 'Français', englishName: 'French', dir: 'ltr', reviewed: false, region: 'Europe and the Americas' },
   { code: 'es', nativeName: 'Español', englishName: 'Spanish', dir: 'ltr', reviewed: false, region: 'Europe and the Americas' },
   { code: 'pt', nativeName: 'Português', englishName: 'Portuguese', dir: 'ltr', reviewed: false, region: 'Europe and the Americas' },
@@ -181,6 +194,13 @@ export function matchLocale(tag: string | null | undefined): LocaleCode | null {
   if (typeof tag !== 'string') return null;
   const cleaned = tag.trim().toLowerCase().replace('_', '-');
   if (cleaned === '') return null;
+
+  // **The whole tag first.** `fa-AF` is Dari and `fa` is Persian — one catalogue
+  // each, and they are not the same file. Until Dari existed, dropping the
+  // region was always safe because every catalogue was a language rather than a
+  // language-and-a-place; the exception is written here rather than discovered by
+  // an Afghan reader being taught in Tehran's vocabulary.
+  if (isLocaleCode(cleaned)) return cleaned;
 
   const [base] = cleaned.split('-');
   if (!base) return null;

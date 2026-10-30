@@ -6145,3 +6145,58 @@ nothing for Central Asia (Uzbek, Kazakh, Azerbaijani, Kyrgyz, Tajik, Turkmen),
 nothing for Afghanistan (Pashto, Dari), nothing for East Asia, and only two for
 Southeast Asia. That is a content decision rather than a defect, and it is the
 next unit rather than this one.
+
+## Asia had been asked for, and Asia was thin — **DECIDED 2026-10-30**
+
+The reader who asked why the picker had no Asian language was told that five had
+been there all along. That was true and it was not an answer. Of the world's
+Muslims, the majority live in Asia, and the interface could address five
+languages of that continent and no others: **nothing for Central Asia, nothing
+for Afghanistan, nothing for East Asia, only two for Southeast Asia.** A hundred
+million people in Uzbekistan, Kazakhstan, Azerbaijan, Afghanistan and the
+neighbouring republics met an English page with no option at all. So the
+question was answered twice — once by showing the languages that existed, and
+once by writing five that did not.
+
+**The five: Oʻzbekcha, Қазақша, Azərbaycanca, پښتو and دری.** Uzbek in Latin
+script, because Uzbekistan retired Cyrillic in 1993 and a menu that arrives in
+Cyrillic reads as a document from before the reader was born. Kazakh in
+Cyrillic, deliberately, although Kazakhstan is moving to Latin — the reform is
+staggered, and writing the menu ahead of its readers would be a guess about
+which school year somebody was born in. Pashto and Dari join the three
+right-to-left languages already in the register, which also makes them the first
+RTL languages added **after** the shell learned to mirror: they needed no special
+case, because the layout was written in logical properties from the start. That
+was the point of writing it that way, and this is the first time it has been
+cashed.
+
+**Dari is `fa-af`, and it is a separate catalogue.** Dari and Iranian Persian are
+one language in the way English and Scots are one language: mutually readable,
+and immediately distinguishable to the people who speak them. The everyday words
+differ — کورس rather than دوره, صنف for class — and handing an Afghan reader the
+Iranian file is precisely the failure this feature exists to prevent. That
+required one change to `matchLocale()`, which had dropped the region from every
+tag since it was written: it now matches the **whole tag first**, so `fa-AF`
+lands in Dari and `fa` and `fa-IR` land in Persian. Dropping the region was
+always safe while every catalogue was a language; `fa-af` is the one catalogue
+that is a language *and* a place, and the exception is written in the function
+rather than discovered by an Afghan reader being taught in Tehran's vocabulary.
+
+**These are whole catalogues in one file each, and that is deliberate.** The
+older groups are layers — a sign-in block here, a shelf block there — because
+they grew that way, one screen at a time, and each unit added the strings its
+screen needed. A language written from nothing has no such history: splitting it
+across eight files to imitate the shape of the others would be ceremony imitating
+history. `merge()` does not care which file a string came from, and a reader
+checking whether Uzbek is finished wants one file they can read top to bottom.
+Each carries all 191 keys, every placeholder from `en.ts` reproduced verbatim —
+`{count}`, `{number}`, `{year}`, `{query}`, `{band}`, `{phone}`, `{language}`,
+`{percent}`, `{page}`, `{pages}`, `{from}`, `{to}`, `{total}`, `{hours}`,
+`{minutes}` — and the existing test that no catalogue changes its placeholders
+covers them without a line of new code.
+
+**Thirty-eight languages, and still nobody has read them.** All thirty-eight are
+at 100% of the key set, which is a count and not a claim: `reviewed` stays
+`false` for every one of the thirty-seven translations, including these five, and
+`/language` prints that in the reader's own language. The honest next step is not
+another language — it is a speaker of one of them opening the file.
