@@ -21,6 +21,7 @@ import { AddChild } from './add-child';
 import { AgeDeclarationCard } from './age-declaration';
 import { fetchDeclaration, type AdultDeclaration } from '@/lib/adult-declaration';
 import { CreateFamily } from './create-family';
+import { ChildLoginCard, type ChildLoginState } from './child-login-card';
 
 export const dynamic = 'force-dynamic';
 
@@ -158,6 +159,13 @@ async function FamilyBlock({
         engagement: showChildEngagement
           ? await fetchEngagement(supabase, c.id).catch(() => null)
           : null,
+        // `child_login_state()` returns nothing when the caller may neither
+        // manage this child nor is this child. That is the whole gate: the page
+        // does not need to know about the flag, because a refusal is silence.
+        login: await (async () => {
+          const { data } = await supabase.rpc('child_login_state', { p_learner_id: c.id });
+          return (data as ChildLoginState | null) ?? null;
+        })().catch(() => null),
       })),
     ),
     // Who learns here as an adult besides the children. A failure is silence:
@@ -200,7 +208,7 @@ async function FamilyBlock({
         </div>
       ) : (
         <div className="grid cols-2">
-          {childCourses.map(({ child, courses, engagement }) => (
+          {childCourses.map(({ child, courses, engagement, login }) => (
             <div className="card" key={child.id}>
               <h3 style={{ marginTop: 0 }}>{child.displayName}</h3>
               <div className="badges">
@@ -262,6 +270,14 @@ async function FamilyBlock({
                   </>
                 )}
               </p>
+
+              {login && (
+                <ChildLoginCard
+                  learnerId={child.id}
+                  childName={child.displayName}
+                  state={login}
+                />
+              )}
             </div>
           ))}
         </div>

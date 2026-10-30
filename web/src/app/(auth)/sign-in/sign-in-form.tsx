@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { toE164, isE164 } from '@/lib/phone';
 import { oauthRedirectUrl } from '@/lib/oauth';
 import { useT } from '@/lib/i18n/client';
+import { signInAddress } from '@/lib/child-login';
 
 /**
  * D3: both email+password and phone OTP.
@@ -75,7 +76,14 @@ export function SignInForm({
 
     try {
       if (mode === 'password') {
-        const { error: err } = await supabase.auth.signInWithPassword({ email, password });
+        // A bare word is a child's username; anything with an @ is an address and
+        // is left exactly as typed. The transform is local: it never asks the
+        // database whether a username exists, so a wrong one fails the same way a
+        // wrong password does and cannot be used to enumerate children.
+        const { error: err } = await supabase.auth.signInWithPassword({
+          email: signInAddress(email),
+          password,
+        });
         if (err) throw err;
         router.push(next);
         router.refresh();
@@ -171,10 +179,17 @@ export function SignInForm({
         {mode === 'password' ? (
           <>
             <label htmlFor="email">{t('auth.email')}</label>
+            {/* Text rather than type="email" since 2026-10-30, because a child
+                signs in with the username their guardian made rather than an
+                address — the browser's own validation would refuse it before
+                this form ever ran. An address still goes through untouched. */}
             <input
               id="email"
-              type="email"
-              autoComplete="email"
+              type="text"
+              inputMode="email"
+              autoComplete="username"
+              autoCapitalize="none"
+              spellCheck={false}
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}

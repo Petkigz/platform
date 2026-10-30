@@ -121,8 +121,6 @@ export const en = {
   'auth.signInTitle': 'Sign in',
   'auth.signUpTitle': 'Create an account',
   'auth.signInLede': 'Welcome back.',
-  'auth.signUpLede':
-    'For an adult. Children learn under a family account, not their own login.',
   'auth.email': 'Email',
   'auth.password': 'Password',
   'auth.mobile': 'Mobile number',

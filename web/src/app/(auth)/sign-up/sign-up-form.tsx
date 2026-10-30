@@ -76,7 +76,12 @@ export function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
     <div className="narrow">
     <div className="card">
       <h1>{t('auth.signUpTitle')}</h1>
-      <p className="muted">{t('auth.signUpLede')}</p>
+      {/* The lede that used to sit here said children learn under a family
+          account "not their own login". That stopped being true on 2026-10-30,
+          when a guardian gained the right to make one, so the sentence is gone
+          rather than left wrong — in this language and in the thirty-two the
+          catalogue had it in. A missing sentence is better than a false
+          promise; see DECISIONS.md. */}
 
       <div className="tabs">
         <a href="#email" aria-current={mode === 'email' ? 'page' : undefined}

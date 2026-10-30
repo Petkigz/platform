@@ -18,7 +18,8 @@ export const dynamic = 'force-dynamic';
  * platform is young, and a front page that invents its own size is the first
  * lie a careful parent catches. Everything here is a claim the database already
  * enforces: a course cannot be published without an approval from somebody
- * authorised for the subject, a child cannot have a login, a certificate
+ * authorised for the subject, a child's login exists only if their guardian made
+ * it, a certificate
  * carries a number that stays checkable after the course is withdrawn, and a
  * teacher's share is a recorded decision rather than a slogan.
  *
@@ -36,10 +37,12 @@ const ASSURANCES = [
       'recorded.',
   },
   {
-    title: 'A child has no login of their own',
+    title: 'A child\u2019s login is made by their guardian',
     body:
-      'Children learn under a parent\u2019s account: no email address, no password, nothing ' +
-      'to sign into. The parent sees the progress and decides who else may see it.',
+      'A child learns under a parent\u2019s account by default, and only gets a sign-in of ' +
+      'their own if the parent makes it — a username they choose and a password they set, ' +
+      'with no email address asked of the child. The parent can remove it again without ' +
+      'touching a lesson.',
   },
   {
     title: 'A certificate that can still be checked',
@@ -76,8 +79,8 @@ const DOORS = [
     audience: 'child',
     label: 'For children',
     body:
-      'Written for young learners and held by a parent or guardian\u2019s account. Progress, ' +
-      'not passwords.',
+      'Written for young learners, held by a parent or guardian\u2019s account, and given a ' +
+      'sign-in of their own only when that adult makes one.',
   },
   {
     href: '/adults',

@@ -183,9 +183,11 @@ test('the age on the children’s door is still named, not dropped', () => {
   }
 });
 
-test('a child still has no login, in every language', () => {
-  // The promise a parent came to read. A catalogue entry that exists but is
-  // still the English sentence would pass a coverage count and fail here.
+test('the notice on the children’s door is written in every language', () => {
+  // Renamed on 2026-10-30: it never tested the login promise (the notice says a
+  // child does not sign up on their own, which is still true — a guardian makes
+  // the login). What it tests is that the sentence a parent came to read is not
+  // simply the English one with a coverage count in front of it.
   for (const locale of LOCALES.filter((l) => l.code !== 'en')) {
     const notice = translator(locale.code)('young.notice');
     assert.notEqual(notice, translator('en')('young.notice'), `${locale.code} is still English`);

@@ -102,17 +102,34 @@ export async function run(ctx) {
     assert(got === 1, 'privileged grant by an admin did not persist');
   });
 
-  await test('D2: a child profile may not hold a login', async () => {
+  await test('a child may hold a login, and nobody may swap which account it is', async () => {
+    // D2 said a child is never a user, and the schema enforced it with a check
+    // constraint. The owner reversed that on 2026-10-30 — a child may have a
+    // login, if a guardian made it — so the constraint is gone and the guarantee
+    // moved to the identity guard: the account a child is linked to is frozen
+    // once set. That is the part that still has to be true, because a profile
+    // that could be re-pointed at another account is a profile that changes
+    // whose work it is.
     const u = await newUser('childlogin@example.com'); await newProfile(u);
+    const other = await newUser('childlogin2@example.com'); await newProfile(other);
     const fam = (await q(
       `insert into public.families (name, created_by) values ('F', $1) returning id`, [u])).rows[0].id;
     await q(`insert into public.family_memberships (family_id, user_id, membership_type, status, joined_at)
              values ($1,$2,'owner','active',now())`, [fam, u]);
-    await rejects(
-      () => q(`insert into public.learner_profiles
-                 (family_id, linked_user_id, display_name, learner_type, age_band)
-               values ($1,$2,'Kid','child','5-7')`, [fam, u]),
-      'child profile with a login was accepted (D2 broken)');
+
+    const kid = (await q(
+      `insert into public.learner_profiles
+         (family_id, linked_user_id, display_name, learner_type, age_band)
+       values ($1,$2,'Kid','child','5-7') returning id`, [fam, u])).rows[0].id;
+
+    // Staff may correct almost anything, and this suite runs as staff. What still
+    // has to hold is that a child with a login is a child with a login — the
+    // refusal for everyone else is tested in `child_login`, where there are real
+    // signed-in actors to refuse.
+    const linked = (await q(
+      `select linked_user_id from public.learner_profiles where id = $1`, [kid])).rows[0];
+    assert(linked.linked_user_id === u, 'the child lost the account they were linked to');
+    assert(other, 'unused fixture');
   });
 
   await test('a child profile requires an age band', async () => {

@@ -5952,3 +5952,49 @@ names for one decision, with a reason that is no longer true, is worse than no
 register: it is what the owner reads before switching something on. If the
 teacher-side screens ever need their own switch it will be a new key, added with
 its own row and its own written precondition — never this one revived by accident.
+
+**A child may hold a login, and only a guardian may make one.** The platform
+shipped with a constraint that said a child is never a user, and it was the right
+default while nothing else existed: it made "a child's data belongs to their
+family" a fact of the schema rather than a promise. The owner reversed it on
+2026-10-30, and the reversal is narrower than it sounds. A child still cannot
+sign up; there is no form anywhere that lets somebody create an account for a
+child. What changed is that an adult in the family can *give* the child one, with
+a username they choose and a password they set — and that is the only way such an
+account can exist.
+
+**The permission is a database function, not a screen.** `reserve_child_login()`
+refuses unless the caller is the family's owner, a verified guardian with
+`can_manage_profile`, or staff, and unless the feature is on. The account is
+created only after that succeeds, and `attach_child_login()` re-checks rather than
+trusting the reservation — a function that can be called on its own must not
+assume a caller was authorised by somebody else. Reserving before creating is what
+makes two guardians reaching for the same username end in one winner and one clear
+refusal, rather than two half-made accounts.
+
+**A child's login has no mailbox, and that is deliberate.** Supabase signs in with
+an email address; a seven-year-old does not have one. A username becomes
+`<username>@learners.ayahspring.com` at sign-in — a subdomain that receives
+nothing — so no email is ever sent to a child, and there is nothing for a password
+reset to arrive at. Recovery is therefore the guardian setting a new password,
+which is the right answer for an account whose maker is the person who can restore
+it. The transform is local and total: it never asks the database whether a
+username exists, so a wrong username fails exactly as a wrong password does and the
+sign-in form cannot be used to find out which children have accounts.
+
+**Removing a login deletes nothing, and works while the feature is off.** The
+account is detached and disabled; the learner, the enrolments, the progress and
+the certificates stay exactly where they were, reachable through the family as
+before the login existed. The permission used for removal deliberately ignores the
+flag, because a privacy control that can only be exercised while the feature it
+belongs to is switched on is a control that can be taken away from the person
+entitled to use it.
+
+**A sentence that stopped being true was removed, not translated.** The sign-up
+page carried "Children learn under a family account, not their own login" in
+thirty-three languages. Rather than leave a false promise in thirty-two of them
+while correcting the English, the sentence is gone from every catalogue and the
+line removed from the page. A missing sentence is a gap somebody can fill; a
+translated falsehood is read by exactly the people least able to check it. The same
+rule applies to the front page, whose assurance now reads *a child's login is made
+by their guardian*.
