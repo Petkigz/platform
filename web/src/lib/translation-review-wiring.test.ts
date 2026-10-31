@@ -10,6 +10,7 @@ import { LOCALES } from './i18n/locales.ts';
 import {
   SECTIONS,
   acceptedBlock,
+  claimBoard,
   coverageOfReviews,
   dayOf,
   defaultSection,
@@ -463,4 +464,143 @@ test('the owner is told how to hand a language to a speaker', () => {
   const console_ = read('app/admin/translations/translation-console.tsx');
   assert.match(console_, /\/contribute\?locale=ta/u);
   assert.match(console_, /no provider is connected/u);
+});
+
+// ---------------------------------------------------------------------------
+// What is blocking the claim
+// ---------------------------------------------------------------------------
+// The console could say how near one language was. This is the question an
+// owner with twenty spare minutes actually asks: which single read would finish
+// something, and where is nobody looking.
+
+test('the board counts a part per language, and never two reads as two parts', () => {
+  const board = claimBoard(
+    new Map([
+      ['si', [published({ reviewerName: 'Amina' }), published({ reviewerName: 'Nuwan' })]],
+    ]),
+    ['si', 'ta'],
+  );
+
+  assert.equal(board.total, 2);
+  assert.equal(board.progressed.length, 1);
+  assert.equal(board.untouched, 1, 'a language with nothing read was listed as progress');
+  const [row] = board.progressed;
+  assert.ok(row);
+  assert.equal(row.read, 1);
+  // Two people reading the same part is one part — the claim is about the
+  // catalogue, not about how many volunteers there were.
+  assert.deepEqual(row.names, ['Amina', 'Nuwan']);
+});
+
+test('the next thing to ask for is the first missing part, in catalogue order', () => {
+  const board = claimBoard(
+    new Map([['si', [published({ section: SECTIONS[0]!.prefix })]]]),
+    ['si'],
+  );
+  const [row] = board.progressed;
+  assert.ok(row);
+  assert.equal(row.next?.prefix, SECTIONS[1]?.prefix);
+  // And it is the part closest to the top of the page, not whichever is smallest.
+  assert.equal(
+    board.progressed[0]?.missing.length,
+    SECTIONS.length - 1,
+  );
+});
+
+test('the closest to done comes first, and ties are stable', () => {
+  const many = SECTIONS.slice(0, 5).map((section) => published({ section: section.prefix }));
+  const one = [published({ section: 'nav' })];
+  const board = claimBoard(
+    new Map([
+      ['ta', one],
+      ['si', many],
+      ['ur', one],
+    ]),
+    ['ta', 'si', 'ur'],
+  );
+  assert.deepEqual(
+    board.progressed.map((row) => row.locale),
+    ['si', 'ta', 'ur'],
+    'the list is not closest-first with a stable tie',
+  );
+});
+
+test('a finished language says so, and asks for nothing', () => {
+  const everyPart = SECTIONS.map((section) => published({ section: section.prefix }));
+  const board = claimBoard(new Map([['si', everyPart]]), ['si']);
+  const [row] = board.progressed;
+  assert.ok(row);
+  assert.equal(row.claim.kind, 'reviewed');
+  assert.equal(row.read, row.total);
+  assert.deepEqual(row.missing, []);
+  assert.equal(row.next, undefined);
+});
+
+test('the board sees the trap: every part behind, and the coldest named', () => {
+  // Everybody read the navigation, because a volunteer is pointed at the sheet
+  // and the sheet opens on the navigation. Fifty languages at one part forever.
+  const navOnly = new Map(
+    Array.from({ length: 5 }, (_, index) => [
+      `l${index}`,
+      [published({ section: 'nav' })],
+    ]),
+  );
+  const board = claimBoard(navOnly, ['l0', 'l1', 'l2', 'l3', 'l4']);
+
+  const nav = board.byPart.find((part) => part.section.prefix === 'nav');
+  assert.equal(nav?.languages, 5);
+  const others = board.byPart.filter((part) => part.section.prefix !== 'nav');
+  assert.ok(others.every((part) => part.languages === 0), 'a part nobody read is counted');
+  // Every language is at the same place, which is the thing the panel warns about.
+  assert.equal(new Set(board.progressed.map((row) => row.read)).size, 1);
+});
+
+test('one whole-catalogue read covers every part at once on the board', () => {
+  const board = claimBoard(
+    new Map([['si', [published({ scope: 'whole', section: null })]]]),
+    ['si'],
+  );
+  assert.equal(board.byPart.every((part) => part.languages === 1), true);
+  assert.equal(board.progressed[0]?.claim.kind, 'reviewed');
+});
+
+test('a language nobody has touched is a count, not fifty rows', () => {
+  const board = claimBoard(new Map(), ['ta', 'si', 'ur', 'dv']);
+  assert.deepEqual(board.progressed, []);
+  assert.equal(board.untouched, 4);
+  assert.equal(board.total, 4);
+  assert.equal(board.byPart.every((part) => part.languages === 0), true);
+});
+
+test('the panel is on the owner’s page, and says what does not count', () => {
+  const page = read('app/admin/translations/page.tsx');
+  assert.match(page, /claimBoard\(/u);
+  assert.match(page, /<ClaimBoardPanel board=\{board\} names=\{names\} \/>/u);
+
+  const panel = read('app/admin/translations/claim-board.tsx');
+  // Every row offers the sheet for the exact part that would move it, prefilled
+  // — a "next step" with no link is a suggestion, not a next step.
+  assert.match(panel, /\/contribute\?locale=\$\{locale\}&section=\$\{section\}/u);
+  // And the panel is explicit that a published review is what counts, not an
+  // accepted correction.
+  assert.match(panel, /Only published reviews count here/u);
+  assert.match(panel, /accepted corrections do not move a language/i);
+  // The trap gets its own sentence, because it is the failure this view exists
+  // to catch.
+  assert.match(panel, /every language stays at one part/u);
+});
+
+test('the part the panel recommends is never the skip link', () => {
+  // The skip link is one line at the top of every page that nobody has looked at
+  // on purpose. It is genuinely unread, and telling a volunteer to start there
+  // would be advice this page does not believe — so it is excluded from the
+  // "coldest part" pick, and the navigation is offered instead.
+  const panel = read('app/admin/translations/claim-board.tsx');
+  assert.match(panel, /part\.section\.prefix !== 'skip'/u);
+
+  // And the fallback is the catalogue order, which starts with the skip link only
+  // when there is nothing else to choose from.
+  const board = claimBoard(new Map(), ['ta']);
+  const candidates = board.byPart.filter((part) => part.section.prefix !== 'skip');
+  assert.equal(candidates[0]?.section.prefix, 'nav');
 });

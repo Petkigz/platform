@@ -7,6 +7,7 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
 import { auditAll, auditProposal } from '@/lib/translation-audit';
 import {
+  claimBoard,
   coverageOfReviews,
   englishFor,
   parseQueue,
@@ -16,6 +17,7 @@ import {
   type PublishedReview,
 } from '@/lib/translations';
 import { AuditPanel } from './audit-panel';
+import { ClaimBoardPanel } from './claim-board';
 import { TranslationConsole } from './translation-console';
 
 export const dynamic = 'force-dynamic';
@@ -107,6 +109,15 @@ export default async function AdminTranslationsPage() {
   for (const locale of LOCALES) names[locale.code] = locale.englishName;
   const audit = auditAll(names);
 
+  // **What is blocking the claim, across all fifty languages.** The per-card line
+  // answers "how near is this one"; this answers "what do I do next", and it is
+  // the only view that can see the trap — fifty languages at one part read
+  // because everybody started at the navigation.
+  const board = claimBoard(
+    new Map(Object.entries(publishedByLocale)),
+    LOCALES.filter((locale) => locale.code !== 'en').map((locale) => locale.code),
+  );
+
   // What the machine can see in each *proposed* line, too: a correction that
   // pastes the English back is not a correction, and the owner should meet that
   // before accepting it rather than after.
@@ -165,6 +176,8 @@ export default async function AdminTranslationsPage() {
         {waiting.length} waiting · {undecided} correction{undecided === 1 ? '' : 's'} to
         decide · {reviews.length} in total
       </p>
+
+      <ClaimBoardPanel board={board} names={names} />
 
       <AuditPanel summaries={audit} />
 

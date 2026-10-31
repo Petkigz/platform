@@ -418,6 +418,98 @@ export function claimFor(
 }
 
 /**
+ * Every language, against every part: what is done and what to ask for next.
+ *
+ * The per-card line on the console says how near *one* language is. This says it
+ * for all of them at once, which is a different question and the one that
+ * decides what the owner does on Monday morning: **which single read would move a
+ * language to done**, and which part nobody anywhere has read.
+ *
+ * Two lists, because "0 of 16" fifty times is a wall and not information:
+ *
+ *   * `progressed` — a language with at least one part read, closest to done
+ *     first, each carrying the part to ask for next and a link to that part;
+ *   * `untouched` — a count, because a language nobody has started on needs the
+ *     same thing as every other language nobody has started on.
+ *
+ * The order is by parts read, then by locale, so it is stable between loads: an
+ * owner coming back to the page sees the same list in the same order and can
+ * pick up where they left off.
+ */
+export type ClaimRow = {
+  locale: string;
+  claim: Claim;
+  read: number;
+  total: number;
+  /** The parts with nobody's name against them, in catalogue order. */
+  missing: Section[];
+  /** The part to ask for next, or `undefined` when nothing is left. */
+  next: Section | undefined;
+  /** The names already published against this language, without repeats. */
+  names: string[];
+};
+
+export type PartRow = {
+  section: Section;
+  /** How many languages have a published read of this part. */
+  languages: number;
+};
+
+export type ClaimBoard = {
+  progressed: ClaimRow[];
+  /** Languages with no published read of any part. */
+  untouched: number;
+  /** Languages considered at all — every one with a catalogue. */
+  total: number;
+  byPart: PartRow[];
+};
+
+export function claimBoard(
+  published: Map<string, PublishedReview[]>,
+  locales: readonly string[],
+): ClaimBoard {
+  const progressed: ClaimRow[] = [];
+  let untouched = 0;
+
+  for (const locale of locales) {
+    const reviews = published.get(locale) ?? [];
+    const coverage = coverageOfReviews(reviews);
+    const claim = claimFor(reviews);
+    if (claim.kind === 'unreviewed') {
+      untouched += 1;
+      continue;
+    }
+    progressed.push({
+      locale,
+      claim,
+      read: coverage.read,
+      total: coverage.total,
+      missing: coverage.missing,
+      next: coverage.missing[0],
+      names: [...new Set(reviews.map((review) => review.reviewerName.trim()).filter(Boolean))],
+    });
+  }
+
+  progressed.sort((a, b) => b.read - a.read || a.locale.localeCompare(b.locale));
+
+  const byPart: PartRow[] = SECTIONS.map((section) => {
+    let languages = 0;
+    for (const locale of locales) {
+      const reviews = published.get(locale) ?? [];
+      const covered =
+        reviews.some((review) => review.scope === 'whole') ||
+        reviews.some(
+          (review) => review.scope === 'section' && review.section === section.prefix,
+        );
+      if (covered) languages += 1;
+    }
+    return { section, languages };
+  });
+
+  return { progressed, untouched, total: locales.length, byPart };
+}
+
+/**
  * The review line `/language` prints.
  *
  * A name and a date, not a sentence: the sentence above them — “A

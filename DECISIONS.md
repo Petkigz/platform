@@ -6497,3 +6497,31 @@ sentence itself instead of a regular expression over the page's source. And
 correction permits **no** edits, with the valid ones still reported as
 `proposed`. Before, the gate was only in the CLI, and a caller reaching for
 `edits` would have written half a payload.
+
+## The owner's real question is "what do I do next", not "how near is this" — **DECIDED 2026-10-30**
+
+**The console could say how near one language was, and that is the wrong
+question.** With fifty languages and sixteen parts each there are eight hundred
+cells, and the one that matters is the one where a single read finishes
+something. So `/admin/translations` now opens on a board, across every language
+at once, sorted closest-to-done, each row carrying **the part to ask for next**
+and a link to the sheet for exactly that part.
+
+**It exists to catch one specific failure.** The sheet opens on the navigation,
+because that is the best first ask. If everybody is pointed at the sheet and
+nobody is pointed anywhere else, then fifty languages sit at one part of sixteen
+forever and the sentence never changes — a queue that looks busy with no claim
+anywhere near. So the panel names **the part nobody has read in any language**,
+and says in as many words that the next person you ask is worth asking for that
+one.
+
+**Two refusals in the building of it.** The skip link is excluded from that
+"coldest part" recommendation: it is genuinely unread and it is one line at the
+top of every page that nobody has looked at on purpose, so pointing a volunteer
+there would be advice this page does not believe. And a language nobody has
+started on is a **count**, not fifty rows — a table that says `0 of 16` fifty
+times is the wall this whole console has been trying to stop being.
+
+**Only published reviews count.** Not accepted corrections, not submissions
+waiting to be decided. A language called read while its corrections sit in a
+queue is the claim made early that every other part of this feature refuses.
