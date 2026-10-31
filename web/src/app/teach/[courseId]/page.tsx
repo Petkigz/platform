@@ -17,6 +17,8 @@ import { VersionChecks } from '@/app/_shared/version-checks';
 import { SubjectPicker } from './subject-picker';
 import { AudiencePicker } from './audience-picker';
 import { LanguagePicker } from './language-picker';
+import { CertificatePolicyCard } from './certificate-policy';
+import { fetchCertificatePolicy } from '@/lib/certificates';
 import { parseLanguages } from '@/lib/language';
 import { fetchVersionSources } from '@/lib/provenance';
 import { isFlagEnabled } from '@/lib/flags';
@@ -94,7 +96,7 @@ export default async function TeachCoursePage({
 
   // Subject tagging, and the taxonomy it draws from. Tagging is what makes a
   // course findable in the catalogue.
-  const [subjects, currentSubjects, sourcesByLesson, previewsEnabled, assessments, manualResponses, reviewState, subjectOptions] = await Promise.all([
+  const [subjects, currentSubjects, sourcesByLesson, previewsEnabled, assessments, manualResponses, reviewState, subjectOptions, certificatePolicy] = await Promise.all([
     fetchSubjects(supabase),
     current ? fetchVersionSubjects(supabase, current.id) : Promise.resolve<string[]>([]),
     current ? fetchVersionSources(supabase, current.id) : Promise.resolve({}),
@@ -106,6 +108,10 @@ export default async function TeachCoursePage({
     // governance decision and lives on /admin/reviews.
     current ? fetchVersionReviewState(supabase, current.id) : Promise.resolve(null),
     fetchSubjectOptions(supabase),
+    // What this version promises whoever finishes it. Read from the version,
+    // because a new draft may promise something different from the version
+    // learners are already on.
+    current ? fetchCertificatePolicy(supabase, current.id) : Promise.resolve({ enabled: false, templateVersion: null }),
   ]);
 
   return (
@@ -160,6 +166,12 @@ export default async function TeachCoursePage({
             version={current}
             subjects={subjects}
             initial={currentSubjects}
+          />
+          <CertificatePolicyCard
+            versionId={current.id}
+            versionNumber={current.versionNumber}
+            versionStatus={current.status}
+            policy={certificatePolicy}
           />
           <Curriculum
             courseId={row.id}

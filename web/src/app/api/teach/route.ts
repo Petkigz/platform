@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
+import { setCertificatePolicy } from '@/lib/certificates';
 import {
   activateAssessment, addAssessmentQuestion, createAssessment,
   markManualAssessmentResponse,
@@ -79,6 +80,8 @@ export async function POST(request: Request) {
     name?: unknown;
     access?: unknown;
     csv?: unknown;
+    enabled?: unknown;
+    templateVersion?: unknown;
   };
 
   const uuid = /^[0-9a-f-]{36}$/i;
@@ -427,6 +430,31 @@ export async function POST(request: Request) {
   }
 
   // ---------------------------------------------------------------------
+  if (b.action === 'set_certificate_policy') {
+    // Whether a version ends in a certificate belongs to the version, and the
+    // author is the one who knows what finishing it means. This had no button
+    // anywhere in the product: a certificate could be issued, and no author
+    // could ever ask for one, so the whole shelf was unreachable.
+    if (!isUuid(b.versionId) || typeof b.enabled !== 'boolean') {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: 'rejected',
+          message: 'A version and whether it ends in a certificate are required.',
+        },
+        { status: 400 },
+      );
+    }
+    return json(
+      await setCertificatePolicy(supabase, {
+        versionId: b.versionId,
+        enabled: b.enabled,
+        templateVersion: typeof b.templateVersion === 'string' ? b.templateVersion : null,
+      }),
+    );
+  }
+
+  // ---------------------------------------------------------------------
   if (b.action === 'set_audience') {
     // Who a course is for sits on the course, not the version, so this is not
     // blocked by a published version the way every other write here is.
@@ -513,6 +541,7 @@ function json(outcome: { ok: boolean; code?: string; message?: string }) {
   const status =
     outcome.code === 'duplicate' ? 409
     : outcome.code === 'locked' ? 409
+    : outcome.code === 'not_author' ? 403
     : 400;
   return NextResponse.json(outcome, { status });
 }

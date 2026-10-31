@@ -206,6 +206,126 @@ export async function fetchCertificateForHolder(
   };
 }
 
+/**
+ * What the certificate shelf can see, in six numbers.
+ *
+ * This is the answer to "why is this page empty?", which an empty `[]` cannot
+ * give. Each number is a different reason:
+ *
+ *   publishedVersions  nobody has published anything, so nobody can finish
+ *   issuingVersions    published courses, none of which say they end in one
+ *   waiting            finished, certificate-enabled, not yet issued
+ *   finishedWithout    finished a course that does not issue certificates
+ *   issued / revoked   what exists
+ *
+ * Staff only, and it carries no names — the counts are about the shelf, the
+ * names on it are the learner's business.
+ */
+export type CertificateShelfStanding = {
+  publishedVersions: number;
+  issuingVersions: number;
+  waiting: number;
+  finishedWithout: number;
+  issued: number;
+  revoked: number;
+};
+
+export async function fetchCertificateShelfStanding(
+  supabase: SupabaseClient,
+): Promise<CertificateShelfStanding | null> {
+  const { data, error } = await supabase.rpc('certificate_shelf_standing');
+  // A page that cannot say why it is empty is still a page that lists what is
+  // there; the standing is an explanation, not the content.
+  if (error) return null;
+  const row = data as unknown as CertificateShelfStanding | null;
+  if (!row) return null;
+  return {
+    publishedVersions: Number(row.publishedVersions ?? 0),
+    issuingVersions: Number(row.issuingVersions ?? 0),
+    waiting: Number(row.waiting ?? 0),
+    finishedWithout: Number(row.finishedWithout ?? 0),
+    issued: Number(row.issued ?? 0),
+    revoked: Number(row.revoked ?? 0),
+  };
+}
+
+/** What one version promises a learner who finishes it. */
+export type CertificatePolicy = {
+  enabled: boolean;
+  templateVersion: string | null;
+};
+
+export async function fetchCertificatePolicy(
+  supabase: SupabaseClient,
+  versionId: string,
+): Promise<CertificatePolicy> {
+  const { data, error } = await supabase
+    .from('course_completion_policies')
+    .select('certificate_enabled, certificate_template_version')
+    .eq('course_version_id', versionId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  const row = data as unknown as {
+    certificate_enabled: boolean;
+    certificate_template_version: string | null;
+  } | null;
+  return {
+    enabled: row?.certificate_enabled ?? false,
+    templateVersion: row?.certificate_template_version ?? null,
+  };
+}
+
+export type CertificatePolicyOutcome =
+  | { ok: true; enabled: boolean; templateVersion: string | null; changed: boolean }
+  | { ok: false; code: 'not_author' | 'rejected'; message: string };
+
+/**
+ * Turn certificates on or off for one version.
+ *
+ * `set_course_certificate_policy()` is the only writer: `course_completion_policies`
+ * has read and insert policies and no update policy, because switching the
+ * promise off after somebody has been given a certificate is a decision that
+ * needs a reason and a count, not a row update. The function restates both.
+ */
+export async function setCertificatePolicy(
+  supabase: SupabaseClient,
+  args: { versionId: string; enabled: boolean; templateVersion?: string | null },
+): Promise<CertificatePolicyOutcome> {
+  const { data, error } = await supabase.rpc('set_course_certificate_policy', {
+    p_version_id: args.versionId,
+    p_enabled: args.enabled,
+    p_template_version: args.templateVersion?.trim() || null,
+  });
+  if (error) {
+    const m = error.message;
+    if (/only the author/i.test(m)) {
+      return {
+        ok: false,
+        code: 'not_author',
+        message: 'Only the author of this version can decide what it finishes with.',
+      };
+    }
+    if (/holding a certificate/i.test(m)) {
+      return { ok: false, code: 'rejected', message: m };
+    }
+    if (/design it was made from/i.test(m)) {
+      return { ok: false, code: 'rejected', message: 'Name the design the certificate is made from.' };
+    }
+    return { ok: false, code: 'rejected', message: m };
+  }
+  const row = data as unknown as {
+    enabled: boolean;
+    templateVersion: string | null;
+    changed: boolean;
+  };
+  return {
+    ok: true,
+    enabled: row.enabled === true,
+    templateVersion: row.templateVersion ?? null,
+    changed: row.changed === true,
+  };
+}
+
 export type IssueOutcome =
   | { ok: true; certificateNumber: string }
   | { ok: false; code: 'not_privileged' | 'not_eligible' | 'rejected'; message: string };

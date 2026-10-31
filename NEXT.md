@@ -311,9 +311,19 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
-Verification: **1501 database tests, 905 web tests; TypeScript typecheck and
-production build pass; 117 tables, 241 policies, 146 user-defined triggers,
-353 functions, 151 migrations and 151 app route entries.**
+The four journeys a platform either supports or does not are now walked end to
+end as four different people, in one database suite (`first_day.test.mjs`): the
+owner opening the door, a teacher writing a course to publication, a stranger
+becoming a learner and finishing it, and a parent enrolling a child — with the
+deployment probe run against the platform they just used. It found two things a
+feature suite structurally could not: a course version's id could not be read
+back when it was created, so the first thing a new teacher did failed while the
+course row survived; and a certificate could be issued but never asked for,
+because `certificate_enabled` had a writer function and no screen. Both are
+fixed, and the author now turns certificates on from their course page.
+
+Verification: **2210 database tests (147 suites), 1825 web tests; TypeScript
+typecheck, build and `check:repo` pass; 205 migrations.**
 
 ## Today's sentence
 
@@ -2221,6 +2231,64 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### Four people, one platform, and the two things only they could find, 2026-10-31
+
+"Test all roles and complete user journeys" is a different question from "is every
+function tested", and the difference is not academic. Every suite so far created
+its fixtures as the superuser and asserted on one feature at a time; nothing had
+ever asked whether a *person* could get from signing up to holding a certificate.
+
+`supabase/tests/first_day.test.mjs` does, as four people, in one database, in
+order: the owner appoints a teacher and a reviewer; the teacher writes a course,
+a version, a section and three lessons, submits it, and is refused when they try
+to approve their own work; the reviewer records a decision and moves it to
+approved; the owner publishes it; a stranger claims a learner profile, enrols,
+finishes, is given a certificate and verifies it from a signed-out browser; a
+parent creates a family, adds a child with no account, enrols them in the same
+course and watches them finish; and the last act runs `docs/deploy/verify.sql`
+plus the four facts `web/src/lib/setup.ts` reads, on the platform they just used.
+
+**It found two defects that no feature suite could.** Both are the same shape:
+two individually-correct layers that disagree, which is what a journey is for.
+
+1. **A new teacher could not create a course.** `createCourse()` inserts the
+   course, then inserts its first version and asks for the id back — and
+   `INSERT … RETURNING` requires the returned row to pass the SELECT policy as
+   well as the INSERT policy. `course_versions_read` was
+   `can_read_version(id) or can_review_version(id)`, and `can_read_version` is a
+   STABLE function that looks the row up in the same table, on the snapshot taken
+   when the statement began — which cannot contain the row being inserted. So the
+   insert succeeded, the read-back was refused, the whole statement failed, and
+   the course row stayed behind with no version and no editor. The fix
+   (`20261281004300`) restates the one clause of `can_read_version` that must be
+   evaluated on the row — `created_by = current_user_id()` — as a policy
+   expression. Existing rows are unaffected; the function still owns publication,
+   retirement and takedown. **Writing it found a second trap**: the first version
+   of the replacement policy was `to authenticated` only, which silently closed
+   anonymous reads of published versions. `lesson_search` caught it — thirteen
+   tests, one of which searches as a visitor with nobody signed in. An RLS change
+   is never local.
+2. **A certificate could be issued and never asked for.** The shelf, the issuing
+   writer, the staff screen and the public verification page all existed;
+   `course_completion_policies.certificate_enabled` had no way to become true, so
+   `/admin/certificates` could only ever be empty and the reason was invisible.
+   `set_course_certificate_policy()` now exists (author of the version, or staff;
+   refuses to switch off while learners hold a certificate) and the author turns
+   it on from `/teach/<course>` — the screen is the thing that makes the shelf
+   reachable, per "every routine change must be doable in a visual format".
+   `/admin/certificates` now says *why* it is empty, from
+   `certificate_shelf_standing()`: nothing published, nothing promising a
+   certificate, or people who finished a course that never offered one are three
+   different sentences, and only one of them is about the learners.
+
+The suite also recorded what a correct refusal sounds like when a teacher both
+teaches and reviews: `assign_role(teacher, 'reviewer')` changes the refusal from
+"not permitted" to "may not approve it themselves", which is the sentence about
+the work rather than about the permissions.
+
+**35 new database tests (2210 passed, 147 suites), 12 certificate web tests
+(1825 passed); tsc, build and check:repo clean; 205 migrations.**
 
 ### A saved lesson lives in the app, and needs a Plus plan, 2026-10-22
 

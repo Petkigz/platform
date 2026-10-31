@@ -2,7 +2,11 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import { fetchCertificateAdminRecords, fetchCertificateCandidates } from '@/lib/certificates';
+import {
+  fetchCertificateAdminRecords,
+  fetchCertificateCandidates,
+  fetchCertificateShelfStanding,
+} from '@/lib/certificates';
 import { CertificateAdmin } from './certificate-admin';
 
 export const dynamic = 'force-dynamic';
@@ -19,9 +23,14 @@ export default async function AdminCertificatesPage() {
   ]);
   if (privileged !== true && supportAgent !== true) redirect('/');
 
-  const [candidates, records] = await Promise.all([
+  // The shelf's own count of itself. An empty list is not an explanation, and
+  // "no eligible learners" is the wrong one in most of the ways this page can be
+  // empty: nothing published, nothing promising a certificate, or people who
+  // finished a course that never offered one.
+  const [candidates, records, standing] = await Promise.all([
     fetchCertificateCandidates(supabase),
     fetchCertificateAdminRecords(supabase),
+    fetchCertificateShelfStanding(supabase),
   ]);
 
   return (
@@ -29,7 +38,7 @@ export default async function AdminCertificatesPage() {
       <p className="eyebrow"><Link href="/admin">Administration</Link></p>
       <h1>Certificates</h1>
       <p className="lede">Issue certificates only after the learner has completed a certificate-enabled course. Every issue is idempotent; every revocation is permanent and reasoned.</p>
-      <CertificateAdmin candidates={candidates} records={records} />
+      <CertificateAdmin candidates={candidates} records={records} standing={standing} />
     </div>
   );
 }

@@ -2,14 +2,51 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import type { CertificateAdminRecord, CertificateCandidate } from '@/lib/certificates';
+import type {
+  CertificateAdminRecord,
+  CertificateCandidate,
+  CertificateShelfStanding,
+} from '@/lib/certificates';
+
+/**
+ * Why there is nothing to issue, in words.
+ *
+ * `[]` means four different things here, and only one of them is about the
+ * learners. Naming the actual reason is the difference between an admin who
+ * knows to ask a teacher to switch certificates on and one who concludes the
+ * platform is broken.
+ */
+function waitingEmptyReason(standing: CertificateShelfStanding | null): string {
+  if (!standing) return 'No eligible learners are waiting for a certificate.';
+  if (standing.publishedVersions === 0) {
+    return 'No course has been published yet, so nobody can finish one. Publishing is the last step of an author’s course page.';
+  }
+  if (standing.issuingVersions === 0) {
+    return `${standing.publishedVersions} published ${standing.publishedVersions === 1 ? 'version does' : 'versions do'} not say they end in a certificate. An author turns that on from their course page, under “What finishing this means”.`;
+  }
+  if (standing.finishedWithout > 0) {
+    const n = standing.finishedWithout;
+    return `${n} ${n === 1 ? 'learner has' : 'learners have'} finished a course whose version does not promise a certificate, so there is nothing to give them.`;
+  }
+  return `${standing.issuingVersions} published ${standing.issuingVersions === 1 ? 'version promises' : 'versions promise'} a certificate, and nobody has finished one yet.`;
+}
+
+function recordsEmptyReason(standing: CertificateShelfStanding | null): string {
+  if (!standing) return 'No certificates have been issued yet.';
+  if (standing.issuingVersions === 0) {
+    return 'No certificate has ever been issued, because no published version promises one. Nothing is wrong — there is simply nothing to give yet.';
+  }
+  return 'No certificate has been issued yet. When staff issue one, it appears here; a revoked certificate stays, so the record is permanent either way.';
+}
 
 export function CertificateAdmin({
   candidates,
   records,
+  standing,
 }: {
   candidates: CertificateCandidate[];
   records: CertificateAdminRecord[];
+  standing: CertificateShelfStanding | null;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -56,6 +93,16 @@ export function CertificateAdmin({
         </div>
       )}
 
+      {standing && (
+        <p className="meta" style={{ marginTop: '0.5rem' }}>
+          {standing.publishedVersions} published ·{' '}
+          {standing.issuingVersions} promising a certificate ·{' '}
+          {standing.waiting} waiting ·{' '}
+          {standing.finishedWithout} finished without one ·{' '}
+          {standing.issued} issued · {standing.revoked} revoked
+        </p>
+      )}
+
       <section aria-labelledby="eligible-title">
         <div className="outline-h">
           <h2 id="eligible-title">Ready to issue</h2>
@@ -63,7 +110,7 @@ export function CertificateAdmin({
         </div>
         <p className="muted">Only completed enrolments with certificates enabled appear here. Issuance is recorded once and cannot be duplicated.</p>
         {candidates.length === 0 ? (
-          <p className="empty">No eligible learners are waiting for a certificate.</p>
+          <p className="empty">{waitingEmptyReason(standing)}</p>
         ) : (
           <div style={{ display: 'grid', gap: '0.75rem' }}>
             {candidates.map((candidate) => (
@@ -95,7 +142,7 @@ export function CertificateAdmin({
         </div>
         <p className="muted">Revocation is permanent and requires a written reason. The verification record remains public and shows that reason.</p>
         {records.length === 0 ? (
-          <p className="empty">No certificates have been issued yet.</p>
+          <p className="empty">{recordsEmptyReason(standing)}</p>
         ) : (
           <div style={{ display: 'grid', gap: '0.75rem' }}>
             {records.map((record) => (
