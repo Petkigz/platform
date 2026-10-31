@@ -2,14 +2,15 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import { fetchSections } from '@/lib/authoring';
+import { loadRehearsal } from '@/lib/version-rehearsal';
+import { isFlagEnabled } from '@/lib/flags';
+import { SEVERITY, type RehearsalLesson } from '@/lib/lesson-preview';
 import {
   ASSIGNMENT_STATUS_LABEL,
   SCOPE_LABEL,
   fetchAssignment,
   isAssignmentWatchable,
 } from '@/lib/review';
-import { fetchMediaResourcesForLessons, type LessonMediaResource } from '@/lib/lessons';
 import { fetchPlayableRenditions, groupByAsset, posterFor } from '@/lib/playback';
 import { RenditionPlayer } from '@/app/_shared/rendition-player';
 import { fetchVersionReviewState } from '@/lib/review-requirements';
@@ -65,33 +66,57 @@ export default async function ReviewAssignmentPage({
   // while they are judging it.
   const reviewState = await fetchVersionReviewState(supabase, assignment.courseVersionId);
 
-  const sections = await fetchSections(supabase, assignment.courseVersionId).catch(() => []);
+  // The outline, and the answer to the question a reviewer actually has: what does
+  // a learner get from this? One read, shared with the author's own rehearsal, so
+  // the person judging and the person who wrote it cannot be looking at different
+  // facts. `null` means the version is not readable at all, which for an assigned
+  // reviewer should not happen.
+  // Read before the rehearsal, not beside it: `previewsOn` decides whether a
+  // free-preview lesson is annotated or warned about, and passing a guess would
+  // put a warning on the reviewer's screen that is not true.
+  const previewsOn = await isFlagEnabled(supabase, 'learning.previews').catch(() => false);
+  const loaded = await loadRehearsal(supabase, assignment.courseVersionId, { previewsOn }).catch(
+    () => null,
+  );
+
+  const rehearsal = loaded?.rehearsal ?? null;
+  const sections = loaded?.version.sections ?? [];
   const lessonCount = sections.reduce((n, s) => n + s.lessons.length, 0);
+
+  // What each lesson's rows say, keyed by lesson id — the same object the author's
+  // preview page renders, so the reviewer's badges cannot mean something else.
+  const rehearsalByLesson = new Map<string, RehearsalLesson>();
+  for (const section of rehearsal?.sections ?? []) {
+    for (const lesson of section.lessons) rehearsalByLesson.set(lesson.id, lesson);
+  }
 
   // A reviewer judges what a learner will see, so the delivery copies of this
   // version's lessons are fetched here. `media_renditions_read` is
   // may_play_rendition(), which now answers yes for an active assignment, so a
   // closed one simply comes back empty rather than being filtered on this side.
   const watchable = isAssignmentWatchable(assignment.status);
-  const mediaResources = watchable
-    ? await fetchMediaResourcesForLessons(
-        supabase,
-        sections.flatMap((s) => s.lessons.map((l) => l.id)),
-      ).catch(() => [] as LessonMediaResource[])
-    : [];
+
+  // Uploaded files, taken from the outline read above rather than from a second
+  // query for the same rows. External links are not players and are not listed
+  // here: this page shows what can be watched, and the rehearsal beside it is
+  // where a link is described for what it is.
+  const resourcesByLesson = new Map<string, typeof sections[number]['lessons'][number]['resources']>();
+  for (const section of sections) {
+    for (const lesson of section.lessons) {
+      const media = lesson.resources.filter((resource) => resource.mediaAssetId !== null);
+      if (media.length > 0) resourcesByLesson.set(lesson.id, media);
+    }
+  }
+
   const renditions = watchable
     ? await fetchPlayableRenditions(
         supabase,
-        mediaResources.map((r) => r.mediaAssetId ?? ''),
+        [...resourcesByLesson.values()]
+          .flat()
+          .map((resource) => resource.mediaAssetId ?? ''),
       ).catch(() => [])
     : [];
   const renditionsByAsset = groupByAsset(renditions);
-  const resourcesByLesson = new Map<string, LessonMediaResource[]>();
-  for (const resource of mediaResources) {
-    const list = resourcesByLesson.get(resource.lessonId) ?? [];
-    list.push(resource);
-    resourcesByLesson.set(resource.lessonId, list);
-  }
 
   return (
     <div className="container section">
@@ -118,6 +143,82 @@ export default async function ReviewAssignmentPage({
           <div className="l">Decisions</div>
         </div>
       </div>
+
+      {rehearsal && rehearsal.lessonCount > 0 && (
+        <section className="card" style={{ marginTop: '1.75rem' }}>
+          <h2 style={{ marginTop: 0 }}>What a learner gets</h2>
+
+          <p style={{ marginBottom: '0.5rem' }}>
+            {rehearsal.withSomething === rehearsal.lessonCount ? (
+              <>
+                All {String(rehearsal.lessonCount)} lessons give a learner something to open.
+              </>
+            ) : (
+              <>
+                <strong>
+                  {String(rehearsal.withSomething)} of {String(rehearsal.lessonCount)}
+                </strong>{' '}
+                lessons give a learner something to open
+                {rehearsal.withNothing > 0 && (
+                  <>
+                    , and{' '}
+                    <strong>
+                      {String(rehearsal.withNothing)} {rehearsal.withNothing === 1 ? 'gives' : 'give'}
+                    </strong>{' '}
+                    them nothing at all
+                  </>
+                )}
+                .
+              </>
+            )}{' '}
+            {rehearsal.withTrouble > 0 && (
+              <span className="muted">
+                {String(rehearsal.withTrouble)} {rehearsal.withTrouble === 1 ? 'has' : 'have'}{' '}
+                something worth knowing before this reaches a learner.
+              </span>
+            )}
+          </p>
+
+          {rehearsal.next && (
+            <div className="notice" style={{ marginBottom: '0.75rem' }}>
+              <strong>
+                {rehearsal.next.severity === SEVERITY.empty
+                  ? 'Worth opening first:'
+                  : rehearsal.next.severity === SEVERITY.silent
+                    ? 'Looks finished, and is not:'
+                    : 'Worth a look:'}
+              </strong>{' '}
+              <em>{rehearsal.next.lessonTitle}</em> {rehearsal.next.sentence}.
+              {rehearsal.nextAlso > 0 && (
+                <span className="muted">
+                  {' '}
+                  {rehearsal.nextAlso === 1
+                    ? 'One other lesson is at the same stage.'
+                    : `${String(rehearsal.nextAlso)} other lessons are at the same stage.`}
+                </span>
+              )}{' '}
+              {assignment.courseId && (
+                <Link href={`/teach/${assignment.courseId}/preview/${rehearsal.next.lessonId}`}>
+                  See it as a learner →
+                </Link>
+              )}
+            </div>
+          )}
+
+          {loaded && !loaded.deliveryKnown && (
+            <p className="muted" style={{ marginBottom: '0.5rem' }}>
+              The encoding state of uploaded files could not be read just now, so a file shown
+              without a player may be one nobody asked about rather than one that failed.
+            </p>
+          )}
+
+          <p className="muted" style={{ marginBottom: 0, fontSize: '0.9rem' }}>
+            This says what a learner would meet, not what to decide. The decision is yours, and
+            nothing here is a reason to accept or decline on its own — a scholarly review is about
+            what is taught, and this is about what arrives.
+          </p>
+        </section>
+      )}
 
       <div className="outline-h" style={{ marginTop: '1.75rem' }}>
         <h3>Outline</h3>
@@ -152,6 +253,14 @@ export default async function ReviewAssignmentPage({
                           Free preview
                         </span>
                       )}
+                      {/* The same badge the author sees, from the same object: a
+                          reviewer and an author looking at one lesson must not be
+                          told two different things about it. */}
+                      {rehearsalByLesson.get(l.id) && (
+                        <span className="badge neutral" style={{ flex: 'none' }}>
+                          {badgeFor(rehearsalByLesson.get(l.id))}
+                        </span>
+                      )}
                       {resources.length > 0 && (
                         <span style={{ display: 'grid', gap: '0.75rem', marginTop: '0.5rem' }}>
                           {resources.map((r) => {
@@ -159,7 +268,7 @@ export default async function ReviewAssignmentPage({
                             return playable.length > 0 ? (
                               <RenditionPlayer
                                 key={r.id}
-                                displayName={r.displayName}
+                                displayName={r.resourceName}
                                 lessonId={l.id}
                                 resourceId={r.id}
                                 renditions={playable}
@@ -171,8 +280,9 @@ export default async function ReviewAssignmentPage({
                               />
                             ) : (
                               <span className="muted" key={r.id} style={{ fontSize: '0.9rem' }}>
-                                {r.displayName}: no delivery copy encoded yet, so there is
-                                nothing to watch.
+                                {r.resourceName}: no delivery copy has been encoded yet, so
+                                there is nothing to watch and a learner would get a sentence where
+                                the player should be.
                               </span>
                             );
                           })}
@@ -234,4 +344,19 @@ export default async function ReviewAssignmentPage({
       </p>
     </div>
   );
+}
+
+/**
+ * A word for how a lesson reads, so a scan down a long outline finds the bad ones.
+ *
+ * Deliberately the same four words as the author's rehearsal page. Two screens
+ * describing one lesson with two vocabularies is how a reviewer and an author end
+ * up disagreeing about whether something is wrong.
+ */
+function badgeFor(lesson: RehearsalLesson | undefined): string {
+  if (!lesson) return '';
+  if (lesson.preview.rows.length === 0) return 'Nothing in it';
+  if (lesson.severity === SEVERITY.silent) return 'Nothing to play';
+  if (lesson.severity === SEVERITY.noted) return 'Worth a look';
+  return 'Ready';
 }

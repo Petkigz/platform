@@ -5,15 +5,8 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
 import { createClient } from '@/lib/supabase/server';
 import { VERSION_STATUS_LABEL, type VersionStatus } from '@/lib/authoring';
-import { byAsset, parseDelivery } from '@/lib/media-encoding';
-import {
-  rehearseVersion,
-  SEVERITY,
-  type AuthoredRow,
-  type PreviewLesson,
-  type RehearsalLesson,
-} from '@/lib/lesson-preview';
-import type { ResourceType } from '@/lib/lessons';
+import { SEVERITY, type RehearsalLesson } from '@/lib/lesson-preview';
+import { loadRehearsal } from '@/lib/version-rehearsal';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'The version a learner meets' };
@@ -111,99 +104,32 @@ export default async function VersionRehearsalPage({
     );
   }
 
-  const { data: sectionRows } = await supabase
-    .from('course_sections')
-    .select('id, title, position')
-    .eq('course_version_id', current.id)
-    .order('position', { ascending: true });
+  // One read for the whole version — the same one the reviewer's screen makes and
+  // the same decisions underneath the single-lesson preview. `null` means the
+  // version is not readable to this caller, which for its author should not
+  // happen; it is reported as an empty version rather than an error page.
+  const previewsOn = await isFlagEnabled(supabase, 'learning.previews').catch(() => false);
+  const loaded = await loadRehearsal(supabase, current.id, { previewsOn }).catch(() => null);
+  const rehearsal = loaded?.rehearsal ?? null;
 
-  const sections = (sectionRows ?? []) as unknown as {
-    id: string;
-    title: string;
-    position: number;
-  }[];
-
-  // Lessons first: their ids are what the resources query needs, and one query
-  // for the whole version is the difference between three round trips and forty.
-  const { data: lessonRows } = await supabase
-    .from('lessons')
-    .select('id, section_id, title, description, duration_seconds, is_preview, position')
-    .in('section_id', sections.map((section) => section.id))
-    .order('position', { ascending: true });
-
-  const lessons = (lessonRows ?? []) as unknown as {
-    id: string;
-    section_id: string;
-    title: string;
-    description: string | null;
-    duration_seconds: number | null;
-    is_preview: boolean;
-    position: number;
-  }[];
-
-  const lessonIds = lessons.map((lesson) => lesson.id);
-
-  const [{ data: resourceRows }, previewsOn, { data: deliveryData }] = await Promise.all([
-    lessonIds.length === 0
-      ? Promise.resolve({ data: [] as unknown[] })
-      : supabase
-          .from('lesson_resources')
-          .select('id, lesson_id, display_name, resource_type, external_url, media_asset_id, access_classification, position')
-          .in('lesson_id', lessonIds)
-          .order('position', { ascending: true }),
-    isFlagEnabled(supabase, 'learning.previews').catch(() => false),
-    // One call for the whole version. The screen that shows a single lesson calls
-    // the same function and keeps the rows for its lesson, so the three-person
-    // guard is written once.
-    supabase.rpc('version_delivery_state', { p_version_id: current.id }),
-  ]);
-
-  const delivery = byAsset(parseDelivery(deliveryData));
-
-  const resourcesByLesson = new Map<string, AuthoredRow[]>();
-  for (const row of (resourceRows ?? []) as unknown as {
-    id: string;
-    lesson_id: string;
-    display_name: string;
-    resource_type: string;
-    external_url: string | null;
-    media_asset_id: string | null;
-    access_classification: string;
-  }[]) {
-    const assetId = row.media_asset_id === null ? null : String(row.media_asset_id);
-    const list = resourcesByLesson.get(row.lesson_id) ?? [];
-    list.push({
-      id: String(row.id),
-      resourceName: String(row.display_name),
-      resourceType: row.resource_type as ResourceType,
-      externalUrl: row.external_url === null ? null : String(row.external_url),
-      mediaAssetId: assetId,
-      encoding: assetId === null ? null : (delivery.get(assetId) ?? null),
-      access: row.access_classification as AuthoredRow['access'],
-    });
-    resourcesByLesson.set(row.lesson_id, list);
+  if (!rehearsal) {
+    return (
+      <div className="page">
+        <nav className="crumbs">
+          <Link href="/teach">Teaching</Link>
+          <span aria-hidden>›</span>
+          <Link href={`/teach/${course.id}`}>{course.title}</Link>
+          <span aria-hidden>›</span>
+          <span>Rehearsal</span>
+        </nav>
+        <h1>{course.title}</h1>
+        <div className="empty">
+          This version could not be read just now. The curriculum page has the same content, and
+          the rehearsal will be here when it loads.
+        </div>
+      </div>
+    );
   }
-
-  const rehearsal = rehearseVersion(
-    sections.map((section) => ({
-      id: section.id,
-      title: section.title,
-      lessons: lessons
-        .filter((lesson) => lesson.section_id === section.id)
-        .map(
-          (lesson): PreviewLesson => ({
-            id: lesson.id,
-            title: lesson.title,
-            isPreview: lesson.is_preview,
-            sectionTitle: section.title,
-            description: lesson.description,
-            durationSeconds: lesson.duration_seconds,
-            resources: resourcesByLesson.get(lesson.id) ?? [],
-          }),
-        ),
-    })),
-    { previewsOn, published: current.version_status === 'published' },
-  );
 
   const clean = rehearsal.withTrouble === 0 && rehearsal.lessonCount > 0;
 
@@ -232,6 +158,14 @@ export default async function VersionRehearsalPage({
           This is the rehearsal.
         </p>
       </div>
+
+      {loaded?.deliveryKnown === false && (
+        <div className="notice" style={{ marginBottom: '1.25rem' }}>
+          <strong>The encoding state of your uploaded files could not be read just now.</strong>{' '}
+          A lesson shown with nothing to play may be one with no delivery copy yet, or one nobody
+          asked about — the media library will tell you which. Everything else here was read.
+        </div>
+      )}
 
       {rehearsal.next && (
         <section className="card" style={{ marginBottom: '1.25rem' }}>

@@ -29,19 +29,31 @@ const rehearsal = read(REHEARSAL);
 const curriculum = read('app/teach/[courseId]/curriculum.tsx');
 const teachPage = read('app/teach/[courseId]/page.tsx');
 
-test('the preview is the author’s, and only the author’s', () => {
+test('the preview admits the author and the reviewer on the assignment, and nobody else', () => {
   // Signed in, or sent to sign-in — the same door as the editor itself.
   assert.match(page, /if \(!user\) redirect\(/);
 
   // Ownership, checked against `courses.created_by` rather than trusted from the
   // URL. `courses_read` would otherwise admit any active course to any
   // signed-in user.
-  assert.match(page, /course\.created_by !== user\.id/);
-  assert.match(page, /if \(!course \|\| course\.created_by !== user\.id\) notFound\(\)/);
+  assert.match(page, /const mine = course\.created_by === user\.id/);
+
+  // The second person is the reviewer *actively* assigned to this version, and
+  // the check is a database predicate rather than a role: "was assigned" is not
+  // "is reviewing". The page's own copy says which of the two is looking.
+  assert.match(page, /rpc\('may_review_version_media', \{\s*p_version_id: version\.id,?\s*\}\)/);
+  assert.match(page, /if \(reviewing !== true\) notFound\(\)/);
+  assert.match(page, /You are seeing this because this version is assigned to you for review/);
 
   // And the lesson must belong to *this* course's version, or a lesson id from
   // another course would resolve under a course the caller does own.
   assert.match(page, /version\.course_id !== course\.id/);
+
+  // The reviewer check comes after the version is resolved: before it, the page
+  // has nothing to ask the predicate about.
+  const ownership = page.indexOf('const mine = course.created_by');
+  const versionCheck = page.indexOf('version.course_id !== course.id');
+  assert.ok(versionCheck > 0 && ownership > versionCheck, 'the gate needs the version id first');
 });
 
 test('the preview decides what a learner sees by the live flag, not by assumption', () => {
@@ -154,19 +166,29 @@ test('the rehearsal is the author’s, gated exactly like the editor', () => {
   assert.match(rehearsal, /draft \?\? versions\[0\] \?\? null/);
 });
 
-test('the rehearsal reads every lesson and every resource in one query each', () => {
-  // Forty lessons must not be forty round trips, and an N+1 here is invisible
-  // until a real course exists.
-  assert.match(rehearsal, /\.in\('section_id', sections\.map/);
-  assert.match(rehearsal, /\.in\('lesson_id', lessonIds\)/);
-  assert.ok(!/lessons\.map\(async/.test(rehearsal), 'no per-lesson await');
+test('the rehearsal reads the version once, through the shared loader', () => {
+  // The page used to assemble this itself; now the loader does, so the author and
+  // the reviewer cannot be shown two different versions of the same judgement.
+  assert.match(rehearsal, /loadRehearsal\(supabase, current\.id/);
+  assert.ok(!/rehearseVersion\(/.test(rehearsal), 'the page must not decide for itself');
+  assert.ok(!/from\('lesson_resources'\)/.test(rehearsal), 'one read, not one per table');
+
+  // The loader itself asks for the lesson ids once and the rows once — never a
+  // query inside a map, which is the N+1 nobody notices until a real course.
+  const loader = read('lib/version-rehearsal.ts');
+  assert.match(loader, /fetchVersion\(supabase, versionId\)/);
+  assert.match(loader, /deliveryForVersion\(supabase, versionId\)/);
+  const authoring = read('lib/authoring.ts');
+  // The query is spread over lines, so the assertion is on the shape rather than
+  // one line of formatting.
+  assert.match(authoring, /\.in\(\s*'lesson_id',\s*lessonRows\.map\(/);
 });
 
 test('the rehearsal is a list in reading order, not a gate', () => {
   // It renders the curriculum's own order and offers no submit control: the
   // submission requirements live on the curriculum page, and a rehearsal that
   // could refuse would be a second opinion about when a course is finished.
-  assert.match(rehearsal, /rehearseVersion\(/);
+  assert.match(rehearsal, /rehearsal\.sections\.map/);
   const jsx = rehearsal.slice(rehearsal.indexOf('return ('));
   assert.ok(!/type="submit"/.test(jsx));
   assert.ok(!/api\/(teach|review)/.test(jsx), 'the rehearsal writes nothing');

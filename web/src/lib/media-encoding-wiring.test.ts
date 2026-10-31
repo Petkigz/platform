@@ -55,10 +55,20 @@ test('the lesson preview asks for the delivery state of its version', () => {
 
 test('the rehearsal asks once for the whole version, not once per lesson', () => {
   const rehearsal = read('app/teach/[courseId]/preview/page.tsx');
-  const calls = rehearsal.match(/rpc\('version_delivery_state'/g) ?? [];
-  assert.equal(calls.length, 1, 'forty lessons must not be forty round trips');
+  // The call moved into the shared loader when the reviewer's screen started
+  // asking the same question; the page now makes no delivery call of its own.
+  assert.ok(!rehearsal.includes("rpc('version_delivery_state'"));
   assert.ok(!rehearsal.includes('lesson_delivery_state'));
-  assert.match(rehearsal, /rehearseVersion\(/);
+  assert.match(rehearsal, /loadRehearsal\(/);
+
+  const loader = read('lib/version-rehearsal.ts');
+  const calls = loader.match(/rpc\('version_delivery_state'/g) ?? [];
+  assert.equal(calls.length, 1, 'one function, called once, for a whole version');
+  assert.equal(
+    loader.match(/rpc\('version_delivery_state'/g)?.length,
+    1,
+    'and no other caller anywhere on this path',
+  );
   // Notes, not a gate: the page must not offer a submit button or refuse one.
   assert.ok(!/submit/i.test(rehearsal.split('return (')[1] ?? ''), 'the rehearsal is not a gate');
 });

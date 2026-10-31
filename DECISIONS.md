@@ -6626,3 +6626,41 @@ the same body and a different join — and its guard would be the same three peo
 written a second time, which is a guard that is wrong once. So
 `version_delivery_state()` replaces it, the single-lesson screen calls it too, and
 the three branches of `may_watch_master()` exist in exactly one place.
+
+## The person who says yes sees what the person who wrote it sees — **DECIDED 2026-10-31**
+
+**The author could rehearse and the reviewer could not.** Three screens ask "what
+does a learner get from this version": the author on one lesson, the author on the
+whole version, the reviewer deciding. The third is the one where the answer
+matters most and it had the least — an outline, and a player only for files that
+happened to have a delivery copy. A lesson with nothing in it looked exactly like
+a lesson whose content the reviewer could not read.
+
+**So there is one loader, and both seats read through it.** `loadRehearsal()` is
+`fetchVersion()` plus the encoding counts plus `rehearsalFrom()`, which is pure and
+tested without a database. The reviewer's screen renders the author's own badges,
+word for word, and the author's own answer to *which lesson first*. Two
+implementations of "is this lesson ready" would have been two answers, and the
+reviewer's would have been the wrong one first, because it is the copy nobody
+looks at while editing.
+
+**The panel is not a verdict, and says so.** It reports what a learner would meet;
+it does not tell a reviewer how to rule. A scholarly review is about what is
+taught, and this is about what arrives — related, not the same, and the difference
+is the reviewer's to judge.
+
+**Three things had to be true first, and none of them were.** `AuthoredLesson` had
+no `description` or `durationSeconds`, so a rehearsal built from the authored shape
+would have warned every lesson about a missing description — a screen telling an
+author to fix forty things that are already right. `AuthoredResource` had no
+`mediaAssetId`, so an uploaded file could only ever be called empty. And
+`ReviewAssignment` had no course id, taken from the nested `courses` relation,
+which is null for a draft course a reviewer is nonetheless entitled to read;
+`course_versions.course_id` is readable wherever the version is.
+
+**And the reviewer may open the lesson they are pointed at.** The preview page
+checked authorship and nothing else, which was a door in front of a boundary that
+did not exist: `can_read_version`, `lesson_resources_read` and
+`version_delivery_state()` all admit an actively assigned reviewer already. The
+page now asks the same predicate the database does, and says which of the two
+people is looking.

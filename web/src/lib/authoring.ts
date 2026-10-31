@@ -43,6 +43,15 @@ export type AuthoredLesson = {
   title: string;
   position: number;
   isPreview: boolean;
+  /**
+   * The two columns a lesson page prints and the editor never needed.
+   *
+   * They are here because the rehearsal does need them: a preview built without
+   * a description warns every lesson about a missing one, which is a screen
+   * telling an author to fix forty things that are already right.
+   */
+  description: string | null;
+  durationSeconds: number | null;
   resources: AuthoredResource[];
 };
 
@@ -151,6 +160,38 @@ export async function fetchVersions(
   }));
 }
 
+/**
+ * One version, with its sections and lessons.
+ *
+ * `fetchVersions()` asks for every version of a course, which is what the editor
+ * wants and what a preview does not: the preview knows which version it is
+ * showing, and reading the other four to display one is work nobody asked for.
+ */
+export async function fetchVersion(
+  supabase: SupabaseClient,
+  versionId: string,
+): Promise<AuthoredVersion | null> {
+  const { data, error } = await supabase
+    .from('course_versions')
+    .select('id, version_number, version_status')
+    .eq('id', versionId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!data) return null;
+
+  const row = data as unknown as { id: string; version_number: number; version_status: string };
+  const sections = await fetchSections(supabase, row.id);
+
+  return {
+    id: row.id,
+    versionNumber: row.version_number,
+    status: row.version_status as VersionStatus,
+    sections,
+    lessonCount: sections.reduce((n, section) => n + section.lessons.length, 0),
+  };
+}
+
 export async function fetchSections(
   supabase: SupabaseClient,
   versionId: string,
@@ -171,7 +212,7 @@ export async function fetchSections(
   // N+1 shows up.
   const { data: lessons, error: lErr } = await supabase
     .from('lessons')
-    .select('id, section_id, title, position, is_preview')
+    .select('id, section_id, title, position, is_preview, description, duration_seconds')
     .in(
       'section_id',
       rows.map((r) => r.id),
@@ -186,6 +227,8 @@ export async function fetchSections(
     title: string;
     position: number;
     is_preview: boolean;
+    description: string | null;
+    duration_seconds: number | null;
   };
   const lessonRows = (lessons ?? []) as unknown as LessonRow[];
 
@@ -195,7 +238,7 @@ export async function fetchSections(
   // with nothing attached is an empty page.
   const { data: resources, error: rErr } = await supabase
     .from('lesson_resources')
-    .select('id, lesson_id, display_name, resource_type, external_url, access_classification, position')
+    .select('id, lesson_id, display_name, resource_type, external_url, media_asset_id, access_classification, position')
     .in(
       'lesson_id',
       lessonRows.map((l) => l.id),
@@ -210,6 +253,7 @@ export async function fetchSections(
     display_name: string;
     resource_type: string;
     external_url: string | null;
+    media_asset_id: string | null;
     access_classification: ResourceAccess;
     position: number;
   };
@@ -226,6 +270,8 @@ export async function fetchSections(
         title: l.title,
         position: l.position,
         isPreview: l.is_preview,
+        description: l.description,
+        durationSeconds: l.duration_seconds,
         resources: resourceRows
           .filter((r) => r.lesson_id === l.id)
           .map((r) => ({
@@ -233,6 +279,7 @@ export async function fetchSections(
             resourceName: r.display_name,
             resourceType: r.resource_type as ResourceType,
             externalUrl: r.external_url,
+            mediaAssetId: r.media_asset_id,
             access: r.access_classification,
             position: r.position,
           })),
@@ -787,6 +834,14 @@ export type AuthoredResource = {
   resourceName: string;
   resourceType: ResourceType;
   externalUrl: string | null;
+  /**
+   * The other permitted source of a resource: a file we host.
+   *
+   * Carried here because a resource with no address is not a resource with no
+   * content — it is one whose delivery copies decide whether a learner can play
+   * it, and a shape that dropped the id could only ever call it empty.
+   */
+  mediaAssetId: string | null;
   access: ResourceAccess;
   position: number;
 };
@@ -804,7 +859,7 @@ export async function fetchLessonResources(
 ): Promise<AuthoredResource[]> {
   const { data, error } = await client
     .from('lesson_resources')
-    .select('id, display_name, resource_type, external_url, access_classification, position')
+    .select('id, display_name, resource_type, external_url, media_asset_id, access_classification, position')
     .eq('lesson_id', lessonId)
     .order('position', { ascending: true });
 
@@ -815,6 +870,7 @@ export async function fetchLessonResources(
     resourceName: String(r.display_name),
     resourceType: r.resource_type as ResourceType,
     externalUrl: r.external_url === null ? null : String(r.external_url),
+    mediaAssetId: r.media_asset_id === null ? null : String(r.media_asset_id),
     access: r.access_classification as ResourceAccess,
     position: Number(r.position),
   }));

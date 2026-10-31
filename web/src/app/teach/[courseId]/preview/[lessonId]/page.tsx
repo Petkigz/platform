@@ -71,9 +71,12 @@ export default async function LessonPreviewPage({
     created_by: string;
   } | null;
 
-  // `courses_read` admits any active course to any signed-in user, so the
-  // ownership check is what makes this page the author's rather than everyone's.
-  if (!course || course.created_by !== user.id) notFound();
+  if (!course) notFound();
+
+  // `courses_read` admits any active course to any signed-in user, so authorship
+  // is checked below — after the version is known, because the second person who
+  // may look is the reviewer actively assigned to it, and that is a question about
+  // the version rather than the course.
 
   const { data: lessonRow } = await supabase
     .from('lessons')
@@ -120,6 +123,19 @@ export default async function LessonPreviewPage({
   // A lesson from another course's version is not this course's lesson, even
   // though the lesson id alone would still resolve.
   if (!version || version.course_id !== course.id) notFound();
+
+  // Two people may see this page: the author, and a reviewer actively assigned to
+  // the version — the second, because "what will a learner meet" is precisely the
+  // question a review answers, and every read underneath this page already admits
+  // them (`can_read_version`, and `version_delivery_state`'s own branches). Saying
+  // no here would not be a boundary, only a door in front of one.
+  const mine = course.created_by === user.id;
+  if (!mine) {
+    const { data: reviewing } = await supabase.rpc('may_review_version_media', {
+      p_version_id: version.id,
+    });
+    if (reviewing !== true) notFound();
+  }
 
   const [{ data: resourceRows }, previewsOn, { data: deliveryData }] = await Promise.all([
     supabase
@@ -210,6 +226,12 @@ export default async function LessonPreviewPage({
           practice check and, where the course allows it, a download button. None of those are
           invented here, because a preview of a page that does not exist is worse than none.
         </span>
+        {!mine && (
+          <span className="muted">
+            {' '}
+            You are seeing this because this version is assigned to you for review.
+          </span>
+        )}
       </div>
 
       {preview.warnings.length > 0 && (

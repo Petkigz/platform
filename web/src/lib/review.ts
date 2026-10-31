@@ -80,6 +80,15 @@ export type ReviewDecision = {
 export type ReviewAssignment = {
   id: string;
   courseVersionId: string;
+  /**
+   * The course the version belongs to, read from `course_versions.course_id`.
+   *
+   * Not from the nested `courses` relation: a course under review is usually
+   * still a draft, and `courses_read` admits active courses to signed-in users —
+   * so the relation can be null for a reviewer who is nonetheless entitled to
+   * read the version. The foreign key column is readable wherever the version is.
+   */
+  courseId: string;
   courseTitle: string;
   courseSlug: string;
   scope: ReviewScope;
@@ -96,7 +105,9 @@ type AssignmentRow = {
   assignment_status: string;
   assigned_at: string | null;
   due_at: string | null;
-  course_versions: { courses: { title: string; slug: string }[] | null }[] | null;
+  course_versions:
+    | { course_id: string | null; courses: { title: string; slug: string }[] | null }[]
+    | null;
   content_review_decisions: {
     id: string;
     decision: string;
@@ -130,7 +141,7 @@ export async function fetchMyAssignments(
   const { data, error } = await supabase
     .from('content_review_assignments')
     .select(
-      'id, course_version_id, review_scope, assignment_status, assigned_at, due_at, course_versions ( courses ( title, slug ) ), content_review_decisions ( id, decision, rationale, decided_at )',
+      'id, course_version_id, review_scope, assignment_status, assigned_at, due_at, course_versions ( course_id, courses ( title, slug ) ), content_review_decisions ( id, decision, rationale, decided_at )',
     )
     .eq('reviewer_profile_id', reviewerProfileId)
     .order('assigned_at', { ascending: false });
@@ -140,6 +151,7 @@ export async function fetchMyAssignments(
   return ((data ?? []) as unknown as AssignmentRow[]).map((r) => ({
     id: r.id,
     courseVersionId: r.course_version_id,
+    courseId: r.course_versions?.[0]?.course_id ?? '',
     courseTitle: r.course_versions?.[0]?.courses?.[0]?.title ?? 'Untitled course',
     courseSlug: r.course_versions?.[0]?.courses?.[0]?.slug ?? '',
     scope: r.review_scope as ReviewScope,
@@ -162,7 +174,7 @@ export async function fetchAssignment(
   const { data, error } = await supabase
     .from('content_review_assignments')
     .select(
-      'id, course_version_id, review_scope, assignment_status, assigned_at, due_at, course_versions ( courses ( title, slug ) ), content_review_decisions ( id, decision, rationale, decided_at )',
+      'id, course_version_id, review_scope, assignment_status, assigned_at, due_at, course_versions ( course_id, courses ( title, slug ) ), content_review_decisions ( id, decision, rationale, decided_at )',
     )
     .eq('id', assignmentId)
     .single();
@@ -173,6 +185,7 @@ export async function fetchAssignment(
   return {
     id: r.id,
     courseVersionId: r.course_version_id,
+    courseId: r.course_versions?.[0]?.course_id ?? '',
     courseTitle: r.course_versions?.[0]?.courses?.[0]?.title ?? 'Untitled course',
     courseSlug: r.course_versions?.[0]?.courses?.[0]?.slug ?? '',
     scope: r.review_scope as ReviewScope,
