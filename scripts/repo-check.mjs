@@ -33,6 +33,10 @@
 //  10. Crawl rules that describe a version of the app that no longer exists: a
 //      sitemap entry for a dead route, a `Disallow` for a renamed one, or a
 //      gated page whose source never reads a flag.
+////  11. A deployment variable the app reads that the runbook never names. The
+//      encoder's two credentials were missing from `web/.env.example` and from
+//      the runbook at once: every screen worked, no test failed, and the only
+//      symptom would have been a first deployment that could not start.
 //
 // Node builtins only, so this runs before `npm ci` and costs nothing.
 
@@ -605,6 +609,67 @@ function appRoutes() {
 
   process.stdout.write(
     `crawl: ${publicPaths.length} public, ${gated.length} gated, ${disallowed.length} disallowed, all real\n`,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 11. The deployment runbook names exactly the variables a deployment can set
+// ---------------------------------------------------------------------------
+// `web/.env.example` is the list a person copies, and `docs/deploy/README.md` is
+// the list they read. Two lists of the same thing drift, and the drift is silent
+// in both directions: a variable the runbook invents does nothing when set, and a
+// variable only in the example file is one nobody is told what to do with.
+//
+// The encoder's credentials were missing from both until the runbook was written.
+// Nothing failed; the deployment would simply have started without an encoder.
+{
+  const example = readFileSync(join(root, 'web', '.env.example'), 'utf8');
+  const declared = new Set(
+    [...example.matchAll(/^#?\s*([A-Z][A-Z0-9_]{2,})\s*=/gm)].map((m) => m[1]),
+  );
+  const runbook = readFileSync(join(root, 'docs', 'deploy', 'README.md'), 'utf8');
+
+  // Named in backticks, which is how this document refers to a variable.
+  const mentioned = new Set(
+    [...runbook.matchAll(/`([A-Z][A-Z0-9_]{2,})`/g)].map((m) => m[1]),
+  );
+
+  for (const key of [...declared].sort()) {
+    if (!mentioned.has(key)) {
+      fail('deploy', `${key} is declared in web/.env.example and docs/deploy/README.md never mentions it`);
+    }
+  }
+
+  // The other direction, limited to shell assignments inside fenced blocks — the
+  // place where an invented variable would actually be exported and then silently
+  // ignored. `DATABASE_URL` is exempt on purpose: it is psql's connection string
+  // for the migration loop, and the application never reads it.
+  const NOT_THE_APPS = new Set(['DATABASE_URL']);
+  // Any fence, whatever its tag: skipping a ```json block shifts every pair after
+  // it by one, and the block boundaries stop being where the document says.
+  for (const block of [...runbook.matchAll(/```[a-zA-Z]*\n([\s\S]*?)```/g)].map((m) => m[1])) {
+    for (const match of block.matchAll(/^\s*(?:export\s+)?([A-Z][A-Z0-9_]{2,})=/gm)) {
+      const key = match[1];
+      if (NOT_THE_APPS.has(key)) continue;
+      if (!declared.has(key)) {
+        fail('deploy', `docs/deploy/README.md sets ${key}, which web/.env.example does not declare`);
+      }
+    }
+  }
+
+  // The runbook states how many migration files there are, because a reader needs
+  // to know what "the loop finished" looks like. That is the number most likely to
+  // rot in the whole document, so it is compared rather than trusted.
+  const stated = runbook.match(/(\d+) files in `supabase\/migrations\/`/);
+  const count = readdirSync(join(root, 'supabase', 'migrations')).filter((f) => f.endsWith('.sql')).length;
+  if (!stated) {
+    fail('deploy', 'docs/deploy/README.md no longer says how many migrations to expect');
+  } else if (Number(stated[1]) !== count) {
+    fail('deploy', `docs/deploy/README.md says ${stated[1]} migrations; there are ${count}`);
+  }
+
+  process.stdout.write(
+    `deploy: ${declared.size} variables in .env.example, all named in the runbook; ${count} migrations\n`,
   );
 }
 

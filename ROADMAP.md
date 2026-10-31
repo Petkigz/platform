@@ -109,7 +109,7 @@ money through.*
 - [ ] Run security, privacy and performance checks
 - [!] Test real payment flows and failure cases — **needs a provider sandbox**
 - [!] Publish approved initial learning content — **who authors it is decided (me + teacher friends); what the first courses are is not**
-- [ ] Deploy production website and backend
+- [~] Deploy production website and backend — *the runbook is written and half of it executes itself: `docs/deploy/README.md` covers the project, the 203 migrations, the first owner role, the environment, R2, the encoder, email and Google sign-in in order, with the output each step should produce; `docs/deploy/verify.sql` answers "did the schema land" in twelve rows; and both pieces of SQL a person pastes are executed by `supabase/tests/deploy_runbook.test.mjs`, so the instructions cannot quietly stop working. `check:repo` refuses a deployment variable the runbook never names. **What is left is accounts and credentials, not code**: no Supabase project, no R2 bucket, no ffmpeg host, no provider key*
 - [ ] Submit mobile apps for review and publication — *Apple $99/yr, fee waiver worth checking; Google $25 once*
 - [X] Launch in Uganda and monitor feedback — **conflicts with the recorded decision:** worldwide ambition, Uganda important but not exclusive
 - [X] Plan international expansion based on evidence — **already worldwide-first by design;** reframe as "activate paid features market by market"

@@ -13,6 +13,7 @@ Global Islamic e-learning platform for children and adults.
 | `FLAGS.md` | Every feature, behind a flag, with its precondition |
 | `SCREENS.md` | 53 distinct screens; 12 ready to design |
 | `IDEAS.md` | Parking lot. Nothing here is scheduled. |
+| `docs/deploy/` | **How to put this live**: project, migrations, first owner, env vars, media, encoder, email, Google — written as steps with their outputs, and the two pieces of SQL an operator pastes are executed by the test suite |
 
 ## Database
 
@@ -21,7 +22,12 @@ applied in filename order.
 
 `supabase/tests/harness.sql` stubs the parts Supabase provides (`auth.users`,
 the `anon` and `authenticated` roles) so the migrations can run against a bare
-PostgreSQL instance in CI. It is never applied to a real database. That CI is
+PostgreSQL instance in CI. It is never applied to a real database.
+
+**To deploy, follow `docs/deploy/README.md`** — and when it is up, paste
+`docs/deploy/verify.sql` into the SQL editor: twelve rows that say whether the
+schema landed, whether the sign-up trigger is attached, and whether anybody can
+administer it yet. That CI is
 `.github/workflows/ci.yml`, and it needs no Supabase project and no secrets.
 
 ### Running the tests

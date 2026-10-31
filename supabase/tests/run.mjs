@@ -145,6 +145,7 @@ import { run as cataloguePage } from './catalogue_page.test.mjs';
 import { run as mediaDeliveryState } from './media_delivery_state.test.mjs';
 import { run as lessonPlaybackStanding } from './lesson_playback_standing.test.mjs';
 import { run as mediaEncodeNotifications } from './media_encode_notifications.test.mjs';
+import { run as deployRunbook } from './deploy_runbook.test.mjs';
 
 // Settings that are global by design: one row, read by code far from the suite
 // that changes it. The revenue share decides what every accrual computes; the
@@ -214,6 +215,7 @@ for (const [name, fn] of [
   ['media delivery state', mediaDeliveryState],
   ['lesson playback standing', lessonPlaybackStanding],
   ['media encode notifications', mediaEncodeNotifications],
+  ['deployment runbook', deployRunbook],
   ['learner analytics', learnerAnalytics],
   ['master access', masterAccess],
   ['media upload abandonment', mediaUploadAbandonment],

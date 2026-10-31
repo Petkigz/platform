@@ -6751,3 +6751,49 @@ the `foreach` in `my_notification_preferences()`, the guard in
 `notification-prefs.ts` — whose `parsePreferences()` throws on a kind it cannot
 label, so a migration alone is a preferences screen that crashes. The database
 suite now pins the six in one assertion for that reason.
+
+## The instructions are executed by the tests, not proof-read — **DECIDED 2026-10-31**
+
+**The gap this closes is not code.** Every layer of this platform is tested and CI
+is green, and there was still no answer to "how does this go live?" that was not
+assembled from memory. A runbook written from memory rots in a way that is invisible:
+a column gets renamed, a function's guard changes, and the paragraph keeps looking
+authoritative while the SQL in it no longer runs. The person who finds out is the
+one following it at midnight.
+
+So `docs/deploy/README.md` is not prose with SQL in it. The two things an operator
+actually pastes are executed by `supabase/tests/deploy_runbook.test.mjs`:
+
+- **`docs/deploy/verify.sql`**, run verbatim. Twelve rows: tables, policies, the
+  sign-up trigger, roles, people, staff, settings, features on, subjects, courses,
+  published versions, audit events. It exists because "did the 203 migrations
+  land?" has no answer in a wall of notices — and because the two numbers that
+  look like a broken deployment (`staff = 0`, `features on = 0`) are the intended
+  state of a platform nobody has opened yet. A row whose meaning is not written
+  down is a row an operator guesses at, so the test also fails if the runbook
+  stops explaining one.
+- **The first-owner block**, extracted from the markdown and run as written —
+  including the refusal when the `set app.bootstrap_privileged_roles = 'on'` line
+  is removed. That refusal is the point: there is deliberately no "first user
+  becomes admin" rule, because that is how a stranger ends up owning a platform.
+  The setting is a session variable that is never stored, has to be typed on
+  purpose, and opens a door exactly once. Testing the failure is what keeps the
+  sentence from being a comment.
+
+**And `check:repo` now refuses drift between three lists that describe one thing.**
+`web/.env.example` is what a person copies, the runbook is what they read, and the
+code is what actually must be set. Writing this unit found the encoder's two
+credentials (`MEDIA_WORKER_EMAIL`, `MEDIA_WORKER_PASSWORD`) declared nowhere — the
+worker exits with a clear message, so nothing was broken, but a deployment would
+have started without an encoder and the runbook would have had nothing to say.
+Every variable in the example file must now be named in the runbook, and every
+shell assignment in the runbook must exist in the example file. Both directions
+fail loudly; both were verified by breaking them.
+
+**What stayed a document.** The migration order, the pooler-not-direct connection,
+the R2 CORS `ETag` header, the workspace `cd ..` build commands and the DNS
+records are written, not automated, because each one is a decision made on
+somebody else's dashboard. The rule for what is in the runbook versus what is
+tested: anything **this repository can execute** is executed in CI; anything that
+happens in a console we do not control is written with the output it should
+produce, so the reader has something to compare against.
