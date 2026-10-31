@@ -19,6 +19,7 @@ import { fetchLessonSources } from '@/lib/provenance';
 import { fetchLessonStudyTools } from '@/lib/lesson-study-tools';
 import { StudyTools } from './study-tools';
 import { fetchPlayableRenditions, groupByAsset, posterFor } from '@/lib/playback';
+import { lessonNote, noteFor, parseStanding } from '@/lib/playback-standing';
 import { RenditionPlayer } from '@/app/_shared/rendition-player';
 import { AudioPlayer, VideoWithResume } from '@/app/_shared/media-resume';
 import { fetchAssessmentsForVersion, fetchQuestions } from '@/lib/assessment';
@@ -213,13 +214,34 @@ export default async function LessonPage({
     .filter((id): id is string => Boolean(id));
   const hasMedia = assetIds.length > 0;
 
-  const [renditions, offlineOn] = await Promise.all([
+  const [renditions, offlineOn, standingData] = await Promise.all([
     hasMedia ? fetchPlayableRenditions(supabase, assetIds) : Promise.resolve([]),
     hasMedia
       ? isFlagEnabled(supabase, 'learning.offline').catch(() => false)
       : Promise.resolve(false),
+    // Why a file has no player, in the learner's own three words. The rendition
+    // read above can only see copies that are already available, so a file still
+    // being prepared and a file that failed look identical to it — and to a
+    // learner they are two different sentences, one of which asks for help.
+    hasMedia
+      ? supabase
+          .rpc('lesson_playback_standing', { p_lesson_id: lesson.id })
+          .then((result) => result.data, () => null)
+      : Promise.resolve(null),
   ]);
   const renditionsByAsset = groupByAsset(renditions);
+  const standing = parseStanding(standingData);
+
+  // Said above the materials, and only when something in the lesson is not
+  // playable: a learner who reads the first line and stops is the one who most
+  // needs to know whether to wait or to tell somebody.
+  const summary = entitled
+    ? lessonNote(
+        lesson.resources
+          .filter((resource) => resource.mediaAssetId)
+          .map((resource) => standing.get(resource.id) ?? null),
+      )
+    : null;
 
   // Saving is a paid feature with its own predicate, deliberately not
   // can_access_lesson(): a free preview may be watched but not kept. The
@@ -275,6 +297,21 @@ export default async function LessonPage({
         <section className="card">
           <p>{lesson.description}</p>
         </section>
+      )}
+
+      {summary && (
+        <div className="notice" style={{ marginBottom: '1rem' }}>
+          <strong>{summary.heading}.</strong> {summary.sentence}
+          {summary.tellSomeone && (
+            <span style={{ display: 'block', marginTop: '0.5rem' }}>
+              <ReportForm
+                lessonId={lesson.id}
+                label="Tell us about this recording"
+                category="technical_fault"
+              />
+            </span>
+          )}
+        </div>
       )}
 
       <section className="card">
@@ -342,12 +379,34 @@ export default async function LessonPage({
                         }
                       />
                     ) : r.mediaAssetId ? (
-                      // The master exists but nothing has encoded a delivery copy
-                      // yet, and a master is never served to a learner, so there
-                      // is nothing honest to put in a player.
-                      <span className="muted">
-                        {r.displayName} — uploaded, not yet encoded for playback
-                      </span>
+                      // A file with no player. What it says now depends on why —
+                      // and the two why's ask the learner for opposite things:
+                      // patience, or a report. The old copy was one sentence, in
+                      // the voice of a database column, for six situations.
+                      (() => {
+                        const note = noteFor(standing.get(r.id) ?? null);
+                        if (!note) {
+                          // Never told: say nothing rather than guess. This is the
+                          // page before the read existed, and it is not wrong, it
+                          // is just quiet.
+                          return <span className="muted">{r.displayName}</span>;
+                        }
+                        return (
+                          <span className="muted">
+                            <strong>{r.displayName}</strong> — {note.heading.toLowerCase()}.{' '}
+                            {note.sentence}
+                            {note.tellSomeone && (
+                              <span style={{ display: 'block', marginTop: '0.35rem' }}>
+                                <ReportForm
+                                  lessonId={lesson.id}
+                                  label="Tell us about this recording"
+                                  category="technical_fault"
+                                />
+                              </span>
+                            )}
+                          </span>
+                        );
+                      })()
                     ) : (
                       <span className="muted">{r.displayName}</span>
                     )}

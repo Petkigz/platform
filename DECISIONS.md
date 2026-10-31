@@ -6664,3 +6664,42 @@ did not exist: `can_read_version`, `lesson_resources_read` and
 `version_delivery_state()` all admit an actively assigned reviewer already. The
 page now asks the same predicate the database does, and says which of the two
 people is looking.
+
+## Six states for the staff, three words for the learner — **DECIDED 2026-10-31**
+
+**The person who can do nothing was told the most technical thing.** For every
+file with no player the lesson page printed *"uploaded, not yet encoded for
+playback"* — one sentence covering six situations the rest of the product now
+tells apart, shown to the one reader who can act on none of them. The author had
+learned to see the difference that morning; the reviewer had just been given it;
+the learner still had a database column talking to them.
+
+**So the vocabulary shrinks on the way in, and the shrinking is the point.** The
+six states exist to decide *whose job it is* — encoder, moderation, verification
+queue, staff. The learner's job is never one of them. What is left is the only
+question they have: **do I wait, or do I tell someone?**
+
+  plays        watch it.
+  preparing    not ready yet; nothing for you to do.
+  unavailable  it will not play without a person. Tell somebody.
+
+`lesson_playback_standing()` returns one word per file and no numbers. It is
+deliberately *not* the author's function: that one returns per-profile counts and
+the worker's own failure text, and `ffmpeg exited 137` is not a learner's
+business. The vocabulary is the boundary — a function that cannot return a failure
+reason cannot leak one — and its guard is exactly `lesson_resources_read`,
+re-stated because a SECURITY DEFINER function bypasses the policy that would
+otherwise decide it.
+
+**Two refusals in the copy.** It promises no time it cannot keep: there is no
+transcode worker in this deployment, so a verified file with nothing encoded may
+never play, and *"still being prepared"* is true of it while *"it will appear
+shortly"* would be a promise this platform cannot stand behind — and the sentence
+a learner remembers. And it offers the report form **only** where the copy says a
+person helps: a recording still on its way through a queue needs patience, and a
+form beside it trains people to file reports nobody can act on.
+
+**Silence remains available.** When the standing cannot be read — a timeout, an
+older deployment — the page says nothing rather than guessing, and renders exactly
+as it did before. `unavailable` is the failed and held cases and nothing else,
+because those are the two nobody is coming for unless somebody is told.

@@ -21,15 +21,24 @@ export function ReportForm({
   lessonId,
   postId,
   label,
+  category: initialCategory = 'doctrinal_error',
 }: {
   lessonId: string;
   postId?: string;
   label?: string;
+  /**
+   * Which category the form opens on.
+   *
+   * A learner who clicks "tell us about this recording" is reporting a fault, and
+   * a form that opened on "doctrinal error" would be asking them to correct it —
+   * or, worse, to leave it and send a doctrinal complaint about a broken file.
+   */
+  category?: ReportCategory;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
-  const [category, setCategory] = useState<ReportCategory>('doctrinal_error');
+  const [category, setCategory] = useState<ReportCategory>(initialCategory);
   const [description, setDescription] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [tone, setTone] = useState<'info' | 'error'>('info');
