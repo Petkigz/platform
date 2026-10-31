@@ -10,16 +10,34 @@ import {
   type Preference,
 } from './notification-prefs.ts';
 
-test('the five kinds are the five the database can send', () => {
+test('the six kinds are the six the database can send, in its order', () => {
+  // The order is the database's (`my_notification_preferences()`), not a choice
+  // made here: a screen that reorders the list is a screen whose next kind is
+  // forgotten in the other list.
   assert.deepEqual(
     NOTIFICATION_KINDS.map((k) => k.kind),
-    ['payout_paid', 'payout_failed', 'payout_cancelled', 'class_starting', 'plan_renewing'],
+    [
+      'payout_paid', 'payout_failed', 'payout_cancelled',
+      'media_encode_failed', 'class_starting', 'plan_renewing',
+    ],
   );
 });
 
 test('exactly two kinds are locked, and they are the money failures', () => {
   const locked = NOTIFICATION_KINDS.filter((k) => k.locked).map((k) => k.kind);
   assert.deepEqual(locked, ['payout_failed', 'payout_cancelled']);
+});
+
+test('a failed encode is a choice, and the description says what silence costs', () => {
+  // Locked would be defensible — it is bad news about your own work. It is not
+  // locked because "always on" must mean "the platform owes you this", and the
+  // two money kinds are the ones that do. The cost of muting it is stated
+  // instead of hidden.
+  const info = describeKind('media_encode_failed');
+  assert.ok(info);
+  assert.equal(info!.locked, false);
+  assert.match(info!.description, /finding out from a learner/);
+  assert.match(info!.description, /does not affect whether the file is fixed/);
 });
 
 test('a list from the database comes back in the order it arrived', () => {
@@ -62,8 +80,8 @@ test('the sentence counts only what can be chosen', () => {
   assert.equal(
     preferenceSummary([
       pref('payout_paid', true), pref('payout_failed', true, true),
-      pref('payout_cancelled', true, true), pref('class_starting', true),
-      pref('plan_renewing', true),
+      pref('payout_cancelled', true, true), pref('media_encode_failed', true),
+      pref('class_starting', true), pref('plan_renewing', true),
     ]),
     'Everything you can choose is on.',
   );
@@ -71,8 +89,8 @@ test('the sentence counts only what can be chosen', () => {
   assert.equal(
     preferenceSummary([
       pref('payout_paid', true), pref('payout_failed', true, true),
-      pref('payout_cancelled', true, true), pref('class_starting', false),
-      pref('plan_renewing', true),
+      pref('payout_cancelled', true, true), pref('media_encode_failed', true),
+      pref('class_starting', false), pref('plan_renewing', true),
     ]),
     '1 optional message is switched off.',
   );
@@ -80,8 +98,8 @@ test('the sentence counts only what can be chosen', () => {
   assert.equal(
     preferenceSummary([
       pref('payout_paid', false), pref('payout_failed', true, true),
-      pref('payout_cancelled', true, true), pref('class_starting', false),
-      pref('plan_renewing', false),
+      pref('payout_cancelled', true, true), pref('media_encode_failed', false),
+      pref('class_starting', false), pref('plan_renewing', false),
     ]),
     'You have switched off every optional message.',
   );
@@ -113,4 +131,16 @@ test('a kind is described in a sentence a person can act on', () => {
   assert.ok(info);
   assert.match(info!.description, /Always on/);
   assert.equal(describeKind('nope'), null);
+});
+
+test('the media kind is a preference the database will accept', () => {
+  // End to end with the migration's own lists: if `media_encode_failed` were
+  // missing from the CHECK, the RPC or the `foreach`, the reply would not parse
+  // and this test would fail on the throw rather than on an assertion.
+  const prefs = parsePreferences([
+    { kind: 'media_encode_failed', enabled: false, locked: false, available: true },
+  ]);
+  assert.equal(prefs[0]?.kind, 'media_encode_failed');
+  assert.equal(prefs[0]?.enabled, false);
+  assert.equal(availabilityNote(prefs[0]!), null);
 });

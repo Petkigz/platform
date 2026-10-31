@@ -1,6 +1,6 @@
 // You choose what you are told.
 //
-// The in-app centre has five kinds of message. This suite is about the two
+// The in-app centre has six kinds of message. This suite is about the two
 // rules that make a preferences screen safe to offer: the two kinds that report
 // money not arriving cannot be silenced, and a muted message is kept and not
 // counted rather than deleted.
@@ -67,10 +67,15 @@ export async function run(ctx) {
 
   await test('every kind comes back, whether or not it has been changed', async () => {
     const list = await prefs(user);
-    assert(Array.isArray(list) && list.length === 5, `got ${list.length} kinds`);
+    assert(Array.isArray(list) && list.length === 6, `got ${list.length} kinds`);
+    // Six since `media_encode_failed`: the closed vocabulary lives in the two
+    // table CHECKs, the `foreach` in `my_notification_preferences()`, the guard
+    // in `set_notification_preference()` and this list. A kind added to one and
+    // forgotten in another is a screen that throws, so they are pinned here.
     assert(
       JSON.stringify(list.map((p) => p.kind))
-        === JSON.stringify(['payout_paid', 'payout_failed', 'payout_cancelled', 'class_starting', 'plan_renewing']),
+        === JSON.stringify(['payout_paid', 'payout_failed', 'payout_cancelled',
+                            'media_encode_failed', 'class_starting', 'plan_renewing']),
       'the order or the vocabulary changed');
     assert(list.every((p) => p.enabled === true), 'a kind is off by default');
   });

@@ -2689,11 +2689,16 @@ that. Both the feed and the badge now call `notification_enabled()`, so a muted 
 while the row stays — and unmuting brings it back still unread.
 
 `payout_failed` and `payout_cancelled` are locked: the writer refuses them, `notification_enabled()` ignores a
-hand-written row, and the screen shows them on and disabled with the reason. The two reminders are *not*
+hand-written row, and the screen shows them on and disabled with the reason.
+
+A sixth kind arrived later — `media_encode_failed` *(2026-10-31)* — written by `fail_media_rendition()` to the
+uploader and the version authors when a file has nothing playable left and nothing still encoding. It is **not**
+locked: the two money kinds are locked because the platform owes that information, and a teacher can already see
+their own failed file. The description says what silence costs instead. The two reminders are *not*
 locked but are reported as `available = false` while `delivery.live_classes` and `commerce.subscriptions` are
 off, because a switch for a message nobody computes should not read as though it works.
 
-On the web, `notification-prefs.ts` labels the five kinds, parses the reply, throws on a kind it cannot label,
+On the web, `notification-prefs.ts` labels the kinds, parses the reply, throws on a kind it cannot label,
 and returns `null` from `availabilityNote()` for a live one. `/notifications` renders the switches under the
 feed (`#preferences`); `/account` carries the unread count so the centre is discoverable without making the
 masthead auth-aware; `POST /api/notifications/preferences` forwards the change and shows the database's answer

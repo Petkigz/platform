@@ -2,11 +2,11 @@
  * You choose what you are told.
  *
  * The vocabulary is closed and lives in the database (`notification_preferences`
- * and the notification table both check it), so this file names the five kinds
+ * and the notification table both check it), so this file names the six kinds
  * the platform can send and says what each one is for. The labels are here
  * rather than in SQL because a sentence about a payout belongs next to the code
  * that renders it — but the *list* is not invented here: `parsePreferences()`
- * throws on a kind this file does not know, so adding a sixth kind in a
+ * throws on a kind this file does not know, so adding a seventh kind in a
  * migration without updating this screen is an error rather than a silently
  * unlabelled switch.
  *
@@ -15,12 +15,21 @@
  * switch that off — by accident, or because "off" was the first option in a
  * list — has built a switch whose only effect is to hide a problem. The
  * database refuses it too, so this is not the enforcement, only the explanation.
+ *
+ * Everything else is a choice, including `media_encode_failed`. That one is
+ * tempting to lock for the same reason — it says your own work will not play,
+ * and silence means finding out from a student instead. But locking it would
+ * make "always on" mean "important" rather than "the platform owes you this
+ * about its own conduct", and the two money kinds would lose the distinction
+ * that makes them worth locking. So the switch stays, and its description says
+ * plainly what turning it off costs.
  */
 
 export type NotificationKind =
   | 'payout_paid'
   | 'payout_failed'
   | 'payout_cancelled'
+  | 'media_encode_failed'
   | 'class_starting'
   | 'plan_renewing';
 
@@ -51,6 +60,13 @@ export const NOTIFICATION_KINDS: KindInfo[] = [
     description:
       'When a payout is withdrawn before it is sent. Always on, for the same reason as a failure.',
     locked: true,
+  },
+  {
+    kind: 'media_encode_failed',
+    label: 'A recording of yours will not play',
+    description:
+      'When an upload could not be prepared for playback and nothing can be done about it silently. Turning this off means finding out from a learner instead. It does not affect whether the file is fixed.',
+    locked: false,
   },
   {
     kind: 'class_starting',

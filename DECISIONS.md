@@ -6703,3 +6703,51 @@ form beside it trains people to file reports nobody can act on.
 older deployment — the page says nothing rather than guessing, and renders exactly
 as it did before. `unavailable` is the failed and held cases and nothing else,
 because those are the two nobody is coming for unless somebody is told.
+
+## Bad news goes to the person who can fix it — **DECIDED 2026-10-31**
+
+**The last silent link in the chain.** A failed encode was written to
+`media_renditions.failure_reason` and then left there. Everything since U155 made
+that reason *findable* — the rehearsal marks the lesson, `/teach/media` says which
+file, `/admin/media` gives staff the raw line — but findable is not told. A
+rendition could fail at three in the morning and be discovered days later by the
+student it was for, in a message no teacher wants to receive.
+
+**Two people, told differently, because they can do different things.**
+
+  the uploader          what the encoder said, and the media library
+  the version's author  the same, and the rehearsal — where the lesson that
+                        depends on the file is already marked as having nothing
+                        to play
+
+An author who also uploaded the file gets one message, not two: they are one
+person, and a duplicate is how a person learns to skim. The dedupe key is the
+file and the day, so four profiles failing on one upload is one message, and a
+file that fails again after somebody tried to fix it is a new one.
+
+**Only when it is out of chances.** A failed 480p beside a working 720p is not
+news — the lesson plays. A failure while another copy is still encoding may yet
+be fine. Announcing either would train the author to ignore these messages, which
+costs more than the message is worth. So the condition is decided inside the
+writer, next to the wording, rather than at the call site: the moment and the
+sentence cannot drift apart. A quarantined or tombstoned master gets nothing at
+all — that file has its own story, and telling the author their encode failed
+would send them to re-encode something moderation took down on purpose.
+
+**It is a choice, and that is the decision worth recording.** Locking it is
+tempting: it is bad news about your own work, and silence means hearing it from a
+learner. But `payout_failed` and `payout_cancelled` are locked for a narrower
+reason — the platform owes that information about its own conduct, and the person
+cannot find it anywhere else. A teacher can already see their own failed file on
+two screens they own. Locking this too would make *Always on* mean *important*,
+and the two money kinds would lose the distinction that makes them worth locking.
+The switch stays, and its description says plainly what turning it off costs:
+*"Turning this off means finding out from a learner instead. It does not affect
+whether the file is fixed."*
+
+**One vocabulary, five places.** The kind had to be added to both table CHECKs,
+the `foreach` in `my_notification_preferences()`, the guard in
+`set_notification_preference()`, and `NOTIFICATION_KINDS` in
+`notification-prefs.ts` — whose `parsePreferences()` throws on a kind it cannot
+label, so a migration alone is a preferences screen that crashes. The database
+suite now pins the six in one assertion for that reason.
