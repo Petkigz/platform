@@ -6559,3 +6559,38 @@ free preview with previews switched off, or with nothing in it marked public, or
 sitting in a version nobody has published — three ways the one screen built to be
 seen by strangers can show a stranger nothing. Each sentence names the resource it
 is about, and each one ends like a sentence a person wrote.
+
+## The file you uploaded is not the file a learner plays — **DECIDED 2026-10-31**
+
+**Every screen described the master.** `media_assets.status` says whether a
+staff member has confirmed a file arrived, and it was doing duty as an answer to
+a question it cannot answer: whether a browser can play anything. The copy a
+learner is served lives in `media_renditions`, is written by an encoding worker,
+and was invisible to the person waiting for it — `media_renditions_read` admits
+only copies that are `available`, which is exactly right for serving bytes and
+exactly wrong for "is my upload ready yet". So a verified master with nothing
+encoded read as **Ready to use** on `/teach/media`, and the whole product let a
+teacher attach a file that would give a learner a sentence where the player
+should be.
+
+**The answer is counts, not rows.** Two functions — `lesson_delivery_state()`
+for a lesson, `my_media_delivery()` for a library — return how many copies exist
+and in what state, the most recent failure's reason, and a flag per medium.
+Neither returns a bucket, a key or a checksum: a function that cannot return an
+object's coordinates cannot leak them, which is the limit `master_preview_target()`
+already used when `media_assets_read` turned out to be narrower than
+`may_watch_master()`.
+
+**Six states, because five of them need five different people.** Plays.
+Still encoding — wait. Failed — staff, with a reason, and it will not retry
+itself. Verified with nothing encoded — staff, and this is the one that looks
+finished and does not play. Not yet verified — the verification queue.
+Held for review — moderation. A boolean would have collapsed all five into
+"no", and the person reading it would have had to guess whose problem it was.
+
+**And the preview stops guessing.** An external address is its own evidence: a
+link opens, a file downloads. An uploaded file is not, so the lesson preview now
+counts it as playable only when a delivery copy says so, and raises a note naming
+the file and its state when one does not. A preview whose counts never arrived
+claims neither: `ready` is false because nothing was checked, and there is no
+reason because there is no known reason.

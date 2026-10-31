@@ -35,6 +35,7 @@
  * finished.
  */
 
+import { deliveryOf, type Delivery } from './media-encoding.ts';
 import { RESOURCE_LABEL, type ResourceType } from './lessons.ts';
 
 export type Playback = 'video' | 'audio' | 'link' | 'download' | 'uploaded' | 'nothing';
@@ -49,6 +50,15 @@ export type PreviewRow = {
   access: 'public_preview' | 'enrolled' | 'guardian' | 'restricted';
   /** What happens when a learner clicks it. */
   playback: Playback;
+  /**
+   * Whether a learner gets anything at all. False for a dead address, false for
+   * an uploaded file whose delivery copies are not ready — the case this page
+   * was built to catch — and false for an uploaded file whose state nobody asked
+   * for, because "we did not check" must not be reported as "it plays".
+   */
+  ready: boolean;
+  /** When it is not ready, why, in three words: `still encoding`, `held…`. */
+  holdUp: string | null;
   /** One sentence, in the teacher's terms, about what that means. */
   sentence: string;
   /** The address, when there is one — never for an uploaded file. */
@@ -69,6 +79,12 @@ export type AuthoredRow = {
   resourceType: ResourceType;
   externalUrl: string | null;
   mediaAssetId?: string | null;
+  /**
+   * The delivery state of an uploaded file, when the caller has asked for it.
+   * Absent means "not known" — an address has no encoding state at all, and a
+   * screen that did not fetch the counts must not pretend the file is ready.
+   */
+  encoding?: Delivery | null;
   access: 'public_preview' | 'enrolled' | 'guardian' | 'restricted';
 };
 
@@ -129,9 +145,40 @@ const SENTENCE: Record<Playback, string> = {
   nothing: 'There is no address and no file here, so a learner would see a name and nothing to click.',
 };
 
+/**
+ * The short reason a file cannot be played yet, for a list of them.
+ *
+ * Three words rather than a sentence, because it is repeated inside a sentence
+ * that already names the file and says what a learner gets.
+ */
+const HOLD_UP: Record<string, string> = {
+  encoding: 'still encoding',
+  failed: 'its encode failed',
+  silent: 'nothing has been encoded from it',
+  unverified: 'the file is not verified yet',
+  held: 'it is held for review',
+};
+
 export function rowFor(row: AuthoredRow, previewsOn: boolean): PreviewRow {
   const playback = playbackOf(row);
   let sentence = SENTENCE[playback];
+  // An address is its own evidence: a link opens, a file downloads. An uploaded
+  // file is not, so it starts at "not promised" and only the counts move it.
+  let ready = playback !== 'nothing' && playback !== 'uploaded';
+  let holdUp: string | null = null;
+
+  // An uploaded file is the one row where the address is not the answer: what a
+  // learner gets depends on a worker having made a copy. When the caller has the
+  // counts, the sentence comes from them; when it does not, the standing sentence
+  // stays honest by promising nothing it cannot know.
+  if (playback === 'uploaded') {
+    const verdict = deliveryOf(row.encoding ?? null);
+    if (verdict) {
+      sentence = verdict.sentence;
+      ready = verdict.ready;
+      holdUp = verdict.ready ? null : (HOLD_UP[verdict.kind] ?? null);
+    }
+  }
 
   // The one combination where the classification and the switch disagree: a
   // resource marked a public sample while previews are switched off is
@@ -149,6 +196,8 @@ export function rowFor(row: AuthoredRow, previewsOn: boolean): PreviewRow {
     label: RESOURCE_LABEL[row.resourceType] ?? 'Resource',
     access: row.access,
     playback,
+    ready,
+    holdUp,
     sentence,
     url: row.externalUrl,
   };
@@ -241,7 +290,28 @@ export function previewOf(
     );
   }
 
-  // 4. No description. Not fatal — the page has a title and materials — but it
+  // 4. An uploaded file with nothing a learner can play. This is the case that
+  // looks finished everywhere else: the master is verified, the library says
+  // "Ready to use", and the lesson has a resource in it. It is the reason this
+  // page exists.
+  // Only rows whose state is known count: a row we never asked about has no
+  // `holdUp`, and warning about it would be a guess wearing a sentence.
+  const stalled = rows.filter((row) => row.playback === 'uploaded' && !row.ready && row.holdUp !== null);
+  if (stalled.length > 0) {
+    if (stalled.length === 1) {
+      warnings.push(
+        `“${stalled[0]?.name}” is uploaded but ${stalled[0]?.holdUp ?? 'has no playable copy'}, so a learner gets a sentence where the player should be rather than a lesson. The media library has the detail and the reason.`,
+      );
+    } else {
+      warnings.push(
+        `${stalled.length} uploaded files have nothing a learner can play yet (${stalled
+          .map((row) => `“${row.name}” — ${row.holdUp ?? 'no playable copy'}`)
+          .join('; ')}). The media library has the detail and the reason for each.`,
+      );
+    }
+  }
+
+  // 5. No description. Not fatal — the page has a title and materials — but it
   // is the difference between a learner starting and a learner leaving.
   if (lesson.resources.length > 0 && !hasDescription) {
     warnings.push(
@@ -249,7 +319,7 @@ export function previewOf(
     );
   }
 
-  // 5. The flag. A preview lesson is the marketing surface; with previews
+  // 6. The flag. A preview lesson is the marketing surface; with previews
   // switched off there is no surface at all.
   if (lesson.isPreview && !options.previewsOn) {
     warnings.push(
@@ -257,7 +327,7 @@ export function previewOf(
     );
   }
 
-  // 6. A preview lesson with nothing in it marked public. The flag makes the
+  // 7. A preview lesson with nothing in it marked public. The flag makes the
   // lesson reachable; the classification is what a stranger is allowed to see.
   if (lesson.isPreview && options.previewsOn) {
     const sample = rows.filter((row) => row.access === 'public_preview');
@@ -268,7 +338,7 @@ export function previewOf(
     }
   }
 
-  // 7. A preview lesson in an unpublished version. There is no public page to
+  // 8. A preview lesson in an unpublished version. There is no public page to
   // reach it by, whatever the flags say.
   if (lesson.isPreview && options.previewsOn && !options.published) {
     warnings.push(
@@ -279,7 +349,15 @@ export function previewOf(
   return {
     rows,
     warnings,
-    playable: rows.filter((row) => row.playback === 'video' || row.playback === 'audio').length,
+    playable: rows.filter(
+      (row) =>
+        row.playback === 'video' ||
+        row.playback === 'audio' ||
+        // An uploaded file counts only when it can actually play. Counting a
+        // file whose encode failed is how a footer says "3 of 3 play" above
+        // three rows that say they do not.
+        (row.playback === 'uploaded' && row.ready),
+    ).length,
     hasDescription,
   };
 }

@@ -142,6 +142,7 @@ import { run as courseShelf } from './course_shelf.test.mjs';
 import { run as practiceCheck } from './practice_check.test.mjs';
 import { run as catalogueCards } from './catalogue_cards.test.mjs';
 import { run as cataloguePage } from './catalogue_page.test.mjs';
+import { run as mediaDeliveryState } from './media_delivery_state.test.mjs';
 
 // Settings that are global by design: one row, read by code far from the suite
 // that changes it. The revenue share decides what every accrual computes; the
@@ -208,6 +209,7 @@ for (const [name, fn] of [
   ['cohort join window', cohortJoinWindow],
   ['offline download', offlineDownload],
   ['media renditions', mediaRenditions],
+  ['media delivery state', mediaDeliveryState],
   ['learner analytics', learnerAnalytics],
   ['master access', masterAccess],
   ['media upload abandonment', mediaUploadAbandonment],

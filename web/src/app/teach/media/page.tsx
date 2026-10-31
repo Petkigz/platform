@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 
 import { isSupabaseConfigured } from '@/lib/env';
 import { MEDIA_STATUS_LABEL, fetchMediaAssets, readableByteSize } from '@/lib/media';
+import { byAsset, deliveryOf, parseDelivery } from '@/lib/media-encoding';
 import { parseTeacherTerms, uploadBlockedSentence, type TeacherTerms } from '@/lib/licence';
 import { createClient } from '@/lib/supabase/server';
 
@@ -48,6 +49,13 @@ export default async function TeachMediaPage() {
 
   const assets = await fetchMediaAssets(supabase);
   const usable = assets.filter((asset) => asset.status === 'available').length;
+
+  // Whether each file can actually play, which is a different question from
+  // whether it is verified. `media_renditions_read` answers neither for an
+  // uploader — it admits only copies that are already available — so the counts
+  // come from `my_media_delivery()`, which returns numbers and no object keys.
+  const { data: deliveryData } = await supabase.rpc('my_media_delivery');
+  const delivery = byAsset(parseDelivery(deliveryData));
 
   // The same gate `media_assets` enforces on insert. Asking first turns a
   // refusal after an upload attempt into a sentence before one, and the form is
@@ -184,38 +192,56 @@ export default async function TeachMediaPage() {
           <p className="muted">Nothing uploaded yet.</p>
         ) : (
           <ul className="lessons">
-            {assets.map((asset) => (
-              <li key={asset.id}>
-                <span className="n">{MEDIA_STATUS_LABEL[asset.status]}</span>
-                <span className="t" style={{ minWidth: 0, flex: 1 }}>
-                  <strong>{asset.displayName}</strong>
-                  <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
-                    {asset.mimeType} · {readableByteSize(asset.byteSize)}
-                    {asset.durationSeconds !== null &&
-                      ` · ${String(Math.round(asset.durationSeconds / 60))} min`}
+            {assets.map((asset) => {
+              const verdict = deliveryOf(delivery.get(asset.id) ?? null);
+              return (
+                <li key={asset.id}>
+                  <span className="n">{MEDIA_STATUS_LABEL[asset.status]}</span>
+                  <span className="t" style={{ minWidth: 0, flex: 1 }}>
+                    <strong>{asset.displayName}</strong>
+                    <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
+                      {asset.mimeType} · {readableByteSize(asset.byteSize)}
+                      {asset.durationSeconds !== null &&
+                        ` · ${String(Math.round(asset.durationSeconds / 60))} min`}
+                    </span>
+                    {/* The line the page used to be missing: the master's status
+                        is above, and whether a learner gets a player is here. */}
+                    {verdict && (
+                      <span
+                        className="muted"
+                        style={{
+                          display: 'block',
+                          fontSize: '0.9rem',
+                          color: verdict.ready ? undefined : 'var(--amber, #b45309)',
+                        }}
+                      >
+                        {verdict.sentence}
+                      </span>
+                    )}
                   </span>
-                  {asset.status === 'pending' && (
-                    <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
-                      Waiting for verification. It cannot be attached to a lesson until a staff
-                      member has confirmed the file arrived.
-                    </span>
-                  )}
-                  {asset.status === 'quarantined' && (
-                    <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
-                      Held for review, and every copy derived from it has been withdrawn.
-                    </span>
-                  )}
-                </span>
-                {asset.status === 'available' && <span className="badge">Ready</span>}
-                <span style={{ display: 'block', marginTop: '0.4rem' }}>
-                  <MasterPlayer assetId={asset.id} />
-                </span>
-              </li>
-            ))}
+                  {verdict?.ready ? (
+                    <span className="badge">Plays</span>
+                  ) : asset.status === 'available' ? (
+                    <span className="badge neutral">No player yet</span>
+                  ) : null}
+                  <span style={{ display: 'block', marginTop: '0.4rem' }}>
+                    <MasterPlayer assetId={asset.id} />
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         )}
 
         <p className="muted" style={{ fontSize: '0.9rem', marginTop: '0.75rem' }}>
+          A file&apos;s status and whether it plays are two different things. Staff verify
+          the file; a separate step makes the delivery copies a learner is actually
+          served, and a file can be verified and still have no player. The line under
+          each name is that second answer, and it is the one a lesson will give a
+          learner.
+        </p>
+
+        <p className="muted" style={{ fontSize: '0.9rem' }}>
           Only platform staff can withdraw a file, and they need a written reason
           to do it. If something here has to come down,{' '}
           <Link href="/support">contact support</Link>.

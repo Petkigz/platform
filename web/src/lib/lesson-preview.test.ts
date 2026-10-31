@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { durationLabel, playbackOf, previewOf, rowFor, type AuthoredRow } from './lesson-preview.ts';
+import type { Delivery } from './media-encoding.ts';
 import { nativeMediaKind, RESOURCE_LABEL } from './lessons.ts';
 
 function resource(overrides: Partial<AuthoredRow> = {}): AuthoredRow {
@@ -129,6 +130,135 @@ test('a public preview with previews off says so on the row itself', () => {
 
   // A merely enrolled resource is not affected by the flag.
   assert.doesNotMatch(rowFor(resource({ access: 'enrolled' }), false).sentence, /switched off/);
+});
+
+// ---------------------------------------------------------------------------
+// An uploaded file, where the address is not the answer
+//
+// `playbackOf` can only say "our own file" — it has no address to judge. Whether
+// a learner gets a player depends on a delivery copy existing, which is a fact
+// about the encoding worker rather than about the lesson. When the caller has
+// asked for it, the row says what is true; when it has not, the standing sentence
+// promises nothing it cannot know.
+// ---------------------------------------------------------------------------
+
+const uploaded = (over: Partial<AuthoredRow> = {}) =>
+  resource({
+    resourceType: 'video',
+    externalUrl: null,
+    mediaAssetId: '11111111-1111-4111-8111-111111111111',
+    ...over,
+  });
+
+function encoding(over: Partial<Delivery> = {}) {
+  return {
+    assetId: '11111111-1111-4111-8111-111111111111',
+    assetStatus: 'available' as const,
+    available: 0,
+    pending: 0,
+    failed: 0,
+    videoReady: false,
+    audioReady: false,
+    failureReason: null,
+    ...over,
+  };
+}
+
+test('an uploaded file whose copies are ready is ready', () => {
+  const row = rowFor(uploaded({ encoding: encoding({ available: 2, videoReady: true }) }), true);
+  assert.equal(row.playback, 'uploaded');
+  assert.equal(row.ready, true);
+  assert.equal(row.holdUp, null);
+  assert.match(row.sentence, /our own server/);
+});
+
+test('an uploaded file still encoding is not ready, and says so in three words', () => {
+  const row = rowFor(uploaded({ encoding: encoding({ pending: 1 }) }), true);
+  assert.equal(row.ready, false);
+  assert.equal(row.holdUp, 'still encoding');
+  assert.match(row.sentence, /still being made/);
+});
+
+test('a failed encode is named as failed, not as a wait', () => {
+  const row = rowFor(uploaded({ encoding: encoding({ failed: 1, failureReason: 'out of memory' }) }), true);
+  assert.equal(row.ready, false);
+  assert.equal(row.holdUp, 'its encode failed');
+  assert.match(row.sentence, /out of memory/);
+});
+
+test('with no encoding state the row promises nothing it cannot know', () => {
+  // A screen that did not ask must not claim a file plays, and must not claim it
+  // does not: the old sentence says the player arrives when the copies do.
+  const row = rowFor(uploaded(), true);
+  // Not a promise and not a warning: `ready` is false because nothing was
+  // checked, `holdUp` is null because there is no known reason, and the sentence
+  // declines to say either way.
+  assert.equal(row.ready, false, 'an unchecked file is not reported as playing');
+  assert.equal(row.holdUp, null, 'and is not given a reason it does not have');
+  assert.match(row.sentence, /as soon as the delivery copies are ready/);
+
+  // So it neither counts as playable nor raises the stalled warning.
+  const preview = previewOf(lesson({ resources: [uploaded()] }), { previewsOn: true, published: false });
+  assert.equal(preview.playable, 0);
+  assert.ok(!preview.warnings.some((one) => /uploaded but|uploaded files/i.test(one)));
+});
+
+test('a lesson with an uploaded file nobody can play says so, once', () => {
+  const preview = previewOf(lesson({ resources: [uploaded({ encoding: encoding({ pending: 1 }) })] }), {
+    previewsOn: true,
+    published: false,
+  });
+  const warning = preview.warnings.find((one) => /uploaded but/i.test(one));
+  assert.ok(warning, 'the reviewer of this preview must be told the file does not play');
+  assert.match(warning, /“Lesson one”/);
+  assert.match(warning, /still encoding/);
+  assert.match(warning, /media library/i, 'and where to find the reason');
+});
+
+test('several stalled files are listed with their own reasons', () => {
+  const preview = previewOf(
+    lesson({
+      resources: [
+        uploaded({ id: 'r-1', resourceName: 'Tajweed', encoding: encoding({ failed: 1, failureReason: 'oom' }) }),
+        uploaded({ id: 'r-2', resourceName: 'Memorisation', encoding: encoding() }),
+      ],
+    }),
+    { previewsOn: true, published: false },
+  );
+  const warning = preview.warnings.find((one) => /uploaded files/i.test(one));
+  assert.ok(warning);
+  assert.match(warning, /2 uploaded files/);
+  assert.match(warning, /“Tajweed” — its encode failed/);
+  assert.match(warning, /“Memorisation” — nothing has been encoded from it/);
+});
+
+test('a file that cannot play is not counted as playable', () => {
+  // The footer says "N of M play". Counting a stalled file is how it says
+  // "1 of 1 play" above a row that says it does not.
+  const preview = previewOf(
+    lesson({
+      resources: [
+        uploaded({ id: 'r-1', encoding: encoding({ pending: 1 }) }),
+        resource({ id: 'r-2', externalUrl: 'https://media.example/lesson.mp4' }),
+      ],
+    }),
+    { previewsOn: true, published: false },
+  );
+  assert.equal(preview.rows.length, 2);
+  assert.equal(preview.playable, 1);
+
+  const ready = previewOf(lesson({ resources: [uploaded({ encoding: encoding({ available: 1, videoReady: true }) })] }), {
+    previewsOn: true,
+    published: false,
+  });
+  assert.equal(ready.playable, 1);
+});
+
+test('a held file is not described as one to wait for', () => {
+  const row = rowFor(uploaded({ encoding: encoding({ assetStatus: 'quarantined', available: 2, videoReady: true }) }), true);
+  assert.equal(row.ready, false);
+  assert.equal(row.holdUp, 'it is held for review');
+  assert.match(row.sentence, /withdrawn until staff release it/);
 });
 
 // ---------------------------------------------------------------------------

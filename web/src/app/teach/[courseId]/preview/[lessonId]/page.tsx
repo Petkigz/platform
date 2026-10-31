@@ -7,6 +7,7 @@ import { isFlagEnabled } from '@/lib/flags';
 import { createClient } from '@/lib/supabase/server';
 import { VERSION_STATUS_LABEL, type VersionStatus } from '@/lib/authoring';
 import { durationLabel, previewOf, type AuthoredRow, type Playback } from '@/lib/lesson-preview';
+import { byAsset, parseDelivery } from '@/lib/media-encoding';
 import type { ResourceType } from '@/lib/lessons';
 
 export const dynamic = 'force-dynamic';
@@ -120,23 +121,42 @@ export default async function LessonPreviewPage({
   // though the lesson id alone would still resolve.
   if (!version || version.course_id !== course.id) notFound();
 
-  const [{ data: resourceRows }, previewsOn] = await Promise.all([
+  const [{ data: resourceRows }, previewsOn, { data: deliveryData }] = await Promise.all([
     supabase
       .from('lesson_resources')
       .select('id, display_name, resource_type, external_url, media_asset_id, access_classification')
       .eq('lesson_id', lesson.id)
       .order('position', { ascending: true }),
     isFlagEnabled(supabase, 'learning.previews').catch(() => false),
+    // Whether an uploaded file can actually play. The address on the row says
+    // nothing about it: that answer is a delivery copy in a bucket, made by a
+    // worker, and this is the only read that reports it — the rendition policy
+    // admits available copies only, so an uploader cannot see their own queue.
+    // A failure here must not take the page down: the preview still shows the
+    // lesson, and an uploaded file then says the honest "when the copies are
+    // ready" rather than claiming to play.
+    supabase.rpc('lesson_delivery_state', { p_lesson_id: lesson.id }).then(
+      (result) => result,
+      () => ({ data: null, error: { message: 'delivery state unavailable' } }),
+    ),
   ]);
 
-  const resources: AuthoredRow[] = (resourceRows ?? []).map((row) => ({
-    id: String(row.id),
-    resourceName: String(row.display_name),
-    resourceType: row.resource_type as ResourceType,
-    externalUrl: row.external_url === null ? null : String(row.external_url),
-    mediaAssetId: row.media_asset_id === null ? null : String(row.media_asset_id),
-    access: row.access_classification as AuthoredRow['access'],
-  }));
+  const delivery = byAsset(parseDelivery(deliveryData));
+
+  const resources: AuthoredRow[] = (resourceRows ?? []).map((row) => {
+    const assetId = row.media_asset_id === null ? null : String(row.media_asset_id);
+    return {
+      id: String(row.id),
+      resourceName: String(row.display_name),
+      resourceType: row.resource_type as ResourceType,
+      externalUrl: row.external_url === null ? null : String(row.external_url),
+      mediaAssetId: assetId,
+      // `null` rather than absent when the row has no asset: an address has no
+      // encoding state, and the row says so instead of leaving it undefined.
+      encoding: assetId === null ? null : (delivery.get(assetId) ?? null),
+      access: row.access_classification as AuthoredRow['access'],
+    };
+  });
 
   const published = version.version_status === 'published';
   const preview = previewOf(
