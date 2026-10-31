@@ -156,15 +156,24 @@ export async function run(ctx) {
   });
 
   await test('a user cannot grant themselves a privileged role', async () => {
-    // The trigger owns this one, and it must stay: assign_role refuses a
-    // non-privileged actor, so the only way to reach the self-grant check is as
-    // someone already privileged — which is exactly who must not be able to
-    // elevate themselves further without another person involved.
+    // Two rules stand between a support agent and a promotion to platform admin,
+    // and they fire in this order:
+    //
+    //   1. assign_role() refuses a privileged grant by anybody but the platform
+    //      admin, so a support agent is stopped before the row is ever written.
+    //   2. The trigger refuses *anybody* assigning a privileged role to
+    //      themselves — which is the only rule left once the caller is the
+    //      owner, and exactly the one that says an elevation needs a second
+    //      person in the room.
     const person = await newPerson('role-self@example.com', 'Self Promoter');
     await assign(admin, person, 'support_agent', 'Starting them off');
 
     await rejects(
       () => assign(person, person, 'platform_admin', 'Promoting myself'),
+      /only the platform admin may grant/i);
+
+    await rejects(
+      () => assign(admin, admin, 'governance_admin', 'Giving myself another one'),
       /may not assign a privileged role to themselves/i);
   });
 

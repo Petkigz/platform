@@ -212,10 +212,16 @@ export async function run(ctx) {
   });
 
   await test('the report counts people and names nobody', async () => {
+    // Scoped to this institution's own members. Every suite shares one
+    // database, and a second adult called Amina — a customer in the staff-day
+    // journey was one — made the unnamed subquery return two rows and the whole
+    // report unreadable. The join is the fix: a name is only unique *inside* a
+    // roster, so that is the only place it is asked about.
     const inside = await scalar(
-      `select user_id from public.institution_memberships
-        where institution_id = $1 and user_id = (select user_id from public.user_profiles
-                                                  where display_name = 'Amina')`,
+      `select m.user_id
+         from public.institution_memberships m
+         join public.user_profiles p on p.user_id = m.user_id
+        where m.institution_id = $1 and p.display_name = 'Amina'`,
       [institutionId]);
 
     const learner = (await q(

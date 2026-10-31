@@ -124,6 +124,24 @@ test('a self-grant refusal is a 403, not a bad form', async () => {
   }
 });
 
+test('a privileged role is the owner’s to give, and the refusal says so', async () => {
+  const { client } = stubRpc({
+    error: { message: 'only the platform admin may grant the privileged role platform_admin' },
+  });
+
+  const res = await assignRole(client, {
+    userId: 'u-1',
+    roleCode: 'platform_admin',
+    reason: 'A friend needs admin',
+  });
+
+  assert.equal(res.ok, false);
+  if (!res.ok) {
+    assert.equal(res.status, 403);
+    assert.match(res.error, /only the platform admin/i);
+  }
+});
+
 test('a missing reason for a privileged grant is explained', async () => {
   const { client } = stubRpc({
     error: { message: 'granting the privileged role platform_admin requires a written reason' },

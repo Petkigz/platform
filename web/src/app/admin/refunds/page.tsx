@@ -36,6 +36,16 @@ export default async function AdminRefundsPage() {
   });
   if (privileged !== true) redirect('/');
 
+  // Reading the queue and opening a refund are support's work; deciding one is
+  // finance's. `decide_refund_request()` refuses anybody else, so the buttons
+  // are rendered only for the two roles that function admits — a decide control
+  // in front of a support agent would be a promise the database does not keep.
+  const [{ data: financeAdmin }, { data: platformAdmin }] = await Promise.all([
+    supabase.rpc('has_role', { p_user_id: user.id, p_role_code: 'finance_admin' }),
+    supabase.rpc('has_role', { p_user_id: user.id, p_role_code: 'platform_admin' }),
+  ]);
+  const canDecide = financeAdmin === true || platformAdmin === true;
+
   const queue = await fetchRefundQueue(supabase);
 
   // The window is read from the register, which staff may read. A page that
@@ -82,7 +92,14 @@ export default async function AdminRefundsPage() {
             <footer className="muted">— {item.requester?.display_name ?? 'Unknown'}</footer>
           </blockquote>
 
-          <DecideForm requestId={item.id} />
+          {canDecide ? (
+            <DecideForm requestId={item.id} />
+          ) : (
+            <p className="muted" style={{ margin: 0 }}>
+              Approving or declining belongs to finance. You can still see what
+              is waiting, and open a refund on a customer&rsquo;s behalf below.
+            </p>
+          )}
         </section>
       ))}
 

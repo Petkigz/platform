@@ -211,8 +211,15 @@ export async function decideRefund(
   });
   if (error) {
     const msg = error.message.toLowerCase();
-    if (msg.includes('only staff may decide')) {
-      return { ok: false, status: 403, error: 'Only staff can decide a refund.' };
+    // `/may decide a refund/` covers both the old "only staff" wording and the
+    // narrower rule the staff-day journey produced: support opens a refund, and
+    // finance decides it.
+    if (msg.includes('may decide a refund')) {
+      return {
+        ok: false,
+        status: 403,
+        error: 'Approving a refund belongs to finance. You can still open one on a customer’s behalf.',
+      };
     }
     if (msg.includes('you requested yourself')) {
       return {

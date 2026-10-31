@@ -33,6 +33,16 @@ export default async function AdminRolesPage() {
   const { data: privileged } = await supabase.rpc('is_privileged', { p_user_id: user.id });
   if (privileged !== true) redirect('/');
 
+  // `assign_role()` lets any staff member appoint an ordinary role, and only the
+  // platform admin appoint a privileged one. A support agent could hand out
+  // `platform_admin` until this unit; the form below offers exactly what the
+  // function allows, so nobody is shown a choice that will be refused.
+  const { data: platformAdmin } = await supabase.rpc('has_role', {
+    p_user_id: user.id,
+    p_role_code: 'platform_admin',
+  });
+  const canAppointPrivileged = platformAdmin === true;
+
   const { roles, assignments } = await fetchRoleRoster(supabase);
 
   // Names for everyone who holds a role. RLS decides which profiles come back;
@@ -75,6 +85,15 @@ export default async function AdminRolesPage() {
         audit trail. The last privileged account cannot be removed — appoint
         someone else first.
       </p>
+      {!canAppointPrivileged && (
+        <p className="notice">
+          The privileged roles — support, governance, finance and platform admin
+          — belong to the platform admin. You can appoint the ordinary ones:
+          teaching, guardianship, reviewing. If somebody needs more than that,
+          the owner is who to ask, and the request is a sentence rather than a
+          form.
+        </p>
+      )}
 
       {([
         ['Privileged', privilegedRoles],
@@ -128,8 +147,9 @@ export default async function AdminRolesPage() {
           <h3>Change someone&apos;s role</h3>
         </div>
         <p className="muted">
-          Only people who already have a profile are listed. You cannot grant
-          yourself a privileged role — someone else has to do it.
+          Only people who already have a profile are listed. A privileged role
+          is the platform admin&rsquo;s to give, so nobody can grant one to
+          themselves — or to anybody else.
         </p>
 
         {assignments.length === 0 ? (
@@ -143,7 +163,7 @@ export default async function AdminRolesPage() {
                 key={id}
                 userId={id}
                 userName={nameOf(id)}
-                roles={roles}
+                roles={canAppointPrivileged ? roles : otherRoles}
                 held={assignments
                   .filter((a) => a.user_id === id)
                   .map((a) => a.role_code)}

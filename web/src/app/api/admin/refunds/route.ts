@@ -6,9 +6,14 @@ import { decideRefund } from '@/lib/refunds';
 /**
  * POST /api/admin/refunds — approve or decline a refund request.
  *
- * The privilege check happens here *and* inside decide_refund_request(). The
- * redirect here is for the interface; the one in the function is the actual
- * boundary, because an RPC can be called without going through this route.
+ * The check happens here *and* inside decide_refund_request(). The one here is
+ * for the interface; the one in the function is the actual boundary, because an
+ * RPC can be called without going through this route.
+ *
+ * Both ask the same narrower question — finance or the owner — because a support
+ * agent opening a refund on a customer's behalf is the person most likely to
+ * press this by accident, and "approving belongs to finance" is a better answer
+ * than a permission error.
  *
  * Approving does not settle. It creates a pending refund transaction, and the
  * money moves only when complete_refund() runs against a verified provider
@@ -39,11 +44,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Sign in to decide a refund.' }, { status: 401 });
   }
 
-  const { data: privileged } = await supabase.rpc('is_privileged', {
-    p_user_id: user.id,
-  });
-  if (privileged !== true) {
-    return NextResponse.json({ error: 'Only staff can decide refunds.' }, { status: 403 });
+  const [{ data: financeAdmin }, { data: platformAdmin }] = await Promise.all([
+    supabase.rpc('has_role', { p_user_id: user.id, p_role_code: 'finance_admin' }),
+    supabase.rpc('has_role', { p_user_id: user.id, p_role_code: 'platform_admin' }),
+  ]);
+  if (financeAdmin !== true && platformAdmin !== true) {
+    return NextResponse.json(
+      { error: 'Approving a refund belongs to finance. You can still open one on a customer’s behalf.' },
+      { status: 403 },
+    );
   }
 
   const result = await decideRefund(supabase, input);

@@ -260,9 +260,12 @@ export async function run(ctx) {
     const id = (await requestAs(userId, order, 30000, 'Please')).rows[0].id;
 
     await asUser(userId, async () => {
+      // The refusal names the two roles that may decide rather than saying
+      // "staff": a support agent is staff, and support approving refunds was
+      // exactly the seam the staff-day journey found.
       await rejects(
         () => q('select public.decide_refund_request($1,$2,$3)', [id, true, 'why not']),
-        /only staff may decide/i,
+        /finance admin or platform admin/i,
       );
     });
   });

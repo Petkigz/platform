@@ -148,6 +148,7 @@ import { run as mediaEncodeNotifications } from './media_encode_notifications.te
 import { run as deployRunbook } from './deploy_runbook.test.mjs';
 import { run as courseCertificatePolicy } from './course_certificate_policy.test.mjs';
 import { run as firstDay } from './first_day.test.mjs';
+import { run as staffDay } from './staff_day.test.mjs';
 
 // Settings that are global by design: one row, read by code far from the suite
 // that changes it. The revenue share decides what every accrual computes; the
@@ -220,6 +221,7 @@ for (const [name, fn] of [
   ['deployment runbook', deployRunbook],
   ['course certificate policy', courseCertificatePolicy],
   ['the first day', firstDay],
+  ['the staff day', staffDay],
   ['learner analytics', learnerAnalytics],
   ['master access', masterAccess],
   ['media upload abandonment', mediaUploadAbandonment],

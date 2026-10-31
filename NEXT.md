@@ -311,6 +311,15 @@ unless they have convened a scholarly board — and only they may appoint a memb
 to it. A qualification also has to name its subject now, because one that does
 not can never authorise anything.
 
+The staff side of the same question is walked too: `staff_day.test.mjs` plays a
+support agent, a finance admin and a governance admin through one day, which
+found the switchboard wired backwards — the least-privileged staff role could
+appoint a platform admin and revoke the owner's — and a refund decision that any
+staff member could sign while every screen said it was finance's. Both fixed;
+the refund is now opened by support and decided by finance, and the two ledger
+writers that still admit any privileged caller are written down rather than
+quietly rewritten.
+
 The four journeys a platform either supports or does not are now walked end to
 end as four different people, in one database suite (`first_day.test.mjs`): the
 owner opening the door, a teacher writing a course to publication, a stranger
@@ -322,8 +331,8 @@ course row survived; and a certificate could be issued but never asked for,
 because `certificate_enabled` had a writer function and no screen. Both are
 fixed, and the author now turns certificates on from their course page.
 
-Verification: **2210 database tests (147 suites), 1825 web tests; TypeScript
-typecheck, build and `check:repo` pass; 205 migrations.**
+Verification: **2237 database tests (148 suites), 1826 web tests; TypeScript
+typecheck, build and `check:repo` pass; 206 migrations.**
 
 ## Today's sentence
 
@@ -2231,6 +2240,59 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### The staff day, and the two places the switches were wired backwards, 2026-10-31
+
+`first_day.test.mjs` walks the platform as its four customers. `staff_day.test.mjs`
+does the same for the three people behind `/admin` — a support agent, a finance
+admin and a governance admin — in one day, in one database, in the order a day
+happens: the owner appoints them, support answers a case and opens a refund,
+finance decides it, governance verifies a reviewer and a guardian, and every
+queue is read back from `staff_attention()` as each of them.
+
+Each of those surfaces already had a test. The question none of them asked is
+the one a person asks on their first morning — *whose work is this, and is the
+platform sure?* — and it only has a wrong answer at a seam. Two seams:
+
+1. **A support agent could appoint a platform admin, and could revoke the
+   owner's.** `assign_role()` and `revoke_role()` asked only `is_privileged`,
+   which every staff role has. So the least-privileged staff account — kept
+   that way on purpose, because "somebody who can read a case and refund an
+   order should not thereby be able to appoint the scholars" — could mint the
+   most privileged role, or strip it from the owner. The last-privileged-account
+   lockout guard did not fire on the way out, because the agent revoking the
+   owner's role was themselves the remaining privileged account. Two statements
+   from the least-trusted account and the platform had no owner. Privileged
+   grants and revocations are now the platform admin's alone; ordinary roles
+   (instructor, guardian, reviewer) are still any staff member's, which is how
+   teachers get appointed.
+
+2. **A support agent could decide a refund.** `decide_refund_request()` asked
+   `is_privileged` too, while `/admin` filed refunds under money (finance only),
+   `staff_attention()` kept the refund count from support, and the role table
+   describes refunds as the finance admin's work. The page a support agent
+   reached showed a queue whose buttons worked. Refunds now split the way the
+   rest of the platform says: **support opens one on a customer's behalf** —
+   `request_refund()` exempts staff from the window for exactly that call — and
+   **finance decides it**. The refund *window* stays any staff member's, because
+   it bounds asking rather than deciding, and support is where a closed window
+   gets explained; that is now pinned by a test so a later tidy-up cannot quietly
+   take it away.
+
+Both screens follow the database instead of promising more than it will do: the
+refund queue shows the decision buttons only to finance, and `/admin/roles`
+offers a non-owner the ordinary roles plus one sentence about whose the switches
+are.
+
+**Recorded, not fixed:** `record_payment_success()` (manual evidence) and
+`complete_refund()` (manual settlement) still admit any privileged caller. No
+screen reaches either — both wait on a provider — and both have been redefined
+several times since, so rewriting a ledger writer to change one clause is a
+separate, deliberate unit rather than a rider on this one. It is in
+`DECISIONS.md` as an open edge.
+
+**30 new database tests (2237 passed, 148 suites), 1826 web tests; tsc, build
+and check:repo clean; 206 migrations.**
 
 ### Four people, one platform, and the two things only they could find, 2026-10-31
 

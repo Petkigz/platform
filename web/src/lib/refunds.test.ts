@@ -323,7 +323,9 @@ test('approving your own refund is a 403', async () => {
 });
 
 test('a non-privileged caller is a 403', async () => {
-  const { client } = stubRpc({ error: { message: 'only staff may decide a refund' } });
+  const { client } = stubRpc({
+    error: { message: 'only a finance admin or platform admin may decide a refund' },
+  });
 
   const res = await decideRefund(client, { requestId: 'req-1', approve: true });
 

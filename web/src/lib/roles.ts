@@ -97,6 +97,19 @@ function refusal(message: string): RoleResult {
       error: 'Give a written reason — it goes on the audit trail.',
     };
   }
+  // The staff-day journey's rule: a privileged role is the owner's to give or
+  // take, and everybody else is told so in one sentence rather than being
+  // handed a permission error.
+  if (m.includes('only the platform admin may grant')
+      || m.includes('only the platform admin may revoke')) {
+    return {
+      ok: false,
+      status: 403,
+      error:
+        'Only the platform admin can give or take a privileged role. ' +
+        'Ask them, and say what the person needs to do.',
+    };
+  }
   if (m.includes('may not assign a privileged role to themselves')) {
     return {
       ok: false,
