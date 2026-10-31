@@ -2291,7 +2291,7 @@ several times since, so rewriting a ledger writer to change one clause is a
 separate, deliberate unit rather than a rider on this one. It is in
 `DECISIONS.md` as an open edge.
 
-**30 new database tests (2237 passed, 148 suites), 1826 web tests; tsc, build
+**27 new database tests (2237 passed, 148 suites), 1826 web tests; tsc, build
 and check:repo clean; 206 migrations.**
 
 ### Four people, one platform, and the two things only they could find, 2026-10-31
