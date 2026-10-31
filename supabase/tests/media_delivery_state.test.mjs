@@ -38,8 +38,11 @@ export async function run(ctx) {
     catch (e) { await q('rollback'); throw e; }
   }
 
-  const lessonState = async (actor, lessonId) =>
-    (await asActor(actor, 'select * from public.lesson_delivery_state($1)', [lessonId])).rows;
+  // One row per uploaded file in the version. The single-lesson screen calls
+  // this too and keeps the rows for its lesson, so every test here is also a test
+  // of that screen's only read.
+  const versionState = async (actor, versionId) =>
+    (await asActor(actor, 'select * from public.version_delivery_state($1)', [versionId])).rows;
 
   const libraryState = async (actor) =>
     (await asActor(actor, 'select * from public.my_media_delivery()')).rows;
@@ -92,11 +95,11 @@ export async function run(ctx) {
   // -------------------------------------------------------------------------
 
   await test('a verified master with no copies is reported as nothing playable', async () => {
-    const { lesson } = await ownedLesson();
+    const { lesson, version } = await ownedLesson();
     const asset = await newAsset(teacher, { status: 'available' });
     const resource = await attach(lesson, asset);
 
-    const rows = await lessonState(teacher, lesson);
+    const rows = await versionState(teacher, version);
     assert(rows.length === 1, 'the lesson has one uploaded file and the report must have one row');
     const row = rows[0];
     assert(row.resource_id === resource, 'the row is keyed by the resource, so a screen can join on it');
@@ -108,18 +111,18 @@ export async function run(ctx) {
   });
 
   await test('a pending copy is pending, and is not playable', async () => {
-    const { lesson } = await ownedLesson();
+    const { lesson, version } = await ownedLesson();
     const asset = await newAsset(teacher, { status: 'available' });
     await attach(lesson, asset);
     await copyOf(asset, '720p', 'pending');
 
-    const row = (await lessonState(teacher, lesson))[0];
+    const row = (await versionState(teacher, version))[0];
     assert(row.pending_copies === 1 && row.available_copies === 0);
     assert(row.video_ready === false, 'a copy still being encoded is not something a browser can play');
   });
 
   await test('one available video copy makes the file playable, and two do not count twice', async () => {
-    const { lesson } = await ownedLesson();
+    const { lesson, version } = await ownedLesson();
     const asset = await newAsset(teacher, { status: 'available' });
     await attach(lesson, asset);
     // The ladder a worker actually writes for one master.
@@ -127,7 +130,7 @@ export async function run(ctx) {
     await copyOf(asset, '480p', 'available');
     await copyOf(asset, 'audio', 'available');
 
-    const row = (await lessonState(teacher, lesson))[0];
+    const row = (await versionState(teacher, version))[0];
     assert(row.available_copies === 2);
     assert(row.pending_copies === 1);
     assert(row.video_ready === true);
@@ -135,31 +138,31 @@ export async function run(ctx) {
   });
 
   await test('a poster or a manifest is not a player', async () => {
-    const { lesson } = await ownedLesson();
+    const { lesson, version } = await ownedLesson();
     const asset = await newAsset(teacher, { status: 'available' });
     await attach(lesson, asset);
     await copyOf(asset, 'poster', 'available', { mimeType: 'image/jpeg', width: 1280, height: 720 });
     await copyOf(asset, 'manifest', 'available', { mimeType: 'application/vnd.apple.mpegurl', width: null, height: null });
 
-    const row = (await lessonState(teacher, lesson))[0];
+    const row = (await versionState(teacher, version))[0];
     assert(row.available_copies === 2, 'both copies exist');
     assert(row.video_ready === false,
       'a poster and a manifest are delivery copies and neither one is a video a browser plays');
   });
 
   await test('an audio-only encode says so instead of saying nothing', async () => {
-    const { lesson } = await ownedLesson();
+    const { lesson, version } = await ownedLesson();
     const asset = await newAsset(teacher, { status: 'available' });
     await attach(lesson, asset);
     await copyOf(asset, 'audio', 'available');
 
-    const row = (await lessonState(teacher, lesson))[0];
+    const row = (await versionState(teacher, version))[0];
     assert(row.audio_ready === true && row.video_ready === false,
       'a learner gets sound and no picture, and the page has to be able to say that');
   });
 
   await test('a failure carries its reason, and the most recent one wins', async () => {
-    const { lesson } = await ownedLesson();
+    const { lesson, version } = await ownedLesson();
     const asset = await newAsset(teacher, { status: 'available' });
     await attach(lesson, asset);
     await copyOf(asset, '720p', 'failed', { reason: 'disk full' });
@@ -180,14 +183,14 @@ export async function run(ctx) {
       await q('alter table public.media_renditions enable trigger media_renditions_set_updated_at');
     }
 
-    const row = (await lessonState(teacher, lesson))[0];
+    const row = (await versionState(teacher, version))[0];
     assert(row.failed_copies === 2);
     assert(row.failure_reason === 'codec not supported',
       'the author is shown the reason that still applies, not the first one ever recorded');
   });
 
   await test('a held master is reported as held, whatever copies exist', async () => {
-    const { lesson } = await ownedLesson();
+    const { lesson, version } = await ownedLesson();
     // Quarantining does not delete the copies; it stops them being served. The
     // report has to show both facts or a teacher will ask why a copy that is
     // "available" is not playing.
@@ -195,29 +198,29 @@ export async function run(ctx) {
     await attach(lesson, asset);
     await copyOf(asset, '720p', 'available');
 
-    const row = (await lessonState(teacher, lesson))[0];
+    const row = (await versionState(teacher, version))[0];
     assert(row.asset_status === 'quarantined');
     assert(row.available_copies === 1);
   });
 
   await test('a withdrawn master disappears from the report', async () => {
-    const { lesson } = await ownedLesson();
+    const { lesson, version } = await ownedLesson();
     const asset = await newAsset(teacher, { status: 'available' });
     await attach(lesson, asset);
     await copyOf(asset, '720p', 'available');
     await q(`update public.media_assets set deleted_at = now() where id = $1`, [asset]);
 
-    const rows = await lessonState(teacher, lesson);
+    const rows = await versionState(teacher, version);
     assert(rows.length === 0, 'D7: a tombstoned master is gone from every path, this one included');
   });
 
   await test('a lesson of only external addresses has nothing to report', async () => {
     // The common case, and it must not look like a failure: no uploaded files
     // means no rows, and the screen renders nothing extra.
-    const { lesson } = await ownedLesson();
+    const { lesson, version } = await ownedLesson();
     await q(`insert into public.lesson_resources (lesson_id, resource_type, external_url, display_name, position)
              values ($1,'video','https://video.example/watch/1','Talk',1)`, [lesson]);
-    assert((await lessonState(teacher, lesson)).length === 0);
+    assert((await versionState(teacher, version)).length === 0);
   });
 
   // -------------------------------------------------------------------------
@@ -232,8 +235,8 @@ export async function run(ctx) {
     await attach(lesson, asset);
     await copyOf(asset, '720p', 'available');
 
-    assert((await lessonState(teacher, lesson)).length === 1, 'the author may ask about their own lesson');
-    assert((await lessonState(admin, lesson)).length === 1, 'the uploader may ask, even as staff');
+    assert((await versionState(teacher, version)).length === 1, 'the author may ask about their own lesson');
+    assert((await versionState(admin, version)).length === 1, 'the uploader may ask, even as staff');
     assert(version, 'the version exists');
   });
 
@@ -243,17 +246,17 @@ export async function run(ctx) {
     await attach(lesson, asset);
     await copyOf(asset, '720p', 'available');
 
-    assert((await lessonState(reviewer, lesson)).length === 0,
+    assert((await versionState(reviewer, version)).length === 0,
       'an unassigned reviewer is a stranger to this version');
     await assignReviewer(version, reviewer);
-    assert((await lessonState(reviewer, lesson)).length === 1,
+    assert((await versionState(reviewer, version)).length === 1,
       'what is under review is what a learner gets, so the reviewer gets the same report');
-    assert((await lessonState(unassignedReviewer, lesson)).length === 0,
+    assert((await versionState(unassignedReviewer, version)).length === 0,
       'a second reviewer is not carried in by the first one\'s assignment');
   });
 
   await test('another teacher, a learner and a stranger all get nothing', async () => {
-    const { lesson } = await ownedLesson();
+    const { lesson, version } = await ownedLesson();
     const asset = await newAsset(teacher, { status: 'available' });
     await attach(lesson, asset);
     await copyOf(asset, '720p', 'available');
@@ -263,18 +266,19 @@ export async function run(ctx) {
       ['a signed-in learner', learnerUser],
       ['a stranger with an account', strangerUser],
     ]) {
-      assert((await lessonState(id, lesson)).length === 0, `${who} must not see a draft lesson's encoding state`);
+      assert((await versionState(id, version)).length === 0, `${who} must not see a draft lesson's encoding state`);
     }
   });
 
   await test('no session at all may run either function', async () => {
-    const { lesson } = await ownedLesson();
+    const { lesson, version } = await ownedLesson();
+    assert(lesson, 'the fixture builds a lesson');
 
     // `asAnon` is a signed-in session with no user in it. The grant is to
     // `authenticated`, so the call is allowed and returns nothing — which is the
     // answer, not an error.
     await asAnon(async () => {
-      assert((await q('select * from public.lesson_delivery_state($1)', [lesson])).rows.length === 0);
+      assert((await q('select * from public.version_delivery_state($1)', [version])).rows.length === 0);
       assert((await q('select * from public.my_media_delivery()')).rows.length === 0);
     });
 
@@ -294,7 +298,7 @@ export async function run(ctx) {
       }
     };
 
-    await refusedAsAnon('select * from public.lesson_delivery_state($1)', [lesson]);
+    await refusedAsAnon('select * from public.version_delivery_state($1)', [version]);
     await refusedAsAnon('select * from public.my_media_delivery()');
   });
 
@@ -302,14 +306,14 @@ export async function run(ctx) {
     // The whole reason these are functions rather than a widened policy. A
     // column added to `media_renditions` must not appear here by accident, so
     // the check is against the shape of a real answer rather than a comment.
-    const { lesson } = await ownedLesson();
+    const { lesson, version } = await ownedLesson();
     const asset = await newAsset(teacher, { status: 'available' });
     await attach(lesson, asset);
     await copyOf(asset, '720p', 'available');
 
     const shapes = [
-      ['lesson_delivery_state',
-        (await asActor(admin, 'select * from public.lesson_delivery_state($1)', [lesson])).rows[0]],
+      ['version_delivery_state',
+        (await asActor(admin, 'select * from public.version_delivery_state($1)', [version])).rows[0]],
       ['my_media_delivery',
         (await asActor(admin, 'select * from public.my_media_delivery()')).rows[0]],
     ];
@@ -319,6 +323,73 @@ export async function run(ctx) {
         assert(!(forbidden in row), `${name} must not return ${forbidden}`);
       }
     }
+  });
+
+  await test('a version reports every lesson in reading order, with the lesson id', async () => {
+    // The rehearsal screen renders sections and lessons in curriculum order, so
+    // an unordered answer would make it re-sort — and a re-sort is where the
+    // rows and the titles drift apart.
+    const { version, section, lesson } = await ownedLesson();
+    const second = await newLesson(section, { title: 'Second', position: 2 });
+    const third = await newLesson(section, { title: 'Third', position: 3 });
+
+    const firstAsset = await newAsset(teacher);
+    const thirdAsset = await newAsset(teacher);
+    await attach(lesson, firstAsset);
+    await attach(third, thirdAsset);
+    assert(second, 'the middle lesson has no upload and must still be absent from this report, not invented');
+
+    const rows = await versionState(teacher, version);
+    assert(
+      JSON.stringify(rows.map((r) => r.lesson_id)) === JSON.stringify([lesson, third]),
+      'only lessons with an uploaded file appear, in the order the course reads',
+    );
+  });
+
+  await test('one version never reports another version\'s files', async () => {
+    const mine = await ownedLesson();
+    const asset = await newAsset(teacher);
+    await attach(mine.lesson, asset);
+
+    const otherCourse = await newCourse(teacher, { status: 'active' });
+    const otherVersion = await newVersion(otherCourse, teacher);
+
+    assert((await versionState(teacher, otherVersion)).length === 0,
+      'a version with no uploads reports nothing, not its sibling\'s uploads');
+  });
+
+  await test('the lesson-level read is gone, so the guard is written once', async () => {
+    // Two security-definer functions guarding the same three people by two
+    // spellings is a guard that is wrong once. The single-lesson screen filters
+    // this function's rows instead.
+    const { version } = await ownedLesson();
+    await rejects(
+      () => q('select * from public.lesson_delivery_state($1)', [version]),
+      /does not exist|permission denied|function/i,
+    );
+  });
+
+  await test('a file\'s uploader sees that file even in a course that is not theirs', async () => {
+    // Staff upload into a teacher's course. The teacher sees the encoding state
+    // of everything in their version; the staff member who uploaded one file
+    // sees that file — and nothing else about a course they do not author.
+    const { version, lesson } = await ownedLesson();
+    const theirs = await newCourse(otherTeacher, { status: 'active' });
+    const theirVersion = await newVersion(theirs, otherTeacher);
+    const theirSection = await newSection(theirVersion);
+    const theirLesson = await newLesson(theirSection);
+
+    const uploadedByStaff = await newAsset(admin);
+    await attach(lesson, uploadedByStaff);
+    const teachersOwnFile = await newAsset(otherTeacher);
+    await attach(theirLesson, teachersOwnFile);
+
+    assert((await versionState(admin, theirVersion)).length === 1,
+      'the up loader sees the file they are waiting on');
+    assert((await versionState(admin, version)).length === 1,
+      'and not the rest of the platform\'s inventory');
+    assert((await versionState(otherTeacher, version)).length === 0,
+      'a teacher who did not upload into this course and does not author it sees nothing');
   });
 
   // -------------------------------------------------------------------------

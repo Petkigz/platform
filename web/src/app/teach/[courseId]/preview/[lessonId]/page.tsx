@@ -132,10 +132,15 @@ export default async function LessonPreviewPage({
     // nothing about it: that answer is a delivery copy in a bucket, made by a
     // worker, and this is the only read that reports it — the rendition policy
     // admits available copies only, so an uploader cannot see their own queue.
+    //
+    // One call for the version, and this page keeps its own lesson's rows: the
+    // guard is the same three people at version scope, and a second function for
+    // one lesson would be a second spelling of it.
+    //
     // A failure here must not take the page down: the preview still shows the
     // lesson, and an uploaded file then says the honest "when the copies are
     // ready" rather than claiming to play.
-    supabase.rpc('lesson_delivery_state', { p_lesson_id: lesson.id }).then(
+    supabase.rpc('version_delivery_state', { p_version_id: version.id }).then(
       (result) => result,
       () => ({ data: null, error: { message: 'delivery state unavailable' } }),
     ),

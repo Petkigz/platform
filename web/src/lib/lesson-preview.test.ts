@@ -1,7 +1,16 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { durationLabel, playbackOf, previewOf, rowFor, type AuthoredRow } from './lesson-preview.ts';
+import {
+  durationLabel,
+  playbackOf,
+  previewOf,
+  rehearseVersion,
+  rowFor,
+  SEVERITY,
+  type AuthoredRow,
+  type PreviewLesson,
+} from './lesson-preview.ts';
 import type { Delivery } from './media-encoding.ts';
 import { nativeMediaKind, RESOURCE_LABEL } from './lessons.ts';
 
@@ -460,4 +469,204 @@ test('no duration prints nothing at all', () => {
   assert.equal(durationLabel(-5), null);
   assert.equal(durationLabel(Number.NaN), null);
   assert.equal(durationLabel(Number.POSITIVE_INFINITY), null);
+});
+
+// ---------------------------------------------------------------------------
+// The whole version at once
+//
+// A teacher submitting forty lessons should not find out one at a time. The
+// rehearsal is the same decision per lesson, plus the one thing a list of forty
+// rows cannot say: which row to open first.
+// ---------------------------------------------------------------------------
+
+function taught(over: Partial<PreviewLesson> = {}): PreviewLesson {
+  return {
+    id: 'l-x',
+    title: 'A lesson',
+    isPreview: false,
+    sectionTitle: 'S',
+    description: 'What it covers.',
+    durationSeconds: 600,
+    resources: [resource({ id: 'r-x', resourceName: 'Recording' })],
+    ...over,
+  };
+}
+
+test('the rehearsal keeps the course in reading order', () => {
+  // The teacher is looking at their course. A course re-sorted by brokenness no
+  // longer looks like the thing they wrote, so the named fix sits above the list
+  // instead of rearranging it.
+  const rehearsal = rehearseVersion(
+    [
+      { id: 's-1', title: 'Foundations', lessons: [taught({ id: 'l-1' }), taught({ id: 'l-2' })] },
+      { id: 's-2', title: 'Practice', lessons: [taught({ id: 'l-3' })] },
+    ],
+    { previewsOn: true, published: false },
+  );
+
+  assert.deepEqual(
+    rehearsal.sections.map((section) => section.lessons.map((lesson) => lesson.id)),
+    [['l-1', 'l-2'], ['l-3']],
+  );
+  assert.equal(rehearsal.lessonCount, 3);
+});
+
+test('an empty lesson outranks a lesson whose file cannot play', () => {
+  const rehearsal = rehearseVersion(
+    [
+      {
+        id: 's-1',
+        title: 'S',
+        lessons: [
+          taught({ id: 'l-stalled', resources: [uploaded({ id: 'r-1', encoding: encoding({ failed: 1, failureReason: 'oom' }) })] }),
+          taught({ id: 'l-empty', resources: [] }),
+        ],
+      },
+    ],
+    { previewsOn: true, published: false },
+  );
+
+  const byId = new Map(rehearsal.sections[0]?.lessons.map((lesson) => [lesson.id, lesson]));
+  assert.equal(byId.get('l-empty')?.severity, SEVERITY.empty);
+  assert.equal(byId.get('l-stalled')?.severity, SEVERITY.silent);
+
+  assert.equal(rehearsal.next?.lessonId, 'l-empty', 'the empty page is the worst thing here');
+  assert.match(rehearsal.next?.sentence ?? '', /nothing in it at all/);
+  assert.equal(rehearsal.nextAlso, 0);
+});
+
+test('the named lesson is the first at that severity, not the last', () => {
+  const rehearsal = rehearseVersion(
+    [
+      {
+        id: 's-1',
+        title: 'S',
+        lessons: [
+          taught({ id: 'l-1', resources: [] }),
+          taught({ id: 'l-2', resources: [] }),
+          taught({ id: 'l-3', resources: [] }),
+        ],
+      },
+    ],
+    { previewsOn: true, published: false },
+  );
+
+  assert.equal(rehearsal.next?.lessonId, 'l-1');
+  assert.equal(rehearsal.nextAlso, 2, 'and the sentence can say "and 2 others"');
+  assert.equal(rehearsal.withNothing, 3);
+});
+
+test('a clean course has nothing to say, and says so', () => {
+  const rehearsal = rehearseVersion(
+    [{ id: 's-1', title: 'S', lessons: [taught({ id: 'l-1' }), taught({ id: 'l-2' })] }],
+    { previewsOn: true, published: false },
+  );
+  assert.equal(rehearsal.next, null);
+  assert.equal(rehearsal.nextAlso, 0);
+  assert.equal(rehearsal.withSomething, 2);
+  assert.equal(rehearsal.withTrouble, 0);
+  assert.equal(rehearsal.sections[0]?.lessons[0]?.severity, SEVERITY.clean);
+  assert.deepEqual(rehearsal.sections[0]?.lessons[0]?.trouble, []);
+});
+
+test('a lesson with one usable item and one dead one is noted, not silent', () => {
+  const rehearsal = rehearseVersion(
+    [
+      {
+        id: 's-1',
+        title: 'S',
+        lessons: [
+          taught({
+            id: 'l-1',
+            resources: [
+              resource({ id: 'r-1', resourceName: 'Recording' }),
+              resource({ id: 'r-2', resourceName: 'Handout', resourceType: 'document', externalUrl: null }),
+            ],
+          }),
+        ],
+      },
+    ],
+    { previewsOn: true, published: false },
+  );
+
+  const lesson = rehearsal.sections[0]?.lessons[0];
+  assert.equal(lesson?.severity, SEVERITY.noted);
+  assert.ok(lesson?.trouble.some((one) => /“Handout” has nowhere to point/.test(one)));
+  assert.equal(rehearsal.withSomething, 1, 'a learner does get the recording');
+  assert.equal(rehearsal.withNothing, 0);
+});
+
+test('a media item that opens as a link is trouble, and is named as a surprise', () => {
+  const rehearsal = rehearseVersion(
+    [
+      {
+        id: 's-1',
+        title: 'S',
+        lessons: [
+          taught({
+            id: 'l-1',
+            resources: [resource({ resourceName: 'Tajweed', externalUrl: 'https://video.example/watch/1' })],
+          }),
+        ],
+      },
+    ],
+    { previewsOn: true, published: false },
+  );
+  const lesson = rehearsal.sections[0]?.lessons[0];
+  assert.equal(lesson?.severity, SEVERITY.noted);
+  assert.ok(lesson?.trouble.some((one) => /opens as a link rather than in the page/.test(one)));
+  assert.ok(!lesson?.trouble.some((one) => /nowhere to point/.test(one)), 'it works, it is just not a player');
+});
+
+test('a stalled upload is named with its own reason, so the right person is found', () => {
+  const rehearsal = rehearseVersion(
+    [
+      {
+        id: 's-1',
+        title: 'S',
+        lessons: [
+          taught({ id: 'l-1', resources: [uploaded({ resourceName: 'Memorisation', encoding: encoding({ pending: 1 }) })] }),
+        ],
+      },
+    ],
+    { previewsOn: true, published: false },
+  );
+  const lesson = rehearsal.sections[0]?.lessons[0];
+  assert.equal(lesson?.severity, SEVERITY.silent);
+  assert.ok(lesson?.trouble.some((one) => /“Memorisation” still encoding/.test(one)));
+});
+
+test('a missing description is a note, and never the first thing named', () => {
+  const rehearsal = rehearseVersion(
+    [
+      {
+        id: 's-1',
+        title: 'S',
+        lessons: [
+          taught({ id: 'l-1', description: null }),
+          taught({ id: 'l-2', resources: [] }),
+        ],
+      },
+    ],
+    { previewsOn: true, published: false },
+  );
+  assert.equal(rehearsal.next?.lessonId, 'l-2', 'the empty lesson still comes first');
+  assert.equal(rehearsal.withTrouble, 2);
+});
+
+test('an empty version rehearses without pretending to have a next step', () => {
+  const rehearsal = rehearseVersion([], { previewsOn: true, published: false });
+  assert.equal(rehearsal.lessonCount, 0);
+  assert.equal(rehearsal.next, null);
+  assert.deepEqual(rehearsal.sections, []);
+});
+
+test('a version with no lessons at all, only sections, is still zero', () => {
+  const rehearsal = rehearseVersion([{ id: 's-1', title: 'Empty section', lessons: [] }], {
+    previewsOn: false,
+    published: true,
+  });
+  assert.equal(rehearsal.lessonCount, 0);
+  assert.equal(rehearsal.next, null);
+  assert.equal(rehearsal.sections.length, 1, 'the section is still rendered, or the page loses its shape');
 });

@@ -133,6 +133,19 @@ export default async function TeachCoursePage({
               without touching what learners are already studying.
             </div>
           )}
+          <div
+            className="row"
+            style={{ gap: '0.6rem', alignItems: 'baseline', marginBottom: '1rem', flexWrap: 'wrap' }}
+          >
+            <Link className="btn" href={`/teach/${row.id}/preview`}>
+              Rehearse the whole version
+            </Link>
+            <span className="muted" style={{ fontSize: '0.9rem' }}>
+              Every lesson, the way a learner meets it — what is empty, and what has nothing to
+              play. Notes, not a gate; submitting is still this page&apos;s business.
+            </span>
+          </div>
+
           <AudiencePicker
             courseId={row.id}
             initialAudience={row.audience}

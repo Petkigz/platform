@@ -362,6 +362,176 @@ export function previewOf(
   };
 }
 
+// ---------------------------------------------------------------------------
+// The whole version at once
+//
+// A teacher about to submit forty lessons should not find out one lesson at a
+// time. The rehearsal is the same decision as the single preview, run over every
+// lesson, plus the one thing a list of forty rows cannot say by itself: which
+// row to open first.
+// ---------------------------------------------------------------------------
+
+/** How bad a lesson is, worst first. Numbers so a sort can be written. */
+export const SEVERITY = {
+  /** Nothing in it at all: a learner opens a title and an empty page. */
+  empty: 2,
+  /** Something is attached and a learner still gets nothing — a dead address, a
+   *  recording that has not encoded. The screen looks finished and is not. */
+  silent: 1,
+  /** A learner gets something, and there is something worth knowing. */
+  noted: 0,
+  /** Nothing to say. */
+  clean: -1,
+} as const;
+
+export type RehearsalLesson = {
+  id: string;
+  title: string;
+  /** Everything the single-lesson preview would compute. */
+  preview: Preview;
+  /** `SEVERITY`, so the caller can sort or highlight without re-deriving it. */
+  severity: number;
+  /** The learner-facing facts, in the teacher's words: what a learner gets and
+   *  does not. Empty when the lesson is clean. */
+  trouble: string[];
+};
+
+export type RehearsalSection = { id: string; title: string; lessons: RehearsalLesson[] };
+
+export type Rehearsal = {
+  sections: RehearsalSection[];
+  lessonCount: number;
+  /** Lessons where at least one thing can actually be opened or played. */
+  withSomething: number;
+  /** Lessons where a learner gets nothing at all. */
+  withNothing: number;
+  /** Lessons with any note or blocker. */
+  withTrouble: number;
+  /**
+   * The single thing to fix first, and how many other lessons share its
+   * severity — the same shape as the translation claim board, for the same
+   * reason: with forty rows the question is "what do I do next", not "how bad is
+   * this one".
+   */
+  next: { lessonId: string; lessonTitle: string; sentence: string; severity: number } | null;
+  /** Further lessons at that same severity, so the sentence can say "and 3 others". */
+  nextAlso: number;
+};
+
+const TROUBLE: Record<Exclude<Playback, 'video' | 'audio' | 'download'>, string> = {
+  link: 'opens as a link rather than in the page',
+  uploaded: 'is uploaded; whether it plays depends on the copies below',
+  nothing: 'has nowhere to point, so a learner sees a name and nothing to click',
+};
+
+/**
+ * One lesson's trouble, in the teacher's words.
+ *
+ * It reads the rows rather than the warnings because it needs the *kind* of
+ * problem, not its prose: an empty lesson and a lesson whose recording has not
+ * encoded both produce a sentence on the preview, and only one of them is worth
+ * opening first.
+ */
+function troubleOf(lesson: { title: string }, preview: Preview): string[] {
+  const trouble: string[] = [];
+
+  if (preview.rows.length === 0) {
+    trouble.push('has nothing in it at all — a learner gets a title and an empty page');
+    return trouble;
+  }
+
+  for (const row of preview.rows) {
+    if (!row.ready) {
+      trouble.push(
+        `“${row.name}” ${row.playback === 'uploaded' ? (row.holdUp ?? 'may not play yet') : TROUBLE.nothing}`,
+      );
+      continue;
+    }
+    // A media item that opens as a link is not broken. It is the surprise worth
+    // knowing, and it belongs below the things a learner cannot use.
+    if (row.playback === 'link' && (row.type === 'video' || row.type === 'audio')) {
+      trouble.push(`“${row.name}” ${TROUBLE.link}`);
+    }
+  }
+
+  if (!preview.hasDescription) {
+    trouble.push('has no description, so the page goes straight from the title to the materials');
+  }
+
+  return trouble;
+}
+
+function severityOf(preview: Preview, trouble: string[]): number {
+  if (preview.rows.length === 0) return SEVERITY.empty;
+  // `ready` is false for a dead address and for an uploaded file with no player,
+  // and true for anything a learner can open — so this is exactly "something is
+  // attached and a learner gets nothing".
+  if (preview.rows.every((row) => !row.ready)) return SEVERITY.silent;
+  if (trouble.length > 0) return SEVERITY.noted;
+  return SEVERITY.clean;
+}
+
+/**
+ * Every lesson in a version, in reading order.
+ *
+ * Reading order and not worst-first: the teacher is looking at their course, and
+ * a course that has been re-sorted by brokenness no longer looks like the thing
+ * they wrote. The "fix this first" answer sits above the list instead of
+ * rearranging it.
+ */
+export function rehearseVersion(
+  sections: { id: string; title: string; lessons: PreviewLesson[] }[],
+  options: { previewsOn: boolean; published: boolean },
+): Rehearsal {
+  const built: RehearsalSection[] = sections.map((section) => ({
+    id: section.id,
+    title: section.title,
+    lessons: section.lessons.map((lesson) => {
+      const preview = previewOf(lesson, options);
+      const trouble = troubleOf(lesson, preview);
+      return {
+        id: lesson.id,
+        title: lesson.title,
+        preview,
+        severity: severityOf(preview, trouble),
+        trouble,
+      };
+    }),
+  }));
+
+  const all = built.flatMap((section) => section.lessons);
+  const withSomething = all.filter(
+    (lesson) => lesson.preview.rows.length > 0 && lesson.preview.rows.some((row) => row.ready),
+  ).length;
+
+  // Worst first, then the course's own order — so the named lesson is the first
+  // one the teacher would meet if they read their course from the top.
+  let next: Rehearsal['next'] = null;
+  for (let severity = SEVERITY.empty; severity > SEVERITY.clean; severity -= 1) {
+    const worst = all.filter((lesson) => lesson.severity === severity);
+    if (worst.length === 0) continue;
+    const first = worst[0];
+    if (!first) break;
+    next = {
+      lessonId: first.id,
+      lessonTitle: first.title,
+      sentence: first.trouble[0] ?? 'needs a look',
+      severity,
+    };
+    break;
+  }
+
+  return {
+    sections: built,
+    lessonCount: all.length,
+    withSomething,
+    withNothing: all.length - withSomething,
+    withTrouble: all.filter((lesson) => lesson.trouble.length > 0).length,
+    next,
+    nextAlso: next ? all.filter((lesson) => lesson.severity === next.severity).length - 1 : 0,
+  };
+}
+
 /** `12:30` — a duration as the learner page prints it, or nothing. */
 export function durationLabel(seconds: number | null | undefined): string | null {
   if (typeof seconds !== 'number' || !Number.isFinite(seconds) || seconds <= 0) return null;

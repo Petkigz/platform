@@ -40,13 +40,27 @@ test('the media library asks for the delivery state rather than inferring it', (
   assert.match(mediaPage, /badge">Plays</);
 });
 
-test('the lesson preview asks for the delivery state of this lesson only', () => {
-  assert.match(previewPage, /rpc\('lesson_delivery_state', \{ p_lesson_id: lesson\.id \}\)/);
+test('the lesson preview asks for the delivery state of its version', () => {
+  // One function, one guard: the single-lesson screen keeps its own lesson's rows
+  // out of the version's answer rather than asking a second, near-identical
+  // question with its own spelling of who may ask.
+  assert.match(previewPage, /rpc\('version_delivery_state', \{ p_version_id: version\.id \}\)/);
+  assert.ok(!previewPage.includes('lesson_delivery_state'), 'the per-lesson function is gone');
   assert.ok(!previewPage.includes("from('media_renditions')"));
   // The three branches of that function are the same three as `may_watch_master`
   // — uploader, author, active reviewer — so a stranger's call returns no rows
   // rather than an error the page would have to distinguish from an empty one.
   assert.match(previewPage, /encoding: assetId === null \? null : \(delivery\.get\(assetId\) \?\? null\)/);
+});
+
+test('the rehearsal asks once for the whole version, not once per lesson', () => {
+  const rehearsal = read('app/teach/[courseId]/preview/page.tsx');
+  const calls = rehearsal.match(/rpc\('version_delivery_state'/g) ?? [];
+  assert.equal(calls.length, 1, 'forty lessons must not be forty round trips');
+  assert.ok(!rehearsal.includes('lesson_delivery_state'));
+  assert.match(rehearsal, /rehearseVersion\(/);
+  // Notes, not a gate: the page must not offer a submit button or refuse one.
+  assert.ok(!/submit/i.test(rehearsal.split('return (')[1] ?? ''), 'the rehearsal is not a gate');
 });
 
 test('a failed delivery read still renders the lesson', () => {

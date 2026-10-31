@@ -6594,3 +6594,35 @@ counts it as playable only when a delivery copy says so, and raises a note namin
 the file and its state when one does not. A preview whose counts never arrived
 claims neither: `ready` is false because nothing was checked, and there is no
 reason because there is no known reason.
+
+## Rehearsing forty lessons is one question, not forty — **DECIDED 2026-10-31**
+
+**The single-lesson preview asked the wrong question at the wrong size.** With one
+lesson open, "what does this look like" is the question. Before submitting, it is
+not: *is anything in here empty, and is anything attached that a learner cannot
+open?* Twenty minutes of clicking through a course to answer that is twenty
+minutes during which the answer is being changed under you.
+
+**So the rehearsal is the same decision, run over every lesson, and it answers
+the question a list of forty rows cannot.** One named lesson to open first —
+worst severity first, ties broken by the course's own order — with the count of
+others behind it. That is the conclusion of the translation claim board applied to
+curriculum: with forty rows the useful sentence is *start here*, not *here is
+everything*.
+
+**The list stays in reading order.** A course sorted by brokenness is no longer
+the thing its author wrote, and the author is the one reading. Worst-first is the
+single named row above the list; the list itself is the course.
+
+**And it is not a gate.** The page says so, because the temptation is obvious: a
+screen that can see what is wrong could refuse a submission with it. It must not.
+The requirements for publication are written down on the curriculum page and
+enforced by `set_course_version_status()`; a rehearsal that also refused would be
+a second opinion about when a course is finished, hidden in a preview.
+
+**One function, not two.** Yesterday's `lesson_delivery_state()` answered for one
+lesson; the rehearsal needs the version. The cheap thing is a second function with
+the same body and a different join — and its guard would be the same three people
+written a second time, which is a guard that is wrong once. So
+`version_delivery_state()` replaces it, the single-lesson screen calls it too, and
+the three branches of `may_watch_master()` exist in exactly one place.
