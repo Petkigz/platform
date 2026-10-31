@@ -149,6 +149,7 @@ export default async function TeachCoursePage({
             initial={currentSubjects}
           />
           <Curriculum
+            courseId={row.id}
             version={current}
             sourcesByLesson={sourcesByLesson}
             previewsEnabled={previewsEnabled}

@@ -6525,3 +6525,37 @@ times is the wall this whole console has been trying to stop being.
 **Only published reviews count.** Not accepted corrections, not submissions
 waiting to be decided. A language called read while its corrections sit in a
 queue is the claim made early that every other part of this feature refuses.
+
+## A preview that only shows what is true — **DECIDED 2026-10-31**
+
+**Every other part of authoring has something to look at, and the lesson did
+not.** A teacher can see the course, the curriculum, the requirements, the review
+state — and then has to publish, enrol and become a different person to see the
+screen a learner actually spends their time on. So a teacher pastes a video URL,
+reads "added", and finds out from a student three weeks later that the "video"
+was a page asking for a login the teacher does not have.
+
+**The preview is therefore a rehearsal of the learner's shapes, not a second
+copy of the learner's page.** Rendering that page twice would make two copies of
+it, and the copy nobody edits is the one that drifts. It renders the eyebrow, the
+title in its own direction, the description card and the Materials list in the
+learner's order, and the banner names the parts that need an enrolment — progress,
+notes, the discussion, the practice check, the download — rather than inventing
+them.
+
+**Three things it refuses to say.** It does not claim a lesson is publishable: the
+notes are notes, and nothing here refuses a save or a submission. It does not
+warn about `http://` addresses or a resource with neither URL nor file, because
+`lesson_resources` refuses both — the check constraint demands `^https://` and
+exactly one source — and a warning about an impossible state teaches an author to
+distrust the panel. And it does not call a link broken. The reachable surprise is
+the opposite of the one we assumed: an https address that is a **watch page**
+rather than a file, which the learner page correctly renders as a link. That is
+worth knowing, not worth alarming anyone about.
+
+**What is left is the honest list.** A lesson with nothing in it. A media item
+that will open as a plain link rather than play. A lesson with no description. A
+free preview with previews switched off, or with nothing in it marked public, or
+sitting in a version nobody has published — three ways the one screen built to be
+seen by strangers can show a stranger nothing. Each sentence names the resource it
+is about, and each one ends like a sentence a person wrote.

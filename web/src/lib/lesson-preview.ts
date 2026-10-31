@@ -1,0 +1,294 @@
+/**
+ * What a learner will actually get, worked out before publication.
+ *
+ * A teacher adds a resource, sees a green "added" tick, and moves on. What they
+ * have not seen is the thing that matters: **whether a learner can watch it.** A
+ * `video` pointing at a YouTube watch page is not a video as far as this platform
+ * is concerned — `nativeMediaKind()` returns null and the lesson page renders a
+ * plain link in a new tab. A teacher who expected a player finds out from a
+ * student, weeks later, in a message that reads like a complaint about the
+ * platform.
+ *
+ * So this module answers the question the editor never asked: for each resource,
+ * *what will happen when a learner clicks it* — a player in the page, a new tab,
+ * a download, or nothing at all. And for the lesson as a whole, the list of
+ * things that are worth knowing **before** it reaches a learner.
+ *
+ * It is deliberately not a preview renderer. Rendering the learner page twice
+ * would be a second copy of it, and the second copy is the one that drifts. The
+ * page at `/teach/[courseId]/preview/[lessonId]` renders the **same shapes** the
+ * learner page renders, and this module decides the parts that are decisions
+ * rather than layout.
+ *
+ * **What the schema already guarantees, and this therefore does not warn about.**
+ * `lesson_resources` requires exactly one source — an https URL or a media asset
+ * — and its check constraint refuses anything but `https://`. So "the teacher
+ * typed http" is not a reachable state, and neither is "no address and no file".
+ * The cases that *are* reachable are the interesting ones: an https address that
+ * is a watch page rather than a file, a lesson with nothing attached, a file
+ * uploaded here rather than hosted elsewhere, and a preview that is not a preview
+ * because a flag is off.
+ *
+ * **It says one thing the learner page does not.** A learner sees the finished
+ * article; a teacher needs the three cases that produce an empty screen named out
+ * loud. Those are notes, not errors: the author decides when a lesson is
+ * finished.
+ */
+
+import { RESOURCE_LABEL, type ResourceType } from './lessons.ts';
+
+export type Playback = 'video' | 'audio' | 'link' | 'download' | 'uploaded' | 'nothing';
+
+/** One resource, as the teacher needs to see it. */
+export type PreviewRow = {
+  id: string;
+  name: string;
+  type: ResourceType;
+  /** The label the learner page prints beside it. */
+  label: string;
+  access: 'public_preview' | 'enrolled' | 'guardian' | 'restricted';
+  /** What happens when a learner clicks it. */
+  playback: Playback;
+  /** One sentence, in the teacher's terms, about what that means. */
+  sentence: string;
+  /** The address, when there is one — never for an uploaded file. */
+  url: string | null;
+};
+
+/**
+ * The authored shape, which is what the editor has.
+ *
+ * `mediaAssetId` is the other permitted source. The editor does not create one
+ * yet — `/api/lesson-resources` accepts only external URLs — but the table does,
+ * and a preview that treated an uploaded file as "nothing" would start lying the
+ * day uploading arrives.
+ */
+export type AuthoredRow = {
+  id: string;
+  resourceName: string;
+  resourceType: ResourceType;
+  externalUrl: string | null;
+  mediaAssetId?: string | null;
+  access: 'public_preview' | 'enrolled' | 'guardian' | 'restricted';
+};
+
+/**
+ * The same decision `nativeMediaKind()` makes, restated here as a value.
+ *
+ * Restated rather than imported because the learner page's function returns
+ * `'video' | 'audio' | null` and this needs to distinguish *why* it is not a
+ * player — a watch page is a link a learner can follow, a file we host is a
+ * player that is not built from an address at all. The test that keeps the two in
+ * step is `nativeMediaKind`'s own cases, run through this.
+ *
+ * The order is the learner page's order, which matters: an external URL wins over
+ * an uploaded file when both somehow exist, because the learner page checks the
+ * URL first.
+ */
+export function playbackOf(row: AuthoredRow): Playback {
+  const url = row.externalUrl;
+
+  if (url) {
+    let parsed: URL;
+    try {
+      parsed = new URL(url);
+    } catch {
+      // `https://` and nothing else parses as a URL, and the column's check
+      // constraint only proves the prefix. Nothing to click.
+      return 'nothing';
+    }
+    // Unreachable through the database — the column refuses anything but
+    // `https://` — but this function is also called on unsaved editor state.
+    if (parsed.protocol !== 'https:') return 'nothing';
+
+    const path = parsed.pathname.toLowerCase();
+
+    if (row.resourceType === 'video') {
+      return /\.(mp4|webm|ogv)$/.test(path) ? 'video' : 'link';
+    }
+    if (row.resourceType === 'audio') {
+      return /\.(mp3|m4a|aac|ogg|oga|wav|flac)$/.test(path) ? 'audio' : 'link';
+    }
+    if (row.resourceType === 'document' || row.resourceType === 'worksheet') {
+      return 'download';
+    }
+    return 'link';
+  }
+
+  // No address. Either a file uploaded here, or nothing at all.
+  return row.mediaAssetId ? 'uploaded' : 'nothing';
+}
+
+const SENTENCE: Record<Playback, string> = {
+  video: 'Plays in the page, on its own player.',
+  audio: 'Plays in the page, with a player and a scrubber.',
+  link: 'Opens in a new tab. The learner gets a link, not a player.',
+  download: 'Opens in a new tab. Most browsers will offer to download it.',
+  uploaded:
+    'Our own file, not an address — a learner gets the player as soon as the delivery copies are ready, and no third-party site can take it down.',
+  nothing: 'There is no address and no file here, so a learner would see a name and nothing to click.',
+};
+
+export function rowFor(row: AuthoredRow, previewsOn: boolean): PreviewRow {
+  const playback = playbackOf(row);
+  let sentence = SENTENCE[playback];
+
+  // The one combination where the classification and the switch disagree: a
+  // resource marked a public sample while previews are switched off is
+  // invisible to everybody outside the course, and the author is the only person
+  // who can notice.
+  if (row.access === 'public_preview' && !previewsOn) {
+    sentence +=
+      ' Marked a public preview, but previews are switched off — nobody outside the course can see it.';
+  }
+
+  return {
+    id: row.id,
+    name: row.resourceName,
+    type: row.resourceType,
+    label: RESOURCE_LABEL[row.resourceType] ?? 'Resource',
+    access: row.access,
+    playback,
+    sentence,
+    url: row.externalUrl,
+  };
+}
+
+/** An authored lesson, as much of it as a preview needs. */
+export type PreviewLesson = {
+  id: string;
+  title: string;
+  isPreview: boolean;
+  sectionTitle: string;
+  description?: string | null;
+  durationSeconds?: number | null;
+  resources: AuthoredRow[];
+};
+
+export type Preview = {
+  rows: PreviewRow[];
+  /**
+   * Things a teacher would want to know before this reaches a learner. Each one
+   * is a sentence they can act on; none of them blocks anything, because the
+   * author decides when a lesson is finished.
+   */
+  warnings: string[];
+  /** How many resources play inside the page, as opposed to opening a tab. */
+  playable: number;
+  /**
+   * Whether the lesson has a description worth printing.
+   *
+   * Whitespace is not one: the learner page renders the card anyway, which is
+   * the blank box this preview tells the author about.
+   */
+  hasDescription: boolean;
+};
+
+/** `‘A’, ‘B’ and ‘C’` — a list a person reads, not one a parser does. */
+function quoteList(names: string[]): string {
+  const quoted = names.map((name) => `“${name}”`);
+  if (quoted.length === 1) return quoted[0] ?? '';
+  return `${quoted.slice(0, -1).join(', ')} and ${quoted[quoted.length - 1] ?? ''}`;
+}
+
+/**
+ * The whole lesson, as a learner would meet it.
+ *
+ * `published` matters because it changes what the notes *mean*: a draft's
+ * warnings are a to-do list, and a published version's are a live problem. The
+ * page says which, and only one warning reads `published` at all — a free
+ * preview with no public page behind it yet.
+ */
+export function previewOf(
+  lesson: PreviewLesson,
+  options: { previewsOn: boolean; published: boolean },
+): Preview {
+  const rows = lesson.resources.map((resource) => rowFor(resource, options.previewsOn));
+  const hasDescription = (lesson.description ?? '').trim().length > 0;
+  const warnings: string[] = [];
+
+  // 1. Nothing at all. The commonest empty screen, and the one the editor's
+  // "No content yet" badge does not explain.
+  if (rows.length === 0) {
+    warnings.push(
+      'This lesson has nothing in it. A learner who opens it finds a title and an empty page, and will assume that is what the course is.',
+    );
+  }
+
+  // 2. A row with neither address nor file. The table's check constraint makes
+  // this unreachable; if it ever appears it is a bug, so it is reported rather
+  // than hidden.
+  const addressless = rows.filter((row) => row.playback === 'nothing');
+  if (addressless.length > 0) {
+    warnings.push(
+      `${addressless.length === 1 ? 'One item has' : `${addressless.length} items have`} neither an address nor an uploaded file (${quoteList(addressless.map((row) => row.name))}), so a learner would see a name and nothing to click.`,
+    );
+  }
+
+  // 3. The surprise. A media resource that lands on a link is not an error — a
+  // teacher may well host a recording somewhere this platform cannot stream —
+  // but it is the single most common gap between what an author expects and what
+  // a learner gets, so it is said once, without alarm.
+  const linked = rows.filter(
+    (row) => row.playback === 'link' && (row.type === 'video' || row.type === 'audio'),
+  );
+  if (linked.length > 0) {
+    const names = quoteList(linked.map((row) => row.name));
+    warnings.push(
+      linked.length === 1
+        ? `${names} is marked a ${linked[0]?.type} but its address is not a media file, so it will open as a plain link rather than playing in the page. That is fine if it is hosted somewhere we cannot stream from — it is only worth knowing before a student tells you.`
+        : `${linked.length} items are marked media but their addresses are not media files (${names}), so they will open as plain links rather than playing in the page. That is fine if they are hosted somewhere we cannot stream from — it is only worth knowing before a student tells you.`,
+    );
+  }
+
+  // 4. No description. Not fatal — the page has a title and materials — but it
+  // is the difference between a learner starting and a learner leaving.
+  if (lesson.resources.length > 0 && !hasDescription) {
+    warnings.push(
+      'This lesson has no description, so the page goes straight from the title to the materials. A sentence about what the lesson covers is the difference between a learner starting it and moving on.',
+    );
+  }
+
+  // 5. The flag. A preview lesson is the marketing surface; with previews
+  // switched off there is no surface at all.
+  if (lesson.isPreview && !options.previewsOn) {
+    warnings.push(
+      'This lesson is marked a free preview, but previews are switched off — it is not a sample of anything at the moment.',
+    );
+  }
+
+  // 6. A preview lesson with nothing in it marked public. The flag makes the
+  // lesson reachable; the classification is what a stranger is allowed to see.
+  if (lesson.isPreview && options.previewsOn) {
+    const sample = rows.filter((row) => row.access === 'public_preview');
+    if (sample.length === 0) {
+      warnings.push(
+        'This lesson is a free preview, but none of its content is marked a public preview — so what a stranger sees is an empty page.',
+      );
+    }
+  }
+
+  // 7. A preview lesson in an unpublished version. There is no public page to
+  // reach it by, whatever the flags say.
+  if (lesson.isPreview && options.previewsOn && !options.published) {
+    warnings.push(
+      'This lesson is a free preview in a version that is not published, so there is no public page for it yet. It becomes reachable the day the version goes live.',
+    );
+  }
+
+  return {
+    rows,
+    warnings,
+    playable: rows.filter((row) => row.playback === 'video' || row.playback === 'audio').length,
+    hasDescription,
+  };
+}
+
+/** `12:30` — a duration as the learner page prints it, or nothing. */
+export function durationLabel(seconds: number | null | undefined): string | null {
+  if (typeof seconds !== 'number' || !Number.isFinite(seconds) || seconds <= 0) return null;
+  const whole = Math.round(seconds);
+  const minutes = Math.floor(whole / 60);
+  const rest = whole % 60;
+  return `${minutes}:${String(rest).padStart(2, '0')}`;
+}

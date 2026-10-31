@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   RESOURCE_TYPES, RESOURCE_TYPE_LABEL, VERSION_STATUS_LABEL,
@@ -19,11 +20,13 @@ import type { LessonSource } from '@/lib/provenance';
  * new version instead.
  */
 export function Curriculum({
+  courseId,
   version,
   sourcesByLesson,
   previewsEnabled,
   copyFromVersionId,
 }: {
+  courseId: string;
   version: AuthoredVersion;
   sourcesByLesson: Record<string, LessonSource[]>;
   previewsEnabled: boolean;
@@ -300,6 +303,18 @@ export function Curriculum({
                         No content yet
                       </span>
                     )}
+                    {/* On a draft *and* on a published version, which is the
+                        one place a read-only version still wants a door: "what
+                        does a learner see" is a question the editor cannot
+                        answer, and publishing to find out is not an option. */}
+                    <Link
+                      href={`/teach/${courseId}/preview/${l.id}`}
+                      className="badge neutral"
+                      style={{ flex: 'none' }}
+                      title={`See how ${l.title} looks to a learner`}
+                    >
+                      Preview
+                    </Link>
 
                     {l.resources.length > 0 && (
                       <ul
