@@ -354,8 +354,17 @@ record, thirty days after the guardian's account closes — was found in the sam
 sentence and is **not** wound; it is named on the page and in NEXT.md rather than
 quietly implied by the other two.
 
-Verification: **2288 database tests (150 suites), 1837 web tests; TypeScript
-typecheck, build and `check:repo` pass; 209 migrations.**
+The last retention promise with a number in it is now kept too
+(`child_record.test.mjs`). The children's policy says a child's learning record is
+deleted thirty days after the guardian's account closes, and that an issued
+certificate keeps verifying — and those two could not both be true while a
+certificate held its enrolment with `on delete restrict`. The enrolment is the
+learning record, so it goes: the certificate keeps its number, its snapshot and a
+note saying when its evidence was erased. What is left of the child is a row an id
+long, because a certificate points at it.
+
+Verification: **2304 database tests (151 suites), 1840 web tests; TypeScript
+typecheck, build and `check:repo` pass; 210 migrations.**
 
 ## Today's sentence
 
@@ -2263,6 +2272,53 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### The record a certificate was standing on, 2026-11-01
+
+The children's policy promises two things in one sentence: a child's learning
+record is deleted thirty days after the guardian's account closes, and a
+certificate already issued keeps verifying, because somebody may have shown it to
+an employer. The previous unit wound the other two clocks and left this one
+unwound, which was the right call — it is a delete across more than a dozen
+tables with a certificate that has to survive it.
+
+It also could not be wound as written. `certificates.course_enrolment_id` was
+`not null … on delete restrict`, and the enrolment *is* the learning record. So
+the column became nullable with `on delete set null`, and the certificate records
+`evidence_erased_at` in the same statement — a null with no explanation reads as a
+broken row, and the guard makes the explanation compulsory. Its snapshot never
+moves: the title, the version, the criteria and the number are a record of a
+moment, and they are what verification reads.
+
+**What the clock actually deletes** is everything that says what the child did:
+enrolments, lesson progress, submissions, assessment attempts and responses,
+attendance, memorisation passages, cohort memberships, offline devices and
+downloads, child logins, access checks, shares, invitations, entitlements,
+guardian links, plan allocations and sponsorship applications. The order keeps its
+money facts and loses the learner it was for. The support case keeps the
+conversation and loses the child it was about. The certificate keeps everything
+except the enrolment.
+
+**What is left is a tombstone**, and the suite is written to prove it is only
+that: the name, the age band, the family and the account link are cleared, the
+status becomes `erased`, and the row survives for one reason — a certificate
+points at it.
+
+**The sweep is the test that matters.** It asks the catalogue which tables have a
+`learner_profile_id` column rather than reading a list somebody remembered, so a
+table added next month is caught by the next run of this suite instead of by
+nobody. It is also asserted *before* the purge, where it names the tables that
+still point at the child — a sweep that finds nothing because it looks at nothing
+is the failure mode of every "nothing left" assertion ever written.
+
+**Deliberately not widened:** an adult closing their own account is still told
+their enrolments and progress are kept. The thirty days are the children's policy,
+and they start when somebody else's account closes. Changing that is a decision
+with a screen to rewrite, not a tidy-up, and it is named in NEXT.md and on
+`/admin/retention`.
+
+**16 new database tests (2304 passed, 151 suites), 14 new web tests (1840); tsc,
+build and check:repo clean; 210 migrations.**
 
 ### The two clocks that were written down and never wound, 2026-11-01
 

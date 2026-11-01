@@ -1,11 +1,16 @@
 /**
  * The retention clocks, read.
  *
- * The privacy notice makes two promises with dates in them: a support case is
- * kept three years after it closes, and a screening record seven years after the
- * later of the check and the person's eighteenth birthday. Until
- * `20261281004700_retention_clock.sql` nothing implemented either, which meant
- * the notice was promising a deletion nobody would ever perform.
+ * Three promises with dates in them, in two documents. The privacy notice makes
+ * two: a support case is kept three years after it closes, and a screening record
+ * seven years after the later of the check and the person's eighteenth birthday.
+ * The children's policy makes the third: a child's learning record is deleted
+ * thirty days after the guardian's account closes, and the certificate that came
+ * out of it goes on verifying.
+ *
+ * None of the three was implemented before `20261281004700` and
+ * `20261281004800`, which meant the documents were promising deletions nobody
+ * would ever perform.
  *
  * This module is the reading half: it turns what the database says is due into
  * sentences somebody can act on, and it says the awkward part — a case nobody
@@ -24,7 +29,10 @@
  */
 
 export type RetentionPolicy = {
-  years: number;
+  /** Set for a period counted in years; null for one counted in days. */
+  years: number | null;
+  /** Set for a period counted in days; null for one counted in years. */
+  days: number | null;
   clock: string;
   source: string;
 };
@@ -40,6 +48,7 @@ export type RetentionPlan = {
   policies: {
     supportCase: RetentionPolicy;
     screening: RetentionPolicy;
+    learnerRecord: RetentionPolicy;
   };
   supportCases: {
     due: number;
@@ -52,6 +61,13 @@ export type RetentionPlan = {
     oldestDue: string | null;
     nextDue: string | null;
   };
+  learnerRecords: {
+    due: number;
+    oldestDue: string | null;
+    nextDue: string | null;
+    erasedToDate: number;
+    waiting: RetentionWaiting;
+  };
 };
 
 export type RetentionRun = {
@@ -60,10 +76,12 @@ export type RetentionRun = {
     supportCases: number;
     supportCaseMessages: number;
     screenings: number;
+    learnerRecords: number;
   };
   remaining: {
     supportCases: number;
     screenings: number;
+    learnerRecords: number;
   };
   audited: boolean;
 };
@@ -72,10 +90,17 @@ export type RetentionRun = {
 export const EMPTY_PLAN: RetentionPlan = {
   asOf: '',
   policies: {
-    supportCase: { years: 3, clock: 'three years after the case closed', source: '' },
+    supportCase: { years: 3, days: null, clock: 'three years after the case closed', source: '' },
     screening: {
       years: 7,
+      days: null,
       clock: "seven years after the later of the check and the subject's eighteenth birthday",
+      source: '',
+    },
+    learnerRecord: {
+      years: null,
+      days: 30,
+      clock: "thirty days after the guardian's account closed",
       source: '',
     },
   },
@@ -86,7 +111,23 @@ export const EMPTY_PLAN: RetentionPlan = {
     waiting: { count: 0, oldestCreatedAt: null, note: '' },
   },
   screenings: { due: 0, oldestDue: null, nextDue: null },
+  learnerRecords: {
+    due: 0,
+    oldestDue: null,
+    nextDue: null,
+    erasedToDate: 0,
+    waiting: { count: 0, oldestCreatedAt: null, note: '' },
+  },
 };
+
+/** A period as a sentence says it: "3 years" or "30 days". */
+export function policyPeriod(policy: RetentionPolicy): string {
+  if (policy.days !== null && policy.days !== undefined) {
+    return `${policy.days} day${policy.days === 1 ? '' : 's'}`;
+  }
+  const years = policy.years ?? 0;
+  return `${years} year${years === 1 ? '' : 's'}`;
+}
 
 /** A day as a reader reads it; `null` when there is no day to read. */
 export function retentionDay(iso: string | null | undefined): string | null {
@@ -106,7 +147,7 @@ export function retentionDay(iso: string | null | undefined): string | null {
 
 /** How many records the clocks say are due right now. */
 export function dueTotal(plan: RetentionPlan): number {
-  return plan.supportCases.due + plan.screenings.due;
+  return plan.supportCases.due + plan.screenings.due + plan.learnerRecords.due;
 }
 
 /**
@@ -125,25 +166,39 @@ export function retentionHeadline(plan: RetentionPlan): string {
     : `${total} record${total === 1 ? ' is' : 's are'} past the date the policy gives `
       + `${total === 1 ? 'it' : 'them'} and can be deleted.`;
 
-  if (waiting === 0) return due;
+  const tails: string[] = [];
+  if (waiting > 0) {
+    tails.push(
+      `${waiting} support case${waiting === 1 ? ' has' : 's have'} never been closed, `
+      + 'so the three years have not started for '
+      + `${waiting === 1 ? 'it' : 'them'} — closing a case is what starts its clock.`,
+    );
+  }
 
-  return `${due} ${waiting} support case${waiting === 1 ? ' has' : 's have'} never been closed, `
-    + 'so the three years have not started for '
-    + `${waiting === 1 ? 'it' : 'them'} — closing a case is what starts its clock.`;
+  const orphans = plan.learnerRecords.waiting.count;
+  if (orphans > 0) {
+    tails.push(
+      `${orphans} child profile${orphans === 1 ? ' was' : 's were'} left behind by an `
+      + 'account merge and has no clock at all.',
+    );
+  }
+
+  return [due, ...tails].join(' ');
 }
 
-/** What the two clocks are, in one sentence each, with the promise they come from. */
+/** What the three clocks are, in one sentence each, with the promise they come from. */
 export function retentionPolicyLines(plan: RetentionPlan): string[] {
-  const { supportCase, screening } = plan.policies;
+  const { supportCase, screening, learnerRecord } = plan.policies;
   return [
-    `A support case: ${supportCase.years} years, ${supportCase.clock}.`,
-    `A screening record: ${screening.years} years, ${screening.clock}.`,
+    `A support case: ${policyPeriod(supportCase)}, ${supportCase.clock}.`,
+    `A screening record: ${policyPeriod(screening)}, ${screening.clock}.`,
+    `A child's learning record: ${policyPeriod(learnerRecord)}, ${learnerRecord.clock}.`,
   ];
 }
 
 /** What is due next, so an empty screen still answers "when is the next one?". */
 export function nextDueSentence(plan: RetentionPlan): string {
-  const dates = [plan.supportCases.nextDue, plan.screenings.nextDue]
+  const dates = [plan.supportCases.nextDue, plan.screenings.nextDue, plan.learnerRecords.nextDue]
     .filter((d): d is string => Boolean(d))
     .sort();
   if (dates.length === 0) {
@@ -155,8 +210,8 @@ export function nextDueSentence(plan: RetentionPlan): string {
 
 /** What a run did, in the database's own numbers. */
 export function describeRetentionRun(run: RetentionRun): string {
-  const { supportCases, supportCaseMessages, screenings } = run.deleted;
-  const total = supportCases + screenings;
+  const { supportCases, supportCaseMessages, screenings, learnerRecords } = run.deleted;
+  const total = supportCases + screenings + learnerRecords;
   if (total === 0) {
     return 'Nothing was due, so nothing was deleted and no audit entry was written.';
   }
@@ -170,7 +225,11 @@ export function describeRetentionRun(run: RetentionRun): string {
   if (screenings > 0) {
     parts.push(`${screenings} screening record${screenings === 1 ? '' : 's'}`);
   }
-  const left = run.remaining.supportCases + run.remaining.screenings;
+  if (learnerRecords > 0) {
+    const noun = learnerRecords === 1 ? "child's learning record" : "children's learning records";
+    parts.push(`${learnerRecords} ${noun}`);
+  }
+  const left = run.remaining.supportCases + run.remaining.screenings + run.remaining.learnerRecords;
   const tail = left > 0
     ? ` ${left} more ${left === 1 ? 'is' : 'are'} due and will go on the next run — each run takes a bounded batch so a backlog cannot hold a lock.`
     : ' Nothing else is due.';

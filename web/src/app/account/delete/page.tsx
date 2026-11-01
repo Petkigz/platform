@@ -78,7 +78,9 @@ export default async function DeleteAccountPage() {
                 <li>Notifications sent to you, and mail the platform sent or queued for you</li>
                 <li>
                   Any child profile that would be left without an adult — a child with
-                  another active guardian stays with them
+                  another active guardian stays with them. Thirty days later the rest of
+                  that child&rsquo;s learning record goes too: enrolments, progress,
+                  submissions, attempts and attendance
                 </li>
               </ul>
             </section>
@@ -86,7 +88,10 @@ export default async function DeleteAccountPage() {
               <h2 style={{ marginTop: 0 }}>Kept, without your name</h2>
               <ul className="muted" style={{ paddingLeft: '1.1rem' }}>
                 <li>Orders, payments and refunds — the ledger a refund depends on</li>
-                <li>Enrolments and lesson progress</li>
+                <li>
+                  Your own enrolments and lesson progress. A child&rsquo;s are different: they
+                  go thirty days after this, with the rest of their record
+                </li>
                 <li>Certificates, under the number they were issued with</li>
                 <li>
                   Your support case — the words you wrote are removed, your name becomes
@@ -98,7 +103,9 @@ export default async function DeleteAccountPage() {
               <p className="muted" style={{ marginBottom: 0 }}>
                 A certificate&rsquo;s holder is shown as &ldquo;Deleted learner&rdquo;, so a
                 number that is checked later still resolves — to a record that no longer
-                names anybody.
+                names anybody. A child&rsquo;s certificate keeps its number for the same
+                reason, even after the thirty-day deletion above takes the evidence behind
+                it.
               </p>
             </section>
           </div>

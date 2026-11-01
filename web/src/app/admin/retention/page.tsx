@@ -56,9 +56,11 @@ export default async function AdminRetentionPage() {
       </p>
       <h1>Retention clock</h1>
       <p className="lede">
-        What the privacy notice promises to delete, and when. Two things are kept on a
-        clock — a closed support case, and a record that an adult who teaches was checked —
-        and nothing else on this platform outlives the account it belongs to.
+        What the privacy notice and the children&rsquo;s policy promise to delete, and when.
+        Three things are kept on a clock — a closed support case, a record that an adult who
+        teaches was checked, and a child&rsquo;s learning record once the guardian&rsquo;s
+        account has closed — and nothing else on this platform outlives the account it
+        belongs to.
       </p>
 
       <RetentionConsole plan={plan} canRun={platform === true} />
@@ -77,12 +79,21 @@ export default async function AdminRetentionPage() {
             </span>
           </li>
           <li>
-            <strong>It does not delete a child&rsquo;s learning record</strong>
+            <strong>It does not touch an adult&rsquo;s own learning record</strong>
             <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
-              The children&rsquo;s policy promises that a child&rsquo;s record goes thirty days
-              after the guardian&rsquo;s account closes. That is a third clock and it is not
-              wound yet: it is a delete across enrolments, progress, submissions, attempts and
-              attendance, and it needs its own suite rather than a line in this one.
+              The thirty days are the children&rsquo;s policy, and they start when somebody
+              else&rsquo;s account closes. An adult who closes their own account is told, on{' '}
+              <Link href="/account/delete">that page</Link>, that their enrolments and progress
+              are kept — and keeping that sentence true matters more than making the two
+              clocks look alike. Changing it is a decision, not a tidy-up.
+            </span>
+          </li>
+          <li>
+            <strong>It does not delete a certificate</strong>
+            <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
+              A certificate keeps its number for ever, because somebody may have shown it to an
+              employer. What goes is the evidence behind it — the enrolment — and the
+              certificate records that on the day it happens.
             </span>
           </li>
           <li>

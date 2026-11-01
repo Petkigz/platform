@@ -81,10 +81,22 @@ export function RetentionConsole({
           <div className="l">Cases never closed</div>
         </div>
         <div>
+          <div className="n">{plan.learnerRecords.due}</div>
+          <div className="l">Child records due</div>
+        </div>
+        <div>
           <div className="n">{total}</div>
           <div className="l">Total to delete</div>
         </div>
       </div>
+
+      {plan.learnerRecords.erasedToDate > 0 && (
+        <p className="muted" style={{ marginTop: '0.75rem' }}>
+          {plan.learnerRecords.erasedToDate} child
+          {plan.learnerRecords.erasedToDate === 1 ? ' record has' : ' records have'} already been
+          erased. What is left of each is an id a certificate still points at, and nothing else.
+        </p>
+      )}
 
       <div className="outline-h" style={{ marginTop: '2rem' }}>
         <h3>The two clocks</h3>
@@ -103,6 +115,15 @@ export function RetentionConsole({
           )}
         </ul>
       </div>
+
+      {plan.learnerRecords.waiting.count > 0 && (
+        <div className="card" style={{ marginTop: '1rem' }}>
+          <h3>Child profiles with no clock</h3>
+          <p className="muted" style={{ marginTop: 0 }}>
+            {plan.learnerRecords.waiting.note}
+          </p>
+        </div>
+      )}
 
       {plan.supportCases.waiting.count > 0 && (
         <div className="card" style={{ marginTop: '1rem' }}>

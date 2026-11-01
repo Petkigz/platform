@@ -5,6 +5,7 @@ import {
   dueTotal,
   EMPTY_PLAN,
   nextDueSentence,
+  policyPeriod,
   retentionDay,
   retentionGateSentence,
   retentionHeadline,
@@ -59,17 +60,24 @@ test('due records are counted across both clocks, with the plural right', () => 
   assert.match(retentionHeadline(three), /^3 records are past the date the policy gives them/);
 });
 
-test('the two clocks are printed from the plan, not from a copy of the numbers', () => {
+test('each clock is printed from the plan, not from a copy of the numbers', () => {
   const lines = retentionPolicyLines(plan());
-  assert.equal(lines.length, 2);
-  assert.match(lines[0] ?? '', /3 years/);
-  assert.match(lines[1] ?? '', /7 years/);
+  assert.equal(lines.length, 3);
+  assert.match(lines[0] ?? '', /^A support case: 3 years/);
+  assert.match(lines[1] ?? '', /^A screening record: 7 years/);
   assert.match(lines[1] ?? '', /eighteenth birthday/);
+  // The children's clock is the only one counted in days, and the sentence has
+  // to say so rather than printing "0 years".
+  assert.match(lines[2] ?? '', /^A child's learning record: 30 days/);
+  assert.doesNotMatch(lines[2] ?? '', /0 years/);
 
   // A plan that says four years is what the screen says. Hard-coding "3" in the
   // copy is how a screen and a database drift apart without either failing.
   const changed = plan({
-    policies: { ...EMPTY_PLAN.policies, supportCase: { years: 4, clock: 'four years', source: '' } },
+    policies: {
+      ...EMPTY_PLAN.policies,
+      supportCase: { years: 4, days: null, clock: 'four years', source: '' },
+    },
   });
   assert.match(retentionPolicyLines(changed)[0] ?? '', /^A support case: 4 years/);
 });
@@ -101,8 +109,8 @@ test('a run is described from the numbers the database returned', () => {
   assert.equal(
     describeRetentionRun({
       asOf: '2026-11-01',
-      deleted: { supportCases: 0, supportCaseMessages: 0, screenings: 0 },
-      remaining: { supportCases: 0, screenings: 0 },
+      deleted: { supportCases: 0, supportCaseMessages: 0, screenings: 0, learnerRecords: 0 },
+      remaining: { supportCases: 0, screenings: 0, learnerRecords: 0 },
       audited: false,
     }),
     'Nothing was due, so nothing was deleted and no audit entry was written.',
@@ -110,8 +118,8 @@ test('a run is described from the numbers the database returned', () => {
 
   const one = describeRetentionRun({
     asOf: '2026-11-01',
-    deleted: { supportCases: 1, supportCaseMessages: 1, screenings: 0 },
-    remaining: { supportCases: 0, screenings: 0 },
+    deleted: { supportCases: 1, supportCaseMessages: 1, screenings: 0, learnerRecords: 0 },
+    remaining: { supportCases: 0, screenings: 0, learnerRecords: 0 },
     audited: true,
   });
   assert.match(one, /^Deleted 1 support case, 1 reply inside them\./);
@@ -120,18 +128,65 @@ test('a run is described from the numbers the database returned', () => {
 
   const batch = describeRetentionRun({
     asOf: '2026-11-01',
-    deleted: { supportCases: 500, supportCaseMessages: 1200, screenings: 3 },
-    remaining: { supportCases: 40, screenings: 0 },
+    deleted: { supportCases: 500, supportCaseMessages: 1200, screenings: 3, learnerRecords: 2 },
+    remaining: { supportCases: 40, screenings: 0, learnerRecords: 0 },
     audited: true,
   });
   assert.match(batch, /500 support cases/);
   assert.match(batch, /1200 replies/);
   assert.match(batch, /3 screening records/);
+  assert.match(batch, /2 children's learning records/);
   assert.match(batch, /40 more are due and will go on the next run/);
+
+  const single = describeRetentionRun({
+    asOf: '2026-11-01',
+    deleted: { supportCases: 0, supportCaseMessages: 0, screenings: 0, learnerRecords: 1 },
+    remaining: { supportCases: 0, screenings: 0, learnerRecords: 0 },
+    audited: true,
+  });
+  assert.match(single, /^Deleted 1 child's learning record\./);
+});
+
+test('a child\'s record past its date is counted with the rest', () => {
+  const plan3 = plan({
+    learnerRecords: {
+      due: 1,
+      oldestDue: '2026-10-01',
+      nextDue: '2026-12-01',
+      erasedToDate: 4,
+      waiting: { count: 0, oldestCreatedAt: null, note: '' },
+    },
+  });
+  assert.equal(dueTotal(plan3), 1);
+  assert.match(retentionHeadline(plan3), /^1 record is past the date the policy gives it/);
+  assert.match(nextDueSentence(plan3), /1 Dec 2026/);
+});
+
+test('a merge leftover is named, because it has no clock at all', () => {
+  const orphaned = plan({
+    learnerRecords: {
+      due: 0,
+      oldestDue: null,
+      nextDue: null,
+      erasedToDate: 2,
+      waiting: { count: 1, oldestCreatedAt: '2025-01-01T00:00:00Z', note: 'merge' },
+    },
+  });
+  const sentence = retentionHeadline(orphaned);
+  assert.match(sentence, /left behind by an account merge/);
+  assert.match(sentence, /has no clock at all/);
+  assert.match(sentence, /^Nothing is past its retention date today\./);
 });
 
 test('the gate says who may press, and what the press does', () => {
   assert.match(retentionGateSentence(true), /permanently/);
   assert.match(retentionGateSentence(false), /Only the platform admin/);
   assert.match(retentionGateSentence(false), /read what is due/);
+});
+
+test('a period is said the way a person would say it', () => {
+  assert.equal(policyPeriod({ years: 3, days: null, clock: '', source: '' }), '3 years');
+  assert.equal(policyPeriod({ years: 1, days: null, clock: '', source: '' }), '1 year');
+  assert.equal(policyPeriod({ years: null, days: 30, clock: '', source: '' }), '30 days');
+  assert.equal(policyPeriod({ years: null, days: 1, clock: '', source: '' }), '1 day');
 });

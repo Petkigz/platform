@@ -151,6 +151,7 @@ import { run as firstDay } from './first_day.test.mjs';
 import { run as staffDay } from './staff_day.test.mjs';
 import { run as dataRights } from './data_rights.test.mjs';
 import { run as retention } from './retention.test.mjs';
+import { run as childRecord } from './child_record.test.mjs';
 
 // Settings that are global by design: one row, read by code far from the suite
 // that changes it. The revenue share decides what every accrual computes; the
@@ -226,6 +227,7 @@ for (const [name, fn] of [
   ['the staff day', staffDay],
   ['data rights', dataRights],
   ['retention', retention],
+  ['child record', childRecord],
   ['learner analytics', learnerAnalytics],
   ['master access', masterAccess],
   ['media upload abandonment', mediaUploadAbandonment],

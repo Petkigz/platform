@@ -22,7 +22,7 @@ deleted** — the personal fields are anonymised instead.
 | Guardian verification evidence | Delete on decision | Hard delete once verified or rejected, unless disputed. Never keep "just in case". |
 | Failed sign-in and OTP logs | 30 days | Hard delete |
 | Session and refresh tokens | On revocation or expiry | Hard delete |
-| Child learner data | Settled 2026-10-22: **30 days after the guardian's account closes** | Deleted, except a certificate number that has to keep verifying. **Not enforced** — see the end of this document. Never sold or shared. |
+| Child learner data | Settled 2026-10-22: **30 days after the guardian's account closes** | Deleted, except a certificate number that has to keep verifying. Enforced. Never sold or shared. |
 | Discussion and Q&A posts | Life of the lesson | Soft delete; author may delete their own |
 | Learner profiles and progress | Until deletion request | Anonymise on request; retain aggregate, non-identifying statistics |
 | Course content and versions | Indefinite while published | Unpublishing is soft delete; masters retained per D8 |
@@ -65,19 +65,29 @@ document was the prose. Two rows of the table above are now executed by
 |---|---|---|---|
 | A support case | the moment it is closed | three years later, with its messages | `retention_due_records`, computed from `closed_at` |
 | A screening record | the later of the check and the subject's eighteenth birthday | seven years later | `teacher_screenings.retention_until`, set by the writer |
+| A child's learning record | the moment the guardian's account closed | thirty days later | `retention_due_records`, from `learner_profiles.deleted_at` |
 
 `retention_plan()` answers *what is due, what is next, and what has no clock*;
 `/admin/retention` shows it and presses it; `POST /api/cron/retention` runs it
 unattended. Every run is audited with counts and no names, and writes nothing
 when it deleted nothing.
 
+**What the child clock deletes, and what it keeps.** Deleted: enrolments, lesson
+progress, submissions, assessment attempts and responses, attendance, memorisation
+passages, cohort memberships, offline devices, child logins, access checks,
+shares, invitations, entitlements, guardian links, plan allocations and
+sponsorship applications. De-identified: an order keeps its money facts and loses
+the learner it was for; a support case keeps the conversation and loses the child
+it was about. Kept: the certificate, with its number and its snapshot, and the
+audit trail. What is left of the child is a row holding an id, a type, a status
+and dates, because a certificate points at it.
+
 **Three things this does not cover, stated here so no row above is read as
 enforced when it is not:**
 
-1. **A child's learning record, thirty days after the guardian's account
-   closes.** Promised in the children's policy, not wound. It is a delete across
-   enrolments, progress, submissions, attempts and attendance, with a certificate
-   number that must survive it, and it needs its own unit and its own suite.
+1. **An adult's own learning record.** `/account/delete` tells an adult their
+   enrolments and progress are kept, and that sentence has been on the screen
+   since it was written. Whether it should change is the owner's decision.
 2. **A support case nobody closes.** The clock starts at closure, so an open case
    is kept forever by default. `/admin/retention` reports the count and the age
    of the oldest rather than pretending they are covered. Closing a case is a
@@ -85,6 +95,10 @@ enforced when it is not:**
 3. **Anything held outside this database** — the sign-in address at the
    authentication provider, backups, and provider-side OTP and session logs. The
    database cannot delete what it does not hold.
+4. **A child profile left behind by an account merge.** Its record was moved to
+   the surviving profile and the row that remains is a pointer, so there is
+   nothing to delete and no policy sets a date for it. `retention_plan()` reports
+   the count rather than deleting it.
 
 Soft delete remains the default for everything else, and the ledger categories
 (financial, governance, grading, publication, certificate history) are never
