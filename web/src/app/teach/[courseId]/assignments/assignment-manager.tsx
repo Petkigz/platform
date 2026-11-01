@@ -8,6 +8,7 @@ import {
   type CourseAssignment,
   revisionPolicyLabel,
 } from '@/lib/course-assignments';
+import { courseworkFileHref, describeCourseworkFile, parseCourseworkFiles } from '@/lib/coursework';
 
 export type AssignmentVersionOption = { id: string; versionNumber: number; status: string };
 export type AssignmentCohortOption = {
@@ -38,7 +39,7 @@ export function AssignmentManager({
   cohorts,
   assignments,
   submissions,
-  fileCounts,
+  files,
   revisions,
 }: {
   enabled: boolean;
@@ -47,7 +48,8 @@ export function AssignmentManager({
   cohorts: AssignmentCohortOption[];
   assignments: CourseAssignment[];
   submissions: AssignmentSubmission[];
-  fileCounts: Record<string, number>;
+  /** Named files per submission, from `assignment_submission_files()`. */
+  files: Record<string, unknown[]>;
   revisions: Record<string, AssignmentRevision[]>;
 }) {
   const router = useRouter();
@@ -292,7 +294,7 @@ export function AssignmentManager({
                   key={submission.id}
                   assignment={assignment}
                   submission={submission}
-                  fileCount={fileCounts[submission.id] ?? 0}
+                  files={files[submission.id] ?? []}
                   earlierVersions={revisions[submission.id] ?? []}
                   onSend={send}
                   busy={busy}
@@ -302,6 +304,41 @@ export function AssignmentManager({
           );
         })}
       </section>
+    </div>
+  );
+}
+
+/**
+ * What was handed in, as links.
+ *
+ * The address is `/api/media/master?asset=…`, which re-decides permission every
+ * time it is asked — the course author and staff, nobody else — and mints a
+ * fifteen-minute URL. A storage address printed into the page would be a bearer
+ * token in the history of every device the teacher ever marked on.
+ */
+function SubmissionFiles({ files }: { files: unknown[] }) {
+  const list = parseCourseworkFiles(files);
+  if (list.length === 0) return null;
+
+  return (
+    <div style={{ display: 'grid', gap: '.25rem' }}>
+      <p className="eyebrow" style={{ margin: 0 }}>Handed in</p>
+      <ul className="lessons">
+        {list.map((file) => (
+          <li key={file.assetId}>
+            <span className="t">
+              {file.attachmentId ? (
+                <a href={courseworkFileHref(file.assetId)} target="_blank" rel="noreferrer">
+                  {file.name ?? 'Handed-in file'}
+                </a>
+              ) : (
+                (file.name ?? 'Handed-in file')
+              )}
+              <span className="muted"> · {describeCourseworkFile(file)}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -380,14 +417,14 @@ function RevisionPolicy({
 function SubmissionForMarking({
   assignment,
   submission,
-  fileCount,
+  files,
   earlierVersions,
   onSend,
   busy,
 }: {
   assignment: CourseAssignment;
   submission: AssignmentSubmission;
-  fileCount: number;
+  files: unknown[];
   earlierVersions: AssignmentRevision[];
   onSend: (payload: Record<string, unknown>, key: string) => Promise<unknown>;
   busy: string | null;
@@ -428,11 +465,7 @@ function SubmissionForMarking({
         </div>
       )}
       {submission.bodyText && <div style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{submission.bodyText}</div>}
-      {fileCount > 0 && (
-        <p className="notice warn" style={{ margin: 0 }}>
-          {fileCount} private file reference{fileCount === 1 ? '' : 's'} attached. Secure viewing is not connected yet.
-        </p>
-      )}
+      <SubmissionFiles files={files} />
       {submission.status === 'graded' ? (
         <div className="notice">
           {submission.scoreEarned !== null && <strong>{submission.scoreEarned}{assignment.pointsPossible ? ` / ${assignment.pointsPossible}` : ''}</strong>}

@@ -75,10 +75,17 @@ export default async function TeachAssignmentsPage({
     // can see what they asked for and whether the learner answered it.
     fetchAssignmentRevisions(supabase, submissions.map((s) => s.id)),
   ]);
-  const fileCounts = files.reduce<Record<string, number>>((counts, file) => {
-    counts[file.submissionId] = (counts[file.submissionId] ?? 0) + 1;
-    return counts;
-  }, {});
+  // The named list per submission. A count was all this queue could show while
+  // `media_assets` was uploader-or-staff only, which is how a teacher ended up
+  // with "3 private file references" and no way to open one.
+  const named = await Promise.all(
+    submissions.map((submission) =>
+      supabase
+        .rpc('assignment_submission_files', { p_submission_id: submission.id })
+        .then(({ data }) => [submission.id, Array.isArray(data) ? data : []] as const),
+    ),
+  );
+  const filesBySubmission = Object.fromEntries(named) as Record<string, unknown[]>;
   const revisionsBySubmission = revisions.reduce<Record<string, typeof revisions>>((groups, revision) => {
     const group = groups[revision.submissionId] ?? [];
     group.push(revision);
@@ -101,7 +108,7 @@ export default async function TeachAssignmentsPage({
         cohorts={cohorts}
         assignments={assignments}
         submissions={submissions}
-        fileCounts={fileCounts}
+        files={filesBySubmission}
         revisions={revisionsBySubmission}
       />
       <p style={{ marginTop: '1.5rem' }}>

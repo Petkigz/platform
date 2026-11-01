@@ -41,6 +41,8 @@ type Payload = {
    * without signing a single-PUT URL, which the browser would never use.
    */
   transport?: unknown;
+  /** Coursework: the draft submission a file is being handed in against. */
+  submissionId?: unknown;
   /** Echoed back by the browser; minted by storage, never invented here. */
   uploadId?: unknown;
   partNumbers?: unknown;
@@ -53,6 +55,11 @@ const fail = (message: string, status: number) => NextResponse.json({ ok: false,
 /** Every action this route answers. Anything else is a 400, not a guess. */
 const ACTIONS = [
   'request_upload',
+  // Handing in coursework. Two actions rather than a second route, because this
+  // is the one place a presigned PUT is minted and a second place would be a
+  // second set of signing mistakes.
+  'request_coursework_upload',
+  'confirm_coursework_upload',
   'resume_upload',
   'confirm_upload',
   'initiate_multipart',
@@ -128,6 +135,106 @@ export async function POST(request: Request) {
     // Not a 500: this deployment has no R2 credentials, which is the expected
     // state until they are issued. The message says what is missing.
     return fail(new R2NotConfiguredError().message, 503);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Coursework: a learner's hand-in
+  // ---------------------------------------------------------------------------
+  // Deliberately not the quota path. `media_upload_allowance()` counts a
+  // teacher's masters against 50 GB, and a household photographing three pages
+  // of homework is not consuming storage the platform budgeted for a teacher.
+  // The limit that governs here is the assignment's own: 25 MiB, checked by the
+  // database before this line signs anything.
+  if (action === 'request_coursework_upload') {
+    const submissionId = asText(body?.submissionId);
+    if (!UUID.test(submissionId)) return fail('Choose the draft this file belongs to.', 400);
+
+    const registered = await supabase.rpc('register_coursework_upload', {
+      p_submission_id: submissionId,
+      p_display_name: asText(body?.displayName),
+      p_mime_type: asText(body?.mimeType).toLowerCase(),
+      p_byte_size: Number(body?.byteSize),
+      p_checksum: asText(body?.checksum).toLowerCase(),
+    });
+
+    if (registered.error) {
+      // Every refusal here is a sentence written for the person reading it — the
+      // size cap, the type list, the ten-file limit, a closed task — so it is
+      // passed through rather than replaced with a generic one.
+      const message = registered.error.message;
+      const status = /sign in|responsible for|uploader/i.test(message)
+        ? 403
+        : /not found/i.test(message)
+          ? 404
+          : 400;
+      return fail(message, status);
+    }
+
+    const row = (registered.data ?? null) as
+      | { asset_id?: unknown; master_bucket?: unknown; master_key?: unknown }[]
+      | { asset_id?: unknown; master_bucket?: unknown; master_key?: unknown }
+      | null;
+    // PostgREST returns the named composite as an object, or a one-row array when
+    // asked for a set; both are accepted rather than assuming one.
+    const target = (Array.isArray(row) ? row[0] : row) ?? {};
+    const assetId = String(target.asset_id ?? '');
+    const bucket = String(target.master_bucket ?? '');
+    const key = String(target.master_key ?? '');
+    if (!UUID.test(assetId) || !key) return fail('The upload could not be opened.', 500);
+    if (bucket !== config.mastersBucket) {
+      return fail(
+        `Storage is misconfigured: the database derived "${bucket}" but this deployment signs for "${config.mastersBucket}".`,
+        503,
+      );
+    }
+
+    try {
+      const signed = presignMasterUpload(config, key, {
+        contentType: asText(body?.mimeType).toLowerCase(),
+      });
+      return NextResponse.json({
+        ok: true,
+        data: {
+          assetId,
+          transport: 'single' as const,
+          method: signed.method,
+          uploadUrl: signed.url,
+          requiredHeaders: signed.requiredHeaders,
+          expiresInSeconds: signed.expiresInSeconds,
+        },
+      });
+    } catch (error) {
+      if (error instanceof R2RequestError) return fail(error.message, 400);
+      throw error;
+    }
+  }
+
+  if (action === 'confirm_coursework_upload') {
+    const assetId = asText(body?.assetId);
+    if (!UUID.test(assetId)) return fail('That is not a file.', 400);
+
+    // The same module the staff path uses, in coursework mode: it looks at the
+    // object in storage and compares its size before it calls the database. What
+    // changes between the two modes is which door is opened, never whether
+    // anybody checked.
+    const outcome = await confirmMediaUpload(supabase, assetId, {
+      config,
+      mode: 'coursework',
+    });
+    if (!outcome.ok) return fail(outcome.message, outcome.status);
+
+    return NextResponse.json(
+      {
+        ok: true,
+        data: {
+          assetId: outcome.assetId,
+          attachmentId: outcome.attachmentId ?? null,
+          available: true,
+          verifiedBytes: outcome.verifiedBytes,
+        },
+      },
+      { status: 200 },
+    );
   }
 
   // Before anything is signed: does it fit? The rule is in the database —

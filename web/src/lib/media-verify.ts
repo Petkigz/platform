@@ -46,7 +46,7 @@ export type MasterRow = {
 };
 
 export type ConfirmOutcome =
-  | { ok: true; verifiedBytes: number; assetId: string }
+  | { ok: true; verifiedBytes: number; assetId: string; attachmentId?: string }
   | { ok: false; message: string; status: number };
 
 export type ConfirmOptions = {
@@ -54,6 +54,23 @@ export type ConfirmOptions = {
   /** Injectable so the checks can be tested without a bucket to talk to. */
   fetchImpl?: typeof fetch;
   now?: Date;
+  /**
+   * Which door this is.
+   *
+   * 'library' is the teacher's media library, and the only function that can
+   * confirm it is staff-only — that is the rule which stops an unuploaded file
+   * being published to strangers.
+   *
+   * 'coursework' is a learner's hand-in. It is private to one submission, it can
+   * never be attached to a lesson (a trigger refuses it), and the person who can
+   * vouch for a child's homework arriving is the household that sent it. So the
+   * database's narrower function may promote it — but only for a file that was
+   * declared for that submission before the bytes moved.
+   *
+   * What does NOT change between them is this module: the object is still looked
+   * at, and its size still compared, before anything is called.
+   */
+  mode?: 'library' | 'coursework';
 };
 
 /**
@@ -181,15 +198,20 @@ export async function confirmMediaUpload(
     };
   }
 
-  const { data: confirmed, error: confirmError } = await client.rpc('confirm_media_upload', {
-    p_asset_id: assetId,
-  });
+  const coursework = options.mode === 'coursework';
+
+  // A coursework confirmation returns the attachment id; the library one returns
+  // a boolean. Both are asked of the database, never assumed here.
+  const { data: confirmed, error: confirmError } = await client.rpc(
+    coursework ? 'confirm_coursework_upload' : 'confirm_media_upload',
+    { p_asset_id: assetId },
+  );
 
   if (confirmError) {
     const message = confirmError.message;
     // Both phrasings exist in the schema's history, and a permissions refusal
     // reported as a conflict sends somebody looking in the wrong place.
-    const status = /only staff may confirm|only platform staff|privileg/i.test(message)
+    const status = /only staff may confirm|only platform staff|only the uploader|privileg/i.test(message)
       ? 403
       : /not found|no media asset/i.test(message)
         ? 404
@@ -197,7 +219,14 @@ export async function confirmMediaUpload(
     return { ok: false, message, status };
   }
 
-  if (confirmed !== true) {
+  // The library door answers `true`; the coursework door answers with the new
+  // attachment's id. Anything else — false, null, an empty string — means the
+  // database did not do it, and a caller must not be told it did.
+  const done = coursework
+    ? typeof confirmed === 'string' && confirmed !== ''
+    : confirmed === true;
+
+  if (!done) {
     return {
       ok: false,
       message: 'The file was seen in storage but the database did not confirm it.',
@@ -205,5 +234,10 @@ export async function confirmMediaUpload(
     };
   }
 
-  return { ok: true, verifiedBytes: reportedBytes, assetId };
+  return {
+    ok: true,
+    verifiedBytes: reportedBytes,
+    assetId,
+    ...(coursework ? { attachmentId: String(confirmed) } : {}),
+  };
 }

@@ -7,6 +7,7 @@ import {
   type AssignmentSubmission,
   revisionsRemaining,
 } from '@/lib/course-assignments';
+import { AssignmentFiles } from './assignment-files';
 
 export function AssignmentWork({
   assignmentId,
@@ -16,7 +17,7 @@ export function AssignmentWork({
   acceptLate,
   deadline,
   initialSubmission,
-  fileCount,
+  files,
   revisionsAllowed,
   revisionLimit,
   history,
@@ -28,7 +29,8 @@ export function AssignmentWork({
   acceptLate: boolean;
   deadline: string | null;
   initialSubmission: AssignmentSubmission | null;
-  fileCount: number;
+  /** Named files as `assignment_submission_files()` returned them. */
+  files: unknown;
   revisionsAllowed: boolean;
   revisionLimit: number | null;
   history: AssignmentRevision[];
@@ -220,17 +222,12 @@ export function AssignmentWork({
             {status === 'draft' && <span className="badge neutral">Draft saved</span>}
           </div>
 
-          {fileCount > 0 ? (
-            <div className="notice warn">
-              {fileCount} file reference{fileCount === 1 ? '' : 's'} are attached to this submission.
-              Secure viewing is not connected yet.
-            </div>
-          ) : (
-            <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>
-              File, photo and audio uploads will appear here once private upload
-              and verified delivery are connected. For now, submit written work.
-            </p>
-          )}
+          <AssignmentFiles
+            submissionId={submissionId}
+            files={files}
+            locked={locked}
+            ensureDraft={async () => saveDraft()}
+          />
 
           {!locked && (
             <div className="row" style={{ gap: '.5rem' }}>

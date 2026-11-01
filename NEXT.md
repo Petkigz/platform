@@ -48,7 +48,15 @@ available, unpublished or no longer offered, and whether someone in the family i
 already enrolled. The list belongs to an account rather than to a learner
 profile — "who is this for" goes in the note, so saving stays one tap — and
 removal is not flag-gated, so turning the feature off cannot trap it.
-`learning.wishlist` ships off. A teacher can now cancel a live class from
+`learning.wishlist` ships off. A learner can now hand in a file: a photo of
+each page, a PDF or a recording goes straight to storage, and the teacher marking
+the work can open it — the sentence on that queue used to read "secure viewing is
+not connected yet", which was honest about a feature with no uploader and no
+viewer. The 25 MiB, type and ten-file limits are checked before the transfer
+rather than after it, and the staff-only rule that guards lesson media is not
+borrowed: a handed-in file is a separate kind of file, declared for one draft
+before a byte moves, and a trigger refuses to let any lesson point at one.
+A teacher can now cancel a live class from
 `/teach/<course>/live`, and cancelling is the act of telling the people who were
 coming: the audience count is shown before the button is pressed, every adult
 learner is notified, every active guardian of an enrolled child is notified
@@ -416,6 +424,7 @@ say what is left instead of what was missing.
 | **Payments** | MTN MoMo and Airtel adapters, checkout, orders, refunds, reconciliation, disputes, financial adjustments, subscriptions with entitlement grants that drive access, 50% teacher-share accrual with the split snapshotted per row, and the **72-hour refund window** (2026-10-23): a customer asks within three days of the payment, staff can still open one afterwards, and a partial goodwill refund has no screen yet | Live credentials, callback verification against a real provider, automatic renewal, failed-payment retry, a merchant account | **External:** provider sandbox and merchant credentials (P12). Do not claim any of this works end to end |
 | **Payouts** (`teaching.payouts`) | The whole request path: `my_earnings()` and `/teach/earnings`, `request_instructor_payout()` with a tax acknowledgement, the refund-hold setting, one open request per currency (unique index), `my_payouts()`, the finance queue at `/admin/payouts` that shows the amount asked for beside what the ledger owes today, cancellation, failure with a reason the teacher reads, and `complete_instructor_payout()` as the only function that marks an earning paid; `platform_teacher_liability()` reports the balance owed per currency | The provider call itself, and per-teacher destination details | **External:** a payout provider, and a tax treatment per country. `teaching.payouts` is CODE-gated and a trigger refuses to enable it at runtime |
 | **Guardian verification** | Tables and flow complete, shipping off. **Not to be deleted** — COPPA makes verifiable parental consent mandatory for US under-13s | Enabling it | **External:** legal review, and it must be on before any US child enrols |
+| **Assignments** (`learning.assignments`) | Task authoring, deadlines (relative or cohort), one submission per learner, a revision loop with the marked version snapshotted, written feedback, and since 2026-11-01 **file hand-ins**: register → presigned PUT → server-verified confirm, attach in the same transaction, listed by name for the household and the course author, opened through a redirect that re-checks permission; 20 database tests, 13 web tests | What happens to a handed-in file when an account or a course is deleted, beyond the general media tombstone; school-wide retention rules for children's work | **Decision:** retention for coursework. The flag stays off until that is written down |
 | **Notifications** | The in-app centre: `/notifications`, a `notifications` table with RLS on the reader, `notify_user()` writing payout sent/failed/cancelled, a failed encode, and a cancelled class, and two derived reminders computed at read time (a class within a day, a plan renewing within three) each gated on its own flag; 7 tests. The outbox has a state machine *(2026-10-24)*: a five-minute claim lease, a 5/15/60/240/720-minute backoff, a dead letter at `delivery.max_attempts`, a do-not-send list a bounce writes to, and a retry that needs a written reason | Email and SMS delivery — nothing sends, and the adapter is the missing piece | **External:** a delivery provider and its credentials (`delivery.notifications`) |
 | **Product analytics** (`delivery.analytics`) | 7 event codes, monthly partitions, a table with RLS and no read policy, `record_analytics_event()` returning `{recorded, reason}`; teacher course reports and platform reporting read aggregates, never a person | Event instrumentation beyond the coded set | **Decision:** a retention policy is *not* run — analytics are kept forever by the owner's decision of 2026-10-22 |
 | **Visual identity** | White and green theme settled; tokens in `web/src/app/globals.css`; every screen uses the same card/badge/notice vocabulary. *(2026-10-24)* **The mark is a file now** — sixteen points in `web/src/lib/brand.ts`, drawn by `<BrandMark>` in the masthead and on the certificate and receipt (which had a *different* mark: a rotated square), as `app/icon.svg` (favicon), `app/apple-icon.png` (rendered from the same points by `scripts/make-apple-icon.mjs`) and `app/opengraph-image.tsx` (the 1200×630 share card), with `manifest.ts` giving Android the icon and the green. `brand.test.ts` fails if the favicon and the header stop agreeing | Type, illustration; 0 of the 50 inventoried screens designed | **Decision:** the owner's — the shape is the one the header already drew, so nothing is decided that was not already on screen. Not a blocker for any backend work |
@@ -2290,6 +2299,70 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### A learner can hand in a file, 2026-11-01
+
+The assignment page has said, in smaller type, that files would appear "once
+private upload is verified delivery are connected". The teacher's queue was
+frank about the same hole from the other side: *"3 private file references are
+attached to this submission. Secure viewing is not connected yet."* Both
+sentences were true, and between them they described a feature with no uploader,
+no viewer and no way in from either end. A learner who had to photograph their
+handwriting had nothing to photograph it into.
+
+**Why it was not simply wired up.** `confirm_media_upload()` is staff-only, and
+deliberately: the byte path stops at `pending` until something trustworthy has
+looked at the object, because that is what stops a lesson pointing at a file that
+was never uploaded. Waiting for staff to click "confirm" on every page of
+homework would mean nobody ever handed anything in.
+
+**So there is a second door, and two rules keep it narrow.**
+`media_assets.purpose` splits the table structurally: a `coursework` file can
+never be attached to a lesson — a trigger refuses it, not a convention — so the
+self-confirm path cannot be used to publish anything. And
+`confirm_coursework_upload()` will only promote a file that was *declared* for a
+named draft before a single byte moved, attaching it in the same transaction.
+There is nothing to gain by confirming a coursework file: the only place it can
+ever appear is the one submission it was declared for. What does not change is
+that the object is still looked at — the route sends the same HEAD request and
+compares the same size as the staff path, and what differs is who may act on the
+answer, never whether anybody asked the question.
+
+**The limits fire before the bytes do.** 25 MiB, the eleven-type allow-list and
+the ten-file cap are all enforced by
+`register_coursework_upload()` at registration. The old ordering was the worst
+possible one: a learner on a metered connection uploading a 300 MB video of a
+recitation would spend the data, wait for the transfer, and *then* be told that
+an assignment file cannot exceed 25 MiB. `attach_assignment_asset()` keeps its own
+copy of those numbers, and a database test drives both routes to the same byte to
+make sure they still agree — a duplicated constant with a test is a pinned
+constant, and a duplicated constant without one is a future bug.
+
+**A file nobody can open is not a hand-in.** `may_watch_master()` gained one
+branch: whoever may read the submission may watch a coursework file attached to
+it — the household that sent it, the course author marking it, and staff, and
+nobody else. `assignment_submission_files()` returns names, sizes and statuses
+without object coordinates, because `media_assets_read` is uploader-or-staff and
+widening it to hand a route three columns would hand it twenty.
+`/api/media/open` then re-checks permission on every request and redirects to a
+signed address that expires in fifteen minutes — a link copied out of the address
+bar does not outlive the conversation it was for, which matters more for a
+child's homework than for a lesson recording.
+
+**A reload mid-upload shows the file, not an empty list.** The declared-but-still-
+arriving row is listed as *still arriving*, so a learner whose connection dropped
+at 80% does not conclude nothing was sent and start again.
+
+**20 database tests, 13 web tests.** The database suite walks all three people in
+the conversation — the learner, the guardian of a child, the course author — and
+then the ones who must be shut out: another teacher, an unrelated household,
+a library file, a lesson, a closed task, an eleventh file. The web suite checks
+the sentences, the phase order, and that a confirmation which answers with nothing
+is reported as a failure rather than as a hand-in.
+
+Still open, and said out loud in `FLAGS.md`: what happens to a handed-in file when
+an account or a course is deleted, beyond the general media tombstone. That is a
+retention decision for children's work, and the flag stays off until it is made.
 
 ### Cancelling a class, which is the act of telling people, 2026-11-01
 

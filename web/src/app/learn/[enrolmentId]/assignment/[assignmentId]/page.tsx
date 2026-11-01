@@ -4,7 +4,6 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import {
   assignmentDeadline,
-  fetchAssignmentFileReferences,
   fetchAssignmentRevisions,
   fetchAssignmentSubmission,
   fetchCourseAssignment,
@@ -66,9 +65,14 @@ export default async function AssignmentPage({
     if (membershipError) throw new Error(membershipError.message);
     if (!membership) notFound();
   }
-  const files = submission
-    ? await fetchAssignmentFileReferences(supabase, [submission.id])
-    : [];
+  // The named list, for the screen: `assignment_submission_assets` says a file is
+  // attached and `media_assets` holds its name, whose own read policy is
+  // uploader-or-staff. This function asks on the reader's behalf and returns no
+  // object coordinates — opening a file still goes through the route that
+  // re-checks `may_watch_master()`.
+  const { data: fileRows } = submission
+    ? await supabase.rpc('assignment_submission_files', { p_submission_id: submission.id })
+    : { data: [] };
   // Marked versions the learner has already handed in. RLS keeps this to their
   // own submission, so it is safe to fetch without a second permission check.
   const history = submission
@@ -97,7 +101,7 @@ export default async function AssignmentPage({
         acceptLate={assignment.acceptLate}
         deadline={deadline?.toISOString() ?? null}
         initialSubmission={submission}
-        fileCount={files.length}
+        files={fileRows ?? []}
         revisionsAllowed={assignment.revisionsAllowed}
         revisionLimit={assignment.revisionLimit}
         history={history}

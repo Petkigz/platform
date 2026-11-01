@@ -52,6 +52,32 @@ const respond = (result: AssignmentWriteResult | AssignmentRevisionResult) =>
     ? NextResponse.json(result)
     : NextResponse.json({ ok: false, message: result.message }, { status: result.status });
 
+/**
+ * The files on one submission.
+ *
+ * A separate read rather than a page reload: after an upload the learner should
+ * see *the database's* list — the one that survives a refresh — not the list this
+ * browser remembers sending. `assignment_submission_files()` decides who may look,
+ * and it returns no object coordinates, only what a screen can render.
+ */
+export async function GET(request: Request) {
+  if (!isSupabaseConfigured()) return fail('Supabase is not configured.', 503);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return fail('Sign in first.', 401);
+
+  const submissionId = new URL(request.url).searchParams.get('submission')?.trim() ?? '';
+  if (!isUuid(submissionId)) return fail('Choose a submission.', 400);
+
+  const { data, error } = await supabase.rpc('assignment_submission_files', {
+    p_submission_id: submissionId,
+  });
+  if (error) return fail(error.message, 403);
+
+  return NextResponse.json({ ok: true, files: Array.isArray(data) ? data : [] });
+}
+
 export async function POST(request: Request) {
   if (!isSupabaseConfigured()) return fail('Supabase is not configured.', 503);
 
@@ -112,6 +138,29 @@ export async function POST(request: Request) {
       bodyText: text(body.bodyText),
     });
     return respond(result);
+  }
+
+  if (body.action === 'remove_file') {
+    if (!isUuid(body.submissionId) || !isUuid(body.mediaAssetId)) {
+      return fail('Choose the file to remove.', 400);
+    }
+    // The database decides: draft only, open task only, and only for a learner
+    // the caller is responsible for. Evidence cannot be pulled out from under a
+    // marked submission.
+    const { error } = await supabase.rpc('remove_assignment_asset', {
+      p_submission_id: body.submissionId,
+      p_media_asset_id: body.mediaAssetId,
+    });
+    if (error) {
+      const message = error.message;
+      const status = /responsible for/i.test(message)
+        ? 403
+        : /not found|not attached/i.test(message)
+          ? 404
+          : 409;
+      return fail(message, status);
+    }
+    return NextResponse.json({ ok: true });
   }
 
   if (body.action === 'submit') {

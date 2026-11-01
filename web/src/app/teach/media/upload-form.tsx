@@ -13,6 +13,7 @@ import {
 } from '@/lib/browser-upload';
 import { readableByteSize } from '@/lib/media';
 import { uploadInParts } from '@/lib/multipart-upload';
+import { putWithProgress } from '@/lib/upload-progress';
 
 type Phase = 'idle' | 'reading' | 'hashing' | 'registering' | 'uploading' | 'done';
 
@@ -417,44 +418,3 @@ export function UploadMedia({ remainingBytes = null }: { remainingBytes?: number
   );
 }
 
-/**
- * A presigned PUT with progress.
- *
- * `fetch` cannot report upload progress, and a teacher on a slow connection
- * watching a 400 MB lesson recording go up with no feedback would reasonably
- * assume it had stalled and close the tab. XMLHttpRequest can, so this is the one
- * place it is worth the older API.
- */
-function putWithProgress(
-  url: string,
-  headers: Record<string, string>,
-  body: Blob,
-  onProgress: (percent: number) => void,
-): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const request = new XMLHttpRequest();
-    request.open('PUT', url);
-    for (const [header, value] of Object.entries(headers)) {
-      request.setRequestHeader(header, value);
-    }
-    request.upload.onprogress = (event) => {
-      if (event.lengthComputable) {
-        onProgress(Math.round((event.loaded / event.total) * 100));
-      }
-    };
-    request.onload = () => {
-      if (request.status >= 200 && request.status < 300) resolve();
-      else
-        reject(
-          new Error(
-            `Storage refused the upload (HTTP ${String(request.status)}). The row is still pending ` +
-              'and nothing was published.',
-          ),
-        );
-    };
-    request.onerror = () =>
-      reject(new Error('The upload could not reach storage. Check the connection and try again.'));
-    request.ontimeout = () => reject(new Error('The upload timed out.'));
-    request.send(body);
-  });
-}
