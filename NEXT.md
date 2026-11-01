@@ -48,7 +48,13 @@ available, unpublished or no longer offered, and whether someone in the family i
 already enrolled. The list belongs to an account rather than to a learner
 profile — "who is this for" goes in the note, so saving stays one tap — and
 removal is not flag-gated, so turning the feature off cannot trap it.
-`learning.wishlist` ships off. A teacher marking a written answer can now say
+`learning.wishlist` ships off. A teacher can now cancel a live class from
+`/teach/<course>/live`, and cancelling is the act of telling the people who were
+coming: the audience count is shown before the button is pressed, every adult
+learner is notified, every active guardian of an enrolled child is notified
+instead of the child, the teacher is notified when staff cancel, one message per
+person per class, capped at 200 and the shortfall admitted rather than rounded
+away. A teacher marking a written answer can now say
 something as well as award a number: `grading_feedback` is written in the same
 statement as the mark, so it is immutable with it, and the learner reads it under
 "Your marked attempts" on the assessment page. The audit records that a comment
@@ -410,7 +416,7 @@ say what is left instead of what was missing.
 | **Payments** | MTN MoMo and Airtel adapters, checkout, orders, refunds, reconciliation, disputes, financial adjustments, subscriptions with entitlement grants that drive access, 50% teacher-share accrual with the split snapshotted per row, and the **72-hour refund window** (2026-10-23): a customer asks within three days of the payment, staff can still open one afterwards, and a partial goodwill refund has no screen yet | Live credentials, callback verification against a real provider, automatic renewal, failed-payment retry, a merchant account | **External:** provider sandbox and merchant credentials (P12). Do not claim any of this works end to end |
 | **Payouts** (`teaching.payouts`) | The whole request path: `my_earnings()` and `/teach/earnings`, `request_instructor_payout()` with a tax acknowledgement, the refund-hold setting, one open request per currency (unique index), `my_payouts()`, the finance queue at `/admin/payouts` that shows the amount asked for beside what the ledger owes today, cancellation, failure with a reason the teacher reads, and `complete_instructor_payout()` as the only function that marks an earning paid; `platform_teacher_liability()` reports the balance owed per currency | The provider call itself, and per-teacher destination details | **External:** a payout provider, and a tax treatment per country. `teaching.payouts` is CODE-gated and a trigger refuses to enable it at runtime |
 | **Guardian verification** | Tables and flow complete, shipping off. **Not to be deleted** — COPPA makes verifiable parental consent mandatory for US under-13s | Enabling it | **External:** legal review, and it must be on before any US child enrols |
-| **Notifications** | The in-app centre: `/notifications`, a `notifications` table with RLS on the reader, `notify_user()` writing payout sent/failed/cancelled, and two derived reminders computed at read time (a class within a day, a plan renewing within three) each gated on its own flag; 7 tests. The outbox has a state machine *(2026-10-24)*: a five-minute claim lease, a 5/15/60/240/720-minute backoff, a dead letter at `delivery.max_attempts`, a do-not-send list a bounce writes to, and a retry that needs a written reason | Email and SMS delivery — nothing sends, and the adapter is the missing piece | **External:** a delivery provider and its credentials (`delivery.notifications`) |
+| **Notifications** | The in-app centre: `/notifications`, a `notifications` table with RLS on the reader, `notify_user()` writing payout sent/failed/cancelled, a failed encode, and a cancelled class, and two derived reminders computed at read time (a class within a day, a plan renewing within three) each gated on its own flag; 7 tests. The outbox has a state machine *(2026-10-24)*: a five-minute claim lease, a 5/15/60/240/720-minute backoff, a dead letter at `delivery.max_attempts`, a do-not-send list a bounce writes to, and a retry that needs a written reason | Email and SMS delivery — nothing sends, and the adapter is the missing piece | **External:** a delivery provider and its credentials (`delivery.notifications`) |
 | **Product analytics** (`delivery.analytics`) | 7 event codes, monthly partitions, a table with RLS and no read policy, `record_analytics_event()` returning `{recorded, reason}`; teacher course reports and platform reporting read aggregates, never a person | Event instrumentation beyond the coded set | **Decision:** a retention policy is *not* run — analytics are kept forever by the owner's decision of 2026-10-22 |
 | **Visual identity** | White and green theme settled; tokens in `web/src/app/globals.css`; every screen uses the same card/badge/notice vocabulary. *(2026-10-24)* **The mark is a file now** — sixteen points in `web/src/lib/brand.ts`, drawn by `<BrandMark>` in the masthead and on the certificate and receipt (which had a *different* mark: a rotated square), as `app/icon.svg` (favicon), `app/apple-icon.png` (rendered from the same points by `scripts/make-apple-icon.mjs`) and `app/opengraph-image.tsx` (the 1200×630 share card), with `manifest.ts` giving Android the icon and the green. `brand.test.ts` fails if the favicon and the header stop agreeing | Type, illustration; 0 of the 50 inventoried screens designed | **Decision:** the owner's — the shape is the one the header already drew, so nothing is decided that was not already on screen. Not a blocker for any backend work |
 
@@ -2284,6 +2290,79 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### Cancelling a class, which is the act of telling people, 2026-11-01
+
+`cancel_live_session()` had existed since live classes were built. It demanded a
+reason, refused a second cancellation, audited itself and was covered by a test.
+It was also called by nothing: a grep of `web/src` for it returned zero files. The
+teacher's screen printed `cancelled: <reason>` for a cancelled class — a branch
+that had never run — and offered no control that could produce one. A teacher
+whose class cannot happen had two options, leave it standing or email everybody
+by hand, and the first is what actually happens.
+
+The audit that found it was a list of every granted function `web/src` never
+calls. That list is ninety-six functions long and almost all of it is noise:
+helpers called from inside SQL, and functions waiting for a screen that a later
+unit will build. The way to read it is to grep for a caller *and* name the screen
+that should have had one. This had a screen. It had a sentence on it describing a
+state nothing could enter.
+
+**The missing button was the smaller half.** Even a cancellation typed into
+`psql` told nobody: `notifications.kind` admitted three payout events and a failed
+encode, and a class being cancelled was not one of them. A learner found out by
+opening the room at seven o'clock and finding a dark page, which means they found
+out by arriving — and concluded the platform was broken rather than that the
+teacher was unwell. Adding the button without the fan-out would have produced a
+class that says "cancelled" to the one person who already knows.
+
+**Who is told is the whole design.** `live_session_expected_people()` is one
+definition used by both the count and the loop, because two copies of that query
+would drift the day somebody decided a suspended enrolment still deserved a
+warning, and the drift would be invisible — the count saying six while five
+people were written to. The audience is addressed as *accounts*, not as rows in
+`learner_profiles`:
+
+- an adult learner is told themselves;
+- a child is not told, because a child profile has no login by design
+  (`lp_no_child_login_yet`) — their **active guardians** are told instead, which
+  is who a cancelled class actually inconveniences;
+- the host is included, so a cancellation made by staff reaches the teacher
+  rather than being discovered by them.
+
+One message per person, however many children of theirs are in the class. The
+dedupe key is the session, so a retry cannot post twice. The person who cancelled
+is never notified of their own act, and is therefore not counted in the number on
+the button — a button that says it will tell you about something you are doing is
+a button that has already stopped being believed.
+
+**Two hundred, and the shortfall admitted.** A course with a thousand enrolments
+would otherwise write a thousand rows inside the transaction that cancels the
+class, and a teacher whose connection dropped halfway through would have a
+cancelled class and a partial audience. Past the cap the class is still cancelled
+and the rest are not written to, so the screen says *"Told 200 of 340 people; the
+rest will find the class gone but were not messaged"* instead of reporting
+success. The cap is not a limitation anybody enjoys; the alternative is a number
+that is only sometimes true.
+
+**`live_cancelled` is a preference, not a lock.** Locking it was tempting: the
+message is time-critical and this is the only channel by which somebody learns
+before turning up. It is not locked for the reason a failed encode is not locked —
+"always on" has to keep meaning "the platform owes you this about its own
+conduct", and the two money kinds are the ones that do. Widening it would make the
+lock mean "important", which is a weaker promise for the messages that must never
+be missed. What muting costs is on the switch: the room still says the class was
+cancelled, and why, so the warning is lost and the fact is not.
+
+**13 database tests, 6 web tests, and a receipt read off the URL.** The receipt is
+in the query string rather than in component state, so it survives the refresh
+that moves the class out of "Coming up" — and a hand-edited
+`?notified=9999&people=1` is ignored rather than printed. The database tests
+cover the adult, the guardian of one child, the guardian of two, the teacher
+cancelled by staff, the actor never told, the blank reason, the stranger, the
+double cancellation, the finished class, the 200-cap, the shut room and the audit
+entry; the web tests cover the sentences, the truncated receipt, and the blank
+reason that never reaches the network.
 
 ### The preflight, so the next person is not alone with a sentence, 2026-11-01
 

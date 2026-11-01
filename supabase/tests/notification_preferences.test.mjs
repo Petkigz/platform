@@ -1,6 +1,6 @@
 // You choose what you are told.
 //
-// The in-app centre has six kinds of message. This suite is about the two
+// The in-app centre has seven kinds of message. This suite is about the two
 // rules that make a preferences screen safe to offer: the two kinds that report
 // money not arriving cannot be silenced, and a muted message is kept and not
 // counted rather than deleted.
@@ -67,15 +67,16 @@ export async function run(ctx) {
 
   await test('every kind comes back, whether or not it has been changed', async () => {
     const list = await prefs(user);
-    assert(Array.isArray(list) && list.length === 6, `got ${list.length} kinds`);
-    // Six since `media_encode_failed`: the closed vocabulary lives in the two
+    assert(Array.isArray(list) && list.length === 7, `got ${list.length} kinds`);
+    // Seven since `live_cancelled`: the closed vocabulary lives in the two
     // table CHECKs, the `foreach` in `my_notification_preferences()`, the guard
     // in `set_notification_preference()` and this list. A kind added to one and
     // forgotten in another is a screen that throws, so they are pinned here.
     assert(
       JSON.stringify(list.map((p) => p.kind))
         === JSON.stringify(['payout_paid', 'payout_failed', 'payout_cancelled',
-                            'media_encode_failed', 'class_starting', 'plan_renewing']),
+                            'media_encode_failed', 'class_starting', 'plan_renewing',
+                            'live_cancelled']),
       'the order or the vocabulary changed');
     assert(list.every((p) => p.enabled === true), 'a kind is off by default');
   });
@@ -90,6 +91,8 @@ export async function run(ctx) {
     assert(byKind.payout_failed.available === true, 'a stored kind is not offered');
     assert(byKind.class_starting.available === false, 'a reminder nobody computes is offered as live');
     assert(byKind.plan_renewing.available === false, 'a reminder nobody computes is offered as live');
+    assert(byKind.live_cancelled.available === false,
+      'a cancellation nobody can send is offered as live');
 
     // And it can still be chosen: availability must not disable the switch.
     await setPref(user, 'class_starting', false);

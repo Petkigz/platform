@@ -10,7 +10,7 @@ import {
   type Preference,
 } from './notification-prefs.ts';
 
-test('the six kinds are the six the database can send, in its order', () => {
+test('the seven kinds are the seven the database can send, in its order', () => {
   // The order is the database's (`my_notification_preferences()`), not a choice
   // made here: a screen that reorders the list is a screen whose next kind is
   // forgotten in the other list.
@@ -18,9 +18,20 @@ test('the six kinds are the six the database can send, in its order', () => {
     NOTIFICATION_KINDS.map((k) => k.kind),
     [
       'payout_paid', 'payout_failed', 'payout_cancelled',
-      'media_encode_failed', 'class_starting', 'plan_renewing',
+      'media_encode_failed', 'class_starting', 'plan_renewing', 'live_cancelled',
     ],
   );
+});
+
+test('a cancelled class is a choice, and the description says what silence costs', () => {
+  // Same reasoning as a failed encode: important is not the same as owed. The
+  // room still says the class was cancelled and why, so muting loses the
+  // warning rather than the fact — and the switch says so.
+  const info = describeKind('live_cancelled');
+  assert.ok(info);
+  assert.equal(info!.locked, false);
+  assert.match(info!.description, /finding out by opening the room/);
+  assert.match(info!.description, /still says it was cancelled/);
 });
 
 test('exactly two kinds are locked, and they are the money failures', () => {
@@ -82,6 +93,7 @@ test('the sentence counts only what can be chosen', () => {
       pref('payout_paid', true), pref('payout_failed', true, true),
       pref('payout_cancelled', true, true), pref('media_encode_failed', true),
       pref('class_starting', true), pref('plan_renewing', true),
+      pref('live_cancelled', true),
     ]),
     'Everything you can choose is on.',
   );
@@ -91,6 +103,7 @@ test('the sentence counts only what can be chosen', () => {
       pref('payout_paid', true), pref('payout_failed', true, true),
       pref('payout_cancelled', true, true), pref('media_encode_failed', true),
       pref('class_starting', false), pref('plan_renewing', true),
+      pref('live_cancelled', true),
     ]),
     '1 optional message is switched off.',
   );
@@ -100,6 +113,7 @@ test('the sentence counts only what can be chosen', () => {
       pref('payout_paid', false), pref('payout_failed', true, true),
       pref('payout_cancelled', true, true), pref('media_encode_failed', false),
       pref('class_starting', false), pref('plan_renewing', false),
+      pref('live_cancelled', false),
     ]),
     'You have switched off every optional message.',
   );

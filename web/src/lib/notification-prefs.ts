@@ -2,7 +2,7 @@
  * You choose what you are told.
  *
  * The vocabulary is closed and lives in the database (`notification_preferences`
- * and the notification table both check it), so this file names the six kinds
+ * and the notification table both check it), so this file names the seven kinds
  * the platform can send and says what each one is for. The labels are here
  * rather than in SQL because a sentence about a payout belongs next to the code
  * that renders it — but the *list* is not invented here: `parsePreferences()`
@@ -31,7 +31,8 @@ export type NotificationKind =
   | 'payout_cancelled'
   | 'media_encode_failed'
   | 'class_starting'
-  | 'plan_renewing';
+  | 'plan_renewing'
+  | 'live_cancelled';
 
 export type KindInfo = {
   kind: NotificationKind;
@@ -78,6 +79,13 @@ export const NOTIFICATION_KINDS: KindInfo[] = [
     kind: 'plan_renewing',
     label: 'A plan renews soon',
     description: 'Three days before a subscription renews, so cancelling is possible in time.',
+    locked: false,
+  },
+  {
+    kind: 'live_cancelled',
+    label: 'A class you were going to is cancelled',
+    description:
+      'When a live class you or a child of yours was enrolled in is called off, with the reason. Turning this off means finding out by opening the room instead — the class still says it was cancelled, and why.',
     locked: false,
   },
 ];

@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import { describeLength, describeWhen } from '@/lib/live';
+import { describeCancellation, describeLength, describeWhen } from '@/lib/live';
+import { CancelClass } from './cancel-class';
 import { ScheduleForm } from './schedule-form';
 
 export const dynamic = 'force-dynamic';
@@ -16,11 +17,14 @@ export const dynamic = 'force-dynamic';
  */
 export default async function TeachLivePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ courseId: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   if (!isSupabaseConfigured()) redirect('/');
   const { courseId } = await params;
+  const query = await searchParams;
 
   const supabase = await createClient();
   const {
@@ -64,6 +68,11 @@ export default async function TeachLivePage({
     room_slug: string;
   }[];
 
+  // The receipt after a cancellation, read off the URL rather than kept in a
+  // component, so it survives the refresh that moves the class out of "Coming
+  // up" and can be reloaded or linked without lying about what happened.
+  const receipt = readReceipt(query);
+
   const now = Date.now();
   const upcoming = rows.filter(
     (s) => s.status !== 'ended' && s.status !== 'cancelled' && new Date(s.ends_at).getTime() > now,
@@ -81,6 +90,12 @@ export default async function TeachLivePage({
         never recorded; you may be, if recording is ever switched on.
       </p>
 
+      {receipt && (
+        <p className="notice warn" role="status">
+          {describeCancellation(receipt)}
+        </p>
+      )}
+
       <section className="card">
         <h2 style={{ marginTop: 0 }}>Schedule a class</h2>
         <ScheduleForm
@@ -96,7 +111,7 @@ export default async function TeachLivePage({
         ) : (
           <ul className="lessons">
             {upcoming.map((session) => (
-              <li key={session.id}>
+              <li key={session.id} style={{ flexWrap: 'wrap' }}>
                 <span className="t">
                   {session.title}
                   <span className="muted">
@@ -109,6 +124,7 @@ export default async function TeachLivePage({
                 <Link className="btn ghost tiny" href={`/live/${session.id}?as=${course.id}`}>
                   Roster
                 </Link>
+                <CancelClass courseId={course.id} sessionId={session.id} />
               </li>
             ))}
           </ul>
@@ -143,4 +159,25 @@ export default async function TeachLivePage({
       </p>
     </div>
   );
+}
+
+/**
+ * The cancellation receipt, when there is a believable one in the URL.
+ *
+ * Query strings are user input, so a hand-edited `?notified=9999&people=1` must
+ * not put a false sentence on the screen. Anything that does not describe a
+ * cancellation that could have happened is ignored rather than printed.
+ */
+function readReceipt(
+  query: Record<string, string | string[] | undefined>,
+): { notified: number; people: number; capped: boolean } | null {
+  const single = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+  if (!single(query.cancelled)) return null;
+
+  const notified = Number.parseInt(single(query.notified) ?? '', 10);
+  const people = Number.parseInt(single(query.people) ?? '', 10);
+  if (!Number.isFinite(notified) || !Number.isFinite(people)) return null;
+  if (notified < 0 || people < 0 || notified > people) return null;
+
+  return { notified, people, capped: single(query.capped) === '1' };
 }

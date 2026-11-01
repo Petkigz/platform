@@ -78,6 +78,132 @@ export function describeLength(startsAt: string, endsAt: string): string {
   return rest === 0 ? `${hours} hour${hours === 1 ? '' : 's'}` : `${hours}h ${rest}m`;
 }
 
+/**
+ * Who cancelling a class would tell.
+ *
+ * `learners` and `people` are deliberately different numbers. A parent with two
+ * children in the same class is two learners and one person to message, and the
+ * second number is the one that decides whether cancelling is a note or a phone
+ * call. Neither number includes the person reading it, because they are about to
+ * take the action rather than be told about it.
+ */
+export type LiveAudience = {
+  title: string;
+  status: string;
+  learners: number;
+  people: number;
+  cap: number;
+  willTell: number;
+  capped: boolean;
+  cancellable: boolean;
+};
+
+export type CancelReceipt = {
+  notified: number;
+  people: number;
+  capped: boolean;
+  reason: string;
+};
+
+/**
+ * The sentence above the button, before it is pressed.
+ *
+ * A bare "Cancel class" is a button that gets pressed by accident on a class of
+ * thirty. Saying how many people it reaches turns it into a decision — and it is
+ * the number the receipt afterwards is checked against.
+ */
+export function describeAudience(a: LiveAudience): string {
+  if (!a.cancellable) return 'This class has already finished, so it cannot be cancelled.';
+  if (a.people === 0) {
+    return 'Nobody else is affected, so no one will be messaged. The class will still be marked cancelled.';
+  }
+  if (a.capped) {
+    const rest = a.people - a.willTell;
+    return `${a.people} people are coming, and ${a.willTell} will be messaged now — that is the most one cancellation sends. The other ${rest} will find the class gone, but will not be messaged.`;
+  }
+  if (a.people === 1) return 'One person will be messaged that this class is cancelled.';
+  return `${a.people} people will be messaged that this class is cancelled.`;
+}
+
+/** What actually happened, said honestly, including when it was truncated. */
+export function describeCancellation(r: Pick<CancelReceipt, 'notified' | 'people' | 'capped'>): string {
+  if (r.people === 0) return 'Cancelled. Nobody needed telling.';
+  if (r.capped) {
+    return `Cancelled. Told ${r.notified} of ${r.people} people; the rest will find the class gone but were not messaged.`;
+  }
+  if (r.notified === r.people) {
+    return `Cancelled. Told ${r.notified === 1 ? 'the one person' : `all ${r.people} people`}.`;
+  }
+  return `Cancelled. Told ${r.notified} of ${r.people} people.`;
+}
+
+/** Who is coming. The database decides whether the reader may know. */
+export async function liveSessionAudience(
+  supabase: SupabaseClient,
+  sessionId: string,
+): Promise<{ ok: true; audience: LiveAudience } | { ok: false; message: string }> {
+  const { data, error } = await supabase.rpc('live_session_audience', {
+    p_session_id: sessionId,
+  });
+  if (error) return { ok: false, message: error.message };
+
+  const row = data as Partial<LiveAudience> | null;
+  if (!row || typeof row.people !== 'number') {
+    return { ok: false, message: 'the class could not be read just now' };
+  }
+
+  return {
+    ok: true,
+    audience: {
+      title: typeof row.title === 'string' ? row.title : '',
+      status: typeof row.status === 'string' ? row.status : '',
+      learners: typeof row.learners === 'number' ? row.learners : 0,
+      people: row.people,
+      cap: typeof row.cap === 'number' ? row.cap : 200,
+      willTell: typeof row.willTell === 'number' ? row.willTell : row.people,
+      capped: row.capped === true,
+      cancellable: row.cancellable !== false,
+    },
+  };
+}
+
+/**
+ * Cancel, which is the act of telling people.
+ *
+ * The reason is mandatory and reaches learners, so it is trimmed here and
+ * refused before it reaches the network: an empty reason is a message that says
+ * a class is cancelled and nothing else.
+ */
+export async function cancelLiveSession(
+  supabase: SupabaseClient,
+  sessionId: string,
+  reason: string,
+): Promise<{ ok: true; receipt: CancelReceipt } | { ok: false; message: string }> {
+  const trimmed = reason.trim();
+  if (trimmed === '') return { ok: false, message: 'say why the class is cancelled' };
+
+  const { data, error } = await supabase.rpc('cancel_live_session', {
+    p_session_id: sessionId,
+    p_reason: trimmed,
+  });
+  if (error) return { ok: false, message: error.message };
+
+  const row = data as { people?: unknown; notified?: unknown; capped?: unknown } | null;
+  if (!row || typeof row.notified !== 'number' || typeof row.people !== 'number') {
+    return { ok: false, message: 'the class was cancelled, but the receipt could not be read' };
+  }
+
+  return {
+    ok: true,
+    receipt: {
+      notified: row.notified,
+      people: row.people,
+      capped: row.capped === true,
+      reason: trimmed,
+    },
+  };
+}
+
 export type JoinResult =
   | { joined: true; roomUrl: string; roomSlug: string; startsAt: string; endsAt: string }
   | { joined: false; reason: string; message?: string };
