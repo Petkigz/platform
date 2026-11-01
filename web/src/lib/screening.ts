@@ -28,6 +28,9 @@ export type ScreeningRow = {
   type: string | null;
   checkedAt: string | null;
   validUntil: string | null;
+  /** The day this record is deleted, seven years after the later of the two clocks. */
+  retentionUntil?: string | null;
+  retentionBasis?: 'check' | 'birthday' | null;
   checkedByName: string | null;
 };
 
@@ -106,6 +109,24 @@ export function screeningLine(row: ScreeningRow): string {
     default:
       return 'Nothing recorded. That is not a failure — it is an empty column.';
   }
+}
+
+/**
+ * When this record stops existing.
+ *
+ * A register that deletes a row without ever having said it would is a register
+ * that loses evidence by surprise. The date is the same one the cleanup reads,
+ * so this sentence cannot promise a later deletion than the one that happens.
+ */
+export function screeningRetentionSentence(row: ScreeningRow): string {
+  const until = row.retentionUntil ? day(row.retentionUntil) : null;
+  if (!until) {
+    return 'No deletion date on this record, so the cleanup will not take it.';
+  }
+  if (row.retentionBasis === 'birthday') {
+    return `Kept until ${until}: the seven years start at the eighteenth birthday, which is later than the check.`;
+  }
+  return `Kept until ${until} — seven years after the check — and then deleted.`;
 }
 
 /** Who has been checked, said as counts rather than as a wall of rows. */

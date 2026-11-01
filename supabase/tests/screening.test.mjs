@@ -134,12 +134,15 @@ export async function run(ctx) {
     const id = (await q(
       `select id from public.teacher_screenings where user_id = $1 order by checked_at desc limit 1`,
       [second])).rows[0].id;
+    // Two refusals now, and the difference is the point: nothing may edit a
+    // record, and nothing but the retention run may delete one — and even then
+    // not before its date. `retention.test.mjs` walks the second half.
     await rejects(() => q(
       `update public.teacher_screenings set outcome = 'failed' where id = $1`, [id]),
-    /not edited or deleted/);
+    /not edited/);
     await rejects(() => q(
       `delete from public.teacher_screenings where id = $1`, [id]),
-    /not edited or deleted/);
+    /deleted only by the retention run/);
 
     const rows = (await q(
       `select count(*)::int n from public.teacher_screenings where user_id = $1`, [second])).rows[0].n;

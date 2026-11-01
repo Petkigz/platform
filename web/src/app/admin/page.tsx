@@ -315,6 +315,14 @@ export default async function AdminPage() {
             </div>
           </div>
 
+          <p style={{ marginTop: '1.5rem' }}>
+            <Link href="/admin/retention">Retention clock</Link> — the two things the privacy
+            notice promises to delete on a date: a support case three years after it closes, and a
+            record that a teacher was checked seven years after the later of the check and their
+            eighteenth birthday. The page says what is due, what has no clock because nobody closed
+            it, and takes the deletion in a bounded batch
+          </p>
+
           <div className="notice" style={{ marginTop: '1.5rem' }}>
             A flag marked <strong>needs a deploy</strong> cannot be switched on
             here, and the refusal is enforced in the database rather than by hiding

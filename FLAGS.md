@@ -133,7 +133,7 @@ Three kinds of gate:
 | `auth.email_password` | Email + password sign-in | ADMIN | Email sender verified; reset flow |
 | `auth.google_sign_in` | "Continue with Google" on sign-in and sign-up | ADMIN + SETUP | Google OAuth client created; `https://<project>.supabase.co/auth/v1/callback` registered as a redirect URI; Supabase Google provider enabled; site URL and extra redirect URLs include this deployment. Setup steps in `docs/google-sign-in.md`. **Off until all of that exists**, because a button that cannot work is worse than no button |
 | `auth.phone_otp` | Phone number + OTP sign-in | ADMIN + SETUP | SMS provider chosen; **cost per message confirmed for each launch market**; OTP used at registration and recovery only, never per login |
-| `platform.support` | Support cases and replies | ADMIN | Someone available to answer the queue; reply-channel and retention policy decided. No notification provider is wired — cases are read in the dashboard |
+| `platform.support` | Support cases and replies | ADMIN | Someone available to answer the queue. The retention half of this was open for a week and is closed: a closed case is deleted three years after it closes, by `run_retention_jobs()` rather than by anything on this page, and `/admin/retention` shows what is due (`20261281004700`). No notification provider is wired — cases are read in the dashboard |
 | `platform.admin_settings` | The admin dashboard itself | ADMIN | Must be built **first** — everything else depends on it |
 | `platform.audit` | Audit log of privileged actions | ADMIN | — |
 | `platform.maintenance_mode` | Read-only mode | ADMIN | — |

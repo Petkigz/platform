@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
-import { createHash, timingSafeEqual } from 'node:crypto';
+import { checkScheduler } from '@/lib/cron';
 import { getSupabaseEnv, isSupabaseConfigured } from '@/lib/env';
 import { describeReport } from '@/lib/email/dispatch';
 import { runDispatch } from '@/lib/email/run';
@@ -19,10 +19,11 @@ export const dynamic = 'force-dynamic';
  * person is, and every send is attributable to somebody.
  *
  * **Why a shared secret and not a session.** There is no browser in this path.
- * `CRON_SECRET` is compared against the bearer token in constant time, and the
- * route answers 503 — not 401 — when it is unset, because a deployment with no
- * secret has not configured a scheduler and saying "unauthorised" would send
- * whoever set it up looking for the wrong problem.
+ * `CRON_SECRET` is compared against the bearer token in constant time by
+ * `lib/cron.ts` — the same check the retention run uses — and the route answers
+ * 503, not 401, when it is unset: a deployment with no secret has not configured
+ * a scheduler, and "unauthorised" would send whoever set it up looking for the
+ * wrong problem.
  *
  * Point a free scheduler at it (a GitHub Action on a public repository, or
  * cron-job.org) once a provider key exists. Until then it is inert: with no
@@ -33,25 +34,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Not configured.' }, { status: 503 });
   }
 
-  const secret = (process.env.CRON_SECRET ?? '').trim();
-  if (secret === '') {
-    return NextResponse.json(
-      {
-        error:
-          'CRON_SECRET is not set, so this route cannot tell a scheduler from a '
-          + 'stranger. Set it, then call this URL from your scheduler with '
-          + '`Authorization: Bearer <secret>`.',
-        code: 'no_secret',
-      },
-      { status: 503 },
-    );
-  }
-
-  const presented = (request.headers.get('authorization') ?? '').replace(/^Bearer\s+/i, '').trim();
-  const digest = (value: string) => createHash('sha256').update(value).digest();
-  if (presented === '' || !timingSafeEqual(digest(presented), digest(secret))) {
-    return NextResponse.json({ error: 'Not permitted.' }, { status: 401 });
-  }
+  // One implementation of "is this a scheduler", shared with the retention run,
+  // so the two routes cannot disagree about what a valid token is.
+  const gate = checkScheduler(request.headers.get('authorization'), process.env.CRON_SECRET);
+  if (!gate.ok) return NextResponse.json(gate.body, { status: gate.status });
 
   const workerEmail = (process.env.EMAIL_WORKER_EMAIL ?? '').trim();
   const workerPassword = process.env.EMAIL_WORKER_PASSWORD ?? '';

@@ -211,18 +211,19 @@ against the actual route list in the production build, not from memory.
 | `/admin/refunds` | Refund queue |
 | `/admin/reports` | Abuse and content reports |
 | `/admin/roles` | Role assignments |
+| `/admin/retention` | **The retention clock** *(added 2026-11-01)* — `platform_admin` only, and the database refuses everybody else. The two things the privacy notice promises to delete on a date are printed here: a support case three years after it closes, and a record that a teacher was checked seven years after the later of the check and their eighteenth birthday. Three numbers sit above the list — what is due now, what is due next, and **how many support cases nobody has closed**, because those have no clock at all and a page showing only "0 due" would be right and misleading at once. The press deletes in a bounded batch and prints the numbers the database returned rather than what the screen expected. Below it, three sentences say what this page is not: it does not close cases for you, it does not delete a child's learning record (a third clock, not wound yet), and it does not touch the sign-in address, which lives with the authentication provider |
 
 Nine of these are administration screens. Section 7 has since gained rows of its
-own, and the production build now emits **forty-one admin routes** — the index at
-`/admin` and forty beneath it.
+own, and the production build now emits **forty-two admin routes** — the index at
+`/admin` and forty-one beneath it.
 
 ## Counts
 
 | | |
 |---|---|
 | Numbered screen IDs | **50**, plus 19a, 19b, 20a, 20b, 20c, 31a, 31b, 31c, 31d, 33b, 35a, 35b, 35c, 35d, 35e, 35f, 35g, 35h and 43b — **69 rows** |
-| Routed | **117 page routes** in the production build. Three are not screens anybody designs (`/_not-found`, `/sign-out`, `/auth/confirm`), so **114 screens are routed** |
-| Built but never inventoried | **46**, listed in section 11 |
+| Routed | **118 page routes** in the production build. Three are not screens anybody designs (`/_not-found`, `/sign-out`, `/auth/confirm`), so **115 screens are routed** |
+| Built but never inventoried | **47**, listed in section 11 |
 | Ready to design now | **1** |
 | Blocked | **4** |
 

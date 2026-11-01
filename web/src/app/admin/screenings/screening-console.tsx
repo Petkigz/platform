@@ -7,6 +7,7 @@ import {
   SCREENING_OUTCOMES,
   screeningCountsSentence,
   screeningLine,
+  screeningRetentionSentence,
   screeningStatusLabel,
   type ScreeningRegister,
   type ScreeningRow,
@@ -119,6 +120,11 @@ export function ScreeningConsole({
                     {screeningLine(row)}
                     {row.checkedByName && (
                       <span className="muted"> Recorded by {row.checkedByName}.</span>
+                    )}
+                    {row.retentionUntil && (
+                      <span className="muted" style={{ display: 'block', fontSize: '0.8rem' }}>
+                        {screeningRetentionSentence(row)}
+                      </span>
                     )}
                   </td>
                   {canRecord && (

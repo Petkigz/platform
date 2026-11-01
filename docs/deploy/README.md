@@ -89,7 +89,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-208 files in `supabase/migrations/`, applied in filename order — the 14-digit
+209 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -123,7 +123,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 208 files from the top and fail on the
+it, and `db push` would then re-apply all 209 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -238,6 +238,7 @@ Then, in the order you get to them:
 | `MEDIA_WORKER_EMAIL`, `MEDIA_WORKER_PASSWORD` | the encoder's own sign-in | 6 |
 | `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO` | anything sends at all | 7 |
 | `CRON_SECRET`, `EMAIL_WORKER_EMAIL`, `EMAIL_WORKER_PASSWORD` | the unattended mail run | 7 |
+| `RETENTION_WORKER_EMAIL`, `RETENTION_WORKER_PASSWORD` | the unattended retention cleanup — the job that makes the privacy notice's three and seven years true. Must be an account holding `platform_admin`, because only the owner may delete a record; unset means the route refuses and `/admin/retention` still works by hand | 4 |
 | `PAYMENT_PROVIDER` | how a provider is named; unset means checkout says payments are not configured rather than pretending | — |
 | `MTN_MOMO_SUBSCRIPTION_KEY`, `MTN_MOMO_API_USER`, `MTN_MOMO_API_KEY`, `MTN_MOMO_BASE_URL`, `MTN_MOMO_TARGET_ENVIRONMENT`, `MTN_MOMO_CALLBACK_URL` | MTN collections | — |
 | `MTN_MOMO_DISBURSEMENT_SUBSCRIPTION_KEY`, `MTN_MOMO_DISBURSEMENT_API_USER`, `MTN_MOMO_DISBURSEMENT_API_KEY` | refunds going back out through MTN | — |
@@ -483,6 +484,28 @@ Schedule it hourly with [cron-job.org](https://cron-job.org) (free, no card): UR
 as above, method POST, header `Authorization: Bearer <secret>`. Hourly rather than
 every five minutes because on a free Supabase project the job is doing double duty
 — it is also what stops the project pausing after seven idle days.
+
+**7.6** The retention cleanup. Two things the privacy notice promises to delete on
+a date: a support case three years after it closes, and a record that a teacher
+was checked seven years after the later of the check and their eighteenth
+birthday. `POST /api/cron/retention` does both, in bounded batches:
+
+```bash
+curl -sS -X POST https://ayahspring.vercel.app/api/cron/retention \
+  -H "Authorization: Bearer $CRON_SECRET"
+```
+
+- `RETENTION_WORKER_EMAIL`, `RETENTION_WORKER_PASSWORD` — the same staff account
+  the mail run uses is fine, but it **must hold `platform_admin`**: the database
+  only lets the owner delete a record, and that check is what stops a stray token
+  emptying the register. Unset, the route answers 503 and deletes nothing.
+- Run it daily from the same free scheduler. It is idempotent and takes at most
+  500 records per clock per call; a backlog drains over consecutive runs rather
+  than holding a lock behind a live support queue.
+- `/admin/retention` shows what is due, what will be due next, and — the part
+  worth reading — how many cases nobody has closed, because those have no clock
+  at all. The owner can run the same cleanup by hand from that page, which is the
+  whole job until there is a scheduler.
 
 ---
 

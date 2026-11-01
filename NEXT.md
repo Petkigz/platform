@@ -340,8 +340,22 @@ course row survived; and a certificate could be issued but never asked for,
 because `certificate_enabled` had a writer function and no screen. Both are
 fixed, and the author now turns certificates on from their course page.
 
-Verification: **2271 database tests (149 suites), 1826 web tests; TypeScript
-typecheck, build and `check:repo` pass; 208 migrations.**
+Both retention periods the privacy notice promised are now enforced rather than
+described (`retention.test.mjs`). The notice said three years for a closed
+support case and seven for a screening record; nothing implemented either, so the
+first record past its date would have stayed forever while the document went on
+promising otherwise. A view now says what is due, `run_retention_jobs()` deletes
+in bounded batches and audits itself, `/admin/retention` shows it and presses it,
+and a cron route does it unattended. The append-only rule on screening records
+kept one exception, and the suite proves it cannot be used early: the trigger
+checks the row against both the date the caller names and the database's own
+clock, so a future date deletes nothing. A third clock — a child's learning
+record, thirty days after the guardian's account closes — was found in the same
+sentence and is **not** wound; it is named on the page and in NEXT.md rather than
+quietly implied by the other two.
+
+Verification: **2288 database tests (150 suites), 1837 web tests; TypeScript
+typecheck, build and `check:repo` pass; 209 migrations.**
 
 ## Today's sentence
 
@@ -2249,6 +2263,61 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### The two clocks that were written down and never wound, 2026-11-01
+
+The privacy notice answers a question the owner was asked: how long is a support
+case kept, and how long is a safeguarding record kept. Three years after a case
+closes; seven years after the person a check concerns turns 18, or seven years
+after it is made where they were already an adult. That answer has been in force
+since 2026-10-22.
+
+Nothing implemented it. The sentence lived in one published draft and nowhere in
+the schema — no column, no job, no query could answer *what should have been
+deleted already*. A retention period with no clock is a promise that becomes a
+lie the day the first record passes its date, and it fails in the direction
+nobody notices: nothing breaks, nothing errors, and the document goes on saying
+something the software does not do.
+
+**The rule now lives where it can be executed.** A view, `retention_due_records`,
+is the single definition of "due" — read by the plan, by the cleanup and by
+anybody with `psql`, instead of the same three-year subtraction copied into two
+function bodies. `retention_plan()` returns what is due now, what is due next,
+and what has no clock at all. `run_retention_jobs()` deletes in bounded batches
+so a backlog cannot hold a lock behind a live support queue, writes one audit
+event when it removed anything, and reports what is left.
+
+**A birthday the row does not keep.** Half of the screening rule starts at a date
+the register has no column for. The writer takes a date of birth as an input,
+converts it to the day the record is due, and keeps only the result — plus which
+of the two clocks started, so a record held on the later clock can be counted
+without keeping anybody's age. Adding a birthday can only move the date later,
+never earlier, so a registration with no birthday recorded is never deleted early
+for the want of one.
+
+**The append-only rule keeps exactly one exception.** A screening record could
+never be edited or deleted, and the trigger said so. It still refuses every edit.
+A delete now needs the caller to say it is the retention run *and* to name the
+date it is cleaning as of — and the trigger re-checks the row against that date
+**and against the database's own clock**. Naming 2099 deletes nothing, which the
+suite proves by trying it.
+
+**What the suite is written to catch,** in the order it would hurt: deleting too
+early (every boundary tested from both sides, plus a direct attempt to take a row
+that is not due), deleting never (every run's count is compared to the plan that
+preceded it, so a job that quietly does nothing fails), and deleting invisibly (a
+case nobody closed has no clock, and the plan reports those rather than a
+reassuring zero).
+
+**Found while writing it, and not fixed here:** the children's policy promises a
+child's learning record is deleted thirty days after the guardian's account
+closes. That is a third clock, it is not wound, and it is named on
+`/admin/retention` and in NEXT.md rather than implied by the other two. It is a
+delete across enrolments, progress, submissions, attempts and attendance, with a
+certificate number that has to survive it — its own unit, not a line in this one.
+
+**17 new database tests (2288 passed, 150 suites), 11 new web tests (1837);
+tsc, build and check:repo clean; 209 migrations.**
 
 ### Download, delete, and the two rights not being about the same list, 2026-11-01
 

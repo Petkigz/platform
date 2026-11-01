@@ -89,8 +89,9 @@ export default async function DeleteAccountPage() {
                 <li>Enrolments and lesson progress</li>
                 <li>Certificates, under the number they were issued with</li>
                 <li>
-                  Your support case — the words you wrote are removed, and your name becomes
-                  &ldquo;the account holder&rdquo; in what support wrote back
+                  Your support case — the words you wrote are removed, your name becomes
+                  &ldquo;the account holder&rdquo; in what support wrote back, and the case itself
+                  is deleted three years after it closes
                 </li>
                 <li>The audit record that the account was closed</li>
               </ul>
