@@ -129,6 +129,7 @@ import { run as guardianConsent } from './guardian_consent.test.mjs';
 import { run as renewalProjection } from './renewal_projection.test.mjs';
 import { run as googleSignIn } from './google_sign_in.test.mjs';
 import { run as dataExport } from './data_export.test.mjs';
+import { run as restoreMyData } from './restore_my_data.test.mjs';
 import { run as staffAttention } from './staff_attention.test.mjs';
 import { run as payerStatement } from './payer_statement.test.mjs';
 import { run as refundWindow } from './refund_window.test.mjs';
@@ -283,6 +284,7 @@ for (const [name, fn] of [
   ['renewal projection', renewalProjection],
   ['google sign in', googleSignIn],
   ['data export', dataExport],
+  ['restore my data', restoreMyData],
   ['staff attention', staffAttention],
   ['payer statement', payerStatement],
   ['refund window', refundWindow],

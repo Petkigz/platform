@@ -340,6 +340,11 @@ export default async function AccountPage() {
           support cases, the messages sent to you, and — if you teach — your earnings and payouts.
           {' '}<Link href="/account/export">What is in it, and what is left out</Link>
         </p>
+        <p className="muted" style={{ fontSize: '0.9rem', marginBottom: 0 }}>
+          Have a file already? <Link href="/account/restore">Put it back</Link> — your profile,
+          notes and bookmarks return to the lessons you are enrolled in; enrolments, certificates and
+          orders do not, and that page says why.
+        </p>
       </section>
 
       <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>

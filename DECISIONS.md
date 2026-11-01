@@ -93,6 +93,7 @@ you. Do not treat it as settled, and do not build on it until it moves up.
 | 2026-11-01 | **Money moves by hand through finance or the owner, and only the code that verifies a signature may write one.** `record_payment_success()` and `complete_refund()` each admitted any privileged caller, which includes a support agent. Narrowing the manual branch alone would have been a decoration, because both also settle against a provider event and `ppe_read` lets staff read `payment_provider_events` — a support agent could cite any verified event id and the manual gate was never reached. Both now check `current_user_id()` as well as the passed-in actor (the actor is an argument, and an argument can name the owner), and `ppe_write` no longer lets a person insert `signature_verified = true`: a person may record a delivery they cannot vouch for, the service role (which bypasses RLS) writes the verified ones. A provider callback still settles itself — that is what a confirmed payment is. |
 | 2026-11-01 | **Neither money writer checks that a provider event belongs to the order or refund it is applied to, and that stays open.** The callback's payload is provider-specific and there is no provider yet (P12), so there is no contract to check against; inventing one now would be guessing at the shape a real statement arrives in. Until then this is finance-or-service-role territory rather than a route for the least-trusted staff account, and it is written here rather than left to look closed. |
 | 2026-11-01 | **A deletion receipt has to name things the person was shown, and a retained record has to lose the name.** `export_my_data()` and `erase_my_account()` were written a month apart and each was right on its own; checked against each other they were not. The receipt reported saved courses, invitations and guardian links removed, while the document carried none of the three — even though `/account/export` had promised "saved courses" in writing. And erasure's own header claimed nothing that names the person is kept, while a sweep of every text column found the name in the person's notifications, in the invitation email they had sent and in support's replies on their own case. Both closed: the document carries the three lists (plus the outbox, with any invitation token blanked), the inbox and the mail go with the account, and text that must be kept passes through `redact_name()` — case-insensitive, treating a name as a literal — so it reads "the account holder". |
+| 2026-11-01 | **A right that only works one way is half a right, and a restore may only write what the person wrote.** `export_my_data()` had no counterpart, so a person could leave with a file and not return with one — the document was a souvenir. `restore_my_data()` reads it back: profile preferences, notes and bookmarks. It deliberately cannot restore enrolments, certificates, orders, progress, published words, children or roles, because those are written *by the platform about* a person and a file that could write them would hand out courses, mint certificates and fake a payment history. The restore does not restate the entitlement rule — every insert meets `guard_lesson_study_data`, the trigger an ordinary note meets, and the refusal is caught and reported in the trigger's own words. Dry run is the default. The export moved to format 2 so an entry can name its course: a lesson title is not an identity, and an ambiguous match is reported rather than guessed. |
 | 2026-11-01 | **Other people's words about a person are theirs, and erasure does not rewrite them.** A classmate's reply that mentions somebody by name is the classmate's post. The export says so under `notIncluded`, and the suite asserts that exactly one such hit survives a sweep of the whole schema — so the claim stays "we removed everything of yours", not "your name appears nowhere on the platform", which was never true and would be a promise the next feature could break. |
 | 2026-11-01 | **A retention period with no clock is a promise, not a policy.** The privacy notice has said since 2026-10-22 that a support case is kept three years after it closes and a safeguarding record seven years after the person turns 18. Nothing implemented it: no column, no job, no query. The period now lives where it can be executed — a view (`retention_due_records`) says what is due and which clock set it, `retention_plan()` says what is due now, what is next and what has no clock at all, and `run_retention_jobs()` deletes in bounded batches and audits itself. The date of birth a screening needs for its second clock is an **input that is converted and not kept**: only the day the record is due survives. |
 | 2026-11-01 | **A screening record may be deleted, and only once. The append-only rule keeps one exception, stated in the trigger.** A row is never edited — that stands, and the suite proves it. A row is deleted only by the retention run, which must declare itself *and* name the date it is cleaning as of, and the trigger re-checks the row against both that date and the database's own clock. Naming a year far ahead therefore deletes nothing: the second comparison does not move. Deleting a record that says a check happened is destroying evidence, so it happens only when the policy says the record's time is up. |
@@ -5377,6 +5378,41 @@ enrolments that nobody wrote, and guessing that mapping invents records rather
 than importing them. `platform.data_export` remains CODE-gated with that written
 down as the remaining precondition, because a flag that claims a feature is
 complete when half of it is missing is the worse lie.
+
+*Corrected 2026-11-01 — the paragraph above is true about the right thing and had
+come to be read as covering a different one.* "Import" had silently become one
+word for two ideas. A file **from somewhere else** still needs a format the owner
+names, and is still unbuilt. A file **this platform produced** needs no mapping at
+all: it is the person's own record, in this schema's own vocabulary, and refusing
+to read it was never a decision — it was a gap that the paragraph above made sound
+deliberate. `restore_my_data()` now reads it.
+
+**What a restore may write is decided by what the person wrote, not by what the
+file says.** Half of an export is written *by the platform about* a person: an
+enrolment is an entitlement, a certificate is signed, an order is a ledger entry,
+a progress percentage is a record of something that was watched. A file that could
+put those back is a file that hands out courses, mints certificates and fakes a
+payment history — so it does not. The restore returns account preferences, notes
+and bookmarks, and returns a sentence for every other section of the document
+saying what it left and why, in the same voice the export uses for `notIncluded`.
+
+**It does not restate the entitlement rule; it meets it.** A note hangs off an
+enrolment, so every insert goes through `guard_lesson_study_data` — the same
+trigger an ordinary insert meets — and the function catches the refusal and
+reports it in the trigger's own words. That is why a `security definer` function
+can be trusted here: it has no more power than the person at the browser, only
+better legs. The dry run asks the same predicate the trigger asks, so the preview
+cannot promise what the apply then refuses; the dry run is also the default,
+including in the SQL signature, so a client that forgets the flag previews instead
+of writing.
+
+**Format 2, because a title is not an identity.** A restore has to find the lesson
+an entry belonged to, and "Introduction" exists in more than one course. The
+export gained `courseSlug` and `section` on notes and bookmarks and moved
+`formatVersion` to 2. A version 1 file is still read and is matched by title alone
+— which is exactly the case that has to be *reported as ambiguous* rather than
+guessed at. A note put back on the wrong lesson is a note the person will read in
+the wrong place and believe.
 
 ## A school buys seats, and never learns who sits in them — **DECIDED 2026-10-28**
 

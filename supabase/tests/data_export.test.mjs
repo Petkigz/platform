@@ -66,7 +66,9 @@ export async function run(ctx) {
       `select value_text from public.platform_settings where key = 'platform.data_export'`);
     assert(flag.value_text === 'false', `the flag ships ${flag.value_text}`);
     const doc = await exportOf(person.userId);
-    assert(doc.formatVersion === 1, 'the export was refused while its flag was off');
+    // Format 2 added the course slug to notes and bookmarks so a restore can
+    // find its lesson; see 20261281007000_restore_my_data.sql.
+    assert(doc.formatVersion === 2, 'the export was refused while its flag was off');
 
     await rejects(() => q('select public.export_my_data()'), /sign in to/i);
   });
@@ -208,7 +210,7 @@ export async function run(ctx) {
       `select count(*)::int n from public.governance_audit_events
         where actor = $1 and action = 'data.exported'`, [person.userId])).n;
     assert(after === before + 1, `audit events went from ${before} to ${after}`);
-    assert(row.detail.formatVersion === 1);
+    assert(row.detail.formatVersion === 2);
     assert(row.detail.counts, 'the audit event did not record the counts');
   });
 

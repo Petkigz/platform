@@ -134,7 +134,7 @@ export async function run(ctx) {
 
     const doc = await exportAs(me.userId);
 
-    assert(doc.formatVersion === 1, 'no format version');
+    assert(doc.formatVersion === 2, 'no format version');
     assert(doc.account.displayName === 'Exporting Adult');
     assert(doc.learners.length === 1, `${doc.learners.length} learners in my own export`);
     const learner = doc.learners[0];

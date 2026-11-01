@@ -193,7 +193,9 @@ export default async function ExportPage() {
       </div>
 
       <p className="muted" style={{ marginTop: '1.5rem', fontSize: '0.9rem' }}>
-        Closing your account is separate and irreversible: <Link href="/account/delete">close my account</Link>.
+        Downloading is one direction and restoring is the other: <Link href="/account/restore">put an
+        export back</Link> on this account or a new one. Closing your account is separate and
+        irreversible: <Link href="/account/delete">close my account</Link>.
         {' '}What happens to each kind of record is written on that page.
       </p>
 

@@ -120,6 +120,20 @@ question, not a string in a file. Both flags stay off until it is answered: the
 upload path is built, and the only thing between it and a learner is a retention
 rule nobody has written.
 
+A person can now put their exported data back. `/account/restore` reads the JSON
+file the export produces and returns what the *person* wrote — profile
+preferences, notes and bookmarks — matched to the lessons they are enrolled in
+now. Everything the platform wrote *about* them stays out: enrolments,
+certificates, orders, progress, published words, children and roles, each with a
+sentence in the reply saying why. It previews by default and writes nothing until
+the preview has been read; running the same file twice converges rather than
+duplicating, and an entry already on a lesson is never overwritten. The restore
+does not restate the entitlement rule — every insert meets the same trigger an
+ordinary note meets, and the refusal is reported in the trigger's own words. The
+export moved to format 2 (notes and bookmarks now name their course and section)
+because a lesson title is not an identity; a format 1 file is still read, and an
+ambiguous match is reported rather than guessed.
+
 The interface now lays itself out from either edge. A reader whose device is set
 to Arabic, Urdu, Persian, Pashto, Dari or Dhivehi gets `<html dir="rtl">` and a
 page that mirrors: margins, padding, borders and alignment follow the writing
@@ -2314,6 +2328,66 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### A right that works in both directions, 2026-11-01
+
+`export_my_data()` has produced a document since October and nothing has ever
+read one. That is the shape of a right that only works one way: a person can
+leave with a file and cannot return with it, so what the platform calls a copy of
+their record is, in practice, a souvenir.
+
+**The word "import" was covering two different things, and only one of them was
+a decision.** `DECISIONS.md` has said since 2026-10-28 that import stays unbuilt
+because a file from another platform has to be mapped into courses, learners and
+enrolments nobody wrote — inventing records rather than importing them. That is
+still true, and it is still not built. But a file *this platform produced* needs
+no mapping at all: it is the person's own record, in this schema's own
+vocabulary, and refusing to read it was a gap the paragraph had made sound
+deliberate.
+
+**So the question is not what the file says, it is who wrote what.** Half of an
+export is written *by the platform about* a person. An enrolment is an
+entitlement, sometimes a paid one. A certificate is issued and signed. An order
+is a ledger entry, a progress percentage is a record of something somebody
+watched, and an audit trail is a claim about what happened. A restore that could
+write those is a restore that hands out courses, mints certificates and fakes a
+payment history — so it does not, and it returns a sentence for every section of
+the document it left behind, in the same voice the export uses for what it
+leaves out.
+
+What it does bring back is the part the person wrote: their profile preferences,
+their notes and their bookmarks.
+
+**It does not restate the entitlement rule — it meets it.** A note hangs off an
+enrolment (`lesson_notes.course_enrolment_id`), so restoring one onto a course
+somebody has left would either fail or have to create the enrolment. The
+function does neither: every insert goes through `guard_lesson_study_data`, the
+same trigger an ordinary insert meets, and the function catches the refusal and
+reports it in the trigger's own words. That is what makes a `security definer`
+function trustworthy here — inside it, the writes have no more power than the
+person sitting at the browser, only better legs.
+
+**Dry run first, and it is the default in the SQL signature**, so a client that
+forgets to pass a flag previews instead of writing. The dry run asks
+`can_use_lesson_study_data()` — the very predicate the trigger asks — so the
+preview cannot promise something the apply then refuses. And running the file
+twice converges: an entry that is already there is counted as already there and
+never overwritten, because the live note is the person's current thought and a
+file from last month does not get to replace it. That idempotence is also why
+there is no rate limit here, unlike the export.
+
+**Format 2, because a title is not an identity.** "Introduction" exists in more
+than one course, and the export carried only the lesson's title. Notes and
+bookmarks now carry `courseSlug` and `section`, and `formatVersion` is 2. A
+version 1 file is still read and matched by title alone — which is exactly the
+case that has to be reported as ambiguous rather than guessed at. A note put back
+on the wrong lesson is a note the person will read in the wrong place and
+believe, which is worse than a note left in the file.
+
+**`/account/restore`** does the three-step version: choose the file, see what
+would happen, then mean it. The screen lists what can and cannot come back
+*before* the picker, because a person who learns it afterwards has been misled by
+a screen that stayed quiet.
 
 ### The page turns around, 2026-11-01
 
