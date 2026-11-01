@@ -106,6 +106,7 @@ import { run as eraseMyAccount } from './erase_my_account.test.mjs';
 import { run as marketCharges } from './market_charges.test.mjs';
 import { run as liveClasses } from './live_classes.test.mjs';
 import { run as liveCancellation } from './live_cancellation.test.mjs';
+import { run as liveRecording } from './live_recording.test.mjs';
 import { run as offlineSaves } from './offline_saves.test.mjs';
 import { run as learnerStreaks } from './learner_streaks.test.mjs';
 import { run as promotionRemoval } from './promotion_removal.test.mjs';
@@ -261,6 +262,7 @@ for (const [name, fn] of [
   ['market charges', marketCharges],
   ['live classes', liveClasses],
   ['live cancellation', liveCancellation],
+  ['live recording', liveRecording],
   ['offline saves', offlineSaves],
   ['learner streaks', learnerStreaks],
   ['promotion removal', promotionRemoval],

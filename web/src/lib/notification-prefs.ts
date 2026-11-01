@@ -2,11 +2,11 @@
  * You choose what you are told.
  *
  * The vocabulary is closed and lives in the database (`notification_preferences`
- * and the notification table both check it), so this file names the seven kinds
+ * and the notification table both check it), so this file names the eight kinds
  * the platform can send and says what each one is for. The labels are here
  * rather than in SQL because a sentence about a payout belongs next to the code
  * that renders it — but the *list* is not invented here: `parsePreferences()`
- * throws on a kind this file does not know, so adding a seventh kind in a
+ * throws on a kind this file does not know, so adding an eighth kind in a
  * migration without updating this screen is an error rather than a silently
  * unlabelled switch.
  *
@@ -32,7 +32,8 @@ export type NotificationKind =
   | 'media_encode_failed'
   | 'class_starting'
   | 'plan_renewing'
-  | 'live_cancelled';
+  | 'live_cancelled'
+  | 'live_recording_ready';
 
 export type KindInfo = {
   kind: NotificationKind;
@@ -86,6 +87,13 @@ export const NOTIFICATION_KINDS: KindInfo[] = [
     label: 'A class you were going to is cancelled',
     description:
       'When a live class you or a child of yours was enrolled in is called off, with the reason. Turning this off means finding out by opening the room instead — the class still says it was cancelled, and why.',
+    locked: false,
+  },
+  {
+    kind: 'live_recording_ready',
+    label: 'A recording of a class is ready',
+    description:
+      'When the teacher puts the recording of a class you or a child of yours was in. Turning this off means finding out by opening the class page instead — the recording is still there, and still watchable while your enrolment lasts.',
     locked: false,
   },
 ];

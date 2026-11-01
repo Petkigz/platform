@@ -246,3 +246,112 @@ export async function joinLiveSession(
     message: typeof row?.message === 'string' ? row.message : undefined,
   };
 }
+
+/**
+ * The recording of a class that already happened.
+ *
+ * Only the teacher is ever captured, so the file holds no learner. The address
+ * of it is never in the page: the database keeps it and hands it out one
+ * redirect at a time to somebody the permission admits, which is why the button
+ * below points at `/api/live/<id>/recording` and not at a video host.
+ */
+export type RecordingReceipt = {
+  announced: boolean;
+  notified: number;
+  people: number;
+  capped: boolean;
+  replaced: boolean;
+};
+
+/**
+ * The one rule a link has to pass before it is worth sending.
+ *
+ * The database refuses anything that is not `https` — a `javascript:` address
+ * here would be a link the platform hands a learner and a browser executes. This
+ * checks the same thing in the browser so the person gets the sentence without a
+ * round trip; it is not the enforcement, and it does not pretend to be.
+ */
+export function recordingLinkProblem(url: string): string | null {
+  const trimmed = url.trim();
+  if (trimmed === '') return 'Paste the address of the recording.';
+  if (!/^https:\/\/[^\s]+$/.test(trimmed)) {
+    return 'A recording link has to start with https:// and contain no spaces.';
+  }
+  if (trimmed.length > 2048) return 'That link is too long to be a recording address.';
+  return null;
+}
+
+/** What happened, said honestly, including when nobody was told. */
+export function describeRecordingAttach(r: RecordingReceipt): string {
+  const what = r.replaced ? 'Replaced the recording.' : 'Recording attached.';
+  if (!r.announced) {
+    return `${what} Nobody was messaged — the class will find it on the class page.`;
+  }
+  if (r.people === 0) return `${what} There was nobody to tell.`;
+  if (r.capped) {
+    return `${what} Told ${r.notified} of ${r.people} people; the rest were not messaged.`;
+  }
+  return `${what} Told ${r.notified === 1 ? 'the one person' : `all ${r.people} people`}.`;
+}
+
+export async function attachLiveRecording(
+  supabase: SupabaseClient,
+  sessionId: string,
+  url: string,
+  announce: boolean,
+): Promise<{ ok: true; receipt: RecordingReceipt } | { ok: false; message: string }> {
+  const problem = recordingLinkProblem(url);
+  if (problem) return { ok: false, message: problem };
+
+  const { data, error } = await supabase.rpc('attach_live_recording', {
+    p_session_id: sessionId,
+    p_url: url.trim(),
+    p_announce: announce,
+  });
+  if (error) return { ok: false, message: error.message };
+
+  const row = data as {
+    announced?: unknown;
+    notified?: unknown;
+    people?: unknown;
+    capped?: unknown;
+    replaced?: unknown;
+  } | null;
+  if (!row || typeof row.notified !== 'number' || typeof row.people !== 'number') {
+    return { ok: false, message: 'the recording was attached, but the receipt could not be read' };
+  }
+
+  return {
+    ok: true,
+    receipt: {
+      announced: row.announced === true,
+      notified: row.notified,
+      people: row.people,
+      capped: row.capped === true,
+      replaced: row.replaced === true,
+    },
+  };
+}
+
+/**
+ * Taking a recording down.
+ *
+ * The reason is mandatory because the next person to ask "why has this class lost
+ * its recording?" is answered by it, so it is refused here before it reaches the
+ * network rather than after.
+ */
+export async function removeLiveRecording(
+  supabase: SupabaseClient,
+  sessionId: string,
+  reason: string,
+): Promise<{ ok: true; reason: string } | { ok: false; message: string }> {
+  const trimmed = reason.trim();
+  if (trimmed.length < 3) return { ok: false, message: 'Say why the recording is being removed.' };
+
+  const { error } = await supabase.rpc('remove_live_recording', {
+    p_session_id: sessionId,
+    p_reason: trimmed,
+  });
+  if (error) return { ok: false, message: error.message };
+  return { ok: true, reason: trimmed };
+}

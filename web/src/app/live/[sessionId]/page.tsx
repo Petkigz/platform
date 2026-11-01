@@ -98,6 +98,15 @@ export default async function LiveSessionPage({
     | { joinable?: boolean; reason?: string }
     | null;
 
+  // Whether a recording of this class may be watched by this reader. The answer
+  // comes from the database, which knows about the enrolment; the address does
+  // not come from anywhere yet — it is handed out by the redirect below, one
+  // person at a time, and never sits in this page.
+  const { data: watchableData } = await supabase.rpc('can_watch_live_recording', {
+    p_session_id: session.id,
+  });
+  const watchable = watchableData === true;
+
   return (
     <div className="container section">
       <p className="eyebrow">
@@ -114,6 +123,19 @@ export default async function LiveSessionPage({
         <div className="notice warn">
           <strong>This class was cancelled.</strong> {session.cancelled_reason}
         </div>
+      )}
+
+      {watchable && (
+        <section className="card" style={{ marginTop: '1rem' }}>
+          <h2 style={{ marginTop: 0 }}>The recording</h2>
+          <p className="muted" style={{ marginTop: 0 }}>
+            This class was recorded. Only the teacher was captured — nobody in the class
+            appears in it. It stays watchable while your place in the course does.
+          </p>
+          <a className="btn" href={`/api/live/${session.id}/recording`}>
+            Watch the recording
+          </a>
+        </section>
       )}
 
       {attendees.length > 0 ? (

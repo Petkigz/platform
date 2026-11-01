@@ -67,8 +67,8 @@ export async function run(ctx) {
 
   await test('every kind comes back, whether or not it has been changed', async () => {
     const list = await prefs(user);
-    assert(Array.isArray(list) && list.length === 7, `got ${list.length} kinds`);
-    // Seven since `live_cancelled`: the closed vocabulary lives in the two
+    assert(Array.isArray(list) && list.length === 8, `got ${list.length} kinds`);
+    // Eight since `live_recording_ready`: the closed vocabulary lives in the two
     // table CHECKs, the `foreach` in `my_notification_preferences()`, the guard
     // in `set_notification_preference()` and this list. A kind added to one and
     // forgotten in another is a screen that throws, so they are pinned here.
@@ -76,7 +76,7 @@ export async function run(ctx) {
       JSON.stringify(list.map((p) => p.kind))
         === JSON.stringify(['payout_paid', 'payout_failed', 'payout_cancelled',
                             'media_encode_failed', 'class_starting', 'plan_renewing',
-                            'live_cancelled']),
+                            'live_cancelled', 'live_recording_ready']),
       'the order or the vocabulary changed');
     assert(list.every((p) => p.enabled === true), 'a kind is off by default');
   });
@@ -93,6 +93,8 @@ export async function run(ctx) {
     assert(byKind.plan_renewing.available === false, 'a reminder nobody computes is offered as live');
     assert(byKind.live_cancelled.available === false,
       'a cancellation nobody can send is offered as live');
+    assert(byKind.live_recording_ready.available === false,
+      'a recording nobody can attach yet is offered as live');
 
     // And it can still be chosen: availability must not disable the switch.
     await setPref(user, 'class_starting', false);

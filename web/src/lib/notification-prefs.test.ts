@@ -10,7 +10,7 @@ import {
   type Preference,
 } from './notification-prefs.ts';
 
-test('the seven kinds are the seven the database can send, in its order', () => {
+test('the eight kinds are the eight the database can send, in its order', () => {
   // The order is the database's (`my_notification_preferences()`), not a choice
   // made here: a screen that reorders the list is a screen whose next kind is
   // forgotten in the other list.
@@ -19,6 +19,7 @@ test('the seven kinds are the seven the database can send, in its order', () => 
     [
       'payout_paid', 'payout_failed', 'payout_cancelled',
       'media_encode_failed', 'class_starting', 'plan_renewing', 'live_cancelled',
+      'live_recording_ready',
     ],
   );
 });
@@ -32,6 +33,15 @@ test('a cancelled class is a choice, and the description says what silence costs
   assert.equal(info!.locked, false);
   assert.match(info!.description, /finding out by opening the room/);
   assert.match(info!.description, /still says it was cancelled/);
+});
+
+test('a recording being ready is a choice, and the description says what silence costs', () => {
+  // The recording is not going anywhere: muting the message costs the warning,
+  // not the class. That is what makes it a switch rather than an obligation.
+  const info = describeKind('live_recording_ready');
+  assert.ok(info);
+  assert.equal(info!.locked, false);
+  assert.match(info!.description, /still there/);
 });
 
 test('exactly two kinds are locked, and they are the money failures', () => {

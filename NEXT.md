@@ -144,6 +144,18 @@ own, not the client's claim. Who may see a class is still answered once, by
 close the export in the same breath as the page. The course report still has no
 file; what a teacher needs first is the register for one class.
 
+A class that has already happened can now carry a recording. The teacher made it
+somewhere else — a phone, a drive, the school's Zoom — and the platform holds the
+address: the host or staff attaches it to a class that has ended, over https only,
+and announces it to the class if they choose to. Anyone entitled to the course can
+watch it for as long as their enrolment lasts, which is the same rule the course's
+own lessons follow. The address itself is not on the session row and not in any
+table a client can read — it is handed out once, by a redirect — because row level
+security is row level, and a column an entitled learner can select is a column that
+learner can read. Only the teacher is ever captured, so the recording holds no
+learner; the caveat that remains, and is printed beside the field, is that a link
+copied out of the recording host cannot be recalled by us.
+
 The interface now lays itself out from either edge. A reader whose device is set
 to Arabic, Urdu, Persian, Pashto, Dari or Dhivehi gets `<html dir="rtl">` and a
 page that mirrors: margins, padding, borders and alignment follow the writing
@@ -459,7 +471,7 @@ say what is left instead of what was missing.
 | **Cohorts** | Tables, exact-version pinning, opt-in join/leave, capacity serialisation, family opt-in for children, counts on the manager and, since row 32, names and progress on the class page for the teacher who opened it, teacher manager, learner join/leave, the teacher-set `join_closes_at` window, how full each class is on the course page a joiner reads it from (`cohort_places()`, counts only — the roster stays behind `can_read_cohort_member()`), and the teacher's control over the published number (`set_cohort_capacity()`, never below the learners already in the class) | Nothing structural | The same safeguarding review. `learning.cohorts` ships `false` |
 | **Learner analytics** (`SCREENS.md` row 32) | `can_read_learner_course_progress()`, `cohort_learner_progress()`, the class page with a roster ordered by need, `teacher_course_analytics()` with enrolments/completions/certificates, `/teach/[courseId]/reports`, and the class list as a CSV a teacher downloads from the class page, recorded in the audit log before the file is sent | Anything that follows a learner across courses; the course report has no file yet, only the class roster does | **Decision:** how long progress stays readable after a class ends. Until then it stays readable, which is the safer default |
 | **Reviewer access to lesson media** | `may_review_version_media()` — an accepted or in-progress assignment and nothing else — as a third branch of `may_play_rendition()`, with the player wired into `/review/[assignmentId]`; `may_watch_master()`, `master_preview_target()` and `/api/media/master` for the uploader, staff and the version author, with `Watch` on `/teach/media` and `/admin/media`; 19 database tests, most of them refusals | Any copy for a reviewer: no download, no master, no export. Aggregate review analytics | **Nothing.** Decided 2026-10-20: "other teachers" means a reviewer checking quality for a named period, not co-teachers and not any teacher on the platform. The period is the assignment's state, so access ends with the review |
-| **Live classes with teacher-only recording** | Sessions, join windows, attendance, the roster, `/live` and the teacher's scheduling form; the room URL is `delivery.live_room_base + '/room/' + slug`. Teacher-only capture is the rule | The media server: anything that actually carries audio and video | **Decision made** (build in-house); the remaining work is infrastructure, not design |
+| **Live classes with teacher-only recording** | Sessions, join windows, attendance, the roster, `/live` and the teacher's scheduling form; the room URL is `delivery.live_room_base + '/room/' + slug`. Teacher-only capture is the rule. Since 2026-11-01 a finished class can carry the **address** of a recording the teacher made elsewhere — attached by the host or staff, over https, watchable by anybody entitled to the course while their enrolment lasts, never readable from the session row, and announced once per class | The media server: anything that actually carries audio and video. Hosting the bytes rather than holding a link | **Decision made** (build in-house); the remaining work is infrastructure, not design |
 | **Payments** | MTN MoMo and Airtel adapters, checkout, orders, refunds, reconciliation, disputes, financial adjustments, subscriptions with entitlement grants that drive access, 50% teacher-share accrual with the split snapshotted per row, and the **72-hour refund window** (2026-10-23): a customer asks within three days of the payment, staff can still open one afterwards, and a partial goodwill refund has no screen yet | Live credentials, callback verification against a real provider, automatic renewal, failed-payment retry, a merchant account | **External:** provider sandbox and merchant credentials (P12). Do not claim any of this works end to end |
 | **Payouts** (`teaching.payouts`) | The whole request path: `my_earnings()` and `/teach/earnings`, `request_instructor_payout()` with a tax acknowledgement, the refund-hold setting, one open request per currency (unique index), `my_payouts()`, the finance queue at `/admin/payouts` that shows the amount asked for beside what the ledger owes today, cancellation, failure with a reason the teacher reads, and `complete_instructor_payout()` as the only function that marks an earning paid; `platform_teacher_liability()` reports the balance owed per currency | The provider call itself, and per-teacher destination details | **External:** a payout provider, and a tax treatment per country. `teaching.payouts` is CODE-gated and a trigger refuses to enable it at runtime |
 | **Guardian verification** | Tables and flow complete, shipping off. **Not to be deleted** — COPPA makes verifiable parental consent mandatory for US under-13s | Enabling it | **External:** legal review, and it must be on before any US child enrols |
@@ -2338,6 +2350,55 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### The recording of a class is an address, not a file, 2026-11-01
+
+`live_sessions` has carried `recording_reference` since live classes were built,
+with a comment saying a provider callback would fill it. No provider was ever
+connected, nothing wrote it, and no row has ever held one. Meanwhile a teacher who
+recorded a class on their phone had nowhere to put it, so the recording lived in a
+chat message and the platform — which owns the schedule, the door, the clock and
+the roll — knew nothing about it.
+
+**The undecided part was never the code.** Two questions had been left open since
+2026-10-20, with a note saying they become the next question the moment anything
+produces a recording. The owner answered both on 2026-11-01: anyone entitled to the
+course may watch, and for as long as their enrolment lasts. Neither is a new rule —
+the second is exactly what the course's own lessons already do — and together they
+keep the recording off the safeguarding critical path, because only the teacher is
+ever captured.
+
+**The column could not be used as it stood, and that is the interesting part.**
+`live_sessions_read` admits every entitled learner to the row, and row level
+security is row level: a column on that row is readable by everybody the row is. A
+gated redirect in front of a link stored there would have been decoration — the
+address would already have been in every learner's hands. So the reference moved to
+`live_session_recordings`, RLS on and **no policy at all**, the shape
+`analytics_events` already uses; and the two dead columns were dropped rather than
+left beside it, because two homes for one fact drift and an empty one keeps looking
+authoritative.
+
+**`live_recording_link()` raises rather than returning null.** That single choice is
+what makes a refusal and a class that was never recorded the same answer: a
+stranger cannot use the difference to learn which classes were recorded. The route
+turns both into the same 404, for the same reason.
+
+**Refusals that carry the design.** Only the host or staff attach one, and only to a
+class that has ended — a link attached to a class that has not happened is a promise
+nobody can keep. Never to a cancelled class: nothing was taught. HTTPS only, because
+a `javascript:` address here would be a link the platform hands a learner and a
+browser executes, and "the teacher pasted it" is not a reason to run it. Telling the
+class is a checkbox that starts **unticked**, deduped on the session so replacing a
+wrong link does not message anybody twice. Taking one down needs a reason and keeps
+the row, because the next person to ask why a class lost its recording is answered
+by it — and the removal is audited **without** the address, because an append-only
+table is the last place for a capability.
+
+**What the platform does not do, said on the form.** It holds the address; it does
+not own the video, host the bytes, or control what a recording host does once a
+browser has followed the redirect. A Drive or Zoom link copied out of that address
+can be opened by anybody who has it. The form says so in the sentence beside the
+field rather than implying a lock the platform does not have.
 
 ### The class list leaves the platform, 2026-11-01
 

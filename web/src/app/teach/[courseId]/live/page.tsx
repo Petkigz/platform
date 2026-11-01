@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { describeCancellation, describeLength, describeWhen } from '@/lib/live';
 import { CancelClass } from './cancel-class';
+import { RecordingForm } from './recording';
 import { ScheduleForm } from './schedule-form';
 
 export const dynamic = 'force-dynamic';
@@ -56,6 +57,17 @@ export default async function TeachLivePage({
     .eq('user_id', user.id)
     .maybeSingle();
 
+  // Which classes already have a recording. The address itself is not here and
+  // cannot be: it lives in a table with no read policy, and this only says which
+  // session ids have one. A failure is silence rather than a broken page — a
+  // missing badge is not a reason to lose the class list.
+  const { data: recordingRows } = await supabase.rpc('teacher_live_recordings', {
+    p_course_id: course.id,
+  });
+  const recordings = new Set(
+    ((recordingRows ?? []) as unknown as { session_id: string }[]).map((r) => r.session_id),
+  );
+
   const rows = (sessions ?? []) as unknown as {
     id: string;
     title: string;
@@ -87,7 +99,9 @@ export default async function TeachLivePage({
       <h1>Live classes</h1>
       <p className="lede">
         A room your enrolled learners can enter, for the length you set. Learners are
-        never recorded; you may be, if recording is ever switched on.
+        never recorded. If you record yourself — on a phone, or in whatever app your
+        school uses — add the link to the class afterwards and the people entitled to
+        the course can watch it.
       </p>
 
       {receipt && (
@@ -136,18 +150,25 @@ export default async function TeachLivePage({
           <h2 style={{ marginTop: 0 }}>Finished</h2>
           <ul className="lessons">
             {past.map((session) => (
-              <li key={session.id}>
+              <li key={session.id} style={{ flexWrap: 'wrap' }}>
                 <span className="t">
                   {session.title}
                   <span className="muted">
                     {' · '}
                     {describeWhen(session.starts_at, session.scheduled_zone)}
                     {session.status === 'cancelled' ? ` · cancelled: ${session.cancelled_reason}` : ''}
+                    {recordings.has(session.id) ? ' · recorded' : ''}
                   </span>
                 </span>
                 <Link className="btn ghost tiny" href={`/live/${session.id}?as=${course.id}`}>
                   Who came
                 </Link>
+                {session.status !== 'cancelled' && (
+                  <RecordingForm
+                    sessionId={session.id}
+                    hasRecording={recordings.has(session.id)}
+                  />
+                )}
               </li>
             ))}
           </ul>

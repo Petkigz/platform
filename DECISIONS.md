@@ -6910,3 +6910,53 @@ class" — which may be a lie, and is the one thing a register must never do.
 **Also refused, and still refused:** following a learner across courses. One class
 at one moment is a register; a person's whole record across a course catalogue is a
 profile, and that is a different decision nobody has made.
+
+## A recording is a link the platform holds, not a file it owns — **DECIDED 2026-11-01**
+
+Two things about live-class recordings had been left open since 2026-10-20, and the
+note in this file said they become "the next question" the moment anything produces
+a recording. The owner answered both on 2026-11-01.
+
+**Who may watch.** Anyone entitled to the course — an enrolled learner or their
+guardian, the same door they would have walked through to attend. Not only those
+who came: a recording that exists so a sick child can catch up is worth more than
+one that exists as a reward for attendance, and attendance is already recorded
+separately for anyone who wants to ask the harder question.
+
+**How long.** As long as the enrolment lasts. That is not a new expiry rule, it is
+the rule the course's own lessons already follow, and it means nothing new persists
+after entitlement ends. A learner who withdraws loses the recording in the same
+instant they lose the course.
+
+**The platform holds the address, not the video.** No room provider is connected
+and none is chosen, so a recording is made wherever the teacher already works. The
+first version therefore stores an `https` address and nothing else. Uploading the
+bytes is a different feature — a transcode pipeline and a paid storage plan — and
+the permission, the screens and the redirect are written so that swapping the
+mechanism later touches one function rather than three screens.
+
+**What that costs, said plainly.** Once a browser follows the redirect, the
+recording host decides what happens next, and a Zoom or Drive link copied out of
+that address can be shared by anybody who has it. The platform controls who is
+*given* the link — which is the part it owns — and the teacher's form says so
+rather than implying a lock it does not have. A capability URL is not a permission
+system, and pretending otherwise would be the dishonest part.
+
+**Where the address lives, and why it moved.** `live_sessions` had carried
+`recording_reference` since the feature was built, with a comment about a provider
+callback. It was never written and no row ever held one. It could not have been
+used as it stood: `live_sessions_read` admits every entitled learner to the row,
+and row level security is row level — a column on that row is readable by everybody
+the row is, so a gated redirect in front of it would have been decoration. The
+address now lives in `live_session_recordings`, RLS on with **no policy at all**,
+and the two dead columns are dropped rather than left beside it. Two homes for one
+fact drift, and an empty one keeps looking authoritative.
+
+**Refusals.** Only the host or staff may attach one, and only to a class that has
+ended; a cancelled class has nothing to attach, because nothing was taught. The
+link must be `https` — a `javascript:` or `data:` address is a link the platform
+would hand a learner and a browser would execute. A cancelled class is never
+watchable, even if a link was attached before it was called off. `live_recording_link()`
+**raises** rather than returning null, so "there is no recording" and "it is not
+yours" are the same answer to a stranger and neither can be used to find out which
+classes were recorded.
