@@ -200,7 +200,7 @@ export async function run(ctx) {
       'the same provider event was stored twice');
   });
 
-  await test('manual confirmation requires a privileged actor and written evidence', async () => {
+  await test('manual confirmation requires a finance admin or the owner, and written evidence', async () => {
     const { acct, userId } = await newPayer('pay-5@example.com');
     const { order } = await newOrder(acct);
     await rejects(() => q(

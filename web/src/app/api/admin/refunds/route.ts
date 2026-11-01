@@ -17,7 +17,8 @@ import { decideRefund } from '@/lib/refunds';
  *
  * Approving does not settle. It creates a pending refund transaction, and the
  * money moves only when complete_refund() runs against a verified provider
- * event or by a privileged actor.
+ * event or by a finance admin — support can open a refund, but settlement is
+ * the same signature that decides it.
  */
 export async function POST(request: Request) {
   if (!isSupabaseConfigured()) {

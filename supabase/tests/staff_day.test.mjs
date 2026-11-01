@@ -33,6 +33,11 @@
 // and finance decides it, the refund window itself is any staff member's
 // because it bounds asking rather than deciding, and the feature switches are
 // the owner's alone.
+//
+// The last act pays a debt this suite wrote down rather than fixed when it
+// shipped: the two ledger writers still admitted any privileged caller. Act VI
+// walks the day to its end — the provider never calls back — and pins that the
+// money moves only through finance, by hand or otherwise (`20261281004500`).
 
 export async function run(ctx) {
   const {
@@ -90,7 +95,7 @@ export async function run(ctx) {
    * a timestamp), and a fixture that fakes it would prove nothing about what
    * happens to a real one.
    */
-  async function paidCustomer(name) {
+  async function paidCustomer(name, { confirm = true } = {}) {
     sequence += 1;
     const userId = await newUser(`staffday-buyer-${sequence}@example.com`);
     await newProfile(userId, name);
@@ -146,10 +151,13 @@ export async function run(ctx) {
       [order, product, priceId, totalMinor]);
 
     // The confirmation is finance's own work, exercised as finance rather than
-    // as the database owner: the manual-evidence path requires a privileged
-    // actor with written evidence.
-    await q('select public.record_payment_success($1,$2,$3,$4,null,$5)',
-      [order, finance, 'manual', `SDAY-CAP-${sequence}`, 'Bank statement, 12 Aug']);
+    // as the database owner: the manual-evidence path needs a finance admin or
+    // the owner, and written evidence. `confirm: false` leaves the order
+    // pending for the act that proves who may confirm one.
+    if (confirm) {
+      await q('select public.record_payment_success($1,$2,$3,$4,null,$5)',
+        [order, finance, 'manual', `SDAY-CAP-${sequence}`, 'Bank statement, 12 Aug']);
+    }
 
     return { userId, learnerId, account, order, totalMinor, course, version };
   }
@@ -491,6 +499,134 @@ export async function run(ctx) {
   });
 
   // -------------------------------------------------------------------------
+  console.log('\nAct VI — the provider never calls back');
+  // -------------------------------------------------------------------------
+
+  /** What the webhook does with the service role: an event it has verified. */
+  async function signedEvent(eventId) {
+    return (await q(
+      `insert into public.payment_provider_events
+         (provider, provider_event_id, event_type, payload, signature_verified, processing_status)
+       values ('mtn_momo', $1, 'refund.completed', '{}', true, 'received')
+       returning id`, [eventId])).rows[0].id;
+  }
+
+  const refundTxn = (await q(
+    'select id from public.refund_transactions where refund_request_id = $1',
+    [supportRefund])).rows[0].id;
+
+  await test('support cannot settle the refund, by hand or through the provider door', async () => {
+    // The manual door, which the recorded edge named.
+    await rejects(() => asActor(support, 'select public.complete_refund($1,$2,$3)',
+      [refundTxn, 'SDAY-REF-1', support]),
+      /finance admin or platform admin/i);
+
+    // And the door beside it, which the recorded edge did not: support can read
+    // payment_provider_events, so any verified event id would have settled the
+    // refund as though the provider had confirmed it.
+    const event = await signedEvent('evt-staffday-refund');
+    await rejects(() => asActor(support, 'select public.complete_refund($1,$2,$3,$4)',
+      [refundTxn, 'SDAY-REF-1', support, event]),
+      /finance admin or platform admin/i);
+
+    const still = (await q('select status from public.refund_transactions where id = $1',
+      [refundTxn])).rows[0].status;
+    assert(still === 'pending', `the refund is ${still} after two refused settlements`);
+  });
+
+  await test('a signature is not something a console can type', async () => {
+    // The webhook writes events with the service role, which does not consult
+    // RLS. No person does — the signature is the thing the provider and the
+    // server share, and typing `signature_verified = true` is not verifying it.
+    await rejects(() => asActor(support,
+      `insert into public.payment_provider_events
+         (provider, provider_event_id, event_type, signature_verified)
+       values ('mtn_momo','evt-staffday-typed','payment.succeeded',true)`),
+      /row-level security/i);
+
+    // Not a rank question: the owner cannot type one either.
+    await rejects(() => asActor(owner,
+      `insert into public.payment_provider_events
+         (provider, provider_event_id, event_type, signature_verified)
+       values ('mtn_momo','evt-staffday-typed-2','payment.succeeded',true)`),
+      /row-level security/i);
+
+    // Recording a delivery they cannot vouch for is allowed. That is evidence,
+    // not a signature, and both writers refuse it.
+    await asActor(support,
+      `insert into public.payment_provider_events
+         (provider, provider_event_id, event_type, signature_verified)
+       values ('mtn_momo','evt-staffday-unverified','payment.succeeded',false)`);
+    assert((await q(
+      `select count(*)::int n from public.payment_provider_events
+        where provider_event_id = 'evt-staffday-unverified'`)).rows[0].n === 1,
+      'a support agent could not record an unverified delivery');
+  });
+
+  await test('support cannot mark an order paid that nobody paid', async () => {
+    const unpaid = await paidCustomer('Halima Nabirye', { confirm: false });
+
+    await rejects(() => asActor(support,
+      'select public.record_payment_success($1,$2,$3,$4,null,$5)',
+      [unpaid.order, support, 'manual', 'SDAY-CASH-1', 'A slip the office says it saw']),
+      /finance admin or platform admin/i);
+
+    // Naming somebody else is not a way around it either: the check is on the
+    // session, and the session is the one thing a caller cannot choose.
+    await rejects(() => asActor(support,
+      'select public.record_payment_success($1,$2,$3,$4,null,$5)',
+      [unpaid.order, owner, 'manual', 'SDAY-CASH-2', 'The owner says it is fine']),
+      /finance admin or platform admin/i);
+
+    const status = (await q('select status from public.orders where id = $1',
+      [unpaid.order])).rows[0].status;
+    assert(status === 'pending_payment', `support moved the order to ${status}`);
+
+    // Finance can, because it is their desk.
+    await asActor(finance, 'select public.record_payment_success($1,$2,$3,$4,null,$5)',
+      [unpaid.order, finance, 'manual', 'SDAY-CASH-1', 'Cash at the office, receipt 4471']);
+
+    const paid = (await q(
+      `select status, payment_confirmed_by, payment_evidence
+         from public.orders where id = $1`, [unpaid.order])).rows[0];
+    assert(paid.status === 'paid', `finance's manual confirmation left the order ${paid.status}`);
+    assert(paid.payment_confirmed_by === finance, 'the receipt does not name finance');
+    assert(/receipt 4471/i.test(paid.payment_evidence), 'the written evidence was not kept');
+  });
+
+  await test('finance settles it by hand, and the ledger, the order and the request agree', async () => {
+    await asActor(finance, 'select public.complete_refund($1,$2,$3)',
+      [refundTxn, 'SDAY-REF-1', finance]);
+
+    const txn = (await q(
+      `select status, processed_by, provider_reference
+         from public.refund_transactions where id = $1`, [refundTxn])).rows[0];
+    assert(txn.status === 'completed', `the refund is ${txn.status}`);
+    assert(txn.processed_by === finance, 'the settlement does not name the person who made it');
+    assert(txn.provider_reference === 'SDAY-REF-1');
+
+    const request = (await q(
+      `select status, financial_transaction_id
+         from public.refund_requests where id = $1`, [supportRefund])).rows[0];
+    assert(request.status === 'completed', `the request is ${request.status}`);
+    assert(request.financial_transaction_id,
+      'the settled refund is not linked to the ledger row it produced');
+
+    const ledger = (await q(
+      `select transaction_type, direction, amount_minor
+         from public.financial_transactions where id = $1`,
+      [request.financial_transaction_id])).rows[0];
+    assert(ledger.transaction_type === 'refund' && ledger.direction === 'debit',
+      `the ledger row is a ${ledger.transaction_type} ${ledger.direction}`);
+    assert(Number(ledger.amount_minor) === 60000, `the ledger says ${ledger.amount_minor}`);
+
+    // The whole 60,000 went back, so the order is refunded rather than partly.
+    const order = (await q('select status from public.orders where id = $1',
+      [customer.order])).rows[0];
+    assert(order.status === 'refunded', `the order is ${order.status} after a full refund`);
+  });
+
+  // -------------------------------------------------------------------------
   console.log('\nThe day, read back from the audit trail');
   // -------------------------------------------------------------------------
 
@@ -506,6 +642,8 @@ export async function run(ctx) {
       'the refund support opened is not recorded against them');
     assert(by(finance).includes('refund.approved'),
       'finance’s decision is not recorded against them');
+    assert(by(finance).includes('refund.completed'),
+      'the settlement finance made is not recorded against them');
     assert(by(governance).length > 0, 'governance did nothing that was recorded');
   });
 

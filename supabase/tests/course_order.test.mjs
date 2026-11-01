@@ -688,7 +688,7 @@ export async function run(ctx) {
   // record_payment_success() would skip.
   // ---------------------------------------------------------------------
 
-  /** Pay an order the way the platform does — a privileged actor with evidence. */
+  /** Pay an order the way the platform does — finance, with written evidence. */
   const payOrder = (orderId, reference) =>
     q('select id from public.record_payment_success($1,$2,$3,$4,null,$5)',
       [orderId, admin, 'manual', reference, `Cash, receipt ${reference}`]);

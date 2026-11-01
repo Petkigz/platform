@@ -47,7 +47,7 @@ type Body = {
  *
  *   - It does not grant anything. A pending order confers no access; only
  *     `record_payment_success()` does that, and it needs a verified provider
- *     event or a privileged actor with written evidence.
+ *     event or a finance admin with written evidence.
  *   - It does not treat a provider redirect as payment. The payer comes back to
  *     `returnUrl` with nothing settled, and the entitlement arrives when the
  *     webhook lands. The UI has to be built to wait rather than to assume.

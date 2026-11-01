@@ -316,9 +316,9 @@ support agent, a finance admin and a governance admin through one day, which
 found the switchboard wired backwards — the least-privileged staff role could
 appoint a platform admin and revoke the owner's — and a refund decision that any
 staff member could sign while every screen said it was finance's. Both fixed;
-the refund is now opened by support and decided by finance, and the two ledger
-writers that still admit any privileged caller are written down rather than
-quietly rewritten.
+the refund is now opened by support and decided by finance — and the two ledger
+writers the same suite named as an open edge are now finance's too, by hand or
+by provider event, with a typed signature refused at the table.
 
 The four journeys a platform either supports or does not are now walked end to
 end as four different people, in one database suite (`first_day.test.mjs`): the
@@ -331,8 +331,8 @@ course row survived; and a certificate could be issued but never asked for,
 because `certificate_enabled` had a writer function and no screen. Both are
 fixed, and the author now turns certificates on from their course page.
 
-Verification: **2237 database tests (148 suites), 1826 web tests; TypeScript
-typecheck, build and `check:repo` pass; 206 migrations.**
+Verification: **2241 database tests (148 suites), 1826 web tests; TypeScript
+typecheck, build and `check:repo` pass; 207 migrations.**
 
 ## Today's sentence
 
@@ -2240,6 +2240,55 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### The money writers are finance's, and a signature is not something a console types, 2026-11-01
+
+The staff day closed its entry by naming a debt instead of paying it: the two
+ledger writers that still admitted any privileged caller. This is the payment,
+in `20261281004500_money_by_finance.sql`.
+
+Narrowing the manual branches would have been decorative, because three other
+doors opened onto the same room, and finding them took reading the writers
+rather than the words about them:
+
+1. **The provider-event door.** Both writers also settle *against a provider
+   event*, and `ppe_read` lets any staff member read `payment_provider_events`.
+   So a support agent could settle an approved refund, or mark an order paid, by
+   citing any verified event id — the manual gate would never be reached. The
+   event door now asks the session the same question. A real callback has no
+   session at all (the service role carries no JWT subject), which is the only
+   caller that skips the question.
+
+2. **The actor was an argument.** It has to be — a webhook has nobody behind it.
+   But an argument can name somebody else, so checking `p_actor_id` alone would
+   let support pass the owner's id. There is now a check on
+   `current_user_id()` beside the check on the actor: the session is the one
+   thing a caller cannot choose.
+
+3. **`ppe_write` let a person type a signature.** Any privileged user could
+   insert a provider event with `signature_verified = true`. That is not
+   verifying anything, and it also let a staff member squat a provider event id
+   so the genuine delivery would be deduplicated away. A person may now record
+   an event they cannot vouch for; only the code holding the secret may mark one
+   verified. The webhook is unaffected — it writes with the service role, which
+   does not consult RLS.
+
+Act VI of `staff_day.test.mjs` walks the end of the day that motivated this: the
+provider never calls back. Support is refused settling the refund by hand and
+refused citing a verified event; support is refused marking an unpaid order paid
+even when it names the owner as the actor; a typed signature is refused at the
+table for support and for the owner alike, while recording an unverified
+delivery is allowed. Then finance settles the refund by hand, and the ledger row,
+the request and the order are read back and agree.
+
+**Still open, and named:** neither writer checks that a provider event belongs to
+the order or refund it is applied to. That needs the callback's payload contract
+and there is no provider yet (P12), so it is recorded in `DECISIONS.md` as the
+remaining edge — a finance-or-service-role mistake now, not a support agent's
+escalation route.
+
+**4 new database tests (2241 passed, 148 suites), 1826 web tests; tsc, build and
+check:repo clean; 207 migrations.**
 
 ### The staff day, and the two places the switches were wired backwards, 2026-10-31
 
