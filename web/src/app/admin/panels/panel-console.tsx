@@ -223,7 +223,7 @@ function PanelCard({
         {panel.activeMembers < panel.quorum ? ' — fewer than the quorum' : ''}
       </p>
 
-      <ul style={{ margin: 0, paddingLeft: '1.1rem' }}>
+      <ul style={{ margin: 0, paddingInlineStart: '1.1rem' }}>
         {panel.members.map((member) => (
           <li key={member.id} style={{ marginBottom: '0.25rem' }}>
             {member.name}{' '}
@@ -391,7 +391,7 @@ function PanelCard({
         {panel.cases.length === 0 ? (
           <p className="muted" style={{ margin: 0 }}>No case has been opened for this panel.</p>
         ) : (
-          <ul style={{ margin: 0, paddingLeft: '1.1rem' }}>
+          <ul style={{ margin: 0, paddingInlineStart: '1.1rem' }}>
             {panel.cases.map((row) => (
               <li key={row.id} style={{ marginBottom: '0.5rem' }}>
                 <strong>{row.courseTitle}</strong>{' '}

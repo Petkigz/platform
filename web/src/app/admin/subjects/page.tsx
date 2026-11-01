@@ -61,7 +61,9 @@ export default async function AdminSubjectsPage() {
       <SubjectEditor subjects={subjects} />
 
       <p className="section">
-        <Link href="/admin">← Back to what is waiting</Link>
+        <Link href="/admin">
+          <span className="dir-flip" aria-hidden>←</span> Back to what is waiting
+        </Link>
       </p>
     </div>
   );

@@ -674,6 +674,113 @@ function appRoutes() {
 }
 
 // ---------------------------------------------------------------------------
+// 12. The layout is written in logical properties, so a language can open
+//     right to left without a second stylesheet
+// ---------------------------------------------------------------------------
+// `<html dir>` follows the reader's language, and the layout is expected to
+// follow `<html dir>` on its own. It does that only while the CSS says
+// `margin-inline-start` rather than `margin-left`: a physical property bakes one
+// direction into the stylesheet, and the failure is invisible to everybody who
+// reads left to right.
+//
+// That is what makes this a check rather than a convention. The defaults that
+// shipped were physical in eight places — a toggle knob, four lines of the
+// printed certificate and receipt, and a rotated stamp — and none of them looked
+// wrong in English.
+//
+// Two kinds of exception, both stated in the source rather than listed here:
+//
+//   * a line carrying `direction-ok:` with a reason, for the handful of places
+//     where a physical edge is the point — a PNG drawn by Satori has no writing
+//     direction to follow;
+//   * `web/src/app/opengraph-image.tsx` as a whole, which is a fixed-size image
+//     rendered once, not a page.
+{
+  // `border-inline-start` contains `border-inline`, so the pattern is anchored on
+  // the physical word itself and never on a logical one that resembles it.
+  const PHYSICAL_CSS = [
+    /(^|[^-\w])(margin|padding)-(left|right)\b/,
+    /(^|[^-\w])border-(left|right)\b/,
+    /\btext-align:\s*(left|right)\b/,
+    /\bfloat:\s*(left|right)\b/,
+    /(^|[^-\w{])(left|right):\s*-?\d/,
+  ];
+  const PHYSICAL_TSX = /\b(marginLeft|marginRight|paddingLeft|paddingRight|borderLeft|borderRight)\b/;
+  const MARKER = /direction-ok:/;
+
+  // A four-value `margin`/`padding` shorthand is physical too, and the longhand
+  // rule above does not see it: `margin: 0 0 0 1rem` is `marginLeft: 1rem` in
+  // disguise. Two, three and four values are direction-neutral as long as the
+  // second and fourth agree, which is what this asks.
+  // The value stops at a `,` as well as a `;`, because a JSX style object holds
+  // several declarations inside one line and the next one is not this one's. The
+  // quotes around a JSX value are stripped rather than excluded: excluding them
+  // makes the whole value invisible, which is a check that passes for the wrong
+  // reason in exactly the place it is most needed.
+  const SHORTHAND = /(?:margin|padding)(?:Inline|Block)?\s*:\s*([^;,}]+)/g;
+  const ASYMMETRIC = (line) => {
+    for (const match of line.matchAll(SHORTHAND)) {
+      const values = match[1].replace(/['"]/g, ' ').trim().split(/\s+/).filter(Boolean);
+      if (values.length === 4 && values[1] !== values[3]) return match[0].trim();
+    }
+    return null;
+  };
+
+  // Globals first, then every component, because a fix in one and not the other
+  // is the state that looks finished and is not.
+  const scanLine = (line) => {
+    if (MARKER.test(line)) return null;
+    const shorthand = ASYMMETRIC(line);
+    if (shorthand) return `uses an asymmetric shorthand: ${shorthand.slice(0, 60)}`;
+    if (PHYSICAL_CSS.some((pattern) => pattern.test(line))) return `uses a physical property: ${line.trim().slice(0, 90)}`;
+    return null;
+  };
+
+  let cssHits = 0;
+  const cssPath = join(root, 'web', 'src', 'app', 'globals.css');
+  readFileSync(cssPath, 'utf8').split('\n').forEach((line, index) => {
+    const problem = scanLine(line);
+    if (problem) {
+      cssHits += 1;
+      fail('direction', `globals.css:${index + 1} ${problem}`);
+    }
+  });
+
+  // Images drawn by Satori, not pages: no writing direction, never mirrored.
+  const IMAGE_FILES = new Set(['opengraph-image.tsx', 'icon.tsx', 'apple-icon.tsx']);
+  let tsxHits = 0;
+  let scanned = 0;
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir)) {
+      const full = join(dir, entry);
+      if (statSync(full).isDirectory()) {
+        walk(full);
+        continue;
+      }
+      if (!entry.endsWith('.tsx') || entry.endsWith('.test.tsx')) continue;
+      if (IMAGE_FILES.has(entry)) continue;
+      scanned += 1;
+      readFileSync(full, 'utf8').split('\n').forEach((line, index) => {
+        if (MARKER.test(line)) return;
+        const relative = full.slice(root.length + 1);
+        const shorthand = ASYMMETRIC(line);
+        if (shorthand) {
+          tsxHits += 1;
+          fail('direction', `${relative}:${index + 1} uses an asymmetric shorthand: ${shorthand.slice(0, 60)}`);
+        } else if (PHYSICAL_TSX.test(line)) {
+          tsxHits += 1;
+          fail('direction', `${relative}:${index + 1} uses a physical style property: ${line.trim().slice(0, 90)}`);
+        }
+      });
+    }
+  };
+  walk(join(root, 'web', 'src'));
+
+  if (scanned === 0) fail('direction', 'no .tsx files were scanned, so the check proves nothing');
+  process.stdout.write(`direction: ${scanned} components, ${cssHits} physical CSS, ${tsxHits} physical inline styles\n`);
+}
+
+// ---------------------------------------------------------------------------
 if (problems.length > 0) {
   process.stderr.write(`\n${problems.length} structural problem(s):\n`);
   for (const problem of problems) process.stderr.write(`  - ${problem}\n`);

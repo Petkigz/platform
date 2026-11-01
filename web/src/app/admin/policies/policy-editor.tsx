@@ -320,7 +320,7 @@ export function PolicyEditor({
             </p>
             <p className="muted" style={{ margin: '0 0 0.5rem', fontSize: '0.9rem' }}>
               {doc.versions.map((version) => (
-                <span key={version.id} style={{ marginRight: '0.75rem' }}>
+                <span key={version.id} style={{ marginInlineEnd: '0.75rem' }}>
                   v{version.versionNumber} {version.status}
                   {version.effectiveAt ? ` from ${String(version.effectiveAt).slice(0, 10)}` : ''}
                   {version.openDecisions > 0 ? ` · ${version.openDecisions} open` : ''}

@@ -124,7 +124,7 @@ export default async function CourseReportsPage({
           <p style={{ marginTop: '1rem' }}>
             Window:{' '}
             {WINDOWS.map((w) => (
-              <span key={w} style={{ marginRight: '0.75rem' }}>
+              <span key={w} style={{ marginInlineEnd: '0.75rem' }}>
                 {w === days ? (
                   <strong>{w} days</strong>
                 ) : (

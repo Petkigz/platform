@@ -229,7 +229,7 @@ export default async function CourseViewPage({
         {completion && !completion.isComplete && completion.blocking.length > 0 && (
           <div className="notice warn" style={{ marginTop: '1rem' }}>
             <strong>Still to do:</strong>
-            <ul style={{ margin: '0.4rem 0 0', paddingLeft: '1.1rem' }}>
+            <ul style={{ margin: '0.4rem 0 0', paddingInlineStart: '1.1rem' }}>
               {completion.blocking.map((b) => (
                 <li key={b}>{b}</li>
               ))}
@@ -273,7 +273,7 @@ export default async function CourseViewPage({
                             {l.title}
                           </Link>
                           {l.is_preview && previewsOn && (
-                            <span className="badge neutral" style={{ marginLeft: '0.5rem' }}>
+                            <span className="badge neutral" style={{ marginInlineStart: '0.5rem' }}>
                               Preview
                             </span>
                           )}

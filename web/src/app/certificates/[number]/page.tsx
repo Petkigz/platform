@@ -83,13 +83,17 @@ export default async function CertificatePage({
             </div>
             <div className="certificate-number-block">
               <span className="certificate-meta">Certificate number</span>
-              <strong>{certificate.certificateNumber}</strong>
+              {/* The sheet is `dir="ltr"`, so this isolates nothing today. It is
+                  here because a number is the one string on a certificate that
+                  must never be reordered: if these labels are ever translated,
+                  the number stays a number without anybody remembering. */}
+              <strong><bdi>{certificate.certificateNumber}</bdi></strong>
               {/* A printed certificate has no clickable link, so the address is
                   printed too. It is the configured origin when the deployment
                   has one, and the path alone otherwise — never the request's
                   Host header, which is the one part of the request a visitor
                   can choose. */}
-              <span className="certificate-meta">{verifyAddress}</span>
+              <span className="certificate-meta"><bdi>{verifyAddress}</bdi></span>
               <Link href={`/verify/${encodeURIComponent(certificate.certificateNumber)}`}>
                 Verify this certificate
               </Link>

@@ -199,7 +199,7 @@ export default async function ReviewAssignmentPage({
               )}{' '}
               {assignment.courseId && (
                 <Link href={`/teach/${assignment.courseId}/preview/${rehearsal.next.lessonId}`}>
-                  See it as a learner →
+                  See it as a learner <span className="dir-flip" aria-hidden>→</span>
                 </Link>
               )}
             </div>

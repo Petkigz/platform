@@ -112,7 +112,7 @@ export default async function AdminMediaPage() {
                 <span className="muted">
                   {readableByteSize(Number(row.bytes))}
                   {row.used_percent !== null && ` · ${row.used_percent}%`}
-                  {row.over_quota && <span className="badge warn" style={{ marginLeft: '0.5rem' }}>over quota</span>}
+                  {row.over_quota && <span className="badge warn" style={{ marginInlineStart: '0.5rem' }}>over quota</span>}
                 </span>
               </li>
             ))}

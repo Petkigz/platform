@@ -205,7 +205,7 @@ export default async function ReceiptPage({
           </div>
           <div className="receipt-number">
             <span className="receipt-label">Number</span>
-            <strong>{order.order_number}</strong>
+            <strong><bdi>{order.order_number}</bdi></strong>
             <span className="receipt-meta">Issued {date(order.paid_at ?? order.created_at)}</span>
           </div>
         </header>

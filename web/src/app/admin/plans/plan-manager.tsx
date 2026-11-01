@@ -293,7 +293,7 @@ export function PlanManager({
                       <button
                         type="button"
                         className="btn ghost tiny"
-                        style={{ marginLeft: '0.5rem' }}
+                        style={{ marginInlineStart: '0.5rem' }}
                         disabled={pending}
                         onClick={() => {
                           void (async () => {

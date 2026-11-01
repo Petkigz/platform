@@ -171,7 +171,7 @@ export default async function AdminExchangeRatesPage({
                       <dd>
                         {describeRate(probe.value.converted)}
                         {probe.value.converted.derived && (
-                          <span className="badge warn" style={{ marginLeft: '0.5rem' }}>inverted</span>
+                          <span className="badge warn" style={{ marginInlineStart: '0.5rem' }}>inverted</span>
                         )}
                       </dd>
                     </div>

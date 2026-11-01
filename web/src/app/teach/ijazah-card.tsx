@@ -27,7 +27,7 @@ export function IjazahCard({ authorisations }: { authorisations: Authorisation[]
       </p>
 
       {live.length > 0 && (
-        <ul style={{ paddingLeft: '1.1rem' }}>
+        <ul style={{ paddingInlineStart: '1.1rem' }}>
           {live.map((a) => (
             <li key={a.id} style={{ marginBottom: '0.4rem' }}>
               {authorisationLine(a)}
@@ -41,7 +41,7 @@ export function IjazahCard({ authorisations }: { authorisations: Authorisation[]
           <summary className="muted" style={{ fontSize: '0.85rem' }}>
             {withdrawn.length} withdrawn
           </summary>
-          <ul style={{ paddingLeft: '1.1rem' }}>
+          <ul style={{ paddingInlineStart: '1.1rem' }}>
             {withdrawn.map((a) => (
               <li key={a.id} style={{ marginBottom: '0.4rem' }}>
                 {authorisationLine(a)}

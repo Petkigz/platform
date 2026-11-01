@@ -48,7 +48,7 @@ export function ReconciliationManager({runs,rates}:{runs:Reconciliation[];rates:
               <label>Currency it landed in<input name="currencyCode" required minLength={3} maxLength={3} defaultValue={item.currency_code??'UGX'}/></label>
               <label>Rate<select name="rateId" defaultValue="">
                 <option value="">The newest recorded for the pair</option>
-                {rates.map(r=><option key={r.id} value={r.id}>{r.base}→{r.quote} at {r.rate} ({r.source})</option>)}
+                {rates.map(r=><option key={r.id} value={r.id}>{`${r.base}\u2192${r.quote}`} at {r.rate} ({r.source})</option>)}
               </select></label>
               <button className="btn secondary" disabled={busy!==null}>{busy===`settle:${item.id}`?'Recording…':'Record settlement'}</button>
             </form>

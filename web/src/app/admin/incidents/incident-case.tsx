@@ -457,7 +457,7 @@ export function IncidentCase({ incidentId, onClose }: { incidentId: string; onCl
         </div>
       )}
 
-      <ol style={{ marginTop: '0.75rem', paddingLeft: '1.1rem' }}>
+      <ol style={{ marginTop: '0.75rem', paddingInlineStart: '1.1rem' }}>
         {detail.entries.map((e) => (
           <li key={e.id} style={{ marginBottom: '0.4rem' }}>
             <span className="muted" style={{ fontSize: '0.85rem' }}>

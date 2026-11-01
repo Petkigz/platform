@@ -219,7 +219,7 @@ export function AssessmentManager({
                         style={{ width: 'auto' }}
                       /> Correct
                     </label>
-                    <label style={{ marginLeft: '0.75rem' }}>
+                    <label style={{ marginInlineStart: '0.75rem' }}>
                       <input
                         type="radio"
                         name={`verdict-${response.response_id}`}
@@ -366,7 +366,7 @@ export function AssessmentManager({
                     <fieldset style={{ border: '1px solid var(--line)', borderRadius: '0.6rem', padding: '0.75rem' }}>
                       <legend>Correct answer</legend>
                       <label><input type="radio" name={`answer-${assessment.id}`} checked={answerId === 'true'} onChange={() => setAnswerId('true')} style={{ width: 'auto' }} /> True</label>
-                      <label style={{ marginLeft: '1rem' }}><input type="radio" name={`answer-${assessment.id}`} checked={answerId === 'false'} onChange={() => setAnswerId('false')} style={{ width: 'auto' }} /> False</label>
+                      <label style={{ marginInlineStart: '1rem' }}><input type="radio" name={`answer-${assessment.id}`} checked={answerId === 'false'} onChange={() => setAnswerId('false')} style={{ width: 'auto' }} /> False</label>
                     </fieldset>
                   )}
                   <div className="row">

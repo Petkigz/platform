@@ -1318,7 +1318,10 @@ textarea { resize: vertical; min-height: 4rem; }
 .switch > span {
   position: absolute;
   top: 2px;
-  left: 2px;
+  /* Logical, so the knob starts at the same visual edge a reader expects. The
+     travel below is still a transform, which has no logical form: a translateX
+     of +1.15rem moves right whatever the writing direction says. */
+  inset-inline-start: 2px;
   width: 1.05rem;
   height: 1.05rem;
   border-radius: 999px;
@@ -1327,6 +1330,8 @@ textarea { resize: vertical; min-height: 4rem; }
 }
 .switch.on { background: var(--green-100); border-color: var(--green-600); }
 .switch.on > span { transform: translateX(1.15rem); background: var(--green-700); }
+/* The one place a transform has to be mirrored by hand. */
+[dir='rtl'] .switch.on > span { transform: translateX(-1.15rem); }
 .switch:disabled { opacity: 0.6; cursor: progress; }
 
 .lessons code {
@@ -1403,15 +1408,21 @@ textarea { resize: vertical; min-height: 4rem; }
 .certificate-learner { margin: 0; color: var(--green-900); font-family: Georgia, 'Times New Roman', serif; font-size: clamp(1.8rem, 4vw, 3rem); }
 .certificate-copy { color: var(--muted); }
 .certificate-sheet h2 { margin: 0.5rem 0; color: var(--green-800); font-size: clamp(1.25rem, 3vw, 2rem); }
-.certificate-footer { display: flex; width: 100%; align-items: end; justify-content: space-between; gap: 2rem; margin-top: auto; padding-top: 2rem; text-align: left; }
+.certificate-footer { display: flex; width: 100%; align-items: end; justify-content: space-between; gap: 2rem; margin-top: auto; padding-top: 2rem; text-align: start; }
 .certificate-footer > div { display: grid; gap: 0.25rem; }
 .certificate-footer strong { color: var(--green-900); }
 .certificate-rule { width: 11rem; border-top: 1px solid var(--green-600); }
 .certificate-meta { color: var(--muted); font-size: 0.8rem; }
-.certificate-number-block { text-align: right; }
+.certificate-number-block { text-align: end; }
 .certificate-number-block a { font-size: 0.85rem; }
+/* The certificate and the receipt are the one place where a reader's language
+   must not turn the page around: their words are English and untranslated, both
+   sheets declare `dir="ltr"`, and a rule scoped to `[dir='rtl']` would still
+   reach inside them because the *document* is right to left. So nothing here is
+   direction-conditional. The edges below are logical only because the build
+   refuses physical ones, and under `ltr` the two compute the same pixel. */
 .certificate-sheet.is-revoked { filter: grayscale(0.8); }
-.certificate-sheet.is-revoked::after { position: absolute; top: 44%; left: 20%; color: #a12828; border: 0.35rem solid currentColor; padding: 0.3rem 1rem; font-size: clamp(2rem, 8vw, 6rem); font-weight: 900; letter-spacing: 0.15em; opacity: 0.72; transform: rotate(-18deg); content: 'REVOKED'; }
+.certificate-sheet.is-revoked::after { position: absolute; top: 44%; inset-inline-start: 20%; color: #a12828; border: 0.35rem solid currentColor; padding: 0.3rem 1rem; font-size: clamp(2rem, 8vw, 6rem); font-weight: 900; letter-spacing: 0.15em; opacity: 0.72; transform: rotate(-18deg); content: 'REVOKED'; }
 
 @media (max-width: 600px) {
   .certificate-sheet { min-height: 560px; padding: 2.25rem 1.5rem; }
@@ -1435,15 +1446,15 @@ textarea { resize: vertical; min-height: 4rem; }
 .receipt-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1.5rem; flex-wrap: wrap; }
 .receipt-brand { margin: 0; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--brand, #17744b); display: flex; align-items: center; gap: 0.5rem; }
 .receipt-sheet h1 { margin: 0.35rem 0 0; font-size: clamp(1.5rem, 3vw, 2rem); }
-.receipt-number { text-align: right; display: grid; gap: 0.15rem; }
+.receipt-number { text-align: end; display: grid; gap: 0.15rem; }
 .receipt-number strong { font-size: 1.1rem; letter-spacing: 0.04em; }
 .receipt-label { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
 .receipt-meta { font-size: 0.8rem; color: var(--muted); }
 .receipt-facts { margin: 1.75rem 0 0; }
 .receipt-lines { width: 100%; border-collapse: collapse; margin: 1.75rem 0 0; }
-.receipt-lines th { text-align: left; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding-bottom: 0.5rem; border-bottom: 1px solid var(--line, rgba(23, 116, 75, 0.18)); }
+.receipt-lines th { text-align: start; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding-bottom: 0.5rem; border-bottom: 1px solid var(--line, rgba(23, 116, 75, 0.18)); }
 .receipt-lines td { padding: 0.7rem 0; border-bottom: 1px solid var(--line, rgba(23, 116, 75, 0.1)); vertical-align: top; }
-.receipt-lines .amount { text-align: right; white-space: nowrap; }
+.receipt-lines .amount { text-align: end; white-space: nowrap; }
 .receipt-total { margin: 1.5rem 0 0; display: flex; justify-content: flex-end; }
 .receipt-total .facts { min-width: 280px; }
 .receipt-due dd { font-size: 1.2rem; }
@@ -1456,7 +1467,7 @@ textarea { resize: vertical; min-height: 4rem; }
 
 @media (max-width: 600px) {
   .receipt-sheet { padding: 1.5rem 1.15rem; }
-  .receipt-number { text-align: left; }
+  .receipt-number { text-align: start; }
   .receipt-total .facts { min-width: 0; width: 100%; }
 }
 
@@ -1536,4 +1547,75 @@ html[data-motion='reduce'] *::after {
   transition: none !important;
   animation: none !important;
   scroll-behavior: auto !important;
+}
+
+/* --------------------------------------------------------------------------
+   Writing direction
+   --------------------------------------------------------------------------
+   `<html dir>` comes from the reader's language (`directionOf(code)` in
+   `lib/i18n`), so Arabic, Urdu and Persian open right to left and everything
+   else opens left to right. Almost all of the layout follows on its own,
+   because it is written with logical properties — `border-inline-start`,
+   `margin-inline`, `padding-inline` — and flex/grid place items from the inline
+   start whatever that start is.
+
+   Three things cannot follow on their own, and they are the three below.
+
+   1. A GLYPH THAT POINTS.  A breadcrumb chevron and a "back" arrow encode a
+      direction in their shape rather than in their box, so a logical property
+      does nothing for them. `.dir-flip` mirrors the glyph itself; the markup
+      keeps one character and both directions read correctly, which is why there
+      is no per-locale icon list to keep in step.
+
+   2. A TRANSFORM.  `translateX` moves toward increasing x, not toward the
+      inline end. There is no logical form of it, so the toggle's travel is
+      restated for RTL above rather than being made to work in general.
+
+   3. A NUMBER.  A phone number, a code, an amount typed into a field is
+      Latin-ordered even when the sentence around it is Arabic: `+256 700 …`
+      in a right-to-left paragraph can put the plus at the wrong end, which is
+      a wrong phone number. Those fields are pinned to `ltr` and aligned to the
+      inline end, so the caret still starts where a reader looks first.
+
+   Keep every rule here scoped on the *document*. `[dir='rtl']` asks what the
+   page is set in, so it also reaches a block that has declared `dir="ltr"` for
+   itself — which is exactly what a printed certificate does. `:dir(rtl)` asks
+   what the element resolved to and would be the better tool, but it is newer
+   than the browsers this has to run in, and two print documents are a shorter
+   list to remember than a support matrix. So: no direction-conditional styling
+   inside the certificate or the receipt, and nothing here that touches them.
+   -------------------------------------------------------------------------- */
+
+[dir='rtl'] .dir-flip,
+[dir='rtl'] .crumbs span[aria-hidden] {
+  display: inline-block;
+  transform: scaleX(-1);
+}
+
+/* Digits, dialling codes and amounts keep their own order. `text-align: end`
+   inside an `ltr` element is the right edge, which is where an RTL reader
+   starts. */
+[dir='rtl'] input[type='tel'],
+[dir='rtl'] input[type='email'],
+[dir='rtl'] input[type='number'],
+[dir='rtl'] input[inputmode='numeric' i],
+[dir='rtl'] input[inputmode='decimal' i],
+[dir='rtl'] input[inputmode='tel' i] {
+  direction: ltr;
+  text-align: end;
+}
+
+/* A course slug, an order number, a pair of currency codes: read left to right
+   even in an Arabic sentence, and never allowed to reorder the punctuation
+   around them.
+
+   The markup uses `<bdi>` for this, which needs no rule here — it isolates a run
+   and takes its direction from its own first strong character. `.ltr` is the
+   fallback for a block that is meant to be Latin throughout but cannot be
+   wrapped, and `code` is included because every identifier the admin screens
+   print — a feature key, a provider reference, a claim token — is inside one. */
+[dir='rtl'] .ltr,
+[dir='rtl'] code {
+  direction: ltr;
+  unicode-bidi: isolate;
 }

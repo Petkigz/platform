@@ -224,7 +224,7 @@ export function IjazahConsole({ register, enabled }: { register: Register; enabl
         grouped.map((group) => (
           <section className="card" key={group.userId} style={{ marginBottom: '1rem' }}>
             <h3 style={{ marginTop: 0 }}>{group.name}</h3>
-            <ul style={{ paddingLeft: '1.1rem' }}>
+            <ul style={{ paddingInlineStart: '1.1rem' }}>
               {group.rows.map((a) => (
                 <li key={a.id} style={{ marginBottom: '0.6rem' }}>
                   <span>{authorisationLine(a)}</span>{' '}
@@ -244,7 +244,7 @@ export function IjazahConsole({ register, enabled }: { register: Register; enabl
                     <button
                       type="button"
                       className="btn ghost"
-                      style={{ marginLeft: '0.5rem' }}
+                      style={{ marginInlineStart: '0.5rem' }}
                       onClick={() => {
                         setWithdrawing(a.id);
                         setReason('');

@@ -125,7 +125,7 @@ export default async function LearningPathPage({
       ) : <p className="notice">This path has no required courses to track.</p>}
 
       {items.length === 0 ? <p className="empty">There are no published courses in this path yet.</p> : (
-        <ol className="grid" style={{ paddingLeft: '1.5rem' }}>
+        <ol className="grid" style={{ paddingInlineStart: '1.5rem' }}>
           {items.map((item) => {
             const course = item.courses![0]!;
             const enrolment = enrolmentByCourse.get(course.id);

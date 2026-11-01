@@ -110,11 +110,25 @@ that does not accept late work is refused, because otherwise a learner could
 trade a grade for a draft they can never hand back in.
 
 File references accept PDF/JPEG/PNG/WebP and common audio formats, with a
-25 MiB per-file / 10-file ceiling, but the upload path is still missing: bytes
-are not transferred, scanned or delivered, and there is no retention workflow.
-The learner screen is text-only for now. Both flags stay off until the secure
-media path and retention workflow are ready; the cohort UI is built, but its
-These are the remaining pieces, not another quiz table.
+25 MiB per-file / 10-file ceiling, and the bytes now move: a learner picks a file
+on the assignment screen, the browser hashes and streams it, the route checks the
+object it landed and the file appears attached to that one submission. A teacher
+opens it back through a route that re-checks membership on every request. What is
+still missing is the *retention* half — nobody has decided how long a child's
+photographed homework is kept or who reviews it, and that is the owner's
+question, not a string in a file. Both flags stay off until it is answered: the
+upload path is built, and the only thing between it and a learner is a retention
+rule nobody has written.
+
+The interface now lays itself out from either edge. A reader whose device is set
+to Arabic, Urdu, Persian, Pashto, Dari or Dhivehi gets `<html dir="rtl">` and a
+page that mirrors: margins, padding, borders and alignment follow the writing
+direction because they are written as `margin-inline-start` and `text-align:
+start` rather than as left and right. Three things a logical property cannot
+move are mirrored by name — a pointing glyph such as a breadcrumb chevron, a
+transform such as the toggle's travel, and a number, which stays Latin-ordered
+inside an Arabic sentence. `scripts/repo-check.mjs` fails the build on a new
+physical property, so the next screen cannot quietly reintroduce one.
 
 The gates themselves are now enforced by the repository rather than by
 remembering them. `.github/workflows/ci.yml` runs on every push: a structural
@@ -124,7 +138,8 @@ production build). No secrets and no Supabase project are involved — PGlite ru
 in memory and the build succeeds with no credentials configured, which is worth
 saying out loud because it is the reason CI can exist before the backend does.
 
-The structural job checks three things that have each cost real time here: two
+The structural job checks the things that have each cost real time here. Three
+of them are recent history: two
 migrations sharing a filename prefix, which is what happened when separate
 sessions both chose `20261130000100`; a new `supabase/tests/*.test.mjs` that
 nobody registered in `run.mjs`, which does not fail — it simply never runs, and
@@ -2299,6 +2314,57 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### The page turns around, 2026-11-01
+
+`DECISIONS.md` has said since 2026-10-29 that the shell mirrors because its rules
+are written in logical properties. The sentence was true of the rules somebody
+had had in mind while writing it. It was not true of the stylesheet, and it was
+not true of a third of the components.
+
+**What an Arabic reader actually got.** `<html dir="rtl">` was correct — the
+document opened from the right, the text ran the right way, the punctuation sat
+at the correct end of the line. Around it: a toggle whose knob travelled
+rightwards off its track, because `left: 2px` places a knob but does not tell it
+which way to go; a printed certificate with its number block and signature rule
+on the English side; thirty-one components with `marginLeft`, `paddingLeft` or
+`borderLeft` set in their JSX, including the subject tree, which indented off the
+wrong edge at every depth; and forty-six breadcrumb chevrons, one character each,
+pointing at the page you had come from as though it were the page you were going
+to.
+
+**Why it survived a review.** None of it is visible in English, and English is
+what everybody opens. A physical property is not a bug in the direction it was
+written for — it is a bug that only exists in six of the 38 languages, none of
+which the person checking the screen was reading.
+
+**The fix is one rule and three exceptions.** `margin-left` became
+`margin-inline-start`, `border-left` became `border-inline-start`, `text-align:
+left` became `text-align: start` — declarations that compute to the same pixels
+in an English page, which is why nothing moved. Three things a logical property
+cannot move are mirrored by name instead. *A glyph that points*: a chevron
+encodes a direction in its shape, so `[dir='rtl'] .dir-flip` mirrors it with
+`scaleX(-1)`, one rule for forty-six separators rather than forty-six edits. *A
+transform*: `translateX` moves toward increasing x and there is no logical form
+of it, so the toggle's travel is restated. *A number*: a phone number, an amount
+and a certificate number are Latin-ordered even inside an Arabic sentence, and
+`+256 700 …` can lose its plus to the wrong end — those fields and identifiers
+are pinned to `ltr`, and machine identifiers use `<bdi>`, which isolates a run
+without a rule at all.
+
+**And it cannot come back.** `scripts/repo-check.mjs` grew a twelfth check that
+reads `globals.css` and all 280 components and fails the build on a physical
+edge — including the four-value shorthand, `margin: 0 0 0 1rem`, which is
+`marginLeft` wearing a hat and which the longhand rule alone does not see. Two
+exemptions are written in the source rather than in a list: `direction-ok:` on a
+line, and `opengraph-image.tsx`, which is a PNG drawn by Satori and has no
+writing direction to follow at all.
+
+**What was deliberately not touched.** Arabic *typography* — the Naskh stack,
+`line-height: 2`, tracking at zero — is a separate mechanism and was left exactly
+as it is. The certificate and the receipt still declare `dir="ltr"`, and the
+direction rules are written so that nothing scoped to the reader's language
+reaches inside them.
 
 ### A learner can hand in a file, 2026-11-01
 

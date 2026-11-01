@@ -361,7 +361,7 @@ function Report({ report }: { report: RevenueReport }) {
                       <br />
                       {formatMinor(row.grossMinor, row.currency)} of sales
                       {Number(row.reversedMinor) > 0 && (
-                        <span className="badge warn" style={{ marginLeft: '0.5rem' }}>
+                        <span className="badge warn" style={{ marginInlineStart: '0.5rem' }}>
                           {formatMinor(row.reversedMinor, row.currency)} reversed
                         </span>
                       )}

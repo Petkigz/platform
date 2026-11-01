@@ -131,7 +131,7 @@ export default async function TaxPage() {
             Kept because orders were billed under them. A retired rule explains its
             lines and charges nothing new.
           </p>
-          <ul className="muted" style={{ paddingLeft: '1.1rem' }}>
+          <ul className="muted" style={{ paddingInlineStart: '1.1rem' }}>
             {retired.map((rule) => (
               <li key={rule.id}>
                 {rule.label} · {describeScope(rule)} ·{' '}

@@ -81,7 +81,7 @@ export default function GlobalError({
               href="/"
               style={{
                 display: 'inline-block',
-                marginLeft: '0.5rem',
+                marginInlineStart: '0.5rem',
                 color: '#12341f',
                 padding: '0.6rem 0.75rem',
               }}

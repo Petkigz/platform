@@ -146,7 +146,7 @@ export function ImportOutline({ versionId }: { versionId: string }) {
 
         <div>
           <p style={{ margin: '0 0 0.35rem', fontWeight: 600 }}>The columns it understands</p>
-          <ul style={{ margin: 0, paddingLeft: '1.1rem', fontSize: '0.9rem' }}>
+          <ul style={{ margin: 0, paddingInlineStart: '1.1rem', fontSize: '0.9rem' }}>
             {IMPORT_COLUMNS.map((column) => (
               <li key={column.name}>
                 <code>{column.name}</code>
@@ -234,7 +234,7 @@ export function ImportOutline({ versionId }: { versionId: string }) {
                   : `${preview.problems.length} lines need fixing.`}
               </strong>{' '}
               Nothing has been added. Fix these and check the file again.
-              <ul style={{ margin: '0.5rem 0 0', paddingLeft: '1.1rem' }}>
+              <ul style={{ margin: '0.5rem 0 0', paddingInlineStart: '1.1rem' }}>
                 {preview.problems.slice(0, 12).map((problem, index) => (
                   <li key={index}>
                     {problem.line > 0 ? `Line ${problem.line}: ` : ''}

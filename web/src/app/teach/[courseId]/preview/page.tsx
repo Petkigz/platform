@@ -188,7 +188,7 @@ export default async function VersionRehearsalPage({
             )}
           </p>
           <Link className="btn" href={`/teach/${course.id}/preview/${rehearsal.next.lessonId}`}>
-            Open it as a learner →
+            Open it as a learner <span className="dir-flip" aria-hidden>→</span>
           </Link>
         </section>
       )}

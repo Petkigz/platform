@@ -89,7 +89,7 @@ export function RevenueShareForm({ currentPercent }: { currentPercent: number })
           <button type="submit" className="btn" disabled={pending}>
             {pending ? 'Saving…' : 'Save revenue share'}
           </button>
-          {saved && <span className="success" role="status" style={{ marginLeft: '0.75rem' }}>Saved.</span>}
+          {saved && <span className="success" role="status" style={{ marginInlineStart: '0.75rem' }}>Saved.</span>}
           {message && <p className="danger" role="alert">{message}</p>}
         </div>
       </div>

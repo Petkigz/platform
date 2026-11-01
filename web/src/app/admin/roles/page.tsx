@@ -122,7 +122,7 @@ export default async function AdminRolesPage() {
                     Nobody holds this role.
                   </p>
                 ) : (
-                  <ul style={{ margin: '0.5rem 0 0', paddingLeft: '1.25rem' }}>
+                  <ul style={{ margin: '0.5rem 0 0', paddingInlineStart: '1.25rem' }}>
                     {holders.map((h) => (
                       <li key={`${h.user_id}-${h.role_code}`}>
                         {nameOf(h.user_id)}{' '}

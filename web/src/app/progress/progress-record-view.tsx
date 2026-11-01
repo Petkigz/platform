@@ -68,7 +68,7 @@ export function ProgressRecordView({
           </div>
           <div>
             <p className="eyebrow" style={{ margin: 0 }}>In total</p>
-            <ul style={{ margin: '0.35rem 0 0', paddingLeft: 0, listStyle: 'none' }}>
+            <ul style={{ margin: '0.35rem 0 0', paddingInlineStart: 0, listStyle: 'none' }}>
               <li>
                 <strong>{record.totals.lessonsCompleted}</strong>{' '}
                 {record.totals.lessonsCompleted === 1 ? 'lesson' : 'lessons'} finished
@@ -223,7 +223,7 @@ export function ProgressRecordView({
                 <strong>{cert.courseTitle}</strong> · {cert.certificateNumber} · issued{' '}
                 {prettyDate(cert.issuedOn)}
                 {cert.status === 'revoked' && (
-                  <span className="badge neutral" style={{ marginLeft: '0.4rem' }}>Revoked</span>
+                  <span className="badge neutral" style={{ marginInlineStart: '0.4rem' }}>Revoked</span>
                 )}
               </li>
             ))}

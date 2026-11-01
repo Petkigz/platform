@@ -68,7 +68,8 @@ function Steps({ steps }: { steps: CaseHistoryStatusStep[] }) {
         // eslint-disable-next-line react/no-array-index-key
         <li key={index} style={{ padding: '0.35rem 0' }}>
           <span className="t">
-            {step.fromStatus ?? '—'} → {step.toStatus ?? '—'}
+            {step.fromStatus ?? '—'} <span className="dir-flip" aria-hidden>→</span>{' '}
+            {step.toStatus ?? '—'}
             {step.reason ? <span className="muted"> · {step.reason}</span> : null}
           </span>
           <span className="muted" style={{ fontSize: '0.85rem' }}>
@@ -128,7 +129,7 @@ function Bundle({ history }: { history: CaseHistory }) {
           <dd>
             {history.requester?.displayName ?? 'An account with no name'}
             {history.requester?.accountStatus && history.requester.accountStatus !== 'active' ? (
-              <span className="badge warn" style={{ marginLeft: '0.4rem' }}>
+              <span className="badge warn" style={{ marginInlineStart: '0.4rem' }}>
                 {history.requester.accountStatus}
               </span>
             ) : null}
@@ -179,7 +180,7 @@ function Bundle({ history }: { history: CaseHistory }) {
                 {' · '}
                 {word(HISTORY_ORDER_STATUS_LABEL, order.status)}
                 {order.isCaseOrder ? (
-                  <span className="badge warn" style={{ marginLeft: '0.4rem' }}>
+                  <span className="badge warn" style={{ marginInlineStart: '0.4rem' }}>
                     Named on this case
                   </span>
                 ) : null}
@@ -290,7 +291,7 @@ function Bundle({ history }: { history: CaseHistory }) {
                 {word(HISTORY_ENROLMENT_STATUS_LABEL, enrolment.status)}
                 {enrolment.learnerName ? ` · ${enrolment.learnerName}` : ''}
                 {enrolment.versionStatus ? (
-                  <span className="badge neutral" style={{ marginLeft: '0.4rem' }}>
+                  <span className="badge neutral" style={{ marginInlineStart: '0.4rem' }}>
                     {word(VERSION_STATUS_LABEL, enrolment.versionStatus)}
                   </span>
                 ) : null}

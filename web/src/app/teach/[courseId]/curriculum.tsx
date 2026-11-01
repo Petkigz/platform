@@ -333,7 +333,7 @@ export function Curriculum({
                             <span>
                               {RESOURCE_TYPE_LABEL[r.resourceType]} · {r.resourceName}
                               {r.access === 'public_preview' && (
-                                <span className="badge" style={{ marginLeft: '0.4rem' }}>Public preview</span>
+                                <span className="badge" style={{ marginInlineStart: '0.4rem' }}>Public preview</span>
                               )}
                             </span>
                             {editable && (

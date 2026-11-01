@@ -5772,6 +5772,21 @@ documents — a certificate and a receipt — **declare `dir="ltr"`**, because t
 words are English and untranslated and a reader's language must not turn them
 around; the learner's name inside them is isolated by `ArabicBlock` as before.
 
+*Corrected 2026-11-01.* The paragraph above described an intention as though it
+were a property of the codebase, and it was wrong for about two days. Logical
+properties only mirror the rules that use them, and while the paragraphs were
+being written the stylesheet still had nine physical edges — the toggle knob at
+`left: 2px`, four lines of the printed certificate and receipt, a rotated stamp —
+and thirty-one components set `marginLeft`, `paddingLeft` and `borderLeft`
+directly in their JSX. Arabic and Urdu readers got a right-to-left page whose
+text ran the right way inside margins that did not. The mechanism is the same
+one; what changed is that it is now **enforced**. Every edge is written from the
+inline start or end, the three things a logical property cannot move — a glyph
+that points, a transform, a number — are mirrored by name, and the repository
+check fails the build on a new `margin-left`, `text-align: right`, or a
+four-value shorthand whose two sides disagree. A rule that only holds while
+everybody remembers is not a mechanism.
+
 **A form is translated by one provider, and it carries one language.**
 `lib/i18n/client.tsx` holds the reader's catalogue and hands it to every client
 component below the root layout. The server picks the language and merges English

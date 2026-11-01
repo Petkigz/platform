@@ -123,7 +123,7 @@ export default async function AnalyticsPage({
       <p style={{ marginTop: '1.5rem' }}>
         Window:{' '}
         {WINDOWS.map((w) => (
-          <span key={w} style={{ marginRight: '0.75rem' }}>
+          <span key={w} style={{ marginInlineEnd: '0.75rem' }}>
             {w === days ? (
               <strong>{w} days</strong>
             ) : (

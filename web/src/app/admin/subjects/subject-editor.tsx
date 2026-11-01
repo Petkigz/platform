@@ -164,7 +164,7 @@ export function SubjectEditor({ subjects }: { subjects: SubjectRow[] }) {
 
             return (
               <li key={subject.id} className={`subject-row${isRetired ? ' subject-retired' : ''}`}>
-                <div className="subject-head" style={{ paddingLeft: `${depth * 1.25}rem` }}>
+                <div className="subject-head" style={{ paddingInlineStart: `${depth * 1.25}rem` }}>
                   {renaming === subject.id ? (
                     <form
                       className="subject-rename"

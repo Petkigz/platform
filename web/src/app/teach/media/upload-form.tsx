@@ -394,7 +394,7 @@ export function UploadMedia({ remainingBytes = null }: { remainingBytes?: number
               {busy ? PHASE_LABEL[phase] : 'Upload'}
             </button>
             {counted && (
-              <span className="muted" style={{ marginLeft: '0.6rem' }}>
+              <span className="muted" style={{ marginInlineStart: '0.6rem' }}>
                 {String(percent)}%{partLabel ? ` · ${partLabel}` : ''}
               </span>
             )}

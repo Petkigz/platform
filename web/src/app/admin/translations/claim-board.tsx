@@ -40,7 +40,7 @@ function Row({ row, name }: { row: ClaimRow; name: string }) {
       <td style={{ textAlign: 'end', padding: '0.4rem 0' }}>
         <strong>{done ? 'done' : `${row.read} of ${row.total}`}</strong>
       </td>
-      <td style={{ padding: '0.4rem 0 0.4rem 0.9rem', fontSize: '0.88rem' }}>
+      <td style={{ padding: '0.4rem 0', paddingInlineStart: '0.9rem', fontSize: '0.88rem' }}>
         {done ? (
           <span className="muted">{row.names.join(', ')} read the whole catalogue</span>
         ) : row.next ? (
@@ -119,7 +119,7 @@ export function ClaimBoardPanel({
                   <th style={{ textAlign: 'end', padding: '0.3rem 0', fontWeight: 600 }}>
                     Parts read
                   </th>
-                  <th style={{ textAlign: 'start', padding: '0.3rem 0 0.3rem 0.9rem', fontWeight: 600 }}>
+                  <th style={{ textAlign: 'start', padding: '0.3rem 0', paddingInlineStart: '0.9rem', fontWeight: 600 }}>
                     What would move it
                   </th>
                   <th style={{ textAlign: 'start', padding: '0.3rem 0', fontWeight: 600 }}>

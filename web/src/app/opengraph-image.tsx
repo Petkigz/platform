@@ -39,6 +39,11 @@ export default async function OpengraphImage() {
           padding: '64px 80px 56px',
           // A single hairline of green down the left edge: the card should be
           // recognisable in a chat list before a word of it is read.
+          //
+          // Physical, and deliberately so. This is a PNG drawn by Satori, not a
+          // page: it has no writing direction, it is never mirrored, and one
+          // image is served to every reader. A logical property here would be a
+          // rule about a document that does not exist.
           borderLeft: '14px solid #0b6b3a',
         }}
       >

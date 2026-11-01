@@ -280,7 +280,7 @@ function NoticeCard({
         style={{
           margin: '0.5rem 0',
           padding: '0.5rem 0.9rem',
-          borderLeft: '3px solid var(--border)',
+          borderInlineStart: '3px solid var(--border)',
           whiteSpace: 'pre-wrap',
         }}
       >

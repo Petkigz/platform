@@ -69,7 +69,7 @@ export default async function DeleteAccountPage() {
           <div className="grid cols-2" style={{ marginTop: '1rem' }}>
             <section className="card">
               <h2 style={{ marginTop: 0 }}>Deleted</h2>
-              <ul className="muted" style={{ paddingLeft: '1.1rem' }}>
+              <ul className="muted" style={{ paddingInlineStart: '1.1rem' }}>
                 <li>Your name, photo, time zone and country</li>
                 <li>Lesson notes and bookmarks</li>
                 <li>Saved courses and the notes on them</li>
@@ -87,7 +87,7 @@ export default async function DeleteAccountPage() {
             </section>
             <section className="card">
               <h2 style={{ marginTop: 0 }}>Kept, without your name</h2>
-              <ul className="muted" style={{ paddingLeft: '1.1rem' }}>
+              <ul className="muted" style={{ paddingInlineStart: '1.1rem' }}>
                 <li>Orders, payments and refunds — the ledger a refund depends on</li>
                 <li>
                   Your own enrolments and lesson progress. A child&rsquo;s are different: they

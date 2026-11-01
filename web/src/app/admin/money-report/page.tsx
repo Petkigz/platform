@@ -187,7 +187,8 @@ function Report({ report }: { report: MoneyReport }) {
           <ul style={{ margin: '0.5rem 0 0' }}>
             {report.outliers.map((outlier) => (
               <li key={`${outlier.base}-${outlier.quote}-${outlier.observedAt ?? 'none'}`}>
-                {outlier.base}→{outlier.quote} went from {formatRate(outlier.previousRate)} to{' '}
+                <bdi>{outlier.base}→{outlier.quote}</bdi> went from{' '}
+                {formatRate(outlier.previousRate)} to{' '}
                 {formatRate(outlier.rate)}, more than {outlier.factor}× — {outlier.source}
               </li>
             ))}
@@ -217,7 +218,7 @@ function Report({ report }: { report: MoneyReport }) {
                       </strong>
                     </>
                   ) : (
-                    <span className="badge warn" style={{ marginLeft: '0.5rem' }}>
+                    <span className="badge warn" style={{ marginInlineStart: '0.5rem' }}>
                       no rate for {row.currency}
                     </span>
                   )}
@@ -257,7 +258,7 @@ function Report({ report }: { report: MoneyReport }) {
                       </strong>
                     </>
                   ) : (
-                    <span className="badge warn" style={{ marginLeft: '0.5rem' }}>
+                    <span className="badge warn" style={{ marginInlineStart: '0.5rem' }}>
                       no rate for {row.currency}
                     </span>
                   )}

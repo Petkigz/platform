@@ -112,7 +112,7 @@ export function Discussion({
                   </button>
                 )}
                 {canPost && p.visibilityState === 'visible' && (
-                  <span style={{ marginLeft: '0.5rem' }}>
+                  <span style={{ marginInlineStart: '0.5rem' }}>
                     <ReportForm lessonId={lessonId} postId={p.id} label="Report this post" />
                   </span>
                 )}
@@ -120,7 +120,7 @@ export function Discussion({
             </div>
 
             {p.replies.length > 0 && (
-              <ul className="lessons" style={{ marginLeft: '1rem' }}>
+              <ul className="lessons" style={{ marginInlineStart: '1rem' }}>
                 {p.replies.map((r) => (
                   <li key={r.id}>
                     <span className="t">{r.body}</span>
