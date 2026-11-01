@@ -478,8 +478,25 @@ a date, counted on the plan, listed with its bucket and key for the person doing
 it, and `record_coursework_purge()` refuses to record a deletion that has not
 happened.
 
-Verification: **2 421 database assertions in 158 suites, 1 951 web tests; TypeScript
-typecheck, build and `check:repo` pass; 217 migrations.**
+A handed-in file now carries a record of somebody having looked at it, and the gap
+that made it necessary was one sentence: a child's photograph arrives confirmed by
+the family that sent it — right for a child on metered data — and no member of staff
+ever saw it or recorded having looked, so the platform could not answer the question
+a safeguarding lead is actually asked. The answer is a **recorded review, not a
+release queue** (`20261281011000_coursework_review.sql`): append-only rows, so
+"reviewed" is a person, a moment and a word; the household cannot vouch for its own
+file; a concern must carry a sentence, which stays with the file rather than in the
+audit log; and nothing waits behind it, because a teacher opens a file the moment it
+arrives. The marker's list shows the state and the family's list does not, because a
+coarse word like "concern" on a child's own hand-in is a message with no context and
+no adult to explain it. `/admin/coursework` is the staff view: what nobody has looked
+at, oldest first, and a two-answer form. A review outlives the file it was about —
+the submission reference is deliberately not a foreign key, because the children's
+clock deletes submissions and a constraint there would have broken that clock the
+moment a file had been reviewed.
+
+Verification: **2 436 database assertions in 159 suites, 1 959 web tests; TypeScript
+typecheck, build and `check:repo` pass; 218 migrations.**
 
 ## Today's sentence
 
@@ -505,7 +522,7 @@ say what is left instead of what was missing.
 | **Media delivery** | The whole path, end to end: `media_renditions` register with a closed profile vocabulary and derived object keys; the transcode worker that fills it (`web/src/worker/transcode-worker.ts`, decisions in `lib/transcode.ts`, gated by `delivery.transcode`), which checks the master's SHA-256 against the bytes before it encodes anything; `/api/media/playback` and `/api/media/download` signing short-lived rendition URLs with the database as the only authority on who may watch; a player on the lesson page with a quality selector and a poster; `/teach/media`, where a teacher uploads straight to R2 with a browser-computed checksum; `verify` on `/admin/media`, which asks storage whether the file arrived at the declared size and only then confirms it; and `retry_media_rendition()`, reached from the same screen, which puts a copy that failed to encode back in the queue on a written reason | A host to run the worker on with ffmpeg, R2 credentials and a staff account for it, and a decision about whether a free preview may be watched signed-out | **Nothing** that is a design question. What is left is infrastructure and one product decision, and the infrastructure is now a step-by-step: `docs/deploy/README.md` step 6 covers ffmpeg, the worker's staff account and the service unit |
 | **Offline download** | Built end to end: `/downloads` reads the device's own storage so it works with no network; `learning.offline_max_devices` (3) and `learning.offline_expiry_days` (30) are settings; only a Plus plan grants `offline_downloads`, and `lesson_download_standing()` explains refusal by reasoning order (signed out → feature off → not entitled → needs Plus → no media → allowed); 11 tests | Nothing structural. The media is a signed rendition URL cached by the app; "never in the file manager" holds only inside the mobile shell, which does not exist yet | **Decisions:** nothing left. The browser build can save a file the OS can see — that limit is the mobile app's job, not this one's |
 | **Upload cost control** | A per-file ceiling of 8 GiB that the browser can now actually reach: `lib/digest.ts` hashes a slice at a time so the checksum does not cap the size, and above 32 MiB `lib/multipart-upload.ts` sends 16 MiB parts so the transport does not either — a failed part is retried rather than the file restarted. **The cumulative quota exists too**: `media.upload_quota_gb_per_teacher` is 50 GB of master bytes, `media_upload_allowance()` answers whether one more upload fits, `my_media_storage()` reports what an account already holds, and `/api/media` refuses a `request_upload` or `initiate_multipart` that would not fit, naming the space left | A spend alert. Resuming needs the same file to be chosen again, because the checksum is what recognises it, so a half-sent file cannot be finished from the library without it; and an unfinished upload whose key was not derived from an asset can be listed but not ended, since the audit trail would have nothing to point at | **Switch:** `platform.cost_controls` ships off, so every upload passes today. The quota policy itself is decided — note that `register_media_upload()` is open to **any signed-in user**, not only teachers, because learners attach files to assignment submissions through the same table, so the setting is a quota per person rather than a role check |
-| **Assignments** (`learning.assignments`) | Task authoring, self-paced and cohort deadlines, one private submission per learner, drafts and hand-in, marking with immutable feedback, a revision loop with an append-only snapshot, and since 2026-11-01 **file hand-ins**: register → presigned PUT → server-verified confirm, attach in the same transaction, listed by name for the household and the course author, opened through a redirect that re-checks permission — with the type and size ceilings checked before a byte moves, and a separate `coursework` file kind, declared for one submission before a byte moves, that no lesson can point at. **Retention is a clock now** (`20261281010000`): a year after the later of the class ending and the hand-in, thirty days after an erased learning record where that is sooner, tombstoned at once when the submission goes, with a written hold as the only thing that stops it; 20 database tests, 13 web tests, 11 more on the clock | A recorded review mark — the safeguarding review of what children send — and a screen for the storage queue and holds; scanning; school-wide retention rules beyond the children's policy | **Decision:** the review. The retention question is answered and built, so the flag waits on the recorded review only, and the same review holds `learning.cohorts` |
+| **Assignments** (`learning.assignments`) | Task authoring, self-paced and cohort deadlines, one private submission per learner, drafts and hand-in, marking with immutable feedback, a revision loop with an append-only snapshot, and **file hand-ins**: register → presigned PUT → server-verified confirm, attach in the same transaction, listed by name for the household and the course author, opened through a redirect that re-checks permission — with the type and size ceilings checked before a byte moves, and a separate `coursework` file kind no lesson can point at. **Retention is a clock** (`20261281010000`): a year after the later of the class ending and the hand-in, thirty days after an erased learning record where that is sooner, tombstoned at once when the submission goes, with a written hold as the only thing that stops it. **And a review is a record** (`20261281011000`): append-only, staff or the marker only, never the household, a concern carrying a sentence, and `/admin/coursework` showing what nobody has looked at without gating anything; 20 database tests, 13 web tests, 12 on the clock, 15 on the review | Scanning a file on arrival — the one part that costs money monthly; a screen for the storage queue and the holds; school-wide retention rules beyond the children's policy | **Decision:** the safeguarding lead's written rule — who may look, and what a teacher does with a worry. Both machinery halves are built; what is left is a policy somebody writes, not code. The same rule holds `learning.cohorts` |
 | **Cohorts** | Tables, exact-version pinning, opt-in join/leave, capacity serialisation, family opt-in for children, counts on the manager and, since row 32, names and progress on the class page for the teacher who opened it, teacher manager, learner join/leave, the teacher-set `join_closes_at` window, how full each class is on the course page a joiner reads it from (`cohort_places()`, counts only — the roster stays behind `can_read_cohort_member()`), and the teacher's control over the published number (`set_cohort_capacity()`, never below the learners already in the class) | Nothing structural | The same safeguarding review. `learning.cohorts` ships `false` |
 | **Learner analytics** (`SCREENS.md` row 32) | `can_read_learner_course_progress()`, `cohort_learner_progress()`, the class page with a roster ordered by need, `teacher_course_analytics()` with enrolments/completions/certificates, `/teach/[courseId]/reports`, and the class list as a CSV a teacher downloads from the class page, recorded in the audit log before the file is sent | Anything that follows a learner across courses; the course report has no file yet, only the class roster does | **Decision:** how long progress stays readable after a class ends. Until then it stays readable, which is the safer default |
 | **Reviewer access to lesson media** | `may_review_version_media()` — an accepted or in-progress assignment and nothing else — as a third branch of `may_play_rendition()`, with the player wired into `/review/[assignmentId]`; `may_watch_master()`, `master_preview_target()` and `/api/media/master` for the uploader, staff and the version author, with `Watch` on `/teach/media` and `/admin/media`; 19 database tests, most of them refusals | Any copy for a reviewer: no download, no master, no export. Aggregate review analytics | **Nothing.** Decided 2026-10-20: "other teachers" means a reviewer checking quality for a named period, not co-teachers and not any teacher on the platform. The period is the assignment's state, so access ends with the review |
@@ -2387,6 +2404,52 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### A review is a person, a moment and a word, 2026-11-01
+
+The second half of the coursework question, and the gap had the same shape as the
+first: one sentence, and nothing failed. `confirm_coursework_upload()` lets the
+uploader promote their own file from `pending` to `available` and attach it to their
+draft in the same transaction — right for a child on metered data, and fast — and
+**no member of staff ever saw the file or recorded having looked**. So the platform
+could not answer the question a safeguarding lead is actually asked: *who has seen my
+child's photograph?* Three features could not be blamed for it; a fact was absent.
+
+**The owner chose a record over a gate.** Holding every file until staff release it
+is the safest and spends the family's goodwill on the ordinary case: at three classes
+it is a job, and at thirty it reads to a parent as the platform losing homework. A
+file therefore opens for the teacher it was handed to the moment it arrives, and the
+record exists so that somebody can *see* what has not been looked at and answer for
+it later. The screen says "nothing is waiting behind this number" on its face,
+because a count that implies a queue stops being read.
+
+**A review is an event, not a flag.** Rows are append-only — the trigger refuses
+update and delete in the same voice the screening register uses — so a second look is
+a second row and the latest is the state every screen reads. A double click from the
+same person reaching the same conclusion is one review, and that idempotence lives in
+the writer rather than in the form.
+
+**Two refusals carry the design.** The household cannot vouch for its own file: the
+check asks `is_own_learner_profile()` and `is_learner_family_member()` and
+deliberately not `can_access_learner()`, which is true for staff and would have
+refused the people the function exists for — that exact bug was caught by the suite
+before the migration left the branch. And a concern must carry a sentence, because a
+flag nobody explained is a file the next person has to open and guess about; the
+sentence stays on the review, while the audit entry records only that a decision was
+made and which one.
+
+**The marker is told and the family is not.** `assignment_submission_files()` adds
+the review keys for the course author and staff and omits them entirely for the
+household. That is not secrecy about a child's own file; it is that "concern" on a
+child's hand-in is a message with no context and no adult beside it. A serious worry
+is a conversation with a guardian.
+
+**The record outlives the file, and the first schema got that wrong.** `submission_id`
+began as a `restrict` foreign key, which would have made the children's retention
+clock fail the moment a file had been reviewed — caught by the suite, and fixed by
+making the column a reference rather than a constraint, the same reasoning
+`governance_audit_events.target_id` follows. A review survives the photograph, and
+the staff summary counts how many do.
 
 ### A child's hand-in outlives the class, not the person, 2026-11-01
 

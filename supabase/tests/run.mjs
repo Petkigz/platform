@@ -77,6 +77,7 @@ import { run as cohorts } from './cohorts.test.mjs';
 import { run as courseAssignments } from './course_assignments.test.mjs';
 import { run as courseworkFiles } from './coursework_files.test.mjs';
 import { run as courseworkRetention } from './coursework_retention.test.mjs';
+import { run as courseworkReview } from './coursework_review.test.mjs';
 import { run as markingFeedback } from './marking_feedback.test.mjs';
 import { run as assignmentRevisions } from './assignment_revisions.test.mjs';
 import { run as cohortJoinWindow } from './cohort_join_window.test.mjs';
@@ -222,6 +223,7 @@ for (const [name, fn] of [
   ['course assignments', courseAssignments],
   ['coursework files', courseworkFiles],
   ['coursework retention', courseworkRetention],
+  ['coursework review', courseworkReview],
   ['marking feedback', markingFeedback],
   ['assignment revisions', assignmentRevisions],
   ['cohort join window', cohortJoinWindow],

@@ -9,6 +9,7 @@ import {
   revisionPolicyLabel,
 } from '@/lib/course-assignments';
 import { courseworkFileHref, describeCourseworkFile, parseCourseworkFiles } from '@/lib/coursework';
+import { describeFileReview } from '@/lib/coursework-review';
 
 export type AssignmentVersionOption = { id: string; versionNumber: number; status: string };
 export type AssignmentCohortOption = {
@@ -335,6 +336,10 @@ function SubmissionFiles({ files }: { files: unknown[] }) {
                 (file.name ?? 'Handed-in file')
               )}
               <span className="muted"> · {describeCourseworkFile(file)}</span>
+              {/* Whether anybody has looked at it, beside the file rather than on a
+                  separate screen: the teacher marking the work is the person who
+                  sees it first, so this is where a review is worth recording. */}
+              <span className="muted"> · {describeFileReview(file)}</span>
             </span>
           </li>
         ))}

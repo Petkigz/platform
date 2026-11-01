@@ -88,6 +88,10 @@ test('each file line says whether it has arrived', () => {
     byteSize: '1800000',
     status: 'available',
     uploadedAt: '2026-11-01T10:00:00.000Z',
+    // Review state is present only for a caller who may review, and an absent key
+    // parses to "nobody has looked" rather than to a clean bill of health.
+    review: 'none' as const,
+    reviewedAt: null,
   };
   assert.equal(describeCourseworkFile(base), 'image · 1.7 MiB');
   assert.match(describeCourseworkFile({ ...base, status: 'pending' }), /still arriving/);

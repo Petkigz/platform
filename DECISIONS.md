@@ -101,6 +101,7 @@ you. Do not treat it as settled, and do not build on it until it moves up.
 | 2026-11-01 | **The thirty days are the children's clock, not everybody's.** An adult closing their own account is told on `/account/delete` that their enrolments and progress are kept, and has been since the screen was written. Making that untrue quietly, to make the three clocks look alike, would be worse than an asymmetry somebody can see. Widening it is the owner's call and is written down in NEXT.md. |
 | 2026-11-01 | **A child's tombstone holds an id, a type, a status and dates — and nothing else.** `learner_profiles` gains a third status, `erased`, and the two constraints that require a name-bearing row (an age band, a family) are waived for exactly that status. The row survives because a certificate points at it with `on delete restrict`, and for no other reason: the name, the age band, the family and the account link are all cleared. |
 | 2026-11-01 | **A child's hand-in outlives the class for a year, and outlives the person for thirty days.** A file handed in as coursework is kept for a year after the later of the class ending and the file being handed in; where the learner's record was erased, thirty days after the erasure, whichever is sooner — the children's policy already promised that. A file that loses its submission is tombstoned at once and unwatchable by everybody, including staff, because after that nothing can say whose photograph it was. A safeguarding hold is the only thing that stops the clock and it needs a written reason at both ends. The object in storage is queued and counted separately: this database holds no storage credential, so a staff step records the deletion once it has happened. |
+| 2026-11-01 | **A handed-in file gets a recorded review, not a release gate.** `record_coursework_review()` records that the teacher the work was handed to, or staff, looked at a file: append-only rows, so "reviewed" is a person, a moment and a word rather than a boolean a form can overwrite. The household and the child cannot review their own file, and a concern must carry a sentence. The marker's list shows the state; the family's list is not told, because "concern" on a child's own hand-in is a message with no context and no adult beside it. **Reviewing gates nothing** — a file opens for its marker the moment it arrives — so the record buys the ability to see what nobody has looked at and to answer for it later. `/admin/coursework` is the staff view. |
 | 2026-11-01 | **A number in a maintained document is a claim about today, and the ones a script can count are checked.** `check:repo` now fails when `NEXT.md`, `ROADMAP.md`, `SCREENS.md`, `FLAGS.md` or the deploy runbook states a migration count the tree does not have, when the current-status `Verification:` paragraph does not name the real migration and suite counts, or when the half-built ledger gives one piece two rows. The implementation history is exempt — its counts are snapshots from their dates — and the test totals on the same line remain a claim the unit keeps true by hand, because nothing in the script can count them. |
 
 ---
@@ -7042,3 +7043,47 @@ person doing it, and refuses to record a deletion that has not happened — the 
 shape `record_identity_removal()` uses for a closed account's sign-in. A platform
 that said "deleted" when it meant "unwatchable" would be lying on the one screen
 where the truth is the point.
+
+## A review is a person, a moment and a word — **DECIDED 2026-11-01**
+
+The second half of the coursework question, and the shape of the gap was one
+sentence: `confirm_coursework_upload()` lets the uploader promote their own file and
+attach it to their draft in one call — right for a child on metered data, and fast —
+and **no member of staff ever saw the file or recorded having looked**. The
+platform could not answer the question a safeguarding lead is actually asked: *who
+has seen my child's photograph?* Nothing was inconsistent; a fact was absent.
+
+**A recorded review, not a release queue.** The owner chose the former. Holding
+every file until staff release it is safest and spends the family's goodwill on the
+ordinary case: at three classes it is a job, and at thirty it reads to a parent as
+the platform losing homework. So a file opens for its marker the moment it arrives,
+and the record exists to let somebody *see* what has not been looked at — and to
+answer for it later. The screen says "nothing is waiting behind this number" on its
+face, because a count that implies a queue stops being read.
+
+**A review is an event.** Rows are append-only, triggered against update and delete.
+A second look is a second row, and the latest is the state every screen reads. A
+double click from the same person reaching the same conclusion is one review, not a
+bulk of them — the idempotence is in the writer, because the form cannot promise it.
+
+**The household cannot vouch for its own file.** The refusal asks
+`is_own_learner_profile()` and `is_learner_family_member()`, deliberately *not*
+`can_access_learner()`: that helper is true for privileged staff, and using it here
+would have refused the very people the function exists for. **A concern needs a
+sentence** — a flag nobody explained is a file the next person has to open and
+guess about — and the sentence stays on the review rather than in the audit log,
+which records that a decision was made and which one. An append-only log about a
+child's photograph is the last place for a paragraph.
+
+**The marker is told; the family is not.** `assignment_submission_files()` carries
+the review state for the course author and staff, and omits the keys entirely for
+the household. That is not secrecy about the child's own file — it is that a coarse
+word like "concern" on a child's hand-in is a message with no context and no adult
+in the room to explain it. A serious concern is a conversation with a guardian, not
+a badge on a screen.
+
+**The record outlives the file.** `submission_id` on a review is a reference and
+not a foreign key: the children's retention clock deletes submissions, and a
+`restrict` there would make the clock fail the moment a file had been reviewed,
+while a cascade would delete the safeguarding record with the homework. The review
+survives the photograph, and the staff summary counts how many do.

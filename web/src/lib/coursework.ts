@@ -135,6 +135,13 @@ export type CourseworkFile = {
   byteSize: string;
   status: string;
   uploadedAt: string;
+  /**
+   * The last review, present only for a caller who may review — the course author
+   * and staff. The household's own list has no such key, because "concern" on a
+   * child's own hand-in is a message with no context and no adult beside it.
+   */
+  review: 'none' | 'clear' | 'concern';
+  reviewedAt: string | null;
 };
 
 /**
@@ -158,6 +165,11 @@ export function parseCourseworkFiles(value: unknown): CourseworkFile[] {
       byteSize: typeof raw.byteSize === 'string' ? raw.byteSize : String(raw.byteSize ?? ''),
       status: typeof raw.status === 'string' ? raw.status : 'unknown',
       uploadedAt: typeof raw.uploadedAt === 'string' ? raw.uploadedAt : '',
+      review:
+        raw.review === 'clear' || raw.review === 'concern'
+          ? raw.review
+          : 'none',
+      reviewedAt: typeof raw.reviewedAt === 'string' ? raw.reviewedAt : null,
     });
   }
   return files;
