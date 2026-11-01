@@ -781,6 +781,123 @@ function appRoutes() {
 }
 
 // ---------------------------------------------------------------------------
+// 13. The numbers the maintained documents quote are still true
+// ---------------------------------------------------------------------------
+// The resume documents are read by a session that has no memory of the last one.
+// That makes a stale number expensive rather than untidy: a count five units out
+// of date sends the next reader looking for files that were never missing, and a
+// ledger row still asking for a feature that shipped is how a finished piece gets
+// rebuilt.
+//
+// Only what a script can count is checked, which is the point: a document may
+// quote a number freely, but the numbers a unit must keep true are the ones it
+// cannot avoid — migrations and suites, both counted from the tree. The test
+// totals on the same line are quoted too and nothing here can count them, so
+// they are the one part of that paragraph a unit still has to remember.
+//
+// The implementation history is exempt, on purpose. Its heading says the counts
+// below are historical snapshots, and rewriting a snapshot to match today would
+// destroy the record of what was true then.
+{
+  const migrationCount = readdirSync(join(root, 'supabase', 'migrations'))
+    .filter((f) => f.endsWith('.sql')).length;
+  const suiteCount = readdirSync(join(root, 'supabase', 'tests'))
+    .filter((f) => f.endsWith('.test.mjs')).length;
+
+  const next = readFileSync(join(root, 'NEXT.md'), 'utf8');
+  const historyAt = next.indexOf('## Implementation history');
+  const living = historyAt === -1 ? next : next.slice(0, historyAt);
+
+  const documents = [
+    ['NEXT.md', living],
+    ['ROADMAP.md', readFileSync(join(root, 'ROADMAP.md'), 'utf8')],
+    ['SCREENS.md', readFileSync(join(root, 'SCREENS.md'), 'utf8')],
+    ['FLAGS.md', readFileSync(join(root, 'FLAGS.md'), 'utf8')],
+    ['docs/deploy/README.md', readFileSync(join(root, 'docs', 'deploy', 'README.md'), 'utf8')],
+  ];
+
+  for (const [name, text] of documents) {
+    const lines = text.split('\n');
+    lines.forEach((line, index) => {
+      for (const match of line.matchAll(/(\d{2,4}) migrations\b/g)) {
+        const quoted = Number.parseInt(match[1], 10);
+        if (quoted !== migrationCount) {
+          fail('dates', `${name}:${index + 1} says ${quoted} migrations; there are ${migrationCount}. `
+            + 'A count in a document is a claim about today — update it, or move the sentence '
+            + 'into the implementation history, which is exempt.');
+        }
+      }
+      for (const match of line.matchAll(/(\d{2,4}) files in `supabase\/migrations\/`/g)) {
+        const quoted = Number.parseInt(match[1], 10);
+        if (quoted !== migrationCount) {
+          fail('dates', `${name}:${index + 1} says ${quoted} files in supabase/migrations/; there are ${migrationCount}`);
+        }
+      }
+    });
+  }
+
+  // The current-status paragraph, which is the one place the document states
+  // what was proved. It is allowed to run over a couple of lines — it is a
+  // sentence, not a table cell — so the whole paragraph is read, not one line.
+  const stated = living.search(/^Verification:/m);
+  if (stated === -1) {
+    fail('dates', 'NEXT.md has no current "Verification:" paragraph, so a reader cannot tell what was last checked');
+  } else {
+    const rest = living.slice(stated);
+    const paragraph = rest.slice(0, rest.search(/\n\s*\n/));
+    if (!paragraph.includes(`${migrationCount} migrations`)) {
+      fail('dates', `NEXT.md's Verification paragraph does not say ${migrationCount} migrations`);
+    }
+    const suites = paragraph.match(/(\d{2,4}) suites/);
+    if (!suites) {
+      fail('dates', 'NEXT.md\'s Verification paragraph does not name the suite count');
+    } else if (Number.parseInt(suites[1], 10) !== suiteCount) {
+      fail('dates', `NEXT.md's Verification paragraph says ${suites[1]} suites; there are ${suiteCount}`);
+    }
+  }
+
+  process.stdout.write(`dates: ${documents.length} documents, ${migrationCount} migrations, ${suiteCount} suites\n`);
+}
+
+// ---------------------------------------------------------------------------
+// 14. The half-built ledger names each piece exactly once
+// ---------------------------------------------------------------------------
+// Two rows for one feature is not a formatting problem. The rows were written at
+// different times, and they disagreed: one said a learner's file hand-in was
+// "not wired to submissions" while the other recorded it built and shipped, in
+// the same table, forty lines apart. A reader picks whichever row they read
+// first, and nothing anywhere is wrong except the document that exists to
+// prevent exactly this.
+{
+  const next = readFileSync(join(root, 'NEXT.md'), 'utf8');
+  const lines = next.split('\n');
+  const header = lines.findIndex((line) => line.startsWith('| Piece | Built and tested |'));
+  if (header === -1) {
+    fail('ledger', 'NEXT.md no longer has the half-built table, so nothing names what each piece is waiting on');
+  } else {
+    const seen = new Map();
+    let rows = 0;
+    for (let index = header + 2; index < lines.length; index += 1) {
+      const line = lines[index];
+      if (!line.startsWith('|')) break;
+      rows += 1;
+      const cell = line.split('|')[1] ?? '';
+      // `**Assignments**` and `**Assignments** (`learning.assignments`)` are the
+      // same piece with and without the flag it is held behind.
+      const piece = cell.replace(/\*\*/g, '').split('(')[0].trim();
+      if (!piece) continue;
+      if (seen.has(piece)) {
+        fail('ledger', `"${piece}" is listed twice (lines ${seen.get(piece)} and ${index + 1}); `
+          + 'one piece, one row, or the two will disagree and a reader will believe the first');
+      } else {
+        seen.set(piece, index + 1);
+      }
+    }
+    process.stdout.write(`ledger: ${rows} pieces, each named once\n`);
+  }
+}
+
+// ---------------------------------------------------------------------------
 if (problems.length > 0) {
   process.stderr.write(`\n${problems.length} structural problem(s):\n`);
   for (const problem of problems) process.stderr.write(`  - ${problem}\n`);

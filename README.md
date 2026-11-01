@@ -15,6 +15,16 @@ Global Islamic e-learning platform for children and adults.
 | `IDEAS.md` | Parking lot. Nothing here is scheduled. |
 | `docs/deploy/` | **How to put this live**: project, migrations, first owner, env vars, media, encoder, email, Google — written as steps with their outputs, and the two pieces of SQL an operator pastes are executed by the test suite |
 
+Those documents are how a session with no memory of the last one starts a unit,
+so the two ways they go wrong are structural checks rather than habits. `npm run
+check:repo` fails when `NEXT.md` (before its history), `ROADMAP.md`, `SCREENS.md`,
+`FLAGS.md` or the deploy runbook states a migration count the tree does not have —
+`NEXT.md` did, for five units — and when the half-built ledger gives one piece two
+rows, which it did for `Assignments`: one row said a learner's file hand-in was not wired to submissions,
+the other recorded it built and shipped, forty lines apart. The implementation
+history in `NEXT.md` is exempt, because its counts are snapshots from their dates
+and rewriting a snapshot destroys the record. Settled 2026-11-01 in `DECISIONS.md`.
+
 ## Database
 
 PostgreSQL on Supabase. Migrations live in `supabase/migrations` and are

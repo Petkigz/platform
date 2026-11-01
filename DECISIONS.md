@@ -100,6 +100,7 @@ you. Do not treat it as settled, and do not build on it until it moves up.
 | 2026-11-01 | **A certificate outlives the learning record it was issued from, and the schema had to allow that.** The children's policy says a child's record is deleted thirty days after the guardian's account closes and that an issued certificate keeps verifying. `certificates.course_enrolment_id` was `not null … on delete restrict`, so one of those two had to give. The enrolment is the learning record, so it goes: the column becomes nullable with `on delete set null`, and the certificate records `evidence_erased_at` in the same statement. The snapshot — title, version, criteria, number — never moves, which is what verification reads. A certificate cannot be re-attached to an enrolment, and its erasure cannot be undone. |
 | 2026-11-01 | **The thirty days are the children's clock, not everybody's.** An adult closing their own account is told on `/account/delete` that their enrolments and progress are kept, and has been since the screen was written. Making that untrue quietly, to make the three clocks look alike, would be worse than an asymmetry somebody can see. Widening it is the owner's call and is written down in NEXT.md. |
 | 2026-11-01 | **A child's tombstone holds an id, a type, a status and dates — and nothing else.** `learner_profiles` gains a third status, `erased`, and the two constraints that require a name-bearing row (an age band, a family) are waived for exactly that status. The row survives because a certificate points at it with `on delete restrict`, and for no other reason: the name, the age band, the family and the account link are all cleared. |
+| 2026-11-01 | **A number in a maintained document is a claim about today, and the ones a script can count are checked.** `check:repo` now fails when `NEXT.md`, `ROADMAP.md`, `SCREENS.md`, `FLAGS.md` or the deploy runbook states a migration count the tree does not have, when the current-status `Verification:` paragraph does not name the real migration and suite counts, or when the half-built ledger gives one piece two rows. The implementation history is exempt — its counts are snapshots from their dates — and the test totals on the same line remain a claim the unit keeps true by hand, because nothing in the script can count them. |
 
 ---
 
@@ -6960,3 +6961,38 @@ watchable, even if a link was attached before it was called off. `live_recording
 **raises** rather than returning null, so "there is no recording" and "it is not
 yours" are the same answer to a stranger and neither can be used to find out which
 classes were recorded.
+
+## A number in a document is a claim about today — **DECIDED 2026-11-01**
+
+The four documents that carry the project are read by a session with no memory of
+the last one, and they are believed. That makes a stale count expensive rather
+than untidy. `NEXT.md` said 211 migrations for five units while the tree had 216,
+and its half-built ledger carried two `Assignments` rows that disagreed with each
+other: one saying a learner's file hand-in was not wired to submissions, the other
+recording the whole path built and tested, forty lines apart in the same table. The
+next session read both and had to check the repository by hand before it could
+start. A duplicated row and a fortnight-old number are how a finished feature gets
+rebuilt.
+
+**What a script can count, it counts.** Migrations are files in
+`supabase/migrations/`, suites are `*.test.mjs` in `supabase/tests/`, and
+`scripts/repo-check.mjs` compares both against every claim in `NEXT.md` (before its
+implementation history), `ROADMAP.md`, `SCREENS.md`, `FLAGS.md` and
+`docs/deploy/README.md`. Two counting conventions for the same folder — "216
+migrations" and "216 files in `supabase/migrations/`" — are both read, because both
+were in use.
+
+**What it cannot count stays a claim, and says so.** The database and web test
+totals on the same verification line are the one part a unit keeps true by hand,
+and the check's own comment says that rather than letting the line look verified.
+That is the honest split: a check that pretended to verify a number it guessed
+would be worse than no check.
+
+**The history is exempt on purpose.** Its heading says the counts below are
+snapshots from their dates. Rewriting a snapshot so it matches today destroys the
+only record of what was true then, which is the whole reason that section exists.
+
+**Two rows for one piece is a defect even when both are true.** The rows are written
+in different weeks and age differently. The comparison strips the flag suffix
+first, because `**Assignments**` and `**Assignments** (`learning.assignments`)` are
+one piece and the table is not consistent about writing it.

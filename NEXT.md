@@ -440,8 +440,31 @@ name. The change that made it possible was not the ledger, though — it was
 dropping a foreign key, because deleting an identity used to take the profile, the
 roles and the name against every audit entry with it.
 
-Verification: **2331 database tests (153 suites), 1880 web tests; TypeScript
-typecheck, build and `check:repo` pass; 211 migrations.**
+The documents that a cold session resumes from had stopped describing the
+repository, and nothing noticed. `NEXT.md`'s migration count was five units out
+of date; its half-built ledger carried **two** `Assignments` rows
+that disagreed — one saying a learner's file hand-in was "not wired to
+submissions", the other recording it built and shipped forty lines below — and its
+`Upload cost control` row still asked for a cumulative quota that had been built
+and named in the row's own last cell. The last session read all three before
+starting a unit and had to check the repository against them by hand; a
+fortnight-old count and a duplicated row are how a finished feature gets rebuilt.
+Two of those failure modes are now structural checks rather than housekeeping
+(`repo-check.mjs` 13 and 14): every `N migrations` claim in `NEXT.md` before its
+history, in `ROADMAP.md`, `SCREENS.md`, `FLAGS.md` and the deploy runbook must
+equal the number of files in `supabase/migrations/`; the current-status
+`Verification:` paragraph must name that count and the number of suites; and no
+piece may have two rows in the half-built table, with the flag spelling stripped
+before comparing, because `**Assignments**` and
+`**Assignments** (`learning.assignments`)` are one piece written twice. The
+implementation history is exempt on purpose — its heading says the counts below
+are snapshots, and a snapshot rewritten to match today is no longer a record of
+what was true then. `doc-counts.test.ts` recomputes both counts from the tree
+rather than trusting the script's arithmetic, and fails if either check is ever
+removed.
+
+Verification: **2 409 database assertions in 157 suites, 1 951 web tests; TypeScript
+typecheck, build and `check:repo` pass; 216 migrations.**
 
 ## Today's sentence
 
@@ -466,8 +489,8 @@ say what is left instead of what was missing.
 | **Media ingest** (D8 = R2) | `media_assets` register with a pending/available/quarantined/deleted state machine and four writer functions; SigV4 signing in `web/src/lib/media-r2.ts`, pinned against AWS's published vector; `POST /api/media` `request_upload` + `confirm_upload`; multipart upload for a file too big for one presigned PUT (`lib/media-multipart.ts` on the server, `lib/multipart-upload.ts` in the browser, four more actions on the same route); `resume_upload`, which finds the caller's own `pending` row by checksum and size and reads back from the bucket the parts storage already holds, so a closed tab costs one part rather than the file; `abandon_media_upload()` and the `/admin/media` panel that reaches it, which is the only place an upload nobody finished can be seen; R2 variables documented in `web/.env.example` | Any R2 credential in this environment, so nothing has been exercised against a real bucket; the bucket's CORS rule, which multipart needs and single-PUT did not | **Nothing** that is a design question. R2 is chosen; when credentials are issued the masters bucket must allow `PUT` from the app's origin and expose `ETag`. The bucket names, the token scope and the CORS JSON are written out in `docs/deploy/README.md` step 5 |
 | **Media delivery** | The whole path, end to end: `media_renditions` register with a closed profile vocabulary and derived object keys; the transcode worker that fills it (`web/src/worker/transcode-worker.ts`, decisions in `lib/transcode.ts`, gated by `delivery.transcode`), which checks the master's SHA-256 against the bytes before it encodes anything; `/api/media/playback` and `/api/media/download` signing short-lived rendition URLs with the database as the only authority on who may watch; a player on the lesson page with a quality selector and a poster; `/teach/media`, where a teacher uploads straight to R2 with a browser-computed checksum; `verify` on `/admin/media`, which asks storage whether the file arrived at the declared size and only then confirms it; and `retry_media_rendition()`, reached from the same screen, which puts a copy that failed to encode back in the queue on a written reason | A host to run the worker on with ffmpeg, R2 credentials and a staff account for it, and a decision about whether a free preview may be watched signed-out | **Nothing** that is a design question. What is left is infrastructure and one product decision, and the infrastructure is now a step-by-step: `docs/deploy/README.md` step 6 covers ffmpeg, the worker's staff account and the service unit |
 | **Offline download** | Built end to end: `/downloads` reads the device's own storage so it works with no network; `learning.offline_max_devices` (3) and `learning.offline_expiry_days` (30) are settings; only a Plus plan grants `offline_downloads`, and `lesson_download_standing()` explains refusal by reasoning order (signed out → feature off → not entitled → needs Plus → no media → allowed); 11 tests | Nothing structural. The media is a signed rendition URL cached by the app; "never in the file manager" holds only inside the mobile shell, which does not exist yet | **Decisions:** nothing left. The browser build can save a file the OS can see — that limit is the mobile app's job, not this one's |
-| **Upload cost control** | A per-file ceiling of 8 GiB that the browser can now actually reach: `lib/digest.ts` hashes a slice at a time so the checksum does not cap the size, and above 32 MiB `lib/multipart-upload.ts` sends 16 MiB parts so the transport does not either — a failed part is retried rather than the file restarted | A cumulative per-teacher byte quota and a spend alert. Resuming needs the same file to be chosen again, because the checksum is what recognises it, so a half-sent file cannot be finished from the library without it; and an unfinished upload whose key was not derived from an asset can be listed but not ended, since the audit trail would have nothing to point at | **Decision:** quota policy (`platform.cost_controls`). Note that `register_media_upload()` is open to **any signed-in user**, not only teachers, because learners attach files to assignment submissions through the same table — so the missing control is a cumulative quota per person, not a role check | **The cumulative quota is now built**: `media.upload_quota_gb_per_teacher` is 50 GB of master bytes, `media_upload_allowance()` answers whether one more upload fits, and `/api/media` refuses with the space left — behind `platform.cost_controls`, which still ships off.
-| **Assignments** | Tasks, self-paced and cohort deadlines, one private submission per learner, drafts and hand-in, marking with immutable feedback, a revision loop with an append-only snapshot, file *references* with type and size ceilings | Byte transfer for submissions (the R2 path exists but is not wired to submissions), scanning, secure delivery to the marker, retention of children's files | **Decision/review:** the safeguarding review of files children send. This one review holds `learning.assignments` **and** `learning.cohorts` |
+| **Upload cost control** | A per-file ceiling of 8 GiB that the browser can now actually reach: `lib/digest.ts` hashes a slice at a time so the checksum does not cap the size, and above 32 MiB `lib/multipart-upload.ts` sends 16 MiB parts so the transport does not either — a failed part is retried rather than the file restarted. **The cumulative quota exists too**: `media.upload_quota_gb_per_teacher` is 50 GB of master bytes, `media_upload_allowance()` answers whether one more upload fits, `my_media_storage()` reports what an account already holds, and `/api/media` refuses a `request_upload` or `initiate_multipart` that would not fit, naming the space left | A spend alert. Resuming needs the same file to be chosen again, because the checksum is what recognises it, so a half-sent file cannot be finished from the library without it; and an unfinished upload whose key was not derived from an asset can be listed but not ended, since the audit trail would have nothing to point at | **Switch:** `platform.cost_controls` ships off, so every upload passes today. The quota policy itself is decided — note that `register_media_upload()` is open to **any signed-in user**, not only teachers, because learners attach files to assignment submissions through the same table, so the setting is a quota per person rather than a role check |
+| **Assignments** (`learning.assignments`) | Task authoring, self-paced and cohort deadlines, one private submission per learner, drafts and hand-in, marking with immutable feedback, a revision loop with an append-only snapshot, and since 2026-11-01 **file hand-ins**: register → presigned PUT → server-verified confirm, attach in the same transaction, listed by name for the household and the course author, opened through a redirect that re-checks permission — with the type and size ceilings checked before a byte moves, and a separate `coursework` file kind, declared for one submission before a byte moves, that no lesson can point at; 20 database tests, 13 web tests | What happens to a handed-in file when an account or a course is deleted, beyond the general media tombstone; scanning; school-wide retention rules for children's work | **Decision:** retention for coursework. The flag stays off until that is written down, and the same review holds `learning.cohorts` |
 | **Cohorts** | Tables, exact-version pinning, opt-in join/leave, capacity serialisation, family opt-in for children, counts on the manager and, since row 32, names and progress on the class page for the teacher who opened it, teacher manager, learner join/leave, the teacher-set `join_closes_at` window, how full each class is on the course page a joiner reads it from (`cohort_places()`, counts only — the roster stays behind `can_read_cohort_member()`), and the teacher's control over the published number (`set_cohort_capacity()`, never below the learners already in the class) | Nothing structural | The same safeguarding review. `learning.cohorts` ships `false` |
 | **Learner analytics** (`SCREENS.md` row 32) | `can_read_learner_course_progress()`, `cohort_learner_progress()`, the class page with a roster ordered by need, `teacher_course_analytics()` with enrolments/completions/certificates, `/teach/[courseId]/reports`, and the class list as a CSV a teacher downloads from the class page, recorded in the audit log before the file is sent | Anything that follows a learner across courses; the course report has no file yet, only the class roster does | **Decision:** how long progress stays readable after a class ends. Until then it stays readable, which is the safer default |
 | **Reviewer access to lesson media** | `may_review_version_media()` — an accepted or in-progress assignment and nothing else — as a third branch of `may_play_rendition()`, with the player wired into `/review/[assignmentId]`; `may_watch_master()`, `master_preview_target()` and `/api/media/master` for the uploader, staff and the version author, with `Watch` on `/teach/media` and `/admin/media`; 19 database tests, most of them refusals | Any copy for a reviewer: no download, no master, no export. Aggregate review analytics | **Nothing.** Decided 2026-10-20: "other teachers" means a reviewer checking quality for a named period, not co-teachers and not any teacher on the platform. The period is the assignment's state, so access ends with the review |
@@ -475,7 +498,6 @@ say what is left instead of what was missing.
 | **Payments** | MTN MoMo and Airtel adapters, checkout, orders, refunds, reconciliation, disputes, financial adjustments, subscriptions with entitlement grants that drive access, 50% teacher-share accrual with the split snapshotted per row, and the **72-hour refund window** (2026-10-23): a customer asks within three days of the payment, staff can still open one afterwards, and a partial goodwill refund has no screen yet | Live credentials, callback verification against a real provider, automatic renewal, failed-payment retry, a merchant account | **External:** provider sandbox and merchant credentials (P12). Do not claim any of this works end to end |
 | **Payouts** (`teaching.payouts`) | The whole request path: `my_earnings()` and `/teach/earnings`, `request_instructor_payout()` with a tax acknowledgement, the refund-hold setting, one open request per currency (unique index), `my_payouts()`, the finance queue at `/admin/payouts` that shows the amount asked for beside what the ledger owes today, cancellation, failure with a reason the teacher reads, and `complete_instructor_payout()` as the only function that marks an earning paid; `platform_teacher_liability()` reports the balance owed per currency | The provider call itself, and per-teacher destination details | **External:** a payout provider, and a tax treatment per country. `teaching.payouts` is CODE-gated and a trigger refuses to enable it at runtime |
 | **Guardian verification** | Tables and flow complete, shipping off. **Not to be deleted** — COPPA makes verifiable parental consent mandatory for US under-13s | Enabling it | **External:** legal review, and it must be on before any US child enrols |
-| **Assignments** (`learning.assignments`) | Task authoring, deadlines (relative or cohort), one submission per learner, a revision loop with the marked version snapshotted, written feedback, and since 2026-11-01 **file hand-ins**: register → presigned PUT → server-verified confirm, attach in the same transaction, listed by name for the household and the course author, opened through a redirect that re-checks permission; 20 database tests, 13 web tests | What happens to a handed-in file when an account or a course is deleted, beyond the general media tombstone; school-wide retention rules for children's work | **Decision:** retention for coursework. The flag stays off until that is written down |
 | **Notifications** | The in-app centre: `/notifications`, a `notifications` table with RLS on the reader, `notify_user()` writing payout sent/failed/cancelled, a failed encode, and a cancelled class, and two derived reminders computed at read time (a class within a day, a plan renewing within three) each gated on its own flag; 7 tests. The outbox has a state machine *(2026-10-24)*: a five-minute claim lease, a 5/15/60/240/720-minute backoff, a dead letter at `delivery.max_attempts`, a do-not-send list a bounce writes to, and a retry that needs a written reason | Email and SMS delivery — nothing sends, and the adapter is the missing piece | **External:** a delivery provider and its credentials (`delivery.notifications`) |
 | **Product analytics** (`delivery.analytics`) | 7 event codes, monthly partitions, a table with RLS and no read policy, `record_analytics_event()` returning `{recorded, reason}`; teacher course reports and platform reporting read aggregates, never a person | Event instrumentation beyond the coded set | **Decision:** a retention policy is *not* run — analytics are kept forever by the owner's decision of 2026-10-22 |
 | **Visual identity** | White and green theme settled; tokens in `web/src/app/globals.css`; every screen uses the same card/badge/notice vocabulary. *(2026-10-24)* **The mark is a file now** — sixteen points in `web/src/lib/brand.ts`, drawn by `<BrandMark>` in the masthead and on the certificate and receipt (which had a *different* mark: a rotated square), as `app/icon.svg` (favicon), `app/apple-icon.png` (rendered from the same points by `scripts/make-apple-icon.mjs`) and `app/opengraph-image.tsx` (the 1200×630 share card), with `manifest.ts` giving Android the icon and the green. `brand.test.ts` fails if the favicon and the header stop agreeing | Type, illustration; 0 of the 50 inventoried screens designed | **Decision:** the owner's — the shape is the one the header already drew, so nothing is decided that was not already on screen. Not a blocker for any backend work |
@@ -2350,6 +2372,40 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### A number in a document is a claim about today, 2026-11-01
+
+The maintained documents are the only memory a session has. That makes a stale
+number expensive rather than untidy: the next session reads it, believes it, and
+either hunts for five migrations that were never missing or starts rebuilding a
+feature that shipped a unit ago. Both had happened. `NEXT.md` stated 211
+migrations while the tree held 216, and its ledger carried two `Assignments` rows
+that disagreed with each other — one said a learner's file hand-in was not wired
+to submissions, the other recorded the whole path built and tested, forty lines
+apart in the same table. Nothing was broken anywhere except the document that
+exists to prevent exactly this.
+
+**What is checkable is checked, and what is not is said to be unchecked.** A
+count that a script can derive from the tree — migrations, suites — is now
+derived and compared on every `check:repo`, with the implementation history
+exempt because rewriting a snapshot destroys the only record of what was true
+then. The test totals on the same line stay a claim the unit has to keep true by
+hand, and the check's own comment says so rather than implying otherwise.
+
+**The duplicate was worth a check of its own.** A table whose rows are added by
+different sessions in different weeks will eventually describe one piece twice,
+and the two rows age differently: one records what was built, the other what was
+missing when it was written. A reader believes whichever they read first. The
+comparison strips the flag suffix before matching, because `**Assignments**` and
+`**Assignments** (`learning.assignments`)` are the same piece and the table is
+not consistent about writing it.
+
+**Both checks were seen to fail before they were trusted.** The count check was
+run against a document edited to say 215, and the ledger check against a table
+with a second `Cohorts` row; each failed with the line number and the reason, and
+the files were restored. `doc-counts.test.ts` then recomputes the same two
+numbers independently of the script, so a future refactor that makes the script
+count the wrong directory fails in two places rather than one.
 
 ### The recording of a class is an address, not a file, 2026-11-01
 
