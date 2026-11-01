@@ -6868,3 +6868,45 @@ somebody else's dashboard. The rule for what is in the runbook versus what is
 tested: anything **this repository can execute** is executed in CI; anything that
 happens in a console we do not control is written with the output it should
 produce, so the reader has something to compare against.
+
+## A register may leave the platform, and the leaving is recorded — **DECIDED 2026-11-01**
+
+**The question was not whether a teacher may keep a record of their class.** They
+already can: the roster is on a screen, a screen can be photographed, and a teacher
+who is trusted to watch a child's progress is trusted to write it down. Refusing
+the file does not make the list stay on the platform — it makes the copy worse,
+because a screenshot is unreadable, undated, and carries no record at all.
+
+**So the platform provides the good version and records the taking.** A teacher
+downloads the class list as a CSV from the class page, and `log_cohort_roster_export()`
+writes a `cohort.roster_exported` audit event naming the class, the teacher and a
+**count re-derived from the roster itself** — the record says how many people the
+database was willing to show, not how many the browser claims it wrote. The route
+refuses to send a file whose event could not be written, and the audit event is
+written first because there is no afterwards that can un-send a download. This is
+the same reasoning `/account/export` already states about its own downloads: a
+record is what turns a surprise copy of somebody's data into a traceable one.
+
+**The audit entry holds a number, never a name.** An append-only table is the worst
+possible place for a second copy of a list of children — it cannot be edited and it
+is kept for the life of the platform — so the event identifies the class and counts
+the people in it, and the test that proves this fails if a learner's name appears in
+the detail.
+
+**What the file contains is what the page contains.** Name, adult or child, age
+band, join date, enrolment state, lessons completed and in progress against the
+version the class pins, percent, the pace sentence, last seen. No family, no
+account, no contact details, and no learner the caller could not already read. The
+route does not restate who may see a class — it calls the same
+`cohort_learner_progress()` the page calls, because two copies of "who may see this
+child" would eventually disagree, and the one that disagreed in the permissive
+direction would do so silently.
+
+**Refused:** an empty file. An empty class, a class the caller does not manage, a
+cohort id that does not exist and a switched-off feature all produce the same
+refusal, deliberately, because a spreadsheet of no rows says "nobody is in this
+class" — which may be a lie, and is the one thing a register must never do.
+
+**Also refused, and still refused:** following a learner across courses. One class
+at one moment is a register; a person's whole record across a course catalogue is a
+profile, and that is a different decision nobody has made.

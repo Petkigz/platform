@@ -134,6 +134,16 @@ export moved to format 2 (notes and bookmarks now name their course and section)
 because a lesson title is not an identity; a format 1 file is still read, and an
 ambiguous match is reported rather than guessed.
 
+A class list can now leave the platform, and the leaving is recorded. The
+teacher who already sees the roster on the class page gets the same rows as a
+CSV from that page — same order, same words, no learner added and none dropped —
+and the database writes an audit event before the file is handed over, so a copy
+nobody can account for is never made. The count in that record is the roster's
+own, not the client's claim. Who may see a class is still answered once, by
+`cohort_learner_progress()`: the route does not restate the rule, and both flags
+close the export in the same breath as the page. The course report still has no
+file; what a teacher needs first is the register for one class.
+
 The interface now lays itself out from either edge. A reader whose device is set
 to Arabic, Urdu, Persian, Pashto, Dari or Dhivehi gets `<html dir="rtl">` and a
 page that mirrors: margins, padding, borders and alignment follow the writing
@@ -447,7 +457,7 @@ say what is left instead of what was missing.
 | **Upload cost control** | A per-file ceiling of 8 GiB that the browser can now actually reach: `lib/digest.ts` hashes a slice at a time so the checksum does not cap the size, and above 32 MiB `lib/multipart-upload.ts` sends 16 MiB parts so the transport does not either — a failed part is retried rather than the file restarted | A cumulative per-teacher byte quota and a spend alert. Resuming needs the same file to be chosen again, because the checksum is what recognises it, so a half-sent file cannot be finished from the library without it; and an unfinished upload whose key was not derived from an asset can be listed but not ended, since the audit trail would have nothing to point at | **Decision:** quota policy (`platform.cost_controls`). Note that `register_media_upload()` is open to **any signed-in user**, not only teachers, because learners attach files to assignment submissions through the same table — so the missing control is a cumulative quota per person, not a role check | **The cumulative quota is now built**: `media.upload_quota_gb_per_teacher` is 50 GB of master bytes, `media_upload_allowance()` answers whether one more upload fits, and `/api/media` refuses with the space left — behind `platform.cost_controls`, which still ships off.
 | **Assignments** | Tasks, self-paced and cohort deadlines, one private submission per learner, drafts and hand-in, marking with immutable feedback, a revision loop with an append-only snapshot, file *references* with type and size ceilings | Byte transfer for submissions (the R2 path exists but is not wired to submissions), scanning, secure delivery to the marker, retention of children's files | **Decision/review:** the safeguarding review of files children send. This one review holds `learning.assignments` **and** `learning.cohorts` |
 | **Cohorts** | Tables, exact-version pinning, opt-in join/leave, capacity serialisation, family opt-in for children, counts on the manager and, since row 32, names and progress on the class page for the teacher who opened it, teacher manager, learner join/leave, the teacher-set `join_closes_at` window, how full each class is on the course page a joiner reads it from (`cohort_places()`, counts only — the roster stays behind `can_read_cohort_member()`), and the teacher's control over the published number (`set_cohort_capacity()`, never below the learners already in the class) | Nothing structural | The same safeguarding review. `learning.cohorts` ships `false` |
-| **Learner analytics** (`SCREENS.md` row 32) | `can_read_learner_course_progress()`, `cohort_learner_progress()`, the class page with a roster ordered by need, `teacher_course_analytics()` with enrolments/completions/certificates, and `/teach/[courseId]/reports` | Export or CSV, anything that follows a learner across courses | **Decision:** how long progress stays readable after a class ends. Until then it stays readable, which is the safer default |
+| **Learner analytics** (`SCREENS.md` row 32) | `can_read_learner_course_progress()`, `cohort_learner_progress()`, the class page with a roster ordered by need, `teacher_course_analytics()` with enrolments/completions/certificates, `/teach/[courseId]/reports`, and the class list as a CSV a teacher downloads from the class page, recorded in the audit log before the file is sent | Anything that follows a learner across courses; the course report has no file yet, only the class roster does | **Decision:** how long progress stays readable after a class ends. Until then it stays readable, which is the safer default |
 | **Reviewer access to lesson media** | `may_review_version_media()` — an accepted or in-progress assignment and nothing else — as a third branch of `may_play_rendition()`, with the player wired into `/review/[assignmentId]`; `may_watch_master()`, `master_preview_target()` and `/api/media/master` for the uploader, staff and the version author, with `Watch` on `/teach/media` and `/admin/media`; 19 database tests, most of them refusals | Any copy for a reviewer: no download, no master, no export. Aggregate review analytics | **Nothing.** Decided 2026-10-20: "other teachers" means a reviewer checking quality for a named period, not co-teachers and not any teacher on the platform. The period is the assignment's state, so access ends with the review |
 | **Live classes with teacher-only recording** | Sessions, join windows, attendance, the roster, `/live` and the teacher's scheduling form; the room URL is `delivery.live_room_base + '/room/' + slug`. Teacher-only capture is the rule | The media server: anything that actually carries audio and video | **Decision made** (build in-house); the remaining work is infrastructure, not design |
 | **Payments** | MTN MoMo and Airtel adapters, checkout, orders, refunds, reconciliation, disputes, financial adjustments, subscriptions with entitlement grants that drive access, 50% teacher-share accrual with the split snapshotted per row, and the **72-hour refund window** (2026-10-23): a customer asks within three days of the payment, staff can still open one afterwards, and a partial goodwill refund has no screen yet | Live credentials, callback verification against a real provider, automatic renewal, failed-payment retry, a merchant account | **External:** provider sandbox and merchant credentials (P12). Do not claim any of this works end to end |
@@ -2328,6 +2338,72 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### The class list leaves the platform, 2026-11-01
+
+A teacher could see the roster of a class they opened and had no way to take it
+with them: no print, no file, nothing. So a teacher running three classes copied
+names off a screen into a document by hand — which is a slower way of doing the
+same thing, with more mistakes in it. The gap was named in this ledger as
+"export or CSV" and it was the last structural piece of the learner-analytics row.
+
+**The file is not the hard part; the copy is.** The moment a class list becomes a
+download it is a list of children's names in somebody's Downloads folder. That is
+not an argument against it — a teacher trusted to see a child's progress is
+trusted to write it down, and refusing the file only pushes the same data into a
+screenshot. It is an argument for the copy being *recorded*, which is the
+reasoning `/account/export` already states about its own downloads. So
+`log_cohort_roster_export()` writes a `cohort.roster_exported` event and
+**re-counts the learners itself** — the record says how many people the database
+was willing to show, not how many the browser claims it wrote — and the route
+refuses to send a file whose event could not be written. There is no "afterwards"
+that can un-send a download.
+
+**The permission is not restated.** The route calls `fetchCohortProgress()`, the
+same function the class page calls, which calls `cohort_learner_progress()`. No
+`can_manage_cohort` check, no flag check, no join: a second copy of "who may see
+this child" is a second answer, and two answers drift. The logging function asks
+the roster for its count rather than re-deriving it, for the same reason. A test
+reads the route's source with comments stripped and fails if any of those names
+reappear in the code.
+
+**One refusal covers four situations** — an empty class, a class this caller does
+not manage, a cohort id that does not exist, and a feature somebody switched off.
+Telling them apart would tell a caller which classes exist. The route turns all
+four into the same 404 with a sentence a person can act on, rather than sending an
+empty spreadsheet that would read as "nobody is in this class".
+
+**What goes in the file** is what the page shows and nothing else: name, adult or
+child, age band, when they joined, enrolment state, lessons completed and in
+progress out of the version's total, percent, the pace sentence, and when they
+were last seen. No family, no account, no contact details — the same boundary the
+page's own notice draws. Two details are there because a spreadsheet is read
+against a printout: a learner with no enrolment gets an **empty** percentage
+rather than `0`, because `0` reads as "started and got nowhere", and a name that
+begins with `=`, `+`, `-` or `@` goes through `csvCell()` and stays a name.
+
+**The words, not only the numbers.** "No activity for 16 days" is the thing a
+teacher acts on; a bare `16` invites a formula that quietly means something else.
+The file carries the sentence, the percent beside it, and a heading block naming
+the course, the class, the version and the day the copy was made — a spreadsheet
+found in March has to say what it is.
+
+**Two things were checked before writing any of it.** `csvFileName()` in
+`lib/csv.ts` returns `ayahspring-my-data-<date>.csv` unconditionally, so reusing
+it would have named a class roster "my data": the new file has its own
+`rosterFileName()`, ASCII-only because the `Content-Disposition` header is not the
+place to discover that a file manager mangled a class name in Arabic — the name
+is inside the file, where it renders. And the file is assembled on the server, in
+a route returning `text/csv` with `Content-Disposition: attachment` and
+`Cache-Control: no-store`, following the one existing CSV route rather than
+inventing a second shape.
+
+**What this does not do.** It does not export to the course report, which
+aggregates across a whole course and has no per-learner rows to leak; it does not
+follow a learner across courses, which is the other half of the ledger row and
+still waiting on a decision. The class page's export link appears only where
+there is something to export, inside the branch that already knows the roster is
+readable and non-empty.
 
 ### A right that works in both directions, 2026-11-01
 

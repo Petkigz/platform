@@ -129,6 +129,27 @@ export default async function CohortProgressPage({
                 <div><p className="n">{summary.averagePercent}%</p><p className="l">Average complete</p></div>
               </div>
 
+              <p
+                style={{
+                  marginTop: '1.25rem',
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                }}
+              >
+                <a
+                  className="btn secondary"
+                  href={`/api/teach/courses/${courseId}/cohorts/${cohortId}/roster`}
+                  download
+                >
+                  Take this list into a spreadsheet
+                </a>
+                <span className="muted" style={{ fontSize: '0.9rem' }}>
+                  The same rows you see here, and nothing more.
+                </span>
+              </p>
+
               <div className="stack" style={{ marginTop: '1.5rem', gap: '0.75rem' }}>
                 {rows.map((row) => {
                   const percent = percentComplete(row);
@@ -175,6 +196,12 @@ export default async function CohortProgressPage({
                 their account, or their contact details, and somebody who leaves the class leaves
                 this page with it. A learner who took the course on their own, without a class, is
                 not here at all.
+              </p>
+
+              <p className="muted" style={{ fontSize: '0.9rem' }}>
+                Once a copy leaves the platform it stays where you put it, so treat the file the
+                way you would treat a paper register. Every copy is recorded against your account,
+                with the date and how many learners it held.
               </p>
             </>
           )}

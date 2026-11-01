@@ -528,6 +528,109 @@ export async function run(ctx) {
       assert(predicate === true, 'authenticated lost execute on the predicate');
     });
 
+    // -----------------------------------------------------------------
+    console.log('\nA copy that leaves the platform leaves a trace');
+    // -----------------------------------------------------------------
+
+    await test('exporting a class list records it, and the count is the database\'s', async () => {
+      const before = (await q(
+        `select count(*)::int n from public.governance_audit_events
+          where action = 'cohort.roster_exported'`)).rows[0].n;
+
+      // The number the record carries is the roster's own count, not a number the
+      // caller passed in — so it is compared against the roster rather than a
+      // constant that would drift the moment another test joins somebody.
+      const expected = (await roster(teacher, cohort)).length;
+      assert(expected > 0, 'the class is empty; this test proves nothing');
+
+      const result = (await asActor(teacher,
+        'select public.log_cohort_roster_export($1) r', [cohort])).rows[0].r;
+
+      assert(result.logged === true, 'the export was not recorded');
+      assert(result.learners === expected,
+        `the record says ${result.learners} learners; the roster says ${expected}`);
+
+      const after = (await q(
+        `select count(*)::int n from public.governance_audit_events
+          where action = 'cohort.roster_exported'`)).rows[0].n;
+      assert(after === before + 1, `audit rows went from ${before} to ${after}`);
+
+      const row = (await q(
+        `select actor, target_type, target_id, detail
+           from public.governance_audit_events
+          where action = 'cohort.roster_exported'
+          order by occurred_at desc limit 1`)).rows[0];
+      assert(row.actor === teacher, 'the copy was recorded against somebody else');
+      assert(row.target_type === 'cohort', `target_type is ${row.target_type}`);
+      assert(row.target_id === cohort, 'the copy does not name the class');
+      assert(row.detail.learners === expected, 'the detail lost the count');
+      // The event names a class and a number. It must not become a second copy
+      // of the list inside an append-only table.
+      assert(!JSON.stringify(row.detail).includes(member.name),
+        'the audit detail carries a learner\'s name');
+    });
+
+    await test('a copy the caller may not make is refused, and nothing is recorded', async () => {
+      // The learner themselves, and an author who did not open this class.
+      await refused(member.userId,
+        'select public.log_cohort_roster_export($1)', [cohort],
+        /nothing in this class that you can see/i);
+      await refused(outsider,
+        'select public.log_cohort_roster_export($1)', [cohort],
+        /nothing in this class that you can see/i);
+
+      const logged = (await q(
+        `select count(*)::int n from public.governance_audit_events
+          where action = 'cohort.roster_exported' and actor <> $1`, [teacher])).rows[0].n;
+      assert(logged === 0, 'a refused export still wrote an audit row');
+    });
+
+    await test('a class that does not exist is the same refusal as one that does', async () => {
+      // Telling them apart would tell a caller which classes exist.
+      await refused(teacher,
+        'select public.log_cohort_roster_export($1)',
+        ['00000000-0000-0000-0000-000000000000'],
+        /nothing in this class that you can see/i);
+      await refused(teacher, 'select public.log_cohort_roster_export(null)', [],
+        /a class is required/i);
+    });
+
+    await test('turning either flag off closes the export as well as the page', async () => {
+      await setFlag(ANALYTICS, 'false');
+      try {
+        await refused(teacher, 'select public.log_cohort_roster_export($1)', [cohort],
+          /nothing in this class that you can see/i);
+      } finally {
+        await setFlag(ANALYTICS, 'true');
+      }
+
+      await setFlag(COHORTS, 'false');
+      try {
+        await refused(teacher, 'select public.log_cohort_roster_export($1)', [cohort],
+          /nothing in this class that you can see/i);
+      } finally {
+        await setFlag(COHORTS, 'true');
+      }
+    });
+
+    await test('a signed-out caller cannot record a copy at all', async () => {
+      await refused(null, 'select public.log_cohort_roster_export($1)', [cohort],
+        /sign in to export a class list/i);
+    });
+
+    await test('the logging function is reachable by a signed-in person and by nobody else', async () => {
+      const allowed = (await q(
+        `select has_function_privilege('authenticated',
+           'public.log_cohort_roster_export(uuid)','EXECUTE') as ok`)).rows[0].ok;
+      assert(allowed === true, 'authenticated cannot record an export');
+      for (const role of ['public', 'anon']) {
+        const no = (await q(
+          `select has_function_privilege($1,
+             'public.log_cohort_roster_export(uuid)','EXECUTE') as ok`, [role])).rows[0].ok;
+        assert(no === false, `${role} can execute the export logger`);
+      }
+    });
+
     await test('a cohort the caller does not manage returns nothing', async () => {
       // `can_manage_cohort()` already answers this; the roster asks it rather than
       // restating it, so the two cannot drift apart.
