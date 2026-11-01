@@ -105,8 +105,23 @@ export default async function ExportPage() {
           <li>
             <strong>What you wrote</strong>
             <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
-              Lesson notes, bookmarks, saved courses, reviews, discussion posts, assignment
-              submissions and quiz answers.
+              Lesson notes, bookmarks, saved courses and the private note you put beside one,
+              reviews, discussion posts, assignment submissions and quiz answers.
+            </span>
+          </li>
+          <li>
+            <strong>Who you are responsible for, and who may see you</strong>
+            <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
+              Every child you are a guardian of, what you are allowed to see and manage, and when
+              that was verified — and, the other way round, whoever the platform has verified as a
+              guardian of you.
+            </span>
+          </li>
+          <li>
+            <strong>People you invited</strong>
+            <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
+              The address you sent a share to, what you shared, and whether it was accepted. Not the
+              link itself: it is what lets its holder in.
             </span>
           </li>
           <li>
@@ -119,7 +134,9 @@ export default async function ExportPage() {
           <li>
             <strong>Support and messages</strong>
             <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
-              Cases you opened, the replies you can already see, and every notification sent to you.
+              Cases you opened, the replies you can already see, every notification sent to you, and
+              the mail the platform has sent or queued on your behalf — with any invitation link
+              blanked out.
             </span>
           </li>
           <li>

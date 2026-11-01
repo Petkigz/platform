@@ -320,6 +320,15 @@ the refund is now opened by support and decided by finance — and the two ledge
 writers the same suite named as an open edge are now finance's too, by hand or
 by provider event, with a typed signature refused at the table.
 
+The two data rights were then checked against each other rather than one at a
+time (`data_rights.test.mjs`). Closing an account was reporting deletions —
+saved courses, invitations, guardian links — that the download never showed, and
+a sweep of every text column found the person's name surviving in their
+notifications, in an invitation email and in support's replies on their own
+case. Both fixed: the document now carries all three, and text the platform must
+keep passes through `redact_name()` so it reads "the account holder" rather than
+a name.
+
 The four journeys a platform either supports or does not are now walked end to
 end as four different people, in one database suite (`first_day.test.mjs`): the
 owner opening the door, a teacher writing a course to publication, a stranger
@@ -331,8 +340,8 @@ course row survived; and a certificate could be issued but never asked for,
 because `certificate_enabled` had a writer function and no screen. Both are
 fixed, and the author now turns certificates on from their course page.
 
-Verification: **2241 database tests (148 suites), 1826 web tests; TypeScript
-typecheck, build and `check:repo` pass; 207 migrations.**
+Verification: **2271 database tests (149 suites), 1826 web tests; TypeScript
+typecheck, build and `check:repo` pass; 208 migrations.**
 
 ## Today's sentence
 
@@ -2240,6 +2249,48 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### Download, delete, and the two rights not being about the same list, 2026-11-01
+
+`export_my_data()` and `erase_my_account()` were built a month apart, each with
+its own suite, and each suite asked the right question about its own half: is
+the document complete, and does closing an account delete what it says it
+deletes. Neither asked the question a person asks — **is the thing being
+deleted the thing I was shown?** — and `data_rights.test.mjs` was written to ask
+it, walking one person from their first saved course to the day they close the
+account. It answered no in both directions.
+
+**One: the receipt counted things the document never showed.** Closing an
+account reports how many saved courses, invitations and guardian links it
+removed. The export held none of the three — and `/account/export` has listed
+"saved courses" under "What you wrote" since the page was written, so the
+promise was on a screen and the function did not keep it. A person cannot check
+a deletion of something they were never shown. The document now carries saved
+courses (with the private note), who they invited and what became of it, and
+guardianship in both directions.
+
+**Two: the name survived the erasure.** Erasure's own header said "Kept
+untouched: nothing that names the person". A sweep of *every text column in the
+schema* — not a list of tables somebody remembered — found the name in three
+places: the person's own notifications, the invitation email they had sent, and
+the staff replies on their own support case. Each was individually defensible;
+together they falsified the sentence. Now the inbox and the mail go with the
+account, and text the platform must keep is passed through `redact_name()`,
+which replaces the name with "the account holder", case-insensitively, treating
+a name as a literal rather than a pattern.
+
+**The export was also reissuing a credential.** Adding the outbox meant
+deciding what an invitation email is: its rendered body contains the link that
+lets its holder in. The document now keeps the path and blanks the token, which
+is what `notIncluded` has claimed all along.
+
+**What the suite pins, and the one exception it states:** other people's words
+about a person stay as they were written. A classmate's reply that names them is
+the classmate's post; the sweep asserts exactly one hit remains and that it is
+that reply, so a future migration cannot quietly widen the claim to "nowhere".
+
+**30 new database tests (2271 passed, 149 suites), 1826 web tests; tsc, build
+and check:repo clean; 208 migrations.**
 
 ### The money writers are finance's, and a signature is not something a console types, 2026-11-01
 
