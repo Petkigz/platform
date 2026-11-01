@@ -77,6 +77,7 @@ import {
   encodeArgs,
   mapTranscodeError,
   probeArgs,
+  readWorkerEnv,
   transcodeMaster,
   type EncodeOutput,
   type ExistingRendition,
@@ -116,47 +117,6 @@ function parseArgs(argv: readonly string[]): Args {
     }
   }
   return args;
-}
-
-// ---------------------------------------------------------------------------
-// Environment
-// ---------------------------------------------------------------------------
-
-type WorkerEnv = {
-  url: string;
-  anonKey: string;
-  email: string;
-  password: string;
-  r2: R2Config;
-};
-
-/**
- * Reads what the worker needs, and refuses with a sentence naming the missing
- * variable. No default is invented for a credential: a worker that silently ran
- * against the wrong project would encode into somebody else's bucket.
- */
-function readWorkerEnv(env: Record<string, string | undefined>): WorkerEnv {
-  const required: Array<[string, string | undefined]> = [
-    ['SUPABASE_URL', env.SUPABASE_URL],
-    ['SUPABASE_ANON_KEY', env.SUPABASE_ANON_KEY],
-    ['MEDIA_WORKER_EMAIL', env.MEDIA_WORKER_EMAIL],
-    ['MEDIA_WORKER_PASSWORD', env.MEDIA_WORKER_PASSWORD],
-  ];
-  const missing = required.filter(([, value]) => !value?.trim()).map(([name]) => name);
-  if (missing.length > 0) {
-    throw new Error(
-      `the worker needs ${missing.join(', ')} in its environment. ` +
-        'MEDIA_WORKER_EMAIL and MEDIA_WORKER_PASSWORD are a real account that an admin has made staff at /admin/roles; ' +
-        'there is no service key in this schema, by design.',
-    );
-  }
-  return {
-    url: env.SUPABASE_URL!.trim(),
-    anonKey: env.SUPABASE_ANON_KEY!.trim(),
-    email: env.MEDIA_WORKER_EMAIL!.trim(),
-    password: env.MEDIA_WORKER_PASSWORD!,
-    r2: requireR2Config(env),
-  };
 }
 
 // ---------------------------------------------------------------------------
@@ -601,13 +561,14 @@ async function main(): Promise<number> {
     return 1;
   }
 
-  let env: WorkerEnv;
-  try {
-    env = readWorkerEnv(process.env as Record<string, string | undefined>);
-  } catch (error) {
-    process.stdout.write(`${describeFailure(error)}\n`);
+  const read = readWorkerEnv(process.env as Record<string, string | undefined>);
+  if (!read.ok) {
+    process.stdout.write(`${read.message}\n`);
     return 1;
   }
+  // The R2 credentials are read separately above, before anything is signed, so
+  // this is the one place the two halves of the configuration meet.
+  const env = { ...read.env, r2: configured };
 
   const supabase = createClient(env.url, env.anonKey, {
     auth: { persistSession: false, autoRefreshToken: false },

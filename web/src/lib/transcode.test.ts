@@ -12,6 +12,7 @@ import {
   planRenditions,
   probeArgs,
   profileMimeType,
+  readWorkerEnv,
   transcodeMaster,
   type EncodeOutput,
   type ExistingRendition,
@@ -576,3 +577,80 @@ function row(over: Partial<ExistingRendition> = {}): ExistingRendition {
     ...over,
   };
 }
+
+// ---------------------------------------------------------------------------
+// The environment the worker reads
+// ---------------------------------------------------------------------------
+//
+// Found by running the deployment runbook against the code rather than trusting
+// that they agreed. `docs/deploy/README.md` step 6.3 exports
+// NEXT_PUBLIC_SUPABASE_URL; the worker demanded SUPABASE_URL and exited with a
+// sentence about a variable the runbook never named. An operator following the
+// instructions exactly got an encoder that would not start, and the message sent
+// them looking for a typo in a value that was correct.
+//
+// The two names exist for a real reason and neither can be dropped: Next exposes
+// NEXT_PUBLIC_ to the browser, and the worker is a plain Node process. So both
+// are accepted, and the bare name wins when both are set.
+
+const workerBase = {
+  MEDIA_WORKER_EMAIL: 'worker@ayahspring.com',
+  MEDIA_WORKER_PASSWORD: 'a-real-password',
+};
+
+test('the worker starts from the runbook\'s names, not only its own', () => {
+  const fromRunbook = readWorkerEnv({
+    ...workerBase,
+    NEXT_PUBLIC_SUPABASE_URL: 'https://ref.supabase.co',
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: 'anon-key',
+  });
+  assert.equal(fromRunbook.ok, true);
+  assert.equal(fromRunbook.ok && fromRunbook.env.url, 'https://ref.supabase.co');
+});
+
+test('the bare names still win, because a worker has no Next runtime', () => {
+  const both = readWorkerEnv({
+    ...workerBase,
+    SUPABASE_URL: 'https://bare.supabase.co',
+    NEXT_PUBLIC_SUPABASE_URL: 'https://public.supabase.co',
+    SUPABASE_ANON_KEY: 'bare-key',
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: 'public-key',
+  });
+  assert.equal(both.ok, true);
+  assert.equal(both.ok && both.env.url, 'https://bare.supabase.co');
+  assert.equal(both.ok && both.env.anonKey, 'bare-key');
+});
+
+test('a missing value is named with both spellings, and nothing is invented', () => {
+  const nothing = readWorkerEnv({});
+  assert.equal(nothing.ok, false);
+  const said = nothing.ok ? '' : nothing.message;
+  assert.match(said, /SUPABASE_URL \(or NEXT_PUBLIC_SUPABASE_URL\)/);
+  assert.match(said, /MEDIA_WORKER_EMAIL/);
+  assert.match(said, /MEDIA_WORKER_PASSWORD/);
+  // A worker that guessed a URL would encode into somebody else's bucket.
+  assert.doesNotMatch(said, /supabase\.co/);
+});
+
+test('whitespace is not a credential', () => {
+  const blank = readWorkerEnv({
+    SUPABASE_URL: '   ',
+    SUPABASE_ANON_KEY: '   ',
+    MEDIA_WORKER_EMAIL: '  ',
+    MEDIA_WORKER_PASSWORD: '  ',
+  });
+  assert.equal(blank.ok, false);
+});
+
+test('a complete environment is passed through trimmed, and the password is not', () => {
+  const ok = readWorkerEnv({
+    ...workerBase,
+    MEDIA_WORKER_PASSWORD: '  spaces-matter-in-a-password  ',
+    SUPABASE_URL: ' https://ref.supabase.co ',
+    SUPABASE_ANON_KEY: ' key ',
+  });
+  assert.equal(ok.ok, true);
+  assert.equal(ok.ok && ok.env.url, 'https://ref.supabase.co');
+  assert.equal(ok.ok && ok.env.anonKey, 'key');
+  assert.equal(ok.ok && ok.env.password, '  spaces-matter-in-a-password  ');
+});

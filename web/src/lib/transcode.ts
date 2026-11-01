@@ -602,6 +602,67 @@ export async function transcodeMaster(
   return { assetId: master.assetId, outcomes };
 }
 
+/**
+ * What the worker needs from its environment, and what it says when something is
+ * missing.
+ *
+ * It lives here, with the other decisions the worker makes, rather than in the
+ * worker itself — the same rule as everything else in this file: the file that
+ * cannot run in CI holds plumbing, and the decisions are testable.
+ *
+ * **Two names for one value, and that is not sloppiness.** The web app reads
+ * `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`, because Next
+ * exposes a `NEXT_PUBLIC_` variable to the browser and those two are meant to be
+ * public. The worker is a plain Node process with no Next runtime, so neither
+ * name is special to it — and `docs/deploy/README.md` told an operator to export
+ * the `NEXT_PUBLIC_` pair, while this function demanded the bare pair. Following
+ * the runbook exactly produced "the worker needs SUPABASE_URL", which is a
+ * sentence about a variable the runbook never mentioned. Reading either name
+ * fixes the instruction instead of asking every operator to learn a quirk.
+ *
+ * The bare name wins when both are set: it is the one that is unambiguous outside
+ * a Next build.
+ */
+export type WorkerEnv = {
+  url: string;
+  anonKey: string;
+  email: string;
+  password: string;
+};
+
+export type WorkerEnvResult =
+  | { ok: true; env: WorkerEnv }
+  | { ok: false; message: string };
+
+export function readWorkerEnv(
+  env: Record<string, string | undefined>,
+): WorkerEnvResult {
+  const url = (env.SUPABASE_URL ?? env.NEXT_PUBLIC_SUPABASE_URL ?? '').trim();
+  const anonKey = (
+    env.SUPABASE_ANON_KEY ?? env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
+  ).trim();
+  const email = (env.MEDIA_WORKER_EMAIL ?? '').trim();
+  const password = env.MEDIA_WORKER_PASSWORD ?? '';
+
+  const missing: string[] = [];
+  if (!url) missing.push('SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL)');
+  if (!anonKey) missing.push('SUPABASE_ANON_KEY (or NEXT_PUBLIC_SUPABASE_ANON_KEY)');
+  if (!email) missing.push('MEDIA_WORKER_EMAIL');
+  if (!password.trim()) missing.push('MEDIA_WORKER_PASSWORD');
+
+  if (missing.length > 0) {
+    return {
+      ok: false,
+      message:
+        `the worker needs ${missing.join(', ')} in its environment. ` +
+        'MEDIA_WORKER_EMAIL and MEDIA_WORKER_PASSWORD are a real account that an admin has made staff at /admin/roles; ' +
+        'there is no service key in this schema, by design.',
+    };
+  }
+
+  return { ok: true, env: { url, anonKey, email, password } };
+}
+
 /** Failing a row is best-effort: the original error is the one worth reporting. */
 async function recordFailure(
   deps: TranscodeDeps,

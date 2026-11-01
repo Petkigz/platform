@@ -153,6 +153,7 @@ import { run as dataRights } from './data_rights.test.mjs';
 import { run as retention } from './retention.test.mjs';
 import { run as childRecord } from './child_record.test.mjs';
 import { run as identityErasure } from './identity_erasure.test.mjs';
+import { run as rpcContract } from './rpc_contract.test.mjs';
 
 // Settings that are global by design: one row, read by code far from the suite
 // that changes it. The revenue share decides what every accrual computes; the
@@ -230,6 +231,7 @@ for (const [name, fn] of [
   ['retention', retention],
   ['child record', childRecord],
   ['identity erasure', identityErasure],
+  ['rpc contract', rpcContract],
   ['learner analytics', learnerAnalytics],
   ['master access', masterAccess],
   ['media upload abandonment', mediaUploadAbandonment],

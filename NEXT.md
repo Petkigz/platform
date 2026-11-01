@@ -375,7 +375,7 @@ name. The change that made it possible was not the ledger, though — it was
 dropping a foreign key, because deleting an identity used to take the profile, the
 roles and the name against every audit entry with it.
 
-Verification: **2325 database tests (152 suites), 1853 web tests; TypeScript
+Verification: **2330 database tests (153 suites), 1858 web tests; TypeScript
 typecheck, build and `check:repo` pass; 211 migrations.**
 
 ## Today's sentence
@@ -2284,6 +2284,71 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### The audit, and the three things a green build could not see, 2026-11-01
+
+The platform has been built in units, each one tested where it lives, and no unit
+has ever been *run* — no Supabase project, no R2 bucket, no encoder, no mailbox.
+So this session did the closest thing available: ran everything, and then asked
+questions the tests are structurally unable to ask.
+
+**What ran.** All 2 325 database assertions against a real PostgreSQL engine, all
+1 853 web tests, `tsc`, a production `next build`, and then the build itself as a
+server: 96 static page routes and 102 API routes with both verbs. **No page threw
+and no route crashed** — 85 pages redirect to `/` because no database is
+configured, which is the honest answer rather than a blank screen, and every API
+route answered with a status code and a sentence.
+
+**The first defect was found by running the runbook against the code.** Step 6.3
+tells an operator to `export NEXT_PUBLIC_SUPABASE_URL`; the transcode worker
+refused with "the worker needs SUPABASE_URL". Following the deployment
+instructions exactly produced an encoder that would not start, and the message
+sent the reader looking for a typo in a value that was correct. A Next app exposes
+`NEXT_PUBLIC_` to the browser and the worker is a plain Node process, so neither
+name is wrong — it now accepts both, the bare one winning, and the reader is told
+which two spellings are the same value. **This is the class of bug that only
+appears when a document and a process are run against each other**, and it would
+have cost an evening on the one machine nobody can debug for you.
+
+**The second was a duplicate.** `web/.env.example` declared `PAYMENT_PROVIDER`
+twice — harmless to a shell, misleading to a reader who sets one and wonders why
+the other is still empty.
+
+**The third is the one worth keeping.** A `supabase.rpc('name', { … })` call sends
+its object's keys as *named arguments*, so a key that is not a parameter is not a
+warning: PostgREST answers "function not found" and the screen shows an error
+about a database function to a user. Nothing in this repository could see that
+mistake — the database suites call SQL directly and never touch a call site,
+TypeScript types `rpc` as `(name: string, args?: any)`, and `check:repo` reads
+files as text with no idea what a function's parameters are. `rpc_contract.test.mjs`
+is the missing half: it asks `information_schema` what every function is called
+and what its required arguments are, reads every call site in `web/src`, and
+compares the two. **477 calls across 309 functions, 0 mismatches** — and the suite
+was proved able to fail by renaming one parameter in one call site, which turned
+two of its five assertions red before it was reverted. It also pins that the scan
+reads more than 500 functions and more than 300 calls, because a sweep that looks
+at nothing reads exactly like a sweep that found nothing.
+
+**What the audit found clean, and it is worth saying so:** no `SECURITY DEFINER`
+function without a pinned `search_path` (0 of 153); the four tables with RLS and no
+policy are all deliberate (the analytics partition, `erased_identities`, and the
+two institution seat tables, whose own migration says a seat code row is one step
+from a grant); anon can execute 76 definer functions and every one of them is a
+trigger — which Postgres refuses to call directly — a read helper that takes its
+subject as an argument, or the API-key-authenticated institution report, which
+equalises a wrong prefix and a wrong hash on purpose. No hardcoded credential, no
+`.env` file in the tree, `npm audit` clean, and every environment variable the code
+reads is declared in `web/.env.example` — the one exception being the worker's two
+Supabase names, which is the defect above.
+
+**What is still not run, and cannot be from here:** anything that needs a
+credential. No byte has been sent to a real R2 bucket, no mail has been delivered,
+no payment has been through a provider, and no page has rendered with a real
+session. That is the deployment, and it is the one thing a test suite cannot do
+for you.
+
+**5 new database tests (2330 passed, 153 suites), 5 new web tests (1858); tsc,
+build and check:repo clean; 211 migrations.**
 
 ### The account that closed but could still sign in, 2026-11-01
 

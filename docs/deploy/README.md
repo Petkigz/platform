@@ -392,12 +392,20 @@ as the owner: `/admin/roles` → grant **platform_admin**, with a written reason
 export MEDIA_WORKER_EMAIL='worker@ayahspring.com'
 export MEDIA_WORKER_PASSWORD='…'
 export NEXT_PUBLIC_SUPABASE_URL='https://<ref>.supabase.co'
+export NEXT_PUBLIC_SUPABASE_ANON_KEY='…'
 export R2_ACCOUNT_ID='…'
 export R2_ACCESS_KEY_ID='…'
 export R2_SECRET_ACCESS_KEY='…'
 
 npm run worker:transcode -- --asset <media asset id> --limit 1
 ```
+
+The worker reads `SUPABASE_URL` and `SUPABASE_ANON_KEY`, and falls back to the
+`NEXT_PUBLIC_` pair above — it is a plain Node process, so the prefix means
+nothing to it. Either name works; the values are the same two from step 1.2. If it
+exits naming a variable, that variable is the one missing — it never guesses a URL,
+because a worker pointed at the wrong project would encode into somebody else's
+bucket.
 
 Then check `/teach/media`: the file should now show a playable copy, and the
 lesson that uses it should play in a browser.
