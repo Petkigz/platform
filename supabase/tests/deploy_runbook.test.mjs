@@ -45,6 +45,25 @@ export async function run(ctx) {
   // The probe
   // -------------------------------------------------------------------------
 
+  await test('every command the runbook tells an operator to run exists', async () => {
+    // A runbook is executed by a person at the worst possible moment, so a
+    // command it names has to exist in package.json. This one was added with the
+    // preflight: the step that says `npm run preflight` is the first thing in the
+    // document, and a renamed script would make the first instruction fail.
+    const pkg = JSON.parse(readFileSync(join(here, '..', '..', 'package.json'), 'utf8'));
+    const declared = new Set(Object.keys(pkg.scripts ?? {}));
+    const commands = new Set(
+      [...runbook.matchAll(/npm run ([a-z:]+)/g)].map((m) => m[1]).filter(Boolean),
+    );
+    assert(commands.size > 0, 'the runbook names no npm script at all');
+    const missing = [...commands].filter((c) => !declared.has(c));
+    assert(missing.length === 0, `the runbook names scripts that do not exist: ${missing.join(', ')}`);
+
+    // The Done checklist has to mention it, or the last page of the document
+    // describes a finished deployment that would fail its own first check.
+    assert(/npm run preflight/.test(runbook), 'the runbook never tells anybody to run the preflight');
+  });
+
   await test('the probe runs, and answers in one statement', async () => {
     const results = await ctx.db.exec(verifySql);
     assert(results.length === 1,

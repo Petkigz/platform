@@ -24,7 +24,9 @@ applied in filename order.
 the `anon` and `authenticated` roles) so the migrations can run against a bare
 PostgreSQL instance in CI. It is never applied to a real database.
 
-**To deploy, follow `docs/deploy/README.md`** — and when it is up, paste
+**To deploy, follow `docs/deploy/README.md`** — starting with step 0.1, `npm run
+preflight`, which reads your `.env.local` and prints the steps that are not
+satisfied yet. When it is up, paste
 `docs/deploy/verify.sql` into the SQL editor: twelve rows that say whether the
 schema landed, whether the sign-up trigger is attached, and whether anybody can
 administer it yet. That CI is

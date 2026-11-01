@@ -53,6 +53,40 @@ Plus, on the machine that will run the encoder: **Node 20 or newer**, `git`, and
 You do **not** need: a card, a domain (a `*.vercel.app` address works while you
 build), a payment provider, or a Twilio account.
 
+### 0.1 The preflight, which you run again after every step
+
+```bash
+npm run preflight
+```
+
+It reads `web/.env.local`, works out which parts of the platform are dark, and
+prints **the steps below that are not satisfied yet, in this document's order**. It
+exits non-zero while anything is blocking, so it belongs at the top of a deploy
+script as much as in a terminal.
+
+It exists because of a real evening: an earlier version of step 6.3 exported
+`NEXT_PUBLIC_SUPABASE_URL` while the encoder asked for `SUPABASE_URL`, and the
+message named a variable this document never mentioned. The values were right and
+the deployment was impossible, and nothing in the repository could see it — the app
+builds with no environment at all, the test suites inject their own, and the
+structural check compares *this document to the example file* rather than either
+of them to what a process reads.
+
+What it checks is worth knowing, because it decides how far you can trust it:
+
+- **Is each capability configured**, not "do the variables exist": no R2
+  credentials and no byte can be uploaded or played.
+- **Is what is set the right shape** — a URL that is not a URL, a key that is not
+  a key, a vault secret shorter than the thing it seals, a `NEXT_PUBLIC_` prefix on
+  a secret that would then ship to every browser, and two different Supabase
+  projects under the two names that are supposed to hold one.
+- **Which step fixes it.** Every finding carries the section number below.
+
+It never touches the network, and that is deliberate: a checker that needs
+credentials to tell you about your credentials is useless in the moment it is
+needed. It reads values; it cannot prove they work — **step 4.4 is the smoke test
+that signs in, and step 5.5 is the one that sends a byte to storage.**
+
 ---
 
 ## 1. The database
@@ -608,6 +642,7 @@ the address, and audits every time it is asked. It never returns a name.
 
 A deployment is finished when all of these are true, in this order:
 
+- [ ] `npm run preflight` exits 0, with nothing dark but payments
 - [ ] `verify.sql` reports `signup trigger = present` and **`staff` ≥ 1**
 - [ ] `/admin` shows the setup panel rather than an error
 - [ ] you can sign up, sign out and sign back in

@@ -375,7 +375,7 @@ name. The change that made it possible was not the ledger, though — it was
 dropping a foreign key, because deleting an identity used to take the profile, the
 roles and the name against every audit entry with it.
 
-Verification: **2330 database tests (153 suites), 1858 web tests; TypeScript
+Verification: **2331 database tests (153 suites), 1880 web tests; TypeScript
 typecheck, build and `check:repo` pass; 211 migrations.**
 
 ## Today's sentence
@@ -2284,6 +2284,50 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### The preflight, so the next person is not alone with a sentence, 2026-11-01
+
+The audit found one defect that mattered more than its size: `docs/deploy/README.md`
+step 6.3 exported `NEXT_PUBLIC_SUPABASE_URL` and the encoder exited asking for
+`SUPABASE_URL`. The value was right, the instruction was reasonable, and the
+deployment was impossible — three things that can all be true at once when a
+document and a process have never been run against each other.
+
+Fixing the two names fixed that instance. `npm run preflight` fixes the shape of
+it. It reads `web/.env.local`, works out which parts of the platform are dark, and
+prints **the runbook steps that are not satisfied yet, numbered as the runbook
+numbers them** — then exits non-zero while anything is blocking, so it works in a
+deploy script as well as in a terminal.
+
+**It asks about capabilities rather than variables.** "R2_SECRET_ACCESS_KEY is
+missing" is a variable; *"media storage: no byte can be uploaded or played, step 5"*
+is a thing somebody can act on, and it is what gets printed. Eight subsystems, each
+with the step that builds it and the sentence that says what staying dark costs.
+
+**It checks shape, which is where the quiet failures live.** A URL that is not a
+URL. A key that is not a key. A vault secret shorter than the thing it seals. A
+`NEXT_PUBLIC_` prefix on a service-role key, which ships it to every browser.
+`NEXT_PUBLIC_ALLOW_MISSING_SUPABASE=1` left on beside a real project, which makes
+the app run while pretending the database is optional. And the one this was really
+written for: **two different Supabase projects under the two names that are supposed
+to hold one** — the site serving from A while the encoder writes renditions into B,
+with every screen working.
+
+**Two deliberate refusals.** It never touches the network — a checker that needs
+credentials to tell you about your credentials is useless in the moment it is
+needed, and the checks that prove reachability are the smoke test in step 4.4 and
+the upload in 5.5, which the document already has. And it does not treat the example
+file as an environment: `https://your-project-ref.supabase.co` is a *valid URL*, so
+a placeholder check that only looked at the first character would report a copied
+example as a configured deployment.
+
+**The runbook now fails if the command in it stops existing.** `deploy_runbook.test.mjs`
+extracts every `npm run …` from the document and checks each against
+`package.json`, so renaming the script is a test failure rather than the first
+instruction on the page being a lie.
+
+**22 new web tests (1880), 1 new database test (2331); tsc, build and `check:repo`
+clean; 211 migrations.**
 
 ### The audit, and the three things a green build could not see, 2026-11-01
 
