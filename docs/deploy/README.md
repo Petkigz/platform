@@ -89,7 +89,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-210 files in `supabase/migrations/`, applied in filename order — the 14-digit
+211 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -112,7 +112,7 @@ done
   first run. What you are watching for is the loop *stopping*, and the file name
   above the error.
 - Takes a few minutes. The last file printed should be
-  `20261281004100_media_encode_notifications.sql`.
+  `20261281004900_identity_erasure.sql`.
 
 **Path B — the Supabase CLI**, if you would rather have migration history tracked:
 
@@ -123,7 +123,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 210 files from the top and fail on the
+it, and `db push` would then re-apply all 211 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -542,6 +542,40 @@ gates and what has to be true first. The register with the reasoning is
 Payments are last on purpose. Checkout is built to the provider boundary, and
 MTN's sandbox is self-serve and free; a merchant account is a business step, not a
 deployment one.
+
+### The one deletion that is not a deployment task
+
+`/account/delete` scrubs this database. It cannot delete the sign-in: that row is
+`auth.users`, and it belongs to Supabase Auth. Closing an account therefore leaves
+a live sign-in, and for three units the answer to that was a sentence in a
+document — which is how a closed account went on being able to sign in.
+
+It is a queue now, and the step is ordered, because the second half refuses to
+happen before the first:
+
+1. A person closes their account at `/account/delete`. The receipt tells them the
+   sign-in is still with the authentication provider and that staff remove it.
+2. Sign in as the owner and open **`/admin/retention` → Sign-ins still at the
+   provider**. That number is every closed account whose sign-in still exists.
+3. In the Supabase dashboard, **Authentication → Users**, find the row by the id
+   printed under the entry, and delete it. The profile and everything hanging off
+   it deliberately no longer cascade from that row, so the delete no longer takes
+   a support case, an audit trail or a teacher's earnings with it. If it is
+   refused, read the reason rather than working around it.
+4. Back on `/admin/retention`, press **Record it deleted at the provider** on that
+   entry. The database asks `auth.users` first: if the row is still there the press
+   is refused and nothing is written. If it is gone, `erased_identities` records the
+   date and who did it, and the audit log gets `identity.removed`.
+5. The count falls by one. At zero, every closed account's sign-in has been
+   deleted.
+
+**Do the round trip in one sitting.** A delete done on Friday and recorded on
+Monday is a weekend in which the screen says the opposite of the truth — and the
+refusal at step 4 exists precisely so that cannot be recorded as if it had
+happened.
+
+`identity_lookup()` answers the follow-up — *is it gone?* — from a fingerprint of
+the address, and audits every time it is asked. It never returns a name.
 
 ---
 

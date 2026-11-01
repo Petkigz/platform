@@ -13,7 +13,7 @@
 
 export async function run(ctx) {
   const {
-    q, test, assert, rejects, bootstrapAdmin,
+    q, test, assert, rejects, bootstrapAdmin, grantRole, committed,
   } = ctx;
 
   const admin = await bootstrapAdmin('signup-admin@example.com');
@@ -82,14 +82,31 @@ export async function run(ctx) {
     assert(n.n === 1, `${n.n} profile rows for one user`);
   });
 
-  await test('deleting the auth user removes the profile', async () => {
+  await test('deleting the auth user keeps the profile, deliberately', async () => {
+    // This assertion used to be the opposite one, and the flip is the whole of
+    // `20261281004900`. `user_profiles.user_id` was `references auth.users on
+    // delete cascade`, so deleting an identity in the Supabase dashboard took the
+    // profile with it — and the profile is what the audit trail, the support case
+    // and the money hang on. For an account that ever opened a case the delete
+    // failed with an opaque foreign key error instead; for one that never did, it
+    // "worked" and blanked the name against every audit entry the person caused.
+    //
+    // A closed account keeps this row on purpose: it is the only record that the
+    // account existed, and the sign-in is what goes. So a profile with no auth
+    // user is no longer a leak to sweep up — it is the normal shape of a closed
+    // account, and `identity_removal_queue()` counts the ones that are still open.
     const userId = await signUp({ email: 'deleted-signup@example.com' });
+    await committed(() => grantRole(userId, 'learner', null));
 
     await q('delete from auth.users where id = $1', [userId]);
 
     const n = await scalar(
       'select count(*)::int n from public.user_profiles where user_id = $1', [userId]);
-    assert(n.n === 0, `${n.n} orphaned profile rows after the auth user was deleted`);
+    assert(n.n === 1, `the profile went with the identity: ${n.n} rows left`);
+
+    const assignments = await scalar(
+      `select count(*)::int n from public.user_role_assignments where user_id = $1`, [userId]);
+    assert(assignments.n === 1, 'the identity took the role assignment with it');
   });
 
   // -------------------------------------------------------------------

@@ -6,7 +6,13 @@ import {
   EMPTY_PLAN,
   type RetentionPlan,
 } from '@/lib/retention';
+import {
+  EMPTY_IDENTITY_QUEUE,
+  parseIdentityQueue,
+  type IdentityQueue,
+} from '@/lib/identity';
 import { RetentionConsole } from './retention-console';
+import { IdentityPanel } from './identity-panel';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +32,13 @@ export const dynamic = 'force-dynamic';
  * 3. **Letting the owner press it.** A deletion that can only be performed by
  *    opening `psql` is a deletion that either does not happen or happens without
  *    a record. The press is here, behind the gate the database enforces anyway.
+ *
+ * 4. **Counting what this database cannot delete.** The sign-in lives at the
+ *    authentication provider, so a closed account kept a live sign-in for three
+ *    units while the answer sat in a document. It is a queue here: every closed
+ *    account whose identity is still at the provider, the press that records the
+ *    deletion once it is done, and the lookup that answers "is it gone?" for
+ *    somebody who can no longer sign in to ask.
  *
  * Readable by the owner only: `retention_plan()` refuses everybody else, so a
  * redirect is the courtesy and not the defence.
@@ -49,6 +62,14 @@ export default async function AdminRetentionPage() {
   if (error) throw new Error(error.message);
   const plan = (data ?? EMPTY_PLAN) as unknown as RetentionPlan;
 
+  // The sign-ins this database cannot delete. Read separately from the plan
+  // because it is not a clock: nothing here falls due, and a screen that folded
+  // it into "total to delete" would promise a deletion the cleanup cannot make.
+  const { data: queueData } = await supabase.rpc('identity_removal_queue', {});
+  const queue: IdentityQueue = queueData
+    ? parseIdentityQueue(queueData)
+    : EMPTY_IDENTITY_QUEUE;
+
   return (
     <div className="container section">
       <p className="eyebrow">
@@ -64,6 +85,8 @@ export default async function AdminRetentionPage() {
       </p>
 
       <RetentionConsole plan={plan} canRun={platform === true} />
+
+      <IdentityPanel queue={queue} />
 
       <div className="outline-h" style={{ marginTop: '2rem' }}>
         <h3>What this page does not do</h3>
@@ -97,10 +120,11 @@ export default async function AdminRetentionPage() {
             </span>
           </li>
           <li>
-            <strong>It does not touch the sign-in address</strong>
+            <strong>It does not delete a sign-in</strong>
             <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
-              That lives with the authentication provider. Closing an account scrubs this
-              database and cannot scrub the identity provider from inside it.
+              The sign-in lives with the authentication provider, and closing an account here
+              cannot reach it. Every identity still left is counted above and recorded here
+              once it is deleted there — the number is the queue, not a promise.
             </span>
           </li>
         </ul>

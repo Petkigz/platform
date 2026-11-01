@@ -1,9 +1,10 @@
 # Retention and Deletion Schedule
 
-**Status:** adopted 2026-10-15 as decision D7. Two periods were settled by the
-owner on 2026-10-22 and are executed by code as of 2026-11-01; the rest of this
-table is still a design. Read *what is enforced today* at the end before quoting
-any row of it as a promise.
+**Status:** adopted 2026-10-15 as decision D7. Three periods were settled by the
+owner on 2026-10-22 and are executed by code as of 2026-11-01, along with the
+deletion of a closed account's sign-in at the authentication provider; the rest of
+this table is still a design. Read *what is enforced today* at the end before
+quoting any row of it as a promise.
 
 Periods marked **(confirm)** depend on the operating jurisdiction and must be
 verified before launch. This is the single fact in D7 that cannot be decided
@@ -82,6 +83,31 @@ it was about. Kept: the certificate, with its number and its snapshot, and the
 audit trail. What is left of the child is a row holding an id, a type, a status
 and dates, because a certificate points at it.
 
+**The sign-in, which this database does not hold.** Closing an account scrubs
+every table here and leaves the row in `auth.users`, because that row *is* the
+identity: it lives at the authentication provider and `erase_my_account()` cannot
+delete it. For three units that was a sentence in a document, which meant a closed
+account could still sign in. It is now a ledger and a queue
+(`20261281004900_identity_erasure.sql`):
+
+- `erased_identities` holds one row per closed account — a **SHA-256 fingerprint**
+  of the normalised sign-in address, when the account closed, and when (and by
+  whom) the identity was recorded as deleted. The fingerprint is what lets
+  `identity_lookup()` answer *was my account erased?* after the address itself is
+  gone. It is a fingerprint and not a deletion: somebody holding a candidate
+  address can test it, and the column comment says so rather than letting the word
+  "erased" imply more.
+- `identity_removal_queue()` is the queue: every closed account whose identity is
+  still at the provider, plus the two states that should not exist — an active
+  account with no identity, and a closed one the provider still holds while the
+  ledger says otherwise. `/admin/retention` shows it.
+- `record_identity_removal()` records the staff step and **refuses while the
+  identity is still there**. "Recorded" drifting from "done" is how the gap
+  survived; the function asks `auth.users` before it writes.
+- The deletion itself is **not automated**. It needs the service-role key, which
+  bypasses every policy in this schema. The ordered manual step is in
+  `docs/deploy/README.md` §9.
+
 **Three things this does not cover, stated here so no row above is read as
 enforced when it is not:**
 
@@ -92,9 +118,10 @@ enforced when it is not:**
    is kept forever by default. `/admin/retention` reports the count and the age
    of the oldest rather than pretending they are covered. Closing a case is a
    human act and nothing closes one automatically.
-3. **Anything held outside this database** — the sign-in address at the
-   authentication provider, backups, and provider-side OTP and session logs. The
-   database cannot delete what it does not hold.
+3. **Backups, and provider-side OTP and session logs.** The sign-in address is
+   now recorded and queued (above), but the database still cannot delete what it
+   does not hold: a backup taken before a deletion carries the old row, and the
+   provider's own sign-in and session logs are outside every policy here.
 4. **A child profile left behind by an account merge.** Its record was moved to
    the surviving profile and the row that remains is a pointer, so there is
    nothing to delete and no policy sets a date for it. `retention_plan()` reports

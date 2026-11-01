@@ -54,8 +54,9 @@ export default async function DeleteAccountPage() {
             This account is already closed.
           </p>
           <p className="muted" style={{ margin: 0 }}>
-            Its name and personal details have been removed. Sign in is still held by
-            the sign-in provider; ask the platform owner to remove the address itself.
+            Its name and personal details have been removed. The sign-in itself lives with
+            the sign-in provider, not here, so closing the account could not delete it —
+            that one is on the platform owner&rsquo;s list now, and they remove it there.
           </p>
         </div>
       ) : (
@@ -99,6 +100,10 @@ export default async function DeleteAccountPage() {
                   is deleted three years after it closes
                 </li>
                 <li>The audit record that the account was closed</li>
+                <li>
+                  A fingerprint of your sign-in address — not the address — so that support
+                  can answer &ldquo;was my account erased?&rdquo; once the sign-in itself is gone
+                </li>
               </ul>
               <p className="muted" style={{ marginBottom: 0 }}>
                 A certificate&rsquo;s holder is shown as &ldquo;Deleted learner&rdquo;, so a
@@ -117,6 +122,14 @@ export default async function DeleteAccountPage() {
               back. If you are a teacher with a course in review or published, the
               platform owner has to close the teaching account first — the page will say
               so if that applies to you.
+            </p>
+            <p className="muted">
+              <strong>The sign-in is not deleted by this.</strong> It is held by the
+              sign-in provider rather than by AyahSpring, so closing the account puts it on
+              the platform owner&rsquo;s list and they delete it there. When it is gone the
+              platform records the date against your closed account — so if you ask
+              support later whether it was done, the answer is a fact rather than a
+              memory.
             </p>
             <EraseAccount displayName={profile.display_name} />
           </section>

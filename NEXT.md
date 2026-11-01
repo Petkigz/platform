@@ -363,8 +363,20 @@ learning record, so it goes: the certificate keeps its number, its snapshot and 
 note saying when its evidence was erased. What is left of the child is a row an id
 long, because a certificate points at it.
 
-Verification: **2304 database tests (151 suites), 1840 web tests; TypeScript
-typecheck, build and `check:repo` pass; 210 migrations.**
+The last promise `/account/delete` makes is the one it could not keep: closing an
+account removed the person from this database and left the sign-in, which lives at
+the authentication provider, so a closed account could still sign in. Three units
+said so in passing and put it in a document. It is now a queue rather than a
+paragraph (`identity_erasure.test.mjs`): every closed account whose identity is
+still at the provider is counted on `/admin/retention`, the staff step records the
+deletion and *refuses to record one that has not happened*, and support can answer
+"was my account erased?" from a fingerprint of the address without ever seeing a
+name. The change that made it possible was not the ledger, though — it was
+dropping a foreign key, because deleting an identity used to take the profile, the
+roles and the name against every audit entry with it.
+
+Verification: **2325 database tests (152 suites), 1853 web tests; TypeScript
+typecheck, build and `check:repo` pass; 211 migrations.**
 
 ## Today's sentence
 
@@ -2272,6 +2284,72 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### The account that closed but could still sign in, 2026-11-01
+
+`/account/delete` has told every person who used it that closing the account
+removes them. It does — in this database. The sign-in lives in `auth.users`, at
+the authentication provider, and `erase_my_account()` cannot delete it: the row
+*is* the identity, and everything the platform keeps about the person hangs off it.
+So the sentence was true and the account was not closed, because nothing had been
+told to stop it.
+
+**The finding is that the obvious fix was worse than the gap.** The staff step a
+paragraph had been promising was "delete the user in the Supabase dashboard".
+`user_profiles.user_id` was `references auth.users (id) on delete cascade`, and
+eighteen tables hold that profile row with `on delete restrict` — so for an
+account that had ever opened a support case, asked for a refund, taught a course
+or been screened, the delete **failed** with a foreign key error the dashboard does
+not explain, and the staff member concluded the dashboard was broken. For an
+account with none of those the delete **succeeded** and took the profile, the role
+assignments, the policy acceptances, and — because `governance_audit_events.actor`
+is `on delete set null` — the name against every audit entry the person had ever
+caused. The one record `/account/delete` promised to keep was the thing that would
+have gone.
+
+**So the enabling change is a dropped constraint.** A profile is no longer a child
+of its identity: the row that keeps the ledger outlives the row that can sign in.
+That is what a closed account should be — it keeps what must be kept and keeps
+nothing that can be used — and it is why the suite's first act is deleting an auth
+row and asserting the profile, the support case and the audit trail are all still
+there.
+
+**The ledger holds a fingerprint, not a deletion.** `erased_identities` takes a
+SHA-256 of the normalised address, when the account closed, and whether the
+identity has been removed. A hash is not anonymity — somebody holding a candidate
+address can test it — and the migration says so in the column comment rather than
+letting the word "erased" imply more than it should. It exists because without it
+"was my account erased?" has no honest answer at all: support says "no account
+found", which is what they say to somebody who never signed up.
+
+**The recorder refuses to record a deletion that has not happened.** This is the
+whole design. `record_identity_removal()` asks `auth.users` before it writes, so a
+dashboard tab left open, a delete that silently failed and a wrong row clicked all
+come back as `identity:still_present` instead of an audit entry claiming
+otherwise. "Recorded" drifting from "done" is exactly how this gap survived a
+month, and the same function refuses a second recording and an account that is
+still open.
+
+**The queue reports the two states that should not exist** beside the work: an
+*active* account with no identity (it cannot sign in, cannot be mailed, and will
+not find out until it tries), and a closed one the provider still holds while the
+ledger says otherwise. Neither is a count that can be fixed from a screen; both
+are states nobody could see before.
+
+**What is deliberately not automated.** The deletion itself. Doing it from the
+application needs the Supabase service-role key, which bypasses every policy in
+this schema — and a key that can delete an identity can delete anything. That is a
+decision with a real risk attached, and it is not one a migration should take. The
+runbook step is therefore ordered and manual: delete the identity in Supabase
+(Authentication → Users), then record it on `/admin/retention`; the page refuses
+the second half until the first is true. **If it is ever automated**, the shape is
+a scheduled function holding the service-role key, working the queue one row at a
+time, writing the same ledger row and the same audit entry — the ledger and the
+recorder are already the contract it would have to satisfy, which is why building
+them first was the right order.
+
+**21 new database tests (2325 passed, 152 suites), 13 new web tests (1853); tsc,
+build and check:repo clean; 211 migrations.**
 
 ### The record a certificate was standing on, 2026-11-01
 

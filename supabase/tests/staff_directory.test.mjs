@@ -131,13 +131,32 @@ export async function run(ctx) {
     });
   });
 
-  await test('an erased account is not in the directory', async () => {
+  await test('an account with no identity is not in the directory, and is not invisible either', async () => {
+    // The directory joins `auth.users`, because it answers "who has an account"
+    // and an account nobody can sign in to is not one. Since `20261281004900` a
+    // profile deliberately outlives its auth row, so this is no longer the
+    // cleanup it used to look like — a closed account keeps its profile for the
+    // audit trail, and this list simply is not where that record lives.
+    //
+    // What must not happen is the row going quiet. A *closed* account with no
+    // identity is expected; an *active* one is a broken delete or a bad merge,
+    // and the second assertion is the promise that somebody can see it.
     const gone = await person('dir-gone@example.com', 'Deleted Person');
+
+    const before = (await as(admin, 'select public.identity_removal_queue() q'))[0].q
+      .activeWithoutIdentity;
+
     await committed(async () => {
       await q('delete from auth.users where id = $1', [gone]);
     });
+
     const result = await dir(admin, 'accounts');
     assert(!result.rows.some((r) => r.name === 'Deleted Person'), 'an erased person is listed');
+
+    const after = (await as(admin, 'select public.identity_removal_queue() q'))[0].q
+      .activeWithoutIdentity;
+    assert(after === before + 1,
+      `an account that cannot sign in is in no list at all (${before} → ${after})`);
   });
 
   // -------------------------------------------------------------------------
