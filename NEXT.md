@@ -463,8 +463,23 @@ what was true then. `doc-counts.test.ts` recomputes both counts from the tree
 rather than trusting the script's arithmetic, and fails if either check is ever
 removed.
 
-Verification: **2 409 database assertions in 157 suites, 1 951 web tests; TypeScript
-typecheck, build and `check:repo` pass; 216 migrations.**
+A file a child hands in now has an end date, and the gap it closed was worse
+than a missing policy: the thirty-day clock deleted a child's submissions, their
+attachment rows cascaded away, and the photograph stayed in the bucket belonging to
+nobody the database could name. The owner's answer — a year after the class ends —
+is a clock (`20261281010000_coursework_retention.sql`): a year after the later of
+the class ending and the hand-in, thirty days after an erased learning record where
+that is sooner, and a file that loses its submission becomes unwatchable at once by
+everybody including staff. A safeguarding hold is the only thing that stops the
+clock, it needs a written reason at both ends, and releasing one starts a fresh
+thirty days rather than deleting immediately. A tombstone is not a deletion and the
+record says so: there are no storage credentials here, so the object is queued with
+a date, counted on the plan, listed with its bucket and key for the person doing
+it, and `record_coursework_purge()` refuses to record a deletion that has not
+happened.
+
+Verification: **2 421 database assertions in 158 suites, 1 951 web tests; TypeScript
+typecheck, build and `check:repo` pass; 217 migrations.**
 
 ## Today's sentence
 
@@ -490,7 +505,7 @@ say what is left instead of what was missing.
 | **Media delivery** | The whole path, end to end: `media_renditions` register with a closed profile vocabulary and derived object keys; the transcode worker that fills it (`web/src/worker/transcode-worker.ts`, decisions in `lib/transcode.ts`, gated by `delivery.transcode`), which checks the master's SHA-256 against the bytes before it encodes anything; `/api/media/playback` and `/api/media/download` signing short-lived rendition URLs with the database as the only authority on who may watch; a player on the lesson page with a quality selector and a poster; `/teach/media`, where a teacher uploads straight to R2 with a browser-computed checksum; `verify` on `/admin/media`, which asks storage whether the file arrived at the declared size and only then confirms it; and `retry_media_rendition()`, reached from the same screen, which puts a copy that failed to encode back in the queue on a written reason | A host to run the worker on with ffmpeg, R2 credentials and a staff account for it, and a decision about whether a free preview may be watched signed-out | **Nothing** that is a design question. What is left is infrastructure and one product decision, and the infrastructure is now a step-by-step: `docs/deploy/README.md` step 6 covers ffmpeg, the worker's staff account and the service unit |
 | **Offline download** | Built end to end: `/downloads` reads the device's own storage so it works with no network; `learning.offline_max_devices` (3) and `learning.offline_expiry_days` (30) are settings; only a Plus plan grants `offline_downloads`, and `lesson_download_standing()` explains refusal by reasoning order (signed out → feature off → not entitled → needs Plus → no media → allowed); 11 tests | Nothing structural. The media is a signed rendition URL cached by the app; "never in the file manager" holds only inside the mobile shell, which does not exist yet | **Decisions:** nothing left. The browser build can save a file the OS can see — that limit is the mobile app's job, not this one's |
 | **Upload cost control** | A per-file ceiling of 8 GiB that the browser can now actually reach: `lib/digest.ts` hashes a slice at a time so the checksum does not cap the size, and above 32 MiB `lib/multipart-upload.ts` sends 16 MiB parts so the transport does not either — a failed part is retried rather than the file restarted. **The cumulative quota exists too**: `media.upload_quota_gb_per_teacher` is 50 GB of master bytes, `media_upload_allowance()` answers whether one more upload fits, `my_media_storage()` reports what an account already holds, and `/api/media` refuses a `request_upload` or `initiate_multipart` that would not fit, naming the space left | A spend alert. Resuming needs the same file to be chosen again, because the checksum is what recognises it, so a half-sent file cannot be finished from the library without it; and an unfinished upload whose key was not derived from an asset can be listed but not ended, since the audit trail would have nothing to point at | **Switch:** `platform.cost_controls` ships off, so every upload passes today. The quota policy itself is decided — note that `register_media_upload()` is open to **any signed-in user**, not only teachers, because learners attach files to assignment submissions through the same table, so the setting is a quota per person rather than a role check |
-| **Assignments** (`learning.assignments`) | Task authoring, self-paced and cohort deadlines, one private submission per learner, drafts and hand-in, marking with immutable feedback, a revision loop with an append-only snapshot, and since 2026-11-01 **file hand-ins**: register → presigned PUT → server-verified confirm, attach in the same transaction, listed by name for the household and the course author, opened through a redirect that re-checks permission — with the type and size ceilings checked before a byte moves, and a separate `coursework` file kind, declared for one submission before a byte moves, that no lesson can point at; 20 database tests, 13 web tests | What happens to a handed-in file when an account or a course is deleted, beyond the general media tombstone; scanning; school-wide retention rules for children's work | **Decision:** retention for coursework. The flag stays off until that is written down, and the same review holds `learning.cohorts` |
+| **Assignments** (`learning.assignments`) | Task authoring, self-paced and cohort deadlines, one private submission per learner, drafts and hand-in, marking with immutable feedback, a revision loop with an append-only snapshot, and since 2026-11-01 **file hand-ins**: register → presigned PUT → server-verified confirm, attach in the same transaction, listed by name for the household and the course author, opened through a redirect that re-checks permission — with the type and size ceilings checked before a byte moves, and a separate `coursework` file kind, declared for one submission before a byte moves, that no lesson can point at. **Retention is a clock now** (`20261281010000`): a year after the later of the class ending and the hand-in, thirty days after an erased learning record where that is sooner, tombstoned at once when the submission goes, with a written hold as the only thing that stops it; 20 database tests, 13 web tests, 11 more on the clock | A recorded review mark — the safeguarding review of what children send — and a screen for the storage queue and holds; scanning; school-wide retention rules beyond the children's policy | **Decision:** the review. The retention question is answered and built, so the flag waits on the recorded review only, and the same review holds `learning.cohorts` |
 | **Cohorts** | Tables, exact-version pinning, opt-in join/leave, capacity serialisation, family opt-in for children, counts on the manager and, since row 32, names and progress on the class page for the teacher who opened it, teacher manager, learner join/leave, the teacher-set `join_closes_at` window, how full each class is on the course page a joiner reads it from (`cohort_places()`, counts only — the roster stays behind `can_read_cohort_member()`), and the teacher's control over the published number (`set_cohort_capacity()`, never below the learners already in the class) | Nothing structural | The same safeguarding review. `learning.cohorts` ships `false` |
 | **Learner analytics** (`SCREENS.md` row 32) | `can_read_learner_course_progress()`, `cohort_learner_progress()`, the class page with a roster ordered by need, `teacher_course_analytics()` with enrolments/completions/certificates, `/teach/[courseId]/reports`, and the class list as a CSV a teacher downloads from the class page, recorded in the audit log before the file is sent | Anything that follows a learner across courses; the course report has no file yet, only the class roster does | **Decision:** how long progress stays readable after a class ends. Until then it stays readable, which is the safer default |
 | **Reviewer access to lesson media** | `may_review_version_media()` — an accepted or in-progress assignment and nothing else — as a third branch of `may_play_rendition()`, with the player wired into `/review/[assignmentId]`; `may_watch_master()`, `master_preview_target()` and `/api/media/master` for the uploader, staff and the version author, with `Watch` on `/teach/media` and `/admin/media`; 19 database tests, most of them refusals | Any copy for a reviewer: no download, no master, no export. Aggregate review analytics | **Nothing.** Decided 2026-10-20: "other teachers" means a reviewer checking quality for a named period, not co-teachers and not any teacher on the platform. The period is the assignment's state, so access ends with the review |
@@ -2372,6 +2387,50 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### A child's hand-in outlives the class, not the person, 2026-11-01
+
+The retention question for coursework was answered in one sentence — a file a
+child hands in is kept a year after the class ends — and the reason it mattered
+was found by reading the child-record clock rather than by looking for a TODO.
+
+`run_retention_jobs()` deletes a child's submissions thirty days after the
+guardian's account closes. `assignment_submission_assets` cascades on that delete,
+so the rows that said *whose* file it was disappeared, while the `media_assets` row
+and the object in the bucket stayed. `delete_media_asset()` is a soft delete whose
+own comment says "retention is a scheduled decision", and for coursework nobody had
+made one. `erase_my_account()` blanks the words of a submission and does not
+mention a file. The platform was, quietly, keeping photographs of children it could
+no longer identify — and no test failed, because nothing was inconsistent, only
+absent.
+
+**Two anchors, and the later one wins.** A class that ends after the hand-in holds
+the file until a year after the class; a self-paced task has no class, so the
+hand-in is the anchor. `greatest()` ignoring NULLs is exactly that behaviour.
+
+**Erasure shortens the clock and never lengthens it.** A photograph is part of the
+learning record the children's policy already promises to delete, so the due date
+is the *earlier* of the two. That is a second clock, not a second policy, and the
+plan reports which one set each date.
+
+**Detached is not orphaned.** The first version of the trigger tombstoned a file
+whenever its attachment row went — and the existing coursework suite caught it,
+because a learner who takes a file back before handing in lost access to their own
+upload. The trigger now asks whether the *submission* is still there. If it is, the
+file is still the learner's and may be handed in again; if it is not, the database
+no longer knows who the file belonged to and the file stops being readable.
+
+**A hold is the only thing that stops the clock**, it needs a written reason to
+open and one to close, and releasing a hold on a file that was already tombstoned
+starts a fresh thirty days rather than deleting at once — closing a case is not the
+same act as destroying its evidence.
+
+**A tombstone is not a deletion.** There are no storage credentials in any
+environment, so the database cannot delete the object. It sets `purge_due_at`,
+counts what is waiting, names the bucket and key, and refuses to record a deletion
+that has not happened — the shape `record_identity_removal()` already uses for a
+closed account's sign-in. A platform that said "deleted" when it meant "unwatchable"
+would be lying on the one screen where the truth is the point.
 
 ### A number in a document is a claim about today, 2026-11-01
 

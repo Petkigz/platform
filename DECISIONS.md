@@ -100,6 +100,7 @@ you. Do not treat it as settled, and do not build on it until it moves up.
 | 2026-11-01 | **A certificate outlives the learning record it was issued from, and the schema had to allow that.** The children's policy says a child's record is deleted thirty days after the guardian's account closes and that an issued certificate keeps verifying. `certificates.course_enrolment_id` was `not null … on delete restrict`, so one of those two had to give. The enrolment is the learning record, so it goes: the column becomes nullable with `on delete set null`, and the certificate records `evidence_erased_at` in the same statement. The snapshot — title, version, criteria, number — never moves, which is what verification reads. A certificate cannot be re-attached to an enrolment, and its erasure cannot be undone. |
 | 2026-11-01 | **The thirty days are the children's clock, not everybody's.** An adult closing their own account is told on `/account/delete` that their enrolments and progress are kept, and has been since the screen was written. Making that untrue quietly, to make the three clocks look alike, would be worse than an asymmetry somebody can see. Widening it is the owner's call and is written down in NEXT.md. |
 | 2026-11-01 | **A child's tombstone holds an id, a type, a status and dates — and nothing else.** `learner_profiles` gains a third status, `erased`, and the two constraints that require a name-bearing row (an age band, a family) are waived for exactly that status. The row survives because a certificate points at it with `on delete restrict`, and for no other reason: the name, the age band, the family and the account link are all cleared. |
+| 2026-11-01 | **A child's hand-in outlives the class for a year, and outlives the person for thirty days.** A file handed in as coursework is kept for a year after the later of the class ending and the file being handed in; where the learner's record was erased, thirty days after the erasure, whichever is sooner — the children's policy already promised that. A file that loses its submission is tombstoned at once and unwatchable by everybody, including staff, because after that nothing can say whose photograph it was. A safeguarding hold is the only thing that stops the clock and it needs a written reason at both ends. The object in storage is queued and counted separately: this database holds no storage credential, so a staff step records the deletion once it has happened. |
 | 2026-11-01 | **A number in a maintained document is a claim about today, and the ones a script can count are checked.** `check:repo` now fails when `NEXT.md`, `ROADMAP.md`, `SCREENS.md`, `FLAGS.md` or the deploy runbook states a migration count the tree does not have, when the current-status `Verification:` paragraph does not name the real migration and suite counts, or when the half-built ledger gives one piece two rows. The implementation history is exempt — its counts are snapshots from their dates — and the test totals on the same line remain a claim the unit keeps true by hand, because nothing in the script can count them. |
 
 ---
@@ -6996,3 +6997,48 @@ only record of what was true then, which is the whole reason that section exists
 in different weeks and age differently. The comparison strips the flag suffix
 first, because `**Assignments**` and `**Assignments** (`learning.assignments`)` are
 one piece and the table is not consistent about writing it.
+
+## A child's hand-in outlives the class, not the person — **DECIDED 2026-11-01**
+
+The owner answered the retention question for coursework with one sentence: a
+child's handed-in file is kept **a year after the class ends**. The gap it closes
+was worse than a missing policy, and it was found by reading the child-record
+clock rather than by looking for a TODO.
+
+**What was happening.** `run_retention_jobs()` deletes a child's submissions
+thirty days after the guardian's account closes. `assignment_submission_assets`
+cascades on that delete, so the rows saying *whose* file it was disappeared — while
+the `media_assets` row and the object in the bucket stayed. `delete_media_asset()`
+is a soft delete whose own comment says "retention is a scheduled decision", and
+for coursework nobody had made one. `erase_my_account()` blanks the words of a
+submission and does not mention a file at all. So the platform was, quietly,
+keeping photographs of children it could no longer identify.
+
+**The clock has two anchors, and it takes the later.** A class that ends after the
+hand-in holds the file until a year after the class; a self-paced task has no
+class, so the hand-in is the anchor. `greatest()` ignoring NULLs is exactly the
+behaviour the two anchors need.
+
+**Erasure shortens the clock and never lengthens it.** A photograph is part of the
+learning record the children's policy already promises to delete thirty days after
+the guardian's account closes, so the due date is the *earlier* of the two. That
+is a second clock, not a second policy.
+
+**A file that loses its submission is unwatchable at once**, by a trigger on the
+attachment row rather than by a job: the moment the link goes, the database can no
+longer say whose file it is, so keeping it readable is keeping it for nobody.
+`may_watch_master()` already refuses any asset with `deleted_at` set, so this is the
+whole of "unwatchable" — no second permission check, no route change.
+
+**A hold is the only thing that stops the clock**, it needs a written reason to
+exist and one to end, and releasing a hold on a file that was already tombstoned
+starts a fresh thirty days rather than deleting immediately: closing a case is not
+the same act as destroying its evidence.
+
+**A tombstone is not a deletion, and the difference is on the record.** There are
+no storage credentials in any environment, so the database cannot delete the
+object. It sets a date, counts what is waiting, names the bucket and key for the
+person doing it, and refuses to record a deletion that has not happened — the same
+shape `record_identity_removal()` uses for a closed account's sign-in. A platform
+that said "deleted" when it meant "unwatchable" would be lying on the one screen
+where the truth is the point.

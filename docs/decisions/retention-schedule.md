@@ -24,6 +24,7 @@ deleted** — the personal fields are anonymised instead.
 | Failed sign-in and OTP logs | 30 days | Hard delete |
 | Session and refresh tokens | On revocation or expiry | Hard delete |
 | Child learner data | Settled 2026-10-22: **30 days after the guardian's account closes** | Deleted, except a certificate number that has to keep verifying. Enforced. Never sold or shared. |
+| A file a learner hands in (coursework) | Settled 2026-11-01: **a year after the later of the class ending and the hand-in**, or thirty days after an erased learning record where that is sooner | Tombstoned at once when its submission goes: unwatchable by everybody, including staff. The object is deleted from storage on that date and the deletion is recorded. Enforced. |
 | Discussion and Q&A posts | Life of the lesson | Soft delete; author may delete their own |
 | Learner profiles and progress | Until deletion request | Anonymise on request; retain aggregate, non-identifying statistics |
 | Course content and versions | Indefinite while published | Unpublishing is soft delete; masters retained per D8 |
@@ -67,6 +68,7 @@ document was the prose. Two rows of the table above are now executed by
 | A support case | the moment it is closed | three years later, with its messages | `retention_due_records`, computed from `closed_at` |
 | A screening record | the later of the check and the subject's eighteenth birthday | seven years later | `teacher_screenings.retention_until`, set by the writer |
 | A child's learning record | the moment the guardian's account closed | thirty days later | `retention_due_records`, from `learner_profiles.deleted_at` |
+| A handed-in file | the later of the class ending and the hand-in, or the erasure of the learner's record | a year later, or thirty days after the erasure — whichever is sooner | `coursework_file_retention` |
 
 `retention_plan()` answers *what is due, what is next, and what has no clock*;
 `/admin/retention` shows it and presses it; `POST /api/cron/retention` runs it
@@ -82,6 +84,21 @@ the learner it was for; a support case keeps the conversation and loses the chil
 it was about. Kept: the certificate, with its number and its snapshot, and the
 audit trail. What is left of the child is a row holding an id, a type, a status
 and dates, because a certificate points at it.
+
+**The fourth clock, and the half of it this database cannot perform.** A file a
+learner hands in is kept a year after the later of the class ending and the hand-in;
+an erased learning record shortens that to thirty days after the erasure, because a
+photograph is part of the record the children's policy already promises to delete.
+A file that loses its submission is tombstoned at once by a trigger — the same
+moment the database stops being able to say whose file it was — and
+`may_watch_master()` refuses a tombstoned asset to everybody, staff included.
+
+What the clock cannot do is delete the object. There are no storage credentials in
+any environment, so `purge_coursework_files()` sets `purge_due_at`, the plan counts
+what is waiting, `coursework_bytes_awaiting()` names the bucket and key, and
+`record_coursework_purge()` records the deletion **and refuses while the file is
+still readable**. A tombstone therefore means "unwatchable", never "gone", and the
+screen says which of the two it is.
 
 **The sign-in, which this database does not hold.** Closing an account scrubs
 every table here and leaves the row in `auth.users`, because that row *is* the
