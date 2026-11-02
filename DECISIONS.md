@@ -7391,3 +7391,29 @@ anybody anything they can act on, and the exclusion is a test in
 every other code, so the platform does not quietly acquire a general-purpose payload
 reader. `/admin/analytics` prints it under *why doors closed* — the only part of that
 page that reports a failure.
+
+## A gap is honest while it is written down — **DECIDED 2026-11-02**
+
+Live classes have been "one setting away" from working since the feature was built, and
+the setting has been empty the whole time. The temptation was to close the gap by pinning
+a host. The owner's answer was the other one: **leave it a gap, and say so where an
+operator reads it.**
+
+The reason is that every candidate host has a cost the platform has not agreed to pay.
+A self-hosted Jitsi is free and is yours, and it is a server to patch, monitor and pay
+for. A commercial provider needs credentials, terms and a card. `meet.jit.si` is free
+today and is the wrong answer for a child's classroom, because the rooms sit on a service
+this platform does not control — and a class of children is exactly the traffic whose
+privacy cannot be borrowed.
+
+So what changed is not behaviour; it is the honesty of the description.
+`docs/deploy/README.md` §3.3a now states the setting, the `no_room_host` refusal an empty
+value produces, what a host must serve (`/room/<slug>`), and — in as many words — that **no
+room server has ever been configured here, so not one minute of audio or video has been
+carried**, and that attendance is *arrival through this platform*, not the host reporting
+who attended. A test holds that prose to the function, because a document describing a
+refusal outlives the refusal the moment somebody edits the SQL.
+
+**What is not claimed.** Nothing anywhere says a live class has worked. The schedule, the
+door, the roll and the recording address are built and tested; the video is somebody
+else's product and there is not one yet.

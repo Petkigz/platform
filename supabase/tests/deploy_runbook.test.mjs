@@ -140,6 +140,44 @@ export async function run(ctx) {
   // a previous call in this process cannot make the refusal test pass by accident.
   await ctx.exec("set app.bootstrap_privileged_roles = '';");
 
+  // -------------------------------------------------------------------------
+  // The one gap the runbook keeps rather than closes
+  // -------------------------------------------------------------------------
+
+  await test('the runbook says plainly that the room behind live classes is not connected', async () => {
+    // The owner's decision (2026-11-02) was to leave the live room as a documented
+    // gap rather than pin a host: keep the setting, keep the explanation, and do not
+    // claim classes work end to end. A gap is only honest while it is written down,
+    // so the prose is held here beside the behaviour it describes.
+    // Flattened first: the prose wraps, and a phrase that a hard line break happens
+    // to split is still the sentence a reader reads.
+    const flat = runbook.replace(/\s+/g, ' ');
+    for (const phrase of [
+      '`delivery.live_room_base` ships **empty**',
+      'no_room_host',
+      'must not be claimed',
+      'one minute of audio or video',
+      'arrival through this platform',
+      'no room behind the door',
+    ]) {
+      assert(flat.includes(phrase),
+        `the runbook no longer says: ${phrase}`);
+    }
+
+    // …and the switch really does ship empty, and joining really does refuse with
+    // the sentence the runbook quotes. If either moves, the document is wrong.
+    const base = (await q(
+      `select coalesce(value_text, '') v from public.platform_settings
+        where key = 'delivery.live_room_base'`)).rows[0];
+    assert((base.v ?? '') === '', `live_room_base ships as ${JSON.stringify(base.v)}`);
+
+    const joinSrc = (await q(
+      `select pg_get_functiondef('public.join_live_session(uuid,uuid)'::regprocedure) as src`))
+      .rows[0].src;
+    assert(/'no_room_host'/.test(joinSrc),
+      'join_live_session no longer answers no_room_host when there is no host');
+  });
+
   await test('without the setting, the bootstrap insert is refused', async () => {
     // This is the test that justifies the `set` line rather than merely describing
     // it: a role that can appoint itself is not a role.

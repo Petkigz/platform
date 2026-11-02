@@ -281,6 +281,40 @@ and the same nine steps are rendered on `/admin/guardians` (`REVIEWER_CHECKLIST`
 `web/src/lib/guardian-consent.ts`). A test holds the two together. Read it before
 the first decision, not after the first mistake.
 
+**3.3a Live classes: the room host is the one thing not built here.**
+`delivery.live_room_base` ships **empty**, and an empty value is not a bug — it is the
+platform refusing rather than pretending. With it empty, `join_live_session()` checks the
+entitlement and the clock, then answers
+`reason: 'no_room_host'` — *"live rooms are not connected yet; the class is scheduled and
+will not open a room."* Nothing records attendance, and no learner is handed a URL that
+does not carry a class.
+
+Everything around the room is built and tested: scheduling with the zone a teacher typed
+beside the UTC instant, the join window, per-person entitlement, arrival and departure,
+the teacher's roll, cancelling with a reason every learner is told, and attaching the
+address of a recording the teacher made elsewhere. The video is the part the platform
+does not own.
+
+**What to do when a host exists.** Set the base URL on `/admin/settings` (or
+`platform_settings.value_text`) to the origin the room server answers on, for example
+`https://rooms.ayahspring.com`. A room is that base plus `/room/<room_slug>`, where the
+slug comes from the session row, so the host must serve that path and must know the same
+room names. Nothing else needs changing or redeploying.
+
+**What has not been verified, and must not be claimed.** No room server has ever been
+configured in this repository's environment, so not one minute of audio or video has been
+carried by it. There is no integration with the host's own API: attendance is *arrival
+through this platform*, not the host telling us who was present, so a learner who gets
+the URL some other way and attends is not counted. And a room server is a server to
+patch, monitor and pay for — the honest description of this feature today is "scheduled
+classes with a door, and no room behind the door".
+
+**The choice that is still open** is which host: a self-hosted Jitsi on a small VM (free,
+yours, and the right answer for children), a commercial service with credentials, or the
+public `meet.jit.si` (free today, and the wrong answer for a child's classroom — the
+rooms are on a service the platform does not control). The owner has deliberately left
+this as a documented gap rather than pinning a host.
+
 **3.4 Check the withdrawal question, which is already on.** Nothing to press. The
 migrations publish refunds policy **version 2** (the paragraph stating the 14-day
 right and the waiver) and switch `platform.withdrawal_right` on in the same step,
