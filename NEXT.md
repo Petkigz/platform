@@ -600,12 +600,20 @@ check keeps finding — `linked_user_id = actor` is null when nobody is linked, 
 null in that test lets a stranger through; it is coalesced now, and the first test in
 the suite is the stranger.
 
-Owed next: the children's policy in force (version 2) says the platform has no
-feature that moves a record between accounts. That was true when it was written on
-2026-11-02 and is not true now, so version 3 is the next unit rather than a later one.
+The policy moved with it, on the same day, because the document that had just
+stopped promising the handover was out of date the moment it existed. **Version 3**
+replaces the paragraph that sent a family to a support desk with what the platform
+does — the learner, or the adult holding the record, states the age at `/handover` and
+chooses — and keeps the sentence the design rests on: the platform records the
+statement and **does not check it**, because it holds no date of birth. Version 2 is
+retired and readable, so a reader can see that a correction was a correction; the
+suite now asks about the live text rather than about a version number, and a test
+holds the policy and `web/src/lib/handover.ts` to the same claim, because a screen
+that admits the limit beside a policy that implies a check is the pair this feature
+exists to prevent.
 
-Verification: **2 498 database assertions in 165 suites, 1 995 web tests; TypeScript
-typecheck, build and `check:repo` pass; 224 migrations.**
+Verification: **2 499 database assertions in 165 suites, 1 995 web tests; TypeScript
+typecheck, build and `check:repo` pass; 225 migrations.**
 
 ## Today's sentence
 

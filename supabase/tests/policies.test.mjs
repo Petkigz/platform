@@ -131,10 +131,16 @@ export async function run(ctx) {
 
     const live = await call(learner, 'policies_in_force()');
     eq(live.length, 7, 'the documents a visitor is shown');
+    // A correction is a new version, and these three have been corrected since the
+    // first publication: the refunds policy when the owner decided the withdrawal
+    // waiver (2026-11-01), the children's and privacy documents when the sentences
+    // about a switched-off verification stopped being true (2026-11-02), and the
+    // children's policy again the same day when the handover it had just stopped
+    // promising was built.
+    const corrected = { refunds: 2, privacy: 2, children: 3 };
     for (const row of live) {
-      const expected =
-        row.slug === 'refunds' || row.slug === 'children' || row.slug === 'privacy' ? 2 : 1;
-      eq(row.versionNumber, expected, `${row.slug} is version ${row.versionNumber}`);
+      eq(row.versionNumber, corrected[row.slug] ?? 1,
+        `${row.slug} is version ${row.versionNumber}`);
     }
   });
 

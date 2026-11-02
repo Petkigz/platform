@@ -7303,3 +7303,11 @@ version 3 is the next unit: the same promise, now performed, stated as a thing t
 learner or their guardian can ask for, with the statement-not-check language the
 screen uses. The legal review remains owed, and it now has one more paragraph to
 read.
+
+**The policy followed the same afternoon.** Version 3 is in force from 2026-11-02 and
+replaces the paragraph that sent a family to a support desk with what the platform
+does: the learner, or the adult holding the record, states the age at `/handover` and
+chooses to keep the record or have it deleted in thirty days. It keeps the sentence
+this whole design rests on — the platform records the statement and does not check it,
+because it holds no date of birth — and version 2 is retired and kept rather than
+rewritten, because a reader is entitled to see that a correction was a correction.
