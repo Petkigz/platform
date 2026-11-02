@@ -85,6 +85,7 @@ const sharedLinks: ConsoleLink[] = [
   { href: '/admin/media', label: 'Uploaded media', note: 'every master anybody has uploaded. Quarantine and withdrawal both need a written reason' },
   { href: '/admin/course-reviews', label: 'Course review queue', note: 'learner ratings that include words, held until someone reads them' },
   { href: '/admin/discussion', label: 'Discussion queue', note: 'learner questions and peer answers held for review' },
+  { href: '/admin/ai-support', label: 'Study assistant', note: 'what it was asked and what the boundary did: answers that cited a lesson, questions sent to a teacher, and the phrases doing the refusing' },
   { href: '/admin/messages', label: 'Messages', note: 'what the platform would send, rendered and recorded. Nothing leaves the building until a provider is configured' },
   { href: '/admin/plans', label: 'Subscription plans', note: 'versioned terms, entitlements and recurring prices' },
   { href: '/admin/panels', label: 'Scholarly panels', note: 'the owner convenes a panel and sets its quorum; staff open a case against an unpublished version; seated members vote and the chair records the decision. A case cannot close below quorum, and with governance.panel_required off nothing waits on it' },

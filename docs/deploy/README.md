@@ -123,7 +123,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-220 files in `supabase/migrations/`, applied in filename order — the 14-digit
+221 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -146,7 +146,7 @@ done
   first run. What you are watching for is the loop *stopping*, and the file name
   above the error.
 - Takes a few minutes. The last file printed should be
-  `20261281004900_identity_erasure.sql`.
+  `20261281014000_ai_support_boundary.sql`.
 
 **Path B — the Supabase CLI**, if you would rather have migration history tracked:
 
@@ -287,6 +287,38 @@ on a fresh deployment:
 * Refunds now close at **14 days** for a buyer in a 14-day market who did not waive,
   and at 72 hours everywhere else. `/orders` prints which rule applies and the date;
   `refund_standing(<order>)` is the same answer in SQL.
+
+**3.5 Check the study assistant, which is deployed off.** Nothing to press, and
+nothing to configure: `learning.ai_support` is CODE-gated, so `/admin/flags` will
+refuse to switch it on and that refusal is correct — turning it on is a deploy, one
+migration that sets `value_text` to `'true'` under
+`set_config('app.bypassing_code_flag', 'on', true)`, exactly as
+`platform.withdrawal_right` was switched on. What exists behind it is a boundary,
+not a bot: `ai_support_ask()` returns
+lessons the asker may open, or nothing, or a refusal that opens a support case for a
+teacher. There is no provider, no key to set, no cost ceiling to pick and no
+generated text anywhere in the payload.
+
+What is worth checking before you would enable it:
+
+* `select public.ai_support_is_ruling('Is it haram to miss a prayer?');` → `true`;
+  `select public.ai_support_is_ruling('Where is the letter ha produced?');` →
+  `false`. The list is fifty lowercase phrases in a table-valued function, and
+  editing it is a migration rather than a click, on purpose: a phrase list is a
+  safety boundary and a boundary that can be edited in a form at 2 a.m. is not one.
+* `select public.ai_support_summary(30);` → zeros, or a permission error for a
+  support agent who is not privileged. `/admin/ai-support` renders the same numbers.
+* `/learn/ask` says what the assistant is and is not, whether or not the flag is on,
+  and `/learn` links to it either way. A learner who was told the feature exists
+  should never meet a 404.
+* **A refusal only reaches a case while `platform.support` is on.** With the help
+  desk closed the refusal still lands and still says "ask your teacher in the
+  lesson" — the boundary does not depend on the desk — but nothing is filed.
+  `/admin/ai-support` counts the difference rather than hiding it.
+
+Recitation is a different flag (`learning.recitation`, also CODE) and this unit did
+not touch it: a wrong correction on religious content is worse than none, and no
+ASR has been validated against makharij.
 
 From here, everything is a screen: `/admin/roles` grants the next person a role,
 with a written reason, out of an audit trail.

@@ -13,7 +13,7 @@ being built one unit at a time; the table says where each one stands.
 | 4 | EU 14-day withdrawal waiver | **a real waiver at checkout**, 14 days if unticked, stored per order | **Built** — `20261281013000`, the checkbox on `/courses/<slug>/buy`, refunds policy republished as version 2; the wording still needs a lawyer |
 | 5 | Market grain | **country**, as built | **Confirmed** — no code |
 | 6 | What nets against what in the money report | chargeback no offset, fee is the platform's, reversal in its own period, then the net line — **two** derived lines, because a teacher's share is not a ledger row | **Built** — `20261281012000` |
-| 7 | AI support and recitation | **the boundary first** — cite a lesson or no answer, refuse rulings to a teacher; recitation stays off | **Decided, not yet built** |
+| 7 | AI support and recitation | **the boundary first** — cite a lesson or no answer, refuse rulings to a teacher; recitation stays off | **Built** — `20261281014000`, `/learn/ask`, `/admin/ai-support`; the flag is still off, and recitation is untouched |
 | 8 | How long a class's progress stays readable | **as long as the course exists** — the roster does not expire | **Confirmed** — the behaviour was already this; the question is closed |
 
 Nothing in the briefs below was decided when they were written. Every section is

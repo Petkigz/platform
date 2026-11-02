@@ -187,7 +187,13 @@ export default async function LearnPage() {
         <Link href="/saved">
           Saved courses{savedCount > 0 ? ` (${savedCount})` : ''}
         </Link>{' · '}
-        <Link href="/downloads">On this device</Link>{' · '}
+        <Link href="/downloads">On this device</Link>
+        {' · '}
+        {/* Unconditional, like the saved list: a question asked while the assistant
+            was on leaves a record, and the page that explains it should not vanish
+            when the flag is turned off. */}
+        <Link href="/learn/ask">Ask about a lesson</Link>
+        {' · '}
         <form action="/sign-out" method="post" style={{ display: 'inline' }}>
           <button
             type="submit"

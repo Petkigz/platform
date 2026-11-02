@@ -495,8 +495,40 @@ the submission reference is deliberately not a foreign key, because the children
 clock deletes submissions and a constraint there would have broken that clock the
 moment a file had been reviewed.
 
-Verification: **2 464 database assertions in 161 suites, 1 969 web tests; TypeScript
-typecheck, build and `check:repo` pass; 220 migrations.**
+The study assistant was the one feature family this repository had decided to hold
+off *on purpose*, and the reason was never the model: no prompt can promise that a
+model will not issue a religious ruling. So the promise was moved out of the prompt
+and into the shape of the answer (`20261281014000_ai_support_boundary.sql`).
+`ai_support_ask()` is retrieval-only: it runs the lesson search the catalogue
+already has, filters the hits through `can_access_lesson_now()` so a citation is
+always a lesson the asker may open, and returns at most five of them — the lesson,
+its section, its course and a snippet built from text it already lets them read. If
+nothing matches, the answer is `no_match` and a sentence saying so, not a
+paraphrase of something adjacent. A question shaped like a ruling is refused by a
+list of fifty phrases (`ai_support_is_ruling`, a plain lowercase substring test, so
+it fails closed rather than cleverly), the phrases that matched are recorded beside
+the question, and the refusal opens a case through the help desk that already
+exists — `'content'`, because `open_support_case()`'s category list has no
+`'learning'` and inventing one would have been a second vocabulary. If the desk is
+closed the refusal still lands, and says "ask your teacher in the lesson"; a
+boundary that stops working when a feature behind it is off is not a boundary. There
+is no `answer` field anywhere in the payload, and the web client refuses to render
+one that claims otherwise: `boundary` carries `retrievalOnly: true`, `model: null`
+and `generatedText: false`, and `normaliseAiSupportAnswer()` returns null for a
+payload that names a model, claims generated text or calls an answer without a
+citation an answer. The refusal is the test — a refused ruling carrying a citation,
+an "answered" row with none and a citation with no destination all fail the suite
+before they could fail a learner. `learning.ai_support` stays **off**: it is a CODE
+flag, and turning it on is a deploy that this unit is not. `/learn/ask` says what the
+assistant is and is not before anybody types, and keeps saying it when the flag is
+off; `/admin/ai-support` reads `ai_support_summary()` — asked, answered, refused,
+unmatched, how many refusals actually reached a case, and which phrases did the
+refusing, because a phrase that catches the wrong question is edited by migration
+and this page is how anybody finds out. Recitation is untouched, and the reason is
+unchanged: a wrong correction on religious content is worse than none.
+
+Verification: **2 474 database assertions in 162 suites, 1 977 web tests; TypeScript
+typecheck, build and `check:repo` pass; 221 migrations.**
 
 ## Today's sentence
 
