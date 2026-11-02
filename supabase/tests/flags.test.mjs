@@ -113,18 +113,28 @@ export async function run(ctx) {
     }
   });
 
-  await test('everything ships off', async () => {
+  // The one flag that is on, and why. Everything else ships off.
+  //
+  // `platform.withdrawal_right` is the checkout's 14-day withdrawal question. The
+  // owner decided on 2026-11-01 that it should be asked and answered at checkout,
+  // so it is on — and it is on in a way that cannot take a right away: with no
+  // refunds policy in force the box disappears and everybody keeps the 14 days.
+  // The list is deliberately short and each entry carries its reason; a second
+  // entry needs a second decision, not a second line.
+  const DELIBERATELY_ON = {
+    'platform.withdrawal_right':
+      'owner decision 2026-11-01: the 14-day withdrawal question is asked at checkout',
+  };
+
+  await test('everything ships off, except what the owner switched on', async () => {
     // The architecture promise: built to completion, enabled later. A flag
     // found on at seed time means something was released by accident.
-    const on = await count(
-      `select 1 from public.platform_settings where value_text = 'true'`);
-    // governance.panel_required and any other pre-existing setting may be on;
-    // the 86 feature flags must not be.
-    const featureOn = await count(
-      `select 1 from public.platform_settings
-        where value_text = 'true' and gate_type is not null`);
-    assert(featureOn === 0, `${featureOn} feature flag(s) shipped enabled`);
-    void on;
+    const on = (await q(
+      `select key from public.platform_settings
+        where value_text = 'true' and gate_type is not null
+        order by key`)).rows.map((r) => r.key);
+    const unexpected = on.filter((key) => !(key in DELIBERATELY_ON));
+    assert(unexpected.length === 0, `feature flag(s) shipped enabled: ${unexpected.join(', ')}`);
   });
 
   await test('the register has one row per key', async () => {
@@ -308,9 +318,12 @@ export async function run(ctx) {
     // is what makes "built to completion, enabled later" a promise rather than
     // a hope. The controls are excluded: they carry values, not features.
     const enabled = rows.filter((r) => flags.has(r.key) && r.value_type === 'boolean');
+    void enabled;
     const on = (await q(
-      `select key from public.platform_settings where value_text = 'true' order by key`)).rows;
-    assert(on.length === 0, `flags shipped on: ${on.map((r) => r.key).join(', ')}`);
+      `select key from public.platform_settings where value_text = 'true' order by key`)).rows
+      .map((r) => r.key)
+      .filter((key) => key !== 'platform.withdrawal_right');
+    assert(on.length === 0, `flags shipped on: ${on.join(', ')}`);
     assert(enabled.length === flags.size, 'a documented flag is not a boolean switch');
   });
 

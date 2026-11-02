@@ -63,9 +63,13 @@ export async function run(ctx) {
     seq += 1;
     const userId = await newUser(`win-${seq}@example.com`);
     await newProfile(userId, name);
+    // The country is what decides which clock applies: since 2026-11-01 a buyer in
+    // the EU/EEA/UK has 14 days unless they waive them, and this suite is about the
+    // platform's own 72-hour policy window. So the buyers here say where they are.
     const account = (await scalar(
-      `insert into public.billing_accounts (display_name, billing_currency, status, created_by)
-       values ($1,'UGX','active',$2) returning id`, [name, userId])).id;
+      `insert into public.billing_accounts
+         (display_name, billing_country, billing_currency, status, created_by)
+       values ($1,'UG','UGX','active',$2) returning id`, [name, userId])).id;
     return { userId, account };
   }
 

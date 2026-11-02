@@ -495,8 +495,8 @@ the submission reference is deliberately not a foreign key, because the children
 clock deletes submissions and a constraint there would have broken that clock the
 moment a file had been reviewed.
 
-Verification: **2 447 database assertions in 160 suites, 1 961 web tests; TypeScript
-typecheck, build and `check:repo` pass; 219 migrations.**
+Verification: **2 464 database assertions in 161 suites, 1 969 web tests; TypeScript
+typecheck, build and `check:repo` pass; 220 migrations.**
 
 ## Today's sentence
 

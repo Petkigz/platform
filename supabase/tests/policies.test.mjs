@@ -106,7 +106,11 @@ export async function run(ctx) {
     for (const doc of docs) {
       eq(Number(doc.drafts), 0, `${doc.slug} still has a draft, so it was not published`);
       eq(Number(doc.live), 1, `${doc.slug} live versions`);
-      eq(new Date(doc.effective).toISOString().slice(0, 10), '2026-10-28',
+      // Seven published on 2026-10-28; the refunds policy was republished on
+      // 2026-11-01 when the owner decided the withdrawal waiver, and a correction
+      // is a new version rather than an edit to the one people agreed to.
+      const expected = doc.slug === 'refunds' ? '2026-11-01' : '2026-10-28';
+      eq(new Date(doc.effective).toISOString().slice(0, 10), expected,
         `${doc.slug} effective date`);
       // No account existed when the migrations ran, so the instruction is the
       // record. Naming a person who did not click would be worse.
@@ -121,7 +125,10 @@ export async function run(ctx) {
 
     const live = await call(learner, 'policies_in_force()');
     eq(live.length, 7, 'the documents a visitor is shown');
-    assert(live.every((row) => row.versionNumber === 1), 'a published version is not version one');
+    for (const row of live) {
+      const expected = row.slug === 'refunds' ? 2 : 1;
+      eq(row.versionNumber, expected, `${row.slug} is version ${row.versionNumber}`);
+    }
   });
 
   await test('a document in force is readable by a visitor who has no account', async () => {

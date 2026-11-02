@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { format, fromMinor } from '@/lib/money';
 import { describeRemaining } from '@/lib/refunds';
+import { describeWithdrawalRule } from '@/lib/withdrawal';
 
 /**
  * Ask for a refund.
@@ -23,13 +24,20 @@ export function RefundForm({
   currencyCode,
   closesAt,
   remainingHours,
+  withdrawalRule,
 }: {
   orderId: string;
   amountMinor: string | number;
   currencyCode: string;
-  /** When the 72-hour window shuts, from the database's clock. */
+  /** When the window shuts, from the database's clock. */
   closesAt?: string | null;
   remainingHours?: number | null;
+  /**
+   * Which rule set that date: 14 days by law, or the 72-hour window. A date with
+   * no reason invites the question "why is mine different", and the answer is
+   * different for the buyer who waived and the buyer who did not.
+   */
+  withdrawalRule?: string | null;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -84,7 +92,10 @@ export function RefundForm({
         </button>
         {closesAt ? (
           <span className="muted" style={{ fontSize: '0.78rem' }}>
-            Until {new Date(closesAt).toLocaleString('en-GB', {
+            {describeWithdrawalRule(withdrawalRule)
+              ? `On ${describeWithdrawalRule(withdrawalRule)}: `
+              : ''}
+            until {new Date(closesAt).toLocaleString('en-GB', {
               day: 'numeric', month: 'short', year: 'numeric',
               hour: '2-digit', minute: '2-digit', timeZone: 'UTC',
             })} UTC

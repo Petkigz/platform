@@ -262,6 +262,12 @@ export type RefundStanding = {
   refundableMinor: string;
   currencyCode: string;
   asStaff: boolean;
+  /**
+   * Which clock this order is on: `statutory_14_days`, `waived_policy_window`
+   * (72 hours, after the buyer asked for immediate access) or `policy_window`
+   * (72 hours). Null when the database did not say, which renders as no claim.
+   */
+  withdrawalRule: string | null;
 };
 
 export class RefundStandingError extends Error {}
@@ -294,6 +300,11 @@ export function normaliseStanding(raw: unknown): RefundStanding {
     refundableMinor: minor,
     currencyCode: typeof row.currencyCode === 'string' ? row.currencyCode : 'XXX',
     asStaff: row.asStaff === true,
+    withdrawalRule:
+      row.withdrawal && typeof row.withdrawal === 'object'
+        && typeof (row.withdrawal as Record<string, unknown>).rule === 'string'
+        ? ((row.withdrawal as Record<string, unknown>).rule as string)
+        : null,
   };
 }
 

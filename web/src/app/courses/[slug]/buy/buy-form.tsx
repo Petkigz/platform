@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { format, fromMinor } from '@/lib/money';
+import type { WithdrawalOffer } from '@/lib/withdrawal';
 
 /**
  * The checkout form.
@@ -23,6 +25,7 @@ export function BuyForm({
   providers,
   providerConfigured,
   defaultCode,
+  withdrawal = null,
 }: {
   courseId: string;
   /** The profiles this purchase may cover: the buyer and their family. */
@@ -37,6 +40,13 @@ export function BuyForm({
    * different code means it.
    */
   defaultCode?: string | null;
+  /**
+   * The 14-day withdrawal question, resolved by the database for this buyer's
+   * country. `canWaive` is what decides whether a box exists; `statutory` alone
+   * only decides whether the buyer has the right — those are different questions
+   * and the copy under the box has to answer the one that applies.
+   */
+  withdrawal?: WithdrawalOffer | null;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -55,6 +65,11 @@ export function BuyForm({
   const [promotionCode, setPromotionCode] = useState(defaultCode?.trim() ?? '');
   const [message, setMessage] = useState<string | null>(null);
   const [tone, setTone] = useState<'info' | 'error'>('info');
+  // Unticked, and it stays unticked until the buyer ticks it: a pre-ticked box is
+  // not consent, and the whole point of this control is that leaving it alone is
+  // a legitimate way to buy.
+  const [waiverTicked, setWaiverTicked] = useState(false);
+  const showWaiver = withdrawal?.canWaive === true;
 
   // What the price checker found, and whether it is still about the box as it stands.
   // Any change to the learner or the code clears it: a total shown against a code
@@ -147,6 +162,9 @@ export function BuyForm({
         promotionCode: promotionCode.trim() || undefined,
         msisdn: msisdn || undefined,
         provider: providerId || undefined,
+        // Only when the box was shown. An absent choice and an unticked one are
+        // different facts, and the route records only what was decided.
+        withdrawalChoice: showWaiver ? (waiverTicked ? 'waived' : 'retained') : undefined,
       }),
     });
 
@@ -328,6 +346,39 @@ export function BuyForm({
           the phone.
         </p>
       </div>
+      )}
+
+      {withdrawal?.statutory && (
+        <div>
+          {showWaiver ? (
+            <>
+              <label
+                htmlFor="withdrawal-waiver"
+                style={{ alignItems: 'flex-start', gap: '0.6rem' }}
+              >
+                <input
+                  id="withdrawal-waiver"
+                  type="checkbox"
+                  checked={waiverTicked}
+                  onChange={(e) => setWaiverTicked(e.target.checked)}
+                />
+                <span>{withdrawal.wording}</span>
+              </label>
+              <p className="muted" style={{ fontSize: '0.82rem' }}>
+                Leaving the box unticked is fine: you still buy the course, it still
+                opens when payment is confirmed, and you keep the 14 days.{' '}
+                <Link href="/policies/refunds">The refunds policy</Link> states this,
+                in these words.
+              </p>
+            </>
+          ) : (
+            // The right applies but cannot be waived here — no published policy to
+            // waive under, or the platform has not switched the question on. Said
+            // rather than hidden, because a buyer who has heard of the 14 days
+            // should be able to find out what this platform is doing about them.
+            <p className="muted" style={{ fontSize: '0.82rem' }}>{withdrawal.message}</p>
+          )}
+        </div>
       )}
 
       <button type="button" className="btn" onClick={buy} disabled={pending}>

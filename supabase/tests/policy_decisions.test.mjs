@@ -174,8 +174,13 @@ export async function run(ctx) {
     assert(/deleted within 30 days/.test(children), 'children: turning 18');
 
     const refunds = (await body('refunds')).body;
-    assert(/applies on top of any right the law gives you/.test(refunds),
-      'refunds: the statutory period is replaced rather than added to');
+    // Superseded 2026-11-01 by the owner's decision that the right may be waived
+    // by an explicit, unticked box at checkout. The document now states the right,
+    // the choice, and that the platform's own window still applies.
+    assert(/you have 14 days from the day you pay to withdraw/.test(refunds),
+      'refunds: the statutory right is not stated');
+    assert(/the 14-day right no longer applies/.test(refunds),
+      'refunds: the waiver is not stated');
     assert(/no part-month refund/.test(refunds), 'refunds: mid-month cancellation');
 
     const teaching = (await body('teaching')).body;

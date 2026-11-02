@@ -253,6 +253,7 @@ export default async function OrdersPage({
                         currencyCode={o.currency_code}
                         closesAt={standings[o.id]?.closesAt ?? null}
                         remainingHours={standings[o.id]?.remainingHours ?? null}
+                        withdrawalRule={standings[o.id]?.withdrawalRule ?? null}
                       />
                     ) : (
                       // A window that closed is said, not hidden: a button that

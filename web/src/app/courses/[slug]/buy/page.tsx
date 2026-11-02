@@ -10,6 +10,7 @@ import { format } from '@/lib/money';
 import { availableProviders, configuredProviderId } from '@/lib/payments/registry';
 import { isFlagEnabled } from '@/lib/flags';
 import { REFERRAL_COOKIE, cleanReferralCode } from '@/lib/referrals';
+import { fetchWithdrawalOffer } from '@/lib/withdrawal';
 import { BuyForm } from './buy-form';
 
 export const dynamic = 'force-dynamic';
@@ -187,6 +188,12 @@ export default async function BuyPage({
   // and "the site is broken".
   const checkoutOpen = await isFlagEnabled(supabase, 'commerce.checkout');
 
+  // The 14-day question, from the database: whether the right applies here,
+  // whether a waiver may be offered, and the paragraph itself. A page that shows a
+  // box the database would refuse to record is worse than one with no box, so the
+  // offer is read rather than assumed from the country.
+  const withdrawal = await fetchWithdrawalOffer(supabase, country);
+
   const providerId = configuredProviderId();
   // Every provider that is configured and usable, not just the first. A learner
   // in Kampala may well have both MTN and Airtel, and being made to use one
@@ -266,6 +273,7 @@ export default async function BuyPage({
             providers={providers}
             providerConfigured={providerId !== null}
             defaultCode={referralCode}
+            withdrawal={withdrawal}
           />
         </section>
       )}

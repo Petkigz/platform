@@ -7150,9 +7150,43 @@ message.
 **The waiver is only a waiver if it is a real one.** An unticked separate box, with
 its own words, recorded per order beside the buyer's country and the policy version
 — and an unticked box grants the 14 days rather than blocking the purchase. A
-pre-ticked box, or one folded into the terms link, is not consent; the checkout must
-not be able to pass without a decision either way, which is why the record is on the
-order rather than in a browser.
+pre-ticked box, or one folded into the terms link, is not consent; the record is on
+the order rather than in a browser, because a choice that lives only in a form
+disappears with the tab.
+
+Built the same day, in `20261281013000_withdrawal_waiver.sql`, and four things about
+it are decisions rather than details:
+
+* **The waiver names published words.** It points at an `in_force` version of the
+  refunds policy, so the paragraph is the same string at the checkout and in the
+  policy (`withdrawal_wording()`, embedded in the policy body by the migration). The
+  policy shipped on 2026-10-28 saying *"no waiver is offered and none will be"*;
+  leaving a buyer to waive that would have been an agreement to its own opposite, so
+  the refunds policy is republished as **version 2**, effective 2026-11-01, with
+  version 1 retired and kept — a correction is a new version, not an edit to what
+  somebody already agreed to. With **no** version in force the box is not offered at
+  all: a waiver of unpublished words is not evidence of anything.
+* **The 14 days are law, not a flag.** `platform.withdrawal_right` decides whether
+  the *question* is asked. It never decides whether the *right* exists, and it is
+  not switchable from the dashboard — enabling it was a deploy, which is what the
+  flag register's CODE gate is for.
+* **Unticked is a purchase.** The order still pays, the course still opens, and the
+  clock simply stays at 14 days. Nothing in the checkout depends on giving up a
+  right.
+* **One clock.** `order_withdrawal_window()` is the only thing that decides when the
+  right to ask closes — 14 days in the EU/EEA/UK unless waived, the 72-hour window
+  everywhere else and after a waiver — and both `refund_standing()` and
+  `request_refund()` read it, so a screen and a refusal cannot disagree. A buyer
+  whose country was never recorded keeps the benefit of the doubt, because the two
+  mistakes are not symmetrical: a box somebody did not need costs nothing, and a
+  right quietly removed costs the platform its credibility.
+* **Not a refusal, and not staff's to give.** `record_withdrawal_choice()` refuses
+  anybody who is not on the billing account, including staff — `is_billing_member()`
+  returns true for privileged users, and this is the one place that is wrong. A
+  waiver staff could record for a buyer is not a voluntary act.
+
+The wording is drafted from the law and **unreviewed by a lawyer**; the policy
+version's approval reason says so in the record rather than in a comment.
 
 **A boundary beats a bot on religious content.** The instruction on
 `learning.ai_support` has always been that it must never issue a ruling, and no

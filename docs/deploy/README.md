@@ -123,7 +123,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-219 files in `supabase/migrations/`, applied in filename order — the 14-digit
+220 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -264,6 +264,29 @@ Two things happen the moment you press it, and neither is a bug:
 
 The reviewer's checklist — what to look at, how long to give, when to reject — is
 step 9 as well, and it is a page of writing rather than a deployment task.
+
+**3.4 Check the withdrawal question, which is already on.** Nothing to press. The
+migrations publish refunds policy **version 2** (the paragraph stating the 14-day
+right and the waiver) and switch `platform.withdrawal_right` on in the same step,
+because turning a CODE flag on is a deploy and not a click. What is worth checking
+on a fresh deployment:
+
+* `/courses/<slug>/buy` for a buyer in an EU country shows **one unticked** box
+  under the withdrawal paragraph. `select public.withdrawal_offer('DE');` should
+  answer `"canWaive": true` with a `policyVersionId`; the same call for `'UG'`
+  should answer `"statutory": false`. If `canWaive` is false with reason
+  `no_policy_in_force`, the refunds version did not publish and **everybody keeps
+  the 14 days** — which is the safe failure, but it is a failure to notice.
+* `select public.withdrawal_wording();` and the opening of `/policies/refunds`
+  should be the same paragraph. A test holds them equal; a person should still
+  read them once.
+* **A lawyer still has to read that paragraph.** The published version's approval
+  reason says it is unreviewed, in the record rather than in a comment. When it has
+  been read, publish a corrected version from `/admin/policies` — a correction is a
+  new version, never an edit to the one buyers already agreed to.
+* Refunds now close at **14 days** for a buyer in a 14-day market who did not waive,
+  and at 72 hours everywhere else. `/orders` prints which rule applies and the date;
+  `refund_standing(<order>)` is the same answer in SQL.
 
 From here, everything is a screen: `/admin/roles` grants the next person a role,
 with a written reason, out of an audit trail.

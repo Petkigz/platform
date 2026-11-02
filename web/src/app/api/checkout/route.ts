@@ -13,6 +13,7 @@ import { getPaymentProvider } from '@/lib/payments/registry';
 import { PaymentProviderUnavailableError } from '@/lib/payments/provider';
 import { toE164 } from '@/lib/phone';
 import { countryFromHeaders } from '@/lib/geo';
+import { recordWithdrawalChoice, type WithdrawalChoice } from '@/lib/withdrawal';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +32,14 @@ type Body = {
   provider?: unknown;
   /** A promotion code the buyer typed. Never a discount — the writer decides. */
   promotionCode?: unknown;
+  /**
+   * What the buyer did with the 14-day withdrawal box. `retained` and absent are
+   * different things: absent means the box was never shown (the buyer is outside
+   * the EU/EEA/UK, or no policy is in force), and `retained` means it was shown and
+   * left unticked. Sending `true/false` would make those two indistinguishable,
+   * and only one of them is a decision worth recording.
+   */
+  withdrawalChoice?: unknown;
 };
 
 /**
@@ -83,6 +92,10 @@ export async function POST(request: Request) {
   const promotionCode = typeof body.promotionCode === 'string'
     ? body.promotionCode.trim().slice(0, 32)
     : '';
+  const withdrawalChoice: WithdrawalChoice | null =
+    body.withdrawalChoice === 'waived' || body.withdrawalChoice === 'retained'
+      ? body.withdrawalChoice
+      : null;
 
   if (Boolean(courseId) === Boolean(planVersionId)) {
     return NextResponse.json(
@@ -178,6 +191,27 @@ export async function POST(request: Request) {
               ? 409
               : 400;
     return NextResponse.json({ error: result.message, code: result.code }, { status });
+  }
+
+  // The buyer's answer about the 14-day right, recorded before any money moves.
+  //
+  // It is deliberately not folded into `create_course_order()`: the writer's job
+  // is what is being sold and for how much, and this is a separate act by a
+  // separate person-shaped decision. Recording it here also means a failure is
+  // loud and the payment never starts, rather than a waiver that quietly did not
+  // happen and a buyer who thinks it did.
+  if (withdrawalChoice) {
+    const recorded = await recordWithdrawalChoice(supabase, {
+      orderId: result.orderId,
+      choice: withdrawalChoice,
+      country,
+    });
+    if (!recorded.ok) {
+      return NextResponse.json(
+        { error: recorded.message, code: 'withdrawal_not_recorded', orderId: result.orderId },
+        { status: 409 },
+      );
+    }
   }
 
   // The order exists and is pending. Now hand off. If no provider is
