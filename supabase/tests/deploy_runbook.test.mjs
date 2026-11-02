@@ -90,7 +90,11 @@ export async function run(ctx) {
     assert(valueOf(rows, 'signup trigger') === 'present',
       'the trigger that creates a profile on sign-up is not attached: a new account could not be given a role');
     assert(number(rows, 'roles') === 10, `the role vocabulary is ${valueOf(rows, 'roles')}`);
-    assert(number(rows, 'settings') > 100, 'the flag register did not seed');
+    // A floor, not a count: the exact split is asserted in `setting_authority`,
+    // and this only has to catch a table that came up empty or half-seeded. It is
+    // lowered when rows are retired, which is a decision recorded in DECISIONS.md
+    // rather than a number that drifted.
+    assert(number(rows, 'settings') > 90, 'the flag register did not seed');
     assert(number(rows, 'tables') > 100, 'the schema is not here');
     assert(number(rows, 'policies') > 100, 'the schema is here without row level security');
   });

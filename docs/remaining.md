@@ -212,26 +212,31 @@ read the key — is `supabase/tests/register_truth.test.mjs`.
 says what is missing; a row that claims it is ready must be read by code. That is
 now enforced, so this defect cannot return quietly.
 
-### A2. Eight more stale preconditions — the same defect fixed twice today
+### A2. Ten more stale preconditions — **done 2026-11-02**
 
 Promotions, the storage quota and lesson search were corrected on 2026-11-02.
-These still name work that shipped:
+Ten more named work that had shipped. This entry said eight; it listed ten.
 
-| Row | Says | Is |
+| Row | Said | Is |
 |---|---|---|
-| `platform.admin_settings` | "Must be built **first** — everything else depends on it" | `/admin/settings` exists, with audited controls |
-| `learning.certificates.simple` | "Template chosen; certificate numbering scheme" | `certificate_number_seq`, `template_version`, and certificates have shipped for weeks |
-| `learning.certificates.verification` | "Verification page deployed; token format fixed" | `/verify` and `/verify/[number]` are live; the token is the certificate number |
-| `learning.provenance` | "needs a UI, not a schema" | `/api/teach/provenance` and the curriculum editor both exist |
-| `learning.audience_sections` | "Learner switcher designed" | the switcher and the per-learner labels ship |
-| `learning.age_bands` | "Bands chosen" | the five bands are a check constraint in the schema |
-| `platform.data_export` | "GDPR right; cheaper to design than retrofit" | JSON, CSV and print all ship; what is left is import and PDF |
-| `delivery.analytics` | "Decide who reads the report" | decided (staff) and built (`/admin/analytics`) |
-| `learning.ai_support` | "Safeguarding policy; provider chosen" | the boundary is built and needs no provider — `FLAGS.md` says so, the register does not |
-| `teaching.authoring` | "media upload limits" | 8 GiB per file and 50 GB per account, both enforced |
+| `platform.admin_settings` | "Must be built **first**" | `/admin` and `/admin/settings` are the switchboard — **row removed** |
+| `learning.certificates.simple` | "Template chosen; certificate numbering scheme" | `certificate_number_seq`, `template_version`, and the real gate is per course: `certificate_enabled`. **Row removed** |
+| `learning.certificates.verification` | "Verification page deployed; token format fixed" | `/verify`, `/verify/[number]`, revocation with a reason. There is no token: the number *is* the capability. **Row removed** |
+| `teaching.authoring` | "Authoring flow tested; media upload limits" | 8 GiB per file and 50 GB per account, both enforced; the quota the sentence still called missing shipped in `20261229000100`. **Row removed** |
+| `learning.provenance` | "needs a UI, not a schema" | corrected — `content_sources`, the route, the editor and the learner's line |
+| `learning.audience_sections` | "Learner switcher designed" | **wrong twice**: it is not the switcher, which does not exist, and what it gates are the audience doors `/adults` and `/young` — corrected |
+| `learning.age_bands` | "Bands chosen" | corrected — five values, as a check constraint |
+| `platform.data_export` | "cheaper than retrofit across 85 tables" | corrected — JSON, CSV, print and a restore all ship; what is left is PDF |
+| `delivery.analytics` | "Decide who reads the report" | corrected — decided (staff) and refused by name in three functions |
+| `learning.ai_support` | "provider chosen; cost ceiling" | corrected — retrieval-only, no provider, no invoice |
 
-**Fix:** one migration, same shape as `20261281024000`, with a test that holds each
-sentence to the code that proves it.
+**Fix:** `20261281026000` rewrites six rows and removes four, and
+`preconditions_proved.test.mjs` holds each surviving sentence to the mechanism it
+names — the constraint's five values, the refusal string in `pg_proc`, the quota
+asserted before a byte moves. Four rows went rather than being reworded because
+their true sentence is *there is nothing here to switch*: the feature shipped, it
+is on for everybody, and a row saying otherwise tells the owner a control exists
+that does not.
 
 ### A3. `ROADMAP.md` is quoting day-one numbers as current facts
 

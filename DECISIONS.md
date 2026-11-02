@@ -7701,3 +7701,54 @@ be a file in the tree. Twice on 2026-11-02 a precondition named a mechanism that
 did not exist — an index over lesson bodies on a schema where a lesson has no body
 text — and a fabricated mechanism in a document becomes a plan. Those checks are
 the ones that stop the next one before it reaches a plan.
+
+## A precondition describes the software, not the plan for it — **DECIDED 2026-11-02**
+
+Ten preconditions were read against the tree and six were wrong about what exists.
+The other four described a control that does not exist at all. Both halves are the
+same defect: a register is a claim about today, and a claim that has stopped being
+true sends the next reader to build what is already there — or, worse, to trust a
+switch that does nothing.
+
+**What the six now say, and what proves each.** `learning.provenance` claimed to
+need a UI that ships: `content_sources`, `add_content_source_for_lesson()`,
+`remove_content_source()`, `/api/teach/provenance` and the line on the learner's
+lesson page all exist, so the sentence says so. `learning.age_bands` said *bands
+chosen* without saying where, which read as a decision still open; they are five
+values in a check constraint on `learner_profiles`, so a sixth band is a migration.
+`platform.data_export` carried a table count from the day it was written and never
+noticed that CSV, print and `restore_my_data()` had all shipped — what is left is a
+PDF. `delivery.analytics` asked the owner to *decide who reads the report*, which
+had been decided and enforced in three functions that refuse a non-staff caller by
+name. `learning.ai_support` listed *provider chosen* and *cost ceiling* as
+outstanding for a feature that is retrieval-only and never generates text, so it
+needs neither; the open question is a different one and is recorded as D8.
+
+**`learning.audience_sections` was not a stale sentence. It was the wrong
+feature.** Its precondition described a learner switcher — *"a parent who also
+studies must move between their own learning and a child's"* — and no such
+switcher exists. What the key actually gates is the audience doors: `/adults` and
+`/young` both read it and both redirect to `/catalogue` while it is off. The thing
+the sentence was reaching for does exist, as a per-enrolment label on `/learn` that
+needs no switch at all. Two features had been merged in one row, and the row
+described neither.
+
+**The four that were removed.** `platform.admin_settings` could not be off —
+`/admin` is the switchboard every other row is flipped from. The two certificate
+flags gated a page and a numbering scheme that ship for everybody, and the real
+certificate gate was always per course (`certificate_enabled`, refused inside
+`issue_certificate()`), so a platform-wide switch was a second, weaker answer.
+`teaching.authoring` named an authoring flow that ships and two media limits that
+are enforced, and its last true clause — *tested by a real teacher* — is a fact
+about the first courses, not a precondition for a switch.
+
+The media-ingest design that lived only in that row was not deleted with it: it is
+a note under the Teaching table in `FLAGS.md` now, marked as not a flag.
+
+`supabase/tests/preconditions_proved.test.mjs` is the part that keeps this from
+being a proofread. One test per row, reading the mechanism rather than the
+sentence: the constraint's five values out of `pg_constraint`, the refusal string
+out of `pg_proc.prosrc`, the absence of a date-of-birth column anywhere, the
+absence of a network call inside `ai_support_ask()`. A sentence may go stale again;
+it may not go stale silently, and it may not go stale into a plausible design that
+nobody built.
