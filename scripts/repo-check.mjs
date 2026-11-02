@@ -898,7 +898,63 @@ function appRoutes() {
 }
 
 // ---------------------------------------------------------------------------
-// 14. ROADMAP's header agrees with the marks in ROADMAP
+// 14. Every page in the app is named in SCREENS
+// ---------------------------------------------------------------------------
+// SCREENS.md is the inventory, and until 2026-11-02 nothing compared it with the
+// App Router. Four pages had been built and documented nowhere — the print view
+// for a data export, the restore page that is its other half, and the two
+// promotions screens — while the file's own count said 121 page routes against
+// 128 on disk. A page nobody inventoried is a page nobody designs, tests or
+// knows to keep working.
+//
+// The comparison has to accept the three ways this document cites a route: the
+// template form (`/orders/[id]/receipt`), the prose form (`/support/<caseNumber>`)
+// and a literal (`/admin/promotions`). One normalisation, so neither form is a
+// false alarm.
+{
+  const pages = [];
+  const collect = (dir, segments) => {
+    for (const entry of readdirSync(dir)) {
+      const full = join(dir, entry);
+      if (statSync(full).isDirectory()) {
+        const isGroup = entry.startsWith('(') && entry.endsWith(')');
+        collect(full, isGroup ? segments : [...segments, entry]);
+      } else if (entry === 'page.tsx') {
+        pages.push('/' + segments.join('/'));
+      }
+    }
+  };
+  collect(join(root, 'web', 'src', 'app'), []);
+
+  const normal = (path) => path.replace(/<[^>]+>/g, '*').replace(/\[[^\]]+\]/g, '*')
+    .replace(/\/$/, '') || '/';
+  const cites = new Set();
+  const screens = readFileSync(join(root, 'SCREENS.md'), 'utf8');
+  for (const match of screens.matchAll(/`(\/[^`\s]*)`/g)) {
+    const path = match[1].split('?')[0].split('#')[0];
+    if (path.startsWith('/api/')) continue;
+    cites.add(normal(path));
+  }
+
+  const missing = pages.filter((page) => !cites.has(normal(page)));
+  if (missing.length > 0) {
+    fail('screens', `${missing.length} page route(s) are not in SCREENS.md: `
+      + `${missing.sort().join(', ')} — a page nobody inventoried is a page nobody designs`);
+  }
+
+  // And the count in the file must be the count in the app. The line is written the
+  // way a person reads it, so the check reads it the same way.
+  const claimed = /\*\*(\d+) page routes\*\*/.exec(screens);
+  if (!claimed) {
+    fail('screens', 'SCREENS.md no longer states how many page routes there are');
+  } else if (Number(claimed[1]) !== pages.length) {
+    fail('screens', `SCREENS.md says ${claimed[1]} page routes; the app has ${pages.length}`);
+  }
+  process.stdout.write(`screens: ${pages.length} page routes, all named in SCREENS.md\n`);
+}
+
+// ---------------------------------------------------------------------------
+// 15. ROADMAP's header agrees with the marks in ROADMAP
 // ---------------------------------------------------------------------------
 // The checklist is 59 rows long and its header counts them. Nothing counted the
 // header, so it drifted the way headers do: on 2026-11-02 it said *53 tasks* and

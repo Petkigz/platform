@@ -262,14 +262,35 @@ listed four.
 `scripts/repo-check.mjs` that fails when the progress line and the marks disagree —
 the specific defect here was a header nobody counted.
 
-### A4. The screen count disagrees with the tree
+### A4. The screen count disagreed with the tree — **done 2026-11-02**
 
-`SCREENS.md` quotes **121 page routes** from a production build. There are **128**
-`page.tsx` files on disk, and the difference has never been explained — it may be
-route groups, it may be three new screens, it may be a stale measurement.
+`SCREENS.md` quoted **121 page routes** from a production build while **128**
+`page.tsx` files sat on disk, and the difference had never been explained. It
+turned out not to be a difference at all: the two numbers were not measuring the
+same thing.
 
-**Fix:** re-measure from the build output and state the number the build emits, or
-say which files are not routes and why.
+**121 was app routes** — pages and route handlers together — measured on
+2026-10-22, when the tree held 63 pages and 57 handlers. `NEXT.md` records it in
+exactly that unit (*"121 app routes"*). It was later quoted in `SCREENS.md` as
+"121 page routes", so it was wrong in kind before it was wrong by seven.
+
+**The three files it excluded were never page routes.** `/sign-out` and
+`/auth/confirm` are `route.ts` handlers; the not-found page is `not-found.tsx` in
+the app root, which Next serves as `/_not-found` and which no `page.tsx` produces.
+Subtracting them from a count of `page.tsx` files was a second arithmetic error on
+top of the first. Today: **128 page routes**, every one of them a screen, plus
+**115 route handlers**; no duplicates, no parallel or intercepted routes, no
+`_`-prefixed folder hiding a page. So the answer to *which files are not routes* is
+**none** — there is no exception to state.
+
+The reconciliation also found four pages that were routed and documented
+**nowhere**: `/account/export/print`, `/account/restore`, `/admin/promotions` and
+`/teach/promotions`. All four are now rows in `SCREENS.md` §11, which also said
+"50" while holding 66.
+
+**Fix:** the counts corrected, the four rows added, and `scripts/repo-check.mjs`
+now fails when a `page.tsx` is not named in `SCREENS.md` — accepting the three
+ways the file cites a route — and when the stated count is not the number of pages.
 
 ### A5. The register has never been read end to end in one pass
 
