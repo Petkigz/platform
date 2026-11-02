@@ -7608,3 +7608,34 @@ because it would claim a class is empty when the caller may simply not be allowe
 to see it. A course with no events this week is not ambiguous, and it is exactly
 what a teacher opens the file to learn — so it is written, with its zeros and its
 window printed.
+
+## A precondition is a description of the software — **DECIDED 2026-11-02**
+
+The second reading of the register, the same day as the first and for the same
+reason: a switch row is read as a statement about the platform, so a row that
+describes last month is not merely stale, it directs work.
+
+**`platform.cost_controls` said "Nothing exists."** It shipped on 2026-10-22: 50 GB
+of master bytes per account, `media_upload_allowance()` refusing an upload before
+a byte moves and naming the space left, `my_media_storage()` for the teacher and
+`/admin/media` for staff, with uploads in flight counted from initiation. What is
+*missing* is the spend alert, and it is missing for a reason worth writing down —
+an alert needs a number the owner has not given. A price per gigabyte or a monthly
+budget in a currency; inventing either would be the platform deciding what the
+owner is willing to spend. So the row now says the quota exists, the alert does
+not, and why.
+
+**`platform.search` blamed the index.** Its precondition said the flag was waiting
+on "an index over lesson bodies", which sent the next reader to build a full-text
+index over a column that does not exist. A lesson is a title, a description and
+media; the words are inside a video, an audio file or a PDF, and nothing in this
+schema stores them as text. What the promise actually needs is a **content model**
+— whether every lesson must carry a transcript — and a judgement about whether the
+transcript of a lesson somebody has not bought may be matched. Both are the
+owner's. The row says so now, and `learning.lesson_search` remains the honest
+statement of everything that *is* text.
+
+Neither switch moved. A corrected sentence is not a released feature, and the test
+that holds these two rows asserts that as well: gate and value are unchanged, so
+the only thing that changed is that a reader is no longer sent to rebuild what
+exists or to index what does not.

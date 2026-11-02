@@ -349,6 +349,38 @@ export async function run(ctx) {
     assert(enabled.length === flags.size, 'a documented flag is not a boolean switch');
   });
 
+  await test('a precondition describes the software as it is, not the month it was written', async () => {
+    // Two rows had drifted far enough to be false, which is worse than vague: a
+    // reader acts on them. `platform.cost_controls` said "Nothing exists" about a
+    // quota that ships, and `platform.search` blamed a missing index when what is
+    // missing is a decision about transcripts — the kind of sentence that sends
+    // the next session to index a column that does not exist.
+    const cost = (await q(
+      `select preconditions, gate_type, value_text from public.platform_settings
+        where key = 'platform.cost_controls'`)).rows[0];
+    assert(!/nothing exists/i.test(cost.preconditions),
+      'the storage control still claims nothing exists');
+    assert(/media_upload_allowance\(\)/.test(cost.preconditions),
+      'the row does not name the function that enforces the quota');
+    assert(/spend alert/i.test(cost.preconditions),
+      'the row no longer says which half is missing');
+
+    const search = (await q(
+      `select preconditions from public.platform_settings
+        where key = 'platform.search'`)).rows[0];
+    assert(/no body/i.test(search.preconditions),
+      'the search row does not say that a lesson has no text to index');
+    assert(/transcri/i.test(search.preconditions),
+      'the search row does not name the decision it is actually waiting on');
+    assert(!/index over lesson bodies/i.test(search.preconditions),
+      'the search row still promises an index over a column that does not exist');
+
+    // Both corrections leave the switch exactly as it was. A sentence changing
+    // is not a feature shipping.
+    assert(cost.gate_type === 'admin' && cost.value_text === 'false',
+      'the storage control was switched or re-gated while its sentence was fixed');
+  });
+
   await test('setting_bool stays readable by everyone', async () => {
     // The app gates features for ordinary users too, so the accessor has to
     // work even though the table is not readable. This is why there is a

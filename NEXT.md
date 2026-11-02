@@ -696,8 +696,15 @@ analytics is on — records what it got, and returns it, so the spreadsheet and 
 agree by construction and a copy nobody can account for cannot be produced. It is
 aggregates only, and the audit row says so in as many words.
 
-Verification: **2 516 database assertions in 166 suites, 2 026 web tests; TypeScript
-typecheck, build and `check:repo` pass; 230 migrations.**
+Two switches were describing a platform that no longer exists. `platform.cost_controls`
+said "Nothing exists" about a 50 GB quota that ships and refuses uploads before a byte
+moves; `platform.search` blamed a missing index for a feature whose real blocker is that
+**a lesson has no body text** — the words are inside a video, an audio file or a PDF, so
+searching them means transcribing them, which is the owner's decision and not a column to
+index. Both rows now say what is true, and the switches themselves did not move.
+
+Verification: **2 517 database assertions in 166 suites, 2 026 web tests; TypeScript
+typecheck, build and `check:repo` pass; 231 migrations.**
 
 ## Today's sentence
 
