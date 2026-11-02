@@ -7752,3 +7752,46 @@ out of `pg_proc.prosrc`, the absence of a date-of-birth column anywhere, the
 absence of a network call inside `ai_support_ask()`. A sentence may go stale again;
 it may not go stale silently, and it may not go stale into a plausible design that
 nobody built.
+
+## The register is checked against the software, not against itself — **DECIDED 2026-11-02**
+
+`flags.test.mjs` has always proved that `FLAGS.md` and `platform_settings` agree.
+That is a real check and it was not enough, because the two sides were written by
+the same hand on the same day: a row and its documentation could agree perfectly
+and both describe a mechanism that does not exist. Twice in one day a precondition
+did exactly that — `platform.cost_controls` said *"Nothing exists"* about a quota
+that ships and refuses uploads, and `platform.search` blamed a missing index on a
+schema where **a lesson has no body text**. The second is the dangerous one: a
+fabricated mechanism in a document becomes a plan, and the next reader builds an
+index over a column nobody has.
+
+**The rule.** A sentence in the register is a claim about the software, and every
+name in it must resolve. `supabase/tests/register_truth.test.mjs` holds eight of
+those claims to the tree: bare identifiers against one vocabulary of relations,
+columns, functions, types, enum labels, check-constraint literals and role codes;
+`name()` against `pg_proc`; routes against the App Router, with `[param]` matched
+as a shape rather than as a string; setting keys against the register itself;
+tables named as tables; source files against the filesystem; and migrations named
+in seven documents against `supabase/migrations/`.
+
+**What it cannot do, and why that is stated in the file.** It cannot tell whether
+a sentence describes a feature *accurately* — that is a reading, and the suite that
+owns the feature is where the reading is pinned (which is why
+`preconditions_proved.test.mjs` exists beside it, one test per rewritten row,
+reading the constraint's five values out of `pg_constraint` and the refusal string
+out of `pg_proc.prosrc`). What the mechanical check stops is the specific failure
+of naming something that is not there, which is how a plan gets built on nothing.
+
+**Two of the eight were written before the units they were meant to verify**, which
+inverts the order asked for and is worth recording rather than tidying away: the
+check turned a page of notes into measurements, and the first thing it measured was
+that my own notes were wrong about which rows were blank. A test written to verify
+work is only as good as the list of work it is given; a test written first *is* the
+list.
+
+**Two rules were added to `scripts/repo-check.mjs` the same day, from the same
+finding in other documents:** every `page.tsx` must be named in `SCREENS.md` and
+the stated count must be the number of pages; and `ROADMAP.md`'s progress line must
+equal the marks in `ROADMAP.md`. Both were drifted by exactly the amount a
+document drifts when nothing counts it — 128 pages against a stated 121, 59 rows
+against a stated 53.

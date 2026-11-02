@@ -292,15 +292,36 @@ The reconciliation also found four pages that were routed and documented
 now fails when a `page.tsx` is not named in `SCREENS.md` — accepting the three
 ways the file cites a route — and when the stated count is not the number of pages.
 
-### A5. The register has never been read end to end in one pass
+### A5. The register has never been read end to end in one pass — **done 2026-11-02**
 
-Everything above was found by reading rows against code. Nothing in CI does that —
-the existing test proves `FLAGS.md` and `platform_settings` *agree with each other*,
-which is why two rows can agree and both be wrong.
+Everything in Part 3 was found by reading rows against code. Nothing in CI did
+that: `flags.test.mjs` proves `FLAGS.md` and `platform_settings` **agree with each
+other**, which is precisely why two rows can agree and both be wrong.
 
-**Fix:** a test that fails when a precondition names a path or function that does
-not exist. That is the mechanical version of what I did by hand today, and it is
-the only thing that stops this drifting again.
+**Fix:** `supabase/tests/register_truth.test.mjs` — eight checks, each failing with
+the row's key and the name it could not find:
+
+1. **No switch waits on a precondition nobody wrote**, and a row claiming readiness
+   must be read by code (`FLAGS.md`'s own rule, finally enforced).
+2. **Every bare identifier in backticks exists** in the schema — relations,
+   columns, functions, types, enum labels, check-constraint literals and role
+   codes, in one vocabulary.
+3. **Every `name()` exists** as a function.
+4. **Every route exists** as a page or a handler, with `[param]` matched as a shape.
+5. **Every setting key exists** in the register.
+6. **Every table named as a table exists.**
+7. **Every source file named** (`lib/digest.ts`) exists in the tree.
+8. **Every migration named in a document** is a file, across seven documents.
+
+Not hypothetical: run against the real defect that started this, it fails with
+*`platform.search → lesson_bodies`* and *`platform.search → lib/search-engine.ts`* —
+an invented column and an invented file, which is exactly the shape of the sentence
+that sent a reader to index something no lesson has.
+
+Two of the eight were written before A1 rather than after, deliberately: the check
+converted a page of notes into measurements and found the seventh blank row
+(`platform.terms_versioning`) that the notes had missed. The order of the units is
+in the report; the order of the reasoning was the other way round.
 
 ---
 

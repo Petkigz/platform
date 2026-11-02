@@ -83,6 +83,31 @@ export async function run(ctx) {
     `select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace
       where n.nspname = 'public' and c.relkind in ('r', 'v', 'm')`)).rows.map((r) => r.relname));
 
+  // Every identifier a precondition may name, in one vocabulary. A register that
+  // invents a mechanism invents a *name* — an index over "lesson bodies", a table
+  // that was never created, a function that was renamed — and a name is the one
+  // thing a test can check. This is the widest set that is still exact: relations,
+  // columns, functions, types, enum labels, the literals inside check constraints,
+  // and the seeded role codes, because `instructor` is a row in `roles` rather
+  // than an enum value and a register may name it.
+  const vocabulary = new Set(tables);
+  const add = (rows, field) => rows.forEach((row) => vocabulary.add(row[field]));
+  add((await q(`select relname as n from pg_class c join pg_namespace s on s.oid = c.relnamespace
+                 where s.nspname = 'public'`)).rows, 'n');
+  add((await q(`select column_name as n from information_schema.columns
+                 where table_schema = 'public'`)).rows, 'n');
+  add((await q(`select proname as n from pg_proc p join pg_namespace s on s.oid = p.pronamespace
+                 where s.nspname = 'public'`)).rows, 'n');
+  add((await q(`select typname as n from pg_type t join pg_namespace s on s.oid = t.typnamespace
+                 where s.nspname = 'public'`)).rows, 'n');
+  add((await q(`select enumlabel as n from pg_enum`)).rows, 'n');
+  add((await q(`select code as n from public.roles`)).rows, 'n');
+  for (const row of (await q(
+    `select pg_get_constraintdef(oid) as d from pg_constraint
+      where contype = 'c' and connamespace = 'public'::regnamespace`)).rows) {
+    for (const match of String(row.d).matchAll(/'([a-z0-9_+.-]{2,})'/g)) vocabulary.add(match[1]);
+  }
+
   const keys = new Set(settings.map((r) => r.key));
   const knownRoutes = routes();
 
@@ -137,6 +162,44 @@ export async function run(ctx) {
     assert(idle.length === 0,
       `switch(es) that claim they are ready but nothing reads: ${idle.join(', ')} — `
       + 'either wire the key or stop telling the owner it is ready');
+  });
+
+  await test('every name a precondition puts in backticks exists in the schema', async () => {
+    // The check that would have caught both fabricated mechanisms of 2026-11-02.
+    // `platform.search` named an index over "lesson bodies" — a column that has
+    // never existed — and `platform.cost_controls` described a quota as absent
+    // while its function was there. Both are *names*, and a name in backticks is
+    // the register's way of saying "this thing exists". So every one is looked up.
+    //
+    // Three shapes are deliberately not identifiers and are skipped: a word from
+    // the register's own namespaces (`teaching`, `learning`, `platform`) used as a
+    // subject rather than a key, a dotted setting key, and anything that is not
+    // snake_case or a single lowercase word.
+    const NAMESPACE_WORDS = new Set(['learning', 'family', 'teaching', 'commerce',
+      'delivery', 'platform', 'governance', 'finance', 'media', 'auth',
+      'institution', 'companion']);
+
+    const unknown = [];
+    let checked = 0;
+    for (const row of rows) {
+      for (const match of row.text.matchAll(/`([a-z][a-z0-9_]*)`/g)) {
+        const name = match[1];
+        if (NAMESPACE_WORDS.has(name) && !name.includes('_')) continue;
+        checked += 1;
+        if (!vocabulary.has(name)) unknown.push(`${row.key} → ${name}`);
+      }
+    }
+
+    // A check that checks nothing passes for the wrong reason, and this register
+    // rarely backticks a bare name: it prefers `name()`, a dotted setting key or a
+    // path, which the four tests after this one read. So the floor is honest about
+    // the size of the population rather than flattering — what matters is that it
+    // is above zero and that every hit was looked up.
+    assert(checked >= 8,
+      `only ${checked} bare identifier(s) were checked — the rule is no longer reading the register`);
+    assert(unknown.length === 0,
+      `the register names ${unknown.length} identifier(s) that exist nowhere in the schema: `
+      + unknown.join('; '));
   });
 
   await test('every function the register names exists', async () => {
@@ -201,6 +264,37 @@ export async function run(ctx) {
     }
     assert(missing.length === 0,
       `the register names table(s) that do not exist: ${missing.join('; ')}`);
+  });
+
+  await test('every source file the register or FLAGS.md names exists', async () => {
+    // A sentence that says "the browser ceiling is `lib/digest.ts`, which hashes a
+    // slice at a time" is a claim about a file. Rename the file and the sentence
+    // becomes a false description of the software that a reader cannot check
+    // without opening the tree — which is the whole complaint behind this suite.
+    const SOURCE = /`((?:web\/src\/)?[a-z0-9][a-z0-9/._-]*\.(?:ts|tsx|mjs))`/g;
+    const roots = [root, join(root, 'web', 'src'), join(root, 'supabase', 'tests')];
+    const exists = (path) => roots.some((base) => {
+      try {
+        return statSync(join(base, path)).isFile();
+      } catch {
+        return false;
+      }
+    });
+
+    const missing = [];
+    let checked = 0;
+    const check = (source, text) => {
+      for (const match of text.matchAll(SOURCE)) {
+        checked += 1;
+        if (!exists(match[1])) missing.push(`${source} → ${match[1]}`);
+      }
+    };
+    check('FLAGS.md', readFileSync(join(root, 'FLAGS.md'), 'utf8'));
+    for (const row of rows) check(row.key, row.text);
+
+    assert(checked >= 3, `only ${checked} source file(s) were checked`);
+    assert(missing.length === 0,
+      `named source file(s) that are not in the tree: ${missing.join('; ')}`);
   });
 
   await test('every migration a document names is a file in the tree', async () => {
