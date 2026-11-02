@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { bandMismatch } from '@/lib/audience';
+import { isEnrolRefusal, track } from '@/lib/analytics';
 
 export type LearnerOption = {
   id: string;
@@ -119,6 +120,17 @@ export function EnrolButton({
     setGuardianReviewRequired(json.code === 'guardian_verification_required');
     setTone(res.status === 402 ? 'info' : 'error');
     setMessage(json.message ?? 'Enrolment failed. Please try again.');
+
+    // A refusal leaves no row anywhere — that is what a refusal is — so this is the
+    // only place the platform can learn that somebody wanted to start and could not.
+    // `isEnrolRefusal` keeps the success case and the setup step out of the count.
+    if (isEnrolRefusal(json.code)) {
+      void track({
+        code: 'enrol.refused',
+        subjectId: courseId,
+        properties: { reason: json.code },
+      });
+    }
   }
 
   return (

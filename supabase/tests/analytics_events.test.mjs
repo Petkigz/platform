@@ -92,7 +92,10 @@ export async function run(ctx) {
     const rows = (await q(
       `select code, description, subject_type, learner_scoped, since_version
          from public.analytics_event_codes order by code`)).rows;
-    assert(rows.length === 7, `expected 7 events, found ${rows.length}`);
+    // Nine since 2026-11-02: the seven successes plus the two refusals, because a
+    // refusal leaves no row in any other table and is the one thing worth the
+    // volume. See `20261281020000_analytics_refusals.sql`.
+    assert(rows.length === 9, `expected 9 events, found ${rows.length}`);
     for (const row of rows) {
       assert(/^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$/.test(row.code), `bad code shape: ${row.code}`);
       assert(row.description.length > 10, `${row.code} has no real description`);
@@ -109,7 +112,7 @@ export async function run(ctx) {
     const learner = await adult('Vocabulary Reader');
     const seen = (await asActor(learner.userId,
       'select count(*)::int n from public.analytics_event_codes')).rows[0].n;
-    assert(seen === 7, `a signed-in user saw ${seen} codes`);
+    assert(seen === 9, `a signed-in user saw ${seen} codes`);
     await rejects(() => asActor(learner.userId,
       `insert into public.analytics_event_codes (code, description) values ('made.up','No')`),
     /permission denied|row-level security/i);
@@ -262,7 +265,7 @@ export async function run(ctx) {
       assert(Number(opened.actors) >= 1 && Number(opened.learners) >= 1);
       // Every code is listed, including the ones with no traffic yet — a report
       // that hides a row cannot show that a feature is never used.
-      assert(totals.length === 7, `totals listed ${totals.length} events`);
+      assert(totals.length === 9, `totals listed ${totals.length} events`);
 
       const daily = (await asActor(admin,
         `select * from public.analytics_daily('lesson.opened', 30)`)).rows;
@@ -291,6 +294,78 @@ export async function run(ctx) {
       assert(terms[0].term === 'zakat' && Number(terms[0].searches) === 2,
         `top term was ${JSON.stringify(terms[0])}`);
       assert(terms.some((t) => t.term === 'wudu'), 'a second term was dropped');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // refusals: the only events that record a door rather than a person
+  // -------------------------------------------------------------------------
+
+  await test('a refusal is recorded without a learner, and reaches no one else', async () => {
+    const person = await adult('Refused Enroller');
+    const { course } = await aLesson();
+    await withAnalytics(async () => {
+      // No learner id: a refusal says a door shut, not who was turned away.
+      const result = await record(person.userId, 'enrol.refused', course, null,
+        { reason: 'guardian_verification_required' });
+      assert(result.recorded === true, JSON.stringify(result));
+
+      // It is not learner-scoped, so attaching one is refused rather than quietly
+      // accepted — the same rule every non-learner event follows.
+      await rejects(() => record(person.userId, 'enrol.refused', course, person.learnerId,
+        { reason: 'not_sold_here' }), /not about a learner/i);
+
+      // And the reason survives as the payload the report groups on.
+      const row = await scalar(
+        `select properties->>'reason' as reason from public.analytics_events where id = $1`,
+        [result.id]);
+      assert(row.reason === 'guardian_verification_required', `stored ${row.reason}`);
+    });
+  });
+
+  await test('the reasons are read by staff only, and only for refusal events', async () => {
+    const person = await adult('Reason Reader');
+    const { lesson } = await aLesson();
+    await withAnalytics(async () => {
+      for (const reason of ['needs_plus', 'not_entitled', 'needs_plus']) {
+        await record(person.userId, 'lesson.save_refused', lesson, null, { reason });
+      }
+
+      // A learner asking for the breakdown is refused: it is a report about how
+      // many people were turned away, which is the operator's business.
+      await rejects(() => asActor(person.userId,
+        `select * from public.analytics_refusal_reasons('lesson.save_refused', 30)`),
+      /only platform staff/i);
+
+      const rows = (await asActor(admin,
+        `select reason, events from public.analytics_refusal_reasons('lesson.save_refused', 30) r`))
+        .rows;
+      assert(rows.length >= 2, `expected two reasons, got ${rows.length}`);
+      const needsPlus = rows.find((r) => r.reason === 'needs_plus');
+      assert(needsPlus && Number(needsPlus.events) >= 2,
+        `needs_plus counted as ${needsPlus && needsPlus.events}`);
+
+      // The reader is not a general payload reader: a code that has no reasons is
+      // refused rather than grouping whatever happens to be in `properties`.
+      await rejects(() => asActor(admin,
+        `select * from public.analytics_refusal_reasons('search.performed', 30)`),
+      /no refusal reasons/i);
+    });
+  });
+
+  await test('a refused enrol leaves no row anywhere else, which is the reason it is here', async () => {
+    const person = await adult('No Row Anywhere');
+    const { course } = await aLesson();
+    await withAnalytics(async () => {
+      const before = await count(
+        `select 1 from public.course_enrolments where learner_profile_id = $1`,
+        [person.learnerId]);
+      await record(person.userId, 'enrol.refused', course, null, { reason: 'not_available' });
+      const after = await count(
+        `select 1 from public.course_enrolments where learner_profile_id = $1`,
+        [person.learnerId]);
+      assert(before === after && after === 0,
+        'the refused enrolment wrote something, so the event is not the only record');
     });
   });
 

@@ -7348,3 +7348,46 @@ press, not a migration. Three consequences, all recorded rather than discovered:
 
 **What this is not.** It is not the legal review, and it does not make one less
 necessary. It is the platform behaving as its own policy already said it does.
+
+## Analytics records refusals, because that is the only thing no table knows — **DECIDED 2026-11-02**
+
+Seven events, and every one recorded something that worked. The owner asked for more
+than the coded set, so the question was what deserves the volume in a store that is kept
+forever — and the answer that survived is not "more of the same".
+
+**A fact that is already in a table does not need a second copy.** Enrolments live in
+`course_enrolments`; completions in `lesson_progress`; certificates, orders, support
+cases, reviews and handovers each have their own table and their own reports. Recording
+them again in an append-only store would duplicate a child's behaviour to answer
+questions the operational tables answer better, and double the number of places the same
+fact can be wrong.
+
+**What no table knows is the refusal.** The write did not happen, so no row exists
+anywhere — that is what a refusal is. Which leaves the operator unable to answer two
+questions that decide what to build next:
+
+* The enrol button was pressed and the course did not open. How often, and why? The
+  answers are different problems: a child waiting on a consent review, a course not sold
+  in that country, a paid course whose checkout is not open.
+* A learner tried to keep a lesson and could not. Is that Basic wanting Plus, or
+  somebody who was never enrolled?
+
+So the vocabulary grew by two, both learner-scoped **false**. A refusal is a fact about a
+door, not about a person: attaching a child's id to "they were turned away" is a record
+nobody needs, and it would also make the write depend on the consent gate that may be the
+very thing refusing — a refusal that cannot be recorded when the gate refuses is the one
+refusal most worth seeing.
+
+**The reasons are closed lists, and they are the ones the refusing code already uses.**
+`enrol.refused` mirrors the codes `enrolInFreeCourse()` returns; `lesson.save_refused`
+mirrors `lesson_download_standing()`. Two things are deliberately not counted:
+`already_enrolled` (the success case wearing a button's clothes) and
+`no_learner_profile` (a setup step). Either would dominate a count without telling
+anybody anything they can act on, and the exclusion is a test in
+`web/src/lib/analytics.ts`, not a comment.
+
+**A payload is read in exactly one place, for exactly two codes.**
+`analytics_refusal_reasons()` groups those two events by `properties.reason` and refuses
+every other code, so the platform does not quietly acquire a general-purpose payload
+reader. `/admin/analytics` prints it under *why doors closed* — the only part of that
+page that reports a failure.

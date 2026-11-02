@@ -629,8 +629,24 @@ with the debt written next to them, while `flags`, `family`, `guardians` and
 fixture that makes a household an ordinary one, and migrating the rest to it is the
 outstanding test work.
 
-Verification: **2 500 database assertions in 165 suites, 1 995 web tests; TypeScript
-typecheck, build and `check:repo` pass; 226 migrations.**
+The analytics vocabulary grew for the first time since it was written, and the
+reason is a rule rather than a wish for more data: **a fact already in a table does
+not need a second copy.** Enrolments, completions, certificates, orders, cases and
+reviews are all recorded and all already joined by the reports; copying them into an
+append-only store kept forever would duplicate a child's behaviour to answer
+questions the operational tables answer better. What no table knows is the
+**refusal** — a door that shut leaves no row anywhere, because that is what a refusal
+is. So the two new events are `enrol.refused` and `lesson.save_refused`, both carrying
+a closed `reason` and neither naming a learner: a refusal is a fact about a door, not
+about a person, and a refusal that could not be recorded because the consent gate
+refused the caller would be the one refusal most worth seeing. `needs_plus` is the
+payload that earns the second event — a learner on Basic asking for something Plus
+exists to sell. `/admin/analytics` now shows *why doors closed*, grouped by the reason
+the refusing code gave, and `analytics_refusal_reasons()` reads a payload for exactly
+two codes and refuses any other.
+
+Verification: **2 503 database assertions in 165 suites, 1 998 web tests; TypeScript
+typecheck, build and `check:repo` pass; 227 migrations.**
 
 ## Today's sentence
 
@@ -665,7 +681,7 @@ say what is left instead of what was missing.
 | **Payouts** (`teaching.payouts`) | The whole request path: `my_earnings()` and `/teach/earnings`, `request_instructor_payout()` with a tax acknowledgement, the refund-hold setting, one open request per currency (unique index), `my_payouts()`, the finance queue at `/admin/payouts` that shows the amount asked for beside what the ledger owes today, cancellation, failure with a reason the teacher reads, and `complete_instructor_payout()` as the only function that marks an earning paid; `platform_teacher_liability()` reports the balance owed per currency | The provider call itself, and per-teacher destination details | **External:** a payout provider, and a tax treatment per country. `teaching.payouts` is CODE-gated and a trigger refuses to enable it at runtime |
 | **Guardian verification** | Tables and the flow complete — a submission the parent makes themselves, a method and a date rather than a boolean, an expiry that pauses access without deleting anything, and a withdrawal that starts the children's clock. **ON, worldwide, since 2026-11-02** (`20261281019000_guardian_verification_on.sql`): the decision of 2026-11-01 had been recorded and stated in the policy while the settings row still shipped `false`, which meant a deployment built from this repository enrolled a child on an adult's word alone. It is the stricter direction and the owner chose it knowingly, ahead of the legal review. Every verification approved before the switch lapsed at once, because those were approved without a lifetime | Nothing structural. The suite runs the gate in the configuration it ships in only in the suites that own it; most fixtures predate the switch and run with it off, and `supabase/tests/run.mjs` names that debt | **External:** legal review — still what a US under-13 enrolment rests on. The flag stays `admin_setup`-gated, so switching it off is one press |
 | **Notifications** | The in-app centre: `/notifications`, a `notifications` table with RLS on the reader, `notify_user()` writing payout sent/failed/cancelled, a failed encode, and a cancelled class, and two derived reminders computed at read time (a class within a day, a plan renewing within three) each gated on its own flag; 7 tests. The outbox has a state machine *(2026-10-24)*: a five-minute claim lease, a 5/15/60/240/720-minute backoff, a dead letter at `delivery.max_attempts`, a do-not-send list a bounce writes to, and a retry that needs a written reason | Email and SMS delivery — nothing sends, and the adapter is the missing piece | **External:** a delivery provider and its credentials (`delivery.notifications`) |
-| **Product analytics** (`delivery.analytics`) | 7 event codes, monthly partitions, a table with RLS and no read policy, `record_analytics_event()` returning `{recorded, reason}`; teacher course reports and platform reporting read aggregates, never a person | Event instrumentation beyond the coded set | **Decision:** a retention policy is *not* run — analytics are kept forever by the owner's decision of 2026-10-22 |
+| **Product analytics** (`delivery.analytics`) | 9 event codes, monthly partitions, a table with RLS and no read policy, `record_analytics_event()` returning `{recorded, reason}`; teacher course reports and platform reporting read aggregates, never a person. *(2026-11-02)* The two that are not successes: `enrol.refused` and `lesson.save_refused`, recording doors that shut — the one thing no operational table knows, because a refusal writes nothing. `/admin/analytics` groups them by the reason the refusing code gave; neither names a learner | Nothing known to be wanted. The vocabulary is closed on purpose and adding a code is a migration, so the next event should be a question the report cannot answer rather than a habit | **Decision:** a retention policy is *not* run — analytics are kept forever by the owner's decision of 2026-10-22 |
 | **Visual identity** | White and green theme settled; tokens in `web/src/app/globals.css`; every screen uses the same card/badge/notice vocabulary. *(2026-10-24)* **The mark is a file now** — sixteen points in `web/src/lib/brand.ts`, drawn by `<BrandMark>` in the masthead and on the certificate and receipt (which had a *different* mark: a rotated square), as `app/icon.svg` (favicon), `app/apple-icon.png` (rendered from the same points by `scripts/make-apple-icon.mjs`) and `app/opengraph-image.tsx` (the 1200×630 share card), with `manifest.ts` giving Android the icon and the green. `brand.test.ts` fails if the favicon and the header stop agreeing | Type, illustration; 0 of the 50 inventoried screens designed | **Decision:** the owner's — the shape is the one the header already drew, so nothing is decided that was not already on screen. Not a blocker for any backend work |
 
 ### Found by audit, 2026-10-20

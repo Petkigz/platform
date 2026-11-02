@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import { ANALYTICS_EVENT_LABELS } from '@/lib/analytics';
+import { ANALYTICS_EVENT_LABELS, ENROL_REFUSALS, SAVE_REFUSALS } from '@/lib/analytics';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,6 +15,15 @@ type Total = {
 };
 
 type Daily = { day: string; events: number | string };
+type Refusal = { reason: string; events: number | string; actors: number | string };
+
+/** The two events that record a door rather than a person. */
+const REFUSAL_EVENTS = ['enrol.refused', 'lesson.save_refused'] as const;
+
+const REASON_LABELS: Record<string, Record<string, string>> = {
+  'enrol.refused': ENROL_REFUSALS,
+  'lesson.save_refused': SAVE_REFUSALS,
+};
 type Term = { term: string | null; searches: number | string };
 
 const WINDOWS = [7, 30, 90, 365];
@@ -54,17 +63,28 @@ export default async function AnalyticsPage({
   const { days: daysParam } = await searchParams;
   const days = WINDOWS.includes(Number(daysParam)) ? Number(daysParam) : 30;
 
-  const [{ data: flag }, { data: totalsData, error: totalsError }, { data: termsData }] =
-    await Promise.all([
-      supabase.from('platform_settings').select('value_text').eq('key', 'delivery.analytics').maybeSingle(),
-      supabase.rpc('analytics_event_totals', { p_days: days }),
-      supabase.rpc('analytics_search_terms', { p_days: days, p_limit: 10 }),
-    ]);
+  const [
+    { data: flag },
+    { data: totalsData, error: totalsError },
+    { data: termsData },
+    enrolRefusals,
+    saveRefusals,
+  ] = await Promise.all([
+    supabase.from('platform_settings').select('value_text').eq('key', 'delivery.analytics').maybeSingle(),
+    supabase.rpc('analytics_event_totals', { p_days: days }),
+    supabase.rpc('analytics_search_terms', { p_days: days, p_limit: 10 }),
+    supabase.rpc('analytics_refusal_reasons', { p_code: 'enrol.refused', p_days: days }),
+    supabase.rpc('analytics_refusal_reasons', { p_code: 'lesson.save_refused', p_days: days }),
+  ]);
 
   if (totalsError) throw new Error(totalsError.message);
 
   const totals = (totalsData ?? []) as Total[];
   const terms = (termsData ?? []) as Term[];
+  const refusals: Record<string, Refusal[]> = {
+    'enrol.refused': (enrolRefusals.data ?? []) as Refusal[],
+    'lesson.save_refused': (saveRefusals.data ?? []) as Refusal[],
+  };
   const enabled = flag?.value_text === 'true';
 
   // The busiest event, and its days — one query rather than a chart nobody asked
@@ -193,6 +213,52 @@ export default async function AnalyticsPage({
           </div>
         </>
       )}
+
+      <div className="outline-h" style={{ marginTop: '2rem' }}>
+        <h3>Why doors closed</h3>
+      </div>
+      <p className="muted">
+        The only events here that record a refusal, and the reason they exist: a refusal
+        leaves no row in any other table, because the write never happened. An enrol that
+        did not open and a lesson somebody tried to keep are the two questions a count of
+        successes cannot answer.
+      </p>
+      {REFUSAL_EVENTS.map((code) => {
+        const rows = refusals[code] ?? [];
+        const labels = REASON_LABELS[code] ?? {};
+        return (
+          <div className="card" key={code} style={{ marginBlockEnd: '1rem' }}>
+            <h4 style={{ marginBlockStart: 0 }}>
+              {ANALYTICS_EVENT_LABELS[code]} <code className="muted">{code}</code>
+            </h4>
+            {rows.length === 0 ? (
+              <p className="empty">Nothing refused in this window.</p>
+            ) : (
+              <ul className="lessons">
+                {rows.map((row) => (
+                  <li key={row.reason}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
+                      <span>{labels[row.reason] ?? row.reason}</span>
+                      <span className="muted">
+                        {n(row.events)} refusal(s) · {n(row.actors)} person(s)
+                      </span>
+                    </div>
+                    <p className="muted" style={{ fontSize: '0.85rem', margin: '0.25rem 0 0' }}>
+                      <code>{row.reason}</code>
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        );
+      })}
+      <p className="muted">
+        Two codes are deliberately not counted: a press that found the learner already
+        enrolled, and one from an account with no learner profile yet. Both would dominate
+        the count without saying anything anybody can act on, and the list is decided in
+        <code> web/src/lib/analytics.ts</code> rather than at a call site.
+      </p>
 
       <div className="outline-h" style={{ marginTop: '2rem' }}>
         <h3>What people search for</h3>

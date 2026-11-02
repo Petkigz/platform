@@ -22,6 +22,33 @@ const fail = (message: string, status: number) =>
   NextResponse.json({ ok: false, message }, { status });
 
 /**
+ * Say why a save did not happen, once, in the one place that refuses.
+ *
+ * A refusal leaves no row anywhere — the bytes never moved, so no table knows — and
+ * `needs_plus` is the single most useful thing this platform can learn about a
+ * learner on Basic. The reason is not guessed here: `lesson_download_standing()`
+ * is the function that already answers the question in reasoning order, so the event
+ * carries its vocabulary rather than a second list invented at the call site. It is
+ * fire-and-forget: a failed recording must never change the refusal a learner sees.
+ */
+async function recordSaveRefusal(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  lessonId: string,
+  reason: string,
+): Promise<void> {
+  try {
+    await supabase.rpc('record_analytics_event', {
+      p_code: 'lesson.save_refused',
+      p_subject_id: lessonId,
+      p_learner_profile_id: null,
+      p_properties: { reason },
+    });
+  } catch {
+    // Instrumentation is not allowed to fail the request it is watching.
+  }
+}
+
+/**
  * Mints a short-lived URL that saves a lesson's media instead of playing it.
  *
  * Same object, same bucket and the same window as playback. The difference is
@@ -75,6 +102,8 @@ export async function GET(request: Request) {
     offlineOn = false;
   }
   if (!offlineOn) {
+    // Not recorded: the switch is off for everybody, so this is a configuration
+    // fact and would count page reloads rather than anybody's intent.
     return fail(
       'Saving lessons for offline use is not enabled on this platform yet.',
       403,
@@ -87,7 +116,14 @@ export async function GET(request: Request) {
   if (gateError) return fail(gateError.message, 500);
   if (mayDownload !== true) {
     // Covers both "not entitled" and "entitled but this is a preview", which is
-    // the point of the predicate. Not distinguished in the response either.
+    // the point of the predicate. Not distinguished in the response either — but
+    // the record of it can distinguish, because `lesson_download_standing()` knows
+    // and the operator's question ("Basic wanting Plus?") has an answer.
+    const { data: standing } = await supabase.rpc('lesson_download_standing', {
+      p_lesson_id: lessonId,
+    });
+    const reason = (standing as { reason?: string } | null)?.reason ?? 'not_entitled';
+    await recordSaveRefusal(supabase, lessonId, reason);
     return fail('This lesson cannot be saved with what you have.', 403);
   }
 
@@ -131,6 +167,7 @@ export async function GET(request: Request) {
   }
 
   if (!chosen || !chosenResource) {
+    await recordSaveRefusal(supabase, lessonId, 'not_encoded');
     return fail(
       requestedProfile
         ? `Nothing has been encoded at ${requestedProfile} for this lesson yet.`

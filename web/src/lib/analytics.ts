@@ -19,13 +19,18 @@ export const ANALYTICS_EVENTS = {
   checkoutStarted: 'checkout.started',
   downloadSaved: 'download.saved',
   liveJoined: 'live.joined',
+  // The two that record a door, not a person. See `ENROL_REFUSALS` below: a
+  // refusal leaves no row in any operational table, which is exactly why it is
+  // the one thing worth adding to a store that keeps forever.
+  enrolRefused: 'enrol.refused',
+  lessonSaveRefused: 'lesson.save_refused',
 } as const;
 
 export type AnalyticsEventCode = (typeof ANALYTICS_EVENTS)[keyof typeof ANALYTICS_EVENTS];
 
 const CODES: readonly string[] = Object.values(ANALYTICS_EVENTS);
 
-/** True when the string is one of the seven codes the database will accept. */
+/** True when the string is one of the nine codes the database will accept. */
 export function isAnalyticsEvent(value: unknown): value is AnalyticsEventCode {
   return typeof value === 'string' && CODES.includes(value);
 }
@@ -43,6 +48,8 @@ export const ANALYTICS_SUBJECT_TYPE: Record<AnalyticsEventCode, string> = {
   'checkout.started': 'plan_version',
   'download.saved': 'lesson',
   'live.joined': 'live_session',
+  'enrol.refused': 'course',
+  'lesson.save_refused': 'lesson',
 };
 
 /** Which codes name a learner, mirroring `learner_scoped` in the database. */
@@ -62,7 +69,50 @@ export const ANALYTICS_EVENT_LABELS: Record<AnalyticsEventCode, string> = {
   'checkout.started': 'Checkout was opened for a plan',
   'download.saved': 'A lesson was saved inside the app',
   'live.joined': 'A learner entered a live class',
+  'enrol.refused': 'Someone pressed enrol and the course did not open',
+  'lesson.save_refused': 'Someone tried to keep a lesson and could not',
 };
+
+/**
+ * The reasons an enrol attempt is worth counting.
+ *
+ * A refusal is a dead end: the person meant to start learning and the platform
+ * said no. These five are the ways that happens. `already_enrolled` is the success
+ * case wearing a button's clothes and `no_learner_profile` is a setup step — either
+ * would dominate the count without telling anybody anything actionable, so neither
+ * is a refusal as far as this module is concerned.
+ */
+export const ENROL_REFUSALS: Record<string, string> = {
+  guardian_verification_required:
+    'A verified parent or guardian had not completed the consent review',
+  not_sold_here: 'The course is sold, but not yet in the buyer’s country',
+  payment_required: 'The course is paid, and checkout is not open for it yet',
+  no_published_version: 'The course exists but has no published version open for enrolment',
+  not_available: 'The database refused the enrolment without saying which rule stopped it',
+};
+
+export function isEnrolRefusal(code: unknown): code is string {
+  return typeof code === 'string' && code in ENROL_REFUSALS;
+}
+
+/**
+ * The reasons a save attempt is worth counting.
+ *
+ * The vocabulary `lesson_download_standing()` already returns, so this is a copy of
+ * a closed list rather than a second opinion. `needs_plus` is the one that earns the
+ * event: it is a learner on Basic asking for something Plus exists to sell.
+ */
+export const SAVE_REFUSALS: Record<string, string> = {
+  not_entitled: 'Watching the lesson does not include keeping it',
+  needs_plus: 'Saving is a Plus feature and this plan does not carry it',
+  no_media: 'The lesson has no verified media to keep',
+  not_encoded: 'The media has no encoded copy to hand out yet',
+  feature_off: 'Saving lessons is switched off on this deployment',
+};
+
+export function isSaveRefusal(reason: unknown): reason is string {
+  return typeof reason === 'string' && reason in SAVE_REFUSALS;
+}
 
 export type AnalyticsEvent = {
   code: AnalyticsEventCode;
