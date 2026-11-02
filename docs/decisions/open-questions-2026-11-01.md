@@ -1,10 +1,24 @@
-# Eight questions waiting on the owner — briefed 2026-11-01
+# Eight questions waiting on the owner — briefed and answered 2026-11-01
 
-Nothing in this document is decided. Every section is a brief: what is actually
-blocked, what already exists so you can check it, the choice, a recommendation
-and what building it would cost. Answers are recorded in `DECISIONS.md` and
-built one unit at a time; until one lands, the records keep saying what they
-say today, and no flag moves.
+**All eight are answered.** The briefs below are kept as they were written, because
+what a question looked like before the answer is the part that stops it being
+re-opened by accident. The answers live in `DECISIONS.md` and the consequences are
+being built one unit at a time; the table says where each one stands.
+
+| # | Question | Answer | Where it stands |
+|---|---|---|---|
+| 1 | Retention for coursework | **a year after the class ends**, and a file whose submission goes stops being readable at once | **Built** — `20261281010000` |
+| 2 | Safeguarding review of files children send | **a recorded review, not a release queue** | **Built** — `20261281011000`, `/admin/coursework` |
+| 3 | Guardian verification on | **on, worldwide, now**, ahead of the legal review | **Decided and documented** — the flag is an owner action (`docs/deploy/README.md` §3.3); the review checklist and the policy are still to write |
+| 4 | EU 14-day withdrawal waiver | **a real waiver at checkout**, 14 days if unticked, stored per order | **Decided, not yet built** |
+| 5 | Market grain | **country**, as built | **Confirmed** — no code |
+| 6 | What nets against what in the money report | chargeback no offset, fee is the platform's, reversal in its own period, then one *platform net* line | **Decided, not yet built** |
+| 7 | AI support and recitation | **the boundary first** — cite a lesson or no answer, refuse rulings to a teacher; recitation stays off | **Decided, not yet built** |
+| 8 | How long a class's progress stays readable | **as long as the course exists** — the roster does not expire | **Confirmed** — the behaviour was already this; the question is closed |
+
+Nothing in the briefs below was decided when they were written. Every section is
+what was blocked, what already existed so it could be checked rather than taken on
+trust, the choice, and what building it would cost.
 
 Two of these hold **two features off at once** — coursework retention and the
 safeguarding review both gate `learning.assignments` *and* `learning.cohorts`,

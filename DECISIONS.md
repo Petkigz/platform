@@ -102,6 +102,12 @@ you. Do not treat it as settled, and do not build on it until it moves up.
 | 2026-11-01 | **A child's tombstone holds an id, a type, a status and dates — and nothing else.** `learner_profiles` gains a third status, `erased`, and the two constraints that require a name-bearing row (an age band, a family) are waived for exactly that status. The row survives because a certificate points at it with `on delete restrict`, and for no other reason: the name, the age band, the family and the account link are all cleared. |
 | 2026-11-01 | **A child's hand-in outlives the class for a year, and outlives the person for thirty days.** A file handed in as coursework is kept for a year after the later of the class ending and the file being handed in; where the learner's record was erased, thirty days after the erasure, whichever is sooner — the children's policy already promised that. A file that loses its submission is tombstoned at once and unwatchable by everybody, including staff, because after that nothing can say whose photograph it was. A safeguarding hold is the only thing that stops the clock and it needs a written reason at both ends. The object in storage is queued and counted separately: this database holds no storage credential, so a staff step records the deletion once it has happened. |
 | 2026-11-01 | **A handed-in file gets a recorded review, not a release gate.** `record_coursework_review()` records that the teacher the work was handed to, or staff, looked at a file: append-only rows, so "reviewed" is a person, a moment and a word rather than a boolean a form can overwrite. The household and the child cannot review their own file, and a concern must carry a sentence. The marker's list shows the state; the family's list is not told, because "concern" on a child's own hand-in is a message with no context and no adult beside it. **Reviewing gates nothing** — a file opens for its marker the moment it arrives — so the record buys the ability to see what nobody has looked at and to answer for it later. `/admin/coursework` is the staff view. |
+| 2026-11-01 | **Guardian verification is switched on, worldwide, ahead of the legal review — knowingly.** The owner answered the open item with "turn it on now, worldwide". The machinery was already built and tested (submission, a method and a date, an expiry that lapses access without deleting anything, a withdrawal that starts the children's clock), and switching it on is the stricter direction: it refuses a child enrolment that would otherwise have succeeded. Two consequences are recorded rather than discovered: **no children's policy version is in force**, so a consent records a null policy and the console says so, and **every verification approved before today lapses at once**, because those were approved without a lifetime. The legal review remains outstanding and is still what a US under-13 enrolment rests on. |
+| 2026-11-01 | **A price's market is a country.** The owner confirmed the grain that was built on 2026-10-22 rather than moving to a currency-only rule: a Ugandan family pays what a Ugandan family can pay, and currency-only cannot express that inside the eurozone or the CFA franc zone. `resolve_course_price()` is unchanged, and staff correct a country in writing. |
+| 2026-11-01 | **A chargeback is a debit in its own period, a fee is the platform's, and a reversal belongs to the period it happened in.** The money report has refused to net since it was built, because each of those is a decision about the business. All three are now decided and `report_money_in_reporting_currency()` gains one derived *platform net* line with the three rules printed beside it — never a capture rewritten, never a fee taken from a teacher's share, never a row back-dated into a closed period. |
+| 2026-11-01 | **The 14-day EU and UK withdrawal right is waived at checkout, and it is a real waiver.** A separate, unticked box for immediate access, stored **per order** with the buyer's country and the policy version; unticked means the statutory 14 days applies rather than a refusal. The 72-hour window stays the rule for everyone else. The wording is drafted and marked unreviewed until a lawyer reads it. |
+| 2026-11-01 | **AI study help starts as a boundary, not a bot.** Answers must cite a lesson the learner is enrolled in, no citation means no answer, and anything shaped like a religious ruling fails closed to "ask a teacher", which opens a case on the help desk that already exists. That version is free, cannot invent a ruling, and is useful the day it ships. Generative answers wait for a provider and a cost ceiling; recitation stays off until an ASR is validated against makharij. |
+| 2026-11-01 | **A class roster is readable for as long as the course exists.** The owner chose *forever* over a year: a teacher's register of the children they taught does not expire, and the ledger row stops asking a question the platform now answers by doing nothing. `cohort_learner_progress()` is unchanged, and the decision is recorded here precisely because the safer-looking default was an expiry nobody had written. |
 | 2026-11-01 | **A number in a maintained document is a claim about today, and the ones a script can count are checked.** `check:repo` now fails when `NEXT.md`, `ROADMAP.md`, `SCREENS.md`, `FLAGS.md` or the deploy runbook states a migration count the tree does not have, when the current-status `Verification:` paragraph does not name the real migration and suite counts, or when the half-built ledger gives one piece two rows. The implementation history is exempt — its counts are snapshots from their dates — and the test totals on the same line remain a claim the unit keeps true by hand, because nothing in the script can count them. |
 
 ---
@@ -7087,3 +7093,52 @@ not a foreign key: the children's retention clock deletes submissions, and a
 `restrict` there would make the clock fail the moment a file had been reviewed,
 while a cascade would delete the safeguarding record with the homework. The review
 survives the photograph, and the staff summary counts how many do.
+
+## Six answers, given on one day — **DECIDED 2026-11-01**
+
+The owner answered the six questions that were holding features off or holding a
+document open. Each is recorded in the table above; what follows is only what a
+later reader needs that the rows cannot carry.
+
+**Guardian verification is on, and the two costs are named.** It was built and
+tested in October and left off pending a legal review and review capacity. Turning
+it on is the stricter direction — it refuses a child enrolment that would otherwise
+have succeeded — so it does not expose anybody; what it can do is refuse a family
+whose consent has not been reviewed yet. Two things follow mechanically and are
+recorded rather than discovered later: **no children's policy version is in force**,
+so `submit_guardian_consent()` stores a null `consented_policy_version_id` and the
+console says why, rather than letting the platform write "they agreed to the
+policy" about a document nobody has published; and **every verification approved
+before today lapses at once**, because those were approved without a lifetime. The
+legal review is still outstanding, and it is still what a US under-13 enrolment
+rests on.
+
+**A roster that never expires is a decision, not a default.** The ledger had asked
+how long a class's progress stays readable and answered itself "until then it stays
+readable, which is the safer default". The owner has now said so on purpose. The
+argument for an expiry was that a roster of children's names serves nothing the
+counts do not — but a teacher writes references, answers a mark appeal a year later
+and is asked for a register by an institution, and all three want the names. What
+makes it defensible is that the roster is already narrow: the class creator and
+staff, never another teacher, and never across courses.
+
+**The money answers are three answers, not one.** They were asked together because
+a report that netted all three would hide which of them it had chosen. Decided
+separately, each is one line: a chargeback offsets nothing (the capture did
+happen, and the ledger is append-only); a provider fee is the platform's cost, which
+the 2026-10-22 split rule already said; and a reversal belongs to the period it was
+reversed in, because a report that changes after it has been read cannot be
+reconciled against anything.
+
+**The waiver is only a waiver if it is a real one.** An unticked separate box, with
+its own words, recorded per order beside the buyer's country and the policy version
+— and an unticked box grants the 14 days rather than blocking the purchase. A
+pre-ticked box, or one folded into the terms link, is not consent; the checkout must
+not be able to pass without a decision either way, which is why the record is on the
+order rather than in a browser.
+
+**A boundary beats a bot on religious content.** The instruction on
+`learning.ai_support` has always been that it must never issue a ruling, and no
+prompt can promise that. What can be promised is that the platform never presents
+model text as a ruling: a citation to a lesson the learner already has, or no
+answer, and a referral that reaches a teacher.

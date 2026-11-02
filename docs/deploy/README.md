@@ -243,6 +243,28 @@ the database, and has to be typed on purpose — the check is in
 `supabase/tests/deploy_runbook.test.mjs`, including the refusal when the line is
 missing.
 
+**3.3 Switch guardian verification on.** `/admin/flags` → `family.guardian_verification`.
+It ships off, and it is the one flag whose *on* state is the stricter one: while it
+is off, a child profile can be created and enrolled with nothing but an adult's
+word; while it is on, a child enrolment requires a session acting as a **verified**
+guardian with learning authority for that exact child. Decided on worldwide on
+2026-11-01, knowingly ahead of the legal review.
+
+Two things happen the moment you press it, and neither is a bug:
+
+* **Every verification approved before today lapses at once**, because those were
+  approved before the machinery recorded a lifetime. Any child already enrolled
+  keeps their access — the gate is on *new* enrolments and on the guardian's reach
+  into the record — but the guardian will be asked to re-verify.
+* **No children's policy version is in force yet**, so a consent stores a null
+  `consented_policy_version_id` and the console says so. Publishing the policy
+  (step 9) fixes that for every consent taken afterwards; it does not retcon the
+  ones already recorded, and the platform will not write "they agreed to the
+  policy" about a document nobody published.
+
+The reviewer's checklist — what to look at, how long to give, when to reject — is
+step 9 as well, and it is a page of writing rather than a deployment task.
+
 From here, everything is a screen: `/admin/roles` grants the next person a role,
 with a written reason, out of an audit trail.
 
