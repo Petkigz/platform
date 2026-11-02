@@ -653,8 +653,21 @@ audio or video has been carried, and attendance is *arrival through this platfor
 rather than the host reporting who was present. A test holds the prose to the function,
 because a gap is honest only while the document and the code agree about it.
 
-Verification: **2 504 database assertions in 165 suites, 1 998 web tests; TypeScript
-typecheck, build and `check:repo` pass; 227 migrations.**
+The view that had been refused now exists, and the refusal survives inside it. A
+learner's courses are read together — `learner_across_courses()` — but the function's
+only branch is `can_access_learner()`, the predicate behind thirteen policies, so the
+household sees the same rows it could already open one course at a time and **nobody
+else does**. The course author is still refused (a teacher's route stays the opted-in
+cohort roster), a stranger is refused identically for an id that does not exist, the
+grantee of a progress-only adult share is refused because this view also carries
+certificate numbers, and a guardian whose verification lapsed is refused because the
+view is one more door onto the consent gate rather than a way around it. `/family/[childId]`
+reads it now instead of a table, and gained the two facts a progress bar cannot give: when
+the learner was last active, in words, and the certificate, linked when issued and marked
+revoked when it is not.
+
+Verification: **2 512 database assertions in 166 suites, 2 006 web tests; TypeScript
+typecheck, build and `check:repo` pass; 228 migrations.**
 
 ## Today's sentence
 

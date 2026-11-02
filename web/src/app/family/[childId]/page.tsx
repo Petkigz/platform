@@ -3,7 +3,15 @@ import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import { AGE_BAND_LABEL, fetchChildCourses, learnerCoursesInOrder } from '@/lib/family';
+import { AGE_BAND_LABEL } from '@/lib/family';
+import {
+  certificateLine,
+  groupLearnerCourses,
+  lastActivityLabel,
+  parseLearnerCourses,
+  progressSentence,
+  statusLabel,
+} from '@/lib/learner-courses';
 
 export const metadata: Metadata = { title: 'Learning' };
 export const dynamic = 'force-dynamic';
@@ -61,8 +69,17 @@ export default async function ChildHomePage({
   const learner = data as unknown as Learner | null;
   if (!learner) notFound();
 
-  const courses = await fetchChildCourses(supabase, learner.id).catch(() => []);
-  const { active, finished } = learnerCoursesInOrder(courses);
+  // One definition, in the database: `learner_across_courses()` refuses any caller
+  // `can_access_learner()` does not admit, so the boundary does not depend on this
+  // page remembering to check it. It is also the only place that knows a learner's
+  // certificate and when they last opened a lesson, which are the two facts a
+  // guardian actually wants beside the progress bar.
+  const { data: courseData } = await supabase.rpc('learner_across_courses', {
+    p_learner_profile_id: learner.id,
+  });
+  const courses = parseLearnerCourses(courseData);
+  const { active, finished, stopped } = groupLearnerCourses(courses);
+  const everything = [...active, ...finished, ...stopped];
 
   return (
     <div className="container section">
@@ -80,9 +97,12 @@ export default async function ChildHomePage({
         {finished.length > 0
           ? ` · ${finished.length} finished`
           : ''}
+        {stopped.length > 0
+          ? ` · ${stopped.length} stopped`
+          : ''}
       </p>
 
-      {active.length + finished.length === 0 ? (
+      {everything.length === 0 ? (
         <div className="card" style={{ marginTop: '1.5rem' }}>
           <p className="empty" style={{ marginTop: 0 }}>
             Nothing here yet.
@@ -95,15 +115,21 @@ export default async function ChildHomePage({
         </div>
       ) : (
         <div className="grid cols-2" style={{ marginTop: '1.5rem' }}>
-          {[...active, ...finished].map((c) => {
+          {everything.map((c) => {
             const percent = Math.max(0, Math.min(100, c.percentComplete));
             const done = c.status === 'completed';
+            const badge = statusLabel(c);
+            const certificate = certificateLine(c);
             return (
               <article className="card" key={c.enrolmentId}>
                 <h2 style={{ margin: 0, fontSize: '1.15rem' }}>{c.courseTitle}</h2>
+                {badge && (
+                  <p style={{ margin: '0.35rem 0 0' }}>
+                    <span className="badge neutral">{badge}</span>
+                  </p>
+                )}
                 <p className="muted" style={{ margin: '0.35rem 0 0.6rem', fontSize: '0.9rem' }}>
-                  {c.lessonsDone} of {c.lessonsTotal} lessons · {Math.round(percent)}%
-                  {done ? ' · finished' : ''}
+                  {progressSentence(c)} · {lastActivityLabel(c.lastActivityAt)}
                 </p>
 
                 <div
@@ -116,6 +142,16 @@ export default async function ChildHomePage({
                 >
                   <span style={{ width: `${percent}%` }} />
                 </div>
+
+                {certificate && (
+                  <p className="muted" style={{ margin: '0.6rem 0 0', fontSize: '0.9rem' }}>
+                    {c.certificateStatus === 'issued' ? (
+                      <Link href={`/certificates/${c.certificateNumber}`}>{certificate}</Link>
+                    ) : (
+                      certificate
+                    )}
+                  </p>
+                )}
 
                 <p style={{ marginTop: '0.9rem', marginBottom: 0 }}>
                   <Link className="btn" href={`/learn/${c.enrolmentId}`}>

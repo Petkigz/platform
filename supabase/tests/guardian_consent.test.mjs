@@ -38,6 +38,19 @@ export async function run(ctx) {
     assert(actual === expected,
       `${what}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
 
+  // **A switch flipped by a test is put back to what was found, not to what was
+  // assumed.** `family.guardian_verification` ships *on* (2026-11-01), and this suite
+  // used to restore a hard-coded 'false' — which left the register disagreeing with the
+  // owner's decision for every suite that ran afterwards. The suite after this one
+  // found the consent gate open and its lapse test failed for a reason that had nothing
+  // to do with the code under test.
+  const shippedFlag = (await q(
+    `select value_text from public.platform_settings
+      where key = 'family.guardian_verification'`)).rows[0].value_text;
+  const setFlag = (value) => q(
+    `update public.platform_settings set value_text = $1
+      where key = 'family.guardian_verification'`, [value]);
+
   const governance = await newUser('gc-governance@example.com');
   await newProfile(governance, 'Consent Governance');
   await committed(() => grantRole(governance, 'governance_admin', admin));
@@ -206,13 +219,13 @@ export async function run(ctx) {
                     consent_expires_at = now() - interval '1 month'
               where id = $1`, [relationshipId]);
 
-    // Flag off: nothing changes. This is today's behaviour and it must not shift
-    // under the owner's feet.
+    // Explicitly off: the claim is about the switch, so the switch is set here rather
+    // than inherited from whichever suite ran before this one.
+    await setFlag('false');
     const off = await call(parent.owner, 'can_access_learner($1)', [parent.childId]);
     eq(off, true, 'access while verification is not enforced');
 
-    await q(`update public.platform_settings set value_text = 'true'
-              where key = 'family.guardian_verification'`);
+    await setFlag('true');
     try {
       const on = await call(parent.owner, 'can_access_learner($1)', [parent.childId]);
       eq(on, false, 'a lapsed consent while verification is enforced');
@@ -230,8 +243,7 @@ export async function run(ctx) {
       eq(register.active.find((a) => a.relationshipId === relationshipId).lapsed, true,
         'and named');
     } finally {
-      await q(`update public.platform_settings set value_text = 'false'
-                where key = 'family.guardian_verification'`);
+      await setFlag(shippedFlag);
     }
   });
 
@@ -265,14 +277,12 @@ export async function run(ctx) {
 
   await test('a parent can withdraw consent, and that is not a pause', async () => {
     // Enforced, so the difference between a pause and a withdrawal is observable.
-    await q(`update public.platform_settings set value_text = 'true'
-              where key = 'family.guardian_verification'`);
+    await setFlag('true');
     try {
       eq(await call(parent.owner, 'can_access_learner($1)', [parent.childId]), true,
         'a current consent reaching the learning record');
     } finally {
-      await q(`update public.platform_settings set value_text = 'false'
-                where key = 'family.guardian_verification'`);
+      await setFlag(shippedFlag);
     }
     await rejects(() => call(stranger.owner, 'revoke_guardian_consent($1,$2)',
       [relationshipId, 'I have decided to withdraw my consent entirely.']),
@@ -296,16 +306,14 @@ export async function run(ctx) {
 
     // Under enforcement, a withdrawn consent closes the learning record even to a
     // family owner — the family clause now runs through consent.
-    await q(`update public.platform_settings set value_text = 'true'
-              where key = 'family.guardian_verification'`);
+    await setFlag('true');
     try {
       eq(await call(parent.owner, 'can_access_learner($1)', [parent.childId]), false,
         'a withdrawn consent still reaching the learning record');
       eq(await call(parent.owner, 'is_verified_guardian_of($1)', [parent.childId]), false,
         'a withdrawn consent still counting as a verified guardian');
     } finally {
-      await q(`update public.platform_settings set value_text = 'false'
-                where key = 'family.guardian_verification'`);
+      await setFlag(shippedFlag);
     }
 
     // Reopening a withdrawn consent is refused: the second call is a duplicate.

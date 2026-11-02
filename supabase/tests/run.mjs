@@ -84,6 +84,7 @@ import { run as aiSupport } from './ai_support.test.mjs';
 import { run as childrenPolicy } from './children_policy.test.mjs';
 import { run as courseworkHolds } from './coursework_holds.test.mjs';
 import { run as learnerHandover } from './learner_handover.test.mjs';
+import { run as learnerAcrossCourses } from './learner_across_courses.test.mjs';
 import { run as markingFeedback } from './marking_feedback.test.mjs';
 import { run as assignmentRevisions } from './assignment_revisions.test.mjs';
 import { run as cohortJoinWindow } from './cohort_join_window.test.mjs';
@@ -187,6 +188,9 @@ const VERIFICATION_ON_SUITES = new Set([
   'family',
   'guardians',
   'learner switcher',
+  // A lapse only closes a door while the switch is on, and the suite's last test is
+  // exactly that: a guardian whose verification expired loses the view.
+  'learner across courses',
 ]);
 
 const GLOBAL_SETTINGS = [
@@ -254,6 +258,7 @@ for (const [name, fn] of [
   ['children policy', childrenPolicy],
   ['coursework holds', courseworkHolds],
   ['learner handover', learnerHandover],
+  ['learner across courses', learnerAcrossCourses],
   ['marking feedback', markingFeedback],
   ['assignment revisions', assignmentRevisions],
   ['cohort join window', cohortJoinWindow],

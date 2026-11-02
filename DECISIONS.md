@@ -7417,3 +7417,46 @@ refusal outlives the refusal the moment somebody edits the SQL.
 **What is not claimed.** Nothing anywhere says a live class has worked. The schedule, the
 door, the roll and the recording address are built and tested; the video is somebody
 else's product and there is not one yet.
+
+## A view may add shape, never reach — **DECIDED 2026-11-02**
+
+The owner asked for the view that had been refused: a learner's courses read together
+rather than one at a time. The refusal of 2026-10-19 was about a **teacher** reading a
+learner across courses, and that part is unchanged. So the reversal is narrow, and the
+rule that makes it safe is the whole of this section:
+
+> A view may add shape, never reach.
+
+`learner_across_courses()` returns rows only where `can_access_learner()` is true for the
+caller and the learner — the same predicate behind thirteen policies. Every column it
+returns, the household could already read one course at a time: the enrolment, its
+status, the completion summary the certificate engine uses, the last lesson opened, the
+certificate number. Nothing is disclosed that was already out of reach; the list is
+simply one query instead of four taps.
+
+**Four callers are still refused, and each is a test:**
+
+* **The course author.** `can_read_learner_course_progress()` remains the only route for
+  a teacher, and it requires an opted-in cohort pinning the version they authored plus
+  both switches. A cross-course view would tell an author that a learner is also studying
+  with somebody else, which is precisely what the 2026-10-19 decision refused.
+* **A stranger**, with the same refusal for an id that does not exist, so the answer
+  cannot be used to learn that a child exists.
+* **The grantee of an adult learning share.** A share carries a scope — progress,
+  achievements, or both — and this view also returns certificate numbers. Folding shares
+  in would quietly upgrade a progress-only grant. `/account/sharing` renders that view
+  with the scope respected; this function does not.
+* **A guardian whose verification has lapsed.** The view is one more door onto
+  `can_access_learner()`, not a way around the consent gate — which matters now that
+  verification ships on.
+
+**What the screen gained is not a second list.** `/family/[childId]` already showed a
+child's courses; it now reads the function above, so there is one definition of "a
+learner's courses" and the boundary does not depend on a page remembering it. Two facts
+were added, because a progress bar alone cannot answer the question a guardian actually
+has: **when the learner was last active** (in words — the exact minute a child sat down
+to study is not something a page should print) and **the certificate**, linked when
+issued and marked revoked when it is not. And a course that stopped now says so instead
+of disappearing: *Paused by the teacher*, *No longer available*. A withdrawal stays
+absent, because leaving is the household's own act rather than something that happened
+to them.
