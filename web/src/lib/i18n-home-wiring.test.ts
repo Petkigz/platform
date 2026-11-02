@@ -191,7 +191,17 @@ test('the button still goes where the session says, and says it in the reader’
   assert.doesNotMatch(HOME, /cta\.label/u);
 
   assert.equal(frontDoorCta(false).href, '/sign-up');
-  assert.equal(frontDoorCta(true).href, '/learn');
+  assert.equal(frontDoorCta(true).href, '/dashboard');
+});
+
+test('the front door gets out of the way of somebody who is already in', () => {
+  // The page had already stopped offering sign-up to a member and had started
+  // saying "continue" — and still handed the owner a brochure about the platform.
+  // The redirect is the whole fix, so the wiring is the thing to hold: a helper
+  // nobody calls is a decision nobody made.
+  assert.match(HOME, /frontDoorDestination\(signedIn, params\)/u);
+  assert.match(HOME, /if \(destination\) redirect\(destination\);/u);
+  assert.match(HOME, /searchParams: Promise<\{ public\?: string \| string\[\] \}>/u);
 });
 
 test('the closing sentence is a different sentence for a member', () => {

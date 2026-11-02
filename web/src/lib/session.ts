@@ -114,14 +114,49 @@ export type CallToAction = { label: string; href: string };
  * the database, so it can read the session while it is there rather than asking
  * afterwards, and a signed-in reader gets the door to their own work.
  *
- * `/learn` rather than `/dashboard`: the dashboard is a redirector that chooses
- * a destination, and a button that goes through a redirect to reach a known
- * place is one hop more than it needs to be.
+ * `/dashboard` rather than `/learn`, and that changed on 2026-11-02. It used to
+ * point at the learner area, which was right for a learner and wrong for
+ * everybody else: the owner signing in from the front page was shown a catalogue
+ * of their own courses. `/dashboard` is the one place that knows the precedence
+ * (`homeFor()`), so a teacher lands in `/teach` and the owner in `/admin` without
+ * this module repeating the order of the questions.
  */
 export function frontDoorCta(signedIn: boolean): CallToAction {
   return signedIn
-    ? { label: 'Continue learning', href: '/learn' }
+    ? { label: 'Continue learning', href: '/dashboard' }
     : { label: 'Create a free account', href: '/sign-up' };
+}
+
+/**
+ * What the front door does for the person standing at it.
+ *
+ * `null` means "show the page": a visitor reads the pitch, and anybody who asked
+ * for it explicitly still can. A path means "you belong somewhere else", and the
+ * somewhere is `/dashboard`, because the redirector is the only thing that knows
+ * whether this person teaches, reviews or owns the platform.
+ *
+ * **Why a redirect rather than a banner.** The front page had already stopped
+ * offering sign-up to a member and had begun saying "continue" instead — and it
+ * was still the wrong page. A signed-in owner typing their own domain landed on
+ * a brochure about the platform and had to find their console from a call to
+ * action written for a stranger. A banner would still be a page to dismiss; the
+ * recorded decision (2026-10-22) is that each role's first screen after arriving
+ * is their own work.
+ *
+ * **`?public=1` is the way back.** There is a real need to see the marketing page
+ * while signed in — the owner checking a change, a teacher looking for what a
+ * prospective student reads — and a redirect with no way out is a door that locks
+ * behind you. It is a query parameter rather than a second route because the page
+ * it renders is this one, and two routes rendering one page is how they drift.
+ */
+export function frontDoorDestination(
+  signedIn: boolean,
+  search: { public?: string | string[] | undefined } = {},
+): string | null {
+  if (!signedIn) return null;
+  const asked = Array.isArray(search.public) ? search.public[0] : search.public;
+  if (asked === '1' || asked === 'true') return null;
+  return '/dashboard';
 }
 
 /**

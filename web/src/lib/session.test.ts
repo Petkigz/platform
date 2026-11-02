@@ -6,6 +6,7 @@ import {
   closingCopy,
   firstName,
   frontDoorCta,
+  frontDoorDestination,
   mastheadActions,
   parseSession,
 } from './session.ts';
@@ -67,13 +68,33 @@ test('the accessible name says who is signed in when it is known', () => {
 
 test('the front door stops offering sign-up to somebody who signed up', () => {
   assert.equal(frontDoorCta(false).href, '/sign-up');
-  assert.equal(frontDoorCta(true).href, '/learn');
+  assert.equal(frontDoorCta(true).href, '/dashboard');
   assert.notEqual(frontDoorCta(true).href, '/sign-up');
 });
 
-test('the signed-in front door button goes somewhere that exists', () => {
-  assert.equal(frontDoorCta(true).href, '/learn');
+test('the signed-in front door button goes to the place that knows where you belong', () => {
+  // `/learn` was right for a learner and wrong for the owner, who was shown a
+  // catalogue of their own courses. The redirector is the only thing that knows
+  // the precedence, so this button goes through it rather than guessing.
+  assert.equal(frontDoorCta(true).href, '/dashboard');
   assert.ok(frontDoorCta(true).label.length > 0);
+});
+
+test('the front door sends a signed-in person away, and a visitor nowhere', () => {
+  assert.equal(frontDoorDestination(false), null, 'a visitor was redirected off the pitch');
+  assert.equal(frontDoorDestination(true), '/dashboard');
+});
+
+test('asking for the public page is the way back', () => {
+  // The owner checking a change, a teacher reading what a stranger reads.
+  assert.equal(frontDoorDestination(true, { public: '1' }), null);
+  assert.equal(frontDoorDestination(true, { public: 'true' }), null);
+  assert.equal(frontDoorDestination(true, { public: ['1'] }), null);
+  // Only an explicit yes. A stray `?public=0` is not a request for the pitch, and
+  // a redirect cannot be argued with once it has happened.
+  assert.equal(frontDoorDestination(true, { public: '0' }), '/dashboard');
+  assert.equal(frontDoorDestination(true, { public: 'yes' }), '/dashboard');
+  assert.equal(frontDoorDestination(false, { public: '0' }), null);
 });
 
 test('the closing sentence is not the visitor sentence with a word changed', () => {

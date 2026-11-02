@@ -681,7 +681,14 @@ order up first so the figure is the database's, fills the amount in with everyth
 left, and lets it be typed over; the sentence beside it says the thing that actually
 differs — all of it closes the course, part of it leaves access in place.
 
-Verification: **2 512 database assertions in 166 suites, 2 015 web tests; TypeScript
+The front door learned who is standing at it. `/dashboard` has dispatched by role
+since 2026-10-22 and sign-in has always used it, but `/` still showed a signed-in
+owner the pitch with a button to the learner area. It now sends anyone already in to
+`/dashboard` — the one place that knows whether they teach, review or run the platform
+— and honours `?public=1` when somebody genuinely needs to read the page as a stranger
+does.
+
+Verification: **2 512 database assertions in 166 suites, 2 018 web tests; TypeScript
 typecheck, build and `check:repo` pass; 229 migrations.**
 
 ## Today's sentence

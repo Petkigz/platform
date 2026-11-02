@@ -7529,3 +7529,40 @@ Nothing about approval moved. The request is attributed to the member of staff
 who opened it, `rr_not_self_approved` still stops them deciding it, and the
 audit still records it as staff-opened with no window, because the window did
 not apply.
+
+## The front door is for people who are not in yet — **DECIDED 2026-11-02**
+
+The role landing page was built on 2026-10-22 and half-connected. `/dashboard`
+reads the session, asks `has_role()` seven times, and sends a teacher to
+`/teach`, a reviewer to `/review`, the owner to `/admin` and everybody else to
+`/learn` — and sign-in already lands there, so the person who came in through the
+form arrived in the right place. The person who typed the domain did not. `/`
+showed a signed-in owner the pitch, with a button labelled *Continue learning*
+hard-wired to `/learn`, which for the owner is a catalogue of courses and for a
+teacher is the wrong side of the platform entirely.
+
+So the front door now asks one question and acts on it: **is this person already
+in?** If they are, they belong in `/dashboard`, because that is the only thing
+that knows the precedence — asking the front page to repeat the order of the role
+questions would give the platform two answers to "where does this person belong",
+and the second one would eventually disagree.
+
+**It is a redirect and not a banner.** A banner is still a page to dismiss, and
+the case for the landing page is not that a member might enjoy the copy; it is
+that the first screen after arriving should be the work, not an advertisement for
+it. The recorded decision of 2026-10-22 said this in as many words — *"a landing
+page that sends each role to its own home is the better shape"* — and this is that
+page being wired rather than redesigned.
+
+**`?public=1` is the way back, and it is deliberate.** There is real work in
+reading the page as a stranger does: the owner checking a change to the promise
+the platform makes before anyone signs in, a teacher seeing what a prospective
+student is told. A redirect with no exit is a door that locks behind you, so an
+explicit request for the page is honoured. It is a query parameter on the same
+route rather than a second route rendering the same component, because two routes
+for one page is how the two drift apart.
+
+The button label did not change. `frontDoorCta(true)` still says *Continue
+learning*, and now points at the redirector rather than at the learner area, so
+the header, the hero and the closing band still cannot disagree about where a
+signed-in person goes.

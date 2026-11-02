@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import { cookies, headers } from 'next/headers';
 import { isSupabaseConfigured } from '@/lib/env';
+import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { disciplines, fetchSubjectAreas } from '@/lib/catalogue';
 import { isFlagEnabled } from '@/lib/flags';
-import { frontDoorCta } from '@/lib/session';
+import { frontDoorCta, frontDoorDestination } from '@/lib/session';
 import {
   LOCALE_COOKIE,
   chooseLocale,
@@ -92,7 +93,12 @@ const DOORS: ReadonlyArray<{
   { href: '/adults', audience: 'adult', label: 'audience.adult', body: 'home.doorAdultBody' },
 ];
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ public?: string | string[] }>;
+}) {
+  const params = await searchParams;
   // The language first, because everything below is written in it. This page is
   // already dynamic — it reads the database and the session — so reading two
   // more request headers costs nothing it was not already paying.
@@ -133,6 +139,18 @@ export default async function Home() {
     : [[], false, false, null];
 
   const signedIn = user !== null;
+
+  // **Somebody who is already signed in does not need the pitch.** This page told
+  // them so — it had already stopped offering them sign-up and started saying
+  // "continue" — and it then sent every one of them to `/learn`, so the owner
+  // arriving at their own domain was handed a catalogue of courses. `/dashboard`
+  // is the one place that knows whether this person teaches, reviews or runs the
+  // platform; the front door does not need to know, only to get out of the way.
+  //
+  // `?public=1` asks for the page itself, which is the way back for the owner
+  // checking a change and for a teacher who wants to read what a stranger reads.
+  const destination = frontDoorDestination(signedIn, params);
+  if (destination) redirect(destination);
   // The destination is still decided by `frontDoorCta` — one function answers
   // "where does this button go", so the header, the front page and the closing
   // band cannot disagree. Only the label has moved into the catalogues.
