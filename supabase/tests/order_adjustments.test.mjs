@@ -384,17 +384,29 @@ export async function run(ctx) {
     assert(adjustments === 0, `${adjustments} contradictory adjustments were stored`);
   });
 
-  await test('a promotion adjustment is refused until the policy is decided', async () => {
+  await test('a promotion is not typed onto an order, and the refusal says why', async () => {
     const buyer = await newBuyer('Promoted');
     const order = await pendingOrder(buyer);
 
-    // oa_promotion_agrees requires a promotion_redemption_id, and nothing can
-    // write one. Accepting a hand-typed id would manufacture the row the
-    // constraint exists to guarantee.
+    // The policy is decided and the feature is built — a promotion discount enters
+    // an order through the code the buyer typed, written by
+    // `apply_promotion_to_order()` so it carries the redemption `oa_promotion_agrees`
+    // requires. A hand-typed one would manufacture the row that constraint exists to
+    // guarantee, so the refusal stands; only the sentence moved, because it was
+    // telling an admin the owner had not decided something the owner decided.
     await rejects(
       () => addAdjustment(finance, order.orderId, 'promotion', 5000,
         { reason: 'Ramadan campaign' }),
-      /promotions policy is undecided/i);
+      /cannot be typed onto an order/i);
+
+    // And the switch now describes the feature rather than an open question.
+    const flag = (await q(
+      `select preconditions from public.platform_settings where key = 'commerce.promotions'`)).rows[0];
+    assert(!/eligibility rules; stacking rules/i.test(flag.preconditions),
+      'the register still lists decided rules as preconditions');
+    assert(/decided/i.test(flag.preconditions), 'the register does not say the policy is decided');
+    assert(/quote_course_order/i.test(flag.preconditions),
+      'the register does not name the function that enforces it');
   });
 
   await test('an unknown type, a bad amount and a missing reason are refused', async () => {

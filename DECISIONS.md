@@ -7460,3 +7460,37 @@ issued and marked revoked when it is not. And a course that stopped now says so 
 of disappearing: *Paused by the teacher*, *No longer available*. A withdrawal stays
 absent, because leaving is the household's own act rather than something that happened
 to them.
+
+## A refusal outlives the reason for it — **DECIDED 2026-11-02**
+
+Promotions were decided in full on 2026-10-22 and built over the three days after:
+campaigns owned by the platform or by a teacher, any set of country markets, a
+fixed amount refused against a market priced in another currency, a per-family
+limit beside a per-person and a total, redemption inside the order transaction,
+a preview through `quote_course_order()` that creates nothing, and a code that
+can be lifted from a pending order without being spent. Two sentences were
+written before any of that and were never revisited, and by today both were
+false.
+
+**The first was a refusal.** `add_order_adjustment()` turned away a hand-typed
+`promotion` line with *"the promotions policy is undecided"*. The refusal was
+right and still is; the sentence was not. A promotion now enters an order
+through the code the buyer typed — written by `apply_promotion_to_order()`, so
+the discount carries the redemption `oa_promotion_agrees` requires. A
+console cannot type one for the same structural reason as before, and the
+sentence now says that instead of naming a decision the owner had already made.
+An admin told "undecided" goes and asks the owner; an admin told "use the code at
+checkout" fixes the order.
+
+**The second was a switch.** `commerce.promotions` still listed *"eligibility
+rules; stacking rules; abuse limits"* as the preconditions for turning it on, on
+the dashboard an owner actually reads. All three exist. The register now says
+what is left, which is not a rule but an occasion: a campaign that is ready to
+run. The flag itself does not move. It ships off, and off changes exactly one
+thing — no code is offered at checkout.
+
+The rule this leaves behind is narrow and general: **when the thing a refusal or
+a precondition was waiting for arrives, the sentence that names it has to move in
+the same breath.** A refusal is read as a description of the system, not as a
+note about the month it was written, and there is nothing on a dashboard that
+tells a reader which of the two they are looking at.

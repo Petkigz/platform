@@ -74,11 +74,16 @@ test('every offered type is one the writer accepts', () => {
   assert.equal(directionForType('promotion'), null, 'a refused type claims a direction');
 });
 
-test('a promotion is refused with the reason it is refused', () => {
+test('a promotion is refused, and the sentence is about the redemption rather than a policy', () => {
   const result = validateAdjustmentInput(valid({ adjustmentType: 'promotion' }));
   assert.equal(result.ok, false);
   if (result.ok) return;
-  assert.match(result.message, /promotions policy is undecided/i);
+  // Promotions are decided and built. What a console cannot do is type one onto an
+  // order, because a promotion discount has to carry the redemption behind it.
+  assert.match(result.message, /code the buyer used at checkout/i);
+  assert.match(result.message, /redemption/i);
+  assert.ok(!/undecided/i.test(result.message),
+    'the sentence still tells an admin the policy is an open question');
 });
 
 test('rounding has to say which way it goes', () => {
@@ -266,7 +271,7 @@ test('a refusal from the writer becomes a status a screen can act on', () => {
     ['that adjustment was already voided on 2026-10-21', 409],
     ['this order is already paid, so its total is history — record a financial adjustment', 409],
     ['that line item is not on this order', 409],
-    ['promotion adjustments are not recorded yet: the promotions policy is undecided', 409],
+    ['a promotion cannot be typed onto an order: use the code the buyer typed at checkout', 409],
     ['the adjustments on this order reduce it below zero', 409],
     ['unknown adjustment type goodwill', 400],
     ['a rounding adjustment needs a direction: debit or credit', 400],

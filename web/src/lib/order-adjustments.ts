@@ -39,10 +39,16 @@ export type AdjustmentTypeOption = {
 /**
  * The types the writer accepts, and where each one lands.
  *
- * `promotion` is absent on purpose: the writer refuses it because
- * `oa_promotion_agrees` needs a redemption id and nothing can write one until
- * the promotions policy is decided. Offering it in a dropdown would offer a
- * button that always fails.
+ * `promotion` is absent on purpose, and the reason changed on 2026-11-02 while
+ * the rule did not. It used to be that nothing could write a redemption, so
+ * nothing could satisfy `oa_promotion_agrees`. Promotions are now built —
+ * `apply_promotion_to_order()` writes exactly this adjustment when a buyer's code
+ * is applied — which makes a hand-typed promotion *more* wrong, not less: it
+ * would be a discount with no redemption behind it, which is the row the
+ * constraint exists to make impossible. So a promotion enters an order through
+ * the code at checkout and leaves it through `remove_promotion_from_order()`; it
+ * is never a line an admin types. Offering it in a dropdown would offer a button
+ * that always fails.
  */
 export const ADJUSTMENT_TYPES: AdjustmentTypeOption[] = [
   {
@@ -141,7 +147,8 @@ export function validateAdjustmentInput(input: {
       ok: false,
       code: 'invalid',
       message: adjustmentType === 'promotion'
-        ? 'Promotions are not recorded yet: the promotions policy is undecided.'
+        ? 'A promotion is not typed onto an order: it comes from the code the buyer used at '
+          + 'checkout, so the discount always has a redemption behind it.'
         : 'Choose a supported adjustment type.',
     };
   }
@@ -421,7 +428,7 @@ export function mapOrderAdjustmentError(message: string): {
   if (/already voided|its total is history/i.test(text)) {
     return { code: 'conflict', status: 409, message: text };
   }
-  if (/not on this order|promotions policy is undecided|below zero/i.test(text)) {
+  if (/not on this order|cannot be typed onto an order|below zero/i.test(text)) {
     return { code: 'conflict', status: 409, message: text };
   }
   if (/unknown adjustment type|needs a direction|always a|written reason|500 characters|positive whole amount/i.test(text)) {
