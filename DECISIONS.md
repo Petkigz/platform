@@ -7566,3 +7566,45 @@ The button label did not change. `frontDoorCta(true)` still says *Continue
 learning*, and now points at the redirector rather than at the learner area, so
 the header, the hero and the closing band still cannot disagree about where a
 signed-in person goes.
+
+## A copy that cannot be accounted for is not made — **DECIDED 2026-11-02**
+
+The course report has shown a teacher their own numbers since 2026-10-21, and the
+class list next to it has been downloadable since the day after. So the one
+document a teacher actually takes to a meeting — *how is my course doing* — was
+the one thing that could not leave the platform. That is now closed, and the way
+it is closed is the decision.
+
+**The export is the report, not a second one.** `export_course_report()` calls
+`teacher_course_analytics()` — the function the screen reads — records what it
+got, and returns that same document. Everything follows from that:
+
+* **The rule is asked, not restated.** Who may read a course report (the author,
+  or staff) and whether analytics is on live in that one function. A route with
+  its own copy of either would be a second answer to the same question, and the
+  second answer is the one that goes stale. So a refusal from down there comes out
+  of here unchanged, and the screen, the file and the API all say the same
+  sentence.
+* **The audit and the file share a transaction.** The class roster route logs
+  before it builds, because its log function has nothing else to return. This one
+  can do better: the row is written beside the numbers it describes, so the count
+  in `governance_audit_events` *is* the count in the spreadsheet rather than a
+  re-count that might disagree — and an export that could not be recorded raises
+  instead of handing over a file.
+* **A refusal writes nothing.** A teacher who is not the author, a learner, and a
+  platform with analytics switched off all leave the audit trail untouched. A row
+  saying somebody took a copy is a claim, and a claim about a thing that never
+  happened is worse than silence.
+
+**What leaves is counts.** The report is aggregates by construction — no learner
+rows exist in it to leak — and the file states in its header that it contains no
+name, family, account or contact detail. The audit row records
+`"aggregate_only": true` beside the counts, so the trail itself answers "which
+kind of document left" a year from now, when the CSV builder has been rewritten
+twice and nobody remembers.
+
+**An empty window is still a report.** A class list with nobody in it is refused,
+because it would claim a class is empty when the caller may simply not be allowed
+to see it. A course with no events this week is not ambiguous, and it is exactly
+what a teacher opens the file to learn — so it is written, with its zeros and its
+window printed.

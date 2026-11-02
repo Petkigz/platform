@@ -228,6 +228,22 @@ export default async function CourseReportsPage({
             These are counts. To see how one named learner is doing, use the cohort
             progress view — that is a different question with its own permission.
           </p>
+
+          {/*
+            * The same numbers, as a file. Not a second report: the route calls
+            * `export_course_report()`, which asks for this page's own function, so
+            * the spreadsheet and the screen cannot disagree — and the copy is
+            * recorded in the audit trail before it is handed over.
+            */}
+          <p style={{ marginTop: '1rem' }}>
+            <a className="btn secondary" href={`/api/teach/courses/${courseId}/report?days=${days}`} download>
+              Download this report
+            </a>
+          </p>
+          <p className="muted" style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>
+            A spreadsheet of the same figures for this window. It holds counts, never a
+            list of learners, and every copy is recorded in the audit trail.
+          </p>
         </>
       )}
 

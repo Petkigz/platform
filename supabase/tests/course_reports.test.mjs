@@ -68,6 +68,15 @@ export async function run(ctx) {
     asActor(actor, 'select public.teacher_course_analytics($1,$2) r', [courseId, days])
       .then((r) => r.rows[0].r);
 
+  const exportReport = (actor, courseId, days = 30) =>
+    asActor(actor, 'select public.export_course_report($1,$2) r', [courseId, days])
+      .then((r) => r.rows[0].r);
+
+  const exportRows = async (courseId) => (await q(
+    `select actor, detail from public.governance_audit_events
+      where action = 'course.report_exported' and target_id = $1
+      order by occurred_at`, [courseId])).rows;
+
   async function withAnalytics(fn) {
     const before = (await scalar(
       `select value_text from public.platform_settings where key = 'delivery.analytics'`)).value_text;
@@ -186,6 +195,89 @@ export async function run(ctx) {
       await rejects(() => report(teacher, mine.course, 0), /between 1 and 3650/i);
       await rejects(() => report(teacher, '00000000-0000-0000-0000-000000000000'),
         /course does not exist/i);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // The report as a file (2026-11-02)
+  // -------------------------------------------------------------------------
+  //
+  // The class list has been downloadable since 2026-10-22 and the course report
+  // was not, which meant the question a teacher takes to a meeting was the one
+  // that could not leave the platform. The export is not a second report: it asks
+  // the same function and records what it asked, so the file and the screen agree
+  // by construction and a copy nobody can account for cannot be produced.
+
+  await test('the export is the report, not a second count', async () => {
+    const person = await adult('Exported Reader');
+    const mine = await courseOf(teacher, 'Exported Course');
+    await withAnalytics(async () => {
+      await record(person.userId, 'lesson.opened', mine.first, person.learnerId);
+      await record(person.userId, 'course.viewed', mine.version);
+
+      const read = await report(teacher, mine.course);
+      const taken = await exportReport(teacher, mine.course);
+
+      // Same figures, same shape — the file is built from this and nothing else.
+      assert(taken.title === read.title, 'the export titled the report differently');
+      assert(Number(taken.events) === Number(read.events),
+        `export counted ${taken.events}, the page counted ${read.events}`);
+      assert(Number(taken.learners) === Number(read.learners));
+      assert(taken.byEvent.length === read.byEvent.length);
+      assert(taken.aggregateOnly === true, 'the export is not marked aggregates-only');
+    });
+  });
+
+  await test('the copy is recorded before it is handed over, with what it held', async () => {
+    const person = await adult('Audited Reader');
+    const mine = await courseOf(teacher, 'Audited Course');
+    await withAnalytics(async () => {
+      await record(person.userId, 'lesson.opened', mine.first, person.learnerId);
+
+      assert((await exportRows(mine.course)).length === 0, 'a row existed before the export');
+      await exportReport(teacher, mine.course, 7);
+
+      const rows = await exportRows(mine.course);
+      assert(rows.length === 1, `${rows.length} audit rows for one export`);
+      assert(rows[0].actor === teacher, 'the export was attributed to somebody else');
+      const detail = rows[0].detail;
+      assert(Number(detail.days) === 7, `days was ${detail.days}`);
+      assert(Number(detail.events) === 1, `events was ${detail.events}`);
+      assert(Number(detail.learners) === 1, `learners was ${detail.learners}`);
+      assert(detail.format === 'csv', `format was ${detail.format}`);
+      // The audit trail itself records which kind of document left.
+      assert(detail.aggregate_only === true, 'the audit row does not say aggregates only');
+      // And the row holds no person, which is the whole claim about this file.
+      const text = JSON.stringify(detail);
+      assert(!text.includes(person.learnerId), 'the audit row holds a learner id');
+      assert(!text.includes(person.userId), 'the audit row holds a user id');
+    });
+  });
+
+  await test('a refusal writes nothing, so a failed export leaves no trace of one', async () => {
+    const mine = await courseOf(teacher, 'Refused Export');
+    const person = await adult('Refused Reader');
+    await withAnalytics(async () => {
+      await rejects(() => exportReport(otherTeacher, mine.course), /belongs to the teacher/i);
+      await rejects(() => exportReport(person.userId, mine.course), /belongs to the teacher/i);
+      assert((await exportRows(mine.course)).length === 0,
+        'a refused export still wrote an audit row');
+    });
+
+    // And with capture off the same is true: the sentence is the page's, and no
+    // file is accounted for.
+    await rejects(() => exportReport(teacher, mine.course), /analytics is not enabled/i);
+    assert((await exportRows(mine.course)).length === 0,
+      'an export refused for a switched-off platform wrote a row');
+  });
+
+  await test('staff may take a copy of any course report, and the row says it was them', async () => {
+    const mine = await courseOf(teacher, 'Staff Export');
+    await withAnalytics(async () => {
+      await exportReport(admin, mine.course);
+      const rows = await exportRows(mine.course);
+      assert(rows.length === 1);
+      assert(rows[0].actor === admin, 'a staff export was attributed to the author');
     });
   });
 }
