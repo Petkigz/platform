@@ -579,8 +579,33 @@ again, and the second attempt died on a primary-key violation nobody had written
 The key is now a row id with a partial unique index on open holds: a file may be
 held again after a release, and never twice at once.
 
-Verification: **2 489 database assertions in 164 suites, 1 987 web tests; TypeScript
-typecheck, build and `check:repo` pass; 223 migrations.**
+The last of those owed builds is now behind code rather than prose. The
+eighteenth-birthday handover is `request_learner_handover()` on `/handover`: it lists
+the child profiles a caller can reach and offers two answers, and both happen
+immediately. **Keep it** turns the profile into an adult learner and then takes it out
+of the family — two statements, in that order, because the guard on the row reads the
+row as it was — stops the guardian's reach through the same predicate thirteen
+policies read, and disables the child login the household had made. **Do not keep it**
+sets `deleted_at`, which is the same thirty-day clock the children's policy already
+describes; nothing new deletes anything. No date of birth is introduced to make any
+of it work: the person asking says the learner is 18, the sentence they agreed to is
+stored with the decision, and the screen says in those words that the platform records
+the statement and holds no birthday to check it against. The only thing the new row
+authorises is that one `child → adult` change and that one departure — the guard
+refuses every other identity change and every other way out of a family, so a
+`keep` row cannot be borrowed to move somebody else's record. Two refusals are worth
+naming: a keep with no login of the learner's own is refused rather than half-done,
+and an adult profile has nothing to hand over. The tests found the bug this class of
+check keeps finding — `linked_user_id = actor` is null when nobody is linked, and a
+null in that test lets a stranger through; it is coalesced now, and the first test in
+the suite is the stranger.
+
+Owed next: the children's policy in force (version 2) says the platform has no
+feature that moves a record between accounts. That was true when it was written on
+2026-11-02 and is not true now, so version 3 is the next unit rather than a later one.
+
+Verification: **2 498 database assertions in 165 suites, 1 995 web tests; TypeScript
+typecheck, build and `check:repo` pass; 224 migrations.**
 
 ## Today's sentence
 

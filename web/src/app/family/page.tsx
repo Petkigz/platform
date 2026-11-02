@@ -89,6 +89,16 @@ export default async function FamilyPage() {
     );
   }
 
+  // A record that becomes theirs: the page where a learner who has turned eighteen
+  // takes their learning out of this account. It is linked from here because the
+  // adult holding the record is the one who most often has to ask the question.
+  const handoverLink = (
+    <p className="muted" style={{ marginTop: '1.25rem' }}>
+      <Link href="/handover">A learner has turned eighteen</Link> — their record can
+      become their own account, or be deleted.
+    </p>
+  );
+
   return (
     <div className="container section">
       <p className="eyebrow">My family</p>
@@ -99,6 +109,8 @@ export default async function FamilyPage() {
           so children and adults currently see the same catalogue.
         </p>
       )}
+
+      {handoverLink}
 
       {families.map((f: Family) => (
         <FamilyBlock

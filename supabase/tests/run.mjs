@@ -83,6 +83,7 @@ import { run as withdrawalWaiver } from './withdrawal_waiver.test.mjs';
 import { run as aiSupport } from './ai_support.test.mjs';
 import { run as childrenPolicy } from './children_policy.test.mjs';
 import { run as courseworkHolds } from './coursework_holds.test.mjs';
+import { run as learnerHandover } from './learner_handover.test.mjs';
 import { run as markingFeedback } from './marking_feedback.test.mjs';
 import { run as assignmentRevisions } from './assignment_revisions.test.mjs';
 import { run as cohortJoinWindow } from './cohort_join_window.test.mjs';
@@ -177,6 +178,9 @@ const GLOBAL_SETTINGS = [
   ['teaching.revenue_share_percent', '50'],
   ['commerce.checkout', 'false'],
   ['platform.translation_reviews', 'false'],
+  // A suite that needs a child to hold a login has to turn this on; it ships off,
+  // and a suite that leaves it on changes what every later suite is testing.
+  ['family.child_login', 'false'],
 ];
 
 const ctx = await createHarness();
@@ -234,6 +238,7 @@ for (const [name, fn] of [
   ['ai support', aiSupport],
   ['children policy', childrenPolicy],
   ['coursework holds', courseworkHolds],
+  ['learner handover', learnerHandover],
   ['marking feedback', markingFeedback],
   ['assignment revisions', assignmentRevisions],
   ['cohort join window', cohortJoinWindow],

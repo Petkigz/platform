@@ -7254,3 +7254,52 @@ which is a real unit rather than a paragraph: a learner (or the adult holding th
 record) asks for the handover, the request is recorded, the record moves or is
 deleted within thirty days, and no date of birth is introduced to make any of it
 work.
+
+## A birthday nobody can see is a statement somebody makes — **DECIDED 2026-11-02**
+
+The section above recorded the eighteenth-birthday handover as an instruction to
+build and named what made it hard: the platform holds no date of birth, on purpose,
+so nothing can notice that a learner has turned 18. The temptation is to fix that by
+storing one. That is the one thing this unit refused to do, and it is worth writing
+down why, because "add a birth date" would look like the smaller change and is the
+larger one — it would create the record the children's policy says the platform does
+not keep, in the exact place where being wrong is worst, and it would make every
+learner's age a fact the platform asserts rather than one its family states.
+
+**What was decided.** A handover is a *recorded statement*, not a detected event.
+
+* **Two people may make it, and the record says which.** The learner on their own
+  login (child logins exist, so this is real), or an adult in their family. The
+  function reads the session and writes `self` or `guardian`; the request carries no
+  actor, because a request that names who is asking is a request that can name
+  somebody else.
+* **The statement is stored, in the words the person read.** One sentence, agreed
+  to before the button enables, kept on the row and copied into the governance
+  audit. The screen says what the record is and is not: *the platform records this
+  statement; it does not hold a date of birth to check it against.*
+* **Both answers are immediate, and neither is a queue.** `keep` makes the profile
+  an adult learner on the login it already has and takes it out of the family;
+  `delete` sets `deleted_at`, which is the thirty-day clock the children's policy
+  already describes. A young person taking their own record is not asking
+  permission, and a queue would have made it look as if they were.
+* **The row authorises exactly one transition, and the guard is where that is
+  enforced.** `guard_learner_profile_identity()` now permits a `child → adult` change
+  and a departure from a family *only* while an open `keep` row exists for that
+  profile. Every other identity change is still refused, and a family seat that is
+  paid for still has to be released — the handover does not roll over a rule that
+  protects somebody else's money.
+* **A keep with nowhere to put the record is refused, not half-done.** No login of
+  the learner's own means `handover:needs_an_account`, with the fix in the message:
+  make them a login first. Moving a record into an account that does not exist is the
+  kind of success that loses data quietly.
+* **`delete` adds no second clock.** It marks the record and lets
+  `run_retention_jobs` do the deleting, because two clocks are two answers to "when",
+  and the policy promises one.
+
+**What is owed now, and it is not code.** Version 2 of the children's policy, in
+force since 2026-11-02, says the platform has no feature that moves a record between
+accounts. That sentence was true in the morning and is false by the afternoon, so
+version 3 is the next unit: the same promise, now performed, stated as a thing the
+learner or their guardian can ask for, with the statement-not-check language the
+screen uses. The legal review remains owed, and it now has one more paragraph to
+read.
