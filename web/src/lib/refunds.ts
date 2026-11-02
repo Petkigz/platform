@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { MoneyError, fromMajor, fromMinor, format, isCurrency } from './money.ts';
 
 export type RefundRequest = {
   id: string;
@@ -343,63 +344,63 @@ export function describeRemaining(hours: number | null): string {
 export type OnBehalfInput = {
   orderNumber?: unknown;
   reason?: unknown;
+  /** What to give back, typed in the order's own currency. Blank means all of it. */
+  amount?: unknown;
 };
 
 export type OnBehalfResult =
-  | { ok: true; requestId: string; amountMinor: string; currencyCode: string }
+  | {
+    ok: true;
+    requestId: string;
+    amountMinor: string;
+    currencyCode: string;
+    refundableMinor: string;
+    partial: boolean;
+  }
+  | { ok: false; status: number; error: string };
+
+/** What one order would still give back, and in what currency. */
+export type OrderStanding = {
+  orderId: string;
+  orderNumber: string;
+  refundableMinor: string;
+  currencyCode: string;
+};
+
+export type StandingResult =
+  | { ok: true; standing: OrderStanding }
   | { ok: false; status: number; error: string };
 
 /**
- * Staff open a refund request on a customer's behalf, after the window has closed.
+ * Read what is left on an order before somebody types a number.
  *
- * The window is a customer policy, not a lock on the platform: a course sold
- * wrong, a duplicate charge, a family who could not get to a phone inside three
- * days. So this path exists and is deliberately separate in the interface — it
- * is attributed to the member of staff who opened it, the two-person rule still
- * stops them approving it, and the database records the action as
- * `refund.requested_by_staff` rather than as a customer asking.
- *
- * The amount is **everything still refundable**, read from the database rather
- * than typed. A person filling this in from a support call does not want to
- * retype a figure in a currency they have to read off another screen, and a
- * mistyped amount on a goodwill refund is money that has to be chased.
+ * The same `refund_standing()` the customer's own screen reads, asked here so a
+ * support agent sees the figure the database will enforce rather than a figure
+ * from another tab. Every way this can fail comes back as a sentence, because the
+ * person reading it is on a call.
  */
-export async function openRefundOnBehalf(
+export async function refundStandingForOrder(
   supabase: SupabaseClient,
-  input: OnBehalfInput,
-): Promise<OnBehalfResult> {
-  const orderNumber = typeof input.orderNumber === 'string'
-    ? input.orderNumber.trim().toUpperCase()
+  orderNumberInput: unknown,
+): Promise<StandingResult> {
+  const orderNumber = typeof orderNumberInput === 'string'
+    ? orderNumberInput.trim().toUpperCase()
     : '';
-  const reason = typeof input.reason === 'string' ? input.reason.trim() : '';
-
   if (!/^AS-\d{8}$/.test(orderNumber)) {
     return { ok: false, status: 400, error: 'An order number looks like AS-00001234.' };
-  }
-  if (!reason) {
-    return { ok: false, status: 400, error: 'Say why this refund is being opened.' };
-  }
-  if (reason.length > REQUEST_REASON_MAX) {
-    return {
-      ok: false,
-      status: 400,
-      error: `Please keep it under ${REQUEST_REASON_MAX} characters.`,
-    };
   }
 
   const { data: order, error: lookupError } = await supabase
     .from('orders')
-    .select('id')
+    .select('id, order_number')
     .eq('order_number', orderNumber)
     .maybeSingle();
   if (lookupError) return { ok: false, status: 400, error: lookupError.message };
   if (!order) return { ok: false, status: 404, error: `No order ${orderNumber}.` };
-  const orderId = (order as { id: string }).id;
+  const row = order as { id: string; order_number?: string };
 
-  // The standing is the same function the customer's screen reads, so staff and
-  // the customer can never disagree about whether a window is open.
   const { data: standingData, error: standingError } = await supabase.rpc('refund_standing', {
-    p_order_id: orderId,
+    p_order_id: row.id,
   });
   if (standingError) return { ok: false, status: 400, error: standingError.message };
 
@@ -411,19 +412,125 @@ export async function openRefundOnBehalf(
   }
 
   if (standing.reason === 'not_paid') {
-    return { ok: false, status: 409, error: 'That order has not been paid, so there is nothing to refund.' };
+    return {
+      ok: false,
+      status: 409,
+      error: 'That order has not been paid, so there is nothing to refund.',
+    };
   }
-  if (standing.reason === 'nothing_left') {
-    return { ok: false, status: 409, error: 'Everything paid on that order has already been returned.' };
+  if (standing.reason === 'nothing_left' || BigInt(standing.refundableMinor) <= 0n) {
+    return {
+      ok: false,
+      status: 409,
+      error: 'Everything paid on that order has already been returned.',
+    };
   }
 
-  const amountMinor = BigInt(standing.refundableMinor);
-  if (amountMinor <= 0n) {
-    return { ok: false, status: 409, error: 'There is nothing left to refund on that order.' };
+  return {
+    ok: true,
+    standing: {
+      orderId: row.id,
+      orderNumber: row.order_number ?? orderNumber,
+      refundableMinor: standing.refundableMinor,
+      currencyCode: standing.currencyCode,
+    },
+  };
+}
+
+/**
+ * Staff open a refund request on a customer's behalf, after the window has closed.
+ *
+ * The window is a customer policy, not a lock on the platform: a course sold
+ * wrong, a duplicate charge, a family who could not get to a phone inside three
+ * days. So this path exists and is deliberately separate in the interface — it
+ * is attributed to the member of staff who opened it, the two-person rule still
+ * stops them approving it, and the database records the action as
+ * `refund.requested_by_staff` rather than as a customer asking.
+ *
+ * **The amount is optional, and blank means everything.** Optional, because the
+ * common case is a whole refund and making somebody on a support call retype a
+ * figure they can already see is how a digit gets transposed. Editable, because
+ * the other common case is a goodwill part-refund — a course sold at the wrong
+ * level, a family that got half of what they paid for — and until this screen
+ * existed that was a database action with no interface, which meant it happened
+ * in SQL where nothing is audited (2026-11-02).
+ *
+ * A partial refund is not a smaller full refund: it **leaves the enrolment in
+ * place**. The database decides that from the balance, not from a flag this
+ * function sets, and the screen says so before the button is pressed.
+ */
+export async function openRefundOnBehalf(
+  supabase: SupabaseClient,
+  input: OnBehalfInput,
+): Promise<OnBehalfResult> {
+  const reason = typeof input.reason === 'string' ? input.reason.trim() : '';
+
+  if (!reason) {
+    return { ok: false, status: 400, error: 'Say why this refund is being opened.' };
+  }
+  if (reason.length > REQUEST_REASON_MAX) {
+    return {
+      ok: false,
+      status: 400,
+      error: `Please keep it under ${REQUEST_REASON_MAX} characters.`,
+    };
+  }
+
+  // The order first, because the amount needs the order's currency and the
+  // ceiling that will refuse the request.
+  const standingResult = await refundStandingForOrder(supabase, input.orderNumber);
+  if (!standingResult.ok) return standingResult;
+  const { standing } = standingResult;
+
+  const refundable = BigInt(standing.refundableMinor);
+  const typed = input.amount === null || input.amount === undefined
+    ? ''
+    : String(input.amount).trim().replace(/[\s,]/g, '');
+
+  let amountMinor = refundable;
+  let partial = false;
+
+  if (typed !== '') {
+    if (!isCurrency(standing.currencyCode)) {
+      return { ok: false, status: 400, error: 'That order has no currency this screen can read.' };
+    }
+    let parsed;
+    try {
+      parsed = fromMajor(typed, standing.currencyCode);
+    } catch (error) {
+      if (error instanceof MoneyError) {
+        return {
+          ok: false,
+          status: 400,
+          error: /decimal places/.test(error.message)
+            ? `${standing.currencyCode} does not use decimals — enter a whole amount, or leave it blank for all of it.`
+            : 'Enter an amount, or leave it blank to refund all of it.',
+        };
+      }
+      throw error;
+    }
+
+    amountMinor = parsed.amountMinor;
+    partial = amountMinor < refundable;
+
+    if (amountMinor <= 0n) {
+      return {
+        ok: false,
+        status: 400,
+        error: 'Zero is not a refund. Enter an amount, or leave it blank to refund all of it.',
+      };
+    }
+    if (amountMinor > refundable) {
+      return {
+        ok: false,
+        status: 409,
+        error: `That is more than is left on the order: ${format(fromMinor(standing.refundableMinor, standing.currencyCode))} is refundable.`,
+      };
+    }
   }
 
   const { data, error } = await supabase.rpc('request_refund', {
-    p_order_id: orderId,
+    p_order_id: standing.orderId,
     p_amount_minor: Number(amountMinor),
     p_reason: reason,
   });
@@ -441,8 +548,10 @@ export async function openRefundOnBehalf(
   return {
     ok: true,
     requestId: String(data),
-    amountMinor: standing.refundableMinor,
+    amountMinor: amountMinor.toString(),
     currencyCode: standing.currencyCode,
+    refundableMinor: standing.refundableMinor,
+    partial,
   };
 }
 

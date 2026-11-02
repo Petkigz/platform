@@ -7494,3 +7494,38 @@ a precondition was waiting for arrives, the sentence that names it has to move i
 the same breath.** A refusal is read as a description of the system, not as a
 note about the month it was written, and there is nothing on a dashboard that
 tells a reader which of the two they are looking at.
+
+## A goodwill refund has a number — **DECIDED 2026-11-02**
+
+The form that opens a refund on a customer's behalf gave back **whatever was
+left** and nothing else. That is the right default and was the whole of the
+screen, and the sentence beside it said the quiet part out loud: *"a partial
+refund is still a database action and has no screen."* So the one case support
+handles most often after a course is sold wrong — half of it delivered, part of
+it returned — happened in SQL, where nothing is audited and the two-person rule
+is a convention rather than a constraint.
+
+The amount is now a field, and **blank still means everything**, because the
+common case must stay one press: asking somebody on a support call to retype a
+figure they can already see is how a digit gets transposed, and a mistyped
+goodwill refund is money that has to be chased. When the order number is looked
+up, the box fills itself with what the database says is left. Typing over it is
+the rare case, and the screen says what changes: **all of it closes the course
+when the money settles; part of it leaves the learner's access in place**,
+because a person who paid for a course and had part of it returned is still the
+person taking it. That is not a new rule — the entitlement engine already decided
+it from the balance — but it is the first time the person pressing the button
+could read it.
+
+Three refusals live on the form rather than in the trigger, because the person
+needs a sentence and not a failed insert: more than is left, which names the
+balance; zero, which is not a refund; and decimals in a currency that has none,
+which is where a two-decimal assumption would turn 15 000 shillings into 150.
+The database still refuses all three on its own — the ceiling on
+`refund_requests`, the `> 0` check, and the currency taken from the order — so
+this is a better first answer, not the only one.
+
+Nothing about approval moved. The request is attributed to the member of staff
+who opened it, `rr_not_self_approved` still stops them deciding it, and the
+audit still records it as staff-opened with no window, because the window did
+not apply.

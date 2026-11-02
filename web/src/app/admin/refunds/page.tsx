@@ -113,11 +113,18 @@ export default async function AdminRefundsPage() {
           not a lock on us.
         </p>
         <p className="muted">
-          It refunds whatever is still refundable on the order, and it needs a
-          written reason. The request is attributed to <strong>you</strong>, and
-          because nobody may decide a refund they opened, somebody else has to
-          approve it. The audit trail records it as staff-opened, with no window,
-          because the window did not apply.
+          It needs a written reason, and the request is attributed to{' '}
+          <strong>you</strong>; because nobody may decide a refund they opened,
+          somebody else has to approve it. The audit trail records it as
+          staff-opened, with no window, because the window did not apply.
+        </p>
+        <p className="muted">
+          <strong>All of it, or part of it.</strong> The amount fills itself in
+          with what is left on the order, and leaving it there refunds everything,
+          which closes the course when the money settles. A smaller number is a
+          goodwill part-refund for a course sold wrong or half delivered — and it
+          leaves the learner&rsquo;s access in place, because they are still the
+          person who paid for what they are still taking.
         </p>
         <OpenOnBehalfForm />
       </section>

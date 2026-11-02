@@ -674,7 +674,14 @@ through the buyer's code because the discount has to carry its redemption, and t
 switch waits on an occasion (a campaign ready to run) rather than on a rule that
 exists. The flag does not move; it ships off.
 
-Verification: **2 512 database assertions in 166 suites, 2 006 web tests; TypeScript
+The refund screen now has a number in it. A goodwill part-refund — half a course
+delivered, a family that got part of what they paid for — was a database action with
+no screen, which meant it happened in SQL where nothing is audited. The form looks the
+order up first so the figure is the database's, fills the amount in with everything
+left, and lets it be typed over; the sentence beside it says the thing that actually
+differs — all of it closes the course, part of it leaves access in place.
+
+Verification: **2 512 database assertions in 166 suites, 2 015 web tests; TypeScript
 typecheck, build and `check:repo` pass; 229 migrations.**
 
 ## Today's sentence

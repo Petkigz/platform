@@ -511,7 +511,7 @@ test('a refund refused for the window is said in the database words', async () =
 
 // A stub for the two queries on-behalf makes: the order lookup, then an RPC.
 function stubBehalf(
-  order: { id: string } | null,
+  order: { id: string; order_number?: string } | null,
   standing: unknown = standingRow,
   rpcError: { message: string } | null = null,
 ) {
@@ -575,6 +575,156 @@ test('an order with nothing left is refused with the reason, not an opaque error
   assert.equal(res.ok, false);
   if (!res.ok) assert.match(res.error, /already been returned/);
   assert.equal(calls.some((c) => c.fn === 'request_refund'), false);
+});
+
+// ---------------------------------------------------------------------------
+// Part of it, or all of it (2026-11-02)
+// ---------------------------------------------------------------------------
+//
+// A goodwill part-refund was a database action with no screen, which meant it
+// happened in SQL where nothing is audited. The amount is now the caller's, and
+// every way of getting it wrong is refused here rather than left to a trigger
+// that would answer in minor units.
+
+import { refundStandingForOrder } from './refunds.ts';
+
+test('what is left on an order is read before anybody types a number', async () => {
+  const { client, calls } = stubBehalf({ id: 'order-1', order_number: 'AS-00001234' });
+  const res = await refundStandingForOrder(client, 'as-00001234');
+
+  assert.equal(res.ok, true);
+  if (!res.ok) return;
+  assert.equal(res.standing.refundableMinor, '30000');
+  assert.equal(res.standing.currencyCode, 'UGX');
+  assert.equal(res.standing.orderNumber, 'AS-00001234');
+  // Looking up an order writes nothing at all.
+  assert.equal(calls.some((c) => c.fn === 'request_refund'), false);
+  assert.equal(calls.some((c) => c.fn === 'decide_refund_request'), false);
+});
+
+test('an order with nothing left says so before the form is filled in', async () => {
+  const { client } = stubBehalf(
+    { id: 'order-1' },
+    { ...standingRow, allowed: false, reason: 'nothing_left', refundableMinor: '0' },
+  );
+  const res = await refundStandingForOrder(client, 'AS-00001234');
+  assert.equal(res.ok, false);
+  if (!res.ok) {
+    assert.equal(res.status, 409);
+    assert.match(res.error, /already been returned/);
+  }
+});
+
+test('an unpaid order is not refundable, and the sentence says which', async () => {
+  const { client } = stubBehalf(
+    { id: 'order-1' },
+    { ...standingRow, allowed: false, reason: 'not_paid' },
+  );
+  const res = await refundStandingForOrder(client, 'AS-00001234');
+  assert.equal(res.ok, false);
+  if (!res.ok) assert.match(res.error, /not been paid/);
+});
+
+test('part of it is a smaller request, not a smaller refund of everything', async () => {
+  const { client, calls } = stubBehalf({ id: 'order-1' });
+  const res = await openRefundOnBehalf(client, {
+    orderNumber: 'AS-00001234',
+    reason: 'The second half of the course was never delivered',
+    amount: '15000',
+  });
+
+  assert.equal(res.ok, true);
+  if (!res.ok) return;
+  assert.equal(res.partial, true);
+  assert.equal(res.amountMinor, '15000');
+  assert.equal(res.refundableMinor, '30000');
+
+  const refund = one(calls.filter((c) => c.fn === 'request_refund'), 'request_refund call');
+  // UGX has no minor unit, so 15 000 typed is 15 000 stored — the ten-times error
+  // a two-decimal assumption would make.
+  assert.equal(refund.args.p_amount_minor, 15000);
+});
+
+test('a blank amount still means everything, so the common case is unchanged', async () => {
+  const { client, calls } = stubBehalf({ id: 'order-1' });
+  const res = await openRefundOnBehalf(client, {
+    orderNumber: 'AS-00001234',
+    reason: 'Duplicate charge',
+    amount: '   ',
+  });
+
+  assert.equal(res.ok, true);
+  if (!res.ok) return;
+  assert.equal(res.partial, false);
+  assert.equal(res.amountMinor, '30000');
+  const refund = one(calls.filter((c) => c.fn === 'request_refund'), 'request_refund call');
+  assert.equal(refund.args.p_amount_minor, 30000);
+});
+
+test('more than is left is refused here, naming what is left', async () => {
+  const { client, calls } = stubBehalf({ id: 'order-1' });
+  const res = await openRefundOnBehalf(client, {
+    orderNumber: 'AS-00001234',
+    reason: 'A generous offer',
+    amount: '50000',
+  });
+
+  assert.equal(res.ok, false);
+  if (!res.ok) {
+    assert.equal(res.status, 409);
+    assert.match(res.error, /is refundable/);
+    assert.match(res.error, /30[,.]?000/);
+  }
+  // Nothing was written: the database would have refused it too, but a support
+  // agent gets the sentence from the form rather than from a failed insert.
+  assert.equal(calls.some((c) => c.fn === 'request_refund'), false);
+});
+
+test('zero and nonsense never reach the database', async () => {
+  for (const amount of ['0', 'abc', '-500', '1e5']) {
+    const { client, calls } = stubBehalf({ id: 'order-1' });
+    const res = await openRefundOnBehalf(client, {
+      orderNumber: 'AS-00001234',
+      reason: 'Trying it',
+      amount,
+    });
+    assert.equal(res.ok, false, `${amount} was accepted`);
+    if (!res.ok) assert.equal(res.status, 400, `${amount} failed with ${res.status}`);
+    assert.equal(calls.some((c) => c.fn === 'request_refund'), false,
+      `${amount} was written`);
+  }
+});
+
+test('a currency with no decimals refuses decimals rather than rounding them', async () => {
+  const { client } = stubBehalf({ id: 'order-1' });
+  const res = await openRefundOnBehalf(client, {
+    orderNumber: 'AS-00001234',
+    reason: 'Half of it',
+    amount: '15000.50',
+  });
+  assert.equal(res.ok, false);
+  if (!res.ok) {
+    assert.equal(res.status, 400);
+    assert.match(res.error, /UGX does not use decimals/);
+  }
+});
+
+test('a two-decimal currency is converted once, and only once', async () => {
+  const { client, calls } = stubBehalf(
+    { id: 'order-1' },
+    { ...standingRow, refundableMinor: '40000', currencyCode: 'USD' },
+  );
+  const res = await openRefundOnBehalf(client, {
+    orderNumber: 'AS-00001234',
+    reason: 'A course sold at the wrong level',
+    amount: '12.50',
+  });
+
+  assert.equal(res.ok, true);
+  if (!res.ok) return;
+  assert.equal(res.partial, true);
+  const refund = one(calls.filter((c) => c.fn === 'request_refund'), 'request_refund call');
+  assert.equal(refund.args.p_amount_minor, 1250);
 });
 
 // ---------------------------------------------------------------------------
