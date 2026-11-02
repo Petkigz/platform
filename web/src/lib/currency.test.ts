@@ -140,6 +140,32 @@ function sampleRate(overrides: Record<string, unknown> = {}): Record<string, unk
   };
 }
 
+function sampleNetting(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  return {
+    currency: 'USD',
+    complete: true,
+    missingRates: [],
+    lines: [
+      { code: 'captures', label: 'Captures', sign: 'add', amountMinor: '13500',
+        rule: 'A capture is money in, in the period it happened.' },
+      { code: 'refunds', label: 'Refunds', sign: 'subtract', amountMinor: '1350',
+        rule: 'A refund is money back out, in the period it was paid.' },
+      { code: 'chargebacks', label: 'Chargebacks', sign: 'subtract', amountMinor: '0',
+        rule: 'Rule 1: a chargeback offsets nothing.' },
+      { code: 'reversals', label: 'Reversals', sign: 'subtract', amountMinor: '0',
+        rule: 'Rule 3: a reversal belongs to the period it was reversed in.' },
+      { code: 'providerFees', label: 'Provider fees', sign: 'subtract', amountMinor: '200',
+        rule: 'Rule 2: a provider fee is the platform\u2019s cost.' },
+      { code: 'teacherShare', label: 'Teacher share accrued', sign: 'subtract', amountMinor: '6750',
+        rule: 'Not a ledger row at all. A lie by omission.' },
+    ],
+    platformNetMinor: '11950',
+    platformRetainedMinor: '5200',
+    note: 'Two lines, because one would have been a lie by omission.',
+    ...overrides,
+  };
+}
+
 function reportFixture(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
     reportingCurrency: 'USD',
@@ -158,6 +184,7 @@ function reportFixture(overrides: Record<string, unknown> = {}): Record<string, 
     unconverted: [],
     ratesUsed: [sampleRate()],
     outliers: [],
+    netting: sampleNetting(),
     note: 'Gross figures grouped by type and direction. Nothing here nets a refund.',
     ...overrides,
   };
@@ -620,6 +647,58 @@ test('a report that lost a group is refused rather than rendered smaller', () =>
 
   assert.equal(normaliseReport(null), null);
   assert.equal(normaliseReport({}), null);
+});
+
+test('the net figure is read with its rules, and a partial one is refused', () => {
+  const report = normaliseReport(reportFixture()) as MoneyReport | null;
+  assert.ok(report, 'a well-formed netting block was refused');
+  assert.equal(report?.netting.platformNetMinor, '11950');
+  assert.equal(report?.netting.platformRetainedMinor, '5200');
+  assert.equal(report?.netting.lines.length, 6);
+  assert.deepEqual(report?.netting.lines.map((line) => line.sign),
+    ['add', 'subtract', 'subtract', 'subtract', 'subtract', 'subtract'],
+    'the one line that adds is not the money in');
+  assert.match(report?.netting.lines[2]?.rule ?? '', /offsets nothing/);
+
+  // A number beside `complete: false` is the failure this parser exists for: it
+  // would render a partial total as though it were the whole one.
+  assert.equal(normaliseReport(reportFixture({
+    netting: sampleNetting({ complete: false, missingRates: ['GHS'] }),
+  })), null, 'an incomplete report carrying numbers was accepted');
+
+  assert.equal(normaliseReport(reportFixture({
+    netting: sampleNetting({ platformNetMinor: null }),
+  })), null, 'a complete report with no net figure was accepted');
+
+  // "Incomplete" with nothing missing cannot be fixed by recording a rate, so it
+  // is not a state the screen should be able to render.
+  assert.equal(normaliseReport(reportFixture({
+    netting: sampleNetting({
+      complete: false, platformNetMinor: null, platformRetainedMinor: null, missingRates: [],
+    }),
+  })), null);
+});
+
+test('a netting block that lost a line is a different sum, so it is refused', () => {
+  const netting = sampleNetting();
+  const lines = netting.lines as Record<string, unknown>[];
+  assert.equal(normaliseReport(reportFixture({ netting: sampleNetting({ lines: lines.slice(0, 5) }) })),
+    null, 'a net figure missing a line was rendered');
+  assert.equal(normaliseReport(reportFixture({
+    netting: sampleNetting({ lines: [...lines.slice(0, 5), { ...lines[0], code: 'chargebacks' }] }),
+  })), null, 'a duplicated line was taken for a full set');
+  assert.equal(normaliseReport(reportFixture({
+    netting: sampleNetting({ lines: [...lines.slice(1), { ...lines[0], sign: 'subtract' }] }),
+  })), null, 'captures was subtracted and the sum was still rendered');
+  assert.equal(normaliseReport(reportFixture({
+    netting: sampleNetting({ lines: lines.map((line, index) =>
+      (index === 3 ? { ...line, amountMinor: '0.5' } : line)) }),
+  })), null, 'a fractional minor-unit line was accepted');
+  assert.equal(normaliseReport(reportFixture({
+    netting: sampleNetting({ currency: 'UGX' }),
+  })), null, 'a net figure in a second currency was accepted');
+  assert.equal(normaliseReport(reportFixture({ netting: null })), null,
+    'a report with no netting block at all was accepted');
 });
 
 test('an unconverted group is a row of its own, not a zero', () => {

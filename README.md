@@ -481,8 +481,10 @@ a slipped decimal is a hundredfold error that looks reasonable on screen.
 `/admin/money-report` converts a period into `finance.reporting_currency` (USD), names
 the rate beside every figure, and lists the money it could not convert as a gap rather
 than guessing it — an unrecorded pair resolves to nothing, never to 1. It totals
-credits and debits separately and produces no single net figure, because what nets
-against what is a business decision recorded as open rather than assumed by a query.
+credits and debits separately and, since 2026-11-01, also nets them — a `netting`
+block with two derived lines, what the platform handled and what it kept, each of its
+three rules printed beside the line it produced and both lines withheld outright when
+a currency in the window has no rate.
 The same migration gives `financial_transactions.fx_rate`, `fx_source` and
 `fx_observed_at` their first writer: a settlement in another currency is refused unless
 a rate is recorded, so FX provenance has one source and cannot be typed in beside the

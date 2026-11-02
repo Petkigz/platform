@@ -1508,11 +1508,15 @@ in beside it. A settlement cites a row from the shelf or nothing, which is what 
 `fx_rate`, `fx_source` and `fx_observed_at` mean something. Re-recording is allowed,
 because a provider restates, and the earlier figure stays in the audit row.
 
-**The report does not net.** Credits and debits are totalled separately and no single
-figure is produced, because whether a chargeback offsets the capture it came from, and
-whether a provider fee comes off revenue here or the teacher's payout there, are
-decisions about the business rather than about arithmetic. Recorded as open in
-`NEXT.md`; the report says on its face that it does not net.
+**The report does not net — *superseded 2026-11-01*.** Credits and debits were
+totalled separately and no single figure was produced, because whether a chargeback
+offsets the capture it came from, and whether a provider fee comes off revenue here or
+the teacher's payout there, are decisions about the business rather than about
+arithmetic. The owner made all three answers on 2026-11-01 and
+`20261281012000_money_netting.sql` makes them a figure; see *"The money answers are
+three answers, not one"* below. The refusal was the right shape for an undecided
+question, and the three rules are now printed beside the lines they produce rather
+than left implicit.
 
 **Rejected:** converting stored amounts into USD (D4 — the original currency is
 authoritative, and a ledger that changes when a rate does is not a ledger); defaulting a
@@ -7129,6 +7133,19 @@ happen, and the ledger is append-only); a provider fee is the platform's cost, w
 the 2026-10-22 split rule already said; and a reversal belongs to the period it was
 reversed in, because a report that changes after it has been read cannot be
 reconciled against anything.
+
+**Two derived lines, not one.** `report_money_in_reporting_currency()` now returns a
+`netting` block with `platformNetMinor` and `platformRetainedMinor`. One figure would
+have been a lie by omission: a teacher's share of a course sale is not in
+`financial_transactions` at all — it lives in `instructor_earnings_entries` — so a
+figure that stopped at the ledger would call money the platform owes a teacher "what
+the platform made". The first line is what the platform handled; the second is what
+it kept. Both are null together, with `complete: false` and the missing currencies
+named, whenever one currency in the window has no rate — a net figure silently
+missing a market is a wrong figure that looks exactly like a right one. Each of the
+six lines carries its rule in the response, and the screen prints the rule beside the
+line rather than paraphrasing it, so a total can be checked without reading a commit
+message.
 
 **The waiver is only a waiver if it is a real one.** An unticked separate box, with
 its own words, recorded per order beside the buyer's country and the policy version

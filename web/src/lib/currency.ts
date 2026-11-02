@@ -142,6 +142,53 @@ export type RateOutlier = {
   source: string;
 };
 
+/**
+ * The six lines a net figure is made of, in the order the report prints them.
+ *
+ * `captures` is the only addition. Everything else is money that has left — or
+ * money the platform owed the moment it arrived.
+ */
+export const NETTING_LINE_CODES = [
+  'captures',
+  'refunds',
+  'chargebacks',
+  'reversals',
+  'providerFees',
+  'teacherShare',
+] as const;
+
+export type NettingLineCode = (typeof NETTING_LINE_CODES)[number];
+
+export type NettingLine = {
+  code: NettingLineCode;
+  label: string;
+  sign: 'add' | 'subtract';
+  amountMinor: string;
+  /** Why this line is subtracted, printed beside it rather than assumed. */
+  rule: string;
+};
+
+/**
+ * What the owner decided on 2026-11-01, as two figures rather than one.
+ *
+ * `platformNetMinor` is what the platform handled; `platformRetainedMinor` is what
+ * it kept, which is the first less the teacher's share. One figure would have been
+ * a lie by omission, because a teacher's share is not a ledger row at all.
+ *
+ * Both are null together, with `complete: false`, when a currency in the window
+ * had no rate. A net figure that silently omitted a market would be smaller than
+ * the truth while looking exactly like the truth.
+ */
+export type MoneyNetting = {
+  currency: string;
+  complete: boolean;
+  missingRates: string[];
+  lines: NettingLine[];
+  platformNetMinor: string | null;
+  platformRetainedMinor: string | null;
+  note: string;
+};
+
 export type MoneyReport = {
   reportingCurrency: string;
   window: { from: string; to: string };
@@ -157,6 +204,7 @@ export type MoneyReport = {
   unconverted: UnconvertedRow[];
   ratesUsed: ConvertedAmount[];
   outliers: RateOutlier[];
+  netting: MoneyNetting;
   note: string;
 };
 
@@ -442,6 +490,83 @@ export function normaliseSettlement(raw: unknown): Settlement | null {
   };
 }
 
+/** An integer amount, as the database writes every minor-unit figure: a string. */
+const minorText = (value: unknown): string | null =>
+  typeof value === 'string' && /^-?[0-9]+$/.test(value) ? value : null;
+
+/**
+ * The netting block, read strictly — and the one invariant that matters most:
+ * a figure is present exactly when the report says it is complete.
+ *
+ * A parser that accepted `complete: false` beside a number would let a partial
+ * total render as a whole one. A parser that accepted `complete: true` beside a
+ * null would render "—" where a number belongs and nobody would know which.
+ */
+export function normaliseNetting(raw: unknown): MoneyNetting | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const netting = raw as Record<string, unknown>;
+
+  const currency = code(netting.currency);
+  const note = text(netting.note);
+  if (!currency || note === null || typeof netting.complete !== 'boolean') return null;
+
+  if (!Array.isArray(netting.missingRates)) return null;
+  const missingRates: string[] = [];
+  for (const entry of netting.missingRates) {
+    const missing = code(entry);
+    if (!missing) return null;
+    if (!missingRates.includes(missing)) missingRates.push(missing);
+  }
+
+  if (!Array.isArray(netting.lines)) return null;
+  const byCode = new Map<string, NettingLine>();
+  for (const entry of netting.lines) {
+    if (!entry || typeof entry !== 'object') return null;
+    const row = entry as Record<string, unknown>;
+    const lineCode = NETTING_LINE_CODES.find((candidate) => candidate === row.code);
+    if (!lineCode) return null;
+    if (byCode.has(lineCode)) return null;
+    const label = text(row.label);
+    const rule = text(row.rule);
+    const amountMinor = minorText(row.amountMinor);
+    if (!label || !rule || amountMinor === null) return null;
+    if (row.sign !== 'add' && row.sign !== 'subtract') return null;
+    // The sign is the decision: exactly one line adds, and it is the money in.
+    if ((row.sign === 'add') !== (lineCode === 'captures')) return null;
+    byCode.set(lineCode, { code: lineCode, label, sign: row.sign, amountMinor, rule });
+  }
+  // A missing line is a different sum, so it is a different report.
+  if (byCode.size !== NETTING_LINE_CODES.length) return null;
+  const lines = NETTING_LINE_CODES.map((lineCode) => byCode.get(lineCode) as NettingLine);
+
+  const net = netting.platformNetMinor === null ? null : minorText(netting.platformNetMinor);
+  const retained = netting.platformRetainedMinor === null
+    ? null : minorText(netting.platformRetainedMinor);
+  if (netting.platformNetMinor !== null && net === null) return null;
+  if (netting.platformRetainedMinor !== null && retained === null) return null;
+
+  const complete = netting.complete;
+  if (complete) {
+    if (net === null || retained === null) return null;
+    if (missingRates.length > 0) return null;
+  } else {
+    if (net !== null || retained !== null) return null;
+    // "Incomplete" with nothing missing is not a state the database produces, and
+    // rendering it would leave a reader with no way to fix the report.
+    if (missingRates.length === 0) return null;
+  }
+
+  return {
+    currency,
+    complete,
+    missingRates,
+    lines,
+    platformNetMinor: net,
+    platformRetainedMinor: retained,
+    note,
+  };
+}
+
 /**
  * The report is read strictly.
  *
@@ -568,6 +693,12 @@ export function normaliseReport(raw: unknown): MoneyReport | null {
     outliers.push({ base, quote, rate, previousRate, factor: row.factor, observedAt: text(row.observedAt), source });
   }
 
+  const netting = normaliseNetting(report.netting);
+  if (!netting) return null;
+  // The netting block converts into the same currency as everything above it; two
+  // answers to "which currency is this" on one screen is one too many.
+  if (netting.currency !== reportingCurrency) return null;
+
   const totalsRaw = report.totals;
   if (!totalsRaw || typeof totalsRaw !== 'object') return null;
   const totals = totalsRaw as Record<string, unknown>;
@@ -596,6 +727,7 @@ export function normaliseReport(raw: unknown): MoneyReport | null {
     unconverted,
     ratesUsed,
     outliers,
+    netting,
     note,
   };
 }

@@ -495,8 +495,8 @@ the submission reference is deliberately not a foreign key, because the children
 clock deletes submissions and a constraint there would have broken that clock the
 moment a file had been reviewed.
 
-Verification: **2 436 database assertions in 159 suites, 1 959 web tests; TypeScript
-typecheck, build and `check:repo` pass; 218 migrations.**
+Verification: **2 447 database assertions in 160 suites, 1 961 web tests; TypeScript
+typecheck, build and `check:repo` pass; 219 migrations.**
 
 ## Today's sentence
 
@@ -1737,11 +1737,12 @@ plus 3 USD is meaningless twice over: they are different currencies, and they ar
   then be added. It reports the rate beside each figure, lists what it could not
   convert as its own rows with the missing pairs named, and flags any rate behind
   it that moved more than the sanity factor even when the writer was satisfied.
-  **It produces no single net figure.** Credits and debits are totalled
-  separately and the response says why: whether a chargeback offsets a capture,
-  and whether a provider fee comes off here or in the payout, are decisions about
-  the business rather than about arithmetic, and a report that made them would
-  bury the answer in a sum nobody reads the terms of. Recorded as open below.
+  **It nets, as of 2026-11-01.** The three questions were answered and
+  `20261281012000_money_netting.sql` makes them a figure: a chargeback offsets
+  nothing, a provider fee is the platform's, a reversal belongs to the period it
+  happened in. Two derived lines rather than one — what the platform handled and
+  what it kept — because a teacher's share is not a ledger row, and both are
+  withheld with `complete: false` when a currency in the window has no rate.
 - Two controls in the register, `finance.reporting_currency` (`USD`) and
   `finance.rate_sanity_factor` (`10`), and `setting_text()` to read the first.
 
@@ -2303,14 +2304,12 @@ on `/admin/media` (or the upload form) is the obvious next piece, and is recorde
   signed-in caller. What is left is delivery: invitations are queued in the
   outbox, and nothing reaches an inbox until `delivery.notifications` has a
   provider.
-- **What nets against what in the money report.** `/admin/money-report` totals
-  credits and debits separately and refuses to produce one figure, because whether a
-  chargeback offsets the capture it came from, whether a provider fee is deducted
-  from revenue here or from the teacher's payout, and whether a reversed transaction
-  belongs in the period it happened in or the one it was reversed in, are decisions
-  about the business. Each is a one-line change to `report_money_in_reporting_currency()`
-  once made, and guessing would bury the answer in a sum that looks authoritative.
-  The report says on its face that it does not net.
+- ~~**What nets against what in the money report.**~~ **Answered 2026-11-01.**
+  All three: a chargeback offsets nothing, a provider fee is the platform's cost and
+  never the teacher's, a reversal belongs to the period it was reversed in. Built in
+  `20261281012000_money_netting.sql` as a `netting` block with two derived lines
+  (`platformNetMinor`, `platformRetainedMinor`) and each line's rule reported beside
+  it; both lines are null with `complete: false` when a currency has no rate.
 - The saved-lessons questions are answered (2026-10-20, `DECISIONS.md`); what
   is left is code. Both delivery models are wanted — live classes recorded and
   saved, and offline download of anything saved — with the download gated to a

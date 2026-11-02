@@ -78,6 +78,7 @@ import { run as courseAssignments } from './course_assignments.test.mjs';
 import { run as courseworkFiles } from './coursework_files.test.mjs';
 import { run as courseworkRetention } from './coursework_retention.test.mjs';
 import { run as courseworkReview } from './coursework_review.test.mjs';
+import { run as moneyNetting } from './money_netting.test.mjs';
 import { run as markingFeedback } from './marking_feedback.test.mjs';
 import { run as assignmentRevisions } from './assignment_revisions.test.mjs';
 import { run as cohortJoinWindow } from './cohort_join_window.test.mjs';
@@ -224,6 +225,7 @@ for (const [name, fn] of [
   ['coursework files', courseworkFiles],
   ['coursework retention', courseworkRetention],
   ['coursework review', courseworkReview],
+  ['money netting', moneyNetting],
   ['marking feedback', markingFeedback],
   ['assignment revisions', assignmentRevisions],
   ['cohort join window', cohortJoinWindow],

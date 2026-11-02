@@ -274,9 +274,11 @@ currency instead is one function and its tests, plus a migration of existing
 
 **What already exists.** `report_money_in_reporting_currency()` groups the ledger
 by transaction type and direction, converts each group at **one** rate (the window's
-end), reports the rate beside every row, lists what it could not convert, and
-refuses to produce a single net figure. `/admin/money-report` says on its face that
-it does not net.
+end), reports the rate beside every row, and lists what it could not convert. It
+used to refuse to produce a net figure. **Answered 2026-11-01 — all three as
+recommended, and built in `20261281012000_money_netting.sql`**, which returns a
+`netting` block with two derived lines (what the platform handled, what it kept) and
+each line's rule printed beside it.
 
 **Three separate questions, each with a recommendation.**
 

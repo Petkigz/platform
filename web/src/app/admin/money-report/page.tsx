@@ -22,13 +22,20 @@ export const dynamic = 'force-dynamic';
  * total is only as good as the rate under it — so this page shows the rate beside
  * every figure, and lists separately the money it could not convert.
  *
- * Two things it deliberately does not do.
+ * What it does now that it did not before.
  *
- * It does not produce a single net figure. Captures and refunds are shown by
- * direction and left there, because whether a chargeback offsets a capture, and
- * whether a provider fee comes off here or in the payout, are decisions about the
- * business rather than about arithmetic. A report that made them would bury the
- * answer in a sum nobody reads the terms of, and the note at the bottom says so.
+ * It nets. The three questions the page used to refuse to answer — whether a
+ * chargeback offsets the capture it came from, whether a provider fee comes off
+ * here or off a teacher's payout, and whether a reversal belongs to the period it
+ * happened in — are decisions about the business rather than about arithmetic, and
+ * the owner made all three on 2026-11-01. They are printed beside the figures they
+ * produced, in the order they are applied, so nobody has to read a commit message
+ * to check a total.
+ *
+ * It produces two net figures rather than one, because one would have been a lie by
+ * omission: a teacher's share is not a ledger row, and money owed to a teacher is
+ * not money the platform made. One line says what the platform handled; the other
+ * says what it kept.
  *
  * It does not convert a stored amount. D4 keeps the original currency
  * authoritative; conversion happens on the way to being read, and the same order
@@ -99,8 +106,9 @@ export default async function AdminMoneyReportPage({
       <h1>Money report</h1>
       <p className="lede">
         What moved in a period, converted into the one currency the platform is
-        read in. Every converted figure names the rate that produced it, and money
-        in a currency nobody has quoted is listed as a gap rather than guessed at.
+        read in, and what was left when everything that came back out was taken off
+        again. Every converted figure names the rate that produced it, and money in
+        a currency nobody has quoted is listed as a gap rather than guessed at.
       </p>
 
       <div className="card" style={{ padding: '1.25rem' }}>
@@ -147,6 +155,80 @@ export default async function AdminMoneyReportPage({
   );
 }
 
+/**
+ * The net figure, with its arithmetic on its face.
+ *
+ * The rules travel with the report rather than living here, so this component
+ * cannot state a rule the database does not apply — and the page shows the rule the
+ * database sent, not a paraphrase of it.
+ */
+function Netting({ report }: { report: MoneyReport }) {
+  const netting = report.netting;
+  const figure = (value: string | null) =>
+    value === null ? '—' : formatMinor(value, netting.currency);
+
+  return (
+    <section className="section">
+      <h2>What netted, and what was left</h2>
+      <p className="muted">{netting.note}</p>
+
+      {!netting.complete && (
+        <div className="notice warn" style={{ marginTop: '1rem' }} role="alert">
+          The two figures are withheld, not zero.{' '}
+          {netting.missingRates.join(', ')} has no rate into {netting.currency} for
+          this period, and a total missing a market is a wrong total rather than a
+          smaller one. Record the rate on{' '}
+          <Link href="/admin/exchange-rates">the rate shelf</Link> and it will
+          appear.
+        </div>
+      )}
+
+      <div className="stats">
+        <div>
+          <div className="n">{figure(netting.platformNetMinor)}</div>
+          <div className="l">The platform handled</div>
+        </div>
+        <div>
+          <div className="n">{figure(netting.platformRetainedMinor)}</div>
+          <div className="l">The platform kept</div>
+        </div>
+      </div>
+
+      <div className="card" style={{ padding: '0.5rem 1.25rem', marginTop: '1.25rem' }}>
+        {netting.lines.map((line) => (
+          <div
+            key={line.code}
+            style={{
+              display: 'flex',
+              gap: '1rem',
+              alignItems: 'baseline',
+              flexWrap: 'wrap',
+              padding: '0.6rem 0',
+              borderBottom: '1px solid var(--border-soft)',
+            }}
+          >
+            <div style={{ flex: '1 1 16rem' }}>
+              <strong>{line.label}</strong>
+              <div className="muted" style={{ fontSize: '0.82rem' }}>{line.rule}</div>
+            </div>
+            <div style={{ fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
+              {line.sign === 'add' ? '+ ' : '− '}
+              {formatMinor(line.amountMinor, netting.currency)}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <p className="muted" style={{ marginTop: '0.75rem' }}>
+        &ldquo;Handled&rdquo; is captures less refunds, chargebacks, reversals and
+        provider fees. &ldquo;Kept&rdquo; is that less the teacher share that
+        accrued in the same period — which is not a row in the money ledger at all,
+        which is why it needs its own line and its own figure.
+      </p>
+    </section>
+  );
+}
+
 function Report({ report }: { report: MoneyReport }) {
   const missing = report.totals.missingRates;
   const unconvertedCount = report.unconverted.reduce((sum, row) => sum + row.count, 0);
@@ -167,6 +249,8 @@ function Report({ report }: { report: MoneyReport }) {
       </div>
 
       <p className="muted" style={{ marginTop: '1rem' }}>{report.note}</p>
+
+      <Netting report={report} />
 
       {missing.length > 0 && (
         <div className="notice warn" style={{ marginTop: '1rem' }}>
@@ -232,10 +316,12 @@ function Report({ report }: { report: MoneyReport }) {
       <section className="section">
         <h2>What teachers are owed</h2>
         <p className="muted">
-          The net figure is the teacher's share as it accrued, converted at the same
-          rate as everything else in this period. It is what is owed, not what has
-          been paid: <code>teaching.payouts</code> is still gated and nothing here
-          moves money.
+          The teacher's share as it accrued, converted at the same rate as everything
+          else in this period, and the line that turns &ldquo;what the platform
+          handled&rdquo; into &ldquo;what it kept&rdquo;. A provider fee never comes
+          off this: it is the platform's cost, not a teacher's. What is shown is what
+          is owed, not what has been paid — <code>teaching.payouts</code> is still
+          gated and nothing here moves money.
         </p>
         {report.earnings.length === 0 ? (
           <p className="empty">No earnings accrued in this period.</p>
