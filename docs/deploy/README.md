@@ -123,7 +123,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-221 files in `supabase/migrations/`, applied in filename order — the 14-digit
+222 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -146,7 +146,7 @@ done
   first run. What you are watching for is the loop *stopping*, and the file name
   above the error.
 - Takes a few minutes. The last file printed should be
-  `20261281014000_ai_support_boundary.sql`.
+  `20261281015000_children_and_privacy_policies.sql`.
 
 **Path B — the Supabase CLI**, if you would rather have migration history tracked:
 
@@ -256,14 +256,20 @@ Two things happen the moment you press it, and neither is a bug:
   approved before the machinery recorded a lifetime. Any child already enrolled
   keeps their access — the gate is on *new* enrolments and on the guardian's reach
   into the record — but the guardian will be asked to re-verify.
-* **No children's policy version is in force yet**, so a consent stores a null
-  `consented_policy_version_id` and the console says so. Publishing the policy
-  (step 9) fixes that for every consent taken afterwards; it does not retcon the
-  ones already recorded, and the platform will not write "they agreed to the
-  policy" about a document nobody published.
+* **A children's policy version is in force, and it is version 2.** Every consent
+  taken now records `consented_policy_version_id`, so a parent's agreement names the
+  words they were shown. Version 1 was published on 2026-10-28 and said in as many
+  words that the verification switch was off; the owner switched it on anyway on
+  2026-11-01, so version 2 was published on 2026-11-02 stating the rule that now
+  applies — a verified guardian for every child, in every country. Version 1 is
+  retired and kept. A consent recorded before that date names version 1, which is
+  the truth about what was in force when it was decided, and the console shows the
+  difference rather than papering over it.
 
-The reviewer's checklist — what to look at, how long to give, when to reject — is
-step 9 as well, and it is a page of writing rather than a deployment task.
+**The reviewer's checklist** is `docs/safeguarding/guardian-verification-checklist.md`,
+and the same nine steps are rendered on `/admin/guardians` (`REVIEWER_CHECKLIST` in
+`web/src/lib/guardian-consent.ts`). A test holds the two together. Read it before
+the first decision, not after the first mistake.
 
 **3.4 Check the withdrawal question, which is already on.** Nothing to press. The
 migrations publish refunds policy **version 2** (the paragraph stating the 14-day

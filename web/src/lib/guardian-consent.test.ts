@@ -1,8 +1,11 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import {
+  CHECKLIST_DOC,
   CONSENT_METHODS,
   DEFAULT_VALIDITY_MONTHS,
+  REVIEWER_CHECKLIST,
   ENFORCEMENT_NOTE,
   EVIDENCE_NOTE,
   VALIDITY_MONTHS,
@@ -249,4 +252,53 @@ test('the standing notes say the awkward things out loud', () => {
   assert.match(decisionEffect('verified', 12), /12 months/);
   assert.match(decisionEffect('rejected', 12), /clears every permission/);
   assert.match(decisionEffect('needs_information', 12), /keeps the request open/);
+});
+
+// ---------------------------------------------------------------------------
+// The reviewer's checklist
+// ---------------------------------------------------------------------------
+// One of these in a document and a different one on the screen is how two
+// reviewers decide the same request differently, so the two are held together
+// here: every step the queue renders has to be a step the document explains.
+
+test('the checklist is nine steps, each with a title and a reason', () => {
+  assert.equal(REVIEWER_CHECKLIST.length, 9);
+
+  const titles = REVIEWER_CHECKLIST.map((step) => step.title);
+  assert.equal(new Set(titles).size, titles.length, 'two steps share a title');
+
+  for (const step of REVIEWER_CHECKLIST) {
+    assert.ok(step.title.length > 10, `title too short: ${step.title}`);
+    assert.ok(step.body.length > 60, `a step with no reason behind it: ${step.title}`);
+    assert.ok(!/\[OWNER DECISION/.test(step.title + step.body),
+      `a step still carries a question nobody answered: ${step.title}`);
+  }
+
+  // The four methods the database accepts, and the three permissions, are the
+  // vocabulary the reader is being asked to use.
+  const all = REVIEWER_CHECKLIST.map((s) => `${s.title} ${s.body}`).join(' ');
+  for (const word of ['video call', 'document', 'in person', 'declaration']) {
+    assert.match(all, new RegExp(word, 'i'), `the checklist omits ${word}`);
+  }
+  assert.match(all, /thirty-six/, 'the ceiling on a verification is never stated');
+});
+
+test('the document a reviewer reads says the same nine things', () => {
+  const doc = readFileSync(new URL(`../../../${CHECKLIST_DOC}`, import.meta.url), 'utf8');
+
+  for (const step of REVIEWER_CHECKLIST) {
+    assert.ok(doc.includes(step.title),
+      `the checklist document does not carry the step the screen shows: ${step.title}`);
+  }
+  assert.match(doc, /write-only/);
+  assert.match(doc, /two working days/);
+});
+
+test('the queue renders the checklist it ships', () => {
+  const page = readFileSync(
+    new URL('../app/admin/guardians/page.tsx', import.meta.url), 'utf8');
+
+  assert.ok(page.includes('REVIEWER_CHECKLIST'), 'the queue never renders the checklist');
+  assert.ok(page.includes('.map('), 'the checklist is not rendered as a list');
+  assert.ok(page.includes('CHECKLIST_DOC'), 'the queue does not point at the long form');
 });

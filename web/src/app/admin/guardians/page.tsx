@@ -3,7 +3,9 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import {
+  CHECKLIST_DOC,
   EVIDENCE_NOTE,
+  REVIEWER_CHECKLIST,
   dayLabel,
   daysUntil,
   enforcementNote,
@@ -123,6 +125,30 @@ export default async function AdminGuardiansPage() {
       )}
 
       <div className="notice info">{policyLine(register.policyInForce)}</div>
+
+      {/* The standard, on the page where the decision is made. A queue that says
+          "decide" and never says to what standard is how two reviewers give two
+          answers to the same request — and the person deciding here is often the
+          owner, at a screen, at night. */}
+      <section className="card">
+        <h2 style={{ marginTop: 0 }}>What a reviewer is checking</h2>
+        <p className="muted">
+          Read every request within two working days. A request that waits is a
+          child who cannot start, and the queue is short by design.
+        </p>
+        <ol>
+          {REVIEWER_CHECKLIST.map((step) => (
+            <li key={step.title}>
+              <strong>{step.title}.</strong> {step.body}
+            </li>
+          ))}
+        </ol>
+        <p className="muted">
+          The long form, with the reasons behind each line, is{' '}
+          <code>{CHECKLIST_DOC}</code> in the repository. A test keeps this list and
+          that document saying the same nine things.
+        </p>
+      </section>
 
       <section className="section-sm">
         <h2>Waiting for a decision</h2>

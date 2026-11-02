@@ -89,7 +89,7 @@ export async function run(ctx) {
     return source.replace(/\[OWNER DECISION:[^\]]*\]/g, 'Answered by the owner.').trim();
   }
 
-  await test('the seven documents are published, from one date, on one instruction', async () => {
+  await test('the seven documents are published, and a correction is a new version', async () => {
     const docs = (await q(
       `select d.slug, d.acceptance_required,
               count(v.id) filter (where v.status = 'draft') as drafts,
@@ -109,7 +109,13 @@ export async function run(ctx) {
       // Seven published on 2026-10-28; the refunds policy was republished on
       // 2026-11-01 when the owner decided the withdrawal waiver, and a correction
       // is a new version rather than an edit to the one people agreed to.
-      const expected = doc.slug === 'refunds' ? '2026-11-01' : '2026-10-28';
+      // The refunds policy was republished on 2026-11-01 when the owner decided
+      // the withdrawal waiver, and the children's policy on 2026-11-02 when the
+      // paragraphs saying the verification switch was off stopped being true.
+      // A correction is a new version, never an edit to the one people agreed to.
+      const expected = doc.slug === 'refunds'
+        ? '2026-11-01'
+        : doc.slug === 'children' || doc.slug === 'privacy' ? '2026-11-02' : '2026-10-28';
       eq(new Date(doc.effective).toISOString().slice(0, 10), expected,
         `${doc.slug} effective date`);
       // No account existed when the migrations ran, so the instruction is the
@@ -126,7 +132,8 @@ export async function run(ctx) {
     const live = await call(learner, 'policies_in_force()');
     eq(live.length, 7, 'the documents a visitor is shown');
     for (const row of live) {
-      const expected = row.slug === 'refunds' ? 2 : 1;
+      const expected =
+        row.slug === 'refunds' || row.slug === 'children' || row.slug === 'privacy' ? 2 : 1;
       eq(row.versionNumber, expected, `${row.slug} is version ${row.versionNumber}`);
     }
   });

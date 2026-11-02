@@ -9,7 +9,7 @@ being built one unit at a time; the table says where each one stands.
 |---|---|---|---|
 | 1 | Retention for coursework | **a year after the class ends**, and a file whose submission goes stops being readable at once | **Built** — `20261281010000` |
 | 2 | Safeguarding review of files children send | **a recorded review, not a release queue** | **Built** — `20261281011000`, `/admin/coursework` |
-| 3 | Guardian verification on | **on, worldwide, now**, ahead of the legal review | **Decided and documented** — the flag is an owner action (`docs/deploy/README.md` §3.3); the review checklist and the policy are still to write |
+| 3 | Guardian verification on | **on, worldwide, now**, ahead of the legal review | **Built** — the switch is an owner action (`docs/deploy/README.md` §3.3), the children's policy was republished as version 2 on 2026-11-02 to state the rule (`20261281015000`), and the reviewer's checklist is `docs/safeguarding/guardian-verification-checklist.md` |
 | 4 | EU 14-day withdrawal waiver | **a real waiver at checkout**, 14 days if unticked, stored per order | **Built** — `20261281013000`, the checkbox on `/courses/<slug>/buy`, refunds policy republished as version 2; the wording still needs a lawyer |
 | 5 | Market grain | **country**, as built | **Confirmed** — no code |
 | 6 | What nets against what in the money report | chargeback no offset, fee is the platform's, reversal in its own period, then the net line — **two** derived lines, because a teacher's share is not a ledger row | **Built** — `20261281012000` |

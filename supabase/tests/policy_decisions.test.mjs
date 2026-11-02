@@ -143,6 +143,12 @@ export async function run(ctx) {
     // meaning the country where verification is switched on, while the children's
     // policy carried the owner's absolute answer. Two documents, two rules, and the
     // weaker one was the one a parent reads first.
+    //
+    // The rule is conditional on a switch — "until guardian verification is working
+    // and switched on" — and the switch was flipped on 2026-11-01. So both documents
+    // carry the owner's sentence *and* the state of the switch, and the state is read
+    // from the settings row rather than assumed: a policy that says "not yet" while
+    // the door is open is the same defect as one that says "open" while it is shut.
     const privacy = (await body('privacy')).body;
     const children = (await body('children')).body;
     assert(/No one under 13 may use this platform anywhere, in any country/.test(privacy),
@@ -151,6 +157,26 @@ export async function run(ctx) {
       'the children’s policy lost the owner’s absolute rule');
     assert(!/does not knowingly enrol a child under 13 there/.test(privacy),
       'the privacy notice still describes the rule country by country');
+
+    // Both documents state the rule — a verified guardian for every child, in every
+    // country — and neither claims a switch state that contradicts the settings row.
+    // The switch is the operator's to flip (`docs/deploy/README.md` §3.3), so a text
+    // that asserted "switched on" while the row said false would be the same defect
+    // in the other direction.
+    const verificationOn = (await q(
+      `select public.setting_bool('family.guardian_verification', false) as v`)).rows[0].v;
+    for (const [slug, text] of [['privacy', privacy], ['children', children]]) {
+      assert(/verified as their parent or guardian|once a\s+guardian has been verified/.test(text),
+        `${slug} does not state that a child needs a verified guardian`);
+      assert(/every country/.test(text), `${slug} does not say the rule is not country by country`);
+      if (verificationOn) {
+        assert(!/it is switched off/.test(text),
+          `${slug} says the switch is off, and it is on`);
+      } else {
+        assert(!/switched on, from/.test(text),
+          `${slug} claims the switch was flipped while the settings row says it was not`);
+      }
+    }
   });
 
   await test('the documents say what was decided, in the owner’s words', async () => {

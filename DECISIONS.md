@@ -7193,3 +7193,64 @@ version's approval reason says so in the record rather than in a comment.
 prompt can promise that. What can be promised is that the platform never presents
 model text as a ruling: a citation to a lesson the learner already has, or no
 answer, and a referral that reaches a teacher.
+
+## A policy that stopped being true is republished, not quietly edited — **DECIDED 2026-11-02**
+
+The children's policy was published on 2026-10-28 and had stopped being true by
+2026-11-01. It said, in a document in force: *"No one under 13 may use this platform
+anywhere, in any country, until guardian verification is working and switched on. It
+is not yet: the database refuses to create a child profile without a verified
+guardian, and the switch that would open the door is off."* Every clause of that was
+true on the day it was written. The owner then switched guardian verification on,
+worldwide, ahead of the legal review — so from the morning of 2026-11-01 the policy
+told every parent that the platform refused something it allowed, and did it in the
+one document a parent reads before enrolling a child.
+
+It also promised something no code performs: *"When a learner turns 18 the record
+becomes their own account, and they are asked whether to keep it. If they say no it
+is deleted within 30 days."* That was the owner's answer of 2026-10-27, and it is
+**not built**. The platform stores no date of birth — the same policy says so two
+paragraphs earlier, and that is deliberate — so it cannot know that a learner has
+turned 18, and nothing moves a learning record from one account to another. A
+binding document that promises a handover nobody can perform is worse than a
+document that says "not yet": the first is a lie a reader has no way to detect.
+
+**What was decided, and what was built.**
+
+* **A correction is a new version.** Version 2 is in force from 2026-11-02, version
+  1 is retired and kept unchanged, and the audit row records the owner's
+  instruction. Editing version 1 in place would have destroyed the only record of
+  what was in force when the consents that name it were taken.
+* **The policy says what the platform does, not what it intends.** The eighteen
+  paragraph now states the two facts — no birthday is detected, nothing converts or
+  transfers on its own — and says plainly that the platform has no feature that
+  moves a record between accounts. **The owner's decision stands and is recorded
+  here as an instruction to build**: a learner should be able to take their record
+  into an account of their own at eighteen, choosing to keep it or to have it
+  deleted within thirty days. Nothing about that decision was withdrawn; what
+  changed is that a public document stopped claiming it had already happened.
+* **The under-13 answer follows the switch.** Guardian verification is required for
+  every child, in every country, including the United States and the EU, and the
+  policy states it that way. It does not say "under 13": the requirement is the
+  same at five as at fifteen, and a rule with an age threshold in it invites the
+  question of what happens below the threshold.
+* **One sentence is deliberately conditional, and says so.** A course a child may
+  be shown must come from an author who holds a passing screening and has
+  acknowledged the conduct policy — but `platform.safeguarding` is a switch that
+  ships off, so the policy says the platform enforces it "when the operator has the
+  control switched on". A policy may state a rule; it must not present a switch as
+  a guarantee, and the alternative — a stronger sentence today — would be the same
+  mistake this section exists to fix.
+* **The reviewer's checklist is the other half.** Nine steps, rendered on
+  `/admin/guardians` and explained in
+  `docs/safeguarding/guardian-verification-checklist.md`, with a test that fails if
+  the two disagree. The step that matters most is the ninth: a consent decision
+  decides *who may act for a child*, never *whether a child is safe* — a worry goes
+  to the safeguarding lead that day, as a different record.
+
+**What is still owed.** The legal review of the children's policy and of the
+verification it now requires; and the build behind the eighteenth-birthday decision,
+which is a real unit rather than a paragraph: a learner (or the adult holding the
+record) asks for the handover, the request is recorded, the record moves or is
+deleted within thirty days, and no date of birth is introduced to make any of it
+work.

@@ -527,8 +527,41 @@ refusing, because a phrase that catches the wrong question is edited by migratio
 and this page is how anybody finds out. Recitation is untouched, and the reason is
 unchanged: a wrong correction on religious content is worse than none.
 
-Verification: **2 474 database assertions in 162 suites, 1 977 web tests; TypeScript
-typecheck, build and `check:repo` pass; 221 migrations.**
+A published policy can stop being true, and the children's policy did so in four
+days. It was published on 2026-10-28 saying *"No one under 13 may use this platform
+anywhere … the switch that would open the door is off"* — true when it was written.
+On 2026-11-01 the owner switched guardian verification on, worldwide, so from that
+morning the document told every parent that the platform refused something it
+allowed. It also promised something the platform cannot do: *"When a learner turns
+18 the record becomes their own account, and they are asked whether to keep it."* The
+owner decided that on 2026-10-27 and it is **not built** — the platform stores no
+date of birth, by design, so it does not know that anybody has turned 18, and no
+code moves a record from one account to another. A promise in a binding document
+that no code performs is the defect this repository keeps finding, so it is now
+written where it belongs: `DECISIONS.md` records the decision and the gap, and the
+policy says what happens today. Version 2 (`20261281015000_children_and_privacy_policies.sql`) is
+in force from 2026-11-02, retired version 1 is kept unchanged, and a consent records
+the version that was in force when it was decided — including the ones that name
+version 1, which is the truth about what their parent agreed to. Two tests keep the
+live text honest rather than merely long: it must not say the switch is off, must not
+promise the handover, and must still carry the thirty-day clock, the certificate
+exception and the coursework year.
+
+The reviewer's checklist is the other half of the same answer, and its absence was
+quieter: a queue with four buttons and no standard, where two people deciding the
+same request on the same day could give different answers. It is nine steps —
+`REVIEWER_CHECKLIST` in `web/src/lib/guardian-consent.ts`, rendered on
+`/admin/guardians`, and explained with its reasons in
+`docs/safeguarding/guardian-verification-checklist.md`. What each step is *for* is
+worth stating: the method has to be one that actually happened, the reference stays
+write-only because the platform must not become a copy of a passport, the lifetime
+is chosen rather than defaulted, the permissions are narrowed rather than widened,
+and a consent decision is explicitly **not** a safeguarding investigation — a worry
+goes to the lead, that day, as a different record. A test fails if the nine steps on
+the screen and the nine sections in the document ever disagree.
+
+Verification: **2 481 database assertions in 163 suites, 1 980 web tests; TypeScript
+typecheck, build and `check:repo` pass; 222 migrations.**
 
 ## Today's sentence
 

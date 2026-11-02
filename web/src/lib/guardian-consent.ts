@@ -304,6 +304,79 @@ export const EVIDENCE_NOTE =
   + 'exists and never what it is. A reviewer’s judgement rests on the statement, '
   + 'the method, and whatever they checked outside the platform.';
 
+/**
+ * What a reviewer is actually being asked to do.
+ *
+ * The queue used to give a person a statement, four buttons and no idea what
+ * standard they were being held to, which is how two reviewers decide the same
+ * request differently. This is the standard, written once: it is rendered on the
+ * page and it is the same list `docs/safeguarding/guardian-verification-checklist.md`
+ * explains, so the screen and the document cannot drift into two answers. A web
+ * test holds the two together.
+ */
+export const REVIEWER_CHECKLIST: readonly { title: string; body: string }[] = [
+  {
+    title: 'Read the statement, not just the name',
+    body: 'The adult has to say who the child is to them, in their own words. '
+      + 'Twenty characters is the floor the database enforces, not the standard: '
+      + 'a sentence that could be about any child in the world answers nothing.',
+  },
+  {
+    title: 'Check the method that was actually used',
+    body: 'A video call means you saw them. A document means a name on it matched '
+      + 'the child’s record. In person means somebody saw them at a class, an '
+      + 'office or an event. A signed declaration means something signed exists '
+      + 'outside this database. If the method chosen never happened, ask for more '
+      + 'information rather than deciding on a guess.',
+  },
+  {
+    title: 'Never ask for the document itself',
+    body: 'The reference is write-only and this queue reports only that one exists. '
+      + 'The platform must not become a copy of anybody’s passport, and a reviewer '
+      + 'who asks for it has moved the risk rather than checked it.',
+  },
+  {
+    title: 'Decide how long the verification lasts',
+    body: 'Twelve months is the ordinary answer. Six is for evidence that is thin '
+      + 'or a household in flux. Longer than twenty-four needs documentary grounds, '
+      + 'and the database refuses anything past thirty-six.',
+  },
+  {
+    title: 'Narrow the permissions, never widen them',
+    body: 'Seeing a child’s progress and changing what they study are different '
+      + 'powers, and managing the profile — renaming it, removing it — is the one '
+      + 'to withhold unless that adult is the only one who could do it.',
+  },
+  {
+    title: 'Reject when the adult is not who they say, or not this child’s',
+    body: 'A statement that names no child, a method that was never completed, an '
+      + 'adult outside the child’s family asking, or a second adult claiming a '
+      + 'child who already has a live consent — each of those is a rejection with '
+      + 'a reason, not a maybe.',
+  },
+  {
+    title: 'Ask for more information rather than deciding blind',
+    body: 'It keeps the request open, revokes nothing, and tells the adult what is '
+      + 'missing. A decision made to clear a queue is a decision about a child '
+      + 'made for the wrong reason.',
+  },
+  {
+    title: 'Write the reason for the adult, not for the file',
+    body: 'The database requires five characters. The standard is that the adult '
+      + 'can read it and know what to do next — and a rejection that explains '
+      + 'itself is the difference between a refusal and an insult.',
+  },
+  {
+    title: 'A consent decision is not a safeguarding investigation',
+    body: 'It decides who may act for a child, not whether a child is safe. If the '
+      + 'statement raises a worry, record the decision on its own merits and take '
+      + 'the worry to the safeguarding lead separately, that day.',
+  },
+];
+
+/** Where the long form of the same checklist lives, for the person reading the queue. */
+export const CHECKLIST_DOC = 'docs/safeguarding/guardian-verification-checklist.md';
+
 /** The sentence above the decision form. */
 export function decisionEffect(decision: ConsentDecision, months: number): string {
   if (decision === 'verified') {
