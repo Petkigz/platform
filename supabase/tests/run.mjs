@@ -15,6 +15,7 @@ import { run as enrolment } from './enrolment.test.mjs';
 import { run as progress } from './progress.test.mjs';
 import { run as assessment } from './assessment.test.mjs';
 import { run as flags } from './flags.test.mjs';
+import { run as registerTruth } from './register_truth.test.mjs';
 import { run as family } from './family.test.mjs';
 import { run as authoring } from './authoring.test.mjs';
 import { run as courseVersionCopy } from './course_version_copy.test.mjs';
@@ -221,6 +222,7 @@ for (const [name, fn] of [
   ['progress', progress],
   ['assessment', assessment],
   ['flags', flags],
+  ['register truth', registerTruth],
   ['family', family],
   ['authoring', authoring],
   ['course version copy', courseVersionCopy],

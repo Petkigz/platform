@@ -302,7 +302,11 @@ export async function run(ctx) {
       `select key, value_type, gate_type from public.platform_settings order by key`)).rows;
     const inDb = new Map(rows.map((r) => [r.key, r]));
 
-    assert(flags.size >= 86, `FLAGS.md documented only ${flags.size} flags`);
+    // A floor, not a count. The contract is the set comparison below — neither
+    // side may hold a key the other lacks — and that comparison already fixes the
+    // size. This only catches a parser that lost the table altogether, which is
+    // how a document silently stops being checked.
+    assert(flags.size >= 84, `FLAGS.md documented only ${flags.size} flags`);
     assert(controls.size === 18, `expected the 18 controls in FLAGS.md, found ${controls.size}`);
 
     // Neither side may hold a key the other lacks. Reported as a set rather

@@ -410,12 +410,17 @@ export async function run(ctx) {
                       'platform.takedown', 'platform.incident', 'platform.age_assurance',
                       'platform.withdrawal_right')
         order by key`)).rows;
-    eq(rows.length, 7, 'the seven policy flags');
+    eq(rows.length, 6, 'the six policy flags — versioning is no longer one');
 
     const of = (key) => rows.find((r) => r.key === key);
-    // Versioning needs nothing but the owner's decisions in the text, and the
-    // publishing itself is a screen — so it is a runtime toggle, not a deploy.
-    eq(of('platform.terms_versioning').gate_type, 'admin', 'terms versioning');
+    // Versioning stopped being a switch on 2026-11-02. The mechanism ships for
+    // everybody — `policy_versions`, `policy_acceptances`, `accept_policy()` and
+    // the refusal in `approve_policy_version()` read no key at all — so the row
+    // told the owner a feature was ready and did nothing when flipped. A switch
+    // that changes nothing is worse than a missing one, and the register now
+    // holds only switches. This is the guard against it coming back.
+    assert(!of('platform.terms_versioning'),
+      'terms versioning is no longer a switch: the mechanism is unconditional');
     // Legal still needs a document: the decisions, and the people to name.
     eq(of('platform.legal').gate_type, 'admin_setup', 'the legal register');
 

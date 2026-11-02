@@ -7639,3 +7639,65 @@ Neither switch moved. A corrected sentence is not a released feature, and the te
 that holds these two rows asserts that as well: gate and value are unchanged, so
 the only thing that changed is that a reader is no longer sent to rebuild what
 exists or to index what does not.
+
+## A switch that changes nothing is worse than a missing one — **DECIDED 2026-11-02**
+
+Seven rows in the feature register carried no written precondition. `FLAGS.md`
+states the rule they broke in one line — *a flag with no written precondition is a
+bug waiting to be enabled* — and `flags.test.mjs` holds the document and the table
+to each other, so the two agreed with one another and neither had ever been
+compared with the software. That is the failure this decision closes: a register
+is only worth reading if something checks it against the thing it describes.
+
+**What each of the seven turned out to be.** Checked one at a time against the
+tree, they split three ways and only one needed a sentence written.
+
+* `learning.progress` gates a screen, and the sentence it should always have had
+  is that it is a **UI gate**: `record_lesson_position()` stores where a learner
+  stopped whether the switch is on or off, so every position is already kept.
+  Off, three things disappear — the continue-where-you-left-off card on `/learn`,
+  the progress bar and lesson count on a course card, and the progress block on an
+  enrolment — and nothing is refused. That is a reasonable thing for an owner to
+  do and an unreasonable thing to do without knowing, which is exactly what a
+  precondition is for.
+* `family.profiles` and `teaching.dashboard` name work that **shipped and is
+  always on**. A guardian reserving a login for a child is a custody question
+  rather than a feature gate, and `/teach` *is* the teacher's dashboard — a
+  teacher without their own course list has no product. A switch that can take
+  either away is not a dial, it is an outage.
+* `teaching.invites` was the **second name** for `teaching.invite_links`, which is
+  the key the invitation table and the refusal rules were built against. This is
+  the duplicate-after-screening case again, and it is removed the same way.
+* `commerce.free` had **nothing to switch**: a free course is a price of zero, and
+  `'free'` is already an enrolment `source` that the enrolment code sets.
+* `platform.audit` had **no table, no writer and no screen** — and because it
+  carried no precondition, nothing said so. A control an owner reaches for during
+  an incident that would write nothing is worse than an absence.
+* `platform.maintenance_mode` was **never built and cannot be a toggle**. Every
+  write goes through PostgREST and RPC, so read-only mode has to be enforced in
+  the database — revoking insert, update and delete across the schema for the
+  duration, or a session setting every policy consults — and it needs a way to be
+  turned off again that does not depend on the database being writable. That is a
+  design, not a dial. It stays in `docs/remaining.md` so the want is not lost.
+
+**The check found an eighth.** `platform.terms_versioning` was not one of the
+seven. Its precondition said *built 2026-10-27*, which was true — `policy_versions`,
+`policy_acceptances`, `accept_policy()` and the refusal in `approve_policy_version()`
+all ship — but no line of code reads the key. So it was the same defect in its
+most dangerous form: a row that told the owner the feature was ready, was correct
+about the feature, and did nothing when flipped. The mechanism is unconditional
+now; there is no gate left to hold.
+
+**The rule, and the test that keeps it.** A flag may be unread only while its
+precondition says what is missing. **A row that claims it is ready — "None…", the
+word `FLAGS.md` uses — must be read by code.** A switch that claims readiness and
+changes nothing is worse than a missing one, because the owner flips it and
+concludes the platform is broken.
+
+`supabase/tests/register_truth.test.mjs` is the mechanical half of the reading that
+found all of this, and it does more than this rule: every function, route, setting
+and table the register names must exist, and every migration a document names must
+be a file in the tree. Twice on 2026-11-02 a precondition named a mechanism that
+did not exist — an index over lesson bodies on a schema where a lesson has no body
+text — and a fabricated mechanism in a document becomes a plan. Those checks are
+the ones that stop the next one before it reaches a plan.

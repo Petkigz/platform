@@ -183,22 +183,34 @@ three-year clock is right.
 These are defects in the record, not gaps in the software. Each is small and each
 makes a document stop lying.
 
-### A1. Nine flags with no written precondition
+### A1. Seven flags with no written precondition — **done 2026-11-02**
 
 `FLAGS.md` states its own rule: *a flag with no written precondition is a bug
-waiting to be enabled.* Nine rows have an empty `preconditions` field:
-
+waiting to be enabled.* Seven rows carried an empty `preconditions` field:
 `commerce.free`, `family.profiles`, `learning.progress`, `platform.audit`,
-`platform.maintenance_mode`, `teaching.dashboard`, `teaching.invites` — **and six
-of those seven gate nothing at all.** No SQL, no route and no component reads
-them. They exist only as rows in a register.
+`platform.maintenance_mode`, `teaching.dashboard`, `teaching.invites`.
 
-`governance.panel_required` and `governance.scholar_board_active` are controls
-rather than flags, and the same is true of both.
+This entry first said nine, and it was wrong twice over. Two of the nine —
+`governance.panel_required` and `governance.scholar_board_active` — are *controls*,
+not flags: they carry a value and their `description` says what it decides, and
+both are enforced by a trigger rather than by a switch. And the sentence "six of
+those seven gate nothing at all" was too generous to `learning.progress`, which
+does gate something real.
 
-**Fix:** write the precondition for `learning.progress` (it gates real progress
-recording), and either wire or retire the six empty ones. A flag nobody reads is
-not a feature held in reserve; it is a promise in a table.
+Checked one at a time against the tree, the seven split three ways: one gates a
+screen (`learning.progress` — a UI gate only, since `record_lesson_position()`
+writes the position regardless), five name work that shipped
+(`family.profiles`, `teaching.dashboard`), duplicated another key
+(`teaching.invites`), or never had anything behind it (`commerce.free`,
+`platform.audit`), and one was never built and could not be a toggle
+(`platform.maintenance_mode`). `20261281025000` wrote the precondition for the
+first and removed the other six; the check that found the seventh —
+`platform.terms_versioning`, whose precondition claimed readiness while nothing
+read the key — is `supabase/tests/register_truth.test.mjs`.
+
+**The rule that came out of it:** a flag may be unread only while its precondition
+says what is missing; a row that claims it is ready must be read by code. That is
+now enforced, so this defect cannot return quietly.
 
 ### A2. Eight more stale preconditions — the same defect fixed twice today
 
