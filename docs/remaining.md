@@ -238,19 +238,29 @@ their true sentence is *there is nothing here to switch*: the feature shipped, i
 is on for everybody, and a row saying otherwise tells the owner a control exists
 that does not.
 
-### A3. `ROADMAP.md` is quoting day-one numbers as current facts
+### A3. `ROADMAP.md` was quoting day-one numbers as current facts — **done 2026-11-02**
 
-It says **47 flags** (there are 93), **85 tables** (142), **121 endpoints**, and
-"38 screens unblocked" — and its progress line still reads *11 done · 9 part · 16
-todo · 13 blocked · 4 conflict*.
+It said **47 flags**, **85 tables**, **121 endpoints** and "38 screens unblocked",
+with a progress line reading *11 done · 9 part · 16 todo · 13 blocked · 4 conflict
+(53 total)*. Measured on 2026-11-02: **80 flags and 18 controls**, **159 tables**
+with RLS on every one and 282 policies, **128 page routes and 115 route handlers**,
+and a checklist of **59** rows split *20 · 21 · 7 · 6 · 5* — the header was wrong
+about the total before it was wrong about the split.
 
-The four `[X] CONFLICT` rows are worse than stale: each records a conflict that was
-**resolved** — open teacher applications, the scholarly panel, commissions, and
-"launch in Uganda" versus worldwide. They still say "resolve before doing it",
-which invites a future session to reopen decisions that are closed.
+The `[X] CONFLICT` rows were worse than stale, and there were **five**, not four:
+each recorded a conflict that had been **resolved**, so they invited a future
+session to reopen closed decisions. All five now carry the date that ended them —
+2026-10-15 for worldwide-not-Uganda-first and for the panel (P6), 2026-10-22 for
+expansion-by-price-market, 2026-10-26 for applications, 2026-10-27 for the panel
+machinery being built dormant. The fifth was never a conflict at all: *"Test all
+roles and complete user journeys"* described finished work and had been marked
+`[X]` by mistake, which is why the header counted five and the section below it
+listed four.
 
-**Fix:** recount the numbers, mark the four conflicts as resolved with the decision
-date, and re-derive the progress line.
+**Fix:** `ROADMAP.md` recounted, its phase headers re-derived from its own rows
+(they said 6/6 and 5/6 for phases that are 5/6 and 3/6), and a check added to
+`scripts/repo-check.mjs` that fails when the progress line and the marks disagree —
+the specific defect here was a header nobody counted.
 
 ### A4. The screen count disagrees with the tree
 

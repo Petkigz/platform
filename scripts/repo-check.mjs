@@ -898,6 +898,50 @@ function appRoutes() {
 }
 
 // ---------------------------------------------------------------------------
+// 14. ROADMAP's header agrees with the marks in ROADMAP
+// ---------------------------------------------------------------------------
+// The checklist is 59 rows long and its header counts them. Nothing counted the
+// header, so it drifted the way headers do: on 2026-11-02 it said *53 tasks* and
+// *11 done · 9 part · 16 todo · 13 blocked · 4 conflict* while the file held 59
+// rows split 20 · 21 · 7 · 6 · 5. A reader plans from the header, so the header is
+// the number that has to be true.
+//
+// Only the arithmetic is checked. Whether a row is *correctly* marked is a reading
+// and belongs to whoever does it; that the header agrees with the rows is a sum.
+{
+  const text = readFileSync(join(root, 'ROADMAP.md'), 'utf8');
+  const marks = { x: 0, '~': 0, ' ': 0, '!': 0, X: 0 };
+  for (const line of text.split('\n')) {
+    const match = /^- \[(.)\] /.exec(line);
+    if (match) marks[match[1]] = (marks[match[1]] ?? 0) + 1;
+  }
+  const total = Object.values(marks).reduce((a, b) => a + b, 0);
+
+  const claimed = /\*\*Progress: (\d+) done · (\d+) part · (\d+) todo · (\d+) blocked · (\d+) conflict\s+\((\d+) total\)\*\*/
+    .exec(text);
+  if (!claimed) {
+    fail('roadmap', 'ROADMAP.md no longer states its progress line in the form "**Progress: N done · N part · N todo · N blocked · N conflict  (N total)**"');
+  } else {
+    const [, done, part, todo, blocked, conflict, said] = claimed.map(Number);
+    const actual = [marks.x, marks['~'], marks[' '], marks['!'], marks.X].map((n) => n ?? 0);
+    const wanted = [done, part, todo, blocked, conflict];
+    if (actual.some((n, i) => n !== wanted[i]) || said !== total) {
+      fail('roadmap', `ROADMAP.md says ${wanted.join(' · ')} of ${said}, but its rows are `
+        + `${actual.join(' · ')} of ${total}`);
+    }
+    const header = /all \*\*(\d+)\*\* tasks/.exec(text);
+    if (!header || Number(header[1]) !== total) {
+      fail('roadmap', `ROADMAP.md's title says ${header ? header[1] : 'no number'} tasks; there are ${total} rows`);
+    }
+    if (marks.X > 0) {
+      process.stdout.write(`roadmap: ${total} tasks, ${marks.X} still marked CONFLICT\n`);
+    } else {
+      process.stdout.write(`roadmap: ${total} tasks, header agrees\n`);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 if (problems.length > 0) {
   process.stderr.write(`\n${problems.length} structural problem(s):\n`);
   for (const problem of problems) process.stderr.write(`  - ${problem}\n`);
