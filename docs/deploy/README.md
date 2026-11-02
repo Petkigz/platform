@@ -123,7 +123,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-222 files in `supabase/migrations/`, applied in filename order — the 14-digit
+223 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -146,7 +146,7 @@ done
   first run. What you are watching for is the loop *stopping*, and the file name
   above the error.
 - Takes a few minutes. The last file printed should be
-  `20261281015000_children_and_privacy_policies.sql`.
+  `20261281016000_coursework_holds_queue.sql`.
 
 **Path B — the Supabase CLI**, if you would rather have migration history tracked:
 

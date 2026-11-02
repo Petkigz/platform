@@ -13,7 +13,18 @@ import {
   REVIEW_FORM_HELP,
 } from '@/lib/coursework-review';
 import { readableByteSize } from '@/lib/media';
+import {
+  HOLDS_NOTE,
+  PURGE_NOTE,
+  holdMeta,
+  holdSentence,
+  parseHoldCount,
+  parseHolds,
+  parseStorageQueue,
+  storageSentence,
+} from '@/lib/coursework-retention';
 import { ReviewForm } from './review-form';
+import { RetentionActionForm } from './retention-actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,15 +62,32 @@ export default async function AdminCourseworkPage() {
   const { data: privileged } = await supabase.rpc('is_privileged', { p_user_id: user.id });
   if (privileged !== true) redirect('/');
 
-  const [summaryResult, queueResult] = await Promise.all([
-    supabase.rpc('coursework_review_summary'),
-    supabase.rpc('coursework_review_queue', { p_limit: 200 }),
-  ]);
+  const [summaryResult, queueResult, holdsResult, holdCountResult, planResult, storageResult] =
+    await Promise.all([
+      supabase.rpc('coursework_review_summary'),
+      supabase.rpc('coursework_review_queue', { p_limit: 200 }),
+      // Governance staff or the owner. A support agent reaches this page and the
+      // database refuses the list; the page then says whose work it is instead of
+      // rendering an empty register that reads as "nobody has held anything".
+      supabase.rpc('coursework_holds', { p_limit: 100 }),
+      supabase.rpc('coursework_hold_count'),
+      // The owner alone: this plan names what is about to be deleted, and the
+      // storage queue carries a bucket key for every unwatchable object.
+      supabase.rpc('coursework_retention_plan'),
+      supabase.rpc('coursework_bytes_awaiting', { p_limit: 50 }),
+    ]);
 
   const summary = summaryResult.error ? EMPTY_SUMMARY : parseReviewSummary(summaryResult.data);
   const queue = queueResult.error ? [] : parseReviewQueue(queueResult.data);
   const unreviewed = queue.filter((row) => row.review === 'none');
   const reviewed = queue.filter((row) => row.review !== 'none');
+
+  const canSeeHolds = !holdsResult.error;
+  const holds = canSeeHolds ? parseHolds(holdsResult.data) : [];
+  const holdCount = canSeeHolds ? parseHoldCount(holdCountResult.data) : null;
+  const canSeeStorage = !planResult.error && !storageResult.error;
+  const storage = canSeeStorage ? parseStorageQueue(storageResult.data) : [];
+  const plan = canSeeStorage ? (planResult.data as Record<string, unknown>) : null;
 
   return (
     <div className="page wide">
@@ -144,6 +172,12 @@ export default async function AdminCourseworkPage() {
                 </p>
               </div>
               <ReviewForm assetId={row.assetId} fileName={row.fileName} />
+              <RetentionActionForm
+                assetId={row.assetId}
+                action="hold"
+                label="Hold this from deletion"
+                name={row.fileName ?? 'this file'}
+              />
             </article>
           ))}
         </section>
@@ -170,6 +204,96 @@ export default async function AdminCourseworkPage() {
               </li>
             ))}
           </ul>
+        </section>
+      )}
+
+      <section className="card" style={{ marginBlockStart: '1.5rem' }}>
+        <div className="outline-h">
+          <h2>
+            Held from deletion
+            {holdCount ? ` (${holdCount.held})` : ''}
+          </h2>
+        </div>
+        {!canSeeHolds ? (
+          <p className="muted">
+            Holding a file back belongs to governance staff and the owner, so this
+            register is theirs. Everything above is still yours to review.
+          </p>
+        ) : (
+          <>
+            <p className="muted">{HOLDS_NOTE}</p>
+            {holdCount && holdCount.holdingNothing > 0 && (
+              <div className="notice warn">
+                {holdCount.holdingNothing} of these {holdCount.held === 1 ? 'holds names a file' : 'holds name files'} that
+                already left the register. A hold on a file that is gone keeps nothing;
+                releasing it is how the register stops saying otherwise.
+              </div>
+            )}
+            {holds.length === 0 ? (
+              <p className="muted">
+                Nothing is held. The clock is running on every file, which is the
+                ordinary state.
+              </p>
+            ) : (
+              <ul className="lessons">
+                {holds.map((row) => (
+                  <li key={row.assetId}>
+                    <span className="t">
+                      {row.displayName}
+                      <span className="muted"> · {holdMeta(row)}</span>
+                      <br />
+                      <span className="muted">&ldquo;{row.reason}&rdquo;</span>
+                      <br />
+                      <span className="muted">{holdSentence(row)}</span>
+                    </span>
+                    <RetentionActionForm
+                      assetId={row.assetId}
+                      action="release"
+                      label="Release the hold"
+                      name={row.displayName}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
+        )}
+      </section>
+
+      {canSeeStorage && (
+        <section className="card" style={{ marginBlockStart: '1rem' }}>
+          <div className="outline-h">
+            <h2>Handed-in files waiting in storage</h2>
+          </div>
+          <p className="muted">{PURGE_NOTE}</p>
+          {plan && Number(plan.awaitingStorage ?? 0) === 0 ? (
+            <p className="muted">
+              Nothing is waiting. Every file this platform has tombstoned has had its
+              deletion from storage recorded.
+            </p>
+          ) : (
+            <ul className="lessons">
+              {storage.map((row) => (
+                <li key={row.assetId}>
+                  <span className="t">
+                    {row.displayName}
+                    <br />
+                    <span className="muted">{storageSentence(row)}</span>
+                    <br />
+                    <code style={{ fontSize: '0.8rem' }}>
+                      {row.bucket}/{row.key}
+                    </code>
+                  </span>
+                  <RetentionActionForm
+                    assetId={row.assetId}
+                    action="purge"
+                    label="Record the deletion"
+                    name={row.displayName}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       )}
 
