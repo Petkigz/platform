@@ -15,7 +15,7 @@ export async function run(ctx) {
     asUser, asAnon, committed,
     newUser, newProfile, bootstrapAdmin,
     newInstructor, newReviewer, satisfyReview,
-    newCourse, newVersion, newSection, newLesson,
+    newCourse, newVersion, newSection, newLesson, verifyGuardian,
   } = ctx;
 
   const admin    = await bootstrapAdmin('fam-admin@example.com');
@@ -140,18 +140,34 @@ export async function run(ctx) {
   // -------------------------------------------------------------------
   // Who can see the child
   // -------------------------------------------------------------------
-  await test('the family owner sees their children and their progress', async () => {
+  await test('the family owner sees the child, and its progress only once verified', async () => {
+    // `family.guardian_verification` ships on, and since 2026-11-01 that is the
+    // promise the policy makes: a parent sees that the child exists and is named,
+    // and reaches the progress, grades, enrolments and certificates through a
+    // current consent. Two states, because they are two different claims — the
+    // second was the defect this whole gate exists to close.
     await asUser(parent.userId, async () => {
       const kids = await count(
         `select 1 from public.learner_profiles
           where family_id = $1 and learner_type = 'child'`, [familyId]);
       assert(kids === 1, `the owner saw ${kids} children, expected 1`);
 
+      const before = await count(
+        `select 1 from public.lesson_progress lp
+           join public.course_enrolments ce on ce.id = lp.course_enrolment_id
+          where ce.learner_profile_id = $1`, [kidId]);
+      assert(before === 0,
+        `the owner saw ${before} progress rows for a child nobody has been verified for`);
+    });
+
+    await verifyGuardian(parent.userId, kidId);
+
+    await asUser(parent.userId, async () => {
       const prog = await count(
         `select 1 from public.lesson_progress lp
            join public.course_enrolments ce on ce.id = lp.course_enrolment_id
           where ce.learner_profile_id = $1`, [kidId]);
-      assert(prog === 1, `the owner saw ${prog} progress rows for their child`);
+      assert(prog === 1, `the owner saw ${prog} progress rows for their verified child`);
     });
   });
 

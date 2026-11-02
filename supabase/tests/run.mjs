@@ -174,6 +174,21 @@ import { run as rpcContract } from './rpc_contract.test.mjs';
 // failure names a file that never touched the setting — which is exactly how a
 // leaked 0% share cost four suites a full run on 2026-10-22. Detected here, not
 // silently repaired, so the suite that leaked is the one reported.
+// `family.guardian_verification` is ON in the platform (owner decision, 2026-11-01),
+// and a great many suites were written when it shipped off: they build a family with
+// a child and then read that child's progress, which the gate now refuses without a
+// verified consent. Those suites run with the gate off so that each one keeps
+// testing the thing it is about, and the suites that test the gate — or the shipped
+// value itself — run in the configuration that ships. This is a debt, not a design:
+// the target is every household fixture carrying a verification, after which this
+// list and the switch in the loop below disappear.
+const VERIFICATION_ON_SUITES = new Set([
+  'flags',
+  'family',
+  'guardians',
+  'learner switcher',
+]);
+
 const GLOBAL_SETTINGS = [
   ['teaching.revenue_share_percent', '50'],
   ['commerce.checkout', 'false'],
@@ -355,7 +370,14 @@ for (const [name, fn] of [
   ['assessments', assessments],
 ]) {
   console.log(`\n--- ${name} ---\n`);
+  await ctx.q(
+    `update public.platform_settings set value_text = $1 where key = 'family.guardian_verification'`,
+    [VERIFICATION_ON_SUITES.has(name) ? 'true' : 'false']);
   await fn(ctx);
+  // Back to what ships before the leak check, so a suite that forgets to restore
+  // it is caught by the check rather than blamed on the next one.
+  await ctx.q(
+    `update public.platform_settings set value_text = 'true' where key = 'family.guardian_verification'`);
 
   for (const [key, seed] of GLOBAL_SETTINGS) {
     const row = (await ctx.q(

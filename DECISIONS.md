@@ -7311,3 +7311,40 @@ chooses to keep the record or have it deleted in thirty days. It keeps the sente
 this whole design rests on — the platform records the statement and does not check it,
 because it holds no date of birth — and version 2 is retired and kept rather than
 rewritten, because a reader is entitled to see that a correction was a correction.
+
+## A decided switch is not a decided document — **DECIDED 2026-11-02**
+
+Guardian verification was decided on for every child, in every country, on 2026-11-01.
+The decision was recorded here, restated in the children's policy, and contradicted by
+the one row that decides what the software does: `platform_settings.value_text` for
+`family.guardian_verification` still said `false`, because turning it on had been
+written down as an owner action for the dashboard rather than a change to ship.
+
+That was the same defect as a policy that promises what no code performs, pointing the
+other way: a platform that says it requires a verified guardian and then enrols a child
+on an adult's word. The policy is a claim about the platform; the flag is what the
+platform does. Where the two disagree the software wins, and the disagreement is
+invisible to the parent it is about.
+
+**What was decided.** The row ships `true` (`20261281019000_guardian_verification_on.sql`).
+It stays `admin_setup`-gated, so a legal review that says something different is one
+press, not a migration. Three consequences, all recorded rather than discovered:
+
+* **Every approval given before 2026-11-01 has lapsed**, because those were approved
+  before a lifetime existed. A child already enrolled keeps their seat; the guardian is
+  asked to verify again.
+* **The enrolment gate now treats "no caller" as the platform acting on its own data.**
+  Seeds, migrations and fixtures write rows with no session, and refusing those taught
+  nobody anything while making 81 fixture inserts unrunnable. The narrowing is in *when*
+  the trigger fires, never in what it requires: every path a person reaches carries the
+  caller's claims, and the refusal is tested.
+* **Most database suites run with the gate off, and that is a debt with an address.**
+  They were written when the switch shipped off and build households nobody has been
+  verified for. Four suites run in the shipped configuration; `ctx.verifyGuardian()` is
+  the fixture that makes a household an ordinary one; migrating the rest and deleting
+  the list from `run.mjs` is the outstanding test work. A suite that hides the shipped
+  configuration is how a green run stops meaning anything, so it is written down here
+  rather than left to be discovered.
+
+**What this is not.** It is not the legal review, and it does not make one less
+necessary. It is the platform behaving as its own policy already said it does.

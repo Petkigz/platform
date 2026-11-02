@@ -174,6 +174,43 @@ export async function createHarness() {
        values ($1, $2, $3)`, [userId, r.rows[0].id, assignedBy ?? null]);
   }
 
+  /**
+   * Make `guardianId` a current, verified guardian of `learnerId`.
+   *
+   * `family.guardian_verification` ships **on**, so plain family membership no
+   * longer reaches a child's learning data and a child cannot be enrolled without a
+   * current consent. A fixture that stands for an ordinary household therefore has
+   * to stand for the verification too, or it is modelling a household the platform
+   * refuses — and the test that then fails is about the household, not about the
+   * feature it meant to exercise.
+   *
+   * The columns are written directly rather than through the review queue: what is
+   * being established is the state a decision leaves behind. The queue itself is
+   * tested in `guardians` and `guardian_consent`, which drive it through the
+   * functions a reviewer actually uses.
+   */
+  async function verifyGuardian(guardianId, learnerId, options = {}) {
+    const months = options.months ?? 12;
+    const canManageLearning = options.canManageLearning ?? true;
+    const canViewProgress = options.canViewProgress ?? true;
+    const policy = (await q(
+      `select v.id from public.policy_versions v
+         join public.policy_documents d on d.id = v.document_id
+        where d.slug = 'children' and v.status = 'in_force'
+        limit 1`)).rows[0]?.id ?? null;
+
+    await committed(() => q(
+      `insert into public.guardian_relationships
+         (guardian_user_id, learner_profile_id, relationship_type, status,
+          can_manage_profile, can_view_progress, can_manage_learning,
+          verified_at, consent_method, consent_expires_at,
+          consented_policy_version_id)
+       values ($1, $2, 'parent', 'active', true, $3, $4,
+               now(), 'video_call', now() + make_interval(months => $5), $6)
+       on conflict do nothing`,
+      [guardianId, learnerId, canViewProgress, canManageLearning, months, policy]));
+  }
+
   async function bootstrapAdmin(email) {
     const id = await newUser(email);
     await newProfile(id);
@@ -299,6 +336,7 @@ export async function createHarness() {
     test, assert, rejects,
     asSuperuser, asUser, asAnon, committed,
     newUser, newProfile, grantRole, bootstrapAdmin, newInstructor, newReviewer,
+    verifyGuardian,
     ensureReviewerProfile, satisfyReview,
     newCourse, newVersion, newSection, newLesson, newAsset,
     summary, close,

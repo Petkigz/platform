@@ -343,14 +343,17 @@ export async function run(ctx) {
     eq(typeof register.counts.noExpiry, 'number', 'verifications without an expiry are counted');
   });
 
-  await test('the flag describes what exists, including what it will do when switched on', async () => {
+  await test('the flag describes what exists, including what happens when it is switched', async () => {
     const row = (await q(
       `select gate_type, preconditions from public.platform_settings
         where key = 'family.guardian_verification'`)).rows[0];
     eq(row.gate_type, 'admin_setup', 'a human queue is a setup question');
+    assert(/2026-11-01/.test(row.preconditions), 'the register does not say when it moved');
     assert(/the whole consent loop/i.test(row.preconditions), 'the loop is named');
     assert(/expire at once/i.test(row.preconditions),
-      'the flag does not warn that older verifications will lapse when it is switched on');
+      'the flag does not say that approvals given before the switch lapse');
     assert(/write-only evidence reference/i.test(row.preconditions), 'the evidence rule');
+    assert(/legal review/i.test(row.preconditions),
+      'the flag does not say the legal review is still owed');
   });
 }

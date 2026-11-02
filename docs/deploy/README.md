@@ -123,7 +123,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-225 files in `supabase/migrations/`, applied in filename order — the 14-digit
+226 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -146,7 +146,7 @@ done
   first run. What you are watching for is the loop *stopping*, and the file name
   above the error.
 - Takes a few minutes. The last file printed should be
-  `20261281018000_children_policy_handover.sql`.
+  `20261281019000_guardian_verification_on.sql`.
 
 **Path B — the Supabase CLI**, if you would rather have migration history tracked:
 
@@ -157,7 +157,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 225 files from the top and fail on the
+it, and `db push` would then re-apply all 226 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -243,28 +243,38 @@ the database, and has to be typed on purpose — the check is in
 `supabase/tests/deploy_runbook.test.mjs`, including the refusal when the line is
 missing.
 
-**3.3 Switch guardian verification on.** `/admin/flags` → `family.guardian_verification`.
-It ships off, and it is the one flag whose *on* state is the stricter one: while it
-is off, a child profile can be created and enrolled with nothing but an adult's
-word; while it is on, a child enrolment requires a session acting as a **verified**
-guardian with learning authority for that exact child. Decided on worldwide on
-2026-11-01, knowingly ahead of the legal review.
+**3.3 Guardian verification is already on. Nothing to press.**
+`family.guardian_verification` ships `true` since `20261281019000_guardian_verification_on.sql`,
+because the owner decided on 2026-11-01 that every child is enrolled behind a verified
+guardian, in every country, knowingly ahead of the legal review. It is the one flag
+whose *on* state is the stricter one: while it is off, a child profile can be enrolled
+with nothing but an adult's word; while it is on, a child enrolment requires a session
+acting as a **verified** guardian with learning authority for that exact child, and a
+family member reaches a child's progress, grades, enrolments and certificates only
+through a current consent.
 
-Two things happen the moment you press it, and neither is a bug:
+It stays `admin_setup`-gated, so if the legal review says something different it is
+one press on `/admin/flags` to switch off.
 
-* **Every verification approved before today lapses at once**, because those were
-  approved before the machinery recorded a lifetime. Any child already enrolled
-  keeps their access — the gate is on *new* enrolments and on the guardian's reach
-  into the record — but the guardian will be asked to re-verify.
-* **A children's policy version is in force, and it is version 2.** Every consent
-  taken now records `consented_policy_version_id`, so a parent's agreement names the
-  words they were shown. Version 1 was published on 2026-10-28 and said in as many
-  words that the verification switch was off; the owner switched it on anyway on
-  2026-11-01, so version 2 was published on 2026-11-02 stating the rule that now
-  applies — a verified guardian for every child, in every country. Version 1 is
-  retired and kept. A consent recorded before that date names version 1, which is
-  the truth about what was in force when it was decided, and the console shows the
-  difference rather than papering over it.
+Three things are true the moment it is on, and none of them is a bug:
+
+* **Every verification approved before 2026-11-01 has lapsed**, because those were
+  approved before the machinery recorded a lifetime. Any child already enrolled keeps
+  their access — the gate is on *new* enrolments and on the guardian's reach into the
+  record — but the guardian will be asked to re-verify.
+* **A children's policy version is in force, and it is version 3.** Every consent
+  records `consented_policy_version_id`, so a parent's agreement names the words they
+  were shown. Version 1 (2026-10-28) said the verification switch was off; version 2
+  (2026-11-02) stated the rule and stopped promising a handover nobody could perform;
+  version 3, the same day, states the handover that now exists at `/handover`. Older
+  consents name the version in force when they were decided, which is the truth about
+  what was in force, and the console shows the difference rather than papering over it.
+* **The test suite runs the gate in the configuration it ships in only in the suites
+  that own it.** Most database suites predate the switch and build households with no
+  verification, so they run with the gate off and the debt is written down in
+  `supabase/tests/run.mjs`. The target is every fixture carrying a verification, after
+  which that list disappears; `flags`, `family`, `guardians` and `learner switcher` run
+  with it on today.
 
 **The reviewer's checklist** is `docs/safeguarding/guardian-verification-checklist.md`,
 and the same nine steps are rendered on `/admin/guardians` (`REVIEWER_CHECKLIST` in

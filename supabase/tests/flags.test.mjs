@@ -124,6 +124,8 @@ export async function run(ctx) {
   const DELIBERATELY_ON = {
     'platform.withdrawal_right':
       'owner decision 2026-11-01: the 14-day withdrawal question is asked at checkout',
+    'family.guardian_verification':
+      'owner decision 2026-11-01: every child is enrolled only behind a verified guardian',
   };
 
   await test('everything ships off, except what the owner switched on', async () => {
@@ -135,6 +137,26 @@ export async function run(ctx) {
         order by key`)).rows.map((r) => r.key);
     const unexpected = on.filter((key) => !(key in DELIBERATELY_ON));
     assert(unexpected.length === 0, `feature flag(s) shipped enabled: ${unexpected.join(', ')}`);
+  });
+
+  await test('the switches the owner turned on are on, and say why', async () => {
+    for (const [key, why] of Object.entries(DELIBERATELY_ON)) {
+      const row = (await q(
+        'select value_text from public.platform_settings where key = $1',
+        [key])).rows[0];
+      assert(row.value_text === 'true', `${key} is ${row.value_text}: ${why}`);
+    }
+
+    // Guardian verification, specifically: the children's policy states that every
+    // child is enrolled behind a verified guardian, and this row is what makes the
+    // software agree with the document.
+    const gv = (await q(
+      `select preconditions, gate_type from public.platform_settings
+        where key = 'family.guardian_verification'`)).rows[0];
+    assert(gv.gate_type === 'admin_setup',
+      'verification is a human review queue, so it stays a setup question');
+    assert(/2026-11-01/.test(gv.preconditions),
+      'the register does not say when the switch moved');
   });
 
   await test('the register has one row per key', async () => {
@@ -322,7 +344,7 @@ export async function run(ctx) {
     const on = (await q(
       `select key from public.platform_settings where value_text = 'true' order by key`)).rows
       .map((r) => r.key)
-      .filter((key) => key !== 'platform.withdrawal_right');
+      .filter((key) => !(key in DELIBERATELY_ON));
     assert(on.length === 0, `flags shipped on: ${on.join(', ')}`);
     assert(enabled.length === flags.size, 'a documented flag is not a boolean switch');
   });
