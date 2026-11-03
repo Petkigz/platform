@@ -144,6 +144,15 @@ prayer time — the platform's own rule about religious content.
 
 ### D8. AI — provider and cost ceiling
 
+**Started:** course authors can request up to three unreviewed quiz drafts from
+teaching material they paste, using the local `qwen3:4b` model through Ollama on
+the web server. No quiz is saved or published; a teacher must review and manually
+add approved questions. Setup and the remaining limitations are in
+`docs/deploy/local-quiz.md`. The switch remains off until setup and review testing.
+This does not yet implement a platform-wide assistant, automatic lesson retrieval
+for teachers, word of the day, or a calendar. The learner assistant remains
+retrieval-only. No model performance has been tested on the owner's machine.
+
 **Blocks** `learning.ai_quiz_gen`, and the answer half of `learning.ai_support`.
 The support boundary is built and needs no provider: retrieval from the learner's
 own enrolled lessons, no citation means no answer, a ruling-shaped question fails

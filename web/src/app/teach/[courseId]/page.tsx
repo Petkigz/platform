@@ -6,6 +6,7 @@ import { fetchVersions } from '@/lib/authoring';
 import { Curriculum } from './curriculum';
 import { ImportOutline } from './import-outline';
 import { AssessmentManager } from './assessment-manager';
+import { LocalQuiz } from './local-quiz';
 import { fetchAuthoredAssessments, fetchPendingManualResponses } from '@/lib/assessment';
 import { fetchRejections } from '@/lib/governance';
 import { AppealForm } from './appeal-form';
@@ -85,6 +86,7 @@ export default async function TeachCoursePage({
       })) ?? [],
   );
 
+  const quizDraftingEnabled = await isFlagEnabled(supabase, 'learning.ai_quiz_gen').catch(() => false);
   const versions = await fetchVersions(supabase, courseId);
   const draft = versions.find((v) => v.status === 'draft');
   const current = draft ?? versions[0];
@@ -185,6 +187,7 @@ export default async function TeachCoursePage({
               database refuses it, and the teacher would have spent a minute
               preparing a file to find out. */}
           {current.status === 'draft' && <ImportOutline versionId={current.id} />}
+          <LocalQuiz courseId={row.id} enabled={quizDraftingEnabled} />
           <AssessmentManager
             version={current}
             assessments={assessments}
