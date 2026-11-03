@@ -131,6 +131,9 @@ export function Discussion({
                     {r.visibilityState === 'pending' && (
                       <span className="badge neutral">Awaiting review</span>
                     )}
+                    {canPost && r.visibilityState === 'visible' && (
+                      <ReportForm lessonId={lessonId} postId={r.id} label="Report this reply" />
+                    )}
                   </li>
                 ))}
               </ul>

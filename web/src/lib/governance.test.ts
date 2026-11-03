@@ -3,6 +3,7 @@ import test from 'node:test';
 
 import {
   reportContent,
+  fetchReportQueue,
   resolveReport,
   appealDecision,
   decideAppeal,
@@ -74,6 +75,7 @@ function stubChain(queries: { rows: unknown[]; error?: { message: string } | nul
       chain.select = () => chain;
       chain.eq = () => chain;
       chain.in = () => chain;
+      chain.order = () => chain;
       chain.then = (resolve: (v: unknown) => unknown) => end().then(resolve);
       return chain;
     },
@@ -464,4 +466,24 @@ test('a course with no rejected version makes no further queries', async () => {
 
   assert.deepEqual(rows, []);
   assert.deepEqual(tables(), ['course_versions']);
+});
+
+
+test('report queue identifies the reported reply and handles embedded relations', async () => {
+  const { client } = stubChain([{ rows: [{ id: 'r1', discussion_post_id: 'p1',
+    reporter: { display_name: 'Reader' }, lesson: [{ title: 'Lesson' }],
+    discussion_post: { body: 'Reported reply', visibility_state: 'visible' } }] }]);
+  const rows = await fetchReportQueue(client);
+  assert.equal(rows[0]?.discussionPost?.body, 'Reported reply');
+  assert.equal(rows[0]?.discussion_post_id, 'p1');
+  assert.equal(rows[0]?.lesson?.title, 'Lesson');
+  assert.equal(rows[0]?.reporter?.display_name, 'Reader');
+});
+
+test('an unavailable discussion post is presented without inventing content', async () => {
+  const { client } = stubChain([{ rows: [{ id: 'r2', discussion_post_id: 'p2',
+    reporter: null, lesson: null, discussion_post: null }] }]);
+  const rows = await fetchReportQueue(client);
+  assert.equal(rows[0]?.discussionPost, null);
+  assert.equal(rows[0]?.discussion_post_id, 'p2');
 });

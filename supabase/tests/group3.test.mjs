@@ -513,10 +513,8 @@ export async function run(ctx) {
     await q(`select set_config('request.jwt.claims', '', true)`);
     await q('set local role authenticated');
     await q(
-      `insert into public.content_reports
-         (course_version_id, report_category, description)
-       values ($1, 'doctrinal_error', 'This appears to conflict with the majority view.')`,
-      [pc.version]);
+      `select public.report_content($1, 'doctrinal_error', 'This appears to conflict with the majority view.', null)`,
+      [pc.lesson]);
     await q('commit');
 
     const n = await count(

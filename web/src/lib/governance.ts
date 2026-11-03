@@ -96,6 +96,9 @@ export async function reportContent(
         error: 'You cannot report a discussion you are not enrolled in.',
       };
     }
+    if (msg.includes('discussion post unavailable')) {
+      return { ok: false, status: 403, error: 'That post is unavailable to report.' };
+    }
     if (msg.includes('not on this lesson')) {
       return { ok: false, status: 400, error: 'That post is not on this lesson.' };
     }
@@ -120,6 +123,8 @@ export type QueueReport = {
   created_at: string;
   reporter: { display_name: string | null } | null;
   lesson: { title: string | null } | null;
+  discussion_post_id: string | null;
+  discussionPost: { body: string; visibility_state: string } | null;
 };
 
 /** Reports waiting on a person. RLS decides who can see this. */
@@ -129,13 +134,16 @@ export async function fetchReportQueue(
   const { data, error } = await supabase
     .from('content_reports')
     .select(
-      'id, report_category, description, status, created_at, lesson_id,' +
-        'reporter:reported_by(display_name), lesson:lesson_id(title)',
+      'id, report_category, description, status, created_at, lesson_id, discussion_post_id,' +
+        'reporter:reported_by(display_name), lesson:lesson_id(title), discussion_post:discussion_post_id(body,visibility_state)',
     )
     .in('status', ['submitted', 'triaged', 'under_review'])
     .order('created_at', { ascending: true });
 
   if (error) throw new Error(error.message);
+
+  const oneRelation = <T>(value: T | T[] | null): T | null =>
+    Array.isArray(value) ? value[0] ?? null : value;
 
   return ((data ?? []) as unknown as {
     id: string;
@@ -143,12 +151,15 @@ export async function fetchReportQueue(
     description: string;
     status: string;
     created_at: string;
-    reporter: { display_name: string | null }[] | null;
-    lesson: { title: string | null }[] | null;
-  }[]).map(({ reporter, lesson, ...row }) => ({
+    reporter: { display_name: string | null } | { display_name: string | null }[] | null;
+    lesson: { title: string | null } | { title: string | null }[] | null;
+    discussion_post_id: string | null;
+    discussion_post: { body: string; visibility_state: string } | { body: string; visibility_state: string }[] | null;
+  }[]).map(({ reporter, lesson, discussion_post, ...row }) => ({
     ...row,
-    reporter: reporter?.[0] ?? null,
-    lesson: lesson?.[0] ?? null,
+    reporter: oneRelation(reporter),
+    lesson: oneRelation(lesson),
+    discussionPost: oneRelation(discussion_post),
   }));
 }
 

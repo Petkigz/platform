@@ -256,8 +256,30 @@ export async function run(ctx) {
       await rejects(
         () => reportAs(teacher, otherLesson.lesson, 'doctrinal_error',
           'Wrong post, wrong lesson.', postId),
-        /not on this lesson/i,
+        /discussion post unavailable/i,
       );
+    });
+  });
+
+  await test('a discussion report cannot expose another person’s held post', async () => {
+    const p = await published();
+    const learner = await newUser('gov-held-author@example.com');
+    await newProfile(learner, 'Held author');
+    const post = (await q(`insert into public.discussion_posts (lesson_id, author_user_id, body)
+      values ($1,$2,'Not reviewed yet') returning id`, [p.lesson, learner])).rows[0].id;
+    await asUser(teacher, async () => {
+      await rejects(() => reportAs(teacher, p.lesson, 'other', 'Report a hidden post', post),
+        /discussion post unavailable/i);
+    });
+    await asUser(teacher, async () => {
+      await rejects(() => q(`insert into public.content_reports
+        (course_version_id, lesson_id, discussion_post_id, reported_by, report_category, description)
+        values ($1,$2,$3,$4,'other','Bypass')`, [p.version, p.lesson, post, teacher]),
+        /permission denied/i);
+    });
+    await asUser(admin, async () => {
+      const row = await reportAs(admin, p.lesson, 'other', 'Staff can review it', post);
+      assert(typeof row.rows[0].id === 'string', 'staff could not report a post they can read');
     });
   });
 

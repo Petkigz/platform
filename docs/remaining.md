@@ -120,7 +120,8 @@ an order a staff member opened still needs a different person from the opener
 **Progress, 2026-11-03:** Learner replies already go through the moderation
 queue; course-author posts appear immediately. The author can now open the
 live thread from the preview of a published lesson when discussion is enabled,
-without enrolling as a learner. This does not itself approve the moderation
+without enrolling as a learner. Readers can report a visible reply, and the report
+writer checks the post visibility before accepting it. This does not itself approve the moderation
 policy or turn the feature on; deployment and an end-to-end moderation review
 remain necessary.
 

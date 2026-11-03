@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 /**
  * POST /api/reports — flag a problem with a lesson or a discussion post.
  *
- * Deliberately does not require a session: content_reports_insert admits anon,
+ * Deliberately does not require a session: report_content admits anon,
  * because someone who will not sign in should still be able to flag a doctrinal
  * error. The database requires that whoever files it can see the content, which
  * is the check that actually matters here.

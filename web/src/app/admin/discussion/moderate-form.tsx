@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useId, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 
 /**
@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation';
  */
 export function ModerateForm({ postId }: { postId: string }) {
   const router = useRouter();
+  const noteId = useId();
   const [pending, startTransition] = useTransition();
   const [note, setNote] = useState('');
   const [message, setMessage] = useState<string | null>(null);
@@ -54,11 +55,12 @@ export function ModerateForm({ postId }: { postId: string }) {
   return (
     <div style={{ display: 'grid', gap: '0.75rem' }}>
       <div>
-        <label className="eyebrow" htmlFor={`n-${postId}`}>
+        <label className="eyebrow" htmlFor={noteId}>
           Note (required to withdraw)
         </label>
         <input
-          id={`n-${postId}`}
+          id={noteId}
+          aria-label="Moderation note"
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder="Why, if you are hiding or removing it"

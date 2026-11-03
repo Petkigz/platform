@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { fetchReportQueue } from '@/lib/governance';
+import { ModerateForm } from '../discussion/moderate-form';
 import { ResolveForm } from './resolve-form';
 
 export const dynamic = 'force-dynamic';
@@ -71,6 +72,18 @@ export default async function AdminReportsPage() {
                 <p className="muted" style={{ margin: '0.25rem 0' }}>
                   On <span className="meta">{r.lesson.title}</span>
                 </p>
+              )}
+              {r.discussion_post_id && (
+                <div className="notice">
+                  <strong>Reported discussion post</strong>
+                  {r.discussionPost ? (
+                    <>
+                      <p style={{ whiteSpace: 'pre-wrap' }}>{r.discussionPost.body}</p>
+                      <p className="muted">Current state: {r.discussionPost.visibility_state}. Moderating the post and resolving the report are separate actions.</p>
+                      <ModerateForm postId={r.discussion_post_id} />
+                    </>
+                  ) : <p className="muted">This post is no longer available to view.</p>}
+                </div>
               )}
               <p style={{ margin: '0.5rem 0' }}>{r.description}</p>
               <ResolveForm reportId={r.id} category={r.report_category} />
