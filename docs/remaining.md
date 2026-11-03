@@ -144,6 +144,16 @@ prayer time — the platform's own rule about religious content.
 
 ### D8. AI — provider and cost ceiling
 
+**Owner choice:** use reviewed, non-generative platform help for everyone, and
+run a small model on the owner's computer temporarily while a separate server is
+considered. `/support` now searches published help articles; platform admins manage
+them visually on `/admin/ai-support`. Three initial navigation articles are included;
+the owner should review and expand them before launch. This library contains platform instructions,
+not religious rulings. It does not yet answer every AyahSpring question or generate
+quizzes. The app must be connected to the PC securely before the model can serve a
+separately hosted website: the current quiz prototype is loopback-only and will not
+reach the owner's PC from Vercel or another host. Do not expose Ollama publicly.
+
 **Started:** course authors can request up to three unreviewed quiz drafts from
 teaching material they paste, using the local `qwen3:4b` model through Ollama on
 the web server. No quiz is saved or published; a teacher must review and manually

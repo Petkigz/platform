@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
+import { HelpEditor } from './help-editor';
+import type { HelpArticle } from '@/lib/platform-help';
 
 export const metadata = { title: 'Study assistant' };
 export const dynamic = 'force-dynamic';
@@ -28,6 +30,11 @@ export default async function AiSupportPage() {
 
   const { data: summary, error } = await supabase.rpc('ai_support_summary', { p_days: 30 });
   if (error || !summary) redirect('/admin');
+
+  const { data: ownerRole } = await supabase.rpc('has_role', { p_user_id: user.id, p_role_code: 'platform_admin' });
+  const help = ownerRole === true
+    ? await supabase.from('platform_help_articles').select('id,title,body,keywords,status,updated_at').order('title')
+    : null;
 
   const s = summary as {
     days: number;
@@ -118,6 +125,10 @@ export default async function AiSupportPage() {
           </ul>
         </section>
       )}
+
+      {ownerRole === true && (help?.error
+        ? <p className="notice warn">Platform help could not be loaded.</p>
+        : <HelpEditor articles={(help?.data ?? []) as HelpArticle[]} />)}
 
       <section className="section">
         <h2>The last fifty questions</h2>

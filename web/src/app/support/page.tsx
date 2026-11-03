@@ -5,6 +5,8 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
 import { CATEGORY_LABEL, fetchMyCases, STATUS_LABEL } from '@/lib/support';
 import { NewCaseForm } from './new-case-form';
+import { HelpSearch } from './help-search';
+import type { HelpArticle } from '@/lib/platform-help';
 
 export const metadata = { title: 'Help' };
 export const dynamic = 'force-dynamic';
@@ -36,6 +38,8 @@ export default async function SupportPage() {
   // this person's case, and hiding it while the flag is off would look exactly
   // like a request that was never received.
   const cases = await fetchMyCases(supabase);
+  const help = await supabase.from('platform_help_articles')
+    .select('id,title,body,keywords,status,updated_at').eq('status', 'published').order('title');
 
   return (
     <div className="page">
@@ -53,6 +57,9 @@ export default async function SupportPage() {
           no bot in front of this queue.
         </p>
       </div>
+
+      {help.error ? <p className="notice warn">Platform help is unavailable right now.</p> :
+        <HelpSearch articles={(help.data ?? []) as HelpArticle[]} />}
 
       {accepting ? (
         <NewCaseForm />

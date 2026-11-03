@@ -3,7 +3,7 @@
 This file began as the inventory that was missing: the plan had 85 tables and 121
 endpoints and **zero screens** — `screen: 1`, `navigation: 0`, `page structure: 0`
 in the whole project record. Both of those numbers have been re-measured since
-(2026-11-02): **159 tables** and **128 page routes with 115 route handlers**. The
+(2026-11-03): **160 tables** and **128 page routes with 117 route handlers**. The
 history is kept because it explains why this file exists; the counts below are the
 ones to use.
 

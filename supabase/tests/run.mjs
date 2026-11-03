@@ -15,6 +15,7 @@ import { run as enrolment } from './enrolment.test.mjs';
 import { run as progress } from './progress.test.mjs';
 import { run as assessment } from './assessment.test.mjs';
 import { run as flags } from './flags.test.mjs';
+import { run as platformHelp } from './platform_help.test.mjs';
 import { run as registerTruth } from './register_truth.test.mjs';
 import { run as preconditionsProved } from './preconditions_proved.test.mjs';
 import { run as family } from './family.test.mjs';
@@ -223,6 +224,7 @@ for (const [name, fn] of [
   ['progress', progress],
   ['assessment', assessment],
   ['flags', flags],
+  ['platform help', platformHelp],
   ['register truth', registerTruth],
   ['preconditions proved', preconditionsProved],
   ['family', family],
