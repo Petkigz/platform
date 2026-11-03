@@ -10,9 +10,13 @@ new session with no memory of this one — the state of the running system can b
 reconstructed rather than guessed at. Where a step has an output you can look at,
 the output is printed below the command.
 
-**Nothing here costs money.** Every service named is on a free tier that does not
-ask for a card. Where a limit will eventually bite, it says so, and says what it
-costs to lift.
+**This is an unverified deployment plan, not a promise of free, no-card
+production hosting.** Check current eligibility, signup, quotas and terms before
+creating accounts. Vercel Hobby is restricted to non-commercial personal use and
+is not an appropriate assumption for a paid learning business. R2 has a free
+allowance, but its subscription/signup requirements must be checked; do not assume
+no card is required. No alternative commercial host has been tested with this app.
+The owner has not approved paid services.
 
 ---
 
@@ -37,7 +41,7 @@ against it and uploads the result, which is not what a serverless function is fo
 
 ## 0. Before you start
 
-Accounts to create (all free, none needs a card):
+Candidate services to evaluate (free allowances and no-card signup are not guaranteed):
 
 | # | Service | What for |
 |---|---|---|
@@ -50,8 +54,9 @@ Accounts to create (all free, none needs a card):
 Plus, on the machine that will run the encoder: **Node 20 or newer**, `git`, and
 `ffmpeg` (step 6).
 
-You do **not** need: a card, a domain (a `*.vercel.app` address works while you
-build), a payment provider, or a Twilio account.
+Do not provide a card or subscribe to a paid service without the owner's approval.
+A test deployment may not need a custom domain, payment provider or SMS account;
+production email, payments and phone sign-in have their own requirements.
 
 ### 0.1 The preflight, which you run again after every step
 
@@ -103,7 +108,8 @@ Supabase dashboard → **New project**.
 Free tier, in the terms that matter here: 2 projects, 500 MB database, **no
 backups**, and the project **pauses after 7 days with no activity**. A paused
 project is a site that returns errors until somebody opens the dashboard and
-restores it. Step 8's scheduler, running hourly, is what keeps it awake.
+restores it. Do not assume an hourly scheduler prevents a free project from
+being paused; the provider decides what counts as activity.
 
 ### 1.2 Collect four values
 
@@ -309,8 +315,8 @@ the URL some other way and attends is not counted. And a room server is a server
 patch, monitor and pay for — the honest description of this feature today is "scheduled
 classes with a door, and no room behind the door".
 
-**The choice that is still open** is which host: a self-hosted Jitsi on a small VM (free,
-yours, and the right answer for children), a commercial service with credentials, or the
+**The choice that is still open** is which host: a self-hosted Jitsi on a small VM (cost and suitability unverified,
+and requiring security review), a commercial service with credentials, or the
 public `meet.jit.si` (free today, and the wrong answer for a child's classroom — the
 rooms are on a service the platform does not control). The owner has deliberately left
 this as a documented gap rather than pinning a host.
@@ -649,10 +655,10 @@ curl -sS -X POST https://ayahspring.vercel.app/api/cron/dispatch-messages \
   settles the messages. Same reasoning as the encoder: a machine writer is subject
   to the same refusals as a person.
 
-Schedule it hourly with [cron-job.org](https://cron-job.org) (free, no card): URL
-as above, method POST, header `Authorization: Bearer <secret>`. Hourly rather than
-every five minutes because on a free Supabase project the job is doing double duty
-— it is also what stops the project pausing after seven idle days.
+A scheduler such as [cron-job.org](https://cron-job.org) can call this hourly:
+URL as above, method POST, header `Authorization: Bearer <secret>`. Confirm its
+current terms and no-card eligibility before relying on it. This job does not
+guarantee that a free Supabase project remains active.
 
 **7.6** The retention cleanup. Two things the privacy notice promises to delete on
 a date: a support case three years after it closes, and a record that a teacher
@@ -751,7 +757,7 @@ the address, and audits every time it is asked. It never returns a name.
 ## 10. The six ways this bites
 
 1. **The project pauses** after seven idle days and the site is down until you
-   restore it. The hourly cron in 7.5 is the fix.
+   restore it. An hourly cron is not a guaranteed prevention.
 2. **The IPv6 connection string** times out with no useful error. Use the session
    pooler.
 3. **R2 without `ExposeHeaders: ["ETag"]`** uploads every byte and then cannot
