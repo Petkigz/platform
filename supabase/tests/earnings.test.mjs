@@ -23,6 +23,9 @@ export async function run(ctx) {
   } = ctx;
 
   const admin    = await bootstrapAdmin('earn-admin@example.com');
+  // Test-only operator provisioning; production setup uses the runbook.
+  await q('delete from public.refund_approval_owner');
+  await q('select public.bootstrap_refund_approval_owner($1)', [admin]);
   const teacher  = await newInstructor('earn-teacher@example.com', admin);
   const reviewer = await newReviewer('earn-reviewer@example.com', admin);
 

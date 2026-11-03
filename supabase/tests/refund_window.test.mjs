@@ -28,6 +28,9 @@ export async function run(ctx) {
   } = ctx;
 
   const admin = await bootstrapAdmin('win-admin@example.com');
+  // Test-only operator provisioning; production setup uses the runbook.
+  await q('delete from public.refund_approval_owner');
+  await q('select public.bootstrap_refund_approval_owner($1)', [admin]);
   const scalar = async (sql, params = []) => (await q(sql, params)).rows[0];
 
   async function asActor(actor, sql, params = []) {

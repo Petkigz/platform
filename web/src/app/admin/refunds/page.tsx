@@ -36,15 +36,16 @@ export default async function AdminRefundsPage() {
   });
   if (privileged !== true) redirect('/');
 
-  // Reading the queue and opening a refund are support's work; deciding one is
-  // finance's. `decide_refund_request()` refuses anybody else, so the buttons
-  // are rendered only for the two roles that function admits — a decide control
-  // in front of a support agent would be a promise the database does not keep.
+  // Only the explicitly configured owner can approve. Finance or a platform
+  // admin may decline; the requester cannot decide their own request.
   const [{ data: financeAdmin }, { data: platformAdmin }] = await Promise.all([
     supabase.rpc('has_role', { p_user_id: user.id, p_role_code: 'finance_admin' }),
     supabase.rpc('has_role', { p_user_id: user.id, p_role_code: 'platform_admin' }),
   ]);
   const canDecide = financeAdmin === true || platformAdmin === true;
+  const { data: approvalStatus, error: approvalError } = await supabase.rpc('refund_approval_status');
+  const status = approvalStatus as { configured?: boolean; is_owner?: boolean } | null;
+  const canApprove = !approvalError && status?.is_owner === true;
 
   const queue = await fetchRefundQueue(supabase);
 
@@ -70,11 +71,19 @@ export default async function AdminRefundsPage() {
         <p className="eyebrow">Money out</p>
         <h1>Refund requests</h1>
         <p className="muted">
-          Nobody can approve a refund they asked for. Approving creates a
-          pending transaction; the money moves only once the provider confirms
-          it.
+          Only the configured owner can approve a refund, and nobody can decide
+          one they requested. Approval records a pending transaction; it does not
+          send money to a provider or transfer money.
         </p>
       </div>
+
+      {approvalError ? (
+        <p className="notice warn">Could not verify refund approval authority. Approval is unavailable.</p>
+      ) : status?.configured !== true ? (
+        <p className="notice warn">Refund approval is unavailable until the operator configures the owner account.</p>
+      ) : !canApprove ? (
+        <p className="muted">Only the configured owner can approve refunds.</p>
+      ) : null}
 
       {queue.length === 0 && (
         <p className="muted">No refund requests are waiting on a decision.</p>
@@ -92,12 +101,14 @@ export default async function AdminRefundsPage() {
             <footer className="muted">— {item.requester?.display_name ?? 'Unknown'}</footer>
           </blockquote>
 
-          {canDecide ? (
-            <DecideForm requestId={item.id} />
+          {item.requested_by === user.id ? (
+            <p className="muted">You cannot decide a refund you requested yourself.</p>
+          ) : canDecide ? (
+            <DecideForm requestId={item.id} canApprove={canApprove} />
           ) : (
             <p className="muted" style={{ margin: 0 }}>
-              Approving or declining belongs to finance. You can still see what
-              is waiting, and open a refund on a customer&rsquo;s behalf below.
+              Approval belongs to the configured owner; finance or a platform
+              admin can decline. You can still open a request on a customer&rsquo;s behalf below.
             </p>
           )}
         </section>

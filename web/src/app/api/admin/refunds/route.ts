@@ -10,15 +10,9 @@ import { decideRefund } from '@/lib/refunds';
  * for the interface; the one in the function is the actual boundary, because an
  * RPC can be called without going through this route.
  *
- * Both ask the same narrower question — finance or the owner — because a support
- * agent opening a refund on a customer's behalf is the person most likely to
- * press this by accident, and "approving belongs to finance" is a better answer
- * than a permission error.
- *
- * Approving does not settle. It creates a pending refund transaction, and the
- * money moves only when complete_refund() runs against a verified provider
- * event or by a finance admin — support can open a refund, but settlement is
- * the same signature that decides it.
+ * The route allows finance and platform admins to reach the decision writer;
+ * the database additionally requires the configured owner for approval.
+ * Approval records a pending transaction and does not transfer money.
  */
 export async function POST(request: Request) {
   if (!isSupabaseConfigured()) {
@@ -51,7 +45,7 @@ export async function POST(request: Request) {
   ]);
   if (financeAdmin !== true && platformAdmin !== true) {
     return NextResponse.json(
-      { error: 'Approving a refund belongs to finance. You can still open one on a customer’s behalf.' },
+      { error: 'Only the configured owner can approve; finance or a platform administrator can decline.' },
       { status: 403 },
     );
   }

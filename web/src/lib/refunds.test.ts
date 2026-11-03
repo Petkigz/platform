@@ -817,3 +817,16 @@ test('a refusal from the database keeps its own sentence', async () => {
     assert.match(res.error, /flag dashboard/);
   }
 });
+
+
+test('only the configured owner can approve, and unconfigured setup fails closed', async () => {
+  for (const [message, expected] of [
+    ['only the configured owner may approve a refund', 403],
+    ['refund approval owner is not configured; ask the operator to complete setup', 503],
+  ] as const) {
+    const { client } = stubRpc({ error: { message } });
+    const result = await decideRefund(client, { requestId: 'req-1', approve: true });
+    assert.equal(result.ok, false);
+    if (!result.ok) assert.equal(result.status, expected);
+  }
+});

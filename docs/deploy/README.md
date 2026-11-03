@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-241 files in `supabase/migrations/`, applied in filename order — the 14-digit
+242 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -152,7 +152,7 @@ done
   first run. What you are watching for is the loop *stopping*, and the file name
   above the error.
 - Takes a few minutes. The last file printed should be
-  `20261281034000_refund_request_write_boundary.sql`.
+  `20261281035000_refund_owner_approval.sql`.
 
 **Path B — the Supabase CLI**, if you would rather have migration history tracked:
 
@@ -163,7 +163,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 241 files from the top and fail on the
+it, and `db push` would then re-apply all 242 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -249,7 +249,33 @@ the database, and has to be typed on purpose — the check is in
 `supabase/tests/deploy_runbook.test.mjs`, including the refusal when the line is
 missing.
 
-**3.3 Guardian verification is already on. Nothing to press.**
+**3.3 Identify the refund-approving owner (one-time setup).** A platform-admin
+role does not by itself identify the owner. Until this step is done, no account
+can approve refunds. After granting your own role above, run this in the trusted
+SQL editor, replacing the address with your own account:
+
+```sql
+select public.bootstrap_refund_approval_owner(u.id)
+  from auth.users u
+ where u.email = 'you@example.com';
+```
+
+Check that exactly one row was returned. Zero rows means the account was not
+found. The function refuses an account that is not an active platform admin and
+refuses a second setup; it records the bootstrap in the audit log. Application
+accounts cannot run it or change the binding. If account recovery or transfer of
+ownership is needed, there is no visual handover yet: stop refund approvals and
+plan a separately audited trusted-database recovery. Never delete or replace this
+binding casually. A request opened by the owner cannot be approved by that same
+owner, so it needs a separate real-world resolution, not a bypass.
+
+This applies to new decisions after the migration. Review any previously approved
+pending refunds before taking any provider action: they may have been approved by
+finance under the old rule. The migration does not retroactively undo transfers or
+re-decide old requests. Provider submission and callbacks are not established by
+this setting.
+
+**3.4 Guardian verification is already on. Nothing to press.**
 `family.guardian_verification` ships `true` since `20261281019000_guardian_verification_on.sql`,
 because the owner decided on 2026-11-01 that every child is enrolled behind a verified
 guardian, in every country, knowingly ahead of the legal review. It is the one flag

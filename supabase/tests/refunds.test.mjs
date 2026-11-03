@@ -14,7 +14,7 @@ export async function run(ctx) {
     q, test, assert, rejects,
     asUser, committed,
     newUser, newProfile,
-    newInstructor, newReviewer, satisfyReview, bootstrapAdmin,
+    newInstructor, newReviewer, satisfyReview, bootstrapAdmin, grantRole,
     newCourse, newVersion, newSection, newLesson,
   } = ctx;
 
@@ -129,6 +129,75 @@ export async function run(ctx) {
 
     return { userId, learnerId, account, order, totalMinor, course, version, lesson };
   }
+
+  // Each suite provisions its own owner in the test database as the trusted
+  // database operator; application roles cannot perform this setup.
+  await q('delete from public.refund_approval_owner');
+  await test('approvals are closed until an owner is explicitly configured', async () => {
+    const { userId, order } = await paidOrder('Unconfigured Owner');
+    const id = (await requestAs(userId, order, 1000, 'Please review')).rows[0].id;
+    await asUser(admin, async () => {
+      await rejects(() => q('select public.decide_refund_request($1,true,$2)', [id, 'Approve']),
+        /owner is not configured/i);
+    });
+    assert((await scalar('select status from public.refund_requests where id=$1', [id])).status === 'requested',
+      'an unconfigured approval changed the request');
+  });
+  await q('select public.bootstrap_refund_approval_owner($1)', [admin]);
+  const otherAdmin = await newUser('ref-other-admin@example.com');
+  await newProfile(otherAdmin, 'Other Administrator');
+  await grantRole(otherAdmin, 'platform_admin', admin);
+  const finance = await newUser('ref-finance@example.com');
+  await newProfile(finance, 'Finance Administrator');
+  await grantRole(finance, 'finance_admin', admin);
+
+  await test('approval status is caller-specific and unavailable to learners', async () => {
+    await asUser(admin, async () => {
+      const status = (await q('select public.refund_approval_status() as status')).rows[0].status;
+      assert(status.configured === true && status.is_owner === true, 'owner status is wrong');
+    });
+    await asUser(otherAdmin, async () => {
+      const status = (await q('select public.refund_approval_status() as status')).rows[0].status;
+      assert(status.configured === true && status.is_owner === false, 'other admin was treated as owner');
+    });
+    const learner = (await newAdult('Status Learner')).userId;
+    await asUser(learner, async () => {
+      await rejects(() => q('select public.refund_approval_status()'), /only staff/i);
+    });
+  });
+
+  await test('a null decision is rejected rather than silently declining', async () => {
+    const { userId, order } = await paidOrder('Null Decision');
+    const id = (await requestAs(userId, order, 1000, 'Please review')).rows[0].id;
+    await asUser(admin, async () => {
+      await rejects(() => q('select public.decide_refund_request($1,null,null)', [id]), /choose approve or decline/i);
+    });
+    assert((await scalar('select status from public.refund_requests where id=$1', [id])).status === 'requested',
+      'null decision changed the request');
+  });
+
+  await test('another administrator and finance cannot approve or appoint an owner', async () => {
+    const { userId, order } = await paidOrder('Owner Approval');
+    const id = (await requestAs(userId, order, 1000, 'Please review')).rows[0].id;
+    for (const person of [otherAdmin, finance]) {
+      await asUser(person, async () => {
+        await rejects(() => q('select public.decide_refund_request($1,true,$2)', [id, 'Approve']),
+          /only the configured owner/i);
+      });
+      await asUser(person, async () => {
+        await rejects(() => q('select public.bootstrap_refund_approval_owner($1)', [person]), /permission denied/i);
+      });
+      await asUser(person, async () => {
+        await rejects(() => q('update public.refund_approval_owner set owner_user_id=$1', [person]), /permission denied/i);
+      });
+    }
+    await rejects(() => q('select public.bootstrap_refund_approval_owner($1)', [otherAdmin]), /duplicate key/i);
+    assert((await scalar('select status from public.refund_requests where id=$1', [id])).status === 'requested',
+      'an unauthorized caller changed the request');
+    await approveAs(admin, id, 'Owner reviewed');
+    assert((await scalar('select decided_by from public.refund_requests where id=$1', [id])).decided_by === admin,
+      'approval was not attributed to the configured owner');
+  });
 
   // -------------------------------------------------------------------
   // The writer exists at all
@@ -286,7 +355,7 @@ export async function run(ctx) {
       // exactly the seam the staff-day journey found.
       await rejects(
         () => q('select public.decide_refund_request($1,$2,$3)', [id, true, 'why not']),
-        /finance admin or platform admin/i,
+        /only the configured owner/i,
       );
     });
   });

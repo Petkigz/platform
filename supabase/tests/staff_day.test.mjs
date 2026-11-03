@@ -30,7 +30,7 @@
 //
 // What the suite pins is the *settled* matrix, including the places where the
 // platform deliberately gives a role less than it might: support opens a refund
-// and finance decides it, the refund window itself is any staff member's
+// and the identified owner approves it, the refund window itself is any staff member's
 // because it bounds asking rather than deciding, and the feature switches are
 // the owner's alone.
 //
@@ -47,6 +47,9 @@ export async function run(ctx) {
   } = ctx;
 
   const owner = await bootstrapAdmin('staffday-owner@example.com');
+  // Test-only operator provisioning; production setup uses the runbook.
+  await q('delete from public.refund_approval_owner');
+  await q('select public.bootstrap_refund_approval_owner($1)', [owner]);
   const support = await newUser('staffday-support@example.com');
   const finance = await newUser('staffday-finance@example.com');
   const governance = await newUser('staffday-governance@example.com');
@@ -267,10 +270,10 @@ export async function run(ctx) {
     assert(row.status === 'requested');
   });
 
-  await test('...and cannot approve it, because that is finance’s signature', async () => {
+  await test('...and cannot approve it, because that is the owner’s signature', async () => {
     await rejects(() => asActor(support,
       'select public.decide_refund_request($1,$2,$3)', [supportRefund, true, 'Approved by me']),
-      /finance admin or platform admin/i);
+      /only the configured owner/i);
   });
 
   await test('support cannot appoint a platform admin', async () => {
@@ -324,17 +327,19 @@ export async function run(ctx) {
   });
 
   // -------------------------------------------------------------------------
-  console.log('\nAct III — finance decides the money');
+  console.log('\nAct III — owner approves; finance records the money');
   // -------------------------------------------------------------------------
 
-  await test('finance approves the refund support opened', async () => {
-    await asActor(finance, 'select public.decide_refund_request($1,$2,$3)',
+  await test('only the owner approves the refund support opened', async () => {
+    await rejects(() => asActor(finance, 'select public.decide_refund_request($1,$2,$3)',
+      [supportRefund, true, 'Finance approval']), /only the configured owner/i);
+    await asActor(owner, 'select public.decide_refund_request($1,$2,$3)',
       [supportRefund, true, 'Duplicate confirmed against the capture']);
 
     const request = (await q(
       'select status, decided_by from public.refund_requests where id = $1', [supportRefund])).rows[0];
     assert(request.status === 'approved');
-    assert(request.decided_by === finance, 'the decision is not attributed to finance');
+    assert(request.decided_by === owner, 'the decision is not attributed to the owner');
   });
 
   await test('and the money has not moved: the transaction is only pending', async () => {
@@ -435,7 +440,7 @@ export async function run(ctx) {
 
     await rejects(() => asActor(governance, 'select public.decide_refund_request($1,$2,$3)',
       [request, true, 'The support case looked genuine']),
-      /finance admin or platform admin/i);
+      /only the configured owner/i);
   });
 
   await test('governance cannot write a ledger adjustment', async () => {
@@ -640,8 +645,8 @@ export async function run(ctx) {
     assert(by(owner).includes('role.assigned'), 'the owner’s appointments are not recorded');
     assert(by(support).some((a) => /refund\.requested/.test(a)),
       'the refund support opened is not recorded against them');
-    assert(by(finance).includes('refund.approved'),
-      'finance’s decision is not recorded against them');
+    assert(by(owner).includes('refund.approved'),
+      'the owner’s decision is not recorded against them');
     assert(by(finance).includes('refund.completed'),
       'the settlement finance made is not recorded against them');
     assert(by(governance).length > 0, 'governance did nothing that was recorded');

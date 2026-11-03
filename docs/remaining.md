@@ -117,23 +117,20 @@ and nothing is deleted on suspension — access ends, the record stays.
 
 ### D5. Refund authority limits
 
-**Progress:** direct writes to refund requests are refused; the existing audited
-request and decision functions remain. Approval creates a pending internal
-transaction, not a provider transfer. This does not yet implement the owner's
-requirement that every approval be made by the identified owner; finance can
-still approve through the existing function, so the refund authority work is
-not complete.
+**Progress:** direct request writes are refused. New approvals require a single
+explicitly configured owner account, not merely an admin role; the requester
+cannot decide their own request. Until the trusted one-time owner bootstrap is
+performed, approvals fail closed. The migration and setup must be deployed; old
+pending approvals need review before provider action. The owner cannot approve a
+request they opened, and ownership recovery/transfer has no visual workflow yet.
+Approval records a pending internal transaction; it does not send money.
 
-**Blocks** safe use of refund decisions. `commerce.refunds` is registered, but its
-value is not currently enforced by the refund writers; switching it off does not
-block them. The existing decision writer permits finance admins and platform admins,
-not just the identified owner. Restrict access operationally until owner-only
-authority is implemented and deployed. The requester cannot decide their own request.
+`commerce.refunds` is registered, but the refund writers do not enforce its value:
+switching it off does not block requests or decisions. Provider initiation,
+verified callbacks and safe handling of prior approvals remain deployment gaps.
 
-**Recommendation:** `finance_admin` alone up to 25% of an order; above that or
-anything already accrued to a teacher needs `platform_admin` as well; any refund on
-an order a staff member opened still needs a different person from the opener
-(that part is already enforced).
+**Decision (2026-11-03):** the owner approves every refund, not the earlier
+percentage-based recommendation. The requester cannot approve their own request.
 
 ### D6. Discussion — who answers
 

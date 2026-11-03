@@ -212,6 +212,15 @@ export async function decideRefund(
   });
   if (error) {
     const msg = error.message.toLowerCase();
+    if (msg.includes('owner is not configured')) {
+      return { ok: false, status: 503, error: 'Refund approval is unavailable until the operator configures the owner account.' };
+    }
+    if (msg.includes('only the configured owner')) {
+      return { ok: false, status: 403, error: 'Only the configured owner can approve a refund.' };
+    }
+    if (msg.includes('may decline a refund')) {
+      return { ok: false, status: 403, error: 'Only finance or a platform administrator can decline a refund.' };
+    }
     // `/may decide a refund/` covers both the old "only staff" wording and the
     // narrower rule the staff-day journey produced: support opens a refund, and
     // finance decides it.
@@ -219,7 +228,7 @@ export async function decideRefund(
       return {
         ok: false,
         status: 403,
-        error: 'Approving a refund belongs to finance. You can still open one on a customer’s behalf.',
+        error: 'Only the configured owner can approve a refund.',
       };
     }
     if (msg.includes('you requested yourself')) {

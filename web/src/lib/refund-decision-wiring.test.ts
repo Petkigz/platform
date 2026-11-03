@@ -7,3 +7,12 @@ test('the decision screen does not claim a pending refund was sent to a provider
   assert.match(page, /does not send it to a provider or transfer money/);
   assert.doesNotMatch(page, /pending with the provider/i);
 });
+
+
+test('the refund page gates approval on the caller-specific owner status', () => {
+  const page = readFileSync('src/app/admin/refunds/page.tsx', 'utf8');
+  const form = readFileSync('src/app/admin/refunds/decide-form.tsx', 'utf8');
+  assert.match(page, /refund_approval_status/);
+  assert.match(page, /item.requested_by === user.id/);
+  assert.match(form, /canApprove &&/);
+});

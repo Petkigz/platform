@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
  * provider" is the difference between staff knowing where the money is and
  * staff believing they sent it.
  */
-export function DecideForm({ requestId }: { requestId: string }) {
+export function DecideForm({ requestId, canApprove }: { requestId: string; canApprove: boolean }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [notes, setNotes] = useState('');
@@ -65,14 +65,11 @@ export function DecideForm({ requestId }: { requestId: string }) {
       </div>
 
       <div className="row" style={{ gap: '0.5rem' }}>
-        <button
-          type="button"
-          className="btn"
-          disabled={pending}
-          onClick={() => decide(true)}
-        >
-          Approve
-        </button>
+        {canApprove && (
+          <button type="button" className="btn" disabled={pending} onClick={() => decide(true)}>
+            Approve
+          </button>
+        )}
         <button
           type="button"
           className="btn secondary"
