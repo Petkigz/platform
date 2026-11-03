@@ -20,9 +20,15 @@ switched off from a dashboard) and `family.guardian_verification`.
 
 ## Part 1 — Decisions that block code that is already built
 
-Each of these is the last thing between a finished feature and a screen somebody
-can use. My recommendation is in bold; say "yes to all" and I build them in this
-order.
+**Owner response, 2026-11-03:** proceed with the recommendations for D1–D8.
+The choices below are approved; implementation and verification remain outstanding.
+Approval is not evidence that a feature is safe to enable. In particular, D1 needs
+its file-access paths and same-day escalation verified before assignments or cohorts
+are enabled; in-app notification creation alone does not prove the owner received it.
+D4 and D5 require enforcement, not just terms. D7 and D8 remain deferred as described.
+
+The owner approved the recommendations below. They are implementation work in
+the stated order, not a claim that the features are ready to enable.
 
 ### D1. Who may look at a file a child hands in, and what a teacher does with a worry
 
@@ -350,8 +356,8 @@ form that cannot complete.
 
 ## The short version
 
-- **Eight decisions** unblock code that is already written (D1–D8). Every one has a
-  recommendation above, and any of them is small once answered.
+- **Eight decisions** unblock code that is already written (D1–D8). The owner
+  approved the recommendations on 2026-11-03; implementation remains outstanding.
 - **Five decisions** shape the product rather than the code (D9–D13), and D9 —
   first release scope — is the one that makes the other twelve finite.
 - **Five adjustments** I can make without asking anything (A1–A5), and two of them
@@ -359,5 +365,5 @@ form that cannot complete.
   the reason for it.
 - **Nine accounts and licences** are the only genuinely external blockers.
 
-Nothing in Parts 3 and 4 needs you. Part 1 needs one word each. Part 2 needs an
-afternoon.
+Part 1 is approved and awaits implementation. Part 2 still needs the owner’s
+product choices.

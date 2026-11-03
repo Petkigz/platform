@@ -7795,3 +7795,33 @@ the stated count must be the number of pages; and `ROADMAP.md`'s progress line m
 equal the marks in `ROADMAP.md`. Both were drifted by exactly the amount a
 document drifts when nothing counts it — 128 pages against a stated 121, 59 rows
 against a stated 53.
+
+
+## D1–D8 recommendations approved — 2026-11-03
+
+The owner said to proceed with the recommendations in Part 1 of
+`docs/remaining.md`. This records the decisions, not completion or permission to
+bypass a feature's safety gates.
+
+- D1: the marker and owner may open a child's hand-in; record a concern on the
+  file in a sentence and get it to the owner the same day. Do not forward or copy
+  the file out, or show it to another learner's family. Version the safeguarding
+  policy rather than editing the existing version.
+- D2: no lesson transcripts for now; do not treat transcript search as a build.
+- D3: no spend alert; retain the enforced 50 GB ceiling.
+- D4: seven-day grace, three retries then suspension, no proration, upgrades at
+  the next monthly renewal, and honour the purchased version on renewal. Keep
+  records on suspension.
+- D5: finance admin up to 25% of an order; above that or where teacher earnings
+  have accrued, platform admin also approves. An opener cannot approve their own
+  request. Approval is an agreement, not a transfer of money.
+- D6: learners ask and the course author answers; peer replies off at launch.
+- D7: defer the four companion and worship features until after the first paid
+  course, pending licensing and scholarly-accuracy decisions.
+- D8: leave AI quiz generation off; retrieval-only support may be enabled when
+  the owner is ready for escalations.
+
+Implementation is still outstanding. In particular, restricting a signed URL's
+issuance does not stop a recipient copying it, an in-app notification is not proof
+of receipt, and a platform-admin role does not necessarily identify the owner.
+These distinctions must be resolved honestly before claiming D1 is enforced.
