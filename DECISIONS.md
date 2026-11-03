@@ -7825,3 +7825,30 @@ Implementation is still outstanding. In particular, restricting a signed URL's
 issuance does not stop a recipient copying it, an in-app notification is not proof
 of receipt, and a platform-admin role does not necessarily identify the owner.
 These distinctions must be resolved honestly before claiming D1 is enforced.
+
+
+## D1–D8: owner revises the recommendations — 2026-11-03
+
+After being asked each question, the owner revised the earlier blanket approval:
+
+- **D1:** the marker and the owner may open a child's file, alongside the learner
+  and verified guardian. Use a private owner queue and add email alerts when a
+  provider is configured. Neither queueing nor sending proves receipt. A browser
+  cannot prevent all copying or photography by someone allowed to view a file.
+- **D2:** authors may add transcripts; they are optional, not mandatory and not
+  excluded.
+- **D3:** alert at 80% of the monthly storage budget. The owner has not supplied
+  an amount or currency; do not invent one or claim an alert is implemented.
+- **D4:** seven-day grace, three retries then suspension, no proration, upgrades
+  at next monthly renewal, purchased price version honoured, records retained.
+- **D5:** every refund requires the owner's approval. The requester cannot approve
+  their own request. Approval does not transfer money.
+- **D6:** learners and the author may reply, subject to moderation. This replaces
+  the author-only recommendation.
+- **D7:** prioritize all four companion and worship features now. Licensing,
+  source selection and scholarly accuracy must still be established; priority is
+  not a licence or approval of an unverified religious source.
+- **D8:** include quiz generation and investigate a free, no-card or self-hosted
+  provider without paid usage. None has been selected or shown to be suitable.
+
+These are decisions, not a claim that the work is implemented or enabled.

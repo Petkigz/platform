@@ -27,8 +27,27 @@ its file-access paths and same-day escalation verified before assignments or coh
 are enabled; in-app notification creation alone does not prove the owner received it.
 D4 and D5 require enforcement, not just terms. D7 and D8 remain deferred as described.
 
-The owner approved the recommendations below. They are implementation work in
-the stated order, not a claim that the features are ready to enable.
+**Revised owner answers (2026-11-03):** The answers below supersede the original
+recommendations wherever they differ. Implementation and verification remain open.
+
+- **D1:** marker and owner access (alongside the learner and verified guardian);
+  an owner queue now, with an email alert when a provider is configured. A queued
+  alert is not proof of delivery or receipt.
+- **D2:** optional author-provided transcripts, rather than no transcripts.
+- **D3:** alert at 80% of a monthly storage budget. The amount and currency have
+  not yet been supplied; estimated costs also need a price source.
+- **D4:** the recommended subscription terms.
+- **D5:** owner approval for every refund, with the requester unable to approve
+  their own request. Approval is not a transfer.
+- **D6:** allow learners and authors to reply, subject to moderation.
+- **D7:** prioritize all four features; sources, licences, calculation methods
+  and scholarly accuracy still need to be established.
+- **D8:** include quiz generation; investigate free, no-card or self-hosted
+  providers without paid usage. The existing retrieval-only support boundary
+  remains; no provider has been selected.
+
+The original recommendations below are retained for context, not as the current
+answers where these differ.
 
 ### D1. Who may look at a file a child hands in, and what a teacher does with a worry
 
