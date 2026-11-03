@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { chooseQuizTranscript, MAX_SOURCE_LENGTH, type QuizTranscript } from '@/lib/quiz-material';
 
 type Draft = { question: string; answer: string };
 
-export function LocalQuiz({ courseId, enabled }: { courseId: string; enabled: boolean }) {
+export function LocalQuiz({ courseId, enabled, transcripts }: { courseId: string; enabled: boolean; transcripts: QuizTranscript[] }) {
   const [source, setSource] = useState('');
+  const [selectedLesson, setSelectedLesson] = useState('');
   const [draft, setDraft] = useState<Draft[]>([]);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -38,8 +40,24 @@ export function LocalQuiz({ courseId, enabled }: { courseId: string; enabled: bo
       <p>Paste teaching material you have permission to use. The local model suggests up to three questions; check every question and answer against the source before using it. Do not paste learner information.</p>
       <p>Drafts are not saved or published. Copy any you approve into your assessment below.</p>
       {!enabled ? <p className="notice">Quiz drafting is off. The owner can enable it in the feature dashboard after setting up the local model.</p> : <>
+        {transcripts.length > 0 && <div>
+          <label htmlFor="quiz-transcript">Use a lesson transcript</label>
+          <select id="quiz-transcript" value={selectedLesson} onChange={(event) => setSelectedLesson(event.target.value)}>
+            <option value="">Choose a lesson</option>
+            {transcripts.map((item) => <option key={item.lessonId} value={item.lessonId}>{item.title}</option>)}
+          </select>
+          <button type="button" className="btn secondary" disabled={!selectedLesson || busy} onClick={() => {
+            const result = chooseQuizTranscript(transcripts, selectedLesson);
+            if (!result.ok) { setError(result.message); return; }
+            if (source.trim() && !window.confirm('Replace the teaching material currently in the box?')) return;
+            setSource(result.source);
+            setDraft([]);
+            setError('');
+          }}>Replace teaching material with transcript</button>
+          <p className="muted">Check that the transcript is approved and suitable before drafting. Nothing is sent until you press Draft questions.</p>
+        </div>}
         <label htmlFor="quiz-source">Teaching material</label>
-        <textarea id="quiz-source" rows={7} maxLength={8000} value={source}
+        <textarea id="quiz-source" rows={7} maxLength={MAX_SOURCE_LENGTH} value={source}
           onChange={(event) => setSource(event.target.value)} />
         <button type="button" className="btn" disabled={busy || source.trim().length < 50} onClick={generate}>
           {busy ? 'Drafting…' : 'Draft questions'}

@@ -4,7 +4,8 @@
  */
 export const LOCAL_QUIZ_URL = 'http://127.0.0.1:11434/api/generate';
 export const LOCAL_QUIZ_MODEL = 'qwen3:4b';
-export const MAX_SOURCE_LENGTH = 8000;
+import { MAX_SOURCE_LENGTH } from './quiz-material.ts';
+export { MAX_SOURCE_LENGTH } from './quiz-material.ts';
 
 type Question = { question: string; answer: string };
 export type QuizResult =

@@ -81,8 +81,8 @@ into the safeguarding policy as a new version, not an edit.
 **Progress:** optional author-provided text can be edited on a draft lesson,
 reviewed by assigned reviewers and read by entitled learners. It is copied into
 new draft versions and remains frozen after submission. Transcripts are not yet
-shown in public previews or used by the quiz generator; no speech-to-text is
-provided. Lesson search can find them only for a session allowed to read them.
+shown in public previews; no speech-to-text is provided. Authors can select a
+transcript as quiz source text when the local quiz feature is enabled. Lesson search can find them only for a session allowed to read them.
 The deployment needs both transcript migrations. Quran sync and recitation have
 separate sourcing and implementation requirements; a transcript does not complete them.
 
@@ -177,8 +177,8 @@ teaching material they paste, using the local `qwen3:4b` model through Ollama on
 the web server. No quiz is saved or published; a teacher must review and manually
 add approved questions. Setup and the remaining limitations are in
 `docs/deploy/local-quiz.md`. The switch remains off until setup and review testing.
-This does not yet implement a platform-wide assistant, automatic lesson retrieval
-for teachers, word of the day, or a calendar. The learner assistant remains
+This does not yet implement a platform-wide assistant, automatic retrieval of
+multiple lessons for teachers, word of the day, or a calendar. The learner assistant remains
 retrieval-only. No model performance has been tested on the owner's machine.
 
 **Blocks** `learning.ai_quiz_gen`, and the answer half of `learning.ai_support`.

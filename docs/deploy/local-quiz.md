@@ -2,8 +2,10 @@
 
 A first part of the owner’s local-assistant decision, not the complete assistant.
 It makes draft questions for a course author from teaching material they paste.
-It does not answer students, read media or transcripts, save or publish questions,
-or check whether answers are religiously correct. The author must check every
+It does not answer students, read media, automatically retrieve transcripts, save
+or publish questions, or check whether answers are religiously correct. A teacher
+may explicitly select one of their lesson transcripts as the source text; longer
+transcripts require a manually selected passage. The author must check every
 question and answer against approved material and add approved questions through
 the assessment editor. Do not paste learner information.
 
@@ -24,7 +26,7 @@ the assessment editor. Do not paste learner information.
    deployment guide. Sign in as the course author. In the admin feature dashboard,
    turn on `learning.ai_quiz_gen` only after completing setup and a review test.
 4. Open your course under **Teach**, paste approved teaching material into
-   **Draft quiz questions**, and request a draft. Review and copy approved work
+   **Draft quiz questions**, or explicitly select a lesson transcript, and request a draft. Review and copy approved work
    into the assessment editor. The tool itself never saves a draft.
 
 If the switch is off, the API refuses requests. If Ollama or the model is missing,

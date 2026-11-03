@@ -192,7 +192,11 @@ export default async function TeachCoursePage({
               database refuses it, and the teacher would have spent a minute
               preparing a file to find out. */}
           {current.status === 'draft' && <ImportOutline versionId={current.id} />}
-          <LocalQuiz courseId={row.id} enabled={quizDraftingEnabled} />
+          <LocalQuiz courseId={row.id} enabled={quizDraftingEnabled}
+            transcripts={current.sections.flatMap((section) => section.lessons.flatMap((lesson) => {
+              const body = transcripts[lesson.id];
+              return body ? [{ lessonId: lesson.id, title: lesson.title, body }] : [];
+            }))} />
           <AssessmentManager
             version={current}
             assessments={assessments}
