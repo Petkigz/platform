@@ -78,6 +78,19 @@ export async function run(ctx) {
   // -------------------------------------------------------------------
   // The seed
   // -------------------------------------------------------------------
+  await test('coursework and cohort switches cannot be enabled or demoted by an admin', async () => {
+    for (const key of ['learning.assignments', 'learning.cohorts']) {
+      const row = (await q('select value_text, gate_type from public.platform_settings where key=$1', [key])).rows[0];
+      assert(row.value_text === 'false' && row.gate_type === 'code', `${key} is not off and deployment-gated`);
+      await rejects(() => asUser(admin, () => q(
+        "update public.platform_settings set value_text='true' where key=$1", [key])), /CODE-gated/i);
+      await rejects(() => asUser(admin, () => q(
+        "update public.platform_settings set gate_type='admin' where key=$1", [key])), /metadata is managed/i);
+      const after = (await q('select value_text, gate_type from public.platform_settings where key=$1', [key])).rows[0];
+      assert(after.value_text === 'false' && after.gate_type === 'code', `${key} changed through the runtime door`);
+    }
+  });
+
   await test('the whole register is seeded, with a gate type on every flag', async () => {
     const total = await count(`select 1 from public.platform_settings`);
     assert(total >= 86, `expected at least 86 flags, found ${total}`);

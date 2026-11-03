@@ -57,6 +57,11 @@ and the recorded review — and `/admin/coursework` shows what nobody has looked
 What is missing is a paragraph: who may open a child's file, and what a teacher
 does when what they see worries them.
 
+**Safety gate:** assignments and cohorts are deployment-gated while the access,
+owner queue, file safety and deletion work remains incomplete. The migration
+preserves any existing switch value; an already-enabled deployment needs an
+operator to turn it off. The gate does not itself fix those safeguards.
+
 **Implementation started, 2026-11-03:** `20261281027000_coursework_review_note.sql`
 fixes a loss of information: a second concern by the same reviewer with different
 wording is now appended, not mistaken for a double-click. The same normalized note

@@ -384,7 +384,23 @@ for (const [name, fn] of [
   await ctx.q(
     `update public.platform_settings set value_text = $1 where key = 'family.guardian_verification'`,
     [VERIFICATION_ON_SUITES.has(name) ? 'true' : 'false']);
-  await fn(ctx);
+  // These feature suites exercise the built workflow behind an intentionally
+  // deployment-only safety gate. This test-only override is scoped to them;
+  // the flags suite separately verifies that real sessions cannot enable it.
+  const courseworkFixtures = new Set([
+    'cohorts', 'course assignments', 'coursework files', 'coursework retention',
+    'coursework review', 'coursework holds', 'assignment revisions',
+    'cohort join window', 'learner analytics',
+  ]);
+  if (courseworkFixtures.has(name)) {
+    await ctx.q("select set_config('app.bypassing_code_flag', 'on', false)");
+  }
+  try { await fn(ctx); }
+  finally {
+    if (courseworkFixtures.has(name)) {
+      await ctx.q("select set_config('app.bypassing_code_flag', '', false)");
+    }
+  }
   // Back to what ships before the leak check, so a suite that forgets to restore
   // it is caught by the check rather than blamed on the next one.
   await ctx.q(
