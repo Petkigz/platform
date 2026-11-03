@@ -123,7 +123,9 @@ cannot decide their own request. Until the trusted one-time owner bootstrap is
 performed, approvals fail closed. The migration and setup must be deployed; old
 pending approvals need review before provider action. The owner cannot approve a
 request they opened, and ownership recovery/transfer has no visual workflow yet.
-Approval records a pending internal transaction; it does not send money.
+Approval records a pending internal transaction; it does not send money. Direct
+authenticated ledger insertion is also refused; this prevents forged ledger
+entries, not transfers through external systems.
 
 `commerce.refunds` is registered, but the refund writers do not enforce its value:
 switching it off does not block requests or decisions. Provider initiation,

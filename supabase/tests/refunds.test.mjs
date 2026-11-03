@@ -150,6 +150,9 @@ export async function run(ctx) {
   const finance = await newUser('ref-finance@example.com');
   await newProfile(finance, 'Finance Administrator');
   await grantRole(finance, 'finance_admin', admin);
+  const support = await newUser('ref-support@example.com');
+  await newProfile(support, 'Support');
+  await grantRole(support, 'support_agent', admin);
 
   await test('approval status is caller-specific and unavailable to learners', async () => {
     await asUser(admin, async () => {
@@ -164,6 +167,23 @@ export async function run(ctx) {
     await asUser(learner, async () => {
       await rejects(() => q('select public.refund_approval_status()'), /only staff/i);
     });
+  });
+
+  await test('staff cannot forge refund or capture ledger entries directly', async () => {
+    const { order, account } = await paidOrder('Ledger Write Protection');
+    const before = await count('select id from public.financial_transactions where order_id=$1', [order]);
+    for (const actor of [admin, otherAdmin, finance, support]) {
+      for (const [type, direction] of [['refund', 'debit'], ['capture', 'credit']]) {
+        await asUser(actor, async () => {
+          await rejects(() => q(`insert into public.financial_transactions
+            (order_id, billing_account_id, transaction_type, direction, amount_minor, currency_code, status)
+            values ($1,$2,$3,$4,100,'UGX','settled')`, [order, account, type, direction]),
+            /permission denied/i);
+        });
+      }
+    }
+    assert(await count('select id from public.financial_transactions where order_id=$1', [order]) === before,
+      'an unauthorized insert changed the ledger');
   });
 
   await test('a null decision is rejected rather than silently declining', async () => {
