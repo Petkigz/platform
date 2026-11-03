@@ -1,3 +1,4 @@
+import { fetchTranscripts } from '@/lib/transcripts';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -82,6 +83,7 @@ export default async function ReviewAssignmentPage({
   const rehearsal = loaded?.rehearsal ?? null;
   const sections = loaded?.version.sections ?? [];
   const lessonCount = sections.reduce((n, s) => n + s.lessons.length, 0);
+  const transcripts = await fetchTranscripts(supabase, sections.flatMap((s) => s.lessons.map((l) => l.id)));
 
   // What each lesson's rows say, keyed by lesson id — the same object the author's
   // preview page renders, so the reviewer's badges cannot mean something else.
@@ -260,6 +262,12 @@ export default async function ReviewAssignmentPage({
                         <span className="badge neutral" style={{ flex: 'none' }}>
                           {badgeFor(rehearsalByLesson.get(l.id))}
                         </span>
+                      )}
+                      {transcripts[l.id] && (
+                        <details style={{ width: '100%' }}>
+                          <summary>Transcript</summary>
+                          <p style={{ whiteSpace: 'pre-wrap' }} dir="auto">{transcripts[l.id]}</p>
+                        </details>
                       )}
                       {resources.length > 0 && (
                         <span style={{ display: 'grid', gap: '0.75rem', marginTop: '0.5rem' }}>

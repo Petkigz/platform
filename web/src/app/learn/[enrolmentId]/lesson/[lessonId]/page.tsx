@@ -1,3 +1,4 @@
+import { fetchTranscripts } from '@/lib/transcripts';
 import { ArabicInline } from '@/app/_shared/arabic-text';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
@@ -133,6 +134,7 @@ export default async function LessonPage({
   // open. Only asked when the reader may open the lessons at all: a preview
   // viewer sees a handful of them, and offering "next" would walk them into one
   // they are not entitled to.
+  const transcript = entitled ? (await fetchTranscripts(supabase, [lesson.id]))[lesson.id] : undefined;
   const steps = entitled ? await fetchOutline(supabase, lesson.courseVersionId) : [];
   const here = lessonNeighbours(steps, lesson.id);
 
@@ -296,6 +298,13 @@ export default async function LessonPage({
       {lesson.description && (
         <section className="card">
           <p>{lesson.description}</p>
+        </section>
+      )}
+
+      {transcript && (
+        <section className="card">
+          <h2>Transcript</h2>
+          <p style={{ whiteSpace: 'pre-wrap' }} dir="auto">{transcript}</p>
         </section>
       )}
 

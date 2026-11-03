@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { fetchVersions } from '@/lib/authoring';
 import { Curriculum } from './curriculum';
+import { fetchTranscripts } from '@/lib/transcripts';
 import { ImportOutline } from './import-outline';
 import { AssessmentManager } from './assessment-manager';
 import { LocalQuiz } from './local-quiz';
@@ -95,6 +96,9 @@ export default async function TeachCoursePage({
   // established authorship above, which is the check that makes this safe to
   // show.
   const rejections = await fetchRejections(supabase, courseId);
+  const transcripts = current
+    ? await fetchTranscripts(supabase, current.sections.flatMap((s) => s.lessons.map((l) => l.id)))
+    : {};
 
   // Subject tagging, and the taxonomy it draws from. Tagging is what makes a
   // course findable in the catalogue.
@@ -179,6 +183,7 @@ export default async function TeachCoursePage({
             courseId={row.id}
             version={current}
             sourcesByLesson={sourcesByLesson}
+            transcriptsByLesson={transcripts}
             previewsEnabled={previewsEnabled}
             copyFromVersionId={!draft && current.status === 'published' ? current.id : null}
           />

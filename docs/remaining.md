@@ -76,13 +76,18 @@ into the safeguarding policy as a new version, not an edit.
 
 ### D2. Do lessons carry transcripts?
 
+**Progress:** optional author-provided text can be edited on a draft lesson,
+reviewed by assigned reviewers and read by entitled learners. It is copied into
+new draft versions and remains frozen after submission. Transcripts are not yet
+included in search, public previews or the quiz generator; no speech-to-text is
+provided. The deployment needs the transcript migration.
+
 **Blocks** the rest of `platform.search`, plus`learning.quran_sync`,
 `learning.recitation` and the "transcripts are not part of it" limit on notes.
 
-A lesson is a title, a description and media. **There is no body text anywhere in
-the schema** — the words are inside a video, an audio file or a PDF. "Search
-inside lessons" therefore means "search transcripts", which is a content
-obligation, not an index.
+Before transcripts were implemented, a lesson had only a title, a description and
+media, with no stored body text. Optional transcripts now provide authored text,
+but they are not yet searchable.
 
 **Recommendation:** no transcripts for now. Everything that *is* text is already
 searchable behind `learning.lesson_search`. Leave the flag as the honest record of

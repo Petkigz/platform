@@ -8,6 +8,7 @@ import {
   type AddResourceAccess, type AuthoredVersion, type ResourceType,
 } from '@/lib/authoring';
 import { SourceForm } from './source-form';
+import { TranscriptEditor } from './transcript-editor';
 import type { LessonSource } from '@/lib/provenance';
 
 /**
@@ -23,12 +24,14 @@ export function Curriculum({
   courseId,
   version,
   sourcesByLesson,
+  transcriptsByLesson,
   previewsEnabled,
   copyFromVersionId,
 }: {
   courseId: string;
   version: AuthoredVersion;
   sourcesByLesson: Record<string, LessonSource[]>;
+  transcriptsByLesson: Record<string, string>;
   previewsEnabled: boolean;
   copyFromVersionId: string | null;
 }) {
@@ -315,6 +318,9 @@ export function Curriculum({
                     >
                       {version.status === 'published' ? 'Preview / discussion' : 'Preview'}
                     </Link>
+
+                    <TranscriptEditor lessonId={l.id} lessonTitle={l.title}
+                      initial={transcriptsByLesson[l.id] ?? ''} editable={editable} />
 
                     {l.resources.length > 0 && (
                       <ul

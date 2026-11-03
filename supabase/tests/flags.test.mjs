@@ -385,10 +385,12 @@ export async function run(ctx) {
     const search = (await q(
       `select preconditions from public.platform_settings
         where key = 'platform.search'`)).rows[0];
-    assert(/no body/i.test(search.preconditions),
-      'the search row does not say that a lesson has no text to index');
-    assert(/transcri/i.test(search.preconditions),
-      'the search row does not name the decision it is actually waiting on');
+    assert(/transcripts are stored/i.test(search.preconditions),
+      'the search row does not acknowledge stored transcripts');
+    assert(/not yet included in search/i.test(search.preconditions),
+      'the search row claims transcript search exists');
+    const relation = (await q("select to_regclass('public.lesson_transcripts') as name")).rows[0].name;
+    assert(relation === 'lesson_transcripts', 'the transcript relation does not exist');
     assert(!/index over lesson bodies/i.test(search.preconditions),
       'the search row still promises an index over a column that does not exist');
 

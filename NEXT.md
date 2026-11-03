@@ -698,13 +698,12 @@ aggregates only, and the audit row says so in as many words.
 
 Two switches were describing a platform that no longer exists. `platform.cost_controls`
 said "Nothing exists" about a 50 GB quota that ships and refuses uploads before a byte
-moves; `platform.search` blamed a missing index for a feature whose real blocker is that
-**a lesson has no body text** — the words are inside a video, an audio file or a PDF, so
-searching them means transcribing them, which is the owner's decision and not a column to
-index. Both rows now say what is true, and the switches themselves did not move.
+moves; `platform.search` blamed a missing index when no transcript text existed.
+Optional author-provided transcripts now exist, but are not yet searchable. Both rows
+have since been updated; their switches did not move.
 
-Verification: **2 542 database assertions in 169 suites, 2 033 web tests; TypeScript
-typecheck and `check:repo` pass; 238 migrations.**
+Verification: **2 549 database assertions in 170 suites, 2 036 web tests; TypeScript
+typecheck and `check:repo` pass; 239 migrations.**
 
 ## Today's sentence
 

@@ -82,6 +82,7 @@ export async function POST(request: Request) {
     csv?: unknown;
     enabled?: unknown;
     templateVersion?: unknown;
+    transcript?: unknown;
   };
 
   const uuid = /^[0-9a-f-]{36}$/i;
@@ -99,6 +100,17 @@ export async function POST(request: Request) {
 
   const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
   const isUuid = (v: unknown): v is string => typeof v === 'string' && uuid.test(v);
+
+  if (b.action === 'save_transcript') {
+    if (!isUuid(b.lessonId) || typeof b.transcript !== 'string' || b.transcript.length > 100000) {
+      return NextResponse.json({ ok: false, message: 'Choose a lesson and provide up to 100,000 characters.' }, { status: 400 });
+    }
+    const { error } = await supabase.rpc('save_lesson_transcript', {
+      p_lesson_id: b.lessonId, p_body: b.transcript,
+    });
+    if (error) return NextResponse.json({ ok: false, message: error.message }, { status: 400 });
+    return NextResponse.json({ ok: true });
+  }
 
   // ---------------------------------------------------------------------
   if (b.action === 'create_course') {
