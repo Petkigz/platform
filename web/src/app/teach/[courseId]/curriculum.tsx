@@ -311,9 +311,9 @@ export function Curriculum({
                       href={`/teach/${courseId}/preview/${l.id}`}
                       className="badge neutral"
                       style={{ flex: 'none' }}
-                      title={`See how ${l.title} looks to a learner`}
+                      title={`See how ${l.title} looks to a learner and open its discussion when available`}
                     >
-                      Preview
+                      {version.status === 'published' ? 'Preview / discussion' : 'Preview'}
                     </Link>
 
                     {l.resources.length > 0 && (

@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 
+import { Discussion } from '@/app/learn/[enrolmentId]/lesson/[lessonId]/discussion';
+import { fetchThread } from '@/lib/discussion';
 import { ArabicInline } from '@/app/_shared/arabic-text';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
@@ -28,9 +30,9 @@ export const metadata = { title: 'Lesson as a learner sees it' };
  * in its own direction, the description card, the Materials list with the
  * resource type beside each item — the same elements in the same order the lesson
  * page prints them. What it does not render is what needs an enrolment: progress,
- * notes, the discussion, the practice check, the download button. Those are named
- * in the banner rather than faked, because a preview that invented them would be a
- * preview of a page that does not exist.
+ * notes, the practice check or the download button. Those are named in the banner
+ * rather than faked. For a published version, the course author can also open the
+ * real discussion below the rehearsal when the discussion flag is on.
  *
  * **The database decides who may look.** Resource rows on a draft are readable
  * only through `can_author_version()` in the read policy on `lesson_resources`.
@@ -137,6 +139,12 @@ export default async function LessonPreviewPage({
     if (reviewing !== true) notFound();
   }
 
+  const discussionOn = mine && version.version_status === 'published'
+    && await isFlagEnabled(supabase, 'learning.discussion');
+  const thread = discussionOn
+    ? await fetchThread(supabase, { lessonId: lesson.id, myUserId: user.id })
+    : [];
+
   const [{ data: resourceRows }, previewsOn, { data: deliveryData }] = await Promise.all([
     supabase
       .from('lesson_resources')
@@ -222,9 +230,9 @@ export default async function LessonPreviewPage({
           </>
         )}{' '}
         <span className="muted">
-          A learner with access also gets their progress, their own notes, the class discussion, a
-          practice check and, where the course allows it, a download button. None of those are
-          invented here, because a preview of a page that does not exist is worse than none.
+          A learner with access also gets their progress, their own notes, discussion, a
+          practice check and, where allowed, downloads. The rehearsal does not invent these.
+          When discussion is open, the author can use the real thread below.
         </span>
         {!mine && (
           <span className="muted">
@@ -338,6 +346,13 @@ export default async function LessonPreviewPage({
               : `${preview.playable} of ${preview.rows.length} play inside the page, where a learner expects them.`}
         </p>
       </section>
+
+      {discussionOn && (
+        <div>
+          <p className="muted">This is the live discussion for this published lesson, not a preview.</p>
+          <Discussion lessonId={lesson.id} posts={thread} enabled canPost />
+        </div>
+      )}
 
       <p style={{ marginTop: '1.5rem' }}>
         <Link href={`/teach/${course.id}`}>Back to the curriculum</Link>

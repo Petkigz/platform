@@ -75,8 +75,8 @@ export function Discussion({
     <section className="card">
       <h2>Discussion</h2>
       <p className="muted">
-        Ask about this lesson, or answer someone else. Anything you write is
-        reviewed before it appears — questions and answers alike.
+        Ask about this lesson, or answer someone else. Learner questions and replies
+        are reviewed before they appear. Course author and staff posts appear immediately.
       </p>
 
       {posts.length === 0 && (

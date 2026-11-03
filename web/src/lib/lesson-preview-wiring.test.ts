@@ -64,16 +64,14 @@ test('the preview decides what a learner sees by the live flag, not by assumptio
   assert.match(page, /\{ previewsOn, published \}/);
 });
 
-test('the preview does not re-render the learner page', () => {
-  // The learner page's components are bound to an enrolment: progress, notes,
-  // discussion, practice. Importing any of them would mean the preview needs an
-  // enrolment, or fakes one.
-  for (const forbidden of ['MarkComplete', 'Discussion', 'PracticeCheck', 'StudyTools', 'RenditionPlayer']) {
-    assert.ok(!page.includes(forbidden), `${forbidden} belongs to the learner page, not to the preview`);
+test('the rehearsal does not fake enrolment-only tools, and the author thread is real', () => {
+  for (const forbidden of ['MarkComplete', 'PracticeCheck', 'StudyTools', 'RenditionPlayer']) {
+    assert.ok(!page.includes(forbidden), `${forbidden} requires an enrolment`);
   }
-  assert.ok(!page.includes("/learn/[enrolmentId]"), 'the preview must not import the learner route');
-
-  // It still uses the learner page's *rules*, rather than restating them.
+  assert.match(page, /mine && version.version_status === 'published'/);
+  assert.match(page, /isFlagEnabled\(supabase, 'learning\.discussion'\)/);
+  assert.match(page, /discussionOn\s*\? await fetchThread/);
+  assert.match(page, /This is the live discussion/);
   assert.match(page, /from '@\/lib\/lesson-preview'/);
 });
 

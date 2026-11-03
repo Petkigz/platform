@@ -282,6 +282,47 @@ export async function run(ctx) {
     });
   });
 
+  await test('an enrolled learner can reply to a reviewed peer question, but the reply is held', async () => {
+    const L = await lesson();
+    const asker = await enrolledLearner('ds-peer-asker@example.com', L.version, L.course);
+    const peer = await enrolledLearner('ds-peer-replier@example.com', L.version, L.course);
+    const parent = (await q(`insert into public.discussion_posts (lesson_id, author_user_id, body)
+      values ($1,$2,'A peer question') returning id`, [L.lesson, asker.userId])).rows[0].id;
+    await committed(async () => {
+      await q(`select set_config('request.jwt.claims', $1, true)`, [JSON.stringify({ sub: admin })]);
+      await q('set local role authenticated');
+      await q(`select id from public.moderate_discussion_post($1,'visible','Reviewed')`, [parent]);
+    });
+    await asUser(peer.userId, async () => {
+      const row = (await q(`insert into public.discussion_posts
+        (lesson_id, parent_id, author_user_id, body, visibility_state)
+        values ($1,$2,$3,'A peer reply','visible') returning visibility_state, author_kind`,
+        [L.lesson, parent, peer.userId])).rows[0];
+      assert(row.visibility_state === 'pending' && row.author_kind === 'learner',
+        'a learner reply bypassed the moderation queue');
+    });
+  });
+
+  await test('the course author can reply to a reviewed learner question', async () => {
+    const L = await lesson();
+    const asker = await enrolledLearner('ds-author-asker@example.com', L.version, L.course);
+    const parent = (await q(`insert into public.discussion_posts (lesson_id, author_user_id, body)
+      values ($1,$2,'A learner question') returning id`, [L.lesson, asker.userId])).rows[0].id;
+    await committed(async () => {
+      await q(`select set_config('request.jwt.claims', $1, true)`, [JSON.stringify({ sub: admin })]);
+      await q('set local role authenticated');
+      await q(`select id from public.moderate_discussion_post($1,'visible','Reviewed')`, [parent]);
+    });
+    await asUser(L.teacher, async () => {
+      const row = (await q(`insert into public.discussion_posts
+        (lesson_id, parent_id, author_user_id, body)
+        values ($1,$2,$3,'A teacher reply') returning visibility_state, author_kind`,
+        [L.lesson, parent, L.teacher])).rows[0];
+      assert(row.visibility_state === 'visible' && row.author_kind === 'teacher',
+        'the course author could not post a visible reply');
+    });
+  });
+
   await test('a post cannot be edited once it has been approved', async () => {
     // Otherwise "held until reviewed" is defeated by editing after approval.
     const L = await lesson();
