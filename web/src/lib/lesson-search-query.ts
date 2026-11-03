@@ -11,7 +11,7 @@ type Row = {
   course_title: string;
   is_preview: boolean;
   snippet: string;
-  matched_in: 'title' | 'description';
+  matched_in: 'title' | 'description' | 'transcript';
   rank: number;
 };
 
@@ -24,7 +24,7 @@ type Row = {
  * they did not ask for on that visit.
  *
  * Who may see what is decided in `search_lessons()` — titles for anyone who may
- * read the version, a lesson's introduction only for somebody who may study it.
+ * read the version, and a lesson's introduction or transcript only when allowed.
  * Nothing here re-checks it, because a second authority is a second answer.
  */
 export async function fetchLessonHits(
@@ -50,7 +50,7 @@ export async function fetchLessonHits(
     courseTitle: row.course_title,
     isPreview: row.is_preview === true,
     snippet: row.snippet ?? '',
-    matchedIn: row.matched_in === 'description' ? 'description' : 'title',
+    matchedIn: row.matched_in === 'description' || row.matched_in === 'transcript' ? row.matched_in : 'title',
     rank: typeof row.rank === 'number' ? row.rank : 0,
   }));
 }

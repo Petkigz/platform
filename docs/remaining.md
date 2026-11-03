@@ -42,9 +42,10 @@ recommendations wherever they differ. Implementation and verification remain ope
 - **D6:** allow learners and authors to reply, subject to moderation.
 - **D7:** prioritize all four features; sources, licences, calculation methods
   and scholarly accuracy still need to be established.
-- **D8:** include quiz generation; investigate free, no-card or self-hosted
-  providers without paid usage. The existing retrieval-only support boundary
-  remains; no provider has been selected.
+- **D8:** reviewed platform help and a small model temporarily hosted on the
+  owner's PC. The quiz prototype exists, but its secure remote connection and
+  live model testing are not complete. The existing learner assistant remains
+  retrieval-only; no paid provider has been selected.
 
 The original recommendations below are retained for context, not as the current
 answers where these differ.
@@ -54,8 +55,9 @@ answers where these differ.
 **Blocks** `learning.assignments`, `learning.cohorts`, and any reliance on the
 coursework review register. Both machinery halves are built — the retention clock
 and the recorded review — and `/admin/coursework` shows what nobody has looked at.
-What is missing is a paragraph: who may open a child's file, and what a teacher
-does when what they see worries them.
+The owner has decided who may open a child's file and how concerns should reach
+them. The access, escalation and file-safety mechanisms still need implementation
+and verification.
 
 **Safety gate:** assignments and cohorts are deployment-gated while the access,
 owner queue, file safety and deletion work remains incomplete. The migration
@@ -79,19 +81,17 @@ into the safeguarding policy as a new version, not an edit.
 **Progress:** optional author-provided text can be edited on a draft lesson,
 reviewed by assigned reviewers and read by entitled learners. It is copied into
 new draft versions and remains frozen after submission. Transcripts are not yet
-included in search, public previews or the quiz generator; no speech-to-text is
-provided. The deployment needs the transcript migration.
-
-**Blocks** the rest of `platform.search`, plus`learning.quran_sync`,
-`learning.recitation` and the "transcripts are not part of it" limit on notes.
+shown in public previews or used by the quiz generator; no speech-to-text is
+provided. Lesson search can find them only for a session allowed to read them.
+The deployment needs both transcript migrations. Quran sync and recitation have
+separate sourcing and implementation requirements; a transcript does not complete them.
 
 Before transcripts were implemented, a lesson had only a title, a description and
 media, with no stored body text. Optional transcripts now provide authored text,
-but they are not yet searchable.
+and lesson search now includes only transcripts the caller may read.
 
-**Recommendation:** no transcripts for now. Everything that *is* text is already
-searchable behind `learning.lesson_search`. Leave the flag as the honest record of
-a promise not made, and stop treating it as a build.
+**Earlier recommendation, superseded:** no transcripts for now. The owner instead
+chose optional author-provided transcripts.
 
 ### D3. The upload spend alert's number
 

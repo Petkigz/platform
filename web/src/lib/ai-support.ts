@@ -27,7 +27,7 @@ export type AiSupportCitation = {
   courseTitle: string;
   /** `ts_headline` output: `<mark>` around the match, and only that tag. */
   snippet: string;
-  matchedIn: 'title' | 'description';
+  matchedIn: 'title' | 'description' | 'transcript';
   href: string;
 };
 
@@ -60,8 +60,8 @@ function citation(raw: unknown): AiSupportCitation | null {
   const href = text(row.href);
   if (!lessonId || !lessonTitle || !courseSlug || !courseTitle) return null;
   if (snippet === null || !href) return null;
-  const matchedIn = row.matchedIn === 'title' ? 'title' : row.matchedIn === 'description'
-    ? 'description' : null;
+  const matchedIn = row.matchedIn === 'title' || row.matchedIn === 'description' || row.matchedIn === 'transcript'
+    ? row.matchedIn : null;
   if (!matchedIn) return null;
   return {
     lessonId,

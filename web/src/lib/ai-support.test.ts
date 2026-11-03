@@ -149,3 +149,10 @@ test('each status has one line, and none of them claims to have answered', () =>
   assert.match(describeAiSupportStatus('no_match'), /Nothing/);
   assert.match(describeAiSupportStatus('closed'), /Not switched on/);
 });
+
+
+test('retrieval-only transcript citations remain valid without relaxing the model boundary', () => {
+  const payload = answer({ citations: [citation({ matchedIn: 'transcript' })] });
+  assert.equal(normaliseAiSupportAnswer(payload)?.citations[0]?.matchedIn, 'transcript');
+  assert.equal(normaliseAiSupportAnswer({ ...payload, boundary: { retrievalOnly: false, model: 'other', generatedText: true } }), null);
+});

@@ -100,3 +100,8 @@ test('the destination never invents a route for a lesson behind its course', () 
   assert.doesNotMatch(url, /\/learn\//);
   assert.match(url, /^\/courses\//);
 });
+
+
+test('transcript matches have a truthful label', () => {
+  assert.equal(matchLabel('transcript'), 'In the lesson transcript');
+});

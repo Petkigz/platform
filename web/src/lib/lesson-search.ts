@@ -25,7 +25,7 @@ export type LessonHit = {
   /** A preview opens on its own address, for anybody. */
   isPreview: boolean;
   snippet: string;
-  matchedIn: 'title' | 'description';
+  matchedIn: 'title' | 'description' | 'transcript';
   rank: number;
 };
 
@@ -79,11 +79,10 @@ export function snippetParts(snippet: string): SnippetPart[] {
  * Where the match was, said in the reader's terms.
  *
  * "In the title" is a fact they can verify by looking. "Matched" is not, and
- * "content" would be a category the platform does not have — a lesson has a
- * title and an introduction, not a body.
+ * A transcript is labeled separately from a title or introduction.
  */
-export function matchLabel(matchedIn: 'title' | 'description'): string {
-  return matchedIn === 'title' ? 'In the lesson title' : 'In the lesson introduction';
+export function matchLabel(matchedIn: 'title' | 'description' | 'transcript'): string {
+  return matchedIn === 'title' ? 'In the lesson title' : matchedIn === 'transcript' ? 'In the lesson transcript' : 'In the lesson introduction';
 }
 
 /**

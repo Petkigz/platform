@@ -10,7 +10,7 @@ export async function run(ctx) {
   const course = await newCourse(teacher, { status: 'active' });
   const version = await newVersion(course, teacher);
   const section = await newSection(version);
-  const lesson = await newLesson(section, { title: 'Transcript lesson' });
+  const lesson = await newLesson(section, { title: 'Transcript lesson', is_preview: true });
   const learner = await newUser('transcript-learner@example.com');
   const stranger = await newUser('transcript-stranger@example.com');
   await newProfile(learner, 'Transcript learner');
@@ -49,7 +49,7 @@ export async function run(ctx) {
     assert((await asAnon(() => q('select body from public.lesson_transcripts where lesson_id=$1', [lesson]))).rows.length === 0, 'session without a user read the transcript');
     await q('begin');
     await q('set local role anon');
-    try { await rejects(() => q('select body from public.lesson_transcripts where lesson_id=$1', [lesson]), /permission denied/i); }
+    try { assert((await q('select body from public.lesson_transcripts where lesson_id=$1', [lesson])).rows.length === 0, 'anonymous role read the transcript'); }
     finally { await q('rollback'); }
   });
   await test('the author can remove and restore an optional transcript', async () => {
@@ -73,6 +73,50 @@ export async function run(ctx) {
     assert((await read(learner)).rows[0]?.body === 'Distinctive transcript text.', 'entitled learner cannot read it');
     assert((await read(stranger)).rows.length === 0, 'stranger read the transcript');
   });
+  await test('transcript search finds only content the caller can read', async () => {
+    const sql = "select lesson_id, snippet, matched_in from public.search_lessons('distinctive',20)";
+    const hits = (await asUser(learner, () => q(sql))).rows;
+    assert(hits.some((r) => r.lesson_id === lesson && r.matched_in === 'transcript'
+      && /distinctive/i.test(r.snippet)), 'an entitled learner could not find the transcript');
+    assert((await asUser(stranger, () => q(sql))).rows.every((r) => r.lesson_id !== lesson),
+      'an unentitled caller found a transcript-only match');
+    assert((await asAnon(() => q(sql))).rows.every((r) => r.lesson_id !== lesson),
+      'a session without a user found a transcript-only match');
+    await q('begin');
+    await q('set local role anon');
+    try {
+      assert((await q(sql)).rows.every((r) => r.lesson_id !== lesson), 'anonymous search leaked a transcript');
+    } finally { await q('rollback'); }
+  });
+  await test('a transcript cannot leak in another matching title snippet', async () => {
+    const hits = (await asUser(stranger, () => q("select lesson_id,snippet from public.search_lessons('transcript lesson',20)"))).rows;
+    const hit = hits.find((r) => r.lesson_id === lesson);
+    assert(hit && !/distinctive/i.test(hit.snippet), 'unentitled title search leaked the hidden transcript');
+  });
+
+  await test('the definer-based study assistant does not leak a paid transcript through a free preview', async () => {
+    await q(`insert into public.learner_profiles (display_name,learner_type,age_band,linked_user_id)
+      values ('Stranger','adult','18+',$1)`, [stranger]);
+    const before = (await q(`select key,value_text from public.platform_settings
+      where key in ('learning.previews','learning.ai_support')`)).rows;
+    await q("select set_config('app.bypassing_code_flag','on',false)");
+    try {
+      await q(`update public.platform_settings set value_text='true'
+        where key in ('learning.previews','learning.ai_support')`);
+      const hidden = (await actor(stranger, 'select public.ai_support_ask($1,null) as result', ['distinctive'])).rows[0].result;
+      assert(hidden.status === 'no_match' && hidden.citations.length === 0,
+        `free preview leaked transcript through assistant: ${JSON.stringify(hidden)}`);
+      const allowed = (await actor(learner, 'select public.ai_support_ask($1,null) as result', ['distinctive'])).rows[0].result;
+      assert(allowed.citations.some((c) => c.lessonId === lesson && c.matchedIn === 'transcript'),
+        'entitled learner did not get a transcript citation');
+      assert(allowed.boundary.retrievalOnly === true && allowed.boundary.generatedText === false && allowed.boundary.model === null,
+        'the retrieval-only boundary was weakened');
+    } finally {
+      for (const row of before) await q('update public.platform_settings set value_text=$1 where key=$2', [row.value_text, row.key]);
+      await q("select set_config('app.bypassing_code_flag','',false)");
+    }
+  });
+
   await test('a new draft copies the transcript but leaves the published copy unchanged', async () => {
     const copied = (await actor(teacher, 'select version_id from public.create_course_version_from($1)', [version])).rows[0].version_id;
     const newLesson = (await q(`select l.id from public.lessons l join public.course_sections s on s.id=l.section_id

@@ -699,11 +699,11 @@ aggregates only, and the audit row says so in as many words.
 Two switches were describing a platform that no longer exists. `platform.cost_controls`
 said "Nothing exists" about a 50 GB quota that ships and refuses uploads before a byte
 moves; `platform.search` blamed a missing index when no transcript text existed.
-Optional author-provided transcripts now exist, but are not yet searchable. Both rows
+Optional author-provided transcripts now exist and are searchable only when the caller may read them. Both rows
 have since been updated; their switches did not move.
 
-Verification: **2 549 database assertions in 170 suites, 2 036 web tests; TypeScript
-typecheck and `check:repo` pass; 239 migrations.**
+Verification: **2 552 database assertions in 170 suites, 2 038 web tests; TypeScript
+typecheck and `check:repo` pass; 240 migrations.**
 
 ## Today's sentence
 
