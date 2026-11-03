@@ -44,7 +44,7 @@ export function DecideForm({ requestId }: { requestId: string }) {
     setNotes('');
     setMessage(
       approve
-        ? 'Approved. The refund is now pending with the provider — no money has moved yet.'
+        ? 'Approval recorded. A refund is pending inside AyahSpring. This approval does not send it to a provider or transfer money.'
         : 'Declined. The requester keeps access and nothing is refunded.',
     );
     startTransition(() => router.refresh());

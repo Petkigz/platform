@@ -117,8 +117,18 @@ and nothing is deleted on suspension — access ends, the record stays.
 
 ### D5. Refund authority limits
 
-**Blocks** `commerce.refunds`. The mechanism, the two-person rule and part-refunds
-all ship; what is undefined is who may approve how much, and when it escalates.
+**Progress:** direct writes to refund requests are refused; the existing audited
+request and decision functions remain. Approval creates a pending internal
+transaction, not a provider transfer. This does not yet implement the owner's
+requirement that every approval be made by the identified owner; finance can
+still approve through the existing function, so the refund authority work is
+not complete.
+
+**Blocks** safe use of refund decisions. `commerce.refunds` is registered, but its
+value is not currently enforced by the refund writers; switching it off does not
+block them. The existing decision writer permits finance admins and platform admins,
+not just the identified owner. Restrict access operationally until owner-only
+authority is implemented and deployed. The requester cannot decide their own request.
 
 **Recommendation:** `finance_admin` alone up to 25% of an order; above that or
 anything already accrued to a teacher needs `platform_admin` as well; any refund on

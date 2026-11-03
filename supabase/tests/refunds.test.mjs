@@ -189,10 +189,8 @@ export async function run(ctx) {
     assert(rows === 0, `${rows} requests exist from someone with no relationship to the order`);
   });
 
-  await test('the insert policy itself requires a billing relationship', async () => {
-    // The function is not the only path to the table. Before this migration the
-    // policy checked only that the request was self-attributed, so a raw insert
-    // naming any order id was accepted.
+  await test('direct refund request insertion is refused', async () => {
+    // Requests go through the session-checked RPC, not a raw table insert.
     const { order } = await paidOrder('Policy Holder');
     const { userId: stranger } = await newAdult('Direct Inserter');
 
@@ -201,9 +199,32 @@ export async function run(ctx) {
         () => q(`insert into public.refund_requests
                    (order_id, requested_amount_minor, currency_code, reason, requested_by)
                  values ($1, 100, 'UGX', 'direct insert', $2)`, [order, stranger]),
-        /row-level security/i,
+        /permission denied/i,
       );
     });
+  });
+
+  await test('staff cannot directly approve or alter a request outside the audited writer', async () => {
+    const { order, userId } = await paidOrder('Direct Write Protection');
+    const id = (await requestAs(userId, order, 5000, 'Please review this')).rows[0].id;
+    await asUser(admin, async () => {
+      await rejects(() => q(`update public.refund_requests
+        set status='approved', decided_by=$2, decided_at=now() where id=$1`, [id, admin]),
+        /permission denied/i);
+    });
+    await asUser(admin, async () => {
+      await rejects(() => q(`update public.refund_requests set requested_by=$2 where id=$1`, [id, admin]),
+        /permission denied/i);
+    });
+    const row = await scalar('select status, requested_by, decided_by from public.refund_requests where id=$1', [id]);
+    assert(row.status === 'requested' && row.requested_by === userId && row.decided_by === null,
+      'a direct write changed the refund request');
+    await approveAs(admin, id, 'Reviewed through the writer');
+    assert((await scalar('select status from public.refund_requests where id=$1', [id])).status === 'approved',
+      'the authorized decision function stopped working');
+    const transaction = await scalar('select status, provider_reference from public.refund_transactions where refund_request_id=$1', [id]);
+    assert(transaction.status === 'pending' && transaction.provider_reference === null,
+      'approval incorrectly claimed money was sent');
   });
 
   await test('a refund cannot be requested on an order that was never paid', async () => {

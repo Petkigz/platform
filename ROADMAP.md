@@ -22,9 +22,9 @@ header had not. The five conflict rows are resolved below, each with the date of
 the decision that ended it and where that decision is recorded.
 
 **A number in this file is a measurement with a date, not a memory.** Where a
-figure appears without a date it is the 2026-11-03 reading: 240 migrations, 161
+figure appears without a date it is the 2026-11-03 reading: 241 migrations, 161
 tables, 284 policies, 80 flags and 18 controls, 128 page routes and 117 route
-handlers, 2 552 database assertions in 170 suites, 2 040 web tests.
+handlers, 2 553 database assertions in 170 suites, 2 041 web tests.
 
 ---
 

@@ -702,8 +702,8 @@ moves; `platform.search` blamed a missing index when no transcript text existed.
 Optional author-provided transcripts now exist and are searchable only when the caller may read them. Both rows
 have since been updated; their switches did not move.
 
-Verification: **2 552 database assertions in 170 suites, 2 040 web tests; TypeScript
-typecheck and `check:repo` pass; 240 migrations.**
+Verification: **2 553 database assertions in 170 suites, 2 041 web tests; TypeScript
+typecheck and `check:repo` pass; 241 migrations.**
 
 ## Today's sentence
 
