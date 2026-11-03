@@ -38,6 +38,13 @@ and the recorded review — and `/admin/coursework` shows what nobody has looked
 What is missing is a paragraph: who may open a child's file, and what a teacher
 does when what they see worries them.
 
+**Implementation started, 2026-11-03:** `20261281027000_coursework_review_note.sql`
+fixes a loss of information: a second concern by the same reviewer with different
+wording is now appended, not mistaken for a double-click. The same normalized note
+still deduplicates, and audit entries do not copy the note. This is not delivery
+or owner acknowledgement. The switches remain off pending the access and escalation
+work described above.
+
 **Recommendation:** the marker and the owner; a concern is recorded on the file
 with a sentence and goes to you the same day; the file is never forwarded, never
 shown to another learner's family, and never copied out of the platform. Written

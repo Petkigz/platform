@@ -703,8 +703,8 @@ moves; `platform.search` blamed a missing index for a feature whose real blocker
 searching them means transcribing them, which is the owner's decision and not a column to
 index. Both rows now say what is true, and the switches themselves did not move.
 
-Verification: **2 540 database assertions in 168 suites, 2 026 web tests; TypeScript
-typecheck, build and `check:repo` pass; 233 migrations.**
+Verification: **2 533 database assertions in 168 suites, 2 026 web tests; TypeScript
+typecheck and `check:repo` pass; 234 migrations.**
 
 ## Today's sentence
 

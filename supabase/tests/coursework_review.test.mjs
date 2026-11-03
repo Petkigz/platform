@@ -199,6 +199,28 @@ export async function run(ctx) {
     assert(count === 1, `${count} reviews for one file`);
   });
 
+  await test('a changed concern sentence is recorded rather than silently discarded', async () => {
+    const row = await handedIn();
+    const first = await review(teacher, row.asset, 'concern', 'The image is worrying.');
+    const duplicate = await review(teacher, row.asset, 'concern', '  The image is worrying.  ');
+    assert(duplicate.recorded === false && duplicate.id === first.id, 'identical normalized note was duplicated');
+    const changed = await review(teacher, row.asset, 'concern', 'The image shows an urgent concern.');
+    assert(changed.recorded === true && changed.id !== first.id, 'changed note was discarded');
+    const reviews = (await q(
+      'select note from public.coursework_file_reviews where asset_id = $1 order by reviewed_at, id',
+      [row.asset])).rows;
+    assert(reviews.length === 2, `expected two reviews, got ${reviews.length}`);
+    assert(reviews[0].note === 'The image is worrying.' &&
+           reviews[1].note === 'The image shows an urgent concern.', 'review history lost a sentence');
+    const latest = await scalar('select note from public.coursework_file_state where asset_id = $1', [row.asset]);
+    assert(latest.note === 'The image shows an urgent concern.', 'latest state did not carry the updated note');
+    const audit = (await q(
+      `select detail from public.governance_audit_events where action = 'coursework.reviewed' and target_id = $1`,
+      [row.asset])).rows;
+    assert(audit.length === 2 && !JSON.stringify(audit).includes('urgent concern'),
+      'audit must record both events without copying sensitive notes');
+  });
+
   await test('changing the mind is a second review, and both survive', async () => {
     const row = await handedIn();
     await review(teacher, row.asset, 'concern', 'The image looks like a photograph of a screen.');
