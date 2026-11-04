@@ -70,6 +70,12 @@ Checked upload and lifecycle writers remain, as do limited descriptive edits. Th
 migration needs deployment and does not itself fix the existing broad read/signing
 paths, revoke previously issued URLs, scan files, or control storage credentials.
 
+**Attachment boundary:** new assignment attachments must be declared coursework
+for that submission and cannot also be lesson resources. Existing attachments
+are not reclassified or deleted; older library-labelled attachments and any lesson
+references to them need a careful review. This migration must be deployed and does
+not fix all file-read, upload, scanning or retention paths.
+
 **Upload-path containment:** the general library resume lookup excludes coursework,
 and library multipart operations require the signed-in uploader and a live library
 asset even when a staff account can read the row. This needs web deployment. It does

@@ -115,6 +115,14 @@ export async function run(ctx) {
   const SQL_STATUS = 'select public.set_course_assignment_status($1,$2)';
   const SQL_SAVE = 'select public.save_assignment_draft($1,$2,$3) as id';
   const SQL_ATTACH = 'select public.attach_assignment_asset($1,$2) as id';
+  async function declaredFile(actor, submission, name = 'Page.jpg') {
+    const declared = (await asActor(actor, () => q(
+      'select * from public.register_coursework_upload($1,$2,$3,$4,$5)',
+      [submission, name, 'image/jpeg', 1000, crypto.randomUUID().replace(/-/g, '').padEnd(64, 'a').slice(0, 64)]))).rows[0];
+    await asActor(actor, () => q('select public.confirm_coursework_upload($1)', [declared.asset_id]));
+    return declared.asset_id;
+  }
+
   const SQL_REMOVE = 'select public.remove_assignment_asset($1,$2)';
   const SQL_SUBMIT = 'select public.submit_assignment($1)';
   const SQL_MARK = 'select public.mark_assignment_submission($1,$2,$3)';
@@ -332,7 +340,8 @@ export async function run(ctx) {
       }
 
       const photo = await asset(enrolled.userId, 'image/jpeg', 2_000_000);
-      await asActor(enrolled.userId, async () => q(SQL_ATTACH, [submission, photo]));
+      await refused(enrolled.userId, SQL_ATTACH, [submission, photo], /must be declared coursework/i);
+      await declaredFile(enrolled.userId, submission);
       assert((await q(
         'select count(*)::int n from public.assignment_submission_assets where submission_id=$1',
         [submission])).rows[0].n === 1);
@@ -428,12 +437,7 @@ export async function run(ctx) {
     await test('files cannot be added or removed after the learner submits', async () => {
       const fileDraft = await asActor(classLearner.userId, async () =>
         (await q(SQL_SAVE, [cohortAssignment, classLearner.learnerId, 'My answer.'])).rows[0].id);
-      const file = (await q(
-        `insert into public.media_assets
-           (storage_backend,master_bucket,master_key,checksum,mime_type,byte_size,status,uploaded_by)
-         values ('r2','masters',$1,$2,'application/pdf',1000,'available',$3) returning id`,
-        [`assignment/${crypto.randomUUID()}`, crypto.randomUUID().replace(/-/g, '').padEnd(64, 'b').slice(0, 64), classLearner.userId])).rows[0].id;
-      await asActor(classLearner.userId, async () => q(SQL_ATTACH, [fileDraft, file]));
+      const file = await declaredFile(classLearner.userId, fileDraft, 'Page.jpg');
       await asActor(classLearner.userId, async () => q(SQL_SUBMIT, [fileDraft]));
       await refused(classLearner.userId, SQL_REMOVE, [fileDraft, file], /files can only be removed/i);
     });
@@ -462,7 +466,7 @@ export async function run(ctx) {
       for (const expected of [
         'course_assignment.created', 'course_assignment.open',
         'assignment_submission.draft_saved', 'assignment_submission.submitted',
-        'assignment_submission.graded', 'assignment_submission.file_attached',
+        'assignment_submission.graded', 'coursework.file_handed_in',
       ]) assert(actions.includes(expected), `missing audit action ${expected}`);
     });
   } finally {

@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-247 files in `supabase/migrations/`, applied in filename order — the 14-digit
+248 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -152,7 +152,7 @@ done
   first run. What you are watching for is the loop *stopping*, and the file name
   above the error.
 - Takes a few minutes. The last file printed should be
-  `20261281040000_media_asset_write_boundary.sql`.
+  `20261281041000_coursework_attachment_boundary.sql`.
 
 **Existing installations:** the subscription safety migration preserves the current
 `commerce.subscriptions` value. If it is already on, review existing customer
@@ -170,7 +170,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 247 files from the top and fail on the
+it, and `db push` would then re-apply all 248 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -862,3 +862,32 @@ tier.
 
 The optional, self-hosted teacher quiz drafting setup and its limits are described
 in [local-quiz.md](local-quiz.md). It is off until the owner enables it.
+
+### Historical mixed-purpose assignment files
+
+After deploying `20261281041000_coursework_attachment_boundary.sql`, ask a
+trusted database operator to review historical assignment attachments that are
+not correctly declared coursework. The migration blocks new mixed-purpose
+attachments and new lesson references to currently attached legacy files; it does not
+change old rows, revoke old signed links, remove lesson resources, or make these
+files private. Keep assignments and cohorts off until the remaining safeguarding
+work and this review are complete. A one-off count (not a complete privacy audit):
+
+```sql
+select count(*) as attachments_needing_review,
+       count(*) filter (where exists (
+         select 1 from public.lesson_resources lr where lr.media_asset_id = asa.media_asset_id
+       )) as also_used_as_lesson_resources
+from public.assignment_submission_assets asa
+join public.media_assets ma on ma.id = asa.media_asset_id
+where ma.purpose <> 'coursework'
+   or not exists (select 1 from public.coursework_upload_declarations d
+                  where d.asset_id = asa.media_asset_id and d.submission_id = asa.submission_id)
+   or exists (select 1 from public.lesson_resources lr where lr.media_asset_id = asa.media_asset_id);
+```
+
+Have the safeguarding owner and an authorized operator assess each affected
+record and its access, lesson references, retention and already-issued links.
+Do not automatically delete or reclassify the files: that could destroy evidence
+or change teaching materials. A visual remediation workflow and a complete file
+access audit are not yet implemented.

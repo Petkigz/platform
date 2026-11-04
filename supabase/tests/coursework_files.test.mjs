@@ -245,10 +245,8 @@ export async function run(ctx) {
       () => declare(who.userId, submission, { name: '   ' }));
   });
 
-  await test('the caps agree with the staff-attach path, on the same boundary', async () => {
-    // `attach_assignment_asset()` has its own copy of 25 MiB and the type list.
-    // Two copies of a number drift; this is the test that notices, because it
-    // drives both routes to the same edge and asserts they agree.
+  await test('library attachments are refused and coursework still respects the size boundary', async () => {
+    // A library item is not a private coursework upload, even at the size cap.
     const who = await learner('Boundary', { course, version });
     const submission = await draft(who.userId, assignment, who.learnerId);
 
@@ -257,7 +255,9 @@ export async function run(ctx) {
          (storage_backend, master_bucket, master_key, checksum, mime_type, byte_size, status, uploaded_by)
        values ('r2','masters',$1,$2,'application/pdf',$3,'available',$4) returning id`,
       [`boundary/${crypto.randomUUID()}`, digest(), 26_214_400, who.userId]);
-    await asActor(who.userId, () => q('select public.attach_assignment_asset($1,$2)', [submission, atCap.rows[0].id]));
+    await refused(who.userId, 'select public.attach_assignment_asset($1,$2)', [submission, atCap.rows[0].id], /must be declared coursework/i);
+    const declared = await declare(who.userId, submission, { size: 26_214_400, mime: 'application/pdf' });
+    await call(who.userId, SQL_CONFIRM, [declared.asset_id]);
 
     const overCap = await q(
       `insert into public.media_assets
@@ -396,6 +396,35 @@ export async function run(ctx) {
          (lesson_id, resource_type, media_asset_id, display_name, access_classification)
        values ($1,'document',$2,'Handed-in page','enrolled')`,
       [lesson, target.asset_id], /cannot be taught from/i);
+  });
+
+  await test('a library file already used in a lesson cannot be attached as coursework', async () => {
+    const who = await learner('Teachable library', { course, version });
+    const submission = await draft(who.userId, assignment, who.learnerId);
+    const asset = (await q(
+      `insert into public.media_assets
+         (storage_backend, master_bucket, master_key, checksum, mime_type, byte_size, status, uploaded_by)
+       values ('r2','masters',$1,$2,'image/jpeg',1000,'available',$3) returning id`,
+      [`teachable/${crypto.randomUUID()}`, digest(), who.userId])).rows[0].id;
+    const draftVersion = await newVersion(course, teacher, { version_number: 180 + seq });
+    const section = await newSection(draftVersion);
+    const lesson = await newLesson(section);
+    await asActor(teacher, () => q(
+      `insert into public.lesson_resources (lesson_id, resource_type, media_asset_id, display_name, access_classification)
+       values ($1,'document',$2,'Library page','enrolled')`, [lesson, asset]));
+    await refused(who.userId, 'select public.attach_assignment_asset($1,$2)',
+      [submission, asset], /must be declared coursework/i);
+  });
+
+  await test('a coursework file cannot be attached to a different submission', async () => {
+    const who = await learner('Separate submissions', { course, version });
+    const first = await draft(who.userId, assignment, who.learnerId);
+    const secondAssignment = await create(teacher, version, { title: 'Another assignment' });
+    const second = await draft(who.userId, secondAssignment, who.learnerId);
+    const declared = await declare(who.userId, first);
+    await call(who.userId, SQL_CONFIRM, [declared.asset_id]);
+    await refused(who.userId, 'select public.attach_assignment_asset($1,$2)',
+      [second, declared.asset_id], /must be declared coursework/i);
   });
 
   await test('a library file is still refused to a lesson until staff confirm it', async () => {

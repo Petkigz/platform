@@ -110,7 +110,6 @@ export async function run(ctx) {
   const SQL_MARK = 'select public.mark_assignment_submission($1,$2,$3)';
   const SQL_REOPEN = 'select public.reopen_assignment_submission($1) as revision';
   const SQL_POLICY = 'select public.set_assignment_revision_policy($1,$2,$3)';
-  const SQL_ATTACH = 'select public.attach_assignment_asset($1,$2) as id';
 
   const create = (over = {}) => asActor(teacher, async () =>
     (await q(SQL_CREATE, [
@@ -344,16 +343,12 @@ export async function run(ctx) {
 
       // A file can be attached to the reopened draft, because reopening makes it
       // a draft and the existing attachment rules already apply to drafts.
-      const assetId = (await q(
-        `insert into public.media_assets
-           (storage_backend,master_bucket,master_key,checksum,mime_type,byte_size,status,uploaded_by)
-         values ('r2','masters',$1,$2,'image/jpeg',2000000,'available',$3) returning id`,
-        [`revision/${crypto.randomUUID()}`,
-         crypto.randomUUID().replace(/-/g, '').padEnd(64, 'a').slice(0, 64),
-         who.userId])).rows[0].id;
-
       await reopen(submission, who.userId);
-      await asActor(who.userId, async () => q(SQL_ATTACH, [submission, assetId]));
+      const declared = (await asActor(who.userId, () => q(
+        'select * from public.register_coursework_upload($1,$2,$3,$4,$5)',
+        [submission, 'Version two.jpg', 'image/jpeg', 2_000_000,
+         crypto.randomUUID().replace(/-/g, '').padEnd(64, 'a').slice(0, 64)]))).rows[0];
+      await asActor(who.userId, () => q('select public.confirm_coursework_upload($1)', [declared.asset_id]));
       await asActor(who.userId, async () =>
         q('select public.save_assignment_draft($1,$2,$3)', [assignment, who.learnerId, 'Version two, with a source.']));
       await asActor(who.userId, async () => q(SQL_SUBMIT, [submission]));
