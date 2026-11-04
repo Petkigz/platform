@@ -322,13 +322,22 @@ export async function run(ctx) {
     // through for this end-to-end path; it is put back immediately.
     const wasOn = (await q(
       `select value_text from public.platform_settings where key='commerce.subscriptions'`)).rows[0].value_text;
-    await q(`update public.platform_settings set value_text='true' where key='commerce.subscriptions'`);
+    // Test-only deployment override: exercise the existing checkout mechanics,
+    // not a claim that the missing renewal terms have been implemented.
+    await q("select set_config('app.bypassing_code_flag','on',false)");
+    try {
+      await q(`update public.platform_settings set value_text='true' where key='commerce.subscriptions'`);
+    } finally {
+      await q("select set_config('app.bypassing_code_flag','',false)");
+    }
     let order;
     try {
       order = (await asActor(payer, 'select * from public.create_plan_order($1,$2,$3,$4)',
         [account, version, price, learner])).rows[0];
     } finally {
-      await q(`update public.platform_settings set value_text=$1 where key='commerce.subscriptions'`, [wasOn]);
+      await q("select set_config('app.bypassing_code_flag','on',false)");
+      try { await q(`update public.platform_settings set value_text=$1 where key='commerce.subscriptions'`, [wasOn]); }
+      finally { await q("select set_config('app.bypassing_code_flag','',false)"); }
     }
     await q("select public.record_payment_success($1,$2,'manual','OFFLINE-E2E-1',null,'Receipt OFFLINE-E2E-1')",
       [order.order_id, admin]);

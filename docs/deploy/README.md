@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-243 files in `supabase/migrations/`, applied in filename order — the 14-digit
+244 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -152,7 +152,14 @@ done
   first run. What you are watching for is the loop *stopping*, and the file name
   above the error.
 - Takes a few minutes. The last file printed should be
-  `20261281036000_financial_ledger_insert_boundary.sql`.
+  `20261281037000_subscriptions_terms_gate.sql`.
+
+**Existing installations:** the subscription safety migration preserves the current
+`commerce.subscriptions` value. If it is already on, review existing customer
+commitments and switch it off through the admin controls; the new CODE gate only
+prevents runtime re-enabling. Checkout is gated, but the chosen renewal and grace
+rules and a reliable renewal worker are not yet complete. Switching off checkout
+does not by itself cancel subscriptions or resolve existing commitments.
 
 **Path B — the Supabase CLI**, if you would rather have migration history tracked:
 
@@ -163,7 +170,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 243 files from the top and fail on the
+it, and `db push` would then re-apply all 244 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`

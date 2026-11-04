@@ -105,15 +105,16 @@ want one, give me a number and a currency and it is an hour's work.
 
 ### D4. Subscription terms
 
-**Blocks** `commerce.subscriptions` and the automatic renewal worker.
+**Progress:** checkout is gated and the subscription switch is now CODE-gated
+until a deployment supplies the missing behavior. The migration preserves existing
+switch values; if already enabled, an operator must switch it off and review any
+existing commitments. This is containment, not implementation of the terms.
 
-Four questions: the grace period after a failed charge (per market?), whether a
-plan change is prorated, what a renewal does to a price agreed under an older
-version, and how many retries before suspension.
-
-**Recommendation:** 7-day grace, no proration (month-to-month only, upgrade at the
-next renewal), renewal honours the version it bought, three retries then suspend,
-and nothing is deleted on suspension — access ends, the record stays.
+**Still required:** seven-day grace, three retries then suspension, no proration,
+upgrades at the next monthly renewal, and honoring the purchased price version.
+Keep records on suspension. A reliable renewal worker and payment provider are
+not established. Existing plans include annual intervals; their interaction with
+the chosen monthly upgrade rule needs a deliberate implementation, not an assumption.
 
 ### D5. Refund authority limits
 

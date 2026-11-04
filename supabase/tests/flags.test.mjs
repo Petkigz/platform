@@ -78,8 +78,8 @@ export async function run(ctx) {
   // -------------------------------------------------------------------
   // The seed
   // -------------------------------------------------------------------
-  await test('coursework and cohort switches cannot be enabled or demoted by an admin', async () => {
-    for (const key of ['learning.assignments', 'learning.cohorts']) {
+  await test('incomplete coursework and subscription switches cannot be enabled or demoted by an admin', async () => {
+    for (const key of ['learning.assignments', 'learning.cohorts', 'commerce.subscriptions']) {
       const row = (await q('select value_text, gate_type from public.platform_settings where key=$1', [key])).rows[0];
       assert(row.value_text === 'false' && row.gate_type === 'code', `${key} is not off and deployment-gated`);
       await rejects(() => asUser(admin, () => q(
@@ -89,6 +89,29 @@ export async function run(ctx) {
       const after = (await q('select value_text, gate_type from public.platform_settings where key=$1', [key])).rows[0];
       assert(after.value_text === 'false' && after.gate_type === 'code', `${key} changed through the runtime door`);
     }
+  });
+
+  await test('subscription gate preserves an already-enabled value, and an admin can switch it off', async () => {
+    const migration = readFileSync('supabase/migrations/20261281037000_subscriptions_terms_gate.sql', 'utf8');
+    await q('begin');
+    try {
+      await q("set local app.bypassing_code_flag = 'on'");
+      await q("update public.platform_settings set value_text='true', gate_type='admin_setup' where key='commerce.subscriptions'");
+      await ctx.exec(migration);
+      const row = (await q("select value_text, gate_type from public.platform_settings where key='commerce.subscriptions'")).rows[0];
+      assert(row.value_text === 'true' && row.gate_type === 'code', 'migration changed the live value or failed to gate it');
+    } finally { await q('rollback'); }
+    // Test runtime disable separately, with an authenticated administrator.
+    await q("select set_config('app.bypassing_code_flag','on',false)");
+    try { await q("update public.platform_settings set value_text='true' where key='commerce.subscriptions'"); }
+    finally { await q("select set_config('app.bypassing_code_flag','',false)"); }
+    try {
+      await asUser(admin, async () => {
+        await q("update public.platform_settings set value_text='false' where key='commerce.subscriptions'");
+        const row = (await q("select value_text from public.platform_settings where key='commerce.subscriptions'")).rows[0];
+        assert(row.value_text === 'false', 'operator cannot switch off an enabled subscription flag');
+      });
+    } finally { await q("update public.platform_settings set value_text='false' where key='commerce.subscriptions'"); }
   });
 
   await test('the whole register is seeded, with a gate type on every flag', async () => {
