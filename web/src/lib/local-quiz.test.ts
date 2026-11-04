@@ -43,3 +43,40 @@ test('malformed, excessive and unavailable model responses are refused', async (
   }
   assert.equal((await draftLocalQuiz(source, async () => { throw new Error('offline'); })).ok, false);
 });
+
+
+test('oversized streaming responses are stopped before the whole body is read', async () => {
+  let chunksRead = 0;
+  let cancelled = false;
+  const body = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      chunksRead += 1;
+      controller.enqueue(new Uint8Array(10_000).fill(97));
+      if (chunksRead === 100) controller.close();
+    },
+    cancel() { cancelled = true; },
+  }, { highWaterMark: 0 });
+  const result = await draftLocalQuiz(source, async () => new Response(body));
+  assert.deepEqual(result, { ok: false, error: 'The model response was too large and was discarded.' });
+  assert.equal(chunksRead, 6);
+  assert.equal(cancelled, true);
+});
+
+test('the response limit counts bytes, not characters', async () => {
+  const result = await draftLocalQuiz(source, async () => new Response('é'.repeat(25_001)));
+  assert.deepEqual(result, { ok: false, error: 'The model response was too large and was discarded.' });
+});
+
+test('a valid response may be split inside a multibyte character', async () => {
+  const payload = new TextEncoder().encode(JSON.stringify({ response: JSON.stringify({ questions: [
+    { question: 'Qu’est-ce?', answer: 'Écrire.' },
+  ] }) }));
+  const body = new ReadableStream<Uint8Array>({
+    start(controller) {
+      for (const byte of payload) controller.enqueue(Uint8Array.of(byte));
+      controller.close();
+    },
+  });
+  const result = await draftLocalQuiz(source, async () => new Response(body));
+  assert.deepEqual(result, { ok: true, questions: [{ question: 'Qu’est-ce?', answer: 'Écrire.' }] });
+});
