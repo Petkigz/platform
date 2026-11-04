@@ -504,8 +504,9 @@ export async function findResumableUpload(
 
   const { data, error } = await client
     .from('media_assets')
-    .select('id, master_bucket, master_key, mime_type, byte_size')
+    .select('id, master_bucket, master_key, mime_type, byte_size, purpose, uploaded_by')
     .eq('uploaded_by', uploadedBy)
+    .eq('purpose', 'library')
     .eq('checksum', digest)
     .eq('byte_size', byteSize)
     .eq('status', 'pending')
@@ -520,6 +521,9 @@ export async function findResumableUpload(
   if (error || !data) return null;
 
   const row = data as Record<string, unknown>;
+  // Defense in depth: staff visibility and a matching digest are not authority
+  // to resume someone else's upload or repurpose a coursework upload.
+  if (row.purpose !== 'library' || row.uploaded_by !== uploadedBy) return null;
   return {
     assetId: String(row.id),
     masterBucket: String(row.master_bucket),

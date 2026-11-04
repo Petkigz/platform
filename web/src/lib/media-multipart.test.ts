@@ -43,6 +43,9 @@ function row(over: Partial<MasterUploadRow> = {}): MasterUploadRow {
     byte_size: byteSize,
     mime_type: 'video/mp4',
     status: 'pending',
+    purpose: 'library',
+    uploaded_by: 'uploader-1',
+    deleted_at: null,
     ...over,
   };
 }
@@ -51,6 +54,8 @@ type StubOptions = {
   row?: MasterUploadRow | null;
   selectError?: string;
   rpcError?: string;
+  userId?: string | null;
+  authError?: boolean;
 };
 
 /**
@@ -80,6 +85,10 @@ function stubClient(options: StubOptions = {}) {
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const client = {
+    auth: { getUser: async () => ({
+      data: { user: options.userId === null ? null : { id: options.userId ?? 'uploader-1' } },
+      error: options.authError ? { message: 'authentication failed' } : null,
+    }) },
     from: (table: string) => {
       calls.push(`from:${table}`);
       return chain;
@@ -194,10 +203,36 @@ test('opening an upload asks storage for the id and divides the declared size', 
   assert.equal(request?.headers['content-type'], 'video/mp4');
   assert.deepEqual(calls, [
     `from:media_assets`,
-    'select:id, master_bucket, master_key, byte_size, mime_type, status',
+    'select:id, master_bucket, master_key, byte_size, mime_type, status, purpose, uploaded_by, deleted_at',
     `eq:id=${assetId}`,
     'maybeSingle',
   ]);
+});
+
+test('multipart operations refuse coursework, other uploaders and missing sessions before signing or contacting storage', async () => {
+  const variants: StubOptions[] = [
+    { row: row({ purpose: 'coursework' }) },
+    { row: row({ uploaded_by: 'someone-else' }) },
+    { row: row({ uploaded_by: 'someone-else', master_bucket: 'wrong-bucket' }) },
+    { row: row({ deleted_at: '2026-11-01T00:00:00Z' }) },
+    { userId: null },
+    { authError: true },
+  ];
+  for (const variant of variants) {
+    const { client } = stubClient(variant);
+    const storage = stubStorage({ xml: initiateXml });
+    const operations = [
+      await initiateMasterMultipart(client, assetId, { config, fetchImpl: storage.fetchImpl }),
+      await signMasterPartUploads(client, assetId, uploadId, [1], { config }),
+      await resumeMasterMultipart(client, assetId, { config, fetchImpl: storage.fetchImpl }),
+      await completeMasterMultipart(client, assetId, uploadId, [{ partNumber: 1, etag: 'tag' }], { config, fetchImpl: storage.fetchImpl }),
+      await abortMasterMultipart(client, assetId, uploadId, { config, fetchImpl: storage.fetchImpl }),
+    ];
+    for (const outcome of operations) {
+      assert.deepEqual(outcome, { ok: false, message: 'That upload does not exist.', status: 404 });
+    }
+    assert.equal(storage.requests.length, 0, 'an unauthorized operation contacted storage');
+  }
 });
 
 test('the upload id comes from storage, never from the caller', async () => {

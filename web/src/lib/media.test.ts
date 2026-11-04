@@ -418,6 +418,8 @@ const resumableRow = {
   master_key: `${assetId}/video-mp4`,
   mime_type: 'video/mp4',
   byte_size: '34603008',
+  purpose: 'library',
+  uploaded_by: uploaderId,
 };
 
 test('the unfinished upload of this file is found by checksum, size and owner', async () => {
@@ -434,8 +436,9 @@ test('the unfinished upload of this file is found by checksum, size and owner', 
   });
   assert.deepEqual(calls, [
     'from:media_assets',
-    'select:id, master_bucket, master_key, mime_type, byte_size',
+    'select:id, master_bucket, master_key, mime_type, byte_size, purpose, uploaded_by',
     `eq:uploaded_by=${uploaderId}`,
+    'eq:purpose=library',
     `eq:checksum=${'a'.repeat(64)}`,
     'eq:byte_size=34603008',
     'eq:status=pending',
@@ -453,6 +456,18 @@ test('the lookup is scoped to the person asking, not to whoever the policy lets 
   const { client, calls } = stubLookup(null);
   await findResumableUpload(client, uploaderId, 'b'.repeat(64), 1024);
   assert.ok(calls.includes(`eq:uploaded_by=${uploaderId}`), calls.join(' '));
+});
+
+test('a coursework asset or another uploader is never returned as a library resume', async () => {
+  for (const row of [
+    { ...resumableRow, purpose: 'coursework' },
+    { ...resumableRow, uploaded_by: 'someone-else' },
+    { ...resumableRow, purpose: undefined },
+  ]) {
+    const { client, calls } = stubLookup(row);
+    assert.equal(await findResumableUpload(client, uploaderId, 'a'.repeat(64), 34_603_008), null);
+    assert.ok(calls.includes('eq:purpose=library'));
+  }
 });
 
 test('a checksum is lowered before it is looked for', async () => {

@@ -70,7 +70,7 @@ import {
 import { abandonMediaUpload } from './media.ts';
 
 /** Columns needed to sign for one master, and nothing else. */
-const READ_COLUMNS = 'id, master_bucket, master_key, byte_size, mime_type, status';
+const READ_COLUMNS = 'id, master_bucket, master_key, byte_size, mime_type, status, purpose, uploaded_by, deleted_at';
 
 /** The most part URLs signed in one batch, so a call cannot ask for five hundred. */
 export const MAX_PARTS_PER_BATCH = 32;
@@ -82,6 +82,9 @@ export type MasterUploadRow = {
   byte_size: number | string;
   mime_type: string;
   status: string;
+  purpose: string;
+  uploaded_by: string;
+  deleted_at: string | null;
 };
 
 export type MultipartOutcome<T> =
@@ -120,9 +123,9 @@ type Refusal = ReturnType<typeof failure>;
  *
  * Read on every call rather than once at the start, which is a deliberate cost: a
  * master quarantined or withdrawn while its parts are in flight stops being
- * uploadable at the next batch instead of at the end. The SELECT policy hides a
- * master belonging to somebody else, so a missing row and somebody else's row
- * produce the same answer.
+ * uploadable at the next batch instead of at the end. Staff can SELECT another
+ * person's asset, so the session, uploader and library purpose are checked as
+ * well; a missing or unauthorized row produces the same answer.
  */
 /**
  * Where an asset's master lives, if the caller may see the row at all.
@@ -135,6 +138,7 @@ async function readMasterLocation(
   client: SupabaseClient,
   assetId: string,
   config: R2Config,
+  access: { kind: 'library-upload'; userId: string } | { kind: 'staff-cleanup' },
 ): Promise<{ row: MasterUploadRow } | Refusal> {
   const { data, error } = await client
     .from('media_assets')
@@ -144,7 +148,10 @@ async function readMasterLocation(
 
   if (error) return failure(error.message, 500);
   const row = data as unknown as MasterUploadRow | null;
-  if (!row) return failure('That upload does not exist.', 404);
+  if (!row || (access.kind === 'library-upload' &&
+      (row.uploaded_by !== access.userId || row.purpose !== 'library' || row.deleted_at !== null))) {
+    return failure('That upload does not exist.', 404);
+  }
 
   if (row.master_bucket !== config.mastersBucket) {
     return failure(
@@ -161,7 +168,17 @@ async function readUploadableMaster(
   assetId: string,
   config: R2Config,
 ): Promise<{ row: MasterUploadRow; plan: MultipartPlan } | Refusal> {
-  const located = await readMasterLocation(client, assetId, config);
+  // A staff SELECT policy is not permission to write another person's object.
+  // Coursework uses its own declaration/confirmation path, never this generic
+  // library multipart machinery. Refuse missing identity or unexpected row shape.
+  let userId: string | undefined;
+  try {
+    const { data: { user }, error } = await client.auth.getUser();
+    if (!error) userId = user?.id;
+  } catch { /* An unavailable session is not an authorized session. */ }
+  if (!userId) return failure('That upload does not exist.', 404);
+
+  const located = await readMasterLocation(client, assetId, config, { kind: 'library-upload', userId });
   if (!('row' in located)) return located;
   const { row } = located;
 
@@ -750,7 +767,7 @@ export async function abandonUnfinishedUpload(
     return failure(recorded.message, status);
   }
 
-  const located = await readMasterLocation(client, input.assetId, options.config);
+  const located = await readMasterLocation(client, input.assetId, options.config, { kind: 'staff-cleanup' });
   if (!('row' in located)) return located;
 
   const target = masterRequestTarget(options.config, located.row.master_key);

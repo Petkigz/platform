@@ -24,7 +24,7 @@ the decision that ended it and where that decision is recorded.
 **A number in this file is a measurement with a date, not a memory.** Where a
 figure appears without a date it is the 2026-11-03 reading: 247 migrations, 164
 ordinary public tables, 283 policies, 80 flags and 18 controls, 128 page routes and 117 route
-handlers, 2 571 database assertions in 170 suites, 2 048 web tests.
+handlers, 2 571 database assertions in 170 suites, 2 050 web tests.
 
 ---
 
