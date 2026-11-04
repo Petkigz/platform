@@ -95,7 +95,7 @@ test('the headline leads with what was looked at and says nothing is blocked', (
 
   assert.ok(line.startsWith('3 of 12 handed-in files have been looked at.'), line);
   assert.ok(line.includes('9 have not been looked at, the oldest 5 days ago.'), line);
-  assert.ok(/Nothing is waiting behind this number/.test(line), line);
+  assert.ok(/review counts do not delay/.test(line), line);
   assert.ok(/1 file carries a concern/.test(line), line);
   assert.ok(!/blocked|held/i.test(line), `the copy implies a gate: ${line}`);
 });
@@ -121,6 +121,7 @@ test('an unreviewed file with no date is described without inventing one', () =>
 test('a concern is confirmed as a conversation, not a decision about a child', () => {
   const concern = reviewConfirmation('concern');
   assert.ok(/audit trail/.test(concern), concern);
+  assert.ok(/No alert was sent/.test(concern) && /directly/.test(concern), concern);
   assert.ok(!/hidden|blocked/i.test(concern), concern);
 
   const clear = reviewConfirmation('clear');

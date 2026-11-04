@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-245 files in `supabase/migrations/`, applied in filename order — the 14-digit
+246 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -152,7 +152,7 @@ done
   first run. What you are watching for is the loop *stopping*, and the file name
   above the error.
 - Takes a few minutes. The last file printed should be
-  `20261281038000_help_draft_articles.sql`.
+  `20261281039000_safeguarding_concern_queue.sql`.
 
 **Existing installations:** the subscription safety migration preserves the current
 `commerce.subscriptions` value. If it is already on, review existing customer
@@ -170,7 +170,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 245 files from the top and fail on the
+it, and `db push` would then re-apply all 246 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -281,6 +281,28 @@ pending refunds before taking any provider action: they may have been approved b
 finance under the old rule. The migration does not retroactively undo transfers or
 re-decide old requests. Provider submission and callbacks are not established by
 this setting.
+
+**Safeguarding owner setup (one time, trusted database operator).** This is a
+separate binding from refund approval: a platform-admin role alone does not name
+the safeguarding lead. After the owner's account and role exist, use the trusted
+SQL editor, replacing the address with the identified owner's sign-in address:
+
+```sql
+select public.bootstrap_safeguarding_owner(u.id)
+  from auth.users u
+ where u.email = 'you@example.com';
+```
+
+Confirm exactly one row returned; zero means the account was not found. The
+function refuses a non-admin and a second setup. Application accounts cannot
+appoint or change the owner. Account recovery and ownership transfer need a
+separately audited trusted-database process; there is no visual transfer yet.
+The configured owner can open and acknowledge concerns on `/admin/coursework`.
+The queue draws from recorded coursework concerns, including older records and
+all ages so an erased or changed learner record cannot hide a child's concern.
+An acknowledgement is not a resolution; no email or delivery confirmation exists.
+This queue does not fix coursework file-access rules or malware scanning. Keep
+assignments and cohorts off until those safeguards are implemented and verified.
 
 **3.4 Guardian verification is already on. Nothing to press.**
 `family.guardian_verification` ships `true` since `20261281019000_guardian_verification_on.sql`,

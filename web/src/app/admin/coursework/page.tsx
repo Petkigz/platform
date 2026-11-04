@@ -25,6 +25,8 @@ import {
 } from '@/lib/coursework-retention';
 import { ReviewForm } from './review-form';
 import { RetentionActionForm } from './retention-actions';
+import { acknowledgeConcern, reopenConcern } from './safeguarding-actions';
+import { parseSafeguardingConcerns, parseSafeguardingHistory } from '@/lib/safeguarding-queue';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,7 +52,7 @@ export const dynamic = 'force-dynamic';
  * Staff-only, decided in the database (`coursework_review_queue()`), so the route
  * cannot be the place the rule is weakened.
  */
-export default async function AdminCourseworkPage() {
+export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ concern?: string; before?: string; beforeId?: string }> }) {
   if (!isSupabaseConfigured()) redirect('/');
 
   const supabase = await createClient();
@@ -77,6 +79,33 @@ export default async function AdminCourseworkPage() {
       supabase.rpc('coursework_bytes_awaiting', { p_limit: 50 }),
     ]);
 
+  const statusResult = await supabase.rpc('safeguarding_owner_status');
+  const ownerStatus = statusResult.data as { configured?: boolean; is_owner?: boolean } | null;
+  const ownerStatusValid = !statusResult.error && typeof ownerStatus?.configured === 'boolean' && typeof ownerStatus?.is_owner === 'boolean';
+  const isSafeguardingOwner = ownerStatusValid && ownerStatus?.is_owner === true;
+  const params = await searchParams;
+  const cursorValid = (!params.before && !params.beforeId) ||
+    (typeof params.before === 'string' && Number.isFinite(Date.parse(params.before)) &&
+      typeof params.beforeId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(params.beforeId));
+  const concernResult = isSafeguardingOwner
+    ? await supabase.rpc('safeguarding_concern_queue', { p_limit: 100 })
+    : null;
+  const historyResult = isSafeguardingOwner && cursorValid
+    ? await supabase.rpc('safeguarding_concern_history', {
+        // Preserve the database's microseconds; converting to JS Date would lose
+        // cursor precision and could skip acknowledged concerns.
+        p_before: params.before ?? null, p_before_id: params.beforeId ?? null, p_limit: 50,
+      }) : null;
+  const concerns = concernResult && !concernResult.error
+    ? parseSafeguardingConcerns(concernResult.data) : null;
+  const history = historyResult && !historyResult.error
+    ? parseSafeguardingHistory(historyResult.data) : null;
+  const lastHistory = history?.[history.length - 1];
+  const nextHistory = history?.length === 50 && lastHistory
+    ? `/admin/coursework?${new URLSearchParams({ before: lastHistory.acknowledged_at, beforeId: lastHistory.review_id })}`
+    : null;
+  const actionState = params.concern;
+
   const summary = summaryResult.error ? EMPTY_SUMMARY : parseReviewSummary(summaryResult.data);
   const queue = queueResult.error ? [] : parseReviewQueue(queueResult.data);
   const unreviewed = queue.filter((row) => row.review === 'none');
@@ -96,6 +125,56 @@ export default async function AdminCourseworkPage() {
         <span aria-hidden>›</span>
         <span>Handed-in files</span>
       </nav>
+
+      {!ownerStatusValid && <p className="notice warn">Safeguarding owner setup could not be checked.</p>}
+      {ownerStatusValid && ownerStatus?.configured === false && (
+        <section className="notice warn">
+          The safeguarding owner is not configured. Concerns are recorded, but no one can open the owner queue until the trusted database setup is complete. No email alert is connected.
+        </section>
+      )}
+      {isSafeguardingOwner && (
+        <section className="card" style={{ marginBlock: '1rem' }}>
+          <h2>Safeguarding concerns for the owner</h2>
+          <p>Oldest unacknowledged coursework concerns first, up to 100 at a time. Acknowledge and refresh to see any later items. All ages are included so a changed or erased learner record cannot hide a concern. Acknowledging records that you marked the item; it does not mean it is resolved. No email alert is connected.</p>
+          {actionState === 'recorded' && <p role="status">Acknowledgement recorded.</p>}
+          {actionState === 'already' && <p role="status">That concern had already been acknowledged.</p>}
+          {actionState === 'reopened' && <p role="status">The concern is back in the open queue.</p>}
+          {actionState === 'already-open' && <p role="status">That concern was not acknowledged.</p>}
+          {actionState === 'failed' && <p className="notice warn" role="alert">The acknowledgement could not be recorded. Check your access and try again.</p>}
+          {concerns === null ? <p className="notice warn">The concern queue could not be loaded. Do not assume it is empty.</p>
+            : concerns.length === 0 ? <p>No unacknowledged concerns were returned.</p>
+              : <ul className="lessons">{concerns.map((row) => <li key={row.review_id}>
+                <div className="t">
+                  <strong>{row.learner_name ?? 'Learner details unavailable'} · {row.course_title ?? 'Course unavailable'}</strong>
+                  <p>{row.note}</p>
+                  <p className="muted">Recorded {row.reviewed_at} by {row.reviewer_name ?? 'reviewer unavailable'} · File ID: {row.asset_id}</p>
+                  <a href={courseworkFileHref(row.asset_id)} target="_blank" rel="noreferrer">Try opening the file</a>
+                  {row.details_unavailable && <p className="muted">The original submission or learner details are no longer available.</p>}
+                  <form action={acknowledgeConcern}>
+                    <input type="hidden" name="reviewId" value={row.review_id} />
+                    <button type="submit" className="btn">Record acknowledgement</button>
+                  </form>
+                </div>
+              </li>)}</ul>}
+          <h3>Previously acknowledged</h3>
+          <p>These remain available for review; reopening returns a concern to the open queue. The audit keeps the acknowledgement and reopening events.</p>
+          {history === null ? <p className="notice warn">Acknowledgement history could not be loaded.</p>
+            : history.length === 0 ? <p>No items on this history page.</p>
+              : <ul className="lessons">{history.map((row) => <li key={row.review_id}>
+                <div className="t">
+                  <strong>{row.learner_name ?? 'Learner details unavailable'} · {row.course_title ?? 'Course unavailable'}</strong>
+                  <p>{row.note}</p>
+                  <p className="muted">Acknowledged {row.acknowledged_at} · File ID: {row.asset_id}</p>
+                  <form action={reopenConcern}>
+                    <input type="hidden" name="reviewId" value={row.review_id} />
+                    <button type="submit" className="btn">Reopen concern</button>
+                  </form>
+                </div>
+              </li>)}</ul>}
+          {params.before && <p><Link href="/admin/coursework">Back to recent acknowledgements</Link></p>}
+          {nextHistory && <p><Link href={nextHistory}>Older acknowledgements</Link></p>}
+        </section>
+      )}
 
       <div className="page-head">
         <p className="eyebrow">Safeguarding</p>

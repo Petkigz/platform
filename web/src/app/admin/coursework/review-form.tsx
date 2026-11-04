@@ -122,7 +122,7 @@ export function ReviewForm({
           {busy || pending ? 'Recording…' : 'Record this review'}
         </button>
         <span className="muted" style={{ fontSize: '0.85rem' }}>
-          Nobody is waiting on this. The teacher marking the work can open it now.
+          A review does not delay the file. For a concern, contact the safeguarding lead directly; no alert is sent.
         </span>
       </div>
 

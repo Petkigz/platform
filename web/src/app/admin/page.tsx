@@ -213,12 +213,18 @@ export default async function AdminPage() {
       <p className="eyebrow">Administration</p>
       <h1>What is waiting</h1>
       <p className="lede">
-        {waiting === 0
+        {!attention
+          ? 'Staff queues could not be loaded. Do not assume they are empty.'
+          : waiting === 0
           ? (setupFacts && emptyQueueLede(setupFacts))
-            ?? 'Nothing is waiting. Every queue you can work was checked, and every one reads zero.'
+            ?? 'The listed staff queues show zero items.'
           : `${waiting} ${waiting === 1 ? 'thing is' : 'things are'} waiting across ${
               busy.length === 1 ? 'one queue' : `${busy.length} queues`
             }.`}
+      </p>
+
+      <p className="notice warn">
+        Safeguarding concerns are not included in these counts. The configured safeguarding owner must check the private queue in <Link href="/admin/coursework">Handed-in files</Link>; no email alert is connected.
       </p>
 
       {setupFacts && (

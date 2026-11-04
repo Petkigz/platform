@@ -130,7 +130,7 @@ export function emptyQueueLede(facts: SetupFacts): string | null {
   const outstanding = outstandingSteps(facts).length;
 
   if (outstanding > 0) {
-    return 'Nothing is waiting, because nothing is here yet — the platform still needs '
+    return 'The listed staff queues are empty; the platform still needs '
       + `${outstanding === 1 ? 'one thing' : `${outstanding} things`} before anybody can study.`;
   }
   return null;

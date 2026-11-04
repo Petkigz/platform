@@ -195,6 +195,7 @@ const VERIFICATION_ON_SUITES = new Set([
   // A lapse only closes a door while the switch is on, and the suite's last test is
   // exactly that: a guardian whose verification expired loses the view.
   'learner across courses',
+  'coursework review',
 ]);
 
 const GLOBAL_SETTINGS = [

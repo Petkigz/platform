@@ -69,7 +69,7 @@ test('an empty queue line does not claim the work is done', () => {
   const line = emptyQueueLede(fresh);
 
   assert.ok(line);
-  assert.match(line, /nothing is here yet/);
+  assert.match(line, /listed staff queues are empty/);
   assert.doesNotMatch(line, /Every queue you can work was checked/);
 });
 

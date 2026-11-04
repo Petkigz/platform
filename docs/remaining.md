@@ -64,6 +64,19 @@ owner queue, file safety and deletion work remains incomplete. The migration
 preserves any existing switch value; an already-enabled deployment needs an
 operator to turn it off. The gate does not itself fix those safeguards.
 
+**Owner concern queue:** recorded coursework concerns now appear in a queue
+available only to a separately configured safeguarding owner; an acknowledgement
+is recorded, not treated as resolution; acknowledged items can be revisited and
+reopened. A concern repeated after acknowledgement creates a new queue item.
+Existing concerns are included, including
+records whose learner details have been erased, and all ages are included to avoid
+losing a concern when a learner's classification changes. The queue and identity
+migration must be deployed and the owner bootstrapped by a trusted database operator;
+until then access fails closed. No email alert, delivery confirmation or escalation
+workflow is connected. Existing coursework file access and other staff review paths
+have not yet been brought into line with the owner's exact access rule; the queue is
+not a claim that all concern metadata or files are private to the owner.
+
 **Implementation started, 2026-11-03:** `20261281027000_coursework_review_note.sql`
 fixes a loss of information: a second concern by the same reviewer with different
 wording is now appended, not mistaken for a double-click. The same normalized note

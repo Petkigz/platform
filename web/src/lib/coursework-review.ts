@@ -180,7 +180,7 @@ export function reviewHeadline(summary: ReviewSummary, now = new Date()): string
   }
 
   parts.push(
-    'Nothing is waiting behind this number: a teacher opens a file as soon as it is handed in.',
+    'These review counts do not delay the teacher opening a handed-in file.',
   );
 
   if (summary.concerns > 0) {
@@ -203,7 +203,7 @@ export const REVIEW_FORM_HELP =
 /** The confirmation a reviewer reads after a review lands. */
 export function reviewConfirmation(decisionValue: ReviewDecision): string {
   if (decisionValue === 'concern') {
-    return 'Recorded. It is in the audit trail and on the staff screen, and the note stays with the file rather than in the log.';
+    return 'Recorded in the audit trail and available in the safeguarding owner queue once it is set up. No alert was sent. Contact the safeguarding lead directly; recording is not proof they received it.';
   }
   return 'Recorded. A second look by the same person with the same answer is not a second review.';
 }

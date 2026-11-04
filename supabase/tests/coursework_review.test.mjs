@@ -111,6 +111,7 @@ export async function run(ctx) {
          values ($1,$2,$3,'free','active')`, [id, course, version]);
       return id;
     });
+    await ctx.verifyGuardian(guardian, childId);
     return { guardian, childId };
   }
 
@@ -132,6 +133,139 @@ export async function run(ctx) {
   const review = async (actor, asset, decision, note = null) =>
     (await call(actor, 'select public.record_coursework_review($1,$2,$3) as r',
       [asset, decision, note])).r;
+
+  // Queue identity is separate from an admin role, and is deliberately empty on
+  // a fresh installation until the trusted database operator sets it up.
+  await test('concerns fail closed until a specific safeguarding owner is configured', async () => {
+    const row = await handedIn();
+    const recorded = await review(teacher, row.asset, 'concern', 'The handwriting raises a safeguarding concern.');
+    await refuses(/only the configured safeguarding owner/, () =>
+      call(owner, 'select * from public.safeguarding_concern_queue(100)'));
+    await refuses(/permission denied/, () =>
+      call(owner, 'select public.bootstrap_safeguarding_owner($1)', [owner]));
+    await refuses(/only the configured safeguarding owner/, () =>
+      call(owner, 'select public.acknowledge_safeguarding_concern($1)', [recorded.id]));
+    assert((await q('select count(*)::int n from public.safeguarding_concern_acknowledgements')).rows[0].n === 0,
+      'an unconfigured owner acknowledged a concern');
+    await q('select public.bootstrap_safeguarding_owner($1)', [owner]);
+    await refuses(/duplicate key/i, () => q('select public.bootstrap_safeguarding_owner($1)', [owner]));
+
+    const queue = await asActor(owner, () => q('select * from public.safeguarding_concern_queue(100)'));
+    assert(queue.rows.some(r => r.review_id === recorded.id && r.note === 'The handwriting raises a safeguarding concern.'),
+      'a concern recorded before setup was lost');
+  });
+
+  await test('anonymous sessions cannot read or acknowledge the safeguarding queue', async () => {
+    await refuses(/only the configured safeguarding owner/, () => ctx.asAnon(() =>
+      q('select * from public.safeguarding_concern_queue(100)')));
+    await refuses(/only the configured safeguarding owner/, () => ctx.asAnon(() =>
+      q('select public.acknowledge_safeguarding_concern(gen_random_uuid())')));
+    await refuses(/permission denied/, () => ctx.asAnon(() => q('select * from public.safeguarding_owner')));
+    await q('begin');
+    try {
+      await q('set local role anon');
+      await refuses(/permission denied/, () => q('select * from public.safeguarding_concern_queue(100)'));
+    } finally { await q('rollback'); }
+  });
+
+  await test('acknowledgement history uses a stable cursor even for equal times', async () => {
+    const row = await handedIn();
+    const first = await review(teacher, row.asset, 'concern', 'First concern for pagination.');
+    const second = await review(teacher, row.asset, 'concern', 'Second concern for pagination.');
+    await asActor(owner, async () => {
+      await q('select public.acknowledge_safeguarding_concern($1)', [first.id]);
+      await q('select public.acknowledge_safeguarding_concern($1)', [second.id]);
+    });
+    const page1 = await asActor(owner, () => q('select review_id, acknowledged_at::text as t from public.safeguarding_concern_history(null,null,1)'));
+    const page2 = await asActor(owner, () => q('select review_id, acknowledged_at::text as t from public.safeguarding_concern_history($1,$2,1)', [page1.rows[0].t, page1.rows[0].review_id]));
+    assert(page1.rows[0].t === page2.rows[0].t, 'fixture did not produce equal acknowledgement times');
+    assert(new Set([page1.rows[0].review_id, page2.rows[0].review_id]).size === 2 &&
+      [first.id, second.id].includes(page1.rows[0].review_id) && [first.id, second.id].includes(page2.rows[0].review_id),
+      'cursor skipped or duplicated a concern');
+    await refuses(/both history cursor values/, () => call(owner,
+      'select * from public.safeguarding_concern_history(now(),null,1)'));
+  });
+
+  await test('only the designated owner can read or acknowledge the concern queue', async () => {
+    const row = await handedIn();
+    const recorded = await review(teacher, row.asset, 'concern', 'Please review this concern.');
+    const anotherAdmin = await bootstrapAdmin('safeguarding-other-admin@example.com');
+    for (const actor of [anotherAdmin, agent, teacher, row.guardian]) {
+      await refuses(/only the configured safeguarding owner/, () =>
+        call(actor, 'select * from public.safeguarding_concern_queue(100)'));
+      await refuses(/only the configured safeguarding owner/, () =>
+        call(actor, 'select public.acknowledge_safeguarding_concern($1)', [recorded.id]));
+      await refuses(/permission denied/, () =>
+        call(actor, 'select * from public.safeguarding_concern_acknowledgements'));
+    }
+    const list = await asActor(owner, () => q('select * from public.safeguarding_concern_queue(100)'));
+    assert(list.rows.some(r => r.review_id === recorded.id), 'owner cannot see a new concern');
+    const ack = await call(owner, 'select public.acknowledge_safeguarding_concern($1) as done', [recorded.id]);
+    assert(ack.done === true, 'owner acknowledgement was not recorded');
+    const repeated = await call(owner, 'select public.acknowledge_safeguarding_concern($1) as done', [recorded.id]);
+    assert(repeated.done === false, 'repeated acknowledgement was not idempotent');
+    const history = await asActor(owner, () => q('select * from public.safeguarding_concern_history(null,null,50)'));
+    const saved = history.rows.find(r => r.review_id === recorded.id);
+    assert(saved && saved.acknowledged_at, 'acknowledgement history was not visible to owner');
+    await refuses(/only the configured safeguarding owner/, () =>
+      call(anotherAdmin, 'select * from public.safeguarding_concern_history(null,null,50)'));
+    await refuses(/only the configured safeguarding owner/, () =>
+      call(anotherAdmin, 'select public.reopen_safeguarding_concern($1)', [recorded.id]));
+    const after = await asActor(owner, () => q('select * from public.safeguarding_concern_queue(100)'));
+    assert(!after.rows.some(r => r.review_id === recorded.id), 'acknowledged concern remains in the open queue');
+    const audits = (await q("select detail, actor from public.governance_audit_events where action='safeguarding.concern_acknowledged' and target_id=$1", [recorded.id])).rows;
+    assert(audits.length === 1 && audits[0].actor === owner && !JSON.stringify(audits).includes('Please review'),
+      'acknowledgement audit duplicates or reveals the concern note');
+    const reopened = await call(owner, 'select public.reopen_safeguarding_concern($1) as done', [recorded.id]);
+    assert(reopened.done === true, 'owner could not reopen an acknowledged concern');
+    const reopenedAgain = await call(owner, 'select public.reopen_safeguarding_concern($1) as done', [recorded.id]);
+    assert(reopenedAgain.done === false, 'reopening twice was not idempotent');
+    const open = await asActor(owner, () => q('select * from public.safeguarding_concern_queue(100)'));
+    assert(open.rows.some(r => r.review_id === recorded.id), 'reopened concern is not back in the queue');
+    assert((await q("select 1 from public.governance_audit_events where action='safeguarding.concern_reopened' and target_id=$1", [recorded.id])).rows.length === 1,
+      'reopening was not audited');
+  });
+
+  await test('an identical concern recorded after acknowledgement returns to the queue', async () => {
+    const row = await handedIn();
+    const first = await review(teacher, row.asset, 'concern', 'A continuing concern.');
+    const retry = await review(teacher, row.asset, 'concern', 'A continuing concern.');
+    assert(retry.recorded === false && retry.id === first.id, 'a retry before acknowledgement duplicated the concern');
+    await call(owner, 'select public.acknowledge_safeguarding_concern($1)', [first.id]);
+    const later = await review(teacher, row.asset, 'concern', 'A continuing concern.');
+    assert(later.recorded === true && later.id !== first.id, 'the later concern was silently deduplicated');
+    const queue = await asActor(owner, () => q('select * from public.safeguarding_concern_queue(200)'));
+    assert(queue.rows.some(r => r.review_id === later.id), 'the new concern did not reach the queue');
+  });
+
+  await test('several reviews in one transaction retain the last decision and a new concern', async () => {
+    const row = await handedIn();
+    const results = await asActor(owner, async () => {
+      const first = (await q("select public.record_coursework_review($1,'concern','A repeated concern.') as r", [row.asset])).rows[0].r;
+      await q('select public.acknowledge_safeguarding_concern($1)', [first.id]);
+      const again = (await q("select public.record_coursework_review($1,'concern','A repeated concern.') as r", [row.asset])).rows[0].r;
+      const clear = (await q("select public.record_coursework_review($1,'clear',null) as r", [row.asset])).rows[0].r;
+      return { first, again, clear };
+    });
+    assert(results.again.recorded && results.again.id !== results.first.id, 'acknowledged repeat was lost');
+    assert(results.clear.recorded, 'a subsequent clear review was lost');
+    const state = await scalar('select decision from public.coursework_file_state where asset_id=$1', [row.asset]);
+    assert(state.decision === 'clear', 'latest review does not follow insertion order');
+    const queue = await asActor(owner, () => q('select * from public.safeguarding_concern_queue(200)'));
+    assert(queue.rows.some(r => r.review_id === results.again.id), 'later clear incorrectly hid the concern');
+  });
+
+  await test('a later concern is a separate queue entry and erased submission context does not hide it', async () => {
+    const row = await handedIn();
+    const first = await review(teacher, row.asset, 'concern', 'First concern.');
+    await call(owner, 'select public.acknowledge_safeguarding_concern($1)', [first.id]);
+    const second = await review(teacher, row.asset, 'concern', 'Additional concern.');
+    assert(first.id !== second.id, 'a changed concern did not produce a new review');
+    await committed(() => q('delete from public.assignment_submissions where id=$1', [row.submission]));
+    const queue = await asActor(owner, () => q('select * from public.safeguarding_concern_queue(200)'));
+    const item = queue.rows.find(r => r.review_id === second.id);
+    assert(item && item.details_unavailable === true, 'an erased submission hid the new concern');
+  });
 
   // -------------------------------------------------------------------------
   console.log('\nAct I — who may look, and who may say they did');

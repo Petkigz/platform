@@ -257,6 +257,23 @@ export async function run(ctx) {
     assert(/sign in to assign a role/i.test(message),
       `the ordinary path must still need a signed-in person, got: ${message || 'no error'}`);
   });
+  await test('the documented safeguarding setup binds the exact owner', async () => {
+    const blocks = [...runbook.matchAll(/```sql\n([\s\S]*?)```/g)].map((m) => m[1]);
+    const block = blocks.find((b) => b.includes('bootstrap_safeguarding_owner'));
+    assert(block && block.includes("'you@example.com'"), 'safeguarding owner bootstrap block is missing');
+    await q('begin');
+    try {
+      await q('delete from public.safeguarding_owner');
+      const result = await ctx.db.exec(block.replace(/'you@example\.com'/g, `'${OWNER}'`));
+      assert(result[result.length - 1].rows.length === 1, 'bootstrap did not return one row');
+      const owner = (await q('select owner_user_id from public.safeguarding_owner')).rows[0];
+      assert(owner.owner_user_id === ownerId, 'wrong safeguarding owner was configured');
+      const audit = (await q(`select count(*)::int as n from public.governance_audit_events
+        where action='safeguarding.owner_bootstrapped' and target_id=$1`, [ownerId])).rows[0];
+      assert(audit.n === 1, 'safeguarding bootstrap was not audited');
+    } finally { await q('rollback'); }
+  });
+
   await test('the documented refund-owner setup binds the exact account and audits it', async () => {
     const blocks = [...runbook.matchAll(/```sql\n([\s\S]*?)```/g)].map((m) => m[1]);
     const block = blocks.find((b) => b.includes('bootstrap_refund_approval_owner'));
