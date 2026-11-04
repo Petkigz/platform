@@ -24,6 +24,28 @@ export async function run(ctx) {
     });
   });
 
+  await test('new navigation help remains private until an admin publishes it', async () => {
+    const titles = [
+      'How do I change the interface language?', 'How do I update my profile?',
+      'Where can a guardian find family learning?', 'How do saved lessons work?',
+      'Where can I find my orders?', 'What can the study assistant answer?',
+      'How can a teacher add a transcript?', 'How do I report a problem with a lesson?',
+    ];
+    await asUser(owner, async () => {
+      const drafts = (await q('select id, title, body, keywords, status from public.platform_help_articles where title = any($1)', [titles])).rows;
+      assert(drafts.length === titles.length && drafts.every((row) => row.status === 'draft'), 'new help is missing or prematurely published');
+      const article = drafts.find((row) => row.title === titles[0]);
+      await q("select set_config('request.jwt.claims',$1,true)", [JSON.stringify({ sub: reader })]);
+      assert((await q('select id from public.platform_help_articles where title = any($1)', [titles])).rows.length === 0, 'drafts leaked to a learner');
+      await q("select set_config('request.jwt.claims',$1,true)", [JSON.stringify({ sub: owner })]);
+      await q('select public.save_platform_help_article($1,$2,$3,$4,$5)',
+        [article.id, article.title, article.body, article.keywords, 'published']);
+      await q("select set_config('request.jwt.claims',$1,true)", [JSON.stringify({ sub: reader })]);
+      const visible = (await q('select title from public.platform_help_articles where title = any($1)', [titles])).rows;
+      assert(visible.length === 1 && visible[0].title === article.title, 'reviewed article was not visible after publication');
+    });
+  });
+
   await test('only a platform admin may write, including through the RPC', async () => {
     await rejects(() => asUser(reader, () => q("select public.save_platform_help_article(null,'New title','A complete answer here.','','published')")), /Only a platform admin/);
     await rejects(() => asUser(reader, () => q("insert into public.platform_help_articles(title,body,status) values ('New title','A complete answer here.','published')")), /permission denied/);

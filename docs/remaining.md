@@ -175,8 +175,10 @@ prayer time — the platform's own rule about religious content.
 **Owner choice:** use reviewed, non-generative platform help for everyone, and
 run a small model on the owner's computer temporarily while a separate server is
 considered. `/support` now searches published help articles; platform admins manage
-them visually on `/admin/ai-support`. Three initial navigation articles are included;
-the owner should review and expand them before launch. This library contains platform instructions,
+them visually on `/admin/ai-support`. Three initial navigation articles are published. Eight additional navigation
+articles are saved as private drafts for an administrator to review, edit and
+publish before they can appear to learners. The owner should review and expand
+the library before launch. This library contains platform instructions,
 not religious rulings. It does not yet answer every AyahSpring question or generate
 quizzes. The app must be connected to the PC securely before the model can serve a
 separately hosted website: the current quiz prototype is loopback-only and will not
