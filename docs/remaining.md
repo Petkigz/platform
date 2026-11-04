@@ -64,6 +64,12 @@ owner queue, file safety and deletion work remains incomplete. The migration
 preserves any existing switch value; an already-enabled deployment needs an
 operator to turn it off. The gate does not itself fix those safeguards.
 
+**Media write boundary:** authenticated accounts can no longer directly insert
+media rows or change their storage coordinates, ownership, purpose or lifecycle.
+Checked upload and lifecycle writers remain, as do limited descriptive edits. This
+migration needs deployment and does not itself fix the existing broad read/signing
+paths, revoke previously issued URLs, scan files, or control storage credentials.
+
 **Owner concern queue:** recorded coursework concerns now appear in a queue
 available only to a separately configured safeguarding owner; an acknowledgement
 is recorded, not treated as resolution; acknowledged items can be revisited and

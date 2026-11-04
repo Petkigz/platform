@@ -192,7 +192,7 @@ export async function run(ctx) {
 
     assert(message !== null,
       'an uploader was able to promote their own upload to available');
-    assert(/only staff may change the status/i.test(message),
+    assert(/permission denied/i.test(message),
       `refused for the wrong reason: ${message}`);
 
     assert((await statusOf(r.asset_id)).status === 'pending',
@@ -214,23 +214,48 @@ export async function run(ctx) {
     assert(row.status === 'pending', 'status must be untouched');
   });
 
-  await test('an uploader cannot point their own upload at another key', async () => {
-    const mine   = (await register(teacher)).rows[0];
-    const theirs = (await register(teacher)).rows[0];
-
-    let message = null;
-    await asActor(teacher,
+  await test('an uploader cannot point an asset at an arbitrary storage object', async () => {
+    const mine = (await register(teacher)).rows[0];
+    // Use a fresh key: the old test used an existing asset's key and could pass
+    // solely because the unique index rejected the duplicate.
+    await rejects(() => asActor(teacher,
       `update public.media_assets set master_key = $2 where id = $1`,
-      [mine.asset_id, theirs.master_key])
-      .catch((e) => { message = String(e.message); });
+      [mine.asset_id, `other-object/${crypto.randomUUID()}`]), /permission denied/i);
+    const row = (await q('select master_key from public.media_assets where id=$1', [mine.asset_id])).rows[0];
+    assert(row.master_key === mine.master_key, 'an uploader redirected their asset to another object');
+  });
 
-    // Either RLS or the unique constraint may stop this; what must not happen is
-    // one asset silently becoming another's object.
-    const row = (await q('select master_key from public.media_assets where id=$1',
-      [mine.asset_id])).rows[0];
-    if (row.master_key !== mine.master_key) {
-      assert(message !== null, 'the key changed with no refusal');
+  await test('direct asset creation cannot forge an available object or choose its location', async () => {
+    for (const actor of [teacher, admin]) {
+      await rejects(() => asActor(actor,
+        `insert into public.media_assets
+          (storage_backend,master_bucket,master_key,checksum,mime_type,byte_size,status,uploaded_by)
+         values ('r2','ayahspring-masters',$1,$2,'image/jpeg',100,'available',$3)`,
+        [`guessed/${crypto.randomUUID()}`, SHA, actor]), /permission denied/i);
     }
+  });
+
+  await test('neither an uploader nor staff can directly alter the identity or lifecycle of a media asset', async () => {
+    const mine = (await register(teacher)).rows[0];
+    for (const actor of [teacher, admin]) {
+      for (const [column, value] of [
+        ['purpose', 'coursework'], ['master_bucket', 'other-bucket'],
+        ['master_key', `arbitrary/${crypto.randomUUID()}`], ['uploaded_by', admin],
+        ['status', 'available'], ['checksum', 'b'.repeat(64)],
+        ['mime_type', 'image/jpeg'], ['byte_size', 5],
+      ]) {
+        await rejects(() => asActor(actor,
+          `update public.media_assets set ${column}=$2 where id=$1`, [mine.asset_id, value]),
+          /permission denied/i);
+      }
+      await rejects(() => asActor(actor,
+        `update public.media_assets set deleted_at=now() where id=$1`, [mine.asset_id]),
+        /permission denied/i);
+    }
+    const row = (await q('select purpose, master_bucket, master_key, uploaded_by, status, deleted_at from public.media_assets where id=$1', [mine.asset_id])).rows[0];
+    assert(row.purpose === 'library' && row.master_bucket === mine.master_bucket && row.master_key === mine.master_key &&
+      row.uploaded_by === teacher && row.status === 'pending' && row.deleted_at === null,
+      'a direct write changed the asset');
   });
 
   await test('a stranger cannot read or confirm someone else\'s upload', async () => {
