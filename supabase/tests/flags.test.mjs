@@ -79,7 +79,7 @@ export async function run(ctx) {
   // The seed
   // -------------------------------------------------------------------
   await test('incomplete coursework and subscription switches cannot be enabled or demoted by an admin', async () => {
-    for (const key of ['learning.assignments', 'learning.cohorts', 'commerce.subscriptions', 'family.child_login']) {
+    for (const key of ['learning.assignments', 'learning.cohorts', 'commerce.subscriptions']) {
       const row = (await q('select value_text, gate_type from public.platform_settings where key=$1', [key])).rows[0];
       assert(row.value_text === 'false' && row.gate_type === 'code', `${key} is not off and deployment-gated`);
       await rejects(() => asUser(admin, () => q(
@@ -89,6 +89,31 @@ export async function run(ctx) {
       const after = (await q('select value_text, gate_type from public.platform_settings where key=$1', [key])).rows[0];
       assert(after.value_text === 'false' && after.gate_type === 'code', `${key} changed through the runtime door`);
     }
+  });
+
+  await test('child login can be switched on only by an administrator after deployment', async () => {
+    const row = (await q("select value_text, gate_type from public.platform_settings where key='family.child_login'")).rows[0];
+    assert(row.value_text === 'false' && row.gate_type === 'admin_setup', 'the creation switch did not ship off');
+    await asUser(admin, async () => {
+      await q("update public.platform_settings set value_text='true' where key='family.child_login'");
+      const current = (await q("select value_text from public.platform_settings where key='family.child_login'")).rows[0];
+      assert(current.value_text === 'true', 'admin could not enable child login creation');
+    });
+    await asUser(nobody, async () => {
+      const result = await q("update public.platform_settings set value_text='true' where key='family.child_login' returning key");
+      assert(result.rows.length === 0, 'a non-admin could enable the child login switch');
+    });
+  });
+
+  await test('the restored creation migration switches off any previously enabled value', async () => {
+    const migration = readFileSync('supabase/migrations/20261281065000_child_login_creation_switch.sql', 'utf8');
+    await q('begin');
+    try {
+      await q("update public.platform_settings set value_text='true' where key='family.child_login'");
+      await ctx.exec(migration);
+      const row = (await q("select value_text,gate_type from public.platform_settings where key='family.child_login'")).rows[0];
+      assert(row.value_text === 'false' && row.gate_type === 'admin_setup', 'the old enabled value was silently carried forward');
+    } finally { await q('rollback'); }
   });
 
   await test('child-login containment preserves an enabled flag but removes the application attachment grant', async () => {

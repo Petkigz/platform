@@ -651,69 +651,24 @@ removed. Identity removal is a separate step checked against `auth.users`; it
 is not proof of deletion of all external-provider copies. Existing sessions and
 previously issued signed links need a separate revocation review.
 
-**Child login creation containment (2026-11-05):** The authenticated attachment
-RPC accepted an existing user ID without proving that the trusted creation route
-created that identity. The multi-step route also could not safely distinguish a
-failed attachment from a committed attachment whose reply was lost; its cleanup
-could delete the wrong live identity. Migration 600 revokes application access to
-reservation and attachment, marks the setting CODE-gated while preserving its previous value, and
-the web route pauses creation. If already enabled, switch the flag off. Existing
-child logins are not automatically revoked or deleted. Guardians can still detach
-the learner profile visually, but this does not revoke sessions or remove the
-provider identity. A trusted, serialized and recoverable creation/removal workflow,
-verified guardian/owner authority on each step, password recovery and deployed
-concurrency tests are required before reopening; review existing identities and
-orphan reservations individually. The older general profile-management predicate
-still accepts a family owner or an active relationship with profile-management
-permission without itself checking consent expiry or deletion; its other uses need
-review. Migration 630 adds a current verified-guardian/active-staff boundary to
-login-state visibility and detachment, but does not revoke authentication sessions. Do not delete guardian verification machinery.
+**Child login creation (2026-11-05):** The earlier attachment RPC allowed an
+authenticated caller to link an existing account without proving trusted creation.
+Migration 600 removed the old reservation and attachment grants; they remain
+removed. Migrations 610–640 added a current verified-guardian check, a durable
+attempt, a service-only completion tied to auth app metadata, retry recovery,
+verified-guardian detachment and a private pending-attempt readout.
 
-**Child-login trusted-attempt foundation:** Migration 610 introduces verified,
-active-guardian checks, an idempotent reservation and a service-only completion
-that checks a trusted auth app-metadata marker before linking. It is database
-scaffolding only: the creation route is still paused, and recovery for interrupted
-identity creation, password reset, safe identity revocation, a visual operator
-reconciliation path, deployed integration and real concurrent tests remain. Do
-not enable the feature on the strength of this migration alone.
+Migration 650 restores creation through the rebuilt route and changes the flag
+to ADMIN + SETUP. It **sets the flag off**, including on an existing deployment;
+existing linked accounts are unaffected. After deployment, configure the
+server-only Supabase service role key and test the full path in a non-production
+Supabase project before the owner enables the switch. Local cross-layer tests use
+a simulated Auth provider, not Supabase's real API or deployed concurrency.
 
-**Child-login recovery work:** Migration 620 provides a service-only lookup of
-the exact auth identity marked for a reservation. The tested creation coordinator
-can recover a lost provider response without deleting an identity or treating an
-unmarked same-name account as proof. It is not yet wired to the paused route; it
-does not itself revoke identities, reset passwords, resolve stranded attempts, or
-prove real provider/concurrency behavior. On recovery, the original password
-remains in effect; a later password input is not applied automatically.
-
-The child-login coordinator and server adapter use the guardian's session for
-reservation, and the service role for marked identity creation, lookup and
-trusted completion. The route is wired behind a hard-disabled code gate; it has
-mock-based tests only. Supabase's real provider behavior, metadata protection,
-retry/concurrency behavior and sign-in removal have not been verified in a
-representative deployment. Keep creation paused until the remaining recovery and
-identity-removal steps are implemented and checked.
-
-**Child-login detachment:** Migration 630 requires an active verified guardian
-with profile permission or active staff for login state and detachment, and locks
-the profile and consent rows while the detachment is written. It does not delete
-the authentication identity, revoke sessions or establish provider integration.
-
-Migration 640 and the guardian-consent dashboard add a private, named-owner-only
-readout of up to 50 oldest pending child-login attempts, including whether the
-matching marked identity appears in the auth table. The readout is not proof of
-provider-wide absence or revocation and has no reconciliation or deletion action.
-Creation remains paused until a safe end-to-end recovery and removal workflow is
-implemented, tested against the provider, and deliberately deployed.
-
-The gated creation handler validates the child, username and password, derives
-the guardian from the server session, and treats ambiguous replies as unknown.
-If a prior creation is recovered, the family screen explains that the earlier
-password remains in effect. This work does not lift the creation pause or provide
-password reset or provider-session revocation.
-
-A local cross-layer child-login test now drives the real creation handler and
-server adapter through the migrated database functions using authenticated and
-service roles, with a simulated auth provider. It covers normal creation and a
-lost provider response that is recovered via the server-only marker. This is not
-a test of Supabase's live Auth API or deployed concurrency, and it does not lift
-the creation gate.
+Pending attempts may need individual owner review; the guardian-consent page
+lists up to 50 but does not reconcile or delete them. Detachment does not delete
+the auth identity or revoke existing sessions; password reset and provider
+identity removal are not implemented. If a retry recovers an earlier identity,
+the original password remains in effect. The older general profile-management
+predicate still needs review on its other paths. Do not delete guardian verification
+machinery. No migration has been deployed as part of this work.

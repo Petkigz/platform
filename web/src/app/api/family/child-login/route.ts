@@ -5,12 +5,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { isServiceRoleConfigured } from '@/lib/env';
 import { handleChildLoginCreation } from '@/lib/child-login-handler';
 import { childLoginCreatePorts } from '@/lib/child-login-ports';
-// Creation is paused until the trusted linking and recovery workflow is safe.
-// Detachment remains available below; it does not revoke the auth identity.
-
-// The route is wired but deliberately not open until the removal/recovery and
-// real-provider checks are complete and a deployment changes this code gate.
-const CHILD_LOGIN_CREATION_READY = false;
+// Reservation enforces the dashboard flag and current guardian verification.
+// Detachment does not revoke the auth identity or existing sessions.
 
 const NO_STORE = { 'Cache-Control': 'no-store' } as const;
 
@@ -25,12 +21,6 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
   if (!user) return fail('Sign in to make a login for your child.', 401);
 
-  if (!CHILD_LOGIN_CREATION_READY) {
-    return NextResponse.json(
-      { code: 'child_login_creation_paused' },
-      { status: 503, headers: NO_STORE },
-    );
-  }
   if (!isServiceRoleConfigured()) {
     return NextResponse.json({ code: 'child_login_unavailable' }, { status: 503, headers: NO_STORE });
   }

@@ -30,7 +30,7 @@ export type ChildLoginState = {
  *   * the adult may not manage this child — nothing, because a button that would
  *     be refused is worse than no button.
  *
- * Creation is paused until the trusted linking and recovery workflow is safe.
+ * Creation follows the dashboard switch and current guardian verification.
  * Detachment stays visible even while creation is off.
  */
 export function ChildLoginCard({
@@ -154,8 +154,8 @@ export function ChildLoginCard({
                 year: 'numeric',
               })}.`
             : '.'}{' '}
-          Password recovery and creation are paused while the login workflow is reviewed.
-          Contact privacy@ayahspring.com for help.
+          Password reset is not available here yet. Contact privacy@ayahspring.com
+          if you need help with the sign-in.
         </p>
 
         {!confirmRemove ? (
@@ -199,7 +199,7 @@ export function ChildLoginCard({
   }
 
   if (!state.canCreate) {
-    return <p className="muted">Creating child logins is temporarily paused while the linking and recovery workflow is reviewed. Contact privacy@ayahspring.com for help.</p>;
+    return <p className="muted">A new child login is not available for this profile. It may be switched off or an earlier login may need review. Contact privacy@ayahspring.com for help.</p>;
   }
 
 

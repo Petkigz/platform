@@ -128,7 +128,7 @@ export default async function AdminGuardiansPage() {
         <section className="card">
           <h2>Pending child-login attempts</h2>
           <p className="muted">Private to the named safeguarding owner. This shows up to 50 oldest
-            pending attempts. New login creation remains paused. A marked identity is not proof
+            pending attempts. A marked identity is not proof
             that it is linked or that other provider copies or sessions are gone; do not delete or
             release an attempt based on this list alone.</p>
           {attempts === null ? <p className="notice warn">The attempt register could not be read.</p>

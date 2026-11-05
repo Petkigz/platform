@@ -703,8 +703,8 @@ Optional author-provided transcripts now exist and are searchable only when the 
 have since been updated; their switches did not move.
 
 Verification: **The previous 266-migration tree passed 2 598 database assertions
-in 170 suites. With migrations 600–640, 55 focused database and RPC-contract checks and 2 072 web tests passed. A full database rerun was invalidated by concurrent source changes and remains pending. TypeScript
-typecheck and `check:repo` pass; 271 migrations.**
+in 170 suites. With migrations 600–650, 58 focused database and RPC-contract checks and 2 072 web tests passed. A full database rerun was invalidated by concurrent source changes and remains pending. TypeScript
+typecheck and `check:repo` pass; 272 migrations.**
 
 ## Today's sentence
 

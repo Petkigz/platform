@@ -97,11 +97,10 @@ test('every refusal a guardian can meet is a sentence, and none of them leak a c
 });
 
 
-test('child login creation is contained and detachment does not claim auth revocation', () => {
+test('child login creation uses the trusted handler and detachment does not claim auth revocation', () => {
   const route = readFileSync(new URL('../app/api/family/child-login/route.ts', import.meta.url), 'utf8');
   const card = readFileSync(new URL('../app/family/child-login-card.tsx', import.meta.url), 'utf8');
-  assert.match(route, /child_login_creation_paused/);
-  assert.match(route, /CHILD_LOGIN_CREATION_READY = false/);
+  assert.doesNotMatch(route, /CHILD_LOGIN_CREATION_READY = false/);
   assert.match(route, /handleChildLoginCreation/);
   assert.match(route, /A JSON request is required/);
   assert.match(card, /does not delete the sign-in or revoke/);

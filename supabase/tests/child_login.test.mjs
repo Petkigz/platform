@@ -98,14 +98,14 @@ export async function run(ctx) {
   // The register and the constraint
   // ---------------------------------------------------------------------------
 
-  await test('child login creation is code-gated with the containment written down', async () => {
+  await test('child login creation ships off with its setup and limits written down', async () => {
     const row = await scalar(
       `select value_text, gate_type, preconditions, description
          from public.platform_settings where key = 'family.child_login'`);
     assert(row.value_text === 'false', `ships as ${row.value_text}`);
-    assert(row.gate_type === 'code', `gated as ${row.gate_type}`);
+    assert(row.gate_type === 'admin_setup', `gated as ${row.gate_type}`);
     assert(/guardian/i.test(row.description), 'the description names who makes one');
-    assert(/linking/i.test(row.preconditions) && /identity/i.test(row.preconditions),
+    assert(/verified/i.test(row.preconditions) && /identity/i.test(row.preconditions),
       'the linking and identity risks are absent from the register');
   });
 
@@ -134,6 +134,14 @@ export async function run(ctx) {
   await setFlag('family.child_login', true);
 
   try {
+    await test('a verified guardian can see the creation form only while the switch is on', async () => {
+      const available = await state(owner, childId);
+      assert(available && available.canCreate === true, 'verified guardian cannot create with the switch on');
+      await setFlag('family.child_login', false);
+      try { assert((await state(owner, childId)).canCreate === false, 'creation is offered while switched off'); }
+      finally { await setFlag('family.child_login', true); }
+    });
+
     await test('a stranger cannot reserve a username for somebody else\'s child', async () => {
       const stranger = await person('A Stranger');
       await rejects(() => reserve(stranger, childId, 'amina.k'), /child_login:not_your_child/);
@@ -526,6 +534,13 @@ export async function run(ctx) {
             return { data: { user: { id } }, error: null };
           } } },
         };
+        if (!loseReply) {
+          await setFlag('family.child_login', false);
+          const blocked = await handleChildLoginCreation(childLoginCreatePorts(session,service), guardian,
+            { learnerId: learner, username, password: 'test-password-42' });
+          assert(blocked.status !== 200 && calls.length === 0, 'switch-off still reached the auth provider');
+          await setFlag('family.child_login', true);
+        }
         const result = await handleChildLoginCreation(childLoginCreatePorts(session,service), guardian,
           { learnerId: learner, username, password: 'test-password-42', guardianId: 'not-the-actor' });
         assert(result.status === 200 && result.body.ok && result.body.recovered === loseReply,
