@@ -596,10 +596,11 @@ review; do not guess. The list is paginated at 100 classes.
 Deploy migrations 550 and 560. Day-based retention comparisons, other removal paths and
 deployed-schema concurrency still need review. Keep assignments and cohorts off.
 
-**Account-status authorization:** role checks test whether a role assignment is
-revoked, not whether its profile is active. Some owner and other privileged RPCs
-may therefore still accept an authenticated session after suspension or closure;
-identity removal is manual. The class-end attestation independently checks an
-active profile, but that does not repair the other functions. Review and close
-this boundary before deployment; test account closure, merge and suspended users
-without blocking legitimate cleanup or leaving the platform ownerless.
+**Account-status authorization:** Privileged role checks now require an active,
+undeleted profile as well as an unrevoked role. A suspended or closed staff member
+cannot use paths guarded by these checks, including the owner retention and refund
+writers; reinstatement restores an unrevoked role. This does not disable the
+provider identity or cover every path: non-privileged role membership remains a
+fact for screening, and learner, guardian and author authorization may rely on
+identity or relationships rather than privileged roles. Review those paths and
+account merge and closure, especially named-owner recovery. Deploy migration 570.

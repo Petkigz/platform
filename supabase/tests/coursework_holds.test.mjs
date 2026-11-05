@@ -118,6 +118,47 @@ export async function run(ctx) {
   });
   await q('select public.bootstrap_safeguarding_owner($1)', [owner]);
 
+  await test('a suspended or closed owner loses staff access until reinstated', async () => {
+    const setStatus = (status, deleted) => committed(async () => {
+      await q("select set_config('app.account_erasure', 'on', true)");
+      await q('update public.user_profiles set account_status=$2, deleted_at=$3 where user_id=$1', [owner, status, deleted]);
+    });
+    const priorRefundOwner = (await q('select owner_user_id, configured_at from public.refund_approval_owner where singleton')).rows[0];
+    await q('delete from public.refund_approval_owner where singleton');
+    await q('select public.bootstrap_refund_approval_owner($1)', [owner]);
+    try {
+      for (const [status, deleted] of [['suspended', null], ['closed', new Date().toISOString()], ['active', new Date().toISOString()]]) {
+        await setStatus(status, deleted);
+        const predicates = (await q("select public.has_role($1,'platform_admin') as role, public.is_privileged($1) as priv", [owner])).rows[0];
+        assert(predicates.role === false && predicates.priv === false, `${status} owner kept staff authority`);
+        await rejects(() => holdList(owner), /coursework:not_allowed/);
+        await rejects(() => call(owner, 'select * from public.safeguarding_concern_queue()'), /only the configured safeguarding owner/);
+        await rejects(() => call(owner, 'select public.run_retention_jobs()'), /retention:not_allowed/);
+        await rejects(() => call(owner, 'select public.decide_refund_request($1,true,$2)', [crypto.randomUUID(), 'reviewed']), /only the configured owner/);
+      }
+    } finally {
+      await setStatus('active', null);
+      await q('delete from public.refund_approval_owner where singleton');
+      if (priorRefundOwner) await q('insert into public.refund_approval_owner (singleton, owner_user_id, configured_at) values (true,$1,$2)', [priorRefundOwner.owner_user_id, priorRefundOwner.configured_at]);
+    }
+    const predicates = (await q("select public.has_role($1,'platform_admin') as role, public.is_privileged($1) as priv", [owner])).rows[0];
+    assert(predicates.role === true && predicates.priv === true, 'reinstatement did not restore the unrevoked staff role');
+    await holdList(owner);
+    await committed(async () => {
+      await q("select set_config('app.account_erasure', 'on', true)");
+      await q("update public.user_profiles set account_status='suspended' where user_id=$1", [teacher]);
+    });
+    try {
+      const teacherRole = (await q("select public.has_role($1,'instructor') as role", [teacher])).rows[0].role;
+      assert(teacherRole === true, 'ordinary role membership is needed for screening even when suspended');
+    } finally {
+      await committed(async () => {
+        await q("select set_config('app.account_erasure', 'on', true)");
+        await q("update public.user_profiles set account_status='active' where user_id=$1", [teacher]);
+      });
+    }
+  });
+
   await test('unrelated staff cannot read or change private retention records', async () => {
     for (const actor of [governance, otherAdmin, agent, teacher]) {
       for (const [sql, args] of [

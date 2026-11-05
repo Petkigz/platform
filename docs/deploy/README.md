@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-263 files in `supabase/migrations/`, applied in filename order — the 14-digit
+264 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -152,7 +152,7 @@ done
   first run. What you are watching for is the loop *stopping*, and the file name
   above the error.
 - Takes a few minutes. The last file printed should be
-  `20261281056000_cohort_end_attestation.sql`.
+  `20261281057000_inactive_staff_role_boundary.sql`.
 
 **Existing installations:** the subscription safety migration preserves the current
 `commerce.subscriptions` value. If it is already on, review existing customer
@@ -170,7 +170,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 263 files from the top and fail on the
+it, and `db push` would then re-apply all 264 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -1022,3 +1022,10 @@ The owner must verify the date, give a reason and confirm that files may become
 due immediately. The record is not independent proof; existing end dates and
 other cases need individual review. Do not invent dates. This does not verify
 storage deletion.
+
+After `20261281057000_inactive_staff_role_boundary.sql`, privileged role checks
+require an active, undeleted profile. Existing unrevoked assignments are retained
+and work again if the account is reinstated. The authentication provider identity
+may still exist, and non-privileged learner, guardian, author and ownership paths
+have not all been checked against account status. This is not complete session
+revocation. Review named-owner closure and recovery; deploy the migration.
