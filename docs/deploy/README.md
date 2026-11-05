@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-264 files in `supabase/migrations/`, applied in filename order — the 14-digit
+265 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -152,7 +152,7 @@ done
   first run. What you are watching for is the loop *stopping*, and the file name
   above the error.
 - Takes a few minutes. The last file printed should be
-  `20261281057000_inactive_staff_role_boundary.sql`.
+  `20261281058000_named_owner_account_boundary.sql`.
 
 **Existing installations:** the subscription safety migration preserves the current
 `commerce.subscriptions` value. If it is already on, review existing customer
@@ -170,7 +170,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 264 files from the top and fail on the
+it, and `db push` would then re-apply all 265 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -1029,3 +1029,13 @@ and work again if the account is reinstated. The authentication provider identit
 may still exist, and non-privileged learner, guardian, author and ownership paths
 have not all been checked against account status. This is not complete session
 revocation. Review named-owner closure and recovery; deploy the migration.
+
+After `20261281058000_named_owner_account_boundary.sql`, self-service account
+closure and absorbing an account in a merge are paused for individual review
+if the account is the named safeguarding or refund-approval owner. The operator
+must arrange a safe transfer or recovery first; no visual workflow for this is
+shipped. Bootstrap, closure and accepted merge lock the profile. On 2026-11-05,
+PostgreSQL 16.15 tested both lock orders for both appointments and both operations
+using the actual wrappers in a minimal schema with stub closure and merge bodies;
+repeat with the deployed schema. Previously closed or suspended appointments do
+not repair themselves.

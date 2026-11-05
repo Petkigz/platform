@@ -74,9 +74,10 @@ export default async function DeleteAccountPage() {
                 <li>Lesson notes and bookmarks</li>
                 <li>Saved courses and the notes on them</li>
                 <li>Course reviews and discussion posts you wrote</li>
-                <li>The text of assignment work belonging to learner profiles closed with this account</li>
+                <li>The text of assignment work belonging to your own linked learner profile</li>
                 <li>Live sharing links, invitations and guardian access</li>
                 <li>Notifications sent to you, and mail the platform sent or queued for you</li>
+                <li>If this account has a named safeguarding or refund-approval appointment, closing it needs individual review. Contact privacy@ayahspring.com.</li>
                 <li>
                   A child profile in a family with no other active member may be closed.
                   If it has a separate login or coursework under a safeguarding hold, self-service closure is

@@ -136,6 +136,42 @@ export async function run(ctx) {
   // -------------------------------------------------------------------------
   // Deciding
   // -------------------------------------------------------------------------
+  await test('a named owner cannot be absorbed, and the appointment is not an arbitrary UUID lookup', async () => {
+    await flag(true);
+    const owner = await bootstrapAdmin('merge-named-owner@example.com');
+    const target = await account('merge-owner-target@example.com', 'Owner Target');
+    const stranger = await account('merge-owner-stranger@example.com', 'Unrelated Stranger');
+    const priorSafeguarding = (await q('select owner_user_id, configured_at from public.safeguarding_owner where singleton')).rows[0];
+    const priorRefund = (await q('select owner_user_id, configured_at from public.refund_approval_owner where singleton')).rows[0];
+    await q('delete from public.safeguarding_owner where singleton');
+    await q('delete from public.refund_approval_owner where singleton');
+    try {
+      await q('select public.bootstrap_safeguarding_owner($1)', [owner]);
+      const noRequest = await preview(owner, target);
+      assert(!noRequest.blocks.some((x) => /owner appointment/.test(x)), 'an arbitrary pair revealed an appointment');
+      const req = await request(owner, 'merge-owner-target@example.com');
+      const viewed = await preview(owner, target);
+      assert(viewed.ok === false && viewed.blocks.some((x) => /owner appointment/.test(x)), 'the actual parties were not told why');
+      const bystander = await call(stranger, 'select public.merge_blocks($1,$2) as r', [owner, target]);
+      assert(!bystander.blocks.some((x) => /owner appointment/.test(x)), 'a bystander learned of the appointment');
+      await rejects(() => decide(target, req.requestId, true, 'Owner Target'), /owner appointment.*privacy@ayahspring.com/);
+      await rejects(() => call(target, 'select public.decide_account_merge_internal($1,$2,$3) as r', [req.requestId, true, 'Owner Target']), /permission denied/);
+      assert((await profile(owner)).account_status === 'active', 'refused merge closed the owner');
+      const declined = await decide(target, req.requestId, false, '');
+      assert(declined.status === 'declined', 'owner appointment blocked a decline');
+      await q('delete from public.safeguarding_owner where singleton');
+      await q('select public.bootstrap_refund_approval_owner($1)', [owner]);
+      const req2 = await request(owner, 'merge-owner-target@example.com');
+      await rejects(() => decide(target, req2.requestId, true, 'Owner Target'), /owner appointment.*privacy@ayahspring.com/);
+      await decide(target, req2.requestId, false, '');
+    } finally {
+      await q('delete from public.safeguarding_owner where singleton');
+      await q('delete from public.refund_approval_owner where singleton');
+      if (priorSafeguarding) await q('insert into public.safeguarding_owner (singleton,owner_user_id,configured_at) values (true,$1,$2)', [priorSafeguarding.owner_user_id, priorSafeguarding.configured_at]);
+      if (priorRefund) await q('insert into public.refund_approval_owner (singleton,owner_user_id,configured_at) values (true,$1,$2)', [priorRefund.owner_user_id, priorRefund.configured_at]);
+    }
+  });
+
   await test('only the account that would survive can decide', async () => {
     await flag(true);
     const a = await account('merge-who-a@example.com', 'Who A');
@@ -153,13 +189,14 @@ export async function run(ctx) {
     const b = await account('merge-decline-b@example.com', 'Decline B');
     const req = await request(a, 'merge-decline-b@example.com');
 
+    const before = await audit('account.merge_declined');
     const answer = await decide(b, req.requestId, false, 'Decline B');
     eq(answer.merged, false, 'the answer');
     eq(answer.status, 'declined', 'the status');
 
     eq((await profile(a)).account_status, 'active', 'the asking account');
     eq((await profile(b)).account_status, 'active', 'the deciding account');
-    eq(await audit('account.merge_declined'), 1, 'declines recorded');
+    eq(await audit('account.merge_declined'), before + 1, 'declines recorded');
   });
 
   await test('a merge cannot run on the wrong confirmation', async () => {

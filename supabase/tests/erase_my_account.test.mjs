@@ -277,6 +277,33 @@ export async function run(ctx) {
     assert(again.learnersErased === 0, 'the second press erased learners again');
   });
 
+  await test('a named owner needs individual review before self-service closure', async () => {
+    const owner = await bootstrapAdmin('erase-named-owner@example.com');
+    const priorSafeguarding = (await q('select owner_user_id, configured_at from public.safeguarding_owner where singleton')).rows[0];
+    const priorRefund = (await q('select owner_user_id, configured_at from public.refund_approval_owner where singleton')).rows[0];
+    await q('delete from public.safeguarding_owner where singleton');
+    await q('delete from public.refund_approval_owner where singleton');
+    const name = (await scalar('select display_name from public.user_profiles where user_id=$1', [owner])).display_name;
+    try {
+      await q('select public.bootstrap_safeguarding_owner($1)', [owner]);
+      await rejects(() => eraseAs(owner, name), /owner appointment.*privacy@ayahspring.com/);
+      await rejects(() => asActor(owner, 'select public.erase_my_account_internal($1)', [name]), /permission denied/);
+      await q('delete from public.safeguarding_owner where singleton');
+      await q('select public.bootstrap_refund_approval_owner($1)', [owner]);
+      await rejects(() => eraseAs(owner, name), /owner appointment.*privacy@ayahspring.com/);
+      assert((await scalar('select account_status from public.user_profiles where user_id=$1', [owner])).account_status === 'active', 'refused closure changed the profile');
+      await q('delete from public.refund_approval_owner where singleton');
+      assert((await eraseAs(owner, name)).closed === true, 'an ordinary account could not close');
+      await rejects(() => q('select public.bootstrap_safeguarding_owner($1)', [owner]), /active platform admin/);
+      await rejects(() => q('select public.bootstrap_refund_approval_owner($1)', [owner]), /active platform admin/);
+    } finally {
+      await q('delete from public.safeguarding_owner where singleton');
+      await q('delete from public.refund_approval_owner where singleton');
+      if (priorSafeguarding) await q('insert into public.safeguarding_owner (singleton,owner_user_id,configured_at) values (true,$1,$2)', [priorSafeguarding.owner_user_id, priorSafeguarding.configured_at]);
+      if (priorRefund) await q('insert into public.refund_approval_owner (singleton,owner_user_id,configured_at) values (true,$1,$2)', [priorRefund.owner_user_id, priorRefund.configured_at]);
+    }
+  });
+
   await test('a signed-out caller cannot close anything, and cannot reach the function', async () => {
     await rejects(() => asAnon('select public.erase_my_account($1)', ['nobody']),
       'an anonymous caller reached the erasure function');

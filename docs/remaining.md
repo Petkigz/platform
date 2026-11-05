@@ -603,4 +603,15 @@ writers; reinstatement restores an unrevoked role. This does not disable the
 provider identity or cover every path: non-privileged role membership remains a
 fact for screening, and learner, guardian and author authorization may rely on
 identity or relationships rather than privileged roles. Review those paths and
-account merge and closure, especially named-owner recovery. Deploy migration 570.
+account merge and closure beyond the named-owner boundary below. Deploy migration 570.
+
+**Named-owner continuity:** Self-service closure and merging the absorbed account
+are refused while it is the named safeguarding or refund-approval owner. A
+separate manual recovery or transfer must be arranged; no visual owner-transfer
+workflow exists yet. The merge preview tells only the parties to a real pending
+request, and a decline remains possible. Bootstrap, closure and merge acceptance
+lock the same profile. On 2026-11-05, PostgreSQL 16.15 tested both lock orders
+for both appointments and both operations using the actual wrappers in a minimal
+schema with stub closure and merge bodies; repeat against the deployed schema.
+Existing installations with a closed/suspended named owner need operator
+review. Deploy migration 580.
