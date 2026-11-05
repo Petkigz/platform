@@ -162,7 +162,7 @@ export async function POST(request: Request) {
       // size cap, the type list, the ten-file limit, a closed task — so it is
       // passed through rather than replaced with a generic one.
       const message = registered.error.message;
-      const status = /sign in|responsible for|uploader/i.test(message)
+      const status = /sign in|responsible for|uploader|verified guardian/i.test(message)
         ? 403
         : /not found/i.test(message)
           ? 404

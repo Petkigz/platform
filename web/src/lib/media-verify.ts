@@ -211,7 +211,7 @@ export async function confirmMediaUpload(
     const message = confirmError.message;
     // Both phrasings exist in the schema's history, and a permissions refusal
     // reported as a conflict sends somebody looking in the wrong place.
-    const status = /only staff may confirm|only platform staff|only the uploader|privileg/i.test(message)
+    const status = /only staff may confirm|only platform staff|only the uploader|verified guardian|privileg/i.test(message)
       ? 403
       : /not found|no media asset/i.test(message)
         ? 404

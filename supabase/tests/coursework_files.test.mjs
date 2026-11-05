@@ -364,16 +364,76 @@ export async function run(ctx) {
     assert(status.status === 'pending', 'a library file was promoted without staff');
   });
 
-  await test('staff may confirm a coursework file, for the incident nobody expected', async () => {
+  await test('staff cannot confirm coursework through either confirmation door', async () => {
     const who = await learner('Incident', { course, version });
     const submission = await draft(who.userId, assignment, who.learnerId);
     const target = await declare(who.userId, submission);
+    await refused(admin, SQL_CONFIRM, [target.asset_id], /only the uploader/i);
+    await refused(admin, 'select public.confirm_media_upload($1)', [target.asset_id], /only library uploads/i);
+    await refused(admin, 'select public.confirm_coursework_upload_internal($1)', [target.asset_id], /permission denied/i);
+    await refused(admin, 'select public.confirm_media_upload_internal($1)', [target.asset_id], /permission denied/i);
+    assert((await scalar('select status from public.media_assets where id=$1', [target.asset_id])).status === 'pending');
+    const attachmentId = (await call(who.userId, SQL_CONFIRM, [target.asset_id])).id;
+    assert(attachmentId, 'the authorized uploader could not complete the hand-in');
+    await refused(admin, SQL_CONFIRM, [target.asset_id], /only the uploader/i);
+  });
 
-    const attachmentId = (await call(admin, SQL_CONFIRM, [target.asset_id])).id;
-    assert(attachmentId, 'staff could not complete a hand-in');
-    const status = await scalar('select status from public.media_assets where id = $1',
-      [target.asset_id]);
-    assert(status.status === 'available');
+  await test('unverified family and unrelated staff cannot declare coursework', async () => {
+    const family = await parentWithChild({ course, version });
+    const member = await newUser(`coursework-upload-member-${++seq}@example.com`);
+    await newProfile(member, 'Unverified family member');
+    const familyId = (await scalar('select family_id from public.learner_profiles where id=$1', [family.childId])).family_id;
+    await q(`insert into public.family_memberships
+      (family_id,user_id,membership_type,status,joined_at,created_by)
+      values ($1,$2,'guardian','active',now(),$3)`, [familyId, member, family.userId]);
+    const submission = await draft(family.userId, assignment, family.childId);
+    const before = (await scalar('select count(*)::int n from public.media_assets')).n;
+    for (const actor of [member, admin]) {
+      await refused(actor, SQL_DECLARE, [submission, 'Page.jpg', 'image/jpeg', 1000, digest()], /currently verified guardian/i);
+    }
+    await ctx.verifyGuardian(member, family.childId, { canViewProgress: false });
+    await refused(member, SQL_DECLARE, [submission, 'Page.jpg', 'image/jpeg', 1000, digest()], /currently verified guardian/i);
+    assert((await scalar('select count(*)::int n from public.media_assets')).n === before,
+      'a refused declaration persisted a media row');
+    const target = await declare(family.userId, submission);
+    assert(target.asset_id, 'verified guardian could not declare');
+    await call(family.userId, SQL_CONFIRM, [target.asset_id]);
+    await q(`update public.guardian_relationships set verified_at=now()+interval '1 day',
+      consent_expires_at=now()+interval '2 days' where learner_profile_id=$1 and guardian_user_id=$2`,
+      [family.childId, family.userId]);
+    await refused(family.userId, SQL_DECLARE, [submission, 'Page.jpg', 'image/jpeg', 1000, digest()], /currently verified guardian/i);
+    assert((await call(family.userId, SQL_WATCH, [target.asset_id])).w === false, 'future verification granted file access');
+    await q(`update public.guardian_relationships set verified_at=now()-interval '1 day',
+      consent_expires_at=now()+interval '1 year' where learner_profile_id=$1 and guardian_user_id=$2`,
+      [family.childId, family.userId]);
+    const childUser = await newUser(`coursework-hand-in-child-${++seq}@example.com`);
+    await newProfile(childUser, 'Child account');
+    await q('update public.learner_profiles set linked_user_id=$1 where id=$2', [childUser, family.childId]);
+    const childFile = await declare(childUser, submission);
+    await call(childUser, SQL_CONFIRM, [childFile.asset_id]);
+  });
+
+  await test('guardian authority is rechecked at confirmation, retry and legacy reattachment', async () => {
+    const family = await parentWithChild({ course, version });
+    const submission = await draft(family.userId, assignment, family.childId);
+    const pending = await declare(family.userId, submission);
+    const attached = await declare(family.userId, submission);
+    await call(family.userId, SQL_CONFIRM, [attached.asset_id]);
+    await call(family.userId, 'select public.remove_assignment_asset($1,$2)', [submission, attached.asset_id]);
+    assert((await call(family.userId, 'select public.attach_assignment_asset($1,$2) as id', [submission, attached.asset_id])).id,
+      'authorized uploader could not reattach their own declared file');
+    await q(`update public.guardian_relationships set verified_at=now()-interval '2 years',
+      consent_expires_at=now()-interval '1 year' where learner_profile_id=$1 and guardian_user_id=$2`,
+      [family.childId, family.userId]);
+    await refused(family.userId, SQL_CONFIRM, [pending.asset_id], /currently verified guardian/i);
+    await refused(family.userId, SQL_CONFIRM, [attached.asset_id], /currently verified guardian/i);
+    assert((await scalar('select status from public.media_assets where id=$1', [pending.asset_id])).status === 'pending');
+    // The general family predicate is deliberately left enabled by the suite's
+    // flag-off fixture; the attachment trigger must still reject reattachment.
+    await call(family.userId, 'select public.remove_assignment_asset($1,$2)', [submission, attached.asset_id]);
+    await refused(family.userId, 'select public.attach_assignment_asset($1,$2)',
+      [submission, attached.asset_id], /currently verified guardian/i);
+    assert((await scalar('select count(*)::int n from public.assignment_submission_assets where submission_id=$1', [submission])).n === 0);
   });
 
   // -------------------------------------------------------------------------

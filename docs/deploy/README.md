@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-250 files in `supabase/migrations/`, applied in filename order — the 14-digit
+251 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -152,7 +152,7 @@ done
   first run. What you are watching for is the loop *stopping*, and the file name
   above the error.
 - Takes a few minutes. The last file printed should be
-  `20261281043000_coursework_master_access.sql`.
+  `20261281044000_coursework_upload_authority.sql`.
 
 **Existing installations:** the subscription safety migration preserves the current
 `commerce.subscriptions` value. If it is already on, review existing customer
@@ -170,7 +170,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 250 files from the top and fail on the
+it, and `db push` would then re-apply all 251 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -912,3 +912,14 @@ identified by this rule. Other administrative RPCs may still expose metadata or
 storage coordinates, and direct storage credentials and existing signed links
 are not revoked. Keep assignments and cohorts off until the full access, upload,
 scanner, retention and remediation work is complete.
+
+After applying `20261281044000_coursework_upload_authority.sql`, deploy the web
+route too. Coursework declaration, confirmation and reattachment require the
+learner or a current verified guardian with progress permission; confirmation and
+reattachment also require the original uploader. Staff cannot use the generic
+library confirmation on coursework. This affects adult coursework as well as
+children's files. A previously issued signed upload URL remains usable until it
+expires; the database rechecks authority at confirmation. The web route checks
+the uploaded size, but an authenticated direct database RPC can bypass that HEAD
+check, and no malware scanner is connected. This migration does not close every
+metadata or storage access path; keep assignments and cohorts off.

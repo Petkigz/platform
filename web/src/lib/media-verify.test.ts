@@ -280,6 +280,7 @@ await test('a permissions refusal from the database is a 403, whatever its wordi
     'only staff may confirm an upload',
     'only platform staff may confirm an upload',
     'insufficient privilege',
+    'only the learner or a currently verified guardian with progress permission can confirm this file',
   ]) {
     const { client } = stubClient({ row: row(), rpcError: message });
     const outcome = await confirmMediaUpload(client, assetId, {

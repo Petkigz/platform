@@ -70,6 +70,16 @@ Checked upload and lifecycle writers remain, as do limited descriptive edits. Th
 migration needs deployment and does not itself fix the existing broad read/signing
 paths, revoke previously issued URLs, scan files, or control storage credentials.
 
+**Upload authority:** a new coursework declaration, confirmation or legacy
+reattachment requires the actual learner or a currently verified guardian with
+progress permission; the confirmer and reattacher must also be the uploader.
+The check applies to all coursework, even with the general guardian flag off.
+The generic staff confirmation cannot promote coursework. Deploy the migration
+and updated web route. Previously issued upload links remain valid until expiry,
+and the web route's size check is not enforced by direct database RPC calls;
+neither path scans files. Other metadata, administrative and storage-credential
+paths still need review, and assignments/cohorts remain off.
+
 **Master-file containment:** the checked master route and ordinary media-asset
 row reads now require the learner, a current verified guardian with progress
 permission, the assignment author for an attached available file, or the named
