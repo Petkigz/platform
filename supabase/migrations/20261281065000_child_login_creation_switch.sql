@@ -1,11 +1,11 @@
 -- Restore the guardian creation feature behind its existing dashboard switch.
--- Explicitly turn the flag off for deployment; linked accounts are unaffected.
--- The owner may enable it after setting up and testing the new path. It requires a current verified guardian and a service-marked auth identity;
+-- Preserve the existing flag value; already-enabled installations resume creation.
+-- Test and configure the new path before deploying it. It requires a current verified guardian and a service-marked auth identity;
 -- the old direct reservation and attachment grants remain revoked.
 set app.bypassing_code_flag = 'on';
 update public.platform_settings
-   set value_text = 'false', gate_type = 'admin_setup',
-       preconditions = 'Guardian creation uses a verified active guardian, a durable reservation and a service-only marked identity completion. The deployed server needs its Supabase service role key. Test creation, retry and recovery in a non-production Supabase project before enabling. A pending attempt may need owner review; the guardian-consent dashboard lists pending attempts but does not resolve them. Detaching a learner does not delete the auth identity or revoke existing sessions. Password reset and provider identity removal are not yet implemented. The migration explicitly switches the flag off; existing linked accounts are unaffected.'
+   set gate_type = 'admin_setup',
+       preconditions = 'Guardian creation uses a verified active guardian, a durable reservation and a service-only marked identity completion. The deployed server needs its Supabase service role key. Test creation, retry and recovery in a non-production Supabase project before enabling. A pending attempt may need owner review; the guardian-consent dashboard lists pending attempts but does not resolve them. Detaching a learner does not delete the auth identity or revoke existing sessions. Password reset and provider identity removal are not yet implemented. The migration preserves the existing flag value; if it was already on, creation resumes when the new code and migrations are deployed.'
  where key = 'family.child_login';
 reset app.bypassing_code_flag;
 

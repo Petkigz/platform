@@ -1049,11 +1049,11 @@ assignments or cohorts.
 
 Migration `20261281065000_child_login_creation_switch.sql` supersedes the
 creation pause introduced in 600. It removes neither guardian verification nor
-the revoked legacy reservation/attachment grants. It explicitly switches
-`family.child_login` **off**, even if it was previously on; existing linked
-accounts are unaffected. After deploying all migrations and configuring the
-server-only Supabase service role key, test creation and recovery in a
-non-production project before enabling the flag from the admin dashboard. Local
+the revoked legacy reservation/attachment grants. It preserves the existing `family.child_login` value; if already on, creation
+will resume when the new code and migrations are deployed. Existing linked
+accounts are unaffected. Before deploying to production, configure the server-only
+Supabase service role key and test creation and recovery in a non-production
+project. The admin dashboard controls the flag. Local
 tests use a simulated Auth provider. Pending attempts may require owner review;
 the visible queue does not reconcile them. Detaching a child learner does not
 remove the provider identity or revoke sessions, and password reset is not yet

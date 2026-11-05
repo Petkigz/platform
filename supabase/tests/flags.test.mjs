@@ -105,15 +105,17 @@ export async function run(ctx) {
     });
   });
 
-  await test('the restored creation migration switches off any previously enabled value', async () => {
+  await test('the restored creation migration preserves both enabled and disabled values', async () => {
     const migration = readFileSync('supabase/migrations/20261281065000_child_login_creation_switch.sql', 'utf8');
-    await q('begin');
-    try {
-      await q("update public.platform_settings set value_text='true' where key='family.child_login'");
-      await ctx.exec(migration);
-      const row = (await q("select value_text,gate_type from public.platform_settings where key='family.child_login'")).rows[0];
-      assert(row.value_text === 'false' && row.gate_type === 'admin_setup', 'the old enabled value was silently carried forward');
-    } finally { await q('rollback'); }
+    for (const value of ['true', 'false']) {
+      await q('begin');
+      try {
+        await q("update public.platform_settings set value_text=$1 where key='family.child_login'", [value]);
+        await ctx.exec(migration);
+        const row = (await q("select value_text,gate_type from public.platform_settings where key='family.child_login'")).rows[0];
+        assert(row.value_text === value && row.gate_type === 'admin_setup', `migration changed ${value} or the gate`);
+      } finally { await q('rollback'); }
+    }
   });
 
   await test('child-login containment preserves an enabled flag but removes the application attachment grant', async () => {

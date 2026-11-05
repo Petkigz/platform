@@ -659,10 +659,11 @@ attempt, a service-only completion tied to auth app metadata, retry recovery,
 verified-guardian detachment and a private pending-attempt readout.
 
 Migration 650 restores creation through the rebuilt route and changes the flag
-to ADMIN + SETUP. It **sets the flag off**, including on an existing deployment;
-existing linked accounts are unaffected. After deployment, configure the
-server-only Supabase service role key and test the full path in a non-production
-Supabase project before the owner enables the switch. Local cross-layer tests use
+to ADMIN + SETUP. It preserves the existing flag value, so creation resumes
+when the new code and migrations are deployed if the flag was already on;
+existing linked accounts are unaffected. Before production deployment, configure
+the server-only Supabase service role key and test the full path in a
+non-production Supabase project. Local cross-layer tests use
 a simulated Auth provider, not Supabase's real API or deployed concurrency.
 
 Pending attempts may need individual owner review; the guardian-consent page
