@@ -1,0 +1,25 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.6.5/schema.json",
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"preset": "none",
+			"correctness": {
+				"noConstantCondition": "error",
+				"noUnreachable": "error",
+				"noUnsafeFinally": "error",
+				"noUnsafeOptionalChaining": "error",
+				"useIsNan": "error"
+			},
+			"suspicious": {
+				"noDuplicateCase": "error",
+				"noDuplicateClassMembers": "error",
+				"noDuplicateElseIf": "error",
+				"noDuplicateJsxProps": "error",
+				"noDuplicateObjectKeys": "error",
+				"noDuplicateParameters": "error",
+				"noUnsafeNegation": "error"
+			}
+		}
+	}
+}

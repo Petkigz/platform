@@ -615,3 +615,13 @@ for both appointments and both operations using the actual wrappers in a minimal
 schema with stub closure and merge bodies; repeat against the deployed schema.
 Existing installations with a closed/suspended named owner need operator
 review. Deploy migration 580.
+
+**2026-11-05 code audit:** The old `next lint` command failed under Next 16. It
+was replaced with a focused Biome lint gate, included in CI and `npm test`. It
+checks the specific duplicate and correctness hazards listed in `web/biome.json`,
+not the full recommended rule set. A one-time recommended-rules run reported 110
+errors and additional warnings across the web source and tests; these need
+individual review before enabling that broader ruleset. No exact duplicate source
+files were found in the scanned web, script and database-test code; that is not a
+semantic duplicate-code audit. Dependency audit reported no known vulnerabilities
+on the checked lockfile, not a guarantee that dependencies are safe.

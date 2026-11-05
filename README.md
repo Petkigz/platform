@@ -45,11 +45,19 @@ administer it yet. That CI is
 ### Running the tests
 
 ```bash
-npm install
-npm run test:db
+npm ci
+npm test
+npm run typecheck
+npm run build
 ```
 
-This runs the real migration files against a real PostgreSQL engine
+`npm test` includes the repository checks, a focused Biome lint gate, the
+database suite and the web unit suite. The lint gate checks the explicitly listed
+correctness and duplicate-code hazards in `web/biome.json`; it is not a complete
+lint, accessibility or security audit. The broader Biome recommended rules have
+not yet been adopted. `npm run lint` runs just this focused gate.
+
+The database suite runs the real migration files against a real PostgreSQL engine
 ([PGlite](https://pglite.dev) — Postgres compiled to WASM), so constraints,
 triggers and row level security are actually executed rather than merely parsed.
 

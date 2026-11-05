@@ -47,13 +47,16 @@ jobs:
           cache: npm
       - run: npm ci
 
-      # 86 migrations applied to an in-memory database, then every suite in
-      # supabase/tests/run.mjs against it.
+      # The runner applies the current migrations to an in-memory database,
+      # then runs every registered suite against it.
       - name: Database suite
         run: npm run test:db
 
       - name: Web unit suite
         run: npm run test:web
+
+      - name: Focused code lint
+        run: npm run lint
 
       - name: Types
         run: npm run typecheck
