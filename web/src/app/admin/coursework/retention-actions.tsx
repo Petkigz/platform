@@ -34,12 +34,18 @@ export function RetentionActionForm({
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState('');
+  const [attested, setAttested] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [tone, setTone] = useState<'info' | 'error'>('info');
 
   const needsReason = action !== 'purge';
 
   async function submit() {
+    if (action === 'purge' && !attested) {
+      setTone('error');
+      setMessage('Confirm that you independently deleted the object before recording your statement.');
+      return;
+    }
     if (needsReason && reason.trim().length < 3) {
       setTone('error');
       setMessage(
@@ -62,6 +68,7 @@ export function RetentionActionForm({
       setTone('info');
       setMessage(actionConfirmation(action, name));
       setReason('');
+      setAttested(false);
       setOpen(false);
       startTransition(() => router.refresh());
     } finally {
@@ -97,10 +104,16 @@ export function RetentionActionForm({
           />
         </>
       )}
+      {action === 'purge' && !message && (
+        <label>
+          <input type="checkbox" checked={attested} onChange={(e) => setAttested(e.target.checked)} />
+          I independently deleted this object from storage. The platform cannot verify this.
+        </label>
+      )}
       {!message && (
         <div className="row" style={{ marginTop: '0.5rem' }}>
           <button type="button" className="btn" onClick={submit}
-                  disabled={busy || pending}>
+                  disabled={busy || pending || (action === 'purge' && !attested)}>
             {busy ? 'Working…' : label}
           </button>
           <button type="button" className="btn ghost" onClick={() => setOpen(false)}
@@ -114,6 +127,11 @@ export function RetentionActionForm({
            style={{ marginTop: '0.5rem' }}>
           {message}
         </p>
+      )}
+      {message && tone === 'error' && (
+        <button type="button" className="btn ghost" onClick={() => setMessage(null)}>
+          Try again
+        </button>
       )}
     </div>
   );

@@ -93,6 +93,16 @@ assignment. The stricter rule applies to all ages. Other export, retention and
 administrative paths still need review. Deploy the migration; keep assignments
 and cohorts off.
 
+**Retention privacy:** hold details, storage keys, retention plans, hold and
+release, and recording storage deletion are limited to the configured active
+safeguarding owner. A held file cannot be recorded as purged. Storage deletion is
+a human statement, not checked by the database; the form asks for an explicit
+attestation. The regular platform-admin retention job still runs separately.
+A hold and scheduled cleanup can race because cleanup does not yet lock and
+recheck the hold atomically; other deletion paths and historic attestations also
+need review. Do not rely on a hold as a complete preservation guarantee. Deploy
+the migration and keep assignments and cohorts off.
+
 **Submission read boundary:** direct assignment submission text, feedback,
 revision snapshots and attachment references, plus the file-list RPC, now use
 the learner, current verified guardian with progress permission, assignment author

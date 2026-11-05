@@ -1,15 +1,6 @@
-// Who is holding a child's file, and why — and the bucket nobody can reach from here.
-//
-// The clock shipped with a writer and no register. The permission split made the
-// gap visible: holds are governance work or the owner's, the plan is the owner's
-// alone, so a governance admin could place a hold and never read it back. Two
-// people could hold two files and neither could see the other's, and a hold nobody
-// can review is a hold nobody can release — which turns "not yet" into "for ever".
-//
-// These tests are about the two things a register has to get right: the list is
-// readable by the people who can act on it, and it tells the truth about what it
-// is holding. A hold on a file that has already gone keeps nothing, and a
-// deletion recorded before it happened is the failure the queue exists to prevent.
+// The named safeguarding owner manages private hold and storage registers.
+// A tombstone makes a file unreadable, but does not prove its stored bytes are
+// gone. A held object must not be recorded as deleted from storage.
 
 export async function run(ctx) {
   const {
@@ -19,6 +10,9 @@ export async function run(ctx) {
   } = ctx;
 
   const owner = await bootstrapAdmin('holds-owner@example.com');
+  const priorOwner = (await q('select owner_user_id, configured_at from public.safeguarding_owner where singleton')).rows[0];
+  await q('delete from public.safeguarding_owner where singleton');
+  const otherAdmin = await bootstrapAdmin('holds-other-admin@example.com');
   const governance = await newUser('holds-governance@example.com');
   await newProfile(governance, 'Hafsa Nakato');
   await committed(() => ctx.grantRole(governance, 'governance_admin', owner));
@@ -50,7 +44,7 @@ export async function run(ctx) {
   const call = async (actor, sql, params = []) =>
     (await asActor(actor, () => q(sql, params))).rows[0];
 
-  const holdList = async (actor = governance) =>
+  const holdList = async (actor = owner) =>
     (await asActor(actor, () => q('select * from public.coursework_holds()'))).rows;
 
   const transition = (versionId, status, actor) =>
@@ -117,6 +111,36 @@ export async function run(ctx) {
   console.log('\nAct I — who may read the register');
   // -------------------------------------------------------------------------
 
+  await test('retention details fail closed before an owner is configured', async () => {
+    await rejects(() => holdList(owner), /coursework:not_allowed/);
+    await rejects(() => call(owner, 'select public.hold_coursework_file($1,$2)', [asset, 'A concern.']), /coursework:not_allowed/);
+    await rejects(() => call(owner, 'select * from public.coursework_bytes_awaiting()'), /coursework:not_allowed/);
+  });
+  await q('select public.bootstrap_safeguarding_owner($1)', [owner]);
+
+  await test('unrelated staff cannot read or change private retention records', async () => {
+    for (const actor of [governance, otherAdmin, agent, teacher]) {
+      for (const [sql, args] of [
+        ['select * from public.coursework_holds()', []],
+        ['select public.coursework_hold_count()', []],
+        ['select public.coursework_retention_plan()', []],
+        ['select * from public.coursework_bytes_awaiting()', []],
+        ['select public.hold_coursework_file($1,$2)', [asset, 'A concern.']],
+        ['select public.release_coursework_hold($1,$2)', [asset, 'A reason.']],
+        ['select public.record_coursework_purge($1)', [asset]],
+      ]) await rejects(() => call(actor, sql, args), /coursework:not_allowed/);
+    }
+    for (const [sql, args] of [
+      ['select * from public.coursework_holds_internal(50)', []],
+      ['select public.coursework_hold_count_internal()', []],
+      ['select public.coursework_retention_plan_internal(now())', []],
+      ['select * from public.coursework_bytes_awaiting_internal(50)', []],
+      ['select public.hold_coursework_file_internal($1,$2)', [asset, 'A concern.']],
+      ['select public.release_coursework_hold_internal($1,$2)', [asset, 'A reason.']],
+      ['select public.record_coursework_purge_internal($1)', [asset]],
+    ]) await rejects(() => call(otherAdmin, sql, args), /permission denied/);
+  });
+
   await test('a support agent cannot read who is holding a child’s file', async () => {
     await rejects(
       () => asActor(agent, () => q('select * from public.coursework_holds()')),
@@ -132,10 +156,10 @@ export async function run(ctx) {
   });
 
   await test('the register is empty until somebody holds a file', async () => {
-    const rows = await holdList(governance);
+    const rows = await holdList(owner);
     eq(rows.length, 0, 'holds on a fresh clock');
 
-    const count = (await call(governance, 'select public.coursework_hold_count() as c')).c;
+    const count = (await call(owner, 'select public.coursework_hold_count() as c')).c;
     eq(count.held, 0, 'the held count');
     eq(count.holdingNothing, 0, 'holds on files that are gone');
   });
@@ -145,27 +169,27 @@ export async function run(ctx) {
   // -------------------------------------------------------------------------
 
   await test('a hold appears with its reason, its author and its date', async () => {
-    await call(governance, 'select public.hold_coursework_file($1,$2)',
+    await call(owner, 'select public.hold_coursework_file($1,$2)',
       [asset, 'A safeguarding concern is open about this photograph.']);
 
-    const rows = await holdList(governance);
+    const rows = await holdList(owner);
     eq(rows.length, 1, 'holds after one was placed');
     eq(rows[0].asset_id, asset, 'the file held');
     eq(rows[0].reason, 'A safeguarding concern is open about this photograph.',
       'the reason the next reader needs');
-    eq(rows[0].opened_by_name, 'Hafsa Nakato', 'who placed the hold');
+    eq(rows[0].opened_by, owner, 'who placed the hold');
     eq(rows[0].still_readable, true, 'the file is still there');
     assert(rows[0].due_on !== null,
       'the hold lost the date it is holding the file past');
 
-    const count = (await call(governance, 'select public.coursework_hold_count() as c')).c;
+    const count = (await call(owner, 'select public.coursework_hold_count() as c')).c;
     eq(count.held, 1, 'the held count');
     eq(count.holdingNothing, 0, 'a hold on a file that is still there');
   });
 
-  await test('the owner reads the same register, and cannot double-hold a file', async () => {
+  await test('the owner reads the register and cannot double-hold a file', async () => {
     const rows = await holdList(owner);
-    eq(rows.length, 1, 'the owner sees the governance hold');
+    eq(rows.length, 1, 'the owner sees the hold');
 
     await rejects(
       () => asActor(owner, () => q('select public.hold_coursework_file($1,$2)',
@@ -175,7 +199,7 @@ export async function run(ctx) {
   });
 
   await test('releasing puts the file back on the clock and empties the register', async () => {
-    await call(governance, 'select public.release_coursework_hold($1,$2)',
+    await call(owner, 'select public.release_coursework_hold($1,$2)',
       [asset, 'The concern is closed and the record can go.']);
 
     eq((await holdList()).length, 0, 'holds after release');
@@ -187,16 +211,16 @@ export async function run(ctx) {
     assert(retention.due_on !== null,
       'a released file has no date, so the clock would never reach it');
 
-    const count = (await call(governance, 'select public.coursework_hold_count() as c')).c;
+    const count = (await call(owner, 'select public.coursework_hold_count() as c')).c;
     eq(count.held, 0, 'the held count after release');
   });
 
   // -------------------------------------------------------------------------
-  console.log('\nAct III — a hold on a file that has gone keeps nothing');
+  console.log('\nAct III — a held file may be unreadable while bytes remain');
   // -------------------------------------------------------------------------
 
-  await test('a hold outliving its file is counted, and says so', async () => {
-    await call(governance, 'select public.hold_coursework_file($1,$2)',
+  await test('an unreadable held file is counted, and its deletion cannot be recorded', async () => {
+    await call(owner, 'select public.hold_coursework_file($1,$2)',
       [asset, 'The concern is still open.']);
 
     // The submission is erased the way the clock does it: the row goes, the
@@ -205,17 +229,20 @@ export async function run(ctx) {
       await q('delete from public.assignment_submissions where id = $1', [submission]);
     });
 
-    const rows = await holdList(governance);
+    const rows = await holdList(owner);
     eq(rows.length, 1, 'the hold outlives the submission');
     eq(rows[0].still_readable, false,
       'a hold on a deleted file reports the file as readable');
 
-    const count = (await call(governance, 'select public.coursework_hold_count() as c')).c;
+    const count = (await call(owner, 'select public.coursework_hold_count() as c')).c;
     eq(count.held, 1, 'the held count');
-    eq(count.holdingNothing, 1, 'holds that are holding nothing');
+    eq(count.holdingNothing, 1, 'holds whose files are no longer readable');
+    await rejects(() => call(owner, 'select public.record_coursework_purge($1)', [asset]), /held file/i);
+    const pendingBytes = (await q('select purged_at from public.media_assets where id=$1', [asset])).rows[0].purged_at;
+    assert(pendingBytes === null, 'a held file was marked as purged');
 
-    // Releasing still works, and is the only way to stop the register lying.
-    await call(governance, 'select public.release_coursework_hold($1,$2)',
+    // Release remains possible after review; it does not itself delete bytes.
+    await call(owner, 'select public.release_coursework_hold($1,$2)',
       [asset, 'Releasing a hold on a file that no longer exists.']);
     eq((await holdList()).length, 0, 'holds after releasing a dead one');
   });
@@ -272,4 +299,7 @@ export async function run(ctx) {
     assert(stored.purged_at !== null, 'the deletion left no date');
     eq(stored.purged_by, owner, 'the deletion does not name who recorded it');
   });
+  await q('delete from public.safeguarding_owner where singleton');
+  if (priorOwner) await q('insert into public.safeguarding_owner (singleton, owner_user_id, configured_at) values (true,$1,$2)', [priorOwner.owner_user_id, priorOwner.configured_at]);
+
 }

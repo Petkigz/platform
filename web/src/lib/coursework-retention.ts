@@ -97,25 +97,26 @@ export function parseStorageQueue(data: unknown): StorageRow[] {
 
 /** The sentence above the holds list. */
 export const HOLDS_NOTE =
-  'A hold stops the deletion clock and needs a written reason, because the only '
-  + 'reason to keep a child’s file past its date is one somebody can read later. '
-  + 'Releasing one puts a fresh thirty days on the clock rather than deleting at once.';
+  'A hold needs a written reason and is intended to pause scheduled deletion. '
+  + 'A concurrent cleanup can race the hold, so do not rely on it as a preservation guarantee. '
+  + 'After release, a readable file returns to its original schedule and may be due immediately. '
+  + 'For a tombstoned file, release schedules its stored bytes at least thirty days later.';
 
-/** The sentence above the storage queue. */
+/** The database cannot verify a manual storage deletion. */
 export const PURGE_NOTE =
-  'These files are already unwatchable — the row is tombstoned and nobody, staff '
-  + 'included, can open one. What is left is the object in the bucket, which this '
-  + 'database cannot delete: the key is printed so a person can. Recording a deletion '
-  + 'that has not happened is refused, and that refusal is the point.';
+  'These files are tombstoned and cannot be opened through the platform. Their '
+  + 'objects may still be in storage. Delete an object independently before recording '
+  + 'your statement here. The database cannot delete or verify the object; it refuses '
+  + 'a statement for a readable or held file.';
 
 /** One line per held file, in the register. */
 export function holdSentence(row: HoldRow): string {
   if (!row.stillReadable) {
-    return 'The file it names has already gone, so this hold is holding nothing. Release it and the register stops claiming otherwise.';
+    return 'The file is no longer readable. The hold may still protect its stored bytes; check the case before releasing it.';
   }
   return row.dueOn
-    ? `Readable, and off the clock until this is released. It was due on ${row.dueOn}.`
-    : 'Readable. It had not reached its date when the hold was placed.';
+    ? `Readable with a hold recorded. It was due on ${row.dueOn}; a concurrent cleanup can race the hold.`
+    : 'Readable with a hold recorded. It had not reached its date when the hold was placed.';
 }
 
 export function holdMeta(row: HoldRow): string {
@@ -130,12 +131,12 @@ export function storageSentence(row: StorageRow): string {
 /** What the form is doing, said before the round trip rather than after it. */
 export function actionConfirmation(action: RetentionAction, name: string): string {
   if (action === 'hold') {
-    return `${name} is held from deletion. The clock stops until somebody releases it.`;
+    return `A hold was recorded for ${name}. A concurrent cleanup can race it; do not rely on it as a preservation guarantee.`;
   }
   if (action === 'release') {
-    return `${name} is back on the clock: thirty days from today.`;
+    return `The hold on ${name} was released. Check its retention schedule; it may already be due.`;
   }
-  return `Recorded that the object for ${name} was deleted from storage.`;
+  return `Your statement that ${name} was deleted from storage was recorded. The platform did not verify the deletion.`;
 }
 
 export function describeRetentionError(message: string): string {
@@ -145,11 +146,17 @@ export function describeRetentionError(message: string): string {
   if (/written reason/.test(message)) {
     return 'A hold needs a written reason — the next person to read it is the person deciding whether to release it.';
   }
+  if (/held file/.test(message)) {
+    return 'A held file cannot be recorded as deleted. Review the hold first.';
+  }
+  if (/already recorded/.test(message)) {
+    return 'A deletion statement was already recorded for this file.';
+  }
   if (/still readable/.test(message)) {
     return 'Nothing has been deleted for this file yet, so there is no deletion to record.';
   }
   if (/not_allowed|insufficient/i.test(message)) {
-    return 'Holding and releasing a file belongs to governance staff and the owner, and deleting the object to the owner.';
+    return 'Only the configured safeguarding owner can manage these records.';
   }
   if (/no_data_found|does not exist/.test(message)) {
     return 'That file is no longer in the register. Reload the page.';

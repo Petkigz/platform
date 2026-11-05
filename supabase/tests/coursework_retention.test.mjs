@@ -27,6 +27,9 @@ export async function run(ctx) {
   } = ctx;
 
   const owner = await bootstrapAdmin('coursework-retention-owner@example.com');
+  const priorOwner = (await q('select owner_user_id, configured_at from public.safeguarding_owner where singleton')).rows[0];
+  await q('delete from public.safeguarding_owner where singleton');
+  await q('select public.bootstrap_safeguarding_owner($1)', [owner]);
   const governance = await newUser('coursework-retention-governance@example.com');
   await newProfile(governance, 'Hafsa Nakato');
   await committed(() => ctx.grantRole(governance, 'governance_admin', owner));
@@ -314,18 +317,18 @@ export async function run(ctx) {
     assert(!JSON.stringify(audit.detail).includes('Page one'), 'the audit entry carried a file name');
   });
 
-  await test('a hold stops the press, needs a reason at both ends, and only staff may set one', async () => {
+  await test('a hold stops the press, needs a reason at both ends, and only the owner may set one', async () => {
     const row = await handedIn();
     await backdate(row, '2 years');
 
     await refuses(/written reason/, () =>
-      call(governance, 'select public.hold_coursework_file($1,$2)', [row.asset, 'x']));
-    await refuses(/only governance staff or the owner/, () =>
+      call(owner, 'select public.hold_coursework_file($1,$2)', [row.asset, 'x']));
+    await refuses(/coursework:not_allowed/, () =>
       call(agent, 'select public.hold_coursework_file($1,$2)', [row.asset, 'a safeguarding question']));
-    await refuses(/only governance staff or the owner/, () =>
+    await refuses(/coursework:not_allowed/, () =>
       call(teacher, 'select public.hold_coursework_file($1,$2)', [row.asset, 'a safeguarding question']));
 
-    await call(governance, 'select public.hold_coursework_file($1,$2)',
+    await call(owner, 'select public.hold_coursework_file($1,$2)',
       [row.asset, 'A safeguarding case names this file']);
 
     const run = await purge();
@@ -334,8 +337,8 @@ export async function run(ctx) {
     assert(asset.deleted_at === null, 'the press deleted a file that was on hold');
 
     await refuses(/written reason/, () =>
-      call(governance, 'select public.release_coursework_hold($1,$2)', [row.asset, 'ok']));
-    await call(governance, 'select public.release_coursework_hold($1,$2)',
+      call(owner, 'select public.release_coursework_hold($1,$2)', [row.asset, 'ok']));
+    await call(owner, 'select public.release_coursework_hold($1,$2)',
       [row.asset, 'The case was closed with no concern']);
 
     const again = await purge();
@@ -345,7 +348,7 @@ export async function run(ctx) {
   await test('only the owner runs the press', async () => {
     await refuses(/retention:not_allowed/, () => call(governance, 'select public.purge_coursework_files()'));
     await refuses(/retention:not_allowed/, () => call(agent, 'select public.purge_coursework_files()'));
-    await refuses(/retention:not_allowed/, () => call(teacher, 'select public.coursework_retention_plan()'));
+    await refuses(/coursework:not_allowed/, () => call(teacher, 'select public.coursework_retention_plan()'));
   });
 
   // -------------------------------------------------------------------------
@@ -364,7 +367,7 @@ export async function run(ctx) {
     assert(listed.master_bucket && listed.master_key, 'the queue gives no key to delete');
   });
 
-  await test('recording the deletion refuses before it happened, and counts down after', async () => {
+  await test('recording a deletion refuses while readable, then records an attestation', async () => {
     const row = await handedIn();
     await refuses(/still readable/, () =>
       call(owner, 'select public.record_coursework_purge($1)', [row.asset]));
@@ -396,4 +399,7 @@ export async function run(ctx) {
     const asset = await scalar('select deleted_at from public.media_assets where id = $1', [row.asset]);
     assert(asset.deleted_at, 'the combined run did not delete a due file');
   });
+  await q('delete from public.safeguarding_owner where singleton');
+  if (priorOwner) await q('insert into public.safeguarding_owner (singleton, owner_user_id, configured_at) values (true,$1,$2)', [priorOwner.owner_user_id, priorOwner.configured_at]);
+
 }

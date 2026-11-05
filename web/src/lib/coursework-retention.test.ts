@@ -50,8 +50,8 @@ test('a hold on a file that has gone says so, and does not read as care', () => 
   assert.match(holdSentence(parseHolds([hold])[0]!), /due on 2027-08-01/);
 
   const dead = parseHolds([{ ...hold, still_readable: false }])[0]!;
-  assert.match(holdSentence(dead), /holding nothing/);
-  assert.match(holdSentence(dead), /Release it/);
+  assert.match(holdSentence(dead), /stored bytes/);
+  assert.match(holdSentence(dead), /before releasing/);
 
   const early = parseHolds([{ ...hold, due_on: null }])[0]!;
   assert.match(holdSentence(early), /had not reached its date/);
@@ -71,8 +71,8 @@ test('the storage sentence never implies the bytes are gone', () => {
   assert.match(storageSentence(row!), /bytes due 2026-11-04/);
   assert.equal(row?.key, 'child/2026/page-one.jpg');
 
-  assert.match(PURGE_NOTE, /cannot delete/);
-  assert.match(PURGE_NOTE, /refused/);
+  assert.match(PURGE_NOTE, /cannot delete or verify/);
+  assert.match(PURGE_NOTE, /refuses/);
   assert.match(HOLDS_NOTE, /written reason/);
   assert.match(HOLDS_NOTE, /thirty days/);
 });
@@ -82,15 +82,16 @@ test('each refusal is a sentence, not an error code', () => {
   assert.match(describeRetentionError('holding a file back needs a written reason'), /written reason/);
   assert.match(describeRetentionError('that file is still readable; nothing has been deleted to record'),
     /no deletion to record/);
-  assert.match(describeRetentionError('coursework:not_allowed'), /governance staff/);
-  assert.match(describeRetentionError('coursework:not_allowed'), /the owner/);
+  assert.match(describeRetentionError('coursework:not_allowed'), /safeguarding owner/);
+  assert.match(describeRetentionError('coursework:not_allowed'), /Only/);
   assert.match(describeRetentionError('boom'), /nothing was changed/);
 });
 
 test('the confirmation says what happened to the clock, not what was clicked', () => {
-  assert.match(actionConfirmation('hold', 'Page one.jpg'), /clock stops/);
-  assert.match(actionConfirmation('release', 'Page one.jpg'), /thirty days/);
-  assert.match(actionConfirmation('purge', 'Page one.jpg'), /deleted from storage/);
+  assert.match(actionConfirmation('hold', 'Page one.jpg'), /concurrent cleanup can race/);
+  assert.match(actionConfirmation('release', 'Page one.jpg'), /may already be due/);
+  assert.match(actionConfirmation('purge', 'Page one.jpg'), /did not verify/);
+  assert.match(describeRetentionError('a held file cannot be recorded'), /held file/);
 });
 
 test('the page renders the register and the bucket, and asks the database first', () => {
@@ -102,4 +103,7 @@ test('the page renders the register and the bucket, and asks the database first'
   assert.ok(page.includes('RetentionActionForm'), 'the register has no actions on it');
   assert.ok(page.includes('canSeeHolds'), 'the page does not distinguish a refusal from an empty list');
   assert.ok(page.includes('canSeeStorage'), 'the storage queue is rendered without asking whether it may be');
+  assert.ok(!page.includes('it is a record that somebody saw the file'));
+  const form = readFileSync(new URL('../app/admin/coursework/retention-actions.tsx', import.meta.url), 'utf8');
+  assert.ok(form.includes('!attested') && form.includes('cannot verify this'), 'storage statement needs an explicit attestation');
 });

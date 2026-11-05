@@ -49,9 +49,7 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
     await Promise.all([
       supabase.rpc('coursework_review_summary'),
       supabase.rpc('coursework_review_queue', { p_limit: 200 }),
-      // Governance staff or the owner. A support agent reaches this page and the
-      // database refuses the list; the page then says whose work it is instead of
-      // rendering an empty register that reads as "nobody has held anything".
+      // The configured safeguarding owner alone can read the hold register.
       supabase.rpc('coursework_holds', { p_limit: 100 }),
       supabase.rpc('coursework_hold_count'),
       // The owner alone: this plan names what is about to be deleted, and the
@@ -92,12 +90,11 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
   const unreviewed = queue.filter((row) => row.review === 'none');
   const reviewed = queue.filter((row) => row.review !== 'none');
 
-  const canSeeHolds = !holdsResult.error;
+  const canSeeHolds = !holdsResult.error && !holdCountResult.error && Array.isArray(holdsResult.data);
   const holds = canSeeHolds ? parseHolds(holdsResult.data) : [];
   const holdCount = canSeeHolds ? parseHoldCount(holdCountResult.data) : null;
-  const canSeeStorage = !planResult.error && !storageResult.error;
+  const canSeeStorage = !planResult.error && !storageResult.error && Array.isArray(storageResult.data);
   const storage = canSeeStorage ? parseStorageQueue(storageResult.data) : [];
-  const plan = canSeeStorage ? (planResult.data as Record<string, unknown>) : null;
 
   return (
     <div className="page wide">
@@ -273,8 +270,8 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
         </div>
         {!canSeeHolds ? (
           <p className="muted">
-            Holding a file back belongs to governance staff and the owner, so this
-            register is theirs. Everything above is still yours to review.
+            The hold register is available only to the configured safeguarding owner,
+            or could not be loaded. Do not assume it is empty.
           </p>
         ) : (
           <>
@@ -282,8 +279,8 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
             {holdCount && holdCount.holdingNothing > 0 && (
               <div className="notice warn">
                 {holdCount.holdingNothing} of these {holdCount.held === 1 ? 'holds names a file' : 'holds name files'} that
-                already left the register. A hold on a file that is gone keeps nothing;
-                releasing it is how the register stops saying otherwise.
+                no longer readable. The hold may still protect stored bytes; review the
+                case before releasing it.
               </div>
             )}
             {holds.length === 0 ? (
@@ -317,16 +314,19 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
         )}
       </section>
 
+      {!canSeeStorage && (
+        <p className="notice warn">The storage register is available only to the configured safeguarding owner, or could not be loaded. Do not assume it is empty.</p>
+      )}
       {canSeeStorage && (
         <section className="card" style={{ marginBlockStart: '1rem' }}>
           <div className="outline-h">
             <h2>Handed-in files waiting in storage</h2>
           </div>
           <p className="muted">{PURGE_NOTE}</p>
-          {plan && Number(plan.awaitingStorage ?? 0) === 0 ? (
+          {storage.length === 0 ? (
             <p className="muted">
-              Nothing is waiting. Every file this platform has tombstoned has had its
-              deletion from storage recorded.
+              No objects were returned. Any recorded deletions are statements by the
+              owner, not independent proof that storage bytes are gone.
             </p>
           ) : (
             <ul className="lessons">
@@ -344,7 +344,7 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
                   <RetentionActionForm
                     assetId={row.assetId}
                     action="purge"
-                    label="Record the deletion"
+                    label="Record my deletion statement"
                     name={row.displayName}
                   />
                 </li>
@@ -356,9 +356,8 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
 
       <p className="muted" style={{ fontSize: '0.9rem', marginBlockStart: '1.5rem' }}>
         A file is deleted a year after the class it belongs to ends, or thirty days
-        after a learner&rsquo;s record is erased where that is sooner. The review stays:
-        it is a record that somebody saw the file, and it is worth more than the
-        photograph once the photograph is gone.
+        after a learner&rsquo;s record is erased where that is sooner. A review can
+        remain after the file, but it is a statement, not proof of a view.
       </p>
     </div>
   );
