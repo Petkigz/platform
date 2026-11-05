@@ -580,3 +580,11 @@ form that cannot complete.
 
 Part 1 is approved and awaits implementation. Part 2 still needs the owner’s
 product choices.
+
+
+**2026-11-05 retention decision:** When a guardian closes their account, the owner
+chose the 30-day erasure exception for the child's coursework, unless a safeguarding
+hold prevents it. Ordinary coursework still follows the one-year rule. The software
+and policy wording must be reconciled with that decision; deletion of stored bytes
+is a separate step that is not yet automated or verified. A separate child login
+must not be silently closed with a guardian's account.

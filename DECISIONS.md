@@ -7852,3 +7852,15 @@ After being asked each question, the owner revised the earlier blanket approval:
   provider without paid usage. None has been selected or shown to be suitable.
 
 These are decisions, not a claim that the work is implemented or enabled.
+
+
+## Coursework when a child account is erased — **DECIDED 2026-11-05**
+
+When account closure and the ordinary one-year coursework clock conflict, the
+owner chose **30-day erasure**: delete the child's coursework with their record
+30 days after closure, unless a safeguarding hold prevents it. The one-year rule
+continues to apply ordinarily, not as a reason to delay this erasure. A hold needs
+individual review and may defer the affected record. A database tombstone or
+storage-deletion statement is not proof that the object has been deleted; storage
+integration, actual removal and legal review remain necessary. A separate linked
+child login must not be silently closed with a guardian's account.
