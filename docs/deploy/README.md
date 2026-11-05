@@ -447,7 +447,7 @@ first; the app will not start without them.
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | nothing loads: no catalogue, no sign-in |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | the browser cannot reach the database; every screen is empty or refuses |
-| `SUPABASE_SERVICE_ROLE_KEY` | the payment webhook only — it bypasses every policy in the schema, so it is server-only and never prefixed `NEXT_PUBLIC_` |
+| `SUPABASE_SERVICE_ROLE_KEY` | payment webhook and trusted child-login creation — it bypasses every policy in the schema, so it is server-only and never prefixed `NEXT_PUBLIC_` |
 | `NEXT_PUBLIC_SITE_URL` | certificates print a path instead of a full verification address |
 
 Then, in the order you get to them:

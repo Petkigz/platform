@@ -2,28 +2,12 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { getServiceRoleKey, getSupabaseEnv } from '@/lib/env';
 
 /**
- * A client that bypasses row level security.
- *
- * Two callers, both of which are creating something no user session can create:
- *
- *   1. The payment webhook, which cannot run as a user at all. See
- *      `getServiceRoleKey()` for why.
- *   2. `app/api/family/child-login`, which creates a child's auth account. A
- *      child has no email address and cannot complete Supabase's own sign-up, so
- *      the account has to be made server-side; the guardian's permission to make
- *      it is decided *first*, in the database (`reserve_child_login()`), which is
- *      what "only a guardian can create one" means. The route never reads
- *      anything with this client and deletes the account again if the link fails.
- *
- * Everything this can reach, it can reach as anyone. So the discipline is
- * narrow: this file exports one function, it is imported only from those two
- * route handlers, and it takes no cookies — there is no user identity to carry,
- * and inventing one would be a lie the rest of the code would believe.
- *
- * If you are about to import this from a page, a component, or another route,
- * stop. Use `createClient()` from `./server` instead and let RLS decide. The
- * whole point of the policy layer is that it applies to the request, and these
- * are the only two places where it must not.
+ * Server-only service-role client: it bypasses RLS and never carries a user session.
+ * The payment webhook uses it after provider verification; child-login creation
+ * uses it only after a verified guardian's durable reservation, to create or
+ * find a marked identity and complete the attempt. Ambiguous outcomes are not
+ * cleaned up by blindly deleting an account. See child-login-create.ts.
+ * Never expose this key to a browser or use it instead of a user's RLS client.
  */
 export function createAdminClient(): SupabaseClient {
   const { url } = getSupabaseEnv();

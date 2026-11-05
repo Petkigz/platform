@@ -334,6 +334,18 @@ export function runPreflight(env: Record<string, string | undefined>): Preflight
     }
   }
 
+  // This is optional for ordinary sign-in, but required by two server workflows.
+  // Do not claim that a present key is authorized or that provider tests passed.
+  if (!looks('SUPABASE_SERVICE_ROLE_KEY')) {
+    findings.push({
+      level: 'warning',
+      subsystem: 'database',
+      step: '1',
+      stepTitle: 'The database',
+      message: 'SUPABASE_SERVICE_ROLE_KEY is missing or a placeholder. Child-login creation and the payment webhook cannot use their server-side service client. Keep this key private; a configured value still needs provider testing.',
+    });
+  }
+
   // -------------------------------------------------------------------------
   // 2. The pair that is one value with two names.
   // -------------------------------------------------------------------------

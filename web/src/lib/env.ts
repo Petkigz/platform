@@ -40,10 +40,10 @@ export function isSupabaseConfigured(): boolean {
 }
 
 /**
- * The service role key, for the payment webhook and nothing else.
+ * The server-only service role key for the verified payment webhook and the
+ * trusted child-login identity workflow.
  *
- * This is the one place in the app that must bypass row level security, and it
- * is worth being precise about why. `record_payment_success()` is revoked from
+ * These operations bypass row level security; the payment case illustrates why. `record_payment_success()` is revoked from
  * `anon` and granted to `authenticated`, and `payment_provider_events` has
  * `staff_only()` on both read and write. A provider callback arrives with no
  * user session, so through the anon-key client it is `anon` and both of those
@@ -61,10 +61,7 @@ export function getServiceRoleKey(): string {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!key) {
     throw new Error(
-      'SUPABASE_SERVICE_ROLE_KEY is not set. The payment webhook needs it, ' +
-        'because record_payment_success() is not executable by anon and ' +
-        'payment_provider_events is staff-only. Do not work around this by ' +
-        'granting anon EXECUTE: the webhook must stay server-side.',
+      'SUPABASE_SERVICE_ROLE_KEY is not set. The payment webhook and trusted child-login creation need it on the server. Never expose it to a browser or grant anonymous access as a workaround.',
     );
   }
   return key;

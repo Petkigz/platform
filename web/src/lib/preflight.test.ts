@@ -296,3 +296,16 @@ test('a subsystem knows what it costs to leave dark', () => {
     assert.ok(subsystem.stepTitle.length > 0, `${subsystem.id} does not name the step's title`);
   }
 });
+
+
+test('missing or placeholder service key warns about child login without blocking ordinary sign-in', () => {
+  for (const key of ['', 'your-service-role-key']) {
+    const result = runPreflight({ ...COMPLETE, SUPABASE_SERVICE_ROLE_KEY: key });
+    const warning = result.findings.find((f) => f.message.includes('Child-login creation'));
+    assert.equal(warning?.level, 'warning');
+    assert.equal(result.blockingCount, 0);
+    assert.match(warning?.message ?? '', /payment webhook/);
+  }
+  const configured = runPreflight(COMPLETE);
+  assert.equal(configured.findings.some((f) => f.message.includes('Child-login creation')), false);
+});
