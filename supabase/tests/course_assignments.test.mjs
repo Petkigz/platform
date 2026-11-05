@@ -367,6 +367,53 @@ export async function run(ctx) {
       assert((await submissionRows(childUser)).length === 1 && (await revisionRows(teacher)).length === 1);
     });
 
+    await test('assignment writes require the learner or current guardian, and only the marker grades', async () => {
+      const family = await parentWithChild({ course, version });
+      const member = await newUser(`assignment-writer-member-${++seq}@example.com`);
+      await newProfile(member, 'Unverified household member');
+      const familyId = (await q('select family_id from public.learner_profiles where id=$1', [family.childId])).rows[0].family_id;
+      await q(`insert into public.family_memberships
+        (family_id,user_id,membership_type,status,joined_at,created_by)
+        values ($1,$2,'guardian','active',now(),$3)`, [familyId, member, family.userId]);
+      const childSubmission = await asActor(family.userId, async () =>
+        (await q(SQL_SAVE, [selfPaced, family.childId, 'Original answer.'])).rows[0].id);
+      const file = await declaredFile(family.userId, childSubmission);
+      for (const actor of [member, admin, teacher]) {
+        await refused(actor, SQL_SAVE, [selfPaced, family.childId, 'Changed by another account.'], /currently verified guardian/i);
+        await refused(actor, SQL_SUBMIT, [childSubmission], /currently verified guardian/i);
+        await refused(actor, SQL_REMOVE, [childSubmission, file], /currently verified guardian/i);
+      }
+      assert((await q('select body_text from public.assignment_submissions where id=$1', [childSubmission])).rows[0].body_text === 'Original answer.');
+      await q('select public.bootstrap_safeguarding_owner($1)', [admin]);
+      try {
+        await asActor(family.userId, () => q(SQL_SUBMIT, [childSubmission]));
+        await refused(admin, SQL_MARK, [childSubmission, 5, 'Not the assigned marker.'], /only the course author/i);
+        await refused(otherTeacher, SQL_MARK, [childSubmission, 5, 'Not the assigned marker.'], /only the course author/i);
+        await asActor(teacher, () => q(SQL_MARK, [childSubmission, 8, 'Marked by the author.']));
+        await refused(member, 'select public.reopen_assignment_submission($1)', [childSubmission], /currently verified guardian/i);
+        await refused(admin, 'select public.reopen_assignment_submission($1)', [childSubmission], /currently verified guardian/i);
+        assert((await q('select status from public.assignment_submissions where id=$1', [childSubmission])).rows[0].status === 'graded');
+        for (const [sql, args] of [
+          ['select public.save_assignment_draft_internal($1,$2,$3)', [selfPaced, family.childId, 'x']],
+          ['select public.submit_assignment_internal($1)', [childSubmission]],
+          ['select public.reopen_assignment_submission_internal($1)', [childSubmission]],
+          ['select public.remove_assignment_asset_internal($1,$2)', [childSubmission, file]],
+          ['select public.mark_assignment_submission_internal($1,$2,$3)', [childSubmission, 5, 'x']],
+        ]) await refused(admin, sql, args, /permission denied/i);
+        await q(`update public.guardian_relationships set verified_at=now()-interval '2 years',
+          consent_expires_at=now()-interval '1 year' where learner_profile_id=$1 and guardian_user_id=$2`,
+          [family.childId, family.userId]);
+        await refused(family.userId, 'select public.reopen_assignment_submission($1)', [childSubmission], /currently verified guardian/i);
+        await q(`update public.guardian_relationships set verified_at=now()-interval '1 day',
+          consent_expires_at=now()+interval '1 year' where learner_profile_id=$1 and guardian_user_id=$2`,
+          [family.childId, family.userId]);
+        const reopened = await asActor(family.userId, () => q('select public.reopen_assignment_submission($1) as revision', [childSubmission]));
+        assert(Number(reopened.rows[0].revision) === 2, 'verified guardian could not reopen the work');
+      } finally {
+        await q('delete from public.safeguarding_owner where singleton');
+      }
+    });
+
     await test('submission requires matching course version and cohort membership', async () => {
       const unjoined = await learner('Not joined', { course, version });
       await refused(unjoined.userId, SQL_SAVE,

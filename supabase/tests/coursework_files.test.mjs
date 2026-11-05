@@ -422,18 +422,22 @@ export async function run(ctx) {
     await call(family.userId, 'select public.remove_assignment_asset($1,$2)', [submission, attached.asset_id]);
     assert((await call(family.userId, 'select public.attach_assignment_asset($1,$2) as id', [submission, attached.asset_id])).id,
       'authorized uploader could not reattach their own declared file');
+    const removed = await declare(family.userId, submission);
+    await call(family.userId, SQL_CONFIRM, [removed.asset_id]);
+    await call(family.userId, 'select public.remove_assignment_asset($1,$2)', [submission, removed.asset_id]);
     await q(`update public.guardian_relationships set verified_at=now()-interval '2 years',
       consent_expires_at=now()-interval '1 year' where learner_profile_id=$1 and guardian_user_id=$2`,
       [family.childId, family.userId]);
     await refused(family.userId, SQL_CONFIRM, [pending.asset_id], /currently verified guardian/i);
     await refused(family.userId, SQL_CONFIRM, [attached.asset_id], /currently verified guardian/i);
     assert((await scalar('select status from public.media_assets where id=$1', [pending.asset_id])).status === 'pending');
-    // The general family predicate is deliberately left enabled by the suite's
-    // flag-off fixture; the attachment trigger must still reject reattachment.
-    await call(family.userId, 'select public.remove_assignment_asset($1,$2)', [submission, attached.asset_id]);
-    await refused(family.userId, 'select public.attach_assignment_asset($1,$2)',
+    // Even with the general guardian switch off, expiry prevents removal and
+    // reattachment. A previously removed file exercises the legacy attach door.
+    await refused(family.userId, 'select public.remove_assignment_asset($1,$2)',
       [submission, attached.asset_id], /currently verified guardian/i);
-    assert((await scalar('select count(*)::int n from public.assignment_submission_assets where submission_id=$1', [submission])).n === 0);
+    await refused(family.userId, 'select public.attach_assignment_asset($1,$2)',
+      [submission, removed.asset_id], /currently verified guardian/i);
+    assert((await scalar('select count(*)::int n from public.assignment_submission_assets where submission_id=$1', [submission])).n === 1);
   });
 
   // -------------------------------------------------------------------------

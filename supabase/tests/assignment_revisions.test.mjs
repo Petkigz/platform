@@ -75,6 +75,7 @@ export async function run(ctx) {
          values ($1,$2,$3,'free','active')`, [id, fixture.course, fixture.version]);
       return id;
     });
+    await ctx.verifyGuardian(userId, childId);
     return { userId, childId };
   }
 

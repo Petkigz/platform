@@ -70,6 +70,14 @@ Checked upload and lifecycle writers remain, as do limited descriptive edits. Th
 migration needs deployment and does not itself fix the existing broad read/signing
 paths, revoke previously issued URLs, scan files, or control storage credentials.
 
+**Submission write authority:** saving a draft, submitting, reopening and
+removing an attachment now require the learner or a currently verified guardian
+with progress permission. Only the assignment creator (the marker in the current
+schema) can grade; a staff or safeguarding-owner role alone is not a grading
+assignment. The stricter rule applies to all ages. Other export, retention and
+administrative paths still need review. Deploy the migration; keep assignments
+and cohorts off.
+
 **Submission read boundary:** direct assignment submission text, feedback,
 revision snapshots and attachment references, plus the file-list RPC, now use
 the learner, current verified guardian with progress permission, assignment author
