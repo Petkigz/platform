@@ -193,7 +193,10 @@ export function missingClassEndCount(data: unknown): number | null {
   return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0 ? value : null;
 }
 
-export type MissingClassEnd = { cohortId: string; cohortTitle: string; courseTitle: string; files: number };
+export type MissingClassEnd = {
+  cohortId: string; cohortTitle: string; courseTitle: string; files: number;
+  status: string; startsAt: string; joinClosesAt: string;
+};
 export function parseMissingClassEnds(data: unknown): MissingClassEnd[] | null {
   if (!Array.isArray(data)) return null;
   const out: MissingClassEnd[] = [];
@@ -201,8 +204,12 @@ export function parseMissingClassEnds(data: unknown): MissingClassEnd[] | null {
     const r = row(value);
     const files = typeof r.files === 'number' ? r.files : typeof r.files === 'string' && /^\d+$/.test(r.files) ? Number(r.files) : NaN;
     if (typeof r.cohort_id !== 'string' || typeof r.cohort_title !== 'string' ||
-        typeof r.course_title !== 'string' || !Number.isSafeInteger(files) || files < 1) return null;
-    out.push({ cohortId: r.cohort_id, cohortTitle: r.cohort_title, courseTitle: r.course_title, files });
+        typeof r.course_title !== 'string' || typeof r.cohort_status !== 'string' ||
+        typeof r.starts_at !== 'string' || typeof r.join_closes_at !== 'string' ||
+        !Number.isFinite(Date.parse(r.starts_at)) || !Number.isFinite(Date.parse(r.join_closes_at)) ||
+        !Number.isSafeInteger(files) || files < 1) return null;
+    out.push({ cohortId: r.cohort_id, cohortTitle: r.cohort_title, courseTitle: r.course_title, files,
+      status: r.cohort_status, startsAt: r.starts_at, joinClosesAt: r.join_closes_at });
   }
   return out;
 }

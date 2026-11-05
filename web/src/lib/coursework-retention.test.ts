@@ -117,7 +117,19 @@ test('missing class-end reporting distinguishes unknown from zero and validates 
   assert.equal(missingClassEndCount({ files: { missingClassEnd: -1 } }), null);
   assert.equal(parseMissingClassEnds(null), null);
   assert.deepEqual(parseMissingClassEnds([]), []);
-  assert.deepEqual(parseMissingClassEnds([{ cohort_id: 'c', cohort_title: 'Class', course_title: 'Course', files: '2' }]),
-    [{ cohortId: 'c', cohortTitle: 'Class', courseTitle: 'Course', files: 2 }]);
+  assert.deepEqual(parseMissingClassEnds([{ cohort_id: 'c', cohort_title: 'Class', course_title: 'Course', files: '2', cohort_status: 'closed', starts_at: '2025-01-01T00:00:00Z', join_closes_at: '2025-01-02T00:00:00Z' }]),
+    [{ cohortId: 'c', cohortTitle: 'Class', courseTitle: 'Course', files: 2, status: 'closed', startsAt: '2025-01-01T00:00:00Z', joinClosesAt: '2025-01-02T00:00:00Z' }]);
   assert.equal(parseMissingClassEnds([{ cohort_id: 'c', files: 1 }]), null);
+});
+
+test('class end attestation is explicit, UTC and never presents itself as proof', () => {
+  const page = readFileSync(new URL('../app/admin/coursework/page.tsx', import.meta.url), 'utf8');
+  const action = readFileSync(new URL('../app/admin/coursework/class-end-actions.ts', import.meta.url), 'utf8');
+  assert.match(page, /actual end, not the date the class was closed/);
+  assert.match(page, /not independent proof/);
+  assert.match(page, /name="verified" value="yes" required/);
+  assert.match(page, /date and time \(UTC\)/);
+  assert.match(action, /form\.get\('verified'\) !== 'yes'/);
+  assert.match(action, /attest_closed_cohort_end/);
+  assert.match(action, /p_ends_at: `\$\{end\}:00Z`/);
 });

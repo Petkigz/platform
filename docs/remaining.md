@@ -589,8 +589,17 @@ must not be silently closed with a guardian's account.
 **Open-ended class retention:** Coursework in a cohort with no recorded end no
 longer gets an ordinary deadline based on hand-in; the erasure exception and
 holds still apply. The identified safeguarding owner can see affected class names
-and counts under Handed-in files. There is no visual way yet to correct an
-existing class end, and no automatic proof of when the class ended; arrange
-individual review instead of guessing. The list is paginated at 100 classes.
-Deploy migration 550. Day-based retention comparisons, other removal paths and
+and counts under Handed-in files. The owner can attest a verified missing end for a closed class in that screen,
+with a reason and explicit confirmation that files may become due. It is not
+independent proof, and existing end dates and other states still require individual
+review; do not guess. The list is paginated at 100 classes.
+Deploy migrations 550 and 560. Day-based retention comparisons, other removal paths and
 deployed-schema concurrency still need review. Keep assignments and cohorts off.
+
+**Account-status authorization:** role checks test whether a role assignment is
+revoked, not whether its profile is active. Some owner and other privileged RPCs
+may therefore still accept an authenticated session after suspension or closure;
+identity removal is manual. The class-end attestation independently checks an
+active profile, but that does not repair the other functions. Review and close
+this boundary before deployment; test account closure, merge and suspended users
+without blocking legitimate cleanup or leaving the platform ownerless.

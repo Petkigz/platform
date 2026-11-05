@@ -279,6 +279,50 @@ export async function run(ctx) {
       'erasure was blocked after the hold was released');
   });
 
+  await test('only the owner may attest the verified end of a closed class once', async () => {
+    const cohort = (await call(teacher,
+      `select public.create_cohort($1,$2,$3,$4, now() + interval '1 day', null, null) as id`,
+      [course, version, 'Class with verified end', 'No recorded end'])).id;
+    await call(teacher, "select public.set_cohort_status($1,'open')", [cohort]);
+    const who = await learner('Verified end learner', cohort);
+    const assignment = await createAssignment({ cohortId: cohort });
+    const submission = (await call(who.userId, 'select public.save_assignment_draft($1,$2,$3) as id',
+      [assignment, who.learnerId, 'A page.'])).id;
+    const asset = (await call(who.userId, 'select * from public.register_coursework_upload($1,$2,$3,$4,$5)',
+      [submission, 'Page.jpg', 'image/jpeg', 900000, digest()])).asset_id;
+    await call(who.userId, 'select public.confirm_coursework_upload($1)', [asset]);
+    await call(who.userId, 'select public.submit_assignment($1)', [submission]);
+    await backdate({ asset, submission }, '2 years');
+    await q(`update public.cohorts set starts_at=now()-interval '3 years',
+      join_closes_at=now()-interval '2 years' where id=$1`, [cohort]);
+    const sql = 'select public.attest_closed_cohort_end($1,$2,$3,$4) as ended';
+    const end = new Date(Date.now() - 400 * 86400000).toISOString();
+    const confirm = 'I verified the class end and understand that coursework may become due';
+    const args = [cohort, end, 'The class log confirms the last session', confirm];
+    await refuses(/coursework:not_allowed/, () => call(teacher, sql, args));
+    const statusFixture = (status) => committed(async () => {
+      await q("select set_config('app.account_erasure', 'on', true)");
+      await q('update public.user_profiles set account_status=$2 where user_id=$1', [owner, status]);
+    });
+    await statusFixture('suspended');
+    try { await refuses(/coursework:not_allowed/, () => call(owner, sql, args)); }
+    finally { await statusFixture('active'); }
+    await refuses(/only a closed class/, () => call(owner, sql, args));
+    await call(teacher, "select public.set_cohort_status($1,'closed')", [cohort]);
+    await refuses(/confirm the verified end/, () => call(owner, sql, [cohort, end, args[2], '']));
+    await refuses(/written reason/, () => call(owner, sql, [cohort, end, 'x', confirm]));
+    await refuses(/not in the future/, () => call(owner, sql, [cohort, new Date(Date.now() + 86400000).toISOString(), args[2], confirm]));
+    await refuses(/not before the join window/, () => call(owner, sql, [cohort, new Date(Date.now() - 800 * 86400000).toISOString(), args[2], confirm]));
+    const report = (await asActor(owner, () => q('select * from public.coursework_missing_class_ends()'))).rows;
+    assert(report.some((item) => item.cohort_id === cohort && item.cohort_status === 'closed' && item.starts_at && item.join_closes_at), 'owner did not see the decision context');
+    await call(owner, sql, args);
+    const r = await retentionRows({ asset });
+    assert(r.basis === 'class_end' && new Date(r.due_on) < new Date(), 'the attested end did not start the ordinary clock');
+    await refuses(/only a closed class/, () => call(owner, sql, args));
+    const audit = await scalar("select detail from public.governance_audit_events where action='cohort.end_attested' and target_id=$1", [cohort]);
+    assert(audit.detail.reason === args[2] && audit.detail.attestation === true, 'the attestation was not audited');
+  });
+
   await test('an erased learning record shortens the clock and never lengthens it', async () => {
     const row = await handedIn();
     await committed(() => q(

@@ -28,6 +28,7 @@ import {
 import { ReviewForm } from './review-form';
 import { RetentionActionForm } from './retention-actions';
 import { acknowledgeConcern, reopenConcern } from './safeguarding-actions';
+import { attestClassEnd } from './class-end-actions';
 import { parseSafeguardingConcerns, parseSafeguardingHistory } from '@/lib/safeguarding-queue';
 
 export const dynamic = 'force-dynamic';
@@ -35,7 +36,7 @@ export const dynamic = 'force-dynamic';
 /** Owner-only review register, alongside separately authorized retention tools.
  * A recorded review is an attestation, not proof that a file was viewed.
  */
-export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ concern?: string; before?: string; beforeId?: string; endsAfter?: string }> }) {
+export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ concern?: string; before?: string; beforeId?: string; endsAfter?: string; classEnd?: string }> }) {
   if (!isSupabaseConfigured()) redirect('/');
 
   const supabase = await createClient();
@@ -322,14 +323,34 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
 
       {isSafeguardingOwner && <section id="missing-class-ends" className="card" style={{ marginBlockStart: '1rem' }}>
         <h2>Classes without an end date</h2>
+        {params.classEnd === 'recorded' && <p role="status">Your class-end attestation was recorded. It may have made coursework due; storage is a separate step.</p>}
+        {params.classEnd === 'invalid' && <p className="notice warn" role="alert">Check the UTC date, written reason and confirmation, then try again.</p>}
+        {params.classEnd === 'failed' && <p className="notice warn" role="alert">The class end was not recorded. Check that the class is closed, its end is still missing and the date follows its start and join window and is not in the future. Otherwise arrange individual review.</p>}
         <p>For coursework in an open-ended class, the ordinary one-year clock cannot start until an end is recorded. A child-record erasure can still be due sooner, subject to a safeguarding hold.</p>
         {missingCount === null || missingEnds === null ? <p className="notice warn">The missing-end report could not be loaded. Do not assume there are no affected files.</p>
           : <>
             <p>{missingCount} file{missingCount === 1 ? '' : 's'} have no ordinary deadline because their class has no recorded end. The list shows up to 100 classes per page.</p>
-            {missingEnds.length > 0 && <ul className="lessons">{missingEnds.map((item) => <li key={item.cohortId}><span className="t">{item.courseTitle} · {item.cohortTitle}</span><span>{item.files} file{item.files === 1 ? '' : 's'}</span></li>)}</ul>}
+            {missingEnds.length > 0 && <ul className="lessons">{missingEnds.map((item) => <li key={item.cohortId}>
+              <div className="t"><strong>{item.courseTitle} · {item.cohortTitle}</strong>
+                <p>{item.files} file{item.files === 1 ? '' : 's'} · {item.status} · Scheduled start {new Date(item.startsAt).toISOString()} · Join window closes {new Date(item.joinClosesAt).toISOString()}</p>
+                {item.status === 'closed' ? <details>
+                  <summary>Record a verified class end</summary>
+                  <p>Use the actual end, not the date the class was closed in the system. Enter UTC. This one-time attestation can make files immediately due for cleanup; it is not proof of the date. If unsure, do not submit.</p>
+                  <form action={attestClassEnd}>
+                    <input type="hidden" name="cohortId" value={item.cohortId} />
+                    <label htmlFor={`end-${item.cohortId}`}>Verified end date and time (UTC)</label>
+                    <input id={`end-${item.cohortId}`} type="datetime-local" name="endsAt" required />
+                    <label htmlFor={`reason-end-${item.cohortId}`}>How was this verified?</label>
+                    <textarea id={`reason-end-${item.cohortId}`} name="reason" required minLength={3} maxLength={1000} />
+                    <label><input type="checkbox" name="verified" value="yes" required /> I verified this date and understand coursework may become due.</label>
+                    <button className="btn" type="submit">Record my attestation</button>
+                  </form>
+                </details> : <p className="muted">Only a closed class can receive an end attestation here. Other cases need individual review.</p>}
+              </div>
+            </li>)}</ul>}
             {params.endsAfter && <p><Link href="/admin/coursework#missing-class-ends">First page of classes</Link></p>}
             {missingEnds.length === 100 && <p><Link href={`/admin/coursework?${new URLSearchParams({ endsAfter: missingEnds[missingEnds.length - 1]!.cohortId })}#missing-class-ends`}>More classes</Link></p>}
-            <p className="muted">There is not yet a visual workflow to correct an existing class end date. Arrange individual review; do not guess a date or use a database edit as a routine workaround.</p>
+            <p className="muted">This records an owner attestation, not independent proof. Existing end dates and other cases cannot be edited here; arrange individual review.</p>
           </>}
       </section>}
 
