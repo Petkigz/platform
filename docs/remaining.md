@@ -676,3 +676,11 @@ scaffolding only: the creation route is still paused, and recovery for interrupt
 identity creation, password reset, safe identity revocation, a visual operator
 reconciliation path, deployed integration and real concurrent tests remain. Do
 not enable the feature on the strength of this migration alone.
+
+**Child-login recovery work:** Migration 620 provides a service-only lookup of
+the exact auth identity marked for a reservation. The tested creation coordinator
+can recover a lost provider response without deleting an identity or treating an
+unmarked same-name account as proof. It is not yet wired to the paused route; it
+does not itself revoke identities, reset passwords, resolve stranded attempts, or
+prove real provider/concurrency behavior. On recovery, the original password
+remains in effect; a later password input is not applied automatically.

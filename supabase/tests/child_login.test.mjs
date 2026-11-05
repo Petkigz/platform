@@ -387,7 +387,15 @@ export async function run(ctx) {
       const child = await newUser('trusted.child@learners.ayahspring.com');
       await rejects(() => asActor(guardian, 'select public.complete_child_login_attempt($1,$2,$3)', [attempt,guardian,child]), /permission denied/i);
       await rejects(() => q('select public.complete_child_login_attempt($1,$2,$3)', [attempt,guardian,child]), /untrusted_identity/);
+      await rejects(() => asActor(guardian, 'select public.child_login_attempt_identity($1,$2)', [attempt,guardian]), /permission denied/i);
+      const find = (who) => committed(async () => {
+        await q('set local role service_role');
+        return (await q('select public.child_login_attempt_identity($1,$2) as id', [attempt,who])).rows[0].id;
+      });
+      assert(await find(guardian) === null, 'an unmarked identity was exposed for recovery');
+      await rejects(() => find(child), /no_attempt/);
       await q("update auth.users set raw_app_meta_data=jsonb_build_object('ayahspring_child_attempt',$2::text) where id=$1", [child,attempt]);
+      assert(await find(guardian) === child, 'the marked identity could not be recovered');
       await q("update public.guardian_relationships set consent_expires_at=now()-interval '1 second' where guardian_user_id=$1 and learner_profile_id=$2", [guardian,learner]);
       await rejects(() => q('select public.complete_child_login_attempt($1,$2,$3)', [attempt,guardian,child]), /verified_guardian_required/);
       await q("update public.guardian_relationships set consent_expires_at=now()+interval '1 year' where guardian_user_id=$1 and learner_profile_id=$2", [guardian,learner]);

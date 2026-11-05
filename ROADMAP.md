@@ -24,10 +24,10 @@ the decision that ended it and where that decision is recorded.
 **A number in this file is a measurement with a date, not a memory.** Where a
 figure appears without a date it is the 2026-11-03 reading: 164 ordinary public
 tables, 283 policies, 80 flags and 18 controls, 128 page routes and 117 route
-handlers. On 2026-11-05 the tree has 268 migrations. Before migration 600,
-the database suite passed 2 598 assertions in 170 suites; after migrations 600–610,
+handlers. On 2026-11-05 the tree has 269 migrations. Before migration 600,
+the database suite passed 2 598 assertions in 170 suites; after migrations 600–620,
 47 focused child-login, handover and flag checks passed. The full database rerun was
-interrupted and remains pending. The web suite passed 2 061 tests.
+interrupted and remains pending. The web suite passed 2 065 tests.
 
 ---
 
