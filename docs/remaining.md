@@ -625,3 +625,10 @@ individual review before enabling that broader ruleset. No exact duplicate sourc
 files were found in the scanned web, script and database-test code; that is not a
 semantic duplicate-code audit. Dependency audit reported no known vulnerabilities
 on the checked lockfile, not a guarantee that dependencies are safe.
+
+**Playback audit:** A pending playback URL request could finish after a later
+selection or unmount and overwrite the newer state. The player now cancels the
+previous request, ignores late results even if abort is ignored, binds a URL to
+the selected rendition and clears stale poster state. Automated tests exercise
+request ordering and the component wiring; a real browser/network test is still
+needed. Existing signed URLs remain valid until they expire.

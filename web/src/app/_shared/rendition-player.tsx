@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState, type RefObject } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { deviceKey, storeLesson } from '@/lib/offline';
 import { track } from '@/lib/analytics';
+import { LatestRequest } from '@/lib/latest-request';
 import { useMediaPosition } from './use-media-position';
 
 import {
@@ -93,7 +94,8 @@ export function RenditionPlayer({
   const [profile, setProfile] = useState<RenditionProfile>(
     initial?.profile ?? choices[0]?.profile ?? '480p',
   );
-  const [url, setUrl] = useState<string | null>(null);
+  const [playback, setPlayback] = useState<{ id: string; url: string } | null>(null);
+  const [playbackRequests] = useState(() => new LatestRequest());
   const [posterUrl, setPosterUrl] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -108,34 +110,46 @@ export function RenditionPlayer({
 
   const load = useCallback(
     async (renditionId: string) => {
+      const request = playbackRequests.start();
       setLoading(true);
       setError('');
+      setPlayback(null);
       try {
         const response = await fetch(
           `/api/media/playback?rendition=${encodeURIComponent(renditionId)}`,
-          { cache: 'no-store' },
+          { cache: 'no-store', signal: request.signal },
         );
         const result = (await response.json().catch(() => ({}))) as PlaybackResponse;
+        if (!request.isCurrent()) return;
         if (!response.ok || !result.data?.url) {
           throw new Error(result.message ?? 'That lesson could not be played.');
         }
-        setUrl(result.data.url);
+        setPlayback({ id: renditionId, url: result.data.url });
       } catch (cause) {
-        setUrl(null);
+        if (!request.isCurrent()) return;
+        setPlayback(null);
         setError(cause instanceof Error ? cause.message : 'That lesson could not be played.');
       } finally {
-        setLoading(false);
+        if (request.isCurrent()) setLoading(false);
       }
     },
-    [],
+    [playbackRequests],
   );
 
+  const chosenId = chosen?.id ?? null;
   useEffect(() => {
-    if (chosen) void load(chosen.id);
-    // `chosen` is derived from props and state, so keying on its id is enough.
-  }, [chosen?.id, load]);
+    if (chosenId) void load(chosenId);
+    else {
+      playbackRequests.cancel();
+      setPlayback(null);
+      setLoading(false);
+    }
+    // Prop changes and unmount invalidate even a fetch that ignores abort.
+    return () => playbackRequests.cancel();
+  }, [chosenId, load, playbackRequests]);
 
   useEffect(() => {
+    setPosterUrl(null);
     if (!posterRenditionId) return;
     let cancelled = false;
     void (async () => {
@@ -245,7 +259,7 @@ export function RenditionPlayer({
           controls
           playsInline
           preload="metadata"
-          src={url ?? undefined}
+          src={playback?.id === chosen.id ? playback.url : undefined}
           poster={posterUrl ?? undefined}
           aria-label={displayName}
           style={{
@@ -263,7 +277,7 @@ export function RenditionPlayer({
           ref={mediaRef as RefObject<HTMLAudioElement>}
           controls
           preload="metadata"
-          src={url ?? undefined}
+          src={playback?.id === chosen.id ? playback.url : undefined}
           aria-label={displayName}
           style={{ width: '100%' }}
           {...handlers}

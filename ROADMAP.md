@@ -25,7 +25,7 @@ the decision that ended it and where that decision is recorded.
 figure appears without a date it is the 2026-11-03 reading: 164 ordinary public
 tables, 283 policies, 80 flags and 18 controls, 128 page routes and 117 route
 handlers. On 2026-11-05 the tree has 265 migrations, the database suite
-passed 2 597 assertions in 170 suites, and the web suite passed 2 057 tests.
+passed 2 597 assertions in 170 suites, and the web suite passed 2 059 tests.
 
 ---
 
