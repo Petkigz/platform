@@ -103,10 +103,20 @@ before tombstoning. The normal harness is single-connection. On 2026-11-05, a se
 PostgreSQL 16.15 test using a minimal schema and the actual hold/cleanup functions
 verified both lock orders; repeat an end-to-end test with the deployed schema
 before relying on it. Other deletion paths still need review:
-`delete_media_asset` can tombstone coursework despite a hold, and child-record
-cleanup can remove a submission and tombstone its held attachment. The stored
+generic media withdrawal now refuses coursework, including historical
+library files attached to submissions. Child-record cleanup can still remove a
+submission and tombstone its held attachment, and the generic quarantine path
+needs review. The stored
 bytes may remain, but a hold is not a complete preservation guarantee. Storage
 access and historic attestations also need review. Deploy the migrations and keep assignments and cohorts off.
+
+**Coursework withdrawal:** the generic library withdrawal RPC now refuses all
+coursework and historical mixed-purpose submission attachments, whether or not
+held. The learner can still remove an attachment from a draft under the existing
+rules; this does not delete the stored object. Requests to withdraw a coursework
+object require individual review via privacy@ayahspring.com until a dedicated
+workflow exists. Existing uploads and objects are not changed. Apply the migration;
+review orphaned uploads, quarantine and child-record cleanup separately.
 
 **Submission read boundary:** direct assignment submission text, feedback,
 revision snapshots and attachment references, plus the file-list RPC, now use

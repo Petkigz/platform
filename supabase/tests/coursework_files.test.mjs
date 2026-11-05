@@ -561,12 +561,44 @@ export async function run(ctx) {
       await q('alter table public.assignment_submission_assets enable trigger assignment_assets_coursework_only');
     }
     assert((await call(teacher, 'select public.may_play_rendition($1) as ok', [rendition])).ok === false);
+    await refused(who.userId, 'select public.delete_media_asset($1,$2)', [asset, 'Withdrawal'], /coursework cannot be withdrawn/i);
+    assert((await call(admin, 'select public.delete_media_asset($1,$2) as changed', [asset, 'Withdrawal'])).changed === false,
+      'unrelated staff learned that a historical coursework asset existed');
+    assert((await scalar('select deleted_at from public.media_assets where id=$1', [asset])).deleted_at === null,
+      'generic withdrawal deleted a historical mixed-purpose file');
     assert((await call(admin, 'select public.may_transcode_library_asset($1) as ok', [asset])).ok === false);
     assert((await asActor(admin, () => q('select id from public.transcode_library_candidates($1,$2)', [asset, 50]))).rows.length === 0);
     const rows = await asActor(admin, () => q('select id from public.media_renditions where id=$1', [rendition]));
     assert(rows.rows.length === 0, 'staff could read the legacy rendition');
     await refused(admin, 'select * from public.register_media_rendition($1,$2,$3,$4)',
       [asset, 'poster', 'image/jpeg', 1000], /coursework cannot be encoded/i);
+  });
+
+  await test('generic media withdrawal cannot tombstone coursework, held or otherwise', async () => {
+    const who = await learner('Protected withdrawal', { course, version });
+    const submission = await draft(who.userId, assignment, who.learnerId);
+    const plain = await declare(who.userId, submission);
+    const held = await declare(who.userId, submission);
+    await call(who.userId, SQL_CONFIRM, [plain.asset_id]);
+    await call(who.userId, SQL_CONFIRM, [held.asset_id]);
+    await q(`insert into public.coursework_retention_holds (asset_id,reason,opened_by)
+      values ($1,'Safeguarding hold',$2)`, [held.asset_id, admin]);
+    for (const actor of [who.userId, teacher]) {
+      for (const asset of [plain.asset_id, held.asset_id])
+        await refused(actor, 'select public.delete_media_asset($1,$2)', [asset, 'Withdrawal'], /coursework cannot be withdrawn/i);
+    }
+    for (const asset of [plain.asset_id, held.asset_id]) {
+      assert((await call(admin, 'select public.delete_media_asset($1,$2) as changed', [asset, 'Withdrawal'])).changed === false,
+        'unrelated staff learned that the coursework asset existed');
+      await refused(otherTeacher, 'select public.delete_media_asset($1,$2)', [asset, 'Withdrawal'], /only delete your own/i);
+    }
+    for (const actor of [who.userId, admin, teacher, otherTeacher])
+      await refused(actor, 'select public.delete_media_asset_internal($1,$2)', [plain.asset_id, 'Withdrawal'], /permission denied/i);
+    for (const asset of [plain.asset_id, held.asset_id]) {
+      const row = await scalar('select status, deleted_at from public.media_assets where id=$1', [asset]);
+      assert(row.status === 'available' && row.deleted_at === null, 'generic withdrawal tombstoned coursework');
+    }
+    await q('delete from public.coursework_retention_holds where asset_id=$1', [held.asset_id]);
   });
 
   await test('a library file is still refused to a lesson until staff confirm it', async () => {

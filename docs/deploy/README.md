@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-258 files in `supabase/migrations/`, applied in filename order — the 14-digit
+259 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -152,7 +152,7 @@ done
   first run. What you are watching for is the loop *stopping*, and the file name
   above the error.
 - Takes a few minutes. The last file printed should be
-  `20261281051000_coursework_retention_lock.sql`.
+  `20261281052000_coursework_withdrawal_boundary.sql`.
 
 **Existing installations:** the subscription safety migration preserves the current
 `commerce.subscriptions` value. If it is already on, review existing customer
@@ -170,7 +170,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 258 files from the top and fail on the
+it, and `db push` would then re-apply all 259 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -977,7 +977,15 @@ one connection; repeat simultaneous hold and cleanup transactions end-to-end
 with the deployed schema. Test in an isolated sandbox with a
 fake due file: hold it in one uncommitted session, start cleanup in another,
 commit the hold, and confirm cleanup leaves it intact; also test cleanup winning
-the lock first. Other deletion paths need review: generic media withdrawal and
-child-record cleanup can tombstone held coursework. Do not rely on a hold as a
+the lock first. Other deletion paths need review: child-record cleanup can tombstone held
+coursework, and generic quarantine can make it unavailable. Do not rely on a hold as a
 complete preservation guarantee. Deploy and test owner
 setup; keep assignments and cohorts off.
+
+After `20261281052000_coursework_withdrawal_boundary.sql`, generic media-library
+withdrawal refuses coursework and historical library assets attached to a
+submission. This does not delete or reclassify existing objects. Learners may
+still detach draft files; that does not delete their bytes. There is no dedicated
+coursework withdrawal workflow yet: direct affected requests to
+privacy@ayahspring.com and review orphaned uploads, quarantine, and child-record
+cleanup before enabling assignments or cohorts.
