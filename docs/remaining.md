@@ -104,11 +104,22 @@ PostgreSQL 16.15 test using a minimal schema and the actual hold/cleanup functio
 verified both lock orders; repeat an end-to-end test with the deployed schema
 before relying on it. Other deletion paths still need review:
 generic media withdrawal now refuses coursework, including historical
-library files attached to submissions. Child-record cleanup can still remove a
-submission and tombstone its held attachment, and the generic quarantine path
-needs review. The stored
+library files attached to submissions. Child-record cleanup now defers a child record while its attached coursework is
+held and reports the deferral; it rechecks after locking the relevant assets.
+Generic quarantine, other deletion paths, and historical unattached files need
+review. The stored
 bytes may remain, but a hold is not a complete preservation guarantee. Storage
 access and historic attestations also need review. Deploy the migrations and keep assignments and cohorts off.
+
+**Child-record cleanup:** due child records with an attached open coursework
+hold are deferred, and the run reports them rather than saying nothing was due.
+Other due children can still be processed. On 2026-11-05, PostgreSQL 16.15
+with a minimal schema and a stub erasure function exercised both lock orders for
+the actual hold/child-cleanup wrappers; repeat with the deployed schema. The
+account-closure and cleanup changes do not settle the conflict between the existing thirty-day erasure clock
+and the chosen one-year coursework period. Review the retention rules, other
+removal paths and concurrent operations on the deployed system; a hold is not a
+complete preservation guarantee. Deploy the migration.
 
 **Coursework withdrawal:** the generic library withdrawal RPC now refuses all
 coursework and historical mixed-purpose submission attachments, whether or not

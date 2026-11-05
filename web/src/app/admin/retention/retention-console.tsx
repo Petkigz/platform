@@ -67,6 +67,8 @@ export function RetentionConsole({
         {retentionHeadline(plan)}
       </div>
 
+      <p className="muted">These counts cover support cases, screening and child records only. Coursework files have a separate register under Handed-in files; a cleanup may also tombstone due coursework.</p>
+
       <div className="stats" style={{ marginTop: '1.5rem' }}>
         <div>
           <div className="n">{plan.supportCases.due}</div>
@@ -86,7 +88,7 @@ export function RetentionConsole({
         </div>
         <div>
           <div className="n">{total}</div>
-          <div className="l">Total to delete</div>
+          <div className="l">Total past due</div>
         </div>
       </div>
 
@@ -110,7 +112,7 @@ export function RetentionConsole({
           {plan.supportCases.oldestDue && (
             <li className="muted">
               The oldest record waiting was due on {retentionDay(plan.supportCases.oldestDue)}.
-              Everything past its date is what the press below deletes.
+              The cleanup rechecks eligibility; records with held coursework may be deferred.
             </li>
           )}
         </ul>
@@ -157,7 +159,7 @@ export function RetentionConsole({
           armed ? (
             <div style={{ display: 'grid', gap: '0.6rem' }}>
               <p style={{ margin: 0 }}>
-                Delete {total === 0 ? 'nothing (nothing is due)' : `${total} record${total === 1 ? '' : 's'}`} now?
+                Run cleanup for {total === 0 ? 'no listed records' : `${total} past-due record${total === 1 ? '' : 's'}`}? Eligibility is rechecked.
                 {' '}This cannot be undone.
               </p>
               <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>

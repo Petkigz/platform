@@ -77,12 +77,15 @@ export type RetentionRun = {
     supportCaseMessages: number;
     screenings: number;
     learnerRecords: number;
+    courseworkFiles?: number;
   };
   remaining: {
     supportCases: number;
     screenings: number;
     learnerRecords: number;
+    courseworkFiles?: number;
   };
+  held?: { learnerRecords?: number; courseworkFiles?: number };
   audited: boolean;
 };
 
@@ -211,29 +214,37 @@ export function nextDueSentence(plan: RetentionPlan): string {
 /** What a run did, in the database's own numbers. */
 export function describeRetentionRun(run: RetentionRun): string {
   const { supportCases, supportCaseMessages, screenings, learnerRecords } = run.deleted;
-  const total = supportCases + screenings + learnerRecords;
+  const files = run.deleted.courseworkFiles ?? 0;
+  const total = supportCases + screenings + learnerRecords + files;
+  const left = run.remaining.supportCases + run.remaining.screenings + run.remaining.learnerRecords + (run.remaining.courseworkFiles ?? 0);
+  const held = run.held?.learnerRecords ?? 0;
+  const heldFiles = run.held?.courseworkFiles ?? 0;
+  const holdNote = (held > 0
+    ? ` ${held} due child record${held === 1 ? ' is' : 's are'} deferred because coursework is on hold.`
+    : '') + (heldFiles > 0
+    ? ` ${heldFiles} coursework file hold${heldFiles === 1 ? ' remains' : 's remain'} recorded.`
+    : '');
   if (total === 0) {
-    return 'Nothing was due, so nothing was deleted and no audit entry was written.';
+    if (left > 0 || held > 0 || heldFiles > 0) {
+      return `Nothing was deleted. ${left} record${left === 1 ? '' : 's'} remain due.${holdNote} Check the remaining records before another run.`;
+    }
+    return run.audited
+      ? 'Nothing was deleted; the run was recorded in the audit log.'
+      : 'Nothing was due, so nothing was deleted and no audit entry was written.';
   }
   const parts: string[] = [];
-  if (supportCases > 0) {
-    parts.push(`${supportCases} support case${supportCases === 1 ? '' : 's'}`);
-  }
-  if (supportCaseMessages > 0) {
-    parts.push(`${supportCaseMessages} repl${supportCaseMessages === 1 ? 'y' : 'ies'} inside them`);
-  }
-  if (screenings > 0) {
-    parts.push(`${screenings} screening record${screenings === 1 ? '' : 's'}`);
-  }
+  if (supportCases > 0) parts.push(`${supportCases} support case${supportCases === 1 ? '' : 's'}`);
+  if (supportCaseMessages > 0) parts.push(`${supportCaseMessages} repl${supportCaseMessages === 1 ? 'y' : 'ies'} inside them`);
+  if (screenings > 0) parts.push(`${screenings} screening record${screenings === 1 ? '' : 's'}`);
   if (learnerRecords > 0) {
     const noun = learnerRecords === 1 ? "child's learning record" : "children's learning records";
     parts.push(`${learnerRecords} ${noun}`);
   }
-  const left = run.remaining.supportCases + run.remaining.screenings + run.remaining.learnerRecords;
+  if (files > 0) parts.push(`${files} coursework file${files === 1 ? '' : 's'} tombstoned, not necessarily deleted from storage`);
   const tail = left > 0
-    ? ` ${left} more ${left === 1 ? 'is' : 'are'} due and will go on the next run — each run takes a bounded batch so a backlog cannot hold a lock.`
+    ? ` ${left} more remain due; eligibility is checked on each run.`
     : ' Nothing else is due.';
-  return `Deleted ${parts.join(', ')}.${tail} Recorded in the audit log against your name.`;
+  return `Deleted ${parts.join(', ')}.${tail}${holdNote} ${run.audited ? 'Recorded in the audit log against your name.' : 'No audit entry was reported.'}`;
 }
 
 /**
@@ -245,6 +256,6 @@ export function describeRetentionRun(run: RetentionRun): string {
  */
 export function retentionGateSentence(canRun: boolean): string {
   return canRun
-    ? 'Running the cleanup deletes what the policy says is due, permanently. The date on each record was set when it was closed or recorded, not here.'
+    ? 'Running the cleanup permanently deletes eligible records that the policy says are due. The date on each record was set when it was closed or recorded, not here.'
     : 'Only the platform admin runs the cleanup. You can read what is due, and the deletion waits for the owner.';
 }

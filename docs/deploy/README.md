@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-259 files in `supabase/migrations/`, applied in filename order — the 14-digit
+260 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -152,7 +152,7 @@ done
   first run. What you are watching for is the loop *stopping*, and the file name
   above the error.
 - Takes a few minutes. The last file printed should be
-  `20261281052000_coursework_withdrawal_boundary.sql`.
+  `20261281053000_child_record_hold_boundary.sql`.
 
 **Existing installations:** the subscription safety migration preserves the current
 `commerce.subscriptions` value. If it is already on, review existing customer
@@ -170,7 +170,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 259 files from the top and fail on the
+it, and `db push` would then re-apply all 260 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -977,8 +977,8 @@ one connection; repeat simultaneous hold and cleanup transactions end-to-end
 with the deployed schema. Test in an isolated sandbox with a
 fake due file: hold it in one uncommitted session, start cleanup in another,
 commit the hold, and confirm cleanup leaves it intact; also test cleanup winning
-the lock first. Other deletion paths need review: child-record cleanup can tombstone held
-coursework, and generic quarantine can make it unavailable. Do not rely on a hold as a
+the lock first. Other deletion paths need review: generic quarantine can make coursework
+unavailable, and historic unattached files may not be covered. Do not rely on a hold as a
 complete preservation guarantee. Deploy and test owner
 setup; keep assignments and cohorts off.
 
@@ -989,3 +989,13 @@ still detach draft files; that does not delete their bytes. There is no dedicate
 coursework withdrawal workflow yet: direct affected requests to
 privacy@ayahspring.com and review orphaned uploads, quarantine, and child-record
 cleanup before enabling assignments or cohorts.
+
+After `20261281053000_child_record_hold_boundary.sql`, the normal child-record
+cleanup defers a due child record when an attached coursework file is held. The
+run reports deferred counts and continues with other due children. On 2026-11-05,
+a PostgreSQL 16.15 test exercised both lock orders against the actual wrappers in
+a minimal schema with a stub erasure function. Repeat the concurrent test with
+the deployed schema.
+This does not reconcile the existing 30-day erasure clock with the selected
+one-year coursework period, or protect every other removal and storage path.
+Keep assignments and cohorts off pending review.

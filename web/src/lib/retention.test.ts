@@ -136,7 +136,7 @@ test('a run is described from the numbers the database returned', () => {
   assert.match(batch, /1200 replies/);
   assert.match(batch, /3 screening records/);
   assert.match(batch, /2 children's learning records/);
-  assert.match(batch, /40 more are due and will go on the next run/);
+  assert.match(batch, /40 more remain due/);
 
   const single = describeRetentionRun({
     asOf: '2026-11-01',
@@ -145,6 +145,39 @@ test('a run is described from the numbers the database returned', () => {
     audited: true,
   });
   assert.match(single, /^Deleted 1 child's learning record\./);
+});
+
+test('a hold is reported as a deferral, not an empty or automatically resolved queue', () => {
+  const message = describeRetentionRun({
+    asOf: '2026-11-01',
+    deleted: { supportCases: 0, supportCaseMessages: 0, screenings: 0, learnerRecords: 0, courseworkFiles: 0 },
+    remaining: { supportCases: 0, screenings: 0, learnerRecords: 1, courseworkFiles: 0 },
+    held: { learnerRecords: 1, courseworkFiles: 1 }, audited: false,
+  });
+  assert.match(message, /Nothing was deleted/);
+  assert.match(message, /1 due child record is deferred/);
+  assert.doesNotMatch(message, /Nothing was due|will go on the next run/);
+});
+
+test('a file hold is not hidden when no child record is due', () => {
+  const message = describeRetentionRun({
+    asOf: '2026-11-01',
+    deleted: { supportCases: 0, supportCaseMessages: 0, screenings: 0, learnerRecords: 0 },
+    remaining: { supportCases: 0, screenings: 0, learnerRecords: 0 },
+    held: { learnerRecords: 0, courseworkFiles: 1 }, audited: false,
+  });
+  assert.match(message, /1 coursework file hold remains recorded/);
+  assert.doesNotMatch(message, /Nothing was due/);
+});
+
+test('a coursework tombstone is not described as storage deletion', () => {
+  const message = describeRetentionRun({
+    asOf: '2026-11-01',
+    deleted: { supportCases: 0, supportCaseMessages: 0, screenings: 0, learnerRecords: 0, courseworkFiles: 1 },
+    remaining: { supportCases: 0, screenings: 0, learnerRecords: 0 }, audited: true,
+  });
+  assert.match(message, /tombstoned, not necessarily deleted from storage/);
+  assert.doesNotMatch(message, /Nothing was due/);
 });
 
 test('a child\'s record past its date is counted with the rest', () => {

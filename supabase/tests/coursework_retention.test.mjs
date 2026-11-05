@@ -397,6 +397,41 @@ export async function run(ctx) {
     assert(after === before - 1, `awaiting went ${before} -> ${after}`);
   });
 
+  await test('a child record with held coursework is deferred without starving other due children', async () => {
+    async function childFile(label) {
+      const userId = await newUser(`held-child-${++seq}@example.com`);
+      await newProfile(userId, label);
+      const learnerId = (await q(`insert into public.learner_profiles
+        (display_name,learner_type,age_band,linked_user_id) values ($1,'child','8-10',$2) returning id`, [label,userId])).rows[0].id;
+      await q(`insert into public.course_enrolments (learner_profile_id,course_id,course_version_id,source,status)
+        values ($1,$2,$3,'free','active')`, [learnerId, course, version]);
+      const assignment = await createAssignment();
+      const submission = (await call(userId, 'select public.save_assignment_draft($1,$2,$3) as id', [assignment,learnerId,'Child work.'])).id;
+      const file = await call(userId, 'select * from public.register_coursework_upload($1,$2,$3,$4,$5)',
+        [submission, 'Child page.jpg', 'image/jpeg', 1000, digest()]);
+      await call(userId, 'select public.confirm_coursework_upload($1)', [file.asset_id]);
+      await call(userId, 'select public.submit_assignment($1)', [submission]);
+      await q(`update public.learner_profiles set deleted_at=now()-interval '45 days', status='archived' where id=$1`, [learnerId]);
+      return { learnerId, submission, asset: file.asset_id };
+    }
+    const heldChild = await childFile('Held child');
+    const otherChild = await childFile('Other child');
+    await call(owner, 'select public.hold_coursework_file($1,$2)', [heldChild.asset, 'An unresolved concern']);
+    const run = await call(owner, 'select public.run_retention_jobs(now(),500) as r');
+    assert(run.r.held.learnerRecords >= 1, 'the blocked child record was not reported');
+    assert(run.r.remaining.learnerRecords >= 1, 'the due child was not counted as remaining');
+    assert((await scalar('select status from public.learner_profiles where id=$1', [heldChild.learnerId])).status !== 'erased');
+    assert(await scalar('select id from public.assignment_submissions where id=$1', [heldChild.submission]), 'held submission was deleted');
+    assert((await scalar('select deleted_at from public.media_assets where id=$1', [heldChild.asset])).deleted_at === null,
+      'held attachment was tombstoned by child cleanup');
+    assert((await scalar('select status from public.learner_profiles where id=$1', [otherChild.learnerId])).status === 'erased',
+      'an unrelated due child was starved behind a hold');
+    await call(owner, 'select public.release_coursework_hold($1,$2)', [heldChild.asset, 'The concern has been reviewed']);
+    await call(owner, 'select public.run_retention_jobs(now(),500) as r');
+    assert((await scalar('select status from public.learner_profiles where id=$1', [heldChild.learnerId])).status === 'erased',
+      'the child record did not return to its existing clock after release');
+  });
+
   await test('the whole cleanup includes the fourth clock, and reports what it held', async () => {
     const row = await handedIn();
     await backdate(row, '2 years');
