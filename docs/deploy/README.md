@@ -953,3 +953,11 @@ learner study sections and counts require the linked learner or a currently
 verified guardian with progress permission and unexpired consent, for all ages.
 The download explains this scope. Other personal records remain exportable. This
 does not review account closure, administrative exports or retention paths.
+
+**Account-closure caution:** the current `erase_my_account` implementation can
+blank a learner's assignment text when the closing account originally created
+that submission, and can tombstone children when the account is the last active
+family member. This path is not yet reconciled with separate child logins,
+coursework retention, or concurrency. Do not use self-service closure for affected
+guardians until it is reviewed; handle their requests through
+privacy@ayahspring.com. This is an operational caution, not a technical block.
