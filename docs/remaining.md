@@ -684,3 +684,11 @@ unmarked same-name account as proof. It is not yet wired to the paused route; it
 does not itself revoke identities, reset passwords, resolve stranded attempts, or
 prove real provider/concurrency behavior. On recovery, the original password
 remains in effect; a later password input is not applied automatically.
+
+The child-login coordinator now has a server adapter that uses the guardian's
+session for reservation, the service role for marked identity creation and
+lookup, and the trusted completion RPC. It has mock-based tests only. It is not
+yet connected to the paused route, and Supabase's real provider behavior,
+metadata protection and retry/concurrency behavior have not been verified in a
+representative deployment. Keep creation paused until the remaining recovery and
+identity-removal steps are implemented and checked.
