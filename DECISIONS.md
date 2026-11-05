@@ -56,7 +56,7 @@ you. Do not treat it as settled, and do not build on it until it moves up.
 |---|---|
 | — | Adult learning is private by default, including inside a family. |
 | — | Multiple guardians per learner. |
-| — | Child login comes later, via a trusted linking workflow. Children are not users in v1. |
+| — | **Superseded:** child login was originally deferred. The owner later required guardian-created child logins; see the later child-login decisions and current implementation status. |
 | — | Course enrolments pin an exact course version; new versions don't mutate existing enrolments. |
 | — | Completion requirements are configurable per course version. |
 | — | Grading is mixed automatic and manual. |

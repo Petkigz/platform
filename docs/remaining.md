@@ -18,11 +18,17 @@ switched off from a dashboard) and `family.guardian_verification`.
 
 ---
 
-## Part 1 — Decisions that block code that is already built
+## Part 1 — Decisions and their implementation history
+
+The subsections record decisions and dated implementation history, not a current
+readiness checklist. Later progress notes supersede earlier descriptions of missing
+code. `DECISIONS.md`, the current migrations and the audit at the end of this
+document are the sources to check before enabling or deploying a feature.
 
 **Owner response, 2026-11-03:** proceed with the recommendations for D1–D8.
-The choices below are approved; implementation and verification remain outstanding.
-Approval is not evidence that a feature is safe to enable. In particular, D1 needs
+The owner later revised several choices as listed below. Parts have been implemented;
+other implementation and verification remain outstanding. Approval is not evidence
+that a feature is safe to enable. In particular, D1 needs
 its file-access paths and same-day escalation verified before assignments or cohorts
 are enabled; in-app notification creation alone does not prove the owner received it.
 D4 and D5 require enforcement, not just terms. D7 and D8 remain deferred as described.
@@ -56,8 +62,8 @@ answers where these differ.
 coursework review register. Both machinery halves are built — the retention clock
 and the recorded review — and `/admin/coursework` shows what nobody has looked at.
 The owner has decided who may open a child's file and how concerns should reach
-them. The access, escalation and file-safety mechanisms still need implementation
-and verification.
+them. The dated progress notes below describe access and queue code that was later
+implemented. End-to-end escalation, file safety and deployment verification remain open.
 
 **Safety gate:** assignments and cohorts are deployment-gated while the access,
 owner queue, file safety and deletion work remains incomplete. The migration
@@ -544,40 +550,36 @@ in the report; the order of the reasoning was the other way round.
 
 ## Part 4 — Not decisions: accounts, credentials and licences
 
-Nothing here can be finished by writing code, and none of it needs an answer from
-you today beyond "when".
+External setup is only one kind of remaining work. Providers, their current terms,
+no-card signup, pricing, operational procedures and integration testing all need
+verification; code, safeguarding, privacy and owner decisions also remain open.
+The owner has not approved paid services.
 
-| Need | Blocks | Cost |
-|---|---|---|
-| Email provider + sending domain (SPF, DKIM, DMARC) | password reset, receipts, invites, every notification | free tier exists (Resend: 3 000/month) |
-| SMS provider | phone OTP at registration and recovery | paid per message; the only per-message cost in the platform |
-| Payment merchant account + sandbox | checkout, mobile money, real money of any kind | free to open; settlement terms vary |
-| Cloudflare R2 credentials + one CORS rule | every video and audio byte | free tier: 10 GB, 1 M operations |
-| A host for the transcode worker with ffmpeg | first-party media playback | free tier possible; needs a always-on process |
-| Payout provider + a tax treatment per country | paying teachers | cannot be waived; this is the one real money question |
-| Google OAuth client | Google sign-in | free |
-| Legal review of the seven policy documents | the children's policy, the withdrawal wording, the scholarship terms | paid, or a favour |
-| App Store $99/yr and Play $25 once | the mobile app | one-off + annual |
+| Need | What remains |
+|---|---|
+| Email provider and sending domain | Verify signup and delivery; configure SPF, DKIM and DMARC before relying on messages. |
+| Phone OTP provider, if phone OTP is offered | Verify provider eligibility, charges and the working registration and recovery integration. |
+| Payment merchant and payout arrangements | Choose and test a provider, settlement and country-specific tax handling; a refund approval does not move money. |
+| Media storage and an ffmpeg worker | Test storage, CORS, upload, processing and playback; R2 has a free allowance but no-card signup is unverified. |
+| Google OAuth client | Configure and test Google sign-in. |
+| Legal and safeguarding review | Review policies, child protection and relevant market requirements; review is not replaced by an account or credential. |
+| Mobile store accounts, if native apps are released | Check current store requirements and costs before committing to publication. |
 
-The one judgement call in that table is the SMS provider: it is the only item where
-a per-message cost is unavoidable, and until it exists the phone-code path shows a
-form that cannot complete.
+See `docs/deploy/README.md` for the unverified deployment plan and free-tier limits.
+No provider signup or production deployment is assumed complete.
 
 ---
 
 ## The short version
 
-- **Eight decisions** unblock code that is already written (D1–D8). The owner
-  approved the recommendations on 2026-11-03; implementation remains outstanding.
-- **Five decisions** shape the product rather than the code (D9–D13), and D9 —
-  first release scope — is the one that makes the other twelve finite.
-- **Five adjustments** I can make without asking anything (A1–A5), and two of them
-  are the same defect I fixed twice today: a sentence in the register that outlived
-  the reason for it.
-- **Nine accounts and licences** are the only genuinely external blockers.
-
-Part 1 is approved and awaits implementation. Part 2 still needs the owner’s
-product choices.
+- D1–D8 have owner choices, some revised after the original recommendations. Code
+  exists for parts of several decisions; the individual sections identify gaps.
+- D9–D13 include product choices still needing review; don't treat a recommendation
+  as an owner decision.
+- A1–A5 were completed on 2026-11-02.
+- Remaining work is not limited to paid services or nine accounts. It includes
+  implementation, privacy and security work, testing, content, operational setup,
+  licensing, owner decisions and external review.
 
 
 **2026-11-05 retention decision:** When a guardian closes their account, the owner
@@ -673,3 +675,17 @@ identity removal are not implemented. If a retry recovers an earlier identity,
 the original password remains in effect. The older general profile-management
 predicate still needs review on its other paths. Do not delete guardian verification
 machinery. No migration has been deployed as part of this work.
+
+
+**Child-login erasure interaction found in audit (2026-11-05):** A local PGlite
+probe created a pending `child_login_attempts` row for a child whose record was
+due, then called the child-record purge. The purge returned `erased: true`, but
+the attempt row (including username and guardian/learner references) remained.
+Completed attempts can also remain after detachment. The existing child-record
+suite's learner-reference sweep did not catch this case because its fixture had no
+child-login attempt. A pending attempt can represent an Auth creation still in
+flight, so blindly deleting the row could lose the only recovery marker for an
+orphaned identity. Reconciliation and a privacy-safe retention/identity-removal
+workflow are needed; the queue is read-only and shows pending attempts only. Do
+not represent child identity data or provider accounts as fully erased. This is a
+local reproduction, not a deployed-system test.
