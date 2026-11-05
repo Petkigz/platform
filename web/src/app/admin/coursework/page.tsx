@@ -15,6 +15,8 @@ import {
 import { readableByteSize } from '@/lib/media';
 import {
   HOLDS_NOTE,
+  missingClassEndCount,
+  parseMissingClassEnds,
   PURGE_NOTE,
   holdMeta,
   holdSentence,
@@ -33,7 +35,7 @@ export const dynamic = 'force-dynamic';
 /** Owner-only review register, alongside separately authorized retention tools.
  * A recorded review is an attestation, not proof that a file was viewed.
  */
-export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ concern?: string; before?: string; beforeId?: string }> }) {
+export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ concern?: string; before?: string; beforeId?: string; endsAfter?: string }> }) {
   if (!isSupabaseConfigured()) redirect('/');
 
   const supabase = await createClient();
@@ -45,7 +47,9 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
   const { data: privileged } = await supabase.rpc('is_privileged', { p_user_id: user.id });
   if (privileged !== true) redirect('/');
 
-  const [summaryResult, queueResult, holdsResult, holdCountResult, planResult, storageResult] =
+  const params = await searchParams;
+  const endsCursorValid = !params.endsAfter || /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(params.endsAfter);
+  const [summaryResult, queueResult, holdsResult, holdCountResult, planResult, storageResult, missingEndsResult] =
     await Promise.all([
       supabase.rpc('coursework_review_summary'),
       supabase.rpc('coursework_review_queue', { p_limit: 200 }),
@@ -56,13 +60,13 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
       // storage queue carries a bucket key for every unwatchable object.
       supabase.rpc('coursework_retention_plan'),
       supabase.rpc('coursework_bytes_awaiting', { p_limit: 50 }),
+      endsCursorValid ? supabase.rpc('coursework_missing_class_ends', { p_limit: 100, p_after: params.endsAfter ?? null }) : Promise.resolve({ data: null, error: true }),
     ]);
 
   const statusResult = await supabase.rpc('safeguarding_owner_status');
   const ownerStatus = statusResult.data as { configured?: boolean; is_owner?: boolean } | null;
   const ownerStatusValid = !statusResult.error && typeof ownerStatus?.configured === 'boolean' && typeof ownerStatus?.is_owner === 'boolean';
   const isSafeguardingOwner = ownerStatusValid && ownerStatus?.is_owner === true;
-  const params = await searchParams;
   const cursorValid = (!params.before && !params.beforeId) ||
     (typeof params.before === 'string' && Number.isFinite(Date.parse(params.before)) &&
       typeof params.beforeId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(params.beforeId));
@@ -95,6 +99,8 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
   const holdCount = canSeeHolds ? parseHoldCount(holdCountResult.data) : null;
   const canSeeStorage = !planResult.error && !storageResult.error && Array.isArray(storageResult.data);
   const storage = canSeeStorage ? parseStorageQueue(storageResult.data) : [];
+  const missingCount = planResult.error ? null : missingClassEndCount(planResult.data);
+  const missingEnds = missingEndsResult.error ? null : parseMissingClassEnds(missingEndsResult.data);
 
   return (
     <div className="page wide">
@@ -313,6 +319,19 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
           </>
         )}
       </section>
+
+      {isSafeguardingOwner && <section id="missing-class-ends" className="card" style={{ marginBlockStart: '1rem' }}>
+        <h2>Classes without an end date</h2>
+        <p>For coursework in an open-ended class, the ordinary one-year clock cannot start until an end is recorded. A child-record erasure can still be due sooner, subject to a safeguarding hold.</p>
+        {missingCount === null || missingEnds === null ? <p className="notice warn">The missing-end report could not be loaded. Do not assume there are no affected files.</p>
+          : <>
+            <p>{missingCount} file{missingCount === 1 ? '' : 's'} have no ordinary deadline because their class has no recorded end. The list shows up to 100 classes per page.</p>
+            {missingEnds.length > 0 && <ul className="lessons">{missingEnds.map((item) => <li key={item.cohortId}><span className="t">{item.courseTitle} · {item.cohortTitle}</span><span>{item.files} file{item.files === 1 ? '' : 's'}</span></li>)}</ul>}
+            {params.endsAfter && <p><Link href="/admin/coursework#missing-class-ends">First page of classes</Link></p>}
+            {missingEnds.length === 100 && <p><Link href={`/admin/coursework?${new URLSearchParams({ endsAfter: missingEnds[missingEnds.length - 1]!.cohortId })}#missing-class-ends`}>More classes</Link></p>}
+            <p className="muted">There is not yet a visual workflow to correct an existing class end date. Arrange individual review; do not guess a date or use a database edit as a routine workaround.</p>
+          </>}
+      </section>}
 
       {!canSeeStorage && (
         <p className="notice warn">The storage register is available only to the configured safeguarding owner, or could not be loaded. Do not assume it is empty.</p>

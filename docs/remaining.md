@@ -585,3 +585,12 @@ chose the 30-day erasure exception for the child's coursework, unless a safeguar
 hold prevents it. Ordinary coursework still follows the one-year rule. The erasure code and children's policy now state that exception. Deletion of
 stored bytes is a separate step that is not yet automated or verified. A separate child login
 must not be silently closed with a guardian's account.
+
+**Open-ended class retention:** Coursework in a cohort with no recorded end no
+longer gets an ordinary deadline based on hand-in; the erasure exception and
+holds still apply. The identified safeguarding owner can see affected class names
+and counts under Handed-in files. There is no visual way yet to correct an
+existing class end, and no automatic proof of when the class ended; arrange
+individual review instead of guessing. The list is paginated at 100 classes.
+Deploy migration 550. Day-based retention comparisons, other removal paths and
+deployed-schema concurrency still need review. Keep assignments and cohorts off.

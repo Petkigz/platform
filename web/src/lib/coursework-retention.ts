@@ -186,3 +186,23 @@ export async function postRetentionAction(input: {
     };
   }
 }
+
+/** Missing is unknown, not zero: an older schema cannot report this risk. */
+export function missingClassEndCount(data: unknown): number | null {
+  const value = row(row(data).files).missingClassEnd;
+  return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0 ? value : null;
+}
+
+export type MissingClassEnd = { cohortId: string; cohortTitle: string; courseTitle: string; files: number };
+export function parseMissingClassEnds(data: unknown): MissingClassEnd[] | null {
+  if (!Array.isArray(data)) return null;
+  const out: MissingClassEnd[] = [];
+  for (const value of data) {
+    const r = row(value);
+    const files = typeof r.files === 'number' ? r.files : typeof r.files === 'string' && /^\d+$/.test(r.files) ? Number(r.files) : NaN;
+    if (typeof r.cohort_id !== 'string' || typeof r.cohort_title !== 'string' ||
+        typeof r.course_title !== 'string' || !Number.isSafeInteger(files) || files < 1) return null;
+    out.push({ cohortId: r.cohort_id, cohortTitle: r.cohort_title, courseTitle: r.course_title, files });
+  }
+  return out;
+}

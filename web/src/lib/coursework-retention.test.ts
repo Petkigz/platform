@@ -4,6 +4,8 @@ import { test } from 'node:test';
 
 import {
   HOLDS_NOTE,
+  missingClassEndCount,
+  parseMissingClassEnds,
   PURGE_NOTE,
   actionConfirmation,
   describeRetentionError,
@@ -106,4 +108,16 @@ test('the page renders the register and the bucket, and asks the database first'
   assert.ok(!page.includes('it is a record that somebody saw the file'));
   const form = readFileSync(new URL('../app/admin/coursework/retention-actions.tsx', import.meta.url), 'utf8');
   assert.ok(form.includes('!attested') && form.includes('cannot verify this'), 'storage statement needs an explicit attestation');
+});
+
+test('missing class-end reporting distinguishes unknown from zero and validates rows', () => {
+  assert.equal(missingClassEndCount({ files: { missingClassEnd: 2 } }), 2);
+  assert.equal(missingClassEndCount({ files: { missingClassEnd: 0 } }), 0);
+  assert.equal(missingClassEndCount({ files: {} }), null);
+  assert.equal(missingClassEndCount({ files: { missingClassEnd: -1 } }), null);
+  assert.equal(parseMissingClassEnds(null), null);
+  assert.deepEqual(parseMissingClassEnds([]), []);
+  assert.deepEqual(parseMissingClassEnds([{ cohort_id: 'c', cohort_title: 'Class', course_title: 'Course', files: '2' }]),
+    [{ cohortId: 'c', cohortTitle: 'Class', courseTitle: 'Course', files: 2 }]);
+  assert.equal(parseMissingClassEnds([{ cohort_id: 'c', files: 1 }]), null);
 });

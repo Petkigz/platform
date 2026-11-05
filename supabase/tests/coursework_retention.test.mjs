@@ -230,6 +230,55 @@ export async function run(ctx) {
     assert(Math.abs(days) < 2, `due ${Math.round(days)} days from now, expected today`);
   });
 
+  await test('an open-ended cohort has no ordinary due date but erasure still applies', async () => {
+    const cohort = (await call(teacher,
+      `select public.create_cohort($1,$2,$3,$4, now() + interval '1 day', null, null) as id`,
+      [course, version, 'Open-ended class', 'No recorded end'])).id;
+    await call(teacher, "select public.set_cohort_status($1,'open')", [cohort]);
+    const who = await learner('Open-ended learner', cohort);
+    const assignment = await createAssignment({ cohortId: cohort });
+    const submission = (await call(who.userId, 'select public.save_assignment_draft($1,$2,$3) as id',
+      [assignment, who.learnerId, 'Work in an ongoing class.'])).id;
+    const asset = (await call(who.userId,
+      'select * from public.register_coursework_upload($1,$2,$3,$4,$5)',
+      [submission, 'Page.jpg', 'image/jpeg', 900000, digest()])).asset_id;
+    await call(who.userId, 'select public.confirm_coursework_upload($1)', [asset]);
+    await call(who.userId, 'select public.submit_assignment($1)', [submission]);
+    await backdate({ asset, submission }, '2 years');
+
+    let r = await retentionRows({ asset });
+    assert(r.due_on === null && r.basis === 'missing_class_end', 'open-ended class received a hand-in based deadline');
+    const summary = await plan();
+    assert(summary.files.missingClassEnd >= 1, 'missing end dates are invisible in the owner plan');
+    const listed = (await asActor(owner, () => q('select * from public.coursework_missing_class_ends()'))).rows;
+    assert(listed.some((item) => item.cohort_id === cohort && Number(item.files) >= 1), 'owner cannot identify the class');
+    const next = (await asActor(owner, () => q('select * from public.coursework_missing_class_ends($1,$2)', [100, cohort]))).rows;
+    assert(!next.some((item) => item.cohort_id === cohort), 'the cursor repeated the same class');
+    await refuses(/coursework:not_allowed/, () => call(teacher, 'select public.coursework_missing_class_ends()'));
+    await refuses(/between 1 and 100/, () => call(owner, 'select public.coursework_missing_class_ends($1)', [101]));
+    await purge();
+    assert((await scalar('select deleted_at from public.media_assets where id=$1', [asset])).deleted_at === null,
+      'cleanup tombstoned work for a class with no end date');
+
+    await q("update public.cohorts set ends_at=now()+interval '1 month' where id=$1", [cohort]);
+    r = await retentionRows({ asset });
+    assert(r.basis === 'class_end' && new Date(r.due_on) > new Date(Date.now() + 390 * 86400000),
+      'the recorded end did not start the ordinary year');
+    await q('update public.cohorts set ends_at=null where id=$1', [cohort]);
+
+    await q("update public.learner_profiles set deleted_at=now()-interval '40 days' where id=$1", [who.learnerId]);
+    r = await retentionRows({ asset });
+    assert(r.basis === 'erasure' && new Date(r.due_on) < new Date(), 'the erasure exception was lost');
+    await call(owner, 'select public.hold_coursework_file($1,$2)', [asset, 'An active safeguarding review']);
+    await purge();
+    assert((await scalar('select deleted_at from public.media_assets where id=$1', [asset])).deleted_at === null,
+      'the erasure exception bypassed a safeguarding hold');
+    await call(owner, 'select public.release_coursework_hold($1,$2)', [asset, 'The review has concluded']);
+    await purge();
+    assert((await scalar('select deleted_at from public.media_assets where id=$1', [asset])).deleted_at !== null,
+      'erasure was blocked after the hold was released');
+  });
+
   await test('an erased learning record shortens the clock and never lengthens it', async () => {
     const row = await handedIn();
     await committed(() => q(
