@@ -462,6 +462,43 @@ export async function run(ctx) {
       }
     });
 
+    await test('closing a guardian account cannot erase another learner’s submission', async () => {
+      const family = await parentWithChild({ course, version });
+      const remaining = await newUser(`assignment-close-other-${++seq}@example.com`);
+      await newProfile(remaining, 'Other family member');
+      const familyId = (await q('select family_id from public.learner_profiles where id=$1', [family.childId])).rows[0].family_id;
+      await q(`insert into public.family_memberships (family_id,user_id,membership_type,status,joined_at,created_by)
+        values ($1,$2,'guardian','active',now(),$3)`, [familyId, remaining, family.userId]);
+      const sub = await asActor(family.userId, async () =>
+        (await q(SQL_SAVE, [selfPaced, family.childId, 'Keep this learner answer.'])).rows[0].id);
+      const name = (await q('select display_name from public.user_profiles where user_id=$1', [family.userId])).rows[0].display_name;
+      const result = await asActor(family.userId, () => q('select public.erase_my_account($1) as r', [name]));
+      assert(result.rows[0].r.closed === true, 'the guardian account did not close');
+      const row = (await q('select body_text from public.assignment_submissions where id=$1', [sub])).rows[0];
+      assert(row.body_text === 'Keep this learner answer.', 'closing a guardian erased another learner’s answer');
+      assert((await q('select deleted_at from public.learner_profiles where id=$1', [family.childId])).rows[0].deleted_at === null);
+    });
+
+    await test('closing the last family account with child coursework requires review', async () => {
+      const family = await parentWithChild({ course, version });
+      const sub = await asActor(family.userId, async () =>
+        (await q(SQL_SAVE, [selfPaced, family.childId, 'Work to retain.'])).rows[0].id);
+      const name = (await q('select display_name from public.user_profiles where user_id=$1', [family.userId])).rows[0].display_name;
+      await refused(family.userId, 'select public.erase_my_account($1)', [name], /privacy@ayahspring\.com/i);
+      assert((await q('select body_text from public.assignment_submissions where id=$1', [sub])).rows[0].body_text === 'Work to retain.');
+      assert((await q('select account_status from public.user_profiles where user_id=$1', [family.userId])).rows[0].account_status !== 'closed');
+    });
+
+    await test('closing the last family account with a separate child login requires review', async () => {
+      const family = await parentWithChild({ course, version });
+      const child = await newUser(`assignment-close-child-${++seq}@example.com`);
+      await newProfile(child, 'Child login');
+      await q('update public.learner_profiles set linked_user_id=$1 where id=$2', [child, family.childId]);
+      const name = (await q('select display_name from public.user_profiles where user_id=$1', [family.userId])).rows[0].display_name;
+      await refused(family.userId, 'select public.erase_my_account($1)', [name], /privacy@ayahspring\.com/i);
+      assert((await q('select deleted_at from public.learner_profiles where id=$1', [family.childId])).rows[0].deleted_at === null);
+    });
+
     await test('submission requires matching course version and cohort membership', async () => {
       const unjoined = await learner('Not joined', { course, version });
       await refused(unjoined.userId, SQL_SAVE,

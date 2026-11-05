@@ -77,12 +77,13 @@ This applies to all ages, independently of the general guardian switch. Other
 personal records such as a caller's own invitations and guardian relationships
 remain in the export. Review the separate account-closure/erasure path and other
 administrative and retention paths; do not assume the entire data-rights workflow
-has the same boundary. In particular, `erase_my_account` currently blanks a
-submission when the closing account created it, even if the work belongs to a
-separate learner; its last-family-member logic can also tombstone children. Review
-these effects and the concurrency and retention implications before using
-self-service closure for guardians. Until then, handle affected requests through
-privacy@ayahspring.com rather than claiming this path is safe. Deploy the migration.
+has the same boundary. The account-closure safeguard now preserves another learner's submission when
+its creator closes their account, and pauses closure for review when it would
+tombstone a child with a separate login or any assignment submission. Affected
+people are directed to privacy@ayahspring.com. This is not a complete child
+retention or guardianship solution: unlinked children without submissions can
+still be tombstoned, another active family member need not be a verified guardian,
+and other closure/retention and concurrency paths need review. Deploy the migrations.
 
 **Submission write authority:** saving a draft, submitting, reopening and
 removing an attachment now require the learner or a currently verified guardian

@@ -74,14 +74,14 @@ export default async function DeleteAccountPage() {
                 <li>Lesson notes and bookmarks</li>
                 <li>Saved courses and the notes on them</li>
                 <li>Course reviews and discussion posts you wrote</li>
-                <li>The text of assignment work you sent</li>
+                <li>The text of assignment work belonging to learner profiles closed with this account</li>
                 <li>Live sharing links, invitations and guardian access</li>
                 <li>Notifications sent to you, and mail the platform sent or queued for you</li>
                 <li>
-                  Any child profile that would be left without an adult — a child with
-                  another active guardian stays with them. Thirty days later the rest of
-                  that child&rsquo;s learning record goes too: enrolments, progress,
-                  submissions, attempts and attendance
+                  A child profile in a family with no other active member may be closed.
+                  If it has a separate login or assignment work, self-service closure is
+                  paused for individual review: contact privacy@ayahspring.com. Other eligible
+                  child learning records are scheduled for removal after thirty days.
                 </li>
               </ul>
             </section>
@@ -90,8 +90,8 @@ export default async function DeleteAccountPage() {
               <ul className="muted" style={{ paddingInlineStart: '1.1rem' }}>
                 <li>Orders, payments and refunds — the ledger a refund depends on</li>
                 <li>
-                  Your own enrolments and lesson progress. A child&rsquo;s are different: they
-                  go thirty days after this, with the rest of their record
+                  Your own enrolments and lesson progress. Eligible child records are
+                  scheduled for removal thirty days after closure.
                 </li>
                 <li>Certificates, under the number they were issued with</li>
                 <li>
