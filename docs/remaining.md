@@ -710,3 +710,10 @@ the guardian from the server session, and treats ambiguous replies as unknown.
 If a prior creation is recovered, the family screen explains that the earlier
 password remains in effect. This work does not lift the creation pause or provide
 password reset or provider-session revocation.
+
+A local cross-layer child-login test now drives the real creation handler and
+server adapter through the migrated database functions using authenticated and
+service roles, with a simulated auth provider. It covers normal creation and a
+lost provider response that is recovered via the server-only marker. This is not
+a test of Supabase's live Auth API or deployed concurrency, and it does not lift
+the creation gate.

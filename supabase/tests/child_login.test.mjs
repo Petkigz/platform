@@ -15,6 +15,9 @@
 //     control with no way to switch it off unless the feature is on is worse
 //     than the feature.
 
+import { handleChildLoginCreation } from '../../web/src/lib/child-login-handler.ts';
+import { childLoginCreatePorts } from '../../web/src/lib/child-login-ports.ts';
+
 export async function run(ctx) {
   const {
     q, test, assert, rejects,
@@ -482,6 +485,62 @@ export async function run(ctx) {
       await q('delete from public.safeguarding_owner where singleton');
       if (prior) await q('select public.bootstrap_safeguarding_owner($1)', [prior]);
     }
+  });
+
+  await test('the creation handler reaches the real database boundary, including a lost provider reply', async () => {
+    await setFlag('family.child_login', true);
+    try {
+      for (const loseReply of [false, true]) {
+        const guardian = await person(`Integration guardian ${loseReply}`);
+        const { childId: learner } = await familyWithChild(guardian, `Integration child ${loseReply}`);
+        const username = loseReply ? 'integration.lost' : 'integration.normal';
+        const calls = [];
+        // The session and service wrappers execute the real migration functions
+        // under their actual DB roles. Only Supabase Auth's HTTP endpoint is a
+        // fake: it inserts an auth identity with server-controlled app metadata.
+        const session = { rpc: async (name, args) => {
+          try {
+            const result = await asActor(guardian, `select public.${name}($1,$2) as value`, [args.p_learner,args.p_username]);
+            return { data: result.rows[0].value, error: null };
+          } catch (e) { return { data: null, error: { message: e.message } }; }
+        } };
+        const service = {
+          rpc: async (name, args) => {
+            try {
+              const result = await committed(async () => {
+                await q('set local role service_role');
+                const params = name === 'child_login_attempt_identity'
+                  ? [args.p_attempt,args.p_guardian]
+                  : [args.p_attempt,args.p_guardian,args.p_user];
+                const slots = params.map((_, n) => `$${n+1}`).join(',');
+                return q(`select public.${name}(${slots}) as value`, params);
+              });
+              return { data: result.rows[0].value, error: null };
+            } catch (e) { return { data: null, error: { message: e.message } }; }
+          },
+          auth: { admin: { createUser: async (payload) => {
+            calls.push(payload);
+            const id = await newUser(payload.email);
+            await q('update auth.users set raw_app_meta_data=$2::jsonb where id=$1', [id,JSON.stringify(payload.app_metadata)]);
+            if (loseReply) return { data: null, error: { message: 'simulated lost provider response' } };
+            return { data: { user: { id } }, error: null };
+          } } },
+        };
+        const result = await handleChildLoginCreation(childLoginCreatePorts(session,service), guardian,
+          { learnerId: learner, username, password: 'test-password-42', guardianId: 'not-the-actor' });
+        assert(result.status === 200 && result.body.ok && result.body.recovered === loseReply,
+          `unexpected outcome: ${JSON.stringify(result)}`);
+        assert(calls.length === 1 && calls[0].app_metadata.ayahspring_child_attempt,
+          'the provider did not receive the trusted attempt marker');
+        const linked = (await q(`select lp.linked_user_id, u.email, a.status
+          from public.learner_profiles lp
+          join auth.users u on u.id=lp.linked_user_id
+          join public.child_login_attempts a on a.learner_profile_id=lp.id
+          where lp.id=$1`, [learner])).rows[0];
+        assert(linked && linked.email === `${username}@learners.ayahspring.com` && linked.status === 'completed',
+          'the database did not link the intended identity and complete the attempt');
+      }
+    } finally { await setFlag('family.child_login', false); }
   });
 
   // ---------------------------------------------------------------------------
