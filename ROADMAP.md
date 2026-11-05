@@ -24,8 +24,8 @@ the decision that ended it and where that decision is recorded.
 **A number in this file is a measurement with a date, not a memory.** Where a
 figure appears without a date it is the 2026-11-03 reading: 164 ordinary public
 tables, 283 policies, 80 flags and 18 controls, 128 page routes and 117 route
-handlers. On 2026-11-05 the tree has 252 migrations, the database suite
-passed 2 580 assertions in 170 suites, and the web suite passed 2 052 tests.
+handlers. On 2026-11-05 the tree has 253 migrations, the database suite
+passed 2 581 assertions in 170 suites, and the web suite passed 2 052 tests.
 
 ---
 

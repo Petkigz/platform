@@ -70,6 +70,14 @@ Checked upload and lifecycle writers remain, as do limited descriptive edits. Th
 migration needs deployment and does not itself fix the existing broad read/signing
 paths, revoke previously issued URLs, scan files, or control storage credentials.
 
+**Submission read boundary:** direct assignment submission text, feedback,
+revision snapshots and attachment references, plus the file-list RPC, now use
+the learner, current verified guardian with progress permission, assignment author
+or named safeguarding-owner rule. It applies to all ages and does not rely on
+the general guardian switch. Other SECURITY DEFINER exports and write paths still
+need review; this is not a complete safeguarding boundary. Deploy the migration
+and keep assignments and cohorts off.
+
 **Review privacy:** the review register and its summary are now restricted to
 the separately configured safeguarding owner. Recording a review is limited to
 the assignment author or that owner when they can open the file; a household or

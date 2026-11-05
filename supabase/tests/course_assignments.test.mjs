@@ -77,6 +77,7 @@ export async function run(ctx) {
       }
       return id;
     });
+    await ctx.verifyGuardian(userId, childId);
     return { userId, childId };
   }
 
@@ -313,6 +314,57 @@ export async function run(ctx) {
 
       await refused(outsider.userId, SQL_SAVE,
         [selfPaced, family.childId, 'Not the guardian.'], /learner you are responsible for/i);
+    });
+
+    await test('submission text and revisions require the learner, verified guardian, marker or owner', async () => {
+      const family = await parentWithChild({ course, version });
+      const childUser = await newUser(`assignments-child-login-${++seq}@example.com`);
+      await newProfile(childUser, 'Child account');
+      await q('update public.learner_profiles set linked_user_id=$1 where id=$2', [childUser, family.childId]);
+      const member = await newUser(`assignments-family-member-${++seq}@example.com`);
+      await newProfile(member, 'Unverified household member');
+      const familyId = (await q('select family_id from public.learner_profiles where id=$1', [family.childId])).rows[0].family_id;
+      await q(`insert into public.family_memberships
+        (family_id,user_id,membership_type,status,joined_at,created_by)
+        values ($1,$2,'guardian','active',now(),$3)`, [familyId, member, family.userId]);
+      const childSubmission = await asActor(family.userId, async () =>
+        (await q(SQL_SAVE, [selfPaced, family.childId, 'Private answer.'])).rows[0].id);
+      await declaredFile(family.userId, childSubmission, 'Private image.jpg');
+      await asActor(family.userId, () => q(SQL_SUBMIT, [childSubmission]));
+      await asActor(teacher, () => q(SQL_MARK, [childSubmission, 8, 'Private feedback.']));
+      await asActor(family.userId, () => q('select public.reopen_assignment_submission($1)', [childSubmission]));
+      const submissionRows = async (actor) => (await asActor(actor, () => q(
+        'select body_text from public.assignment_submissions where id=$1', [childSubmission]))).rows;
+      const revisionRows = async (actor) => (await asActor(actor, () => q(
+        'select body_text, feedback from public.assignment_submission_revisions where submission_id=$1', [childSubmission]))).rows;
+      const attachmentRows = async (actor) => (await asActor(actor, () => q(
+        'select media_asset_id from public.assignment_submission_assets where submission_id=$1', [childSubmission]))).rows;
+      for (const actor of [family.userId, childUser, teacher]) {
+        assert((await submissionRows(actor)).length === 1 && (await revisionRows(actor)).length === 1 &&
+          (await attachmentRows(actor)).length === 1, 'an authorized reader lost the submission, revision or attachment');
+      }
+      for (const actor of [member, admin, otherTeacher, outsider.userId]) {
+        assert((await submissionRows(actor)).length === 0 && (await revisionRows(actor)).length === 0 &&
+          (await attachmentRows(actor)).length === 0, 'an unauthorized reader saw private work or an attachment reference');
+        await refused(actor, 'select public.assignment_submission_files($1)', [childSubmission], /not yours to read/i);
+      }
+      await q('select public.bootstrap_safeguarding_owner($1)', [admin]);
+      try {
+        assert((await submissionRows(admin)).length === 1 && (await revisionRows(admin)).length === 1,
+          'the named safeguarding owner cannot inspect the submission');
+      } finally {
+        await q('delete from public.safeguarding_owner where singleton');
+      }
+      // The fixture has the general guardian switch off; the specific submission
+      // reader must still reject an expired or scope-limited verification.
+      await q('update public.guardian_relationships set can_view_progress=false where learner_profile_id=$1 and guardian_user_id=$2',
+        [family.childId, family.userId]);
+      assert((await submissionRows(family.userId)).length === 0 && (await revisionRows(family.userId)).length === 0);
+      await q(`update public.guardian_relationships set can_view_progress=true, verified_at=now()-interval '2 years',
+        consent_expires_at=now()-interval '1 year' where learner_profile_id=$1 and guardian_user_id=$2`,
+        [family.childId, family.userId]);
+      assert((await submissionRows(family.userId)).length === 0 && (await revisionRows(family.userId)).length === 0);
+      assert((await submissionRows(childUser)).length === 1 && (await revisionRows(teacher)).length === 1);
     });
 
     await test('submission requires matching course version and cohort membership', async () => {

@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-252 files in `supabase/migrations/`, applied in filename order — the 14-digit
+253 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -152,7 +152,7 @@ done
   first run. What you are watching for is the loop *stopping*, and the file name
   above the error.
 - Takes a few minutes. The last file printed should be
-  `20261281045000_coursework_review_privacy.sql`.
+  `20261281046000_assignment_submission_read_boundary.sql`.
 
 **Existing installations:** the subscription safety migration preserves the current
 `commerce.subscriptions` value. If it is already on, review existing customer
@@ -170,7 +170,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 252 files from the top and fail on the
+it, and `db push` would then re-apply all 253 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -931,3 +931,10 @@ staff and household members cannot record reviews or see review state through th
 submission-file list. A review is an attestation, not proof of viewing or a
 complete access log. Other submission and retention metadata paths still require
 review; leave the assignments and cohorts switches off.
+
+After `20261281046000_assignment_submission_read_boundary.sql`, assignment text,
+feedback, revision snapshots and attachment lists use the narrower coursework
+reader rule for all ages. Confirm the named safeguarding owner is configured and
+verify access with real learner, guardian and marker accounts before enabling
+anything. This does not yet constrain every export or write path; keep assignments
+and cohorts off until the remaining safeguarding work is complete.

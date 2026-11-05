@@ -428,9 +428,7 @@ export async function run(ctx) {
     assert(seen.length === 1, 'the family cannot see their own file');
     assert(!('review' in seen[0]), 'the family was told a teacher marked a concern');
     assert(!('reviewedAt' in seen[0]), 'the family was told when a review happened');
-    const staff = (await call(agent, 'select public.assignment_submission_files($1) as f', [row.submission])).f;
-    assert(staff.length === 1 && !('review' in staff[0]) && !('reviewedAt' in staff[0]),
-      'unrelated staff saw safeguarding review state');
+    await refuses(/not yours to read/, () => call(agent, 'select public.assignment_submission_files($1) as f', [row.submission]));
     await ctx.verifyGuardian(agent, row.childId);
     const guardianStaff = (await call(agent, 'select public.assignment_submission_files($1) as f', [row.submission])).f;
     assert(guardianStaff.length === 1 && !('review' in guardianStaff[0]),
