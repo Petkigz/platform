@@ -632,3 +632,11 @@ previous request, ignores late results even if abort is ignored, binds a URL to
 the selected rendition and clears stale poster state. Automated tests exercise
 request ordering and the component wiring; a real browser/network test is still
 needed. Existing signed URLs remain valid until they expire.
+
+**Coursework inactive-session audit:** The coursework text, revision, attachment, learner study-export
+and master-file read predicates now require an active, undeleted account; learner
+and guardian hand-in, author grading and coursework review writers recheck it
+and hold the profile lock through the transaction. This covers those paths, not
+every learner, guardian, author, personal-export section or media endpoint. Previously issued
+signed URLs can still work until expiry. Deployed concurrency and live-browser
+checks remain necessary. Deploy migration 590; keep assignments and cohorts off.

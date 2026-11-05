@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-265 files in `supabase/migrations/`, applied in filename order — the 14-digit
+266 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -152,7 +152,7 @@ done
   first run. What you are watching for is the loop *stopping*, and the file name
   above the error.
 - Takes a few minutes. The last file printed should be
-  `20261281058000_named_owner_account_boundary.sql`.
+  `20261281059000_coursework_inactive_actor_boundary.sql`.
 
 **Existing installations:** the subscription safety migration preserves the current
 `commerce.subscriptions` value. If it is already on, review existing customer
@@ -170,7 +170,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 265 files from the top and fail on the
+it, and `db push` would then re-apply all 266 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -1039,3 +1039,10 @@ PostgreSQL 16.15 tested both lock orders for both appointments and both operatio
 using the actual wrappers in a minimal schema with stub closure and merge bodies;
 repeat with the deployed schema. Previously closed or suspended appointments do
 not repair themselves.
+
+After `20261281059000_coursework_inactive_actor_boundary.sql`, coursework reads and learner study exports
+and the hand-in, grading and review writers require an active, undeleted account.
+This is not a general session revocation: other data and endpoints still need
+review, and signed URLs already issued may work until expiry. Test concurrency
+and complete the other safeguarding checks on the deployed system before opening
+assignments or cohorts.

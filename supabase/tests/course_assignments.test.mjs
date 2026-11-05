@@ -367,6 +367,56 @@ export async function run(ctx) {
       assert((await submissionRows(childUser)).length === 1 && (await revisionRows(teacher)).length === 1);
     });
 
+    await test('inactive learner, verified guardian and marker sessions cannot read or change coursework', async () => {
+      const family = await parentWithChild({ course, version });
+      const childUser = await newUser(`inactive-child-${++seq}@example.com`);
+      await newProfile(childUser, 'Child login');
+      await q('update public.learner_profiles set linked_user_id=$1 where id=$2', [childUser, family.childId]);
+      const sub = await asActor(family.userId, async () =>
+        (await q(SQL_SAVE, [selfPaced, family.childId, 'Private work.'])).rows[0].id);
+      const asset = await declaredFile(family.userId, sub, 'Private file.jpg');
+      await asActor(family.userId, () => q(SQL_SUBMIT, [sub]));
+      await asActor(teacher, () => q(SQL_MARK, [sub, 8, 'Private feedback.']));
+      await asActor(family.userId, () => q('select public.reopen_assignment_submission($1)', [sub]));
+      await asActor(family.userId, () => q(SQL_SUBMIT, [sub]));
+
+      const setStatus = (actor, status, deleted) => committed(async () => {
+        await q("select set_config('app.account_erasure','on',true)");
+        await q('update public.user_profiles set account_status=$2, deleted_at=$3 where user_id=$1', [actor, status, deleted]);
+      });
+      const rows = async (actor, table, col) => (await asActor(actor, () => q(
+        `select 1 from public.${table} where ${col}=$1`, [sub]))).rows.length;
+      for (const actor of [family.userId, childUser, teacher]) {
+        assert(await rows(actor, 'assignment_submissions', 'id') === 1, 'active actor lacked the submission');
+        assert((await asActor(actor, () => q('select public.may_watch_master($1) as allowed', [asset]))).rows[0].allowed === true,
+          'active actor could not open the file');
+        try {
+          for (const [status, deleted] of [['suspended', null], ['closed', new Date().toISOString()], ['active', new Date().toISOString()]]) {
+            await setStatus(actor, status, deleted);
+            assert(await rows(actor, 'assignment_submissions', 'id') === 0 &&
+              await rows(actor, 'assignment_submission_revisions', 'submission_id') === 0 &&
+              await rows(actor, 'assignment_submission_assets', 'submission_id') === 0,
+              'inactive actor could read coursework through RLS');
+            assert((await asActor(actor, () => q('select public.may_watch_master($1) as allowed', [asset]))).rows[0].allowed === false,
+              'inactive actor could open a coursework master');
+            await refused(actor, 'select public.assignment_submission_files($1)', [sub], /not yours to read/i);
+            const exported = (await asActor(actor, () => q('select public.export_my_data() as doc'))).rows[0].doc;
+            assert(!exported.assignments.some(item => item.body === 'Private work.'),
+              'inactive actor obtained coursework through personal export');
+            if (actor === teacher) {
+              await refused(actor, SQL_MARK, [sub, 9, 'Should not save'], /active account/i);
+              await refused(actor, 'select public.record_coursework_review($1,$2,$3)', [asset, 'clear', null], /active account/i);
+              await refused(actor, 'select public.record_coursework_review_internal($1,$2,$3)', [asset, 'clear', null], /permission denied/i);
+            }
+            else await refused(actor, SQL_SAVE, [selfPaced, family.childId, 'Should not save'], /currently verified guardian/i);
+          }
+        } finally { await setStatus(actor, 'active', null); }
+        assert(await rows(actor, 'assignment_submissions', 'id') === 1, 'reinstatement did not restore access');
+      }
+      await asActor(teacher, () => q(SQL_MARK, [sub, 9, 'After reinstatement.']));
+      assert((await q('select feedback from public.assignment_submissions where id=$1', [sub])).rows[0].feedback === 'After reinstatement.');
+    });
+
     await test('assignment writes require the learner or current guardian, and only the marker grades', async () => {
       const family = await parentWithChild({ course, version });
       const member = await newUser(`assignment-writer-member-${++seq}@example.com`);
