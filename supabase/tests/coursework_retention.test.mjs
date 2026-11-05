@@ -345,6 +345,16 @@ export async function run(ctx) {
     assert(again.deleted >= 1, 'releasing the hold did not put the file back in front of the press');
   });
 
+  await test('the cleanup locks each asset and rechecks its hold before tombstoning', async () => {
+    const definition = (await q(`select pg_get_functiondef('public.purge_coursework_files(timestamptz,integer)'::regprocedure) as source`)).rows[0].source;
+    const lock = definition.indexOf('where id = v_id for update');
+    const recheck = definition.indexOf('where asset_id = v_id and due_on <= v_as_of', lock);
+    const update = definition.indexOf('update public.media_assets', recheck);
+    assert(lock >= 0 && recheck > lock && update > recheck && definition.slice(recheck, update).includes('not held'),
+      'cleanup no longer locks and rechecks the hold before tombstoning');
+    // This structural test is not a multi-session PostgreSQL race test.
+  });
+
   await test('only the owner runs the press', async () => {
     await refuses(/retention:not_allowed/, () => call(governance, 'select public.purge_coursework_files()'));
     await refuses(/retention:not_allowed/, () => call(agent, 'select public.purge_coursework_files()'));

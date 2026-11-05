@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-257 files in `supabase/migrations/`, applied in filename order — the 14-digit
+258 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -152,7 +152,7 @@ done
   first run. What you are watching for is the loop *stopping*, and the file name
   above the error.
 - Takes a few minutes. The last file printed should be
-  `20261281050000_coursework_retention_privacy.sql`.
+  `20261281051000_coursework_retention_lock.sql`.
 
 **Existing installations:** the subscription safety migration preserves the current
 `commerce.subscriptions` value. If it is already on, review existing customer
@@ -170,7 +170,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 257 files from the top and fail on the
+it, and `db push` would then re-apply all 258 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -968,7 +968,16 @@ Existing deployments remain exposed until the migration is applied.
 After `20261281050000_coursework_retention_privacy.sql`, only the named active
 safeguarding owner can view or manage coursework holds and storage records. A
 storage-deletion record is an attestation, not proof of deletion. Regular
-platform-admin retention runs are unchanged. Holds and scheduled cleanup are not
-yet serialized against one another, and other deletion paths need review: do not
-rely on a hold as a complete preservation guarantee. Deploy and test owner setup;
-keep assignments and cohorts off.
+platform-admin retention runs retain their existing authorization. After
+`20261281051000_coursework_retention_lock.sql`, scheduled coursework cleanup
+locks each media row and rechecks the hold before tombstoning. A separate
+PostgreSQL 16.15 test on 2026-11-05 exercised both lock orders using the actual
+hold and cleanup functions against a minimal schema. The normal test harness has
+one connection; repeat simultaneous hold and cleanup transactions end-to-end
+with the deployed schema. Test in an isolated sandbox with a
+fake due file: hold it in one uncommitted session, start cleanup in another,
+commit the hold, and confirm cleanup leaves it intact; also test cleanup winning
+the lock first. Other deletion paths need review: generic media withdrawal and
+child-record cleanup can tombstone held coursework. Do not rely on a hold as a
+complete preservation guarantee. Deploy and test owner
+setup; keep assignments and cohorts off.

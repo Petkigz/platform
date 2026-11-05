@@ -98,10 +98,15 @@ release, and recording storage deletion are limited to the configured active
 safeguarding owner. A held file cannot be recorded as purged. Storage deletion is
 a human statement, not checked by the database; the form asks for an explicit
 attestation. The regular platform-admin retention job still runs separately.
-A hold and scheduled cleanup can race because cleanup does not yet lock and
-recheck the hold atomically; other deletion paths and historic attestations also
-need review. Do not rely on a hold as a complete preservation guarantee. Deploy
-the migration and keep assignments and cohorts off.
+The scheduled coursework cleanup now locks each media row and rechecks its hold
+before tombstoning. The normal harness is single-connection. On 2026-11-05, a separate
+PostgreSQL 16.15 test using a minimal schema and the actual hold/cleanup functions
+verified both lock orders; repeat an end-to-end test with the deployed schema
+before relying on it. Other deletion paths still need review:
+`delete_media_asset` can tombstone coursework despite a hold, and child-record
+cleanup can remove a submission and tombstone its held attachment. The stored
+bytes may remain, but a hold is not a complete preservation guarantee. Storage
+access and historic attestations also need review. Deploy the migrations and keep assignments and cohorts off.
 
 **Submission read boundary:** direct assignment submission text, feedback,
 revision snapshots and attachment references, plus the file-list RPC, now use

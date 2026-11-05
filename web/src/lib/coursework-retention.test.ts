@@ -88,7 +88,7 @@ test('each refusal is a sentence, not an error code', () => {
 });
 
 test('the confirmation says what happened to the clock, not what was clicked', () => {
-  assert.match(actionConfirmation('hold', 'Page one.jpg'), /concurrent cleanup can race/);
+  assert.match(actionConfirmation('hold', 'Page one.jpg'), /not a preservation guarantee/);
   assert.match(actionConfirmation('release', 'Page one.jpg'), /may already be due/);
   assert.match(actionConfirmation('purge', 'Page one.jpg'), /did not verify/);
   assert.match(describeRetentionError('a held file cannot be recorded'), /held file/);

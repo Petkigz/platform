@@ -97,8 +97,8 @@ export function parseStorageQueue(data: unknown): StorageRow[] {
 
 /** The sentence above the holds list. */
 export const HOLDS_NOTE =
-  'A hold needs a written reason and is intended to pause scheduled deletion. '
-  + 'A concurrent cleanup can race the hold, so do not rely on it as a preservation guarantee. '
+  'A hold needs a written reason. Scheduled cleanup locks and rechecks the hold, '
+  + 'but other deletion paths still need review, so it is not a preservation guarantee. '
   + 'After release, a readable file returns to its original schedule and may be due immediately. '
   + 'For a tombstoned file, release schedules its stored bytes at least thirty days later.';
 
@@ -115,7 +115,7 @@ export function holdSentence(row: HoldRow): string {
     return 'The file is no longer readable. The hold may still protect its stored bytes; check the case before releasing it.';
   }
   return row.dueOn
-    ? `Readable with a hold recorded. It was due on ${row.dueOn}; a concurrent cleanup can race the hold.`
+    ? `Readable with a hold recorded. It was due on ${row.dueOn}; other deletion paths still need review.`
     : 'Readable with a hold recorded. It had not reached its date when the hold was placed.';
 }
 
@@ -131,7 +131,7 @@ export function storageSentence(row: StorageRow): string {
 /** What the form is doing, said before the round trip rather than after it. */
 export function actionConfirmation(action: RetentionAction, name: string): string {
   if (action === 'hold') {
-    return `A hold was recorded for ${name}. A concurrent cleanup can race it; do not rely on it as a preservation guarantee.`;
+    return `A hold was recorded for ${name}. Other deletion paths still need review; it is not a preservation guarantee.`;
   }
   if (action === 'release') {
     return `The hold on ${name} was released. Check its retention schedule; it may already be due.`;
