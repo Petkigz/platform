@@ -98,7 +98,7 @@ export default async function ExportPage() {
           <li>
             <strong>Learner profiles</strong>
             <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
-              Your own, and any child you are an active guardian of. It also carries that child&rsquo;s
+              Your own, and learners for whom you are a currently verified guardian with progress permission. It also carries their
               enrolments, progress, attempts and certificates.
             </span>
           </li>

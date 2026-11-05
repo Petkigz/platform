@@ -196,9 +196,10 @@ export async function run(ctx) {
              values ($1,$2,'owner','active',now())`, [familyId, guardian.userId]);
 
     const childName = 'Export Child';
-    await q(
+    const childId = (await scalar(
       `insert into public.learner_profiles (family_id, display_name, learner_type, age_band)
-       values ($1,$2,'child','8-10')`, [familyId, childName]);
+       values ($1,$2,'child','8-10') returning id`, [familyId, childName])).id;
+    await ctx.verifyGuardian(guardian.userId, childId);
 
     const doc = await exportAs(guardian.userId);
     const names = doc.learners.map((l) => l.displayName);

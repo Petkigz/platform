@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-254 files in `supabase/migrations/`, applied in filename order — the 14-digit
+255 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -152,7 +152,7 @@ done
   first run. What you are watching for is the loop *stopping*, and the file name
   above the error.
 - Takes a few minutes. The last file printed should be
-  `20261281047000_assignment_write_authority.sql`.
+  `20261281048000_export_learner_boundary.sql`.
 
 **Existing installations:** the subscription safety migration preserves the current
 `commerce.subscriptions` value. If it is already on, review existing customer
@@ -170,7 +170,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 254 files from the top and fail on the
+it, and `db push` would then re-apply all 255 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -947,3 +947,9 @@ This applies to all ages. Test any existing assignments that were created by sta
 on a teacher's behalf: the current schema identifies the creator as the marker,
 and has no visual marker-reassignment workflow. Other export and administrative
 paths remain unaudited, so keep assignments and cohorts off.
+
+After `20261281048000_export_learner_boundary.sql`, the personal-data export's
+learner study sections and counts require the linked learner or a currently
+verified guardian with progress permission and unexpired consent, for all ages.
+The download explains this scope. Other personal records remain exportable. This
+does not review account closure, administrative exports or retention paths.

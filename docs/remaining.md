@@ -70,6 +70,15 @@ Checked upload and lifecycle writers remain, as do limited descriptive edits. Th
 migration needs deployment and does not itself fix the existing broad read/signing
 paths, revoke previously issued URLs, scan files, or control storage credentials.
 
+**Personal-data exports:** the learner, assignment, assessment and offline-device
+study sections and their counts now include a learner only for their linked account
+or a currently verified guardian with progress permission and unexpired consent.
+This applies to all ages, independently of the general guardian switch. Other
+personal records such as a caller's own invitations and guardian relationships
+remain in the export. Review the separate account-closure/erasure path and other
+administrative and retention paths; do not assume the entire data-rights workflow
+has the same boundary. Deploy the migration.
+
 **Submission write authority:** saving a draft, submitting, reopening and
 removing an attachment now require the learner or a currently verified guardian
 with progress permission. Only the assignment creator (the marker in the current

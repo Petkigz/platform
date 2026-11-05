@@ -190,7 +190,7 @@ export async function run(ctx) {
     const doc = await exportOf(person.userId);
     assert(doc.meta.truncated.length === 0,
       `a fresh account had a cut list: ${JSON.stringify(doc.meta.truncated)}`);
-    assert(doc.meta.note === 'Every list is complete.');
+    assert(doc.meta.note === 'Every eligible list is complete. Learner records require current access.');
   });
 
   // -------------------------------------------------------------------------

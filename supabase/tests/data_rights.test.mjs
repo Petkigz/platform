@@ -351,7 +351,7 @@ export async function run(ctx) {
       assert(Number(counts[key]) === actual,
         `meta.counts.${key} says ${counts[key]}, the list holds ${actual}`);
     }
-    assert(doc.meta.note === 'Every list is complete.', doc.meta.note);
+    assert(doc.meta.note === 'Every eligible list is complete. Learner records require current access.', doc.meta.note);
   });
 
   await test('and it says, in words, what it leaves out', async () => {

@@ -414,6 +414,54 @@ export async function run(ctx) {
       }
     });
 
+    await test('data export respects current learner and guardian authority, including counts', async () => {
+      const family = await parentWithChild({ course, version });
+      const member = await newUser(`assignment-export-member-${++seq}@example.com`);
+      await newProfile(member, 'Unverified family member');
+      const childUser = await newUser(`assignment-export-child-${++seq}@example.com`);
+      await newProfile(childUser, 'Learner account');
+      const familyId = (await q('select family_id from public.learner_profiles where id=$1', [family.childId])).rows[0].family_id;
+      await q(`insert into public.family_memberships
+        (family_id,user_id,membership_type,status,joined_at,created_by)
+        values ($1,$2,'guardian','active',now(),$3)`, [familyId, member, family.userId]);
+      await q('update public.learner_profiles set linked_user_id=$1 where id=$2', [childUser, family.childId]);
+      const sub = await asActor(family.userId, async () =>
+        (await q(SQL_SAVE, [selfPaced, family.childId, 'Private export answer.'])).rows[0].id);
+      await asActor(family.userId, () => q(SQL_SUBMIT, [sub]));
+      await asActor(teacher, () => q(SQL_MARK, [sub, 8, 'Private feedback.']));
+      const flag = (await q("select value_text from public.platform_settings where key='family.guardian_verification'")).rows[0].value_text;
+      await q("update public.platform_settings set value_text='false' where key='family.guardian_verification'");
+      const get = async actor => (await asActor(actor, () => q('select public.export_my_data() as document'))).rows[0].document;
+      try {
+        for (const actor of [family.userId, childUser]) {
+          const doc = await get(actor);
+          assert(doc.assignments.some(row => row.body === 'Private export answer.' && row.feedback === 'Private feedback.'));
+          assert(doc.meta.counts.assignments >= 1, 'authorized count omitted the work');
+        }
+        const excluded = async actor => {
+          const doc = await get(actor);
+          assert(!doc.assignments.some(row => row.body === 'Private export answer.'));
+          assert(doc.meta.counts.assignments === 0 && doc.learners.length === 0,
+            'unauthorized export or its counts exposed the learner');
+          assert(doc.notIncluded.some(row => /Learner records without current access/.test(row.what)));
+        };
+        await excluded(member);
+        await q(`update public.guardian_relationships set can_view_progress=false
+          where learner_profile_id=$1 and guardian_user_id=$2`, [family.childId, family.userId]);
+        await excluded(family.userId);
+        await q(`update public.guardian_relationships set can_view_progress=true, verified_at=now()+interval '1 day',
+          consent_expires_at=now()+interval '2 days' where learner_profile_id=$1 and guardian_user_id=$2`, [family.childId, family.userId]);
+        await excluded(family.userId);
+        await q(`update public.guardian_relationships set verified_at=now()-interval '2 years',
+          consent_expires_at=now()-interval '1 year' where learner_profile_id=$1 and guardian_user_id=$2`, [family.childId, family.userId]);
+        await excluded(family.userId);
+        const childDoc = await get(childUser);
+        assert(childDoc.assignments.some(row => row.body === 'Private export answer.'), 'the learner lost their own data');
+      } finally {
+        await q("update public.platform_settings set value_text=$1 where key='family.guardian_verification'", [flag]);
+      }
+    });
+
     await test('submission requires matching course version and cohort membership', async () => {
       const unjoined = await learner('Not joined', { course, version });
       await refused(unjoined.userId, SQL_SAVE,
