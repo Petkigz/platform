@@ -668,3 +668,11 @@ accepts a family owner or an active relationship with profile-management permiss
 without itself checking verification timestamps, consent expiry or relationship
 deletion. Its use for detachment and state visibility needs a separate authority
 review; this containment does not establish verified-guardian enforcement. Do not delete guardian verification machinery.
+
+**Child-login trusted-attempt foundation:** Migration 610 introduces verified,
+active-guardian checks, an idempotent reservation and a service-only completion
+that checks a trusted auth app-metadata marker before linking. It is database
+scaffolding only: the creation route is still paused, and recovery for interrupted
+identity creation, password reset, safe identity revocation, a visual operator
+reconciliation path, deployed integration and real concurrent tests remain. Do
+not enable the feature on the strength of this migration alone.

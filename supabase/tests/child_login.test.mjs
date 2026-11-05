@@ -371,6 +371,40 @@ export async function run(ctx) {
     }
   });
 
+  await test('trusted child-login attempts require verified consent and a service-marked identity', async () => {
+    const guardian = await person('Verified guardian');
+    const { childId: learner } = await familyWithChild(guardian, 'Trusted');
+    await setFlag('family.child_login', true);
+    try {
+      const prep = () => asActor(guardian, 'select public.prepare_child_login($1,$2) as id', [learner, 'trusted.child']);
+      await rejects(prep, /verified_guardian_required/);
+      await q(`insert into public.guardian_relationships
+        (guardian_user_id,learner_profile_id,relationship_type,status,can_manage_profile,verified_at,consent_expires_at)
+        values($1,$2,'parent','active',true,now()-interval '1 day',now()+interval '1 year')`, [guardian,learner]);
+      const attempt = (await prep()).rows[0].id;
+      assert((await prep()).rows[0].id === attempt, 'retry replaced the reservation');
+      await rejects(() => asActor(guardian, 'select public.prepare_child_login($1,$2)', [learner, 'other.child']), /attempt_pending/);
+      const child = await newUser('trusted.child@learners.ayahspring.com');
+      await rejects(() => asActor(guardian, 'select public.complete_child_login_attempt($1,$2,$3)', [attempt,guardian,child]), /permission denied/i);
+      await rejects(() => q('select public.complete_child_login_attempt($1,$2,$3)', [attempt,guardian,child]), /untrusted_identity/);
+      await q("update auth.users set raw_app_meta_data=jsonb_build_object('ayahspring_child_attempt',$2::text) where id=$1", [child,attempt]);
+      await q("update public.guardian_relationships set consent_expires_at=now()-interval '1 second' where guardian_user_id=$1 and learner_profile_id=$2", [guardian,learner]);
+      await rejects(() => q('select public.complete_child_login_attempt($1,$2,$3)', [attempt,guardian,child]), /verified_guardian_required/);
+      await q("update public.guardian_relationships set consent_expires_at=now()+interval '1 year' where guardian_user_id=$1 and learner_profile_id=$2", [guardian,learner]);
+      const done = await committed(async () => {
+        await q('set local role service_role');
+        return (await q('select public.complete_child_login_attempt($1,$2,$3) as result', [attempt,guardian,child])).rows[0].result;
+      });
+      assert(done.alreadyCompleted === false, 'first completion did not attach');
+      assert((await q('select linked_user_id from public.learner_profiles where id=$1', [learner])).rows[0].linked_user_id === child, 'wrong user linked');
+      const retry = (await q('select public.complete_child_login_attempt($1,$2,$3) as result', [attempt,guardian,child])).rows[0].result;
+      assert(retry.alreadyCompleted === true, 'lost completion reply could not be retried');
+      const audits = (await q("select count(*)::int as n from public.governance_audit_events where action='child_login.created' and target_id=$1", [learner])).rows[0].n;
+      assert(audits === 1, 'retry duplicated the creation audit');
+      await rejects(() => q('select public.complete_child_login_attempt($1,$2,$3)', [attempt,guardian,guardian]), /account_mismatch/);
+    } finally { await setFlag('family.child_login', false); }
+  });
+
   // ---------------------------------------------------------------------------
   // No password anywhere near the database
   // ---------------------------------------------------------------------------

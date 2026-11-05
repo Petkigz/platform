@@ -12,6 +12,7 @@ create table if not exists auth.users (
   -- full_name/name/avatar_url and handle_new_user() reads them; a password
   -- sign-up arrives with an empty object.
   raw_user_meta_data jsonb not null default '{}'::jsonb,
+  raw_app_meta_data jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );
 
@@ -31,5 +32,8 @@ begin
   end if;
   if not exists (select 1 from pg_roles where rolname = 'authenticated') then
     create role authenticated nologin;
+  end if;
+  if not exists (select 1 from pg_roles where rolname = 'service_role') then
+    create role service_role nologin;
   end if;
 end $$;
