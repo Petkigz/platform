@@ -67,6 +67,7 @@ test('a bare word cannot be used to find out whether a child has an account', ()
 test('every refusal a guardian can meet is a sentence, and none of them leak a code', () => {
   const codes = [
     'child_login:disabled',
+    'child_login:verified_guardian_required',
     'child_login:not_your_child',
     'child_login:already_has_one',
     'child_login:username_taken',

@@ -58,12 +58,15 @@ export async function run(ctx) {
   }
 
   /** A family owned by `owner`, with one child in it. */
-  async function familyWithChild(owner, name = 'Amina') {
+  async function familyWithChild(owner, name = 'Amina', { verified = true } = {}) {
     const familyId = (await asActor(owner, 'select public.create_family($1) id',
       [`Family ${name}`])).rows[0].id;
     const childId = (await q(
       `insert into public.learner_profiles (display_name, learner_type, age_band, family_id)
        values ($1,'child','8-10',$2) returning id`, [name, familyId])).rows[0].id;
+    if (verified) await q(`insert into public.guardian_relationships
+      (guardian_user_id,learner_profile_id,relationship_type,status,can_manage_profile,verified_at,consent_expires_at)
+      values($1,$2,'parent','active',true,now()-interval '1 day',now()+interval '1 year')`, [owner,childId]);
     return { familyId, childId };
   }
 
@@ -322,6 +325,37 @@ export async function run(ctx) {
     }
   });
 
+  await test('detachment and login visibility require a current verified guardian', async () => {
+    const guardian = await person('Detachment guardian');
+    const theirs = await familyWithChild(guardian, 'Detachment child');
+    await setFlag('family.child_login', true);
+    try {
+      const id = await reserve(guardian, theirs.childId, 'detach.test');
+      const child = await newUser('detach-test@learners.example.test');
+      await attach(guardian, id, child);
+    } finally { await setFlag('family.child_login', false); }
+    await committed(async () => {
+      await q("select set_config('app.account_erasure','on',true)");
+      await q("update public.user_profiles set account_status='suspended' where user_id=$1", [guardian]);
+    });
+    try {
+      assert(await state(guardian, theirs.childId) === null, 'suspended guardian could see the login');
+      await rejects(() => asActor(guardian, 'select public.remove_child_login($1,$2)', [theirs.childId, null]), /verified_guardian_required/);
+    } finally {
+      await committed(async () => {
+        await q("select set_config('app.account_erasure','on',true)");
+        await q("update public.user_profiles set account_status='active' where user_id=$1", [guardian]);
+      });
+    }
+    await q("update public.guardian_relationships set consent_expires_at=now()-interval '1 second' where guardian_user_id=$1 and learner_profile_id=$2", [guardian,theirs.childId]);
+    assert(await state(guardian, theirs.childId) === null, 'expired guardian could see the login');
+    await rejects(() => asActor(guardian, 'select public.remove_child_login($1,$2)', [theirs.childId, null]), /verified_guardian_required/);
+    await rejects(() => asActor(guardian, 'select public.remove_child_login_internal($1,$2)', [theirs.childId, null]), /permission denied/i);
+    await q("update public.guardian_relationships set consent_expires_at=now()+interval '1 year' where guardian_user_id=$1 and learner_profile_id=$2", [guardian,theirs.childId]);
+    assert((await state(guardian, theirs.childId)).canManage, 'renewed guardian did not regain visibility');
+    await asActor(guardian, 'select public.remove_child_login($1,$2)', [theirs.childId, null]);
+  });
+
   await test('a login can be ended while the feature is switched off', async () => {
     // The flag is off at this point. Put a login back on a fresh child, then end
     // it with the switch off — a guardian must not be stuck holding a login they
@@ -373,7 +407,7 @@ export async function run(ctx) {
 
   await test('trusted child-login attempts require verified consent and a service-marked identity', async () => {
     const guardian = await person('Verified guardian');
-    const { childId: learner } = await familyWithChild(guardian, 'Trusted');
+    const { childId: learner } = await familyWithChild(guardian, 'Trusted', { verified: false });
     await setFlag('family.child_login', true);
     try {
       const prep = () => asActor(guardian, 'select public.prepare_child_login($1,$2) as id', [learner, 'trusted.child']);

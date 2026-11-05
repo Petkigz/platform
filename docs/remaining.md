@@ -663,11 +663,11 @@ the learner profile visually, but this does not revoke sessions or remove the
 provider identity. A trusted, serialized and recoverable creation/removal workflow,
 verified guardian/owner authority on each step, password recovery and deployed
 concurrency tests are required before reopening; review existing identities and
-orphan reservations individually. The existing profile-management predicate
-accepts a family owner or an active relationship with profile-management permission
-without itself checking verification timestamps, consent expiry or relationship
-deletion. Its use for detachment and state visibility needs a separate authority
-review; this containment does not establish verified-guardian enforcement. Do not delete guardian verification machinery.
+orphan reservations individually. The older general profile-management predicate
+still accepts a family owner or an active relationship with profile-management
+permission without itself checking consent expiry or deletion; its other uses need
+review. Migration 630 adds a current verified-guardian/active-staff boundary to
+login-state visibility and detachment, but does not revoke authentication sessions. Do not delete guardian verification machinery.
 
 **Child-login trusted-attempt foundation:** Migration 610 introduces verified,
 active-guardian checks, an idempotent reservation and a service-only completion
@@ -692,3 +692,8 @@ yet connected to the paused route, and Supabase's real provider behavior,
 metadata protection and retry/concurrency behavior have not been verified in a
 representative deployment. Keep creation paused until the remaining recovery and
 identity-removal steps are implemented and checked.
+
+**Child-login detachment:** Migration 630 requires an active verified guardian
+with profile permission or active staff for login state and detachment, and locks
+the profile and consent rows while the detachment is written. It does not delete
+the authentication identity, revoke sessions or establish provider integration.

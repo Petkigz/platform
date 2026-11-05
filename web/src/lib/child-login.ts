@@ -73,6 +73,9 @@ export function signInAddress(input: string): string {
  */
 export function childLoginSentence(code: string | null | undefined): string {
   const value = (code ?? '').toLowerCase();
+  if (value.includes('child_login:verified_guardian_required')) {
+    return 'A current verified guardian with permission to manage this child is needed. Contact privacy@ayahspring.com for help.';
+  }
   if (value.includes('child_login_creation_paused')) {
     return 'Creating child logins is temporarily paused. Contact privacy@ayahspring.com for help.';
   }
