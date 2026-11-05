@@ -143,6 +143,7 @@ export async function run(ctx) {
          values ($1,$2,$3,'free','active')`, [id, enrolIn.course, enrolIn.version]);
       return id;
     });
+    await ctx.verifyGuardian(userId, childId);
     return { userId, childId };
   }
 
@@ -591,13 +592,100 @@ export async function run(ctx) {
       'the teacher could not see a child\'s hand-in');
   });
 
+  await test('coursework masters require the learner, marker, verified guardian or named owner', async () => {
+    const family = await parentWithChild({ course, version });
+    const childUser = await newUser(`coursework-child-login-${++seq}@example.com`);
+    await newProfile(childUser, 'Child login');
+    await q('update public.learner_profiles set linked_user_id=$1 where id=$2', [childUser, family.childId]);
+    const member = await newUser(`coursework-member-${++seq}@example.com`);
+    await newProfile(member, 'Unverified family member');
+    const familyId = (await scalar('select family_id from public.learner_profiles where id=$1', [family.childId])).family_id;
+    await q(`insert into public.family_memberships
+      (family_id,user_id,membership_type,status,joined_at,created_by)
+      values ($1,$2,'guardian','active',now(),$3)`, [familyId, member, family.userId]);
+    const otherAdmin = await bootstrapAdmin(`coursework-unrelated-admin-${seq}@example.com`);
+    const submission = await draft(family.userId, assignment, family.childId);
+    const target = await declare(family.userId, submission);
+    const canWatch = async (actor) => (await call(actor, SQL_WATCH, [target.asset_id])).w;
+    const targetRows = async (actor) => (await asActor(actor, () => q(
+      'select master_key from public.master_preview_target($1)', [target.asset_id]))).rows.length;
+    const assetRows = async (actor) => (await asActor(actor, () => q(
+      'select master_key from public.media_assets where id=$1', [target.asset_id]))).rows.length;
+
+    assert(await canWatch(family.userId) && await canWatch(childUser), 'guardian or learner cannot open pending coursework');
+    assert(!(await canWatch(teacher)), 'marker opened a file before it was attached');
+    assert(!(await canWatch(member)) && !(await canWatch(admin)) && !(await canWatch(otherAdmin)));
+    assert((await targetRows(admin)) === 0 && (await assetRows(admin)) === 0, 'unrelated staff saw coordinates');
+    assert((await assetRows(family.userId)) === 1, 'uploader cannot confirm their pending upload');
+
+    await q('select public.bootstrap_safeguarding_owner($1)', [admin]);
+    try {
+      assert(await canWatch(admin) && (await targetRows(admin)) === 1 && (await assetRows(admin)) === 1,
+        'named owner cannot reach the file');
+      assert(!(await canWatch(otherAdmin)), 'admin role alone opened child coursework');
+      await call(family.userId, SQL_CONFIRM, [target.asset_id]);
+      assert(await canWatch(teacher) && (await targetRows(teacher)) === 1, 'marker cannot open submitted coursework');
+      assert(!(await canWatch(otherTeacher)), 'another teacher opened coursework');
+
+      // A historical mismatch between the declaration and the attachment is
+      // ambiguous, so only the owner can open it until it is reviewed.
+      const another = await learner('Ambiguous', { course, version });
+      const otherSubmission = await draft(another.userId, assignment, another.learnerId);
+      await q('update public.coursework_upload_declarations set submission_id=$1 where asset_id=$2',
+        [otherSubmission, target.asset_id]);
+      try {
+        assert(await canWatch(admin), 'owner lost access to an ambiguous file');
+        assert(!(await canWatch(family.userId)) && !(await canWatch(childUser)) && !(await canWatch(teacher)),
+          'an ambiguous file was opened by a non-owner');
+      } finally {
+        await q('update public.coursework_upload_declarations set submission_id=$1 where asset_id=$2',
+          [submission, target.asset_id]);
+      }
+
+      // A verified identity with progress permission withheld does not inherit
+      // the more sensitive file access from family membership.
+      await q('update public.guardian_relationships set can_view_progress=false where learner_profile_id=$1 and guardian_user_id=$2',
+        [family.childId, family.userId]);
+      assert(!(await canWatch(family.userId)), 'guardian without progress permission opened coursework');
+      await q('update public.guardian_relationships set can_view_progress=true where learner_profile_id=$1 and guardian_user_id=$2',
+        [family.childId, family.userId]);
+      assert(await canWatch(family.userId));
+
+      // This suite has the general verification switch off. The file-specific
+      // rule still refuses an expired verification and a family member with none.
+      await q(`update public.guardian_relationships set verified_at=now()-interval '2 years',
+        consent_expires_at=now()-interval '1 year' where learner_profile_id=$1 and guardian_user_id=$2`,
+        [family.childId, family.userId]);
+      assert(!(await canWatch(family.userId)), 'expired guardian opened coursework with the general switch off');
+      assert((await assetRows(family.userId)) === 0, 'expired uploader retained the master coordinates');
+      assert(await canWatch(childUser), 'guardian expiry blocked the child');
+      const updated = await asActor(family.userId, () => q(
+        "update public.media_assets set display_name='Changed' where id=$1 returning id", [target.asset_id]));
+      assert(updated.rows.length === 0, 'expired guardian edited coursework metadata');
+    } finally {
+      await q('delete from public.safeguarding_owner where singleton');
+    }
+  });
+
+  await test('unattributed coursework is fail-closed for uploader and staff', async () => {
+    const who = await learner('Orphan', { course, version });
+    const asset = (await q(`insert into public.media_assets
+      (storage_backend,master_bucket,master_key,checksum,mime_type,byte_size,status,uploaded_by,purpose)
+      values ('r2','masters',$1,$2,'image/jpeg',1000,'available',$3,'coursework') returning id`,
+      [`orphan/${crypto.randomUUID()}`, digest(), who.userId])).rows[0].id;
+    for (const actor of [who.userId, admin, teacher]) {
+      assert((await call(actor, SQL_WATCH, [asset])).w === false, 'unattributed file was opened');
+      assert((await asActor(actor, () => q('select id from public.media_assets where id=$1', [asset]))).rows.length === 0);
+    }
+  });
+
   await test('the teacher may watch a handed-in master, and nobody else may', async () => {
     assert((await call(teacher, SQL_WATCH, [sharedAsset])).w === true,
       'the course author cannot open the file they are marking');
     assert((await call(ownerUser, SQL_WATCH, [sharedAsset])).w === true,
       'the learner cannot open their own hand-in');
-    assert((await call(admin, SQL_WATCH, [sharedAsset])).w === true,
-      'staff cannot open a handed-in file');
+    assert((await call(admin, SQL_WATCH, [sharedAsset])).w === false,
+      'staff without the safeguarding-owner designation could open a hand-in');
 
     const outsider = await learner('Peeker', { course, version });
     assert((await call(outsider.userId, SQL_WATCH, [sharedAsset])).w === false,

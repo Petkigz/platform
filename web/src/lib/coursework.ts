@@ -335,8 +335,9 @@ export async function uploadCourseworkFile(file: File, options: UploadOptions): 
  * The address a file is opened at.
  *
  * Not a storage URL: `/api/media/open` re-decides permission on every request
- * against `may_watch_master()` — the household that sent it, the course author
- * marking it, and staff — and then redirects to a URL that expires in fifteen
+ * against `may_watch_master()` — the learner, a current verified guardian with
+ * progress access, the marker while attached, or the named safeguarding owner —
+ * and then redirects to a URL that expires in fifteen
  * minutes. A storage address in the page would be a bearer token sitting in the
  * history of every device that ever opened it, which is a worse thing to leave
  * behind for a child's homework than for a lesson recording.

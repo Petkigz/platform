@@ -70,6 +70,18 @@ Checked upload and lifecycle writers remain, as do limited descriptive edits. Th
 migration needs deployment and does not itself fix the existing broad read/signing
 paths, revoke previously issued URLs, scan files, or control storage credentials.
 
+**Master-file containment:** the checked master route and ordinary media-asset
+row reads now require the learner, a current verified guardian with progress
+permission, the assignment author for an attached available file, or the named
+active safeguarding owner. This conservative boundary applies to all coursework,
+not just files currently labelled as a child's. Unattributed or conflicting
+contexts fail closed except to that owner. It also covers currently attached
+legacy library files, but cannot identify legacy library files after attribution
+has been lost. The upload, other metadata and administrative RPCs still need a
+full audit, and existing signed URLs and storage credentials are unaffected.
+Deploy the migration and bootstrap the safeguarding owner; assignment and cohort
+flags must remain off until all safeguarding gaps are addressed.
+
 **Rendition containment:** lesson rendition reads and the transcode worker now
 exclude coursework and currently attached legacy files, including old rendition
 rows. The worker checks before downloading; existing object-store bytes and

@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-249 files in `supabase/migrations/`, applied in filename order — the 14-digit
+250 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -152,7 +152,7 @@ done
   first run. What you are watching for is the loop *stopping*, and the file name
   above the error.
 - Takes a few minutes. The last file printed should be
-  `20261281042000_coursework_rendition_boundary.sql`.
+  `20261281043000_coursework_master_access.sql`.
 
 **Existing installations:** the subscription safety migration preserves the current
 `commerce.subscriptions` value. If it is already on, review existing customer
@@ -170,7 +170,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 249 files from the top and fail on the
+it, and `db push` would then re-apply all 250 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -900,3 +900,15 @@ objects and signed URLs remain in storage, and existing mixed-purpose records ne
 review. A detached historical library file with no surviving assignment or
 declaration cannot be identified reliably by this guard. Storage credentials and
 other master-file paths are not restricted by this change.
+
+After deploying `20261281043000_coursework_master_access.sql`, ordinary master
+opening and direct media-asset row reads use the stricter coursework rule. It
+covers all coursework (including adult work), so verify that learners and their
+current, verified guardians can use their files and that the separately configured
+safeguarding owner and each assignment author can open the relevant attached files.
+Unattributed or conflicting contexts are limited to the named owner. Legacy
+library files whose assignment attribution has already been lost cannot be
+identified by this rule. Other administrative RPCs may still expose metadata or
+storage coordinates, and direct storage credentials and existing signed links
+are not revoked. Keep assignments and cohorts off until the full access, upload,
+scanner, retention and remediation work is complete.
