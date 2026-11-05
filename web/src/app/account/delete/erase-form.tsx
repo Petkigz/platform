@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { UNCERTAIN_CLOSURE } from '@/lib/account';
 
 /**
  * The confirmation, and nothing else.
@@ -30,7 +31,7 @@ export function EraseAccount({ displayName }: { displayName: string }) {
         | null;
 
       if (!res.ok || !json?.ok) {
-        setError(json?.message ?? 'The account was not closed. Nothing was changed.');
+        setError(json?.message ?? UNCERTAIN_CLOSURE);
         setBusy(false);
         return;
       }
@@ -39,7 +40,7 @@ export function EraseAccount({ displayName }: { displayName: string }) {
       // and every cached page under it belongs to an account that no longer exists.
       window.location.assign('/');
     } catch {
-      setError('The account was not closed. Check your connection and try again.');
+      setError(UNCERTAIN_CLOSURE);
       setBusy(false);
     }
   }

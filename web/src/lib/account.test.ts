@@ -104,13 +104,15 @@ test('eraseMyAccount passes a refusal through in the database’s own words', as
   assert.match(result.ok === false ? result.message : '', /course in review/);
 });
 
-test('eraseMyAccount treats an ambiguous reply as nothing happened', async () => {
+test('eraseMyAccount does not claim an ambiguous reply left the account unchanged', async () => {
   for (const data of [null, {}, { closed: 'yes' }]) {
     const client = {
       rpc: () => Promise.resolve({ data, error: null }),
     } as unknown as SupabaseClient;
     const result = await eraseMyAccount(client, 'Amina Yusuf');
     assert.equal(result.ok, false, `accepted ${JSON.stringify(data)} as a closure`);
+    assert.match(result.message, /could not confirm whether your account closed/);
+    assert.doesNotMatch(result.message, /nothing was changed|was not closed/i);
   }
 
   const blank = await eraseMyAccount({} as unknown as SupabaseClient, '   ');
@@ -124,4 +126,11 @@ test('the closure page distinguishes profile changes, snapshots and unverified r
   assert.match(page, /other sessions and the provider sign-in/);
   assert.match(page, /not proof about all provider copies/);
   assert.doesNotMatch(page, /removes your name from everything it touched/);
+});
+
+test('closure form reports network or unreadable responses as uncertain', () => {
+  const form = readFileSync(new URL('../app/account/delete/erase-form.tsx', import.meta.url), 'utf8');
+  assert.match(form, /json\?\.message \?\? UNCERTAIN_CLOSURE/);
+  assert.match(form, /catch \{\s*setError\(UNCERTAIN_CLOSURE\)/);
+  assert.doesNotMatch(form, /The account was not closed/);
 });

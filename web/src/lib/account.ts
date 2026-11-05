@@ -85,6 +85,8 @@ export type EraseOutcome =
  * the one operation where believing an ambiguous answer would be worse than
  * doing nothing.
  */
+export const UNCERTAIN_CLOSURE = 'We could not confirm whether your account closed. Check your account status or contact privacy@ayahspring.com before trying again.';
+
 export async function eraseMyAccount(
   supabase: SupabaseClient,
   confirm: string,
@@ -102,7 +104,7 @@ export async function eraseMyAccount(
   } | null;
 
   if (!reply || reply.closed !== true) {
-    return { ok: false, message: 'The account was not closed. Nothing was changed.' };
+    return { ok: false, message: UNCERTAIN_CLOSURE };
   }
 
   return {
