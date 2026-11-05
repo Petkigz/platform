@@ -697,3 +697,10 @@ identity-removal steps are implemented and checked.
 with profile permission or active staff for login state and detachment, and locks
 the profile and consent rows while the detachment is written. It does not delete
 the authentication identity, revoke sessions or establish provider integration.
+
+Migration 640 and the guardian-consent dashboard add a private, named-owner-only
+readout of up to 50 oldest pending child-login attempts, including whether the
+matching marked identity appears in the auth table. The readout is not proof of
+provider-wide absence or revocation and has no reconciliation or deletion action.
+Creation remains paused until a safe end-to-end recovery and removal workflow is
+implemented, tested against the provider, and deliberately deployed.

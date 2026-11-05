@@ -16,6 +16,7 @@ import {
   relationshipLabel,
 } from '@/lib/guardian-consent';
 import { DecideForm } from './decide-form';
+import { parseChildLoginPendingAttempts } from '@/lib/child-login-queue';
 
 export const dynamic = 'force-dynamic';
 
@@ -76,6 +77,11 @@ export default async function AdminGuardiansPage() {
   }
 
   const register = await guardianConsentRegister(supabase);
+  const ownerStatus = await supabase.rpc('safeguarding_owner_status');
+  const owner = !ownerStatus.error && ownerStatus.data?.is_owner === true;
+  const attemptsResult = owner ? await supabase.rpc('child_login_pending_attempts', { p_limit: 50 }) : null;
+  const attempts = attemptsResult && !attemptsResult.error
+    ? parseChildLoginPendingAttempts(attemptsResult.data) : null;
 
   return (
     <div className="page wide">
@@ -117,6 +123,28 @@ export default async function AdminGuardiansPage() {
           <div className="l">Children on the platform</div>
         </div>
       </div>
+
+      {owner && (
+        <section className="card">
+          <h2>Pending child-login attempts</h2>
+          <p className="muted">Private to the named safeguarding owner. This shows up to 50 oldest
+            pending attempts. New login creation remains paused. A marked identity is not proof
+            that it is linked or that other provider copies or sessions are gone; do not delete or
+            release an attempt based on this list alone.</p>
+          {attempts === null ? <p className="notice warn">The attempt register could not be read.</p>
+            : attempts.length === 0 ? <p className="muted">No pending attempts are listed.</p>
+            : <ul>{attempts.map((attempt) => (
+              <li key={attempt.attempt_id}>
+                {attempt.learner_name} — guardian {attempt.guardian_name}; username {attempt.username};
+                {' '}started {dayLabel(attempt.created_at)}; {attempt.marked_identity_present
+                  ? 'a marked identity appears in the authentication table'
+                  : 'no matching marked identity appears in the authentication table'}.
+              </li>
+            ))}</ul>}
+          <p className="muted">Review outstanding cases individually; this list does not perform
+            reconciliation or remove an identity.</p>
+        </section>
+      )}
 
       <p className="lede">{registerHeadline(register)}</p>
 

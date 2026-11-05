@@ -447,6 +447,43 @@ export async function run(ctx) {
     } finally { await setFlag('family.child_login', false); }
   });
 
+  await test('pending identity attempts are visible only to the named active safeguarding owner', async () => {
+    const guardian = await person('Queue guardian');
+    const theirs = await familyWithChild(guardian, 'Queue child');
+    const prior = (await q('select owner_user_id from public.safeguarding_owner where singleton')).rows[0]?.owner_user_id ?? null;
+    const otherAdmin = await bootstrapAdmin(`cl-other-admin-${++seq}@example.com`);
+    await q('delete from public.safeguarding_owner where singleton');
+    await q('select public.bootstrap_safeguarding_owner($1)', [admin]);
+    await setFlag('family.child_login', true);
+    try {
+      const attempt = (await asActor(guardian, 'select public.prepare_child_login($1,$2) id', [theirs.childId, 'queue.child'])).rows[0].id;
+      await rejects(() => asActor(otherAdmin, 'select * from public.child_login_pending_attempts($1)', [50]), /not_allowed/);
+      await rejects(() => asActor(guardian, 'select * from public.child_login_pending_attempts($1)', [50]), /not_allowed/);
+      await committed(async () => {
+        await q("select set_config('app.account_erasure','on',true)");
+        await q("update public.user_profiles set account_status='suspended' where user_id=$1", [admin]);
+      });
+      try { await rejects(() => asActor(admin, 'select * from public.child_login_pending_attempts($1)', [50]), /not_allowed/); }
+      finally {
+        await committed(async () => {
+          await q("select set_config('app.account_erasure','on',true)");
+          await q("update public.user_profiles set account_status='active' where user_id=$1", [admin]);
+        });
+      }
+      const entries = (await asActor(admin, 'select * from public.child_login_pending_attempts($1)', [50])).rows;
+      const row = entries.find(r => r.attempt_id === attempt);
+      assert(row && row.marked_identity_present === false && row.learner_name === 'Queue child', 'owner queue lost the pending attempt');
+      const user = await newUser('queue.child@learners.ayahspring.com');
+      await q("update auth.users set raw_app_meta_data=jsonb_build_object('ayahspring_child_attempt',$2::text) where id=$1", [user,attempt]);
+      const marked = (await asActor(admin, 'select * from public.child_login_pending_attempts($1)', [50])).rows.find(r => r.attempt_id === attempt);
+      assert(marked && marked.marked_identity_present === true, 'the marked identity was not identified');
+    } finally {
+      await setFlag('family.child_login', false);
+      await q('delete from public.safeguarding_owner where singleton');
+      if (prior) await q('select public.bootstrap_safeguarding_owner($1)', [prior]);
+    }
+  });
+
   // ---------------------------------------------------------------------------
   // No password anywhere near the database
   // ---------------------------------------------------------------------------
