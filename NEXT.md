@@ -703,7 +703,7 @@ Optional author-provided transcripts now exist and are searchable only when the 
 have since been updated; their switches did not move.
 
 Verification: **2 591 database assertions in 170 suites, 2 055 web tests; TypeScript
-typecheck and `check:repo` pass; 260 migrations.**
+typecheck and `check:repo` pass; 261 migrations.**
 
 ## Today's sentence
 

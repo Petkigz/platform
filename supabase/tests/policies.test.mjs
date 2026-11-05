@@ -115,7 +115,7 @@ export async function run(ctx) {
       // A correction is a new version, never an edit to the one people agreed to.
       const expected = doc.slug === 'refunds'
         ? '2026-11-01'
-        : doc.slug === 'children' || doc.slug === 'privacy' ? '2026-11-02' : '2026-10-28';
+        : doc.slug === 'children' ? '2026-11-05' : doc.slug === 'privacy' ? '2026-11-02' : '2026-10-28';
       eq(new Date(doc.effective).toISOString().slice(0, 10), expected,
         `${doc.slug} effective date`);
       // No account existed when the migrations ran, so the instruction is the
@@ -137,7 +137,7 @@ export async function run(ctx) {
     // about a switched-off verification stopped being true (2026-11-02), and the
     // children's policy again the same day when the handover it had just stopped
     // promising was built.
-    const corrected = { refunds: 2, privacy: 2, children: 3 };
+    const corrected = { refunds: 2, privacy: 2, children: 4 };
     for (const row of live) {
       eq(row.versionNumber, corrected[row.slug] ?? 1,
         `${row.slug} is version ${row.versionNumber}`);

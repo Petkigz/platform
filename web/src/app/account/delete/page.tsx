@@ -79,9 +79,9 @@ export default async function DeleteAccountPage() {
                 <li>Notifications sent to you, and mail the platform sent or queued for you</li>
                 <li>
                   A child profile in a family with no other active member may be closed.
-                  If it has a separate login or assignment work, self-service closure is
+                  If it has a separate login or coursework under a safeguarding hold, self-service closure is
                   paused for individual review: contact privacy@ayahspring.com. Other eligible
-                  child learning records are scheduled for removal after thirty days.
+                  child learning records, including coursework, are scheduled for removal after thirty days. Stored files require a separate deletion step.
                 </li>
               </ul>
             </section>

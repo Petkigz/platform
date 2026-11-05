@@ -52,17 +52,17 @@ export async function run(ctx) {
 
   await test('the children’s policy is in force as a correction, not an edit', async () => {
     const rows = await versions();
-    eq(rows.length, 3, 'the children’s policy versions');
+    eq(rows.length, 4, 'the children’s policy versions');
     eq(rows.filter((v) => v.status === 'in_force').length, 1, 'versions in force');
 
     const now = rows.find((v) => v.status === 'in_force');
-    eq(now.version_number, 3, 'the version in force');
-    eq(new Date(now.effective_at).toISOString().slice(0, 10), '2026-11-02',
+    eq(now.version_number, 4, 'the version in force');
+    eq(new Date(now.effective_at).toISOString().slice(0, 10), '2026-11-05',
       'the day the correction took effect');
     eq(now.open, 0, 'open owner decisions in a document in force');
     eq(now.approved_by, null,
       'a version published by migration names an approver who does not exist');
-    assert(/^Owner instruction, 2026-11-02/.test(now.approval_reason ?? ''),
+    assert(/^Owner instruction, 2026-11-05/.test(now.approval_reason ?? ''),
       `the correction does not record the instruction: ${now.approval_reason}`);
     assert((now.change_note ?? '').length > 40,
       'the correction does not say what changed');
@@ -80,6 +80,9 @@ export async function run(ctx) {
     eq(second.status, 'retired', 'the version that told people to ask support');
     assert(/through the support desk/.test(second.body),
       'version 2 was rewritten rather than retired');
+    const third = rows.find((v) => v.version_number === 3);
+    eq(third.status, 'retired', 'the handover version remains as a record');
+    assert(/its bytes follow thirty days later/.test(third.body), 'version 3 was rewritten');
   });
 
   await test('the version in force states what the platform now does', async () => {
@@ -102,7 +105,7 @@ export async function run(ctx) {
       'the live policy implies the platform knows a learner’s age');
     assert(/becomes their own account/.test(body),
       'the owner’s decision about turning eighteen was dropped from the policy');
-    assert(/deleted within 30 days/.test(body),
+    assert(/removal is scheduled for thirty days/.test(body),
       'the policy no longer says what happens if the record is not kept');
     assert(/\/handover/.test(body),
       'the policy does not say where the handover is decided');
@@ -121,6 +124,8 @@ export async function run(ctx) {
     assert(/thirty days/.test(body), 'the thirty-day clock is not stated');
     assert(/certificate/.test(body), 'the certificate exception is not stated');
     assert(/a year/.test(body), 'the coursework year is not stated');
+    assert(/thirty-day erasure rule is an exception/.test(body) && /safeguarding\s+hold prevents/.test(body), 'the erasure exception or hold was omitted');
+    assert(/cannot independently verify/.test(body), 'storage deletion was presented as verified');
 
     // The person to reach, by an address that works without an account.
     assert(/privacy@ayahspring\.com/.test(body),
@@ -181,7 +186,7 @@ export async function run(ctx) {
 
     const page = (await asAnon(() => q(`select public.policy_page('children') as r`)))
       .rows[0].r;
-    eq(page.versionNumber, 3, 'the version a visitor reads');
+    eq(page.versionNumber, 4, 'the version a visitor reads');
     assert(page.body === now.body, 'the page did not return the live body');
 
     const readable = (await asAnon(() => q(
@@ -198,7 +203,7 @@ export async function run(ctx) {
       () => asUser(admin, () => q('select public.approve_policy_version($1,$2,$3)',
         [old.id, '2026-11-02', 'Put the old text back, which nobody should do.'])),
       /already_decided/);
-    eq((await live()).version_number, 3, 'the retired version was put back in force');
+    eq((await live()).version_number, 4, 'the retired version was put back in force');
   });
 
   await test('the privacy notice carries the same rule, and neither is stale', async () => {

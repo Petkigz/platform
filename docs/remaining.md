@@ -79,9 +79,9 @@ remain in the export. Review the separate account-closure/erasure path and other
 administrative and retention paths; do not assume the entire data-rights workflow
 has the same boundary. The account-closure safeguard now preserves another learner's submission when
 its creator closes their account, and pauses closure for review when it would
-tombstone a child with a separate login or any assignment submission. Affected
+tombstone a child with a separate login or held coursework. Affected
 people are directed to privacy@ayahspring.com. This is not a complete child
-retention or guardianship solution: unlinked children without submissions can
+retention or guardianship solution: unlinked children without held coursework can
 still be tombstoned, another active family member need not be a verified guardian,
 and other closure/retention and concurrency paths need review. Deploy the migrations.
 
@@ -115,18 +115,16 @@ access and historic attestations also need review. Deploy the migrations and kee
 hold are deferred, and the run reports them rather than saying nothing was due.
 Other due children can still be processed. On 2026-11-05, PostgreSQL 16.15
 with a minimal schema and a stub erasure function exercised both lock orders for
-the actual hold/child-cleanup wrappers; repeat with the deployed schema. The
-account-closure and cleanup changes do not settle the conflict between the existing thirty-day erasure clock
-and the chosen one-year coursework period. Review the retention rules, other
-removal paths and concurrent operations on the deployed system; a hold is not a
-complete preservation guarantee. Deploy the migration.
+the actual hold/child-cleanup wrappers; repeat with the deployed schema. The owner decided on 2026-11-05 that 30-day erasure takes priority over the
+ordinary one-year coursework clock unless a safeguarding hold prevents removal.
+Other removal paths and concurrent operations still need review on the deployed
+system; a hold is not a complete preservation guarantee. Deploy the migration.
 
 **Coursework withdrawal:** the generic library withdrawal RPC now refuses all
 coursework and historical mixed-purpose submission attachments, whether or not
 held. The learner can still remove an attachment from a draft under the existing
-rules; this does not delete the stored object. Requests to withdraw a coursework
-object require individual review via privacy@ayahspring.com until a dedicated
-workflow exists. Existing uploads and objects are not changed. Apply the migration;
+rules; this does not delete the stored object. Requests to withdraw a coursework object outside the erasure clock require
+individual review via privacy@ayahspring.com until a dedicated workflow exists. Existing uploads and objects are not changed. Apply the migration;
 review orphaned uploads, quarantine and child-record cleanup separately.
 
 **Submission read boundary:** direct assignment submission text, feedback,
@@ -584,7 +582,6 @@ product choices.
 
 **2026-11-05 retention decision:** When a guardian closes their account, the owner
 chose the 30-day erasure exception for the child's coursework, unless a safeguarding
-hold prevents it. Ordinary coursework still follows the one-year rule. The software
-and policy wording must be reconciled with that decision; deletion of stored bytes
-is a separate step that is not yet automated or verified. A separate child login
+hold prevents it. Ordinary coursework still follows the one-year rule. The erasure code and children's policy now state that exception. Deletion of
+stored bytes is a separate step that is not yet automated or verified. A separate child login
 must not be silently closed with a guardian's account.

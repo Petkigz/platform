@@ -479,14 +479,45 @@ export async function run(ctx) {
       assert((await q('select deleted_at from public.learner_profiles where id=$1', [family.childId])).rows[0].deleted_at === null);
     });
 
-    await test('closing the last family account with child coursework requires review', async () => {
+    await test('closing the last family account puts unheld child coursework on the 30-day erasure path', async () => {
       const family = await parentWithChild({ course, version });
       const sub = await asActor(family.userId, async () =>
-        (await q(SQL_SAVE, [selfPaced, family.childId, 'Work to retain.'])).rows[0].id);
+        (await q(SQL_SAVE, [selfPaced, family.childId, 'Work for erasure.'])).rows[0].id);
+      const asset = await declaredFile(family.userId, sub, 'Child work.jpg');
+      await asActor(family.userId, () => q(SQL_SUBMIT, [sub]));
       const name = (await q('select display_name from public.user_profiles where user_id=$1', [family.userId])).rows[0].display_name;
-      await refused(family.userId, 'select public.erase_my_account($1)', [name], /privacy@ayahspring\.com/i);
-      assert((await q('select body_text from public.assignment_submissions where id=$1', [sub])).rows[0].body_text === 'Work to retain.');
-      assert((await q('select account_status from public.user_profiles where user_id=$1', [family.userId])).rows[0].account_status !== 'closed');
+      const closed = await asActor(family.userId, () => q('select public.erase_my_account($1) as result', [name]));
+      assert(closed.rows[0].result.closed === true, 'unheld child coursework blocked account closure');
+      assert((await q('select body_text from public.assignment_submissions where id=$1', [sub])).rows[0].body_text === 'Work for erasure.',
+        'the child’s work was blanked before its 30-day erasure');
+      await q(`update public.learner_profiles set deleted_at=now()-interval '31 days' where id=$1`, [family.childId]);
+      await asActor(admin, () => q('select public.run_retention_jobs()'));
+      assert((await q('select id from public.assignment_submissions where id=$1', [sub])).rows.length === 0,
+        'child coursework survived the 30-day erasure run');
+      const object = (await q('select deleted_at, purge_due_at, purged_at from public.media_assets where id=$1', [asset])).rows[0];
+      assert(object.deleted_at && object.purge_due_at && new Date(object.purge_due_at) <= new Date(),
+        'the coursework object was not queued for immediate storage deletion');
+      assert(object.purged_at === null, 'the database pretended to delete the storage object');
+    });
+
+    await test('closing the last family account with held coursework needs individual review', async () => {
+      const family = await parentWithChild({ course, version });
+      const sub = await asActor(family.userId, async () =>
+        (await q(SQL_SAVE, [selfPaced, family.childId, 'Work under hold.'])).rows[0].id);
+      const asset = await declaredFile(family.userId, sub, 'Held work.jpg');
+      await q('select public.bootstrap_safeguarding_owner($1)', [admin]);
+      try {
+        await asActor(admin, () => q('select public.hold_coursework_file($1,$2)', [asset, 'An unresolved concern']));
+        const name = (await q('select display_name from public.user_profiles where user_id=$1', [family.userId])).rows[0].display_name;
+        await refused(family.userId, 'select public.erase_my_account($1)', [name], /privacy@ayahspring\.com/i);
+        assert((await q('select body_text from public.assignment_submissions where id=$1', [sub])).rows[0].body_text === 'Work under hold.');
+        assert((await q('select account_status from public.user_profiles where user_id=$1', [family.userId])).rows[0].account_status !== 'closed');
+      } finally {
+        if ((await q('select 1 from public.coursework_retention_holds where asset_id=$1 and closed_at is null', [asset])).rows.length) {
+          await asActor(admin, () => q('select public.release_coursework_hold($1,$2)', [asset, 'Test fixture cleanup']));
+        }
+        await q('delete from public.safeguarding_owner where singleton');
+      }
     });
 
     await test('closing the last family account with a separate child login requires review', async () => {

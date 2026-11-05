@@ -197,7 +197,7 @@ export async function run(ctx) {
     assert(/Frankfurt region/.test(privacy), 'privacy: where the data is hosted');
 
     const children = (await body('children')).body;
-    assert(/deleted within 30 days/.test(children), 'children: turning 18');
+    assert(/removal is scheduled for thirty days/.test(children) && /safeguarding hold/.test(children), 'children: turning 18');
 
     const refunds = (await body('refunds')).body;
     // Superseded 2026-11-01 by the owner's decision that the right may be waived

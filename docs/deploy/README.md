@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-260 files in `supabase/migrations/`, applied in filename order — the 14-digit
+261 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -152,7 +152,7 @@ done
   first run. What you are watching for is the loop *stopping*, and the file name
   above the error.
 - Takes a few minutes. The last file printed should be
-  `20261281053000_child_record_hold_boundary.sql`.
+  `20261281054000_coursework_erasure_exception.sql`.
 
 **Existing installations:** the subscription safety migration preserves the current
 `commerce.subscriptions` value. If it is already on, review existing customer
@@ -170,7 +170,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 260 files from the top and fail on the
+it, and `db push` would then re-apply all 261 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -958,8 +958,9 @@ does not review account closure, administrative exports or retention paths.
 `20261281049000_account_erasure_coursework_guard.sql`, closing a guardian's
 account no longer blanks another learner's submission merely because the guardian
 created it. Self-service closure is technically refused when it would tombstone
-a child with a separate login or coursework; affected requests require individual
-review via privacy@ayahspring.com. This does not resolve every child-retention or
+a child with a separate login or any assignment submission; migration 540 narrows
+that restriction to separate logins or held coursework. Affected requests require
+individual review via privacy@ayahspring.com. This does not resolve every child-retention or
 guardianship issue: an unlinked child without submissions may still be tombstoned,
 and another active family member is not necessarily a verified guardian. Review
 other erasure and retention paths and concurrency before relying on this workflow.
@@ -996,6 +997,18 @@ run reports deferred counts and continues with other due children. On 2026-11-05
 a PostgreSQL 16.15 test exercised both lock orders against the actual wrappers in
 a minimal schema with a stub erasure function. Repeat the concurrent test with
 the deployed schema.
-This does not reconcile the existing 30-day erasure clock with the selected
-one-year coursework period, or protect every other removal and storage path.
+The owner chose the 30-day erasure exception to the ordinary coursework year,
+unless a safeguarding hold prevents removal. Other removal and storage paths are
+not fully protected.
 Keep assignments and cohorts off pending review.
+
+After `20261281054000_coursework_erasure_exception.sql`, an unlinked child's
+unheld coursework follows the 30-day erasure clock when the last family account
+closes. Its text is retained until the record cleanup; detached coursework-purpose
+objects are queued for immediate storage deletion, not falsely marked deleted.
+Historical mixed-purpose attachments need individual review. A separate
+child login or held coursework pauses self-service closure for individual review.
+The children's policy is republished as a new version with the owner's decision
+and the storage limitation. The cleanup and storage deletion must actually be
+operated and verified; they are not guaranteed by a database date. Legal review,
+other removal paths and the existing child-account guardianship gap still matter.
