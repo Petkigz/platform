@@ -640,3 +640,13 @@ and hold the profile lock through the transaction. This covers those paths, not
 every learner, guardian, author, personal-export section or media endpoint. Previously issued
 signed URLs can still work until expiry. Deployed concurrency and live-browser
 checks remain necessary. Deploy migration 590; keep assignments and cohorts off.
+
+**Account closure wording and retained text:** Closure clears the current answer
+body on the closing account's linked learner profile, but earlier revision
+snapshots and attached objects can remain; the account page now says so. Review
+whether the adult closure/retention and safeguarding-hold rules adequately cover
+those snapshots before enabling coursework. Support-message name redaction only
+matches the profile display name; it cannot establish that all identifiers were
+removed. Identity removal is a separate step checked against `auth.users`; it
+is not proof of deletion of all external-provider copies. Existing sessions and
+previously issued signed links need a separate revocation review.

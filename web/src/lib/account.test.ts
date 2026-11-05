@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import {
   eraseMyAccount,
@@ -114,4 +115,13 @@ test('eraseMyAccount treats an ambiguous reply as nothing happened', async () =>
 
   const blank = await eraseMyAccount({} as unknown as SupabaseClient, '   ');
   assert.equal(blank.ok, false);
+});
+
+test('the closure page distinguishes profile changes, snapshots and unverified removal', () => {
+  const page = readFileSync(new URL('../app/account/delete/page.tsx', import.meta.url), 'utf8');
+  assert.match(page, /Earlier revision snapshots and attached files can remain/);
+  assert.match(page, /other names or identifiers may remain/);
+  assert.match(page, /other sessions and the provider sign-in/);
+  assert.match(page, /not proof about all provider copies/);
+  assert.doesNotMatch(page, /removes your name from everything it touched/);
 });

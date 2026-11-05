@@ -13,10 +13,8 @@ export const dynamic = 'force-dynamic';
  * goes, what stays, and why the two lists are not the same. A person who reads
  * this and still wants it closed is taken at their word.
  *
- * The split is not a legal footnote. Everything in the first list is something
- * they wrote or a name attached to them. Everything in the second is a record the
- * platform made about a transaction or a qualification, and those are the rows a
- * refund, a chargeback or a certificate check would need afterwards.
+ * Some records are changed immediately while others remain, and neither a
+ * scheduled job nor a manual storage step is proof of physical deletion.
  */
 export default async function DeleteAccountPage() {
   if (!isSupabaseConfigured()) redirect('/');
@@ -54,29 +52,30 @@ export default async function DeleteAccountPage() {
             This account is already closed.
           </p>
           <p className="muted" style={{ margin: 0 }}>
-            Its name and personal details have been removed. The sign-in itself lives with
-            the sign-in provider, not here, so closing the account could not delete it —
-            that one is on the platform owner&rsquo;s list now, and they remove it there.
+            The profile has been changed, but some records and files may remain. The sign-in
+            lives with the provider; if still present it needs a separate removal step.
+            The queue is not proof the sign-in has been removed.
           </p>
         </div>
       ) : (
         <>
           <p className="lede">
             Signed in as <strong>{user.email ?? user.phone ?? 'unknown'}</strong>. This
-            closes the account and removes your name from everything it touched.
+            closes the account, changes your profile and removes some personal information.
+            Some records and stored files remain, as explained below.
           </p>
 
           <div className="grid cols-2" style={{ marginTop: '1rem' }}>
             <section className="card">
-              <h2 style={{ marginTop: 0 }}>Deleted</h2>
+              <h2 style={{ marginTop: 0 }}>Removed or changed at closure</h2>
               <ul className="muted" style={{ paddingInlineStart: '1.1rem' }}>
                 <li>Your name, photo, time zone and country</li>
                 <li>Lesson notes and bookmarks</li>
                 <li>Saved courses and the notes on them</li>
-                <li>Course reviews and discussion posts you wrote</li>
-                <li>The text of assignment work belonging to your own linked learner profile</li>
+                <li>Your course-review rows are removed. Discussion posts remain as threads with their body replaced.</li>
+                <li>The current answer text on your own linked learner profile is cleared. Earlier revision snapshots and attached files can remain under separate retention rules.</li>
                 <li>Live sharing links, invitations and guardian access</li>
-                <li>Notifications sent to you, and mail the platform sent or queued for you</li>
+                <li>Platform notification and outbound-message records associated with you. Email already delivered cannot be recalled.</li>
                 <li>If this account has a named safeguarding or refund-approval appointment, closing it needs individual review. Contact privacy@ayahspring.com.</li>
                 <li>
                   A child profile in a family with no other active member may be closed.
@@ -87,7 +86,7 @@ export default async function DeleteAccountPage() {
               </ul>
             </section>
             <section className="card">
-              <h2 style={{ marginTop: 0 }}>Kept, without your name</h2>
+              <h2 style={{ marginTop: 0 }}>Records that remain</h2>
               <ul className="muted" style={{ paddingInlineStart: '1.1rem' }}>
                 <li>Orders, payments and refunds — the ledger a refund depends on</li>
                 <li>
@@ -96,9 +95,10 @@ export default async function DeleteAccountPage() {
                 </li>
                 <li>Certificates, under the number they were issued with</li>
                 <li>
-                  Your support case — the words you wrote are removed, your name becomes
-                  &ldquo;the account holder&rdquo; in what support wrote back, and the case itself
-                  is deleted three years after it closes
+                  Your support case — the case text is replaced and messages you wrote are removed.
+                  The platform attempts to replace your profile display name in staff replies and
+                  resolution notes, but other names or identifiers may remain. The case is due for
+                  deletion three years after it closes.
                 </li>
                 <li>The audit record that the account was closed</li>
                 <li>
@@ -107,11 +107,9 @@ export default async function DeleteAccountPage() {
                 </li>
               </ul>
               <p className="muted" style={{ marginBottom: 0 }}>
-                A certificate&rsquo;s holder is shown as &ldquo;Deleted learner&rdquo;, so a
-                number that is checked later still resolves — to a record that no longer
-                names anybody. A child&rsquo;s certificate keeps its number for the same
-                reason, even after the thirty-day deletion above takes the evidence behind
-                it.
+                A certificate&rsquo;s holder field is replaced with &ldquo;Deleted learner&rdquo;,
+                and its number and other snapshot details remain. A child&rsquo;s certificate
+                also keeps its number after the learning record is removed.
               </p>
             </section>
           </div>
@@ -119,18 +117,18 @@ export default async function DeleteAccountPage() {
           <section className="card" style={{ marginTop: '1rem' }}>
             <h2 style={{ marginTop: 0 }}>This cannot be undone</h2>
             <p className="muted">
-              You will be signed out, and signing in again will not bring any of it
-              back. If you are a teacher with a course in review or published, the
+              The app attempts to sign you out, but other sessions and the provider sign-in
+              may remain until separately revoked or removed. If you are a teacher with a
+              course in review or published, the
               platform owner has to close the teaching account first — the page will say
               so if that applies to you.
             </p>
             <p className="muted">
               <strong>The sign-in is not deleted by this.</strong> It is held by the
               sign-in provider rather than by AyahSpring, so closing the account puts it on
-              the platform owner&rsquo;s list and they delete it there. When it is gone the
-              platform records the date against your closed account — so if you ask
-              support later whether it was done, the answer is a fact rather than a
-              memory.
+              the platform owner&rsquo;s list for a separate removal step if it is still
+              present. Before recording removal, the database checks that the identity is
+              absent from its authentication table; that is not proof about all provider copies.
             </p>
             <EraseAccount displayName={profile.display_name} />
           </section>
