@@ -19,22 +19,21 @@ const fail = (message: string, status: number) =>
 /**
  * Mints a short-lived URL for one delivery copy.
  *
- * This is the only place a learner's player gets bytes from, and it is a
- * rendition, never a master: D8 keeps the archive and the delivery copies apart
- * so that "a learner never touches a master" is a property of the code rather
- * than a filter somebody remembered to add.
+ * This is the lesson player's delivery-copy path, not the coursework file path.
+ * Coursework files may be opened through a separate master-file route.
  *
  * WHO IS ALLOWED IS NOT DECIDED HERE
  * ----------------------------------
- * `media_renditions_read` is `may_play_rendition(id) or is_privileged(...)`, and
+ * `media_renditions_read` excludes coursework and currently attached legacy files, and
  * `may_play_rendition()` walks rendition → master → `lesson_resources` →
  * `lessons` and asks `can_access_lesson_now()`. So this route selects the row and
  * trusts the answer. Re-checking entitlement here would create a second
  * authority that could disagree with the first, which is how a preview gate once
  * nearly gave away a paid feature.
  *
- * A row the caller may not play does not come back at all, so "that rendition
- * does not exist" and "that rendition is not yours" produce the same response.
+ * Ordinary callers cannot read a row they may not play; staff can also read
+ * library rows for operational work. Coursework rows are excluded for both.
+ * For an ordinary caller, "not found" and "not yours" produce the same response.
  * They are not distinguished on purpose: the difference tells a caller what to
  * try next.
  *

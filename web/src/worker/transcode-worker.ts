@@ -64,6 +64,8 @@ import { pipeline } from 'node:stream/promises';
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
+import { decideTranscodeEligibility } from '../lib/transcode-eligibility.ts';
+
 import {
   presignMasterDownload,
   presignRenditionUpload,
@@ -89,7 +91,7 @@ const USAGE = `usage: transcode-worker [--asset <uuid>] [--limit <n>] [--scan <n
 
   --asset   encode one master by id, whatever state its renditions are in
   --limit   how many masters to encode in this pass (default 5)
-  --scan    how many available masters to look at when choosing (default 50)
+  --scan    how many eligible library masters to look at (default 50, maximum 1000)
 `;
 
 type Args = { asset: string | null; limit: number; scan: number };
@@ -105,7 +107,9 @@ function parseArgs(argv: readonly string[]): Args {
       i += 1;
     } else if (flag === '--limit' || flag === '--scan') {
       const n = Number(value);
-      if (!Number.isInteger(n) || n < 1) throw new Error(`${flag} needs a whole number of at least 1`);
+      if (!Number.isInteger(n) || n < 1 || (flag === '--scan' && n > 1000)) {
+        throw new Error(flag === '--scan' ? '--scan needs a whole number from 1 to 1000' : `${flag} needs a whole number of at least 1`);
+      }
       if (flag === '--limit') args.limit = n;
       else args.scan = n;
       i += 1;
@@ -310,27 +314,18 @@ async function findWork(
   supabase: SupabaseClient,
   args: Args,
 ): Promise<{ masters: MasterRow[]; renditions: Map<string, ExistingRendition[]> }> {
-  if (args.asset) {
-    const { data, error } = await supabase
-      .from('media_assets')
-      .select('id, checksum, mime_type, master_bucket, master_key, status')
-      .eq('id', args.asset)
-      .maybeSingle();
-    if (error) throw new Error(mapTranscodeError(error));
-    if (!data) throw new Error(`no master ${args.asset}`);
-    const rows = [data as unknown as MasterRow];
-    return { masters: rows, renditions: await fetchRenditions(supabase, rows.map((m) => m.id)) };
-  }
-
-  const { data, error } = await supabase
-    .from('media_assets')
-    .select('id, checksum, mime_type, master_bucket, master_key, status')
-    .eq('status', 'available')
-    .order('created_at', { ascending: true })
-    .limit(args.scan);
+  // Filter inside the database before limiting, so private coursework cannot
+  // consume the scan window and starve unrelated library media.
+  const { data, error } = await supabase.rpc('transcode_library_candidates', {
+    p_asset_id: args.asset,
+    p_scan: args.scan,
+  });
   if (error) throw new Error(mapTranscodeError(error));
-
   const scanned = (data ?? []) as unknown as MasterRow[];
+  if (args.asset) {
+    if (scanned.length === 0) throw new Error(`no eligible library master ${args.asset}`);
+    return { masters: scanned, renditions: await fetchRenditions(supabase, scanned.map((m) => m.id)) };
+  }
   const renditions = await fetchRenditions(supabase, scanned.map((m) => m.id));
 
   const needing = scanned.filter((master) => {
@@ -397,6 +392,15 @@ async function processMaster(
   if (master.status !== 'available') {
     process.stdout.write(`\n${master.id} — ${master.status}: not available, nothing encoded\n`);
     return 0;
+  }
+  // This check also covers an explicit --asset and pre-existing pending rows.
+  // Fail closed if the database cannot establish that this is library media.
+  const eligibility = await decideTranscodeEligibility(() => supabase.rpc(
+    'may_transcode_library_asset', { p_asset_id: master.id },
+  ));
+  if (eligibility !== 'eligible') {
+    process.stdout.write(`\n${master.id} — not eligible for library transcoding; no master downloaded\n`);
+    return eligibility === 'error' ? 1 : 0;
   }
   if (master.master_bucket !== r2.mastersBucket) {
     process.stdout.write(

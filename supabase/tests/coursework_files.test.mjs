@@ -427,6 +427,83 @@ export async function run(ctx) {
       [second, declared.asset_id], /must be declared coursework/i);
   });
 
+  await test('coursework cannot be transcoded or read through an old rendition', async () => {
+    const who = await learner('Private rendition', { course, version });
+    const submission = await draft(who.userId, assignment, who.learnerId);
+    const target = await declare(who.userId, submission);
+    assert((await call(admin, 'select public.may_transcode_library_asset($1) as ok', [target.asset_id])).ok === false);
+    await call(who.userId, SQL_CONFIRM, [target.asset_id]);
+    assert((await call(admin, 'select public.may_transcode_library_asset($1) as ok', [target.asset_id])).ok === false);
+    await refused(admin, 'select * from public.register_media_rendition($1,$2,$3,$4)',
+      [target.asset_id, 'audio', 'audio/mpeg', 1000], /coursework cannot be encoded/i);
+    await call(who.userId, 'select public.remove_assignment_asset($1,$2)', [submission, target.asset_id]);
+    assert((await call(admin, 'select public.may_transcode_library_asset($1) as ok', [target.asset_id])).ok === false,
+      'detached declared coursework became eligible');
+
+    // Trusted fixture simulates a rendition that already existed before this
+    // migration. Never disable this trigger in production.
+    await q('alter table public.media_renditions disable trigger media_rendition_library_only');
+    let rendition;
+    let pending;
+    try {
+      rendition = (await q(`insert into public.media_renditions
+        (asset_id, profile, bucket, object_key, mime_type, byte_size, status, created_by)
+        values ($1,'audio','test-renditions',$2,'audio/mpeg',1000,'available',$3) returning id`,
+      [target.asset_id, `historical/${crypto.randomUUID()}`, admin])).rows[0].id;
+      pending = (await q(`insert into public.media_renditions
+        (asset_id, profile, bucket, object_key, mime_type, byte_size, status, created_by)
+        values ($1,'poster','test-renditions',$2,'image/jpeg',1000,'pending',$3) returning id`,
+      [target.asset_id, `historical/${crypto.randomUUID()}`, admin])).rows[0].id;
+    } finally {
+      await q('alter table public.media_renditions enable trigger media_rendition_library_only');
+    }
+    for (const actor of [admin, teacher, who.userId]) {
+      assert((await call(actor, 'select public.may_play_rendition($1) as ok', [rendition])).ok === false);
+      const rows = await asActor(actor, () => q('select id, object_key from public.media_renditions where id=$1', [rendition]));
+      assert(rows.rows.length === 0, 'a coursework rendition row was visible');
+    }
+    await refused(admin, 'select public.confirm_media_rendition($1)', [pending], /coursework cannot be encoded/i);
+    await refused(who.userId, 'select public.is_library_delivery_asset($1)', [target.asset_id], /permission denied/i);
+  });
+
+  await test('an existing library attachment is excluded from rendition playback and transcoding', async () => {
+    const who = await learner('Old mixed file', { course, version });
+    const submission = await draft(who.userId, assignment, who.learnerId);
+    const asset = (await q(`insert into public.media_assets
+      (storage_backend, master_bucket, master_key, checksum, mime_type, byte_size, status, uploaded_by)
+      values ('r2','masters',$1,$2,'audio/mpeg',1000,'available',$3) returning id`,
+      [`historical/${crypto.randomUUID()}`, digest(), who.userId])).rows[0].id;
+    const rendition = (await call(admin, 'select * from public.register_media_rendition($1,$2,$3,$4)',
+      [asset, 'audio', 'audio/mpeg', 1000])).rendition_id;
+    await call(admin, 'select public.confirm_media_rendition($1)', [rendition]);
+    const draftVersion = await newVersion(course, teacher, { version_number: 280 + seq });
+    const section = await newSection(draftVersion);
+    const lesson = await newLesson(section);
+    await asActor(teacher, () => q(`insert into public.lesson_resources
+      (lesson_id, resource_type, media_asset_id, display_name, access_classification)
+      values ($1,'audio',$2,'Old mixed file','enrolled')`, [lesson, asset]));
+    assert((await call(teacher, 'select public.may_play_rendition($1) as ok', [rendition])).ok === true);
+    assert((await call(admin, 'select public.may_transcode_library_asset($1) as ok', [asset])).ok === true);
+    assert((await call(who.userId, 'select public.may_transcode_library_asset($1) as ok', [asset])).ok === false);
+    assert((await asActor(admin, () => q('select id from public.transcode_library_candidates($1,$2)', [asset, 50]))).rows.length === 1);
+    assert((await asActor(who.userId, () => q('select id from public.transcode_library_candidates($1,$2)', [asset, 50]))).rows.length === 0);
+    // Simulate a row inserted by the old RPC before its attachment guard existed.
+    await q('alter table public.assignment_submission_assets disable trigger assignment_assets_coursework_only');
+    try {
+      await q('insert into public.assignment_submission_assets (submission_id,media_asset_id,attached_by) values ($1,$2,$3)',
+        [submission, asset, who.userId]);
+    } finally {
+      await q('alter table public.assignment_submission_assets enable trigger assignment_assets_coursework_only');
+    }
+    assert((await call(teacher, 'select public.may_play_rendition($1) as ok', [rendition])).ok === false);
+    assert((await call(admin, 'select public.may_transcode_library_asset($1) as ok', [asset])).ok === false);
+    assert((await asActor(admin, () => q('select id from public.transcode_library_candidates($1,$2)', [asset, 50]))).rows.length === 0);
+    const rows = await asActor(admin, () => q('select id from public.media_renditions where id=$1', [rendition]));
+    assert(rows.rows.length === 0, 'staff could read the legacy rendition');
+    await refused(admin, 'select * from public.register_media_rendition($1,$2,$3,$4)',
+      [asset, 'poster', 'image/jpeg', 1000], /coursework cannot be encoded/i);
+  });
+
   await test('a library file is still refused to a lesson until staff confirm it', async () => {
     const row = await q(
       `insert into public.media_assets

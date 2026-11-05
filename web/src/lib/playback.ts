@@ -3,10 +3,11 @@
  *
  * THE DATABASE IS THE ONLY AUTHORITY ON WHO MAY PLAY WHAT
  * --------------------------------------------------------
- * `media_renditions_read` is `may_play_rendition(id) or is_privileged(...)`, and
+ * `media_renditions_read` excludes coursework and currently attached legacy files, and
  * `may_play_rendition()` already walks rendition → master → `lesson_resources` →
  * `lessons` and asks `can_access_lesson_now()`. So `fetchPlayableRenditions`
- * below does a plain select and does no entitlement check of its own. A second
+ * below does a plain select and does no entitlement check of its own. Staff can
+ * also read library rendition rows for operational work. A second
  * check here would be a second authority, and two authorities that can disagree
  * is the failure this repository keeps finding — `add_child_to_family()`, the
  * duplicated upload validator, and a preview gate that would have given away a

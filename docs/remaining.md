@@ -70,6 +70,14 @@ Checked upload and lifecycle writers remain, as do limited descriptive edits. Th
 migration needs deployment and does not itself fix the existing broad read/signing
 paths, revoke previously issued URLs, scan files, or control storage credentials.
 
+**Rendition containment:** lesson rendition reads and the transcode worker now
+exclude coursework and currently attached legacy files, including old rendition
+rows. The worker checks before downloading; existing object-store bytes and
+previously issued links are not revoked. Legacy library attachments that were
+already detached and lost their attribution cannot reliably be identified by this
+check. Deploy the migration and updated worker; direct master access, staff
+metadata paths, existing copies and other safeguarding gaps remain unresolved.
+
 **Attachment boundary:** new assignment attachments must be declared coursework
 for that submission and cannot also be lesson resources. Existing attachments
 are not reclassified or deleted; older library-labelled attachments and any lesson
