@@ -1,8 +1,16 @@
 import { NextResponse } from 'next/server';
 
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { isServiceRoleConfigured } from '@/lib/env';
+import { handleChildLoginCreation } from '@/lib/child-login-handler';
+import { childLoginCreatePorts } from '@/lib/child-login-ports';
 // Creation is paused until the trusted linking and recovery workflow is safe.
 // Detachment remains available below; it does not revoke the auth identity.
+
+// The route is wired but deliberately not open until the removal/recovery and
+// real-provider checks are complete and a deployment changes this code gate.
+const CHILD_LOGIN_CREATION_READY = false;
 
 const NO_STORE = { 'Cache-Control': 'no-store' } as const;
 
@@ -17,11 +25,23 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
   if (!user) return fail('Sign in to make a login for your child.', 401);
 
-  void request;
-  return NextResponse.json(
-    { code: 'child_login_creation_paused' },
-    { status: 503, headers: NO_STORE },
-  );
+  if (!CHILD_LOGIN_CREATION_READY) {
+    return NextResponse.json(
+      { code: 'child_login_creation_paused' },
+      { status: 503, headers: NO_STORE },
+    );
+  }
+  if (!isServiceRoleConfigured()) {
+    return NextResponse.json({ code: 'child_login_unavailable' }, { status: 503, headers: NO_STORE });
+  }
+  // Browser form posts cannot send application/json cross-origin without CORS
+  // preflight. This is not a substitute for a broader deployment CSRF review.
+  if (!/^application\/json(?:\s*;|$)/i.test(request.headers.get('content-type') ?? '')) {
+    return NextResponse.json({ ok: false, message: 'A JSON request is required.' }, { status: 415, headers: NO_STORE });
+  }
+  const body = await request.json().catch(() => null);
+  const result = await handleChildLoginCreation(childLoginCreatePorts(supabase, createAdminClient()), user.id, body);
+  return NextResponse.json(result.body, { status: result.status, headers: NO_STORE });
 }
 
 /** Removing a login. Deletes no learning; see `remove_child_login()`. */

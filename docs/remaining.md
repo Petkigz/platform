@@ -685,11 +685,11 @@ does not itself revoke identities, reset passwords, resolve stranded attempts, o
 prove real provider/concurrency behavior. On recovery, the original password
 remains in effect; a later password input is not applied automatically.
 
-The child-login coordinator now has a server adapter that uses the guardian's
-session for reservation, the service role for marked identity creation and
-lookup, and the trusted completion RPC. It has mock-based tests only. It is not
-yet connected to the paused route, and Supabase's real provider behavior,
-metadata protection and retry/concurrency behavior have not been verified in a
+The child-login coordinator and server adapter use the guardian's session for
+reservation, and the service role for marked identity creation, lookup and
+trusted completion. The route is wired behind a hard-disabled code gate; it has
+mock-based tests only. Supabase's real provider behavior, metadata protection,
+retry/concurrency behavior and sign-in removal have not been verified in a
 representative deployment. Keep creation paused until the remaining recovery and
 identity-removal steps are implemented and checked.
 
@@ -704,3 +704,9 @@ matching marked identity appears in the auth table. The readout is not proof of
 provider-wide absence or revocation and has no reconciliation or deletion action.
 Creation remains paused until a safe end-to-end recovery and removal workflow is
 implemented, tested against the provider, and deliberately deployed.
+
+The gated creation handler validates the child, username and password, derives
+the guardian from the server session, and treats ambiguous replies as unknown.
+If a prior creation is recovered, the family screen explains that the earlier
+password remains in effect. This work does not lift the creation pause or provide
+password reset or provider-session revocation.

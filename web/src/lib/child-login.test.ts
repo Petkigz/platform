@@ -101,7 +101,11 @@ test('child login creation is contained and detachment does not claim auth revoc
   const route = readFileSync(new URL('../app/api/family/child-login/route.ts', import.meta.url), 'utf8');
   const card = readFileSync(new URL('../app/family/child-login-card.tsx', import.meta.url), 'utf8');
   assert.match(route, /child_login_creation_paused/);
-  assert.doesNotMatch(route, /createUser|attach_child_login/);
+  assert.match(route, /CHILD_LOGIN_CREATION_READY = false/);
+  assert.match(route, /handleChildLoginCreation/);
+  assert.match(route, /A JSON request is required/);
   assert.match(card, /does not delete the sign-in or revoke/);
   assert.match(card, /!state.canCreate/);
+  assert.match(card, /password set in that earlier attempt remains in effect/);
+  assert.match(card, /We could not confirm this login/);
 });

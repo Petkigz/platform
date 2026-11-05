@@ -48,7 +48,7 @@ export function ChildLoginCard({
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [made, setMade] = useState<string | null>(null);
+  const [made, setMade] = useState<{ username: string; recovered: boolean } | null>(null);
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [reason, setReason] = useState('');
   const [, startTransition] = useTransition();
@@ -69,25 +69,28 @@ export function ChildLoginCard({
     }
 
     setBusy(true);
-    const res = await fetch('/api/family/child-login', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ learnerId, username, password }),
-    });
-    const json = (await res.json().catch(() => null)) as
-      | { ok?: boolean; username?: string; error?: string; code?: string }
-      | null;
-    setBusy(false);
-
-    if (!res.ok || !json?.ok) {
-      setError(childLoginSentence(json?.code ?? json?.error));
-      return;
+    try {
+      const res = await fetch('/api/family/child-login', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ learnerId, username, password }),
+      });
+      const json = (await res.json().catch(() => null)) as
+        | { ok?: boolean; username?: string; recovered?: boolean; message?: string; error?: string; code?: string }
+        | null;
+      if (!res.ok || json?.ok !== true || typeof json.username !== 'string' || typeof json.recovered !== 'boolean') {
+        setError(json?.message ?? childLoginSentence(json?.code ?? json?.error));
+        return;
+      }
+      setMade({ username: json.username, recovered: json.recovered });
+      setUsername('');
+      setPassword('');
+      startTransition(() => router.refresh());
+    } catch {
+      setError('We could not confirm this login. Refresh the family page or contact privacy@ayahspring.com before retrying. If you retry, use the original password.');
+    } finally {
+      setBusy(false);
     }
-
-    setMade(json.username ?? username);
-    setUsername('');
-    setPassword('');
-    startTransition(() => router.refresh());
   }
 
   async function remove() {
@@ -115,6 +118,24 @@ export function ChildLoginCard({
     } finally {
       setBusy(false);
     }
+  }
+
+  if (made) {
+    return (
+      <div className="card" style={{ marginTop: '0.75rem' }}>
+        <div className="notice">
+          <strong>{childName}&rsquo;s learner profile is linked.</strong> The username is{' '}
+          <strong>{made.username}</strong>. {made.recovered
+            ? 'This was recovered from an earlier attempt. The password set in that earlier attempt remains in effect; the password entered on this retry did not replace it.'
+            : 'Use the password you chose for this login.'}
+        </div>
+        <p className="muted">The username is a sign-in identifier, not an email mailbox.
+          Contact privacy@ayahspring.com if you need help with the password.</p>
+        <button type="button" className="btn ghost" onClick={() => { setMade(null); startTransition(() => router.refresh()); }}>
+          Done
+        </button>
+      </div>
+    );
   }
 
   if (state.hasLogin && state.username) {
@@ -181,22 +202,7 @@ export function ChildLoginCard({
     return <p className="muted">Creating child logins is temporarily paused while the linking and recovery workflow is reviewed. Contact privacy@ayahspring.com for help.</p>;
   }
 
-  if (made) {
-    return (
-      <div className="card" style={{ marginTop: '0.75rem' }}>
-        <div className="notice">
-          <strong>{childName} can now sign in.</strong> The username is{' '}
-          <strong>{made}</strong>. If you did not write the password down, set a new one
-          by removing this login and making it again — nobody on the platform can read it.
-        </div>
-        <p className="muted" style={{ fontSize: '0.85rem' }}>
-          On the sign-in page, {childName} types <strong>{made}</strong> where it asks for
-          an email address. It is not one: it is a username, and nothing is ever sent to
-          it.
-        </p>
-      </div>
-    );
-  }
+
 
   return (
     <div style={{ marginTop: '0.75rem' }}>

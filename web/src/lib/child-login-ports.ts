@@ -38,7 +38,9 @@ export function childLoginCreatePorts(session: SupabaseClient, service: Supabase
       const { data, error } = await service.rpc('complete_child_login_attempt', {
         p_attempt: attemptId, p_guardian: guardianId, p_user: userId,
       });
-      if (error || !data || typeof data !== 'object') throw new Error('link completion uncertain');
+      if (error || !data || typeof data !== 'object'
+        || typeof data.username !== 'string' || typeof data.learnerProfileId !== 'string'
+        || typeof data.alreadyCompleted !== 'boolean') throw new Error('link completion uncertain');
     },
   };
 }

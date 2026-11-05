@@ -27,7 +27,7 @@ tables, 283 policies, 80 flags and 18 controls, 128 page routes and 117 route
 handlers. On 2026-11-05 the tree has 271 migrations. Before migration 600,
 the database suite passed 2 598 assertions in 170 suites; after migrations 600–640,
 54 focused child-login, handover, flag and RPC-contract checks passed. The full database rerun was invalidated by concurrent source changes and remains pending.
-The web suite passed 2 068 tests.
+The web suite passed 2 072 tests.
 
 ---
 

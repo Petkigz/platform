@@ -13,7 +13,7 @@ test('session reserves and only the service client creates, looks up and complet
   const service = cast({
     rpc: async (name: string, input: unknown) => {
       calls.push({ name: `service:${name}`, input });
-      return { data: name === 'child_login_attempt_identity' ? null : { username: 'amina' }, error: null };
+      return { data: name === 'child_login_attempt_identity' ? null : { username: 'amina', learnerProfileId: 'learner', alreadyCompleted: false }, error: null };
     },
     auth: { admin: { createUser: async (input: unknown) => {
       calls.push({ name: 'service:createUser', input }); return { data: { user: { id: 'child' } }, error: null };
@@ -44,5 +44,13 @@ test('provider errors are not exposed and missing results are not treated as suc
   await assert.rejects(() => ports.prepare('l', 'u'), /reservation unavailable/);
   await assert.rejects(() => ports.findIdentity('a', 'g'), /identity lookup unavailable/);
   await assert.rejects(() => ports.createIdentity({ username: 'u', password: 'p', attemptId: 'a' }), /identity creation uncertain/);
+  await assert.rejects(() => ports.complete('a', 'g', 'u'), /link completion uncertain/);
+});
+
+
+test('an incomplete completion response is not accepted as proof', async () => {
+  const session = cast({});
+  const service = cast({ rpc: async () => ({ data: {}, error: null }) });
+  const ports = childLoginCreatePorts(session, service);
   await assert.rejects(() => ports.complete('a', 'g', 'u'), /link completion uncertain/);
 });
