@@ -30,7 +30,7 @@ export function ReviewForm({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [busy, setBusy] = useState(false);
-  const [decision, setDecision] = useState<'clear' | 'concern'>('clear');
+  const [decision, setDecision] = useState<'clear' | 'concern' | null>(null);
   const [note, setNote] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [tone, setTone] = useState<'info' | 'error'>('info');
@@ -38,6 +38,12 @@ export function ReviewForm({
 
   async function submit() {
     setMessage(null);
+
+    if (decision === null) {
+      setTone('error');
+      setMessage('Choose a review outcome before recording it.');
+      return;
+    }
 
     if (decision === 'concern' && note.trim().length < 3) {
       setTone('error');
@@ -74,7 +80,8 @@ export function ReviewForm({
   return (
     <div style={{ display: 'grid', gap: '0.6rem' }}>
       <fieldset style={{ border: 0, padding: 0, margin: 0, display: 'grid', gap: '0.35rem' }}>
-        <legend className="eyebrow">What you saw in {name}</legend>
+        <legend className="eyebrow">Record a review of {name}</legend>
+        <p className="muted">Open the file before recording a review. The platform cannot verify that you viewed it.</p>
         <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'baseline' }}>
           <input
             type="radio"
@@ -82,7 +89,7 @@ export function ReviewForm({
             checked={decision === 'clear'}
             onChange={() => setDecision('clear')}
           />
-          <span>No concern — this is the learner&rsquo;s own work</span>
+          <span>No concern noted</span>
         </label>
         <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'baseline' }}>
           <input
@@ -110,9 +117,8 @@ export function ReviewForm({
             placeholder="What is in the file, and what you did about it"
           />
           <p className="muted" style={{ fontSize: '0.85rem' }}>
-            This stays with the file, where whoever may read the file can read it.
-            The audit trail records that a concern was noted and which file — not
-            the sentence itself.
+            The note is available in the safeguarding owner queue. The audit trail
+            records that a concern was noted and which file, not the sentence itself.
           </p>
         </div>
       )}

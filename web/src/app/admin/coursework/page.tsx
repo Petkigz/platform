@@ -30,27 +30,8 @@ import { parseSafeguardingConcerns, parseSafeguardingHistory } from '@/lib/safeg
 
 export const dynamic = 'force-dynamic';
 
-/**
- * Files children handed in, and who has looked at them.
- *
- * The gap this screen answers was one sentence wide and total: a handed-in file is
- * confirmed by the family that sends it and attached to their draft in the same
- * call, which is right for a child on metered data — and **no member of staff ever
- * saw the file or recorded having looked**. So the platform could not answer the
- * question a safeguarding lead actually gets asked.
- *
- * What this is not: a queue in front of the file. The teacher marking the work
- * opens it the moment it arrives, and this page says so on its face, because a
- * queue that never empties stops being read and a release gate spends the family's
- * goodwill on the ordinary case.
- *
- * The two answers are deliberately unequal. "No concern" needs nothing further;
- * "something to raise" needs a sentence, and the sentence stays with the file
- * rather than in the audit log, where a summary about a child's photograph would
- * outlive the people who could explain it.
- *
- * Staff-only, decided in the database (`coursework_review_queue()`), so the route
- * cannot be the place the rule is weakened.
+/** Owner-only review register, alongside separately authorized retention tools.
+ * A recorded review is an attestation, not proof that a file was viewed.
  */
 export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ concern?: string; before?: string; beforeId?: string }> }) {
   if (!isSupabaseConfigured()) redirect('/');
@@ -180,23 +161,21 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
         <p className="eyebrow">Safeguarding</p>
         <h1>Handed-in files</h1>
         <p className="muted">
-          Work a learner sent as a photograph, a document or a recording. The teacher
-          it was handed to can open it immediately; this page is how somebody records
-          having looked at it, so the question &ldquo;who has seen my child&rsquo;s
-          photograph?&rdquo; has an answer that is not a memory.
+          Review records are statements by the marker or safeguarding owner. They do
+          not prove that anyone opened the file or list everyone who has seen it.
         </p>
       </div>
 
-      <section className="card" style={{ marginBottom: '1.5rem' }}>
+      {summaryResult.error ? <p className="notice warn">The review summary is available only to the configured safeguarding owner, or could not be loaded. Do not assume it is empty.</p> : <section className="card" style={{ marginBottom: '1.5rem' }}>
         <div className="outline-h"><h2>Where things stand</h2></div>
         <p>{reviewHeadline(summary)}</p>
         <ul className="lessons">
           <li>
-            <span className="t">Looked at</span>
+            <span className="t">Review recorded</span>
             <span className="muted">{summary.reviewed} of {summary.files}</span>
           </li>
           <li>
-            <span className="t">Not looked at yet</span>
+            <span className="t">No review recorded</span>
             <span className="muted">{summary.unreviewed}</span>
           </li>
           <li>
@@ -210,26 +189,25 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
             <li>
               <span className="t">Reviews whose file has since been deleted</span>
               <span className="muted">
-                {summary.reviewsOutlivingFiles} — the record of somebody having
-                looked survives the photograph, which is the point of keeping it.
+                {summary.reviewsOutlivingFiles} — the review record survives the file.
               </span>
             </li>
           )}
         </ul>
-      </section>
+      </section>}
 
-      {queue.length === 0 && (
+      {queueResult.error && <p className="notice warn">The review register is available only to the configured safeguarding owner, or could not be loaded. Do not assume it is empty.</p>}
+      {!queueResult.error && queue.length === 0 && (
         <p className="muted">
-          Nothing has been handed in yet. When a learner sends a file it appears here
-          within a second of arriving, and the teacher marking the work sees it
-          immediately — with or without a review.
+          No available handed-in files were returned. A missing review record does
+          not prove whether anyone opened a file.
         </p>
       )}
 
       {unreviewed.length > 0 && (
         <section className="card">
           <div className="outline-h">
-            <h2>Nobody has looked at {unreviewed.length === 1 ? 'this one' : `these ${unreviewed.length}`}</h2>
+            <h2>No review recorded for {unreviewed.length === 1 ? 'this file' : `these ${unreviewed.length} files`}</h2>
           </div>
           <p className="muted" style={{ fontSize: '0.9rem' }}>{REVIEW_FORM_HELP}</p>
           {unreviewed.map((row) => (
@@ -264,7 +242,7 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
 
       {reviewed.length > 0 && (
         <section className="card" style={{ marginBlockStart: '1rem' }}>
-          <div className="outline-h"><h2>Looked at</h2></div>
+          <div className="outline-h"><h2>Reviews recorded</h2></div>
           <ul className="lessons">
             {reviewed.map((row) => (
               <li key={row.assetId}>

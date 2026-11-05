@@ -9,7 +9,7 @@ import { isSupabaseConfigured } from '@/lib/env';
  * review is the teacher the work was handed to, not a staff member, and the screen
  * they do it from is the course's own assignment queue. The authority is
  * `record_coursework_review()`, which reads the session and decides — the course
- * author or staff, never the household. This route repeats none of that rule; it
+ * author or the named safeguarding owner, never the household. This route repeats none of that rule; it
  * refuses only what it can see for itself.
  *
  * That is why the route can be open to any signed-in caller without opening
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
     // The three refusals a person can act on keep their own sentence and their own
     // status; everything else is a 500 with the database's words, because a route
     // is the wrong place to invent a reason.
-    if (/family that sent a file|only the teacher the work was handed to/i.test(message)) {
+    if (/family that sent a file|only the teacher the work was handed to|not available for your review/i.test(message)) {
       return fail(message, 403);
     }
     if (/needs a sentence|has been deleted|nothing to look at yet|not handed in as coursework/i.test(message)) {

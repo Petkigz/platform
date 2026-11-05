@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-251 files in `supabase/migrations/`, applied in filename order — the 14-digit
+252 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -152,7 +152,7 @@ done
   first run. What you are watching for is the loop *stopping*, and the file name
   above the error.
 - Takes a few minutes. The last file printed should be
-  `20261281044000_coursework_upload_authority.sql`.
+  `20261281045000_coursework_review_privacy.sql`.
 
 **Existing installations:** the subscription safety migration preserves the current
 `commerce.subscriptions` value. If it is already on, review existing customer
@@ -170,7 +170,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 251 files from the top and fail on the
+it, and `db push` would then re-apply all 252 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -923,3 +923,11 @@ expires; the database rechecks authority at confirmation. The web route checks
 the uploaded size, but an authenticated direct database RPC can bypass that HEAD
 check, and no malware scanner is connected. This migration does not close every
 metadata or storage access path; keep assignments and cohorts off.
+
+After `20261281045000_coursework_review_privacy.sql`, deploy the web application.
+Only the configured safeguarding owner can read the general review register and
+summary; assignment authors can record reviews on their own attached files. Other
+staff and household members cannot record reviews or see review state through the
+submission-file list. A review is an attestation, not proof of viewing or a
+complete access log. Other submission and retention metadata paths still require
+review; leave the assignments and cohorts switches off.

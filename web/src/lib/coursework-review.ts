@@ -1,29 +1,5 @@
-/**
- * Who looked at a child's handed-in file, and what they said.
- *
- * The second half of the coursework question the owner answered on 2026-11-01.
- * A file is confirmed by the family that sends it and attached to their draft in
- * one call — fast, and right for a child on metered data — and until this record
- * existed **no member of staff ever saw the file or recorded having looked**. So
- * the platform could not answer the question a safeguarding lead actually gets
- * asked: "who has seen my child's photograph?"
- *
- * The owner chose a *recorded review* over a release queue: nothing waits behind
- * this, and a teacher opens a file the moment it arrives. What the record buys is
- * the ability to see what nobody has looked at, and to answer for it later.
- *
- * This module is the reading and writing half of that: it turns what the database
- * returns into sentences, and it posts a review. Two rules the copy follows:
- *
- * 1. **Nothing is described as pending review.** A queue that never empties is a
- *    queue that stops being read. The sentence says how many have been looked at
- *    and that nothing is blocked, in that order.
- * 2. **A concern is never reduced to a colour.** It says a person noted something
- *    and when, because the next step is a conversation with a guardian, not a red
- *    badge on a list.
- *
- * Pure except for `postCourseworkReview`, so every sentence is testable without a
- * browser or a database.
+/** Coursework review display and form helpers. A review is an attestation;
+ * it is not proof the file was opened or a record of every person who saw it.
  */
 
 export type ReviewDecision = 'none' | 'clear' | 'concern';
@@ -129,9 +105,9 @@ export function describeFileReview(file: {
   reviewedAt?: string | null;
 }): string {
   const when = file.reviewedAt ? ` on ${reviewDay(file.reviewedAt)}` : '';
-  if (file.review === 'clear') return `looked at${when}`;
+  if (file.review === 'clear') return `review recorded${when}`;
   if (file.review === 'concern') return `a concern was noted${when}`;
-  return 'not looked at yet';
+  return 'no review recorded';
 }
 
 /** A day as a reader reads it, or nothing when there is no day to read. */
@@ -152,18 +128,17 @@ export function daysWaiting(iso: string | null | undefined, now = new Date()): n
 }
 
 /**
- * The headline: how many have been looked at, how many have not, and — first,
- * because it is the thing a safeguarding lead needs to know — that nothing is
- * being held.
+ * The headline distinguishes recorded reviews from unreviewed files, without
+ * claiming to know whether anyone opened a file.
  */
 export function reviewHeadline(summary: ReviewSummary, now = new Date()): string {
   if (summary.files === 0) {
-    return 'Nobody has handed in a file yet. When they do, it opens for the teacher straight away and appears here so that somebody can record having looked at it.';
+    return 'No available handed-in files were returned. A review record does not prove whether anyone viewed a file.';
   }
 
   const lookedAt = summary.reviewed === 1
-    ? '1 handed-in file has been looked at'
-    : `${summary.reviewed} of ${summary.files} handed-in files have been looked at`;
+    ? '1 handed-in file has a recorded review'
+    : `${summary.reviewed} of ${summary.files} handed-in files have a recorded review`;
 
   const parts = [`${lookedAt}.`];
 
@@ -175,7 +150,7 @@ export function reviewHeadline(summary: ReviewSummary, now = new Date()): string
         : `, the oldest ${days} day${days === 1 ? '' : 's'} ago`
       : '';
     parts.push(
-      `${summary.unreviewed} ${summary.unreviewed === 1 ? 'has' : 'have'} not been looked at${oldest}.`,
+      `${summary.unreviewed} ${summary.unreviewed === 1 ? 'has' : 'have'} no review recorded${oldest}.`,
     );
   }
 
@@ -185,7 +160,7 @@ export function reviewHeadline(summary: ReviewSummary, now = new Date()): string
 
   if (summary.concerns > 0) {
     parts.push(
-      `${summary.concerns} ${summary.concerns === 1 ? 'file carries' : 'files carry'} a concern noted by somebody who looked. `
+      `${summary.concerns} ${summary.concerns === 1 ? 'file carries' : 'files carry'} a recorded concern. `
       + 'A review is a prompt for a conversation, not a decision about a child.',
     );
   }
@@ -215,10 +190,13 @@ export type ReviewPostResult =
 /** Plain-language failures, because a constraint name is not a sentence. */
 export function reviewRefusal(message: string): string {
   if (/family that sent a file/i.test(message)) {
-    return 'Only the teacher the work was handed to, or staff, can record a review — the family that sent the file cannot vouch for it.';
+    return 'Only the teacher the work was handed to, or the safeguarding owner, can record a review — the family that sent the file cannot vouch for it.';
   }
   if (/only the teacher the work was handed to/i.test(message)) {
-    return 'Only the teacher this work was handed to, or staff, can record a review of it.';
+    return 'Only the teacher this work was handed to, or the safeguarding owner, can record a review of it.';
+  }
+  if (/not available for your review/i.test(message)) {
+    return 'This file cannot be reviewed with your current access. Ask the safeguarding owner to check its assignment context.';
   }
   if (/needs a sentence/i.test(message)) {
     return 'Say what worried you in a sentence. “Something to raise” with no words is a flag somebody has to guess at.';

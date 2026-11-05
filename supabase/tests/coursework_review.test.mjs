@@ -298,10 +298,11 @@ export async function run(ctx) {
       review(otherTeacher, row.asset, 'clear'));
   });
 
-  await test('staff may review, because an incident may need somebody outside the course', async () => {
+  await test('the named owner may review, but unrelated staff may not', async () => {
     const row = await handedIn();
-    const out = await review(agent, row.asset, 'clear');
-    assert(out.recorded === true, 'a support agent could not record a review');
+    await refuses(/only the teacher the work was handed to/, () => review(agent, row.asset, 'clear'));
+    const out = await review(owner, row.asset, 'clear');
+    assert(out.recorded === true, 'the safeguarding owner could not record a review');
   });
 
   // -------------------------------------------------------------------------
@@ -427,6 +428,15 @@ export async function run(ctx) {
     assert(seen.length === 1, 'the family cannot see their own file');
     assert(!('review' in seen[0]), 'the family was told a teacher marked a concern');
     assert(!('reviewedAt' in seen[0]), 'the family was told when a review happened');
+    const staff = (await call(agent, 'select public.assignment_submission_files($1) as f', [row.submission])).f;
+    assert(staff.length === 1 && !('review' in staff[0]) && !('reviewedAt' in staff[0]),
+      'unrelated staff saw safeguarding review state');
+    await ctx.verifyGuardian(agent, row.childId);
+    const guardianStaff = (await call(agent, 'select public.assignment_submission_files($1) as f', [row.submission])).f;
+    assert(guardianStaff.length === 1 && !('review' in guardianStaff[0]),
+      'a verified guardian holding a staff role saw safeguarding review state');
+    await refuses(/family that sent a file/, () => review(agent, row.asset, 'clear'));
+    await refuses(/permission denied/, () => call(agent, 'select public.assignment_submission_files_internal($1)', [row.submission]));
   });
 
   // -------------------------------------------------------------------------
@@ -437,6 +447,16 @@ export async function run(ctx) {
     const row = await handedIn();
     const watched = await call(teacher, 'select public.may_watch_master($1) as w', [row.asset]);
     assert(watched.w === true, 'an unreviewed file could not be opened by the marker');
+  });
+
+  await test('a file with conflicting historical contexts cannot receive a misattributed review', async () => {
+    const first = await handedIn();
+    const second = await handedIn();
+    await q('update public.coursework_upload_declarations set submission_id=$1 where asset_id=$2',
+      [second.submission, first.asset]);
+    await refuses(/assignment context needs checking/, () => review(teacher, first.asset, 'clear'));
+    await refuses(/assignment context needs checking/, () => review(owner, first.asset, 'clear'));
+    assert((await q('select id from public.coursework_file_reviews where asset_id=$1', [first.asset])).rows.length === 0);
   });
 
   await test('the review survives the file it was about', async () => {
@@ -474,12 +494,18 @@ export async function run(ctx) {
     assert(listed.learnerName && listed.fileName, 'the queue cannot name what it is asking about');
   });
 
-  await test('the queue and the summary are staff-only', async () => {
+  await test('the queue and summary are limited to the named owner, not all staff', async () => {
     await refuses(/coursework:not_allowed/, () =>
       call(teacher, 'select public.coursework_review_summary() as s'));
     await refuses(/coursework:not_allowed/, () =>
       call(teacher, 'select public.coursework_review_queue(10) as q'));
     await refuses(/coursework:not_allowed/, () =>
       call(otherTeacher, 'select public.coursework_review_summary() as s'));
+    for (const actor of [agent, await bootstrapAdmin('coursework-queue-unrelated-admin@example.com')]) {
+      await refuses(/coursework:not_allowed/, () => call(actor, 'select public.coursework_review_summary()'));
+      await refuses(/coursework:not_allowed/, () => call(actor, 'select public.coursework_review_queue(10)'));
+      await refuses(/permission denied/, () => call(actor, 'select public.coursework_review_queue_internal(10)'));
+      await refuses(/permission denied/, () => call(actor, 'select public.coursework_review_summary_internal()'));
+    }
   });
 }

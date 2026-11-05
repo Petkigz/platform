@@ -62,10 +62,10 @@ test('the summary derives "unreviewed" rather than trusting it', () => {
 });
 
 test('a file says whether somebody looked at it, and never says "pending"', () => {
-  assert.equal(describeFileReview({ review: 'none' }), 'not looked at yet');
+  assert.equal(describeFileReview({ review: 'none' }), 'no review recorded');
   assert.equal(
     describeFileReview({ review: 'clear', reviewedAt: '2026-11-01T09:00:00Z' }),
-    'looked at on 1 Nov 2026',
+    'review recorded on 1 Nov 2026',
   );
   assert.equal(
     describeFileReview({ review: 'concern', reviewedAt: '2026-11-01T09:00:00Z' }),
@@ -93,17 +93,17 @@ test('the headline leads with what was looked at and says nothing is blocked', (
     now,
   );
 
-  assert.ok(line.startsWith('3 of 12 handed-in files have been looked at.'), line);
-  assert.ok(line.includes('9 have not been looked at, the oldest 5 days ago.'), line);
+  assert.ok(line.startsWith('3 of 12 handed-in files have a recorded review.'), line);
+  assert.ok(line.includes('9 have no review recorded, the oldest 5 days ago.'), line);
   assert.ok(/review counts do not delay/.test(line), line);
-  assert.ok(/1 file carries a concern/.test(line), line);
+  assert.ok(/1 file carries a recorded concern/.test(line), line);
   assert.ok(!/blocked|held/i.test(line), `the copy implies a gate: ${line}`);
 });
 
 test('an empty platform says what will happen rather than zero of zero', () => {
   const line = reviewHeadline(EMPTY_SUMMARY, now);
-  assert.ok(line.startsWith('Nobody has handed in a file yet.'), line);
-  assert.ok(/straight away/.test(line), line);
+  assert.ok(line.startsWith('No available handed-in files were returned.'), line);
+  assert.ok(/does not prove/.test(line), line);
 });
 
 test('an unreviewed file with no date is described without inventing one', () => {
@@ -111,7 +111,7 @@ test('an unreviewed file with no date is described without inventing one', () =>
     parseReviewSummary({ files: 2, reviewed: 0, unreviewed: 2, oldestUnreviewed: null }),
     now,
   );
-  assert.ok(line.includes('2 have not been looked at.'), line);
+  assert.ok(line.includes('2 have no review recorded.'), line);
   assert.ok(!/NaN|Invalid/.test(line), line);
   assert.equal(daysWaiting(null), null);
   assert.equal(reviewDay(''), null);

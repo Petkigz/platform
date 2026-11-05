@@ -70,6 +70,16 @@ Checked upload and lifecycle writers remain, as do limited descriptive edits. Th
 migration needs deployment and does not itself fix the existing broad read/signing
 paths, revoke previously issued URLs, scan files, or control storage credentials.
 
+**Review privacy:** the review register and its summary are now restricted to
+the separately configured safeguarding owner. Recording a review is limited to
+the assignment author or that owner when they can open the file; a household or
+verified guardian cannot review its own file, and conflicting historic contexts
+fail closed. Other staff and guardians do not receive review state through the
+submission-file list. A review is a person's attestation, not proof that they
+opened a file or a complete viewing log. Other submission, retention, storage and
+administrative metadata still need an access audit. Deploy the migration and web
+changes, and keep assignments and cohorts off.
+
 **Upload authority:** a new coursework declaration, confirmation or legacy
 reattachment requires the actual learner or a currently verified guardian with
 progress permission; the confirmer and reattacher must also be the uploader.
