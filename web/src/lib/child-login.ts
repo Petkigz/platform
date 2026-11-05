@@ -73,6 +73,9 @@ export function signInAddress(input: string): string {
  */
 export function childLoginSentence(code: string | null | undefined): string {
   const value = (code ?? '').toLowerCase();
+  if (value.includes('child_login_creation_paused')) {
+    return 'Creating child logins is temporarily paused. Contact privacy@ayahspring.com for help.';
+  }
   if (value.includes('child_login:disabled')) {
     return 'Child logins are not switched on for this platform yet, so no new login can be made. Anything already created keeps working.';
   }
@@ -100,5 +103,5 @@ export function childLoginSentence(code: string | null | undefined): string {
   if (value.includes('service_role') || value.includes('child_login_unavailable')) {
     return 'Child logins cannot be created on this deployment yet: the server key that makes an account is not configured. Nothing was changed.';
   }
-  return 'The login could not be created just now. Nothing was changed — please try again.';
+  return 'We could not confirm the login change. Refresh the page or contact privacy@ayahspring.com before trying again.';
 }

@@ -21,8 +21,10 @@ export async function run(ctx) {
   // here — a family cannot make a child a login without it — so it is turned off
   // again even if a fixture throws. `run.mjs` lists it in `GLOBAL_SETTINGS` too, so
   // a leak is reported against this suite rather than silently repaired.
-  await ctx.q(
-    "update public.platform_settings set value_text='true' where key='family.child_login'");
+  await ctx.committed(async () => {
+    await ctx.q("select set_config('app.bypassing_code_flag','on',true)");
+    await ctx.q("update public.platform_settings set value_text='true' where key='family.child_login'");
+  });
   try {
     await handover(ctx);
   } finally {
@@ -90,11 +92,15 @@ async function handover(ctx) {
     if (login) {
       childUser = await newUser(`handover-learner-${seq}@example.com`);
       await newProfile(childUser, childName);
-      const reserved = (await call(guardian,
-        'select public.reserve_child_login($1,$2) as r',
-        [childId, `learner${seq}`])).r;
-      await call(guardian, 'select public.attach_child_login($1,$2) as r',
-        [reserved, childUser]);
+      // Construct a legacy linked-login fixture as database owner; application
+      // callers cannot reserve or attach while the workflow is contained.
+      await committed(async () => {
+        await q("select set_config('request.jwt.claims',$1,true)",
+          [JSON.stringify({ sub: guardian, role: 'authenticated' })]);
+        const reserved = (await q('select public.reserve_child_login($1,$2) as r',
+          [childId, `learner${seq}`])).rows[0].r;
+        await q('select public.attach_child_login($1,$2) as r', [reserved, childUser]);
+      });
     }
 
     return { guardian, familyId, childId, childUser };

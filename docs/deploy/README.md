@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-266 files in `supabase/migrations/`, applied in filename order — the 14-digit
+267 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -152,7 +152,7 @@ done
   first run. What you are watching for is the loop *stopping*, and the file name
   above the error.
 - Takes a few minutes. The last file printed should be
-  `20261281059000_coursework_inactive_actor_boundary.sql`.
+  `20261281060000_child_login_creation_containment.sql`.
 
 **Existing installations:** the subscription safety migration preserves the current
 `commerce.subscriptions` value. If it is already on, review existing customer
@@ -170,7 +170,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 266 files from the top and fail on the
+it, and `db push` would then re-apply all 267 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -1046,3 +1046,11 @@ This is not a general session revocation: other data and endpoints still need
 review, and signed URLs already issued may work until expiry. Test concurrency
 and complete the other safeguarding checks on the deployed system before opening
 assignments or cohorts.
+
+After `20261281060000_child_login_creation_containment.sql`, new child login
+creation is paused and the authenticated reservation and attachment grants are removed. Switch
+`family.child_login` off if it was already enabled; its value is preserved by
+migration. Existing identity accounts and sessions are not revoked by learner
+profile detachment. Review existing accounts and reservations individually and
+keep creation closed until the trusted, recoverable workflow is deployed and
+tested. The migration has not itself been deployed by this repository change.

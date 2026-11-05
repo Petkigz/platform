@@ -18,7 +18,7 @@
 export async function run(ctx) {
   const {
     q, test, assert, rejects,
-    bootstrapAdmin, newUser, newProfile,
+    bootstrapAdmin, newUser, newProfile, committed,
   } = ctx;
 
   const admin = await bootstrapAdmin('cl-admin@example.com');
@@ -42,8 +42,11 @@ export async function run(ctx) {
   const scalar = async (sql, params = []) => (await q(sql, params)).rows[0];
 
   async function setFlag(key, on) {
-    await q(`update public.platform_settings set value_text = $2 where key = $1`,
-      [key, on ? 'true' : 'false']);
+    await committed(async () => {
+      await q("select set_config('app.bypassing_code_flag','on',true)");
+      await q(`update public.platform_settings set value_text = $2 where key = $1`,
+        [key, on ? 'true' : 'false']);
+    });
   }
 
   let seq = 0;
@@ -64,13 +67,19 @@ export async function run(ctx) {
     return { familyId, childId };
   }
 
-  const reserve = (who, learnerId, username) =>
-    asActor(who, 'select public.reserve_child_login($1,$2) id', [learnerId, username])
-      .then((r) => r.rows[0].id);
+  const reserve = (who, learnerId, username) => committed(async () => {
+    await q("select set_config('request.jwt.claims',$1,true)",
+      [JSON.stringify({ sub: who, role: 'authenticated' })]);
+    return (await q('select public.reserve_child_login($1,$2) id', [learnerId, username])).rows[0].id;
+  });
 
-  const attach = (who, loginId, userId) =>
-    asActor(who, 'select public.attach_child_login($1,$2) r', [loginId, userId])
-      .then((r) => r.rows[0].r);
+  // Test legacy function internals as the database owner, never as an application
+  // role. Production callers cannot execute it while creation is contained.
+  const attach = (who, loginId, userId) => committed(async () => {
+    await q("select set_config('request.jwt.claims',$1,true)",
+      [JSON.stringify({ sub: who, role: 'authenticated' })]);
+    return (await q('select public.attach_child_login($1,$2) r', [loginId, userId])).rows[0].r;
+  });
 
   const state = (who, learnerId) =>
     asActor(who, 'select public.child_login_state($1) s', [learnerId])
@@ -83,17 +92,15 @@ export async function run(ctx) {
   // The register and the constraint
   // ---------------------------------------------------------------------------
 
-  await test('the flag is now a switch, with the trade-off written down', async () => {
+  await test('child login creation is code-gated with the containment written down', async () => {
     const row = await scalar(
       `select value_text, gate_type, preconditions, description
          from public.platform_settings where key = 'family.child_login'`);
     assert(row.value_text === 'false', `ships as ${row.value_text}`);
-    assert(row.gate_type === 'admin', `gated as ${row.gate_type}`);
+    assert(row.gate_type === 'code', `gated as ${row.gate_type}`);
     assert(/guardian/i.test(row.description), 'the description names who makes one');
-    assert(/no mailbox/i.test(row.preconditions),
-      'and the recovery trade-off is in the register, not only in a comment');
-    assert(/remove_child_login/.test(row.preconditions),
-      'and says that removing one takes nothing away');
+    assert(/linking/i.test(row.preconditions) && /identity/i.test(row.preconditions),
+      'the linking and identity risks are absent from the register');
   });
 
   await test('the constraint that forbade a child login is gone', async () => {
@@ -108,6 +115,14 @@ export async function run(ctx) {
 
   await test('while the switch is off, no login can be reserved', async () => {
     await rejects(() => reserve(owner, childId, 'amina.k'), /child_login:disabled/);
+  });
+
+  await test('an authenticated guardian cannot attach an arbitrary existing account', async () => {
+    const target = await person('Existing account');
+    await rejects(() => asActor(owner, 'select public.attach_child_login($1,$2)', [childId, target]),
+      /permission denied/i);
+    await rejects(() => asActor(owner, 'select public.reserve_child_login($1,$2)', [childId, 'blocked-user']),
+      /permission denied/i);
   });
 
   await setFlag('family.child_login', true);
@@ -320,6 +335,9 @@ export async function run(ctx) {
     await attach(other, loginId, childUser);
     await setFlag('family.child_login', false);
 
+    const whileOff = await state(other, theirs.childId);
+    assert(whileOff && whileOff.hasLogin && whileOff.canManage && whileOff.canCreate === false,
+      'the guardian cannot find detachment while creation is paused');
     const removed = await asActor(other,
       'select public.remove_child_login($1,$2) r', [theirs.childId, 'No longer needed'])
       .then((r) => r.rows[0].r);

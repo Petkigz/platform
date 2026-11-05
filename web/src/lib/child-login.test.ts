@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 import {
@@ -74,6 +75,7 @@ test('every refusal a guardian can meet is a sentence, and none of them leak a c
     'child_login:no_login',
     'age:declare_before_creating_a_child_login',
     'child_login_unavailable',
+    'child_login_creation_paused',
   ];
 
   for (const code of codes) {
@@ -89,6 +91,16 @@ test('every refusal a guardian can meet is a sentence, and none of them leak a c
   assert.equal(distinct.size, codes.length);
 
   // An unrecognised refusal is not dressed up as a real one.
-  assert.match(childLoginSentence('some_new_code'), /please try again/);
-  assert.match(childLoginSentence(null), /please try again/);
+  assert.match(childLoginSentence('some_new_code'), /could not confirm/);
+  assert.match(childLoginSentence(null), /could not confirm/);
+});
+
+
+test('child login creation is contained and detachment does not claim auth revocation', () => {
+  const route = readFileSync(new URL('../app/api/family/child-login/route.ts', import.meta.url), 'utf8');
+  const card = readFileSync(new URL('../app/family/child-login-card.tsx', import.meta.url), 'utf8');
+  assert.match(route, /child_login_creation_paused/);
+  assert.doesNotMatch(route, /createUser|attach_child_login/);
+  assert.match(card, /does not delete the sign-in or revoke/);
+  assert.match(card, /!state.canCreate/);
 });

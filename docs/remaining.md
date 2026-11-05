@@ -650,3 +650,21 @@ matches the profile display name; it cannot establish that all identifiers were
 removed. Identity removal is a separate step checked against `auth.users`; it
 is not proof of deletion of all external-provider copies. Existing sessions and
 previously issued signed links need a separate revocation review.
+
+**Child login creation containment (2026-11-05):** The authenticated attachment
+RPC accepted an existing user ID without proving that the trusted creation route
+created that identity. The multi-step route also could not safely distinguish a
+failed attachment from a committed attachment whose reply was lost; its cleanup
+could delete the wrong live identity. Migration 600 revokes application access to
+reservation and attachment, marks the setting CODE-gated while preserving its previous value, and
+the web route pauses creation. If already enabled, switch the flag off. Existing
+child logins are not automatically revoked or deleted. Guardians can still detach
+the learner profile visually, but this does not revoke sessions or remove the
+provider identity. A trusted, serialized and recoverable creation/removal workflow,
+verified guardian/owner authority on each step, password recovery and deployed
+concurrency tests are required before reopening; review existing identities and
+orphan reservations individually. The existing profile-management predicate
+accepts a family owner or an active relationship with profile-management permission
+without itself checking verification timestamps, consent expiry or relationship
+deletion. Its use for detachment and state visibility needs a separate authority
+review; this containment does not establish verified-guardian enforcement. Do not delete guardian verification machinery.

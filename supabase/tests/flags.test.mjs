@@ -79,7 +79,7 @@ export async function run(ctx) {
   // The seed
   // -------------------------------------------------------------------
   await test('incomplete coursework and subscription switches cannot be enabled or demoted by an admin', async () => {
-    for (const key of ['learning.assignments', 'learning.cohorts', 'commerce.subscriptions']) {
+    for (const key of ['learning.assignments', 'learning.cohorts', 'commerce.subscriptions', 'family.child_login']) {
       const row = (await q('select value_text, gate_type from public.platform_settings where key=$1', [key])).rows[0];
       assert(row.value_text === 'false' && row.gate_type === 'code', `${key} is not off and deployment-gated`);
       await rejects(() => asUser(admin, () => q(
@@ -89,6 +89,31 @@ export async function run(ctx) {
       const after = (await q('select value_text, gate_type from public.platform_settings where key=$1', [key])).rows[0];
       assert(after.value_text === 'false' && after.gate_type === 'code', `${key} changed through the runtime door`);
     }
+  });
+
+  await test('child-login containment preserves an enabled flag but removes the application attachment grant', async () => {
+    const migration = readFileSync('supabase/migrations/20261281060000_child_login_creation_containment.sql', 'utf8');
+    await q('begin');
+    try {
+      await q("set local app.bypassing_code_flag = 'on'");
+      await q("update public.platform_settings set value_text='true', gate_type='admin' where key='family.child_login'");
+      await ctx.exec(migration);
+      const row = (await q("select value_text, gate_type from public.platform_settings where key='family.child_login'")).rows[0];
+      assert(row.value_text === 'true' && row.gate_type === 'code', 'existing setting was not preserved');
+      const access = (await q("select has_function_privilege('authenticated', 'public.attach_child_login(uuid,uuid)', 'execute') as allowed")).rows[0];
+      assert(access.allowed === false, 'authenticated may still attach an arbitrary user');
+      const reserve = (await q("select has_function_privilege('authenticated', 'public.reserve_child_login(uuid,text)', 'execute') as allowed")).rows[0];
+      assert(reserve.allowed === false, 'an older route can still reserve before creating an auth identity');
+    } finally { await q('rollback'); }
+    await q("select set_config('app.bypassing_code_flag','on',false)");
+    try { await q("update public.platform_settings set value_text='true' where key='family.child_login'"); }
+    finally { await q("select set_config('app.bypassing_code_flag','',false)"); }
+    try {
+      await asUser(admin, async () => {
+        await q("update public.platform_settings set value_text='false' where key='family.child_login'");
+        assert((await q("select value_text from public.platform_settings where key='family.child_login'")).rows[0].value_text === 'false', 'operator cannot switch off the existing flag');
+      });
+    } finally { await q("update public.platform_settings set value_text='false' where key='family.child_login'"); }
   });
 
   await test('subscription gate preserves an already-enabled value, and an admin can switch it off', async () => {

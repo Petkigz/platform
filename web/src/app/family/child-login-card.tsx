@@ -11,6 +11,7 @@ export type ChildLoginState = {
   username: string | null;
   createdAt: string | null;
   canManage: boolean;
+  canCreate?: boolean;
 };
 
 /**
@@ -29,9 +30,8 @@ export type ChildLoginState = {
  *   * the adult may not manage this child — nothing, because a button that would
  *     be refused is worse than no button.
  *
- * The password the guardian types is sent once and never stored anywhere the
- * platform can read it: it goes straight to Supabase's auth, and no screen can
- * show it again. That is why the card says to write it down.
+ * Creation is paused until the trusted linking and recovery workflow is safe.
+ * Detachment stays visible even while creation is off.
  */
 export function ChildLoginCard({
   learnerId,
@@ -93,22 +93,28 @@ export function ChildLoginCard({
   async function remove() {
     setBusy(true);
     setError(null);
-    const res = await fetch('/api/family/child-login', {
-      method: 'DELETE',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ learnerId, reason }),
-    });
-    const json = (await res.json().catch(() => null)) as
-      | { ok?: boolean; code?: string }
-      | null;
-    setBusy(false);
-    if (!res.ok || !json?.ok) {
-      setError(childLoginSentence(json?.code));
-      return;
+    try {
+      const res = await fetch('/api/family/child-login', {
+        method: 'DELETE',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ learnerId, reason }),
+      });
+      const json = (await res.json().catch(() => null)) as
+        | { ok?: boolean; code?: string }
+        | null;
+      if (!res.ok || !json?.ok) {
+        setError(json?.code ? childLoginSentence(json.code) :
+          'We could not confirm detachment. Refresh the page or contact privacy@ayahspring.com before trying again.');
+        return;
+      }
+      setConfirmRemove(false);
+      setReason('');
+      startTransition(() => router.refresh());
+    } catch {
+      setError('We could not confirm detachment. Refresh the page or contact privacy@ayahspring.com before trying again.');
+    } finally {
+      setBusy(false);
     }
-    setConfirmRemove(false);
-    setReason('');
-    startTransition(() => router.refresh());
   }
 
   if (state.hasLogin && state.username) {
@@ -127,20 +133,20 @@ export function ChildLoginCard({
                 year: 'numeric',
               })}.`
             : '.'}{' '}
-          If they forget the password, set a new one here: there is no email to send a
-          reset to, because the login has no mailbox.
+          Password recovery and creation are paused while the login workflow is reviewed.
+          Contact privacy@ayahspring.com for help.
         </p>
 
         {!confirmRemove ? (
           <button type="button" className="btn ghost" onClick={() => setConfirmRemove(true)}>
-            Remove this login
+            Detach this learner
           </button>
         ) : (
           <div>
             <p style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>
-              {childName} will stop being able to sign in as themselves. Their lessons,
-              progress and certificates stay exactly where they are, and you keep seeing
-              them here — nothing is deleted.
+              This detaches the learner profile but does not delete the sign-in or revoke
+              existing sessions. Contact privacy@ayahspring.com to arrange separate sign-in
+              removal. Lessons, progress and certificates remain with the learner.
             </p>
             <label htmlFor={`reason-${learnerId}`}>
               Why (optional — kept for the record)
@@ -153,7 +159,7 @@ export function ChildLoginCard({
             />
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
               <button type="button" className="btn" onClick={remove} disabled={busy}>
-                {busy ? 'Removing…' : 'Remove the login'}
+                {busy ? 'Detaching…' : 'Detach the learner'}
               </button>
               <button
                 type="button"
@@ -169,6 +175,10 @@ export function ChildLoginCard({
         {error && <p className="muted" style={{ color: 'var(--danger, #b3261e)' }}>{error}</p>}
       </div>
     );
+  }
+
+  if (!state.canCreate) {
+    return <p className="muted">Creating child logins is temporarily paused while the linking and recovery workflow is reviewed. Contact privacy@ayahspring.com for help.</p>;
   }
 
   if (made) {
