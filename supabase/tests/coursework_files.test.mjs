@@ -644,6 +644,8 @@ export async function run(ctx) {
       await q('alter table public.assignment_submission_assets enable trigger assignment_assets_coursework_only');
     }
     assert((await call(teacher, 'select public.may_play_rendition($1) as ok', [rendition])).ok === false);
+    const staffStorage = (await asActor(admin, () => q('select * from public.media_storage_overview(1000)'))).rows;
+    assert(!staffStorage.some(row => row.uploader_id === who.userId), 'legacy coursework appeared in staff storage overview');
     await refused(who.userId, 'select public.delete_media_asset($1,$2)', [asset, 'Withdrawal'], /coursework cannot be withdrawn/i);
     assert((await call(admin, 'select public.delete_media_asset($1,$2) as changed', [asset, 'Withdrawal'])).changed === false,
       'unrelated staff learned that a historical coursework asset existed');

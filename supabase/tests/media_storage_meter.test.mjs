@@ -39,15 +39,15 @@ export async function run(ctx) {
     }
   }
 
-  async function asset(uploader, bytes, { status = 'available', deleted = false } = {}) {
+  async function asset(uploader, bytes, { status = 'available', deleted = false, purpose = 'library' } = {}) {
     return (await scalar(
       `insert into public.media_assets
          (storage_backend, master_bucket, master_key, checksum, mime_type,
-          byte_size, status, uploaded_by, deleted_at)
-       values ('r2','masters',$1,$2,'video/mp4',$3,$4,$5,$6) returning id`,
+          byte_size, status, uploaded_by, deleted_at, purpose)
+       values ('r2','masters',$1,$2,'video/mp4',$3,$4,$5,$6,$7) returning id`,
       [`meter-${crypto.randomUUID()}.mp4`,
         crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '').slice(0, 32),
-        bytes, status, uploader, deleted ? new Date().toISOString() : null])).id;
+        bytes, status, uploader, deleted ? new Date().toISOString() : null, purpose])).id;
   }
 
   const meter = (actor) =>
@@ -148,6 +148,22 @@ export async function run(ctx) {
     const position = rows.findIndex((r) => r.uploader_id === heavy);
     const lightPosition = rows.findIndex((r) => r.uploader_id === light);
     assert(position < lightPosition, 'the overview is not ordered by bytes');
+  });
+
+  await test('staff storage overview excludes private coursework without changing personal quota use', async () => {
+    const mixed = await adultTeacher('Mixed uploader');
+    const courseworkOnly = await adultTeacher('Coursework-only uploader');
+    await asset(mixed, 1000);
+    await asset(mixed, 5000, { purpose: 'coursework' });
+    await asset(courseworkOnly, 8000, { purpose: 'coursework' });
+    const rows = await withCostControls(true, 1, async () =>
+      (await asActor(admin, 'select * from public.media_storage_overview(1000)')).rows);
+    const mixedRow = rows.find((r) => r.uploader_id === mixed);
+    assert(mixedRow && Number(mixedRow.files) === 1 && Number(mixedRow.bytes) === 1000,
+      'staff overview included private coursework in the named aggregate');
+    assert(!rows.some((r) => r.uploader_id === courseworkOnly), 'staff overview revealed a coursework-only uploader');
+    const personal = await meter(mixed);
+    assert(personal.usedBytes === '6000', 'the actual quota stopped counting coursework');
   });
 
   await test('with cost controls off the overview reports no quota, not zero percent', async () => {

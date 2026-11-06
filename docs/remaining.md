@@ -832,3 +832,10 @@ be reconstructed if dispatch ran before the migration. These pseudonymous
 records are personal data, and no retention or automated deletion process for
 them is implemented. Provider acceptance is not delivery or receipt. This has
 not been deployed or verified on a real Supabase project.
+
+**Staff storage overview:** Migration 810 excludes coursework and currently
+attached or declared legacy coursework from per-uploader library aggregates.
+The dashboard labels the figures as only the library portion; actual upload
+allowances still count all applicable master files. Detached legacy files with
+no remaining attribution cannot be classified reliably. This change does not
+protect storage credentials, bucket listings, or establish actual object size.

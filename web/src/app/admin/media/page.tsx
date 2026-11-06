@@ -80,7 +80,7 @@ export default async function AdminMediaPage() {
         <p className="eyebrow">Content</p>
         <h1>Uploaded media</h1>
         <p className="muted">
-          Every master anybody has uploaded. Quarantining holds one for review
+          Library masters visible to your account. Quarantining holds one for review
           and stops every copy derived from it; withdrawing ends its use but
           keeps the object, because a rights request may have to be matched to
           it later. A copy that failed to encode can be put back in the queue.
@@ -91,14 +91,13 @@ export default async function AdminMediaPage() {
 
       {storage.length > 0 && (
         <section className="card" style={{ marginBottom: '1.5rem' }}>
-          <div className="outline-h"><h2>Storage by teacher</h2></div>
+          <div className="outline-h"><h2>Library storage by uploader</h2></div>
           <p className="muted" style={{ fontSize: '0.9rem' }}>
-            Master bytes, biggest first. The allowance is{' '}
+            Library master bytes, biggest first. Private coursework and currently attached legacy files are excluded from this list. The actual allowance includes all applicable master files, so these percentages are only the library portion and cannot show total quota use. The allowance is{' '}
             {storage[0]?.quota_bytes === null || storage[0]?.quota_bytes === undefined
               ? 'not being enforced on this platform (platform.cost_controls is off)'
               : `being enforced at ${readableByteSize(Number(storage[0].quota_bytes))} per teacher`}
-            . Withdrawn and deleted files are excluded; pending and held files count, because
-            they are still bytes in a bucket.
+            . Withdrawn and deleted library files are excluded; pending and held library files count.
           </p>
           <ul className="lessons">
             {storage.map((row) => (
@@ -112,7 +111,7 @@ export default async function AdminMediaPage() {
                 <span className="muted">
                   {readableByteSize(Number(row.bytes))}
                   {row.used_percent !== null && ` · ${row.used_percent}%`}
-                  {row.over_quota && <span className="badge warn" style={{ marginInlineStart: '0.5rem' }}>over quota</span>}
+                  {row.over_quota && <span className="badge warn" style={{ marginInlineStart: '0.5rem' }}>library portion over quota</span>}
                 </span>
               </li>
             ))}
@@ -120,7 +119,7 @@ export default async function AdminMediaPage() {
         </section>
       )}
 
-      {queue.length === 0 && <p className="muted">Nothing has been uploaded yet.</p>}
+      {queue.length === 0 && <p className="muted">No uploads are visible in this list.</p>}
 
       {queue.map((asset) => {
         // A retry is only offered for a master that can still be encoded from:
