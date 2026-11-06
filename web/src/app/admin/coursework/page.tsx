@@ -29,6 +29,8 @@ import { ReviewForm } from './review-form';
 import { RetentionActionForm } from './retention-actions';
 import { acknowledgeConcern, reopenConcern } from './safeguarding-actions';
 import { attestClassEnd } from './class-end-actions';
+import { releaseQuarantine } from './quarantine-actions';
+import { isQuarantineCursor, parseCourseworkQuarantines } from '@/lib/coursework-quarantine';
 import { parseSafeguardingConcerns, parseSafeguardingHistory } from '@/lib/safeguarding-queue';
 
 export const dynamic = 'force-dynamic';
@@ -36,7 +38,7 @@ export const dynamic = 'force-dynamic';
 /** Owner-only review register, alongside separately authorized retention tools.
  * A recorded review is an attestation, not proof that a file was viewed.
  */
-export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ concern?: string; before?: string; beforeId?: string; endsAfter?: string; classEnd?: string }> }) {
+export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ concern?: string; before?: string; beforeId?: string; endsAfter?: string; classEnd?: string; quarantineAfter?: string; quarantine?: string }> }) {
   if (!isSupabaseConfigured()) redirect('/');
 
   const supabase = await createClient();
@@ -71,6 +73,12 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
   const cursorValid = (!params.before && !params.beforeId) ||
     (typeof params.before === 'string' && Number.isFinite(Date.parse(params.before)) &&
       typeof params.beforeId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(params.beforeId));
+  const quarantineCursorValid = !params.quarantineAfter || isQuarantineCursor(params.quarantineAfter);
+  const quarantineResult = isSafeguardingOwner && quarantineCursorValid
+    ? await supabase.rpc('coursework_quarantine_queue', { p_limit: 51, p_after: params.quarantineAfter ?? null }) : null;
+  const quarantines = quarantineResult && !quarantineResult.error
+    ? parseCourseworkQuarantines(quarantineResult.data) : null;
+  const quarantineNext = quarantines && quarantines.length > 50 ? quarantines[49]?.asset_id : null;
   const concernResult = isSafeguardingOwner
     ? await supabase.rpc('safeguarding_concern_queue', { p_limit: 100 })
     : null;
@@ -115,6 +123,34 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
       {ownerStatusValid && ownerStatus?.configured === false && (
         <section className="notice warn">
           The safeguarding owner is not configured. Concerns are recorded, but no one can open the owner queue until the trusted database setup is complete. No email alert is connected.
+        </section>
+      )}
+      {isSafeguardingOwner && (
+        <section id="coursework-quarantines" className="card" style={{ marginBlock: '1rem' }}>
+          <h2>Quarantined coursework</h2>
+          <p>Review why each file was quarantined before releasing it. A release restores its recorded previous state, not the file bytes or a safety scan. Pending files still need the uploader to confirm the upload. Older quarantines without a recorded previous state need individual review.</p>
+          {params.quarantine === 'pending' && <p role="status">Quarantine released; the file is pending and is not yet confirmed.</p>}
+          {params.quarantine === 'available' && <p role="status">Quarantine released; the previous available status was restored.</p>}
+          {(params.quarantine === 'failed' || params.quarantine === 'invalid') && <p className="notice warn" role="alert">The release could not be confirmed. Refresh and review the file before trying again.</p>}
+          {quarantines === null ? <p className="notice warn">The quarantine list could not be loaded. Do not assume it is empty.</p>
+            : quarantines.length === 0 ? <p>No quarantined coursework is shown on this page.</p>
+              : <ul className="lessons">{quarantines.slice(0, 50).map((row) => <li key={row.asset_id}>
+                <div className="t">
+                  <strong>{row.display_name ?? 'Unnamed file'}</strong>
+                  <p>File ID: {row.asset_id} · {row.quarantined_at ? `Quarantined ${row.quarantined_at}` : 'Quarantine date not recorded here'}</p>
+                  <p>{row.previous_status ? `Previously ${row.previous_status}.` : 'Previous status unknown: individual review required.'}</p>
+                  <p>{row.recorded_reason ? `A recorded quarantine reason: ${row.recorded_reason}` : 'No quarantine reason was found here.'} Check any other incident records too.</p>
+                  <a href={courseworkFileHref(row.asset_id)} target="_blank" rel="noreferrer">Try opening the file for review</a>
+                  {row.previous_status && <form action={releaseQuarantine}>
+                    <input type="hidden" name="assetId" value={row.asset_id} />
+                    <input type="hidden" name="after" value={params.quarantineAfter ?? ''} />
+                    <label><input type="checkbox" name="reviewed" value="yes" required /> I reviewed this quarantine and understand that its previous status will be restored.</label>
+                    <button type="submit" className="btn">Release quarantine</button>
+                  </form>}
+                </div>
+              </li>)}</ul>}
+          {params.quarantineAfter && <p><Link href="/admin/coursework#coursework-quarantines">Back to first quarantine page</Link></p>}
+          {quarantineNext && <p><Link href={`/admin/coursework?${new URLSearchParams({ quarantineAfter: quarantineNext })}#coursework-quarantines`}>More quarantined files</Link></p>}
         </section>
       )}
       {isSafeguardingOwner && (

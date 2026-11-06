@@ -348,6 +348,57 @@ export async function run(ctx) {
     assert(still.status === 'quarantined' && attachment.id === first, 'retry changed the held file or attachment');
   });
 
+  await test('only the named owner can review and release quarantined coursework to its actual prior state', async () => {
+    const who = await learner('Quarantine recovery', { course, version });
+    const submission = await draft(who.userId, assignment, who.learnerId);
+    const pending = await declare(who.userId, submission);
+    const attached = await declare(who.userId, submission);
+    const legacy = await declare(who.userId, submission);
+    await call(who.userId, SQL_CONFIRM, [attached.asset_id]);
+    const prior = (await q('select owner_user_id,configured_at from public.safeguarding_owner where singleton')).rows[0];
+    await q('delete from public.safeguarding_owner where singleton');
+    await q('select public.bootstrap_safeguarding_owner($1)', [admin]);
+    try {
+      for (const id of [pending.asset_id, attached.asset_id, legacy.asset_id])
+        await call(admin, 'select public.quarantine_media_upload($1,$2)', [id, 'review needed']);
+      // A repeated quarantine must not replace the real original state.
+      await call(admin, 'select public.quarantine_media_upload($1,$2)', [pending.asset_id, 'still under review']);
+      await q('delete from public.coursework_quarantine_state where asset_id=$1', [legacy.asset_id]);
+      await refused(who.userId, 'select * from public.coursework_quarantine_queue(50,null)', [], /not_allowed/);
+      const otherAdmin = await bootstrapAdmin(`quarantine-other-${++seq}@example.com`);
+      await refused(otherAdmin, 'select * from public.coursework_quarantine_queue(50,null)', [], /not_allowed/);
+      await refused(otherAdmin, 'select public.release_coursework_quarantine($1,$2)', [pending.asset_id, 'I reviewed this quarantine and its release'], /not_allowed/);
+      await refused(teacher, 'select public.release_coursework_quarantine($1,$2)', [pending.asset_id, 'I reviewed this quarantine and its release'], /not_allowed/);
+      await refused(who.userId, 'select * from public.coursework_quarantine_state', [], /permission denied/);
+      const queue = (await asActor(admin, () => q('select * from public.coursework_quarantine_queue(100,null)'))).rows;
+      assert(queue.find(r => r.asset_id === pending.asset_id)?.previous_status === 'pending');
+      assert(queue.find(r => r.asset_id === pending.asset_id)?.recorded_reason, 'owner did not see a recorded reason');
+      assert(queue.find(r => r.asset_id === attached.asset_id)?.previous_status === 'available');
+      assert(queue.find(r => r.asset_id === legacy.asset_id)?.previous_status === null);
+      const firstPage = (await asActor(admin, () => q('select * from public.coursework_quarantine_queue(1,null)'))).rows;
+      const nextPage = (await asActor(admin, () => q('select * from public.coursework_quarantine_queue(100,$1)', [firstPage[0].asset_id]))).rows;
+      assert(nextPage.every(r => r.asset_id > firstPage[0].asset_id) && nextPage.every(r => r.asset_id !== firstPage[0].asset_id), 'queue cursor repeated a row');
+      await refused(admin, 'select public.release_coursework_quarantine($1,$2)', [pending.asset_id, 'yes'], /confirm/);
+      await refused(admin, 'select public.release_coursework_quarantine($1,$2)', [legacy.asset_id, 'I reviewed this quarantine and its release'], /previous state is unknown/);
+      const pendingStatus = (await call(admin, 'select public.release_coursework_quarantine($1,$2) result', [pending.asset_id, 'I reviewed this quarantine and its release'])).result;
+      assert(pendingStatus === 'pending', 'pending file was promoted without confirmation');
+      assert((await scalar('select status from public.media_assets where id=$1', [pending.asset_id])).status === 'pending');
+      await call(who.userId, SQL_CONFIRM, [pending.asset_id]);
+      await q("insert into public.coursework_retention_holds(asset_id,reason,opened_by) values($1,'Safeguarding hold',$2)", [attached.asset_id,admin]);
+      const availableStatus = (await call(admin, 'select public.release_coursework_quarantine($1,$2) result', [attached.asset_id, 'I reviewed this quarantine and its release'])).result;
+      assert((await scalar('select count(*)::int n from public.coursework_retention_holds where asset_id=$1 and closed_at is null', [attached.asset_id])).n === 1, 'release removed the retention hold');
+      await q('delete from public.coursework_retention_holds where asset_id=$1', [attached.asset_id]);
+      assert(availableStatus === 'available', 'confirmed file did not return to available');
+      assert((await call(who.userId, SQL_CONFIRM, [attached.asset_id])).id, 'restored attachment did not remain idempotent');
+      await refused(admin, 'select public.release_coursework_quarantine($1,$2)', [attached.asset_id, 'I reviewed this quarantine and its release'], /not currently quarantined/);
+      const audit = await scalar("select count(*)::int n from public.governance_audit_events where action='coursework.quarantine_released' and actor=$1 and target_id in ($2,$3)", [admin,pending.asset_id,attached.asset_id]);
+      assert(audit.n === 2, 'review actions were not audited');
+    } finally {
+      await q('delete from public.safeguarding_owner where singleton');
+      if (prior) await q('insert into public.safeguarding_owner(singleton,owner_user_id,configured_at) values(true,$1,$2)', [prior.owner_user_id,prior.configured_at]);
+    }
+  });
+
   await test('nobody may confirm a file they did not hand in', async () => {
     const who = await learner('Owner', { course, version });
     const outsider = await learner('Meddler', { course, version });

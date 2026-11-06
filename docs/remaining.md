@@ -773,6 +773,18 @@ A previously confirmed available attachment can also be checked again after a
 lost response. The database locks the asset and refuses a confirmation if it was
 quarantined, even if the attachment already exists; an incomplete or lost response
 is not treated as success. Object checks verify reported size, not file safety or
-checksum. A quarantine release workflow, pending uploads whose bytes never arrived,
+checksum. Older quarantines without a recorded prior state, pending uploads whose bytes never arrived,
 other media paths and real storage/deployed concurrency testing remain open. This
 migration has not been deployed and does not change the assignment feature flags.
+
+
+**Coursework quarantine recovery:** Migration 750 captures the previous pending
+or available state when a coursework file is newly quarantined. The named active
+safeguarding owner can review a paginated list, see a recorded reason and attest
+release in the coursework dashboard; the file returns only to its previous state.
+An original pending upload still needs confirmation. The action does not remove a
+retention hold, verify object bytes, scan malware or prove the review occurred.
+Historical quarantines with unknown prior state require individual review rather
+than promotion by guesswork. Other moderation paths, deployed concurrency, storage
+operations and real Supabase permissions remain to be tested. This migration and
+UI are not deployed, and existing feature-switch values are unchanged.
