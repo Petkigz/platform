@@ -442,7 +442,10 @@ export async function reopenAssignmentSubmission(
     p_submission_id: submissionId,
   });
   if (error) return { ok: false, ...mapAssignmentError(error) };
-  return { ok: true, revisionNumber: Number(data ?? 1) };
+  if (typeof data !== 'number' || !Number.isSafeInteger(data) || data < 2) {
+    return { ok: false, status: 502, message: 'The revision result could not be confirmed. Check the current work before trying again.' };
+  }
+  return { ok: true, revisionNumber: data };
 }
 
 export async function setAssignmentRevisionPolicy(

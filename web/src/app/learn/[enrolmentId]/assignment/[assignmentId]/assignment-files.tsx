@@ -82,7 +82,7 @@ export function AssignmentFiles({
     try {
       const target = submissionId || (await ensureDraft());
       if (!target) {
-        setError('The draft could not be saved, so the file was not sent.');
+        setError('The draft could not be confirmed, so this file was not sent. Check the current work before trying again.');
         return;
       }
 

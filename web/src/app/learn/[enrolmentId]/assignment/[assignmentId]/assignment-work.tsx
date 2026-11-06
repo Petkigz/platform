@@ -8,6 +8,7 @@ import {
   revisionsRemaining,
 } from '@/lib/course-assignments';
 import { AssignmentFiles } from './assignment-files';
+import { postLearnerAssignmentAction } from '@/lib/coursework';
 
 export function AssignmentWork({
   assignmentId,
@@ -80,19 +81,12 @@ export function AssignmentWork({
     setError('');
     setMessage('');
     try {
-      const response = await fetch('/api/assignments', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const result = await response.json().catch(() => ({})) as {
-        ok?: boolean; id?: string | null; revisionNumber?: number; message?: string;
-      };
-      if (!response.ok || !result.ok) throw new Error(result.message ?? 'That could not be saved.');
+      const result = await postLearnerAssignmentAction(payload);
+      if (!result.ok) {
+        setError(result.message);
+        return null;
+      }
       return result;
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'That could not be saved.');
-      return null;
     } finally {
       setBusy(false);
     }

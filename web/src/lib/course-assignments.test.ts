@@ -240,6 +240,18 @@ test('reopening reports the version the work now carries', async () => {
   assert.deepEqual(Object.keys(calls[0]!.args), ['p_submission_id']);
 });
 
+test('a missing or malformed revision result is not invented as version one', async () => {
+  for (const data of [null, undefined, '2', 0, 1, -1, 2.5, NaN]) {
+    const { client } = stubRpc({ data });
+    const result = await reopenAssignmentSubmission(client, 's-1');
+    assert.equal(result.ok, false);
+    if (!result.ok) {
+      assert.equal(result.status, 502);
+      assert.match(result.message, /could not be confirmed/);
+    }
+  }
+});
+
 test('a refused reopen reaches the learner as a readable conflict, not a 400', () => {
   const { client } = stubRpc({ error: { message: 'the deadline has passed, so this mark stands' } });
   return reopenAssignmentSubmission(client, 's-1').then((result) => {

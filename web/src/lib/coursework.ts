@@ -214,6 +214,41 @@ export async function removeCourseworkFile(
   }
 }
 
+export type AssignmentActionResponse =
+  | { ok: true; id?: string; revisionNumber?: number }
+  | { ok: false; message: string };
+
+/** A lost or malformed reply does not tell us whether the write committed. */
+export async function postLearnerAssignmentAction(
+  payload: Record<string, unknown>, doFetch: typeof fetch = fetch,
+): Promise<AssignmentActionResponse> {
+  const guidance = 'The result could not be confirmed. Before trying again, copy any unsaved text somewhere private, reload the page, and check the current work.';
+  try {
+    const response = await doFetch('/api/assignments', {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload),
+    });
+    const body = await response.json().catch(() => null) as Record<string, unknown> | null;
+    if (!response.ok || !body || body.ok !== true) {
+      const detail = !response.ok && typeof body?.message === 'string' ? body.message.trim() : '';
+      return { ok: false, message: detail ? `${detail} ${guidance}` : guidance };
+    }
+    if (payload.action === 'save_draft') {
+      const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      if (typeof body.id !== 'string' || !uuid.test(body.id)) return { ok: false, message: guidance };
+      return { ok: true, id: body.id };
+    }
+    if (payload.action === 'reopen') {
+      if (typeof body.revisionNumber !== 'number' || !Number.isSafeInteger(body.revisionNumber) || body.revisionNumber < 2)
+        return { ok: false, message: guidance };
+      return { ok: true, revisionNumber: body.revisionNumber };
+    }
+    if (payload.action === 'submit') return { ok: true };
+    return { ok: false, message: guidance };
+  } catch {
+    return { ok: false, message: guidance };
+  }
+}
+
 /** What one file's line says: it arrived, it is on its way, or it cannot be read. */
 export function describeCourseworkFile(file: CourseworkFile): string {
   const size = describeFileSize(file.byteSize);

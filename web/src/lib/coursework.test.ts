@@ -16,6 +16,7 @@ import {
   parseCourseworkFiles,
   parseCourseworkFilesStrict,
   removeCourseworkFile,
+  postLearnerAssignmentAction,
   PHASE_LABEL,
   uploadCourseworkFile,
   validateCourseworkFile,
@@ -343,4 +344,28 @@ test('marked work still shows its files without making them editable', () => {
   assert.ok(files > gradedStart && textSectionEnd > gradedStart);
   assert.match(work.slice(gradedStart, textSectionEnd), /<\/>\s*\)\}/);
   assert.match(work, /const locked = status === 'submitted' \|\| status === 'graded'/);
+});
+
+
+test('learner assignment actions distinguish a confirmed write from an uncertain result', async () => {
+  const id = '2b1c7a9e-0000-4000-8000-000000000001';
+  const response = (body: unknown, status=200) => async () => new Response(JSON.stringify(body), {status});
+  assert.deepEqual(await postLearnerAssignmentAction({action:'save_draft'}, response({ok:true,id})), {ok:true,id});
+  assert.deepEqual(await postLearnerAssignmentAction({action:'submit'}, response({ok:true,id:null})), {ok:true});
+  assert.deepEqual(await postLearnerAssignmentAction({action:'reopen'}, response({ok:true,revisionNumber:2})), {ok:true,revisionNumber:2});
+  const checks: [Record<string, unknown>, typeof fetch][] = [
+    [{action:'submit'}, async () => { throw new Error('reply lost'); }],
+    [{action:'save_draft'}, response({ok:true,id:null})],
+    [{action:'save_draft'}, response({ok:true,id:'not-a-uuid'})],
+    [{action:'reopen'}, response({ok:true,revisionNumber:1})],
+    [{action:'reopen'}, response({ok:true,revisionNumber:2.5})],
+    [{action:'submit'}, response({ok:true}, 500)],
+    [{action:'submit'}, async () => new Response('broken', {status:200})],
+    [{action:'submit'}, response({ok:false,message:'A conflict occurred.'}, 409)],
+  ];
+  for (const [payload, fetcher] of checks) {
+    const result = await postLearnerAssignmentAction(payload, fetcher);
+    assert.equal(result.ok, false);
+    if (!result.ok) assert.match(result.message, /copy any unsaved text.*reload.*check/i);
+  }
 });
