@@ -21,7 +21,7 @@ test('the page fetches the queue only for the configured owner and describes its
   const page = readFileSync('src/app/admin/coursework/page.tsx', 'utf8');
   assert.match(page, /isSafeguardingOwner && openCursorValid\s*\? await supabase\.rpc\('safeguarding_concern_queue_page'/);
   assert.match(page, /does not mean it is resolved/);
-  assert.match(page, /No email alert is connected/);
+  assert.match(page, /a provider reference does not prove receipt/);
   assert.match(page, /Do not assume it is empty/);
   const action = readFileSync('src/app/admin/coursework/safeguarding-actions.ts', 'utf8');
   assert.match(action, /acknowledge_safeguarding_concern/);
@@ -30,6 +30,10 @@ test('the page fetches the queue only for the configured owner and describes its
   assert.match(page, /More open concerns/);
   assert.match(page, /without acknowledging earlier ones/);
   assert.match(action, /concernAfterId/);
+  const route = readFileSync('src/app/api/cron/safeguarding-alert/route.ts', 'utf8');
+  assert.match(route, /NextResponse\.json\(\{ ok: true \}/);
+  assert.doesNotMatch(route, /result\s*[,}]/);
+  assert.match(route, /checkScheduler/);
   const home = readFileSync('src/app/admin/page.tsx', 'utf8');
   assert.match(home, /Safeguarding concerns are not included in these counts/);
   assert.doesNotMatch(home, /Every queue you can work was checked/);

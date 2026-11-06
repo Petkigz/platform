@@ -8,7 +8,8 @@ import { getServiceRoleKey, getSupabaseEnv } from '@/lib/env';
  * find a marked identity and complete the attempt. The named owner may also
  * request deletion of a verified, guarded child identity; ambiguous outcomes are
  * checked against the database rather than blindly repeated. See
- * child-login-create.ts and child-login-auth-removal.ts.
+ * child-login-create.ts and child-login-auth-removal.ts. The scheduler uses it
+ * for private, generic safeguarding alerts; the key never goes to the client.
  * Never expose this key to a browser or use it instead of a user's RLS client.
  */
 export function createAdminClient(): SupabaseClient {

@@ -1,3 +1,5 @@
+import { dispatchSafeguardingAlert } from '../../web/src/lib/safeguarding-alert.ts';
+
 // Somebody looked at the file, and the platform can say who.
 //
 // The gap this suite is written around was one sentence wide and total: a child's
@@ -153,6 +155,55 @@ export async function run(ctx) {
     const queue = await asActor(owner, () => q('select * from public.safeguarding_concern_queue(100)'));
     assert(queue.rows.some(r => r.review_id === recorded.id && r.note === 'The handwriting raises a safeguarding concern.'),
       'a concern recorded before setup was lost');
+  });
+
+  await test('private safeguarding alerts require a service lease and an owner to see or retry them', async () => {
+    const existing = (await q("select value_text from public.platform_settings where key='delivery.notifications'")).rows[0].value_text;
+    const asService = async (fn) => {
+      await q('begin'); await q('set local role service_role');
+      try { const result=await fn(); await q('commit'); return result; }
+      catch (error) { await q('rollback'); throw error; }
+    };
+    try {
+      await q("update public.platform_settings set value_text='false' where key='delivery.notifications'");
+      assert((await asService(() => q('select public.claim_safeguarding_alert() r'))).rows[0].r.state === 'disabled');
+      await refuses(/permission denied/, () => call(owner, 'select public.claim_safeguarding_alert()'));
+      await refuses(/permission denied/, () => call(teacher, 'select * from public.safeguarding_alerts'));
+      await q("update public.platform_settings set value_text='true' where key='delivery.notifications'");
+      const lease = (await asService(() => q('select public.claim_safeguarding_alert() r'))).rows[0].r;
+      assert(lease.state === 'leased' && lease.ownerId === owner && lease.token, 'a pending concern was not privately leased');
+      const serviceCall = async (sql, params) => (await asService(() => q(sql,params))).rows[0].r;
+      assert(await serviceCall('select public.safeguarding_alert_send_allowed($1,$2,$3) r',[lease.reviewId,lease.token,owner]) === true);
+      assert(await serviceCall('select public.safeguarding_alert_send_allowed($1,$2,$3) r',[lease.reviewId,lease.token,teacher]) === false);
+      await refuses(/provider reference/, () => asService(() => q('select public.settle_safeguarding_alert($1,$2,$3,$4,$5)',[lease.reviewId,lease.token,'sent','resend',''])));
+      assert(await serviceCall('select public.settle_safeguarding_alert($1,$2,$3,$4,$5) r',[lease.reviewId,lease.token,'sent','resend','provider-ref']) === true);
+      assert(await serviceCall('select public.settle_safeguarding_alert($1,$2,$3,$4,$5) r',[lease.reviewId,lease.token,'sent','resend','provider-ref']) === false);
+      const status=(await asActor(owner,() => q('select * from public.safeguarding_alert_status($1::uuid[])',[[lease.reviewId]]))).rows[0];
+      assert(status.status==='sent' && status.attempts===1, 'provider reference not reflected');
+      await refuses(/coursework:not_allowed/, () => call(teacher,'select * from public.safeguarding_alert_status($1::uuid[])',[[lease.reviewId]]));
+      await call(owner,'select public.acknowledge_safeguarding_concern($1)',[lease.reviewId]);
+      await call(owner,'select public.reopen_safeguarding_concern($1)',[lease.reviewId]);
+      assert((await scalar('select status from public.safeguarding_alerts where review_id=$1',[lease.reviewId])).status==='pending', 'reopen did not queue a fresh alert');
+      const again=(await asService(() => q('select public.claim_safeguarding_alert() r'))).rows[0].r;
+      await call(owner,'select public.acknowledge_safeguarding_concern($1)',[again.reviewId]);
+      assert(await serviceCall('select public.safeguarding_alert_send_allowed($1,$2,$3) r',[again.reviewId,again.token,owner]) === false, 'acknowledged concern could still pass pre-send check');
+      await serviceCall('select public.settle_safeguarding_alert($1,$2,$3,null,null) r',[again.reviewId,again.token,'not_sent']);
+      await call(owner,'select public.reopen_safeguarding_concern($1)',[again.reviewId]);
+      await q("update public.safeguarding_alerts set status='leased',attempts=5,lease_token=gen_random_uuid(),lease_until=now()-interval '1 minute',owner_id=$2 where review_id=$1",[again.reviewId,owner]);
+      await asService(() => q('select public.claim_safeguarding_alert()'));
+      assert((await scalar('select status from public.safeguarding_alerts where review_id=$1',[again.reviewId])).status==='failed', 'expired fifth lease was stranded');
+      await refuses(/coursework:not_allowed/, () => call(teacher,'select public.retry_safeguarding_alert($1)',[again.reviewId]));
+      assert((await call(owner,'select public.retry_safeguarding_alert($1) r',[again.reviewId])).r === true, 'owner could not retry failed alert');
+      let providerCalls=0;
+      const result=await dispatchSafeguardingAlert({
+        claim: async () => (await asService(() => q('select public.claim_safeguarding_alert() r'))).rows[0].r,
+        owner: async (id) => ({id,email:'owner@example.com',verified:true}),
+        allowed: async (l) => await serviceCall('select public.safeguarding_alert_send_allowed($1,$2,$3) r',[l.reviewId,l.token,l.ownerId]),
+        send: async () => { providerCalls++; return {outcome:'sent',provider:'resend',reference:'fake-provider-ref'}; },
+        settle: async (l,outcome,provider,reference) => await serviceCall('select public.settle_safeguarding_alert($1,$2,$3,$4,$5) r',[l.reviewId,l.token,outcome,provider??null,reference??null]),
+      });
+      assert(result==='sent' && providerCalls===1, 'server alert flow did not use the real private database boundary');
+    } finally { await q("update public.platform_settings set value_text=$1 where key='delivery.notifications'",[existing]); }
   });
 
   await test('anonymous sessions cannot read or acknowledge the safeguarding queue', async () => {

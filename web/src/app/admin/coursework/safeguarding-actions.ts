@@ -40,3 +40,22 @@ export async function reopenConcern(form: FormData) {
   if (error || typeof data !== 'boolean') redirect('/admin/coursework?concern=failed');
   redirect(`/admin/coursework?concern=${data ? 'reopened' : 'already-open'}`);
 }
+
+export async function retrySafeguardingAlert(form: FormData) {
+  const id = form.get('reviewId');
+  const after = form.get('concernAfter');
+  const afterId = form.get('concernAfterId');
+  const cursorValid = typeof after === 'string' && Number.isFinite(Date.parse(after)) &&
+    typeof afterId === 'string' && UUID.test(afterId);
+  const back = (status: string) => `/admin/coursework?${new URLSearchParams({
+    alert: status, ...(cursorValid ? { concernAfter: after, concernAfterId: afterId } : {}),
+  })}#open-concerns`;
+  if (!isSupabaseConfigured() || typeof id !== 'string' || !UUID.test(id)) redirect(back('failed'));
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/sign-in?next=/admin/coursework');
+  const { data, error } = await supabase.rpc('retry_safeguarding_alert', { p_review_id: id });
+  revalidatePath('/admin/coursework');
+  if (error || data !== true) redirect(back('failed'));
+  redirect(back('queued'));
+}

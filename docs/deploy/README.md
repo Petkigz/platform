@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-285 files in `supabase/migrations/`, applied in filename order — the 14-digit
+286 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -170,7 +170,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 285 files from the top and fail on the
+it, and `db push` would then re-apply all 286 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -447,7 +447,7 @@ first; the app will not start without them.
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | nothing loads: no catalogue, no sign-in |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | the browser cannot reach the database; every screen is empty or refuses |
-| `SUPABASE_SERVICE_ROLE_KEY` | payment webhook and trusted child-login creation and owner-reviewed removal — it bypasses every policy in the schema, so it is server-only and never prefixed `NEXT_PUBLIC_` |
+| `SUPABASE_SERVICE_ROLE_KEY` | payment webhook, trusted child-login creation and owner-reviewed removal, and private safeguarding alerts — it bypasses every policy in the schema, so it is server-only and never prefixed `NEXT_PUBLIC_` |
 | `NEXT_PUBLIC_SITE_URL` | certificates print a path instead of a full verification address |
 
 Then, in the order you get to them:
@@ -1106,3 +1106,20 @@ that restores a known previous status. Older quarantines without that captured
 state require individual review; the release neither scans nor verifies storage
 objects and does not release safeguarding holds. Test these controls and the
 `media_assets` trigger on a non-production deployment before relying on them.
+
+
+### Private safeguarding alerts (migration 790)
+
+The owner must be bootstrapped as the active safeguarding owner, with a verified
+email in Supabase Auth. Configure the server-only `SUPABASE_SERVICE_ROLE_KEY`,
+`RESEND_API_KEY`, `EMAIL_FROM`, and `CRON_SECRET`; configure and verify the sender
+domain and turn on `delivery.notifications` only after testing. Schedule a POST to
+`/api/cron/safeguarding-alert` with `Authorization: Bearer <CRON_SECRET>`. The scheduler response does not reveal whether a concern exists or was sent; the owner checks the private dashboard for status. One
+request handles at most one alert. Scheduler frequency and provider limits affect
+how quickly a backlog is processed; the free provider quota may be exhausted.
+No card or paid plan is assumed. Never expose the service key or scheduler secret
+to a browser. The owner sees alert status and can retry a failed alert on the
+coursework page. The generic email contains no case details; a provider reference
+is acceptance, not delivery or receipt. Test missing keys, unverified address,
+flag-off, rate limits, lost responses, concurrency and real delivery in a
+non-production project. This has not been deployed or tested with live providers.

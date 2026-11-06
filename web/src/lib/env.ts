@@ -41,7 +41,7 @@ export function isSupabaseConfigured(): boolean {
 
 /**
  * The server-only service role key for the verified payment webhook and the
- * trusted child-login creation and owner-reviewed deletion workflows.
+ * trusted child-login creation and owner-reviewed deletion workflows, and private safeguarding alert dispatch.
  *
  * These operations bypass row level security; the payment case illustrates why. `record_payment_success()` is revoked from
  * `anon` and granted to `authenticated`, and `payment_provider_events` has
@@ -61,7 +61,7 @@ export function getServiceRoleKey(): string {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!key) {
     throw new Error(
-      'SUPABASE_SERVICE_ROLE_KEY is not set. The payment webhook and trusted child-login creation and removal need it on the server. Never expose it to a browser or grant anonymous access as a workaround.',
+      'SUPABASE_SERVICE_ROLE_KEY is not set. The payment webhook, trusted child-login creation and removal, and private safeguarding alerts need it on the server. Never expose it to a browser or grant anonymous access as a workaround.',
     );
   }
   return key;

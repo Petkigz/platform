@@ -27,7 +27,8 @@ import {
 } from '@/lib/coursework-retention';
 import { ReviewForm } from './review-form';
 import { RetentionActionForm } from './retention-actions';
-import { acknowledgeConcern, reopenConcern } from './safeguarding-actions';
+import { acknowledgeConcern, reopenConcern, retrySafeguardingAlert } from './safeguarding-actions';
+import { parseSafeguardingAlertStatus, describeSafeguardingAlert } from '@/lib/safeguarding-alert-status';
 import { attestClassEnd } from './class-end-actions';
 import { releaseQuarantine } from './quarantine-actions';
 import { isQuarantineCursor, parseCourseworkQuarantines } from '@/lib/coursework-quarantine';
@@ -38,7 +39,7 @@ export const dynamic = 'force-dynamic';
 /** Owner-only review register, alongside separately authorized retention tools.
  * A recorded review is an attestation, not proof that a file was viewed.
  */
-export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ concern?: string; before?: string; beforeId?: string; endsAfter?: string; classEnd?: string; quarantineAfter?: string; quarantine?: string; concernAfter?: string; concernAfterId?: string }> }) {
+export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ concern?: string; before?: string; beforeId?: string; endsAfter?: string; classEnd?: string; quarantineAfter?: string; quarantine?: string; concernAfter?: string; concernAfterId?: string; alert?: string }> }) {
   if (!isSupabaseConfigured()) redirect('/');
 
   const supabase = await createClient();
@@ -97,6 +98,9 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
   const nextOpenCursor = concerns && concerns.length > 50 ? concerns[49] : null;
   const nextOpenPage = nextOpenCursor
     ? `/admin/coursework?${new URLSearchParams({ concernAfter: nextOpenCursor.reviewed_at, concernAfterId: nextOpenCursor.review_id })}#open-concerns` : null;
+  const alertStatusResult = isSafeguardingOwner && concerns !== null
+    ? await supabase.rpc('safeguarding_alert_status', { p_review_ids: concerns.slice(0, 50).map((row) => row.review_id) }) : null;
+  const alertStatuses = alertStatusResult && !alertStatusResult.error ? parseSafeguardingAlertStatus(alertStatusResult.data) : null;
   const history = historyResult && !historyResult.error
     ? parseSafeguardingHistory(historyResult.data) : null;
   const lastHistory = history?.[history.length - 1];
@@ -129,7 +133,7 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
       {!ownerStatusValid && <p className="notice warn">Safeguarding owner setup could not be checked.</p>}
       {ownerStatusValid && ownerStatus?.configured === false && (
         <section className="notice warn">
-          The safeguarding owner is not configured. Concerns are recorded, but no one can open the owner queue until the trusted database setup is complete. No email alert is connected.
+          The safeguarding owner is not configured. Concerns are recorded, but no one can open the owner queue until the trusted database setup is complete. Alerts cannot be sent until an owner is configured.
         </section>
       )}
       {isSafeguardingOwner && (
@@ -163,7 +167,9 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
       {isSafeguardingOwner && (
         <section className="card" style={{ marginBlock: '1rem' }}>
           <h2 id="open-concerns">Safeguarding concerns for the owner</h2>
-          <p>Oldest unacknowledged coursework concerns first, 50 per page. You can see later items without acknowledging earlier ones. All ages are included so a changed or erased learner record cannot hide a concern. Acknowledging records that you marked the item; it does not mean it is resolved. No email alert is connected.</p>
+          <p>Oldest unacknowledged coursework concerns first, 50 per page. You can see later items without acknowledging earlier ones. All ages are included so a changed or erased learner record cannot hide a concern. Acknowledging records that you marked the item; it does not mean it is resolved. Alerts need the provider, scheduler and an active verified owner email; a provider reference does not prove receipt.</p>
+          {params.alert === 'queued' && <p role="status">Alert queued for another attempt; no email has been confirmed sent.</p>}
+          {params.alert === 'failed' && <p className="notice warn" role="alert">The alert could not be queued for retry.</p>}
           {actionState === 'recorded' && <p role="status">Acknowledgement recorded.</p>}
           {actionState === 'already' && <p role="status">That concern had already been acknowledged.</p>}
           {actionState === 'reopened' && <p role="status">The concern is back in the open queue.</p>}
@@ -175,6 +181,13 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
                 <div className="t">
                   <strong>{row.learner_name ?? 'Learner details unavailable'} · {row.course_title ?? 'Course unavailable'}</strong>
                   <p>{row.note}</p>
+                  <p className="muted">{describeSafeguardingAlert(alertStatuses?.find((alert) => alert.review_id === row.review_id))}</p>
+                  {alertStatuses?.find((alert) => alert.review_id === row.review_id)?.status === 'failed' && <form action={retrySafeguardingAlert}>
+                    <input type="hidden" name="reviewId" value={row.review_id} />
+                    <input type="hidden" name="concernAfter" value={params.concernAfter ?? ''} />
+                    <input type="hidden" name="concernAfterId" value={params.concernAfterId ?? ''} />
+                    <button type="submit" className="btn">Retry alert</button>
+                  </form>}
                   <p className="muted">Recorded {row.reviewed_at} by {row.reviewer_name ?? 'reviewer unavailable'} · File ID: {row.asset_id}</p>
                   <a href={courseworkFileHref(row.asset_id)} target="_blank" rel="noreferrer">Try opening the file</a>
                   {row.details_unavailable && <p className="muted">The original submission or learner details are no longer available.</p>}

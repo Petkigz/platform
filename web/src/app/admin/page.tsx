@@ -224,7 +224,7 @@ export default async function AdminPage() {
       </p>
 
       <p className="notice warn">
-        Safeguarding concerns are not included in these counts. The configured safeguarding owner must check the private queue in <Link href="/admin/coursework">Handed-in files</Link>; no email alert is connected.
+        Safeguarding concerns are not included in these counts. The configured safeguarding owner must check the private queue in <Link href="/admin/coursework">Handed-in files</Link>; email alerts require provider and scheduler setup and do not prove receipt.
       </p>
 
       {setupFacts && (

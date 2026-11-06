@@ -201,8 +201,9 @@ Existing concerns are included, including
 records whose learner details have been erased, and all ages are included to avoid
 losing a concern when a learner's classification changes. The queue and identity
 migration must be deployed and the owner bootstrapped by a trusted database operator;
-until then access fails closed. No email alert, delivery confirmation or escalation
-workflow is connected. Existing coursework file access and other staff review paths
+until then access fails closed. Migration 790 adds private, generic owner email
+alerts when configured, but does not establish delivery confirmation or a complete
+escalation workflow. Existing coursework file access and other staff review paths
 have not yet been brought into line with the owner's exact access rule; the queue is
 not a claim that all concern metadata or files are private to the owner.
 
@@ -807,3 +808,17 @@ owner to see later open concerns without acknowledging earlier ones merely to
 reach them. Timestamp ties use the review ID, and the original reader remains
 available. Lists can change, so revisit earlier pages. This is not an email alert,
 delivery receipt or resolution, and has not been deployed.
+
+
+**Private concern alerts:** Migration 790 creates a separate private alert
+register, not the staff-visible message outbox. New and previously unacknowledged
+concerns can prompt a generic email to the current active owner's verified Auth
+address when the email provider, service-role key, notification flag and scheduler
+are configured. The message contains no child, concern or file details. The owner
+can see pending, in-flight, failed or provider-accepted status and retry a failed
+alert visually; the provider's reference is not proof of delivery or receipt.
+A lost reply may cause a duplicate; an acknowledgement or owner change during an
+in-flight provider request cannot recall that request. Scheduling frequency, free
+provider limits, actual delivery and real Supabase role/lease behavior need a
+non-production test. No alert or migration has been deployed. This does not complete
+same-day escalation, file scanning or storage deletion.
