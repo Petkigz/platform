@@ -521,6 +521,7 @@ export async function run(ctx) {
       assert(audit.n === 2, 'owner reconciliation audit not attributed to the owner');
       const removed = (await asActor(guardian, 'select public.remove_child_login($1,$2) result', [theirs.childId, 'family requested'])).rows[0].result;
       assert(removed.removed === true && removed.identityRemovalPending === true && removed.databaseAccessBlocked === true, 'detachment lost its identity task or database block');
+      await rejects(() => q('select public.complete_child_login_attempt($1,$2,$3)', [attempt,guardian,user]), /login_no_longer_active/);
       await rejects(() => asActor(user, 'select public.current_user_id()'), /database_session_blocked/);
       await rejects(() => asActor(user, 'select * from public.user_profiles where user_id=$1', [user]), /database_session_blocked/);
       const guardianStillActive = (await asActor(guardian, 'select public.current_user_id() actor')).rows[0].actor;

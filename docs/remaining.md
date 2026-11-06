@@ -747,3 +747,9 @@ API, every already-running transaction, existing signed URLs, provider sign-in o
 provider sessions. A private ID remains in the deny list; its safe cleanup is not
 automated. Provider deletion, broad authorization audit, concurrency testing and
 real Supabase validation remain necessary. No migration has been deployed.
+
+
+**Late completion after detachment:** Migration 720 rechecks that a completed
+attempt still has its active child link before reporting an idempotent success. A
+delayed retry after removal is refused instead of falsely saying the child remains
+linked. This does not remove or revoke the provider identity.
