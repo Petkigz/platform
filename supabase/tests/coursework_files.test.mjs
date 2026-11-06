@@ -341,7 +341,14 @@ export async function run(ctx) {
     const submission = await draft(who.userId, assignment, who.learnerId);
     const target = await declare(who.userId, submission);
     const first = (await call(who.userId, SQL_CONFIRM, [target.asset_id])).id;
-    await call(admin, 'select public.quarantine_media_upload($1,$2)', [target.asset_id, 'review needed']);
+    const prior = (await q('select owner_user_id,configured_at from public.safeguarding_owner where singleton')).rows[0];
+    await q('delete from public.safeguarding_owner where singleton');
+    await q('select public.bootstrap_safeguarding_owner($1)', [admin]);
+    try { await call(admin, 'select public.quarantine_media_upload($1,$2)', [target.asset_id, 'review needed']); }
+    finally {
+      await q('delete from public.safeguarding_owner where singleton');
+      if (prior) await q('insert into public.safeguarding_owner(singleton,owner_user_id,configured_at) values(true,$1,$2)', [prior.owner_user_id,prior.configured_at]);
+    }
     await refused(who.userId, SQL_CONFIRM, [target.asset_id], /held for review/i);
     const still = await scalar('select status from public.media_assets where id=$1', [target.asset_id]);
     const attachment = await scalar('select id from public.assignment_submission_assets where media_asset_id=$1', [target.asset_id]);
@@ -359,13 +366,17 @@ export async function run(ctx) {
     await q('delete from public.safeguarding_owner where singleton');
     await q('select public.bootstrap_safeguarding_owner($1)', [admin]);
     try {
+      const otherAdmin = await bootstrapAdmin(`quarantine-other-${++seq}@example.com`);
+      for (const id of [pending.asset_id, attached.asset_id, legacy.asset_id]) {
+        await refused(otherAdmin, 'select public.quarantine_media_upload($1,$2)', [id, 'review needed'], /not found/i);
+        assert((await scalar('select status from public.media_assets where id=$1', [id])).status !== 'quarantined', 'unrelated admin quarantined private coursework');
+      }
       for (const id of [pending.asset_id, attached.asset_id, legacy.asset_id])
         await call(admin, 'select public.quarantine_media_upload($1,$2)', [id, 'review needed']);
       // A repeated quarantine must not replace the real original state.
       await call(admin, 'select public.quarantine_media_upload($1,$2)', [pending.asset_id, 'still under review']);
       await q('delete from public.coursework_quarantine_state where asset_id=$1', [legacy.asset_id]);
       await refused(who.userId, 'select * from public.coursework_quarantine_queue(50,null)', [], /not_allowed/);
-      const otherAdmin = await bootstrapAdmin(`quarantine-other-${++seq}@example.com`);
       await refused(otherAdmin, 'select * from public.coursework_quarantine_queue(50,null)', [], /not_allowed/);
       await refused(otherAdmin, 'select public.release_coursework_quarantine($1,$2)', [pending.asset_id, 'I reviewed this quarantine and its release'], /not_allowed/);
       await refused(teacher, 'select public.release_coursework_quarantine($1,$2)', [pending.asset_id, 'I reviewed this quarantine and its release'], /not_allowed/);

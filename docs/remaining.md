@@ -794,3 +794,10 @@ visible in its submission's file list even if it was never attached, so the
 learner sees that it is held for review instead of seeing it disappear. The
 existing submission-access and review-privacy checks still apply. This does
 not scan files or release a quarantine. It has not been deployed.
+
+**Coursework quarantine authority:** Migration 770 closes a guessed-ID path in
+which unrelated privileged staff could quarantine a private coursework file.
+Authorized staff who can open that file, including the named safeguarding owner,
+retain quarantine; ordinary library moderation is unchanged. The check uses the
+asset and actor locks but does not prove every deployed concurrency interleaving.
+No migration is deployed, and this change does not scan or delete objects.
