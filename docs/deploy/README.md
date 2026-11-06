@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-273 files in `supabase/migrations/`, applied in filename order — the 14-digit
+274 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -170,7 +170,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 273 files from the top and fail on the
+it, and `db push` would then re-apply all 274 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -1058,3 +1058,13 @@ tests use a simulated Auth provider. Pending attempts may require owner review;
 the named owner can complete an existing uniquely marked identity, but the queue cannot create or remove an identity. Detaching a child learner does not
 remove the provider identity or revoke sessions, and password reset is not yet
 implemented. These migrations have not been deployed by this repository change.
+
+
+Migration 670 makes a private identity-removal task when a child login is detached
+and backfills disabled child-login rows still present. The safeguarding owner can
+see it on the guardian-consent page. Identity removal itself is still manual:
+verify the exact user in Supabase Authentication, especially for older unmarked
+identities. The record button checks Auth-table absence, not session revocation or
+provider copies. A matching identity that reappears puts the task back in the list.
+Do not assume completed erasure: reconciliation, in-flight-provider coordination,
+cleanup of identifying attempt/task data and session revocation remain unfinished.

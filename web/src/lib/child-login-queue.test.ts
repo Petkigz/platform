@@ -25,3 +25,12 @@ test('owner recovery is wired to a narrow session RPC and does not claim deletio
   assert.match(route, /application\\\/json/);
   assert.doesNotMatch(route, /createAdminClient|deleteUser/);
 });
+
+test('the identity-removal queue does not confuse missing data with an empty list', async () => {
+  const { parseChildLoginRemovalTasks } = await import('./child-login-queue.ts');
+  assert.deepEqual(parseChildLoginRemovalTasks([]), []);
+  assert.equal(parseChildLoginRemovalTasks(null), null);
+  const row = { task_id: 'task', learner_name: 'Child', username: 'child', child_user_id: 'user', created_at: '2026-11-05T00:00:00Z', identity_present: true, marker_matches: false };
+  assert.deepEqual(parseChildLoginRemovalTasks([row]), [row]);
+  assert.equal(parseChildLoginRemovalTasks([{ ...row, identity_present: null }]), null);
+});

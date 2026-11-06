@@ -502,6 +502,27 @@ export async function run(ctx) {
       assert(linked.linked_user_id === user, 'wrong identity linked');
       const audit = (await q("select count(*)::int n from public.governance_audit_events where action='child_login.owner_reconciled' and actor=$1 and target_id=$2", [admin, attempt])).rows[0];
       assert(audit.n === 2, 'owner reconciliation audit not attributed to the owner');
+      const removed = (await asActor(guardian, 'select public.remove_child_login($1,$2) result', [theirs.childId, 'family requested'])).rows[0].result;
+      assert(removed.removed === true && removed.identityRemovalPending === true, 'detachment lost its identity task');
+      await rejects(() => asActor(otherAdmin, 'select * from public.child_login_removal_queue($1)', [50]), /not_allowed/);
+      const task = (await asActor(admin, 'select * from public.child_login_removal_queue($1)', [50])).rows.find(r => r.child_user_id === user);
+      assert(task && task.identity_present && task.marker_matches, 'queue did not show the marked identity');
+      await rejects(() => asActor(guardian, 'select public.record_child_login_identity_removed($1)', [task.task_id]), /not_allowed/);
+      await rejects(() => asActor(admin, 'select public.record_child_login_identity_removed($1)', [task.task_id]), /identity_still_exists/);
+      await q('delete from auth.users where id=$1', [user]);
+      const gone = (await asActor(admin, 'select * from public.child_login_removal_queue($1)', [50])).rows.find(r => r.task_id === task.task_id);
+      assert(gone && !gone.identity_present && !gone.marker_matches, 'identity absence not reflected');
+      const recorded = (await asActor(admin, 'select public.record_child_login_identity_removed($1) result', [task.task_id])).rows[0].result;
+      const recordedAgain = (await asActor(admin, 'select public.record_child_login_identity_removed($1) result', [task.task_id])).rows[0].result;
+      assert(recorded.recorded && !recorded.alreadyRecorded && recordedAgain.alreadyRecorded, 'recording is not idempotent');
+      const reappeared = await newUser('queue.child@learners.ayahspring.com');
+      await q("update auth.users set raw_app_meta_data=jsonb_build_object('ayahspring_child_attempt',$2::text) where id=$1", [reappeared,attempt]);
+      const reopened = (await asActor(admin, 'select * from public.child_login_removal_queue($1)', [50])).rows.find(r => r.task_id === task.task_id);
+      assert(reopened && reopened.identity_present && !reopened.marker_matches, 'a replacement marked identity was silently omitted');
+      await rejects(() => asActor(admin, 'select public.record_child_login_identity_removed($1)', [task.task_id]), /identity_still_exists/);
+      await q('delete from auth.users where id=$1', [reappeared]);
+      const childRow = (await q('select linked_user_id,status from public.learner_profiles where id=$1', [theirs.childId])).rows[0];
+      assert(childRow && childRow.linked_user_id === null && childRow.status !== 'erased', 'identity removal damaged learner record');
     } finally {
       await setFlag('family.child_login', false);
       await q('delete from public.safeguarding_owner where singleton');

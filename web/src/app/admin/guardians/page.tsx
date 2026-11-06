@@ -17,7 +17,8 @@ import {
 } from '@/lib/guardian-consent';
 import { DecideForm } from './decide-form';
 import { ReconcileForm } from './reconcile-form';
-import { parseChildLoginPendingAttempts } from '@/lib/child-login-queue';
+import { RecordChildRemoval } from './record-child-removal';
+import { parseChildLoginPendingAttempts, parseChildLoginRemovalTasks } from '@/lib/child-login-queue';
 
 export const dynamic = 'force-dynamic';
 
@@ -83,6 +84,9 @@ export default async function AdminGuardiansPage() {
   const attemptsResult = owner ? await supabase.rpc('child_login_pending_attempts', { p_limit: 50 }) : null;
   const attempts = attemptsResult && !attemptsResult.error
     ? parseChildLoginPendingAttempts(attemptsResult.data) : null;
+  const removalResult = owner ? await supabase.rpc('child_login_removal_queue', { p_limit: 50 }) : null;
+  const removals = removalResult && !removalResult.error
+    ? parseChildLoginRemovalTasks(removalResult.data) : null;
 
   return (
     <div className="page wide">
@@ -148,6 +152,24 @@ export default async function AdminGuardiansPage() {
             matching identity still need individual review.</p>
         </section>
       )}
+
+      {owner && <section className="card">
+        <h2>Child sign-ins awaiting removal</h2>
+        <p className="muted">Private to the named safeguarding owner. Detachment keeps lessons and
+          progress but does not remove the sign-in. Up to 50 oldest tasks are shown. Review the exact
+          identity in Supabase Authentication before any deletion; a missing marker, especially on
+          an older login, requires individual investigation. Removing an identity is currently manual.
+          This list does not prove that issued sessions or external copies are gone.</p>
+        {removals === null ? <p className="notice warn">The removal register could not be read.</p>
+          : removals.length === 0 ? <p className="muted">No identity-removal tasks are listed.</p>
+          : <ul>{removals.map((task) => <li key={task.task_id}>
+            {task.learner_name} — username {task.username}; identity ID <code>{task.child_user_id}</code>;
+            {' '}started {dayLabel(task.created_at)}. {task.identity_present
+              ? task.marker_matches ? 'Identity present with matching trusted marker.' : 'An identity is present, but the original ID and marker do not match: investigate before acting.'
+              : 'The original ID and any identity with the matching marker are absent from the authentication table.'}
+            {!task.identity_present && <RecordChildRemoval taskId={task.task_id} />}
+          </li>)}</ul>}
+      </section>}
 
       <p className="lede">{registerHeadline(register)}</p>
 

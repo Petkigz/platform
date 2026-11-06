@@ -689,3 +689,16 @@ orphaned identity. Reconciliation and a privacy-safe retention/identity-removal
 workflow are needed; the queue shows pending attempts only, and its completion action cannot remove an identity. Do
 not represent child identity data or provider accounts as fully erased. This is a
 local reproduction, not a deployed-system test.
+
+
+**Child-login removal tasks:** Migration 670 makes detachment and a durable removal
+ task one database transaction and backfills still-present historical detachments.
+The named safeguarding owner can see outstanding tasks on the guardian-consent
+page and record absence only after the original Auth ID and any identity with the
+expected trusted marker are absent from `auth.users`. A matching identity that
+reappears makes the task visible again. Older unmarked identities require individual
+review; neither the queue nor its recording button deletes a provider identity,
+revokes sessions or verifies external copies. Existing rows already removed before
+this migration cannot be reconstructed from `child_logins`. Task and attempt data
+can still identify a child after the learning-record purge; safe cleanup and
+in-flight-provider coordination remain unfinished. No migration has been deployed.
