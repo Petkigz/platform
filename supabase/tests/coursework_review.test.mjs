@@ -184,6 +184,15 @@ export async function run(ctx) {
       await call(owner,'select public.acknowledge_safeguarding_concern($1)',[lease.reviewId]);
       await call(owner,'select public.reopen_safeguarding_concern($1)',[lease.reviewId]);
       assert((await scalar('select status from public.safeguarding_alerts where review_id=$1',[lease.reviewId])).status==='pending', 'reopen did not queue a fresh alert');
+      const events=(await asActor(owner,() => q('select * from public.safeguarding_alert_recent_history($1::uuid[],5)',[[lease.reviewId]]))).rows;
+      assert(events.some(e => e.status==='sent' && e.provider_reference==='provider-ref'), 'reopening lost the prior provider reference');
+      await refuses(/coursework:not_allowed/, () => call(teacher,'select * from public.safeguarding_alert_recent_history($1::uuid[],5)',[[lease.reviewId]]));
+      await refuses(/permission denied/, () => call(teacher,'select * from public.safeguarding_alert_events'));
+      await refuses(/immutable|append.only|cannot|audit/i, () => q('delete from public.safeguarding_alert_events where review_id=$1',[lease.reviewId]));
+      const page1=(await asActor(owner,() => q('select * from public.safeguarding_alert_history($1,null,1)',[lease.reviewId]))).rows;
+      const page2=(await asActor(owner,() => q('select * from public.safeguarding_alert_history($1,$2,1)',[lease.reviewId,page1[0].event_id]))).rows;
+      assert(page1.length===1 && page2.length===1 && page1[0].event_id!==page2[0].event_id, 'full alert history cursor did not advance');
+      await refuses(/coursework:not_allowed/, () => call(teacher,'select * from public.safeguarding_alert_history($1,null,5)',[lease.reviewId]));
       const again=(await asService(() => q('select public.claim_safeguarding_alert() r'))).rows[0].r;
       await call(owner,'select public.acknowledge_safeguarding_concern($1)',[again.reviewId]);
       assert(await serviceCall('select public.safeguarding_alert_send_allowed($1,$2,$3) r',[again.reviewId,again.token,owner]) === false, 'acknowledged concern could still pass pre-send check');

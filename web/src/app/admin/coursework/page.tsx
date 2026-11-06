@@ -28,7 +28,7 @@ import {
 import { ReviewForm } from './review-form';
 import { RetentionActionForm } from './retention-actions';
 import { acknowledgeConcern, reopenConcern, retrySafeguardingAlert } from './safeguarding-actions';
-import { parseSafeguardingAlertStatus, describeSafeguardingAlert } from '@/lib/safeguarding-alert-status';
+import { parseSafeguardingAlertStatus, describeSafeguardingAlert, parseSafeguardingAlertHistory, isAlertHistoryCursor, parseSafeguardingAlertFullHistory } from '@/lib/safeguarding-alert-status';
 import { attestClassEnd } from './class-end-actions';
 import { releaseQuarantine } from './quarantine-actions';
 import { isQuarantineCursor, parseCourseworkQuarantines } from '@/lib/coursework-quarantine';
@@ -39,7 +39,7 @@ export const dynamic = 'force-dynamic';
 /** Owner-only review register, alongside separately authorized retention tools.
  * A recorded review is an attestation, not proof that a file was viewed.
  */
-export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ concern?: string; before?: string; beforeId?: string; endsAfter?: string; classEnd?: string; quarantineAfter?: string; quarantine?: string; concernAfter?: string; concernAfterId?: string; alert?: string }> }) {
+export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ concern?: string; before?: string; beforeId?: string; endsAfter?: string; classEnd?: string; quarantineAfter?: string; quarantine?: string; concernAfter?: string; concernAfterId?: string; alert?: string; alertReview?: string; alertBefore?: string }> }) {
   if (!isSupabaseConfigured()) redirect('/');
 
   const supabase = await createClient();
@@ -89,7 +89,7 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
       }) : null;
   const historyResult = isSafeguardingOwner && cursorValid
     ? await supabase.rpc('safeguarding_concern_history', {
-        // Preserve the database's microseconds; converting to JS Date would lose
+        // Preserve database microseconds; converting to JS Date would lose
         // cursor precision and could skip acknowledged concerns.
         p_before: params.before ?? null, p_before_id: params.beforeId ?? null, p_limit: 50,
       }) : null;
@@ -101,6 +101,15 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
   const alertStatusResult = isSafeguardingOwner && concerns !== null
     ? await supabase.rpc('safeguarding_alert_status', { p_review_ids: concerns.slice(0, 50).map((row) => row.review_id) }) : null;
   const alertStatuses = alertStatusResult && !alertStatusResult.error ? parseSafeguardingAlertStatus(alertStatusResult.data) : null;
+  const alertHistoryResult = isSafeguardingOwner && concerns !== null
+    ? await supabase.rpc('safeguarding_alert_recent_history', { p_review_ids: concerns.slice(0, 50).map((row) => row.review_id), p_per_alert: 5 }) : null;
+  const alertHistory = alertHistoryResult && !alertHistoryResult.error ? parseSafeguardingAlertHistory(alertHistoryResult.data) : null;
+  const fullAlertCursorValid = !!params.alertReview && isQuarantineCursor(params.alertReview) &&
+    (!params.alertBefore || isAlertHistoryCursor(params.alertBefore));
+  const fullAlertResult = isSafeguardingOwner && fullAlertCursorValid
+    ? await supabase.rpc('safeguarding_alert_history', { p_review_id: params.alertReview, p_before: params.alertBefore ?? null, p_limit: 51 }) : null;
+  const fullAlertHistory = fullAlertResult && !fullAlertResult.error ? parseSafeguardingAlertFullHistory(fullAlertResult.data) : null;
+  const fullAlertNext = fullAlertHistory && fullAlertHistory.length > 50 ? fullAlertHistory[49]?.event_id : null;
   const history = historyResult && !historyResult.error
     ? parseSafeguardingHistory(historyResult.data) : null;
   const lastHistory = history?.[history.length - 1];
@@ -136,6 +145,18 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
           The safeguarding owner is not configured. Concerns are recorded, but no one can open the owner queue until the trusted database setup is complete. Alerts cannot be sent until an owner is configured.
         </section>
       )}
+      {isSafeguardingOwner && params.alertReview && <section id="alert-history" className="card" style={{ marginBlock: '1rem' }}>
+        <h2>Private alert history</h2>
+        <p>For concern {params.alertReview}. A provider reference is acceptance, not evidence of delivery or receipt. Earlier events may not exist if alert history was enabled later.</p>
+        {fullAlertHistory === null ? <p className="notice warn">Alert history could not be loaded; do not assume it is empty.</p>
+          : fullAlertHistory.length === 0 ? <p>No events on this page.</p>
+            : <ul>{fullAlertHistory.slice(0,50).map((event) => <li key={event.event_id}>
+              {event.recorded_at} · {event.status} · attempt {event.attempts}
+              {event.provider_reference && ` · ${event.provider ?? 'provider'} reference: ${event.provider_reference}`}
+            </li>)}</ul>}
+        {params.alertBefore && <p><Link href={`/admin/coursework?${new URLSearchParams({ alertReview: params.alertReview })}#alert-history`}>Back to recent alert history</Link></p>}
+        {fullAlertNext && <p><Link href={`/admin/coursework?${new URLSearchParams({ alertReview: params.alertReview, alertBefore: fullAlertNext })}#alert-history`}>Older alert events</Link></p>}
+      </section>}
       {isSafeguardingOwner && (
         <section id="coursework-quarantines" className="card" style={{ marginBlock: '1rem' }}>
           <h2>Quarantined coursework</h2>
@@ -182,6 +203,16 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
                   <strong>{row.learner_name ?? 'Learner details unavailable'} · {row.course_title ?? 'Course unavailable'}</strong>
                   <p>{row.note}</p>
                   <p className="muted">{describeSafeguardingAlert(alertStatuses?.find((alert) => alert.review_id === row.review_id))}</p>
+                  <details><summary>Recent alert history</summary>
+                    <p>Up to five recent changes are shown. A provider reference is not proof of delivery or receipt.</p>
+                    {alertHistory === null ? <p className="notice warn">Alert history could not be read; do not assume there were no earlier attempts.</p>
+                      : alertHistory.filter((event) => event.review_id === row.review_id).length === 0 ? <p>No recorded alert changes were returned.</p>
+                        : <ul>{alertHistory.filter((event) => event.review_id === row.review_id).map((event, index) => <li key={`${event.recorded_at}-${index}`}>
+                          {event.recorded_at} · {event.status} · attempt {event.attempts}
+                          {event.provider_reference && ` · ${event.provider ?? 'provider'} reference: ${event.provider_reference}`}
+                        </li>)}</ul>}
+                  </details>
+                  <Link href={`/admin/coursework?${new URLSearchParams({ alertReview: row.review_id })}#alert-history`}>Full alert history</Link>
                   {alertStatuses?.find((alert) => alert.review_id === row.review_id)?.status === 'failed' && <form action={retrySafeguardingAlert}>
                     <input type="hidden" name="reviewId" value={row.review_id} />
                     <input type="hidden" name="concernAfter" value={params.concernAfter ?? ''} />
@@ -209,6 +240,7 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
                 <div className="t">
                   <strong>{row.learner_name ?? 'Learner details unavailable'} · {row.course_title ?? 'Course unavailable'}</strong>
                   <p>{row.note}</p>
+                  <Link href={`/admin/coursework?${new URLSearchParams({ alertReview: row.review_id })}#alert-history`}>Full alert history</Link>
                   <p className="muted">Acknowledged {row.acknowledged_at} · File ID: {row.asset_id}</p>
                   <form action={reopenConcern}>
                     <input type="hidden" name="reviewId" value={row.review_id} />

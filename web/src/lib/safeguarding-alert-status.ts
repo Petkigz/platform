@@ -26,3 +26,46 @@ export function describeSafeguardingAlert(row: SafeguardingAlertStatus | undefin
     : 'Email attempts stopped after provider or network uncertainty. Review the setup before retrying.';
   return 'Email is waiting for delivery setup or the next attempt; receipt is not confirmed.';
 }
+
+export type SafeguardingAlertEvent = {
+  review_id: string;
+  status: 'pending' | 'leased' | 'sent' | 'failed';
+  attempts: number;
+  provider: string | null;
+  provider_reference: string | null;
+  problem: string | null;
+  recorded_at: string;
+};
+export function parseSafeguardingAlertHistory(value: unknown): SafeguardingAlertEvent[] | null {
+  if (!Array.isArray(value)) return null;
+  const rows: SafeguardingAlertEvent[] = [];
+  for (const item of value) {
+    if (!item || typeof item !== 'object') return null;
+    const row = item as Record<string, unknown>;
+    if (typeof row.review_id !== 'string' || !['pending','leased','sent','failed'].includes(String(row.status)) ||
+      !Number.isInteger(row.attempts) || (row.attempts as number) < 0 || typeof row.recorded_at !== 'string' ||
+      !(row.provider === null || typeof row.provider === 'string') ||
+      !(row.provider_reference === null || typeof row.provider_reference === 'string') ||
+      !(row.problem === null || typeof row.problem === 'string')) return null;
+    rows.push(row as SafeguardingAlertEvent);
+  }
+  return rows;
+}
+
+export type SafeguardingAlertHistoryEvent = Omit<SafeguardingAlertEvent, 'review_id'> & { event_id: string };
+export function isAlertHistoryCursor(value: string): boolean {
+  return /^[1-9][0-9]{0,18}$/.test(value) && BigInt(value) <= 9223372036854775807n;
+}
+export function parseSafeguardingAlertFullHistory(value: unknown): SafeguardingAlertHistoryEvent[] | null {
+  if (!Array.isArray(value)) return null;
+  const entries: SafeguardingAlertHistoryEvent[] = [];
+  for (const raw of value) {
+    if (!raw || typeof raw !== 'object') return null;
+    const row = raw as Record<string, unknown>;
+    if (typeof row.event_id !== 'string' || !isAlertHistoryCursor(row.event_id)) return null;
+    const valid = parseSafeguardingAlertHistory([{ ...row, review_id: 'validated-by-database' }]);
+    if (!valid) return null;
+    entries.push(row as SafeguardingAlertHistoryEvent);
+  }
+  return entries;
+}

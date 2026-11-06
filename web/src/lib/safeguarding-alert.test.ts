@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { dispatchSafeguardingAlert, runSafeguardingAlert, type AlertPorts } from './safeguarding-alert.ts';
-import { describeSafeguardingAlert, parseSafeguardingAlertStatus } from './safeguarding-alert-status.ts';
+import { describeSafeguardingAlert, parseSafeguardingAlertStatus, parseSafeguardingAlertFullHistory, isAlertHistoryCursor } from './safeguarding-alert-status.ts';
 const reviewId='11111111-1111-4111-8111-111111111111';
 const token='22222222-2222-4222-8222-222222222222';
 const ownerId='33333333-3333-4333-8333-333333333333';
@@ -53,4 +53,15 @@ test('alert status keeps a provider reference distinct from delivery', () => {
   const rows=parseSafeguardingAlertStatus([{ review_id:reviewId,status:'sent',attempts:1,last_problem:null }]);
   assert.match(describeSafeguardingAlert(rows?.[0]),/receipt are not confirmed/);
   assert.match(describeSafeguardingAlert(undefined),/unavailable/);
+});
+
+
+test('history cursors preserve bigint precision and malformed history is not empty', () => {
+  assert.equal(isAlertHistoryCursor('9223372036854775807'), true);
+  assert.equal(isAlertHistoryCursor('9223372036854775808'), false);
+  assert.equal(isAlertHistoryCursor('0'), false);
+  assert.equal(parseSafeguardingAlertFullHistory(null), null);
+  const event={ event_id:'9007199254740993',status:'sent',attempts:1,provider:'resend',provider_reference:'ref',problem:null,recorded_at:'2026-11-06' };
+  assert.deepEqual(parseSafeguardingAlertFullHistory([event]), [event]);
+  assert.equal(parseSafeguardingAlertFullHistory([{ ...event,event_id:'0' }]),null);
 });

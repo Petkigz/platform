@@ -822,3 +822,13 @@ in-flight provider request cannot recall that request. Scheduling frequency, fre
 provider limits, actual delivery and real Supabase role/lease behavior need a
 non-production test. No alert or migration has been deployed. This does not complete
 same-day escalation, file scanning or storage deletion.
+
+
+**Safeguarding alert history:** Migration 800 keeps a private append-only
+record of alert state changes and provider references even when a concern is
+reopened or an alert is retried. The owner can browse the history visually;
+the journal does not contain the address or case text. Prior transitions cannot
+be reconstructed if dispatch ran before the migration. These pseudonymous
+records are personal data, and no retention or automated deletion process for
+them is implemented. Provider acceptance is not delivery or receipt. This has
+not been deployed or verified on a real Supabase project.

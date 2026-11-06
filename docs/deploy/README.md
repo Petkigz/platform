@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-286 files in `supabase/migrations/`, applied in filename order — the 14-digit
+287 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -170,7 +170,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 286 files from the top and fail on the
+it, and `db push` would then re-apply all 287 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -1123,3 +1123,9 @@ coursework page. The generic email contains no case details; a provider referenc
 is acceptance, not delivery or receipt. Test missing keys, unverified address,
 flag-off, rate limits, lost responses, concurrency and real delivery in a
 non-production project. This has not been deployed or tested with live providers.
+
+Migration 800 adds a private, append-only alert history, visible to the named
+owner in the coursework dashboard, including after acknowledgement or retry.
+It retains identifiers and provider references as personal data; a retention
+and cleanup policy remains outstanding. It cannot reconstruct transitions from
+before it was installed and does not prove delivery or receipt.
