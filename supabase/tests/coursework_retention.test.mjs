@@ -438,6 +438,27 @@ export async function run(ctx) {
     assert(again.deleted >= 1, 'releasing the hold did not put the file back in front of the press');
   });
 
+  await test('an owner can place a new hold after a previous hold was released', async () => {
+    const row = await handedIn();
+    await backdate(row, '2 years');
+    await call(owner, 'select public.hold_coursework_file($1,$2)', [row.asset, 'Initial safeguarding concern']);
+    await call(owner, 'select public.release_coursework_hold($1,$2)', [row.asset, 'Initial concern reviewed']);
+    await call(owner, 'select public.hold_coursework_file($1,$2)', [row.asset, 'A separate new safeguarding concern']);
+    await refuses(/already held/, () => call(owner, 'select public.hold_coursework_file($1,$2)', [row.asset, 'Repeated hold']));
+    const current = await scalar('select reason,closed_at,closed_by,closed_reason from public.coursework_retention_holds where asset_id=$1 and closed_at is null', [row.asset]);
+    assert(current.reason === 'A separate new safeguarding concern' && current.closed_at === null && current.closed_by === null && current.closed_reason === null,
+      'the reopened hold did not become current');
+    const holdRows = (await q('select reason,closed_at from public.coursework_retention_holds where asset_id=$1', [row.asset])).rows;
+    assert(holdRows.length === 2 && holdRows.some(h => h.reason==='Initial safeguarding concern' && h.closed_at !== null), 'the previous hold was not retained');
+    const events = (await q("select action,detail from public.governance_audit_events where target_id=$1 and action in ('coursework.held','coursework.hold_released')", [row.asset])).rows;
+    assert(events.filter(e => e.action==='coursework.held').length === 2 && events.some(e => e.action==='coursework.hold_released'),
+      'hold reopening lost prior decision history');
+    await purge();
+    assert((await scalar('select deleted_at from public.media_assets where id=$1',[row.asset])).deleted_at === null,
+      'reopened hold failed to protect due file');
+    await call(owner, 'select public.release_coursework_hold($1,$2)', [row.asset, 'The new concern was reviewed']);
+  });
+
   await test('the cleanup locks each asset and rechecks its hold before tombstoning', async () => {
     const definition = (await q(`select pg_get_functiondef('public.purge_coursework_files(timestamptz,integer)'::regprocedure) as source`)).rows[0].source;
     const lock = definition.indexOf('where id = v_id for update');
