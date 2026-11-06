@@ -24,10 +24,16 @@ grant execute on function public.child_login_legacy_erasure_queue(integer) to au
 -- It retains pseudonymous provider-recovery evidence before removing the rows.
 create function public.reconcile_legacy_child_login_erasure(p_learner uuid)
 returns jsonb language plpgsql security definer set search_path=public as $$
-declare v_actor uuid := public.current_user_id(); v_result jsonb;
+declare v_actor uuid := public.current_user_id(); v_result jsonb; v_status text; v_kind text;
 begin
   perform public.require_coursework_retention_owner();
-  if not exists (select 1 from public.learner_profiles where id=p_learner and learner_type='child' and status='erased') then
+  -- Lock the row before inspecting status, so a concurrent restoration cannot
+  -- turn this historical cleanup into an early purge of an active record.
+  -- A competing hold cleanup may deadlock; PostgreSQL aborts one transaction
+  -- without making either destructive operation partial, and the owner retries.
+  select status, learner_type into v_status, v_kind from public.learner_profiles
+   where id=p_learner for update;
+  if not found or v_status <> 'erased' or v_kind <> 'child' then
     raise exception 'child_login:record_not_erased' using errcode='check_violation';
   end if;
   v_result := public.purge_learner_record(p_learner);
