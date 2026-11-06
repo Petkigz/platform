@@ -5,8 +5,10 @@ import { getServiceRoleKey, getSupabaseEnv } from '@/lib/env';
  * Server-only service-role client: it bypasses RLS and never carries a user session.
  * The payment webhook uses it after provider verification; child-login creation
  * uses it only after a verified guardian's durable reservation, to create or
- * find a marked identity and complete the attempt. Ambiguous outcomes are not
- * cleaned up by blindly deleting an account. See child-login-create.ts.
+ * find a marked identity and complete the attempt. The named owner may also
+ * request deletion of a verified, guarded child identity; ambiguous outcomes are
+ * checked against the database rather than blindly repeated. See
+ * child-login-create.ts and child-login-auth-removal.ts.
  * Never expose this key to a browser or use it instead of a user's RLS client.
  */
 export function createAdminClient(): SupabaseClient {

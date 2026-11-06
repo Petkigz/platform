@@ -20,6 +20,7 @@ import { ReconcileForm } from './reconcile-form';
 import { RecordChildRemoval } from './record-child-removal';
 import { ReconcileErasure } from './reconcile-erasure';
 import { BlockChildDatabase } from './block-child-database';
+import { DeleteChildAuth } from './delete-child-auth';
 import { parseChildLoginPendingAttempts, parseChildLoginRemovalTasks, parseChildLoginErasureRecovery, parseChildLoginLegacyErasure, queuePageNumber } from '@/lib/child-login-queue';
 
 export const dynamic = 'force-dynamic';
@@ -196,8 +197,9 @@ export default async function AdminGuardiansPage({ searchParams }: {
         <p className="muted">Private to the named safeguarding owner. Detachment keeps lessons and
           progress but does not remove the sign-in. Tasks are shown 50 per page. Review the exact
           identity in Supabase Authentication before any deletion; a missing marker, especially on
-          an older login, requires individual investigation. Removing an identity is currently manual.
-          This list does not prove that issued sessions or external copies are gone.</p>
+          an older login, requires individual investigation. A trusted matching identity may be deleted
+          from this page after explicit review; other identities require individual handling. This list
+          does not prove that issued sessions or external copies are gone.</p>
         {removals === null ? <p className="notice warn">The removal register could not be read.</p>
           : removals.length === 0 ? <p className="muted">No identity-removal tasks are listed.</p>
           : <ul>{removals.slice(0, 50).map((task) => <li key={task.task_id}>
@@ -211,6 +213,8 @@ export default async function AdminGuardiansPage({ searchParams }: {
                 : <p className="notice warn">No database-helper block is confirmed for this identity. Review it individually.</p>}
             {blockRows !== null && blockRows.find((row) => row.task_id === task.task_id)?.blocked === false
               && task.marker_matches && <BlockChildDatabase taskId={task.task_id} />}
+            {task.identity_present && task.marker_matches && blockRows?.find((row) => row.task_id === task.task_id)?.blocked === true
+              && <DeleteChildAuth taskId={task.task_id} />}
             {!task.identity_present && <RecordChildRemoval taskId={task.task_id} />}
           </li>)}</ul>}
         {removals !== null && <QueueNavigation pageKey="removalPage" pages={pages} hasMore={removals.length > 50} />}

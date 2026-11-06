@@ -669,9 +669,7 @@ non-production Supabase project. Local cross-layer tests use
 a simulated Auth provider, not Supabase's real API or deployed concurrency.
 
 Pending attempts may need individual owner review; the guardian-consent page
-is paginated and can complete a uniquely marked existing identity after rechecking guardian permission, but cannot create or delete an identity. Detachment does not delete
-the auth identity or revoke existing sessions; password reset and provider
-identity removal are not implemented. If a retry recovers an earlier identity,
+is paginated and can complete a uniquely marked existing identity after rechecking guardian permission. Detachment itself does not delete the auth identity or revoke existing sessions; migration 730 adds a separate owner-reviewed provider deletion path for eligible marked identities, not yet tested with Supabase. Password reset remains unimplemented. If a retry recovers an earlier identity,
 the original password remains in effect. The older general profile-management
 predicate still needs review on its other paths. Do not delete guardian verification
 machinery. No migration has been deployed as part of this work.
@@ -753,3 +751,17 @@ real Supabase validation remain necessary. No migration has been deployed.
 attempt still has its active child link before reporting an idempotent success. A
 delayed retry after removal is refused instead of falsely saying the child remains
 linked. This does not remove or revoke the provider identity.
+
+
+**Owner-reviewed Auth removal:** Migration 730 adds a private owner action for a
+verified marked, detached, exclusive child identity. A durable deletion authorization
+and an `auth.users` before-delete trigger recheck the identity and conflicting use
+in the deletion transaction. The server verifies the provider result and records
+current database absence, including after a lost reply; an uncertain result is not
+reported as success. This is locally tested with PGlite and a simulated provider,
+not a tested Supabase integration. The trigger's managed-schema permissions,
+full-schema concurrency, session behavior and provider cascade effects must be
+verified in a non-production Supabase project before use. Legacy, changed or
+shared identities still need individual review; late identities may reappear.
+Private deletion authorization, recovery and session-denial records remain personal
+data, and no safe automatic cleanup is implemented. No migration has been deployed.

@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-279 files in `supabase/migrations/`, applied in filename order — the 14-digit
+280 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -170,7 +170,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 279 files from the top and fail on the
+it, and `db push` would then re-apply all 280 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -447,7 +447,7 @@ first; the app will not start without them.
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | nothing loads: no catalogue, no sign-in |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | the browser cannot reach the database; every screen is empty or refuses |
-| `SUPABASE_SERVICE_ROLE_KEY` | payment webhook and trusted child-login creation — it bypasses every policy in the schema, so it is server-only and never prefixed `NEXT_PUBLIC_` |
+| `SUPABASE_SERVICE_ROLE_KEY` | payment webhook and trusted child-login creation and owner-reviewed removal — it bypasses every policy in the schema, so it is server-only and never prefixed `NEXT_PUBLIC_` |
 | `NEXT_PUBLIC_SITE_URL` | certificates print a path instead of a full verification address |
 
 Then, in the order you get to them:
@@ -1055,16 +1055,14 @@ accounts are unaffected. Before deploying to production, configure the server-on
 Supabase service role key and test creation and recovery in a non-production
 project. The admin dashboard controls the flag. Local
 tests use a simulated Auth provider. Pending attempts may require owner review;
-the named owner can complete an existing uniquely marked identity, but the queue cannot create or remove an identity. Detaching a child learner does not
+the named owner can complete an existing uniquely marked identity. Migration 730 also adds an owner-reviewed deletion action for an eligible detached marked identity, not yet verified with real Supabase. Detaching a child learner does not
 remove the provider identity or revoke sessions, and password reset is not yet
 implemented. These migrations have not been deployed by this repository change.
 
 
 Migration 670 makes a private identity-removal task when a child login is detached
 and backfills disabled child-login rows still present. The safeguarding owner can
-see it on the guardian-consent page. Identity removal itself is still manual:
-verify the exact user in Supabase Authentication, especially for older unmarked
-identities. The record button checks Auth-table absence, not session revocation or
+see it on the guardian-consent page. Migration 730 adds an owner-reviewed provider deletion action for eligible marked identities; other cases remain manual. Verify the exact user in Supabase Authentication, especially for older unmarked identities. The record button checks Auth-table absence, not session revocation or
 provider copies. A matching identity that reappears puts the task back in the list.
 Do not assume completed erasure: reconciliation, in-flight-provider coordination,
 cleanup of identifying attempt/task data and session revocation remain unfinished.
@@ -1089,3 +1087,15 @@ identity or revoke provider sessions, cover every endpoint, terminate in-flight
 transactions or invalidate issued signed URLs. IDs remain in a private deny list;
 do not remove them without a tested expiry/revocation design. Verify real Supabase,
 deployed-schema concurrency and paths not using `current_user_id()`.
+
+
+Migration 730 adds an owner-reviewed provider-deletion path for a detached,
+verified marked child identity. Before an Auth deletion the database trigger
+rechecks the marker, address, other account uses and app records that would
+cascade. The dashboard can request the deletion through the server-only service
+client and records current Auth absence only after a database check. Legacy,
+changed or shared identities require individual review. This path is not yet
+verified against real Supabase, its managed Auth schema or deployed concurrency;
+do not claim provider sessions, issued JWTs or external copies are gone. A late
+creation with the marker remains a recovery case, and the private authorization,
+deny and recovery records are personal data without automated cleanup.

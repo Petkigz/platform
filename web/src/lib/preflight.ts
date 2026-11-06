@@ -342,7 +342,7 @@ export function runPreflight(env: Record<string, string | undefined>): Preflight
       subsystem: 'database',
       step: '1',
       stepTitle: 'The database',
-      message: 'SUPABASE_SERVICE_ROLE_KEY is missing or a placeholder. Child-login creation and the payment webhook cannot use their server-side service client. Keep this key private; a configured value still needs provider testing.',
+      message: 'SUPABASE_SERVICE_ROLE_KEY is missing or a placeholder. Child-login creation, owner-reviewed identity removal and the payment webhook cannot use their server-side service client. Keep this key private; a configured value still needs provider testing.',
     });
   }
 

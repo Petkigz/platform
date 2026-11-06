@@ -17,6 +17,7 @@
 
 import { handleChildLoginCreation } from '../../web/src/lib/child-login-handler.ts';
 import { childLoginCreatePorts } from '../../web/src/lib/child-login-ports.ts';
+import { removeTrustedChildAuth } from '../../web/src/lib/child-login-auth-removal.ts';
 
 export async function run(ctx) {
   const {
@@ -540,14 +541,55 @@ export async function run(ctx) {
       assert(reapplied.blocked, 'owner could not block a previously detached trusted identity');
       await rejects(() => asActor(user, 'select public.current_user_id()'), /database_session_blocked/);
 
+      await rejects(() => asActor(otherAdmin, 'select public.authorize_child_login_auth_deletion($1)', [task.task_id]), /not_allowed/);
+      const authorized = (await asActor(admin, 'select public.authorize_child_login_auth_deletion($1) result', [task.task_id])).rows[0].result;
+      assert(authorized.identityId === user && authorized.attemptId === attempt && authorized.email === 'queue.child@learners.ayahspring.com', 'wrong deletion target authorized');
+      // Recheck in the Auth deletion transaction, not just before the HTTP call.
+      await q("update auth.users set raw_app_meta_data='{}'::jsonb where id=$1", [user]);
+      await rejects(() => q('delete from auth.users where id=$1', [user]), /identity_changed/);
+      await q("update auth.users set raw_app_meta_data=jsonb_build_object('ayahspring_child_attempt',$2::text) where id=$1", [user,attempt]);
+      await ctx.grantRole(user, 'instructor', admin);
+      await rejects(() => q('delete from auth.users where id=$1', [user]), /identity_needs_review/);
+      await q(`update public.user_role_assignments set revoked_at=now(),revocation_reason='test cleanup'
+        where user_id=$1 and role_id=(select id from public.roles where code='instructor')`, [user]);
+      const membership = (await q(`insert into public.family_memberships(family_id,user_id,membership_type,status,joined_at)
+        values($1,$2,'guardian','active',now()) returning id`, [theirs.familyId,user])).rows[0].id;
+      await rejects(() => q('delete from auth.users where id=$1', [user]), /identity_needs_review/);
+      await q('delete from public.family_memberships where id=$1', [membership]);
+      await q('insert into public.user_contact_details(user_id) values($1)', [user]);
+      await rejects(() => q('delete from auth.users where id=$1', [user]), /identity_needs_review/);
+      await q('delete from public.user_contact_details where user_id=$1', [user]);
+      const merge = (await q('insert into public.account_merge_requests(duplicate_user_id,target_user_id) values($1,$2) returning id', [user,guardian])).rows[0].id;
+      await rejects(() => q('delete from auth.users where id=$1', [user]), /identity_needs_review/);
+      await q('delete from public.account_merge_requests where id=$1', [merge]);
+
       await rejects(() => asActor(guardian, 'select public.record_child_login_identity_removed($1)', [task.task_id]), /not_allowed/);
       await rejects(() => asActor(admin, 'select public.record_child_login_identity_removed($1)', [task.task_id]), /identity_still_exists/);
-      await q('delete from auth.users where id=$1', [user]);
-      const gone = (await asActor(admin, 'select * from public.child_login_removal_queue($1)', [50])).rows.find(r => r.task_id === task.task_id);
-      assert(gone && !gone.identity_present && !gone.marker_matches, 'identity absence not reflected');
-      const recorded = (await asActor(admin, 'select public.record_child_login_identity_removed($1) result', [task.task_id])).rows[0].result;
+      const providerCalls = [];
+      const outcome = await removeTrustedChildAuth({
+        async authorize(id) {
+          return (await asActor(admin, 'select public.authorize_child_login_auth_deletion($1) result', [id])).rows[0].result;
+        },
+        async lookup(id) {
+          const row = (await q("select id,email,raw_app_meta_data->>'ayahspring_child_attempt' marker from auth.users where id=$1", [id])).rows[0];
+          if (!row) throw new Error('missing provider identity');
+          return row;
+        },
+        async remove(id) {
+          providerCalls.push(id);
+          await q('delete from auth.users where id=$1', [id]);
+          throw new Error('simulated lost provider reply');
+        },
+        async recordAbsence(id) {
+          const result = (await asActor(admin, 'select public.record_child_login_identity_removed($1) result', [id])).rows[0].result;
+          if (!result.recorded) throw new Error('not recorded');
+        },
+      }, task.task_id);
+      assert(outcome.ok && providerCalls.length === 1 && providerCalls[0] === user, 'end-to-end marked deletion or lost-reply recovery failed');
+      assert(!(await scalar('select id from auth.users where id=$1', [user])), 'Auth identity remains');
+      assert((await scalar('select recorded_at from public.child_login_removal_tasks where id=$1', [task.task_id])).recorded_at, 'identity absence was not recorded');
       const recordedAgain = (await asActor(admin, 'select public.record_child_login_identity_removed($1) result', [task.task_id])).rows[0].result;
-      assert(recorded.recorded && !recorded.alreadyRecorded && recordedAgain.alreadyRecorded, 'recording is not idempotent');
+      assert(recordedAgain.recorded && recordedAgain.alreadyRecorded, 'recording is not idempotent');
       const reappeared = await newUser('queue.child@learners.ayahspring.com');
       await q("update auth.users set raw_app_meta_data=jsonb_build_object('ayahspring_child_attempt',$2::text) where id=$1", [reappeared,attempt]);
       const reopened = (await asActor(admin, 'select * from public.child_login_removal_queue($1)', [50])).rows.find(r => r.task_id === task.task_id);
