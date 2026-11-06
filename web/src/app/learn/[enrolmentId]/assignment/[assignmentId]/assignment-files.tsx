@@ -11,7 +11,8 @@ import {
   confirmCourseworkFile,
   describeCourseworkFile,
   describeFileSize,
-  parseCourseworkFiles,
+  parseCourseworkFilesStrict,
+  removeCourseworkFile,
   PHASE_LABEL,
   uploadCourseworkFile,
   validateCourseworkFile,
@@ -50,15 +51,15 @@ export function AssignmentFiles({
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const [files, setFiles] = useState(() => parseCourseworkFiles(initialFiles));
+  const [files, setFiles] = useState(() => parseCourseworkFilesStrict(initialFiles));
   const [busy, setBusy] = useState(false);
   const [phase, setPhase] = useState<UploadPhase | null>(null);
   const [percent, setPercent] = useState(0);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
 
-  useEffect(() => { setFiles(parseCourseworkFiles(initialFiles)); }, [initialFiles]);
-  const remaining = COURSEWORK_MAX_FILES - files.length;
+  useEffect(() => { setFiles(parseCourseworkFilesStrict(initialFiles)); }, [initialFiles]);
+  const remaining = files === null ? null : COURSEWORK_MAX_FILES - files.length;
 
   async function choose(chosen: File | null) {
     if (!chosen) return;
@@ -69,7 +70,7 @@ export function AssignmentFiles({
     // metered data should not learn the cap after sending the file.
     const check = validateCourseworkFile(
       { name: chosen.name, size: chosen.size, type: chosen.type },
-      files.length,
+      files?.length ?? 0,
     );
     if (!check.ok) {
       setError(check.message);
@@ -104,10 +105,10 @@ export function AssignmentFiles({
       const refreshed = await fetch(`/api/assignments?submission=${target}`)
         .then((response) => (response.ok ? response.json() : null))
         .catch(() => null);
-      const parsed = parseCourseworkFiles(
+      const parsed = parseCourseworkFilesStrict(
         (refreshed as { files?: unknown } | null)?.files ?? null,
       );
-      if (parsed.length > 0) setFiles(parsed);
+      if (parsed !== null) setFiles(parsed);
       setNotice(
         `File attached. ${describeFileSize(chosen.size)} — access remains subject to permissions and review.`,
       );
@@ -138,20 +139,14 @@ export function AssignmentFiles({
     setError('');
     setNotice('');
     try {
-      const response = await fetch('/api/assignments', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ action: 'remove_file', submissionId, mediaAssetId: assetId }),
-      });
-      const result = (await response.json().catch(() => ({}))) as { ok?: boolean; message?: string };
-      if (!response.ok || !result.ok) {
-        throw new Error(result.message ?? 'That file could not be removed.');
+      const result = await removeCourseworkFile(submissionId, assetId);
+      if (result.ok) {
+        setFiles((previous) => previous?.filter((file) => file.assetId !== assetId) ?? null);
+        setNotice('Removed from this hand-in. The stored object is not deleted by this action.');
+      } else {
+        setError(result.message);
       }
-      setFiles((previous) => previous.filter((file) => file.assetId !== assetId));
-      setNotice('Removed. The file is no longer part of your hand-in.');
       router.refresh();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'That file could not be removed.');
     } finally {
       setBusy(false);
     }
@@ -162,11 +157,12 @@ export function AssignmentFiles({
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
         <h3 style={{ margin: 0 }}>Files</h3>
         <span className="muted" style={{ fontSize: '.85rem' }}>
-          {files.length} of {COURSEWORK_MAX_FILES}
+          {files === null ? 'File count unavailable' : `${files.length} of ${COURSEWORK_MAX_FILES}`}
         </span>
       </div>
 
-      {files.length > 0 && (
+      {files === null && <p className="notice warn">The file list could not be checked. Refresh before relying on it; do not assume there are no files.</p>}
+      {files !== null && files.length > 0 && (
         <ul className="lessons">
           {files.map((file) => (
             <li key={file.assetId}>
@@ -204,15 +200,15 @@ export function AssignmentFiles({
         <div style={{ display: 'grid', gap: '.4rem' }}>
           <label htmlFor="assignment-file" className="muted" style={{ fontSize: '.85rem' }}>
             A photo of each page, a PDF, or a recording — up to{' '}
-            {describeFileSize(COURSEWORK_MAX_BYTES)} each, {remaining} more allowed on this hand-in.
+            {describeFileSize(COURSEWORK_MAX_BYTES)} each{remaining === null ? '. The current file count is unavailable.' : `, ${remaining} more allowed on this hand-in.`}
           </label>
-          <p className="muted">If an upload is still arriving, the original uploader can check it again without sending it twice.</p>
+          <p className="muted">For a pending upload, the original uploader can check whether the file arrived without sending it twice. If it never arrived, the pending entry may need individual review.</p>
           <input
             ref={inputRef}
             id="assignment-file"
             type="file"
             accept={COURSEWORK_ACCEPT}
-            disabled={busy || remaining <= 0}
+            disabled={busy || (remaining !== null && remaining <= 0)}
             onChange={(event) => void choose(event.target.files?.[0] ?? null)}
           />
           {busy && phase && (
@@ -224,7 +220,7 @@ export function AssignmentFiles({
         </div>
       )}
 
-      {locked && files.length === 0 && (
+      {locked && files !== null && files.length === 0 && (
         <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>
           No files were handed in with this work.
         </p>

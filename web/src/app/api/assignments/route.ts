@@ -75,7 +75,8 @@ export async function GET(request: Request) {
   });
   if (error) return fail(error.message, 403);
 
-  return NextResponse.json({ ok: true, files: Array.isArray(data) ? data : [] });
+  if (!Array.isArray(data)) return fail('The file list could not be loaded. Please refresh and check again.', 502);
+  return NextResponse.json({ ok: true, files: data }, { headers: { 'cache-control': 'private, no-store' } });
 }
 
 export async function POST(request: Request) {

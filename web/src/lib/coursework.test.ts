@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { readFileSync } from 'node:fs';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import {
@@ -13,6 +14,8 @@ import {
   describeFileKind,
   describeFileSize,
   parseCourseworkFiles,
+  parseCourseworkFilesStrict,
+  removeCourseworkFile,
   PHASE_LABEL,
   uploadCourseworkFile,
   validateCourseworkFile,
@@ -95,7 +98,7 @@ test('each file line says whether it has arrived', () => {
     reviewedAt: null,
   };
   assert.equal(describeCourseworkFile(base), 'image · 1.7 MiB');
-  assert.match(describeCourseworkFile({ ...base, status: 'pending' }), /still arriving/);
+  assert.match(describeCourseworkFile({ ...base, status: 'pending' }), /arrival not confirmed/);
   // A quarantined file is said out loud rather than rendered as a working link.
   assert.match(describeCourseworkFile({ ...base, status: 'quarantined' }), /held for review/);
 });
@@ -248,7 +251,8 @@ test('a refusal from the database is passed through in its own words', async () 
   });
   assert.equal(outcome.ok, false);
   assert.ok(!outcome.ok);
-  assert.equal(outcome.message, 'an assignment file cannot exceed 25 MiB');
+  assert.match(outcome.message, /an assignment file cannot exceed 25 MiB/);
+  assert.match(outcome.message, /may have been registered/);
   assert.equal(calls.length, 1);
 });
 
@@ -280,4 +284,63 @@ test('a lost confirmation response is uncertain and directs the learner to refre
 test('confirmation rejects a response naming a different file', async () => {
   const result = await confirmCourseworkFile('a1', async () => new Response(JSON.stringify({ ok: true, data: { assetId: 'a2', attachmentId: 'att' } }), { status: 200 }));
   assert.equal(result.ok, false);
+});
+
+
+test('a missing or malformed file list is unknown rather than empty', () => {
+  const entry = { assetId:'2b1c7a9e-0000-4000-8000-000000000001', attachmentId:null,
+    name:null, mimeType:'image/png', byteSize:'42', status:'pending', uploadedAt:'2026-11-02T09:15:00Z' };
+  assert.equal(parseCourseworkFilesStrict([entry])?.length, 1);
+  assert.deepEqual(parseCourseworkFilesStrict([]), []);
+  for (const value of [null, {}, [null], [{...entry, assetId:''}], [{...entry, status:'other'}],
+    [{...entry, byteSize:'-3'}], [{...entry, uploadedAt:'bad'}], [entry, entry]]) {
+    assert.equal(parseCourseworkFilesStrict(value), null);
+  }
+  assert.equal(parseCourseworkFilesStrict([{...entry, byteSize:'0', status:'quarantined'}])?.length, 1);
+  const page = readFileSync(new URL('../app/learn/[enrolmentId]/assignment/[assignmentId]/page.tsx', import.meta.url), 'utf8');
+  const component = readFileSync(new URL('../app/learn/[enrolmentId]/assignment/[assignmentId]/assignment-files.tsx', import.meta.url), 'utf8');
+  const api = readFileSync(new URL('../app/api/assignments/route.ts', import.meta.url), 'utf8');
+  assert.match(page, /files=\{fileResult.error \? null : fileResult.data\}/);
+  assert.match(component, /file list could not be checked/i);
+  assert.match(component, /locked && files !== null && files.length === 0/);
+  assert.match(api, /if \(!Array.isArray\(data\)\) return fail/);
+});
+
+test('a lost or malformed removal response never claims that the file stayed put', async () => {
+  const lost = await removeCourseworkFile('s', 'a', async () => { throw new Error('lost reply'); });
+  assert.equal(lost.ok, false);
+  if (!lost.ok) assert.match(lost.message, /may already have been removed/);
+  for (const response of [new Response('broken', {status:200}),
+    new Response(JSON.stringify({ok:false, message:'The request could not be completed.'}), {status:503}),
+    new Response(JSON.stringify({ok:true}), {status:500})]) {
+    const result = await removeCourseworkFile('s', 'a', async () => response);
+    assert.equal(result.ok, false);
+    if (!result.ok) assert.match(result.message, /check the file list/);
+  }
+  const good = await removeCourseworkFile('s', 'a', async (_url, init) => {
+    assert.deepEqual(JSON.parse(String(init?.body)), {action:'remove_file',submissionId:'s',mediaAssetId:'a'});
+    return new Response(JSON.stringify({ok:true}), {status:200});
+  });
+  assert.deepEqual(good, {ok:true});
+});
+
+
+test('uncertain registration and confirmation tell the learner to check before retrying', async () => {
+  const lost = await uploadCourseworkFile(blobFile(5), { submissionId:'sub', fetchImpl:async () => { throw new Error('lost'); } });
+  assert.equal(lost.ok, false);
+  if (!lost.ok) assert.match(lost.message, /may have been registered/);
+  const bad = await confirmCourseworkFile('a1', async () => new Response(JSON.stringify({ok:false,message:'The server could not confirm the result.'}), {status:500}));
+  assert.equal(bad.ok, false);
+  if (!bad.ok) assert.match(bad.message, /may already be attached/);
+});
+
+
+test('marked work still shows its files without making them editable', () => {
+  const work = readFileSync(new URL('../app/learn/[enrolmentId]/assignment/[assignmentId]/assignment-work.tsx', import.meta.url), 'utf8');
+  const files = work.indexOf('<AssignmentFiles');
+  const textSectionEnd = work.indexOf('      <AssignmentFiles');
+  const gradedStart = work.indexOf("{status !== 'graded' && (");
+  assert.ok(files > gradedStart && textSectionEnd > gradedStart);
+  assert.match(work.slice(gradedStart, textSectionEnd), /<\/>\s*\)\}/);
+  assert.match(work, /const locked = status === 'submitted' \|\| status === 'graded'/);
 });

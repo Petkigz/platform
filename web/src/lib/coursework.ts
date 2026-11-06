@@ -175,11 +175,50 @@ export function parseCourseworkFiles(value: unknown): CourseworkFile[] {
   return files;
 }
 
+/** A failed or incomplete list is unknown, never an empty hand-in. */
+export function parseCourseworkFilesStrict(value: unknown): CourseworkFile[] | null {
+  if (!Array.isArray(value)) return null;
+  const ids = new Set<string>();
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  for (const item of value) {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return null;
+    const r = item as Record<string, unknown>;
+    if (typeof r.assetId !== 'string' || !uuid.test(r.assetId) || ids.has(r.assetId.toLowerCase()) ||
+        !(r.attachmentId === null || (typeof r.attachmentId === 'string' && uuid.test(r.attachmentId))) ||
+        !(r.name === null || typeof r.name === 'string') || typeof r.mimeType !== 'string' || !r.mimeType ||
+        typeof r.byteSize !== 'string' || !/^(0|[1-9][0-9]*)$/.test(r.byteSize) ||
+        typeof r.status !== 'string' || !['pending', 'available', 'quarantined', 'deleted'].includes(r.status) ||
+        typeof r.uploadedAt !== 'string' || !Number.isFinite(Date.parse(r.uploadedAt))) return null;
+    ids.add(r.assetId.toLowerCase());
+  }
+  return parseCourseworkFiles(value);
+}
+
+export async function removeCourseworkFile(
+  submissionId: string, assetId: string, doFetch: typeof fetch = fetch,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const unknown = 'The removal could not be confirmed. Refresh and check the file list before trying again; it may already have been removed.';
+  try {
+    const response = await doFetch('/api/assignments', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ action: 'remove_file', submissionId, mediaAssetId: assetId }),
+    });
+    const body = await response.json().catch(() => null) as { ok?: unknown; message?: unknown } | null;
+    if (response.ok && body?.ok === true) return { ok: true };
+    if (!response.ok && typeof body?.message === 'string' && body.message.trim()) {
+      return { ok: false, message: `${body.message} ${unknown}` };
+    }
+    return { ok: false, message: unknown };
+  } catch {
+    return { ok: false, message: unknown };
+  }
+}
+
 /** What one file's line says: it arrived, it is on its way, or it cannot be read. */
 export function describeCourseworkFile(file: CourseworkFile): string {
   const size = describeFileSize(file.byteSize);
   const kind = describeFileKind(file.mimeType);
-  if (file.status === 'pending') return `${kind} · ${size} · still arriving`;
+  if (file.status === 'pending') return `${kind} · ${size} · upload pending; arrival not confirmed`;
   if (file.status === 'quarantined') return `${kind} · ${size} · held for review`;
   if (file.status !== 'available') return `${kind} · ${size} · ${file.status}`;
   return `${kind} · ${size}`;
@@ -255,27 +294,30 @@ export async function uploadCourseworkFile(file: File, options: UploadOptions): 
   }
 
   progress('registering', 0);
-  const registered = await doFetch('/api/media', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      action: 'request_coursework_upload',
-      submissionId: options.submissionId,
-      displayName: file.name.slice(0, 200),
-      mimeType: file.type,
-      byteSize: file.size,
-      checksum,
-    }),
-  });
+  let registered: Response;
+  try {
+    registered = await doFetch('/api/media', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        action: 'request_coursework_upload',
+        submissionId: options.submissionId,
+        displayName: file.name.slice(0, 200),
+        mimeType: file.type,
+        byteSize: file.size,
+        checksum,
+      }),
+    });
+  } catch {
+    return { ok: false, message: 'The upload request could not be confirmed. Refresh and check the file list before trying again; an upload may have been registered.' };
+  }
   const registeredBody = await json(registered);
   const registeredData = (registeredBody.data ?? {}) as Record<string, unknown>;
   if (!registered.ok || registeredBody.ok !== true) {
     return {
       ok: false,
       message:
-        typeof registeredBody.message === 'string'
-          ? registeredBody.message
-          : 'That file could not be started. Try again in a moment.',
+        `${typeof registeredBody.message === 'string' ? registeredBody.message : 'The upload request could not be confirmed.'} Refresh and check the file list before trying again; an upload may have been registered.`,
     };
   }
 
@@ -283,7 +325,7 @@ export async function uploadCourseworkFile(file: File, options: UploadOptions): 
   const uploadUrl = typeof registeredData.uploadUrl === 'string' ? registeredData.uploadUrl : '';
   const requiredHeaders = (registeredData.requiredHeaders ?? {}) as Record<string, string>;
   if (!assetId || !uploadUrl) {
-    return { ok: false, message: 'The upload could not be started. Storage may not be configured.' };
+    return { ok: false, message: 'The upload response was incomplete. Refresh and check the file list before trying again; an upload may have been registered.' };
   }
 
   progress('uploading', 0);
@@ -319,11 +361,11 @@ export async function confirmCourseworkFile(assetId: string, doFetch: typeof fet
     const body = await json(response);
     if (!response.ok || body.ok !== true) return {
       ok: false,
-      message: typeof body.message === 'string' ? body.message : 'The file could not be confirmed. Refresh the file list before trying again.',
+      message: `${typeof body.message === 'string' ? body.message : 'The file could not be confirmed.'} Refresh and check the file list before trying again; the file may already be attached.`,
     };
     const data = (body.data ?? {}) as Record<string, unknown>;
     if (data.assetId !== assetId || typeof data.attachmentId !== 'string' || !data.attachmentId.trim()) return {
-      ok: false, message: 'The confirmation response was incomplete. Refresh the file list before trying again.',
+      ok: false, message: 'The confirmation response was incomplete. Refresh the file list before trying again; the file may already be attached.',
     };
     return { ok: true, assetId, attachmentId: data.attachmentId };
   } catch {
@@ -337,10 +379,9 @@ export async function confirmCourseworkFile(assetId: string, doFetch: typeof fet
  * Not a storage URL: `/api/media/open` re-decides permission on every request
  * against `may_watch_master()` — the learner, a current verified guardian with
  * progress access, the marker while attached, or the named safeguarding owner —
- * and then redirects to a URL that expires in fifteen
- * minutes. A storage address in the page would be a bearer token sitting in the
- * history of every device that ever opened it, which is a worse thing to leave
- * behind for a child's homework than for a lesson recording.
+ * and then redirects to a bearer URL that expires in fifteen minutes. That URL
+ * can appear in browser history and can remain usable until expiry even if access
+ * changes. Authorised readers may also save or copy what they open.
  */
 export function courseworkFileHref(assetId: string): string {
   return `/api/media/open?asset=${encodeURIComponent(assetId)}`;

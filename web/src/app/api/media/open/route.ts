@@ -23,8 +23,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-
  *     `master_preview_target()`. Nothing is decided here; this route only turns a
  *     yes into a redirect.
  *   * **The address is signed, not stored.** It expires in fifteen minutes, so a
- *     link copied out of the address bar does not outlive the conversation it was
- *     for — which matters more for a child's homework than for a lesson recording.
+ *     link can remain usable until expiry even after access changes. It may also
+ *     appear in browser history. A signed link cannot prevent copying or saving.
  *
  * A refusal and a missing row are the same 404 on purpose: distinguishing them
  * would tell a caller which uploads are real.

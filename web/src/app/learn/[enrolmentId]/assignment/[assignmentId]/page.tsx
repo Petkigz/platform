@@ -70,9 +70,9 @@ export default async function AssignmentPage({
   // uploader-or-staff. This function asks on the reader's behalf and returns no
   // object coordinates — opening a file still goes through the route that
   // re-checks `may_watch_master()`.
-  const { data: fileRows } = submission
+  const fileResult = submission
     ? await supabase.rpc('assignment_submission_files', { p_submission_id: submission.id })
-    : { data: [] };
+    : { data: [], error: null };
   // Marked versions the learner has already handed in. RLS keeps this to their
   // own submission, so it is safe to fetch without a second permission check.
   const history = submission
@@ -101,7 +101,7 @@ export default async function AssignmentPage({
         acceptLate={assignment.acceptLate}
         deadline={deadline?.toISOString() ?? null}
         initialSubmission={submission}
-        files={fileRows ?? []}
+        files={fileResult.error ? null : fileResult.data}
         revisionsAllowed={assignment.revisionsAllowed}
         revisionLimit={assignment.revisionLimit}
         history={history}

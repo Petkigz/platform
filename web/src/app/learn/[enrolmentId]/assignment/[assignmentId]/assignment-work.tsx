@@ -222,24 +222,25 @@ export function AssignmentWork({
             {status === 'draft' && <span className="badge neutral">Draft saved</span>}
           </div>
 
-          <AssignmentFiles
-            submissionId={submissionId}
-            files={files}
-            locked={locked}
-            ensureDraft={async () => saveDraft()}
-          />
-
-          {!locked && (
-            <div className="row" style={{ gap: '.5rem' }}>
-              <button type="button" className="btn secondary" disabled={busy} onClick={saveDraft}>
-                {busy ? 'Saving…' : 'Save draft'}
-              </button>
-              <button type="button" className="btn" disabled={busy || (pastDue && !acceptLate)} onClick={submit}>
-                {busy ? 'Submitting…' : revisionNumber > 1 ? 'Submit revision' : 'Submit assignment'}
-              </button>
-            </div>
-          )}
         </>
+      )}
+
+      <AssignmentFiles
+        submissionId={submissionId}
+        files={files}
+        locked={locked}
+        ensureDraft={async () => saveDraft()}
+      />
+
+      {!locked && (
+        <div className="row" style={{ gap: '.5rem' }}>
+          <button type="button" className="btn secondary" disabled={busy} onClick={saveDraft}>
+            {busy ? 'Saving…' : 'Save draft'}
+          </button>
+          <button type="button" className="btn" disabled={busy || (pastDue && !acceptLate)} onClick={submit}>
+            {busy ? 'Submitting…' : revisionNumber > 1 ? 'Submit revision' : 'Submit assignment'}
+          </button>
+        </div>
       )}
 
       {status === 'graded' && (
