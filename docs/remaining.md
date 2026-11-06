@@ -866,3 +866,10 @@ library moderation events remain visible to staff. The audit entries themselves
 are not removed; previous exposure and unattributed historical media cannot be
 undone or reliably classified. Other database definer paths and real deployments
 still require audit; storage credentials are outside this RLS boundary.
+
+**Storage queue access:** Migration 860 gives the safeguarding owner a
+keyset-paginated visual storage register, so held or unresolved entries on the
+first page no longer make later entries unreachable. Entries can move as holds
+or statements change; a fresh first-page review may be needed. The separate
+hold register remains limited to its first 100 entries and still needs paging.
+This does not delete or verify objects.

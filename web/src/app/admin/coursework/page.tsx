@@ -22,7 +22,7 @@ import {
   holdSentence,
   parseHoldCount,
   parseHolds,
-  parseStorageQueue,
+  parseStoragePage,
   storageSentence,
 } from '@/lib/coursework-retention';
 import { ReviewForm } from './review-form';
@@ -39,7 +39,7 @@ export const dynamic = 'force-dynamic';
 /** Owner-only review register, alongside separately authorized retention tools.
  * A recorded review is an attestation, not proof that a file was viewed.
  */
-export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ concern?: string; before?: string; beforeId?: string; endsAfter?: string; classEnd?: string; quarantineAfter?: string; quarantine?: string; concernAfter?: string; concernAfterId?: string; alert?: string; alertReview?: string; alertBefore?: string }> }) {
+export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ concern?: string; before?: string; beforeId?: string; endsAfter?: string; classEnd?: string; quarantineAfter?: string; quarantine?: string; concernAfter?: string; concernAfterId?: string; alert?: string; alertReview?: string; alertBefore?: string; storageAfter?: string; storageAfterId?: string }> }) {
   if (!isSupabaseConfigured()) redirect('/');
 
   const supabase = await createClient();
@@ -53,6 +53,9 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
 
   const params = await searchParams;
   const endsCursorValid = !params.endsAfter || /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(params.endsAfter);
+  const storageCursorValid = (!params.storageAfter && !params.storageAfterId) ||
+    (typeof params.storageAfter === 'string' && Number.isFinite(Date.parse(params.storageAfter)) &&
+      typeof params.storageAfterId === 'string' && isQuarantineCursor(params.storageAfterId));
   const [summaryResult, queueResult, holdsResult, holdCountResult, planResult, storageResult, missingEndsResult] =
     await Promise.all([
       supabase.rpc('coursework_review_summary'),
@@ -63,7 +66,7 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
       // The owner alone: this plan names what is about to be deleted, and the
       // storage queue carries a bucket key for every unwatchable object.
       supabase.rpc('coursework_retention_plan'),
-      supabase.rpc('coursework_bytes_awaiting', { p_limit: 50 }),
+      storageCursorValid ? supabase.rpc('coursework_bytes_awaiting_page', { p_after: params.storageAfter ?? null, p_after_id: params.storageAfterId ?? null, p_limit: 51 }) : Promise.resolve({ data: null, error: true }),
       endsCursorValid ? supabase.rpc('coursework_missing_class_ends', { p_limit: 100, p_after: params.endsAfter ?? null }) : Promise.resolve({ data: null, error: true }),
     ]);
 
@@ -126,8 +129,10 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
   const canSeeHolds = !holdsResult.error && !holdCountResult.error && Array.isArray(holdsResult.data);
   const holds = canSeeHolds ? parseHolds(holdsResult.data) : [];
   const holdCount = canSeeHolds ? parseHoldCount(holdCountResult.data) : null;
-  const canSeeStorage = !planResult.error && !storageResult.error && Array.isArray(storageResult.data);
-  const storage = canSeeStorage ? parseStorageQueue(storageResult.data) : [];
+  const storageRows = !planResult.error && !storageResult.error ? parseStoragePage(storageResult.data) : null;
+  const canSeeStorage = storageRows !== null;
+  const storage = storageRows?.slice(0,50) ?? [];
+  const storageNext = storageRows && storageRows.length > 50 ? storageRows[49] : null;
   const missingCount = planResult.error ? null : missingClassEndCount(planResult.data);
   const missingEnds = missingEndsResult.error ? null : parseMissingClassEnds(missingEndsResult.data);
 
@@ -450,14 +455,14 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
         <p className="notice warn">The storage register is available only to the configured safeguarding owner, or could not be loaded. Do not assume it is empty.</p>
       )}
       {canSeeStorage && (
-        <section className="card" style={{ marginBlockStart: '1rem' }}>
+        <section id="storage-queue" className="card" style={{ marginBlockStart: '1rem' }}>
           <div className="outline-h">
             <h2>Handed-in files waiting in storage</h2>
           </div>
           <p className="muted">{PURGE_NOTE}</p>
           {storage.length === 0 ? (
             <p className="muted">
-              No objects were returned. Any recorded deletions are statements by the
+              No entries were returned on this page. Any recorded deletions are statements by the
               owner, not independent proof that storage bytes are gone.
             </p>
           ) : (
@@ -483,6 +488,9 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
               ))}
             </ul>
           )}
+          {params.storageAfter && <p><Link href="/admin/coursework#storage-queue">First page of storage entries</Link></p>}
+          {storageNext && <p><Link href={`/admin/coursework?${new URLSearchParams({ storageAfter: storageNext.sortAt, storageAfterId: storageNext.assetId })}#storage-queue`}>More storage entries</Link></p>}
+          <p className="muted">Entries can move between pages when a hold or deletion statement changes. Return to the first page to check again.</p>
         </section>
       )}
 

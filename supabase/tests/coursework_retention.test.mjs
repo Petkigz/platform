@@ -491,6 +491,30 @@ export async function run(ctx) {
     assert(listed.master_bucket && listed.master_key, 'the queue gives no key to delete');
   });
 
+  await test('the owner can page past 120 storage entries with equal sort times', async () => {
+    await q('begin');
+    try {
+      const seeded = (await q(`insert into public.media_assets
+        (storage_backend,master_bucket,master_key,checksum,mime_type,byte_size,status,uploaded_by,deleted_at,purge_due_at,purpose)
+        select 'r2','masters','paging/'||gen_random_uuid(),md5(gen_random_uuid()::text)||md5(gen_random_uuid()::text),
+          'image/jpeg',100,'deleted',$1,now(),'1900-01-01 00:00:00.123456+00'::timestamptz,'coursework'
+        from generate_series(1,120) returning id`, [owner])).rows.map(r => r.id);
+      await q("select set_config('request.jwt.claims',$1,true)", [JSON.stringify({sub:owner,role:'authenticated'})]);
+      await q('set local role authenticated');
+      const seen = []; let after = null, afterId = null;
+      for (let page=0; page<5; page++) {
+        const rows = (await q('select *,sort_at::text t from public.coursework_bytes_awaiting_page($1,$2,50)', [after,afterId])).rows;
+        seen.push(...rows.map(r => r.asset_id));
+        if (rows.length < 50) break;
+        after=rows.at(-1).t; afterId=rows.at(-1).asset_id;
+      }
+      assert(seeded.every(id => seen.includes(id)) && new Set(seen).size===seen.length, 'storage pages skipped or duplicated entries');
+    } finally { await q('rollback'); }
+    await refuses(/coursework:not_allowed/, () => call(governance,'select * from public.coursework_bytes_awaiting_page(null,null,50)'));
+    await refuses(/both storage cursor values/, () => call(owner,'select * from public.coursework_bytes_awaiting_page(now(),null,50)'));
+    await refuses(/page limit/, () => call(owner,'select * from public.coursework_bytes_awaiting_page(null,null,101)'));
+  });
+
   await test('recording a deletion refuses while readable, then records an attestation', async () => {
     const row = await handedIn();
     await refuses(/still readable/, () =>

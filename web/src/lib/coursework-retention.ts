@@ -95,6 +95,24 @@ export function parseStorageQueue(data: unknown): StorageRow[] {
   });
 }
 
+export type StoragePageRow = StorageRow & { sortAt: string };
+export function parseStoragePage(data: unknown): StoragePageRow[] | null {
+  if (!Array.isArray(data)) return null;
+  const result: StoragePageRow[] = [];
+  for (const item of data) {
+    if (!item || typeof item !== 'object') return null;
+    const r = item as Record<string, unknown>;
+    if (typeof r.asset_id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(r.asset_id) ||
+        typeof r.master_bucket !== 'string' || typeof r.master_key !== 'string' || typeof r.display_name !== 'string' ||
+        typeof r.tombstoned_at !== 'string' || !Number.isFinite(Date.parse(r.tombstoned_at)) ||
+        typeof r.sort_at !== 'string' || !Number.isFinite(Date.parse(r.sort_at)) ||
+        !(r.purge_due_at === null || (typeof r.purge_due_at === 'string' && Number.isFinite(Date.parse(r.purge_due_at))))) return null;
+    result.push({ assetId:r.asset_id, bucket:r.master_bucket, key:r.master_key, displayName:r.display_name,
+      tombstonedAt:r.tombstoned_at, purgeDueAt:r.purge_due_at, sortAt:r.sort_at });
+  }
+  return result;
+}
+
 /** The sentence above the holds list. */
 export const HOLDS_NOTE =
   'A hold needs a written reason. Scheduled cleanup locks and rechecks the hold, '

@@ -14,6 +14,7 @@ import {
   parseHoldCount,
   parseHolds,
   parseStorageQueue,
+  parseStoragePage,
   postRetentionAction,
   storageSentence,
 } from './coursework-retention.ts';
@@ -154,4 +155,14 @@ test('interrupted or malformed retention responses do not claim the action faile
     globalThis.fetch = async () => new Response(JSON.stringify({ok:true}), {status:200});
     assert.deepEqual(await postRetentionAction({action:'hold',assetId:hold.asset_id}), {ok:true});
   } finally { globalThis.fetch = original; }
+});
+
+
+test('storage pages preserve precise cursors and reject malformed responses', () => {
+  const timestamp = '2026-11-01T10:00:00.123456+00:00';
+  const data = [{asset_id:hold.asset_id,master_bucket:'masters',master_key:'key',display_name:'File',tombstoned_at:timestamp,purge_due_at:null,sort_at:timestamp}];
+  assert.equal(parseStoragePage(data)?.[0]?.sortAt, timestamp);
+  assert.equal(parseStoragePage(null), null);
+  assert.equal(parseStoragePage([{...data[0],sort_at:'bad'}]), null);
+  assert.deepEqual(parseStoragePage([]), []);
 });
