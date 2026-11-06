@@ -367,6 +367,10 @@ export async function run(ctx) {
     await q('select public.bootstrap_safeguarding_owner($1)', [admin]);
     try {
       const otherAdmin = await bootstrapAdmin(`quarantine-other-${++seq}@example.com`);
+      for (const actor of [admin, otherAdmin]) {
+        await refused(actor, 'select public.abandon_media_upload($1,$2,$3)', [pending.asset_id, 'upload-id', 'Check stalled upload'], /no media asset/i);
+      }
+      assert((await scalar("select count(*)::int n from public.governance_audit_events where action='media.upload_abandoned' and target_id=$1", [pending.asset_id])).n === 0, 'coursework metadata entered the shared audit');
       for (const id of [pending.asset_id, attached.asset_id, legacy.asset_id]) {
         await refused(otherAdmin, 'select public.quarantine_media_upload($1,$2)', [id, 'review needed'], /not found/i);
         assert((await scalar('select status from public.media_assets where id=$1', [id])).status !== 'quarantined', 'unrelated admin quarantined private coursework');
@@ -646,6 +650,10 @@ export async function run(ctx) {
     assert((await call(teacher, 'select public.may_play_rendition($1) as ok', [rendition])).ok === false);
     const staffStorage = (await asActor(admin, () => q('select * from public.media_storage_overview(1000)'))).rows;
     assert(!staffStorage.some(row => row.uploader_id === who.userId), 'legacy coursework appeared in staff storage overview');
+    const beforeAbandon = (await q("select count(*)::integer n from public.governance_audit_events where target_id=$1 and action='media.upload_abandoned'", [asset])).rows[0].n;
+    await refused(admin, 'select public.abandon_media_upload($1,$2,$3)', [asset, 'some-upload', 'Test cleanup'], /no media asset/i);
+    const afterAbandon = (await q("select count(*)::integer n from public.governance_audit_events where target_id=$1 and action='media.upload_abandoned'", [asset])).rows[0].n;
+    assert(beforeAbandon === afterAbandon, 'private coursework leaked into staff-visible multipart audit');
     await refused(who.userId, 'select public.delete_media_asset($1,$2)', [asset, 'Withdrawal'], /coursework cannot be withdrawn/i);
     assert((await call(admin, 'select public.delete_media_asset($1,$2) as changed', [asset, 'Withdrawal'])).changed === false,
       'unrelated staff learned that a historical coursework asset existed');

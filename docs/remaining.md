@@ -839,3 +839,13 @@ The dashboard labels the figures as only the library portion; actual upload
 allowances still count all applicable master files. Detached legacy files with
 no remaining attribution cannot be classified reliably. This change does not
 protect storage credentials, bucket listings, or establish actual object size.
+
+**Multipart cleanup:** Migration 820 prevents the direct library abandonment
+RPC from writing private coursework keys and sizes into the staff-visible
+shared governance audit, including for currently attached legacy files. It does
+not remove any historical audit entries. The staff unfinished-multipart bucket
+listing still exposes keys, upload IDs and timestamps without classifying every
+entry, including unrecognized objects: it needs a privacy-safe owner/library
+split without losing orphan cleanup. Database authorization also cannot hold an
+asset lock across a later external storage request; real concurrent attachment
+and abort behavior requires a separately designed guard and live verification.
