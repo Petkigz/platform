@@ -228,6 +228,39 @@ export async function run(ctx) {
     } finally { await q('rollback'); }
   });
 
+  await test('private coursework audit and quarantine counts are visible only to the safeguarding owner', async () => {
+    const row = await handedIn();
+    const otherAdmin = await bootstrapAdmin(`audit-other-${crypto.randomUUID()}@example.com`);
+    const concern = await review(teacher, row.asset, 'concern', 'Private safeguarding detail.');
+    await call(owner, 'select public.hold_coursework_file($1,$2)', [row.asset, 'A private hold reason']);
+    const counts = async actor => {
+      const s = (await call(actor, 'select public.security_signals(30) as s')).s;
+      return s.actions.find(item => item.action === 'media.upload_quarantined')?.events ?? 0;
+    };
+    const ownerBefore = await counts(owner), staffBefore = await counts(otherAdmin);
+    await call(owner, 'select public.quarantine_media_upload($1,$2)', [row.asset, 'A private quarantine reason']);
+    assert(await counts(owner) === ownerBefore + 1, 'owner lost the quarantine security signal');
+    assert(await counts(otherAdmin) === staffBefore, 'staff security signal leaked a private quarantine');
+    await call(owner, 'select public.acknowledge_safeguarding_concern($1)', [concern.id]);
+    const sql = `select action,detail from public.governance_audit_events
+      where (target_type='media_asset' and target_id=$1) or (target_type='coursework_file_review' and target_id=$2)`;
+    const visibleToOwner = (await asActor(owner, () => q(sql,[row.asset,concern.id]))).rows;
+    assert(visibleToOwner.some(e => e.action==='coursework.reviewed') &&
+      visibleToOwner.some(e => e.action==='coursework.held' && e.detail.reason==='A private hold reason') &&
+      visibleToOwner.some(e => e.action==='media.upload_quarantined') &&
+      visibleToOwner.some(e => e.action==='safeguarding.concern_acknowledged'), 'owner cannot audit private coursework events');
+    for (const actor of [otherAdmin,agent,teacher,row.guardian]) {
+      const rows = (await asActor(actor, () => q(sql,[row.asset,concern.id]))).rows;
+      assert(rows.length===0, 'an unrelated actor could read private coursework audit events');
+    }
+    const library = (await q(`insert into public.media_assets(storage_backend,master_bucket,master_key,checksum,mime_type,byte_size,status,uploaded_by)
+      values ('r2','masters',$1,$2,'audio/mpeg',100,'available',$3) returning id`,
+      [`library-audit/${crypto.randomUUID()}`,digest(),owner])).rows[0].id;
+    await call(otherAdmin,'select public.quarantine_media_upload($1,$2)',[library,'Ordinary library moderation']);
+    const libraryEvents = (await asActor(otherAdmin, () => q("select action from public.governance_audit_events where target_id=$1 and action='media.upload_quarantined'",[library]))).rows;
+    assert(libraryEvents.length===1, 'normal library moderation audit was hidden from staff');
+  });
+
   await test('open concerns page without acknowledgement, including equal timestamps', async () => {
     const row = await handedIn();
     const ids = await asActor(owner, async () => {

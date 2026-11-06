@@ -76,6 +76,7 @@ export default async function AdminIncidentsPage() {
       {signals && (
         <section className="card" style={{ maxWidth: '52rem', marginBottom: '1.5rem' }}>
           <h2 style={{ marginTop: 0 }}>What has happened, counted</h2>
+          <p className="muted">Counts include only audit events your account may read. Private coursework activity is restricted to the safeguarding owner; these figures are not a platform-wide total for other staff.</p>
           <p style={{ marginBottom: '0.35rem' }}>
             <strong>{signalsSentence(signals)}</strong>
           </p>

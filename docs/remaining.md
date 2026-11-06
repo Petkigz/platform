@@ -858,3 +858,11 @@ response as unknown and asks for a register check before retrying. A recorded
 statement remains unverified; the legacy shared audit action name says
 `coursework_bytes_deleted` even though it records only an owner's statement.
 Historical audit records and actual object deletion have not been verified.
+
+**Shared audit privacy:** Migration 850 restricts historic and future coursework
+and concern events in the shared audit to the named safeguarding owner, and
+filters the security-signals definer aggregate by the same boundary. Ordinary
+library moderation events remain visible to staff. The audit entries themselves
+are not removed; previous exposure and unattributed historical media cannot be
+undone or reliably classified. Other database definer paths and real deployments
+still require audit; storage credentials are outside this RLS boundary.
