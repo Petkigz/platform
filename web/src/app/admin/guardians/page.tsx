@@ -19,6 +19,7 @@ import { DecideForm } from './decide-form';
 import { ReconcileForm } from './reconcile-form';
 import { RecordChildRemoval } from './record-child-removal';
 import { ReconcileErasure } from './reconcile-erasure';
+import { BlockChildDatabase } from './block-child-database';
 import { parseChildLoginPendingAttempts, parseChildLoginRemovalTasks, parseChildLoginErasureRecovery, parseChildLoginLegacyErasure, queuePageNumber } from '@/lib/child-login-queue';
 
 export const dynamic = 'force-dynamic';
@@ -114,6 +115,9 @@ export default async function AdminGuardiansPage({ searchParams }: {
   const removalResult = owner ? await supabase.rpc('child_login_removal_queue_page', { p_limit: 51, p_offset: pages.removalPage * 50 }) : null;
   const removals = removalResult && !removalResult.error
     ? parseChildLoginRemovalTasks(removalResult.data) : null;
+  const blockResult = owner && removals ? await supabase.rpc('child_login_database_block_status', { p_tasks: removals.slice(0, 50).map((row) => row.task_id) }) : null;
+  const blockRows = blockResult && !blockResult.error && Array.isArray(blockResult.data)
+    ? blockResult.data as { task_id: string; blocked: boolean }[] : null;
   const erasureResult = owner ? await supabase.rpc('child_login_erasure_recovery_queue_page', { p_limit: 51, p_offset: pages.recoveryPage * 50 }) : null;
   const erasureRecovery = erasureResult && !erasureResult.error
     ? parseChildLoginErasureRecovery(erasureResult.data) : null;
@@ -201,6 +205,12 @@ export default async function AdminGuardiansPage({ searchParams }: {
             {' '}started {dayLabel(task.created_at)}. {task.identity_present
               ? task.marker_matches ? 'Identity present with matching trusted marker.' : 'An identity is present, but the original ID and marker do not match: investigate before acting.'
               : 'The original ID and any identity with the matching marker are absent from the authentication table.'}
+            {blockRows === null ? <p className="notice warn">Database block status is unavailable.</p>
+              : blockRows.find((row) => row.task_id === task.task_id)?.blocked === true
+                ? <p className="muted">This identity is blocked on database paths using the identity helper; provider sessions and other paths are not confirmed revoked.</p>
+                : <p className="notice warn">No database-helper block is confirmed for this identity. Review it individually.</p>}
+            {blockRows !== null && blockRows.find((row) => row.task_id === task.task_id)?.blocked === false
+              && task.marker_matches && <BlockChildDatabase taskId={task.task_id} />}
             {!task.identity_present && <RecordChildRemoval taskId={task.task_id} />}
           </li>)}</ul>}
         {removals !== null && <QueueNavigation pageKey="removalPage" pages={pages} hasMore={removals.length > 50} />}

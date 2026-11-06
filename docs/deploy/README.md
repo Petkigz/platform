@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-277 files in `supabase/migrations/`, applied in filename order — the 14-digit
+278 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -170,7 +170,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 277 files from the top and fail on the
+it, and `db push` would then re-apply all 278 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -1081,3 +1081,11 @@ recovery-evidence cleanup remain separate. Migration 690 adds an owner-only visu
 Migration 700 adds 50-per-page navigation to the four private child-login owner
 queues. The lists are live, not snapshots; refresh and revisit earlier pages when
 cases change. Pagination does not itself delete an identity or revoke a session.
+
+
+Migration 710 adds an identity-helper database block for eligible detached child
+logins and a private owner control for older tasks. It does not delete an Auth
+identity or revoke provider sessions, cover every endpoint, terminate in-flight
+transactions or invalidate issued signed URLs. IDs remain in a private deny list;
+do not remove them without a tested expiry/revocation design. Verify real Supabase,
+deployed-schema concurrency and paths not using `current_user_id()`.

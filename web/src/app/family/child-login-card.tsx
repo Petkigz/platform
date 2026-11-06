@@ -166,7 +166,8 @@ export function ChildLoginCard({
           <div>
             <p style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>
               This detaches the learner profile but does not delete the sign-in or revoke
-              existing sessions. Contact privacy@ayahspring.com to arrange separate sign-in
+              provider sessions. A trusted identity may also be blocked on database paths that
+              use the platform identity check; other access can remain. Contact privacy@ayahspring.com to arrange separate sign-in
               removal. Lessons, progress and certificates remain with the learner.
             </p>
             <label htmlFor={`reason-${learnerId}`}>

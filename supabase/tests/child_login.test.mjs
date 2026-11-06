@@ -306,6 +306,7 @@ export async function run(ctx) {
       .then((r) => r.rows[0].r);
     assert(removed.removed === true, 'the removal did not report success');
     assert(removed.username === 'amina.k', 'the removal did not say which login it ended');
+    assert(removed.databaseAccessBlocked === false, 'an unmarked legacy account was blocked automatically');
 
     const profile = await scalar(
       `select linked_user_id from public.learner_profiles where id = $1`, [childId]);
@@ -458,6 +459,22 @@ export async function run(ctx) {
     } finally { await setFlag('family.child_login', false); }
   });
 
+  await test('a trusted identity with a separate role is not automatically blocked on detachment', async () => {
+    const guardian = await person('Role guardian');
+    const theirs = await familyWithChild(guardian, 'Role child');
+    await setFlag('family.child_login', true);
+    try {
+      const attempt = (await asActor(guardian, 'select public.prepare_child_login($1,$2) id', [theirs.childId,'separate.role'])).rows[0].id;
+      const user = await newUser('separate.role@learners.ayahspring.com');
+      await q("update auth.users set raw_app_meta_data=jsonb_build_object('ayahspring_child_attempt',$2::text) where id=$1", [user,attempt]);
+      await q('select public.complete_child_login_attempt($1,$2,$3)', [attempt,guardian,user]);
+      await ctx.grantRole(user, 'instructor', admin);
+      const result = (await asActor(guardian, 'select public.remove_child_login($1,$2) result', [theirs.childId,'requested'])).rows[0].result;
+      assert(result.removed && result.identityRemovalPending && !result.databaseAccessBlocked, 'identity with another role was automatically blocked');
+      assert((await asActor(user, 'select public.current_user_id() actor')).rows[0].actor === user, 'other role lost its session');
+    } finally { await setFlag('family.child_login', false); }
+  });
+
   await test('pending identity attempts are visible only to the named active safeguarding owner', async () => {
     const guardian = await person('Queue guardian');
     const theirs = await familyWithChild(guardian, 'Queue child');
@@ -503,10 +520,25 @@ export async function run(ctx) {
       const audit = (await q("select count(*)::int n from public.governance_audit_events where action='child_login.owner_reconciled' and actor=$1 and target_id=$2", [admin, attempt])).rows[0];
       assert(audit.n === 2, 'owner reconciliation audit not attributed to the owner');
       const removed = (await asActor(guardian, 'select public.remove_child_login($1,$2) result', [theirs.childId, 'family requested'])).rows[0].result;
-      assert(removed.removed === true && removed.identityRemovalPending === true, 'detachment lost its identity task');
+      assert(removed.removed === true && removed.identityRemovalPending === true && removed.databaseAccessBlocked === true, 'detachment lost its identity task or database block');
+      await rejects(() => asActor(user, 'select public.current_user_id()'), /database_session_blocked/);
+      await rejects(() => asActor(user, 'select * from public.user_profiles where user_id=$1', [user]), /database_session_blocked/);
+      const guardianStillActive = (await asActor(guardian, 'select public.current_user_id() actor')).rows[0].actor;
+      assert(guardianStillActive === guardian, 'guardian was blocked with the child');
       await rejects(() => asActor(otherAdmin, 'select * from public.child_login_removal_queue($1)', [50]), /not_allowed/);
       const task = (await asActor(admin, 'select * from public.child_login_removal_queue($1)', [50])).rows.find(r => r.child_user_id === user);
       assert(task && task.identity_present && task.marker_matches, 'queue did not show the marked identity');
+      await rejects(() => asActor(otherAdmin, 'select public.block_child_login_task_database_access($1)', [task.task_id]), /not_allowed/);
+      await rejects(() => asActor(guardian, 'select * from public.child_login_database_block_status($1::uuid[])', [[task.task_id]]), /not_allowed/);
+      let blockStatus = (await asActor(admin, 'select * from public.child_login_database_block_status($1::uuid[])', [[task.task_id]])).rows[0];
+      assert(blockStatus.blocked, 'owner cannot see the database block');
+      // Simulate an older detached task created before this migration.
+      await q('delete from public.child_login_database_denials where identity_id=$1', [user]);
+      assert((await asActor(user, 'select public.current_user_id() actor')).rows[0].actor === user, 'older task unexpectedly blocked');
+      const reapplied = (await asActor(admin, 'select public.block_child_login_task_database_access($1) result', [task.task_id])).rows[0].result;
+      assert(reapplied.blocked, 'owner could not block a previously detached trusted identity');
+      await rejects(() => asActor(user, 'select public.current_user_id()'), /database_session_blocked/);
+
       await rejects(() => asActor(guardian, 'select public.record_child_login_identity_removed($1)', [task.task_id]), /not_allowed/);
       await rejects(() => asActor(admin, 'select public.record_child_login_identity_removed($1)', [task.task_id]), /identity_still_exists/);
       await q('delete from auth.users where id=$1', [user]);

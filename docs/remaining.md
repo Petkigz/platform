@@ -734,3 +734,16 @@ records. The guardian-consent page has separate navigation for each queue; exist
 one-argument readers remain available. Lists can change while a person is browsing,
 so refresh and revisit earlier pages after processing cases. This does not automate
 identity deletion, session revocation or recovery-marker cleanup.
+
+
+**Database session boundary for detached trusted child logins:** Migration 710
+adds a private deny list checked by `current_user_id()`. Detachment blocks an
+exclusive child identity only when a completed attempt and current Auth marker and
+address match; an unmarked legacy account or one with another learner, active
+family/guardian link or non-learner role is not automatically blocked. The owner
+can see the status and apply the same check to a previously detached marked
+identity. This blocks later database calls that use the identity helper, not every
+API, every already-running transaction, existing signed URLs, provider sign-in or
+provider sessions. A private ID remains in the deny list; its safe cleanup is not
+automated. Provider deletion, broad authorization audit, concurrency testing and
+real Supabase validation remain necessary. No migration has been deployed.

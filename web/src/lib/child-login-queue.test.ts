@@ -58,3 +58,15 @@ test('queue page numbers are non-negative bounded integers', async () => {
   assert.equal(queuePageNumber('2'), 2);
   for (const input of ['-1', '1.2', '1e4', '042', '42949672', ['2']]) assert.equal(queuePageNumber(input), 0);
 });
+
+test('owner can see partial database protection without claiming provider sessions ended', async () => {
+  const { readFileSync } = await import('node:fs');
+  const page = readFileSync(new URL('../app/admin/guardians/page.tsx', import.meta.url), 'utf8');
+  const route = readFileSync(new URL('../app/api/admin/child-login-database-block/route.ts', import.meta.url), 'utf8');
+  const form = readFileSync(new URL('../app/admin/guardians/block-child-database.tsx', import.meta.url), 'utf8');
+  assert.match(page, /child_login_database_block_status/);
+  assert.match(page, /provider sessions and other paths are not confirmed revoked/);
+  assert.match(route, /block_child_login_task_database_access/);
+  assert.doesNotMatch(route, /createAdminClient|deleteUser/);
+  assert.match(form, /Provider sessions and other paths still need review/);
+});
