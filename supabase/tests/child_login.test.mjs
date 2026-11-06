@@ -484,10 +484,24 @@ export async function run(ctx) {
       const entries = (await asActor(admin, 'select * from public.child_login_pending_attempts($1)', [50])).rows;
       const row = entries.find(r => r.attempt_id === attempt);
       assert(row && row.marked_identity_present === false && row.learner_name === 'Queue child', 'owner queue lost the pending attempt');
+      await rejects(() => asActor(admin, 'select public.reconcile_child_login_attempt($1)', [attempt]), /marked_identity_unavailable/);
       const user = await newUser('queue.child@learners.ayahspring.com');
       await q("update auth.users set raw_app_meta_data=jsonb_build_object('ayahspring_child_attempt',$2::text) where id=$1", [user,attempt]);
       const marked = (await asActor(admin, 'select * from public.child_login_pending_attempts($1)', [50])).rows.find(r => r.attempt_id === attempt);
       assert(marked && marked.marked_identity_present === true, 'the marked identity was not identified');
+      await rejects(() => asActor(otherAdmin, 'select public.reconcile_child_login_attempt($1)', [attempt]), /not_allowed/);
+      await rejects(() => asActor(guardian, 'select public.reconcile_child_login_attempt($1)', [attempt]), /not_allowed/);
+      await q("update public.guardian_relationships set consent_expires_at=now()-interval '1 day' where guardian_user_id=$1 and learner_profile_id=$2", [guardian, theirs.childId]);
+      await rejects(() => asActor(admin, 'select public.reconcile_child_login_attempt($1)', [attempt]), /verified_guardian_required/);
+      await q("update public.guardian_relationships set consent_expires_at=now()+interval '1 year' where guardian_user_id=$1 and learner_profile_id=$2", [guardian, theirs.childId]);
+      const done = (await asActor(admin, 'select public.reconcile_child_login_attempt($1) result', [attempt])).rows[0].result;
+      assert(done.reconciled === true && done.alreadyCompleted === false, 'owner did not complete marked attempt');
+      const retried = (await asActor(admin, 'select public.reconcile_child_login_attempt($1) result', [attempt])).rows[0].result;
+      assert(retried.reconciled === true && retried.alreadyCompleted === true, 'owner retry was not idempotent');
+      const linked = (await q('select linked_user_id from public.learner_profiles where id=$1', [theirs.childId])).rows[0];
+      assert(linked.linked_user_id === user, 'wrong identity linked');
+      const audit = (await q("select count(*)::int n from public.governance_audit_events where action='child_login.owner_reconciled' and actor=$1 and target_id=$2", [admin, attempt])).rows[0];
+      assert(audit.n === 2, 'owner reconciliation audit not attributed to the owner');
     } finally {
       await setFlag('family.child_login', false);
       await q('delete from public.safeguarding_owner where singleton');

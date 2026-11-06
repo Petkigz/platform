@@ -16,6 +16,7 @@ import {
   relationshipLabel,
 } from '@/lib/guardian-consent';
 import { DecideForm } from './decide-form';
+import { ReconcileForm } from './reconcile-form';
 import { parseChildLoginPendingAttempts } from '@/lib/child-login-queue';
 
 export const dynamic = 'force-dynamic';
@@ -139,10 +140,12 @@ export default async function AdminGuardiansPage() {
                 {' '}started {dayLabel(attempt.created_at)}; {attempt.marked_identity_present
                   ? 'a marked identity appears in the authentication table'
                   : 'no matching marked identity appears in the authentication table'}.
+                {attempt.marked_identity_present && <ReconcileForm attemptId={attempt.attempt_id} />}
               </li>
             ))}</ul>}
-          <p className="muted">Review outstanding cases individually; this list does not perform
-            reconciliation or remove an identity.</p>
+          <p className="muted">Completion links only the existing marked identity after rechecking guardian permission.
+            It does not reset the password, create another identity or remove one. Cases without a
+            matching identity still need individual review.</p>
         </section>
       )}
 

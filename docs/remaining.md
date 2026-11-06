@@ -669,7 +669,7 @@ non-production Supabase project. Local cross-layer tests use
 a simulated Auth provider, not Supabase's real API or deployed concurrency.
 
 Pending attempts may need individual owner review; the guardian-consent page
-lists up to 50 but does not reconcile or delete them. Detachment does not delete
+lists up to 50 and can complete a uniquely marked existing identity after rechecking guardian permission, but cannot create or delete an identity. Detachment does not delete
 the auth identity or revoke existing sessions; password reset and provider
 identity removal are not implemented. If a retry recovers an earlier identity,
 the original password remains in effect. The older general profile-management
@@ -686,6 +686,6 @@ suite's learner-reference sweep did not catch this case because its fixture had 
 child-login attempt. A pending attempt can represent an Auth creation still in
 flight, so blindly deleting the row could lose the only recovery marker for an
 orphaned identity. Reconciliation and a privacy-safe retention/identity-removal
-workflow are needed; the queue is read-only and shows pending attempts only. Do
+workflow are needed; the queue shows pending attempts only, and its completion action cannot remove an identity. Do
 not represent child identity data or provider accounts as fully erased. This is a
 local reproduction, not a deployed-system test.
