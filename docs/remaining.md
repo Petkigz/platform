@@ -901,3 +901,13 @@ playback and download addresses request private, no-store handling; the coursewo
 redirect already does so. This does not control copies made by an authorised reader
 or prove how the object-storage response itself is cached. Verify actual R2 response
 headers and intermediate caches in the deployed environment before relying on them.
+
+**Batched database regression:** frozen revision `feb0274` ran all 170 database
+suites in their normal order within eight fresh PGlite databases (22 suites in each
+of the first seven batches, 16 in the last): 2,625 assertions passed and none
+failed. The normal test-only coursework and guardian-fixture settings were retained.
+This covers the migrations at that revision, including the hold-status storage
+queue. It is not the single shared-database run: interactions between suites in
+different batches are not exercised. PGlite also does not prove concurrent hosted
+PostgreSQL, Supabase Auth, storage or provider behavior. The earlier shared run was
+interrupted and has no final result.
