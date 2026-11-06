@@ -112,6 +112,20 @@ export function parseReviewSummary(value: unknown): ReviewSummary {
   };
 }
 
+/** A malformed summary is unknown, never a reassuring zero. */
+export function parseReviewSummaryStrict(value: unknown): ReviewSummary | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const raw = value as Record<string, unknown>;
+  const fields = ['files','reviewed','unreviewed','clear','concerns','reviewsOutlivingFiles'] as const;
+  if (fields.some(key => typeof raw[key] !== 'number' || !Number.isSafeInteger(raw[key]) || (raw[key] as number) < 0)) return null;
+  if ((raw.reviewed as number) + (raw.unreviewed as number) !== raw.files ||
+      (raw.clear as number) + (raw.concerns as number) !== raw.reviewed || raw.gates !== false) return null;
+  for (const key of ['oldestUnreviewed','oldestFile']) {
+    if (!(raw[key] === null || (typeof raw[key] === 'string' && Number.isFinite(Date.parse(raw[key] as string))))) return null;
+  }
+  return parseReviewSummary(raw);
+}
+
 /** One file's line on the marker's list. */
 export function describeFileReview(file: {
   review?: ReviewDecision;

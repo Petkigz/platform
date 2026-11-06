@@ -4,10 +4,9 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { courseworkFileHref } from '@/lib/coursework';
 import {
-  EMPTY_SUMMARY,
   describeFileReview,
   parseReviewPage,
-  parseReviewSummary,
+  parseReviewSummaryStrict,
   reviewDay,
   reviewHeadline,
   REVIEW_FORM_HELP,
@@ -128,7 +127,7 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
     : null;
   const actionState = params.concern;
 
-  const summary = summaryResult.error ? EMPTY_SUMMARY : parseReviewSummary(summaryResult.data);
+  const summary = summaryResult.error ? null : parseReviewSummaryStrict(summaryResult.data);
   const queueRows = queueResult.error ? null : parseReviewPage(queueResult.data);
   const queue = queueRows?.slice(0,50) ?? [];
   const reviewNext = queueRows && queueRows.length > 50 ? queueRows[49] : null;
@@ -282,7 +281,7 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
         </p>
       </div>
 
-      {summaryResult.error ? <p className="notice warn">The review summary is available only to the configured safeguarding owner, or could not be loaded. Do not assume it is empty.</p> : <section className="card" style={{ marginBottom: '1.5rem' }}>
+      {summary === null ? <p className="notice warn">The review summary is available only to the configured safeguarding owner, or could not be loaded. Do not assume it is empty.</p> : <section className="card" style={{ marginBottom: '1.5rem' }}>
         <div className="outline-h"><h2>Where things stand</h2></div>
         <p>{reviewHeadline(summary)}</p>
         <ul className="lessons">

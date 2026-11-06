@@ -8,6 +8,7 @@ import {
   parseReviewQueue,
   parseReviewPage,
   parseReviewSummary,
+  parseReviewSummaryStrict,
   reviewConfirmation,
   reviewDay,
   reviewHeadline,
@@ -186,4 +187,15 @@ test('review pages preserve precise timestamps and reject invalid cursors', () =
   assert.equal(parseReviewPage([{...raw, review:'unknown'}]), null);
   assert.equal(parseReviewPage(null), null);
   assert.deepEqual(parseReviewPage([]), []);
+});
+
+
+test('a missing or contradictory owner summary remains unknown, never zero', () => {
+  const raw={files:3,reviewed:2,unreviewed:1,clear:1,concerns:1,oldestUnreviewed:null,oldestFile:null,reviewsOutlivingFiles:0,gates:false};
+  assert.equal(parseReviewSummaryStrict(raw)?.files,3);
+  assert.equal(parseReviewSummaryStrict(null),null);
+  assert.equal(parseReviewSummaryStrict({...raw,reviewed:4}),null);
+  assert.equal(parseReviewSummaryStrict({...raw,concerns:0}),null);
+  assert.equal(parseReviewSummaryStrict({...raw,gates:true}),null);
+  assert.equal(parseReviewSummaryStrict({...raw,oldestFile:'not a date'}),null);
 });
