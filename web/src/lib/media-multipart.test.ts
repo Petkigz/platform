@@ -1108,7 +1108,7 @@ test('storage refusing to delete is reported honestly, and the decision still st
   if (!outcome.ok) return;
   assert.equal(outcome.value.recorded, true);
   assert.equal(outcome.value.deleted, false);
-  assert.match(String(outcome.value.note), /seven days/);
+  assert.match(String(outcome.value.note), /only if an appropriate bucket lifecycle rule is configured/);
   assert.match(String(outcome.value.note), /answered 500/);
 });
 

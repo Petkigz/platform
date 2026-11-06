@@ -10,7 +10,8 @@ import {
 } from '@/lib/media';
 import { abandonUnfinishedUpload, listUnfinishedMasterUploads } from '@/lib/media-multipart';
 import { confirmMediaUpload } from '@/lib/media-verify';
-import { R2NotConfiguredError, R2RequestError, masterKeyAssetId, readR2Config } from '@/lib/media-r2';
+import { classifyUnfinishedUploads } from '@/lib/unfinished-upload-privacy';
+import { R2NotConfiguredError, readR2Config } from '@/lib/media-r2';
 
 export const dynamic = 'force-dynamic';
 
@@ -115,18 +116,18 @@ export async function POST(request: Request) {
     const listed = await listUnfinishedMasterUploads({ config });
     if (!listed.ok) return fail(listed.message, listed.status);
 
-    // Storage lists by object key; the platform's record of a file is addressed by
-    // id, and the key is derived from it. A key that was not derived from an asset
-    // is shown as one this platform cannot name, rather than being dropped: an
-    // upload nobody can account for is the one worth looking at.
-    const keyed = listed.value.uploads.map((upload) => {
-      try {
-        return { upload, assetId: masterKeyAssetId(upload.key) };
-      } catch (error) {
-        if (error instanceof R2RequestError) return { upload, assetId: null };
-        throw error;
-      }
+    // Check exact bucket/key pairs, not merely a UUID extracted from an
+    // untrusted key. A failed or malformed classification returns nothing.
+    const access = await classifyUnfinishedUploads(listed.value.uploads, async (keys) => {
+      const { data, error } = await supabase.rpc('staff_unfinished_upload_access', {
+        p_bucket: config.mastersBucket, p_keys: keys,
+      });
+      return error ? null : data;
     });
+    if (!access) return fail('Unfinished uploads could not be classified safely.', 503);
+    const keyed = access.visible.map((upload) => ({
+      upload, assetId: access.libraryAssets.get(upload.key) ?? null,
+    }));
 
     const ids = keyed
       .map((entry) => entry.assetId)
@@ -138,12 +139,14 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ok: true,
       data: {
-        capped: listed.value.capped,
+        scope: access.isOwner ? 'owner' : 'library',
+        capped: access.isOwner && listed.value.capped,
         uploads: keyed.map(({ upload, assetId: id }) => ({
           key: upload.key,
           uploadId: upload.uploadId,
           initiated: upload.initiated,
           assetId: id,
+          canAbandon: id !== null,
           asset: id ? (byId.get(id) ?? null) : null,
         })),
       },

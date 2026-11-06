@@ -22,12 +22,13 @@ export type UnfinishedUpload = {
   /** Null when the key was not derived from an asset this platform knows. */
   assetId: string | null;
   asset: UnfinishedAsset | null;
+  canAbandon: boolean;
 };
 
 type ListingResponse = {
   ok?: boolean;
   error?: string;
-  data?: { capped: boolean; uploads: UnfinishedUpload[] };
+  data?: { capped: boolean; scope: 'owner' | 'library'; uploads: UnfinishedUpload[] };
 };
 
 type AbandonResponse = {
@@ -58,9 +59,8 @@ function openedLabel(initiated: string | null): string {
  * platform could find them, because the upload id is storage's and the schema
  * records the file that was declared rather than the transfer that stalled.
  *
- * Storage ends an incomplete upload on its own lifecycle after seven days, so
- * this is not a leak and nothing here is urgent. What it is: a week of storage per
- * abandoned transfer, and a list nobody could read. Ending one early needs a
+ * An incomplete upload may persist until a configured bucket lifecycle rule
+ * removes it, or an operator ends it. This panel does not verify that lifecycle. Ending one early needs a
  * written reason, like every other reversal here, and the reason is recorded
  * before storage is asked to delete anything — so a refusal leaves a record of the
  * decision instead of leaving a deletion with no record at all.
@@ -74,6 +74,7 @@ export function UnfinishedUploads() {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [looked, setLooked] = useState(false);
+  const [scope, setScope] = useState<'owner' | 'library' | null>(null);
   const [uploads, setUploads] = useState<UnfinishedUpload[]>([]);
   const [capped, setCapped] = useState(false);
   const [reasons, setReasons] = useState<Record<string, string>>({});
@@ -93,12 +94,14 @@ export function UnfinishedUploads() {
 
     if (!response.ok || !json.data) {
       setUploads([]);
+      setScope(null);
       setCapped(false);
       setMessage({ tone: 'error', text: json.error ?? 'The bucket could not be asked.' });
       return;
     }
 
     setUploads(json.data.uploads);
+    setScope(json.data.scope);
     setCapped(json.data.capped);
   }
 
@@ -152,8 +155,8 @@ export function UnfinishedUploads() {
       <p className="muted">
         Parts of a file that were sent and never assembled. They are in the bucket
         and not in any list above, because the object they would become does not
-        exist yet. Storage deletes them on its own after seven days; ending one
-        here stops paying for it sooner and records who decided.
+        exist yet. Automatic expiry depends on the bucket lifecycle configuration;
+        verify it separately. Ending an eligible upload here records who decided.
       </p>
 
       <div>
@@ -173,6 +176,8 @@ export function UnfinishedUploads() {
         </p>
       )}
 
+      {scope === 'library' && <p className="muted">This list includes only identifiable library uploads you may manage. Other uploads and unrecognised keys are not shown. Ask the safeguarding owner to investigate unknown entries. The listing may be incomplete.</p>}
+      {scope === 'owner' && <p className="muted">As safeguarding owner you can inspect unrecognised or private entries. The cleanup button is only available for identifiable library uploads; private or unknown entries need individual review.</p>}
       {capped && (
         <p className="notice warn">
           Storage has more unfinished uploads than this read. What is listed is the
@@ -180,10 +185,9 @@ export function UnfinishedUploads() {
         </p>
       )}
 
-      {looked && uploads.length === 0 && (
+      {looked && scope !== null && uploads.length === 0 && (
         <p className="empty">
-          Nothing is unfinished. Every upload opened in this bucket was completed
-          or abandoned.
+          No uploads are visible in this listing. This does not establish that the bucket is empty.
         </p>
       )}
 
@@ -209,7 +213,7 @@ export function UnfinishedUploads() {
             {upload.key} · {upload.uploadId}
           </p>
 
-          {upload.assetId ? (
+          {upload.canAbandon && upload.assetId ? (
             <>
               <label className="eyebrow" htmlFor={`abandon-${upload.uploadId}`}>
                 Why these bytes are not going to arrive
@@ -237,9 +241,8 @@ export function UnfinishedUploads() {
             </>
           ) : (
             <p className="muted" style={{ fontSize: '0.9rem', margin: 0 }}>
-              This key was not derived from an asset, so there is nothing to record
-              the decision against and no button here. Storage will end it on its
-              own within seven days.
+              This entry is not a confirmed library upload that can be ended here.
+              Review its attribution and any safeguarding hold before taking action.
             </p>
           )}
         </div>

@@ -787,7 +787,7 @@ export async function abandonUnfinishedUpload(
         deleted: false,
         note:
           `${called.message} The decision is recorded, and storage ends an unfinished upload on ` +
-          'its own after seven days.',
+          'its own only if an appropriate bucket lifecycle rule is configured.',
       },
     };
   }

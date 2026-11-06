@@ -370,6 +370,22 @@ export async function run(ctx) {
       for (const actor of [admin, otherAdmin]) {
         await refused(actor, 'select public.abandon_media_upload($1,$2,$3)', [pending.asset_id, 'upload-id', 'Check stalled upload'], /no media asset/i);
       }
+      const privateLocation = await scalar('select master_bucket,master_key from public.media_assets where id=$1', [pending.asset_id]);
+      const libraryKey = `classify/${crypto.randomUUID()}`;
+      await q(`insert into public.media_assets(storage_backend,master_bucket,master_key,checksum,mime_type,byte_size,status,uploaded_by)
+        values ('r2',$1,$2,$3,'audio/mpeg',100,'pending',$4)`, [privateLocation.master_bucket,libraryKey,digest(),admin]);
+      const classifySql = 'select public.staff_unfinished_upload_access($1,$2::text[]) as access';
+      const requested = [libraryKey, `${libraryKey}-suffix`, privateLocation.master_key, 'unknown/key'];
+      const staffAccess = (await call(otherAdmin, classifySql, [privateLocation.master_bucket,requested])).access;
+      assert(staffAccess.is_owner === false && staffAccess.library_assets.length === 1 && staffAccess.library_assets[0].key === libraryKey,
+        'staff classification revealed private or non-exact keys');
+      const ownerAccess = (await call(admin, classifySql, [privateLocation.master_bucket,requested])).access;
+      assert(ownerAccess.is_owner === true && ownerAccess.library_assets.length === 1 && ownerAccess.library_assets[0].key === libraryKey,
+        'owner classification did not distinguish private entries from actionable library entries');
+      const wrongBucket = (await call(otherAdmin, classifySql, ['different-bucket',requested])).access;
+      assert(wrongBucket.library_assets.length === 0, 'classification ignored the bucket');
+      await refused(who.userId, classifySql, [privateLocation.master_bucket,requested], /only platform staff/i);
+      await refused(otherAdmin, classifySql, [privateLocation.master_bucket,Array(501).fill(libraryKey)], /invalid unfinished/i);
       assert((await scalar("select count(*)::int n from public.governance_audit_events where action='media.upload_abandoned' and target_id=$1", [pending.asset_id])).n === 0, 'coursework metadata entered the shared audit');
       for (const id of [pending.asset_id, attached.asset_id, legacy.asset_id]) {
         await refused(otherAdmin, 'select public.quarantine_media_upload($1,$2)', [id, 'review needed'], /not found/i);
@@ -648,6 +664,9 @@ export async function run(ctx) {
       await q('alter table public.assignment_submission_assets enable trigger assignment_assets_coursework_only');
     }
     assert((await call(teacher, 'select public.may_play_rendition($1) as ok', [rendition])).ok === false);
+    const legacyLocation = await scalar('select master_bucket,master_key from public.media_assets where id=$1', [asset]);
+    const legacyClassification = (await call(admin, 'select public.staff_unfinished_upload_access($1,$2::text[]) as access', [legacyLocation.master_bucket,[legacyLocation.master_key]])).access;
+    assert(legacyClassification.library_assets.length === 0, 'attached legacy coursework was classified as library cleanup');
     const staffStorage = (await asActor(admin, () => q('select * from public.media_storage_overview(1000)'))).rows;
     assert(!staffStorage.some(row => row.uploader_id === who.userId), 'legacy coursework appeared in staff storage overview');
     const beforeAbandon = (await q("select count(*)::integer n from public.governance_audit_events where target_id=$1 and action='media.upload_abandoned'", [asset])).rows[0].n;

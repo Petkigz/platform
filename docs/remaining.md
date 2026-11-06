@@ -843,9 +843,11 @@ protect storage credentials, bucket listings, or establish actual object size.
 **Multipart cleanup:** Migration 820 prevents the direct library abandonment
 RPC from writing private coursework keys and sizes into the staff-visible
 shared governance audit, including for currently attached legacy files. It does
-not remove any historical audit entries. The staff unfinished-multipart bucket
-listing still exposes keys, upload IDs and timestamps without classifying every
-entry, including unrecognized objects: it needs a privacy-safe owner/library
-split without losing orphan cleanup. Database authorization also cannot hold an
-asset lock across a later external storage request; real concurrent attachment
-and abort behavior requires a separately designed guard and live verification.
+not remove any historical audit entries. Migration 830 restricts the staff unfinished-multipart listing to exact
+bucket/key matches for library assets; the named safeguarding owner may inspect
+unrecognized entries, which cannot be ended in the library interface. Old audit
+entries are not repaired. Database authorization cannot hold an asset lock
+across a later external storage request; concurrent attachment and abort behavior
+requires a separately designed guard and live verification. Unattributed legacy
+files cannot reliably be identified as coursework. Bucket lifecycle expiry must
+be configured and verified rather than assumed.

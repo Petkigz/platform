@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-289 files in `supabase/migrations/`, applied in filename order — the 14-digit
+290 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -170,7 +170,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 289 files from the top and fail on the
+it, and `db push` would then re-apply all 290 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -1137,5 +1137,8 @@ files and storage-provider access remain separate review and deployment gaps.
 
 Migration 820 stops new private-coursework metadata entering the shared
 multipart-abandonment audit through that RPC; existing entries, the separate
-bucket listing, and the later external abort race still need review. It does not
-delete storage objects or prove that none exist.
+and the later external abort race still need review. It does not delete storage
+objects or prove that none exist. Migration 830 restricts the unfinished-upload
+listing to exact library matches for staff while the named safeguarding owner
+can inspect unknown entries; unknown or private entries are not actionable from
+that library cleanup interface. Verify bucket lifecycle configuration separately.
