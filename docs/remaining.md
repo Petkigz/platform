@@ -895,3 +895,9 @@ queued objects and suppresses the deletion-statement action while held. Hold
 status is a point-in-time view and can change; neither the screen nor the
 statement can prevent or verify independent object-store operations. Review the
 hold immediately before acting. Deploy and test against the hosted system.
+
+**File-opening cache controls:** the application responses containing signed master,
+playback and download addresses request private, no-store handling; the coursework
+redirect already does so. This does not control copies made by an authorised reader
+or prove how the object-storage response itself is cached. Verify actual R2 response
+headers and intermediate caches in the deployed environment before relying on them.

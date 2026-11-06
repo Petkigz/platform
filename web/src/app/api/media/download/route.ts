@@ -19,7 +19,7 @@ export const dynamic = 'force-dynamic';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const fail = (message: string, status: number) =>
-  NextResponse.json({ ok: false, message }, { status });
+  NextResponse.json({ ok: false, message }, { status, headers: { 'cache-control': 'private, no-store' } });
 
 /**
  * Say why a save did not happen, once, in the one place that refuses.
@@ -207,7 +207,7 @@ export async function GET(request: Request) {
         mimeType: chosen.mimeType,
         byteSize: chosen.byteSize,
       },
-    });
+    }, { headers: { 'cache-control': 'private, no-store' } });
   } catch (cause) {
     const message =
       cause instanceof R2RequestError ? cause.message : 'The download URL could not be signed.';

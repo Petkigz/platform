@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const fail = (message: string, status: number) =>
-  NextResponse.json({ ok: false, message }, { status });
+  NextResponse.json({ ok: false, message }, { status, headers: { 'cache-control': 'private, no-store' } });
 
 /**
  * Mints a short-lived URL for one delivery copy.
@@ -105,7 +105,7 @@ export async function GET(request: Request) {
         height: rendition.height,
         durationSeconds: rendition.durationSeconds,
       },
-    });
+    }, { headers: { 'cache-control': 'private, no-store' } });
   } catch (cause) {
     const message =
       cause instanceof R2RequestError

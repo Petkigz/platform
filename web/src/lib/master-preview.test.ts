@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { readFileSync } from 'node:fs';
 
 import { MAX_PLAYBACK_SECONDS, MAX_WORKER_SECONDS } from './media-r2.ts';
 import {
@@ -201,4 +202,15 @@ test('one asset is one row, and the first is the one used', async () => {
   const result = await fetchMasterPreviewTarget(client, 'first');
   assert.equal(result.ok, true);
   if (result.ok) assert.equal(result.target?.assetId, 'first');
+});
+
+
+test('media address responses ask intermediaries not to store bearer links', () => {
+  for (const route of ['master', 'playback', 'download']) {
+    const source = readFileSync(new URL(`../app/api/media/${route}/route.ts`, import.meta.url), 'utf8');
+    assert.match(source, /\{ status, headers: \{ 'cache-control': 'private, no-store' \} \}/);
+    assert.match(source, /\}, \{ headers: \{ 'cache-control': 'private, no-store' \} \}\);/);
+  }
+  const open = readFileSync(new URL('../app/api/media/open/route.ts', import.meta.url), 'utf8');
+  assert.match(open, /response\.headers\.set\('cache-control', 'private, no-store'\)/);
 });
