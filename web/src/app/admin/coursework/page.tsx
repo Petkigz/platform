@@ -208,13 +208,13 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
         <section className="card" style={{ marginBlock: '1rem' }}>
           <h2 id="open-concerns">Safeguarding concerns for the owner</h2>
           <p>Oldest unacknowledged coursework concerns first, 50 per page. You can see later items without acknowledging earlier ones. All ages are included so a changed or erased learner record cannot hide a concern. Acknowledging records that you marked the item; it does not mean it is resolved. Alerts need the provider, scheduler and an active verified owner email; a provider reference does not prove receipt.</p>
-          {params.alert === 'queued' && <p role="status">Alert queued for another attempt; no email has been confirmed sent.</p>}
-          {params.alert === 'failed' && <p className="notice warn" role="alert">The alert could not be queued for retry.</p>}
+          {params.alert === 'queued' && <p role="status">Alert queued for another attempt. Check its current status; provider acceptance is not proof of delivery.</p>}
+          {params.alert === 'failed' && <p className="notice warn" role="alert">The retry result could not be confirmed. Refresh and check the alert status before trying again.</p>}
           {actionState === 'recorded' && <p role="status">Acknowledgement recorded.</p>}
           {actionState === 'already' && <p role="status">That concern had already been acknowledged.</p>}
           {actionState === 'reopened' && <p role="status">The concern is back in the open queue.</p>}
-          {actionState === 'already-open' && <p role="status">That concern was not acknowledged.</p>}
-          {actionState === 'failed' && <p className="notice warn" role="alert">The acknowledgement could not be recorded. Check your access and try again.</p>}
+          {actionState === 'already-open' && <p role="status">No acknowledgement was removed. Check the open queue and history.</p>}
+          {actionState === 'failed' && <p className="notice warn" role="alert">The action could not be confirmed. Refresh and check the open queue and acknowledgement history before trying again.</p>}
           {concerns === null ? <p className="notice warn">The concern queue could not be loaded. Do not assume it is empty.</p>
             : concerns.length === 0 ? <p>No unacknowledged concerns were returned.</p>
               : <ul className="lessons">{concerns.slice(0, 50).map((row) => <li key={row.review_id}>
@@ -449,7 +449,7 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
         <h2>Classes without an end date</h2>
         {params.classEnd === 'recorded' && <p role="status">Your class-end attestation was recorded. It may have made coursework due; storage is a separate step.</p>}
         {params.classEnd === 'invalid' && <p className="notice warn" role="alert">Check the UTC date, written reason and confirmation, then try again.</p>}
-        {params.classEnd === 'failed' && <p className="notice warn" role="alert">The class end was not recorded. Check that the class is closed, its end is still missing and the date follows its start and join window and is not in the future. Otherwise arrange individual review.</p>}
+        {params.classEnd === 'failed' && <p className="notice warn" role="alert">The class-end result could not be confirmed. Refresh and check the class record before trying again. If it was not recorded, check that the class is closed and the date follows its start and join window and is not in the future; otherwise arrange individual review.</p>}
         <p>For coursework in an open-ended class, the ordinary one-year clock cannot start until an end is recorded. A child-record erasure can still be due sooner, subject to a safeguarding hold.</p>
         {missingCount === null || missingEnds === null ? <p className="notice warn">The missing-end report could not be loaded. Do not assume there are no affected files.</p>
           : <>

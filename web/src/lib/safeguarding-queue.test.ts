@@ -38,3 +38,13 @@ test('the page fetches the queue only for the configured owner and describes its
   assert.match(home, /Safeguarding concerns are not included in these counts/);
   assert.doesNotMatch(home, /Every queue you can work was checked/);
 });
+
+
+test('ambiguous owner actions do not assert that a write failed', () => {
+  const page=readFileSync('src/app/admin/coursework/page.tsx','utf8');
+  assert.match(page, /The action could not be confirmed/);
+  assert.match(page, /The retry result could not be confirmed/);
+  assert.match(page, /The class-end result could not be confirmed/);
+  assert.doesNotMatch(page, /The class end was not recorded/);
+  assert.doesNotMatch(page, /The acknowledgement could not be recorded/);
+});
