@@ -104,7 +104,10 @@ export async function confirmMediaUpload(
     return { ok: false, message: 'That upload does not exist.', status: 404 };
   }
 
-  if (row.status !== 'pending') {
+  const coursework = options.mode === 'coursework';
+  // A previous request may have committed while its HTTP response was lost.
+  // Recheck the object, then let the database validate the available attachment.
+  if (row.status !== 'pending' && !(coursework && row.status === 'available')) {
     return {
       ok: false,
       message: `That file is already ${row.status}, so there is nothing to confirm.`,
@@ -153,7 +156,7 @@ export async function confirmMediaUpload(
   } catch {
     return {
       ok: false,
-      message: 'Storage could not be reached to check the file. The row is still pending.',
+      message: 'Storage could not be reached to check the file. Its confirmation could not be verified.',
       status: 503,
     };
   }
@@ -162,8 +165,7 @@ export async function confirmMediaUpload(
     return {
       ok: false,
       message:
-        'The file never arrived in storage, so it cannot be made available. The row is still ' +
-        'pending and the teacher can upload it again.',
+        'Storage did not confirm that the file is present. The confirmation could not be verified.',
       status: 409,
     };
   }
@@ -171,7 +173,7 @@ export async function confirmMediaUpload(
   if (!response.ok) {
     return {
       ok: false,
-      message: `Storage answered ${String(response.status)} when asked whether the file exists. The row is still pending.`,
+      message: `Storage answered ${String(response.status)} when asked whether the file exists. The confirmation was not made by this request.`,
       status: 502,
     };
   }
@@ -183,7 +185,7 @@ export async function confirmMediaUpload(
       ok: false,
       message:
         'Storage did not report a size for the file, so it could not be compared with what was ' +
-        'declared. The row is still pending.',
+        'declared. The confirmation was not made by this request.',
       status: 502,
     };
   }
@@ -193,12 +195,10 @@ export async function confirmMediaUpload(
       ok: false,
       message:
         `Storage holds ${String(reportedBytes)} bytes but the upload declared ${String(declaredBytes)}. ` +
-        'A partial or replaced file must not become available. The row is still pending.',
+        'A partial or replaced file must not become available. The confirmation was not made by this request.',
       status: 409,
     };
   }
-
-  const coursework = options.mode === 'coursework';
 
   // A coursework confirmation returns the attachment id; the library one returns
   // a boolean. Both are asked of the database, never assumed here.

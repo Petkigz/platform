@@ -336,6 +336,18 @@ export async function run(ctx) {
     assert(count === 1, `${count} attachments after two confirmations`);
   });
 
+  await test('confirmation retries do not claim a quarantined attachment is available', async () => {
+    const who = await learner('Quarantined Retry', { course, version });
+    const submission = await draft(who.userId, assignment, who.learnerId);
+    const target = await declare(who.userId, submission);
+    const first = (await call(who.userId, SQL_CONFIRM, [target.asset_id])).id;
+    await call(admin, 'select public.quarantine_media_upload($1,$2)', [target.asset_id, 'review needed']);
+    await refused(who.userId, SQL_CONFIRM, [target.asset_id], /held for review/i);
+    const still = await scalar('select status from public.media_assets where id=$1', [target.asset_id]);
+    const attachment = await scalar('select id from public.assignment_submission_assets where media_asset_id=$1', [target.asset_id]);
+    assert(still.status === 'quarantined' && attachment.id === first, 'retry changed the held file or attachment');
+  });
+
   await test('nobody may confirm a file they did not hand in', async () => {
     const who = await learner('Owner', { course, version });
     const outsider = await learner('Meddler', { course, version });

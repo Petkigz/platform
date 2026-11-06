@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -8,6 +8,7 @@ import {
   COURSEWORK_MAX_BYTES,
   COURSEWORK_MAX_FILES,
   courseworkFileHref,
+  confirmCourseworkFile,
   describeCourseworkFile,
   describeFileSize,
   parseCourseworkFiles,
@@ -56,6 +57,7 @@ export function AssignmentFiles({
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
 
+  useEffect(() => { setFiles(parseCourseworkFiles(initialFiles)); }, [initialFiles]);
   const remaining = COURSEWORK_MAX_FILES - files.length;
 
   async function choose(chosen: File | null) {
@@ -93,6 +95,7 @@ export function AssignmentFiles({
 
       if (!outcome.ok) {
         setError(outcome.message);
+        router.refresh();
         return;
       }
 
@@ -106,8 +109,11 @@ export function AssignmentFiles({
       );
       if (parsed.length > 0) setFiles(parsed);
       setNotice(
-        `Handed in. ${describeFileSize(chosen.size)} — the teacher can open it, and nobody else can.`,
+        `File attached. ${describeFileSize(chosen.size)} — access remains subject to permissions and review.`,
       );
+      router.refresh();
+    } catch {
+      setError('The upload response was lost. Refresh the file list before trying again; a file may have been registered or attached.');
       router.refresh();
     } finally {
       setBusy(false);
@@ -115,6 +121,16 @@ export function AssignmentFiles({
       setPercent(0);
       if (inputRef.current) inputRef.current.value = '';
     }
+  }
+
+  async function retryConfirmation(assetId: string) {
+    setBusy(true); setError(''); setNotice('');
+    try {
+      const result = await confirmCourseworkFile(assetId);
+      if (result.ok) setNotice('The file was checked and attached.');
+      else setError(result.message);
+      router.refresh();
+    } finally { setBusy(false); }
   }
 
   async function remove(assetId: string) {
@@ -164,6 +180,11 @@ export function AssignmentFiles({
                 )}
                 <span className="muted"> · {describeCourseworkFile(file)}</span>
               </span>
+              {!locked && file.status === 'pending' && (
+                <button type="button" className="btn ghost tiny" disabled={busy} onClick={() => void retryConfirmation(file.assetId)}>
+                  Check upload again
+                </button>
+              )}
               {!locked && file.status === 'available' && (
                 <button
                   type="button"
@@ -185,6 +206,7 @@ export function AssignmentFiles({
             A photo of each page, a PDF, or a recording — up to{' '}
             {describeFileSize(COURSEWORK_MAX_BYTES)} each, {remaining} more allowed on this hand-in.
           </label>
+          <p className="muted">If an upload is still arriving, the original uploader can check it again without sending it twice.</p>
           <input
             ref={inputRef}
             id="assignment-file"

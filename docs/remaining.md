@@ -765,3 +765,14 @@ verified in a non-production Supabase project before use. Legacy, changed or
 shared identities still need individual review; late identities may reappear.
 Private deletion authorization, recovery and session-denial records remain personal
 data, and no safe automatic cleanup is implemented. No migration has been deployed.
+
+
+**Coursework upload retry:** Migration 740 and the web changes let the original
+uploader check a pending hand-in again without sending the bytes a second time.
+A previously confirmed available attachment can also be checked again after a
+lost response. The database locks the asset and refuses a confirmation if it was
+quarantined, even if the attachment already exists; an incomplete or lost response
+is not treated as success. Object checks verify reported size, not file safety or
+checksum. A quarantine release workflow, pending uploads whose bytes never arrived,
+other media paths and real storage/deployed concurrency testing remain open. This
+migration has not been deployed and does not change the assignment feature flags.

@@ -197,11 +197,11 @@ export const PHASE_LABEL: Record<UploadPhase, string> = {
   registering: 'Asking where to put it…',
   uploading: 'Sending…',
   confirming: 'Checking it arrived…',
-  done: 'Handed in',
+  done: 'File attached',
 };
 
 export type UploadOutcome =
-  | { ok: true; assetId: string; attachmentId: string | null }
+  | { ok: true; assetId: string; attachmentId: string }
   | { ok: false; message: string };
 
 export type UploadOptions = {
@@ -225,7 +225,7 @@ const json = async (response: Response): Promise<Record<string, unknown>> =>
 /**
  * Send one file and attach it to the draft.
  *
- * A failure at any step leaves the row `pending` and says what to do about it.
+ * A failure may leave a pending row or an attached file; refresh before retrying.
  * Nothing here retries blindly: re-sending the same bytes would leave a second
  * pending row, and the database's own declaration is what decides what the file
  * is, not this page's memory of it.
@@ -299,36 +299,36 @@ export async function uploadCourseworkFile(file: File, options: UploadOptions): 
     return {
       ok: false,
       message:
-        cause instanceof Error
-          ? cause.message
-          : 'The file did not finish sending. It can be tried again.',
+        `${cause instanceof Error ? cause.message : 'The file transfer could not be confirmed.'} Refresh the file list and check the upload before sending it again.`,
     };
   }
 
   progress('confirming', 0);
-  const confirmed = await doFetch('/api/media', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ action: 'confirm_coursework_upload', assetId }),
-  });
-  const confirmedBody = await json(confirmed);
-  if (!confirmed.ok || confirmedBody.ok !== true) {
-    return {
-      ok: false,
-      message:
-        typeof confirmedBody.message === 'string'
-          ? confirmedBody.message
-          : 'The file was sent but could not be confirmed. Nothing was attached.',
-    };
-  }
+  const outcome = await confirmCourseworkFile(assetId, doFetch);
+  if (outcome.ok) progress('done', 100);
+  return outcome;
+}
 
-  const confirmedData = (confirmedBody.data ?? {}) as Record<string, unknown>;
-  progress('done', 100);
-  return {
-    ok: true,
-    assetId,
-    attachmentId: typeof confirmedData.attachmentId === 'string' ? confirmedData.attachmentId : null,
-  };
+/** Recheck an existing upload without sending the bytes again. */
+export async function confirmCourseworkFile(assetId: string, doFetch: typeof fetch = fetch): Promise<UploadOutcome> {
+  try {
+    const response = await doFetch('/api/media', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ action: 'confirm_coursework_upload', assetId }),
+    });
+    const body = await json(response);
+    if (!response.ok || body.ok !== true) return {
+      ok: false,
+      message: typeof body.message === 'string' ? body.message : 'The file could not be confirmed. Refresh the file list before trying again.',
+    };
+    const data = (body.data ?? {}) as Record<string, unknown>;
+    if (data.assetId !== assetId || typeof data.attachmentId !== 'string' || !data.attachmentId.trim()) return {
+      ok: false, message: 'The confirmation response was incomplete. Refresh the file list before trying again.',
+    };
+    return { ok: true, assetId, attachmentId: data.attachmentId };
+  } catch {
+    return { ok: false, message: 'The confirmation response was lost. Refresh the file list before trying again; the file may already be attached.' };
+  }
 }
 
 /**

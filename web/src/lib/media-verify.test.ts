@@ -148,7 +148,7 @@ await test('an upload is confirmed once storage says the file is there at the de
   );
 });
 
-await test('a file that never arrived is not confirmed', async () => {
+await test('a file storage cannot find is not confirmed', async () => {
   const { client, calls } = stubClient({ row: row() });
   const storage = stubStorage({ status: 404, contentLength: null });
 
@@ -160,7 +160,7 @@ await test('a file that never arrived is not confirmed', async () => {
   assert.equal(outcome.ok, false);
   assert.ok(!outcome.ok);
   assert.equal(outcome.status, 409, 'not a permissions problem and not our fault');
-  assert.match(outcome.message, /never arrived/);
+  assert.match(outcome.message, /did not confirm/);
   assert.equal(calls.some((c) => c.startsWith('rpc:')), false, 'nothing was confirmed');
 });
 
@@ -206,7 +206,7 @@ await test('storage that cannot be reached is our problem, not the teacher\'s', 
   assert.equal(outcome.ok, false);
   assert.ok(!outcome.ok);
   assert.equal(outcome.status, 503);
-  assert.match(outcome.message, /still pending/);
+  assert.match(outcome.message, /could not be verified/);
   assert.equal(calls.some((c) => c.startsWith('rpc:')), false);
 });
 
@@ -329,4 +329,31 @@ await test('a key that is not a master key is refused before any request', async
   assert.ok(!outcome.ok);
   assert.equal(outcome.status, 503);
   assert.equal(storage.requests.length, 0);
+});
+
+
+test('a coursework retry checks storage and reuses the database attachment', async () => {
+  const { client, calls } = stubClient({ row: row({ status: 'available' }), rpcResult: 'attachment-id' });
+  const storage = stubStorage({ status: 200, contentLength: 10_485_760 });
+  const result = await confirmMediaUpload(client, assetId, { config, mode: 'coursework', fetchImpl: storage.fetchImpl, now: fixed });
+  assert.deepEqual(result, { ok: true, verifiedBytes: 10_485_760, assetId, attachmentId: 'attachment-id' });
+  assert.equal(storage.requests.length, 1);
+  assert.ok(calls.some((call) => call.startsWith('rpc:confirm_coursework_upload:')));
+});
+
+test('a quarantine between the storage check and database confirmation is not reported as success', async () => {
+  const { client } = stubClient({ row: row({ status: 'available' }), rpcError: 'this file is held for review and cannot be confirmed' });
+  const storage = stubStorage({ status: 200, contentLength: 10_485_760 });
+  const result = await confirmMediaUpload(client, assetId, { config, mode: 'coursework', fetchImpl: storage.fetchImpl, now: fixed });
+  assert.equal(result.ok, false);
+  if (!result.ok) { assert.equal(result.status, 409); assert.match(result.message, /held for review/); }
+});
+
+test('a retry does not confirm when the object cannot be checked', async () => {
+  const { client, calls } = stubClient({ row: row({ status: 'available' }), rpcResult: 'attachment-id' });
+  const storage = stubStorage({ status: 403 });
+  const result = await confirmMediaUpload(client, assetId, { config, mode: 'coursework', fetchImpl: storage.fetchImpl, now: fixed });
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.match(result.message, /did not confirm/);
+  assert.ok(!calls.some((call) => call.startsWith('rpc:')));
 });

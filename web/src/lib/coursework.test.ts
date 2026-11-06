@@ -7,6 +7,7 @@ import {
   COURSEWORK_MAX_BYTES,
   COURSEWORK_MAX_FILES,
   courseworkFileHref,
+  confirmCourseworkFile,
   courseworkMimeAllowed,
   describeCourseworkFile,
   describeFileKind,
@@ -264,7 +265,19 @@ test('a confirmation that answers with nothing is a failure, not a success', asy
   });
   // The route said ok, but no attachment came back: the caller must not show
   // "handed in" for a file the database did not attach.
-  assert.equal(outcome.ok, true);
-  assert.equal(outcome.ok === true ? outcome.attachmentId : 'x', null);
+  assert.equal(outcome.ok, false);
+  if (!outcome.ok) assert.match(outcome.message, /incomplete/);
   void client;
+});
+
+
+test('a lost confirmation response is uncertain and directs the learner to refresh', async () => {
+  const result = await confirmCourseworkFile('a1', async () => { throw new Error('offline'); });
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.match(result.message, /may already be attached/);
+});
+
+test('confirmation rejects a response naming a different file', async () => {
+  const result = await confirmCourseworkFile('a1', async () => new Response(JSON.stringify({ ok: true, data: { assetId: 'a2', attachmentId: 'att' } }), { status: 200 }));
+  assert.equal(result.ok, false);
 });
