@@ -509,12 +509,15 @@ export async function run(ctx) {
     }
     const heldChild = await childFile('Held child');
     const otherChild = await childFile('Other child');
+    const pendingAttempt = (await q(`insert into public.child_login_attempts
+      (learner_profile_id,guardian_user_id,username) values ($1,$2,'hold.recovery') returning id`, [heldChild.learnerId,owner])).rows[0].id;
     await call(owner, 'select public.hold_coursework_file($1,$2)', [heldChild.asset, 'An unresolved concern']);
     const run = await call(owner, 'select public.run_retention_jobs(now(),500) as r');
     assert(run.r.held.learnerRecords >= 1, 'the blocked child record was not reported');
     assert(run.r.remaining.learnerRecords >= 1, 'the due child was not counted as remaining');
     assert((await scalar('select status from public.learner_profiles where id=$1', [heldChild.learnerId])).status !== 'erased');
     assert(await scalar('select id from public.assignment_submissions where id=$1', [heldChild.submission]), 'held submission was deleted');
+    assert(await scalar('select id from public.child_login_attempts where id=$1', [pendingAttempt]), 'hold did not preserve the attempt');
     assert((await scalar('select deleted_at from public.media_assets where id=$1', [heldChild.asset])).deleted_at === null,
       'held attachment was tombstoned by child cleanup');
     assert((await scalar('select status from public.learner_profiles where id=$1', [otherChild.learnerId])).status === 'erased',
@@ -523,6 +526,8 @@ export async function run(ctx) {
     await call(owner, 'select public.run_retention_jobs(now(),500) as r');
     assert((await scalar('select status from public.learner_profiles where id=$1', [heldChild.learnerId])).status === 'erased',
       'the child record did not return to its existing clock after release');
+    assert(!(await scalar('select id from public.child_login_attempts where id=$1', [pendingAttempt])), 'released record retained the identifying attempt');
+    assert(await scalar('select source_id from public.child_login_erasure_recovery where source_id=$1', [pendingAttempt]), 'released record lost recovery evidence');
   });
 
   await test('the whole cleanup includes the fourth clock, and reports what it held', async () => {

@@ -34,3 +34,11 @@ test('the identity-removal queue does not confuse missing data with an empty lis
   assert.deepEqual(parseChildLoginRemovalTasks([row]), [row]);
   assert.equal(parseChildLoginRemovalTasks([{ ...row, identity_present: null }]), null);
 });
+
+test('erasure recovery shows a late identity without exposing learner or guardian fields', async () => {
+  const { parseChildLoginErasureRecovery } = await import('./child-login-queue.ts');
+  const row = { source_kind: 'attempt', source_id: 'marker', identity_id: null, created_at: '2026-11-05T00:00:00Z', identity_present: true, trusted_marker_matches: true, matched_identity_ids: ['auth-id'] };
+  assert.deepEqual(parseChildLoginErasureRecovery([row]), [row]);
+  assert.equal(parseChildLoginErasureRecovery([{ ...row, matched_identity_ids: [null] }]), null);
+  assert.equal(parseChildLoginErasureRecovery(null), null);
+});

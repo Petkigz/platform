@@ -18,7 +18,7 @@ import {
 import { DecideForm } from './decide-form';
 import { ReconcileForm } from './reconcile-form';
 import { RecordChildRemoval } from './record-child-removal';
-import { parseChildLoginPendingAttempts, parseChildLoginRemovalTasks } from '@/lib/child-login-queue';
+import { parseChildLoginPendingAttempts, parseChildLoginRemovalTasks, parseChildLoginErasureRecovery } from '@/lib/child-login-queue';
 
 export const dynamic = 'force-dynamic';
 
@@ -87,6 +87,9 @@ export default async function AdminGuardiansPage() {
   const removalResult = owner ? await supabase.rpc('child_login_removal_queue', { p_limit: 50 }) : null;
   const removals = removalResult && !removalResult.error
     ? parseChildLoginRemovalTasks(removalResult.data) : null;
+  const erasureResult = owner ? await supabase.rpc('child_login_erasure_recovery_queue', { p_limit: 50 }) : null;
+  const erasureRecovery = erasureResult && !erasureResult.error
+    ? parseChildLoginErasureRecovery(erasureResult.data) : null;
 
   return (
     <div className="page wide">
@@ -168,6 +171,25 @@ export default async function AdminGuardiansPage() {
               ? task.marker_matches ? 'Identity present with matching trusted marker.' : 'An identity is present, but the original ID and marker do not match: investigate before acting.'
               : 'The original ID and any identity with the matching marker are absent from the authentication table.'}
             {!task.identity_present && <RecordChildRemoval taskId={task.task_id} />}
+          </li>)}</ul>}
+      </section>}
+
+      {owner && <section className="card">
+        <h2>Sign-in recovery after child-record erasure</h2>
+        <p className="muted">Private to the named safeguarding owner. Up to 50 oldest recovery
+          markers are shown without child or guardian names. A fingerprint and provider IDs are still
+          personal data. An absent identity may appear later if a provider request was in flight;
+          this screen neither removes the sign-in nor proves sessions or provider copies are gone.
+          Legacy identities without a trusted marker need individual review.</p>
+        {erasureRecovery === null ? <p className="notice warn">The erasure recovery register could not be read.</p>
+          : erasureRecovery.length === 0 ? <p className="muted">No recovery markers are listed.</p>
+          : <ul>{erasureRecovery.map((item) => <li key={`${item.source_kind}:${item.source_id}`}>
+            Recovery marker <code>{item.source_id}</code>, {dayLabel(item.created_at)};{' '}
+            {item.identity_present ? item.trusted_marker_matches
+              ? 'a trusted matching identity is present.' : 'an identity is present but not verified by a marker: review it individually.'
+              : 'no matching identity currently appears; an in-flight request may still finish.'}
+            {item.matched_identity_ids.length > 0 && <span> Authentication ID(s):{' '}
+              {item.matched_identity_ids.map((id) => <code key={id}>{id} </code>)}.</span>}
           </li>)}</ul>}
       </section>}
 

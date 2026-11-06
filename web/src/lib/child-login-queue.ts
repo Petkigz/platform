@@ -48,3 +48,30 @@ export function parseChildLoginRemovalTasks(value: unknown): ChildLoginRemovalTa
   }
   return rows;
 }
+
+export type ChildLoginErasureRecovery = {
+  source_kind: 'attempt' | 'legacy_removal';
+  source_id: string;
+  identity_id: string | null;
+  created_at: string;
+  identity_present: boolean;
+  trusted_marker_matches: boolean;
+  matched_identity_ids: string[];
+};
+
+export function parseChildLoginErasureRecovery(value: unknown): ChildLoginErasureRecovery[] | null {
+  if (!Array.isArray(value)) return null;
+  const rows: ChildLoginErasureRecovery[] = [];
+  for (const item of value) {
+    if (!item || typeof item !== 'object') return null;
+    const row = item as Record<string, unknown>;
+    if ((row.source_kind !== 'attempt' && row.source_kind !== 'legacy_removal')
+      || typeof row.source_id !== 'string'
+      || (row.identity_id !== null && typeof row.identity_id !== 'string')
+      || typeof row.created_at !== 'string' || Number.isNaN(Date.parse(row.created_at))
+      || typeof row.identity_present !== 'boolean' || typeof row.trusted_marker_matches !== 'boolean'
+      || !Array.isArray(row.matched_identity_ids) || !row.matched_identity_ids.every((id) => typeof id === 'string')) return null;
+    rows.push(row as ChildLoginErasureRecovery);
+  }
+  return rows;
+}

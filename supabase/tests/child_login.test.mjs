@@ -530,6 +530,72 @@ export async function run(ctx) {
     }
   });
 
+  await test('child-record purge removes identifying attempt links but keeps a recoverable late-provider marker', async () => {
+    const guardian = await person('Erasure guardian');
+    const { childId } = await familyWithChild(guardian, 'Erasure child');
+    const prior = (await q('select owner_user_id from public.safeguarding_owner where singleton')).rows[0]?.owner_user_id ?? null;
+    const otherAdmin = await bootstrapAdmin(`cl-erasure-admin-${++seq}@example.com`);
+    await q('delete from public.safeguarding_owner where singleton');
+    await q('select public.bootstrap_safeguarding_owner($1)', [admin]);
+    await setFlag('family.child_login', true);
+    try {
+      const attempt = (await asActor(guardian, 'select public.prepare_child_login($1,$2) id', [childId, 'late.erasure'])).rows[0].id;
+      await committed(async () => {
+        await q("select set_config('app.account_erasure','on',true)");
+        await q("update public.learner_profiles set deleted_at=now()-interval '31 days' where id=$1", [childId]);
+      });
+      const result = (await q('select public.purge_learner_record($1) result', [childId])).rows[0].result;
+      assert(result.erased === true && result.nothingLeft === false && result.identityRecoveryMarkersAdded === 1, 'purge did not report retained recovery data');
+      const remaining = (await q('select count(*)::int n from public.child_login_attempts where learner_profile_id=$1', [childId])).rows[0].n;
+      assert(remaining === 0, 'identifying attempt still names child');
+      const recovery = (await q('select * from public.child_login_erasure_recovery where source_id=$1', [attempt])).rows[0];
+      assert(recovery && recovery.attempt_marker === attempt && recovery.identity_id === null && recovery.address_hash.length === 64, 'recovery marker missing');
+      assert(!('learner_profile_id' in recovery) && !('guardian_user_id' in recovery) && !('username' in recovery), 'marker kept identifying columns');
+      await rejects(() => asActor(otherAdmin, 'select * from public.child_login_erasure_recovery_queue($1)', [50]), /not_allowed/);
+      let listed = (await asActor(admin, 'select * from public.child_login_erasure_recovery_queue($1)', [50])).rows.find(r => r.source_id === attempt);
+      assert(listed && !listed.identity_present && listed.matched_identity_ids.length === 0, 'empty lookup misreported');
+      // A provider request can finish after the record was purged.
+      const late = await newUser('late.erasure@learners.ayahspring.com');
+      await q("update auth.users set raw_app_meta_data=jsonb_build_object('ayahspring_child_attempt',$2::text) where id=$1", [late,attempt]);
+      listed = (await asActor(admin, 'select * from public.child_login_erasure_recovery_queue($1)', [50])).rows.find(r => r.source_id === attempt);
+      assert(listed && listed.identity_present && listed.trusted_marker_matches && listed.matched_identity_ids.includes(late), 'late provider identity was lost');
+      await q('delete from auth.users where id=$1', [late]);
+    } finally {
+      await setFlag('family.child_login', false);
+      await q('delete from public.safeguarding_owner where singleton');
+      if (prior) await q('select public.bootstrap_safeguarding_owner($1)', [prior]);
+    }
+  });
+
+  await test('child-record purge retains recovery for completed and unmarked legacy removals', async () => {
+    const guardian = await person('Completed erasure guardian');
+    const { childId } = await familyWithChild(guardian, 'Completed erasure child');
+    const trusted = await person('Trusted old identity');
+    const legacy = await person('Legacy old identity');
+    const attempt = (await q(`insert into public.child_login_attempts
+      (learner_profile_id,guardian_user_id,username,status,user_id,completed_at)
+      values($1,$2,'completed.erase','completed',$3,now()) returning id`, [childId,guardian,trusted])).rows[0].id;
+    await q(`insert into public.child_login_removal_tasks
+      (child_login_id,learner_profile_id,child_user_id,username,attempt_id)
+      values (gen_random_uuid(),$1,$2,'completed.erase',$3)`, [childId,trusted,attempt]);
+    const legacyTask = (await q(`insert into public.child_login_removal_tasks
+      (child_login_id,learner_profile_id,child_user_id,username)
+      values (gen_random_uuid(),$1,$2,'legacy.erase') returning id`, [childId,legacy])).rows[0].id;
+    await committed(async () => {
+      await q("select set_config('app.account_erasure','on',true)");
+      await q("update public.learner_profiles set deleted_at=now()-interval '31 days' where id=$1", [childId]);
+    });
+    const result = (await q('select public.purge_learner_record($1) result', [childId])).rows[0].result;
+    assert(result.erased && result.identityRecoveryMarkersAdded === 2, 'expected two recovery records');
+    const links = (await q(`select (select count(*) from public.child_login_attempts where learner_profile_id=$1)
+      + (select count(*) from public.child_login_removal_tasks where learner_profile_id=$1) n`, [childId])).rows[0];
+    assert(Number(links.n) === 0, 'identifying child links remain');
+    const records = (await q('select * from public.child_login_erasure_recovery where source_id in ($1,$2)', [attempt,legacyTask])).rows;
+    assert(records.length === 2 && records.some(r => r.source_kind === 'attempt' && r.identity_id === trusted)
+      && records.some(r => r.source_kind === 'legacy_removal' && r.identity_id === legacy && r.attempt_marker === null),
+      'trusted or legacy identity evidence was lost');
+  });
+
   await test('the creation handler reaches the real database boundary, including a lost provider reply', async () => {
     await setFlag('family.child_login', true);
     try {

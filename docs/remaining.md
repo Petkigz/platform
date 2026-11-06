@@ -702,3 +702,18 @@ revokes sessions or verifies external copies. Existing rows already removed befo
 this migration cannot be reconstructed from `child_logins`. Task and attempt data
 can still identify a child after the learning-record purge; safe cleanup and
 in-flight-provider coordination remain unfinished. No migration has been deployed.
+
+
+**Child-login data after learning-record purge:** Migration 680 changes the
+successful purge to remove attempt and removal-task rows that name the child,
+guardian or username. Before removing them it stores a private recovery marker,
+a normalized-address fingerprint and, when known, an identity ID; the safeguarding
+owner can view possible matching identities on the guardian-consent page. A late
+provider creation remains discoverable. Held child records are not purged or
+changed by this step. The fingerprint, marker and identity ID are still personal
+data, and Auth identities, sessions, audit records and provider copies may remain.
+The queue does not delete identities or know that an in-flight request is finished;
+there is no automated cleanup of the recovery markers yet. Records already erased
+before this migration need individual review; no automatic backfill is provided.
+Local tests cover pending, completed, legacy and held cases, including a late
+marked identity; deployed-schema concurrency and real Supabase remain untested.

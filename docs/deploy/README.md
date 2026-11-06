@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-274 files in `supabase/migrations/`, applied in filename order — the 14-digit
+275 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -170,7 +170,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 274 files from the top and fail on the
+it, and `db push` would then re-apply all 275 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -1068,3 +1068,11 @@ identities. The record button checks Auth-table absence, not session revocation 
 provider copies. A matching identity that reappears puts the task back in the list.
 Do not assume completed erasure: reconciliation, in-flight-provider coordination,
 cleanup of identifying attempt/task data and session revocation remain unfinished.
+
+
+Migration 680 removes child-linked attempt and task rows when a child learning
+record is purged, after retaining private pseudonymous recovery evidence. The
+safeguarding owner sees possible surviving or late-created identities on the
+guardian-consent page. A fingerprint is not anonymous, and absence from Auth is
+not proof a request cannot still complete. Identity deletion, session revocation,
+recovery-evidence cleanup and review of already-erased records remain separate.
