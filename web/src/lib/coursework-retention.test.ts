@@ -13,6 +13,7 @@ import {
   holdSentence,
   parseHoldCount,
   parseHolds,
+  parseHoldPage,
   parseStorageQueue,
   parseStoragePage,
   postRetentionAction,
@@ -165,4 +166,13 @@ test('storage pages preserve precise cursors and reject malformed responses', ()
   assert.equal(parseStoragePage(null), null);
   assert.equal(parseStoragePage([{...data[0],sort_at:'bad'}]), null);
   assert.deepEqual(parseStoragePage([]), []);
+});
+
+
+test('hold pages validate rows and retain precise opened-at cursors', () => {
+  const opened = '2026-11-02T09:15:00.123456+00:00';
+  assert.equal(parseHoldPage([{...hold,opened_at:opened}])?.[0]?.openedAt, opened);
+  assert.equal(parseHoldPage([{...hold,still_readable:'true'}]), null);
+  assert.equal(parseHoldPage(null), null);
+  assert.deepEqual(parseHoldPage([]), []);
 });

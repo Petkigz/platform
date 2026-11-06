@@ -459,6 +459,31 @@ export async function run(ctx) {
     await call(owner, 'select public.release_coursework_hold($1,$2)', [row.asset, 'The new concern was reviewed']);
   });
 
+  await test('the owner can page past 120 open holds with equal timestamps', async () => {
+    await q('begin');
+    try {
+      const ids = (await q(`insert into public.media_assets
+        (storage_backend,master_bucket,master_key,checksum,mime_type,byte_size,status,uploaded_by,purpose)
+        select 'r2','masters','hold-page/'||gen_random_uuid(),md5(gen_random_uuid()::text)||md5(gen_random_uuid()::text),
+          'image/jpeg',100,'available',$1,'coursework' from generate_series(1,120) returning id`,[owner])).rows.map(r=>r.id);
+      await q(`insert into public.coursework_retention_holds(asset_id,reason,opened_by,opened_at)
+        select a,'Private reason',$2,'1900-01-01 00:00:00.123456+00'::timestamptz from unnest($1::uuid[]) a`,[ids,owner]);
+      await q("select set_config('request.jwt.claims',$1,true)", [JSON.stringify({sub:owner,role:'authenticated'})]);
+      await q('set local role authenticated');
+      const seen=[]; let after=null,afterId=null;
+      for (let page=0; page<5; page++) {
+        const rows=(await q('select *,opened_at::text t from public.coursework_holds_page($1,$2,50)',[after,afterId])).rows;
+        seen.push(...rows.map(r=>r.asset_id));
+        if (rows.length<50) break;
+        after=rows.at(-1).t; afterId=rows.at(-1).asset_id;
+      }
+      assert(ids.every(id=>seen.includes(id)) && new Set(seen).size===seen.length, 'hold pages skipped or duplicated entries');
+    } finally { await q('rollback'); }
+    await refuses(/coursework:not_allowed/, () => call(governance,'select * from public.coursework_holds_page(null,null,50)'));
+    await refuses(/both hold cursor values/, () => call(owner,'select * from public.coursework_holds_page(now(),null,50)'));
+    await refuses(/page limit/, () => call(owner,'select * from public.coursework_holds_page(null,null,101)'));
+  });
+
   await test('the cleanup locks each asset and rechecks its hold before tombstoning', async () => {
     const definition = (await q(`select pg_get_functiondef('public.purge_coursework_files(timestamptz,integer)'::regprocedure) as source`)).rows[0].source;
     const lock = definition.indexOf('where id = v_id for update');

@@ -74,6 +74,20 @@ export function parseHolds(data: unknown): HoldRow[] {
   });
 }
 
+export function parseHoldPage(data: unknown): HoldRow[] | null {
+  if (!Array.isArray(data)) return null;
+  for (const item of data) {
+    if (!item || typeof item !== 'object') return null;
+    const r = item as Record<string, unknown>;
+    if (typeof r.asset_id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(r.asset_id) ||
+        typeof r.display_name !== 'string' || typeof r.master_bucket !== 'string' || typeof r.master_key !== 'string' ||
+        typeof r.reason !== 'string' || typeof r.opened_by_name !== 'string' || typeof r.opened_at !== 'string' ||
+        !Number.isFinite(Date.parse(r.opened_at)) || typeof r.still_readable !== 'boolean' ||
+        !(r.due_on === null || (typeof r.due_on === 'string' && Number.isFinite(Date.parse(r.due_on))))) return null;
+  }
+  return parseHolds(data);
+}
+
 export function parseHoldCount(data: unknown): HoldCount {
   const r = row(data);
   const n = (value: unknown) => (Number.isFinite(Number(value)) ? Number(value) : 0);

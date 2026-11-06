@@ -21,7 +21,7 @@ import {
   holdMeta,
   holdSentence,
   parseHoldCount,
-  parseHolds,
+  parseHoldPage,
   parseStoragePage,
   storageSentence,
 } from '@/lib/coursework-retention';
@@ -39,7 +39,7 @@ export const dynamic = 'force-dynamic';
 /** Owner-only review register, alongside separately authorized retention tools.
  * A recorded review is an attestation, not proof that a file was viewed.
  */
-export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ concern?: string; before?: string; beforeId?: string; endsAfter?: string; classEnd?: string; quarantineAfter?: string; quarantine?: string; concernAfter?: string; concernAfterId?: string; alert?: string; alertReview?: string; alertBefore?: string; storageAfter?: string; storageAfterId?: string }> }) {
+export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ concern?: string; before?: string; beforeId?: string; endsAfter?: string; classEnd?: string; quarantineAfter?: string; quarantine?: string; concernAfter?: string; concernAfterId?: string; alert?: string; alertReview?: string; alertBefore?: string; storageAfter?: string; storageAfterId?: string; holdAfter?: string; holdAfterId?: string }> }) {
   if (!isSupabaseConfigured()) redirect('/');
 
   const supabase = await createClient();
@@ -53,6 +53,9 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
 
   const params = await searchParams;
   const endsCursorValid = !params.endsAfter || /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(params.endsAfter);
+  const holdCursorValid = (!params.holdAfter && !params.holdAfterId) ||
+    (typeof params.holdAfter === 'string' && Number.isFinite(Date.parse(params.holdAfter)) &&
+      typeof params.holdAfterId === 'string' && isQuarantineCursor(params.holdAfterId));
   const storageCursorValid = (!params.storageAfter && !params.storageAfterId) ||
     (typeof params.storageAfter === 'string' && Number.isFinite(Date.parse(params.storageAfter)) &&
       typeof params.storageAfterId === 'string' && isQuarantineCursor(params.storageAfterId));
@@ -61,7 +64,7 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
       supabase.rpc('coursework_review_summary'),
       supabase.rpc('coursework_review_queue', { p_limit: 200 }),
       // The configured safeguarding owner alone can read the hold register.
-      supabase.rpc('coursework_holds', { p_limit: 100 }),
+      holdCursorValid ? supabase.rpc('coursework_holds_page', { p_after: params.holdAfter ?? null, p_after_id: params.holdAfterId ?? null, p_limit: 51 }) : Promise.resolve({ data: null, error: true }),
       supabase.rpc('coursework_hold_count'),
       // The owner alone: this plan names what is about to be deleted, and the
       // storage queue carries a bucket key for every unwatchable object.
@@ -126,9 +129,15 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
   const unreviewed = queue.filter((row) => row.review === 'none');
   const reviewed = queue.filter((row) => row.review !== 'none');
 
-  const canSeeHolds = !holdsResult.error && !holdCountResult.error && Array.isArray(holdsResult.data);
-  const holds = canSeeHolds ? parseHolds(holdsResult.data) : [];
-  const holdCount = canSeeHolds ? parseHoldCount(holdCountResult.data) : null;
+  const holdRows = !holdsResult.error ? parseHoldPage(holdsResult.data) : null;
+  const holdCountData = holdCountResult.data as Record<string, unknown> | null;
+  const validHoldCount = !holdCountResult.error && typeof holdCountData?.held === 'number' &&
+    typeof holdCountData?.holdingNothing === 'number' && Number.isSafeInteger(holdCountData.held) &&
+    Number.isSafeInteger(holdCountData.holdingNothing) && holdCountData.held >= 0 && holdCountData.holdingNothing >= 0;
+  const canSeeHolds = holdRows !== null && validHoldCount;
+  const holds = holdRows?.slice(0,50) ?? [];
+  const holdNext = holdRows && holdRows.length > 50 ? holdRows[49] : null;
+  const holdCount = canSeeHolds ? parseHoldCount(holdCountData) : null;
   const storageRows = !planResult.error && !storageResult.error ? parseStoragePage(storageResult.data) : null;
   const canSeeStorage = storageRows !== null;
   const storage = storageRows?.slice(0,50) ?? [];
@@ -365,7 +374,7 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
         </section>
       )}
 
-      <section className="card" style={{ marginBlockStart: '1.5rem' }}>
+      <section id="coursework-holds" className="card" style={{ marginBlockStart: '1.5rem' }}>
         <div className="outline-h">
           <h2>
             Held from deletion
@@ -389,8 +398,7 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
             )}
             {holds.length === 0 ? (
               <p className="muted">
-                Nothing is held. The clock is running on every file, which is the
-                ordinary state.
+                No holds were returned on this page.
               </p>
             ) : (
               <ul className="lessons">
@@ -414,6 +422,9 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
                 ))}
               </ul>
             )}
+            {params.holdAfter && <p><Link href="/admin/coursework#coursework-holds">First page of holds</Link></p>}
+            {holdNext && <p><Link href={`/admin/coursework?${new URLSearchParams({ holdAfter: holdNext.openedAt, holdAfterId: holdNext.assetId })}#coursework-holds`}>More holds</Link></p>}
+            <p className="muted">Holds can change while you browse. Return to the first page to check again.</p>
           </>
         )}
       </section>
