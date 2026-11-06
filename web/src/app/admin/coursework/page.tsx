@@ -19,7 +19,7 @@ import {
   PURGE_NOTE,
   holdMeta,
   holdSentence,
-  parseHoldCount,
+  parseHoldCountStrict,
   parseHoldPage,
   parseStoragePage,
   storageSentence,
@@ -135,15 +135,11 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
   const reviewed = queue.filter((row) => row.review !== 'none');
 
   const holdRows = !holdsResult.error ? parseHoldPage(holdsResult.data) : null;
-  const holdCountData = holdCountResult.data as Record<string, unknown> | null;
-  const validHoldCount = !holdCountResult.error && typeof holdCountData?.held === 'number' &&
-    typeof holdCountData?.holdingNothing === 'number' && Number.isSafeInteger(holdCountData.held) &&
-    Number.isSafeInteger(holdCountData.holdingNothing) && holdCountData.held >= 0 && holdCountData.holdingNothing >= 0;
-  const canSeeHolds = holdRows !== null && validHoldCount;
+  const holdCount = holdCountResult.error ? null : parseHoldCountStrict(holdCountResult.data);
+  const canSeeHolds = holdRows !== null;
   const holds = holdRows?.slice(0,50) ?? [];
   const holdNext = holdRows && holdRows.length > 50 ? holdRows[49] : null;
-  const holdCount = canSeeHolds ? parseHoldCount(holdCountData) : null;
-  const storageRows = !planResult.error && !storageResult.error ? parseStoragePage(storageResult.data) : null;
+  const storageRows = !storageResult.error ? parseStoragePage(storageResult.data) : null;
   const canSeeStorage = storageRows !== null;
   const storage = storageRows?.slice(0,50) ?? [];
   const storageNext = storageRows && storageRows.length > 50 ? storageRows[49] : null;
@@ -405,9 +401,10 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
         ) : (
           <>
             <p className="muted">{HOLDS_NOTE}</p>
+            {!holdCount && <p className="notice warn">Hold totals could not be checked. The list may still be used, but do not assume the total is zero.</p>}
             {holdCount && holdCount.holdingNothing > 0 && (
               <div className="notice warn">
-                {holdCount.holdingNothing} of these {holdCount.held === 1 ? 'holds names a file' : 'holds name files'} that
+                {holdCount.holdingNothing} of these {holdCount.held === 1 ? 'holds names a file' : 'holds name files'} that are
                 no longer readable. The hold may still protect stored bytes; review the
                 case before releasing it.
               </div>

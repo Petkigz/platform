@@ -12,6 +12,7 @@ import {
   holdMeta,
   holdSentence,
   parseHoldCount,
+  parseHoldCountStrict,
   parseHolds,
   parseHoldPage,
   parseStorageQueue,
@@ -49,6 +50,17 @@ test('nothing is read as a hold when the answer is not a list', () => {
   assert.deepEqual(parseStorageQueue(undefined), []);
   assert.deepEqual(parseHoldCount(null), { held: 0, holdingNothing: 0 });
   assert.deepEqual(parseHoldCount({ held: '2', holdingNothing: 1 }), { held: 2, holdingNothing: 1 });
+});
+
+test('hold totals reject malformed or contradictory values without hiding a valid list', () => {
+  assert.deepEqual(parseHoldCountStrict({ held: 3, holdingNothing: 2 }), { held: 3, holdingNothing: 2 });
+  for (const value of [null, {}, { held: 0, holdingNothing: 1 },
+    { held: '3', holdingNothing: 1 }, { held: -1, holdingNothing: 0 },
+    { held: 3, holdingNothing: 1.5 }]) assert.equal(parseHoldCountStrict(value), null);
+  const page = readFileSync(new URL('../app/admin/coursework/page.tsx', import.meta.url), 'utf8');
+  assert.match(page, /const canSeeHolds = holdRows !== null/);
+  assert.match(page, /Hold totals could not be checked/);
+  assert.match(page, /const storageRows = !storageResult.error/);
 });
 
 test('a hold on a file that has gone says so, and does not read as care', () => {

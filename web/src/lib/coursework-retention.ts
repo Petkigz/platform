@@ -94,6 +94,16 @@ export function parseHoldCount(data: unknown): HoldCount {
   return { held: n(r.held), holdingNothing: n(r.holdingNothing) };
 }
 
+/** A missing or contradictory summary is unknown, not zero. */
+export function parseHoldCountStrict(data: unknown): HoldCount | null {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
+  const r = data as Record<string, unknown>;
+  if (typeof r.held !== 'number' || !Number.isSafeInteger(r.held) || r.held < 0 ||
+      typeof r.holdingNothing !== 'number' || !Number.isSafeInteger(r.holdingNothing) ||
+      r.holdingNothing < 0 || r.holdingNothing > r.held) return null;
+  return { held: r.held, holdingNothing: r.holdingNothing };
+}
+
 export function parseStorageQueue(data: unknown): StorageRow[] {
   if (!Array.isArray(data)) return [];
   return data.map((raw) => {
