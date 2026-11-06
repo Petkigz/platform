@@ -78,6 +78,8 @@ test('the storage sentence never implies the bytes are gone', () => {
 
   assert.match(PURGE_NOTE, /cannot delete or verify/);
   assert.match(PURGE_NOTE, /refuses/);
+  assert.match(PURGE_NOTE, /Do not delete held objects or objects not yet due/);
+  assert.match(PURGE_NOTE, /cannot prevent changes or deletion in storage/);
   assert.match(HOLDS_NOTE, /written reason/);
   assert.match(HOLDS_NOTE, /restores a known byte deadline/);
   assert.match(HOLDS_NOTE, /review older or unclear cases individually/);
@@ -108,6 +110,8 @@ test('the page renders the register and the bucket, and asks the database first'
   assert.ok(page.includes('coursework_bytes_awaiting'), 'the page never reads the storage queue');
   assert.ok(page.includes('RetentionActionForm'), 'the register has no actions on it');
   assert.ok(page.includes('canSeeHolds'), 'the page does not distinguish a refusal from an empty list');
+  assert.ok(page.includes('row.held ?') && page.includes('Safeguarding hold open'), 'held storage entries need a visible warning');
+  assert.ok(page.includes('coursework_bytes_awaiting_page_with_holds'));
   assert.ok(page.includes('canSeeStorage'), 'the storage queue is rendered without asking whether it may be');
   assert.ok(!page.includes('it is a record that somebody saw the file'));
   const form = readFileSync(new URL('../app/admin/coursework/retention-actions.tsx', import.meta.url), 'utf8');
@@ -162,8 +166,14 @@ test('interrupted or malformed retention responses do not claim the action faile
 
 test('storage pages preserve precise cursors and reject malformed responses', () => {
   const timestamp = '2026-11-01T10:00:00.123456+00:00';
-  const data = [{asset_id:hold.asset_id,master_bucket:'masters',master_key:'key',display_name:'File',tombstoned_at:timestamp,purge_due_at:null,sort_at:timestamp}];
+  const data = [{asset_id:hold.asset_id,master_bucket:'masters',master_key:'key',display_name:'File',tombstoned_at:timestamp,purge_due_at:null,sort_at:timestamp,held:false}];
   assert.equal(parseStoragePage(data)?.[0]?.sortAt, timestamp);
+  assert.equal(parseStoragePage(data)?.[0]?.held, false);
+  assert.equal(parseStoragePage([{...data[0],held:true}])?.[0]?.held, true);
+  assert.equal(parseStoragePage([{...data[0],held:null}]), null);
+  assert.equal(parseStoragePage([{...data[0],held:'false'}]), null);
+  const { held: _held, ...missingHold } = data[0]!;
+  assert.equal(parseStoragePage([missingHold]), null);
   assert.equal(parseStoragePage(null), null);
   assert.equal(parseStoragePage([{...data[0],sort_at:'bad'}]), null);
   assert.deepEqual(parseStoragePage([]), []);

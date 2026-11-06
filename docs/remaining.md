@@ -889,3 +889,9 @@ still assigns thirty days after release, so the owner must review those cases
 individually rather than assume that date satisfies the closure-erasure decision.
 Neither the deadline nor an owner's statement removes or verifies stored bytes.
 Apply the migration and test against the deployed system and object storage.
+
+**Storage queue hold warnings:** the owner page now identifies open holds on
+queued objects and suppresses the deletion-statement action while held. Hold
+status is a point-in-time view and can change; neither the screen nor the
+statement can prevent or verify independent object-store operations. Review the
+hold immediately before acting. Deploy and test against the hosted system.

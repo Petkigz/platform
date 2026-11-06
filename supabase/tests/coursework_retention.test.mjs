@@ -528,16 +528,16 @@ export async function run(ctx) {
       await q('set local role authenticated');
       const seen = []; let after = null, afterId = null;
       for (let page=0; page<5; page++) {
-        const rows = (await q('select *,sort_at::text t from public.coursework_bytes_awaiting_page($1,$2,50)', [after,afterId])).rows;
+        const rows = (await q('select *,sort_at::text t from public.coursework_bytes_awaiting_page_with_holds($1,$2,50)', [after,afterId])).rows;
         seen.push(...rows.map(r => r.asset_id));
         if (rows.length < 50) break;
         after=rows.at(-1).t; afterId=rows.at(-1).asset_id;
       }
       assert(seeded.every(id => seen.includes(id)) && new Set(seen).size===seen.length, 'storage pages skipped or duplicated entries');
     } finally { await q('rollback'); }
-    await refuses(/coursework:not_allowed/, () => call(governance,'select * from public.coursework_bytes_awaiting_page(null,null,50)'));
-    await refuses(/both storage cursor values/, () => call(owner,'select * from public.coursework_bytes_awaiting_page(now(),null,50)'));
-    await refuses(/page limit/, () => call(owner,'select * from public.coursework_bytes_awaiting_page(null,null,101)'));
+    await refuses(/coursework:not_allowed/, () => call(governance,'select * from public.coursework_bytes_awaiting_page_with_holds(null,null,50)'));
+    await refuses(/both storage cursor values/, () => call(owner,'select * from public.coursework_bytes_awaiting_page_with_holds(now(),null,50)'));
+    await refuses(/page limit/, () => call(owner,'select * from public.coursework_bytes_awaiting_page_with_holds(null,null,101)'));
   });
 
   await test('recording a deletion refuses while readable, then records an attestation', async () => {

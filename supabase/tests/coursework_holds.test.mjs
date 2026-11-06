@@ -282,10 +282,16 @@ export async function run(ctx) {
     const pendingBytes = (await q('select purged_at from public.media_assets where id=$1', [asset])).rows[0].purged_at;
     assert(pendingBytes === null, 'a held file was marked as purged');
 
+    const heldPage = (await asActor(owner, () => q('select * from public.coursework_bytes_awaiting_page_with_holds(null,null,100)'))).rows;
+    eq(heldPage.find((entry) => entry.asset_id === asset)?.held, true, 'the storage page must identify an open hold');
+    await rejects(() => asActor(governance, () => q('select * from public.coursework_bytes_awaiting_page_with_holds(null,null,50)')), /coursework:not_allowed/);
+
     // Release remains possible after review; it does not itself delete bytes.
     await call(owner, 'select public.release_coursework_hold($1,$2)',
       [asset, 'Releasing a hold on a file that no longer exists.']);
     eq((await holdList()).length, 0, 'holds after releasing a dead one');
+    const releasedPage = (await asActor(owner, () => q('select * from public.coursework_bytes_awaiting_page_with_holds(null,null,100)'))).rows;
+    eq(releasedPage.find((entry) => entry.asset_id === asset)?.held, false, 'the storage page must reflect release');
   });
 
   await test('a hold preserves an existing byte deadline instead of adding thirty days', async () => {
