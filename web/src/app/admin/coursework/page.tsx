@@ -523,9 +523,10 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
 
       <p className="muted" style={{ fontSize: '0.9rem', marginBlockStart: '1.5rem' }}>
         A file may become due for tombstoning a year after the class ends, or
-        thirty days after a learner&rsquo;s record is erased where that is sooner.
-        Storage deletion is a separate, unverified statement. A review can remain
-        after the file, but it is a statement, not proof of a view.
+        thirty days after an eligible account closure marks the child&rsquo;s record for erasure,
+        where that is sooner. A safeguarding hold can delay erasure. Child-login cleanup and
+        storage deletion have separate, unverified steps. A review can remain after the file,
+        but it is a statement, not proof of a view.
       </p>
     </div>
   );

@@ -176,3 +176,11 @@ test('hold pages validate rows and retain precise opened-at cursors', () => {
   assert.equal(parseHoldPage(null), null);
   assert.deepEqual(parseHoldPage([]), []);
 });
+
+
+test('coursework clock copy does not start thirty days after erasure', () => {
+  const page=readFileSync(new URL('../app/admin/coursework/page.tsx', import.meta.url),'utf8');
+  assert.match(page,/thirty days after an eligible account closure/);
+  assert.doesNotMatch(page,/thirty days after a learner.rsquo;s record is erased/);
+  assert.match(page,/Child-login cleanup and/);
+});
