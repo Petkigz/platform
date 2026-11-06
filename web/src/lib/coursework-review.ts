@@ -87,8 +87,15 @@ export function parseReviewPage(value: unknown): ReviewQueueRow[] | null {
   for (const entry of value) {
     if (!entry || typeof entry !== 'object') return null;
     const r = entry as Record<string, unknown>;
-    if (typeof r.assetId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(r.assetId) ||
-        typeof r.submissionId !== 'string' || typeof r.attachedAt !== 'string' || !Number.isFinite(Date.parse(r.attachedAt)) ||
+    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const nullableText = (item: unknown) => item === null || typeof item === 'string';
+    if (typeof r.assetId !== 'string' || !uuid.test(r.assetId) ||
+        typeof r.submissionId !== 'string' || !uuid.test(r.submissionId) ||
+        typeof r.attachedAt !== 'string' || !Number.isFinite(Date.parse(r.attachedAt)) ||
+        typeof r.mimeType !== 'string' || !r.mimeType || typeof r.byteSize !== 'string' ||
+        !/^[0-9]+$/.test(r.byteSize) || !Number.isSafeInteger(Number(r.byteSize)) ||
+        !nullableText(r.courseTitle) || !nullableText(r.learnerName) || !nullableText(r.fileName) || !nullableText(r.reviewerName) ||
+        !(r.reviewedAt === null || (typeof r.reviewedAt === 'string' && Number.isFinite(Date.parse(r.reviewedAt)))) ||
         (r.review !== 'none' && r.review !== 'clear' && r.review !== 'concern')) return null;
   }
   return parseReviewQueue(value);

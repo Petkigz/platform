@@ -182,9 +182,11 @@ test('owner can open, review again and hold a previously reviewed file', () => {
 
 
 test('review pages preserve precise timestamps and reject invalid cursors', () => {
-  const raw={assetId:'11111111-1111-4111-8111-111111111111',submissionId:'submission',attachedAt:'2026-11-01T10:00:00.123456+00:00',review:'none'};
+  const raw={assetId:'11111111-1111-4111-8111-111111111111',submissionId:'22222222-2222-4222-8222-222222222222',attachedAt:'2026-11-01T10:00:00.123456+00:00',review:'none',mimeType:'image/jpeg',byteSize:'100',courseTitle:null,learnerName:null,fileName:null,reviewerName:null,reviewedAt:null};
   assert.equal(parseReviewPage([raw])?.[0]?.attachedAt, raw.attachedAt);
   assert.equal(parseReviewPage([{...raw, review:'unknown'}]), null);
+  assert.equal(parseReviewPage([{...raw, byteSize:'not-a-size'}]), null);
+  assert.equal(parseReviewPage([{...raw, submissionId:'broken'}]), null);
   assert.equal(parseReviewPage(null), null);
   assert.deepEqual(parseReviewPage([]), []);
 });
