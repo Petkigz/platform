@@ -19,7 +19,7 @@ import { DecideForm } from './decide-form';
 import { ReconcileForm } from './reconcile-form';
 import { RecordChildRemoval } from './record-child-removal';
 import { ReconcileErasure } from './reconcile-erasure';
-import { parseChildLoginPendingAttempts, parseChildLoginRemovalTasks, parseChildLoginErasureRecovery, parseChildLoginLegacyErasure } from '@/lib/child-login-queue';
+import { parseChildLoginPendingAttempts, parseChildLoginRemovalTasks, parseChildLoginErasureRecovery, parseChildLoginLegacyErasure, queuePageNumber } from '@/lib/child-login-queue';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,7 +36,33 @@ export const dynamic = 'force-dynamic';
  * lapse bites, not whether a review can happen; a queue that only works once
  * enforcement is on would make enforcement impossible to prepare for.
  */
-export default async function AdminGuardiansPage() {
+type QueuePageKey = 'attemptPage' | 'removalPage' | 'recoveryPage' | 'legacyPage';
+type QueuePages = Record<QueuePageKey, number>;
+
+function QueueNavigation({ pageKey, pages, hasMore }: { pageKey: QueuePageKey; pages: QueuePages; hasMore: boolean }) {
+  function href(page: number) {
+    const params = new URLSearchParams();
+    for (const key of ['attemptPage', 'removalPage', 'recoveryPage', 'legacyPage'] as const) {
+      const value = key === pageKey ? page : pages[key];
+      if (value > 0) params.set(key, String(value));
+    }
+    return `/admin/guardians?${params.toString()}`;
+  }
+  return <nav className="row" aria-label="Queue pages" style={{ gap: '0.75rem' }}>
+    {pages[pageKey] > 0 && <Link href={href(pages[pageKey] - 1)}>Previous</Link>}
+    <span>Page {pages[pageKey] + 1}</span>
+    {hasMore && <Link href={href(pages[pageKey] + 1)}>Next</Link>}
+  </nav>;
+}
+
+export default async function AdminGuardiansPage({ searchParams }: {
+  searchParams: Promise<Partial<Record<QueuePageKey, string | string[]>>>;
+}) {
+  const query = await searchParams;
+  const pages: QueuePages = {
+    attemptPage: queuePageNumber(query.attemptPage), removalPage: queuePageNumber(query.removalPage),
+    recoveryPage: queuePageNumber(query.recoveryPage), legacyPage: queuePageNumber(query.legacyPage),
+  };
   if (!isSupabaseConfigured()) redirect('/');
 
   const supabase = await createClient();
@@ -82,16 +108,16 @@ export default async function AdminGuardiansPage() {
   const register = await guardianConsentRegister(supabase);
   const ownerStatus = await supabase.rpc('safeguarding_owner_status');
   const owner = !ownerStatus.error && ownerStatus.data?.is_owner === true;
-  const attemptsResult = owner ? await supabase.rpc('child_login_pending_attempts', { p_limit: 50 }) : null;
+  const attemptsResult = owner ? await supabase.rpc('child_login_pending_attempts_page', { p_limit: 51, p_offset: pages.attemptPage * 50 }) : null;
   const attempts = attemptsResult && !attemptsResult.error
     ? parseChildLoginPendingAttempts(attemptsResult.data) : null;
-  const removalResult = owner ? await supabase.rpc('child_login_removal_queue', { p_limit: 50 }) : null;
+  const removalResult = owner ? await supabase.rpc('child_login_removal_queue_page', { p_limit: 51, p_offset: pages.removalPage * 50 }) : null;
   const removals = removalResult && !removalResult.error
     ? parseChildLoginRemovalTasks(removalResult.data) : null;
-  const erasureResult = owner ? await supabase.rpc('child_login_erasure_recovery_queue', { p_limit: 50 }) : null;
+  const erasureResult = owner ? await supabase.rpc('child_login_erasure_recovery_queue_page', { p_limit: 51, p_offset: pages.recoveryPage * 50 }) : null;
   const erasureRecovery = erasureResult && !erasureResult.error
     ? parseChildLoginErasureRecovery(erasureResult.data) : null;
-  const legacyResult = owner ? await supabase.rpc('child_login_legacy_erasure_queue', { p_limit: 50 }) : null;
+  const legacyResult = owner ? await supabase.rpc('child_login_legacy_erasure_queue_page', { p_limit: 51, p_offset: pages.legacyPage * 50 }) : null;
   const legacyErasure = legacyResult && !legacyResult.error
     ? parseChildLoginLegacyErasure(legacyResult.data) : null;
 
@@ -139,13 +165,13 @@ export default async function AdminGuardiansPage() {
       {owner && (
         <section className="card">
           <h2>Pending child-login attempts</h2>
-          <p className="muted">Private to the named safeguarding owner. This shows up to 50 oldest
-            pending attempts. A marked identity is not proof
+          <p className="muted">Queues can change while you browse. Refresh and revisit earlier pages after processing cases.</p>
+          <p className="muted">Private to the named safeguarding owner. Pending attempts are shown 50 per page. A marked identity is not proof
             that it is linked or that other provider copies or sessions are gone; do not delete or
             release an attempt based on this list alone.</p>
           {attempts === null ? <p className="notice warn">The attempt register could not be read.</p>
             : attempts.length === 0 ? <p className="muted">No pending attempts are listed.</p>
-            : <ul>{attempts.map((attempt) => (
+            : <ul>{attempts.slice(0, 50).map((attempt) => (
               <li key={attempt.attempt_id}>
                 {attempt.learner_name} — guardian {attempt.guardian_name}; username {attempt.username};
                 {' '}started {dayLabel(attempt.created_at)}; {attempt.marked_identity_present
@@ -154,6 +180,7 @@ export default async function AdminGuardiansPage() {
                 {attempt.marked_identity_present && <ReconcileForm attemptId={attempt.attempt_id} />}
               </li>
             ))}</ul>}
+          {attempts !== null && <QueueNavigation pageKey="attemptPage" pages={pages} hasMore={attempts.length > 50} />}
           <p className="muted">Completion links only the existing marked identity after rechecking guardian permission.
             It does not reset the password, create another identity or remove one. Cases without a
             matching identity still need individual review.</p>
@@ -163,31 +190,31 @@ export default async function AdminGuardiansPage() {
       {owner && <section className="card">
         <h2>Child sign-ins awaiting removal</h2>
         <p className="muted">Private to the named safeguarding owner. Detachment keeps lessons and
-          progress but does not remove the sign-in. Up to 50 oldest tasks are shown. Review the exact
+          progress but does not remove the sign-in. Tasks are shown 50 per page. Review the exact
           identity in Supabase Authentication before any deletion; a missing marker, especially on
           an older login, requires individual investigation. Removing an identity is currently manual.
           This list does not prove that issued sessions or external copies are gone.</p>
         {removals === null ? <p className="notice warn">The removal register could not be read.</p>
           : removals.length === 0 ? <p className="muted">No identity-removal tasks are listed.</p>
-          : <ul>{removals.map((task) => <li key={task.task_id}>
+          : <ul>{removals.slice(0, 50).map((task) => <li key={task.task_id}>
             {task.learner_name} — username {task.username}; identity ID <code>{task.child_user_id}</code>;
             {' '}started {dayLabel(task.created_at)}. {task.identity_present
               ? task.marker_matches ? 'Identity present with matching trusted marker.' : 'An identity is present, but the original ID and marker do not match: investigate before acting.'
               : 'The original ID and any identity with the matching marker are absent from the authentication table.'}
             {!task.identity_present && <RecordChildRemoval taskId={task.task_id} />}
           </li>)}</ul>}
+        {removals !== null && <QueueNavigation pageKey="removalPage" pages={pages} hasMore={removals.length > 50} />}
       </section>}
 
       {owner && <section className="card">
         <h2>Sign-in recovery after child-record erasure</h2>
-        <p className="muted">Private to the named safeguarding owner. Up to 50 oldest recovery
-          markers are shown without child or guardian names. A fingerprint and provider IDs are still
+        <p className="muted">Private to the named safeguarding owner. Recovery markers are shown 50 per page without child or guardian names. A fingerprint and provider IDs are still
           personal data. An absent identity may appear later if a provider request was in flight;
           this screen neither removes the sign-in nor proves sessions or provider copies are gone.
           Legacy identities without a trusted marker need individual review.</p>
         {erasureRecovery === null ? <p className="notice warn">The erasure recovery register could not be read.</p>
           : erasureRecovery.length === 0 ? <p className="muted">No recovery markers are listed.</p>
-          : <ul>{erasureRecovery.map((item) => <li key={`${item.source_kind}:${item.source_id}`}>
+          : <ul>{erasureRecovery.slice(0, 50).map((item) => <li key={`${item.source_kind}:${item.source_id}`}>
             Recovery marker <code>{item.source_id}</code>, {dayLabel(item.created_at)};{' '}
             {item.identity_present ? item.trusted_marker_matches
               ? 'a trusted matching identity is present.' : 'an identity is present but not verified by a marker: review it individually.'
@@ -195,21 +222,22 @@ export default async function AdminGuardiansPage() {
             {item.matched_identity_ids.length > 0 && <span> Authentication ID(s):{' '}
               {item.matched_identity_ids.map((id) => <code key={id}>{id} </code>)}.</span>}
           </li>)}</ul>}
+        {erasureRecovery !== null && <QueueNavigation pageKey="recoveryPage" pages={pages} hasMore={erasureRecovery.length > 50} />}
       </section>}
 
       {owner && <section className="card">
         <h2>Old child records needing login-link cleanup</h2>
-        <p className="muted">Private to the named safeguarding owner. Up to 50 already-erased
-          records are shown without names. Cleanup retains pseudonymous evidence for provider
+        <p className="muted">Private to the named safeguarding owner. Already-erased records are shown 50 per page without names. Cleanup retains pseudonymous evidence for provider
           recovery; it does not remove an authentication identity or revoke sessions. A safeguarding
           hold prevents cleanup.</p>
         {legacyErasure === null ? <p className="notice warn">The old-record register could not be read.</p>
           : legacyErasure.length === 0 ? <p className="muted">No old login links are listed.</p>
-          : <ul>{legacyErasure.map((item) => <li key={item.learner_id}>
+          : <ul>{legacyErasure.slice(0, 50).map((item) => <li key={item.learner_id}>
             Record <code>{item.learner_id}</code>: {item.attempt_count} attempt(s),{' '}
             {item.removal_task_count} removal task(s). {item.coursework_held
               ? 'A safeguarding hold prevents cleanup.' : <ReconcileErasure learnerId={item.learner_id} />}
           </li>)}</ul>}
+        {legacyErasure !== null && <QueueNavigation pageKey="legacyPage" pages={pages} hasMore={legacyErasure.length > 50} />}
       </section>}
 
       <p className="lede">{registerHeadline(register)}</p>

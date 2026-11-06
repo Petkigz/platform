@@ -50,3 +50,11 @@ test('old erasure cleanup rejects malformed counts and does not treat read failu
   assert.equal(parseChildLoginLegacyErasure([{ ...row, attempt_count: -1 }]), null);
   assert.equal(parseChildLoginLegacyErasure(null), null);
 });
+
+test('queue page numbers are non-negative bounded integers', async () => {
+  const { queuePageNumber } = await import('./child-login-queue.ts');
+  assert.equal(queuePageNumber(undefined), 0);
+  assert.equal(queuePageNumber('0'), 0);
+  assert.equal(queuePageNumber('2'), 2);
+  for (const input of ['-1', '1.2', '1e4', '042', '42949672', ['2']]) assert.equal(queuePageNumber(input), 0);
+});

@@ -96,3 +96,10 @@ export function parseChildLoginLegacyErasure(value: unknown): ChildLoginLegacyEr
   }
   return rows;
 }
+
+/** A zero-based page index bounded so multiplying by 50 fits a SQL integer. */
+export function queuePageNumber(value: string | string[] | undefined): number {
+  if (typeof value !== 'string' || !/^(0|[1-9][0-9]*)$/.test(value)) return 0;
+  const page = Number(value);
+  return Number.isSafeInteger(page) && page <= 42_949_671 ? page : 0;
+}

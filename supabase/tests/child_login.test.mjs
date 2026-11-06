@@ -629,6 +629,48 @@ export async function run(ctx) {
     }
   });
 
+  await test('owner queues page past unresolved entries and preserve their authorization', async () => {
+    const prior = (await q('select owner_user_id from public.safeguarding_owner where singleton')).rows[0]?.owner_user_id ?? null;
+    const outsider = await bootstrapAdmin(`cl-page-admin-${++seq}@example.com`);
+    const guardian = await person('Page guardian');
+    await familyWithChild(guardian, 'Page child');
+    let legacy = [];
+    await q('delete from public.safeguarding_owner where singleton');
+    await q('select public.bootstrap_safeguarding_owner($1)', [admin]);
+    try {
+      legacy = (await q(`insert into public.learner_profiles(display_name,learner_type,status,erased_at)
+        select 'Deleted learner','child','erased',now()-interval '3 days' from generate_series(1,2) returning id`)).rows.map(r => r.id);
+      for (const [index, id] of legacy.entries()) {
+        await q('insert into public.child_login_attempts(learner_profile_id,guardian_user_id,username) values($1,$2,$3)', [id,guardian,`pages.${index}`]);
+        await q(`insert into public.child_login_removal_tasks(child_login_id,learner_profile_id,child_user_id,username)
+          values(gen_random_uuid(),$1,$2,$3)`, [id,guardian,`pages.${index}`]);
+      }
+      await q(`insert into public.child_login_erasure_recovery(source_kind,source_id,attempt_marker,address_hash,created_at)
+        select 'attempt',id,id,repeat('f',64),now()+n*interval '1 second'
+        from (select gen_random_uuid() id,n from generate_series(1,205) n) generated`);
+      for (const [oldName, pageName, idColumn] of [
+        ['child_login_pending_attempts','child_login_pending_attempts_page','attempt_id'],
+        ['child_login_removal_queue','child_login_removal_queue_page','task_id'],
+        ['child_login_erasure_recovery_queue','child_login_erasure_recovery_queue_page','source_id'],
+        ['child_login_legacy_erasure_queue','child_login_legacy_erasure_queue_page','learner_id'],
+      ]) {
+        await rejects(() => asActor(outsider, `select * from public.${pageName}($1,$2)`, [1,0]), /not_allowed/);
+        const firstTwo = (await asActor(admin, `select * from public.${oldName}($1)`, [2])).rows;
+        const second = (await asActor(admin, `select * from public.${pageName}($1,$2)`, [1,1])).rows;
+        assert(firstTwo.length === 2 && second.length === 1 && firstTwo[1][idColumn] === second[0][idColumn], `${pageName} returned wrong offset`);
+      }
+      const later = (await asActor(admin, 'select * from public.child_login_erasure_recovery_queue_page($1,$2)', [10,200])).rows;
+      assert(later.length >= 5, 'recovery entries after 200 remain hidden');
+    } finally {
+      await q("delete from public.child_login_erasure_recovery where address_hash=repeat('f',64)");
+      await q('delete from public.child_login_removal_tasks where learner_profile_id=any($1::uuid[])', [legacy]);
+      await q('delete from public.child_login_attempts where learner_profile_id=any($1::uuid[])', [legacy]);
+      await q('delete from public.learner_profiles where id=any($1::uuid[])', [legacy]);
+      await q('delete from public.safeguarding_owner where singleton');
+      if (prior) await q('select public.bootstrap_safeguarding_owner($1)', [prior]);
+    }
+  });
+
   await test('the creation handler reaches the real database boundary, including a lost provider reply', async () => {
     await setFlag('family.child_login', true);
     try {
