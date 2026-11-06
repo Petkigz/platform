@@ -911,3 +911,17 @@ queue. It is not the single shared-database run: interactions between suites in
 different batches are not exercised. PGlite also does not prove concurrent hosted
 PostgreSQL, Supabase Auth, storage or provider behavior. The earlier shared run was
 interrupted and has no final result.
+
+**Revision-file provenance audit (open):** a revision snapshot stores asset IDs
+in `assignment_submission_revisions.asset_ids`. A legacy library-labelled file
+that is later detached from the current submission and has no coursework upload
+declaration can still appear in that snapshot, but `is_library_delivery_asset`
+and several withdrawal, quarantine and retention checks currently look only at
+current attachments or declarations. It may therefore fall back to library
+access or withdrawal rules despite evidence that it was coursework. Snapshot
+entries are also shown as counts, not openable files. Do not treat this as fixed:
+review all access, withdrawal, quarantine, hold and erasure paths together and
+preserve reliable provenance when snapshots or submissions are erased. Mixed
+lesson/coursework files need individual handling so a privacy fix does not silently
+destroy or repurpose an actual lesson asset. Previously issued links and external
+copies cannot be recalled by a database change.
