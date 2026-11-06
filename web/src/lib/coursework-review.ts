@@ -81,6 +81,19 @@ export function parseReviewQueue(value: unknown): ReviewQueueRow[] {
   return rows;
 }
 
+/** A page must not turn a malformed row into a false empty register or cursor. */
+export function parseReviewPage(value: unknown): ReviewQueueRow[] | null {
+  if (!Array.isArray(value)) return null;
+  for (const entry of value) {
+    if (!entry || typeof entry !== 'object') return null;
+    const r = entry as Record<string, unknown>;
+    if (typeof r.assetId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(r.assetId) ||
+        typeof r.submissionId !== 'string' || typeof r.attachedAt !== 'string' || !Number.isFinite(Date.parse(r.attachedAt)) ||
+        (r.review !== 'none' && r.review !== 'clear' && r.review !== 'concern')) return null;
+  }
+  return parseReviewQueue(value);
+}
+
 /** The counts, with `unreviewed` derived rather than trusted. */
 export function parseReviewSummary(value: unknown): ReviewSummary {
   const raw = (value && typeof value === 'object' ? value : {}) as Record<string, unknown>;

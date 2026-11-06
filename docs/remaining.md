@@ -878,4 +878,6 @@ record another review and place a hold from that row. Review responses now
 report network or malformed-reply ambiguity instead of claiming failure or
 inventing a clear result. The form says email alerts may be sent only when
 configured and are not proof of delivery; staff must still contact the lead
-directly. The review register still needs pagination beyond its first 200 rows.
+directly. Migration 880 pages the owner review register rather than stopping
+after its first 200 files; a fresh first-page review is needed when files change
+state while browsing.

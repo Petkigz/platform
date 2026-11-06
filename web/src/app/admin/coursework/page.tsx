@@ -6,7 +6,7 @@ import { courseworkFileHref } from '@/lib/coursework';
 import {
   EMPTY_SUMMARY,
   describeFileReview,
-  parseReviewQueue,
+  parseReviewPage,
   parseReviewSummary,
   reviewDay,
   reviewHeadline,
@@ -39,7 +39,7 @@ export const dynamic = 'force-dynamic';
 /** Owner-only review register, alongside separately authorized retention tools.
  * A recorded review is an attestation, not proof that a file was viewed.
  */
-export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ concern?: string; before?: string; beforeId?: string; endsAfter?: string; classEnd?: string; quarantineAfter?: string; quarantine?: string; concernAfter?: string; concernAfterId?: string; alert?: string; alertReview?: string; alertBefore?: string; storageAfter?: string; storageAfterId?: string; holdAfter?: string; holdAfterId?: string }> }) {
+export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ concern?: string; before?: string; beforeId?: string; endsAfter?: string; classEnd?: string; quarantineAfter?: string; quarantine?: string; concernAfter?: string; concernAfterId?: string; alert?: string; alertReview?: string; alertBefore?: string; storageAfter?: string; storageAfterId?: string; holdAfter?: string; holdAfterId?: string; reviewAfterState?: string; reviewAfterAt?: string; reviewAfterId?: string }> }) {
   if (!isSupabaseConfigured()) redirect('/');
 
   const supabase = await createClient();
@@ -53,6 +53,10 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
 
   const params = await searchParams;
   const endsCursorValid = !params.endsAfter || /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(params.endsAfter);
+  const reviewCursorValid = (!params.reviewAfterState && !params.reviewAfterAt && !params.reviewAfterId) ||
+    ((params.reviewAfterState === 'reviewed' || params.reviewAfterState === 'unreviewed') &&
+      typeof params.reviewAfterAt === 'string' && Number.isFinite(Date.parse(params.reviewAfterAt)) &&
+      typeof params.reviewAfterId === 'string' && isQuarantineCursor(params.reviewAfterId));
   const holdCursorValid = (!params.holdAfter && !params.holdAfterId) ||
     (typeof params.holdAfter === 'string' && Number.isFinite(Date.parse(params.holdAfter)) &&
       typeof params.holdAfterId === 'string' && isQuarantineCursor(params.holdAfterId));
@@ -62,7 +66,7 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
   const [summaryResult, queueResult, holdsResult, holdCountResult, planResult, storageResult, missingEndsResult] =
     await Promise.all([
       supabase.rpc('coursework_review_summary'),
-      supabase.rpc('coursework_review_queue', { p_limit: 200 }),
+      reviewCursorValid ? supabase.rpc('coursework_review_queue_page', { p_after_reviewed: params.reviewAfterState ? params.reviewAfterState === 'reviewed' : null, p_after_attached: params.reviewAfterAt ?? null, p_after_asset: params.reviewAfterId ?? null, p_limit: 51 }) : Promise.resolve({ data: null, error: true }),
       // The configured safeguarding owner alone can read the hold register.
       holdCursorValid ? supabase.rpc('coursework_holds_page', { p_after: params.holdAfter ?? null, p_after_id: params.holdAfterId ?? null, p_limit: 51 }) : Promise.resolve({ data: null, error: true }),
       supabase.rpc('coursework_hold_count'),
@@ -125,7 +129,9 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
   const actionState = params.concern;
 
   const summary = summaryResult.error ? EMPTY_SUMMARY : parseReviewSummary(summaryResult.data);
-  const queue = queueResult.error ? [] : parseReviewQueue(queueResult.data);
+  const queueRows = queueResult.error ? null : parseReviewPage(queueResult.data);
+  const queue = queueRows?.slice(0,50) ?? [];
+  const reviewNext = queueRows && queueRows.length > 50 ? queueRows[49] : null;
   const unreviewed = queue.filter((row) => row.review === 'none');
   const reviewed = queue.filter((row) => row.review !== 'none');
 
@@ -306,10 +312,11 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
         </ul>
       </section>}
 
-      {queueResult.error && <p className="notice warn">The review register is available only to the configured safeguarding owner, or could not be loaded. Do not assume it is empty.</p>}
-      {!queueResult.error && queue.length === 0 && (
+      <div id="review-register" />
+      {queueRows === null && <p className="notice warn">The review register is available only to the configured safeguarding owner, or could not be loaded. Do not assume it is empty.</p>}
+      {queueRows !== null && queue.length === 0 && (
         <p className="muted">
-          No available handed-in files were returned. A missing review record does
+          No available handed-in files were returned on this page. A missing review record does
           not prove whether anyone opened a file.
         </p>
       )}
@@ -377,6 +384,12 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
           </ul>
         </section>
       )}
+
+      {queueRows !== null && <section className="card" style={{ marginBlockStart: '1rem' }}>
+        <p>Reviews can move files between pages. Return to the first page to check for changes.</p>
+        {params.reviewAfterState && <p><Link href="/admin/coursework#review-register">First page of reviews</Link></p>}
+        {reviewNext && <p><Link href={`/admin/coursework?${new URLSearchParams({ reviewAfterState: reviewNext.review === 'none' ? 'unreviewed' : 'reviewed', reviewAfterAt: reviewNext.attachedAt, reviewAfterId: reviewNext.assetId })}#review-register`}>More files</Link></p>}
+      </section>}
 
       <section id="coursework-holds" className="card" style={{ marginBlockStart: '1.5rem' }}>
         <div className="outline-h">

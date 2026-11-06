@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-294 files in `supabase/migrations/`, applied in filename order — the 14-digit
+295 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -170,7 +170,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 294 files from the top and fail on the
+it, and `db push` would then re-apply all 295 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -1155,3 +1155,7 @@ exists, or constrain storage-provider credentials. Verify on the deployed schema
 Migration 860 adds owner-only pagination to the coursework storage register.
 A deletion statement remains an unverified statement; paging is not object
 removal. Migration 870 adds owner-only pagination to the hold register as well.
+
+Migration 880 adds owner-only pagination to the coursework review register.
+The order may change when a review is recorded, so revisit the first page.
+The register is not proof that anyone opened a file or that an alert was received.

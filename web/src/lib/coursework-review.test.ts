@@ -6,6 +6,7 @@ import {
   EMPTY_SUMMARY,
   describeFileReview,
   parseReviewQueue,
+  parseReviewPage,
   parseReviewSummary,
   reviewConfirmation,
   reviewDay,
@@ -176,4 +177,13 @@ test('owner can open, review again and hold a previously reviewed file', () => {
   const form=readFileSync(new URL('../app/admin/coursework/review-form.tsx', import.meta.url),'utf8');
   assert.match(form,/delivery is not guaranteed/);
   assert.doesNotMatch(form,/no alert is sent/i);
+});
+
+
+test('review pages preserve precise timestamps and reject invalid cursors', () => {
+  const raw={assetId:'11111111-1111-4111-8111-111111111111',submissionId:'submission',attachedAt:'2026-11-01T10:00:00.123456+00:00',review:'none'};
+  assert.equal(parseReviewPage([raw])?.[0]?.attachedAt, raw.attachedAt);
+  assert.equal(parseReviewPage([{...raw, review:'unknown'}]), null);
+  assert.equal(parseReviewPage(null), null);
+  assert.deepEqual(parseReviewPage([]), []);
 });

@@ -157,6 +157,37 @@ export async function run(ctx) {
       'a concern recorded before setup was lost');
   });
 
+  await test('the owner can page the review register past equal timestamps and the reviewed boundary', async () => {
+    const row = await handedIn();
+    await review(teacher,row.asset,'clear');
+    await q('begin');
+    try {
+      const ids = (await q(`insert into public.media_assets
+        (storage_backend,master_bucket,master_key,checksum,mime_type,byte_size,status,uploaded_by,purpose)
+        select 'r2','masters','review-page/'||gen_random_uuid(),md5(gen_random_uuid()::text)||md5(gen_random_uuid()::text),
+          'image/jpeg',100,'available',$1,'coursework' from generate_series(1,120) returning id`,[row.guardian])).rows.map(r=>r.id);
+      // Model old stored attachments in the disposable fixture; production guards stay enabled.
+      await q('alter table public.assignment_submission_assets disable trigger assignment_assets_coursework_only');
+      await q(`insert into public.assignment_submission_assets(submission_id,media_asset_id,attached_by,created_at)
+        select $1,a,$2,'1900-01-01 00:00:00.123456+00'::timestamptz from unnest($3::uuid[]) a`,[row.submission,row.guardian,ids]);
+      await q('alter table public.assignment_submission_assets enable trigger assignment_assets_coursework_only');
+      await q("select set_config('request.jwt.claims',$1,true)", [JSON.stringify({sub:owner,role:'authenticated'})]);
+      await q('set local role authenticated');
+      const seen=[]; let reviewed=null,attached=null,asset=null;
+      for (let page=0; page<10; page++) {
+        const items=(await q('select public.coursework_review_queue_page($1,$2,$3,50) as r',[reviewed,attached,asset])).rows[0].r;
+        seen.push(...items.map(r=>r.assetId));
+        if (items.length<50) break;
+        const last=items.at(-1); reviewed=last.review!=='none'; attached=last.attachedAt; asset=last.assetId;
+      }
+      assert(ids.every(id=>seen.includes(id)) && seen.includes(row.asset) && new Set(seen).size===seen.length,
+        'review pages skipped or repeated files');
+    } finally { await q('rollback'); }
+    await refuses(/coursework:not_allowed/, () => call(teacher,'select public.coursework_review_queue_page(null,null,null,50)'));
+    await refuses(/all review cursor values/, () => call(owner,'select public.coursework_review_queue_page(false,null,null,50)'));
+    await refuses(/review page limit/, () => call(owner,'select public.coursework_review_queue_page(null,null,null,101)'));
+  });
+
   await test('private safeguarding alerts require a service lease and an owner to see or retry them', async () => {
     const existing = (await q("select value_text from public.platform_settings where key='delivery.notifications'")).rows[0].value_text;
     const asService = async (fn) => {
