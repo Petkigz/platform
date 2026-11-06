@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { readFileSync } from 'node:fs';
 
 import {
   EMPTY_SUMMARY,
@@ -10,6 +11,7 @@ import {
   reviewDay,
   reviewHeadline,
   reviewRefusal,
+  postCourseworkReview,
   daysWaiting,
 } from './coursework-review.ts';
 
@@ -121,7 +123,7 @@ test('an unreviewed file with no date is described without inventing one', () =>
 test('a concern is confirmed as a conversation, not a decision about a child', () => {
   const concern = reviewConfirmation('concern');
   assert.ok(/audit trail/.test(concern), concern);
-  assert.ok(/No alert was sent/.test(concern) && /directly/.test(concern), concern);
+  assert.ok(/may be sent if configured/.test(concern) && /directly/.test(concern), concern);
   assert.ok(!/hidden|blocked/i.test(concern), concern);
 
   const clear = reviewConfirmation('clear');
@@ -136,12 +138,42 @@ test('every refusal the database can send becomes a sentence a person can act on
     reviewRefusal('only the teacher the work was handed to, or staff, may review it')));
   assert.ok(/Say what worried you/.test(
     reviewRefusal('a concern needs a sentence saying what worried you')));
-  assert.ok(/deleted/.test(
+  assert.ok(/unavailable/.test(
     reviewRefusal('that file has been deleted, so there is nothing to review')));
   assert.ok(/finished arriving/.test(
     reviewRefusal('that file is pending, so there is nothing to look at yet')));
 
   // An unknown failure is a refusal, never a silent success.
-  assert.equal(reviewRefusal(''), 'That review was not recorded.');
-  assert.equal(reviewRefusal('some new constraint name'), 'That review was not recorded.');
+  assert.match(reviewRefusal(''), /could not be confirmed/);
+  assert.match(reviewRefusal('some new constraint name'), /could not be confirmed/);
+});
+
+
+test('an interrupted or malformed review reply is uncertain, not a clear review', async () => {
+  const original=globalThis.fetch;
+  const input={assetId:'file',decision:'concern' as const,note:'Important concern'};
+  try {
+    globalThis.fetch=async()=>{throw new Error('response lost')};
+    const lost=await postCourseworkReview(input);
+    assert.equal(lost.ok,false);
+    if (!lost.ok) { assert.equal(lost.uncertain,true); assert.match(lost.error,/owner to check/); }
+    globalThis.fetch=async()=>new Response(JSON.stringify({ok:true,review:{decision:'clear',recorded:true}}),{status:200});
+    const wrong=await postCourseworkReview(input);
+    assert.equal(wrong.ok,false);
+    if (!wrong.ok) assert.equal(wrong.uncertain,true);
+    globalThis.fetch=async()=>new Response(JSON.stringify({ok:true,review:{decision:'concern',recorded:true}}),{status:200});
+    assert.deepEqual(await postCourseworkReview(input),{ok:true,decision:'concern',recorded:true});
+  } finally {globalThis.fetch=original;}
+});
+
+
+test('owner can open, review again and hold a previously reviewed file', () => {
+  const page=readFileSync(new URL('../app/admin/coursework/page.tsx', import.meta.url),'utf8');
+  const section=page.slice(page.indexOf('{reviewed.length > 0'),page.indexOf('<section id="coursework-holds"'));
+  assert.match(section,/courseworkFileHref\(row\.assetId\)/);
+  assert.match(section,/Record another review/);
+  assert.match(section,/action="hold"/);
+  const form=readFileSync(new URL('../app/admin/coursework/review-form.tsx', import.meta.url),'utf8');
+  assert.match(form,/delivery is not guaranteed/);
+  assert.doesNotMatch(form,/no alert is sent/i);
 });

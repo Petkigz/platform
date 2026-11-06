@@ -357,7 +357,7 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
             {reviewed.map((row) => (
               <li key={row.assetId}>
                 <span className="t">
-                  {row.learnerName ?? 'A learner'} · {row.fileName ?? 'handed-in file'}
+                  {row.learnerName ?? 'A learner'} · <a href={courseworkFileHref(row.assetId)} target="_blank" rel="noreferrer">{row.fileName ?? 'handed-in file'}</a>
                   <span className="muted">
                     {' '}· {describeFileReview(row)}
                     {row.reviewerName ? ` by ${row.reviewerName}` : ''}
@@ -368,6 +368,10 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
                     </span>
                   )}
                 </span>
+                <details><summary>Record another review</summary>
+                  <ReviewForm assetId={row.assetId} fileName={row.fileName} />
+                </details>
+                <RetentionActionForm assetId={row.assetId} action="hold" label="Hold this from deletion" name={row.fileName ?? 'this file'} />
               </li>
             ))}
           </ul>

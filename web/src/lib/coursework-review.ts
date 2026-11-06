@@ -178,14 +178,14 @@ export const REVIEW_FORM_HELP =
 /** The confirmation a reviewer reads after a review lands. */
 export function reviewConfirmation(decisionValue: ReviewDecision): string {
   if (decisionValue === 'concern') {
-    return 'Recorded in the audit trail and available in the safeguarding owner queue once it is set up. No alert was sent. Contact the safeguarding lead directly; recording is not proof they received it.';
+    return 'Recorded in the audit trail and available in the private safeguarding owner queue once it is set up. An email alert may be sent if configured, but recording is not proof it was delivered or received. Contact the safeguarding lead directly.';
   }
   return 'Recorded. A second look by the same person with the same answer is not a second review.';
 }
 
 export type ReviewPostResult =
   | { ok: true; decision: ReviewDecision; recorded: boolean }
-  | { ok: false; error: string };
+  | { ok: false; error: string; uncertain?: boolean };
 
 /** Plain-language failures, because a constraint name is not a sentence. */
 export function reviewRefusal(message: string): string {
@@ -202,13 +202,13 @@ export function reviewRefusal(message: string): string {
     return 'Say what worried you in a sentence. “Something to raise” with no words is a flag somebody has to guess at.';
   }
   if (/has been deleted/i.test(message)) {
-    return 'That file has been deleted, so there is nothing to review.';
+    return 'That file is unavailable for review in the platform.';
   }
   if (/nothing to look at yet/i.test(message)) {
     return 'That file has not finished arriving yet. It can be reviewed once it is there.';
   }
   if (/sign in/i.test(message)) return 'Sign in first.';
-  return 'That review was not recorded.';
+  return 'The result could not be confirmed. Ask the safeguarding owner to check before trying again.';
 }
 
 /** Posts a review. The database decides who may, so this only reports. */
@@ -217,29 +217,26 @@ export async function postCourseworkReview(input: {
   decision: 'clear' | 'concern';
   note?: string | null;
 }): Promise<ReviewPostResult> {
-  const res = await fetch('/api/coursework/review', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      assetId: input.assetId,
-      decision: input.decision,
-      note: input.note?.trim() ? input.note.trim() : null,
-    }),
-  });
-
-  const json = (await res.json().catch(() => ({}))) as {
-    ok?: boolean;
-    review?: { decision?: unknown; recorded?: unknown };
-    error?: string;
-  };
-
-  if (!res.ok || json.ok !== true) {
-    return { ok: false, error: reviewRefusal(json.error ?? '') };
+  const uncertain: ReviewPostResult = { ok: false, uncertain: true,
+    error: 'The result could not be confirmed. Ask the safeguarding owner to check before trying again; contact them directly about any concern.' };
+  try {
+    const res = await fetch('/api/coursework/review', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ assetId: input.assetId, decision: input.decision,
+        note: input.note?.trim() ? input.note.trim() : null }),
+    });
+    const json = (await res.json().catch(() => null)) as {
+      ok?: unknown; review?: { decision?: unknown; recorded?: unknown }; error?: unknown;
+    } | null;
+    if (!res.ok) {
+      if (res.status >= 500 || typeof json?.error !== 'string') return uncertain;
+      const error = reviewRefusal(json.error);
+      return error.startsWith('The result could not be confirmed') ? uncertain : { ok: false, error };
+    }
+    if (json?.ok !== true || json.review?.decision !== input.decision || typeof json.review.recorded !== 'boolean') return uncertain;
+    return { ok: true, decision: input.decision, recorded: json.review.recorded };
+  } catch {
+    return uncertain;
   }
-
-  return {
-    ok: true,
-    decision: json.review?.decision === 'concern' ? 'concern' : 'clear',
-    recorded: json.review?.recorded === true,
-  };
 }

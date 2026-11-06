@@ -34,6 +34,7 @@ export function ReviewForm({
   const [note, setNote] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [tone, setTone] = useState<'info' | 'error'>('info');
+  const [uncertain, setUncertain] = useState(false);
   const name = fileName ?? 'this file';
 
   async function submit() {
@@ -61,6 +62,7 @@ export function ReviewForm({
 
       if (!result.ok) {
         setTone('error');
+        setUncertain(result.uncertain === true);
         setMessage(result.error);
         return;
       }
@@ -124,14 +126,17 @@ export function ReviewForm({
       )}
 
       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-        <button type="button" className="btn" disabled={busy || pending} onClick={submit}>
+        <button type="button" className="btn" disabled={busy || pending || uncertain} onClick={submit}>
           {busy || pending ? 'Recording…' : 'Record this review'}
         </button>
         <span className="muted" style={{ fontSize: '0.85rem' }}>
-          A review does not delay the file. For a concern, contact the safeguarding lead directly; no alert is sent.
+          A review does not delay the file. An alert may be sent if configured, but delivery is not guaranteed. Contact the safeguarding lead directly about a concern.
         </span>
       </div>
 
+      {uncertain && <button type="button" className="btn ghost" onClick={() => {
+        startTransition(() => router.refresh()); setUncertain(false); setMessage(null);
+      }} disabled={busy || pending}>Refresh after checking</button>}
       {message && (
         <p className={tone === 'error' ? 'error' : 'muted'} role="status">
           {message}

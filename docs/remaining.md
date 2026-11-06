@@ -872,3 +872,10 @@ keyset-paginated visual storage register, so held or unresolved entries on the
 first page no longer make later entries unreachable. Entries can move as holds
 or statements change; a fresh first-page review may be needed. Migration 870 also pages the owner hold register, including when multiple
 holds share a timestamp. These pages do not delete or verify objects.
+
+**Review form and repeat review:** The owner can open an already-reviewed file,
+record another review and place a hold from that row. Review responses now
+report network or malformed-reply ambiguity instead of claiming failure or
+inventing a clear result. The form says email alerts may be sent only when
+configured and are not proof of delivery; staff must still contact the lead
+directly. The review register still needs pagination beyond its first 200 rows.
