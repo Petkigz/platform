@@ -14,6 +14,7 @@ import {
   parseHoldCount,
   parseHolds,
   parseStorageQueue,
+  postRetentionAction,
   storageSentence,
 } from './coursework-retention.ts';
 
@@ -83,10 +84,10 @@ test('each refusal is a sentence, not an error code', () => {
   assert.match(describeRetentionError('that file is already held'), /already held/);
   assert.match(describeRetentionError('holding a file back needs a written reason'), /written reason/);
   assert.match(describeRetentionError('that file is still readable; nothing has been deleted to record'),
-    /no deletion to record/);
+    /still readable in the platform/);
   assert.match(describeRetentionError('coursework:not_allowed'), /safeguarding owner/);
   assert.match(describeRetentionError('coursework:not_allowed'), /Only/);
-  assert.match(describeRetentionError('boom'), /nothing was changed/);
+  assert.match(describeRetentionError('boom'), /could not be confirmed/);
 });
 
 test('the confirmation says what happened to the clock, not what was clicked', () => {
@@ -132,4 +133,25 @@ test('class end attestation is explicit, UTC and never presents itself as proof'
   assert.match(action, /form\.get\('verified'\) !== 'yes'/);
   assert.match(action, /attest_closed_cohort_end/);
   assert.match(action, /p_ends_at: `\$\{end\}:00Z`/);
+});
+
+
+test('interrupted or malformed retention responses do not claim the action failed', async () => {
+  const original = globalThis.fetch;
+  try {
+    globalThis.fetch = async () => { throw new Error('connection lost after send'); };
+    const disconnected = await postRetentionAction({ action: 'purge', assetId: hold.asset_id });
+    assert.equal(disconnected.ok, false);
+    if (!disconnected.ok) {
+      assert.equal(disconnected.uncertain, true);
+      assert.match(disconnected.message, /may have been recorded/);
+      assert.doesNotMatch(disconnected.message, /nothing was changed/i);
+    }
+    globalThis.fetch = async () => new Response('bad gateway', { status: 502 });
+    const serverError = await postRetentionAction({ action: 'hold', assetId: hold.asset_id });
+    assert.equal(serverError.ok, false);
+    if (!serverError.ok) assert.equal(serverError.uncertain, true);
+    globalThis.fetch = async () => new Response(JSON.stringify({ok:true}), {status:200});
+    assert.deepEqual(await postRetentionAction({action:'hold',assetId:hold.asset_id}), {ok:true});
+  } finally { globalThis.fetch = original; }
 });

@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-290 files in `supabase/migrations/`, applied in filename order — the 14-digit
+291 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -170,7 +170,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 290 files from the top and fail on the
+it, and `db push` would then re-apply all 291 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -1142,3 +1142,7 @@ objects or prove that none exist. Migration 830 restricts the unfinished-upload
 listing to exact library matches for staff while the named safeguarding owner
 can inspect unknown entries; unknown or private entries are not actionable from
 that library cleanup interface. Verify bucket lifecycle configuration separately.
+
+Migration 840 limits coursework storage-deletion statements to coursework
+assets. It does not verify storage deletion: the legacy shared audit action name
+`retention.coursework_bytes_deleted` represents an owner statement, not proof.

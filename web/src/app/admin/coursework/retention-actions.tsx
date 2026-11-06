@@ -37,6 +37,7 @@ export function RetentionActionForm({
   const [attested, setAttested] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [tone, setTone] = useState<'info' | 'error'>('info');
+  const [uncertain, setUncertain] = useState(false);
 
   const needsReason = action !== 'purge';
 
@@ -58,10 +59,12 @@ export function RetentionActionForm({
 
     setBusy(true);
     setMessage(null);
+    setUncertain(false);
     try {
       const result = await postRetentionAction({ action, assetId, reason });
       if (!result.ok) {
         setTone('error');
+        setUncertain(result.uncertain === true);
         setMessage(result.message);
         return;
       }
@@ -78,7 +81,7 @@ export function RetentionActionForm({
 
   if (!open && !message) {
     return (
-      <button type="button" className="btn ghost" onClick={() => setOpen(true)}>
+      <button type="button" className="btn ghost" disabled={pending || busy} onClick={() => setOpen(true)}>
         {label}
       </button>
     );
@@ -129,8 +132,11 @@ export function RetentionActionForm({
         </p>
       )}
       {message && tone === 'error' && (
-        <button type="button" className="btn ghost" onClick={() => setMessage(null)}>
-          Try again
+        <button type="button" className="btn ghost" onClick={() => {
+          if (uncertain) { setOpen(false); startTransition(() => router.refresh()); }
+          setMessage(null);
+        }}>
+          {uncertain ? 'Refresh and check' : 'Try again'}
         </button>
       )}
     </div>

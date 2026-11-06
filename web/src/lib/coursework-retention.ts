@@ -44,7 +44,7 @@ export type StorageRow = {
 
 export type RetentionAction = 'hold' | 'release' | 'purge';
 
-export type RetentionResult = { ok: true } | { ok: false; message: string };
+export type RetentionResult = { ok: true } | { ok: false; message: string; uncertain?: boolean };
 
 const row = (raw: unknown): Record<string, unknown> =>
   (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
@@ -153,7 +153,7 @@ export function describeRetentionError(message: string): string {
     return 'A deletion statement was already recorded for this file.';
   }
   if (/still readable/.test(message)) {
-    return 'Nothing has been deleted for this file yet, so there is no deletion to record.';
+    return 'The file is still readable in the platform; a deletion statement cannot be recorded yet.';
   }
   if (/not_allowed|insufficient/i.test(message)) {
     return 'Only the configured safeguarding owner can manage these records.';
@@ -161,7 +161,7 @@ export function describeRetentionError(message: string): string {
   if (/no_data_found|does not exist/.test(message)) {
     return 'That file is no longer in the register. Reload the page.';
   }
-  return 'That did not go through. Reload the page and try again — nothing was changed.';
+  return 'The result could not be confirmed. Refresh and check the register before trying again.';
 }
 
 /** Post one action. The actor comes from the session; nothing here names a person. */
@@ -177,12 +177,17 @@ export async function postRetentionAction(input: {
       body: JSON.stringify(input),
     });
     const json = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-    if (res.ok && json.ok) return { ok: true };
-    return { ok: false, message: describeRetentionError(String(json.error ?? '')) };
+    if (res.ok && json.ok === true) return { ok: true };
+    if (res.status >= 500 || res.ok || typeof json.error !== 'string') {
+      return { ok: false, uncertain: true, message: 'The result could not be confirmed. Refresh and check the register before trying again.' };
+    }
+    const message = describeRetentionError(json.error);
+    return { ok: false, message, uncertain: message.startsWith('The result could not be confirmed') };
   } catch {
     return {
       ok: false,
-      message: 'The request did not reach the server. Nothing was changed.',
+      uncertain: true,
+      message: 'The connection was interrupted. The action may have been recorded; refresh and check the register before trying again.',
     };
   }
 }

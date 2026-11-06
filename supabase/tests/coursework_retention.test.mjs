@@ -490,6 +490,18 @@ export async function run(ctx) {
     assert(after === before - 1, `awaiting went ${before} -> ${after}`);
   });
 
+  await test('a coursework deletion statement cannot modify a tombstoned library file', async () => {
+    const library = (await q(`insert into public.media_assets
+      (storage_backend,master_bucket,master_key,checksum,mime_type,byte_size,status,uploaded_by,deleted_at)
+      values ('r2','masters',$1,$2,'video/mp4',123,'deleted',$3,now()) returning id`,
+      [`library/${crypto.randomUUID()}`,digest(),owner])).rows[0].id;
+    await refuses(/coursework file does not exist/, () => call(owner, 'select public.record_coursework_purge($1)', [library]));
+    const row = await scalar('select purged_at,purged_by from public.media_assets where id=$1', [library]);
+    assert(row.purged_at === null && row.purged_by === null, 'coursework statement modified library metadata');
+    const audit = await scalar("select count(*)::int n from public.governance_audit_events where target_id=$1 and action='retention.coursework_bytes_deleted'", [library]);
+    assert(audit.n === 0, 'coursework deletion statement audited a library file');
+  });
+
   await test('a child record with held coursework is deferred without starving other due children', async () => {
     async function childFile(label) {
       const userId = await newUser(`held-child-${++seq}@example.com`);

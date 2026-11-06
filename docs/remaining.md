@@ -851,3 +851,10 @@ across a later external storage request; concurrent attachment and abort behavio
 requires a separately designed guard and live verification. Unattributed legacy
 files cannot reliably be identified as coursework. Bucket lifecycle expiry must
 be configured and verified rather than assumed.
+
+**Deletion statements:** Migration 840 rejects a coursework deletion statement
+for a library asset. The owner interface now treats an interrupted or ambiguous
+response as unknown and asks for a register check before retrying. A recorded
+statement remains unverified; the legacy shared audit action name says
+`coursework_bytes_deleted` even though it records only an owner's statement.
+Historical audit records and actual object deletion have not been verified.
