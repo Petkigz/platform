@@ -132,7 +132,8 @@ export const HOLDS_NOTE =
   'A hold needs a written reason. Scheduled cleanup locks and rechecks the hold, '
   + 'but other deletion paths still need review, so it is not a preservation guarantee. '
   + 'After release, a readable file returns to its original schedule and may be due immediately. '
-  + 'For a tombstoned file, release schedules its stored bytes at least thirty days later.';
+  + 'For a tombstoned file, release restores a known byte deadline, which may already have passed. '
+  + 'If no earlier deadline was captured, the system sets one thirty days after release; review older or unclear cases individually.';
 
 /** The database cannot verify a manual storage deletion. */
 export const PURGE_NOTE =

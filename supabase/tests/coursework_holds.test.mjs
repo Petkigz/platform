@@ -288,6 +288,39 @@ export async function run(ctx) {
     eq((await holdList()).length, 0, 'holds after releasing a dead one');
   });
 
+  await test('a hold preserves an existing byte deadline instead of adding thirty days', async () => {
+    await q("update public.media_assets set purge_due_at = '2020-01-02 03:04:05+00' where id = $1", [asset]);
+    await call(owner, 'select public.hold_coursework_file($1,$2)', [asset, 'Reviewing an already due object.']);
+    const held = (await q('select purge_due_at from public.media_assets where id = $1', [asset])).rows[0];
+    eq(held.purge_due_at, null, 'a hold must suspend the deadline');
+    try {
+      await call(owner, 'select public.release_coursework_hold($1,$2)', [asset, 'The review is complete.']);
+      const restored = (await q("select purge_due_at = '2020-01-02 03:04:05+00'::timestamptz as restored from public.media_assets where id = $1", [asset])).rows[0];
+      eq(restored.restored, true, 'the overdue deadline was not restored');
+    } finally {
+      const open = (await q('select exists(select 1 from public.coursework_retention_holds where asset_id=$1 and closed_at is null) as held', [asset])).rows[0].held;
+      if (open) await call(owner, 'select public.release_coursework_hold($1,$2)', [asset, 'Test cleanup after review.']);
+    }
+  });
+
+  await test('future deadlines survive holds and missing historical dates keep the fallback', async () => {
+    await q("update public.media_assets set purge_due_at = '2099-06-01 12:00:00+00' where id = $1", [asset]);
+    try {
+      await call(owner, 'select public.hold_coursework_file($1,$2)', [asset, 'Holding a future deadline.']);
+      await call(owner, 'select public.release_coursework_hold($1,$2)', [asset, 'The review is complete.']);
+      const future = (await q("select purge_due_at = '2099-06-01 12:00:00+00'::timestamptz as restored from public.media_assets where id = $1", [asset])).rows[0];
+      eq(future.restored, true, 'the future deadline was not restored');
+      await call(owner, 'select public.hold_coursework_file($1,$2)', [asset, 'Simulating an old hold.']);
+      await q('update public.coursework_retention_holds set previous_purge_due_at = null where asset_id = $1 and closed_at is null', [asset]);
+      await call(owner, 'select public.release_coursework_hold($1,$2)', [asset, 'The historical review is complete.']);
+      const fallback = (await q("select purge_due_at between now() + interval '29 days' and now() + interval '31 days' as scheduled from public.media_assets where id = $1", [asset])).rows[0];
+      eq(fallback.scheduled, true, 'an unknown historical date should retain the conservative fallback');
+    } finally {
+      const open = (await q('select exists(select 1 from public.coursework_retention_holds where asset_id=$1 and closed_at is null) as held', [asset])).rows[0].held;
+      if (open) await call(owner, 'select public.release_coursework_hold($1,$2)', [asset, 'Test cleanup after review.']);
+    }
+  });
+
   // -------------------------------------------------------------------------
   console.log('\nAct IV — the bucket, and the refusal that keeps it honest');
   // -------------------------------------------------------------------------

@@ -79,7 +79,8 @@ test('the storage sentence never implies the bytes are gone', () => {
   assert.match(PURGE_NOTE, /cannot delete or verify/);
   assert.match(PURGE_NOTE, /refuses/);
   assert.match(HOLDS_NOTE, /written reason/);
-  assert.match(HOLDS_NOTE, /thirty days/);
+  assert.match(HOLDS_NOTE, /restores a known byte deadline/);
+  assert.match(HOLDS_NOTE, /review older or unclear cases individually/);
 });
 
 test('each refusal is a sentence, not an error code', () => {

@@ -881,3 +881,11 @@ configured and are not proof of delivery; staff must still contact the lead
 directly. Migration 880 pages the owner review register rather than stopping
 after its first 200 files; a fresh first-page review is needed when files change
 state while browsing.
+
+**Held coursework byte deadlines:** newly opened holds preserve any existing
+storage-deletion deadline and restore it on release, even if it has passed.
+Historical holds did not capture the deadline; where none is known the system
+still assigns thirty days after release, so the owner must review those cases
+individually rather than assume that date satisfies the closure-erasure decision.
+Neither the deadline nor an owner's statement removes or verifies stored bytes.
+Apply the migration and test against the deployed system and object storage.
