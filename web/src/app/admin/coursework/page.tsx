@@ -38,7 +38,7 @@ export const dynamic = 'force-dynamic';
 /** Owner-only review register, alongside separately authorized retention tools.
  * A recorded review is an attestation, not proof that a file was viewed.
  */
-export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ concern?: string; before?: string; beforeId?: string; endsAfter?: string; classEnd?: string; quarantineAfter?: string; quarantine?: string }> }) {
+export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ concern?: string; before?: string; beforeId?: string; endsAfter?: string; classEnd?: string; quarantineAfter?: string; quarantine?: string; concernAfter?: string; concernAfterId?: string }> }) {
   if (!isSupabaseConfigured()) redirect('/');
 
   const supabase = await createClient();
@@ -79,9 +79,13 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
   const quarantines = quarantineResult && !quarantineResult.error
     ? parseCourseworkQuarantines(quarantineResult.data) : null;
   const quarantineNext = quarantines && quarantines.length > 50 ? quarantines[49]?.asset_id : null;
-  const concernResult = isSafeguardingOwner
-    ? await supabase.rpc('safeguarding_concern_queue', { p_limit: 100 })
-    : null;
+  const openCursorValid = (!params.concernAfter && !params.concernAfterId) ||
+    (typeof params.concernAfter === 'string' && Number.isFinite(Date.parse(params.concernAfter)) &&
+      typeof params.concernAfterId === 'string' && isQuarantineCursor(params.concernAfterId));
+  const concernResult = isSafeguardingOwner && openCursorValid
+    ? await supabase.rpc('safeguarding_concern_queue_page', {
+        p_after: params.concernAfter ?? null, p_after_id: params.concernAfterId ?? null, p_limit: 51,
+      }) : null;
   const historyResult = isSafeguardingOwner && cursorValid
     ? await supabase.rpc('safeguarding_concern_history', {
         // Preserve the database's microseconds; converting to JS Date would lose
@@ -90,6 +94,9 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
       }) : null;
   const concerns = concernResult && !concernResult.error
     ? parseSafeguardingConcerns(concernResult.data) : null;
+  const nextOpenCursor = concerns && concerns.length > 50 ? concerns[49] : null;
+  const nextOpenPage = nextOpenCursor
+    ? `/admin/coursework?${new URLSearchParams({ concernAfter: nextOpenCursor.reviewed_at, concernAfterId: nextOpenCursor.review_id })}#open-concerns` : null;
   const history = historyResult && !historyResult.error
     ? parseSafeguardingHistory(historyResult.data) : null;
   const lastHistory = history?.[history.length - 1];
@@ -155,8 +162,8 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
       )}
       {isSafeguardingOwner && (
         <section className="card" style={{ marginBlock: '1rem' }}>
-          <h2>Safeguarding concerns for the owner</h2>
-          <p>Oldest unacknowledged coursework concerns first, up to 100 at a time. Acknowledge and refresh to see any later items. All ages are included so a changed or erased learner record cannot hide a concern. Acknowledging records that you marked the item; it does not mean it is resolved. No email alert is connected.</p>
+          <h2 id="open-concerns">Safeguarding concerns for the owner</h2>
+          <p>Oldest unacknowledged coursework concerns first, 50 per page. You can see later items without acknowledging earlier ones. All ages are included so a changed or erased learner record cannot hide a concern. Acknowledging records that you marked the item; it does not mean it is resolved. No email alert is connected.</p>
           {actionState === 'recorded' && <p role="status">Acknowledgement recorded.</p>}
           {actionState === 'already' && <p role="status">That concern had already been acknowledged.</p>}
           {actionState === 'reopened' && <p role="status">The concern is back in the open queue.</p>}
@@ -164,7 +171,7 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
           {actionState === 'failed' && <p className="notice warn" role="alert">The acknowledgement could not be recorded. Check your access and try again.</p>}
           {concerns === null ? <p className="notice warn">The concern queue could not be loaded. Do not assume it is empty.</p>
             : concerns.length === 0 ? <p>No unacknowledged concerns were returned.</p>
-              : <ul className="lessons">{concerns.map((row) => <li key={row.review_id}>
+              : <ul className="lessons">{concerns.slice(0, 50).map((row) => <li key={row.review_id}>
                 <div className="t">
                   <strong>{row.learner_name ?? 'Learner details unavailable'} · {row.course_title ?? 'Course unavailable'}</strong>
                   <p>{row.note}</p>
@@ -173,10 +180,14 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
                   {row.details_unavailable && <p className="muted">The original submission or learner details are no longer available.</p>}
                   <form action={acknowledgeConcern}>
                     <input type="hidden" name="reviewId" value={row.review_id} />
+                    <input type="hidden" name="concernAfter" value={params.concernAfter ?? ''} />
+                    <input type="hidden" name="concernAfterId" value={params.concernAfterId ?? ''} />
                     <button type="submit" className="btn">Record acknowledgement</button>
                   </form>
                 </div>
               </li>)}</ul>}
+          {params.concernAfter && <p><Link href="/admin/coursework#open-concerns">Back to first open-concern page</Link></p>}
+          {nextOpenPage && <p><Link href={nextOpenPage}>More open concerns</Link></p>}
           <h3>Previously acknowledged</h3>
           <p>These remain available for review; reopening returns a concern to the open queue. The audit keeps the acknowledgement and reopening events.</p>
           {history === null ? <p className="notice warn">Acknowledgement history could not be loaded.</p>

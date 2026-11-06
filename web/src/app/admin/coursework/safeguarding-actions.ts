@@ -8,17 +8,24 @@ import { isSupabaseConfigured } from '@/lib/env';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export async function acknowledgeConcern(form: FormData) {
-  if (!isSupabaseConfigured()) redirect('/admin/coursework?concern=failed');
+  const after = form.get('concernAfter');
+  const afterId = form.get('concernAfterId');
+  const cursorValid = typeof after === 'string' && Number.isFinite(Date.parse(after)) &&
+    typeof afterId === 'string' && UUID.test(afterId);
+  const back = (status: string) => `/admin/coursework?${new URLSearchParams({
+    concern: status, ...(cursorValid ? { concernAfter: after, concernAfterId: afterId } : {}),
+  })}#open-concerns`;
+  if (!isSupabaseConfigured()) redirect(back('failed'));
   const id = form.get('reviewId');
-  if (typeof id !== 'string' || !UUID.test(id)) redirect('/admin/coursework?concern=failed');
+  if (typeof id !== 'string' || !UUID.test(id)) redirect(back('failed'));
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/sign-in?next=/admin/coursework');
   // This is not an authorization decision. The database checks the exact owner.
   const { data, error } = await supabase.rpc('acknowledge_safeguarding_concern', { p_review_id: id });
   revalidatePath('/admin/coursework');
-  if (error || typeof data !== 'boolean') redirect('/admin/coursework?concern=failed');
-  redirect(`/admin/coursework?concern=${data ? 'recorded' : 'already'}`);
+  if (error || typeof data !== 'boolean') redirect(back('failed'));
+  redirect(back(data ? 'recorded' : 'already'));
 }
 
 export async function reopenConcern(form: FormData) {

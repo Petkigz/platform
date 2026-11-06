@@ -801,3 +801,9 @@ Authorized staff who can open that file, including the named safeguarding owner,
 retain quarantine; ordinary library moderation is unchanged. The check uses the
 asset and actor locks but does not prove every deployed concurrency interleaving.
 No migration is deployed, and this change does not scan or delete objects.
+
+**Open safeguarding queue:** Migration 780 adds keyset pagination, allowing the
+owner to see later open concerns without acknowledging earlier ones merely to
+reach them. Timestamp ties use the review ID, and the original reader remains
+available. Lists can change, so revisit earlier pages. This is not an email alert,
+delivery receipt or resolution, and has not been deployed.

@@ -168,6 +168,31 @@ export async function run(ctx) {
     } finally { await q('rollback'); }
   });
 
+  await test('open concerns page without acknowledgement, including equal timestamps', async () => {
+    const row = await handedIn();
+    const ids = await asActor(owner, async () => {
+      const values = [];
+      for (const note of ['Pagination concern one.', 'Pagination concern two.', 'Pagination concern three.']) {
+        values.push((await q("select public.record_coursework_review($1,'concern',$2) r", [row.asset, note])).rows[0].r.id);
+      }
+      return values;
+    });
+    const seen = [];
+    let after = null, afterId = null;
+    for (let i=0; i<10; i++) {
+      const page = (await asActor(owner, () => q('select review_id,reviewed_at::text t from public.safeguarding_concern_queue_page($1,$2,1)', [after,afterId]))).rows;
+      if (!page.length) break;
+      seen.push(page[0].review_id); after = page[0].t; afterId = page[0].review_id;
+    }
+    assert(ids.every(id => seen.includes(id)) && new Set(seen).size === seen.length, 'page cursor skipped or duplicated a concern');
+    const times = (await q('select count(distinct reviewed_at)::int n from public.coursework_file_reviews where id=any($1::uuid[])', [ids])).rows[0].n;
+    assert(times === 1, 'fixture did not create equal timestamps');
+    assert((await q('select count(*)::int n from public.safeguarding_concern_acknowledgements where review_id=any($1::uuid[])', [ids])).rows[0].n === 0, 'paging acknowledged concerns');
+    await refuses(/both queue cursor values/, () => call(owner, 'select * from public.safeguarding_concern_queue_page(now(),null,1)'));
+    await refuses(/limit must be/, () => call(owner, 'select * from public.safeguarding_concern_queue_page(null,null,101)'));
+    await refuses(/only the configured safeguarding owner/, () => call(teacher, 'select * from public.safeguarding_concern_queue_page(null,null,1)'));
+  });
+
   await test('acknowledgement history uses a stable cursor even for equal times', async () => {
     const row = await handedIn();
     const first = await review(teacher, row.asset, 'concern', 'First concern for pagination.');

@@ -19,7 +19,7 @@ test('a malformed queue is not silently rendered as an empty queue', () => {
 
 test('the page fetches the queue only for the configured owner and describes its limits', () => {
   const page = readFileSync('src/app/admin/coursework/page.tsx', 'utf8');
-  assert.match(page, /isSafeguardingOwner\s*\? await supabase\.rpc\('safeguarding_concern_queue'/);
+  assert.match(page, /isSafeguardingOwner && openCursorValid\s*\? await supabase\.rpc\('safeguarding_concern_queue_page'/);
   assert.match(page, /does not mean it is resolved/);
   assert.match(page, /No email alert is connected/);
   assert.match(page, /Do not assume it is empty/);
@@ -27,6 +27,9 @@ test('the page fetches the queue only for the configured owner and describes its
   assert.match(action, /acknowledge_safeguarding_concern/);
   assert.match(action, /reopen_safeguarding_concern/);
   assert.match(page, /Older acknowledgements/);
+  assert.match(page, /More open concerns/);
+  assert.match(page, /without acknowledging earlier ones/);
+  assert.match(action, /concernAfterId/);
   const home = readFileSync('src/app/admin/page.tsx', 'utf8');
   assert.match(home, /Safeguarding concerns are not included in these counts/);
   assert.doesNotMatch(home, /Every queue you can work was checked/);
