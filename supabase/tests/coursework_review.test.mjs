@@ -264,6 +264,7 @@ export async function run(ctx) {
     const otherAdmin = await bootstrapAdmin(`audit-other-${crypto.randomUUID()}@example.com`);
     const concern = await review(teacher, row.asset, 'concern', 'Private safeguarding detail.');
     await call(owner, 'select public.hold_coursework_file($1,$2)', [row.asset, 'A private hold reason']);
+    try {
     const counts = async actor => {
       const s = (await call(actor, 'select public.security_signals(30) as s')).s;
       return s.actions.find(item => item.action === 'media.upload_quarantined')?.events ?? 0;
@@ -290,6 +291,9 @@ export async function run(ctx) {
     await call(otherAdmin,'select public.quarantine_media_upload($1,$2)',[library,'Ordinary library moderation']);
     const libraryEvents = (await asActor(otherAdmin, () => q("select action from public.governance_audit_events where target_id=$1 and action='media.upload_quarantined'",[library]))).rows;
     assert(libraryEvents.length===1, 'normal library moderation audit was hidden from staff');
+    } finally {
+      await call(owner, 'select public.release_coursework_hold($1,$2)', [row.asset, 'The test fixture has finished']);
+    }
   });
 
   await test('open concerns page without acknowledgement, including equal timestamps', async () => {
