@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-282 files in `supabase/migrations/`, applied in filename order — the 14-digit
+283 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -170,7 +170,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 282 files from the top and fail on the
+it, and `db push` would then re-apply all 283 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`

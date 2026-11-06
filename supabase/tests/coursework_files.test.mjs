@@ -370,6 +370,15 @@ export async function run(ctx) {
       await refused(otherAdmin, 'select public.release_coursework_quarantine($1,$2)', [pending.asset_id, 'I reviewed this quarantine and its release'], /not_allowed/);
       await refused(teacher, 'select public.release_coursework_quarantine($1,$2)', [pending.asset_id, 'I reviewed this quarantine and its release'], /not_allowed/);
       await refused(who.userId, 'select * from public.coursework_quarantine_state', [], /permission denied/);
+      const visible = (await call(who.userId, SQL_FILES, [submission])).f;
+      const visiblePending = visible.filter(row => row.assetId === pending.asset_id);
+      const visibleAttached = visible.filter(row => row.assetId === attached.asset_id);
+      assert(visiblePending.length === 1 && visiblePending[0].status === 'quarantined' && visiblePending[0].attachmentId === null,
+        'quarantined pending upload disappeared or became attached');
+      assert(visibleAttached.length === 1 && visibleAttached[0].status === 'quarantined', 'attached quarantined file duplicated');
+      assert(!('review' in visiblePending[0]), 'the learner saw private review state');
+      const stranger = await learner('Quarantine stranger', { course, version });
+      await refused(stranger.userId, SQL_FILES, [submission], /not yours/i);
       const queue = (await asActor(admin, () => q('select * from public.coursework_quarantine_queue(100,null)'))).rows;
       assert(queue.find(r => r.asset_id === pending.asset_id)?.previous_status === 'pending');
       assert(queue.find(r => r.asset_id === pending.asset_id)?.recorded_reason, 'owner did not see a recorded reason');

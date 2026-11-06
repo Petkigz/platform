@@ -788,3 +788,9 @@ Historical quarantines with unknown prior state require individual review rather
 than promotion by guesswork. Other moderation paths, deployed concurrency, storage
 operations and real Supabase permissions remain to be tested. This migration and
 UI are not deployed, and existing feature-switch values are unchanged.
+
+**Unattached quarantined uploads:** Migration 760 keeps a quarantined upload
+visible in its submission's file list even if it was never attached, so the
+learner sees that it is held for review instead of seeing it disappear. The
+existing submission-access and review-privacy checks still apply. This does
+not scan files or release a quarantine. It has not been deployed.
