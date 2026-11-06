@@ -512,6 +512,13 @@ export async function run(ctx) {
     const pendingAttempt = (await q(`insert into public.child_login_attempts
       (learner_profile_id,guardian_user_id,username) values ($1,$2,'hold.recovery') returning id`, [heldChild.learnerId,owner])).rows[0].id;
     await call(owner, 'select public.hold_coursework_file($1,$2)', [heldChild.asset, 'An unresolved concern']);
+    // Reproduce an old record marked erased while a hold exists: even the
+    // owner's individual cleanup must recheck the current hold.
+    await q("update public.learner_profiles set status='erased' where id=$1", [heldChild.learnerId]);
+    const blockedLegacy = await call(owner, 'select public.reconcile_legacy_child_login_erasure($1) as r', [heldChild.learnerId]);
+    assert(blockedLegacy.r.reconciled === false && blockedLegacy.r.blockedByCourseworkHold === true, 'legacy action bypassed the hold');
+    assert(await scalar('select id from public.child_login_attempts where id=$1', [pendingAttempt]), 'legacy action removed held attempt');
+    await q("update public.learner_profiles set status='archived' where id=$1", [heldChild.learnerId]);
     const run = await call(owner, 'select public.run_retention_jobs(now(),500) as r');
     assert(run.r.held.learnerRecords >= 1, 'the blocked child record was not reported');
     assert(run.r.remaining.learnerRecords >= 1, 'the due child was not counted as remaining');

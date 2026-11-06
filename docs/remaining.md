@@ -714,6 +714,15 @@ changed by this step. The fingerprint, marker and identity ID are still personal
 data, and Auth identities, sessions, audit records and provider copies may remain.
 The queue does not delete identities or know that an in-flight request is finished;
 there is no automated cleanup of the recovery markers yet. Records already erased
-before this migration need individual review; no automatic backfill is provided.
+before this migration need individual review; migration 690 adds an owner-only visual
+queue and a hold-aware action for removing their child-linked login rows.
 Local tests cover pending, completed, legacy and held cases, including a late
 marked identity; deployed-schema concurrency and real Supabase remain untested.
+
+
+**Earlier erased records:** Migration 690 lets the safeguarding owner find and
+clean child-linked login rows left on already-erased records, through the guardian
+consent dashboard. The action keeps pseudonymous recovery markers and rechecks
+safeguarding holds; it cannot purge a live child record. It does not delete an
+Auth identity, revoke sessions or remove recovery evidence. No migration has been
+deployed; real provider and deployed concurrency testing remain outstanding.

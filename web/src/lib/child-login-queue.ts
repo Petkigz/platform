@@ -75,3 +75,24 @@ export function parseChildLoginErasureRecovery(value: unknown): ChildLoginErasur
   }
   return rows;
 }
+
+export type ChildLoginLegacyErasure = {
+  learner_id: string;
+  attempt_count: number;
+  removal_task_count: number;
+  coursework_held: boolean;
+};
+
+export function parseChildLoginLegacyErasure(value: unknown): ChildLoginLegacyErasure[] | null {
+  if (!Array.isArray(value)) return null;
+  const rows: ChildLoginLegacyErasure[] = [];
+  for (const item of value) {
+    if (!item || typeof item !== 'object') return null;
+    const row = item as Record<string, unknown>;
+    if (typeof row.learner_id !== 'string' || !Number.isSafeInteger(row.attempt_count)
+      || Number(row.attempt_count) < 0 || !Number.isSafeInteger(row.removal_task_count)
+      || Number(row.removal_task_count) < 0 || typeof row.coursework_held !== 'boolean') return null;
+    rows.push(row as ChildLoginLegacyErasure);
+  }
+  return rows;
+}

@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-275 files in `supabase/migrations/`, applied in filename order — the 14-digit
+276 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -170,7 +170,7 @@ npx supabase@latest db push
 
 **Do not mix the two paths.** The CLI records what it applied in
 `supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 275 files from the top and fail on the
+it, and `db push` would then re-apply all 276 files from the top and fail on the
 first `create table`. Pick one on day one and stay with it.
 
 **The one known snag.** Two migrations attach a trigger to `auth.users`
@@ -1075,4 +1075,4 @@ record is purged, after retaining private pseudonymous recovery evidence. The
 safeguarding owner sees possible surviving or late-created identities on the
 guardian-consent page. A fingerprint is not anonymous, and absence from Auth is
 not proof a request cannot still complete. Identity deletion, session revocation,
-recovery-evidence cleanup and review of already-erased records remain separate.
+recovery-evidence cleanup remain separate. Migration 690 adds an owner-only visual review and cleanup action for child-linked rows on already-erased records; it rechecks safeguarding holds.

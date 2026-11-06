@@ -42,3 +42,11 @@ test('erasure recovery shows a late identity without exposing learner or guardia
   assert.equal(parseChildLoginErasureRecovery([{ ...row, matched_identity_ids: [null] }]), null);
   assert.equal(parseChildLoginErasureRecovery(null), null);
 });
+
+test('old erasure cleanup rejects malformed counts and does not treat read failure as empty', async () => {
+  const { parseChildLoginLegacyErasure } = await import('./child-login-queue.ts');
+  const row = { learner_id: 'child', attempt_count: 1, removal_task_count: 0, coursework_held: false };
+  assert.deepEqual(parseChildLoginLegacyErasure([row]), [row]);
+  assert.equal(parseChildLoginLegacyErasure([{ ...row, attempt_count: -1 }]), null);
+  assert.equal(parseChildLoginLegacyErasure(null), null);
+});

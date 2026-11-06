@@ -596,6 +596,39 @@ export async function run(ctx) {
       'trusted or legacy identity evidence was lost');
   });
 
+  await test('owner can reconcile identifying rows on already-erased children without purging live children', async () => {
+    const guardian = await person('Legacy erasure guardian');
+    const { childId } = await familyWithChild(guardian, 'Legacy erasure child');
+    const prior = (await q('select owner_user_id from public.safeguarding_owner where singleton')).rows[0]?.owner_user_id ?? null;
+    const otherAdmin = await bootstrapAdmin(`cl-legacy-erasure-admin-${++seq}@example.com`);
+    await q('delete from public.safeguarding_owner where singleton');
+    await q('select public.bootstrap_safeguarding_owner($1)', [admin]);
+    try {
+      await rejects(() => asActor(admin, 'select public.reconcile_legacy_child_login_erasure($1)', [childId]), /record_not_erased/);
+      await committed(async () => {
+        await q("select set_config('app.account_erasure','on',true)");
+        await q("update public.learner_profiles set deleted_at=now()-interval '31 days' where id=$1", [childId]);
+      });
+      await q('select public.purge_learner_record($1)', [childId]);
+      // Reproduce a row left by a pre-680 purge.
+      const attempt = (await q(`insert into public.child_login_attempts
+        (learner_profile_id,guardian_user_id,username) values($1,$2,'old.erasure') returning id`, [childId,guardian])).rows[0].id;
+      await rejects(() => asActor(otherAdmin, 'select * from public.child_login_legacy_erasure_queue($1)', [50]), /not_allowed/);
+      await rejects(() => asActor(guardian, 'select public.reconcile_legacy_child_login_erasure($1)', [childId]), /not_allowed/);
+      const listed = (await asActor(admin, 'select * from public.child_login_legacy_erasure_queue($1)', [50])).rows.find(r => r.learner_id === childId);
+      assert(listed && listed.attempt_count === 1 && listed.coursework_held === false, 'old residue was not listed');
+      const result = (await asActor(admin, 'select public.reconcile_legacy_child_login_erasure($1) result', [childId])).rows[0].result;
+      assert(result.reconciled && result.identityRecoveryMarkersAdded === 1, 'old residue was not reconciled');
+      assert(!(await scalar('select id from public.child_login_attempts where id=$1', [attempt])), 'identifying attempt survived');
+      assert(await scalar('select source_id from public.child_login_erasure_recovery where source_id=$1', [attempt]), 'late identity recovery was discarded');
+      const after = (await asActor(admin, 'select * from public.child_login_legacy_erasure_queue($1)', [50])).rows;
+      assert(!after.some(r => r.learner_id === childId), 'finished residue is still listed');
+    } finally {
+      await q('delete from public.safeguarding_owner where singleton');
+      if (prior) await q('select public.bootstrap_safeguarding_owner($1)', [prior]);
+    }
+  });
+
   await test('the creation handler reaches the real database boundary, including a lost provider reply', async () => {
     await setFlag('family.child_login', true);
     try {

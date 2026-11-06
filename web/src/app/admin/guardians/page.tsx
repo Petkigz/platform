@@ -18,7 +18,8 @@ import {
 import { DecideForm } from './decide-form';
 import { ReconcileForm } from './reconcile-form';
 import { RecordChildRemoval } from './record-child-removal';
-import { parseChildLoginPendingAttempts, parseChildLoginRemovalTasks, parseChildLoginErasureRecovery } from '@/lib/child-login-queue';
+import { ReconcileErasure } from './reconcile-erasure';
+import { parseChildLoginPendingAttempts, parseChildLoginRemovalTasks, parseChildLoginErasureRecovery, parseChildLoginLegacyErasure } from '@/lib/child-login-queue';
 
 export const dynamic = 'force-dynamic';
 
@@ -90,6 +91,9 @@ export default async function AdminGuardiansPage() {
   const erasureResult = owner ? await supabase.rpc('child_login_erasure_recovery_queue', { p_limit: 50 }) : null;
   const erasureRecovery = erasureResult && !erasureResult.error
     ? parseChildLoginErasureRecovery(erasureResult.data) : null;
+  const legacyResult = owner ? await supabase.rpc('child_login_legacy_erasure_queue', { p_limit: 50 }) : null;
+  const legacyErasure = legacyResult && !legacyResult.error
+    ? parseChildLoginLegacyErasure(legacyResult.data) : null;
 
   return (
     <div className="page wide">
@@ -190,6 +194,21 @@ export default async function AdminGuardiansPage() {
               : 'no matching identity currently appears; an in-flight request may still finish.'}
             {item.matched_identity_ids.length > 0 && <span> Authentication ID(s):{' '}
               {item.matched_identity_ids.map((id) => <code key={id}>{id} </code>)}.</span>}
+          </li>)}</ul>}
+      </section>}
+
+      {owner && <section className="card">
+        <h2>Old child records needing login-link cleanup</h2>
+        <p className="muted">Private to the named safeguarding owner. Up to 50 already-erased
+          records are shown without names. Cleanup retains pseudonymous evidence for provider
+          recovery; it does not remove an authentication identity or revoke sessions. A safeguarding
+          hold prevents cleanup.</p>
+        {legacyErasure === null ? <p className="notice warn">The old-record register could not be read.</p>
+          : legacyErasure.length === 0 ? <p className="muted">No old login links are listed.</p>
+          : <ul>{legacyErasure.map((item) => <li key={item.learner_id}>
+            Record <code>{item.learner_id}</code>: {item.attempt_count} attempt(s),{' '}
+            {item.removal_task_count} removal task(s). {item.coursework_held
+              ? 'A safeguarding hold prevents cleanup.' : <ReconcileErasure learnerId={item.learner_id} />}
           </li>)}</ul>}
       </section>}
 
