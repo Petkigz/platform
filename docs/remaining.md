@@ -1071,3 +1071,18 @@ purge blocking, release and an unrelated library refusal. The alternative
 shared batch passed 151 assertions, closure batch 56, and web 2,126; lint,
 typecheck, repo check and build passed. Holds cannot lock external storage, and
 legacy mixed-use resolution, hosted concurrency and byte deletion remain open.
+
+**Offline booking boundary (local migration 1020):** an entitled learner's
+existing lesson-save function now rejects a selected master with coursework or
+preserved legacy coursework provenance, rolling back the booking and device
+writes without disclosing the private context. Ordinary lesson saves remain
+available. Offline entitlement/save tests passed 27 assertions; repo check,
+typecheck and lint passed. This does not undo past disclosures or device copies.
+A further audit is needed: offline-download records can outlive their lesson
+resource, and current child-erasure/review and retention paths do not yet record
+or consistently account for that evidence before records are removed. Do not
+assume review or storage deletion has removed a copy on a learner's device.
+
+Frozen revision `e215833` passed all 170 database suites and 2,634 assertions
+across eight independent PGlite databases. This is not a hosted PostgreSQL
+concurrency test and does not include migration 1020.

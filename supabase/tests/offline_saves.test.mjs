@@ -60,7 +60,7 @@ export async function run(ctx) {
     await q(`insert into public.lesson_resources
                (lesson_id, resource_type, media_asset_id, display_name, position)
              values ($1,'video',$2,'Recorded lesson',1)`, [lesson, asset]);
-    return { course, version, lesson };
+    return { course, version, lesson, asset };
   }
 
   const grantAccess = (learnerId, versionId) =>
@@ -117,6 +117,26 @@ export async function run(ctx) {
     assert(listed.length === 1, `${listed.length} lessons on the device`);
     assert(listed[0].lesson_title.length > 0, 'the list has no lesson title');
     assert(listed[0].lapsed === false, 'a fresh save is reported as lapsed');
+  }));
+
+  await test('a mixed-use legacy coursework master cannot be booked or disclosed as a lesson save', async () => withOffline(async () => {
+    const me=await learner('Mixed-use Learner');
+    const lesson=await taughtLesson();
+    await grantAccess(me.learnerId,lesson.version);
+    await grantFeature(me.learnerId);
+    // Simulate surviving pre-boundary provenance on an existing lesson resource.
+    await q('insert into public.legacy_coursework_provenance(asset_id) values($1)',[lesson.asset]);
+    await rejects(()=>save(me.userId,lesson.lesson),/cannot be saved until its media is reviewed/i);
+    assert((await scalar('select count(*)::int n from public.offline_downloads where learner_profile_id=$1',[me.learnerId])).n===0,
+      'a refused mixed-use save wrote a booking');
+    assert((await scalar('select count(*)::int n from public.offline_devices where learner_profile_id=$1',[me.learnerId])).n===0,
+      'a refused mixed-use save left a device');
+    await rejects(()=>asActor(me.userId,'select public.save_offline_lesson_before_coursework_guard($1,$2,$3)',
+      [lesson.lesson,'device-abcdefghijklmnop','Phone']),/permission denied/i);
+    // Other lessons and the underlying offline feature remain available.
+    const ordinary=await taughtLesson();
+    await grantAccess(me.learnerId,ordinary.version);
+    assert((await save(me.userId,ordinary.lesson)).saved===true,'ordinary offline saving was disabled');
   }));
 
   await test('a learner without the feature is refused, and nothing is written', async () => withOffline(async () => {
