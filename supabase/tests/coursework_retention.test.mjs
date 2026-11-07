@@ -323,6 +323,30 @@ export async function run(ctx) {
     await purge();
     assert((await scalar('select deleted_at from public.media_assets where id=$1',[first.asset])).deleted_at===null,
       'the first submission deleted a file still referenced by another submission');
+    const sql='select public.queue_reviewed_shared_coursework($1,$2,$3) as queued';
+    const confirm='I reviewed every context and understand this only queues storage deletion';
+    await refuses(/not_allowed/i,()=>call(governance,sql,[first.asset,'Checked every context',confirm]));
+    await refuses(/confirm the review/i,()=>call(owner,sql,[first.asset,'Checked every context','wrong']));
+    await refuses(/not all submission contexts are due/i,()=>call(owner,sql,[first.asset,'Checked every context',confirm]));
+    // The second reference becomes due later; model the passage of time only
+    // after proving it cannot be shortened by the first clock.
+    await q("update public.assignment_submissions set created_at=now()-interval '2 years' where id=$1",[second]);
+    await q('alter table public.assignment_submission_revisions disable trigger assignment_submission_revisions_append_only');
+    try { await q("update public.assignment_submission_revisions set reopened_at=now()-interval '2 years' where submission_id=$1",[second]); }
+    finally { await q('alter table public.assignment_submission_revisions enable trigger assignment_submission_revisions_append_only'); }
+    const alias=(await q(`insert into public.media_assets(storage_backend,master_bucket,master_key,checksum,mime_type,byte_size,status,uploaded_by)
+      select 's3',master_bucket,master_key,checksum,mime_type,byte_size,'available',uploaded_by from public.media_assets where id=$1 returning id`,[first.asset])).rows[0].id;
+    try { await refuses(/storage issue/i,()=>call(owner,sql,[first.asset,'Every context is due',confirm])); }
+    finally { await q('delete from public.media_assets where id=$1',[alias]); }
+    await call(owner,'select public.hold_coursework_file($1,$2)',[first.asset,'Another concern']);
+    try { await refuses(/hold is open/i,()=>call(owner,sql,[first.asset,'Checked every context',confirm])); }
+    finally { await call(owner,'select public.release_coursework_hold($1,$2)',[first.asset,'Concern reviewed']); }
+    const queued=await call(owner,sql,[first.asset,'Every context is due',confirm]);
+    assert(queued.queued===true, 'the owner could not queue a reviewed shared file');
+    const asset=await scalar('select deleted_at,purge_due_at,purged_at from public.media_assets where id=$1',[first.asset]);
+    assert(asset.deleted_at && asset.purge_due_at && asset.purged_at===null, 'queueing was confused with verified deletion');
+    assert((await call(owner,sql,[first.asset,'Every context is due',confirm])).queued===false, 'a retry invented a second queue action');
+
   });
 
   await test('an open-ended cohort has no ordinary due date but erasure still applies', async () => {
@@ -831,6 +855,8 @@ export async function run(ctx) {
       await refuses(/not_allowed/i,()=>call(governance,queueSql,[shared,'Reviewed all uses',queueConfirm]));
       await refuses(/provide a reason/i,()=>call(owner,queueSql,[shared,'x',queueConfirm]));
       await refuses(/surviving use/i,()=>call(owner,queueSql,[shared,'Reviewed all uses',queueConfirm]));
+      await refuses(/separate erasure/i,()=>call(owner,'select public.queue_reviewed_shared_coursework($1,$2,$3)',
+        [shared,'Reviewed every context','I reviewed every context and understand this only queues storage deletion']));
       await refuses(/legacy library/i,()=>call(owner,queueSql,[legacy,'Reviewed older file',queueConfirm]));
       await refuses(/statement must be recorded/i,()=>call(owner,clearSql,[shared,learnerId,clearConfirm]));
 

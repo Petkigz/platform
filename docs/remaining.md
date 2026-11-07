@@ -964,7 +964,8 @@ concurrency testing and retry review. The PGlite test does not prove interleavin
 are skipped because of multiple contexts, lesson use or an unresolved erasure
 review appear in a separate, paginated owner-only list. Retention due and held
 counts now count distinct files rather than submission rows. The list identifies
-cases; it does not authorize deletion or record a finished review. Local tests
+cases; the later guarded action described below can queue an eligible case but
+does not delete stored bytes. Local tests
 cover owner access, pagination boundaries, holds and distinct held counts.
 
 **Reviewed erasure actions (local migration 970):** the safeguarding owner can
@@ -979,7 +980,8 @@ regressions cover denial, holds, quarantine, pending files, duplicate keys,
 multiple child entries, retry behavior and the statement boundary.
 
 **Still open:** legacy mixed-use exceptions, shared files with surviving uses,
-and the separate shared-retention list do not yet have full resolution workflows.
+and shared cases that are not yet due or have separate erasure, lesson or storage
+issues do not yet have full resolution workflows.
 Historical cases without surviving references cannot be identified reliably.
 Storage tombstones and owner statements are not proof of byte deletion; external
 object-key reuse after a check, hosted PostgreSQL concurrency and storage remain
@@ -1029,3 +1031,19 @@ collision, a historical rendition, refusal and the non-conflicting path; the
 150-assertion alternative shared coursework batch and 2,124 web tests passed.
 Hosted concurrency, cross-provider location identity and actual bytes remain
 unverified.
+
+
+**Shared retention action (local migration 990):** after individual review, the
+safeguarding owner can queue a coursework master only when every surviving
+submission context is due and none has a hold, lesson use, separate erasure
+review or known storage conflict. The action locks submissions and the asset,
+rejects a context set that changed while waiting, and records a private reason.
+This is a tombstone and queue entry, not a verified object deletion. Pending or
+quarantined and older library files remain separate; hosted concurrency and
+external storage changes remain unverified. The alternative shared coursework
+batch passed 150 assertions and web tests passed 2,125.
+
+**Storage collision regression:** frozen revision `b2000e0` passed all 170
+database suites and 2,633 assertions in eight independent PGlite batches. It
+covers migration 980, not the later shared-retention action (990), and is not a
+hosted PostgreSQL or object-storage test.

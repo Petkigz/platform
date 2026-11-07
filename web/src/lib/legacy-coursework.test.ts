@@ -49,3 +49,13 @@ test('erasure actions distinguish a queue, an owner statement and verified delet
   assert.match(actions, /clear_coursework_erasure_review/);
   assert.match(actions, /uncertain/);
 });
+
+test('shared retention action requires review and distinguishes the storage queue', () => {
+  const page = readFileSync(new URL('../app/admin/coursework/page.tsx', import.meta.url), 'utf8');
+  const action = readFileSync(new URL('../app/admin/coursework/shared-retention-actions.ts', import.meta.url), 'utf8');
+  assert.match(page, /Queue when every context is due/);
+  assert.match(page, /I reviewed every context/);
+  assert.match(page, /storage bytes have not been verified deleted/);
+  assert.match(action, /queue_reviewed_shared_coursework/);
+  assert.match(action, /uncertain/);
+});

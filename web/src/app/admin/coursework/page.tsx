@@ -32,6 +32,7 @@ import { parseSafeguardingAlertStatus, describeSafeguardingAlert, parseSafeguard
 import { attestClassEnd } from './class-end-actions';
 import { releaseQuarantine } from './quarantine-actions';
 import { reviewErasureFile } from './erasure-review-actions';
+import { reviewSharedRetention } from './shared-retention-actions';
 import { isQuarantineCursor, parseCourseworkQuarantines } from '@/lib/coursework-quarantine';
 import { parseSafeguardingConcerns, parseSafeguardingHistory } from '@/lib/safeguarding-queue';
 
@@ -40,7 +41,7 @@ export const dynamic = 'force-dynamic';
 /** Owner-only review register, alongside separately authorized retention tools.
  * A recorded review is an attestation, not proof that a file was viewed.
  */
-export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ legacyAfter?: string; sharedAfter?: string; erasureReview?: string; erasureAsset?: string; erasureLearner?: string; concern?: string; before?: string; beforeId?: string; endsAfter?: string; classEnd?: string; quarantineAfter?: string; quarantine?: string; concernAfter?: string; concernAfterId?: string; alert?: string; alertReview?: string; alertBefore?: string; storageAfter?: string; storageAfterId?: string; holdAfter?: string; holdAfterId?: string; reviewAfterState?: string; reviewAfterAt?: string; reviewAfterId?: string }> }) {
+export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ legacyAfter?: string; sharedAfter?: string; sharedReview?: string; erasureReview?: string; erasureAsset?: string; erasureLearner?: string; concern?: string; before?: string; beforeId?: string; endsAfter?: string; classEnd?: string; quarantineAfter?: string; quarantine?: string; concernAfter?: string; concernAfterId?: string; alert?: string; alertReview?: string; alertBefore?: string; storageAfter?: string; storageAfterId?: string; holdAfter?: string; holdAfterId?: string; reviewAfterState?: string; reviewAfterAt?: string; reviewAfterId?: string }> }) {
   if (!isSupabaseConfigured()) redirect('/');
 
   const supabase = await createClient();
@@ -193,7 +194,10 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
       </section>}
       {isSafeguardingOwner && <section id="shared-retention" className="card" style={{ marginBlock: '1rem' }}>
         <h2>Due files with shared contexts</h2>
-        <p>Automatic retention leaves these files alone because they may belong to several submissions, a lesson, or an unresolved child-erasure review. Inspect each case individually. This is not a deletion queue and does not record a completed review.</p>
+        <p>Automatic retention leaves these files alone because they may belong to several submissions, a lesson, or an unresolved child-erasure review. Inspect each case individually. Only a coursework file whose every surviving submission is due and has no separate issue can be queued here. Review reasons are retained in the private audit, so avoid names or sensitive details.</p>
+        <p><Link href="/admin/coursework#storage-queue">Go to the storage queue</Link> after queueing; storage deletion is a separate, unverified step.</p>
+        {params.sharedReview === 'queued' && <p role="status">The file was tombstoned and queued; its storage bytes have not been verified deleted.</p>}
+        {(params.sharedReview === 'uncertain' || params.sharedReview === 'invalid') && <p className="notice warn" role="alert">The action could not be confirmed. Refresh and check the shared-file and storage queues before retrying. Undue contexts, holds, lessons, erasure reviews and storage conflicts prevent this action.</p>}
         {sharedRows === null ? <p className="notice warn">The shared-file list could not be loaded. Do not assume it is empty.</p>
           : sharedRows.length === 0 ? <p>No due shared files are shown on this page.</p>
           : <ul className="lessons">{sharedRows.slice(0,50).map(row => <li key={row.asset_id}>
@@ -201,6 +205,14 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
             <p>File ID: {row.asset_id} · earliest due: {row.earliest_due} · {row.submission_contexts} submission {row.submission_contexts === 1 ? 'context' : 'contexts'}</p>
             <p>{row.in_lesson ? 'Referenced by a lesson. ' : ''}{row.erasure_review ? 'Has a child-erasure review entry. ' : ''}{row.held ? 'Safeguarding hold is open.' : ''}</p>
             <a href={courseworkFileHref(row.asset_id)} target="_blank" rel="noreferrer">Try opening the file for review</a>
+            <form action={reviewSharedRetention}>
+              <input type="hidden" name="assetId" value={row.asset_id} />
+              <input type="hidden" name="after" value={params.sharedAfter ?? ''} />
+              <label htmlFor={`shared-reason-${row.asset_id}`}>Review reason</label>
+              <textarea id={`shared-reason-${row.asset_id}`} name="reason" required minLength={3} maxLength={1000} />
+              <label><input type="checkbox" name="confirmed" value="yes" required /> I reviewed every context. This queues storage deletion; it does not delete or verify the bytes.</label>
+              <button type="submit" className="btn ghost">Queue when every context is due</button>
+            </form>
           </li>)}</ul>}
         {params.sharedAfter && <p><Link href="/admin/coursework#shared-retention">First page</Link></p>}
         {sharedNext && <p><Link href={`/admin/coursework?${new URLSearchParams({ sharedAfter: sharedNext })}#shared-retention`}>More shared files</Link></p>}
