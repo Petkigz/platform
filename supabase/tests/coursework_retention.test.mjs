@@ -734,6 +734,7 @@ export async function run(ctx) {
     await q(`insert into public.assignment_submission_revisions
       (submission_id,revision_number,asset_ids,feedback,marked_at,submitted_at,reopened_by)
       values ($1,1,jsonb_build_array($2::text),'Reviewed',now(),now(),$3)`, [other.submission,shared,other.userId]);
+
     const legacy=(await q(`insert into public.media_assets
       (storage_backend,master_bucket,master_key,checksum,mime_type,byte_size,status,uploaded_by)
       values ('r2','masters',$1,$2,'image/jpeg',1000,'available',$3) returning id`,
@@ -774,6 +775,19 @@ export async function run(ctx) {
       assert(queue.some(r=>r.asset_id===legacy && r.learner_id===learnerId), 'owner cannot see legacy review');
       await refuses(/not_allowed/i, () => asActor(governance,() => q('select * from public.coursework_erasure_review_page(null,null,50)')));
       await refuses(/permission denied/i, () => asActor(governance,() => q('select * from public.coursework_erasure_review_assets')));
+      // Another record using the shared file is erased later. An existing
+      // review for the first child must prevent this second purge from silently
+      // tombstoning the same object or claiming no personal data remains.
+      // Simulate a surviving historical attachment after the first child's
+      // attachment has gone, to exercise the cascade trigger too.
+      await q('alter table public.assignment_submission_assets disable trigger assignment_assets_coursework_only');
+      try { await q('insert into public.assignment_submission_assets(submission_id,media_asset_id,attached_by) values($1,$2,$3)', [other.submission,shared,other.userId]); }
+      finally { await q('alter table public.assignment_submission_assets enable trigger assignment_assets_coursework_only'); }
+      await q("update public.learner_profiles set learner_type='child',age_band='8-10',deleted_at=now()-interval '45 days',status='archived' where id=$1",[other.learnerId]);
+      const secondReceipt=(await scalar('select public.purge_learner_record($1) as r',[other.learnerId])).r;
+      assert(secondReceipt.erased===true && secondReceipt.nothingLeft===false, 'the second receipt omitted unresolved shared evidence');
+      assert((await scalar('select deleted_at from public.media_assets where id=$1',[shared])).deleted_at===null, 'the second purge tombstoned an unresolved shared file');
+      assert((await scalar('select reason from public.coursework_erasure_review_assets where asset_id=$1 and learner_id=$2',[shared,other.learnerId])).reason==='shared_context', 'the second review context was lost');
       assert((await scalar('select count(*)::int n from public.child_revision_erasure_scope')).n===0, 'an erasure capability survived the transaction');
     } finally {
       const open=await scalar('select id from public.coursework_retention_holds where asset_id=$1 and closed_at is null', [old]);

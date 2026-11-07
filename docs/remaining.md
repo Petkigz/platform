@@ -936,6 +936,12 @@ review-flagged objects. The local PGlite regression covers a real marked and
 reopened revision, a detached snapshot hold, release, pending uploads, mixed-use
 exceptions and ordinary revision protection.
 
+**Shared child-erasure cases (local migration 950):** a later child purge
+now preserves an earlier unresolved review of the same file, records the later
+child's own review context, and does not claim nothing remains. A local test
+exercises both the purge update and attachment-cascade paths. This is still an
+unresolved individual review, not storage deletion or full erasure.
+
 **Guardian closure (local migration 930):** the last-guardian precheck also
 locks submission and referenced asset rows, then rechecks holds on attachments,
 declarations and revisions. Local tests cover snapshot-only and pending-upload
