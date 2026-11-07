@@ -4,7 +4,6 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
 import {
-  fetchAssignmentFileReferences,
   fetchAssignmentRevisions,
   fetchAssignmentSubmissions,
   fetchCourseAssignments,
@@ -69,12 +68,8 @@ export default async function TeachAssignmentsPage({
   }));
 
   const submissions = await fetchAssignmentSubmissions(supabase, assignments.map((a) => a.id));
-  const [files, revisions] = await Promise.all([
-    fetchAssignmentFileReferences(supabase, submissions.map((s) => s.id)),
-    // Earlier versions of work already marked, so a teacher marking a revision
-    // can see what they asked for and whether the learner answered it.
-    fetchAssignmentRevisions(supabase, submissions.map((s) => s.id)),
-  ]);
+  // Earlier versions of work already marked remain visible to the authorized marker.
+  const revisions = await fetchAssignmentRevisions(supabase, submissions.map((s) => s.id));
   // The named list per submission. A count was all this queue could show while
   // `media_assets` was uploader-or-staff only, which is how a teacher ended up
   // with "3 private file references" and no way to open one.
@@ -82,10 +77,10 @@ export default async function TeachAssignmentsPage({
     submissions.map((submission) =>
       supabase
         .rpc('assignment_submission_files', { p_submission_id: submission.id })
-        .then(({ data }) => [submission.id, Array.isArray(data) ? data : []] as const),
+        .then(({ data, error }) => [submission.id, error ? null : data] as const),
     ),
   );
-  const filesBySubmission = Object.fromEntries(named) as Record<string, unknown[]>;
+  const filesBySubmission = Object.fromEntries(named) as Record<string, unknown>;
   const revisionsBySubmission = revisions.reduce<Record<string, typeof revisions>>((groups, revision) => {
     const group = groups[revision.submissionId] ?? [];
     group.push(revision);

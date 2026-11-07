@@ -9,6 +9,7 @@ import {
 } from '@/lib/course-assignments';
 import { AssignmentFiles } from './assignment-files';
 import { postLearnerAssignmentAction } from '@/lib/coursework';
+import { RevisionFiles } from '@/components/revision-files';
 
 export function AssignmentWork({
   assignmentId,
@@ -283,11 +284,7 @@ export function AssignmentWork({
               {version.feedback && (
                 <p style={{ margin: '.35rem 0 0', whiteSpace: 'pre-wrap' }}>{version.feedback}</p>
               )}
-              {version.assetIds.length > 0 && (
-                <p className="muted" style={{ margin: '.35rem 0 0', fontSize: '.8rem' }}>
-                  {version.assetIds.length} file reference{version.assetIds.length === 1 ? '' : 's'} accompanied this version.
-                </p>
-              )}
+              <RevisionFiles assetIds={version.assetIds} />
             </div>
           ))}
         </div>

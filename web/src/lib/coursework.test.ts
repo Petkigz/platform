@@ -369,3 +369,18 @@ test('learner assignment actions distinguish a confirmed write from an uncertain
     if (!result.ok) assert.match(result.message, /copy any unsaved text.*reload.*check/i);
   }
 });
+
+test('earlier file references are openable and a failed marker list is not empty', () => {
+  const learner = readFileSync(new URL('../app/learn/[enrolmentId]/assignment/[assignmentId]/assignment-work.tsx', import.meta.url), 'utf8');
+  const marker = readFileSync(new URL('../app/teach/[courseId]/assignments/assignment-manager.tsx', import.meta.url), 'utf8');
+  const page = readFileSync(new URL('../app/teach/[courseId]/assignments/page.tsx', import.meta.url), 'utf8');
+  const links = readFileSync(new URL('../components/revision-files.tsx', import.meta.url), 'utf8');
+  assert.match(learner, /<RevisionFiles assetIds=\{version.assetIds\}/);
+  assert.match(marker, /<RevisionFiles assetIds=\{version.assetIds\}/);
+  assert.match(links, /courseworkFileHref\(id\)/);
+  assert.match(links, /file may no longer be available/);
+  assert.match(marker, /parseCourseworkFilesStrict\(files\)/);
+  assert.match(marker, /file list could not be checked/i);
+  assert.match(page, /error \? null : data/);
+  assert.doesNotMatch(page, /fetchAssignmentFileReferences/);
+});

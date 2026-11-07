@@ -8,7 +8,8 @@ import {
   type CourseAssignment,
   revisionPolicyLabel,
 } from '@/lib/course-assignments';
-import { courseworkFileHref, describeCourseworkFile, parseCourseworkFiles } from '@/lib/coursework';
+import { courseworkFileHref, describeCourseworkFile, parseCourseworkFilesStrict } from '@/lib/coursework';
+import { RevisionFiles } from '@/components/revision-files';
 import { describeFileReview } from '@/lib/coursework-review';
 
 export type AssignmentVersionOption = { id: string; versionNumber: number; status: string };
@@ -50,7 +51,7 @@ export function AssignmentManager({
   assignments: CourseAssignment[];
   submissions: AssignmentSubmission[];
   /** Named files per submission, from `assignment_submission_files()`. */
-  files: Record<string, unknown[]>;
+  files: Record<string, unknown>;
   revisions: Record<string, AssignmentRevision[]>;
 }) {
   const router = useRouter();
@@ -295,7 +296,7 @@ export function AssignmentManager({
                   key={submission.id}
                   assignment={assignment}
                   submission={submission}
-                  files={files[submission.id] ?? []}
+                  files={files[submission.id] ?? null}
                   earlierVersions={revisions[submission.id] ?? []}
                   onSend={send}
                   busy={busy}
@@ -312,13 +313,13 @@ export function AssignmentManager({
 /**
  * What was handed in, as links.
  *
- * The address is `/api/media/master?asset=…`, which re-decides permission every
- * time it is asked — the course author and staff, nobody else — and mints a
- * fifteen-minute URL. A storage address printed into the page would be a bearer
- * token in the history of every device the teacher ever marked on.
+ * The open route rechecks permission before issuing a short-lived bearer URL.
+ * The resulting storage URL can appear in browser history and may remain usable
+ * until expiry; it cannot prevent an authorized reader from copying a file.
  */
-function SubmissionFiles({ files }: { files: unknown[] }) {
-  const list = parseCourseworkFiles(files);
+function SubmissionFiles({ files }: { files: unknown }) {
+  const list = parseCourseworkFilesStrict(files);
+  if (list === null) return <p className="notice warn">The file list could not be checked. Refresh before marking; do not assume there are no files.</p>;
   if (list.length === 0) return null;
 
   return (
@@ -429,7 +430,7 @@ function SubmissionForMarking({
 }: {
   assignment: CourseAssignment;
   submission: AssignmentSubmission;
-  files: unknown[];
+  files: unknown;
   earlierVersions: AssignmentRevision[];
   onSend: (payload: Record<string, unknown>, key: string) => Promise<unknown>;
   busy: string | null;
@@ -465,6 +466,7 @@ function SubmissionForMarking({
               {version.feedback && (
                 <p style={{ margin: '.25rem 0 0', whiteSpace: 'pre-wrap' }}>{version.feedback}</p>
               )}
+              <RevisionFiles assetIds={version.assetIds} />
             </div>
           ))}
         </div>
