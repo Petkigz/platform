@@ -38,3 +38,14 @@ test('shared retention entries require truthful context and hold fields', async 
   assert.deepEqual(parseSharedRetentionReviews([]), []);
   for (const value of [null, [{}], [{ ...review, submission_contexts: 0 }], [{ ...review, held: 'false' }], [{ ...review, earliest_due: null }]]) assert.equal(parseSharedRetentionReviews(value), null);
 });
+
+test('erasure actions distinguish a queue, an owner statement and verified deletion', () => {
+  const page = readFileSync(new URL('../app/admin/coursework/page.tsx', import.meta.url), 'utf8');
+  const actions = readFileSync(new URL('../app/admin/coursework/erasure-review-actions.ts', import.meta.url), 'utf8');
+  assert.match(page, /queues storage deletion; it does not delete or verify the bytes/);
+  assert.match(page, /A storage-deletion statement is recorded; I understand it is not independently verified/);
+  assert.match(page, /storage-queue/);
+  assert.match(actions, /queue_reviewed_coursework_erasure/);
+  assert.match(actions, /clear_coursework_erasure_review/);
+  assert.match(actions, /uncertain/);
+});

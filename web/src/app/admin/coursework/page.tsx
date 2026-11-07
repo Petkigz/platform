@@ -31,6 +31,7 @@ import { acknowledgeConcern, reopenConcern, retrySafeguardingAlert } from './saf
 import { parseSafeguardingAlertStatus, describeSafeguardingAlert, parseSafeguardingAlertHistory, isAlertHistoryCursor, parseSafeguardingAlertFullHistory } from '@/lib/safeguarding-alert-status';
 import { attestClassEnd } from './class-end-actions';
 import { releaseQuarantine } from './quarantine-actions';
+import { reviewErasureFile } from './erasure-review-actions';
 import { isQuarantineCursor, parseCourseworkQuarantines } from '@/lib/coursework-quarantine';
 import { parseSafeguardingConcerns, parseSafeguardingHistory } from '@/lib/safeguarding-queue';
 
@@ -39,7 +40,7 @@ export const dynamic = 'force-dynamic';
 /** Owner-only review register, alongside separately authorized retention tools.
  * A recorded review is an attestation, not proof that a file was viewed.
  */
-export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ legacyAfter?: string; sharedAfter?: string; erasureAsset?: string; erasureLearner?: string; concern?: string; before?: string; beforeId?: string; endsAfter?: string; classEnd?: string; quarantineAfter?: string; quarantine?: string; concernAfter?: string; concernAfterId?: string; alert?: string; alertReview?: string; alertBefore?: string; storageAfter?: string; storageAfterId?: string; holdAfter?: string; holdAfterId?: string; reviewAfterState?: string; reviewAfterAt?: string; reviewAfterId?: string }> }) {
+export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ legacyAfter?: string; sharedAfter?: string; erasureReview?: string; erasureAsset?: string; erasureLearner?: string; concern?: string; before?: string; beforeId?: string; endsAfter?: string; classEnd?: string; quarantineAfter?: string; quarantine?: string; concernAfter?: string; concernAfterId?: string; alert?: string; alertReview?: string; alertBefore?: string; storageAfter?: string; storageAfterId?: string; holdAfter?: string; holdAfterId?: string; reviewAfterState?: string; reviewAfterAt?: string; reviewAfterId?: string }> }) {
   if (!isSupabaseConfigured()) redirect('/');
 
   const supabase = await createClient();
@@ -206,14 +207,42 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
       </section>}
       {isSafeguardingOwner && <section id="erasure-review" className="card" style={{ marginBlock: '1rem' }}>
         <h2>Child erasure: files needing individual review</h2>
-        <p>These files were not queued for automatic deletion because they may be shared or used in the library. Review each case before changing it. The child record was removed, but this register and any remaining file or copies are still personal data; storage deletion is not verified. This list cannot yet record a completed review.</p>
+        <p>These files were not queued for automatic deletion because they may be shared or used in the library. Review each case before changing it. The child record was removed, but this register and any remaining file or copies are still personal data; storage deletion is not verified. Only coursework files with no surviving uses or storage-key conflicts can be queued here; older library-labelled files still require separate handling. Review reasons are retained in the private audit, so avoid adding names or sensitive details.</p>
+        <p><Link href="/admin/coursework#storage-queue">Go to the storage queue</Link> to record a deletion statement after separately handling the object.</p>
+        {params.erasureReview === 'queued' && <p role="status">The file was tombstoned and queued for storage deletion. Its bytes have not been verified deleted.</p>}
+        {params.erasureReview === 'already_queued' && <p role="status">The file was already queued. Check the storage queue; bytes have not been verified deleted.</p>}
+        {params.erasureReview === 'statement_recorded' && <p role="status">A storage-deletion statement was already recorded. It is not independent verification.</p>}
+        {params.erasureReview === 'removed' && <p role="status">This review entry was removed after a storage-deletion statement. The statement and other copies are not independently verified.</p>}
+        {(params.erasureReview === 'uncertain' || params.erasureReview === 'invalid') && <p className="notice warn" role="alert">The action could not be confirmed. Refresh and check both the review and storage queues before retrying. Holds, other uses, shared keys, pending files and quarantines prevent this action.</p>}
         {erasureRows === null ? <p className="notice warn">The erasure review list could not be loaded. Do not assume it is empty.</p>
           : erasureRows.length === 0 ? <p>No entries on this page.</p>
           : <ul className="lessons">{erasureRows.slice(0,50).map(row => <li key={`${row.asset_id}:${row.learner_id}`}>
             <strong>{row.display_name ?? 'Unnamed file'}</strong>
             <p>File ID: {row.asset_id} · learner record ID: {row.learner_id}</p>
-            <p>{row.reason === 'legacy_library' ? 'Older library-labelled file; may have mixed use.' : 'Referenced by another learner or a lesson.'} Recorded {row.recorded_at}.</p>
+            <p>{row.reason === 'legacy_library' ? 'Older library-labelled file; may have mixed use.' : 'Was referenced by another learner or a lesson; check for surviving uses.'} Recorded {row.recorded_at}.</p>
             <a href={courseworkFileHref(row.asset_id)} target="_blank" rel="noreferrer">Try opening the file for review</a>
+            {row.reason === 'shared_context' && <>
+              <form action={reviewErasureFile}>
+                <input type="hidden" name="assetId" value={row.asset_id} />
+                <input type="hidden" name="learnerId" value={row.learner_id} />
+                <input type="hidden" name="action" value="queue" />
+                <input type="hidden" name="afterAsset" value={params.erasureAsset ?? ''} />
+                <input type="hidden" name="afterLearner" value={params.erasureLearner ?? ''} />
+                <label htmlFor={`erasure-reason-${row.asset_id}-${row.learner_id}`}>Review reason</label>
+                <textarea id={`erasure-reason-${row.asset_id}-${row.learner_id}`} name="reason" required minLength={3} maxLength={1000} />
+                <label><input type="checkbox" name="confirmed" value="yes" required /> I reviewed all surviving uses. This queues storage deletion; it does not delete or verify the bytes.</label>
+                <button type="submit" className="btn ghost">Queue eligible file</button>
+              </form>
+              <form action={reviewErasureFile}>
+                <input type="hidden" name="assetId" value={row.asset_id} />
+                <input type="hidden" name="learnerId" value={row.learner_id} />
+                <input type="hidden" name="action" value="clear" />
+                <input type="hidden" name="afterAsset" value={params.erasureAsset ?? ''} />
+                <input type="hidden" name="afterLearner" value={params.erasureLearner ?? ''} />
+                <label><input type="checkbox" name="confirmed" value="yes" required /> A storage-deletion statement is recorded; I understand it is not independently verified.</label>
+                <button type="submit" className="btn ghost">Remove this review entry</button>
+              </form>
+            </>}
           </li>)}</ul>}
         {params.erasureAsset && <p><Link href="/admin/coursework#erasure-review">First page</Link></p>}
         {erasureNext && <p><Link href={`/admin/coursework?${new URLSearchParams({ erasureAsset: erasureNext.asset_id, erasureLearner: erasureNext.learner_id })}#erasure-review`}>More files needing review</Link></p>}

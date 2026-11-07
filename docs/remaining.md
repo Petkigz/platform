@@ -967,9 +967,23 @@ counts now count distinct files rather than submission rows. The list identifies
 cases; it does not authorize deletion or record a finished review. Local tests
 cover owner access, pagination boundaries, holds and distinct held counts.
 
-**Still open:** the exception registers have no visual resolution workflow. Historical cases without
-surviving references cannot be identified reliably. Storage tombstones are not proof of
-byte deletion; hosted PostgreSQL concurrency and storage remain unverified.
+**Reviewed erasure actions (local migration 970):** the safeguarding owner can
+visually queue an available coursework-purpose exception when no surviving
+submission, declaration, revision, lesson, rendition, hold or duplicate object
+key is found. After separately recording a storage-deletion statement, the owner
+can remove each learner-specific review entry. These actions do not delete bytes
+or verify the statement, remove all audit information, or prove complete erasure;
+reasons remain in a restricted audit. Pending, quarantined, legacy library,
+shared or otherwise ambiguous cases are refused for separate handling. Local
+regressions cover denial, holds, quarantine, pending files, duplicate keys,
+multiple child entries, retry behavior and the statement boundary.
+
+**Still open:** legacy mixed-use exceptions, shared files with surviving uses,
+and the separate shared-retention list do not yet have full resolution workflows.
+Historical cases without surviving references cannot be identified reliably.
+Storage tombstones and owner statements are not proof of byte deletion; external
+object-key reuse after a check, hosted PostgreSQL concurrency and storage remain
+unverified.
 Existing links and external copies cannot be recalled.
 
 **Legacy-provenance regression:** frozen revision `9672670` ran all 170 database

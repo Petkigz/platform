@@ -787,6 +787,16 @@ export async function run(ctx) {
       const queue=(await asActor(owner,() => q('select * from public.coursework_erasure_review_page(null,null,100)'))).rows;
       assert(queue.some(r=>r.asset_id===shared && r.learner_id===learnerId), 'owner cannot see shared review');
       assert(queue.some(r=>r.asset_id===legacy && r.learner_id===learnerId), 'owner cannot see legacy review');
+      const queueConfirm='I reviewed all surviving uses and understand this only queues storage deletion';
+      const clearConfirm='I understand a storage statement is not verified deletion';
+      const queueSql='select public.queue_reviewed_coursework_erasure($1,$2,$3) as result';
+      const clearSql='select public.clear_coursework_erasure_review($1,$2,$3) as result';
+      await refuses(/not_allowed/i,()=>call(governance,queueSql,[shared,'Reviewed all uses',queueConfirm]));
+      await refuses(/provide a reason/i,()=>call(owner,queueSql,[shared,'x',queueConfirm]));
+      await refuses(/surviving use/i,()=>call(owner,queueSql,[shared,'Reviewed all uses',queueConfirm]));
+      await refuses(/legacy library/i,()=>call(owner,queueSql,[legacy,'Reviewed older file',queueConfirm]));
+      await refuses(/statement must be recorded/i,()=>call(owner,clearSql,[shared,learnerId,clearConfirm]));
+
       await refuses(/not_allowed/i, () => asActor(governance,() => q('select * from public.coursework_erasure_review_page(null,null,50)')));
       await refuses(/permission denied/i, () => asActor(governance,() => q('select * from public.coursework_erasure_review_assets')));
       // Another record using the shared file is erased later. An existing
@@ -802,6 +812,38 @@ export async function run(ctx) {
       assert(secondReceipt.erased===true && secondReceipt.nothingLeft===false, 'the second receipt omitted unresolved shared evidence');
       assert((await scalar('select deleted_at from public.media_assets where id=$1',[shared])).deleted_at===null, 'the second purge tombstoned an unresolved shared file');
       assert((await scalar('select reason from public.coursework_erasure_review_assets where asset_id=$1 and learner_id=$2',[shared,other.learnerId])).reason==='shared_context', 'the second review context was lost');
+      await refuses(/confirm the review/i,()=>call(owner,queueSql,[shared,'Valid review','wrong confirmation']));
+      // A deleted historical row can still name the same physical object.
+      const duplicate=(await q(`insert into public.media_assets(storage_backend,master_bucket,master_key,checksum,mime_type,byte_size,status,uploaded_by,deleted_at)
+        select storage_backend,master_bucket,master_key,checksum,mime_type,byte_size,'deleted',uploaded_by,now() from public.media_assets where id=$1 returning id`,[shared])).rows[0].id;
+      try { await refuses(/surviving use/i,()=>call(owner,queueSql,[shared,'Reviewed all uses',queueConfirm])); }
+      finally { await q('delete from public.media_assets where id=$1',[duplicate]); }
+      await committed(async()=>{ await q("select set_config('app.media_status_transition','on',true)"); await q("update public.media_assets set status='pending' where id=$1",[shared]); });
+      try { await refuses(/pending or quarantined/i,()=>call(owner,queueSql,[shared,'Reviewed all uses',queueConfirm])); }
+      finally { await committed(async()=>{ await q("select set_config('app.media_status_transition','on',true)"); await q("update public.media_assets set status='available' where id=$1",[shared]); }); }
+      await committed(async()=>{ await q("select set_config('app.media_status_transition','on',true)"); await q("update public.media_assets set status='quarantined' where id=$1",[shared]); });
+      try { await refuses(/quarantined/i,()=>call(owner,queueSql,[shared,'Reviewed all uses',queueConfirm])); }
+      finally { await call(owner,'select public.release_coursework_quarantine($1,$2)',[shared,'I reviewed this quarantine and its release']); }
+      await call(owner,'select public.hold_coursework_file($1,$2)',[shared,'A later concern']);
+      try {
+        await refuses(/hold is open/i,()=>call(owner,queueSql,[shared,'Reviewed all uses',queueConfirm]));
+      } finally { await call(owner,'select public.release_coursework_hold($1,$2)',[shared,'Later concern reviewed']); }
+      assert((await call(owner,queueSql,[shared,'The surviving uses have ended',queueConfirm])).result==='queued', 'the reviewed file was not queued');
+      assert((await call(owner,queueSql,[shared,'The surviving uses have ended',queueConfirm])).result==='already_queued', 'a lost queue reply was not recoverable');
+      assert((await scalar('select purged_at from public.media_assets where id=$1',[shared])).purged_at===null, 'queueing claimed storage deletion');
+      await refuses(/statement must be recorded/i,()=>call(owner,clearSql,[shared,learnerId,clearConfirm]));
+      // This records an owner assertion only; no object-store call is made by the test.
+      await call(owner,'select public.record_coursework_purge($1)',[shared]);
+      await refuses(/not_allowed/i,()=>call(governance,clearSql,[shared,learnerId,clearConfirm]));
+      await refuses(/confirm/i,()=>call(owner,clearSql,[shared,learnerId,'wrong']));
+      await call(owner,'select public.hold_coursework_file($1,$2)',[shared,'Review the recorded storage statement']);
+      try { await refuses(/individual handling/i,()=>call(owner,clearSql,[shared,learnerId,clearConfirm])); }
+      finally { await call(owner,'select public.release_coursework_hold($1,$2)',[shared,'Review concluded']); }
+      assert((await call(owner,clearSql,[shared,learnerId,clearConfirm])).result===true, 'the first review entry was not removed');
+      assert((await call(owner,clearSql,[shared,other.learnerId,clearConfirm])).result===true, 'the second review entry was not removed');
+      assert((await call(owner,clearSql,[shared,other.learnerId,clearConfirm])).result===false, 'a retry falsely reported another removal');
+      assert((await scalar('select count(*)::int n from public.coursework_erasure_review_assets where asset_id=$1',[legacy])).n===1, 'legacy exception disappeared');
+
       assert((await scalar('select count(*)::int n from public.child_revision_erasure_scope')).n===0, 'an erasure capability survived the transaction');
     } finally {
       const open=await scalar('select id from public.coursework_retention_holds where asset_id=$1 and closed_at is null', [old]);
