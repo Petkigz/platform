@@ -1307,3 +1307,9 @@ Frozen revision `80f2cdc` passed all 170 database suites and 2,642 assertions
 across eight independent PGlite databases. The test-only confirmation stand-in
 simulates the server step; it does not perform a storage HEAD. Hosted Supabase,
 real storage and cross-session races still require deployment testing.
+
+Server service-key checks now reject blank and common example values before
+starting coursework transfers (and before the other server-only workflows use
+them). This detects obvious configuration mistakes, not whether a real-looking
+key is valid or authorized. Web passed 2,141 tests; lint, typecheck, repository
+checks and build passed.

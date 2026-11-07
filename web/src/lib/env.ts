@@ -58,8 +58,8 @@ export function isSupabaseConfigured(): boolean {
  * and must never reach a browser bundle.
  */
 export function getServiceRoleKey(): string {
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!key) {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!isServiceRoleConfigured() || !key) {
     throw new Error(
       'SUPABASE_SERVICE_ROLE_KEY is not set. Coursework upload confirmation, the payment webhook, trusted child-login creation and removal, and private safeguarding alerts need it on the server. Never expose it to a browser or grant anonymous access as a workaround.',
     );
@@ -68,5 +68,6 @@ export function getServiceRoleKey(): string {
 }
 
 export function isServiceRoleConfigured(): boolean {
-  return Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY);
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ?? '';
+  return key !== '' && !/^(your-|changeme|x{3,}|…|\.\.\.|<.*>)/i.test(key);
 }
