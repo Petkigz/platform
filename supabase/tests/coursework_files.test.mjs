@@ -405,6 +405,9 @@ export async function run(ctx) {
       await q('delete from public.coursework_quarantine_state where asset_id=$1', [legacy.asset_id]);
       await refused(who.userId, 'select * from public.coursework_quarantine_queue(50,null)', [], /not_allowed/);
       await refused(otherAdmin, 'select * from public.coursework_quarantine_queue(50,null)', [], /not_allowed/);
+      await committed(async()=>{ await q("select set_config('app.account_erasure','on',true)"); await q("update public.user_profiles set account_status='suspended' where user_id=$1",[admin]); });
+      try { await refused(admin, 'select * from public.coursework_quarantine_queue(50,null)', [], /not_allowed/); }
+      finally { await committed(async()=>{ await q("select set_config('app.account_erasure','on',true)"); await q("update public.user_profiles set account_status='active' where user_id=$1",[admin]); }); }
       await refused(otherAdmin, 'select public.release_coursework_quarantine($1,$2)', [pending.asset_id, 'I reviewed this quarantine and its release'], /not_allowed/);
       await refused(teacher, 'select public.release_coursework_quarantine($1,$2)', [pending.asset_id, 'I reviewed this quarantine and its release'], /not_allowed/);
       await refused(who.userId, 'select * from public.coursework_quarantine_state', [], /permission denied/);

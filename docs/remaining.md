@@ -1216,3 +1216,10 @@ across eight independent PGlite databases. This includes the offline-key,
 removal and device-management migrations, but predates migration 1100. The
 latter passed its focused 41-assertion retention/holds rerun after the lock
 recheck. Batched tests do not establish all suite orders or hosted concurrency.
+
+**Quarantine register authority (local migration 1110):** the owner-only
+quarantine list now also refuses a suspended or inactive owner, matching the
+existing write boundary. A lost release response is shown as unconfirmed and
+requires a refresh rather than implying that no write occurred. Coursework file
+and review suites passed 61 assertions, including the suspended-owner case;
+lint, typecheck and repository checks passed. Hosted behavior remains untested.

@@ -15,10 +15,11 @@ export async function releaseQuarantine(form: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/sign-in?next=/admin/coursework');
-  const { data, error } = await supabase.rpc('release_coursework_quarantine', {
+  // A network error may occur after the write; do not report it as a refusal.
+  const result = await Promise.resolve(supabase.rpc('release_coursework_quarantine', {
     p_asset_id: id, p_confirm: 'I reviewed this quarantine and its release',
-  });
+  })).catch(() => null);
   revalidatePath('/admin/coursework');
-  if (error || (data !== 'pending' && data !== 'available')) redirect(back('failed'));
-  redirect(back(data));
+  if (!result || result.error || (result.data !== 'pending' && result.data !== 'available')) redirect(back('failed'));
+  redirect(back(result.data));
 }
