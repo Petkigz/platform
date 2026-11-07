@@ -1258,3 +1258,13 @@ Frozen revision `590ca7c` passed all 170 database suites and 2,640 assertions
 across eight independent PGlite databases, including unknown-state quarantine
 review. It predates the later messaging-only changes; hosted concurrency and
 storage behavior remain unverified.
+
+**Quarantine storage-size check:** the named active owner can run a read-only
+HEAD check from the private queue for an eligible quarantined coursework asset.
+The browser receives only the reported and declared sizes, never the signed
+storage URL. A match is not a content/digest verification, malware scan, proof
+of the earlier state, or a guarantee that the object will not later change. A
+provider refusal does not prove absence; a storage request may count against the
+configured provider's usage. The check needs configured storage and has only
+been tested locally with simulated responses. Coursework file/review suites
+passed 61/61, web 2,139/2,139, and lint, typecheck, repo checks and build passed.

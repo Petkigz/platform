@@ -31,6 +31,7 @@ import { acknowledgeConcern, reopenConcern, retrySafeguardingAlert } from './saf
 import { parseSafeguardingAlertStatus, describeSafeguardingAlert, parseSafeguardingAlertHistory, isAlertHistoryCursor, parseSafeguardingAlertFullHistory } from '@/lib/safeguarding-alert-status';
 import { attestClassEnd } from './class-end-actions';
 import { releaseQuarantine, reviewUnknownQuarantine } from './quarantine-actions';
+import { QuarantineInspection } from './quarantine-inspection';
 import { reviewErasureFile } from './erasure-review-actions';
 import { reviewSharedRetention, reviewDetachedRetention } from './shared-retention-actions';
 import { isQuarantineCursor, parseCourseworkQuarantines } from '@/lib/coursework-quarantine';
@@ -360,6 +361,8 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
                   <p>{row.previous_status ? `Previously ${row.previous_status}.` : 'Previous status unknown: individual review required.'}</p>
                   <p>{row.recorded_reason ? `A recorded quarantine reason: ${row.recorded_reason}` : 'No quarantine reason was found here.'} Check any other incident records too.</p>
                   <a href={courseworkFileHref(row.asset_id)} target="_blank" rel="noreferrer">Try opening the file for review</a>
+                  <p>A storage-size check is read-only and does not inspect the content or scan for malware.</p>
+                  <QuarantineInspection assetId={row.asset_id} />
                   {row.previous_status && <form action={releaseQuarantine}>
                     <input type="hidden" name="assetId" value={row.asset_id} />
                     <input type="hidden" name="after" value={params.quarantineAfter ?? ''} />

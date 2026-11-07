@@ -405,10 +405,19 @@ export async function run(ctx) {
       // A repeated quarantine must not replace the real original state.
       await call(admin, 'select public.quarantine_media_upload($1,$2)', [pending.asset_id, 'still under review']);
       await q('delete from public.coursework_quarantine_state where asset_id=any($1::uuid[])', [[legacy.asset_id,olderAttached.asset_id]]);
+      const libraryAssetBeforeInspection=(await scalar('select id from public.media_assets where master_bucket=$1 and master_key=$2',[privateLocation.master_bucket,libraryKey])).id;
+      await call(otherAdmin,'select public.quarantine_media_upload($1,$2)',[libraryAssetBeforeInspection,'Library moderation']);
+      const inspectSql = 'select * from public.coursework_quarantine_inspection_target($1)';
+      await refused(who.userId, inspectSql, [legacy.asset_id], /not_allowed/);
+      await refused(otherAdmin, inspectSql, [legacy.asset_id], /not_allowed/);
+      const inspected = (await asActor(admin, () => q(inspectSql, [legacy.asset_id]))).rows;
+      assert(inspected.length === 1 && inspected[0].asset_id === legacy.asset_id && inspected[0].master_key, 'owner cannot inspect quarantined coursework');
+      assert((await asActor(admin, () => q(inspectSql, [libraryAssetBeforeInspection]))).rows.length === 0, 'library metadata leaked');
       await refused(who.userId, 'select * from public.coursework_quarantine_queue(50,null)', [], /not_allowed/);
       await refused(otherAdmin, 'select * from public.coursework_quarantine_queue(50,null)', [], /not_allowed/);
       await committed(async()=>{ await q("select set_config('app.account_erasure','on',true)"); await q("update public.user_profiles set account_status='suspended' where user_id=$1",[admin]); });
       try {
+        await refused(admin, inspectSql, [legacy.asset_id], /not_allowed/);
         await refused(admin, 'select * from public.coursework_quarantine_queue(50,null)', [], /not_allowed/);
         await refused(admin, 'select public.review_unknown_coursework_quarantine($1,$2,$3,$4)', [legacy.asset_id,'pending','Reviewed the record','I understand the prior state is unknown and the upload still needs confirmation'], /not_allowed/);
       }
@@ -445,7 +454,6 @@ export async function run(ctx) {
       await refused(admin,unknownSql,[legacy.asset_id,'available','Reviewed the record',availableConfirm],/attached or recorded revision/);
       await refused(admin,unknownSql,[legacy.asset_id,'pending','Reviewed the record','yes'],/confirm the limits/);
       const libraryAsset=(await scalar('select id from public.media_assets where master_bucket=$1 and master_key=$2',[privateLocation.master_bucket,libraryKey])).id;
-      await call(otherAdmin,'select public.quarantine_media_upload($1,$2)',[libraryAsset,'Library moderation']);
       await refused(admin,unknownSql,[libraryAsset,'available','Reviewed the record',availableConfirm],/not attributable to coursework/);
 
       const detail=(await asActor(admin,()=>q('select * from public.coursework_quarantine_review_page(100,null)'))).rows;
@@ -454,6 +462,7 @@ export async function run(ctx) {
       assert(detail.find(r=>r.asset_id===olderAttached.asset_id)?.available_context_present===true,'an older attached file was not presented for review');
       assert((await call(admin,unknownSql,[legacy.asset_id,'pending','Checked the prior record',pendingConfirm])).result==='pending','unknown pending file was not recoverable');
       assert((await scalar('select status from public.media_assets where id=$1',[legacy.asset_id])).status==='pending','pending recovery silently promoted the upload');
+      assert((await asActor(admin, () => q(inspectSql, [legacy.asset_id]))).rows.length === 0, 'inspection returned a non-quarantined file');
       await call(who.userId,SQL_CONFIRM,[legacy.asset_id]);
       await q("insert into public.coursework_retention_holds(asset_id,reason,opened_by) values($1,'An open concern',$2)",[olderAttached.asset_id,admin]);
       assert((await call(admin,unknownSql,[olderAttached.asset_id,'available','Checked the upload and concern',availableConfirm])).result==='available','attached older file was not recoverable');
