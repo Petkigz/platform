@@ -22,3 +22,11 @@ test('legacy register warns about mixed use and does not present its list as del
   assert.match(page, /may also be a lesson resource/);
   assert.match(page, /list could not be loaded/);
 });
+
+test('erasure review rows fail closed on malformed data', async () => {
+  const { parseErasureReviews } = await import('./legacy-coursework.ts');
+  const review = { asset_id: row.asset_id, learner_id: '2b1c7a9e-0000-4000-8000-000000000002', display_name: null, reason: 'legacy_library', recorded_at: '2026-11-01T00:00:00Z' };
+  assert.deepEqual(parseErasureReviews([review]), [review]);
+  assert.deepEqual(parseErasureReviews([]), []);
+  for (const value of [null, [{}], [{ ...review, reason: 'unknown' }], [{ ...review, learner_id: 'bad' }], [{ ...review, recorded_at: 'bad' }]]) assert.equal(parseErasureReviews(value), null);
+});

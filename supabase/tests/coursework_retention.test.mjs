@@ -619,6 +619,81 @@ export async function run(ctx) {
     assert(await scalar('select source_id from public.child_login_erasure_recovery where source_id=$1', [pendingAttempt]), 'released record lost recovery evidence');
   });
 
+  await test('child revision erasure respects detached holds, then removes snapshots and queues files', async () => {
+    const userId = await newUser(`revision-erasure-${++seq}@example.com`);
+    await newProfile(userId, 'Revision erasure child');
+    const learnerId = (await q(`insert into public.learner_profiles
+      (display_name,learner_type,age_band,linked_user_id) values ('Revision child','child','8-10',$1) returning id`, [userId])).rows[0].id;
+    await q(`insert into public.course_enrolments (learner_profile_id,course_id,course_version_id,source,status)
+      values ($1,$2,$3,'free','active')`, [learnerId,course,version]);
+    const assignment=await createAssignment();
+    const submission=(await call(userId,'select public.save_assignment_draft($1,$2,$3) as id', [assignment,learnerId,'Private first version.'])).id;
+    const old=(await call(userId,'select * from public.register_coursework_upload($1,$2,$3,$4,$5)',
+      [submission,'Old page.jpg','image/jpeg',1000,digest()])).asset_id;
+    await call(userId,'select public.confirm_coursework_upload($1)', [old]);
+    await call(userId,'select public.submit_assignment($1)', [submission]);
+    await call(teacher,'select public.mark_assignment_submission($1,$2,$3)', [submission,8,'Private feedback.']);
+    await call(userId,'select public.reopen_assignment_submission($1)', [submission]);
+    await call(userId,'select public.remove_assignment_asset($1,$2)', [submission,old]);
+    // Reproduce a legacy detached snapshot without a surviving declaration, so
+    // the hold and purge must find the revision reference itself.
+    await q('delete from public.coursework_upload_declarations where asset_id=$1', [old]);
+    const pending=(await call(userId,'select * from public.register_coursework_upload($1,$2,$3,$4,$5)',
+      [submission,'Pending page.jpg','image/jpeg',1000,digest()])).asset_id;
+    const shared=(await call(userId,'select * from public.register_coursework_upload($1,$2,$3,$4,$5)',
+      [submission,'Shared page.jpg','image/jpeg',1000,digest()])).asset_id;
+    await call(userId,'select public.confirm_coursework_upload($1)', [shared]);
+    const other=await handedIn();
+    await q(`insert into public.assignment_submission_revisions
+      (submission_id,revision_number,asset_ids,feedback,marked_at,submitted_at,reopened_by)
+      values ($1,1,jsonb_build_array($2::text),'Reviewed',now(),now(),$3)`, [other.submission,shared,other.userId]);
+    const legacy=(await q(`insert into public.media_assets
+      (storage_backend,master_bucket,master_key,checksum,mime_type,byte_size,status,uploaded_by)
+      values ('r2','masters',$1,$2,'image/jpeg',1000,'available',$3) returning id`,
+      [`legacy-erasure/${crypto.randomUUID()}`,digest(),userId])).rows[0].id;
+    await q('alter table public.assignment_submission_assets disable trigger assignment_assets_coursework_only');
+    try { await q('insert into public.assignment_submission_assets(submission_id,media_asset_id,attached_by) values($1,$2,$3)', [submission,legacy,userId]); }
+    finally { await q('alter table public.assignment_submission_assets enable trigger assignment_assets_coursework_only'); }
+    const revision=await scalar('select id from public.assignment_submission_revisions where submission_id=$1', [submission]);
+    assert(revision, 'the marked version was not snapshotted');
+    await refuses(/cannot be changed or deleted/i, () => committed(async () => {
+      await q("select set_config('app.child_coursework_erasure','on',true)");
+      await q('delete from public.assignment_submission_revisions where id=$1', [revision.id]);
+    }));
+    await call(owner,'select public.hold_coursework_file($1,$2)', [old,'Safeguarding review is open']);
+    try {
+      await q("update public.learner_profiles set deleted_at=now()-interval '45 days',status='archived' where id=$1", [learnerId]);
+      const heldRun=(await call(owner,'select public.run_retention_jobs(now(),500) as r')).r;
+      assert(heldRun.held.learnerRecords>=1, 'the detached revision hold was not counted');
+      assert(await scalar('select id from public.assignment_submission_revisions where id=$1', [revision.id]), 'the held revision was erased');
+      assert((await scalar('select deleted_at from public.media_assets where id=$1', [old])).deleted_at===null, 'the held file was tombstoned');
+      await call(owner,'select public.release_coursework_hold($1,$2)', [old,'The safeguarding review is complete']);
+      await call(owner,'select public.run_retention_jobs(now(),500) as r');
+      assert((await scalar('select status from public.learner_profiles where id=$1', [learnerId])).status==='erased', 'the released child record did not erase');
+      assert(!(await scalar('select id from public.assignment_submissions where id=$1', [submission])), 'the submission remains');
+      assert(!(await scalar('select id from public.assignment_submission_revisions where id=$1', [revision.id])), 'the snapshot remains');
+      for (const id of [old,pending]) {
+        const asset=await scalar('select status,deleted_at,purge_due_at,purged_at from public.media_assets where id=$1', [id]);
+        assert(asset.status==='deleted' && asset.deleted_at && asset.purge_due_at && new Date(asset.purge_due_at).getTime()<=Date.now(), 'a revision or pending object was not queued immediately');
+        assert(asset.purged_at===null, 'a tombstone was misreported as a storage deletion');
+      }
+      for (const [id,reason] of [[shared,'shared_context'],[legacy,'legacy_library']]) {
+        const asset=await scalar('select status,deleted_at,purge_due_at from public.media_assets where id=$1', [id]);
+        assert(asset.deleted_at===null && asset.purge_due_at===null, `a ${reason} object was tombstoned: ${JSON.stringify(asset)}`);
+        assert((await scalar('select reason from public.coursework_erasure_review_assets where asset_id=$1 and learner_id=$2', [id,learnerId])).reason===reason, 'individual review evidence was not retained');
+      }
+      const queue=(await asActor(owner,() => q('select * from public.coursework_erasure_review_page(null,null,100)'))).rows;
+      assert(queue.some(r=>r.asset_id===shared && r.learner_id===learnerId), 'owner cannot see shared review');
+      assert(queue.some(r=>r.asset_id===legacy && r.learner_id===learnerId), 'owner cannot see legacy review');
+      await refuses(/not_allowed/i, () => asActor(governance,() => q('select * from public.coursework_erasure_review_page(null,null,50)')));
+      await refuses(/permission denied/i, () => asActor(governance,() => q('select * from public.coursework_erasure_review_assets')));
+      assert((await scalar('select count(*)::int n from public.child_revision_erasure_scope')).n===0, 'an erasure capability survived the transaction');
+    } finally {
+      const open=await scalar('select id from public.coursework_retention_holds where asset_id=$1 and closed_at is null', [old]);
+      if (open) await call(owner,'select public.release_coursework_hold($1,$2)', [old,'Test cleanup after review']);
+    }
+  });
+
   await test('the whole cleanup includes the fourth clock, and reports what it held', async () => {
     const row = await handedIn();
     await backdate(row, '2 years');

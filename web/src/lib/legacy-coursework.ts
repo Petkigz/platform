@@ -25,3 +25,24 @@ export function parseLegacyCoursework(value: unknown): LegacyCourseworkRow[] | n
   }
   return rows;
 }
+
+export type ErasureReviewRow = {
+  asset_id: string; learner_id: string; display_name: string | null;
+  reason: 'legacy_library' | 'shared_context'; recorded_at: string;
+};
+/** Do not turn malformed or unavailable review data into an empty list. */
+export function parseErasureReviews(value: unknown): ErasureReviewRow[] | null {
+  if (!Array.isArray(value)) return null;
+  const rows: ErasureReviewRow[] = [];
+  for (const item of value) {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return null;
+    const r = item as Record<string, unknown>;
+    if (typeof r.asset_id !== 'string' || !UUID.test(r.asset_id) ||
+        typeof r.learner_id !== 'string' || !UUID.test(r.learner_id) ||
+        !(r.display_name === null || typeof r.display_name === 'string') ||
+        (r.reason !== 'legacy_library' && r.reason !== 'shared_context') ||
+        typeof r.recorded_at !== 'string' || !Number.isFinite(Date.parse(r.recorded_at))) return null;
+    rows.push(r as ErasureReviewRow);
+  }
+  return rows;
+}

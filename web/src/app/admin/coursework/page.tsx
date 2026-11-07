@@ -12,7 +12,7 @@ import {
   REVIEW_FORM_HELP,
 } from '@/lib/coursework-review';
 import { readableByteSize } from '@/lib/media';
-import { parseLegacyCoursework } from '@/lib/legacy-coursework';
+import { parseErasureReviews, parseLegacyCoursework } from '@/lib/legacy-coursework';
 import {
   HOLDS_NOTE,
   missingClassEndCount,
@@ -39,7 +39,7 @@ export const dynamic = 'force-dynamic';
 /** Owner-only review register, alongside separately authorized retention tools.
  * A recorded review is an attestation, not proof that a file was viewed.
  */
-export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ legacyAfter?: string; concern?: string; before?: string; beforeId?: string; endsAfter?: string; classEnd?: string; quarantineAfter?: string; quarantine?: string; concernAfter?: string; concernAfterId?: string; alert?: string; alertReview?: string; alertBefore?: string; storageAfter?: string; storageAfterId?: string; holdAfter?: string; holdAfterId?: string; reviewAfterState?: string; reviewAfterAt?: string; reviewAfterId?: string }> }) {
+export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ legacyAfter?: string; erasureAsset?: string; erasureLearner?: string; concern?: string; before?: string; beforeId?: string; endsAfter?: string; classEnd?: string; quarantineAfter?: string; quarantine?: string; concernAfter?: string; concernAfterId?: string; alert?: string; alertReview?: string; alertBefore?: string; storageAfter?: string; storageAfterId?: string; holdAfter?: string; holdAfterId?: string; reviewAfterState?: string; reviewAfterAt?: string; reviewAfterId?: string }> }) {
   if (!isSupabaseConfigured()) redirect('/');
 
   const supabase = await createClient();
@@ -95,6 +95,13 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
     ? await supabase.rpc('legacy_coursework_review_page', { p_after: params.legacyAfter ?? null, p_limit: 51 }) : null;
   const legacyRows = legacyResult && !legacyResult.error ? parseLegacyCoursework(legacyResult.data) : null;
   const legacyNext = legacyRows && legacyRows.length > 50 ? legacyRows[49]?.asset_id : null;
+  const erasureCursorValid = (!params.erasureAsset && !params.erasureLearner) ||
+    (typeof params.erasureAsset === 'string' && isQuarantineCursor(params.erasureAsset) &&
+     typeof params.erasureLearner === 'string' && isQuarantineCursor(params.erasureLearner));
+  const erasureResult = isSafeguardingOwner && erasureCursorValid
+    ? await supabase.rpc('coursework_erasure_review_page', { p_after_asset: params.erasureAsset ?? null, p_after_learner: params.erasureLearner ?? null, p_limit: 51 }) : null;
+  const erasureRows = erasureResult && !erasureResult.error ? parseErasureReviews(erasureResult.data) : null;
+  const erasureNext = erasureRows && erasureRows.length > 50 ? erasureRows[49] : null;
   const openCursorValid = (!params.concernAfter && !params.concernAfterId) ||
     (typeof params.concernAfter === 'string' && Number.isFinite(Date.parse(params.concernAfter)) &&
       typeof params.concernAfterId === 'string' && isQuarantineCursor(params.concernAfterId));
@@ -177,6 +184,20 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
             </li>)}</ul>}
         {params.alertBefore && <p><Link href={`/admin/coursework?${new URLSearchParams({ alertReview: params.alertReview })}#alert-history`}>Back to recent alert history</Link></p>}
         {fullAlertNext && <p><Link href={`/admin/coursework?${new URLSearchParams({ alertReview: params.alertReview, alertBefore: fullAlertNext })}#alert-history`}>Older alert events</Link></p>}
+      </section>}
+      {isSafeguardingOwner && <section id="erasure-review" className="card" style={{ marginBlock: '1rem' }}>
+        <h2>Child erasure: files needing individual review</h2>
+        <p>These files were not queued for automatic deletion because they may be shared or used in the library. Review each case before changing it. The child record was removed, but this register and any remaining file or copies are still personal data; storage deletion is not verified. This list cannot yet record a completed review.</p>
+        {erasureRows === null ? <p className="notice warn">The erasure review list could not be loaded. Do not assume it is empty.</p>
+          : erasureRows.length === 0 ? <p>No entries on this page.</p>
+          : <ul className="lessons">{erasureRows.slice(0,50).map(row => <li key={`${row.asset_id}:${row.learner_id}`}>
+            <strong>{row.display_name ?? 'Unnamed file'}</strong>
+            <p>File ID: {row.asset_id} · learner record ID: {row.learner_id}</p>
+            <p>{row.reason === 'legacy_library' ? 'Older library-labelled file; may have mixed use.' : 'Referenced by another learner or a lesson.'} Recorded {row.recorded_at}.</p>
+            <a href={courseworkFileHref(row.asset_id)} target="_blank" rel="noreferrer">Try opening the file for review</a>
+          </li>)}</ul>}
+        {params.erasureAsset && <p><Link href="/admin/coursework#erasure-review">First page</Link></p>}
+        {erasureNext && <p><Link href={`/admin/coursework?${new URLSearchParams({ erasureAsset: erasureNext.asset_id, erasureLearner: erasureNext.learner_id })}#erasure-review`}>More files needing review</Link></p>}
       </section>}
       {isSafeguardingOwner && <section id="legacy-coursework" className="card" style={{ marginBlock: '1rem' }}>
         <h2>Older mixed-use coursework</h2>

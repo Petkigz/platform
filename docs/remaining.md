@@ -925,14 +925,26 @@ may be restricted for privacy and needs individual review. The asset-ID evidence
 is still personal data and needs a verified cleanup route. Historic use whose
 references had already disappeared before migration cannot be reconstructed.
 
-**Still open:** detached revision files are not yet fully integrated into holds,
-child-record erasure and normal retention; mixed-use storage requires individual
-handling. A PGlite probe confirmed that a child record with a revision snapshot
-cannot currently be purged: the snapshot's foreign key prevents deletion of its
-submission. The append-only guard also prevents simply deleting the snapshot.
-This must be repaired with hold-aware, authorized erasure rather than bypassing
-revision protection for ordinary users. Existing links and external copies cannot be recalled,
-and the migration and its concurrency have not been tested on hosted Supabase/R2.
+**Child revision erasure (local migration 920):** the record purge can remove
+append-only revisions only inside a private transaction-scoped erasure capability.
+It locks submissions and referenced assets, rechecks holds on attachments,
+declarations and snapshots, and queues exclusively attributable coursework
+objects immediately. Shared and legacy-library objects are not automatically
+deleted: a private owner review register retains their learner and asset IDs,
+which are still personal data. Ordinary retention also avoids known shared or
+review-flagged objects. The local PGlite regression covers a real marked and
+reopened revision, a detached snapshot hold, release, pending uploads, mixed-use
+exceptions and ordinary revision protection.
+
+**Still open:** the account-closure precheck still locks and checks only current
+attachments; child purge now rechecks the broader hold references, but closure
+itself must also be corrected. Ordinary one-year retention does not yet cover all
+detached revision and declaration files. The new exception register is visible
+but has no visual resolution workflow, and shared assets discovered outside a
+child purge are not separately listed. Historical cases without surviving
+references cannot be identified reliably. Storage tombstones are not proof of
+byte deletion; hosted PostgreSQL concurrency and storage remain unverified.
+Existing links and external copies cannot be recalled.
 
 **Legacy-provenance regression:** frozen revision `9672670` ran all 170 database
 suites in eight fresh PGlite batches: 2,627 assertions passed and none failed.
