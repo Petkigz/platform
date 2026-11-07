@@ -4,6 +4,8 @@ export type CourseworkQuarantine = {
   previous_status: 'pending' | 'available' | null;
   quarantined_at: string | null;
   recorded_reason: string | null;
+  pending_recovery_possible: boolean;
+  available_context_present: boolean;
 };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -18,8 +20,9 @@ export function parseCourseworkQuarantines(value: unknown): CourseworkQuarantine
       !(r.display_name === null || typeof r.display_name === 'string') ||
       !(r.previous_status === null || r.previous_status === 'pending' || r.previous_status === 'available') ||
       !(r.quarantined_at === null || typeof r.quarantined_at === 'string') ||
-      !(r.recorded_reason === null || typeof r.recorded_reason === 'string')) return null;
-    rows.push({ asset_id: r.asset_id, display_name: r.display_name, previous_status: r.previous_status, quarantined_at: r.quarantined_at, recorded_reason: r.recorded_reason });
+      !(r.recorded_reason === null || typeof r.recorded_reason === 'string') ||
+      typeof r.pending_recovery_possible !== 'boolean' || typeof r.available_context_present !== 'boolean') return null;
+    rows.push({ asset_id: r.asset_id, display_name: r.display_name, previous_status: r.previous_status, quarantined_at: r.quarantined_at, recorded_reason: r.recorded_reason, pending_recovery_possible: r.pending_recovery_possible, available_context_present: r.available_context_present });
   }
   return rows;
 }

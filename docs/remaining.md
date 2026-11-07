@@ -1223,3 +1223,22 @@ existing write boundary. A lost release response is shown as unconfirmed and
 requires a refresh rather than implying that no write occurred. Coursework file
 and review suites passed 61 assertions, including the suspended-owner case;
 lint, typecheck and repository checks passed. Hosted behavior remains untested.
+
+**Unknown-state quarantine review (local migration 1120):** an active named
+owner now has visual, audited choices for some older quarantines without a
+recorded prior state. An unattached declared coursework upload can be returned
+to pending, where the uploader must still confirm it. A file with a surviving
+attachment or revision context can be made available only after the owner
+attests to checking upload completion. Neither choice asserts that the unknown
+old state was restored, that storage was verified, or that malware was scanned;
+releasing quarantine also does not remove an existing retention hold. The
+server rechecks evidence and authority. Unattributable files and cases without
+these contexts still need separate individual handling. The app does not yet
+provide a verified storage inspection or malware scan, so the owner must not
+claim those checks happened merely because the button exists.
+
+Coursework file/review suites passed 61 assertions, including pending and legacy
+revision recovery, authorization, hold preservation and non-coursework refusal.
+Alternative shared coursework/offline/RPC order passed 166; web passed 2,136;
+lint, typecheck, repository checks and build passed. Hosted interleavings and
+actual storage inspection remain unverified.

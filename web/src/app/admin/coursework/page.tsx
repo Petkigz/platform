@@ -30,7 +30,7 @@ import { RetentionActionForm } from './retention-actions';
 import { acknowledgeConcern, reopenConcern, retrySafeguardingAlert } from './safeguarding-actions';
 import { parseSafeguardingAlertStatus, describeSafeguardingAlert, parseSafeguardingAlertHistory, isAlertHistoryCursor, parseSafeguardingAlertFullHistory } from '@/lib/safeguarding-alert-status';
 import { attestClassEnd } from './class-end-actions';
-import { releaseQuarantine } from './quarantine-actions';
+import { releaseQuarantine, reviewUnknownQuarantine } from './quarantine-actions';
 import { reviewErasureFile } from './erasure-review-actions';
 import { reviewSharedRetention, reviewDetachedRetention } from './shared-retention-actions';
 import { isQuarantineCursor, parseCourseworkQuarantines } from '@/lib/coursework-quarantine';
@@ -88,7 +88,7 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
       typeof params.beforeId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(params.beforeId));
   const quarantineCursorValid = !params.quarantineAfter || isQuarantineCursor(params.quarantineAfter);
   const quarantineResult = isSafeguardingOwner && quarantineCursorValid
-    ? await supabase.rpc('coursework_quarantine_queue', { p_limit: 51, p_after: params.quarantineAfter ?? null }) : null;
+    ? await supabase.rpc('coursework_quarantine_review_page', { p_limit: 51, p_after: params.quarantineAfter ?? null }) : null;
   const quarantines = quarantineResult && !quarantineResult.error
     ? parseCourseworkQuarantines(quarantineResult.data) : null;
   const quarantineNext = quarantines && quarantines.length > 50 ? quarantines[49]?.asset_id : null;
@@ -344,8 +344,10 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
       {isSafeguardingOwner && (
         <section id="coursework-quarantines" className="card" style={{ marginBlock: '1rem' }}>
           <h2>Quarantined coursework</h2>
-          <p>Review why each file was quarantined before releasing it. A release restores its recorded previous state, not the file bytes or a safety scan. Pending files still need the uploader to confirm the upload. Older quarantines without a recorded previous state need individual review.</p>
+          <p>Review why each file was quarantined before releasing it. Where recorded, the previous state can be restored. For an unknown state, the owner can choose only an eligible future state after individual review; the platform does not restore the old state, verify bytes or scan for malware. Pending files still need the uploader to confirm the upload.</p>
           {params.quarantine === 'pending' && <p role="status">Quarantine released; the file is pending and is not yet confirmed.</p>}
+          {params.quarantine === 'unknown_pending' && <p role="status">The owner chose pending for an unknown prior state. The uploader still needs to confirm the upload; the platform has not verified its bytes.</p>}
+          {params.quarantine === 'unknown_available' && <p role="status">The owner chose available for an unknown prior state. This action did not verify the object or scan it for malware.</p>}
           {params.quarantine === 'available' && <p role="status">Quarantine released; the previous available status was restored.</p>}
           {(params.quarantine === 'failed' || params.quarantine === 'invalid') && <p className="notice warn" role="alert">The release could not be confirmed. Refresh and review the file before trying again.</p>}
           {quarantines === null ? <p className="notice warn">The quarantine list could not be loaded. Do not assume it is empty.</p>
@@ -363,6 +365,28 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
                     <label><input type="checkbox" name="reviewed" value="yes" required /> I reviewed this quarantine and understand that its previous status will be restored.</label>
                     <button type="submit" className="btn">Release quarantine</button>
                   </form>}
+                  {!row.previous_status && <div>
+                    <p>The previous state is unknown. Check the quarantine reason, safeguarding concerns and object separately; neither choice scans the file. Notes are kept in the private audit, so avoid names or sensitive details.</p>
+                    {row.pending_recovery_possible && <form action={reviewUnknownQuarantine}>
+                      <input type="hidden" name="assetId" value={row.asset_id} />
+                      <input type="hidden" name="after" value={params.quarantineAfter ?? ''} />
+                      <input type="hidden" name="status" value="pending" />
+                      <label htmlFor={`unknown-pending-${row.asset_id}`}>Reason for choosing pending</label>
+                      <textarea id={`unknown-pending-${row.asset_id}`} name="reason" required minLength={3} maxLength={1000} />
+                      <label><input type="checkbox" name="reviewed" value="yes" required /> I understand the prior state is unknown and the upload still needs confirmation.</label>
+                      <button type="submit" className="btn ghost">Release as pending</button>
+                    </form>}
+                    {row.available_context_present && <form action={reviewUnknownQuarantine}>
+                      <input type="hidden" name="assetId" value={row.asset_id} />
+                      <input type="hidden" name="after" value={params.quarantineAfter ?? ''} />
+                      <input type="hidden" name="status" value="available" />
+                      <label htmlFor={`unknown-available-${row.asset_id}`}>Reason for choosing available</label>
+                      <textarea id={`unknown-available-${row.asset_id}`} name="reason" required minLength={3} maxLength={1000} />
+                      <label><input type="checkbox" name="reviewed" value="yes" required /> I checked upload completion and understand this is not a scan or storage verification.</label>
+                      <button type="submit" className="btn ghost">Release as available</button>
+                    </form>}
+                    {!row.pending_recovery_possible && !row.available_context_present && <p>No eligible upload declaration, attachment or revision was found. Keep this file quarantined and investigate it individually.</p>}
+                  </div>}
                 </div>
               </li>)}</ul>}
           {params.quarantineAfter && <p><Link href="/admin/coursework#coursework-quarantines">Back to first quarantine page</Link></p>}
