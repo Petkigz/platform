@@ -1336,3 +1336,12 @@ longer blocks a new upload merely by leaving a pending entry. The display says
 server's authoritative check. Pending records and any storage objects remain;
 this change does not remove or delete them. Web passed 2,144 tests, with lint,
 typecheck, repository checks and build passing before the final wording change.
+
+**Upload-size enforcement gap:** the 25 MiB coursework limit is checked against
+the declared size and by the normal browser picker; the signed PUT uses an
+unsigned payload and does not itself enforce that byte limit. Someone holding an
+upload URL can send more bytes, and the later HEAD mismatch refuses confirmation
+but does not remove the oversized object or recover storage costs. Create-only
+signing does not fix this. A hard provider-enforced size constraint or a bounded
+trusted upload path needs design and real-provider testing without breaking normal
+uploads or silently introducing a paid service.
