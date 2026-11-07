@@ -89,3 +89,24 @@ export function parseOfflineEvidence(value: unknown): OfflineEvidenceRow[] | nul
   }
   return rows;
 }
+
+export type DetachedReviewRow = {
+  asset_id: string; display_name: string | null; asset_status: 'pending' | 'available' | 'quarantined' | 'deleted';
+  recorded_at: string; submission_use: boolean; lesson_use: boolean; offline_evidence: boolean; erasure_review: boolean; held: boolean;
+};
+export function parseDetachedReviews(value: unknown): DetachedReviewRow[] | null {
+  if (!Array.isArray(value)) return null;
+  const rows: DetachedReviewRow[] = [];
+  for (const item of value) {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return null;
+    const r = item as Record<string, unknown>;
+    if (typeof r.asset_id !== 'string' || !UUID.test(r.asset_id) ||
+        !(r.display_name === null || typeof r.display_name === 'string') ||
+        typeof r.asset_status !== 'string' || !['pending', 'available', 'quarantined', 'deleted'].includes(r.asset_status) ||
+        typeof r.recorded_at !== 'string' || !Number.isFinite(Date.parse(r.recorded_at)) ||
+        typeof r.submission_use !== 'boolean' || typeof r.lesson_use !== 'boolean' ||
+        typeof r.offline_evidence !== 'boolean' || typeof r.erasure_review !== 'boolean' || typeof r.held !== 'boolean') return null;
+    rows.push(r as DetachedReviewRow);
+  }
+  return rows;
+}

@@ -78,3 +78,14 @@ test('offline evidence is explicit and unknown data never becomes an empty list'
   assert.match(page, /device copies cannot be verified or removed here/);
   assert.match(page, /missing records do not prove there was no copy/i);
 });
+
+test('detached shared-file review preserves use flags and does not claim deletion', async () => {
+  const { parseDetachedReviews } = await import('./legacy-coursework.ts');
+  const entry = { asset_id: row.asset_id, display_name: null, asset_status: 'available', recorded_at: '2026-11-01T00:00:00Z', submission_use: false, lesson_use: true, offline_evidence: true, erasure_review: false, held: false };
+  assert.deepEqual(parseDetachedReviews([entry]), [entry]);
+  for (const bad of [null, [{}], [{...entry, lesson_use:null}], [{...entry, recorded_at:'bad'}]]) assert.equal(parseDetachedReviews(bad), null);
+  const page = readFileSync(new URL('../app/admin/coursework/page.tsx', import.meta.url), 'utf8');
+  assert.match(page, /Detached files with other uses/);
+  assert.match(page, /Queueing is allowed only after known uses end/);
+  assert.match(page, /The queue is not verified deletion/);
+});

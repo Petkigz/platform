@@ -1115,3 +1115,22 @@ Postgres or actual device/storage deletion. A further audit remains necessary
 for non-child submission cascades: a historical file shared with offline or
 lesson use may be tombstoned by an older detach trigger outside the child purge
 path. The new evidence list does not itself resolve that path.
+
+**Non-child shared detach (local migration 1050):** new ordinary submission
+cascades preserve a coursework master when a surviving submission, lesson or
+offline booking is known, and put it in an owner-only detached review register.
+After all known uses, holds, erasure reviews and storage conflicts end, the
+owner can queue the eligible master visually; this is not verified deletion.
+A later child purge transfers a pending detached marker into its child-erasure
+review so the two workflows do not block one another. Existing tombstones and
+past cascades cannot be reconstructed from this trigger and still need audit;
+pending/quarantined or already-tombstoned review cases need separate handling.
+Hosted PostgreSQL interleavings and external storage are not verified.
+
+Retention/holds passed 41 assertions, alternative shared coursework/RPC order
+155, web 2,128, and lint, typecheck, repository checks and build passed.
+A separate offline audit remains: the save booking currently chooses a lesson's
+first eligible master while the browser may download a different selected
+resource; resaving can overwrite the master ID in the booking. Consequently the
+surviving record is incomplete evidence of which assets were saved in the past.
+Do not assume it is a complete device-copy ledger.

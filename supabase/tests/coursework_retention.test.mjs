@@ -782,6 +782,69 @@ export async function run(ctx) {
     assert(await scalar('select source_id from public.child_login_erasure_recovery where source_id=$1', [pendingAttempt]), 'released record lost recovery evidence');
   });
 
+  await test('an ordinary submission cascade preserves a historically shared file for owner review', async () => {
+    const row=await handedIn();
+    const draftCourse=await newCourse(teacher,{status:'active'});
+    const draftVersion=await newVersion(draftCourse,teacher);
+    const lesson=await newLesson(await newSection(draftVersion));
+    await q('alter table public.lesson_resources disable trigger lesson_resources_library_only');
+    let resource;
+    try { resource=(await q(`insert into public.lesson_resources(lesson_id,media_asset_id,resource_type,position,display_name) values($1,$2,'video',99,'Historical lesson file') returning id`,[lesson,row.asset])).rows[0].id; }
+    finally { await q('alter table public.lesson_resources enable trigger lesson_resources_library_only'); }
+    const device=(await q('insert into public.offline_devices(learner_profile_id,device_key) values($1,$2) returning id',[row.learnerId,'device-detached-12345678'])).rows[0].id;
+    const save=(await q(`insert into public.offline_downloads(device_id,learner_profile_id,lesson_id,media_asset_id,expires_at)
+      values($1,$2,$3,$4,now()+interval '1 day') returning id`,[device,row.learnerId,lesson,row.asset])).rows[0].id;
+    await q('delete from public.assignment_submissions where id=$1',[row.submission]);
+    assert((await scalar('select deleted_at from public.media_assets where id=$1',[row.asset])).deleted_at===null,'the surviving lesson was tombstoned');
+    const review=(await asActor(owner,()=>q('select * from public.coursework_detach_review_page(null,100)'))).rows.find(r=>r.asset_id===row.asset);
+    assert(review && review.lesson_use && review.offline_evidence,'the detached review omitted its known uses');
+    await refuses(/not_allowed/i,()=>asActor(governance,()=>q('select * from public.coursework_detach_review_page(null,100)')));
+    const queue='select public.queue_reviewed_detached_coursework($1,$2,$3) as result';
+    const confirm='I reviewed the surviving uses and understand this only queues storage deletion';
+    await refuses(/confirm the review/i,()=>call(owner,queue,[row.asset,'Reviewed case','wrong']));
+    await refuses(/not_allowed/i,()=>call(governance,queue,[row.asset,'Reviewed case',confirm]));
+    await refuses(/surviving use/i,()=>call(owner,queue,[row.asset,'Reviewed case',confirm]));
+    await q('delete from public.lesson_resources where id=$1',[resource]);
+    await refuses(/surviving use/i,()=>call(owner,queue,[row.asset,'Reviewed case',confirm]));
+    await q('delete from public.offline_downloads where id=$1',[save]);
+    await call(owner,'select public.hold_coursework_file($1,$2)',[row.asset,'An open concern']);
+    try { await refuses(/hold or another surviving use/i,()=>call(owner,queue,[row.asset,'Reviewed case',confirm])); }
+    finally { await call(owner,'select public.release_coursework_hold($1,$2)',[row.asset,'Concern reviewed']); }
+    const duplicate=(await q(`insert into public.media_assets(storage_backend,master_bucket,master_key,checksum,mime_type,byte_size,status,uploaded_by,deleted_at)
+      select storage_backend,master_bucket,master_key,checksum,mime_type,byte_size,'deleted',uploaded_by,now() from public.media_assets where id=$1 returning id`,[row.asset])).rows[0].id;
+    try { await refuses(/storage location/i,()=>call(owner,queue,[row.asset,'Reviewed case',confirm]));
+      assert(await scalar('select asset_id from public.coursework_detach_review_assets where asset_id=$1',[row.asset]),'a refused action lost its review marker');
+    } finally { await q('delete from public.media_assets where id=$1',[duplicate]); }
+    assert((await call(owner,queue,[row.asset,'Reviewed all surviving uses',confirm])).result===true,'eligible detached file was not queued');
+    assert((await call(owner,queue,[row.asset,'Reviewed all surviving uses',confirm])).result===false,'retry did not report missing review entry');
+    const asset=await scalar('select deleted_at,purged_at from public.media_assets where id=$1',[row.asset]);
+    assert(asset.deleted_at && !asset.purged_at,'queueing claimed a storage deletion');
+    assert(await scalar("select id from public.governance_audit_events where action='coursework.detached_review_queued' and target_id=$1",[row.asset]),'the review was not audited');
+  });
+
+  await test('a later child erasure carries a detached review forward without a circular block', async () => {
+    const first=await handedIn();
+    const second=await handedIn();
+    const lesson=(await scalar(`select l.id from public.lessons l join public.course_sections cs on cs.id=l.section_id
+      where cs.course_version_id=$1 limit 1`,[version])).id;
+    const device=(await q('insert into public.offline_devices(learner_profile_id,device_key) values($1,$2) returning id',[first.learnerId,'device-detached-second-123'])).rows[0].id;
+    const save=(await q(`insert into public.offline_downloads(device_id,learner_profile_id,lesson_id,media_asset_id,expires_at)
+      values($1,$2,$3,$4,now()+interval '1 day') returning id`,[device,first.learnerId,lesson,first.asset])).rows[0].id;
+    await q('delete from public.assignment_submissions where id=$1',[first.submission]);
+    assert(await scalar('select asset_id from public.coursework_detach_review_assets where asset_id=$1',[first.asset]),'the detach marker was not created');
+    await q('delete from public.offline_downloads where id=$1',[save]);
+    await q(`insert into public.assignment_submission_revisions(submission_id,revision_number,asset_ids,feedback,marked_at,submitted_at,reopened_by)
+      values($1,1,jsonb_build_array($2::text),'Reviewed',now(),now(),$3)`,[second.submission,first.asset,second.userId]);
+    await q("update public.learner_profiles set learner_type='child',age_band='8-10',deleted_at=now()-interval '45 days',status='archived' where id=$1",[second.learnerId]);
+    const receipt=(await scalar('select public.purge_learner_record($1) as r',[second.learnerId])).r;
+    assert(receipt.erased===true && receipt.nothingLeft===false,'the later erasure omitted detached review evidence');
+    assert(!(await scalar('select asset_id from public.coursework_detach_review_assets where asset_id=$1',[first.asset])),'detached marker was not transferred');
+    assert(await scalar('select asset_id from public.coursework_erasure_review_assets where asset_id=$1 and learner_id=$2',[first.asset,second.learnerId]),'the child review was not created');
+    assert((await scalar('select deleted_at from public.media_assets where id=$1',[first.asset])).deleted_at===null,'the shared file was tombstoned');
+    const confirmation='I reviewed all surviving uses and understand this only queues storage deletion';
+    assert((await call(owner,'select public.queue_reviewed_coursework_erasure($1,$2,$3) as result',[first.asset,'Reviewed detached and child uses',confirmation])).result==='queued','transferred review became circular');
+  });
+
   await test('offline-only held coursework preserves possible-copy evidence through child erasure', async () => {
     const child=await handedIn();
     const adult=await learner('Other offline learner');
