@@ -857,7 +857,12 @@ export async function run(ctx) {
     }
     await q("update public.learner_profiles set learner_type='child',age_band='8-10' where id=$1",[child.learnerId]);
     await backdate(child,'2 years');
-    await offlineSave(child.learnerId,'device-offline-child-123');
+    const childSave=await offlineSave(child.learnerId,'device-offline-child-123');
+    const replacement=(await q(`insert into public.media_assets(storage_backend,master_bucket,master_key,checksum,mime_type,byte_size,status,uploaded_by)
+      values('r2','masters',$1,$2,'image/jpeg',1000,'available',$3) returning id`,
+      [`offline-replacement/${crypto.randomUUID()}`,digest(),child.userId])).rows[0].id;
+    await q('update public.offline_downloads set media_asset_id=$1 where id=$2',[replacement,childSave]);
+    assert(await scalar('select asset_id from public.offline_download_asset_history where download_id=$1 and asset_id=$2',[childSave,child.asset]),'the older offline association disappeared on resave');
     const otherSave=await offlineSave(adult.learnerId,'device-offline-adult-123');
     const allEvidence=await asActor(owner,()=>q('select * from public.coursework_offline_evidence_page(null,100)'));
     assert(allEvidence.rows.some(r=>r.asset_id===child.asset && Number(r.recorded_saves)===2),'offline register omitted removed records');

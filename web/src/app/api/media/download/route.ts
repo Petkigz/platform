@@ -85,8 +85,10 @@ export async function GET(request: Request) {
   const lessonId = params.get('lesson')?.trim() ?? '';
   const resourceId = params.get('resource')?.trim() ?? '';
   const requestedProfile = params.get('profile')?.trim() ?? '';
+  const saveId = params.get('save')?.trim() ?? '';
 
   if (!UUID.test(lessonId)) return fail('That is not a lesson.', 400);
+  if (!UUID.test(saveId)) return fail('Book this save in the app before downloading. Refresh the page and try again.', 400);
   if (resourceId && !UUID.test(resourceId)) return fail('That is not a lesson resource.', 400);
 
   const supabase = await createClient();
@@ -175,6 +177,14 @@ export async function GET(request: Request) {
       404,
     );
   }
+
+  const { data: matchesBooking, error: bookingError } = await supabase.rpc('offline_booking_matches_resource', {
+    p_download_id: saveId,
+    p_lesson_id: lessonId,
+    p_resource_id: chosenResource.id,
+  });
+  if (bookingError) return fail('The save booking could not be checked.', 503);
+  if (matchesBooking !== true) return fail('This save is no longer valid for that lesson resource.', 403);
 
   const config = readR2Config();
   if (!config) return fail(new R2NotConfiguredError().message, 503);

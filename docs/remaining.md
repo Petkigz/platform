@@ -1134,3 +1134,26 @@ first eligible master while the browser may download a different selected
 resource; resaving can overwrite the master ID in the booking. Consequently the
 surviving record is incomplete evidence of which assets were saved in the past.
 Do not assume it is a complete device-copy ledger.
+
+**Selected-resource offline bookings (local migration 1060):** the player now
+books the resource it actually asks to save, and the download URL route requires
+an unexpired, unremoved booking for that exact resource and an entitled learner
+on a non-revoked device. An older open browser tab may need a refresh. A private
+booking history retains each asset associated with a save while that booking and
+asset exist, so resaving another resource does not silently overwrite all prior
+association evidence. Existing current booking associations are backfilled;
+previously overwritten associations and downloads outside this flow cannot be
+reconstructed. Booking evidence is conservative: it does not establish that
+bytes were fetched, retained or deleted. Child erasure, holds, detached review,
+retention and owner lists now consult that history. Historical copies and
+external/device deletion remain unverified.
+
+The resource/child/closure group passed 70 assertions, an alternative shared
+coursework/offline/RPC order passed 166, and web passed 2,129. A PGlite upgrade
+probe backfilled 11 existing current associations and passed its 10 fixture
+assertions. Lint, typecheck, repository checks and build passed. Concurrent
+hosted booking, erasure and storage operations still need real PostgreSQL tests.
+
+Frozen revision `0cee1e1` passed all 170 database suites and 2,639 assertions
+across eight independent PGlite databases. It predates migration 1060; batches
+do not test all inter-suite orders or hosted PostgreSQL concurrency.

@@ -187,8 +187,9 @@ export function RenditionPlayer({
       // storage. Nothing is written through a download attribute and no page
       // navigates to the file.
       const key = deviceKey();
-      const booking = await supabase.rpc('save_offline_lesson', {
+      const booking = await supabase.rpc('save_offline_lesson_for_resource', {
         p_lesson_id: lessonId,
+        p_resource_id: resourceId,
         p_device_key: key,
         p_device_label: deviceLabel(),
       });
@@ -208,7 +209,7 @@ export function RenditionPlayer({
         throw new Error(saved?.message ?? 'This lesson cannot be saved on this plan.');
       }
 
-      const query = new URLSearchParams({ lesson: lessonId, resource: resourceId });
+      const query = new URLSearchParams({ lesson: lessonId, resource: resourceId, save: String(saved.downloadId ?? '') });
       const response = await fetch(`/api/media/download?${query.toString()}`, {
         cache: 'no-store',
       });

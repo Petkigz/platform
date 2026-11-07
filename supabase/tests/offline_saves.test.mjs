@@ -145,6 +145,48 @@ export async function run(ctx) {
     assert((await save(me.userId,ordinary.lesson)).saved===true,'ordinary offline saving was disabled');
   }));
 
+  await test('resource-specific saves record the selected media and retain prior booking associations', async () => withOffline(async () => {
+    const me=await learner('Multiple resources');
+    const lesson=await taughtLesson();
+    await grantAccess(me.learnerId,lesson.version);
+    await grantFeature(me.learnerId);
+    const first=(await scalar('select id from public.lesson_resources where lesson_id=$1 and media_asset_id=$2',[lesson.lesson,lesson.asset])).id;
+    const secondAsset=await newAsset(teacher,{status:'available'});
+    const second=(await scalar(`insert into public.lesson_resources(lesson_id,resource_type,media_asset_id,display_name,position)
+      values($1,'video',$2,'Second resource',2) returning id`,[lesson.lesson,secondAsset])).id;
+    const resourceSave=async resource=>(await asActor(me.userId,'select public.save_offline_lesson_for_resource($1,$2,$3,$4) as r',
+      [lesson.lesson,resource,'device-resource-save-123','Phone'])).rows[0].r;
+    const a=await resourceSave(first);
+    const check=async (actor,download,resource)=>(await asActor(actor,'select public.offline_booking_matches_resource($1,$2,$3) as ok',[download,lesson.lesson,resource])).rows[0].ok;
+    assert(await check(me.userId,a.downloadId,first)===true,'the recorded resource could not be verified');
+    assert(await check(me.userId,a.downloadId,second)===false,'an unbooked resource passed the check');
+    const b=await resourceSave(second);
+    assert(await check(me.userId,b.downloadId,first)===false && await check(me.userId,b.downloadId,second)===true,'the check did not follow the new booking');
+    const stranger=await learner('Resource stranger');
+    assert(await check(stranger.userId,b.downloadId,second)===false,'a stranger used another learner booking');
+    await q('update public.offline_downloads set removed_at=now() where id=$1',[b.downloadId]);
+    assert(await check(me.userId,b.downloadId,second)===false,'a removed booking was accepted');
+    await q("update public.offline_downloads set removed_at=null, saved_at=now()-interval '2 days',expires_at=now()-interval '1 day' where id=$1",[b.downloadId]);
+    assert(await check(me.userId,b.downloadId,second)===false,'an expired booking was accepted');
+    await q("update public.offline_downloads set saved_at=now(),expires_at=now()+interval '1 day' where id=$1",[b.downloadId]);
+    await q('update public.offline_devices set revoked_at=now() where id=(select device_id from public.offline_downloads where id=$1)',[b.downloadId]);
+    assert(await check(me.userId,b.downloadId,second)===false,'a revoked device booking was accepted');
+    await q('update public.offline_devices set revoked_at=null where id=(select device_id from public.offline_downloads where id=$1)',[b.downloadId]);
+    assert(a.saved && b.saved && a.downloadId===b.downloadId && b.mediaAssetId===secondAsset,'the booking did not follow the selected resource');
+    assert((await scalar('select media_asset_id from public.offline_downloads where id=$1',[b.downloadId])).media_asset_id===secondAsset,'the latest asset was not recorded');
+    const history=(await q('select asset_id from public.offline_download_asset_history where download_id=$1 order by asset_id',[b.downloadId])).rows.map(r=>r.asset_id);
+    assert(history.length===2 && history.includes(lesson.asset) && history.includes(secondAsset),'earlier resource evidence was lost or a spurious asset was recorded');
+    await rejects(()=>asActor(me.userId,'select * from public.offline_download_asset_history'),/permission denied/i);
+    const other=await taughtLesson();
+    const unrelated=(await scalar('select id from public.lesson_resources where lesson_id=$1',[other.lesson])).id;
+    await rejects(()=>resourceSave(unrelated),/cannot be saved until its media is reviewed/i);
+    assert((await scalar('select media_asset_id from public.offline_downloads where id=$1',[b.downloadId])).media_asset_id===secondAsset,'a refused resource changed the booking');
+    assert((await scalar('select count(*)::int n from public.offline_download_asset_history where download_id=$1',[b.downloadId])).n===2,'a refused resource changed history');
+    await q('insert into public.legacy_coursework_provenance(asset_id) values($1)',[secondAsset]);
+    assert(await check(me.userId,b.downloadId,second)===false,'coursework provenance did not invalidate the booking');
+    await rejects(()=>resourceSave(second),/cannot be saved until its media is reviewed/i);
+  }));
+
   await test('a learner without the feature is refused, and nothing is written', async () => withOffline(async () => {
     const me = await learner('Basic Learner');
     const lesson = await taughtLesson();
