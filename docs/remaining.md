@@ -930,3 +930,10 @@ child-record erasure and normal retention; mixed-use storage requires individual
 handling. Child-record cleanup also needs review for revision snapshots that
 restrict submission deletion. Existing links and external copies cannot be recalled,
 and the migration and its concurrency have not been tested on hosted Supabase/R2.
+
+**Legacy-provenance regression:** frozen revision `9672670` ran all 170 database
+suites in eight fresh PGlite batches: 2,627 assertions passed and none failed.
+A separate upgrade probe applied the migration to a prior schema with both an
+existing attachment and a snapshot-only legacy file; both were classified as
+coursework. The batches do not test cross-batch fixture interactions, real
+PostgreSQL interleavings, hosted Supabase or object-storage behavior.
