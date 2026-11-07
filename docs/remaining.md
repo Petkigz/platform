@@ -1280,3 +1280,7 @@ flight, can remain usable until it expires; previously copied files cannot be
 recalled. This is a local database fix and is not deployed. File/review suites
 passed 62/62, a shared coursework/offline/RPC order passed 167/167, and lint,
 typecheck and repo checks passed. Real hosted concurrent behavior is unverified.
+
+Frozen revision `3dfb504` passed all 170 database suites and 2,641 assertions
+across eight independent PGlite databases after the quarantine access fix. This
+is not a hosted Supabase or multi-session concurrency test.
