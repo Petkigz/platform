@@ -807,6 +807,13 @@ export async function run(ctx) {
     await q('delete from public.lesson_resources where id=$1',[resource]);
     await refuses(/surviving use/i,()=>call(owner,queue,[row.asset,'Reviewed case',confirm]));
     await q('delete from public.offline_downloads where id=$1',[save]);
+    // A later historical reattachment and cascade must not bypass the first review marker.
+    const later=await handedIn();
+    await q('alter table public.assignment_submission_assets disable trigger assignment_assets_coursework_only');
+    try { await q('insert into public.assignment_submission_assets(submission_id,media_asset_id,attached_by) values($1,$2,$3)',[later.submission,row.asset,later.userId]); }
+    finally { await q('alter table public.assignment_submission_assets enable trigger assignment_assets_coursework_only'); }
+    await q('delete from public.assignment_submissions where id=$1',[later.submission]);
+    assert((await scalar('select deleted_at from public.media_assets where id=$1',[row.asset])).deleted_at===null,'a later cascade bypassed the unresolved marker');
     await call(owner,'select public.hold_coursework_file($1,$2)',[row.asset,'An open concern']);
     try { await refuses(/hold or another surviving use/i,()=>call(owner,queue,[row.asset,'Reviewed case',confirm])); }
     finally { await call(owner,'select public.release_coursework_hold($1,$2)',[row.asset,'Concern reviewed']); }

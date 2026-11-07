@@ -1203,3 +1203,10 @@ or successful. Offline save/entitlement tests passed 28 assertions; web passed
 2,135; lint, typecheck, repository checks and build passed. This resolves the
 missing device-management screen noted above, not the separate full-offline
 playback gap.
+
+**Detached-review marker recheck (local migration 1100):** a later ordinary
+submission cascade now preserves an already unresolved detached review instead
+of tombstoning the file after other uses disappear. The trigger rechecks the
+marker after acquiring the asset lock. Retention/holds passed 41 assertions and
+the repository check passed; real concurrent PostgreSQL behavior is still
+unverified.
