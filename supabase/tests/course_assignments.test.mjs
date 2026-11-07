@@ -601,6 +601,30 @@ export async function run(ctx) {
       }
     });
 
+    await test('a held older library-labelled hand-in blocks last-guardian closure', async () => {
+      const family=await parentWithChild({course,version});
+      const sub=await asActor(family.userId,async () => (await q(SQL_SAVE,[selfPaced,family.childId,'Older work.'])).rows[0].id);
+      const legacy=(await q(`insert into public.media_assets(storage_backend,master_bucket,master_key,checksum,mime_type,byte_size,status,uploaded_by)
+        values('r2','masters',$1,$2,'image/jpeg',1000,'available',$3) returning id`,
+        [`legacy-held/${crypto.randomUUID()}`,crypto.randomUUID().replace(/-/g,'').padEnd(64,'a'),family.userId])).rows[0].id;
+      await q('alter table public.assignment_submission_assets disable trigger assignment_assets_coursework_only');
+      try { await q('insert into public.assignment_submission_assets(submission_id,media_asset_id,attached_by) values($1,$2,$3)',[sub,legacy,family.userId]); }
+      finally { await q('alter table public.assignment_submission_assets enable trigger assignment_assets_coursework_only'); }
+      await q('select public.bootstrap_safeguarding_owner($1)',[admin]);
+      try {
+        await asActor(admin,()=>q('select public.hold_coursework_file($1,$2)',[legacy,'An older concern remains open']));
+        const name=(await q('select display_name from public.user_profiles where user_id=$1',[family.userId])).rows[0].display_name;
+        await refused(family.userId,'select public.erase_my_account($1)',[name],/privacy@ayahspring\.com/i);
+        await asActor(admin,()=>q('select public.release_coursework_hold($1,$2)',[legacy,'The older concern was reviewed']));
+        const receipt=await asActor(family.userId,()=>q('select public.erase_my_account($1) as result',[name]));
+        assert(receipt.rows[0].result.closed===true,'released older work still blocked closure');
+      } finally {
+        if ((await q('select 1 from public.coursework_retention_holds where asset_id=$1 and closed_at is null',[legacy])).rows.length)
+          await asActor(admin,()=>q('select public.release_coursework_hold($1,$2)',[legacy,'Test fixture cleanup']));
+        await q('delete from public.safeguarding_owner where singleton');
+      }
+    });
+
     await test('closing the last family account with a separate child login requires review', async () => {
       const family = await parentWithChild({ course, version });
       const child = await newUser(`assignment-close-child-${++seq}@example.com`);

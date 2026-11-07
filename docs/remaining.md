@@ -1059,3 +1059,15 @@ statement prevents removal of the child-specific review entry. Local tests cover
 both newly discovered collisions; the 150-assertion alternative shared batch,
 repo check, typecheck and lint passed. External changes and hosted concurrency
 remain unverified.
+
+**Holds on older hand-ins (local migration 1010):** the named owner can place
+and release a safeguarding hold on a library-labelled asset with preserved
+coursework provenance, from the existing visual review and holds registers.
+The asset is not reclassified, deleted or made more accessible; unrelated library
+assets remain ineligible. The child-record purge and last-guardian closure checks
+honour these holds, and retention-plan/cleanup hold totals include them even
+when no ordinary deadline is known. Local tests cover placement, closure and
+purge blocking, release and an unrelated library refusal. The alternative
+shared batch passed 151 assertions, closure batch 56, and web 2,126; lint,
+typecheck, repo check and build passed. Holds cannot lock external storage, and
+legacy mixed-use resolution, hosted concurrency and byte deletion remain open.

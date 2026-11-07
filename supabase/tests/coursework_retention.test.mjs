@@ -728,6 +728,7 @@ export async function run(ctx) {
       values ('r2','masters',$1,$2,'video/mp4',123,'deleted',$3,now()) returning id`,
       [`library/${crypto.randomUUID()}`,digest(),owner])).rows[0].id;
     await refuses(/coursework file does not exist/, () => call(owner, 'select public.record_coursework_purge($1)', [library]));
+    await refuses(/only a handed-in file/i, () => call(owner, 'select public.hold_coursework_file($1,$2)', [library,'No coursework provenance']));
     const row = await scalar('select purged_at,purged_by from public.media_assets where id=$1', [library]);
     assert(row.purged_at === null && row.purged_by === null, 'coursework statement modified library metadata');
     const audit = await scalar("select count(*)::int n from public.governance_audit_events where target_id=$1 and action='retention.coursework_bytes_deleted'", [library]);
@@ -824,13 +825,20 @@ export async function run(ctx) {
       await q('delete from public.assignment_submission_revisions where id=$1', [revision.id]);
     }));
     await call(owner,'select public.hold_coursework_file($1,$2)', [old,'Safeguarding review is open']);
+    await call(owner,'select public.hold_coursework_file($1,$2)', [legacy,'Separate safeguarding review of older work']);
     try {
       await q("update public.learner_profiles set deleted_at=now()-interval '45 days',status='archived' where id=$1", [learnerId]);
       const heldRun=(await call(owner,'select public.run_retention_jobs(now(),500) as r')).r;
       assert(heldRun.held.learnerRecords>=1, 'the detached revision hold was not counted');
+      assert(heldRun.held.courseworkFiles>=2, 'the legacy hold was omitted from cleanup totals');
+      assert((await plan()).files.held.count>=2, 'the legacy hold was omitted from the owner retention plan');
+      assert((await asActor(owner,()=>q('select * from public.coursework_holds_page(null,null,100)'))).rows.some(r=>r.asset_id===legacy), 'the older hold is missing from the owner register');
       assert(await scalar('select id from public.assignment_submission_revisions where id=$1', [revision.id]), 'the held revision was erased');
       assert((await scalar('select deleted_at from public.media_assets where id=$1', [old])).deleted_at===null, 'the held file was tombstoned');
       await call(owner,'select public.release_coursework_hold($1,$2)', [old,'The safeguarding review is complete']);
+      await call(owner,'select public.run_retention_jobs(now(),500) as r');
+      assert(await scalar('select id from public.assignment_submissions where id=$1',[submission]), 'a held legacy attachment did not protect the child record');
+      await call(owner,'select public.release_coursework_hold($1,$2)', [legacy,'The older-work review is complete']);
       await call(owner,'select public.run_retention_jobs(now(),500) as r');
       assert((await scalar('select status from public.learner_profiles where id=$1', [learnerId])).status==='erased', 'the released child record did not erase');
       assert(!(await scalar('select id from public.assignment_submissions where id=$1', [submission])), 'the submission remains');
@@ -919,8 +927,10 @@ export async function run(ctx) {
 
       assert((await scalar('select count(*)::int n from public.child_revision_erasure_scope')).n===0, 'an erasure capability survived the transaction');
     } finally {
-      const open=await scalar('select id from public.coursework_retention_holds where asset_id=$1 and closed_at is null', [old]);
-      if (open) await call(owner,'select public.release_coursework_hold($1,$2)', [old,'Test cleanup after review']);
+      for (const id of [old,legacy]) {
+        const open=await scalar('select id from public.coursework_retention_holds where asset_id=$1 and closed_at is null', [id]);
+        if (open) await call(owner,'select public.release_coursework_hold($1,$2)', [id,'Test cleanup after review']);
+      }
     }
   });
 

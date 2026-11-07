@@ -272,6 +272,8 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
                 {row.in_revision ? 'Referenced by a revision. ' : ''}
                 {!row.attached && !row.in_revision ? 'No current submission or revision context found; historical evidence remains.' : ''}</p>
               <a href={courseworkFileHref(row.asset_id)} target="_blank" rel="noreferrer">Try opening the file for review</a>
+              <p>A hold can pause child-record erasure and related coursework cleanup; it cannot lock external storage. Check the holds register before placing or releasing one.</p>
+              <RetentionActionForm assetId={row.asset_id} action="hold" label="Place safeguarding hold" name={row.display_name ?? 'older file'} />
             </div>
           </li>)}</ul>}
         {params.legacyAfter && <p><Link href="/admin/coursework#legacy-coursework">First page of older files</Link></p>}

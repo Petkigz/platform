@@ -59,3 +59,10 @@ test('shared retention action requires review and distinguishes the storage queu
   assert.match(action, /queue_reviewed_shared_coursework/);
   assert.match(action, /uncertain/);
 });
+
+test('older coursework offers an owner hold without claiming it locks storage', () => {
+  const page = readFileSync(new URL('../app/admin/coursework/page.tsx', import.meta.url), 'utf8');
+  assert.match(page, /Place safeguarding hold/);
+  assert.match(page, /cannot lock external storage/);
+  assert.match(page, /Check the holds register/);
+});
