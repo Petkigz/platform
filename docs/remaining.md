@@ -1268,3 +1268,15 @@ provider refusal does not prove absence; a storage request may count against the
 configured provider's usage. The check needs configured storage and has only
 been tested locally with simulated responses. Coursework file/review suites
 passed 61/61, web 2,139/2,139, and lint, typecheck, repo checks and build passed.
+
+**Quarantine household access:** the access audit found that the household
+branch of `may_read_coursework_master` did not check quarantine status. A learner
+or verified guardian could therefore obtain a new master target even when the
+file was quarantined. Migration 1140 rejects new household access while the file
+is quarantined and keeps the named owner able to review it. Normal access returns
+on release. It uses `CREATE OR REPLACE` so the function reference used by RLS is
+preserved. A previously signed link, or one issued by a request already in
+flight, can remain usable until it expires; previously copied files cannot be
+recalled. This is a local database fix and is not deployed. File/review suites
+passed 62/62, a shared coursework/offline/RPC order passed 167/167, and lint,
+typecheck and repo checks passed. Real hosted concurrent behavior is unverified.

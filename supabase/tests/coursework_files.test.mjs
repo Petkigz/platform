@@ -362,6 +362,28 @@ export async function run(ctx) {
     assert(still.status === 'quarantined' && attachment.id === first, 'retry changed the held file or attachment');
   });
 
+  await test('quarantine blocks verified guardian file links but preserves owner review and release', async () => {
+    const family = await parentWithChild({ course, version });
+    const submission = await draft(family.userId, assignment, family.childId);
+    const target = await declare(family.userId, submission);
+    await call(family.userId, SQL_CONFIRM, [target.asset_id]);
+    const prior = (await q('select owner_user_id,configured_at from public.safeguarding_owner where singleton')).rows[0];
+    await q('delete from public.safeguarding_owner where singleton');
+    await q('select public.bootstrap_safeguarding_owner($1)', [admin]);
+    try {
+      assert((await call(family.userId, SQL_WATCH, [target.asset_id])).w === true, 'guardian lacked normal access');
+      await call(admin, 'select public.quarantine_media_upload($1,$2)', [target.asset_id, 'review needed']);
+      assert((await call(family.userId, SQL_WATCH, [target.asset_id])).w === false, 'guardian could request quarantined file');
+      assert((await asActor(family.userId, () => q('select * from public.master_preview_target($1)', [target.asset_id]))).rows.length === 0, 'guardian obtained quarantined target');
+      assert((await call(admin, SQL_WATCH, [target.asset_id])).w === true, 'owner could not review quarantined file');
+      await call(admin, 'select public.release_coursework_quarantine($1,$2)', [target.asset_id, 'I reviewed this quarantine and its release']);
+      assert((await call(family.userId, SQL_WATCH, [target.asset_id])).w === true, 'guardian access did not return after release');
+    } finally {
+      await q('delete from public.safeguarding_owner where singleton');
+      if (prior) await q('insert into public.safeguarding_owner(singleton,owner_user_id,configured_at) values(true,$1,$2)', [prior.owner_user_id,prior.configured_at]);
+    }
+  });
+
   await test('only the named owner can review and release quarantined coursework to its actual prior state', async () => {
     const who = await learner('Quarantine recovery', { course, version });
     const submission = await draft(who.userId, assignment, who.learnerId);
@@ -402,6 +424,10 @@ export async function run(ctx) {
       }
       for (const id of [pending.asset_id, attached.asset_id, legacy.asset_id, olderAttached.asset_id])
         await call(admin, 'select public.quarantine_media_upload($1,$2)', [id, 'review needed']);
+      assert((await call(who.userId, SQL_WATCH, [attached.asset_id])).w === false, 'learner could request a quarantined file');
+      assert((await asActor(who.userId, () => q('select * from public.master_preview_target($1)', [attached.asset_id]))).rows.length === 0, 'learner could obtain a quarantined target');
+      assert((await call(teacher, SQL_WATCH, [attached.asset_id])).w === false, 'marker could request a quarantined file');
+      assert((await call(admin, SQL_WATCH, [attached.asset_id])).w === true, 'owner lost quarantine review access');
       // A repeated quarantine must not replace the real original state.
       await call(admin, 'select public.quarantine_media_upload($1,$2)', [pending.asset_id, 'still under review']);
       await q('delete from public.coursework_quarantine_state where asset_id=any($1::uuid[])', [[legacy.asset_id,olderAttached.asset_id]]);
@@ -477,6 +503,7 @@ export async function run(ctx) {
       await call(who.userId, SQL_CONFIRM, [pending.asset_id]);
       await q("insert into public.coursework_retention_holds(asset_id,reason,opened_by) values($1,'Safeguarding hold',$2)", [attached.asset_id,admin]);
       const availableStatus = (await call(admin, 'select public.release_coursework_quarantine($1,$2) result', [attached.asset_id, 'I reviewed this quarantine and its release'])).result;
+      assert((await call(who.userId, SQL_WATCH, [attached.asset_id])).w === true, 'release did not restore learner access');
       assert((await scalar('select count(*)::int n from public.coursework_retention_holds where asset_id=$1 and closed_at is null', [attached.asset_id])).n === 1, 'release removed the retention hold');
       await q('delete from public.coursework_retention_holds where asset_id=$1', [attached.asset_id]);
       assert(availableStatus === 'available', 'confirmed file did not return to available');
