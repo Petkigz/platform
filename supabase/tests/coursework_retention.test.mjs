@@ -876,6 +876,11 @@ export async function run(ctx) {
       assert((await scalar('select deleted_at from public.media_assets where id=$1',[shared])).deleted_at===null, 'the second purge tombstoned an unresolved shared file');
       assert((await scalar('select reason from public.coursework_erasure_review_assets where asset_id=$1 and learner_id=$2',[shared,other.learnerId])).reason==='shared_context', 'the second review context was lost');
       await refuses(/confirm the review/i,()=>call(owner,queueSql,[shared,'Valid review','wrong confirmation']));
+      const crossBackend=(await q(`insert into public.media_assets(storage_backend,master_bucket,master_key,checksum,mime_type,byte_size,status,uploaded_by)
+        select 's3',master_bucket,master_key,checksum,mime_type,byte_size,'available',uploaded_by from public.media_assets where id=$1 returning id`,[shared])).rows[0].id;
+      try { await refuses(/surviving use/i,()=>call(owner,queueSql,[shared,'Reviewed all uses',queueConfirm])); }
+      finally { await q('delete from public.media_assets where id=$1',[crossBackend]); }
+
       // A deleted historical row can still name the same physical object.
       const duplicate=(await q(`insert into public.media_assets(storage_backend,master_bucket,master_key,checksum,mime_type,byte_size,status,uploaded_by,deleted_at)
         select storage_backend,master_bucket,master_key,checksum,mime_type,byte_size,'deleted',uploaded_by,now() from public.media_assets where id=$1 returning id`,[shared])).rows[0].id;
@@ -897,6 +902,11 @@ export async function run(ctx) {
       await refuses(/statement must be recorded/i,()=>call(owner,clearSql,[shared,learnerId,clearConfirm]));
       // This records an owner assertion only; no object-store call is made by the test.
       await call(owner,'select public.record_coursework_purge($1)',[shared]);
+      const laterAlias=(await q(`insert into public.media_assets(storage_backend,master_bucket,master_key,checksum,mime_type,byte_size,status,uploaded_by)
+        select 's3',master_bucket,master_key,checksum,mime_type,byte_size,'available',uploaded_by from public.media_assets where id=$1 returning id`,[shared])).rows[0].id;
+      try { await refuses(/individual handling/i,()=>call(owner,clearSql,[shared,learnerId,clearConfirm])); }
+      finally { await q('delete from public.media_assets where id=$1',[laterAlias]); }
+
       await refuses(/not_allowed/i,()=>call(governance,clearSql,[shared,learnerId,clearConfirm]));
       await refuses(/confirm/i,()=>call(owner,clearSql,[shared,learnerId,'wrong']));
       await call(owner,'select public.hold_coursework_file($1,$2)',[shared,'Review the recorded storage statement']);

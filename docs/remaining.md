@@ -1051,3 +1051,11 @@ hosted PostgreSQL or object-storage test.
 **Shared-action regression:** frozen revision `8e04521` passed all 170 database
 suites and 2,633 assertions in eight independent PGlite batches, including
 migration 990. This is not a multi-session or hosted storage test.
+
+**Erasure review collision recheck (local migration 1000):** both the queue and
+review-entry removal actions now use the same conservative cross-backend key and
+rendition check as the storage queue. A collision discovered after a deletion
+statement prevents removal of the child-specific review entry. Local tests cover
+both newly discovered collisions; the 150-assertion alternative shared batch,
+repo check, typecheck and lint passed. External changes and hosted concurrency
+remain unverified.
