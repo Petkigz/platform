@@ -214,9 +214,9 @@ export async function POST(request: Request) {
     if (!UUID.test(assetId)) return fail('That is not a file.', 400);
 
     // The same module the staff path uses, in coursework mode: it looks at the
-    // object in storage and compares its size before it calls the database. What
-    // changes between the two modes is which door is opened, never whether
-    // anybody checked.
+    // object in storage and compares its reported size before it calls the
+    // database. This route does not scan or verify the contents, and a direct
+    // authorized database confirmation does not run this check.
     const outcome = await confirmMediaUpload(supabase, assetId, {
       config,
       mode: 'coursework',
@@ -231,6 +231,8 @@ export async function POST(request: Request) {
           attachmentId: outcome.attachmentId ?? null,
           available: true,
           verifiedBytes: outcome.verifiedBytes,
+          contentVerified: false,
+          malwareScanned: false,
         },
       },
       { status: 200 },

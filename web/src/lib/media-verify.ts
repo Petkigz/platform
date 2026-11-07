@@ -16,8 +16,8 @@
  * ---------------------------------------------
  * One HEAD request against the master's own object, comparing the size storage
  * reports with the size the uploader declared. That answers the question
- * `confirm_media_upload()` exists to answer — did the file arrive — for the cost
- * of a single request rather than a transfer of something that can be 8 GiB.
+ * whether storage reports an object with the declared size at that moment, for
+ * the cost of a single request rather than transferring up to 8 GiB.
  *
  * It does **not** recompute the SHA-256 digest, and this is the honest limit of
  * it: the digest in the row is the one the uploader's browser declared. Checking
@@ -25,11 +25,10 @@
  * the transcode worker, which downloads the master to encode it. That is where a
  * digest check belongs, and it is noted in `NEXT.md` rather than quietly skipped.
  *
- * Confirming without looking is the failure this prevents. `confirm_media_upload`
- * is staff-only precisely so an uploader cannot mark their own file ready, but a
- * staff member clicking "confirm" on a file that never finished uploading would
- * publish a row pointing at nothing — and every rendition encoded from it would
- * be a rendition of a hole.
+ * This check applies to this server path, not every database RPC. In particular,
+ * an authorized coursework uploader can call the database confirmation directly.
+ * The HEAD does not verify the content, scan for malware, or prevent replacement
+ * after the check. It must not be described as proof of those things.
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -195,7 +194,7 @@ export async function confirmMediaUpload(
       ok: false,
       message:
         `Storage holds ${String(reportedBytes)} bytes but the upload declared ${String(declaredBytes)}. ` +
-        'A partial or replaced file must not become available. The confirmation was not made by this request.',
+        'The sizes differ, so this request did not confirm the file. A size check cannot detect a same-size replacement.',
       status: 409,
     };
   }

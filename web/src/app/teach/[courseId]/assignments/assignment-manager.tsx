@@ -226,8 +226,8 @@ export function AssignmentManager({
             )}
           </div>
           <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>
-            Late work is rejected by default. The media upload and secure file-viewer
-            path is not connected yet; for now, learners can hand in written work.
+            Late work is rejected by default. Learners can hand in written work and,
+            when storage is configured, files. Files are not currently scanned for malware.
           </p>
         </form>
       )}
@@ -325,6 +325,7 @@ function SubmissionFiles({ files }: { files: unknown }) {
   return (
     <div style={{ display: 'grid', gap: '.25rem' }}>
       <p className="eyebrow" style={{ margin: 0 }}>Handed in</p>
+      <p className="notice warn">These files have not been scanned for malware. Use caution when opening them.</p>
       <ul className="lessons">
         {list.map((file) => (
           <li key={file.assetId}>

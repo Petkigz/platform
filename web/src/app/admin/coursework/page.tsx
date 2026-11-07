@@ -184,6 +184,7 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
         <span>Handed-in files</span>
       </nav>
 
+      <p className="notice warn">Handed-in files have not been scanned for malware. Use caution when opening them; quarantine and review records are not a scan.</p>
       {!ownerStatusValid && <p className="notice warn">Safeguarding owner setup could not be checked.</p>}
       {ownerStatusValid && ownerStatus?.configured === false && (
         <section className="notice warn">

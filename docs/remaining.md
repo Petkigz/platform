@@ -1244,3 +1244,17 @@ revision recovery, authorization, hold preservation and non-coursework refusal.
 Alternative shared coursework/offline/RPC order passed 166; web passed 2,136;
 lint, typecheck, repository checks and build passed. Hosted interleavings and
 actual storage inspection remain unverified.
+
+**Coursework upload safety messaging:** removed an outdated teacher-screen
+claim that file uploads were not connected. The teacher and owner screens now
+state that handed-in files are not malware-scanned. The coursework confirmation
+response also states that content and malware were not verified. A storage HEAD
+only compares the reported length at one instant: it does not check the digest,
+prevent a same-size replacement, or run on a direct authorized confirmation RPC.
+This is honest disclosure, not a malware-scanning or integrity fix. Web passed
+2,137 assertions; lint, typecheck, repo checks and build passed.
+
+Frozen revision `590ca7c` passed all 170 database suites and 2,640 assertions
+across eight independent PGlite databases, including unknown-state quarantine
+review. It predates the later messaging-only changes; hosted concurrency and
+storage behavior remain unverified.
