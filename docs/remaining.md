@@ -942,11 +942,23 @@ declarations and revisions. Local tests cover snapshot-only and pending-upload
 holds, release, and the existing account and child-record behavior. Hosted
 PostgreSQL concurrency and lock ordering remain unverified.
 
-**Still open:** ordinary one-year retention does not yet cover all
-detached revision and declaration files. The new exception register is visible
+**Detached coursework retention (local migration 940):** the private clock now
+includes surviving declarations and revision references as well as current
+attachments, grouped by asset and submission. The latest known reference is a
+conservative anchor; an open-ended class still has no ordinary deadline. Held
+files remain held, and a file referenced by multiple submissions is excluded
+from automatic expiry even when they belong to the same learner. Local tests
+cover pending and detached files, holds, newer revisions, invalid JSON and a
+multi-submission conflict. Cleanup rechecks under submission and asset locks;
+some existing upload-confirmation paths take these locks in the opposite order,
+so PostgreSQL may abort a conflicting transaction and the real deployment needs
+concurrency testing and retry review. The PGlite test does not prove interleavings.
+
+**Still open:** the new exception register is visible
 but has no visual resolution workflow, and shared assets discovered outside a
-child purge are not separately listed. Historical cases without surviving
-references cannot be identified reliably. Storage tombstones are not proof of
+child purge are not separately listed, and per-submission retention rows can
+inflate counts when a file has multiple contexts. Historical cases without
+surviving references cannot be identified reliably. Storage tombstones are not proof of
 byte deletion; hosted PostgreSQL concurrency and storage remain unverified.
 Existing links and external copies cannot be recalled.
 

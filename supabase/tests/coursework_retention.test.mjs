@@ -155,6 +155,7 @@ export async function run(ctx) {
     await q(`update public.assignment_submission_assets
                 set created_at = now() - $2::interval
               where media_asset_id = $1`, [row.asset, interval]);
+    await q(`update public.coursework_upload_declarations set declared_at=now()-$2::interval where asset_id=$1`, [row.asset,interval]);
     await q(`update public.assignment_submissions
                 set created_at = now() - $2::interval,
                     submitted_at = now() - $2::interval
@@ -219,6 +220,7 @@ export async function run(ctx) {
               where id = $1`, [assignment]);
     await q(`update public.assignment_submission_assets set created_at = now() - interval '2 years'
               where media_asset_id = $1`, [asset]);
+    await q(`update public.coursework_upload_declarations set declared_at=now()-interval '2 years' where asset_id=$1`, [asset]);
     await q(`update public.assignment_submissions
                 set created_at = now() - interval '2 years',
                     submitted_at = now() - interval '2 years'
@@ -228,6 +230,80 @@ export async function run(ctx) {
     assert(record.basis === 'class_end', `basis ${record.basis}`);
     const days = (new Date(record.due_on).getTime() - Date.now()) / 86_400_000;
     assert(Math.abs(days) < 2, `due ${Math.round(days)} days from now, expected today`);
+  });
+
+  await test('detached revisions and pending declarations retain a conservative clock and honour holds', async () => {
+    const who=await learner('Detached retention');
+    const assignment=await createAssignment();
+    const submission=(await call(who.userId,'select public.save_assignment_draft($1,$2,$3) as id',
+      [assignment,who.learnerId,'A draft.'])).id;
+    const old=(await call(who.userId,'select * from public.register_coursework_upload($1,$2,$3,$4,$5)',
+      [submission,'Earlier page.jpg','image/jpeg',1000,digest()])).asset_id;
+    await call(who.userId,'select public.confirm_coursework_upload($1)',[old]);
+    // Snapshot-only historical reference, with no declaration or attachment.
+    await call(who.userId,'select public.remove_assignment_asset($1,$2)',[submission,old]);
+    await q('delete from public.coursework_upload_declarations where asset_id=$1',[old]);
+    await q(`insert into public.assignment_submission_revisions
+      (submission_id,revision_number,asset_ids,feedback,marked_at,submitted_at,reopened_by,reopened_at)
+      values ($1,1,jsonb_build_array($2::text),'Reviewed',now()-interval '2 years',now()-interval '2 years',$3,now()-interval '2 years')`,
+      [submission,old,who.userId]);
+    const pending=(await call(who.userId,'select * from public.register_coursework_upload($1,$2,$3,$4,$5)',
+      [submission,'Pending page.jpg','image/jpeg',1000,digest()])).asset_id;
+    const recent=(await call(who.userId,'select * from public.register_coursework_upload($1,$2,$3,$4,$5)',
+      [submission,'Recent page.jpg','image/jpeg',1000,digest()])).asset_id;
+    await q("update public.assignment_submissions set created_at=now()-interval '2 years' where id=$1",[submission]);
+    await q("update public.coursework_upload_declarations set declared_at=now()-interval '2 years' where asset_id=$1",[pending]);
+    for (const id of [old,pending]) {
+      const r=await retentionRows({asset:id});
+      assert(r && new Date(r.due_on)<new Date(), 'a detached old reference has no due clock');
+      assert((await scalar('select count(*)::int n from public.coursework_file_retention where asset_id=$1',[id])).n===1, 'reference duplicates inflated the register');
+    }
+    assert(new Date((await retentionRows({asset:recent})).due_on)>new Date(), 'a recent declaration inherited an older deadline');
+    await call(owner,'select public.hold_coursework_file($1,$2)',[old,'An unresolved concern']);
+    try {
+      await purge();
+      assert((await scalar('select deleted_at from public.media_assets where id=$1',[old])).deleted_at===null, 'held detached revision was tombstoned');
+      const p=await scalar('select deleted_at,purge_due_at,purged_at from public.media_assets where id=$1',[pending]);
+      assert(p.deleted_at && p.purge_due_at && p.purged_at===null, 'old pending bytes were not queued truthfully');
+      assert((await scalar('select deleted_at from public.media_assets where id=$1',[recent])).deleted_at===null, 'recent pending upload was deleted');
+      await call(owner,'select public.release_coursework_hold($1,$2)',[old,'The concern was reviewed']);
+      await purge();
+      assert((await scalar('select deleted_at from public.media_assets where id=$1',[old])).deleted_at!==null, 'released detached revision was not queued');
+    } finally {
+      if ((await scalar('select count(*)::int n from public.coursework_retention_holds where asset_id=$1 and closed_at is null',[old])).n)
+        await call(owner,'select public.release_coursework_hold($1,$2)',[old,'Fixture cleanup']);
+    }
+  });
+
+  await test('a recent revision extends the current file clock and invalid snapshot values do not crash it', async () => {
+    const row=await handedIn();
+    await backdate(row,'2 years');
+    await q(`insert into public.assignment_submission_revisions
+      (submission_id,revision_number,asset_ids,feedback,marked_at,submitted_at,reopened_by,reopened_at)
+      values($1,1,jsonb_build_array($2::text,'not-a-uuid'),'Reviewed',now(),now(),$3,now()),
+            ($1,2,'{"legacy":"invalid shape"}'::jsonb,'Reviewed',now(),now(),$3,now())`,[row.submission,row.asset,row.userId]);
+    const clock=await retentionRows(row);
+    assert(clock && new Date(clock.due_on)>new Date(), 'a new revision did not extend the clock');
+    assert((await scalar('select count(*)::int n from public.coursework_file_retention where asset_id=$1',[row.asset])).n===1,
+      'the declaration, attachment and revision appeared as separate files');
+    await purge();
+    assert((await scalar('select deleted_at from public.media_assets where id=$1',[row.asset])).deleted_at===null,
+      'an asset reused in a recent version was tombstoned');
+  });
+
+  await test('a file used in two submissions for the same learner is not expired by the first clock', async () => {
+    const first=await handedIn();
+    await backdate(first,'2 years');
+    const secondAssignment=await createAssignment();
+    const second=(await call(first.userId,'select public.save_assignment_draft($1,$2,$3) as id',
+      [secondAssignment,first.learnerId,'Newer work.'])).id;
+    await q(`insert into public.assignment_submission_revisions
+      (submission_id,revision_number,asset_ids,feedback,marked_at,submitted_at,reopened_by)
+      values($1,1,jsonb_build_array($2::text),'Reviewed',now(),now(),$3)`,[second,first.asset,first.userId]);
+    assert((await scalar('select count(*)::int n from public.coursework_file_retention where asset_id=$1',[first.asset])).n===2);
+    await purge();
+    assert((await scalar('select deleted_at from public.media_assets where id=$1',[first.asset])).deleted_at===null,
+      'the first submission deleted a file still referenced by another submission');
   });
 
   await test('an open-ended cohort has no ordinary due date but erasure still applies', async () => {
@@ -245,6 +321,17 @@ export async function run(ctx) {
     await call(who.userId, 'select public.confirm_coursework_upload($1)', [asset]);
     await call(who.userId, 'select public.submit_assignment($1)', [submission]);
     await backdate({ asset, submission }, '2 years');
+    // An unfinished declaration in the same open-ended class has no invented end either.
+    // Use a separate draft because the first submission is already handed in.
+    const draftAssignment=await createAssignment({cohortId:cohort});
+    const draft=(await call(who.userId,'select public.save_assignment_draft($1,$2,$3) as id',
+      [draftAssignment,who.learnerId,'Unfinished work.'])).id;
+    const pending=(await call(who.userId,'select * from public.register_coursework_upload($1,$2,$3,$4,$5)',
+      [draft,'Unfinished page.jpg','image/jpeg',1000,digest()])).asset_id;
+    await q("update public.coursework_upload_declarations set declared_at=now()-interval '2 years' where asset_id=$1",[pending]);
+    await q("update public.assignment_submissions set created_at=now()-interval '2 years' where id=$1",[draft]);
+    const pendingClock=await retentionRows({asset:pending});
+    assert(pendingClock && pendingClock.due_on===null && pendingClock.basis==='missing_class_end', 'unfinished open-ended coursework got an invented deadline');
 
     let r = await retentionRows({ asset });
     assert(r.due_on === null && r.basis === 'missing_class_end', 'open-ended class received a hand-in based deadline');
