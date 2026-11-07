@@ -927,8 +927,11 @@ references had already disappeared before migration cannot be reconstructed.
 
 **Still open:** detached revision files are not yet fully integrated into holds,
 child-record erasure and normal retention; mixed-use storage requires individual
-handling. Child-record cleanup also needs review for revision snapshots that
-restrict submission deletion. Existing links and external copies cannot be recalled,
+handling. A PGlite probe confirmed that a child record with a revision snapshot
+cannot currently be purged: the snapshot's foreign key prevents deletion of its
+submission. The append-only guard also prevents simply deleting the snapshot.
+This must be repaired with hold-aware, authorized erasure rather than bypassing
+revision protection for ordinary users. Existing links and external copies cannot be recalled,
 and the migration and its concurrency have not been tested on hosted Supabase/R2.
 
 **Legacy-provenance regression:** frozen revision `9672670` ran all 170 database
