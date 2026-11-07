@@ -12,7 +12,7 @@ import {
   REVIEW_FORM_HELP,
 } from '@/lib/coursework-review';
 import { readableByteSize } from '@/lib/media';
-import { parseErasureReviews, parseLegacyCoursework, parseSharedRetentionReviews } from '@/lib/legacy-coursework';
+import { parseErasureReviews, parseLegacyCoursework, parseSharedRetentionReviews, parseOfflineEvidence } from '@/lib/legacy-coursework';
 import {
   HOLDS_NOTE,
   missingClassEndCount,
@@ -41,7 +41,7 @@ export const dynamic = 'force-dynamic';
 /** Owner-only review register, alongside separately authorized retention tools.
  * A recorded review is an attestation, not proof that a file was viewed.
  */
-export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ legacyAfter?: string; sharedAfter?: string; sharedReview?: string; erasureReview?: string; erasureAsset?: string; erasureLearner?: string; concern?: string; before?: string; beforeId?: string; endsAfter?: string; classEnd?: string; quarantineAfter?: string; quarantine?: string; concernAfter?: string; concernAfterId?: string; alert?: string; alertReview?: string; alertBefore?: string; storageAfter?: string; storageAfterId?: string; holdAfter?: string; holdAfterId?: string; reviewAfterState?: string; reviewAfterAt?: string; reviewAfterId?: string }> }) {
+export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ offlineAfter?: string; legacyAfter?: string; sharedAfter?: string; sharedReview?: string; erasureReview?: string; erasureAsset?: string; erasureLearner?: string; concern?: string; before?: string; beforeId?: string; endsAfter?: string; classEnd?: string; quarantineAfter?: string; quarantine?: string; concernAfter?: string; concernAfterId?: string; alert?: string; alertReview?: string; alertBefore?: string; storageAfter?: string; storageAfterId?: string; holdAfter?: string; holdAfterId?: string; reviewAfterState?: string; reviewAfterAt?: string; reviewAfterId?: string }> }) {
   if (!isSupabaseConfigured()) redirect('/');
 
   const supabase = await createClient();
@@ -106,9 +106,14 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
     (typeof params.erasureAsset === 'string' && isQuarantineCursor(params.erasureAsset) &&
      typeof params.erasureLearner === 'string' && isQuarantineCursor(params.erasureLearner));
   const erasureResult = isSafeguardingOwner && erasureCursorValid
-    ? await supabase.rpc('coursework_erasure_review_page', { p_after_asset: params.erasureAsset ?? null, p_after_learner: params.erasureLearner ?? null, p_limit: 51 }) : null;
+    ? await supabase.rpc('coursework_erasure_review_with_offline_page', { p_after_asset: params.erasureAsset ?? null, p_after_learner: params.erasureLearner ?? null, p_limit: 51 }) : null;
   const erasureRows = erasureResult && !erasureResult.error ? parseErasureReviews(erasureResult.data) : null;
   const erasureNext = erasureRows && erasureRows.length > 50 ? erasureRows[49] : null;
+  const offlineCursorValid = !params.offlineAfter || isQuarantineCursor(params.offlineAfter);
+  const offlineResult = isSafeguardingOwner && offlineCursorValid
+    ? await supabase.rpc('coursework_offline_evidence_page', { p_after: params.offlineAfter ?? null, p_limit: 51 }) : null;
+  const offlineRows = offlineResult && !offlineResult.error ? parseOfflineEvidence(offlineResult.data) : null;
+  const offlineNext = offlineRows && offlineRows.length > 50 ? offlineRows[49]?.asset_id : null;
   const openCursorValid = (!params.concernAfter && !params.concernAfterId) ||
     (typeof params.concernAfter === 'string' && Number.isFinite(Date.parse(params.concernAfter)) &&
       typeof params.concernAfterId === 'string' && isQuarantineCursor(params.concernAfterId));
@@ -197,7 +202,7 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
         <p>Automatic retention leaves these files alone because they may belong to several submissions, a lesson, or an unresolved child-erasure review. Inspect each case individually. Only a coursework file whose every surviving submission is due and has no separate issue can be queued here. Review reasons are retained in the private audit, so avoid names or sensitive details.</p>
         <p><Link href="/admin/coursework#storage-queue">Go to the storage queue</Link> after queueing; storage deletion is a separate, unverified step.</p>
         {params.sharedReview === 'queued' && <p role="status">The file was tombstoned and queued; its storage bytes have not been verified deleted.</p>}
-        {(params.sharedReview === 'uncertain' || params.sharedReview === 'invalid') && <p className="notice warn" role="alert">The action could not be confirmed. Refresh and check the shared-file and storage queues before retrying. Undue contexts, holds, lessons, erasure reviews and storage conflicts prevent this action.</p>}
+        {(params.sharedReview === 'uncertain' || params.sharedReview === 'invalid') && <p className="notice warn" role="alert">The action could not be confirmed. Refresh and check the shared-file and storage queues before retrying. Undue contexts, holds, lessons, offline records, erasure reviews and storage conflicts prevent this action.</p>}
         {sharedRows === null ? <p className="notice warn">The shared-file list could not be loaded. Do not assume it is empty.</p>
           : sharedRows.length === 0 ? <p>No due shared files are shown on this page.</p>
           : <ul className="lessons">{sharedRows.slice(0,50).map(row => <li key={row.asset_id}>
@@ -224,15 +229,30 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
         {params.erasureReview === 'queued' && <p role="status">The file was tombstoned and queued for storage deletion. Its bytes have not been verified deleted.</p>}
         {params.erasureReview === 'already_queued' && <p role="status">The file was already queued. Check the storage queue; bytes have not been verified deleted.</p>}
         {params.erasureReview === 'statement_recorded' && <p role="status">A storage-deletion statement was already recorded. It is not independent verification.</p>}
+        {params.erasureReview === 'offline_reviewed' && <p role="status">The possible device-copy evidence was acknowledged. No device copy was removed or verified.</p>}
         {params.erasureReview === 'removed' && <p role="status">This review entry was removed after a storage-deletion statement. The statement and other copies are not independently verified.</p>}
-        {(params.erasureReview === 'uncertain' || params.erasureReview === 'invalid') && <p className="notice warn" role="alert">The action could not be confirmed. Refresh and check both the review and storage queues before retrying. Holds, other uses, shared keys, pending files and quarantines prevent this action.</p>}
+        {(params.erasureReview === 'uncertain' || params.erasureReview === 'invalid') && <p className="notice warn" role="alert">The action could not be confirmed. Refresh and check both the review and storage queues before retrying. Holds, offline evidence, other uses, shared keys, pending files and quarantines can prevent this action.</p>}
         {erasureRows === null ? <p className="notice warn">The erasure review list could not be loaded. Do not assume it is empty.</p>
           : erasureRows.length === 0 ? <p>No entries on this page.</p>
           : <ul className="lessons">{erasureRows.slice(0,50).map(row => <li key={`${row.asset_id}:${row.learner_id}`}>
             <strong>{row.display_name ?? 'Unnamed file'}</strong>
             <p>File ID: {row.asset_id} · learner record ID: {row.learner_id}</p>
-            <p>{row.reason === 'legacy_library' ? 'Older library-labelled file; may have mixed use.' : 'Was referenced by another learner or a lesson; check for surviving uses.'} Recorded {row.recorded_at}.</p>
+            <p>{row.reason === 'legacy_library' ? 'Older library-labelled file; may have mixed use.' : 'May have another learner, lesson or offline-save context; check for surviving uses.'} Recorded {row.recorded_at}.</p>
             <a href={courseworkFileHref(row.asset_id)} target="_blank" rel="noreferrer">Try opening the file for review</a>
+            {row.offline_copy_recorded && <div className="notice warn">
+              A saved-lesson record existed for this file before the child record was erased. That record does not prove bytes were saved, remain, or were removed from a device. {row.offline_copy_reviewed_at ? `Acknowledged ${row.offline_copy_reviewed_at}.` : 'This evidence needs acknowledgement before routine cleanup.'}
+              {!row.offline_copy_reviewed_at && <form action={reviewErasureFile}>
+                <input type="hidden" name="assetId" value={row.asset_id} />
+                <input type="hidden" name="learnerId" value={row.learner_id} />
+                <input type="hidden" name="action" value="offline" />
+                <input type="hidden" name="afterAsset" value={params.erasureAsset ?? ''} />
+                <input type="hidden" name="afterLearner" value={params.erasureLearner ?? ''} />
+                <label htmlFor={`offline-reason-${row.asset_id}-${row.learner_id}`}>Review note (avoid names or sensitive details)</label>
+                <textarea id={`offline-reason-${row.asset_id}-${row.learner_id}`} name="reason" required minLength={3} maxLength={1000} />
+                <label><input type="checkbox" name="confirmed" value="yes" required /> I understand device copies cannot be verified or removed here.</label>
+                <button type="submit" className="btn ghost">Acknowledge possible device copy</button>
+              </form>}
+            </div>}
             {row.reason === 'shared_context' && <>
               <form action={reviewErasureFile}>
                 <input type="hidden" name="assetId" value={row.asset_id} />
@@ -258,6 +278,19 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
           </li>)}</ul>}
         {params.erasureAsset && <p><Link href="/admin/coursework#erasure-review">First page</Link></p>}
         {erasureNext && <p><Link href={`/admin/coursework?${new URLSearchParams({ erasureAsset: erasureNext.asset_id, erasureLearner: erasureNext.learner_id })}#erasure-review`}>More files needing review</Link></p>}
+      </section>}
+      {isSafeguardingOwner && <section id="offline-evidence" className="card" style={{ marginBlock: '1rem' }}>
+        <h2>Possible offline copies of coursework</h2>
+        <p>These are surviving saved-lesson records or preserved child-erasure evidence, including records marked removed or expired. A record does not prove a device copy exists or was deleted; missing records do not prove there was no copy. Surviving records block routine storage cleanup. Review child-erasure evidence above; older mixed-use files need individual handling.</p>
+        {offlineRows === null ? <p className="notice warn">Offline evidence could not be loaded. Do not assume there are no copies.</p>
+          : offlineRows.length === 0 ? <p>No recorded evidence is shown on this page.</p>
+          : <ul className="lessons">{offlineRows.slice(0,50).map(row => <li key={row.asset_id}>
+            <strong>{row.display_name ?? 'Unnamed file'}</strong>
+            <p>File ID: {row.asset_id} · {row.asset_status} · {row.recorded_saves} surviving save {row.recorded_saves === 1 ? 'record' : 'records'}{row.unreviewed_erasure ? ' · child-erasure evidence needs acknowledgement' : ''}</p>
+            <a href={courseworkFileHref(row.asset_id)} target="_blank" rel="noreferrer">Try opening the file for review</a>
+          </li>)}</ul>}
+        {params.offlineAfter && <p><Link href="/admin/coursework#offline-evidence">First page</Link></p>}
+        {offlineNext && <p><Link href={`/admin/coursework?${new URLSearchParams({ offlineAfter: offlineNext })}#offline-evidence`}>More offline evidence</Link></p>}
       </section>}
       {isSafeguardingOwner && <section id="legacy-coursework" className="card" style={{ marginBlock: '1rem' }}>
         <h2>Older mixed-use coursework</h2>
@@ -612,7 +645,7 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
                   {row.held ? (
                     <p className="notice warn">Safeguarding hold open — do not delete this object. Review the hold before taking action.</p>
                   ) : row.storageReviewNeeded ? (
-                    <p className="notice warn">This storage key may be shared, or the file has additional renditions. Do not delete it as routine cleanup; investigate each object and its uses first. If it was already deleted, <Link href="/admin/incidents">report the incident</Link> for individual review.</p>
+                    <p className="notice warn">This storage key may be shared, the file may have additional renditions, or offline-copy evidence needs review. Do not delete it as routine cleanup; investigate each object and its uses first. If it was already deleted, <Link href="/admin/incidents">report the incident</Link> for individual review.</p>
                   ) : (
                     <RetentionActionForm
                       assetId={row.assetId}

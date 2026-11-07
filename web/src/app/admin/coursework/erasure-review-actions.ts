@@ -7,6 +7,7 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { isQuarantineCursor } from '@/lib/coursework-quarantine';
 
 const QUEUE_CONFIRM = 'I reviewed all surviving uses and understand this only queues storage deletion';
+const OFFLINE_CONFIRM = 'I understand device copies cannot be verified or removed here';
 const CLEAR_CONFIRM = 'I understand a storage statement is not verified deletion';
 
 export async function reviewErasureFile(form: FormData) {
@@ -22,8 +23,8 @@ export async function reviewErasureFile(form: FormData) {
   const back = (status: string) => `/admin/coursework?${new URLSearchParams({ ...cursor, erasureReview: status })}#erasure-review`;
   if (!isSupabaseConfigured() || typeof asset !== 'string' || !isQuarantineCursor(asset) ||
       typeof learner !== 'string' || !isQuarantineCursor(learner) || form.get('confirmed') !== 'yes' ||
-      (action !== 'queue' && action !== 'clear') ||
-      (action === 'queue' && (typeof reason !== 'string' || reason.trim().length < 3 || reason.trim().length > 1000))) {
+      (action !== 'queue' && action !== 'clear' && action !== 'offline') ||
+      ((action === 'queue' || action === 'offline') && (typeof reason !== 'string' || reason.trim().length < 3 || reason.trim().length > 1000))) {
     redirect(back('invalid'));
   }
   const supabase = await createClient();
@@ -33,10 +34,13 @@ export async function reviewErasureFile(form: FormData) {
   // directs the owner to refresh both the review and storage queues.
   const result = action === 'queue'
     ? await Promise.resolve(supabase.rpc('queue_reviewed_coursework_erasure', { p_asset_id: asset, p_reason: (reason as string).trim(), p_confirm: QUEUE_CONFIRM })).catch(() => null)
-    : await Promise.resolve(supabase.rpc('clear_coursework_erasure_review', { p_asset_id: asset, p_learner_id: learner, p_confirm: CLEAR_CONFIRM })).catch(() => null);
+    : action === 'offline'
+      ? await Promise.resolve(supabase.rpc('acknowledge_coursework_offline_evidence', { p_asset_id: asset, p_learner_id: learner, p_note: (reason as string).trim(), p_confirm: OFFLINE_CONFIRM })).catch(() => null)
+      : await Promise.resolve(supabase.rpc('clear_coursework_erasure_review', { p_asset_id: asset, p_learner_id: learner, p_confirm: CLEAR_CONFIRM })).catch(() => null);
   revalidatePath('/admin/coursework');
   if (!result || result.error) redirect(back('uncertain'));
   if (action === 'queue' && (result.data === 'queued' || result.data === 'already_queued' || result.data === 'statement_recorded')) redirect(back(result.data));
+  if (action === 'offline' && result.data === true) redirect(back('offline_reviewed'));
   if (action === 'clear' && result.data === true) redirect(back('removed'));
   // A false clear can also mean an earlier request already removed the entry.
   redirect(back('uncertain'));

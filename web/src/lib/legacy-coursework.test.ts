@@ -25,7 +25,7 @@ test('legacy register warns about mixed use and does not present its list as del
 
 test('erasure review rows fail closed on malformed data', async () => {
   const { parseErasureReviews } = await import('./legacy-coursework.ts');
-  const review = { asset_id: row.asset_id, learner_id: '2b1c7a9e-0000-4000-8000-000000000002', display_name: null, reason: 'legacy_library', recorded_at: '2026-11-01T00:00:00Z' };
+  const review = { asset_id: row.asset_id, learner_id: '2b1c7a9e-0000-4000-8000-000000000002', display_name: null, reason: 'legacy_library', recorded_at: '2026-11-01T00:00:00Z', offline_copy_recorded: true, offline_copy_reviewed_at: null };
   assert.deepEqual(parseErasureReviews([review]), [review]);
   assert.deepEqual(parseErasureReviews([]), []);
   for (const value of [null, [{}], [{ ...review, reason: 'unknown' }], [{ ...review, learner_id: 'bad' }], [{ ...review, recorded_at: 'bad' }]]) assert.equal(parseErasureReviews(value), null);
@@ -65,4 +65,16 @@ test('older coursework offers an owner hold without claiming it locks storage', 
   assert.match(page, /Place safeguarding hold/);
   assert.match(page, /cannot lock external storage/);
   assert.match(page, /Check the holds register/);
+});
+
+
+test('offline evidence is explicit and unknown data never becomes an empty list', async () => {
+  const { parseOfflineEvidence, parseErasureReviews } = await import('./legacy-coursework.ts');
+  const evidence = { asset_id: row.asset_id, display_name: null, asset_status: 'available', recorded_saves: 1, unreviewed_erasure: true };
+  assert.deepEqual(parseOfflineEvidence([evidence]), [evidence]);
+  for (const bad of [null, [{}], [{...evidence, recorded_saves: -1}], [{...evidence, unreviewed_erasure: 'false'}]]) assert.equal(parseOfflineEvidence(bad), null);
+  assert.equal(parseErasureReviews([{asset_id:row.asset_id}]), null);
+  const page = readFileSync(new URL('../app/admin/coursework/page.tsx', import.meta.url), 'utf8');
+  assert.match(page, /device copies cannot be verified or removed here/);
+  assert.match(page, /missing records do not prove there was no copy/i);
 });

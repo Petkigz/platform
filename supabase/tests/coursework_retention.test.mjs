@@ -782,6 +782,64 @@ export async function run(ctx) {
     assert(await scalar('select source_id from public.child_login_erasure_recovery where source_id=$1', [pendingAttempt]), 'released record lost recovery evidence');
   });
 
+  await test('offline-only held coursework preserves possible-copy evidence through child erasure', async () => {
+    const child=await handedIn();
+    const adult=await learner('Other offline learner');
+    const lesson=(await scalar(`select l.id from public.lessons l join public.course_sections cs on cs.id=l.section_id
+      where cs.course_version_id=$1 limit 1`,[version])).id;
+    async function offlineSave(learnerId,key) {
+      const device=(await q('insert into public.offline_devices(learner_profile_id,device_key) values($1,$2) returning id',[learnerId,key])).rows[0].id;
+      return (await q(`insert into public.offline_downloads(device_id,learner_profile_id,lesson_id,media_asset_id,expires_at,removed_at)
+        values($1,$2,$3,$4,now()+interval '1 day',now()) returning id`,[device,learnerId,lesson,child.asset])).rows[0].id;
+    }
+    await q("update public.learner_profiles set learner_type='child',age_band='8-10' where id=$1",[child.learnerId]);
+    await backdate(child,'2 years');
+    await offlineSave(child.learnerId,'device-offline-child-123');
+    const otherSave=await offlineSave(adult.learnerId,'device-offline-adult-123');
+    const allEvidence=await asActor(owner,()=>q('select * from public.coursework_offline_evidence_page(null,100)'));
+    assert(allEvidence.rows.some(r=>r.asset_id===child.asset && Number(r.recorded_saves)===2),'offline register omitted removed records');
+    await refuses(/not_allowed/i,()=>asActor(governance,()=>q('select * from public.coursework_offline_evidence_page(null,100)')));
+    await purge();
+    assert((await scalar('select deleted_at from public.media_assets where id=$1',[child.asset])).deleted_at===null,'ordinary retention ignored offline evidence');
+    await call(owner,'select public.hold_coursework_file($1,$2)',[child.asset,'Review possible device copy']);
+    try {
+      // Leave the offline booking as the only surviving association with the child.
+      await q('delete from public.coursework_upload_declarations where asset_id=$1',[child.asset]);
+      await q('delete from public.assignment_submission_assets where media_asset_id=$1',[child.asset]);
+      await q("update public.learner_profiles set deleted_at=now()-interval '45 days',status='archived' where id=$1",[child.learnerId]);
+      const blocked=(await scalar('select public.purge_learner_record($1) r',[child.learnerId])).r;
+      assert(blocked.erased===false && blocked.blockedByCourseworkHold===true,'offline-only hold did not block child purge');
+      await call(owner,'select public.release_coursework_hold($1,$2)',[child.asset,'The concern has been reviewed']);
+      const receipt=(await scalar('select public.purge_learner_record($1) r',[child.learnerId])).r;
+      assert(receipt.erased===true && receipt.nothingLeft===false && receipt.courseworkAssetsNeedingReview>=1,'purge receipt omitted possible-copy evidence');
+      assert(!(await scalar('select id from public.offline_downloads where learner_profile_id=$1',[child.learnerId])),'child offline record survived purge');
+      const evidence=await scalar('select * from public.coursework_erasure_review_assets where asset_id=$1 and learner_id=$2',[child.asset,child.learnerId]);
+      assert(evidence.offline_copy_recorded===true && evidence.offline_copy_reviewed_at===null,'offline evidence was lost with the child record');
+      assert((await scalar('select deleted_at from public.media_assets where id=$1',[child.asset])).deleted_at===null,'offline-only asset was tombstoned');
+      const page=(await asActor(owner,()=>q('select * from public.coursework_erasure_review_with_offline_page(null,null,100)'))).rows;
+      assert(page.some(r=>r.asset_id===child.asset && r.offline_copy_recorded && r.offline_copy_reviewed_at===null),'owner page omitted the evidence');
+      const queueSql='select public.queue_reviewed_coursework_erasure($1,$2,$3) result';
+      const confirm='I reviewed all surviving uses and understand this only queues storage deletion';
+      const ackSql='select public.acknowledge_coursework_offline_evidence($1,$2,$3,$4) result';
+      const ack='I understand device copies cannot be verified or removed here';
+      await refuses(/surviving use/i,()=>call(owner,queueSql,[child.asset,'Review complete',confirm]));
+      await refuses(/confirm the limits/i,()=>call(owner,ackSql,[child.asset,child.learnerId,'Reviewed evidence','wrong']));
+      await refuses(/not_allowed/i,()=>call(governance,ackSql,[child.asset,child.learnerId,'Reviewed evidence',ack]));
+      assert((await call(owner,ackSql,[child.asset,child.learnerId,'Reviewed possible device copy',ack])).result===true,'owner could not acknowledge evidence');
+      assert((await call(owner,ackSql,[child.asset,child.learnerId,'Reviewed possible device copy',ack])).result===false,'acknowledgement was not idempotent');
+      await refuses(/surviving use/i,()=>call(owner,queueSql,[child.asset,'Review complete',confirm]));
+      assert(await scalar('select id from public.offline_downloads where id=$1',[otherSave]),'another learner’s record was removed');
+      // This simulates an independently resolved historical record, not remote byte deletion.
+      await q('delete from public.offline_downloads where id=$1',[otherSave]);
+      assert((await call(owner,queueSql,[child.asset,'Reviewed the surviving evidence',confirm])).result==='queued','reviewed eligible master was not queued');
+      assert((await scalar('select purged_at from public.media_assets where id=$1',[child.asset])).purged_at===null,'queueing claimed bytes were deleted');
+      assert(await scalar("select id from public.governance_audit_events where target_id=$1 and action='coursework.offline_evidence_acknowledged'",[child.asset]),'offline acknowledgement was not audited');
+    } finally {
+      if (await scalar('select id from public.coursework_retention_holds where asset_id=$1 and closed_at is null',[child.asset]))
+        await call(owner,'select public.release_coursework_hold($1,$2)',[child.asset,'Test cleanup']);
+    }
+  });
+
   await test('child revision erasure respects detached holds, then removes snapshots and queues files', async () => {
     const userId = await newUser(`revision-erasure-${++seq}@example.com`);
     await newProfile(userId, 'Revision erasure child');

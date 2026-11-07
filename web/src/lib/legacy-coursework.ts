@@ -29,6 +29,7 @@ export function parseLegacyCoursework(value: unknown): LegacyCourseworkRow[] | n
 export type ErasureReviewRow = {
   asset_id: string; learner_id: string; display_name: string | null;
   reason: 'legacy_library' | 'shared_context'; recorded_at: string;
+  offline_copy_recorded: boolean; offline_copy_reviewed_at: string | null;
 };
 /** Do not turn malformed or unavailable review data into an empty list. */
 export function parseErasureReviews(value: unknown): ErasureReviewRow[] | null {
@@ -41,7 +42,9 @@ export function parseErasureReviews(value: unknown): ErasureReviewRow[] | null {
         typeof r.learner_id !== 'string' || !UUID.test(r.learner_id) ||
         !(r.display_name === null || typeof r.display_name === 'string') ||
         (r.reason !== 'legacy_library' && r.reason !== 'shared_context') ||
-        typeof r.recorded_at !== 'string' || !Number.isFinite(Date.parse(r.recorded_at))) return null;
+        typeof r.recorded_at !== 'string' || !Number.isFinite(Date.parse(r.recorded_at)) ||
+        typeof r.offline_copy_recorded !== 'boolean' ||
+        !(r.offline_copy_reviewed_at === null || (typeof r.offline_copy_reviewed_at === 'string' && Number.isFinite(Date.parse(r.offline_copy_reviewed_at))))) return null;
     rows.push(r as ErasureReviewRow);
   }
   return rows;
@@ -63,6 +66,26 @@ export function parseSharedRetentionReviews(value: unknown): SharedRetentionRevi
         typeof r.submission_contexts !== 'number' || !Number.isSafeInteger(r.submission_contexts) || r.submission_contexts < 1 ||
         typeof r.in_lesson !== 'boolean' || typeof r.erasure_review !== 'boolean' || typeof r.held !== 'boolean') return null;
     rows.push(r as SharedRetentionReview);
+  }
+  return rows;
+}
+
+export type OfflineEvidenceRow = {
+  asset_id: string; display_name: string | null; asset_status: 'pending' | 'available' | 'quarantined' | 'deleted';
+  recorded_saves: number; unreviewed_erasure: boolean;
+};
+export function parseOfflineEvidence(value: unknown): OfflineEvidenceRow[] | null {
+  if (!Array.isArray(value)) return null;
+  const rows: OfflineEvidenceRow[] = [];
+  for (const item of value) {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return null;
+    const r = item as Record<string, unknown>;
+    if (typeof r.asset_id !== 'string' || !UUID.test(r.asset_id) ||
+        !(r.display_name === null || typeof r.display_name === 'string') ||
+        typeof r.asset_status !== 'string' || !['pending', 'available', 'quarantined', 'deleted'].includes(r.asset_status) ||
+        typeof r.recorded_saves !== 'number' || !Number.isSafeInteger(r.recorded_saves) || r.recorded_saves < 0 ||
+        typeof r.unreviewed_erasure !== 'boolean') return null;
+    rows.push(r as OfflineEvidenceRow);
   }
   return rows;
 }

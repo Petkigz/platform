@@ -1093,3 +1093,25 @@ resource block later safe resources; the outer lock-and-recheck still applies.
 If no eligible file exists, the booking and device writes roll back. Offline
 suites passed 27 assertions, including a mixed lesson with a later safe file;
 repository checks passed. The offline-copy evidence gap above remains open.
+
+**Offline evidence during child erasure (local migration 1040):** a surviving
+saved-lesson row, including an expired or removed booking, is treated as evidence
+of a possible device copy, not proof that bytes exist or were deleted. Child
+purge captures that evidence before removing the child's offline rows, including
+an offline-only coursework association. A held offline-only file blocks child
+purge and last-guardian closure. The private owner page lists surviving records
+and preserved evidence; acknowledgement requires a note and explicitly does
+not attest device deletion. Routine retention/storage and owner erasure actions
+hold back while relevant save records or unacknowledged evidence remain. Other
+learners' records are not removed. Acknowledged evidence and the action remain
+in the private audit when a later review entry is cleared. Missing historical
+records cannot establish that no device copies exist; no remote deletion is
+implemented. Legacy mixed-use files still require individual handling.
+
+Focused child-erasure/closure/offline tests passed 67 assertions; the alternative
+shared coursework/RPC order passed 153; web passed 2,127; lint, typecheck,
+repository checks and build passed. PGlite does not verify concurrent hosted
+Postgres or actual device/storage deletion. A further audit remains necessary
+for non-child submission cascades: a historical file shared with offline or
+lesson use may be tombstoned by an older detach trigger outside the child purge
+path. The new evidence list does not itself resolve that path.
