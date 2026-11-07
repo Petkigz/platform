@@ -570,6 +570,37 @@ export async function run(ctx) {
       }
     });
 
+    await test('a held detached revision blocks last-guardian closure until release', async () => {
+      const family=await parentWithChild({ course,version });
+      const sub=await asActor(family.userId,async () => (await q(SQL_SAVE,[selfPaced,family.childId,'Held earlier work.'])).rows[0].id);
+      const asset=await declaredFile(family.userId,sub,'Earlier held page.jpg');
+      await asActor(family.userId,() => q(SQL_SUBMIT,[sub]));
+      await asActor(teacher,() => q(SQL_MARK,[sub,8,'Earlier feedback.']));
+      await asActor(family.userId,() => q('select public.reopen_assignment_submission($1)',[sub]));
+      await asActor(family.userId,() => q('select public.remove_assignment_asset($1,$2)',[sub,asset]));
+      // Isolate a historical snapshot whose upload declaration is no longer present.
+      await q('delete from public.coursework_upload_declarations where asset_id=$1',[asset]);
+      const pending=(await asActor(family.userId,() => q('select * from public.register_coursework_upload($1,$2,$3,$4,$5)',
+        [sub,'Pending held page.jpg','image/jpeg',1000,crypto.randomUUID().replace(/-/g,'').padEnd(64,'a')]))).rows[0].asset_id;
+      await q('select public.bootstrap_safeguarding_owner($1)',[admin]);
+      try {
+        await asActor(admin,() => q('select public.hold_coursework_file($1,$2)',[asset,'An unresolved concern']));
+        await asActor(admin,() => q('select public.hold_coursework_file($1,$2)',[pending,'Another unresolved concern']));
+        const name=(await q('select display_name from public.user_profiles where user_id=$1',[family.userId])).rows[0].display_name;
+        await refused(family.userId,'select public.erase_my_account($1)',[name],/privacy@ayahspring\.com/i);
+        assert((await q('select account_status from public.user_profiles where user_id=$1',[family.userId])).rows[0].account_status!=='closed');
+        await asActor(admin,() => q('select public.release_coursework_hold($1,$2)',[asset,'The concern was reviewed']));
+        await refused(family.userId,'select public.erase_my_account($1)',[name],/privacy@ayahspring\.com/i);
+        await asActor(admin,() => q('select public.release_coursework_hold($1,$2)',[pending,'The other concern was reviewed']));
+        const receipt=await asActor(family.userId,() => q('select public.erase_my_account($1) as result',[name]));
+        assert(receipt.rows[0].result.closed===true,'released hold still blocked closure');
+      } finally {
+        for (const id of [asset,pending]) if ((await q('select 1 from public.coursework_retention_holds where asset_id=$1 and closed_at is null',[id])).rows.length)
+          await asActor(admin,() => q('select public.release_coursework_hold($1,$2)',[id,'Test fixture cleanup']));
+        await q('delete from public.safeguarding_owner where singleton');
+      }
+    });
+
     await test('closing the last family account with a separate child login requires review', async () => {
       const family = await parentWithChild({ course, version });
       const child = await newUser(`assignment-close-child-${++seq}@example.com`);

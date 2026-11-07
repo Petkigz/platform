@@ -936,9 +936,13 @@ review-flagged objects. The local PGlite regression covers a real marked and
 reopened revision, a detached snapshot hold, release, pending uploads, mixed-use
 exceptions and ordinary revision protection.
 
-**Still open:** the account-closure precheck still locks and checks only current
-attachments; child purge now rechecks the broader hold references, but closure
-itself must also be corrected. Ordinary one-year retention does not yet cover all
+**Guardian closure (local migration 930):** the last-guardian precheck also
+locks submission and referenced asset rows, then rechecks holds on attachments,
+declarations and revisions. Local tests cover snapshot-only and pending-upload
+holds, release, and the existing account and child-record behavior. Hosted
+PostgreSQL concurrency and lock ordering remain unverified.
+
+**Still open:** ordinary one-year retention does not yet cover all
 detached revision and declaration files. The new exception register is visible
 but has no visual resolution workflow, and shared assets discovered outside a
 child purge are not separately listed. Historical cases without surviving
