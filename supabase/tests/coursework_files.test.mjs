@@ -30,6 +30,13 @@ export async function run(ctx) {
     newCourse, newVersion, newSection, newLesson,
   } = ctx;
 
+  // These integration suites share a database in some runs. Preserve the flags
+  // they change so a later suite tests its own setup rather than our leftovers.
+  const originalFlags = (await q("select key,value_text from public.platform_settings where key in ('learning.assignments','learning.cohorts')")).rows;
+  const suiteOwner = (await q('select owner_user_id,configured_at from public.safeguarding_owner where singleton')).rows[0];
+  await q('delete from public.safeguarding_owner where singleton');
+  try {
+
   const admin = await bootstrapAdmin('coursework-admin@example.com');
   const teacher = await newInstructor('coursework-teacher@example.com', admin);
   const otherTeacher = await newInstructor('coursework-other-teacher@example.com', admin);
@@ -1077,4 +1084,9 @@ export async function run(ctx) {
       [submission]);
     assert(row.status === 'submitted', `status ${row.status}`);
   });
+  } finally {
+    for (const flag of originalFlags) await q('update public.platform_settings set value_text=$2 where key=$1', [flag.key,flag.value_text]);
+    await q('delete from public.safeguarding_owner where singleton');
+    if (suiteOwner) await q('insert into public.safeguarding_owner(singleton,owner_user_id,configured_at) values(true,$1,$2)', [suiteOwner.owner_user_id,suiteOwner.configured_at]);
+  }
 }

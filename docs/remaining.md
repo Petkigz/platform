@@ -1000,7 +1000,7 @@ hosted Supabase, object-storage or PostgreSQL concurrency test. An additional
 exploratory order that put course assignments after the coursework review suite
 failed five assertions because those suites assume different global flag and
 owner fixtures; the normal frozen batch order and the isolated assignments suite
-passed. The alternative order has not been repaired or revalidated.
+passed. The affected coursework suites now restore their original flags and safeguarding owner in `finally` blocks. The alternative shared-database order was rerun with 149 assertions passing, including the five that failed before; broader ordering and hosted behavior remain separate questions.
 
 **Reviewed-erasure regression:** frozen revision `148ef1c` ran all 170 database
 suites in eight independent PGlite batches: 2,632 assertions passed and none

@@ -13,6 +13,11 @@ export async function run(ctx) {
     newCourse, newVersion, newSection, newLesson,
   } = ctx;
 
+  // These integration suites share a database in some runs. Preserve the flags
+  // they change so a later suite tests its own setup rather than our leftovers.
+  const originalFlags = (await q("select key,value_text from public.platform_settings where key in ('learning.assignments','learning.cohorts')")).rows;
+  try {
+
   const admin = await bootstrapAdmin('revisions-admin@example.com');
   const teacher = await newInstructor('revisions-teacher@example.com', admin);
   const otherTeacher = await newInstructor('revisions-other@example.com', admin);
@@ -449,4 +454,7 @@ export async function run(ctx) {
     await asActor(who.userId, async () => q(SQL_SUBMIT, [submission]));
     assert((await submissionRow(submission)).status === 'submitted');
   });
+  } finally {
+    for (const flag of originalFlags) await q('update public.platform_settings set value_text=$2 where key=$1', [flag.key,flag.value_text]);
+  }
 }

@@ -26,9 +26,14 @@ export async function run(ctx) {
     newCourse, newVersion, newSection, newLesson,
   } = ctx;
 
-  const owner = await bootstrapAdmin('coursework-retention-owner@example.com');
-  const priorOwner = (await q('select owner_user_id, configured_at from public.safeguarding_owner where singleton')).rows[0];
+  // These integration suites share a database in some runs. Preserve the flags
+  // they change so a later suite tests its own setup rather than our leftovers.
+  const originalFlags = (await q("select key,value_text from public.platform_settings where key in ('learning.assignments','learning.cohorts')")).rows;
+  const suiteOwner = (await q('select owner_user_id,configured_at from public.safeguarding_owner where singleton')).rows[0];
   await q('delete from public.safeguarding_owner where singleton');
+  try {
+
+  const owner = await bootstrapAdmin('coursework-retention-owner@example.com');
   await q('select public.bootstrap_safeguarding_owner($1)', [owner]);
   const governance = await newUser('coursework-retention-governance@example.com');
   await newProfile(governance, 'Hafsa Nakato');
@@ -863,7 +868,10 @@ export async function run(ctx) {
     const asset = await scalar('select deleted_at from public.media_assets where id = $1', [row.asset]);
     assert(asset.deleted_at, 'the combined run did not delete a due file');
   });
-  await q('delete from public.safeguarding_owner where singleton');
-  if (priorOwner) await q('insert into public.safeguarding_owner (singleton, owner_user_id, configured_at) values (true,$1,$2)', [priorOwner.owner_user_id, priorOwner.configured_at]);
 
+  } finally {
+    for (const flag of originalFlags) await q('update public.platform_settings set value_text=$2 where key=$1', [flag.key,flag.value_text]);
+    await q('delete from public.safeguarding_owner where singleton');
+    if (suiteOwner) await q('insert into public.safeguarding_owner(singleton,owner_user_id,configured_at) values(true,$1,$2)', [suiteOwner.owner_user_id,suiteOwner.configured_at]);
+  }
 }
