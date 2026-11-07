@@ -30,3 +30,11 @@ test('erasure review rows fail closed on malformed data', async () => {
   assert.deepEqual(parseErasureReviews([]), []);
   for (const value of [null, [{}], [{ ...review, reason: 'unknown' }], [{ ...review, learner_id: 'bad' }], [{ ...review, recorded_at: 'bad' }]]) assert.equal(parseErasureReviews(value), null);
 });
+
+test('shared retention entries require truthful context and hold fields', async () => {
+  const { parseSharedRetentionReviews } = await import('./legacy-coursework.ts');
+  const review = { asset_id: row.asset_id, display_name: null, earliest_due: '2026-11-01', submission_contexts: 2, in_lesson: false, erasure_review: true, held: false };
+  assert.deepEqual(parseSharedRetentionReviews([review]), [review]);
+  assert.deepEqual(parseSharedRetentionReviews([]), []);
+  for (const value of [null, [{}], [{ ...review, submission_contexts: 0 }], [{ ...review, held: 'false' }], [{ ...review, earliest_due: null }]]) assert.equal(parseSharedRetentionReviews(value), null);
+});

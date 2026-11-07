@@ -960,10 +960,14 @@ some existing upload-confirmation paths take these locks in the opposite order,
 so PostgreSQL may abort a conflicting transaction and the real deployment needs
 concurrency testing and retry review. The PGlite test does not prove interleavings.
 
-**Still open:** the new exception register is visible
-but has no visual resolution workflow, and shared assets discovered outside a
-child purge are not separately listed, and per-submission retention rows can
-inflate counts when a file has multiple contexts. Historical cases without
+**Shared retention review (local migration 960):** due coursework files that
+are skipped because of multiple contexts, lesson use or an unresolved erasure
+review appear in a separate, paginated owner-only list. Retention due and held
+counts now count distinct files rather than submission rows. The list identifies
+cases; it does not authorize deletion or record a finished review. Local tests
+cover owner access, pagination boundaries, holds and distinct held counts.
+
+**Still open:** the exception registers have no visual resolution workflow. Historical cases without
 surviving references cannot be identified reliably. Storage tombstones are not proof of
 byte deletion; hosted PostgreSQL concurrency and storage remain unverified.
 Existing links and external copies cannot be recalled.

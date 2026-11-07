@@ -46,3 +46,23 @@ export function parseErasureReviews(value: unknown): ErasureReviewRow[] | null {
   }
   return rows;
 }
+
+export type SharedRetentionReview = {
+  asset_id: string; display_name: string | null; earliest_due: string;
+  submission_contexts: number; in_lesson: boolean; erasure_review: boolean; held: boolean;
+};
+export function parseSharedRetentionReviews(value: unknown): SharedRetentionReview[] | null {
+  if (!Array.isArray(value)) return null;
+  const rows: SharedRetentionReview[] = [];
+  for (const item of value) {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return null;
+    const r = item as Record<string, unknown>;
+    if (typeof r.asset_id !== 'string' || !UUID.test(r.asset_id) ||
+        !(r.display_name === null || typeof r.display_name === 'string') ||
+        typeof r.earliest_due !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(r.earliest_due) || !Number.isFinite(Date.parse(r.earliest_due)) ||
+        typeof r.submission_contexts !== 'number' || !Number.isSafeInteger(r.submission_contexts) || r.submission_contexts < 1 ||
+        typeof r.in_lesson !== 'boolean' || typeof r.erasure_review !== 'boolean' || typeof r.held !== 'boolean') return null;
+    rows.push(r as SharedRetentionReview);
+  }
+  return rows;
+}

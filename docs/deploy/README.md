@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-302 files in `supabase/migrations/`, applied in filename order — the 14-digit
+303 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 

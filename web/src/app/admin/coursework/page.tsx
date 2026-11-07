@@ -12,7 +12,7 @@ import {
   REVIEW_FORM_HELP,
 } from '@/lib/coursework-review';
 import { readableByteSize } from '@/lib/media';
-import { parseErasureReviews, parseLegacyCoursework } from '@/lib/legacy-coursework';
+import { parseErasureReviews, parseLegacyCoursework, parseSharedRetentionReviews } from '@/lib/legacy-coursework';
 import {
   HOLDS_NOTE,
   missingClassEndCount,
@@ -39,7 +39,7 @@ export const dynamic = 'force-dynamic';
 /** Owner-only review register, alongside separately authorized retention tools.
  * A recorded review is an attestation, not proof that a file was viewed.
  */
-export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ legacyAfter?: string; erasureAsset?: string; erasureLearner?: string; concern?: string; before?: string; beforeId?: string; endsAfter?: string; classEnd?: string; quarantineAfter?: string; quarantine?: string; concernAfter?: string; concernAfterId?: string; alert?: string; alertReview?: string; alertBefore?: string; storageAfter?: string; storageAfterId?: string; holdAfter?: string; holdAfterId?: string; reviewAfterState?: string; reviewAfterAt?: string; reviewAfterId?: string }> }) {
+export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ legacyAfter?: string; sharedAfter?: string; erasureAsset?: string; erasureLearner?: string; concern?: string; before?: string; beforeId?: string; endsAfter?: string; classEnd?: string; quarantineAfter?: string; quarantine?: string; concernAfter?: string; concernAfterId?: string; alert?: string; alertReview?: string; alertBefore?: string; storageAfter?: string; storageAfterId?: string; holdAfter?: string; holdAfterId?: string; reviewAfterState?: string; reviewAfterAt?: string; reviewAfterId?: string }> }) {
   if (!isSupabaseConfigured()) redirect('/');
 
   const supabase = await createClient();
@@ -95,6 +95,11 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
     ? await supabase.rpc('legacy_coursework_review_page', { p_after: params.legacyAfter ?? null, p_limit: 51 }) : null;
   const legacyRows = legacyResult && !legacyResult.error ? parseLegacyCoursework(legacyResult.data) : null;
   const legacyNext = legacyRows && legacyRows.length > 50 ? legacyRows[49]?.asset_id : null;
+  const sharedCursorValid = !params.sharedAfter || isQuarantineCursor(params.sharedAfter);
+  const sharedResult = isSafeguardingOwner && sharedCursorValid
+    ? await supabase.rpc('coursework_shared_retention_review_page', { p_after: params.sharedAfter ?? null, p_limit: 51 }) : null;
+  const sharedRows = sharedResult && !sharedResult.error ? parseSharedRetentionReviews(sharedResult.data) : null;
+  const sharedNext = sharedRows && sharedRows.length > 50 ? sharedRows[49]?.asset_id : null;
   const erasureCursorValid = (!params.erasureAsset && !params.erasureLearner) ||
     (typeof params.erasureAsset === 'string' && isQuarantineCursor(params.erasureAsset) &&
      typeof params.erasureLearner === 'string' && isQuarantineCursor(params.erasureLearner));
@@ -184,6 +189,20 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
             </li>)}</ul>}
         {params.alertBefore && <p><Link href={`/admin/coursework?${new URLSearchParams({ alertReview: params.alertReview })}#alert-history`}>Back to recent alert history</Link></p>}
         {fullAlertNext && <p><Link href={`/admin/coursework?${new URLSearchParams({ alertReview: params.alertReview, alertBefore: fullAlertNext })}#alert-history`}>Older alert events</Link></p>}
+      </section>}
+      {isSafeguardingOwner && <section id="shared-retention" className="card" style={{ marginBlock: '1rem' }}>
+        <h2>Due files with shared contexts</h2>
+        <p>Automatic retention leaves these files alone because they may belong to several submissions, a lesson, or an unresolved child-erasure review. Inspect each case individually. This is not a deletion queue and does not record a completed review.</p>
+        {sharedRows === null ? <p className="notice warn">The shared-file list could not be loaded. Do not assume it is empty.</p>
+          : sharedRows.length === 0 ? <p>No due shared files are shown on this page.</p>
+          : <ul className="lessons">{sharedRows.slice(0,50).map(row => <li key={row.asset_id}>
+            <strong>{row.display_name ?? 'Unnamed file'}</strong>
+            <p>File ID: {row.asset_id} · earliest due: {row.earliest_due} · {row.submission_contexts} submission {row.submission_contexts === 1 ? 'context' : 'contexts'}</p>
+            <p>{row.in_lesson ? 'Referenced by a lesson. ' : ''}{row.erasure_review ? 'Has a child-erasure review entry. ' : ''}{row.held ? 'Safeguarding hold is open.' : ''}</p>
+            <a href={courseworkFileHref(row.asset_id)} target="_blank" rel="noreferrer">Try opening the file for review</a>
+          </li>)}</ul>}
+        {params.sharedAfter && <p><Link href="/admin/coursework#shared-retention">First page</Link></p>}
+        {sharedNext && <p><Link href={`/admin/coursework?${new URLSearchParams({ sharedAfter: sharedNext })}#shared-retention`}>More shared files</Link></p>}
       </section>}
       {isSafeguardingOwner && <section id="erasure-review" className="card" style={{ marginBlock: '1rem' }}>
         <h2>Child erasure: files needing individual review</h2>

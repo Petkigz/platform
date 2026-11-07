@@ -301,6 +301,20 @@ export async function run(ctx) {
       (submission_id,revision_number,asset_ids,feedback,marked_at,submitted_at,reopened_by)
       values($1,1,jsonb_build_array($2::text),'Reviewed',now(),now(),$3)`,[second,first.asset,first.userId]);
     assert((await scalar('select count(*)::int n from public.coursework_file_retention where asset_id=$1',[first.asset])).n===2);
+    const queue=(await asActor(owner,()=>q('select * from public.coursework_shared_retention_review_page(null,100)'))).rows;
+    const entry=queue.find(r=>r.asset_id===first.asset);
+    assert(entry && Number(entry.submission_contexts)===2 && entry.held===false, 'owner cannot find the multi-submission exception');
+    await refuses(/not_allowed/i,()=>asActor(governance,()=>q('select * from public.coursework_shared_retention_review_page(null,50)')));
+    const after=(await asActor(owner,()=>q('select * from public.coursework_shared_retention_review_page($1,1)',[first.asset]))).rows;
+    assert(!after.some(r=>r.asset_id===first.asset), 'shared review cursor repeated the entry');
+    const before=(await plan()).files.held.count;
+    await call(owner,'select public.hold_coursework_file($1,$2)',[first.asset,'Review this shared file']);
+    try {
+      const heldPlan=await plan();
+      assert(heldPlan.files.held.count===before+1, 'one shared held file was counted as several files');
+      const heldPage=(await asActor(owner,()=>q('select * from public.coursework_shared_retention_review_page(null,100)'))).rows;
+      assert(heldPage.find(r=>r.asset_id===first.asset)?.held===true, 'shared review omitted its hold');
+    } finally { await call(owner,'select public.release_coursework_hold($1,$2)',[first.asset,'Shared review test cleanup']); }
     await purge();
     assert((await scalar('select deleted_at from public.media_assets where id=$1',[first.asset])).deleted_at===null,
       'the first submission deleted a file still referenced by another submission');
