@@ -978,3 +978,12 @@ A separate upgrade probe applied the migration to a prior schema with both an
 existing attachment and a snapshot-only legacy file; both were classified as
 coursework. The batches do not test cross-batch fixture interactions, real
 PostgreSQL interleavings, hosted Supabase or object-storage behavior.
+
+**Current frozen database regression:** revision `ac58a2f` ran all 170 suites
+in eight independent fresh PGlite databases: 2,632 assertions passed, zero
+failed. This includes local migrations 920–960 but is not a shared-database,
+hosted Supabase, object-storage or PostgreSQL concurrency test. An additional
+exploratory order that put course assignments after the coursework review suite
+failed five assertions because those suites assume different global flag and
+owner fixtures; the normal frozen batch order and the isolated assignments suite
+passed. The alternative order has not been repaired or revalidated.
