@@ -1302,3 +1302,8 @@ R2, concurrent interleavings and coordinated rollout remain unverified.
 Local verification: a shared coursework/offline/RPC order passed 168 assertions;
 the test harness supplies a test-only server stand-in and does not contact real
 storage. Web passed 2,140 tests; lint, typecheck, repo checks and build passed.
+
+Frozen revision `80f2cdc` passed all 170 database suites and 2,642 assertions
+across eight independent PGlite databases. The test-only confirmation stand-in
+simulates the server step; it does not perform a storage HEAD. Hosted Supabase,
+real storage and cross-session races still require deployment testing.
