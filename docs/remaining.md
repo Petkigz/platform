@@ -1047,3 +1047,7 @@ batch passed 150 assertions and web tests passed 2,125.
 database suites and 2,633 assertions in eight independent PGlite batches. It
 covers migration 980, not the later shared-retention action (990), and is not a
 hosted PostgreSQL or object-storage test.
+
+**Shared-action regression:** frozen revision `8e04521` passed all 170 database
+suites and 2,633 assertions in eight independent PGlite batches, including
+migration 990. This is not a multi-session or hosted storage test.
