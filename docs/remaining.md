@@ -1210,3 +1210,9 @@ of tombstoning the file after other uses disappear. The trigger rechecks the
 marker after acquiring the asset lock. Retention/holds passed 41 assertions and
 the repository check passed; real concurrent PostgreSQL behavior is still
 unverified.
+
+Frozen revision `e2061cc` passed all 170 database suites and 2,640 assertions
+across eight independent PGlite databases. This includes the offline-key,
+removal and device-management migrations, but predates migration 1100. The
+latter passed its focused 41-assertion retention/holds rerun after the lock
+recheck. Batched tests do not establish all suite orders or hosted concurrency.
