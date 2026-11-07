@@ -157,8 +157,8 @@ progress permission; the confirmer and reattacher must also be the uploader.
 The check applies to all coursework, even with the general guardian flag off.
 The generic staff confirmation cannot promote coursework. Deploy the migration
 and updated web route. Previously issued upload links remain valid until expiry,
-and the web route's size check is not enforced by direct database RPC calls;
-neither path scans files. Other metadata, administrative and storage-credential
+and, until migration 1150 and its matching web route are deployed, a direct
+database RPC can bypass the size check. Neither path scans files. Other metadata, administrative and storage-credential
 paths still need review, and assignments/cohorts remain off.
 
 **Master-file containment:** the checked master route and ordinary media-asset
@@ -1250,8 +1250,8 @@ claim that file uploads were not connected. The teacher and owner screens now
 state that handed-in files are not malware-scanned. The coursework confirmation
 response also states that content and malware were not verified. A storage HEAD
 only compares the reported length at one instant: it does not check the digest,
-prevent a same-size replacement, or run on a direct authorized confirmation RPC.
-This is honest disclosure, not a malware-scanning or integrity fix. Web passed
+prevent a same-size replacement, or (before migration 1150) run on a direct
+authorized confirmation RPC. This is honest disclosure, not a malware-scanning or integrity fix. Web passed
 2,137 assertions; lint, typecheck, repo checks and build passed.
 
 Frozen revision `590ca7c` passed all 170 database suites and 2,640 assertions
@@ -1284,3 +1284,21 @@ typecheck and repo checks passed. Real hosted concurrent behavior is unverified.
 Frozen revision `3dfb504` passed all 170 database suites and 2,641 assertions
 across eight independent PGlite databases after the quarantine access fix. This
 is not a hosted Supabase or multi-session concurrency test.
+
+**Trusted coursework confirmation:** migration 1150 removes the authenticated
+RPC's direct execution grant. The matching web route authenticates the caller,
+checks storage-reported size and calls a service-role-only RPC with the checked
+coordinates. The database locks and compares the record, then rechecks uploader,
+active learner/guardian authority, submission state and quarantine using the
+existing state machine. Retries remain idempotent. The server-only Supabase
+service role key is required; without it the UI is told before a new transfer
+starts, rather than leaving an upload unable to confirm. Deploy the migration
+and matching web route together, with the key configured; older direct-RPC
+clients will no longer work. Nothing here scans malware, verifies content or
+prevents a signed PUT or other storage writer from replacing an object after the
+HEAD. Library confirmation still has its own direct staff RPC. Real Supabase,
+R2, concurrent interleavings and coordinated rollout remain unverified.
+
+Local verification: a shared coursework/offline/RPC order passed 168 assertions;
+the test harness supplies a test-only server stand-in and does not contact real
+storage. Web passed 2,140 tests; lint, typecheck, repo checks and build passed.

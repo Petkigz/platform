@@ -334,17 +334,19 @@ await test('a key that is not a master key is refused before any request', async
 
 test('a coursework retry checks storage and reuses the database attachment', async () => {
   const { client, calls } = stubClient({ row: row({ status: 'available' }), rpcResult: 'attachment-id' });
+  const confirmCoursework = async (checked: MasterRow, bytes: number) => client.rpc('trusted', { key: checked.master_key, bytes });
   const storage = stubStorage({ status: 200, contentLength: 10_485_760 });
-  const result = await confirmMediaUpload(client, assetId, { config, mode: 'coursework', fetchImpl: storage.fetchImpl, now: fixed });
+  const result = await confirmMediaUpload(client, assetId, { config, mode: 'coursework', fetchImpl: storage.fetchImpl, now: fixed, confirmCoursework });
   assert.deepEqual(result, { ok: true, verifiedBytes: 10_485_760, assetId, attachmentId: 'attachment-id' });
   assert.equal(storage.requests.length, 1);
-  assert.ok(calls.some((call) => call.startsWith('rpc:confirm_coursework_upload:')));
+  assert.ok(calls.some((call) => call.startsWith('rpc:trusted:')));
 });
 
 test('a quarantine between the storage check and database confirmation is not reported as success', async () => {
   const { client } = stubClient({ row: row({ status: 'available' }), rpcError: 'this file is held for review and cannot be confirmed' });
+  const confirmCoursework = async (checked: MasterRow, bytes: number) => client.rpc('trusted', { key: checked.master_key, bytes });
   const storage = stubStorage({ status: 200, contentLength: 10_485_760 });
-  const result = await confirmMediaUpload(client, assetId, { config, mode: 'coursework', fetchImpl: storage.fetchImpl, now: fixed });
+  const result = await confirmMediaUpload(client, assetId, { config, mode: 'coursework', fetchImpl: storage.fetchImpl, now: fixed, confirmCoursework });
   assert.equal(result.ok, false);
   if (!result.ok) { assert.equal(result.status, 409); assert.match(result.message, /held for review/); }
 });
@@ -355,5 +357,15 @@ test('a retry does not confirm when the object cannot be checked', async () => {
   const result = await confirmMediaUpload(client, assetId, { config, mode: 'coursework', fetchImpl: storage.fetchImpl, now: fixed });
   assert.equal(result.ok, false);
   if (!result.ok) assert.match(result.message, /did not confirm/);
+  assert.ok(!calls.some((call) => call.startsWith('rpc:')));
+});
+
+
+test('coursework confirmation needs a server callback and never calls a client RPC directly', async () => {
+  const { client, calls } = stubClient({ row: row() });
+  const storage = stubStorage({ status: 200, contentLength: 10_485_760 });
+  const result = await confirmMediaUpload(client, assetId, { config, mode: 'coursework', fetchImpl: storage.fetchImpl });
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.equal(result.status, 503);
   assert.ok(!calls.some((call) => call.startsWith('rpc:')));
 });

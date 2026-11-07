@@ -161,7 +161,7 @@ export async function run(ctx) {
   // Column list rather than the composite: a named composite type arrives as
   // raw text over the wire, and a test that parsed it would be testing a parser.
   const SQL_DECLARE = `select * from public.register_coursework_upload($1,$2,$3,$4,$5)`;
-  const SQL_CONFIRM = 'select public.confirm_coursework_upload($1) as id';
+  const SQL_CONFIRM = 'select public.test_fixture_confirm_coursework($1) as id';
   const SQL_FILES = 'select public.assignment_submission_files($1) as f';
   const SQL_WATCH = 'select public.may_watch_master($1) as w';
   const SQL_SUBMIT = 'select public.submit_assignment($1)';
@@ -327,6 +327,32 @@ export async function run(ctx) {
     assert(attached.submission_id === submission, 'attached to the wrong submission');
     assert(attached.attached_by === who.userId);
     assert(attached.position === 1, `position ${attached.position}`);
+  });
+
+  await test('only the trusted server can confirm after checking the exact upload record', async () => {
+    const who = await learner('Trusted confirmation', { course, version });
+    const other = await learner('Other confirmation', { course, version });
+    const submission = await draft(who.userId, assignment, who.learnerId);
+    const target = await declare(who.userId, submission);
+    const details = await scalar('select master_bucket, master_key, byte_size from public.media_assets where id=$1', [target.asset_id]);
+    const trusted = 'select public.confirm_coursework_upload_from_server($1,$2,$3,$4,$5) as id';
+    const args = [who.userId, target.asset_id, details.master_bucket, details.master_key, details.byte_size];
+    assert(!(await scalar("select has_function_privilege('anon','public.confirm_coursework_upload_from_server(uuid,uuid,text,text,bigint)','execute') as allowed")).allowed, 'anonymous role can call server confirmation');
+    await refused(who.userId, 'select public.confirm_coursework_upload($1)', [target.asset_id], /permission denied/i);
+    await refused(who.userId, trusted, args, /permission denied/i);
+    await refused(other.userId, trusted, args, /permission denied/i);
+    const asServer = async (params) => {
+      await q('begin'); await q('set local role service_role');
+      try { const result = await q(trusted, params); await q('commit'); return result.rows[0]; }
+      catch (error) { await q('rollback'); throw error; }
+    };
+    await refuses(/upload record changed/, () => asServer([who.userId, target.asset_id, details.master_bucket, details.master_key, Number(details.byte_size)+1]));
+    await refuses(/upload record changed/, () => asServer([who.userId, target.asset_id, details.master_bucket, details.master_key+'-changed', details.byte_size]));
+    await refuses(/only the uploader/, () => asServer([other.userId, target.asset_id, details.master_bucket, details.master_key, details.byte_size]));
+    assert((await scalar('select status from public.media_assets where id=$1',[target.asset_id])).status === 'pending', 'refusal promoted the upload');
+    const first = await asServer(args); const retry = await asServer(args);
+    assert(first.id === retry.id, 'server retry created another attachment');
+    assert((await scalar('select status from public.media_assets where id=$1',[target.asset_id])).status === 'available', 'server confirmation did not complete');
   });
 
   await test('confirming twice is the same file, not a second one', async () => {

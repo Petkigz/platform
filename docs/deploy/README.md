@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-321 files in `supabase/migrations/`, applied in filename order — the 14-digit
+322 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -447,7 +447,7 @@ first; the app will not start without them.
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | nothing loads: no catalogue, no sign-in |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | the browser cannot reach the database; every screen is empty or refuses |
-| `SUPABASE_SERVICE_ROLE_KEY` | payment webhook, trusted child-login creation and owner-reviewed removal, and private safeguarding alerts — it bypasses every policy in the schema, so it is server-only and never prefixed `NEXT_PUBLIC_` |
+| `SUPABASE_SERVICE_ROLE_KEY` | coursework upload confirmation, payment webhook, trusted child-login creation and owner-reviewed removal, and private safeguarding alerts — it bypasses every policy in the schema, so it is server-only and never prefixed `NEXT_PUBLIC_` |
 | `NEXT_PUBLIC_SITE_URL` | certificates print a path instead of a full verification address |
 
 Then, in the order you get to them:
@@ -919,10 +919,13 @@ learner or a current verified guardian with progress permission; confirmation an
 reattachment also require the original uploader. Staff cannot use the generic
 library confirmation on coursework. This affects adult coursework as well as
 children's files. A previously issued signed upload URL remains usable until it
-expires; the database rechecks authority at confirmation. The web route checks
-the uploaded size, but an authenticated direct database RPC can bypass that HEAD
-check, and no malware scanner is connected. This migration does not close every
-metadata or storage access path; keep assignments and cohorts off.
+expires; the database rechecks authority at confirmation. Migration 1150 and its
+matching web route replace the earlier direct confirmation door: configure the
+server-only Supabase service role key before deploying both together. The route
+checks storage-reported size; no malware scanner is connected, and a later object
+replacement is still possible. Existing database calls to the old confirmation
+RPC will be refused. Test the coordinated deployment on a non-production project
+first; do not treat the size check as content verification.
 
 After `20261281045000_coursework_review_privacy.sql`, deploy the web application.
 Only the configured safeguarding owner can read the general review register and

@@ -334,7 +334,7 @@ export function runPreflight(env: Record<string, string | undefined>): Preflight
     }
   }
 
-  // This is optional for ordinary sign-in, but required by two server workflows.
+  // This is optional for ordinary sign-in, but required by several server workflows.
   // Do not claim that a present key is authorized or that provider tests passed.
   if (!looks('SUPABASE_SERVICE_ROLE_KEY')) {
     findings.push({
@@ -342,7 +342,7 @@ export function runPreflight(env: Record<string, string | undefined>): Preflight
       subsystem: 'database',
       step: '1',
       stepTitle: 'The database',
-      message: 'SUPABASE_SERVICE_ROLE_KEY is missing or a placeholder. Child-login creation, owner-reviewed identity removal, private safeguarding alerts and the payment webhook cannot use their server-side service client. Keep this key private; a configured value still needs provider testing.',
+      message: 'SUPABASE_SERVICE_ROLE_KEY is missing or a placeholder. Child-login creation, coursework upload confirmation, owner-reviewed identity removal, private safeguarding alerts and the payment webhook cannot use their server-side service client. Keep this key private; a configured value still needs provider testing.',
     });
   }
 

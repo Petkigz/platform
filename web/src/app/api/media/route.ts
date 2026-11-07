@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { isSupabaseConfigured } from '@/lib/env';
+import { isServiceRoleConfigured, isSupabaseConfigured } from '@/lib/env';
 import {
   MAX_PART_UPLOAD_SECONDS,
   R2NotConfiguredError,
@@ -24,6 +24,7 @@ import {
 } from '@/lib/media';
 import { shouldUploadInParts } from '@/lib/browser-upload';
 import { confirmMediaUpload } from '@/lib/media-verify';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
 
@@ -146,6 +147,7 @@ export async function POST(request: Request) {
   // The limit that governs here is the assignment's own: 25 MiB, checked by the
   // database before this line signs anything.
   if (action === 'request_coursework_upload') {
+    if (!isServiceRoleConfigured()) return fail('Coursework upload confirmation is not configured on the server. Please contact the platform owner before uploading.', 503);
     const submissionId = asText(body?.submissionId);
     if (!UUID.test(submissionId)) return fail('Choose the draft this file belongs to.', 400);
 
@@ -215,11 +217,19 @@ export async function POST(request: Request) {
 
     // The same module the staff path uses, in coursework mode: it looks at the
     // object in storage and compares its reported size before it calls the
-    // database. This route does not scan or verify the contents, and a direct
-    // authorized database confirmation does not run this check.
+    // database. This route does not scan or verify the contents.
+    if (!isServiceRoleConfigured()) return fail('Coursework upload confirmation is not configured on the server. Please contact the platform owner.', 503);
+    const admin = createAdminClient();
     const outcome = await confirmMediaUpload(supabase, assetId, {
       config,
       mode: 'coursework',
+      confirmCoursework: async (row, declaredBytes) => admin.rpc('confirm_coursework_upload_from_server', {
+        p_actor: user.id,
+        p_asset_id: assetId,
+        p_bucket: row.master_bucket,
+        p_key: row.master_key,
+        p_bytes: declaredBytes,
+      }),
     });
     if (!outcome.ok) return fail(outcome.message, outcome.status);
 

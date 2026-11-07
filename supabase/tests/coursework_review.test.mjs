@@ -134,7 +134,7 @@ export async function run(ctx) {
     const declared = await call(guardian,
       'select * from public.register_coursework_upload($1,$2,$3,$4,$5)',
       [submission, 'Page one.jpg', 'image/jpeg', 1_800_000, digest()]);
-    await call(guardian, 'select public.confirm_coursework_upload($1) as id', [declared.asset_id]);
+    await call(guardian, 'select public.test_fixture_confirm_coursework($1) as id', [declared.asset_id]);
     await call(guardian, 'select public.submit_assignment($1)', [submission]);
     return { guardian, childId, submission, asset: declared.asset_id };
   }
@@ -555,7 +555,7 @@ export async function run(ctx) {
     await refuses(/nothing to look at yet/, () =>
       review(teacher, declared.asset_id, 'clear'));
 
-    await call(guardian, 'select public.confirm_coursework_upload($1) as id', [declared.asset_id]);
+    await call(guardian, 'select public.test_fixture_confirm_coursework($1) as id', [declared.asset_id]);
     await call(guardian, 'select public.submit_assignment($1)', [submission]);
     await committed(() => q('delete from public.assignment_submissions where id = $1', [submission]));
 

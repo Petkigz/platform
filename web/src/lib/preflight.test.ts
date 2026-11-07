@@ -305,6 +305,7 @@ test('missing or placeholder service key warns about child login without blockin
     assert.equal(warning?.level, 'warning');
     assert.equal(result.blockingCount, 0);
     assert.match(warning?.message ?? '', /payment webhook/);
+    assert.match(warning?.message ?? '', /coursework upload confirmation/);
   }
   const configured = runPreflight(COMPLETE);
   assert.equal(configured.findings.some((f) => f.message.includes('Child-login creation')), false);

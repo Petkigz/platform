@@ -120,7 +120,7 @@ export async function run(ctx) {
     const declared = (await asActor(actor, () => q(
       'select * from public.register_coursework_upload($1,$2,$3,$4,$5)',
       [submission, name, 'image/jpeg', 1000, crypto.randomUUID().replace(/-/g, '').padEnd(64, 'a').slice(0, 64)]))).rows[0];
-    await asActor(actor, () => q('select public.confirm_coursework_upload($1)', [declared.asset_id]));
+    await asActor(actor, () => q('select public.test_fixture_confirm_coursework($1)', [declared.asset_id]));
     return declared.asset_id;
   }
 

@@ -100,7 +100,7 @@ export async function run(ctx) {
       'select * from public.register_coursework_upload($1,$2,$3,$4,$5)',
       [submission, 'Page one.jpg', 'image/jpeg', 1_800_000, digest()]);
     const asset = declared.asset_id;
-    await call(learnerUser, 'select public.confirm_coursework_upload($1) as id', [asset]);
+    await call(learnerUser, 'select public.test_fixture_confirm_coursework($1) as id', [asset]);
     await call(learnerUser, 'select public.submit_assignment($1)', [submission]);
     return { learnerUser, learnerId, assignment, submission, asset };
   }

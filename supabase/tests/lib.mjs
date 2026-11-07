@@ -63,6 +63,20 @@ export async function createHarness() {
     }
   }
 
+  // Test-only stand-in for a server that has already checked storage. The
+  // harness does not have a bucket and this helper is NEVER a migration. It
+  // exercises the real trusted RPC with the fixture actor and recorded target;
+  // separate tests prove app roles cannot call that RPC or the old transition.
+  await exec(`create function public.test_fixture_confirm_coursework(p_asset uuid)
+    returns uuid language plpgsql security definer set search_path=public as $$
+    declare a public.media_assets; actor uuid := public.current_user_id();
+    begin
+      select * into a from public.media_assets where id=p_asset;
+      return public.confirm_coursework_upload_from_server(actor,p_asset,a.master_bucket,a.master_key,a.byte_size);
+    end $$;
+    revoke all on function public.test_fixture_confirm_coursework(uuid) from public,anon;
+    grant execute on function public.test_fixture_confirm_coursework(uuid) to authenticated;`);
+
   // -------------------------------------------------------------------
   // assertions
   // -------------------------------------------------------------------

@@ -26,8 +26,9 @@
  * digest check belongs, and it is noted in `NEXT.md` rather than quietly skipped.
  *
  * This check applies to this server path, not every database RPC. In particular,
- * an authorized coursework uploader can call the database confirmation directly.
- * The HEAD does not verify the content, scan for malware, or prevent replacement
+ * library confirmation can still be called directly by authorized staff. The
+ * coursework transition is reserved to the server. The HEAD does not verify the
+ * content, scan for malware, or prevent replacement
  * after the check. It must not be described as proof of those things.
  */
 
@@ -53,6 +54,8 @@ export type ConfirmOptions = {
   /** Injectable so the checks can be tested without a bucket to talk to. */
   fetchImpl?: typeof fetch;
   now?: Date;
+  /** Server-only confirmation after a successful coursework storage check. */
+  confirmCoursework?: (row: MasterRow, declaredBytes: number) => Promise<{ data: unknown; error: { message: string } | null }>;
   /**
    * Which door this is.
    *
@@ -201,10 +204,12 @@ export async function confirmMediaUpload(
 
   // A coursework confirmation returns the attachment id; the library one returns
   // a boolean. Both are asked of the database, never assumed here.
-  const { data: confirmed, error: confirmError } = await client.rpc(
-    coursework ? 'confirm_coursework_upload' : 'confirm_media_upload',
-    { p_asset_id: assetId },
-  );
+  if (coursework && !options.confirmCoursework) {
+    return { ok: false, message: 'The server confirmation service is not configured.', status: 503 };
+  }
+  const { data: confirmed, error: confirmError } = coursework
+    ? await options.confirmCoursework!(row, declaredBytes)
+    : await client.rpc('confirm_media_upload', { p_asset_id: assetId });
 
   if (confirmError) {
     const message = confirmError.message;

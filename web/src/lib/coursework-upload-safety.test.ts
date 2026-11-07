@@ -13,5 +13,5 @@ test('coursework UI describes the working file path without claiming a malware s
   assert.match(route, /contentVerified: false/);
   assert.match(route, /malwareScanned: false/);
   assert.match(verification, /same-size replacement/);
-  assert.match(verification, /directly/);
+  assert.match(verification, /coursework transition is reserved to the server/);
 });

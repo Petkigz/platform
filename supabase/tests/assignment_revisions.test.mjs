@@ -354,7 +354,7 @@ export async function run(ctx) {
         'select * from public.register_coursework_upload($1,$2,$3,$4,$5)',
         [submission, 'Version two.jpg', 'image/jpeg', 2_000_000,
          crypto.randomUUID().replace(/-/g, '').padEnd(64, 'a').slice(0, 64)]))).rows[0];
-      await asActor(who.userId, () => q('select public.confirm_coursework_upload($1)', [declared.asset_id]));
+      await asActor(who.userId, () => q('select public.test_fixture_confirm_coursework($1)', [declared.asset_id]));
       await asActor(who.userId, async () =>
         q('select public.save_assignment_draft($1,$2,$3)', [assignment, who.learnerId, 'Version two, with a source.']));
       await asActor(who.userId, async () => q(SQL_SUBMIT, [submission]));

@@ -61,7 +61,7 @@ export function getServiceRoleKey(): string {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!key) {
     throw new Error(
-      'SUPABASE_SERVICE_ROLE_KEY is not set. The payment webhook, trusted child-login creation and removal, and private safeguarding alerts need it on the server. Never expose it to a browser or grant anonymous access as a workaround.',
+      'SUPABASE_SERVICE_ROLE_KEY is not set. Coursework upload confirmation, the payment webhook, trusted child-login creation and removal, and private safeguarding alerts need it on the server. Never expose it to a browser or grant anonymous access as a workaround.',
     );
   }
   return key;

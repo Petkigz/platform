@@ -150,7 +150,7 @@ export async function run(ctx) {
       'select * from public.register_coursework_upload($1,$2,$3,$4,$5)',
       [submission, 'Page one.jpg', 'image/jpeg', assetSize, digest()]);
     const asset = declared.asset_id;
-    await call(who.userId, 'select public.confirm_coursework_upload($1) as id', [asset]);
+    await call(who.userId, 'select public.test_fixture_confirm_coursework($1) as id', [asset]);
     await call(who.userId, 'select public.submit_assignment($1)', [submission]);
     return { ...who, assignment, submission, asset };
   }
@@ -206,7 +206,7 @@ export async function run(ctx) {
       'select * from public.register_coursework_upload($1,$2,$3,$4,$5)',
       [submission, 'Cohort page.jpg', 'image/jpeg', 900_000, digest()]);
     const asset = declared.asset_id;
-    await call(who.userId, 'select public.confirm_coursework_upload($1) as id', [asset]);
+    await call(who.userId, 'select public.test_fixture_confirm_coursework($1) as id', [asset]);
     await call(who.userId, 'select public.submit_assignment($1)', [submission]);
 
     // Backdated only once every writer has accepted them. The clock is what is
@@ -244,7 +244,7 @@ export async function run(ctx) {
       [assignment,who.learnerId,'A draft.'])).id;
     const old=(await call(who.userId,'select * from public.register_coursework_upload($1,$2,$3,$4,$5)',
       [submission,'Earlier page.jpg','image/jpeg',1000,digest()])).asset_id;
-    await call(who.userId,'select public.confirm_coursework_upload($1)',[old]);
+    await call(who.userId,'select public.test_fixture_confirm_coursework($1)',[old]);
     // Snapshot-only historical reference, with no declaration or attachment.
     await call(who.userId,'select public.remove_assignment_asset($1,$2)',[submission,old]);
     await q('delete from public.coursework_upload_declarations where asset_id=$1',[old]);
@@ -361,7 +361,7 @@ export async function run(ctx) {
     const asset = (await call(who.userId,
       'select * from public.register_coursework_upload($1,$2,$3,$4,$5)',
       [submission, 'Page.jpg', 'image/jpeg', 900000, digest()])).asset_id;
-    await call(who.userId, 'select public.confirm_coursework_upload($1)', [asset]);
+    await call(who.userId, 'select public.test_fixture_confirm_coursework($1)', [asset]);
     await call(who.userId, 'select public.submit_assignment($1)', [submission]);
     await backdate({ asset, submission }, '2 years');
     // An unfinished declaration in the same open-ended class has no invented end either.
@@ -420,7 +420,7 @@ export async function run(ctx) {
       [assignment, who.learnerId, 'A page.'])).id;
     const asset = (await call(who.userId, 'select * from public.register_coursework_upload($1,$2,$3,$4,$5)',
       [submission, 'Page.jpg', 'image/jpeg', 900000, digest()])).asset_id;
-    await call(who.userId, 'select public.confirm_coursework_upload($1)', [asset]);
+    await call(who.userId, 'select public.test_fixture_confirm_coursework($1)', [asset]);
     await call(who.userId, 'select public.submit_assignment($1)', [submission]);
     await backdate({ asset, submission }, '2 years');
     await q(`update public.cohorts set starts_at=now()-interval '3 years',
@@ -747,7 +747,7 @@ export async function run(ctx) {
       const submission = (await call(userId, 'select public.save_assignment_draft($1,$2,$3) as id', [assignment,learnerId,'Child work.'])).id;
       const file = await call(userId, 'select * from public.register_coursework_upload($1,$2,$3,$4,$5)',
         [submission, 'Child page.jpg', 'image/jpeg', 1000, digest()]);
-      await call(userId, 'select public.confirm_coursework_upload($1)', [file.asset_id]);
+      await call(userId, 'select public.test_fixture_confirm_coursework($1)', [file.asset_id]);
       await call(userId, 'select public.submit_assignment($1)', [submission]);
       await q(`update public.learner_profiles set deleted_at=now()-interval '45 days', status='archived' where id=$1`, [learnerId]);
       return { learnerId, submission, asset: file.asset_id };
@@ -926,7 +926,7 @@ export async function run(ctx) {
     const submission=(await call(userId,'select public.save_assignment_draft($1,$2,$3) as id', [assignment,learnerId,'Private first version.'])).id;
     const old=(await call(userId,'select * from public.register_coursework_upload($1,$2,$3,$4,$5)',
       [submission,'Old page.jpg','image/jpeg',1000,digest()])).asset_id;
-    await call(userId,'select public.confirm_coursework_upload($1)', [old]);
+    await call(userId,'select public.test_fixture_confirm_coursework($1)', [old]);
     await call(userId,'select public.submit_assignment($1)', [submission]);
     await call(teacher,'select public.mark_assignment_submission($1,$2,$3)', [submission,8,'Private feedback.']);
     await call(userId,'select public.reopen_assignment_submission($1)', [submission]);
@@ -938,7 +938,7 @@ export async function run(ctx) {
       [submission,'Pending page.jpg','image/jpeg',1000,digest()])).asset_id;
     const shared=(await call(userId,'select * from public.register_coursework_upload($1,$2,$3,$4,$5)',
       [submission,'Shared page.jpg','image/jpeg',1000,digest()])).asset_id;
-    await call(userId,'select public.confirm_coursework_upload($1)', [shared]);
+    await call(userId,'select public.test_fixture_confirm_coursework($1)', [shared]);
     const other=await handedIn();
     await q(`insert into public.assignment_submission_revisions
       (submission_id,revision_number,asset_ids,feedback,marked_at,submitted_at,reopened_by)
