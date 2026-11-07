@@ -912,16 +912,21 @@ different batches are not exercised. PGlite also does not prove concurrent hoste
 PostgreSQL, Supabase Auth, storage or provider behavior. The earlier shared run was
 interrupted and has no final result.
 
-**Revision-file provenance audit (open):** a revision snapshot stores asset IDs
-in `assignment_submission_revisions.asset_ids`. A legacy library-labelled file
-that is later detached from the current submission and has no coursework upload
-declaration can still appear in that snapshot, but `is_library_delivery_asset`
-and several withdrawal, quarantine and retention checks currently look only at
-current attachments or declarations. It may therefore fall back to library
-access or withdrawal rules despite evidence that it was coursework. Snapshot
-entries are also shown as counts, not openable files. Do not treat this as fixed:
-review all access, withdrawal, quarantine, hold and erasure paths together and
-preserve reliable provenance when snapshots or submissions are erased. Mixed
-lesson/coursework files need individual handling so a privacy fix does not silently
-destroy or repurpose an actual lesson asset. Previously issued links and external
-copies cannot be recalled by a database change.
+**Revision-file provenance:** the local migration preserves private asset-ID
+provenance for legacy library-labelled files still referenced by a current
+attachment, declaration or revision, and captures future legacy references. This
+keeps such files out of ordinary library playback, staff listings and generic
+withdrawal even after those references disappear. A current single revision
+context permits the learner, verified guardian, assigned marker and named owner to
+open the file; multiple contexts fail closed except to the owner. An owner-only,
+paginated review list identifies surviving mixed-use evidence without changing or
+deleting objects or lesson references. Existing lesson playback for a mixed file
+may be restricted for privacy and needs individual review. The asset-ID evidence
+is still personal data and needs a verified cleanup route. Historic use whose
+references had already disappeared before migration cannot be reconstructed.
+
+**Still open:** detached revision files are not yet fully integrated into holds,
+child-record erasure and normal retention; mixed-use storage requires individual
+handling. Child-record cleanup also needs review for revision snapshots that
+restrict submission deletion. Existing links and external copies cannot be recalled,
+and the migration and its concurrency have not been tested on hosted Supabase/R2.

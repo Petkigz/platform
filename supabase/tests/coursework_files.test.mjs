@@ -686,6 +686,113 @@ export async function run(ctx) {
       [asset, 'poster', 'image/jpeg', 1000], /coursework cannot be encoded/i);
   });
 
+  await test('a detached legacy revision remains private and keeps authorized access', async () => {
+    const family = await parentWithChild({ course, version });
+    const unrelatedStaff = await bootstrapAdmin('revision-unrelated-staff@example.com');
+    const submission = await draft(family.userId, assignment, family.childId);
+    const asset = (await q(`insert into public.media_assets
+      (storage_backend,master_bucket,master_key,checksum,mime_type,byte_size,status,uploaded_by)
+      values ('r2','masters',$1,$2,'image/jpeg',1000,'available',$3) returning id`,
+      [`legacy-revision/${crypto.randomUUID()}`,digest(),family.userId])).rows[0].id;
+    const prior = (await q('select owner_user_id,configured_at from public.safeguarding_owner where singleton')).rows[0];
+    await q('delete from public.safeguarding_owner where singleton');
+    await q('select public.bootstrap_safeguarding_owner($1)', [admin]);
+    try {
+      await q('alter table public.assignment_submission_assets disable trigger assignment_assets_coursework_only');
+      try {
+        await q('insert into public.assignment_submission_assets (submission_id,media_asset_id,attached_by) values ($1,$2,$3)', [submission,asset,family.userId]);
+      } finally {
+        await q('alter table public.assignment_submission_assets enable trigger assignment_assets_coursework_only');
+      }
+      const revision = (await q(`insert into public.assignment_submission_revisions
+        (submission_id,revision_number,asset_ids,feedback,marked_at,submitted_at,reopened_by)
+        values ($1,1,jsonb_build_array($2::text),'Reviewed',now(),now(),$3) returning id`,
+        [submission,asset,family.userId])).rows[0].id;
+      await call(family.userId, 'select public.remove_assignment_asset($1,$2)', [submission,asset]);
+      const register = (await asActor(admin, () => q('select * from public.legacy_coursework_review_page(null,100)'))).rows;
+      const entry = register.find(r => r.asset_id === asset);
+      assert(entry && entry.attached === false && entry.in_revision === true, 'owner register lost detached revision context');
+      await refused(unrelatedStaff, 'select * from public.legacy_coursework_review_page(null,50)', [], /coursework:not_allowed/i);
+      await refused(admin, 'select * from public.legacy_coursework_review_page(null,101)', [], /page limit/i);
+      assert((await call(family.userId, SQL_WATCH, [asset])).w === true, 'verified guardian lost access to a revision file');
+      assert((await call(teacher, SQL_WATCH, [asset])).w === true, 'assigned marker lost access to a revision file');
+      assert((await call(admin, SQL_WATCH, [asset])).w === true, 'named owner lost access to a revision file');
+      assert((await call(otherTeacher, SQL_WATCH, [asset])).w === false, 'unrelated staff opened detached legacy coursework');
+      assert((await asActor(otherTeacher, () => q('select id from public.media_assets where id=$1', [asset]))).rows.length === 0,
+        'unrelated staff read legacy storage metadata');
+      assert((await call(admin, 'select public.may_transcode_library_asset($1) as ok', [asset])).ok === false,
+        'a revision file returned to library transcoding');
+      await refused(family.userId, 'select public.delete_media_asset($1,$2)', [asset,'Withdrawal'], /coursework cannot be withdrawn/i);
+      await refused(unrelatedStaff, 'select public.quarantine_media_upload($1,$2)', [asset,'Unrelated action'], /not found/i);
+      await call(admin, 'select public.quarantine_media_upload($1,$2)', [asset,'A concern needs review']);
+      const queue = (await asActor(admin, () => q('select * from public.coursework_quarantine_queue(100,null)'))).rows;
+      assert(queue.some(row => row.asset_id === asset && row.previous_status === 'available'), 'legacy quarantine is missing its recovery record');
+      const restored = (await call(admin, 'select public.release_coursework_quarantine($1,$2) as result',
+        [asset,'I reviewed this quarantine and its release'])).result;
+      assert(restored === 'available', 'the owner could not restore the recorded legacy quarantine state');
+      await q("update public.guardian_relationships set verified_at=now()-interval '1 year', consent_expires_at=now()-interval '1 second' where learner_profile_id=$1 and guardian_user_id=$2", [family.childId,family.userId]);
+      assert((await call(family.userId, SQL_WATCH, [asset])).w === false, 'expired guardian opened a revision file');
+
+      const other = await learner('Conflicting revision', {course,version});
+      const otherSubmission = await draft(other.userId, assignment, other.learnerId);
+      const conflict = (await q(`insert into public.assignment_submission_revisions
+        (submission_id,revision_number,asset_ids,feedback,marked_at,submitted_at,reopened_by)
+        values ($1,1,jsonb_build_array($2::text),'Another review',now(),now(),$3) returning id`,
+        [otherSubmission,asset,other.userId])).rows[0].id;
+      assert((await call(teacher, SQL_WATCH, [asset])).w === false, 'conflicting revision contexts opened to the marker');
+      assert((await call(other.userId, SQL_WATCH, [asset])).w === false, 'conflicting revision contexts opened to a learner');
+      assert((await call(admin, SQL_WATCH, [asset])).w === true, 'owner cannot investigate conflicting contexts');
+      await q('alter table public.assignment_submission_revisions disable trigger assignment_submission_revisions_append_only');
+      try { await q('delete from public.assignment_submission_revisions where id=$1', [conflict]); }
+      finally { await q('alter table public.assignment_submission_revisions enable trigger assignment_submission_revisions_append_only'); }
+
+      // Simulate future individual erasure of the snapshot, without pretending
+      // the asset or its bytes have been deleted. Provenance must not disappear.
+      await q('alter table public.assignment_submission_revisions disable trigger assignment_submission_revisions_append_only');
+      try { await q('delete from public.assignment_submission_revisions where id=$1', [revision]); }
+      finally { await q('alter table public.assignment_submission_revisions enable trigger assignment_submission_revisions_append_only'); }
+      const afterErasure = (await asActor(admin, () => q('select * from public.legacy_coursework_review_page(null,100)'))).rows.find(r => r.asset_id === asset);
+      assert(afterErasure && !afterErasure.attached && !afterErasure.in_revision, 'owner cannot see an unattributed legacy file');
+      assert((await call(otherTeacher, SQL_WATCH, [asset])).w === false, 'lost snapshot reopened library access');
+      assert((await call(admin, SQL_WATCH, [asset])).w === true, 'owner lost access to unattributed historic coursework');
+      assert((await call(admin, 'select public.may_transcode_library_asset($1) as ok', [asset])).ok === false,
+        'lost snapshot returned the file to library transcoding');
+      await refused(otherTeacher, 'select asset_id from public.legacy_coursework_provenance', [], /permission denied/i);
+    } finally {
+      await q('delete from public.safeguarding_owner where singleton');
+      if (prior) await q('insert into public.safeguarding_owner(singleton,owner_user_id,configured_at) values(true,$1,$2)', [prior.owner_user_id,prior.configured_at]);
+    }
+  });
+
+  await test('the owner can page through every legacy review entry', async () => {
+    const prior = (await q('select owner_user_id,configured_at from public.safeguarding_owner where singleton')).rows[0];
+    await q('delete from public.safeguarding_owner where singleton');
+    await q('select public.bootstrap_safeguarding_owner($1)', [admin]);
+    try {
+      await q('begin');
+      try {
+        const ids = (await q(`insert into public.media_assets
+          (storage_backend,master_bucket,master_key,checksum,mime_type,byte_size,status,uploaded_by)
+          select 'r2','masters','legacy-page/'||gen_random_uuid(),md5(gen_random_uuid()::text)||md5(gen_random_uuid()::text),
+            'image/jpeg',100,'available',$1 from generate_series(1,120) returning id`, [admin])).rows.map(row => row.id);
+        await q('insert into public.legacy_coursework_provenance(asset_id) select unnest($1::uuid[])', [ids]);
+        await q("select set_config('request.jwt.claims',$1,true)", [JSON.stringify({sub:admin,role:'authenticated'})]);
+        await q('set local role authenticated');
+        const seen=[]; let after=null;
+        for (let page=0; page<4; page++) {
+          const rows=(await q('select * from public.legacy_coursework_review_page($1,50)', [after])).rows;
+          seen.push(...rows.map(row => row.asset_id));
+          if (rows.length<50) break;
+          after=rows.at(-1).asset_id;
+        }
+        assert(ids.every(id => seen.includes(id)) && new Set(seen).size===seen.length, 'legacy pages skipped or duplicated files');
+      } finally { await q('rollback'); }
+    } finally {
+      await q('delete from public.safeguarding_owner where singleton');
+      if (prior) await q('insert into public.safeguarding_owner(singleton,owner_user_id,configured_at) values(true,$1,$2)', [prior.owner_user_id,prior.configured_at]);
+    }
+  });
+
   await test('generic media withdrawal cannot tombstone coursework, held or otherwise', async () => {
     const who = await learner('Protected withdrawal', { course, version });
     const submission = await draft(who.userId, assignment, who.learnerId);

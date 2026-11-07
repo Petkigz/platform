@@ -12,6 +12,7 @@ import {
   REVIEW_FORM_HELP,
 } from '@/lib/coursework-review';
 import { readableByteSize } from '@/lib/media';
+import { parseLegacyCoursework } from '@/lib/legacy-coursework';
 import {
   HOLDS_NOTE,
   missingClassEndCount,
@@ -38,7 +39,7 @@ export const dynamic = 'force-dynamic';
 /** Owner-only review register, alongside separately authorized retention tools.
  * A recorded review is an attestation, not proof that a file was viewed.
  */
-export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ concern?: string; before?: string; beforeId?: string; endsAfter?: string; classEnd?: string; quarantineAfter?: string; quarantine?: string; concernAfter?: string; concernAfterId?: string; alert?: string; alertReview?: string; alertBefore?: string; storageAfter?: string; storageAfterId?: string; holdAfter?: string; holdAfterId?: string; reviewAfterState?: string; reviewAfterAt?: string; reviewAfterId?: string }> }) {
+export default async function AdminCourseworkPage({ searchParams }: { searchParams: Promise<{ legacyAfter?: string; concern?: string; before?: string; beforeId?: string; endsAfter?: string; classEnd?: string; quarantineAfter?: string; quarantine?: string; concernAfter?: string; concernAfterId?: string; alert?: string; alertReview?: string; alertBefore?: string; storageAfter?: string; storageAfterId?: string; holdAfter?: string; holdAfterId?: string; reviewAfterState?: string; reviewAfterAt?: string; reviewAfterId?: string }> }) {
   if (!isSupabaseConfigured()) redirect('/');
 
   const supabase = await createClient();
@@ -89,6 +90,11 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
   const quarantines = quarantineResult && !quarantineResult.error
     ? parseCourseworkQuarantines(quarantineResult.data) : null;
   const quarantineNext = quarantines && quarantines.length > 50 ? quarantines[49]?.asset_id : null;
+  const legacyCursorValid = !params.legacyAfter || isQuarantineCursor(params.legacyAfter);
+  const legacyResult = isSafeguardingOwner && legacyCursorValid
+    ? await supabase.rpc('legacy_coursework_review_page', { p_after: params.legacyAfter ?? null, p_limit: 51 }) : null;
+  const legacyRows = legacyResult && !legacyResult.error ? parseLegacyCoursework(legacyResult.data) : null;
+  const legacyNext = legacyRows && legacyRows.length > 50 ? legacyRows[49]?.asset_id : null;
   const openCursorValid = (!params.concernAfter && !params.concernAfterId) ||
     (typeof params.concernAfter === 'string' && Number.isFinite(Date.parse(params.concernAfter)) &&
       typeof params.concernAfterId === 'string' && isQuarantineCursor(params.concernAfterId));
@@ -171,6 +177,24 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
             </li>)}</ul>}
         {params.alertBefore && <p><Link href={`/admin/coursework?${new URLSearchParams({ alertReview: params.alertReview })}#alert-history`}>Back to recent alert history</Link></p>}
         {fullAlertNext && <p><Link href={`/admin/coursework?${new URLSearchParams({ alertReview: params.alertReview, alertBefore: fullAlertNext })}#alert-history`}>Older alert events</Link></p>}
+      </section>}
+      {isSafeguardingOwner && <section id="legacy-coursework" className="card" style={{ marginBlock: '1rem' }}>
+        <h2>Older mixed-use coursework</h2>
+        <p>This is a review list, not a deletion queue. A file may also be a lesson resource. Inspect each case before changing or deleting anything; copies and storage bytes are not verified here. The regular coursework retention and hold workflows do not cover every older mixed-use file.</p>
+        {legacyRows === null ? <p className="notice warn">The legacy list could not be loaded. Do not assume it is empty.</p>
+          : legacyRows.length === 0 ? <p>No entries were returned on this page. Older use without surviving evidence cannot be identified here.</p>
+          : <ul className="lessons">{legacyRows.slice(0,50).map((row) => <li key={row.asset_id}>
+            <div className="t"><strong>{row.display_name ?? 'Unnamed file'}</strong>
+              <p>File ID: {row.asset_id} · {row.asset_status}{row.tombstoned ? ' · tombstoned' : ''}</p>
+              <p>{row.in_lesson ? 'Referenced by a lesson. ' : 'No current lesson reference found. '}
+                {row.attached ? 'Currently attached to a submission. ' : ''}
+                {row.in_revision ? 'Referenced by a revision. ' : ''}
+                {!row.attached && !row.in_revision ? 'No current submission or revision context found; historical evidence remains.' : ''}</p>
+              <a href={courseworkFileHref(row.asset_id)} target="_blank" rel="noreferrer">Try opening the file for review</a>
+            </div>
+          </li>)}</ul>}
+        {params.legacyAfter && <p><Link href="/admin/coursework#legacy-coursework">First page of older files</Link></p>}
+        {legacyNext && <p><Link href={`/admin/coursework?${new URLSearchParams({ legacyAfter: legacyNext })}#legacy-coursework`}>More older files</Link></p>}
       </section>}
       {isSafeguardingOwner && (
         <section id="coursework-quarantines" className="card" style={{ marginBlock: '1rem' }}>
