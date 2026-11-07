@@ -1328,3 +1328,11 @@ The signing vector was independently checked against botocore 1.43.126.
 Local checks for the create-only change: 2,143 web tests passed, including a
 simulated 412 retry and an independent signing vector; lint, typecheck,
 repository checks and build passed. No real R2 request was made.
+
+The learner file picker now counts visible attachments rather than pending
+upload declarations against its ten-file limit. A failed transfer therefore no
+longer blocks a new upload merely by leaving a pending entry. The display says
+"up to" because hidden or concurrently changed attachments may still affect the
+server's authoritative check. Pending records and any storage objects remain;
+this change does not remove or delete them. Web passed 2,144 tests, with lint,
+typecheck, repository checks and build passing before the final wording change.

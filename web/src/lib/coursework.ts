@@ -194,6 +194,11 @@ export function parseCourseworkFilesStrict(value: unknown): CourseworkFile[] | n
   return parseCourseworkFiles(value);
 }
 
+/** The database limit counts attachment rows, not unconfirmed declarations. */
+export function countAttachedCourseworkFiles(files: CourseworkFile[]): number {
+  return files.filter((file) => file.attachmentId !== null).length;
+}
+
 export async function removeCourseworkFile(
   submissionId: string, assetId: string, doFetch: typeof fetch = fetch,
 ): Promise<{ ok: true } | { ok: false; message: string }> {

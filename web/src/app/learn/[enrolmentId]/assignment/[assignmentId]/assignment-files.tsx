@@ -8,6 +8,7 @@ import {
   COURSEWORK_MAX_BYTES,
   COURSEWORK_MAX_FILES,
   courseworkFileHref,
+  countAttachedCourseworkFiles,
   confirmCourseworkFile,
   describeCourseworkFile,
   describeFileSize,
@@ -59,7 +60,9 @@ export function AssignmentFiles({
   const [notice, setNotice] = useState('');
 
   useEffect(() => { setFiles(parseCourseworkFilesStrict(initialFiles)); }, [initialFiles]);
-  const remaining = files === null ? null : COURSEWORK_MAX_FILES - files.length;
+  const attachedCount = files === null ? null : countAttachedCourseworkFiles(files);
+  const pendingCount = files === null || attachedCount === null ? null : files.length - attachedCount;
+  const remaining = attachedCount === null ? null : Math.max(0, COURSEWORK_MAX_FILES - attachedCount);
 
   async function choose(chosen: File | null) {
     if (!chosen) return;
@@ -70,7 +73,7 @@ export function AssignmentFiles({
     // metered data should not learn the cap after sending the file.
     const check = validateCourseworkFile(
       { name: chosen.name, size: chosen.size, type: chosen.type },
-      files?.length ?? 0,
+      attachedCount ?? 0,
     );
     if (!check.ok) {
       setError(check.message);
@@ -157,7 +160,7 @@ export function AssignmentFiles({
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
         <h3 style={{ margin: 0 }}>Files</h3>
         <span className="muted" style={{ fontSize: '.85rem' }}>
-          {files === null ? 'File count unavailable' : `${files.length} of ${COURSEWORK_MAX_FILES}`}
+          {attachedCount === null ? 'File count unavailable' : `${attachedCount} attached shown${pendingCount ? ` · ${pendingCount} not attached` : ''}`}
         </span>
       </div>
 
@@ -200,9 +203,9 @@ export function AssignmentFiles({
         <div style={{ display: 'grid', gap: '.4rem' }}>
           <label htmlFor="assignment-file" className="muted" style={{ fontSize: '.85rem' }}>
             A photo of each page, a PDF, or a recording — up to{' '}
-            {describeFileSize(COURSEWORK_MAX_BYTES)} each{remaining === null ? '. The current file count is unavailable.' : `, ${remaining} more allowed on this hand-in.`}
+            {describeFileSize(COURSEWORK_MAX_BYTES)} each{remaining === null ? '. The current file count is unavailable.' : `, up to ${remaining} more; the server checks the limit.`}
           </label>
-          <p className="muted">For a pending upload, the original uploader can check whether the file arrived without sending it twice. If it never arrived, the pending entry may need individual review.</p>
+          <p className="muted">Pending files do not count as attached. The original uploader can check whether a pending file arrived without sending it twice. If it never arrived, the pending entry may need individual review.</p>
           <input
             ref={inputRef}
             id="assignment-file"

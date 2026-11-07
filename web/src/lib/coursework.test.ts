@@ -8,6 +8,7 @@ import {
   COURSEWORK_MAX_BYTES,
   COURSEWORK_MAX_FILES,
   courseworkFileHref,
+  countAttachedCourseworkFiles,
   confirmCourseworkFile,
   courseworkMimeAllowed,
   describeCourseworkFile,
@@ -384,4 +385,19 @@ test('earlier file references are openable and a failed marker list is not empty
   assert.match(marker, /file list could not be checked/i);
   assert.match(page, /error \? null : data/);
   assert.doesNotMatch(page, /fetchAssignmentFileReferences/);
+});
+
+
+test('unfinished declarations do not use the attached-file limit', () => {
+  const rows = parseCourseworkFiles([
+    ...Array.from({ length: 12 }, (_, index) => ({ assetId: `pending-${index}`, attachmentId: null, status: 'pending' })),
+    { assetId: 'attached', attachmentId: 'attachment', status: 'available' },
+    { assetId: 'held', attachmentId: 'held-attachment', status: 'quarantined' },
+    { assetId: 'unattached-held', attachmentId: null, status: 'quarantined' },
+  ]);
+  assert.equal(countAttachedCourseworkFiles(rows), 2);
+  assert.equal(validateCourseworkFile(file(), countAttachedCourseworkFiles(rows)).ok, true);
+  const page = readFileSync(new URL('../app/learn/[enrolmentId]/assignment/[assignmentId]/assignment-files.tsx', import.meta.url), 'utf8');
+  assert.match(page, /countAttachedCourseworkFiles\(files\)/);
+  assert.match(page, /attachedCount \?\? 0/);
 });
