@@ -133,6 +133,12 @@ export async function run(ctx) {
       'a refused mixed-use save left a device');
     await rejects(()=>asActor(me.userId,'select public.save_offline_lesson_before_coursework_guard($1,$2,$3)',
       [lesson.lesson,'device-abcdefghijklmnop','Phone']),/permission denied/i);
+    // A later ordinary resource in the same lesson remains saveable too.
+    const safe=await newAsset(teacher,{status:'available'});
+    await q(`insert into public.lesson_resources(lesson_id,resource_type,media_asset_id,display_name,position)
+      values($1,'video',$2,'Another lesson file',2)`,[lesson.lesson,safe]);
+    const mixedLessonSave=await save(me.userId,lesson.lesson);
+    assert(mixedLessonSave.saved===true && mixedLessonSave.mediaAssetId===safe,'a safe lesson file was unnecessarily blocked or the private ID leaked');
     // Other lessons and the underlying offline feature remain available.
     const ordinary=await taughtLesson();
     await grantAccess(me.learnerId,ordinary.version);

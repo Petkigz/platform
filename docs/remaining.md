@@ -1086,3 +1086,10 @@ assume review or storage deletion has removed a copy on a learner's device.
 Frozen revision `e215833` passed all 170 database suites and 2,634 assertions
 across eight independent PGlite databases. This is not a hosted PostgreSQL
 concurrency test and does not include migration 1020.
+
+**Offline safe-resource selection (local migration 1030):** the booking first
+selects an eligible ordinary lesson asset instead of letting an earlier mixed-use
+resource block later safe resources; the outer lock-and-recheck still applies.
+If no eligible file exists, the booking and device writes roll back. Offline
+suites passed 27 assertions, including a mixed lesson with a later safe file;
+repository checks passed. The offline-copy evidence gap above remains open.
