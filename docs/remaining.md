@@ -1001,3 +1001,10 @@ exploratory order that put course assignments after the coursework review suite
 failed five assertions because those suites assume different global flag and
 owner fixtures; the normal frozen batch order and the isolated assignments suite
 passed. The alternative order has not been repaired or revalidated.
+
+**Reviewed-erasure regression:** frozen revision `148ef1c` ran all 170 database
+suites in eight independent PGlite batches: 2,632 assertions passed and none
+failed. The new visual action also passed the 120-assertion shared coursework and
+RPC batch, 2,123 web tests, lint, typecheck, repository checks and build. This
+is not evidence of hosted concurrency, object-store deletion, or safe resolution
+of the legacy and still-shared cases the action deliberately refuses.
