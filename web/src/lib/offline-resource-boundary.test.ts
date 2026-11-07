@@ -13,3 +13,17 @@ test('offline downloads book and verify the specific selected resource', () => {
   assert.match(route, /p_resource_id: chosenResource\.id/);
   assert.match(route, /matchesBooking !== true/);
 });
+
+test('vault keys require current entitlement beyond row visibility', () => {
+  const route = readFileSync(new URL('../app/api/offline/key/route.ts', import.meta.url), 'utf8');
+  assert.match(route, /offline_save_key_allowed/);
+  assert.match(route, /allowed !== true/);
+  assert.match(route, /Access to this saved lesson could not be checked/);
+});
+
+test('the current network requirement for opening saved lessons is visible', () => {
+  const downloads = readFileSync(new URL('../app/downloads/page.tsx', import.meta.url), 'utf8');
+  const offline = readFileSync(new URL('./offline.ts', import.meta.url), 'utf8');
+  assert.match(downloads, /connection is currently required/);
+  assert.match(offline, /Connect to the internet to open this saved lesson/);
+});

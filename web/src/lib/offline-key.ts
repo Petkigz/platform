@@ -83,8 +83,8 @@ export async function deriveSaveKey(secret: string, saveId: string): Promise<Uin
  * Four facts, and every one of them is a reason the app should refuse rather
  * than a reason it should try: a save that was never made, one that has lapsed,
  * one the learner withdrew on this device, and one the plan no longer covers.
- * The database enforces the entitlement; this function exists so the route has
- * one place that reads the row a single way.
+ * This function checks the row only; the route separately asks the database to
+ * verify the current learner, device, media and live course and Plus grants.
  */
 export type SaveRow = {
   id: string;

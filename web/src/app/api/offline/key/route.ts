@@ -27,11 +27,10 @@ const fail = (message: string, status: number) => NextResponse.json({ ok: false,
  *
  * WHO MAY HAVE THE KEY
  * --------------------
- * `offline_downloads_read` is `can_access_learner(learner_profile_id) or
- * is_privileged`, so the select returns this learner's saves (or, for staff,
- * somebody's). The route selects the row and trusts that answer rather than
- * re-deriving entitlement here: a second authority that can disagree is exactly
- * the defect this codebase has fixed before.
+ * Row visibility alone can include staff. The key decision additionally checks
+ * that the current account can act for this learner, their course and Plus
+ * grants remain live, the device and save are valid, and the asset is not
+ * coursework or quarantined. A key already retained by a client cannot be recalled.
  */
 export async function POST(request: Request) {
   if (!isSupabaseConfigured()) return fail('Storage is not configured on this deployment.', 503);
@@ -75,6 +74,10 @@ export async function POST(request: Request) {
 
   const decision = decideKey(data as { id: string; expires_at: string | null; removed_at: string | null });
   if (!decision.ok) return fail(decision.message, 410);
+
+  const { data: allowed, error: accessError } = await supabase.rpc('offline_save_key_allowed', { p_download_id: decision.saveId });
+  if (accessError) return fail('Access to this saved lesson could not be checked.', 503);
+  if (allowed !== true) return fail('This saved lesson is no longer available to this account or plan.', 403);
 
   const key = await deriveSaveKey(secret, decision.saveId);
 

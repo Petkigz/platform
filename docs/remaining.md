@@ -1157,3 +1157,29 @@ hosted booking, erasure and storage operations still need real PostgreSQL tests.
 Frozen revision `0cee1e1` passed all 170 database suites and 2,639 assertions
 across eight independent PGlite databases. It predates migration 1060; batches
 do not test all inter-suite orders or hosted PostgreSQL concurrency.
+
+**Offline vault access and honest network state (local migration 1070):** key
+requests now check the current learner/family, course and live Plus grant, saved
+copy and device, and known coursework provenance rather than relying on staff's
+broad row visibility. Prior known coursework associations on the same booking
+also prevent reopening its key. A saved lesson with valid access remains openable
+when an operator turns off new bookings. Save/standing/URL checks now also
+recheck a Plus grant's end time: a PostgreSQL CHECK constraint is not rerun just
+because time passes. Clients that have already kept plaintext or a key cannot
+be remotely forced to discard it.
+
+**Still incomplete:** despite its name, the current saved-lesson feature is not
+fully offline: `/downloads` is server-rendered and opening a saved file fetches
+its key from the server every time. The UI and network error now say so. A
+reliable offline-opening design must explicitly handle cached keys, expiry,
+revocation, device clocks and the unavoidable inability to recall a key while a
+device is disconnected; do not present the current code as completed offline
+playback. Existing local and copied bytes cannot be remotely verified. The
+saved-lesson removal client also needs a separate audit of failed server updates.
+
+Offline entitlement/save/standing tests passed 39 assertions, the alternative
+shared coursework/offline/RPC order passed 166, and web passed 2,131; lint,
+typecheck, repository checks and build passed. Frozen `52117c0` passed all 170
+database suites and 2,640 assertions in eight PGlite batches; it predates
+migration 1070. Hosted database interleavings and real device/storage behavior
+remain unverified.

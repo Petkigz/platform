@@ -151,12 +151,17 @@ type StoredLesson = Omit<SavedLesson, 'lapsed'> & { sealed: ArrayBuffer };
  * removed, which is a sentence the screen can show — not a network fault.
  */
 export async function fetchSaveKey(downloadId: string): Promise<Uint8Array> {
-  const response = await fetch('/api/offline/key', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ downloadId }),
-    cache: 'no-store',
-  });
+  let response: Response;
+  try {
+    response = await fetch('/api/offline/key', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ downloadId }),
+      cache: 'no-store',
+    });
+  } catch {
+    throw new OfflineVaultError('key', 'Connect to the internet to open this saved lesson and check access.');
+  }
 
   const body = (await response.json().catch(() => null)) as
     | { ok?: boolean; key?: string; message?: string }

@@ -49,32 +49,10 @@ async function recordSaveRefusal(
 }
 
 /**
- * Mints a short-lived URL that saves a lesson's media instead of playing it.
- *
- * Same object, same bucket and the same window as playback. The difference is
- * `response-content-disposition`, which is what makes a browser keep the bytes
- * rather than open them — without it a button labelled "Save for offline" would
- * open a tab and play the lesson, which is not what the button says.
- *
- * TWO GATES, AND THEY ARE NOT THE SAME GATE
- * -----------------------------------------
- * `may_download_lesson()` deliberately does not call `can_access_lesson()`. That
- * function also returns true for a free preview while `learning.previews` is on,
- * and a sample is free to watch but not free to keep; using it here would put a
- * hole in a paid feature. So a learner who can stream a preview gets a 403 from
- * this route, and that is the intended behaviour.
- *
- * `learning.offline` is CODE-gated and ships off, which means today this route
- * refuses everybody. Enabling it needs the offline decisions that are still
- * open: how many devices, whether a saved copy expires, and whether anything
- * protects it.
- *
- * WHAT THIS IS NOT
- * ----------------
- * Not DRM. The saved file is an ordinary MP4 that can be copied and shared, so
- * what this buys is convenience on a metered connection and not protection. Any
- * claim otherwise would be a lie in a product that charges for the feature, and
- * the decision is recorded as open rather than quietly answered here.
+ * Issue a short-lived URL only for an entitled learner and a live booking of
+ * the selected resource. The player fetches and encrypts bytes in its vault;
+ * an authorized client can still keep plaintext or retain a key. This is not DRM.
+ * Free previews are watchable but are not enough to save a lesson.
  */
 export async function GET(request: Request) {
   if (!isSupabaseConfigured()) {

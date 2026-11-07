@@ -17,9 +17,7 @@
  *
  * **This is not DRM, and the file does not pretend it is.** A person who keeps
  * the key they were given can keep playing their copy; no browser technology
- * prevents that. What is achieved is narrower and worth stating plainly: nothing
- * durable on disk is plaintext, and nothing that has lapsed can be opened by the
- * app. Any stronger claim would be false.
+ * prevents that. What is achieved is narrower and worth stating plainly: the app stores the saved copy as ciphertext and checks access before opening it. Any stronger claim would be false.
  *
  * The envelope is a fixed header plus GCM output:
  *

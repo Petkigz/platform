@@ -330,7 +330,7 @@ export function RenditionPlayer({
       <p className="muted" style={{ fontSize: '0.85rem' }}>
         Playback links are short-lived and are tied to your access to this lesson.
         {canDownload
-          ? ' A saved lesson stays inside the app rather than in your file manager, and stops working when the plan or the date says so.'
+          ? ' A saved lesson stays inside the app, but currently needs a connection to check access each time you open it.'
           : ''}
       </p>
     </div>
