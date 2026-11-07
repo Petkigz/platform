@@ -256,7 +256,9 @@ export async function run(ctx) {
     const devices = (await asActor(me.userId, 'select * from public.my_offline_devices()')).rows;
     assert(devices.length === 3, `${devices.length} devices listed`);
 
-    await asActor(me.userId, 'select public.remove_offline_device($1)', [devices[0].device_id]);
+    const removed=(await asActor(me.userId, 'select public.remove_offline_device($1) as r', [devices[0].device_id])).rows[0].r;
+    const retry=(await asActor(me.userId, 'select public.remove_offline_device($1) as r', [devices[0].device_id])).rows[0].r;
+    assert(removed.removed===true && !removed.alreadyRemoved && retry.removed===true && retry.alreadyRemoved, 'device removal could not be retried after a lost response');
 
     const after = await save(me.userId, lesson.lesson, 'device-dddddddddddddddd');
     assert(after.saved === true, `still refused after removing one: ${after.reason}`);

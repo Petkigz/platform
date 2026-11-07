@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
 import { DownloadsList } from './downloads-list';
+import { OfflineDevices } from './offline-devices';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,6 +47,8 @@ export default async function DownloadsPage() {
       <section className="card">
         <DownloadsList signedIn={Boolean(user)} />
       </section>
+
+      <OfflineDevices />
 
       <p className="muted" style={{ marginTop: '1rem' }}>
         Saving needs a Plus plan. A saved lesson is not a copy you own: it lasts as

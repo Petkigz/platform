@@ -1193,3 +1193,13 @@ offline” badge now says “Saved on device”. Offline save/entitlement tests 
 28 assertions, alternate shared coursework/offline/RPC order 166, web 2,133,
 and lint, typecheck, repository checks and build passed. A visual device-slot
 management screen is still needed; none of this makes playback fully offline.
+
+**Saved-device management (local migration 1090):** learners and eligible family
+members can now list and remove their saved-lesson devices visually from the
+saved-lessons page. Device removal is retryable after a lost response and ends
+server-side saves without claiming to erase a remote device or recall a retained
+key. List failures and uncertain actions are shown rather than treated as empty
+or successful. Offline save/entitlement tests passed 28 assertions; web passed
+2,135; lint, typecheck, repository checks and build passed. This resolves the
+missing device-management screen noted above, not the separate full-offline
+playback gap.
