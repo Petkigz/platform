@@ -634,7 +634,7 @@ export async function run(ctx) {
       await q('set local role authenticated');
       const seen = []; let after = null, afterId = null;
       for (let page=0; page<5; page++) {
-        const rows = (await q('select *,sort_at::text t from public.coursework_bytes_awaiting_page_with_holds($1,$2,50)', [after,afterId])).rows;
+        const rows = (await q('select *,sort_at::text t from public.coursework_bytes_awaiting_checked_page($1,$2,50)', [after,afterId])).rows;
         seen.push(...rows.map(r => r.asset_id));
         if (rows.length < 50) break;
         after=rows.at(-1).t; afterId=rows.at(-1).asset_id;
@@ -664,6 +664,38 @@ export async function run(ctx) {
 
     const after = (await plan()).storage.awaiting;
     assert(after === before - 1, `awaiting went ${before} -> ${after}`);
+  });
+
+  await test('a reused storage key is flagged and cannot receive a routine deletion statement', async () => {
+    const row=await handedIn(); await backdate(row,'2 years'); await purge();
+    // The original is tombstoned, so the partial unique index permits a new
+    // live asset to claim its location. Also cover an ambiguous different backend.
+    const conflict=(await q(`insert into public.media_assets
+      (storage_backend,master_bucket,master_key,checksum,mime_type,byte_size,status,uploaded_by)
+      select 's3',master_bucket,master_key,checksum,mime_type,byte_size,'available',uploaded_by
+        from public.media_assets where id=$1 returning id`,[row.asset])).rows[0].id;
+    try {
+      const listed=(await asActor(owner,()=>q('select * from public.coursework_bytes_awaiting_checked_page(null,null,100)'))).rows.find(r=>r.asset_id===row.asset);
+      assert(listed && listed.storage_review_needed===true && listed.held===false, 'the owner was not warned about the reused key');
+      await refuses(/individual review/i,()=>call(owner,'select public.record_coursework_purge($1)',[row.asset]));
+      assert((await scalar('select purged_at from public.media_assets where id=$1',[row.asset])).purged_at===null, 'a conflicted deletion statement was recorded');
+      await refuses(/not_allowed/i,()=>call(governance,'select * from public.coursework_bytes_awaiting_checked_page(null,null,50)'));
+    } finally { await q('delete from public.media_assets where id=$1',[conflict]); }
+    // Legacy coursework renditions are extra objects not represented by this
+    // master-only deletion queue. The bypass is test-only historical setup.
+    await q('alter table public.media_renditions disable trigger media_rendition_library_only');
+    let rendition;
+    try { rendition=(await q(`insert into public.media_renditions(asset_id,profile,bucket,object_key,mime_type,byte_size,status,created_by)
+      values($1,'audio','other-bucket',$2,'audio/mpeg',1000,'available',$3) returning id`,[row.asset,`old/${crypto.randomUUID()}`,owner])).rows[0].id; }
+    finally { await q('alter table public.media_renditions enable trigger media_rendition_library_only'); }
+    try {
+      const entry=(await asActor(owner,()=>q('select * from public.coursework_bytes_awaiting_checked_page(null,null,100)'))).rows.find(r=>r.asset_id===row.asset);
+      assert(entry?.storage_review_needed===true, 'extra rendition was not flagged');
+      await refuses(/individual review/i,()=>call(owner,'select public.record_coursework_purge($1)',[row.asset]));
+    } finally { await q('delete from public.media_renditions where id=$1',[rendition]); }
+    const clear=(await asActor(owner,()=>q('select * from public.coursework_bytes_awaiting_checked_page(null,null,100)'))).rows.find(r=>r.asset_id===row.asset);
+    assert(clear && clear.storage_review_needed===false, 'resolved conflict remained flagged');
+    assert((await call(owner,'select public.record_coursework_purge($1) as recorded',[row.asset])).recorded===true, 'an eligible deletion statement was blocked');
   });
 
   await test('a coursework deletion statement cannot modify a tombstoned library file', async () => {

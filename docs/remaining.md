@@ -1014,3 +1014,18 @@ suite cleanup changes, passed all 170 database suites and 2,632 assertions in
 eight independent PGlite batches. The previously failing alternative shared
 order passed 149 assertions in one PGlite database. Neither run establishes
 hosted concurrency or provider behavior.
+
+**Storage-key collision audit (local migration 980):** the master-location
+unique index excludes tombstones, so another asset can subsequently name the
+same bucket/key. The owner storage page now shows the backend and flags known
+same-key records or extra renditions for individual review; a routine deletion
+statement is refused while those database conflicts remain. Older RPCs still
+exist for compatibility, so older clients do not show the warning. The check
+is conservative across backends and is only a database snapshot: another object
+or reference can appear after it, and it cannot stop external storage deletion.
+If a conflicting object was already deleted, use the incident register rather
+than treating it as routine cleanup. A local regression covers an active key
+collision, a historical rendition, refusal and the non-conflicting path; the
+150-assertion alternative shared coursework batch and 2,124 web tests passed.
+Hosted concurrency, cross-provider location identity and actual bytes remain
+unverified.

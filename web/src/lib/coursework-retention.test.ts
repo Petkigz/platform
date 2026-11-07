@@ -112,6 +112,7 @@ test('the confirmation says what happened to the clock, not what was clicked', (
   assert.match(actionConfirmation('release', 'Page one.jpg'), /may already be due/);
   assert.match(actionConfirmation('purge', 'Page one.jpg'), /did not verify/);
   assert.match(describeRetentionError('a held file cannot be recorded'), /held file/);
+  assert.match(describeRetentionError('this storage location or its extra objects need individual review'), /Do not delete it as routine cleanup/);
 });
 
 test('the page renders the register and the bucket, and asks the database first', () => {
@@ -123,7 +124,7 @@ test('the page renders the register and the bucket, and asks the database first'
   assert.ok(page.includes('RetentionActionForm'), 'the register has no actions on it');
   assert.ok(page.includes('canSeeHolds'), 'the page does not distinguish a refusal from an empty list');
   assert.ok(page.includes('row.held ?') && page.includes('Safeguarding hold open'), 'held storage entries need a visible warning');
-  assert.ok(page.includes('coursework_bytes_awaiting_page_with_holds'));
+  assert.ok(page.includes('coursework_bytes_awaiting_checked_page'));
   assert.ok(page.includes('canSeeStorage'), 'the storage queue is rendered without asking whether it may be');
   assert.ok(!page.includes('it is a record that somebody saw the file'));
   const form = readFileSync(new URL('../app/admin/coursework/retention-actions.tsx', import.meta.url), 'utf8');
@@ -178,9 +179,17 @@ test('interrupted or malformed retention responses do not claim the action faile
 
 test('storage pages preserve precise cursors and reject malformed responses', () => {
   const timestamp = '2026-11-01T10:00:00.123456+00:00';
-  const data = [{asset_id:hold.asset_id,master_bucket:'masters',master_key:'key',display_name:'File',tombstoned_at:timestamp,purge_due_at:null,sort_at:timestamp,held:false}];
+  const data = [{asset_id:hold.asset_id,master_bucket:'masters',master_key:'key',display_name:'File',tombstoned_at:timestamp,purge_due_at:null,sort_at:timestamp,held:false,storage_review_needed:false,storage_backend:'r2'}];
   assert.equal(parseStoragePage(data)?.[0]?.sortAt, timestamp);
   assert.equal(parseStoragePage(data)?.[0]?.held, false);
+  assert.equal(parseStoragePage(data)?.[0]?.storageReviewNeeded, false);
+  assert.equal(parseStoragePage(data)?.[0]?.backend, 'r2');
+  assert.equal(parseStoragePage([{...data[0],storage_backend:'unknown'}]), null);
+  assert.equal(parseStoragePage([{...data[0],storage_backend:null}]), null);
+  assert.equal(parseStoragePage([{...data[0],storage_review_needed:true}])?.[0]?.storageReviewNeeded, true);
+  assert.equal(parseStoragePage([{...data[0],storage_review_needed:null}]), null);
+  const { storage_review_needed: _storageReview, ...missingReview } = data[0]!;
+  assert.equal(parseStoragePage([missingReview]), null);
   assert.equal(parseStoragePage([{...data[0],held:true}])?.[0]?.held, true);
   assert.equal(parseStoragePage([{...data[0],held:null}]), null);
   assert.equal(parseStoragePage([{...data[0],held:'false'}]), null);
@@ -206,4 +215,14 @@ test('coursework clock copy does not start thirty days after erasure', () => {
   assert.match(page,/thirty days after an eligible account closure/);
   assert.doesNotMatch(page,/thirty days after a learner.rsquo;s record is erased/);
   assert.match(page,/Child-login cleanup and/);
+});
+
+test('storage collision warning blocks the routine statement and never claims storage is locked', () => {
+  const page = readFileSync(new URL('../app/admin/coursework/page.tsx', import.meta.url), 'utf8');
+  assert.match(page, /coursework_bytes_awaiting_checked_page/);
+  assert.match(page, /row\.storageReviewNeeded/);
+  assert.match(page, /Do not delete it as routine cleanup/);
+  assert.match(page, /If it was already deleted/);
+  assert.match(page, /href="\/admin\/incidents"/);
+  assert.match(PURGE_NOTE, /cannot prevent changes or deletion in storage/);
 });

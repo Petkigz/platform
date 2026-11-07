@@ -74,7 +74,7 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
       // The owner alone: this plan names what is about to be deleted, and the
       // storage queue carries a bucket key for every unwatchable object.
       supabase.rpc('coursework_retention_plan'),
-      storageCursorValid ? supabase.rpc('coursework_bytes_awaiting_page_with_holds', { p_after: params.storageAfter ?? null, p_after_id: params.storageAfterId ?? null, p_limit: 51 }) : Promise.resolve({ data: null, error: true }),
+      storageCursorValid ? supabase.rpc('coursework_bytes_awaiting_checked_page', { p_after: params.storageAfter ?? null, p_after_id: params.storageAfterId ?? null, p_limit: 51 }) : Promise.resolve({ data: null, error: true }),
       endsCursorValid ? supabase.rpc('coursework_missing_class_ends', { p_limit: 100, p_after: params.endsAfter ?? null }) : Promise.resolve({ data: null, error: true }),
     ]);
 
@@ -592,11 +592,13 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
                     <span className="muted">{storageSentence(row)}</span>
                     <br />
                     <code style={{ fontSize: '0.8rem' }}>
-                      {row.bucket}/{row.key}
+                      {row.backend}: {row.bucket}/{row.key}
                     </code>
                   </span>
                   {row.held ? (
                     <p className="notice warn">Safeguarding hold open — do not delete this object. Review the hold before taking action.</p>
+                  ) : row.storageReviewNeeded ? (
+                    <p className="notice warn">This storage key may be shared, or the file has additional renditions. Do not delete it as routine cleanup; investigate each object and its uses first. If it was already deleted, <Link href="/admin/incidents">report the incident</Link> for individual review.</p>
                   ) : (
                     <RetentionActionForm
                       assetId={row.assetId}
