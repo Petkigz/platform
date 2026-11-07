@@ -37,8 +37,7 @@ export function putWithProgress(
       else
         reject(
           new Error(
-            `Storage refused the upload (HTTP ${String(request.status)}). The file is still ` +
-              'marked as not sent, so it can be tried again.',
+            `Storage refused the upload (HTTP ${String(request.status)}). The file may already exist if an earlier response was lost; check the file list before trying again.`,
           ),
         );
     };

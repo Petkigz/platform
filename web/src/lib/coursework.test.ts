@@ -185,7 +185,7 @@ test('a file is declared, sent to storage, then confirmed — in that order', as
         data: {
           assetId: 'a1',
           uploadUrl: 'https://storage.test/put',
-          requiredHeaders: { 'content-type': 'image/jpeg' },
+          requiredHeaders: { 'content-type': 'image/jpeg', 'if-none-match': '*' },
         },
       },
     },
@@ -208,6 +208,7 @@ test('a file is declared, sent to storage, then confirmed — in that order', as
   assert.equal(puts.length, 1);
   assert.equal(puts[0]?.url, 'https://storage.test/put');
   assert.equal(puts[0]?.headers['content-type'], 'image/jpeg');
+  assert.equal(puts[0]?.headers['if-none-match'], '*');
   // Hashing reports at zero and then as it reads, so the phase repeats; what
   // matters is the order the four steps happen in.
   assert.deepEqual([...new Set(phases)], ['hashing', 'registering', 'uploading', 'confirming', 'done']);

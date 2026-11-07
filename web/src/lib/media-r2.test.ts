@@ -867,3 +867,14 @@ test('the two calls that are not about one object target the bucket', () => {
     path: `/${DEFAULT_MASTERS_BUCKET}`,
   });
 });
+
+test('create-only coursework PUT signs the condition as well as its content type', () => {
+  const signed = presignMasterUpload(config, masterKey, { contentType: 'image/jpeg', createOnly: true, now: fixed });
+  const unrestricted = presignMasterUpload(config, masterKey, { contentType: 'image/jpeg', now: fixed });
+  assert.equal(new URL(signed.url).searchParams.get('X-Amz-SignedHeaders'), 'content-type;host;if-none-match');
+  // Cross-checked independently with botocore 1.43.126's S3SigV4QueryAuth.
+  assert.equal(new URL(signed.url).searchParams.get('X-Amz-Signature'), 'f7091f22c420226dd5777c22a832e95a52f1cd303ec72ae7bcc5e02c1c17d9c4');
+  assert.deepEqual(signed.requiredHeaders, { 'content-type': 'image/jpeg', 'if-none-match': '*' });
+  assert.notEqual(new URL(signed.url).searchParams.get('X-Amz-Signature'), new URL(unrestricted.url).searchParams.get('X-Amz-Signature'));
+  assert.throws(() => presignUrl({ config, method: 'GET', bucket: config.mastersBucket, key: masterKey, expiresInSeconds: 60, ifNoneMatchStar: true }), /only valid for PUT/);
+});

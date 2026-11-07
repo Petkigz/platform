@@ -128,7 +128,7 @@ export function AssignmentFiles({
     setBusy(true); setError(''); setNotice('');
     try {
       const result = await confirmCourseworkFile(assetId);
-      if (result.ok) setNotice('The file was checked and attached.');
+      if (result.ok) setNotice('Storage reported the expected size and the file was attached. Its contents have not been scanned for malware.');
       else setError(result.message);
       router.refresh();
     } finally { setBusy(false); }

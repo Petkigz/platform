@@ -572,6 +572,16 @@ Without `ExposeHeaders: ["ETag"]` every part uploads successfully and the last
 step has nothing to say about them — an upload that fails after 100 % of the
 bytes have moved.
 
+New coursework uploads also send a signed `If-None-Match: *` header. The CORS
+policy must allow that header (the wildcard above does); a restrictive existing
+policy must explicitly allow `If-None-Match` and `Content-Type`. Test an upload,
+a repeated PUT and the on-screen confirmation retry against the real bucket.
+Cloudflare documents atomic conditional PutObject writes at
+https://developers.cloudflare.com/r2/api/s3/api/; this repository has not yet
+verified the behavior on the deployed bucket. Old unsigned-condition links,
+separate storage credentials, and a delete followed by a new PUT are not covered.
+This does not verify file contents or scan them for malware.
+
 **5.4** Set the three R2 variables in the app's environment and redeploy.
 
 **5.5** Test: `/teach/media` → upload a 10 MB video. It becomes a row marked

@@ -329,6 +329,8 @@ export type PresignInput = {
   expiresInSeconds: number;
   /** Signed when supplied, so an upload cannot change the type it declared. */
   contentType?: string;
+  /** Sign an atomic create-only condition for a single PUT. */
+  ifNoneMatchStar?: boolean;
   /**
    * `response-*` query parameters, which S3 and R2 honour by overriding the
    * stored object's response headers for this request only. They are part of the
@@ -379,6 +381,10 @@ export function presignUrl(input: PresignInput): PresignedUrl {
 
   const headers: Record<string, string> = { host };
   if (input.contentType) headers['content-type'] = input.contentType;
+  if (input.ifNoneMatchStar) {
+    if (method !== 'PUT') throw new R2RequestError('the create-only condition is only valid for PUT');
+    headers['if-none-match'] = '*';
+  }
   const { signed: signedHeaders } = canonicalHeaders(headers);
 
   const query: Record<string, string> = {
@@ -414,7 +420,10 @@ export function presignUrl(input: PresignInput): PresignedUrl {
     // A presigned PUT with a signed content-type fails unless the client sends
     // exactly this header, which is how the mime type recorded in the database
     // stays the mime type that arrives.
-    requiredHeaders: input.contentType ? { 'content-type': input.contentType } : {},
+    requiredHeaders: {
+      ...(input.contentType ? { 'content-type': input.contentType } : {}),
+      ...(input.ifNoneMatchStar ? { 'if-none-match': '*' } : {}),
+    },
   };
 }
 
@@ -422,7 +431,7 @@ export function presignUrl(input: PresignInput): PresignedUrl {
 export function presignMasterUpload(
   config: R2Config,
   key: string,
-  options: { contentType: string; expiresInSeconds?: number; now?: Date },
+  options: { contentType: string; createOnly?: boolean; expiresInSeconds?: number; now?: Date },
 ): PresignedUrl {
   const expires = options.expiresInSeconds ?? MAX_UPLOAD_SECONDS;
   if (expires > MAX_UPLOAD_SECONDS) {
@@ -440,6 +449,7 @@ export function presignMasterUpload(
     key: assertMasterKey(key),
     expiresInSeconds: expires,
     contentType: options.contentType,
+    ifNoneMatchStar: options.createOnly,
     now: options.now,
   });
 }

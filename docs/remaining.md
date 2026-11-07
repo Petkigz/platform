@@ -1313,3 +1313,18 @@ starting coursework transfers (and before the other server-only workflows use
 them). This detects obvious configuration mistakes, not whether a real-looking
 key is valid or authorized. Web passed 2,141 tests; lint, typecheck, repository
 checks and build passed.
+
+
+**Create-only coursework upload links:** new single-PUT links now sign an
+`If-None-Match: *` condition. Cloudflare documents atomic conditional
+PutObject writes; if the provider enforces it as documented, reusing that link
+cannot overwrite an object while it exists. The browser sends the signed header,
+and an uncertain transfer can still be checked using the existing retry action.
+The condition does not cover older links, separate credentials, deletion followed
+by recreation, wrong initial bytes, or malware. Bucket CORS must allow the new
+header, and the actual R2 behavior and browser flow still need deployment testing.
+The signing vector was independently checked against botocore 1.43.126.
+
+Local checks for the create-only change: 2,143 web tests passed, including a
+simulated 412 retry and an independent signing vector; lint, typecheck,
+repository checks and build passed. No real R2 request was made.

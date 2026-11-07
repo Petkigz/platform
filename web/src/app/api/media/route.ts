@@ -193,6 +193,9 @@ export async function POST(request: Request) {
     try {
       const signed = presignMasterUpload(config, key, {
         contentType: asText(body?.mimeType).toLowerCase(),
+        // R2 atomically refuses a second PUT while the object exists. Signing
+        // this header keeps a holder of the URL from removing the condition.
+        createOnly: true,
       });
       return NextResponse.json({
         ok: true,
