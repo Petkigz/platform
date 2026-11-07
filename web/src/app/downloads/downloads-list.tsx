@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { removeSavedWithConfirmation } from '@/lib/offline-removal';
 import {
   describeBytes,
   describeRemaining,
@@ -79,17 +80,37 @@ export function DownloadsList({ signedIn }: { signedIn: boolean }) {
 
   async function forget(lesson: SavedLesson) {
     setBusy(lesson.lessonId);
+    setPlayError(null);
     try {
-      if (signedIn) {
-        // Tell the server first: the record is what makes the device slot
-        // countable, and a local removal that leaves it behind would quietly
-        // consume the cap.
-        const supabase = createClient();
-        await supabase.rpc('forget_offline_lesson', { p_download_id: lesson.downloadId });
+      if (!signedIn) {
+        setPlayError('Sign in and reconnect to remove the server record, or remove only the local copy.');
+        return;
       }
+      const supabase = createClient();
+      const result = await removeSavedWithConfirmation(
+        lesson.downloadId,
+        () => supabase.rpc('forget_offline_lesson', { p_download_id: lesson.downloadId }),
+        () => removeStored(lesson.lessonId),
+      );
+      if (!result.ok) { setPlayError(result.message); return; }
       if (playing?.lessonId === lesson.lessonId) stopPlaying();
-      await removeStored(lesson.lessonId);
       setSaved((current) => (current ?? []).filter((l) => l.lessonId !== lesson.lessonId));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function removeLocalOnly(lesson: SavedLesson) {
+    if (!window.confirm('Remove only the copy on this device? This does not remove the server record or free a device slot.')) return;
+    setBusy(lesson.lessonId);
+    setPlayError(null);
+    try {
+      await removeStored(lesson.lessonId);
+      if (playing?.lessonId === lesson.lessonId) stopPlaying();
+      setSaved((current) => (current ?? []).filter((l) => l.lessonId !== lesson.lessonId));
+      setPlayError('The local copy was removed. The server record and device slot may still remain.');
+    } catch {
+      setPlayError('This browser could not remove the local copy.');
     } finally {
       setBusy(null);
     }
@@ -157,7 +178,7 @@ export function DownloadsList({ signedIn }: { signedIn: boolean }) {
               {lesson.lapsed ? (
                 <span className="badge neutral">Needs a refresh</span>
               ) : (
-                <span className="badge">Ready offline</span>
+                <span className="badge">Saved on device</span>
               )}{' '}
               <button
                 type="button"
@@ -179,6 +200,9 @@ export function DownloadsList({ signedIn }: { signedIn: boolean }) {
                 onClick={() => void forget(lesson)}
               >
                 {busy === lesson.lessonId ? 'Removing…' : 'Remove'}
+              </button>{' '}
+              <button type="button" className="btn ghost tiny" disabled={busy === lesson.lessonId} onClick={() => void removeLocalOnly(lesson)}>
+                Remove local copy only
               </button>
             </span>
           </li>

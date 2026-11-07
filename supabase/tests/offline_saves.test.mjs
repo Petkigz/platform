@@ -314,7 +314,9 @@ export async function run(ctx) {
     await grantFeature(me.learnerId);
     const saved = await save(me.userId, lesson.lesson);
 
-    await asActor(me.userId, 'select public.forget_offline_lesson($1)', [saved.downloadId]);
+    const first=(await asActor(me.userId, 'select public.forget_offline_lesson($1) as r', [saved.downloadId])).rows[0].r;
+    const retry=(await asActor(me.userId, 'select public.forget_offline_lesson($1) as r', [saved.downloadId])).rows[0].r;
+    assert(first.removed===true && first.alreadyRemoved===false && retry.removed===true && retry.alreadyRemoved===true, 'a lost reply cannot be retried safely');
 
     const row = await scalar('select removed_at from public.offline_downloads where id = $1',
       [saved.downloadId]);

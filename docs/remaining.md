@@ -1183,3 +1183,13 @@ typecheck, repository checks and build passed. Frozen `52117c0` passed all 170
 database suites and 2,640 assertions in eight PGlite batches; it predates
 migration 1070. Hosted database interleavings and real device/storage behavior
 remain unverified.
+
+**Saved-lesson removal (local migration 1080):** server removal is retryable
+when a response is lost. The client no longer silently deletes its local copy
+when server removal is unconfirmed, and reports a browser-storage failure after
+confirmed server removal. A separate, explicitly confirmed local-only removal
+says that the server record and device slot may remain. The misleading “Ready
+offline” badge now says “Saved on device”. Offline save/entitlement tests passed
+28 assertions, alternate shared coursework/offline/RPC order 166, web 2,133,
+and lint, typecheck, repository checks and build passed. A visual device-slot
+management screen is still needed; none of this makes playback fully offline.
