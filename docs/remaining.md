@@ -1008,3 +1008,9 @@ failed. The new visual action also passed the 120-assertion shared coursework an
 RPC batch, 2,123 web tests, lint, typecheck, repository checks and build. This
 is not evidence of hosted concurrency, object-store deletion, or safe resolution
 of the legacy and still-shared cases the action deliberately refuses.
+
+**Fixture-isolation regression:** frozen revision `a96dd20`, including the
+suite cleanup changes, passed all 170 database suites and 2,632 assertions in
+eight independent PGlite batches. The previously failing alternative shared
+order passed 149 assertions in one PGlite database. Neither run establishes
+hosted concurrency or provider behavior.
