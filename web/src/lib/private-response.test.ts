@@ -31,3 +31,14 @@ test('assignment API successes and failures use the private response wrapper', (
   assert.match(route, /privateJson\(\{ ok: true, files: data \}\)/);
   assert.match(route, /\? privateJson\(result\)/);
 });
+
+
+test('coursework review and retention responses are private on success and failure', () => {
+  for (const path of ['../app/api/coursework/review/route.ts', '../app/api/admin/coursework/retention/route.ts']) {
+    const route = readFileSync(new URL(path, import.meta.url), 'utf8');
+    assert.match(route, /privateNoStore\(NextResponse\.json\(body, init\)\)/);
+    assert.equal((route.match(/NextResponse\.json\(/g) ?? []).length, 1);
+    assert.match(route, /privateJson\(\{ ok: false, error: message \}/);
+    assert.match(route, /privateJson\(\{ ok: true/);
+  }
+});

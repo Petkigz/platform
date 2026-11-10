@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
+import { privateNoStore } from '@/lib/private-response';
 
 /**
  * Recording that somebody looked at a handed-in file.
@@ -29,8 +30,9 @@ type Payload = {
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+const privateJson = (body: unknown, init?: ResponseInit) => privateNoStore(NextResponse.json(body, init));
 const fail = (message: string, status: number) =>
-  NextResponse.json({ ok: false, error: message }, { status });
+  privateJson({ ok: false, error: message }, { status });
 
 export async function POST(request: Request) {
   if (!isSupabaseConfigured()) return fail('Supabase is not configured.', 503);
@@ -79,5 +81,5 @@ export async function POST(request: Request) {
     return fail(message, 500);
   }
 
-  return NextResponse.json({ ok: true, review: data });
+  return privateJson({ ok: true, review: data });
 }

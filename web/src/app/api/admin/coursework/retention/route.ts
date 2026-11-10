@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
+import { privateNoStore } from '@/lib/private-response';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,8 +10,9 @@ export const dynamic = 'force-dynamic';
  * route does not contact storage. A tombstone alone does not prove deletion. */
 const ACTIONS = new Set(['hold', 'release', 'purge']);
 
+const privateJson = (body: unknown, init?: ResponseInit) => privateNoStore(NextResponse.json(body, init));
 function fail(message: string, status = 400) {
-  return NextResponse.json({ ok: false, error: message }, { status });
+  return privateJson({ ok: false, error: message }, { status });
 }
 
 export async function POST(request: Request) {
@@ -48,5 +50,5 @@ export async function POST(request: Request) {
 
   if (error) return fail(error.message, 422);
   if (action === 'purge' && data !== true) return fail('A deletion statement was already recorded.', 409);
-  return NextResponse.json({ ok: true });
+  return privateJson({ ok: true });
 }

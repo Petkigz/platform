@@ -1398,3 +1398,7 @@ Assignment API responses, including write results and errors, now request
 cache instruction, not a way to retract copies or control all intermediaries.
 Web checks passed locally (2,156 tests, lint, typecheck, repository checks and
 build); deployment headers still need verification in the hosted environment.
+Coursework review and owner retention-action responses now also request private,
+no-store caching on successes and errors. This does not verify object deletion or
+prevent copying, and deployed proxy behavior remains to be checked. Local web
+checks passed: 2,157 tests, lint, typecheck, repository checks and build.
