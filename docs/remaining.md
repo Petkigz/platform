@@ -1364,3 +1364,7 @@ Local file/review tests passed 65 assertions, a shared coursework/offline/RPC
 order passed 170 before a further suspension check was added, file tests then
 passed 37, and web passed 2,147 tests. Lint, typecheck, repo checks and build
 passed. The database tests use a simulated server-confirmation fixture, not R2.
+
+Frozen revision `efb017c` passed all 170 database suites and 2,644 assertions
+across eight independent PGlite databases. This does not prove hosted storage or
+multi-session interleavings.
