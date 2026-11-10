@@ -1411,3 +1411,16 @@ permission to delete or proof of deletion. These warnings reflect the server tim
 and data at page render, not a lock on storage or a guarantee that holds and uses
 have not changed. Recheck before acting. Local web: 2,158 tests, lint, typecheck,
 repository checks and build passed.
+
+**Pending-declaration growth audit:** the ten-file database check counts attached
+files, not pending declarations. A signed-in authorized uploader can therefore
+create repeated pending declarations while the draft remains open; each can have
+its own upload target. The list RPC builds a single JSON result, so many pending
+records can also make the list slow or large. The older migration's description
+of the ten-file limit should not be read as a cap on pending uploads. Retrying the
+same declaration reduces accidental duplication but does not enforce a bound. A
+safe remedy needs a usable cancellation/recovery path, treatment of held or
+quarantined evidence, and protection against an in-flight or previously signed
+PUT arriving after cleanup. A simple permanent cap or blind deletion would strand
+legitimate uploads or risk evidence; neither has been introduced. Together with
+the unsigned-PUT size gap above, this remains a storage-abuse and cost risk.
