@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
+import { mapConcurrent } from '@/lib/concurrent-map';
 import {
   fetchAssignmentRevisions,
   fetchAssignmentSubmissions,
@@ -73,13 +74,10 @@ export default async function TeachAssignmentsPage({
   // The named list per submission. A count was all this queue could show while
   // `media_assets` was uploader-or-staff only, which is how a teacher ended up
   // with "3 private file references" and no way to open one.
-  const named = await Promise.all(
-    submissions.map((submission) =>
-      supabase
-        .rpc('assignment_submission_files', { p_submission_id: submission.id })
-        .then(({ data, error }) => [submission.id, error ? null : data] as const),
-    ),
-  );
+  const named = await mapConcurrent(submissions, 8, async (submission) => {
+    const { data, error } = await supabase.rpc('assignment_submission_files', { p_submission_id: submission.id });
+    return [submission.id, error ? null : data] as const;
+  });
   const filesBySubmission = Object.fromEntries(named) as Record<string, unknown>;
   const revisionsBySubmission = revisions.reduce<Record<string, typeof revisions>>((groups, revision) => {
     const group = groups[revision.submissionId] ?? [];

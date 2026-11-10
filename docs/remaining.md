@@ -1376,3 +1376,14 @@ private/no-store policy as successful redirects. This does not change the object
 response from storage, retract URLs already issued, or prove that every proxy
 obeys HTTP cache controls. Web passed 2,149 tests; lint, typecheck, repository
 checks and build passed. Hosted cache behavior remains unverified.
+
+**Assignment result limits:** assignment, submission, revision and file-reference
+reads now use ordered pages and exact RLS-filtered counts instead of assuming a
+single PostgREST response contains everything. Large ID filters are batched and
+teacher file-list requests are limited to eight at a time. Missing counts,
+duplicates, unexpected empty pages and count changes fail rather than presenting
+a partial list as complete. These are separate requests, not a database snapshot:
+concurrent changes that leave counts unchanged may still affect the result, and a
+busy list may need a refresh. The interface still renders the collected list in
+full; scalable visual pagination and hosted load testing remain open. Local web
+passed 2,154 tests; lint, typecheck, repo checks and build passed.

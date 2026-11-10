@@ -5,6 +5,7 @@ import {
   assignmentDeadline,
   createCourseAssignment,
   fetchAssignmentRevisions,
+  fetchAssignmentSubmissions,
   fetchAssignmentSubmissionsForLearner,
   fetchCourseAssignments,
   mapAssignmentError,
@@ -43,9 +44,10 @@ function stubQuery(rows: unknown[]) {
   chain.is = (key: string, value: unknown) => { state.filters[key] = value; return chain; };
   chain.in = (key: string, value: unknown) => { state.filters[key] = value; return chain; };
   chain.order = (key: string, value?: { ascending?: boolean }) => {
-    state.order = `${key}:${value?.ascending === false ? 'desc' : 'asc'}`;
+    state.order ??= `${key}:${value?.ascending === false ? 'desc' : 'asc'}`;
     return chain;
   };
+  chain.range = (from: number, to: number) => Promise.resolve({ data: rows.slice(from, to + 1), count: rows.length, error: null });
   chain.maybeSingle = async () => ({ data: rows[0] ?? null, error: null });
   chain.then = (resolve: (value: unknown) => unknown) =>
     Promise.resolve({ data: rows, error: null }).then(resolve);
@@ -321,4 +323,65 @@ test('a snapshot with no recorded files still maps cleanly', async () => {
   assert.deepEqual(rows[0]!.assetIds, []);
   assert.equal(rows[0]!.scoreEarned, null);
   assert.equal(rows[0]!.bodyText, '');
+});
+
+
+function pagedClient(rows: Record<string, unknown>[], options: { serverCap?: number; changedCount?: boolean; missingCount?: boolean; duplicate?: boolean; empty?: boolean } = {}) {
+  const calls: { ids: unknown[]; from: number; to: number; count: string | undefined; orders: string[] }[] = [];
+  const client = {
+    from: () => {
+      let ids: unknown[] = []; let count: string | undefined; const orders: string[] = [];
+      const chain = {
+        select: (_columns: string, options?: { count?: string }) => { count = options?.count; return chain; },
+        in: (_key: string, value: unknown[]) => { ids = value; return chain; },
+        eq: () => chain,
+        is: () => chain,
+        order: (key: string) => { orders.push(key); return chain; },
+        range: async (from: number, to: number) => {
+          calls.push({ ids, from, to, count, orders: [...orders] });
+          const filtered = rows.filter((row) => ids.length === 0 || ids.includes(row.assignment_id));
+          const end = Math.min(to + 1, from + (options.serverCap ?? 250));
+          let data = options.empty ? [] : filtered.slice(from, end);
+          if (options.duplicate && from > 0) data = filtered.slice(0, 1);
+          return { data, error: null, count: options.missingCount ? null : filtered.length + (options.changedCount && from > 0 ? 1 : 0) };
+        },
+      };
+      return chain;
+    },
+  } as unknown as import('@supabase/supabase-js').SupabaseClient;
+  return { client, calls };
+}
+
+function submissionRow(id: string, assignmentId = 'a-1') {
+  return { id, assignment_id: assignmentId, learner_profile_id: 'learner', course_enrolment_id: 'enrolment',
+    body_text: '', status: 'submitted', submitted_at: '2026-12-01T09:00:00Z', is_late: false,
+    score_earned: null, feedback: null, marked_at: null, revision_number: 1 };
+}
+
+test('submission reads continue when the server caps pages below the requested range', async () => {
+  const rows = Array.from({ length: 7 }, (_, index) => submissionRow(`s-${index}`));
+  const { client, calls } = pagedClient(rows, { serverCap: 2 });
+  const result = await fetchAssignmentSubmissions(client, ['a-1']);
+  assert.equal(result.length, 7);
+  assert.deepEqual(calls.map((call) => call.from), [0, 2, 4, 6]);
+  assert.ok(calls.every((call) => call.count === 'exact' && call.orders.join(',') === 'submitted_at,id'));
+  assert.equal(new Set(result.map((row) => row.id)).size, 7);
+});
+
+test('submission reads split long ID filters without broadening them', async () => {
+  const ids = Array.from({ length: 51 }, (_, index) => `a-${index}`);
+  const rows = ids.map((id, index) => submissionRow(`s-${index}`, id));
+  const { client, calls } = pagedClient(rows);
+  const result = await fetchAssignmentSubmissions(client, [...ids, ids[0]!]);
+  assert.equal(result.length, 51);
+  assert.deepEqual(calls.map((call) => call.ids.length), [50, 1]);
+  assert.deepEqual(await fetchAssignmentSubmissions(client, []), []);
+});
+
+test('partial, duplicate, missing-count and changing pages never look like a complete submission list', async () => {
+  const rows = Array.from({ length: 4 }, (_, index) => submissionRow(`s-${index}`));
+  for (const options of [{ serverCap: 2, changedCount: true }, { serverCap: 2, duplicate: true }, { missingCount: true }, { empty: true }]) {
+    const { client } = pagedClient(rows, options);
+    await assert.rejects(fetchAssignmentSubmissions(client, ['a-1']), /could not be checked|changed while loading/);
+  }
 });

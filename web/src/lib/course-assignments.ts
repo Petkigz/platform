@@ -488,20 +488,58 @@ const SUBMISSION_COLUMNS =
 const REVISION_COLUMNS =
   'id, submission_id, revision_number, body_text, asset_ids, score_earned, feedback, submitted_at, is_late, marked_at, reopened_at';
 
+// PostgREST can cap each result set even when no error is returned. Read an
+// exact RLS-filtered count and continue from the number actually received; a
+// deployment may have a lower row cap than our requested page size. Stable id
+// tie-breakers avoid repeated rows when several timestamps are equal.
+type PageResult = { data: unknown; count: number | null; error: { message: string } | null };
+const ASSIGNMENT_READ_PAGE = 250;
+const ASSIGNMENT_READ_ID_BATCH = 50;
+
+async function readAssignmentPages<T extends { id: string }>(
+  queryPage: (from: number, to: number) => PromiseLike<PageResult>,
+): Promise<T[]> {
+  const rows: T[] = [];
+  const seen = new Set<string>();
+  let total: number | null = null;
+  for (;;) {
+    const result = await queryPage(rows.length, rows.length + ASSIGNMENT_READ_PAGE - 1);
+    if (result.error) throw new Error(result.error.message);
+    if (!Array.isArray(result.data) || !Number.isSafeInteger(result.count) || result.count === null || result.count < 0)
+      throw new Error('The assignment list could not be checked. Refresh and try again.');
+    if (total === null) total = result.count;
+    if (result.count !== total || rows.length + result.data.length > total || (result.data.length === 0 && rows.length < total))
+      throw new Error('The assignment list changed while loading. Refresh and try again.');
+    for (const value of result.data) {
+      if (!value || typeof value !== 'object' || typeof value.id !== 'string' || !value.id || seen.has(value.id))
+        throw new Error('The assignment list could not be checked. Refresh and try again.');
+      seen.add(value.id);
+      rows.push(value as T);
+    }
+    if (rows.length === total) return rows;
+  }
+}
+
+function idBatches(ids: string[]): string[][] {
+  const unique = [...new Set(ids)];
+  const batches: string[][] = [];
+  for (let index = 0; index < unique.length; index += ASSIGNMENT_READ_ID_BATCH)
+    batches.push(unique.slice(index, index + ASSIGNMENT_READ_ID_BATCH));
+  return batches;
+}
+
 export async function fetchCourseAssignments(
   client: SupabaseClient,
   args: { courseId: string; courseVersionId?: string },
 ): Promise<CourseAssignment[]> {
-  let query = client
-    .from('course_assignments')
-    .select(ASSIGNMENT_COLUMNS)
-    .eq('course_id', args.courseId)
-    .is('deleted_at', null)
-    .order('created_at', { ascending: true });
-  if (args.courseVersionId) query = query.eq('course_version_id', args.courseVersionId);
-  const { data, error } = await query;
-  if (error) throw new Error(error.message);
-  return ((data ?? []) as unknown as AssignmentRow[]).map(mapAssignment);
+  const rows = await readAssignmentPages<AssignmentRow>((from, to) => {
+    let query = client.from('course_assignments')
+      .select(ASSIGNMENT_COLUMNS, { count: 'exact' })
+      .eq('course_id', args.courseId).is('deleted_at', null);
+    if (args.courseVersionId) query = query.eq('course_version_id', args.courseVersionId);
+    return query.order('created_at', { ascending: true }).order('id', { ascending: true }).range(from, to);
+  });
+  return rows.map(mapAssignment);
 }
 
 export async function fetchCourseAssignment(
@@ -522,28 +560,29 @@ export async function fetchAssignmentSubmissions(
   client: SupabaseClient,
   assignmentIds: string[],
 ): Promise<AssignmentSubmission[]> {
-  if (assignmentIds.length === 0) return [];
-  const { data, error } = await client
-    .from('assignment_submissions')
-    .select(SUBMISSION_COLUMNS)
-    .in('assignment_id', assignmentIds)
-    .order('submitted_at', { ascending: true });
-  if (error) throw new Error(error.message);
-  return ((data ?? []) as unknown as SubmissionRow[]).map(mapSubmission);
+  const rows: SubmissionRow[] = [];
+  for (const ids of idBatches(assignmentIds)) {
+    rows.push(...await readAssignmentPages<SubmissionRow>((from, to) => client
+      .from('assignment_submissions').select(SUBMISSION_COLUMNS, { count: 'exact' })
+      .in('assignment_id', ids).order('submitted_at', { ascending: true, nullsFirst: false })
+      .order('id', { ascending: true }).range(from, to)));
+  }
+  rows.sort((a, b) => (a.submitted_at ?? '\uffff').localeCompare(b.submitted_at ?? '\uffff') || a.id.localeCompare(b.id));
+  return rows.map(mapSubmission);
 }
 
 export async function fetchAssignmentSubmissionsForLearner(
   client: SupabaseClient,
   args: { assignmentIds: string[]; learnerProfileId: string },
 ): Promise<AssignmentSubmission[]> {
-  if (args.assignmentIds.length === 0) return [];
-  const { data, error } = await client
-    .from('assignment_submissions')
-    .select(SUBMISSION_COLUMNS)
-    .in('assignment_id', args.assignmentIds)
-    .eq('learner_profile_id', args.learnerProfileId);
-  if (error) throw new Error(error.message);
-  return ((data ?? []) as unknown as SubmissionRow[]).map(mapSubmission);
+  const rows: SubmissionRow[] = [];
+  for (const ids of idBatches(args.assignmentIds)) {
+    rows.push(...await readAssignmentPages<SubmissionRow>((from, to) => client
+      .from('assignment_submissions').select(SUBMISSION_COLUMNS, { count: 'exact' })
+      .in('assignment_id', ids).eq('learner_profile_id', args.learnerProfileId)
+      .order('id', { ascending: true }).range(from, to)));
+  }
+  return rows.map(mapSubmission);
 }
 
 export async function fetchAssignmentSubmission(
@@ -564,21 +603,15 @@ export async function fetchAssignmentFileReferences(
   client: SupabaseClient,
   submissionIds: string[],
 ): Promise<AssignmentFileReference[]> {
-  if (submissionIds.length === 0) return [];
-  const { data, error } = await client
-    .from('assignment_submission_assets')
-    .select('id, submission_id, media_asset_id, position')
-    .in('submission_id', submissionIds)
-    .order('position', { ascending: true });
-  if (error) throw new Error(error.message);
-  return ((data ?? []) as unknown as {
-    id: string; submission_id: string; media_asset_id: string; position: number;
-  }[]).map((row) => ({
-    id: String(row.id),
-    submissionId: String(row.submission_id),
-    mediaAssetId: String(row.media_asset_id),
-    position: Number(row.position),
-  }));
+  type FileRow = { id: string; submission_id: string; media_asset_id: string; position: number };
+  const rows: FileRow[] = [];
+  for (const ids of idBatches(submissionIds)) {
+    rows.push(...await readAssignmentPages<FileRow>((from, to) => client
+      .from('assignment_submission_assets').select('id, submission_id, media_asset_id, position', { count: 'exact' })
+      .in('submission_id', ids).order('position', { ascending: true }).order('id', { ascending: true }).range(from, to)));
+  }
+  rows.sort((a, b) => a.position - b.position || a.id.localeCompare(b.id));
+  return rows.map((row) => ({ id: row.id, submissionId: row.submission_id, mediaAssetId: row.media_asset_id, position: Number(row.position) }));
 }
 
 /** Recorded versions of marked work, oldest first. Row-level security decides who sees any. */
@@ -586,14 +619,14 @@ export async function fetchAssignmentRevisions(
   client: SupabaseClient,
   submissionIds: string[],
 ): Promise<AssignmentRevision[]> {
-  if (submissionIds.length === 0) return [];
-  const { data, error } = await client
-    .from('assignment_submission_revisions')
-    .select(REVISION_COLUMNS)
-    .in('submission_id', submissionIds)
-    .order('revision_number', { ascending: true });
-  if (error) throw new Error(error.message);
-  return ((data ?? []) as unknown as RevisionRow[]).map(mapRevision);
+  const rows: RevisionRow[] = [];
+  for (const ids of idBatches(submissionIds)) {
+    rows.push(...await readAssignmentPages<RevisionRow>((from, to) => client
+      .from('assignment_submission_revisions').select(REVISION_COLUMNS, { count: 'exact' })
+      .in('submission_id', ids).order('revision_number', { ascending: true }).order('id', { ascending: true }).range(from, to)));
+  }
+  rows.sort((a, b) => a.revision_number - b.revision_number || a.id.localeCompare(b.id));
+  return rows.map(mapRevision);
 }
 
 /** Deadline shown to one learner: absolute for a cohort, relative to enrolment otherwise. */
