@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server';
 
 import { isSupabaseConfigured } from '@/lib/env';
+import { privateNoStore } from '@/lib/private-response';
 import { MASTER_PREVIEW_SECONDS, fetchMasterPreviewTarget } from '@/lib/master-preview';
 import { R2NotConfiguredError, R2RequestError, presignMasterDownload, readR2Config } from '@/lib/media-r2';
 import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
+
+const fail = (message: string, status: number) => privateNoStore(new NextResponse(message, { status }));
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -31,11 +34,11 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-
  */
 export async function GET(request: Request) {
   if (!isSupabaseConfigured()) {
-    return new NextResponse('Storage is not configured on this deployment.', { status: 503 });
+    return fail('Storage is not configured on this deployment.', 503);
   }
 
   const assetId = new URL(request.url).searchParams.get('asset')?.trim() ?? '';
-  if (!UUID.test(assetId)) return new NextResponse('That is not a file.', { status: 400 });
+  if (!UUID.test(assetId)) return fail('That is not a file.', 400);
 
   const supabase = await createClient();
   const {
@@ -44,23 +47,20 @@ export async function GET(request: Request) {
   // A file address is a person-sized thing, so the browser is sent to sign in
   // rather than shown an error it cannot act on.
   if (!user) {
-    return NextResponse.redirect(
+    return privateNoStore(NextResponse.redirect(
       new URL(`/sign-in?next=${encodeURIComponent(`/api/media/open?asset=${assetId}`)}`, request.url),
-    );
+    ));
   }
 
   const result = await fetchMasterPreviewTarget(supabase, assetId);
-  if (!result.ok) return new NextResponse(result.message, { status: result.status });
-  if (!result.target) return new NextResponse('That file is not available to you.', { status: 404 });
+  if (!result.ok) return fail(result.message, result.status);
+  if (!result.target) return fail('That file is not available to you.', 404);
 
   const config = readR2Config();
-  if (!config) return new NextResponse(new R2NotConfiguredError().message, { status: 503 });
+  if (!config) return fail(new R2NotConfiguredError().message, 503);
 
   if (result.target.bucket !== config.mastersBucket) {
-    return new NextResponse(
-      `That file is recorded in '${result.target.bucket}', which this deployment does not serve.`,
-      { status: 503 },
-    );
+    return fail(`That file is recorded in '${result.target.bucket}', which this deployment does not serve.`, 503);
   }
 
   try {
@@ -75,6 +75,6 @@ export async function GET(request: Request) {
   } catch (cause) {
     const message =
       cause instanceof R2RequestError ? cause.message : 'The address for that file could not be signed.';
-    return new NextResponse(message, { status: 503 });
+    return fail(message, 503);
   }
 }

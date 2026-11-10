@@ -1368,3 +1368,11 @@ passed. The database tests use a simulated server-confirmation fixture, not R2.
 Frozen revision `efb017c` passed all 170 database suites and 2,644 assertions
 across eight independent PGlite databases. This does not prove hosted storage or
 multi-session interleavings.
+
+**Media response caching:** all JSON responses from the upload API, including
+signed upload/part URLs, confirmations and errors, now ask browsers and shared
+caches not to store them. File-open errors and sign-in redirects receive the same
+private/no-store policy as successful redirects. This does not change the object
+response from storage, retract URLs already issued, or prove that every proxy
+obeys HTTP cache controls. Web passed 2,149 tests; lint, typecheck, repository
+checks and build passed. Hosted cache behavior remains unverified.

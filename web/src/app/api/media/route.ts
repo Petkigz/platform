@@ -24,6 +24,7 @@ import {
 } from '@/lib/media';
 import { shouldUploadInParts } from '@/lib/browser-upload';
 import { confirmMediaUpload } from '@/lib/media-verify';
+import { privateNoStore } from '@/lib/private-response';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
@@ -51,7 +52,9 @@ type Payload = {
 };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const fail = (message: string, status: number) => NextResponse.json({ ok: false, message }, { status });
+// Upload responses can contain bearer URLs and private file metadata.
+const privateJson = (body: unknown, init?: ResponseInit) => privateNoStore(NextResponse.json(body, init));
+const fail = (message: string, status: number) => privateJson({ ok: false, message }, { status });
 
 /** Every action this route answers. Anything else is a 400, not a guess. */
 const ACTIONS = [
@@ -208,7 +211,7 @@ export async function POST(request: Request) {
         // this header keeps a holder of the URL from removing the condition.
         createOnly: true,
       });
-      return NextResponse.json({
+      return privateJson({
         ok: true,
         data: {
           assetId,
@@ -247,7 +250,7 @@ export async function POST(request: Request) {
     });
     if (!outcome.ok) return fail(outcome.message, outcome.status);
 
-    return NextResponse.json(
+    return privateJson(
       {
         ok: true,
         data: {
@@ -297,7 +300,7 @@ export async function POST(request: Request) {
       asText(body?.checksum).toLowerCase(),
       Number(body?.byteSize),
     );
-    if (!found) return NextResponse.json({ ok: true, data: { found: false } });
+    if (!found) return privateJson({ ok: true, data: { found: false } });
 
     if (found.masterBucket !== config.mastersBucket) {
       return fail(
@@ -314,7 +317,7 @@ export async function POST(request: Request) {
         const signed = presignMasterUpload(config, found.masterKey, {
           contentType: found.mimeType,
         });
-        return NextResponse.json({
+        return privateJson({
           ok: true,
           data: {
             found: true,
@@ -337,7 +340,7 @@ export async function POST(request: Request) {
 
     const resumed = await resumeMasterMultipart(supabase, found.assetId, { config });
     if (!resumed.ok) return fail(resumed.message, resumed.status);
-    return NextResponse.json({
+    return privateJson({
       ok: true,
       data: {
         found: true,
@@ -370,7 +373,7 @@ export async function POST(request: Request) {
     const outcome = await confirmMediaUpload(supabase, assetId, { config });
     if (!outcome.ok) return fail(outcome.message, outcome.status);
 
-    return NextResponse.json(
+    return privateJson(
       {
         ok: true,
         data: {
@@ -423,7 +426,7 @@ export async function POST(request: Request) {
     // No presigned PUT is minted. The browser will ask for part URLs instead, and
     // a single-PUT URL nobody uses is still a live credential for an hour that can
     // write the whole file to that key.
-    return NextResponse.json(
+    return privateJson(
       { ok: true, data: { assetId, key, bucket, transport: 'multipart' } },
       { status: 200 },
     );
@@ -431,7 +434,7 @@ export async function POST(request: Request) {
 
   try {
     const signed = presignMasterUpload(config, key, { contentType: mimeType });
-    return NextResponse.json({
+    return privateJson({
       ok: true,
       data: {
         assetId,
@@ -482,7 +485,7 @@ async function multipart(
   if (action === 'initiate_multipart') {
     const outcome = await initiateMasterMultipart(supabase, assetId, { config });
     if (!outcome.ok) return fail(outcome.message, outcome.status);
-    return NextResponse.json({
+    return privateJson({
       ok: true,
       data: {
         assetId,
@@ -518,7 +521,7 @@ async function multipart(
       { config },
     );
     if (!outcome.ok) return fail(outcome.message, outcome.status);
-    return NextResponse.json({ ok: true, data: { assetId, uploadId, parts: outcome.value.parts } });
+    return privateJson({ ok: true, data: { assetId, uploadId, parts: outcome.value.parts } });
   }
 
   if (action === 'complete_multipart') {
@@ -541,7 +544,7 @@ async function multipart(
     }
     const outcome = await completeMasterMultipart(supabase, assetId, uploadId, parts, { config });
     if (!outcome.ok) return fail(outcome.message, outcome.status);
-    return NextResponse.json({
+    return privateJson({
       ok: true,
       data: {
         assetId,
@@ -557,5 +560,5 @@ async function multipart(
 
   const outcome = await abortMasterMultipart(supabase, assetId, uploadId, { config });
   if (!outcome.ok) return fail(outcome.message, outcome.status);
-  return NextResponse.json({ ok: true, data: { assetId, uploadId, aborted: true } });
+  return privateJson({ ok: true, data: { assetId, uploadId, aborted: true } });
 }
