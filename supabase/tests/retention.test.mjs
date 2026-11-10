@@ -157,9 +157,10 @@ export async function run(ctx) {
     // nothing may edit a closed case afterwards, so this is what the platform
     // would have written then.
     await q(`update public.support_cases
-                set status = 'closed', closed_by = $2, closed_at = now() - interval '3 years',
+                set status = 'closed', closed_by = $2,
+                    closed_at = (($3::timestamptz at time zone 'UTC') - interval '3 years') at time zone 'UTC',
                     close_reason = 'answered long ago'
-              where id = $1`, [boundary, owner]);
+              where id = $1`, [boundary, owner, now]);
     await q(`update public.support_cases
                 set status = 'closed', closed_by = $2,
                     closed_at = now() - interval '3 years 1 month',
@@ -258,6 +259,41 @@ export async function run(ctx) {
       `select count(*)::int n from public.governance_audit_events
         where action = 'retention.purged'`)).n;
     assert(after === before, 'an empty run added an audit entry');
+  });
+
+  await test('the support case and its messages survive until the exact three-year instant', async () => {
+    await q("update public.platform_settings set value_text='true' where key='platform.support'");
+    let id;
+    try {
+      id=await call(asker, "select public.open_support_case('account',$1,$2) as r", ['Deadline boundary', 'Please help with my account.']);
+      await call(agent, 'select public.reply_to_support_case($1,$2) as r', [id,'We will help.']);
+    } finally { await q("update public.platform_settings set value_text='false' where key='platform.support'"); }
+    await q(`update public.support_cases set status='closed',closed_by=$2,close_reason='Answered',
+      closed_at=((date_trunc('day', now() at time zone 'UTC') - interval '12 hours' - interval '3 years') at time zone 'UTC')
+      where id=$1`, [id,owner]);
+    const deadline=(await one('select public.support_case_retention_due_at(closed_at)::text as at from public.support_cases where id=$1',[id])).at;
+    const p0=await call(owner,"select public.retention_plan($1::timestamptz - interval '1 microsecond') as r",[deadline]);
+    const p1=await call(owner,'select public.retention_plan($1::timestamptz) as r',[deadline]);
+    assert(p1.supportCases.due===p0.supportCases.due+1,'the plan missed the exact case deadline');
+    await call(owner,"select public.run_retention_jobs($1::timestamptz - interval '1 microsecond',5000) as r",[deadline]);
+    assert(await exists('support_cases',id),'the case was deleted before the deadline');
+    assert((await one('select count(*)::int n from public.support_case_messages where case_id=$1',[id])).n===1,'the message was deleted early');
+    await call(owner,'select public.run_retention_jobs($1::timestamptz,5000) as r',[deadline]);
+    assert(!(await exists('support_cases',id)),'the due case was not deleted');
+    assert((await one('select count(*)::int n from public.support_case_messages where case_id=$1',[id])).n===0,'the message survived the due case');
+    const source=(await one("select pg_get_functiondef('public.run_retention_jobs(timestamptz,integer)'::regprocedure) as source")).source;
+    const lock=source.indexOf('perform 1 from public.support_cases c');
+    const messages=source.indexOf('delete from public.support_case_messages where case_id=v_one',lock);
+    assert(lock>=0 && messages>lock && source.slice(lock,messages).includes('for update') && source.slice(lock,messages).includes('support_case_retention_due_at(c.closed_at)'), 'the current case deadline is not rechecked under lock before messages are removed');
+    const calendar=await one("select public.support_case_retention_due_at('2024-02-29 12:34:56.123456+00') = '2027-02-28 12:34:56.123456+00'::timestamptz as matches");
+    assert(calendar.matches===true,'leap-day anniversary lost its UTC calendar or time');
+    await q("set timezone='Pacific/Auckland'");
+    try {
+      const same=await one("select public.support_case_retention_due_at('2024-02-29 12:34:56.123456+00') = '2027-02-28 12:34:56.123456+00'::timestamptz as matches");
+      assert(same.matches===true,'session timezone moved the deadline');
+    } finally { await q("set timezone='UTC'"); }
+    const grants=await one("select has_function_privilege('authenticated','public.support_case_retention_due_at(timestamptz)','execute') as can");
+    assert(grants.can===false,'the internal deadline helper became an application endpoint');
   });
 
   await test('a run cannot be talked into the future', async () => {

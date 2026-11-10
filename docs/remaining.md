@@ -1463,3 +1463,25 @@ separate PGlite databases; the relevant batch was repeated after adding the
 profile-lock source assertion. An initial eight-process attempt was stopped
 under resource pressure and is not counted. Web passed 2,158 tests, and lint,
 typecheck, repository checks and build passed. Live deployment remains unverified.
+
+**Support-case retention boundary:** migration 1190 replaces the date-only
+three-year comparison with the exact UTC calendar anniversary. The plan and run
+use the same boundary; the run locks and rechecks each case's current close time
+before deleting its messages, then counts actual deletions. Tests cover one
+microsecond before and at the deadline, a leap-day anniversary, a non-UTC session,
+future-date clamping, and the presence of the lock/recheck. This supersedes the
+preceding note that this boundary needed an audit. Historical early deletions
+cannot be reconstructed by this change. Real multi-session PostgreSQL behavior
+and deployment remain unverified.
+
+Support cases have no safeguarding-specific category or case-level safeguarding
+hold. Their three-year cleanup must not be mistaken for the separate safeguarding
+record policy: a safety concern could have been included in free-text support
+content and would not be identified automatically. The scope of any such legacy
+cases and how to preserve or review them need individual assessment; this change
+does not classify or recover them.
+
+Local regression: 2,647 assertions in 170 suites across eight separate PGlite
+databases (the affected batch was repeated after adding timezone/leap checks),
+2,158 web tests, lint, typecheck, repository checks and build passed. These are
+not live-provider or multi-session tests.
