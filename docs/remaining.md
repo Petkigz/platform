@@ -1392,3 +1392,9 @@ A further local test exercises assignment pagination through the installed
 Supabase client against simulated PostgREST responses, including a server cap
 smaller than the requested range; it does not contact hosted Supabase. Web now
 passes 2,155 tests, with lint, typecheck and repository checks passing.
+
+Assignment API responses, including write results and errors, now request
+`private, no-store` consistently as the file-list success already did. This is a
+cache instruction, not a way to retract copies or control all intermediaries.
+Web checks passed locally (2,156 tests, lint, typecheck, repository checks and
+build); deployment headers still need verification in the hosted environment.

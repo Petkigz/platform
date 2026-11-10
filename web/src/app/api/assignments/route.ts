@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
+import { privateNoStore } from '@/lib/private-response';
 import {
   type AssignmentRevisionResult,
   type AssignmentWriteResult,
@@ -45,12 +46,13 @@ type Payload = {
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const isUuid = (value: unknown): value is string => typeof value === 'string' && UUID.test(value);
 const text = (value: unknown): string => typeof value === 'string' ? value : '';
+const privateJson = (body: unknown, init?: ResponseInit) => privateNoStore(NextResponse.json(body, init));
 const fail = (message: string, status: number) =>
-  NextResponse.json({ ok: false, message }, { status });
+  privateJson({ ok: false, message }, { status });
 const respond = (result: AssignmentWriteResult | AssignmentRevisionResult) =>
   result.ok
-    ? NextResponse.json(result)
-    : NextResponse.json({ ok: false, message: result.message }, { status: result.status });
+    ? privateJson(result)
+    : privateJson({ ok: false, message: result.message }, { status: result.status });
 
 /**
  * The files on one submission.
@@ -76,7 +78,7 @@ export async function GET(request: Request) {
   if (error) return fail(error.message, 403);
 
   if (!Array.isArray(data)) return fail('The file list could not be loaded. Please refresh and check again.', 502);
-  return NextResponse.json({ ok: true, files: data }, { headers: { 'cache-control': 'private, no-store' } });
+  return privateJson({ ok: true, files: data });
 }
 
 export async function POST(request: Request) {
@@ -161,7 +163,7 @@ export async function POST(request: Request) {
           : 409;
       return fail(message, status);
     }
-    return NextResponse.json({ ok: true });
+    return privateJson({ ok: true });
   }
 
   if (body.action === 'submit') {

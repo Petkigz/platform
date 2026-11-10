@@ -21,3 +21,13 @@ test('media upload successes and failures share the private response wrapper', (
   assert.match(open, /privateNoStore\(new NextResponse\(message, \{ status \}\)\)/);
   assert.match(open, /privateNoStore\(NextResponse\.redirect/);
 });
+
+
+test('assignment API successes and failures use the private response wrapper', () => {
+  const route = readFileSync(new URL('../app/api/assignments/route.ts', import.meta.url), 'utf8');
+  assert.match(route, /privateNoStore\(NextResponse\.json\(body, init\)\)/);
+  assert.equal((route.match(/NextResponse\.json\(/g) ?? []).length, 1);
+  assert.match(route, /privateJson\(\{ ok: false, message \}/);
+  assert.match(route, /privateJson\(\{ ok: true, files: data \}\)/);
+  assert.match(route, /\? privateJson\(result\)/);
+});
