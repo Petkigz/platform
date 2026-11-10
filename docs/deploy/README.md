@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-322 files in `supabase/migrations/`, applied in filename order — the 14-digit
+323 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -1172,3 +1172,11 @@ removal. Migration 870 adds owner-only pagination to the hold register as well.
 Migration 880 adds owner-only pagination to the coursework review register.
 The order may change when a review is recorded, so revisit the first page.
 The register is not proof that anyone opened a file or that an alert was received.
+
+The coursework pending-transfer retry introduced by
+`20261281116000_coursework_retry_transfer.sql` needs the matching web route and
+create-only R2/CORS configuration. Test an interrupted upload, **Check upload
+again**, and **Resend same file** on a non-production bucket. A retry uses the
+existing pending entry; it does not prove bytes match the declared digest or
+remove a previously uploaded object. Signed URLs already issued can remain
+usable until expiry, and no malware scanner is connected.

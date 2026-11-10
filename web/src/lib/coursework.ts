@@ -285,6 +285,8 @@ export type UploadOutcome =
 
 export type UploadOptions = {
   submissionId: string;
+  /** Retry an existing pending declaration rather than creating another. */
+  retryAssetId?: string;
   /** Zero to a hundred, for a bar that only moves forwards. */
   onProgress?: (phase: UploadPhase, percent: number) => void;
   /** Injectable, so the sequence can be checked without a bucket to talk to. */
@@ -305,9 +307,8 @@ const json = async (response: Response): Promise<Record<string, unknown>> =>
  * Send one file and attach it to the draft.
  *
  * A failure may leave a pending row or an attached file; refresh before retrying.
- * Nothing here retries blindly: re-sending the same bytes would leave a second
- * pending row, and the database's own declaration is what decides what the file
- * is, not this page's memory of it.
+ * A retry explicitly identifies a pending declaration; the database compares
+ * the original uploader, file facts and draft before the server signs the PUT.
  */
 export async function uploadCourseworkFile(file: File, options: UploadOptions): Promise<UploadOutcome> {
   const doFetch = options.fetchImpl ?? fetch;
@@ -334,14 +335,18 @@ export async function uploadCourseworkFile(file: File, options: UploadOptions): 
   }
 
   progress('registering', 0);
+  const uncertainTarget = options.retryAssetId
+    ? 'Refresh and check the existing pending file before trying again.'
+    : 'Refresh and check the file list before trying again; an upload may have been registered.';
   let registered: Response;
   try {
     registered = await doFetch('/api/media', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        action: 'request_coursework_upload',
+        action: options.retryAssetId ? 'retry_coursework_upload' : 'request_coursework_upload',
         submissionId: options.submissionId,
+        ...(options.retryAssetId ? { assetId: options.retryAssetId } : {}),
         displayName: file.name.slice(0, 200),
         mimeType: file.type,
         byteSize: file.size,
@@ -349,7 +354,7 @@ export async function uploadCourseworkFile(file: File, options: UploadOptions): 
       }),
     });
   } catch {
-    return { ok: false, message: 'The upload request could not be confirmed. Refresh and check the file list before trying again; an upload may have been registered.' };
+    return { ok: false, message: `The upload request could not be confirmed. ${uncertainTarget}` };
   }
   const registeredBody = await json(registered);
   const registeredData = (registeredBody.data ?? {}) as Record<string, unknown>;
@@ -357,15 +362,15 @@ export async function uploadCourseworkFile(file: File, options: UploadOptions): 
     return {
       ok: false,
       message:
-        `${typeof registeredBody.message === 'string' ? registeredBody.message : 'The upload request could not be confirmed.'} Refresh and check the file list before trying again; an upload may have been registered.`,
+        `${typeof registeredBody.message === 'string' ? registeredBody.message : 'The upload request could not be confirmed.'} ${uncertainTarget}`,
     };
   }
 
   const assetId = typeof registeredData.assetId === 'string' ? registeredData.assetId : '';
   const uploadUrl = typeof registeredData.uploadUrl === 'string' ? registeredData.uploadUrl : '';
   const requiredHeaders = (registeredData.requiredHeaders ?? {}) as Record<string, string>;
-  if (!assetId || !uploadUrl) {
-    return { ok: false, message: 'The upload response was incomplete. Refresh and check the file list before trying again; an upload may have been registered.' };
+  if (!assetId || !uploadUrl || (options.retryAssetId && assetId !== options.retryAssetId)) {
+    return { ok: false, message: `The upload response was incomplete. ${uncertainTarget}` };
   }
 
   progress('uploading', 0);

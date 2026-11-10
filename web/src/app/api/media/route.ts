@@ -60,6 +60,7 @@ const ACTIONS = [
   // is the one place a presigned PUT is minted and a second place would be a
   // second set of signing mistakes.
   'request_coursework_upload',
+  'retry_coursework_upload',
   'confirm_coursework_upload',
   'resume_upload',
   'confirm_upload',
@@ -146,18 +147,28 @@ export async function POST(request: Request) {
   // of homework is not consuming storage the platform budgeted for a teacher.
   // The limit that governs here is the assignment's own: 25 MiB, checked by the
   // database before this line signs anything.
-  if (action === 'request_coursework_upload') {
+  if (action === 'request_coursework_upload' || action === 'retry_coursework_upload') {
     if (!isServiceRoleConfigured()) return fail('Coursework upload confirmation is not configured on the server. Please contact the platform owner before uploading.', 503);
     const submissionId = asText(body?.submissionId);
     if (!UUID.test(submissionId)) return fail('Choose the draft this file belongs to.', 400);
 
-    const registered = await supabase.rpc('register_coursework_upload', {
-      p_submission_id: submissionId,
-      p_display_name: asText(body?.displayName),
-      p_mime_type: asText(body?.mimeType).toLowerCase(),
-      p_byte_size: Number(body?.byteSize),
-      p_checksum: asText(body?.checksum).toLowerCase(),
-    });
+    const retryAsset = asText(body?.assetId);
+    if (action === 'retry_coursework_upload' && !UUID.test(retryAsset)) return fail('Choose the pending file to retry.', 400);
+    const registered = action === 'retry_coursework_upload'
+      ? await supabase.rpc('retry_coursework_upload_target', {
+          p_asset_id: retryAsset,
+          p_submission_id: submissionId,
+          p_mime_type: asText(body?.mimeType).toLowerCase(),
+          p_byte_size: Number(body?.byteSize),
+          p_checksum: asText(body?.checksum).toLowerCase(),
+        })
+      : await supabase.rpc('register_coursework_upload', {
+          p_submission_id: submissionId,
+          p_display_name: asText(body?.displayName),
+          p_mime_type: asText(body?.mimeType).toLowerCase(),
+          p_byte_size: Number(body?.byteSize),
+          p_checksum: asText(body?.checksum).toLowerCase(),
+        });
 
     if (registered.error) {
       // Every refusal here is a sentence written for the person reading it — the
@@ -182,7 +193,7 @@ export async function POST(request: Request) {
     const assetId = String(target.asset_id ?? '');
     const bucket = String(target.master_bucket ?? '');
     const key = String(target.master_key ?? '');
-    if (!UUID.test(assetId) || !key) return fail('The upload could not be opened.', 500);
+    if (!UUID.test(assetId) || !key || (action === 'retry_coursework_upload' && assetId !== retryAsset)) return fail('The upload could not be opened.', 500);
     if (bucket !== config.mastersBucket) {
       return fail(
         `Storage is misconfigured: the database derived "${bucket}" but this deployment signs for "${config.mastersBucket}".`,

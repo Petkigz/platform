@@ -236,6 +236,55 @@ export async function run(ctx) {
     assert(attached === 0, 'a file that had not arrived was attached');
   });
 
+  await test('a pending transfer can be retried by its current authorized uploader without creating another record', async () => {
+    const who = await learner('Retry transfer', { course, version });
+    const other = await learner('Retry stranger', { course, version });
+    const submission = await draft(who.userId, assignment, who.learnerId, 'A draft');
+    const anotherSubmission = await draft(other.userId, assignment, other.learnerId, 'Another draft');
+    const checksum = digest();
+    const target = await declare(who.userId, submission, { checksum });
+    const sql = 'select * from public.retry_coursework_upload_target($1,$2,$3,$4,$5)';
+    const args = [target.asset_id,submission,'image/jpeg',1_800_000,checksum];
+    const first = await call(who.userId, sql, args);
+    const again = await call(who.userId, sql, args);
+    assert(first.asset_id === target.asset_id && first.master_key === target.master_key && again.asset_id === first.asset_id, 'retry created or selected another file');
+    await refused(other.userId, sql, args, /not available to you/i);
+    await refused(who.userId, sql, [target.asset_id,anotherSubmission,'image/jpeg',1_800_000,checksum], /not available to you/i);
+    await refused(who.userId, sql, [target.asset_id,submission,'image/jpeg',1_800_001,checksum], /same file/i);
+    await refused(who.userId, sql, [target.asset_id,submission,'image/png',1_800_000,checksum], /same file/i);
+    await refused(who.userId, sql, [target.asset_id,submission,'image/jpeg',1_800_000,digest()], /same file/i);
+    assert((await scalar('select count(*)::int n from public.coursework_upload_declarations where submission_id=$1',[submission])).n === 1, 'retry duplicated a declaration');
+    assert((await scalar('select status from public.media_assets where id=$1',[target.asset_id])).status === 'pending', 'retry silently confirmed the file');
+    await call(who.userId, SQL_CONFIRM, [target.asset_id]);
+    await refused(who.userId, sql, args, /no longer pending/i);
+
+    const pending = await declare(who.userId, submission, { checksum });
+    await call(who.userId, SQL_SUBMIT, [submission]);
+    await refused(who.userId, sql, [pending.asset_id,submission,'image/jpeg',1_800_000,checksum], /open draft/i);
+  });
+
+  await test('a verified guardian cannot retry a pending upload after authority is lost or it is quarantined', async () => {
+    const family = await parentWithChild({course,version});
+    const submission = await draft(family.userId, assignment, family.childId);
+    const checksum = digest();
+    const target = await declare(family.userId, submission, { checksum });
+    const sql='select * from public.retry_coursework_upload_target($1,$2,$3,$4,$5)';
+    const args=[target.asset_id,submission,'image/jpeg',1_800_000,checksum];
+    assert((await call(family.userId,sql,args)).asset_id === target.asset_id, 'guardian retry refused');
+    await q("update public.guardian_relationships set verified_at=now()-interval '2 years', consent_expires_at=now()-interval '1 day' where learner_profile_id=$1 and guardian_user_id=$2",[family.childId,family.userId]);
+    await refused(family.userId,sql,args,/not available to you/i);
+    await q("update public.guardian_relationships set consent_expires_at=now()+interval '1 year' where learner_profile_id=$1 and guardian_user_id=$2",[family.childId,family.userId]);
+    await committed(async()=>{ await q("select set_config('app.account_erasure','on',true)"); await q("update public.user_profiles set account_status='suspended' where user_id=$1",[family.userId]); });
+    try { await refused(family.userId,sql,args,/not available to you/i); }
+    finally { await committed(async()=>{ await q("select set_config('app.account_erasure','on',true)"); await q("update public.user_profiles set account_status='active' where user_id=$1",[family.userId]); }); }
+    const prior=(await q('select owner_user_id,configured_at from public.safeguarding_owner where singleton')).rows[0];
+    await q('delete from public.safeguarding_owner where singleton'); await q('select public.bootstrap_safeguarding_owner($1)',[admin]);
+    try { await call(admin,'select public.quarantine_media_upload($1,$2)',[target.asset_id,'review needed']);
+      await refused(family.userId,sql,args,/no longer pending/i);
+    } finally { await q('delete from public.safeguarding_owner where singleton');
+      if (prior) await q('insert into public.safeguarding_owner(singleton,owner_user_id,configured_at) values(true,$1,$2)',[prior.owner_user_id,prior.configured_at]); }
+  });
+
   await test('the limits fire before the transfer, not after it', async () => {
     const who = await learner('Limits', { course, version });
     const submission = await draft(who.userId, assignment, who.learnerId);

@@ -151,7 +151,7 @@ function harness(options: {
   const fetchImpl = (async (url: string, init?: { body?: string }) => {
     const body = JSON.parse(init?.body ?? '{}') as Record<string, unknown>;
     calls.push({ url, body });
-    const scripted = body.action === 'request_coursework_upload' ? options.register : options.confirm;
+    const scripted = body.action === 'request_coursework_upload' || body.action === 'retry_coursework_upload' ? options.register : options.confirm;
     return {
       ok: scripted?.ok ?? false,
       json: async () => scripted?.body ?? {},
@@ -400,4 +400,33 @@ test('unfinished declarations do not use the attached-file limit', () => {
   const page = readFileSync(new URL('../app/learn/[enrolmentId]/assignment/[assignmentId]/assignment-files.tsx', import.meta.url), 'utf8');
   assert.match(page, /countAttachedCourseworkFiles\(files\)/);
   assert.match(page, /attachedCount \?\? 0/);
+});
+
+
+test('resending uses the original pending asset and confirms only that asset', async () => {
+  const { calls, puts, fetchImpl, putImpl } = harness({
+    register: { ok: true, body: { ok: true, data: { assetId: 'a1', uploadUrl: 'https://storage.test/put', requiredHeaders: { 'if-none-match': '*' } } } },
+    confirm: { ok: true, body: { ok: true, data: { assetId: 'a1', attachmentId: 'att-1' } } },
+  });
+  const result = await uploadCourseworkFile(blobFile(1024), { submissionId: 'sub-1', retryAssetId: 'a1', fetchImpl, putImpl });
+  assert.equal(result.ok, true);
+  assert.deepEqual(calls.map((c) => c.body.action), ['retry_coursework_upload', 'confirm_coursework_upload']);
+  assert.equal(calls[0]?.body.assetId, 'a1');
+  assert.equal(puts[0]?.headers['if-none-match'], '*');
+});
+
+test('a resend response naming another asset is refused before any PUT', async () => {
+  const { puts, fetchImpl, putImpl } = harness({ register: { ok: true, body: { ok: true, data: { assetId: 'other', uploadUrl: 'https://storage.test/put' } } } });
+  const result = await uploadCourseworkFile(blobFile(1024), { submissionId: 'sub-1', retryAssetId: 'a1', fetchImpl, putImpl });
+  assert.equal(result.ok, false);
+  assert.equal(puts.length, 0);
+});
+
+
+test('an uncertain resend does not silently confirm the pending file', async () => {
+  const { calls, fetchImpl } = harness({ register: { ok: true, body: { ok: true, data: { assetId: 'a1', uploadUrl: 'https://storage.test/put', requiredHeaders: { 'if-none-match': '*' } } } } });
+  const result = await uploadCourseworkFile(blobFile(1024), { submissionId: 'sub-1', retryAssetId: 'a1', fetchImpl, putImpl: async () => { throw new Error('Storage refused the upload'); } });
+  assert.equal(result.ok, false);
+  assert.deepEqual(calls.map((c) => c.body.action), ['retry_coursework_upload']);
+  if (!result.ok) assert.match(result.message, /check the upload/);
 });

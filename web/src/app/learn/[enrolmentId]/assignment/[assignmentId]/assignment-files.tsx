@@ -52,6 +52,8 @@ export function AssignmentFiles({
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const retryInputRef = useRef<HTMLInputElement | null>(null);
+  const retryAssetRef = useRef<string | null>(null);
   const [files, setFiles] = useState(() => parseCourseworkFilesStrict(initialFiles));
   const [busy, setBusy] = useState(false);
   const [phase, setPhase] = useState<UploadPhase | null>(null);
@@ -64,7 +66,7 @@ export function AssignmentFiles({
   const pendingCount = files === null || attachedCount === null ? null : files.length - attachedCount;
   const remaining = attachedCount === null ? null : Math.max(0, COURSEWORK_MAX_FILES - attachedCount);
 
-  async function choose(chosen: File | null) {
+  async function choose(chosen: File | null, retryAssetId?: string) {
     if (!chosen) return;
     setError('');
     setNotice('');
@@ -78,12 +80,13 @@ export function AssignmentFiles({
     if (!check.ok) {
       setError(check.message);
       if (inputRef.current) inputRef.current.value = '';
+      if (retryInputRef.current) retryInputRef.current.value = '';
       return;
     }
 
     setBusy(true);
     try {
-      const target = submissionId || (await ensureDraft());
+      const target = submissionId || (retryAssetId ? null : await ensureDraft());
       if (!target) {
         setError('The draft could not be confirmed, so this file was not sent. Check the current work before trying again.');
         return;
@@ -91,6 +94,7 @@ export function AssignmentFiles({
 
       const outcome = await uploadCourseworkFile(chosen, {
         submissionId: target,
+        retryAssetId,
         onProgress: (next, value) => {
           setPhase(next);
           setPercent(value);
@@ -124,6 +128,7 @@ export function AssignmentFiles({
       setPhase(null);
       setPercent(0);
       if (inputRef.current) inputRef.current.value = '';
+      if (retryInputRef.current) retryInputRef.current.value = '';
     }
   }
 
@@ -180,9 +185,14 @@ export function AssignmentFiles({
                 <span className="muted"> · {describeCourseworkFile(file)}</span>
               </span>
               {!locked && file.status === 'pending' && (
-                <button type="button" className="btn ghost tiny" disabled={busy} onClick={() => void retryConfirmation(file.assetId)}>
-                  Check upload again
-                </button>
+                <div className="row">
+                  <button type="button" className="btn ghost tiny" disabled={busy} onClick={() => void retryConfirmation(file.assetId)}>
+                    Check upload again
+                  </button>
+                  <button type="button" className="btn ghost tiny" disabled={busy} onClick={() => { retryAssetRef.current = file.assetId; retryInputRef.current?.click(); }}>
+                    Resend same file
+                  </button>
+                </div>
               )}
               {!locked && file.status === 'available' && (
                 <button
@@ -205,7 +215,9 @@ export function AssignmentFiles({
             A photo of each page, a PDF, or a recording — up to{' '}
             {describeFileSize(COURSEWORK_MAX_BYTES)} each{remaining === null ? '. The current file count is unavailable.' : `, up to ${remaining} more; the server checks the limit.`}
           </label>
-          <p className="muted">Pending files do not count as attached. The original uploader can check whether a pending file arrived without sending it twice. If it never arrived, the pending entry may need individual review.</p>
+          <p className="muted">Pending files do not count as attached. The original uploader can check whether a pending file arrived. If it did not, they can select the same file to resend it to the existing entry. Check first and avoid resending while the original transfer is still running.</p>
+          <input ref={retryInputRef} type="file" accept={COURSEWORK_ACCEPT} hidden aria-label="Select the same file to resend" disabled={busy}
+            onChange={(event) => { const id = retryAssetRef.current; retryAssetRef.current = null; if (id) void choose(event.target.files?.[0] ?? null, id); }} />
           <input
             ref={inputRef}
             id="assignment-file"

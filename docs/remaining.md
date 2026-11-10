@@ -1345,3 +1345,22 @@ but does not remove the oversized object or recover storage costs. Create-only
 signing does not fix this. A hard provider-enforced size constraint or a bounded
 trusted upload path needs design and real-provider testing without breaking normal
 uploads or silently introducing a paid service.
+
+**Pending coursework transfer retry:** the original uploader can now select the
+same file to resend into its existing pending declaration instead of creating a
+new one. The retry RPC locks and checks the file and draft, current learner or
+verified-guardian authority, open assignment, attachment limit and recorded
+size, type and declared digest. It refuses quarantined, completed, deleted or
+unrelated files. The browser hashes the selected file, but a malicious client
+can lie about that digest: neither this RPC nor a storage HEAD verifies content
+or scans malware. If a prior transfer completed, create-only storage may refuse
+the retry; the existing visual check-upload action can confirm the pending entry.
+Already issued upload URLs cannot be revoked by this database change. Pending
+records are not removed, and provider-side objects are not deleted. Deploy the
+migration and web route together and test with real storage/CORS; concurrent
+PostgreSQL and in-flight upload behavior are not established by PGlite.
+
+Local file/review tests passed 65 assertions, a shared coursework/offline/RPC
+order passed 170 before a further suspension check was added, file tests then
+passed 37, and web passed 2,147 tests. Lint, typecheck, repo checks and build
+passed. The database tests use a simulated server-confirmation fixture, not R2.
