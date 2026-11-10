@@ -165,9 +165,16 @@ export async function run(ctx) {
       ]),
       `the shelf row grew a column: ${keys.join(', ')}`);
     assert(typeof row.learners === 'number', 'the learner count is not a number');
-    const text = JSON.stringify(result);
-    assert(!text.includes('learner_profile_id') && !text.includes('learnerProfileId'),
-      'a learner identifier is somewhere in the payload');
-    assert(!/price|revenue|amount|total_paid/i.test(text), 'money appeared in the shelf');
+    // Inspect field names, not arbitrary titles or authors: an ordinary course
+    // may legitimately contain words such as "price" or "revenue".
+    const fieldNames = (value) => {
+      if (!value || typeof value !== 'object') return [];
+      if (Array.isArray(value)) return value.flatMap(fieldNames);
+      return Object.entries(value).flatMap(([key, child]) => [key, ...fieldNames(child)]);
+    };
+    const fields = fieldNames(result);
+    assert(!fields.some((key) => /learner_profile_id|learnerProfileId/i.test(key)),
+      'a learner identifier field is somewhere in the payload');
+    assert(!fields.some((key) => /price|revenue|amount|total_paid/i.test(key)), 'money field appeared in the shelf');
   });
 }
