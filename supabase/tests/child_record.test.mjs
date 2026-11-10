@@ -239,6 +239,34 @@ export async function run(ctx) {
     assert(p.learnerRecords.nextDue !== null, 'the plan does not say when the next record falls due');
   });
 
+  await test('the child record survives until the exact thirty-day instant', async () => {
+    // The original child is not due yet. This second child gives the job an
+    // isolated real deletion target without consuming the certificate fixture.
+    const boundary = (await one(`insert into public.learner_profiles
+      (display_name, learner_type, age_band, status, deleted_at, family_id)
+      values ('Boundary child', 'child', '8-10', 'archived',
+        date_trunc('day',now() at time zone 'UTC') at time zone 'UTC' - interval '732 hours', $1) returning id`, [family])).id;
+    const deadline = (await one(`select (deleted_at + interval '720 hours')::text as at
+      from public.learner_profiles where id=$1`, [boundary])).at;
+    const before = (await call(owner, "select public.retention_plan($1::timestamptz - interval '1 microsecond') as r", [deadline]));
+    const at = (await call(owner, 'select public.retention_plan($1::timestamptz) as r', [deadline]));
+    assert(at.learnerRecords.due === before.learnerRecords.due + 1, 'plan did not count the exact boundary');
+    const early = await call(owner, "select public.run_retention_jobs($1::timestamptz - interval '1 microsecond',5000) as r", [deadline]);
+    assert(early.deleted.learnerRecords===0, 'cleanup reported an early erasure');
+    assert((await one('select status from public.learner_profiles where id=$1',[boundary])).status==='archived', 'record was erased before its deadline');
+    const done = await call(owner, 'select public.run_retention_jobs($1::timestamptz,5000) as r', [deadline]);
+    assert(done.deleted.learnerRecords===1, 'the due record was not counted');
+    assert((await one('select status from public.learner_profiles where id=$1',[boundary])).status==='erased', 'the record was not erased at its deadline');
+    await runJobs(plus(now, 400 * DAY));
+    assert((await one('select status from public.learner_profiles where id=$1',[child])).status==='archived', 'a future request bypassed the actual database clock');
+    const source = (await one("select pg_get_functiondef('public.run_retention_jobs(timestamptz,integer)'::regprocedure) as source")).source;
+    const lock = source.indexOf('perform 1 from public.learner_profiles lp where lp.id=v_one');
+    const erase = source.indexOf('v_learner_result := public.purge_learner_record(v_one)', lock);
+    assert(lock >= 0 && erase > lock && source.slice(lock,erase).includes('for update') &&
+      source.slice(lock,erase).includes("lp.deleted_at + interval '720 hours' <= v_as_of_time"),
+      'candidate clock is no longer rechecked while the profile is locked');
+  });
+
   await test('a day early is not due, and the day itself is', async () => {
     await q(`update public.learner_profiles set deleted_at = now() - interval '29 days' where id = $1`,
       [child]);
@@ -255,8 +283,8 @@ export async function run(ctx) {
     assert(await count('select 1 from public.course_enrolments where learner_profile_id = $1', [child]) === 1,
       'the enrolment went a day early');
 
-    await q(`update public.learner_profiles set deleted_at = now() - interval '30 days' where id = $1`,
-      [child]);
+    await q(`update public.learner_profiles set deleted_at = $2::timestamptz - interval '720 hours' where id = $1`,
+      [child, now]);
     const onTheDay = await one(
       `select count(*)::int n from public.retention_due_records
         where kind = 'learner_record' and id = $1

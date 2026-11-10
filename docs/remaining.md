@@ -1444,3 +1444,22 @@ shard run exposed a pre-existing test that searched arbitrary course titles for
 financial words; its assertion now checks field names and the affected shard was
 rerun. Shards share state only within each batch and do not prove PostgreSQL
 concurrency or hosted object-store behavior.
+
+**Child record deadline:** migration 1180 also changes the separate learner-record
+plan and scheduled cleanup to compare the actual closure timestamp plus 720
+hours, rather than treating midnight on the thirtieth date as the deadline. The
+cleanup locks and rechecks the child profile's type, state and clock before
+calling the existing hold-aware erasure writer, and counts only a new successful
+erasure. This supersedes the preceding note about that cleanup remaining
+date-based. The calendar date is still displayed in summaries. A test covers
+one microsecond before and at the deadline and a future-dated request; a source
+check covers the profile recheck. No test here proves concurrent PostgreSQL
+interleavings, restores prior erasures, deletes storage bytes or guarantees a job
+runs on time. The separate support-case three-year clock still uses calendar dates
+and needs its own boundary audit.
+
+For this change, 170 database suites passed 2,646 assertions across eight
+separate PGlite databases; the relevant batch was repeated after adding the
+profile-lock source assertion. An initial eight-process attempt was stopped
+under resource pressure and is not counted. Web passed 2,158 tests, and lint,
+typecheck, repository checks and build passed. Live deployment remains unverified.
