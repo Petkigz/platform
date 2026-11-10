@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
+import { privateNoStore } from '@/lib/private-response';
 
 /**
  * Running the retention cleanup from a screen.
@@ -17,8 +18,9 @@ import { isSupabaseConfigured } from '@/lib/env';
  * replayed and tested, and a route that let a browser pass `2040` would be
  * handing the future to whoever asked. The run cleans as of today.
  */
+const privateJson = (body: unknown, init?: ResponseInit) => privateNoStore(NextResponse.json(body, init));
 function fail(message: string, status = 400) {
-  return NextResponse.json({ ok: false, message }, { status });
+  return privateJson({ ok: false, message }, { status });
 }
 
 export async function POST(request: Request) {
@@ -56,5 +58,5 @@ export async function POST(request: Request) {
     return fail(error.message, 500);
   }
 
-  return NextResponse.json({ ok: true, run: data });
+  return privateJson({ ok: true, run: data });
 }

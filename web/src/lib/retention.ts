@@ -205,7 +205,7 @@ export function nextDueSentence(plan: RetentionPlan): string {
     .filter((d): d is string => Boolean(d))
     .sort();
   if (dates.length === 0) {
-    return 'No record on the platform has a retention date yet: nothing has been closed or checked.';
+    return 'No next date was reported for these three record types. Other records and coursework have separate clocks.';
   }
   const next = retentionDay(dates[0]);
   return `The next record falls due on ${next}.`;
@@ -230,7 +230,7 @@ export function describeRetentionRun(run: RetentionRun): string {
     }
     return run.audited
       ? 'Nothing was deleted; the run was recorded in the audit log.'
-      : 'Nothing was due, so nothing was deleted and no audit entry was written.';
+      : 'No deletion or audit entry was reported by this run.';
   }
   const parts: string[] = [];
   if (supportCases > 0) parts.push(`${supportCases} support case${supportCases === 1 ? '' : 's'}`);
@@ -243,8 +243,8 @@ export function describeRetentionRun(run: RetentionRun): string {
   if (files > 0) parts.push(`${files} coursework file${files === 1 ? '' : 's'} tombstoned, not necessarily deleted from storage`);
   const tail = left > 0
     ? ` ${left} more remain due; eligibility is checked on each run.`
-    : ' Nothing else is due.';
-  return `Deleted ${parts.join(', ')}.${tail}${holdNote} ${run.audited ? 'Recorded in the audit log against your name.' : 'No audit entry was reported.'}`;
+    : ' No more due records were reported in these queues.';
+  return `Cleanup reported: ${parts.join(', ')}.${tail}${holdNote} ${run.audited ? 'Recorded in the audit log against your name.' : 'No audit entry was reported.'}`;
 }
 
 /**
@@ -258,4 +258,32 @@ export function retentionGateSentence(canRun: boolean): string {
   return canRun
     ? 'Running the cleanup permanently deletes eligible records that the policy says are due. The date on each record was set when it was closed or recorded, not here.'
     : 'Only the platform admin runs the cleanup. You can read what is due, and the deletion waits for the owner.';
+}
+
+
+/** A network or malformed response cannot tell us whether a destructive run committed. */
+export async function postRetentionRun(): Promise<{ ok: true; run: RetentionRun } | { ok: false; message: string }> {
+  const uncertain = 'The cleanup outcome could not be confirmed. It may have run. Refresh the plan and check the audit before running it again.';
+  try {
+    const response = await fetch('/api/admin/retention', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      cache: 'no-store', body: JSON.stringify({ action: 'run' }),
+    });
+    const payload: unknown = await response.json();
+    if (!response.ok || !payload || typeof payload !== 'object' || Array.isArray(payload)) return { ok: false, message: uncertain };
+    const value = payload as { ok?: unknown; run?: unknown };
+    if (value.ok !== true || !value.run || typeof value.run !== 'object' || Array.isArray(value.run)) return { ok: false, message: uncertain };
+    const run = value.run as Record<string, unknown>;
+    const validCount = (n: unknown) => typeof n === 'number' && Number.isSafeInteger(n) && n >= 0;
+    const validCounts = (v: unknown, required: string[], optional: string[]) => {
+      if (!v || typeof v !== 'object' || Array.isArray(v)) return false;
+      const record = v as Record<string, unknown>;
+      return required.every((key) => validCount(record[key])) && optional.every((key) => record[key] === undefined || validCount(record[key]));
+    };
+    if (typeof run.asOf !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(run.asOf) || typeof run.audited !== 'boolean' ||
+        !validCounts(run.deleted, ['supportCases','supportCaseMessages','screenings','learnerRecords','courseworkFiles'], []) ||
+        !validCounts(run.remaining, ['supportCases','screenings','learnerRecords','courseworkFiles'], []) ||
+        !validCounts(run.held, ['learnerRecords','courseworkFiles'], [])) return { ok: false, message: uncertain };
+    return { ok: true, run: value.run as RetentionRun };
+  } catch { return { ok: false, message: uncertain }; }
 }

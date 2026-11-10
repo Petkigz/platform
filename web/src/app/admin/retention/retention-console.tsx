@@ -6,6 +6,7 @@ import {
   describeRetentionRun,
   dueTotal,
   nextDueSentence,
+  postRetentionRun,
   retentionDay,
   retentionGateSentence,
   retentionHeadline,
@@ -39,26 +40,22 @@ export function RetentionConsole({
   const [message, setMessage] = useState<string | null>(null);
   const [run, setRun] = useState<RetentionRun | null>(null);
   const [pending, startTransition] = useTransition();
+  const [busy, setBusy] = useState(false);
 
   const total = dueTotal(plan);
 
   async function press() {
-    setMessage(null);
-    const response = await fetch('/api/admin/retention', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ action: 'run' }),
-    });
-    const result = (await response.json().catch(() => null)) as
-      | { ok?: boolean; message?: string; run?: RetentionRun }
-      | null;
-    if (!response.ok || result?.ok !== true || !result.run) {
-      setMessage(result?.message ?? 'The cleanup did not run.');
-      return;
-    }
-    setRun(result.run);
-    setArmed(false);
-    startTransition(() => router.refresh());
+    setMessage(null); setRun(null); setBusy(true);
+    try {
+      const result = await postRetentionRun();
+      setArmed(false);
+      if (!result.ok) {
+        setMessage(result.message);
+      } else {
+        setRun(result.run);
+      }
+      startTransition(() => router.refresh());
+    } finally { setBusy(false); }
   }
 
   return (
@@ -96,12 +93,12 @@ export function RetentionConsole({
         <p className="muted" style={{ marginTop: '0.75rem' }}>
           {plan.learnerRecords.erasedToDate} child
           {plan.learnerRecords.erasedToDate === 1 ? ' record has' : ' records have'} already been
-          erased. What is left of each is an id a certificate still points at, and nothing else.
+          erased. Certificates, recovery markers, review records and copies may still retain information; erasure of all data is not verified.
         </p>
       )}
 
       <div className="outline-h" style={{ marginTop: '2rem' }}>
-        <h3>The two clocks</h3>
+        <h3>The three clocks</h3>
       </div>
       <div className="card">
         <ul className="lessons">
@@ -159,37 +156,37 @@ export function RetentionConsole({
           armed ? (
             <div style={{ display: 'grid', gap: '0.6rem' }}>
               <p style={{ margin: 0 }}>
-                Run cleanup for {total === 0 ? 'no listed records' : `${total} past-due record${total === 1 ? '' : 's'}`}? Eligibility is rechecked.
-                {' '}This cannot be undone.
+                Run cleanup for {total === 0 ? 'no records in these three counts' : `${total} past-due record${total === 1 ? '' : 's'}`}? Eligibility is rechecked.
+                {' '}Coursework may also be tombstoned, even if these counts are zero. This cannot be undone.
               </p>
               <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
                 <button
                   type="button"
                   className="btn"
-                  disabled={pending || total === 0}
+                  disabled={pending || busy}
                   onClick={() => startTransition(() => { void press(); })}
                 >
-                  {pending ? 'Deleting…' : 'Yes, delete what is due'}
+                  {pending || busy ? 'Working…' : 'Yes, run cleanup'}
                 </button>
                 <button
                   type="button"
                   className="btn ghost"
                   onClick={() => setArmed(false)}
-                  disabled={pending}
+                  disabled={pending || busy}
                 >
                   Cancel
                 </button>
               </div>
             </div>
           ) : (
-            <button type="button" className="btn" onClick={() => setArmed(true)}>
+            <button type="button" className="btn" disabled={pending || busy} onClick={() => setArmed(true)}>
               {total === 0 ? 'Check the clock now' : `Delete the ${total} due record${total === 1 ? '' : 's'}`}
             </button>
           )
         ) : (
           <p className="muted" style={{ marginBottom: 0 }}>
-            The cleanup runs from the owner&rsquo;s account, or from the scheduler when
-            <code> CRON_SECRET </code> is set. Nothing on this page is waiting for a decision
+            The cleanup runs from the owner&rsquo;s account, or from a separately configured scheduler. Setting
+            <code> CRON_SECRET </code> alone does not schedule a job. Nothing on this page is waiting for a decision
             you can make.
           </p>
         )}

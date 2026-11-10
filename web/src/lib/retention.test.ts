@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { readFileSync } from 'node:fs';
 import {
   describeRetentionRun,
   dueTotal,
   EMPTY_PLAN,
   nextDueSentence,
+  postRetentionRun,
   policyPeriod,
   retentionDay,
   retentionGateSentence,
@@ -93,7 +95,7 @@ test('a date-only string is shown as the day it says, not the day before it', ()
 });
 
 test('an empty platform answers when the next one falls due', () => {
-  assert.match(nextDueSentence(plan()), /No record on the platform has a retention date yet/);
+  assert.match(nextDueSentence(plan()), /No next date was reported for these three record types/);
 
   const withNext = plan({
     supportCases: {
@@ -113,7 +115,7 @@ test('a run is described from the numbers the database returned', () => {
       remaining: { supportCases: 0, screenings: 0, learnerRecords: 0 },
       audited: false,
     }),
-    'Nothing was due, so nothing was deleted and no audit entry was written.',
+    'No deletion or audit entry was reported by this run.',
   );
 
   const one = describeRetentionRun({
@@ -122,8 +124,8 @@ test('a run is described from the numbers the database returned', () => {
     remaining: { supportCases: 0, screenings: 0, learnerRecords: 0 },
     audited: true,
   });
-  assert.match(one, /^Deleted 1 support case, 1 reply inside them\./);
-  assert.match(one, /Nothing else is due\./);
+  assert.match(one, /^Cleanup reported: 1 support case, 1 reply inside them\./);
+  assert.match(one, /No more due records were reported in these queues\./);
   assert.match(one, /against your name/);
 
   const batch = describeRetentionRun({
@@ -144,7 +146,7 @@ test('a run is described from the numbers the database returned', () => {
     remaining: { supportCases: 0, screenings: 0, learnerRecords: 0 },
     audited: true,
   });
-  assert.match(single, /^Deleted 1 child's learning record\./);
+  assert.match(single, /^Cleanup reported: 1 child's learning record\./);
 });
 
 test('a hold is reported as a deferral, not an empty or automatically resolved queue', () => {
@@ -222,4 +224,45 @@ test('a period is said the way a person would say it', () => {
   assert.equal(policyPeriod({ years: 1, days: null, clock: '', source: '' }), '1 year');
   assert.equal(policyPeriod({ years: null, days: 30, clock: '', source: '' }), '30 days');
   assert.equal(policyPeriod({ years: null, days: 1, clock: '', source: '' }), '1 day');
+});
+
+
+test('a cleanup with an interrupted or malformed response is uncertain, not a failed run', async () => {
+  const original = globalThis.fetch;
+  const run = { asOf: '2026-11-01', deleted: { supportCases: 0, supportCaseMessages: 0, screenings: 0, learnerRecords: 0, courseworkFiles: 1 },
+    remaining: { supportCases: 0, screenings: 0, learnerRecords: 0, courseworkFiles: 0 }, held: { learnerRecords: 0, courseworkFiles: 0 }, audited: true };
+  try {
+    globalThis.fetch = async () => { throw new Error('connection lost after commit'); };
+    const lost = await postRetentionRun();
+    assert.equal(lost.ok, false);
+    if (!lost.ok) assert.match(lost.message, /may have run.*check the audit/i);
+    for (const response of [new Response('bad gateway', {status: 502}),
+      new Response(JSON.stringify({ok:true,run:{...run,deleted:{...run.deleted,courseworkFiles:'1'}}})),
+      new Response(JSON.stringify({ok:true,run:{...run,held:null}})),
+      new Response(JSON.stringify({ok:false,message:'server error'}),{status:500})]) {
+      globalThis.fetch = async () => response;
+      assert.equal((await postRetentionRun()).ok, false);
+    }
+    globalThis.fetch = async (_input, init) => {
+      assert.equal(init?.cache, 'no-store');
+      return new Response(JSON.stringify({ok:true,run}), {status:200});
+    };
+    assert.deepEqual(await postRetentionRun(), {ok:true,run});
+  } finally { globalThis.fetch = original; }
+});
+
+test('retention console keeps the cleanup usable when only coursework may be due', () => {
+  const component = readFileSync(new URL('../app/admin/retention/retention-console.tsx', import.meta.url), 'utf8');
+  const page = readFileSync(new URL('../app/admin/retention/page.tsx', import.meta.url), 'utf8');
+  const api = readFileSync(new URL('../app/api/admin/retention/route.ts', import.meta.url), 'utf8');
+  assert.doesNotMatch(component, /disabled=\{pending \|\| total === 0\}/);
+  assert.match(component, /Coursework may also be tombstoned/);
+  assert.match(component, /postRetentionRun\(\)/);
+  assert.match(component, /Setting[\s\S]*alone does not schedule/);
+  assert.doesNotMatch(component, /and nothing else\./);
+  assert.doesNotMatch(page, /nothing else on this platform outlives/);
+  assert.match(page, /Do not assume the queues are empty/);
+  assert.doesNotMatch(page, /data \?\? EMPTY_PLAN/);
+  assert.match(api, /privateNoStore\(NextResponse\.json\(body, init\)\)/);
+  assert.equal((api.match(/NextResponse\.json\(/g) ?? []).length, 1);
 });

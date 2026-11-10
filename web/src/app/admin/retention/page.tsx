@@ -2,10 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import {
-  EMPTY_PLAN,
-  type RetentionPlan,
-} from '@/lib/retention';
+import type { RetentionPlan } from '@/lib/retention';
 import {
   EMPTY_IDENTITY_QUEUE,
   parseIdentityQueue,
@@ -59,8 +56,8 @@ export default async function AdminRetentionPage() {
   if (platform !== true) redirect('/');
 
   const { data, error } = await supabase.rpc('retention_plan', {});
-  if (error) throw new Error(error.message);
-  const plan = (data ?? EMPTY_PLAN) as unknown as RetentionPlan;
+  if (error || !data) throw new Error('The retention plan could not be loaded. Do not assume the queues are empty.');
+  const plan = data as unknown as RetentionPlan;
 
   // The sign-ins this database cannot delete. Read separately from the plan
   // because it is not a clock: nothing here falls due, and a screen that folded
@@ -80,8 +77,8 @@ export default async function AdminRetentionPage() {
         What the privacy notice and the children&rsquo;s policy promise to delete, and when.
         Three things are kept on a clock — a closed support case, a record that an adult who
         teaches was checked, and a child&rsquo;s learning record once the guardian&rsquo;s
-        account has closed — and nothing else on this platform outlives the account it
-        belongs to.
+        account has closed. Other records, recovery evidence, stored files and copies can
+        remain and have separate rules or require review.
       </p>
 
       <RetentionConsole plan={plan} canRun={platform === true} />

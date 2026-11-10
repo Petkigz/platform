@@ -1485,3 +1485,15 @@ Local regression: 2,647 assertions in 170 suites across eight separate PGlite
 databases (the affected batch was repeated after adding timezone/leap checks),
 2,158 web tests, lint, typecheck, repository checks and build passed. These are
 not live-provider or multi-session tests.
+
+**Retention console reliability:** the owner can now run the cleanup even when
+the three displayed record counts are zero, because coursework may still be due.
+An interrupted, failed or malformed response is treated as an unknown outcome,
+with a prompt to refresh and check the audit before retrying; it is not called a
+failed run. A missing plan is no longer replaced by a zero plan. Responses request
+private, no-store caching, and the page no longer claims all other personal data
+is gone or that setting a secret schedules a job. The returned counts describe
+database actions, not verified object deletion. Local web: 2,160 tests, lint,
+typecheck, repository checks and build passed. Live job, proxy and browser behavior
+still need verification. The support-case safeguarding hold and legacy-case
+classification gap described above remain open.
