@@ -19,6 +19,7 @@ import {
   parseStoragePage,
   postRetentionAction,
   storageSentence,
+  storageDeadlineStatus,
 } from './coursework-retention.ts';
 
 const hold = {
@@ -85,7 +86,7 @@ test('the storage sentence never implies the bytes are gone', () => {
   }]);
   assert.ok(row);
   assert.match(storageSentence(row!), /Tombstoned 2026-11-01/);
-  assert.match(storageSentence(row!), /bytes due 2026-11-04/);
+  assert.match(storageSentence(row!), /bytes due 2026-11-04T10:00:00.000Z/);
   assert.equal(row?.key, 'child/2026/page-one.jpg');
 
   assert.match(PURGE_NOTE, /cannot delete or verify/);
@@ -225,4 +226,20 @@ test('storage collision warning blocks the routine statement and never claims st
   assert.match(page, /If it was already deleted/);
   assert.match(page, /href="\/admin\/incidents"/);
   assert.match(PURGE_NOTE, /cannot prevent changes or deletion in storage/);
+});
+
+
+test('storage queue distinguishes future and unknown deadlines without claiming deletion is safe', () => {
+  const now = Date.parse('2026-11-04T10:00:00.000Z');
+  assert.equal(storageDeadlineStatus({purgeDueAt: null}, now), 'unknown');
+  assert.equal(storageDeadlineStatus({purgeDueAt: 'invalid'}, now), 'unknown');
+  assert.equal(storageDeadlineStatus({purgeDueAt: '2026-11-04T10:00:00.000001Z'}, now), 'future');
+  assert.equal(storageDeadlineStatus({purgeDueAt: '2026-11-04T10:00:00.001Z'}, now), 'future');
+  assert.equal(storageDeadlineStatus({purgeDueAt: '2026-11-04T09:59:59.999Z'}, now), 'due');
+  assert.equal(storageDeadlineStatus({purgeDueAt: '2026-11-04T09:59:59.999Z'}, NaN), 'unknown');
+  const page = readFileSync(new URL('../app/admin/coursework/page.tsx', import.meta.url), 'utf8');
+  assert.match(page, /The recorded byte deadline has not arrived/);
+  assert.match(page, /The byte deadline is unknown/);
+  assert.match(page, /report the incident/);
+  assert.match(page, /Record my deletion statement/);
 });

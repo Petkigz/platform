@@ -1402,3 +1402,12 @@ Coursework review and owner retention-action responses now also request private,
 no-store caching on successes and errors. This does not verify object deletion or
 prevent copying, and deployed proxy behavior remains to be checked. Local web
 checks passed: 2,157 tests, lint, typecheck, repository checks and build.
+
+The owner storage queue now warns per object when its byte deadline is in the
+future or missing, shows the full recorded timestamp, and points to incident
+reporting if an object was already deleted. A deletion statement remains a
+statement, including when a premature deletion needs to be recorded; it is not
+permission to delete or proof of deletion. These warnings reflect the server time
+and data at page render, not a lock on storage or a guarantee that holds and uses
+have not changed. Recheck before acting. Local web: 2,158 tests, lint, typecheck,
+repository checks and build passed.

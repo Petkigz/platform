@@ -24,6 +24,7 @@ import {
   parseHoldPage,
   parseStoragePage,
   storageSentence,
+  storageDeadlineStatus,
 } from '@/lib/coursework-retention';
 import { ReviewForm } from './review-form';
 import { RetentionActionForm } from './retention-actions';
@@ -173,6 +174,7 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
   const storageRows = !storageResult.error ? parseStoragePage(storageResult.data) : null;
   const canSeeStorage = storageRows !== null;
   const storage = storageRows?.slice(0,50) ?? [];
+  const storageCheckedAt = Date.now();
   const storageNext = storageRows && storageRows.length > 50 ? storageRows[49] : null;
   const missingCount = planResult.error ? null : missingClassEndCount(planResult.data);
   const missingEnds = missingEndsResult.error ? null : parseMissingClassEnds(missingEndsResult.data);
@@ -680,7 +682,7 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
           <div className="outline-h">
             <h2>Handed-in files waiting in storage</h2>
           </div>
-          <p className="muted">{PURGE_NOTE}</p>
+          <p className="muted">{PURGE_NOTE} Deadlines include their time and timezone; refresh this page before acting.</p>
           {storage.length === 0 ? (
             <p className="muted">
               No entries were returned on this page. Any recorded deletions are statements by the
@@ -699,6 +701,8 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
                       {row.backend}: {row.bucket}/{row.key}
                     </code>
                   </span>
+                  {storageDeadlineStatus(row, storageCheckedAt) === 'future' && <p className="notice warn">The recorded byte deadline has not arrived. Do not delete this object yet. If it was already deleted early, <Link href="/admin/incidents">report the incident</Link> and record what happened.</p>}
+                  {storageDeadlineStatus(row, storageCheckedAt) === 'unknown' && <p className="notice warn">The byte deadline is unknown. Do not delete this object as routine cleanup; review its case individually. If it was already deleted, <Link href="/admin/incidents">report the incident</Link> and record what happened.</p>}
                   {row.held ? (
                     <p className="notice warn">Safeguarding hold open — do not delete this object. Review the hold before taking action.</p>
                   ) : row.storageReviewNeeded ? (

@@ -154,6 +154,16 @@ export const PURGE_NOTE =
   + 'a statement for a readable or held file. Do not delete held objects or objects not yet due; review missing dates individually. '
   + 'Hold and storage-key status can change: check again before deletion. This screen cannot prevent changes or deletion in storage.';
 
+/** A queue entry is not necessarily due. This is display guidance, not a lock. */
+export function storageDeadlineStatus(row: Pick<StorageRow, 'purgeDueAt'>, now: number): 'unknown' | 'future' | 'due' {
+  if (!row.purgeDueAt || !Number.isFinite(now)) return 'unknown';
+  const deadline = Date.parse(row.purgeDueAt);
+  if (!Number.isFinite(deadline)) return 'unknown';
+  // JavaScript truncates PostgreSQL's fractional microseconds. Err on the side
+  // of waiting through the entire millisecond at the boundary.
+  return deadline >= now ? 'future' : 'due';
+}
+
 /** One line per held file, in the register. */
 export function holdSentence(row: HoldRow): string {
   if (!row.stillReadable) {
@@ -169,7 +179,8 @@ export function holdMeta(row: HoldRow): string {
 }
 
 export function storageSentence(row: StorageRow): string {
-  const due = row.purgeDueAt ? row.purgeDueAt.slice(0, 10) : 'no date recorded';
+  const due = row.purgeDueAt && Number.isFinite(Date.parse(row.purgeDueAt))
+    ? row.purgeDueAt : 'no valid date recorded';
   return `Tombstoned ${row.tombstonedAt?.slice(0, 10) ?? 'at some point'}; bytes due ${due}.`;
 }
 
