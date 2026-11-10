@@ -1424,3 +1424,23 @@ quarantined evidence, and protection against an in-flight or previously signed
 PUT arriving after cleanup. A simple permanent cap or blind deletion would strand
 legitimate uploads or risk evidence; neither has been introduced. Together with
 the unsigned-PUT size gap above, this remains a storage-abuse and cost risk.
+
+**Coursework retention time boundary:** the former coursework clock compared
+calendar dates, so cleanup or shared-file review could tombstone an object early
+on the anniversary date, before the actual time of day. Migration 1170 keeps
+UTC date summaries for display but compares exact UTC instants for normal
+coursework cleanup, the plan, and shared-file review; the simulated `p_now` cannot
+advance cleanup past the database's clock. The normal anniversary is computed
+in UTC, and the separate erased-record clock uses 720 hours. This does not
+restore already tombstoned files, delete storage objects, or guarantee timely
+cleanup; it also does not change the separate date-based learner-record cleanup
+or prove live concurrent transactions. Historical early actions, if any, require
+individual review. Focused tests cover the instant just before and at expiry,
+same-day shared contexts, erasure-clock precision and session timezone.
+
+Local checks: 2,645 assertions in 170 suites across eight PGlite databases,
+2,158 web tests, lint, typecheck, repository checks and build passed. The first
+shard run exposed a pre-existing test that searched arbitrary course titles for
+financial words; its assertion now checks field names and the affected shard was
+rerun. Shards share state only within each batch and do not prove PostgreSQL
+concurrency or hosted object-store behavior.

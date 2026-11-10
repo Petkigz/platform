@@ -702,9 +702,10 @@ moves; `platform.search` blamed a missing index when no transcript text existed.
 Optional author-provided transcripts now exist and are searchable only when the caller may read them. Both rows
 have since been updated; their switches did not move.
 
-Verification: **The previous 266-migration tree passed 2 598 database assertions
-in 170 suites. With migrations 600–650, 58 focused database and RPC-contract checks and 2 072 web tests passed. A full database rerun was invalidated by concurrent source changes and remains pending. TypeScript
-typecheck and `check:repo` pass; 323 migrations.**
+Verification: **The tree with 324 migrations passed 2 645 database assertions in
+170 suites across eight PGlite databases, and 2 158 web tests. Lint, TypeScript,
+`check:repo` and build passed. Hosted deployment and real concurrent PostgreSQL
+and storage behavior remain unverified.**
 
 ## Today's sentence
 

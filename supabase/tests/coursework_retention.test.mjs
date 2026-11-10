@@ -181,6 +181,28 @@ export async function run(ctx) {
   console.log('\nAct I — the clock, and which anchor it starts from');
   // -------------------------------------------------------------------------
 
+  await test('cleanup waits for the exact yearly anniversary, not midnight on its date', async () => {
+    const row = await handedIn();
+    await q(`update public.assignment_submission_assets set created_at=(date_trunc('day',now()) - interval '1 day' + interval '12 hours') - interval '1 year' where media_asset_id=$1`, [row.asset]);
+    await q(`update public.coursework_upload_declarations set declared_at=(date_trunc('day',now()) - interval '1 day' + interval '12 hours') - interval '1 year' where asset_id=$1`, [row.asset]);
+    await q(`update public.assignment_submissions set created_at=(date_trunc('day',now()) - interval '1 day' + interval '12 hours') - interval '1 year', submitted_at=(date_trunc('day',now()) - interval '1 day' + interval '12 hours') - interval '1 year' where id=$1`, [row.submission]);
+    const clock = await scalar('select due_at::text due_at from public.coursework_file_retention where asset_id=$1', [row.asset]);
+    assert(clock.due_at, 'exact deadline missing');
+    const utcClock=(await scalar("select due_at::text due_at from public.coursework_file_retention where asset_id=$1",[row.asset])).due_at;
+    await q("set timezone='Pacific/Auckland'");
+    try {
+      const shifted=(await scalar("select due_at at time zone 'UTC' as due_at from public.coursework_file_retention where asset_id=$1",[row.asset])).due_at;
+      assert(new Date(shifted).getTime()===new Date(utcClock).getTime(), 'session timezone moved the deadline');
+    } finally { await q("set timezone='UTC'"); }
+    const beforePlan = (await call(owner, "select public.coursework_retention_plan($1::timestamptz - interval '1 microsecond') as p", [clock.due_at])).p;
+    const atPlan = (await call(owner, 'select public.coursework_retention_plan($1::timestamptz) as p', [clock.due_at])).p;
+    assert(atPlan.files.due === beforePlan.files.due + 1, 'plan did not use the same exact boundary');
+    await call(owner, "select public.purge_coursework_files($1::timestamptz - interval '1 microsecond',5000)", [clock.due_at]);
+    assert((await scalar('select deleted_at from public.media_assets where id=$1', [row.asset])).deleted_at===null, 'file tombstoned before exact deadline');
+    await call(owner, 'select public.purge_coursework_files($1::timestamptz,5000)', [clock.due_at]);
+    assert((await scalar('select deleted_at from public.media_assets where id=$1', [row.asset])).deleted_at!==null, 'file not tombstoned at deadline');
+  });
+
   await test('a handed-in file is due a year after it was handed in', async () => {
     const row = await handedIn();
     const record = await retentionRows(row);
@@ -328,6 +350,14 @@ export async function run(ctx) {
     await refuses(/not_allowed/i,()=>call(governance,sql,[first.asset,'Checked every context',confirm]));
     await refuses(/confirm the review/i,()=>call(owner,sql,[first.asset,'Checked every context','wrong']));
     await refuses(/not all submission contexts are due/i,()=>call(owner,sql,[first.asset,'Checked every context',confirm]));
+    // Set the second deadline to the end of the current UTC day: it shares
+    // today's date but has not arrived. A date-only check would accept it.
+    const anchor = "((date_trunc('day',now() at time zone 'UTC') + interval '1 day' - interval '1 microsecond' - interval '1 year') at time zone 'UTC')";
+    await q(`update public.assignment_submissions set created_at=${anchor} where id=$1`,[second]);
+    await q('alter table public.assignment_submission_revisions disable trigger assignment_submission_revisions_append_only');
+    try { await q(`update public.assignment_submission_revisions set reopened_at=${anchor} where submission_id=$1`,[second]); }
+    finally { await q('alter table public.assignment_submission_revisions enable trigger assignment_submission_revisions_append_only'); }
+    await refuses(/not all submission contexts are due/i,()=>call(owner,sql,[first.asset,'Checked every context',confirm]));
     // The second reference becomes due later; model the passage of time only
     // after proving it cannot be shortened by the first clock.
     await q("update public.assignment_submissions set created_at=now()-interval '2 years' where id=$1",[second]);
@@ -461,6 +491,10 @@ export async function run(ctx) {
 
     const record = await retentionRows(row);
     assert(record.basis === 'erasure', `basis ${record.basis}`);
+    const exact = await scalar(`select r.due_at = lp.deleted_at + interval '720 hours' as matches
+      from public.coursework_file_retention r join public.learner_profiles lp on lp.id=r.learner_profile_id
+      where r.asset_id=$1`, [row.asset]);
+    assert(exact.matches === true, 'erasure deadline lost the time of day');
     const days = (new Date(record.due_on).getTime() - Date.now()) / 86_400_000;
     // Thirty days after a record erased forty days ago is ten days past.
     assert(days < -8 && days > -12, `due ${Math.round(days)} days from now, expected ten days ago`);
@@ -617,7 +651,7 @@ export async function run(ctx) {
   await test('the cleanup locks each asset and rechecks its hold before tombstoning', async () => {
     const definition = (await q(`select pg_get_functiondef('public.purge_coursework_files(timestamptz,integer)'::regprocedure) as source`)).rows[0].source;
     const lock = definition.indexOf('where id = v_id for update');
-    const recheck = definition.indexOf('where asset_id = v_id and due_on <= v_as_of', lock);
+    const recheck = definition.indexOf('where asset_id = v_id and due_at <= v_as_of_time', lock);
     const update = definition.indexOf('update public.media_assets', recheck);
     assert(lock >= 0 && recheck > lock && update > recheck && definition.slice(recheck, update).includes('not held'),
       'cleanup no longer locks and rechecks the hold before tombstoning');
