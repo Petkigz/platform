@@ -1387,3 +1387,8 @@ concurrent changes that leave counts unchanged may still affect the result, and 
 busy list may need a refresh. The interface still renders the collected list in
 full; scalable visual pagination and hosted load testing remain open. Local web
 passed 2,154 tests; lint, typecheck, repo checks and build passed.
+
+A further local test exercises assignment pagination through the installed
+Supabase client against simulated PostgREST responses, including a server cap
+smaller than the requested range; it does not contact hosted Supabase. Web now
+passes 2,155 tests, with lint, typecheck and repository checks passing.

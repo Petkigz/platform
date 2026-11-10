@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { createClient } from '@supabase/supabase-js';
 
 import {
   assignmentDeadline,
@@ -384,4 +385,27 @@ test('partial, duplicate, missing-count and changing pages never look like a com
     const { client } = pagedClient(rows, options);
     await assert.rejects(fetchAssignmentSubmissions(client, ['a-1']), /could not be checked|changed while loading/);
   }
+});
+
+
+test('pagination uses the actual Supabase client count and range protocol', async () => {
+  const rows = Array.from({ length: 5 }, (_, index) => submissionRow(`s-${index}`));
+  const offsets: number[] = [];
+  const fetchImpl: typeof fetch = async (input, init) => {
+    const url = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url);
+    const offset = Number(url.searchParams.get('offset'));
+    const limit = Number(url.searchParams.get('limit'));
+    offsets.push(offset);
+    assert.equal(limit, 250);
+    assert.match(new Headers(init?.headers).get('prefer') ?? '', /count=exact/);
+    assert.match(url.searchParams.get('order') ?? '', /submitted_at\.asc\.nullslast,id\.asc/);
+    const page = rows.slice(offset, offset + 2);
+    return new Response(JSON.stringify(page), { status: 200, headers: {
+      'content-type': 'application/json', 'content-range': `${offset}-${offset + page.length - 1}/${rows.length}`,
+    } });
+  };
+  const client = createClient('https://example.invalid', 'test-anon-key', { global: { fetch: fetchImpl }, auth: { persistSession: false } });
+  const result = await fetchAssignmentSubmissions(client, ['a-1']);
+  assert.equal(result.length, rows.length);
+  assert.deepEqual(offsets, [0, 2, 4]);
 });
