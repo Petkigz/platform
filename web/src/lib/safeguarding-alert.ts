@@ -36,7 +36,8 @@ export async function dispatchSafeguardingAlert(ports: AlertPorts): Promise<Aler
   catch { return settle('not_sent'); }
   let result: SendResult;
   try { result = await ports.send(owner.email); } catch { return settle('provider_uncertain'); }
-  if (result.outcome !== 'sent' || !result.reference?.trim() || !result.provider?.trim()) return settle('provider_uncertain');
+  if (!result || result.outcome !== 'sent' || typeof result.reference !== 'string' || !result.reference.trim() ||
+      typeof result.provider !== 'string' || !result.provider.trim()) return settle('provider_uncertain');
   return settle('sent', result.provider, result.reference);
 }
 

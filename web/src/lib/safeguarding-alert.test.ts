@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { dispatchSafeguardingAlert, runSafeguardingAlert, type AlertPorts } from './safeguarding-alert.ts';
+import { safeguardingReadiness } from './safeguarding-readiness.ts';
 import { describeSafeguardingAlert, parseSafeguardingAlertStatus, parseSafeguardingAlertFullHistory, isAlertHistoryCursor } from './safeguarding-alert-status.ts';
 const reviewId='11111111-1111-4111-8111-111111111111';
 const token='22222222-2222-4222-8222-222222222222';
@@ -37,6 +38,9 @@ test('uncertain provider results and failed settlement never say sent', async ()
   const one=fixture(); one.ports.send=async () => ({ outcome:'sent',provider:'resend',reference:'' });
   assert.equal(await dispatchSafeguardingAlert(one.ports), 'recorded');
   assert.ok(one.calls.includes('settle:provider_uncertain'));
+  const malformed=fixture(); malformed.ports.send=async () => null as never;
+  assert.equal(await dispatchSafeguardingAlert(malformed.ports), 'recorded');
+  assert.ok(malformed.calls.includes('settle:provider_uncertain'));
   const two=fixture(); two.ports.settle=async () => false;
   assert.equal(await dispatchSafeguardingAlert(two.ports), 'uncertain');
 });
@@ -64,4 +68,17 @@ test('history cursors preserve bigint precision and malformed history is not emp
   const event={ event_id:'9007199254740993',status:'sent',attempts:1,provider:'resend',provider_reference:'ref',problem:null,recorded_at:'2026-11-06' };
   assert.deepEqual(parseSafeguardingAlertFullHistory([event]), [event]);
   assert.equal(parseSafeguardingAlertFullHistory([{ ...event,event_id:'0' }]),null);
+});
+
+
+test('owner setup hints distinguish absent settings from unverified delivery', () => {
+  const missing = safeguardingReadiness({providerConfigured:false,schedulerSecretConfigured:false,serviceRoleConfigured:false,notificationsEnabled:null,ownerEmailVerified:false});
+  assert.equal(missing.length, 6);
+  assert.match(missing.join(' '), /could not be checked/);
+  assert.match(missing.join(' '), /unverified/);
+  const off = safeguardingReadiness({providerConfigured:true,schedulerSecretConfigured:true,serviceRoleConfigured:true,notificationsEnabled:false,ownerEmailVerified:true});
+  assert.match(off.join(' '), /switch is off/);
+  const configured = safeguardingReadiness({providerConfigured:true,schedulerSecretConfigured:true,serviceRoleConfigured:true,notificationsEnabled:true,ownerEmailVerified:true});
+  assert.equal(configured.length,1);
+  assert.match(configured[0] ?? '', /cannot confirm/);
 });

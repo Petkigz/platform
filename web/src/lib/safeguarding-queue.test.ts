@@ -22,6 +22,9 @@ test('the page fetches the queue only for the configured owner and describes its
   assert.match(page, /isSafeguardingOwner && openCursorValid\s*\? await supabase\.rpc\('safeguarding_concern_queue_page'/);
   assert.match(page, /does not mean it is resolved/);
   assert.match(page, /a provider reference does not prove receipt/);
+  assert.match(page, /isSafeguardingOwner \? safeguardingReadiness/);
+  assert.match(page, /Check alert setup/);
+  assert.match(page, /href="\/admin">feature flag dashboard/);
   assert.match(page, /Do not assume it is empty/);
   const action = readFileSync('src/app/admin/coursework/safeguarding-actions.ts', 'utf8');
   assert.match(action, /acknowledge_safeguarding_concern/);

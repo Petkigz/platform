@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { isSupabaseConfigured } from '@/lib/env';
+import { isServiceRoleConfigured, isSupabaseConfigured } from '@/lib/env';
+import { resolveEmailProvider } from '@/lib/email/provider';
+import { safeguardingReadiness } from '@/lib/safeguarding-readiness';
 import { courseworkFileHref } from '@/lib/coursework';
 import {
   describeFileReview,
@@ -85,6 +87,20 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
   const ownerStatus = statusResult.data as { configured?: boolean; is_owner?: boolean } | null;
   const ownerStatusValid = !statusResult.error && typeof ownerStatus?.configured === 'boolean' && typeof ownerStatus?.is_owner === 'boolean';
   const isSafeguardingOwner = ownerStatusValid && ownerStatus?.is_owner === true;
+  // Only the owner sees these configuration hints. Presence is not a live test.
+  const notificationResult = isSafeguardingOwner
+    ? await supabase.rpc('setting_bool', { p_key: 'delivery.notifications', p_default: false }).then(
+        (result) => result, () => null,
+      ) : null;
+  const readiness = isSafeguardingOwner ? safeguardingReadiness({
+    providerConfigured: resolveEmailProvider(process.env).kind !== 'none',
+    schedulerSecretConfigured: !!process.env.CRON_SECRET?.trim(),
+    serviceRoleConfigured: isServiceRoleConfigured(),
+    notificationsEnabled: notificationResult && !notificationResult.error && typeof notificationResult.data === 'boolean'
+      ? notificationResult.data : null,
+    ownerEmailVerified: typeof user.email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email) && !!user.email_confirmed_at,
+  }) : [];
+
   const cursorValid = (!params.before && !params.beforeId) ||
     (typeof params.before === 'string' && Number.isFinite(Date.parse(params.before)) &&
       typeof params.beforeId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(params.beforeId));
@@ -403,6 +419,10 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
         <section className="card" style={{ marginBlock: '1rem' }}>
           <h2 id="open-concerns">Safeguarding concerns for the owner</h2>
           <p>Oldest unacknowledged coursework concerns first, 50 per page. You can see later items without acknowledging earlier ones. All ages are included so a changed or erased learner record cannot hide a concern. Acknowledging records that you marked the item; it does not mean it is resolved. Alerts need the provider, scheduler and an active verified owner email; a provider reference does not prove receipt.</p>
+          <details><summary>Check alert setup</summary>
+            <ul>{readiness.map((note) => <li key={note}>{note}</li>)}</ul>
+            <p>Change the notifications switch on the <Link href="/admin">feature flag dashboard</Link>; server and scheduler settings require deployment setup.</p>
+          </details>
           {params.alert === 'queued' && <p role="status">Alert queued for another attempt. Check its current status; provider acceptance is not proof of delivery.</p>}
           {params.alert === 'failed' && <p className="notice warn" role="alert">The retry result could not be confirmed. Refresh and check the alert status before trying again.</p>}
           {actionState === 'recorded' && <p role="status">Acknowledgement recorded.</p>}

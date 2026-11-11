@@ -1669,3 +1669,11 @@ not revoke an already-issued bearer link, provide malware scanning, or establish
 that the hosted storage configuration behaves as expected. Older comments that
 said learners can never reach a master were corrected: authorized coursework
 readers can do so under the database rules.
+
+**Safeguarding alert setup visibility:** the owner concern queue now shows a
+visual, owner-only checklist for missing provider settings, scheduler secret,
+service role, notifications switch and the signed-in owner's email verification.
+The check does not expose secrets or claim the scheduler is running, credentials
+are valid or email was received. Those still require an actual configured end-to-end
+test. A malformed sender result is recorded as uncertain instead of aborting the
+lease handler; this does not make an unconfigured provider deliver mail.
