@@ -95,7 +95,7 @@ export default async function DeleteAccountPage() {
                 </li>
                 <li>Certificates, under the number they were issued with</li>
                 <li>
-                  Your support case — the case text is replaced and messages you wrote are removed.
+                  Support cases — text in cases you requested is replaced, and messages you wrote are removed, including messages in other people’s cases.
                   The platform attempts to replace your profile display name in staff replies and
                   resolution notes, but other names or identifiers may remain. The case is due for
                   deletion three years after it closes.

@@ -1520,3 +1520,15 @@ PostgreSQL before relying on this control. Other preservation paths remain open.
 The affected database batch was repeated after adding requester and anonymous
 access checks. This cleanup pause does not itself create a safeguarding concern
 or send an alert; the owner must handle and record the concern separately.
+
+### Owner decision: held support cases and account closure
+
+The owner chose to preserve the whole held support case and its messages during
+account closure, including identifying information, while allowing the account
+to close. This is a new requirement, **not yet implemented**. The current
+scheduled-cleanup pause still does not stop account-erasure redaction or message
+deletion. Work must cover messages authored by the closing account on other
+people's cases, privacy and access to held material, concurrent closure/hold and
+message changes, and how pending erasure is completed after release. It cannot
+restore already-erased information or control external copies. Privacy and
+safeguarding review and real hosted PostgreSQL concurrency tests are required.

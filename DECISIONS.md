@@ -7864,3 +7864,20 @@ individual review and may defer the affected record. A database tombstone or
 storage-deletion statement is not proof that the object has been deleted; storage
 integration, actual removal and legal review remain necessary. A separate linked
 child login must not be silently closed with a guardian's account.
+
+## Held support cases when an account closes — **DECIDED**
+
+The owner chose to preserve the whole support case and its messages while a
+safeguarding hold is active, including identifying information if necessary;
+account closure should still proceed. The hold should be reviewed and released
+by the identified safeguarding owner. This decision covers support cases and is
+separate from the earlier child-coursework decision.
+
+**Not implemented yet:** the existing support-case control pauses scheduled
+cleanup only. Account closure can still redact case text and delete messages,
+including messages the closing person wrote on someone else's case. Do not
+represent the existing control as an evidence-preservation hold. Implementation
+must handle races between closure, message writes, hold and release; access to
+preserved material; and outstanding erasure after release. It cannot restore
+information already erased or control copies outside the platform. Privacy and
+safeguarding review and hosted verification remain necessary.
