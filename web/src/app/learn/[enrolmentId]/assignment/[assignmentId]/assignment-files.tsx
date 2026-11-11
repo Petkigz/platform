@@ -167,8 +167,10 @@ export function AssignmentFiles({
     try {
       const result = await removeCourseworkFile(submissionId, assetId);
       if (result.ok) {
-        setFilePage(await fetchPage(submissionId));
+        const refreshed = await fetchPage(submissionId);
+        setFilePage(refreshed);
         setNotice('Removed from this hand-in. The stored object is not deleted by this action.');
+        if (!refreshed) setError('The removal was acknowledged, but the file list could not be checked. Refresh before relying on it.');
       } else {
         setError(result.message);
       }

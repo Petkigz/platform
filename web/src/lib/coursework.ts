@@ -208,8 +208,8 @@ export async function removeCourseworkFile(
       method: 'POST', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ action: 'remove_file', submissionId, mediaAssetId: assetId }),
     });
-    const body = await response.json().catch(() => null) as { ok?: unknown; message?: unknown } | null;
-    if (response.ok && body?.ok === true) return { ok: true };
+    const body = await response.json().catch(() => null) as { ok?: unknown; message?: unknown; submissionId?: unknown; assetId?: unknown } | null;
+    if (response.ok && body?.ok === true && body.submissionId === submissionId && body.assetId === assetId) return { ok: true };
     if (!response.ok && typeof body?.message === 'string' && body.message.trim()) {
       return { ok: false, message: `${body.message} ${unknown}` };
     }

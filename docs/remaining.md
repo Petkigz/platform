@@ -1651,3 +1651,11 @@ same count can still be missed, and a refresh is necessary. The older all-files
 RPC and API remain for compatibility, and the database still counts the whole
 list; this is not a pending-upload cap, storage cleanup, or an oversized-PUT fix.
 Hosted load and concurrency tests are still needed.
+
+**Coursework removal acknowledgement:** the removal API now echoes the requested
+submission and file identifiers only after the database call succeeds; the client
+rejects missing or mismatched acknowledgements and tells the learner to refresh.
+If the subsequent file-list read fails, the interface says so rather than implying
+it has verified the updated list. The identifiers bind the server response to the
+request, not an independent database receipt; removal still only detaches the file
+and does not prove deletion of its stored object. A lost reply remains ambiguous.

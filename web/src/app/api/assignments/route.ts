@@ -177,7 +177,7 @@ export async function POST(request: Request) {
           : 409;
       return fail(message, status);
     }
-    return privateJson({ ok: true });
+    return privateJson({ ok: true, submissionId: body.submissionId, assetId: body.mediaAssetId });
   }
 
   if (body.action === 'submit') {

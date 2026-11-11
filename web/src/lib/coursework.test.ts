@@ -318,14 +318,17 @@ test('a lost or malformed removal response never claims that the file stayed put
   if (!lost.ok) assert.match(lost.message, /may already have been removed/);
   for (const response of [new Response('broken', {status:200}),
     new Response(JSON.stringify({ok:false, message:'The request could not be completed.'}), {status:503}),
-    new Response(JSON.stringify({ok:true}), {status:500})]) {
+    new Response(JSON.stringify({ok:true}), {status:500}),
+    new Response(JSON.stringify({ok:true}), {status:200}),
+    new Response(JSON.stringify({ok:true,submissionId:'other',assetId:'a'}), {status:200}),
+    new Response(JSON.stringify({ok:true,submissionId:'s',assetId:'other'}), {status:200})]) {
     const result = await removeCourseworkFile('s', 'a', async () => response);
     assert.equal(result.ok, false);
     if (!result.ok) assert.match(result.message, /check the file list/);
   }
   const good = await removeCourseworkFile('s', 'a', async (_url, init) => {
     assert.deepEqual(JSON.parse(String(init?.body)), {action:'remove_file',submissionId:'s',mediaAssetId:'a'});
-    return new Response(JSON.stringify({ok:true}), {status:200});
+    return new Response(JSON.stringify({ok:true,submissionId:'s',assetId:'a'}), {status:200});
   });
   assert.deepEqual(good, {ok:true});
 });
