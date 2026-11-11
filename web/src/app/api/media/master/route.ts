@@ -18,12 +18,8 @@ const fail = (message: string, status: number) =>
 /**
  * Mints a short-lived URL for one master — the archive copy, not a delivery copy.
  *
- * A learner never reaches this route: `may_watch_master()` answers yes only for
- * the person who uploaded the file, platform staff, and the author of a version
- * whose lesson uses it while it is available. Those are the three people who have
- * to look at a file rather than watch a lesson — a teacher checking what they
- * made, a staff member verifying an upload before confirming it, and a course
- * whose media was uploaded on their behalf.
+ * Master access includes authorized coursework readers as well as eligible
+ * uploaders, reviewers and authors. The database gate decides each case.
  *
  * WHO IS ALLOWED IS NOT DECIDED HERE. `master_preview_target()` is SECURITY
  * DEFINER and returns the object coordinates only where `may_watch_master()` says

@@ -1659,3 +1659,13 @@ If the subsequent file-list read fails, the interface says so rather than implyi
 it has verified the updated list. The identifiers bind the server response to the
 request, not an independent database receipt; removal still only detaches the file
 and does not prove deletion of its stored object. A lost reply remains ambiguous.
+
+**Master-file response validation:** both master preview and coursework open use
+the same database-gated target reader. It now refuses malformed, multiple or
+wrong-asset target rows rather than signing the first row or coerced coordinates;
+an RPC failure or lost reply also does not produce a signed link. This validates
+the response shape, not the database authorization or the stored bytes. It does
+not revoke an already-issued bearer link, provide malware scanning, or establish
+that the hosted storage configuration behaves as expected. Older comments that
+said learners can never reach a master were corrected: authorized coursework
+readers can do so under the database rules.

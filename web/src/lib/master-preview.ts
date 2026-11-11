@@ -1,16 +1,13 @@
 // Watching a master: the archive path, for the people who have a reason to look.
 //
-// A learner is never served a master — `media_renditions` exists so that "a
-// learner never touches the archive" is a property of the code. But three people
-// do need it: whoever uploaded the file, whoever moderates it, and the author of
-// a version whose lesson uses it. Until now none of them could, which meant a
-// teacher could upload a lesson and never watch it, and "confirm an upload only
-// after looking at it" could only ever mean comparing a byte count.
+// Lesson playback normally uses renditions. Coursework and other authorized
+// master access use the same database gate, including learner and verified
+// guardian access where the coursework rules permit it.
 //
 // WHO MAY WATCH IS NOT DECIDED HERE. `master_preview_target()` is SECURITY
 // DEFINER and is gated by `may_watch_master()`, so this module asks and shapes.
-// It must never add a filter of its own: a second opinion about who may see a
-// file is a second place to get it wrong.
+// It must not invent an authorization rule; it only validates the returned
+// coordinates and their association with the requested asset before signing.
 //
 // Type-only Supabase import and no signing code, so this stays testable and safe
 // to import from anywhere. The route does the signing, with `media-r2.ts`.
@@ -38,7 +35,7 @@ export type MasterPreviewTarget = {
   mimeType: string;
   byteSize: number;
   displayName: string | null;
-  /** `pending`, `available`, `quarantined`. The uploader may watch any of them. */
+  /** Current status; access is decided by the database, not this field. */
   status: string;
 };
 
@@ -112,10 +109,29 @@ export async function fetchMasterPreviewTarget(
   client: SupabaseClient,
   assetId: string,
 ): Promise<MasterPreviewResult> {
-  const { data, error } = await client.rpc('master_preview_target', { p_asset_id: assetId });
-  if (error) return { ok: false, ...describeMasterPreviewError(error) };
-  const rows = (data ?? []) as unknown as MasterPreviewRow[];
-  const first = rows[0];
-  if (!first) return { ok: true, target: null };
-  return { ok: true, target: toMasterPreviewTarget(first) };
+  const unavailable: MasterPreviewResult = {
+    ok: false, status: 502, message: 'That file could not be checked. Try again in a moment.',
+  };
+  try {
+    const { data, error } = await client.rpc('master_preview_target', { p_asset_id: assetId });
+    if (error) return { ok: false, ...describeMasterPreviewError(error) };
+    if (!Array.isArray(data) || data.length > 1) return unavailable;
+    if (data.length === 0) return { ok: true, target: null };
+    const row: unknown = data[0];
+    if (!row || typeof row !== 'object' || Array.isArray(row)) return unavailable;
+    const r = row as Record<string, unknown>;
+    // Never sign coordinates that did not come back for the requested asset.
+    // The RPC is still the authority; these checks only reject malformed replies.
+    if (typeof r.asset_id !== 'string' || r.asset_id.toLowerCase() !== assetId.toLowerCase() ||
+        typeof r.master_bucket !== 'string' || !r.master_bucket.trim() ||
+        typeof r.master_key !== 'string' || !r.master_key.trim() ||
+        (typeof r.status !== 'string' || !['pending', 'available', 'quarantined'].includes(r.status)) ||
+        !(r.mime_type === null || typeof r.mime_type === 'string') ||
+        !(r.display_name === null || typeof r.display_name === 'string') ||
+        !(r.byte_size === null || (typeof r.byte_size === 'number' && Number.isSafeInteger(r.byte_size) && r.byte_size >= 0) ||
+          (typeof r.byte_size === 'string' && /^(0|[1-9][0-9]*)$/.test(r.byte_size)))) return unavailable;
+    return { ok: true, target: toMasterPreviewTarget(r as MasterPreviewRow) };
+  } catch {
+    return unavailable;
+  }
 }

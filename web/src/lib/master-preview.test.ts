@@ -181,10 +181,7 @@ test('no rows is an answer, and it is the same answer for both refusals', async 
   assert.equal(result.ok, true);
   if (result.ok) assert.equal(result.target, null);
 
-  const { client: nullClient } = stubRpc({ data: null });
-  const other = await fetchMasterPreviewTarget(nullClient, 'asset-1');
-  assert.equal(other.ok, true);
-  if (other.ok) assert.equal(other.target, null);
+
 });
 
 test('a refusal comes back with its status and message', async () => {
@@ -197,11 +194,17 @@ test('a refusal comes back with its status and message', async () => {
   }
 });
 
-test('one asset is one row, and the first is the one used', async () => {
-  const { client } = stubRpc({ data: [dbRow({ asset_id: 'first' }), dbRow({ asset_id: 'second' })] });
-  const result = await fetchMasterPreviewTarget(client, 'first');
-  assert.equal(result.ok, true);
-  if (result.ok) assert.equal(result.target?.assetId, 'first');
+test('malformed, mismatched or ambiguous targets are never signed', async () => {
+  for (const data of [null, {}, [null], [dbRow({asset_id:'other'})],
+    [dbRow(), dbRow()], [dbRow({master_key:null})], [dbRow({master_bucket:''})],
+    [dbRow({status:'deleted'})], [dbRow({byte_size:'bad'})]]) {
+    const {client}=stubRpc({data});
+    const result=await fetchMasterPreviewTarget(client,'asset-1');
+    assert.equal(result.ok,false, JSON.stringify(data));
+    if (!result.ok) assert.equal(result.status,502);
+  }
+  const result=await fetchMasterPreviewTarget({rpc:async()=>{throw new Error('network')}} as never,'asset-1');
+  assert.equal(result.ok,false);
 });
 
 
