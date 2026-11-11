@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { privateNoStore } from '@/lib/private-response';
+import { COURSEWORK_FILE_CURSOR, parseCourseworkFilePage } from '@/lib/coursework';
 import {
   type AssignmentRevisionResult,
   type AssignmentWriteResult,
@@ -71,6 +72,19 @@ export async function GET(request: Request) {
 
   const submissionId = new URL(request.url).searchParams.get('submission')?.trim() ?? '';
   if (!isUuid(submissionId)) return fail('Choose a submission.', 400);
+
+  const params = new URL(request.url).searchParams;
+  if (params.get('page') === '1') {
+    const after=params.get('after');
+    if (after !== null && !COURSEWORK_FILE_CURSOR.test(after)) return fail('That file page is invalid. Refresh the list.', 400);
+    const result=await supabase.rpc('assignment_submission_files_page', {
+      p_submission_id: submissionId, p_after: after, p_limit: 25,
+    });
+    if (result.error) return fail('The file list could not be checked. Refresh and try again.', 403);
+    const page=parseCourseworkFilePage(result.data);
+    if (!page) return fail('The file list could not be checked. Refresh and try again.', 502);
+    return privateJson({ok:true,page:result.data});
+  }
 
   const { data, error } = await supabase.rpc('assignment_submission_files', {
     p_submission_id: submissionId,

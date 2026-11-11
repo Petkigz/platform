@@ -431,3 +431,48 @@ export async function confirmCourseworkFile(assetId: string, doFetch: typeof fet
 export function courseworkFileHref(assetId: string): string {
   return `/api/media/open?asset=${encodeURIComponent(assetId)}`;
 }
+
+/** A bounded page; counts are valid at the time this page was read. */
+export type CourseworkFilePage = { files: CourseworkFile[]; attachedCount: number; pendingCount: number; nextCursor: string | null };
+export const COURSEWORK_FILE_CURSOR = /^[01]:[0-9]{1,10}:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export function parseCourseworkFilePage(value: unknown): CourseworkFilePage | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const raw=value as Record<string,unknown>;
+  const files=parseCourseworkFilesStrict(raw.files);
+  if (!files || files.length>25 || !Number.isSafeInteger(raw.attachedCount) || !Number.isSafeInteger(raw.pendingCount) ||
+      (raw.attachedCount as number)<0 || (raw.pendingCount as number)<0 ||
+      !(raw.nextCursor===null || (typeof raw.nextCursor==='string' && COURSEWORK_FILE_CURSOR.test(raw.nextCursor)))) return null;
+  if (!Number.isSafeInteger((raw.attachedCount as number)+(raw.pendingCount as number)) ||
+      (raw.attachedCount as number)<countAttachedCourseworkFiles(files) ||
+      (raw.pendingCount as number)<files.length-countAttachedCourseworkFiles(files)) return null;
+  if (typeof raw.nextCursor==='string') {
+    const last=files.at(-1);
+    if (!last || raw.nextCursor.split(':')[2]?.toLowerCase()!==last.assetId.toLowerCase() ||
+      raw.nextCursor[0] !== (last.attachmentId ? '0' : '1')) return null;
+  }
+  return {files,attachedCount:raw.attachedCount as number,pendingCount:raw.pendingCount as number,nextCursor:raw.nextCursor as string | null};
+}
+
+/** A first page must not claim completion while its own counts say more exists. */
+export function parseFirstCourseworkFilePage(value: unknown): CourseworkFilePage | null {
+  const page=parseCourseworkFilePage(value);
+  if (!page) return null;
+  const total=page.attachedCount + page.pendingCount;
+  if (page.nextCursor ? total<=page.files.length : total!==page.files.length) return null;
+  return page;
+}
+
+/** Duplicate entries or changed counts mean the list moved; refresh rather than claim completeness. */
+export function appendCourseworkFilePage(current: CourseworkFilePage, next: CourseworkFilePage): CourseworkFilePage | null {
+  if (!current.nextCursor || current.attachedCount!==next.attachedCount || current.pendingCount!==next.pendingCount ||
+      current.nextCursor===next.nextCursor) return null;
+  const ids=new Set(current.files.map(file=>file.assetId.toLowerCase()));
+  for (const file of next.files) {
+    if(ids.has(file.assetId.toLowerCase())) return null;
+    ids.add(file.assetId.toLowerCase());
+  }
+  const files=[...current.files,...next.files];
+  const total=next.attachedCount+next.pendingCount;
+  if (next.nextCursor ? total<=files.length : total!==files.length) return null;
+  return {...next,files};
+}

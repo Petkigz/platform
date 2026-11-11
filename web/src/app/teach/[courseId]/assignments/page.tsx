@@ -75,7 +75,7 @@ export default async function TeachAssignmentsPage({
   // `media_assets` was uploader-or-staff only, which is how a teacher ended up
   // with "3 private file references" and no way to open one.
   const named = await mapConcurrent(submissions, 8, async (submission) => {
-    const { data, error } = await supabase.rpc('assignment_submission_files', { p_submission_id: submission.id });
+    const { data, error } = await supabase.rpc('assignment_submission_files_page', { p_submission_id: submission.id, p_after: null, p_limit: 25 });
     return [submission.id, error ? null : data] as const;
   });
   const filesBySubmission = Object.fromEntries(named) as Record<string, unknown>;

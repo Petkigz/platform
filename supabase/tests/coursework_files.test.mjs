@@ -365,6 +365,21 @@ export async function run(ctx) {
     const marker=(await call(teacher,SQL_FILES,[submission])).f;
     assert(marker.length===62 && marker.every(x=>Object.hasOwn(x,'review')),'authorized marker lost review data');
     assert(!(await scalar("select has_function_privilege('authenticated','public.assignment_submission_files_internal(uuid)','execute') as can")).can,'internal list became callable');
+    const pages=[]; let cursor=null;
+    do {
+      const page=(await call(who.userId,'select public.assignment_submission_files_page($1,$2,13) as p',[submission,cursor])).p;
+      assert(page.attachedCount===2 && page.pendingCount===60,'page counts inaccurate');
+      assert(page.files.length<=13 && page.files.every(x=>!Object.hasOwn(x,'review')),'page exceeded limit or leaked review');
+      pages.push(...page.files); cursor=page.nextCursor;
+    } while(cursor);
+    assert(pages.length===62 && new Set(pages.map(x=>x.assetId)).size===62,'pages lost or repeated files');
+    assert(pages[0].assetId===attached[0] && pages[1].assetId===attached[1],'page attachment order changed');
+    const markerPage=(await call(teacher,'select public.assignment_submission_files_page($1,null,13) as p',[submission])).p;
+    assert(markerPage.files.every(x=>Object.hasOwn(x,'review')),'marker lost page review data');
+    await refused(outsider.userId,'select public.assignment_submission_files_page($1,null,13)',[submission],/not yours to read/i);
+    await refused(who.userId,'select public.assignment_submission_files_page($1,$2,13)',[submission,'bad'],/invalid file cursor/i);
+    await refused(who.userId,'select public.assignment_submission_files_page($1,null,51)',[submission],/invalid file page/i);
+
   });
 
   await test('a stranger cannot declare a file against somebody else’s draft', async () => {
@@ -1112,6 +1127,13 @@ export async function run(ctx) {
       'select master_key from public.media_assets where id=$1', [target.asset_id]))).rows.length;
 
     assert(await canWatch(family.userId) && await canWatch(childUser), 'guardian or learner cannot open pending coursework');
+    const pageSql='select public.assignment_submission_files_page($1,null,25) as p';
+    const guardianPage=(await call(family.userId,pageSql,[submission])).p;
+    const childPage=(await call(childUser,pageSql,[submission])).p;
+    assert(guardianPage.files.length===1 && childPage.files.length===1 && !Object.hasOwn(guardianPage.files[0],'review'), 'household page access or privacy failed');
+    await refused(member,pageSql,[submission],/not yours to read/i);
+    await refused(otherAdmin,pageSql,[submission],/not yours to read/i);
+
     assert(!(await canWatch(teacher)), 'marker opened a file before it was attached');
     assert(!(await canWatch(member)) && !(await canWatch(admin)) && !(await canWatch(otherAdmin)));
     assert((await targetRows(admin)) === 0 && (await assetRows(admin)) === 0, 'unrelated staff saw coordinates');
@@ -1121,6 +1143,8 @@ export async function run(ctx) {
     try {
       assert(await canWatch(admin) && (await targetRows(admin)) === 1 && (await assetRows(admin)) === 1,
         'named owner cannot reach the file');
+      const ownerPage=(await call(admin,pageSql,[submission])).p;
+      assert(ownerPage.files.length===1 && Object.hasOwn(ownerPage.files[0],'review'), 'owner lost file page');
       assert(!(await canWatch(otherAdmin)), 'admin role alone opened child coursework');
       await call(family.userId, SQL_CONFIRM, [target.asset_id]);
       assert(await canWatch(teacher) && (await targetRows(teacher)) === 1, 'marker cannot open submitted coursework');
@@ -1156,6 +1180,7 @@ export async function run(ctx) {
         consent_expires_at=now()-interval '1 year' where learner_profile_id=$1 and guardian_user_id=$2`,
         [family.childId, family.userId]);
       assert(!(await canWatch(family.userId)), 'expired guardian opened coursework with the general switch off');
+      await refused(family.userId,pageSql,[submission],/not yours to read/i);
       assert((await assetRows(family.userId)) === 0, 'expired uploader retained the master coordinates');
       assert(await canWatch(childUser), 'guardian expiry blocked the child');
       const updated = await asActor(family.userId, () => q(

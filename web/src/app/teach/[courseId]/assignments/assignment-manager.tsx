@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   type AssignmentRevision,
@@ -8,7 +8,7 @@ import {
   type CourseAssignment,
   revisionPolicyLabel,
 } from '@/lib/course-assignments';
-import { courseworkFileHref, describeCourseworkFile, parseCourseworkFilesStrict } from '@/lib/coursework';
+import { courseworkFileHref, describeCourseworkFile, parseCourseworkFilePage, parseFirstCourseworkFilePage, appendCourseworkFilePage } from '@/lib/coursework';
 import { RevisionFiles } from '@/components/revision-files';
 import { describeFileReview } from '@/lib/coursework-review';
 
@@ -317,8 +317,26 @@ export function AssignmentManager({
  * The resulting storage URL can appear in browser history and may remain usable
  * until expiry; it cannot prevent an authorized reader from copying a file.
  */
-function SubmissionFiles({ files }: { files: unknown }) {
-  const list = parseCourseworkFilesStrict(files);
+function SubmissionFiles({ files, submissionId }: { files: unknown; submissionId: string }) {
+  const [page, setPage] = useState(() => parseFirstCourseworkFilePage(files));
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  useEffect(() => { setPage(parseFirstCourseworkFilePage(files)); setError(''); }, [files]);
+  const list = page?.files ?? null;
+  async function loadMore() {
+    if (!page?.nextCursor) return;
+    setBusy(true); setError('');
+    try {
+      const params=new URLSearchParams({submission:submissionId,page:'1',after:page.nextCursor});
+      const response=await fetch(`/api/assignments?${params}`,{cache:'no-store'});
+      const result=await response.json().catch(()=>null) as {ok?:unknown;page?:unknown} | null;
+      const next=response.ok && result?.ok===true ? parseCourseworkFilePage(result.page) : null;
+      const combined=next && appendCourseworkFilePage(page,next);
+      if (!combined) setError('The file list changed or could not be checked. Refresh it before marking.');
+      else setPage(combined);
+    } catch { setError('The file list could not be checked. Refresh it before marking.'); }
+    finally { setBusy(false); }
+  }
   if (list === null) return <p className="notice warn">The file list could not be checked. Refresh before marking; do not assume there are no files.</p>;
   if (list.length === 0) return null;
 
@@ -346,6 +364,11 @@ function SubmissionFiles({ files }: { files: unknown }) {
           </li>
         ))}
       </ul>
+      {page?.nextCursor && <div>
+        <p className="muted">Showing {page.files.length} of {page.attachedCount + page.pendingCount}. The list can change between pages; refresh to check again.</p>
+        <button type="button" className="btn ghost" disabled={busy} onClick={() => void loadMore()}>Show more files</button>
+      </div>}
+      {error && <p className="notice warn">{error}</p>}
     </div>
   );
 }
@@ -473,7 +496,7 @@ function SubmissionForMarking({
         </div>
       )}
       {submission.bodyText && <div style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{submission.bodyText}</div>}
-      <SubmissionFiles files={files} />
+      <SubmissionFiles files={files} submissionId={submission.id} />
       {submission.status === 'graded' ? (
         <div className="notice">
           {submission.scoreEarned !== null && <strong>{submission.scoreEarned}{assignment.pointsPossible ? ` / ${assignment.pointsPossible}` : ''}</strong>}

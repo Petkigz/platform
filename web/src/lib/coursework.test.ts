@@ -16,6 +16,9 @@ import {
   describeFileSize,
   parseCourseworkFiles,
   parseCourseworkFilesStrict,
+  parseCourseworkFilePage,
+  parseFirstCourseworkFilePage,
+  appendCourseworkFilePage,
   removeCourseworkFile,
   postLearnerAssignmentAction,
   PHASE_LABEL,
@@ -381,7 +384,7 @@ test('earlier file references are openable and a failed marker list is not empty
   assert.match(marker, /<RevisionFiles assetIds=\{version.assetIds\}/);
   assert.match(links, /courseworkFileHref\(id\)/);
   assert.match(links, /file may no longer be available/);
-  assert.match(marker, /parseCourseworkFilesStrict\(files\)/);
+  assert.match(marker, /parseFirstCourseworkFilePage\(files\)/);
   assert.match(marker, /file list could not be checked/i);
   assert.match(page, /error \? null : data/);
   assert.doesNotMatch(page, /fetchAssignmentFileReferences/);
@@ -398,7 +401,7 @@ test('unfinished declarations do not use the attached-file limit', () => {
   assert.equal(countAttachedCourseworkFiles(rows), 2);
   assert.equal(validateCourseworkFile(file(), countAttachedCourseworkFiles(rows)).ok, true);
   const page = readFileSync(new URL('../app/learn/[enrolmentId]/assignment/[assignmentId]/assignment-files.tsx', import.meta.url), 'utf8');
-  assert.match(page, /countAttachedCourseworkFiles\(files\)/);
+  assert.match(page, /filePage\?\.attachedCount/);
   assert.match(page, /attachedCount \?\? 0/);
 });
 
@@ -429,4 +432,22 @@ test('an uncertain resend does not silently confirm the pending file', async () 
   assert.equal(result.ok, false);
   assert.deepEqual(calls.map((c) => c.body.action), ['retry_coursework_upload']);
   if (!result.ok) assert.match(result.message, /check the upload/);
+});
+
+
+test('bounded coursework pages reject malformed, incomplete and changing lists', () => {
+  const id=(n:number)=>`2b1c7a9e-0000-4000-8000-${String(n).padStart(12,'0')}`;
+  const entry=(n:number)=>({assetId:id(n),attachmentId:null,name:`Page ${n}`,mimeType:'image/png',byteSize:'42',status:'pending',uploadedAt:'2026-11-02T09:15:00Z'});
+  const first={files:[entry(1),entry(2)],attachedCount:0,pendingCount:3,nextCursor:`1:0:${id(2)}`};
+  const last={files:[entry(3)],attachedCount:0,pendingCount:3,nextCursor:null};
+  const a=parseFirstCourseworkFilePage(first); const b=parseCourseworkFilePage(last);
+  assert.ok(a && b);
+  assert.equal(appendCourseworkFilePage(a,b)?.files.length,3);
+  assert.equal(parseFirstCourseworkFilePage({...first,nextCursor:null}),null);
+  assert.equal(parseCourseworkFilePage({...first,nextCursor:`1:0:${id(1)}`}),null);
+  assert.equal(parseCourseworkFilePage({...first,nextCursor:'bad'}),null);
+  assert.equal(parseCourseworkFilePage({...first,files:Array(26).fill(entry(1))}),null);
+  assert.equal(appendCourseworkFilePage(a,{...b,pendingCount:4}),null);
+  assert.equal(appendCourseworkFilePage(a,{...b,files:[a.files[0]!] }),null);
+  assert.equal(appendCourseworkFilePage(a,{...b,files:[]}),null);
 });

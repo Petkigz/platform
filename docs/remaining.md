@@ -1640,3 +1640,14 @@ Local creation-receipt verification: 29 child-login database assertions passed,
 including the handler against real migration functions with a simulated Auth
 provider and lost reply. The web suite passed 2,169 tests; lint, typecheck,
 repository checks and build passed. This is not a hosted provider test.
+
+**Coursework file pages (migration 1270):** learner and marker screens now load
+25 entries at a time, with a visual “Show more files” control and totals from the
+current page snapshot. The new owner/learner/guardian/marker-authorized RPC
+returns no storage coordinates and applies the same review privacy rules as the
+existing list. Failed, malformed, duplicated or count-changing pages are not
+presented as complete. Pages are separate snapshots: concurrent changes with the
+same count can still be missed, and a refresh is necessary. The older all-files
+RPC and API remain for compatibility, and the database still counts the whole
+list; this is not a pending-upload cap, storage cleanup, or an oversized-PUT fix.
+Hosted load and concurrency tests are still needed.

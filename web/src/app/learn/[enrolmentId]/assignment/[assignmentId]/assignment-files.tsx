@@ -8,11 +8,12 @@ import {
   COURSEWORK_MAX_BYTES,
   COURSEWORK_MAX_FILES,
   courseworkFileHref,
-  countAttachedCourseworkFiles,
   confirmCourseworkFile,
   describeCourseworkFile,
   describeFileSize,
-  parseCourseworkFilesStrict,
+  parseCourseworkFilePage,
+  parseFirstCourseworkFilePage,
+  appendCourseworkFilePage,
   removeCourseworkFile,
   PHASE_LABEL,
   uploadCourseworkFile,
@@ -54,17 +55,38 @@ export function AssignmentFiles({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const retryInputRef = useRef<HTMLInputElement | null>(null);
   const retryAssetRef = useRef<string | null>(null);
-  const [files, setFiles] = useState(() => parseCourseworkFilesStrict(initialFiles));
+  const [filePage, setFilePage] = useState(() => parseFirstCourseworkFilePage(initialFiles));
+  const files = filePage?.files ?? null;
   const [busy, setBusy] = useState(false);
   const [phase, setPhase] = useState<UploadPhase | null>(null);
   const [percent, setPercent] = useState(0);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
 
-  useEffect(() => { setFiles(parseCourseworkFilesStrict(initialFiles)); }, [initialFiles]);
-  const attachedCount = files === null ? null : countAttachedCourseworkFiles(files);
-  const pendingCount = files === null || attachedCount === null ? null : files.length - attachedCount;
+  useEffect(() => { setFilePage(parseFirstCourseworkFilePage(initialFiles)); }, [initialFiles]);
+  const attachedCount = filePage?.attachedCount ?? null;
+  const pendingCount = filePage?.pendingCount ?? null;
   const remaining = attachedCount === null ? null : Math.max(0, COURSEWORK_MAX_FILES - attachedCount);
+
+  async function fetchPage(target: string, after: string | null = null) {
+    const query = new URLSearchParams({submission: target, page: '1'});
+    if (after) query.set('after', after);
+    const response = await fetch(`/api/assignments?${query}`, {cache:'no-store'}).catch(() => null);
+    if (!response?.ok) return null;
+    const body = await response.json().catch(() => null) as {ok?: unknown; page?: unknown} | null;
+    return body?.ok === true ? (after ? parseCourseworkFilePage(body.page) : parseFirstCourseworkFilePage(body.page)) : null;
+  }
+
+  async function loadMore() {
+    if (!filePage?.nextCursor || !submissionId) return;
+    setBusy(true); setError('');
+    try {
+      const next=await fetchPage(submissionId,filePage.nextCursor);
+      const combined=next && appendCourseworkFilePage(filePage,next);
+      if (!combined) setError('The file list changed or could not be checked. Refresh it before relying on it.');
+      else setFilePage(combined);
+    } finally { setBusy(false); }
+  }
 
   async function choose(chosen: File | null, retryAssetId?: string) {
     if (!chosen) return;
@@ -109,13 +131,9 @@ export function AssignmentFiles({
 
       // Read back from the database rather than appended by hand: the server's
       // list is the one that will still be there after a refresh.
-      const refreshed = await fetch(`/api/assignments?submission=${target}`)
-        .then((response) => (response.ok ? response.json() : null))
-        .catch(() => null);
-      const parsed = parseCourseworkFilesStrict(
-        (refreshed as { files?: unknown } | null)?.files ?? null,
-      );
-      if (parsed !== null) setFiles(parsed);
+      const refreshed = await fetchPage(target);
+      setFilePage(refreshed);
+      if (!refreshed) setError('The file was attached, but the list could not be checked. Refresh before relying on it.');
       setNotice(
         `File attached. ${describeFileSize(chosen.size)} — access remains subject to permissions and review.`,
       );
@@ -149,7 +167,7 @@ export function AssignmentFiles({
     try {
       const result = await removeCourseworkFile(submissionId, assetId);
       if (result.ok) {
-        setFiles((previous) => previous?.filter((file) => file.assetId !== assetId) ?? null);
+        setFilePage(await fetchPage(submissionId));
         setNotice('Removed from this hand-in. The stored object is not deleted by this action.');
       } else {
         setError(result.message);
@@ -165,7 +183,7 @@ export function AssignmentFiles({
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
         <h3 style={{ margin: 0 }}>Files</h3>
         <span className="muted" style={{ fontSize: '.85rem' }}>
-          {attachedCount === null ? 'File count unavailable' : `${attachedCount} attached shown${pendingCount ? ` · ${pendingCount} not attached` : ''}`}
+          {attachedCount === null ? 'File count unavailable' : `${attachedCount} attached${pendingCount ? ` · ${pendingCount} not attached` : ''}`}
         </span>
       </div>
 
@@ -209,6 +227,11 @@ export function AssignmentFiles({
         </ul>
       )}
 
+      {filePage?.nextCursor && <div>
+        <p className="muted">Showing {filePage.files.length} of {filePage.attachedCount + filePage.pendingCount}. The list can change between pages; refresh to check again.</p>
+        <button type="button" className="btn ghost" disabled={busy} onClick={() => void loadMore()}>Show more files</button>
+      </div>}
+
       {!locked && (
         <div style={{ display: 'grid', gap: '.4rem' }}>
           <label htmlFor="assignment-file" className="muted" style={{ fontSize: '.85rem' }}>
@@ -235,7 +258,7 @@ export function AssignmentFiles({
         </div>
       )}
 
-      {locked && files !== null && files.length === 0 && (
+      {locked && files !== null && files.length === 0 && !filePage?.nextCursor && (
         <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>
           No files were handed in with this work.
         </p>
