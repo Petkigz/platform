@@ -167,10 +167,10 @@ export default async function SupportCasePage({
 
       {owner && <section id="cleanup-hold" className="card">
         <h2>Pause scheduled case cleanup</h2>
-        <p className="muted">Owner only. This pauses scheduled deletion of this case. It does not stop account-erasure redaction, other deletion paths, or loss of external copies. Review the concern separately; this is not a complete evidence-preservation hold.</p>
+        <p className="muted">Owner only. This pauses scheduled deletion and defers account-closure erasure of this case and its messages. Existing support access still applies. It cannot restore erased information or protect against every other deletion path or loss of external copies. Review the concern separately.</p>
         <p className="muted"><Link href="/admin/retention#support-case-holds">View paused cases</Link>. Reasons are kept privately after release; avoid names and sensitive details.</p>
         {result === 'held' && <p role="status">Scheduled cleanup was paused.</p>}
-        {result === 'released' && <p role="status">The pause was released. If the case is due, cleanup may remove it immediately.</p>}
+        {result === 'released' && <p role="status">The pause was released. Any deferred account-closure erasure was applied; if the case is due, cleanup may remove it immediately.</p>}
         {result === 'already' && <p role="status">No change was needed; check the current status.</p>}
         {result === 'uncertain' && <p className="notice warn" role="alert">The action could not be confirmed. Refresh and check the current status before trying again.</p>}
         {result === 'invalid' && <p className="notice warn" role="alert">Confirm the action and give a reason.</p>}
@@ -191,7 +191,7 @@ export default async function SupportCasePage({
             <input type="hidden" name="caseNumber" value={supportCaseRow.caseNumber} />
             <input type="hidden" name="action" value={hold.held ? 'release' : 'hold'} />
             <label>Reason <textarea name="reason" required minLength={3} maxLength={1000} rows={2} /></label>
-            <label><input type="checkbox" name="reviewed" value="yes" required /> I understand this only controls scheduled case cleanup.</label>
+            <label><input type="checkbox" name="reviewed" value="yes" required /> I understand releasing this pause applies deferred account-closure erasure immediately and may allow scheduled deletion.</label>
             <button className="btn ghost" type="submit">{hold.held ? 'Release cleanup pause' : 'Pause scheduled cleanup'}</button>
           </form>
         </>}

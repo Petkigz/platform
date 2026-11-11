@@ -95,7 +95,7 @@ export default async function AdminRetentionPage({ searchParams }: { searchParam
 
       <section id="support-case-holds" className="card" style={{ marginBlock: '1.5rem' }}>
         <h2>Support cases paused from scheduled cleanup</h2>
-        <p className="muted">Only the identified safeguarding owner can view this list or change a pause from a case page. This does not identify every safety concern, prevent account-erasure redaction or preserve outside copies. Check legacy cases individually. A newly paused case can appear on an earlier page; return to the first page to check again.</p>
+        <p className="muted">Only the identified safeguarding owner can view this list or change a pause from a case page. A pause also defers account-closure erasure until release. It does not identify every safety concern, prevent every other deletion path or preserve outside copies. Releasing may erase case content immediately. Check legacy cases individually. A newly paused case can appear on an earlier page; return to the first page to check again.</p>
         {!isOwner ? <p className="notice warn">The private list is available to the identified owner, or owner status could not be checked. Do not assume it is empty.</p>
           : holdRows === null ? <p className="notice warn">The private list could not be loaded. Do not assume it is empty.</p>
           : holds.length === 0 ? <p className="muted">No paused cases were returned on this page.</p>

@@ -421,6 +421,53 @@ export async function run(ctx) {
     await rejects(() => runJobs(now, 100000), /retention:limit_out_of_range/);
   });
 
+  await test('held support cases survive closure and deferred erasure runs at release', async () => {
+    const prior=await one('select owner_user_id,configured_at from public.safeguarding_owner where singleton');
+    await q('delete from public.safeguarding_owner where singleton');
+    await q('select public.bootstrap_safeguarding_owner($1)',[owner]);
+    const author=await newUser('held-erasure-author@example.com');
+    const requester=await newUser('held-erasure-requester@example.com');
+    await newProfile(author,'Held Author'); await newProfile(requester,'Held Requester');
+    await committed(() => grantRole(author,'support_agent',owner));
+    await q("update public.platform_settings set value_text='true' where key='platform.support'");
+    try {
+      const own=await call(author,"select public.open_support_case('other','Own held case','Original held case body') as r");
+      const other=await call(requester,"select public.open_support_case('other','Other held case','Other original body') as r");
+      const ordinary=await call(author,"select public.open_support_case('other','Ordinary case','Ordinary original body') as r");
+      const ownMessage=await call(author,"select public.reply_to_support_case($1,'Author own message',false) as r",[own]);
+      const otherMessage=await call(author,"select public.reply_to_support_case($1,'Author in another case',false) as r",[other]);
+      const requesterMessage=await call(requester,"select public.reply_to_support_case($1,'Requester message',false) as r",[other]);
+      const staffReply=await call(agent,"select public.reply_to_support_case($1,'Response for Held Requester',false) as r",[other]);
+      await call(owner,"select public.change_support_case_cleanup_hold($1,'hold','Safeguarding review') as r",[own]);
+      await call(owner,"select public.change_support_case_cleanup_hold($1,'hold','Safeguarding review') as r",[other]);
+      assert((await call(author,'select public.erase_my_account($1) as r',['Held Author'])).closed === true);
+      assert((await call(requester,'select public.erase_my_account($1) as r',['Held Requester'])).closed === true);
+      const exported=await call(requester,'select public.export_my_data() as r');
+      assert(exported.account.accountStatus==='closed' && exported.support.length===0, 'closed export exposed a held case or broke the tombstone');
+      assert((await one('select body from public.support_cases where id=$1',[own])).body==='Original held case body');
+      assert((await one('select body from public.support_cases where id=$1',[other])).body==='Other original body');
+      assert((await one('select body from public.support_cases where id=$1',[ordinary])).body==='[erased]', 'unheld case was not erased');
+      assert(await exists('support_case_messages',ownMessage) && await exists('support_case_messages',otherMessage) && await exists('support_case_messages',requesterMessage),'a held message was lost');
+      assert((await one('select count(*)::int n from public.support_case_deferred_erasures where case_id=$1',[other])).n===2,'multiple closure tasks not recorded');
+      assert(!(await one("select has_table_privilege('authenticated','public.support_case_deferred_erasures','select') as can")).can,'deferred erasures are exposed');
+      await rejects(() => call(governance,"select public.change_support_case_cleanup_hold($1,'release','Review complete') as r",[other]),/not_allowed/i);
+      assert((await one('select count(*)::int n from public.support_case_deferred_erasures where case_id=$1',[other])).n===2,'unauthorized release changed tasks');
+      await call(owner,"select public.change_support_case_cleanup_hold($1,'release','Review complete') as r",[other]);
+      assert(!(await exists('support_case_messages',otherMessage)) && !(await exists('support_case_messages',requesterMessage)),'closed accounts messages survived release');
+      assert((await one('select body from public.support_cases where id=$1',[other])).body==='[erased]');
+      assert((await one('select body from public.support_case_messages where id=$1',[staffReply])).body==='Response for the account holder');
+      assert((await one('select count(*)::int n from public.support_case_deferred_erasures where case_id=$1',[other])).n===0,'deferred personal data retained after release');
+      assert(await exists('support_case_messages',ownMessage),'release of a different case removed held evidence');
+      await call(owner,"select public.change_support_case_cleanup_hold($1,'release','Review complete') as r",[own]);
+      assert(!(await exists('support_case_messages',ownMessage)),'own message survived release');
+      assert((await one('select body from public.support_cases where id=$1',[own])).body==='[erased]');
+    } finally {
+      await q("update public.platform_settings set value_text='false' where key='platform.support'");
+      await q('delete from public.safeguarding_owner where singleton');
+      if (prior) await q('insert into public.safeguarding_owner(singleton,owner_user_id,configured_at) values(true,$1,$2)',[prior.owner_user_id,prior.configured_at]);
+    }
+  });
+
   // -------------------------------------------------------------------------
   console.log('\nAct III — a screening record, two clocks, and the seventh year');
   // -------------------------------------------------------------------------

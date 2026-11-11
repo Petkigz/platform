@@ -1504,8 +1504,9 @@ its existing page, and page through private paused-case and action-history lists
 The normal retention plan and job exclude paused cases, lock and recheck the case,
 and continue to process other eligible cases. The hold table and event history
 are private; these controls do not grant additional case access. This is deliberately
-not called a complete evidence-preservation hold: account-closure redaction, other
-message deletion paths, backups and external copies are not prevented. Existing
+not called a complete evidence-preservation hold: other message deletion paths,
+backups and external copies are not prevented. Migration 1220 later added a local
+account-closure exception, described below. Existing
 unidentified safety concerns are not automatically classified or protected.
 After release, a due case can be deleted immediately. Pause events and reasons
 remain personal data after deletion; the case-specific history screen no longer
@@ -1525,22 +1526,32 @@ or send an alert; the owner must handle and record the concern separately.
 
 The owner chose to preserve the whole held support case and its messages during
 account closure, including identifying information, while allowing the account
-to close. This is a new requirement, **not yet implemented**. The current
-scheduled-cleanup pause still does not stop account-erasure redaction or message
-deletion. Work must cover messages authored by the closing account on other
-people's cases, privacy and access to held material, concurrent closure/hold and
-message changes, and how pending erasure is completed after release. It cannot
-restore already-erased information or control external copies. Privacy and
-safeguarding review and real hosted PostgreSQL concurrency tests are required.
+to close. Migration 1220 implements that exception locally for the account
+closure writer, including messages authored on others' cases. Deferred work
+records the actor and, where needed, their display name privately; release applies
+the pending erasure and removes those tasks in the same transaction. A released
+due case can then be deleted by scheduled cleanup. Existing support access rules
+still apply: the pause does not make the case owner-only. It cannot restore lost
+information or protect against other paths and external copies. The migrations
+are not deployed, and privacy/safeguarding review and hosted concurrency testing
+remain necessary. Other closure guards can still require individual review.
 
 **Closed-account support boundary (migration 1210):** local code prevents a
 closed or deleted profile from reading support cases/messages through their
 policies, from opening, replying to or closing cases through those RPCs, and
-from accessing the data-export RPC that bypasses support RLS. The
-writers serialize on the same profile row used by account closure. Active staff
+from accessing the data-export RPC that bypasses support RLS. Migration 1220
+restores the post-closure export/tombstone while omitting and explicitly noting
+support content. The writers serialize on the same profile row used by account closure. Active staff
 and requesters retain their existing access. This does not revoke provider
 sessions, invalidate already-started reads or signed links, cover other app
-features, or preserve evidence against account-erasure redaction. The existing
+features, or by itself preserve evidence against account-erasure redaction. The existing
 support read policy still permits privileged staff; the cleanup pause itself does
 not make a support case owner-only. Hosted migrations and concurrent-session
 verification are still required.
+
+**Migration 1220 verification:** 170 suites and 2,650 assertions passed across
+eight separate PGlite databases; 2,162 web tests, lint, typecheck, repository
+checks and build passed. The batches do not prove all cross-suite interactions,
+and PGlite does not prove real PostgreSQL concurrency. A full single-database
+run of the previous migration did not finish in 30 minutes. Deploy and test the
+hold, release, concurrent account closure and public privacy wording together.

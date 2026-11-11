@@ -396,7 +396,9 @@ export async function run(ctx) {
       await refused(a.userId, SQL_OPEN, ['other', 'Another case', 'Should be refused.', null, null], /support:account_closed_or_missing/);
       await refused(a.userId, SQL_REPLY, [id, 'Should be refused.', false], /support:account_closed_or_missing/);
       await refused(a.userId, 'select public.close_support_case($1,$2)', [id, 'Should be refused.'], /support:account_closed_or_missing/);
-      await refused(a.userId, 'select public.export_my_data()', [], /support:account_closed_or_missing/);
+      const closedExport=(await asActor(a.userId, 'select public.export_my_data() as data')).rows[0].data;
+      assert(closedExport.account.accountStatus === 'closed' && closedExport.support.length === 0, 'closed export did not return a safe tombstone');
+      assert(closedExport.meta.note.includes('Support case content is omitted'), 'export did not disclose the omitted section');
       assert((await asActor(agent, 'select id from public.support_cases where id=$1', [id])).rows.length === 1,
         'active staff lost case access');
       assert((await reply(agent, id, 'Staff can continue work.')).rows[0].id, 'active staff lost reply access');

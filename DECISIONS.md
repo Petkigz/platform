@@ -7873,11 +7873,9 @@ account closure should still proceed. The hold should be reviewed and released
 by the identified safeguarding owner. This decision covers support cases and is
 separate from the earlier child-coursework decision.
 
-**Not implemented yet:** the existing support-case control pauses scheduled
-cleanup only. Account closure can still redact case text and delete messages,
-including messages the closing person wrote on someone else's case. Do not
-represent the existing control as an evidence-preservation hold. Implementation
-must handle races between closure, message writes, hold and release; access to
-preserved material; and outstanding erasure after release. It cannot restore
-information already erased or control copies outside the platform. Privacy and
-safeguarding review and hosted verification remain necessary.
+**Implemented locally, not deployed:** migration 1220 defers account-closure
+erasure for held case text and messages, including messages the closing person
+wrote on another case, and applies deferred erasure on release. Existing support
+access rules still apply. Other paths can change or delete information, and
+already erased information and external copies cannot be recovered. Privacy and
+safeguarding review and hosted concurrency verification remain necessary.
