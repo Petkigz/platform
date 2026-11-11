@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import type { RetentionPlan } from '@/lib/retention';
+import { parseSupportCleanupHolds, SUPPORT_HOLD_ID } from '@/lib/support-case-cleanup-hold';
 import {
   EMPTY_IDENTITY_QUEUE,
   parseIdentityQueue,
@@ -40,7 +41,7 @@ export const dynamic = 'force-dynamic';
  * Readable by the owner only: `retention_plan()` refuses everybody else, so a
  * redirect is the courtesy and not the defence.
  */
-export default async function AdminRetentionPage() {
+export default async function AdminRetentionPage({ searchParams }: { searchParams: Promise<{ supportHoldAfter?: string }> }) {
   if (!isSupabaseConfigured()) redirect('/');
 
   const supabase = await createClient();
@@ -58,6 +59,15 @@ export default async function AdminRetentionPage() {
   const { data, error } = await supabase.rpc('retention_plan', {});
   if (error || !data) throw new Error('The retention plan could not be loaded. Do not assume the queues are empty.');
   const plan = data as unknown as RetentionPlan;
+  const cursor = (await searchParams).supportHoldAfter;
+  const cursorValid = !cursor || SUPPORT_HOLD_ID.test(cursor);
+  const ownerResult = await supabase.rpc('safeguarding_owner_status');
+  const isOwner = !ownerResult.error && ownerResult.data?.is_owner === true;
+  const holdResult = isOwner && cursorValid
+    ? await supabase.rpc('support_case_cleanup_hold_page', { p_after: cursor ?? null, p_limit: 51 }) : null;
+  const holdRows = holdResult && !holdResult.error ? parseSupportCleanupHolds(holdResult.data) : null;
+  const nextHold = holdRows && holdRows.length > 50 ? holdRows[49]?.caseId : null;
+  const holds = holdRows?.slice(0, 50) ?? [];
 
   // The sign-ins this database cannot delete. Read separately from the plan
   // because it is not a clock: nothing here falls due, and a screen that folded
@@ -82,6 +92,19 @@ export default async function AdminRetentionPage() {
       </p>
 
       <RetentionConsole plan={plan} canRun={platform === true} />
+
+      <section id="support-case-holds" className="card" style={{ marginBlock: '1.5rem' }}>
+        <h2>Support cases paused from scheduled cleanup</h2>
+        <p className="muted">Only the identified safeguarding owner can view this list or change a pause from a case page. This does not identify every safety concern, prevent account-erasure redaction or preserve outside copies. Check legacy cases individually. A newly paused case can appear on an earlier page; return to the first page to check again.</p>
+        {!isOwner ? <p className="notice warn">The private list is available to the identified owner, or owner status could not be checked. Do not assume it is empty.</p>
+          : holdRows === null ? <p className="notice warn">The private list could not be loaded. Do not assume it is empty.</p>
+          : holds.length === 0 ? <p className="muted">No paused cases were returned on this page.</p>
+          : <ul className="lessons">{holds.map((hold) => <li key={hold.caseId}>
+            <span className="t"><Link href={`/support/${hold.caseNumber}#cleanup-hold`}>{hold.caseNumber}</Link><br /><span className="muted">{hold.reason}</span></span>
+          </li>)}</ul>}
+        {cursor && <p><Link href="/admin/retention#support-case-holds">First page</Link></p>}
+        {nextHold && <p><Link href={`/admin/retention?${new URLSearchParams({ supportHoldAfter: nextHold })}#support-case-holds`}>More paused cases</Link></p>}
+      </section>
 
       <IdentityPanel queue={queue} />
 

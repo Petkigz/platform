@@ -1474,12 +1474,12 @@ preceding note that this boundary needed an audit. Historical early deletions
 cannot be reconstructed by this change. Real multi-session PostgreSQL behavior
 and deployment remain unverified.
 
-Support cases have no safeguarding-specific category or case-level safeguarding
-hold. Their three-year cleanup must not be mistaken for the separate safeguarding
-record policy: a safety concern could have been included in free-text support
-content and would not be identified automatically. The scope of any such legacy
-cases and how to preserve or review them need individual assessment; this change
-does not classify or recover them.
+Support cases have no safeguarding-specific category. Their three-year cleanup
+must not be mistaken for the separate safeguarding record policy: a safety concern
+could have been included in free-text support content and would not be identified
+automatically. The scope of any such legacy cases and how to preserve or review
+them need individual assessment; the earlier deadline fix did not classify or
+recover them. A later, narrower scheduled-cleanup pause is described below.
 
 Local regression: 2,647 assertions in 170 suites across eight separate PGlite
 databases (the affected batch was repeated after adding timezone/leap checks),
@@ -1495,5 +1495,28 @@ private, no-store caching, and the page no longer claims all other personal data
 is gone or that setting a secret schedules a job. The returned counts describe
 database actions, not verified object deletion. Local web: 2,160 tests, lint,
 typecheck, repository checks and build passed. Live job, proxy and browser behavior
-still need verification. The support-case safeguarding hold and legacy-case
-classification gap described above remain open.
+still need verification. The support-case legacy-case classification and full-preservation gaps described above remain open.
+
+
+**Support case scheduled-cleanup pause:** the identified active safeguarding
+owner can pause or release scheduled cleanup for an identified support case from
+its existing page, and page through private paused-case and action-history lists.
+The normal retention plan and job exclude paused cases, lock and recheck the case,
+and continue to process other eligible cases. The hold table and event history
+are private; these controls do not grant additional case access. This is deliberately
+not called a complete evidence-preservation hold: account-closure redaction, other
+message deletion paths, backups and external copies are not prevented. Existing
+unidentified safety concerns are not automatically classified or protected.
+After release, a due case can be deleted immediately. Pause events and reasons
+remain personal data after deletion; the case-specific history screen no longer
+shows them once the case is gone, and their retention and visual review/erasure
+need further work. Reasons should not contain names or sensitive details.
+
+Local regression: 2,648 assertions in 170 suites across eight separate PGlite
+databases, 2,162 web tests, lint, typecheck, repository checks and build passed.
+The SQL tests cover owner-only access, no starvation, cleanup, history and release;
+PGlite does not prove real concurrent sessions. Deploy and verify on hosted
+PostgreSQL before relying on this control. Other preservation paths remain open.
+The affected database batch was repeated after adding requester and anonymous
+access checks. This cleanup pause does not itself create a safeguarding concern
+or send an alert; the owner must handle and record the concern separately.

@@ -296,6 +296,62 @@ export async function run(ctx) {
     assert(grants.can===false,'the internal deadline helper became an application endpoint');
   });
 
+  await test('the safeguarding owner can pause scheduled case cleanup without exposing the private hold', async () => {
+    const prior = await one('select owner_user_id,configured_at from public.safeguarding_owner where singleton');
+    await q('delete from public.safeguarding_owner where singleton');
+    await q('select public.bootstrap_safeguarding_owner($1)',[owner]);
+    await q("update public.platform_settings set value_text='true' where key='platform.support'");
+    let held, ordinaryDue;
+    try {
+      held=await call(asker,"select public.open_support_case('other',$1,$2) as r",['Review this case','Please review this case.']);
+      ordinaryDue=await call(asker,"select public.open_support_case('other',$1,$2) as r",['Other older case','Please review this case.']);
+      await call(agent,'select public.reply_to_support_case($1,$2) as r',[held,'A reply to preserve.']);
+      await q(`update public.support_cases set status='closed', closed_by=$3, close_reason='Answered',
+        closed_at=case when id=$1 then now()-interval '5 years' else now()-interval '4 years' end where id in ($1,$2)`,[held,ordinaryDue,owner]);
+      await rejects(() => call(governance,"select public.change_support_case_cleanup_hold($1,'hold','Review needed') as r",[held]),/not_allowed/i);
+      assert(await call(owner,"select public.change_support_case_cleanup_hold($1,'hold','Review needed') as r",[held])===true);
+      assert(await call(owner,"select public.change_support_case_cleanup_hold($1,'hold','Review needed') as r",[held])===false,'duplicate hold created');
+      const state=await call(owner,'select public.support_case_cleanup_hold_status($1) as r',[held]);
+      assert(state.held===true && state.reason==='Review needed');
+      const planned=await plan(now);
+      const eligible=(await one(`select count(*)::int n from public.retention_due_records r
+        where kind='support_case' and public.support_case_retention_due_at(clock_started_at)<=$1::timestamptz
+        and not exists(select 1 from public.support_case_cleanup_holds h where h.case_id=r.id)`,[now])).n;
+      assert(planned.supportCases.due===eligible,'the plan included a paused case in the cleanup count');
+      await rejects(() => call(governance,'select public.support_case_cleanup_hold_status($1) as r',[held]),/not_allowed/i);
+      await rejects(() => call(asker,'select public.support_case_cleanup_hold_status($1) as r',[held]),/not_allowed/i);
+      const list=(await asActor(owner,'select * from public.support_case_cleanup_hold_page(null,50)')).rows;
+      assert(list.some(r=>r.case_id===held),'the owner cannot find the held case');
+      const after=(await asActor(owner,'select * from public.support_case_cleanup_hold_page($1,50)',[held])).rows;
+      assert(!after.some(r=>r.case_id===held),'the hold cursor repeated the entry');
+      await rejects(() => asActor(governance,'select * from public.support_case_cleanup_hold_page(null,50)'),/not_allowed/i);
+      const privileges=await one("select has_table_privilege('authenticated','public.support_case_cleanup_holds','select') as can");
+      assert(privileges.can===false,'private holds became directly readable');
+      const anon=await one("select has_function_privilege('anon','public.support_case_cleanup_hold_status(uuid)','execute') as can");
+      assert(anon.can===false,'anonymous callers can inspect a private pause');
+      await rejects(()=>q('delete from public.support_cases where id=$1',[held]),/held from scheduled cleanup/i);
+      const first=await runJobs(now,1);
+      assert(first.deleted.supportCases===1 && !(await exists('support_cases',ordinaryDue)),'the held case starved another due case');
+      assert(await exists('support_cases',held),'the held case was deleted');
+      assert((await one('select count(*)::int n from public.support_case_messages where case_id=$1',[held])).n===1,'the scheduled cleanup deleted a held message');
+      assert(await call(owner,"select public.change_support_case_cleanup_hold($1,'release','Review complete') as r",[held])===true);
+      assert(await call(owner,"select public.change_support_case_cleanup_hold($1,'release','Review complete') as r",[held])===false);
+      const history=(await asActor(owner,'select * from public.support_case_cleanup_hold_history($1,null,50)',[held])).rows;
+      assert(history.length===2 && history.some(e=>e.action==='held') && history.some(e=>e.action==='released'),'owner cannot review hold history');
+      const historyAfter=(await asActor(owner,'select * from public.support_case_cleanup_hold_history($1,$2,50)',[held,history[0].event_id])).rows;
+      assert(historyAfter.length===1 && historyAfter[0].event_id===history[1].event_id,'history cursor failed');
+      await rejects(() => asActor(governance,'select * from public.support_case_cleanup_hold_history($1,null,50)',[held]),/not_allowed/i);
+      await runJobs(now,500);
+      assert(!(await exists('support_cases',held)),'released due case was not cleaned');
+      assert((await one('select count(*)::int n from public.support_case_cleanup_hold_events where case_id=$1',[held])).n===2,'private hold history was not kept');
+      await rejects(() => q('delete from public.support_case_cleanup_hold_events where case_id=$1',[held]),/history cannot be changed/i);
+    } finally {
+      await q("update public.platform_settings set value_text='false' where key='platform.support'");
+      await q('delete from public.safeguarding_owner where singleton');
+      if (prior) await q('insert into public.safeguarding_owner(singleton,owner_user_id,configured_at) values(true,$1,$2)',[prior.owner_user_id,prior.configured_at]);
+    }
+  });
+
   await test('a run cannot be talked into the future', async () => {
     // The date is a parameter so the run can be replayed, and a scheduler bug
     // that passes the wrong year must not be able to delete next decade's

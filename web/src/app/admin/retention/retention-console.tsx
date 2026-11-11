@@ -64,7 +64,7 @@ export function RetentionConsole({
         {retentionHeadline(plan)}
       </div>
 
-      <p className="muted">These counts cover support cases, screening and child records only. Coursework files have a separate register under Handed-in files; a cleanup may also tombstone due coursework.</p>
+      <p className="muted">These counts cover support cases, screening and child records only. Cases paused from scheduled cleanup are excluded from the case count. Coursework files have a separate register under Handed-in files; a cleanup may also tombstone due coursework.</p>
 
       <div className="stats" style={{ marginTop: '1.5rem' }}>
         <div>

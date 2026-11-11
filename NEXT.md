@@ -702,8 +702,8 @@ moves; `platform.search` blamed a missing index when no transcript text existed.
 Optional author-provided transcripts now exist and are searchable only when the caller may read them. Both rows
 have since been updated; their switches did not move.
 
-Verification: **The tree with 326 migrations passed 2 647 database assertions in
-170 suites across eight PGlite databases, and 2 158 web tests. Lint, TypeScript,
+Verification: **The tree with 327 migrations passed 2 648 database assertions in
+170 suites across eight PGlite databases, and 2 162 web tests. Lint, TypeScript,
 `check:repo` and build passed. Hosted deployment and real concurrent PostgreSQL
 and storage behavior remain unverified.**
 

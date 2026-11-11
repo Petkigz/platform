@@ -10,6 +10,8 @@ import {
 } from '@/lib/support';
 import { CaseActions } from './case-actions';
 import { CaseHistory } from './case-history';
+import { parseSupportCleanupHoldStatus, parseSupportCleanupHoldHistory, SUPPORT_HOLD_ID } from '@/lib/support-case-cleanup-hold';
+import { changeCleanupHold } from './cleanup-hold-action';
 
 export const metadata = { title: 'Support request' };
 export const dynamic = 'force-dynamic';
@@ -33,9 +35,10 @@ export const dynamic = 'force-dynamic';
  * error where their conversation should be.
  */
 export default async function SupportCasePage({
-  params,
+  params, searchParams,
 }: {
   params: Promise<{ caseNumber: string }>;
+  searchParams: Promise<{ cleanupHold?: string; holdEventAfter?: string }>;
 }) {
   if (!isSupabaseConfigured()) redirect('/');
 
@@ -57,6 +60,18 @@ export default async function SupportCasePage({
 
   const { supportCase: supportCaseRow, messages } = found;
   const open = supportCaseRow.status !== 'closed';
+  const query = await searchParams;
+  const result = query.cleanupHold;
+  const ownerResult = isStaff ? await supabase.rpc('safeguarding_owner_status') : null;
+  const owner = !ownerResult?.error && ownerResult?.data?.is_owner === true;
+  const holdResult = owner ? await supabase.rpc('support_case_cleanup_hold_status', { p_case_id: supportCaseRow.id }) : null;
+  const hold = holdResult && !holdResult.error ? parseSupportCleanupHoldStatus(holdResult.data) : null;
+  const eventCursorValid = !query.holdEventAfter || SUPPORT_HOLD_ID.test(query.holdEventAfter);
+  const eventResult = owner && eventCursorValid ? await supabase.rpc('support_case_cleanup_hold_history', {
+    p_case_id: supportCaseRow.id, p_after: query.holdEventAfter ?? null, p_limit: 51,
+  }) : null;
+  const events = eventResult && !eventResult.error ? parseSupportCleanupHoldHistory(eventResult.data) : null;
+  const eventNext = events && events.length > 50 ? events[49]?.id : null;
 
   return (
     <div className="page">
@@ -149,6 +164,38 @@ export default async function SupportCasePage({
           </p>
         )}
       </section>
+
+      {owner && <section id="cleanup-hold" className="card">
+        <h2>Pause scheduled case cleanup</h2>
+        <p className="muted">Owner only. This pauses scheduled deletion of this case. It does not stop account-erasure redaction, other deletion paths, or loss of external copies. Review the concern separately; this is not a complete evidence-preservation hold.</p>
+        <p className="muted"><Link href="/admin/retention#support-case-holds">View paused cases</Link>. Reasons are kept privately after release; avoid names and sensitive details.</p>
+        {result === 'held' && <p role="status">Scheduled cleanup was paused.</p>}
+        {result === 'released' && <p role="status">The pause was released. If the case is due, cleanup may remove it immediately.</p>}
+        {result === 'already' && <p role="status">No change was needed; check the current status.</p>}
+        {result === 'uncertain' && <p className="notice warn" role="alert">The action could not be confirmed. Refresh and check the current status before trying again.</p>}
+        {result === 'invalid' && <p className="notice warn" role="alert">Confirm the action and give a reason.</p>}
+        <h3>Pause history</h3>
+        <p className="muted">Entries are ordered by event ID, not by date. New entries can appear on an earlier page, so return to the first page to check again. History for a case that has since been deleted is retained privately but is not displayed here.</p>
+        {events === null ? <p className="notice warn">History could not be loaded; do not assume there were no earlier actions.</p>
+          : events.length === 0 ? <p className="muted">No history was returned on this page.</p>
+          : <ul className="lessons">{events.slice(0, 50).map((event) => <li key={event.id}>
+            <span className="t">{event.action === 'held' ? 'Paused' : 'Released'} · {new Date(event.occurredAt).toLocaleString()}<br /><span className="muted">{event.reason}</span></span>
+          </li>)}</ul>}
+        {query.holdEventAfter && <p><Link href={`/support/${supportCaseRow.caseNumber}#cleanup-hold`}>First history page</Link></p>}
+        {eventNext && <p><Link href={`/support/${supportCaseRow.caseNumber}?${new URLSearchParams({ holdEventAfter: eventNext })}#cleanup-hold`}>More history</Link></p>}
+        {hold === null ? <p className="notice warn">The pause status could not be loaded. Do not assume the case is protected.</p> : <>
+          <p>{hold.held ? 'Scheduled cleanup is paused for this case.' : 'Scheduled cleanup is not paused for this case.'}</p>
+          {hold.held && <p className="muted">Reason: {hold.reason}</p>}
+          <form action={changeCleanupHold} style={{ display: 'grid', gap: '.5rem' }}>
+            <input type="hidden" name="caseId" value={supportCaseRow.id} />
+            <input type="hidden" name="caseNumber" value={supportCaseRow.caseNumber} />
+            <input type="hidden" name="action" value={hold.held ? 'release' : 'hold'} />
+            <label>Reason <textarea name="reason" required minLength={3} maxLength={1000} rows={2} /></label>
+            <label><input type="checkbox" name="reviewed" value="yes" required /> I understand this only controls scheduled case cleanup.</label>
+            <button className="btn ghost" type="submit">{hold.held ? 'Release cleanup pause' : 'Pause scheduled cleanup'}</button>
+          </form>
+        </>}
+      </section>}
 
       {isStaff && <CaseHistory caseId={supportCaseRow.id} />}
 
