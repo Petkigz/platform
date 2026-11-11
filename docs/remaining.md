@@ -1555,3 +1555,19 @@ checks and build passed. The batches do not prove all cross-suite interactions,
 and PGlite does not prove real PostgreSQL concurrency. A full single-database
 run of the previous migration did not finish in 30 minutes. Deploy and test the
 hold, release, concurrent account closure and public privacy wording together.
+
+**Held-message deletion boundary (migration 1230):** the database now refuses
+message deletion while a case pause exists, including deletion outside the
+scheduled job. Release removes the pause and applies deferred account erasure
+in the same transaction; failure rolls the whole release back. Competing case
+and message lock orders can deadlock and must be retried. The safeguard does not
+stop edits to case content, privileged trigger bypass, loss of external copies or
+changes to linked records. In particular, the child-record purge currently
+removes the learner link from a held support case; that still needs a preservation
+and post-release erasure design. No live concurrency or deployment test has been
+performed.
+
+Local migration 1230 regression: 2,650 assertions in 170 suites across eight
+separate PGlite databases, plus the focused support, account-erasure, retention
+and child-record suites together (67 assertions). Lint, typecheck and repository
+checks passed. Separate databases do not test every cross-suite interaction.

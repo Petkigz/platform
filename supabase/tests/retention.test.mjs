@@ -450,6 +450,19 @@ export async function run(ctx) {
       assert(await exists('support_case_messages',ownMessage) && await exists('support_case_messages',otherMessage) && await exists('support_case_messages',requesterMessage),'a held message was lost');
       assert((await one('select count(*)::int n from public.support_case_deferred_erasures where case_id=$1',[other])).n===2,'multiple closure tasks not recorded');
       assert(!(await one("select has_table_privilege('authenticated','public.support_case_deferred_erasures','select') as can")).can,'deferred erasures are exposed');
+      await rejects(() => q('delete from public.support_case_messages where id=$1',[otherMessage]),/held from deletion/i);
+      assert(await exists('support_case_messages',otherMessage),'direct delete lost held evidence');
+      // A failure during release must roll back the pause removal and all erasure.
+      await q(`create function pg_temp.reject_held_release() returns trigger language plpgsql as $$
+        begin raise exception 'test:release_failure'; end $$`);
+      await q(`create trigger test_reject_held_release before delete on public.support_case_messages
+        for each row execute function pg_temp.reject_held_release()`);
+      try {
+        await rejects(() => call(owner,"select public.change_support_case_cleanup_hold($1,'release','Review complete') as r",[other]),/test:release_failure/);
+        assert((await call(owner,'select public.support_case_cleanup_hold_status($1) as r',[other])).held === true,'failed release lost hold');
+        assert(await exists('support_case_messages',otherMessage),'failed release lost message');
+        assert((await one('select count(*)::int n from public.support_case_deferred_erasures where case_id=$1',[other])).n===2,'failed release lost pending work');
+      } finally { await q('drop trigger test_reject_held_release on public.support_case_messages'); }
       await rejects(() => call(governance,"select public.change_support_case_cleanup_hold($1,'release','Review complete') as r",[other]),/not_allowed/i);
       assert((await one('select count(*)::int n from public.support_case_deferred_erasures where case_id=$1',[other])).n===2,'unauthorized release changed tasks');
       await call(owner,"select public.change_support_case_cleanup_hold($1,'release','Review complete') as r",[other]);
