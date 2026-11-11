@@ -1627,3 +1627,16 @@ hosted provider and concurrency testing remain open.
 Local verification for the detachment acknowledgement: 2,167 web tests, lint,
 typecheck, repository checks and build passed. The database was unchanged; its
 most recent separate-batch run passed 2,653 assertions in 170 suites.
+
+**Child-login creation receipt:** the server adapter now validates reservation and
+provider identity IDs and checks that the database completion receipt names the
+requested child and username before reporting success. A mismatch or malformed
+reply is uncertain, not proof the login failed; the existing marked-identity
+recovery remains available and does not reset a password. This is local response
+validation, not live Auth verification, global session revocation or password
+recovery.
+
+Local creation-receipt verification: 29 child-login database assertions passed,
+including the handler against real migration functions with a simulated Auth
+provider and lost reply. The web suite passed 2,169 tests; lint, typecheck,
+repository checks and build passed. This is not a hosted provider test.

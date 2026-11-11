@@ -8,7 +8,7 @@ export type ChildLoginCreatePorts = {
   prepare: (learnerId: string, username: string) => Promise<string>;
   findIdentity: (attemptId: string, guardianId: string) => Promise<string | null>;
   createIdentity: (input: { username: string; password: string; attemptId: string }) => Promise<string>;
-  complete: (attemptId: string, guardianId: string, userId: string) => Promise<void>;
+  complete: (attemptId: string, guardianId: string, userId: string, expected: { learnerId: string; username: string }) => Promise<void>;
 };
 
 export type ChildLoginCreateResult =
@@ -42,7 +42,7 @@ export async function createChildLogin(
       }
     }
     if (!userId) return { ok: false, phase: 'unknown' };
-    await ports.complete(attemptId, input.guardianId, userId);
+    await ports.complete(attemptId, input.guardianId, userId, { learnerId: input.learnerId, username: input.username });
     return { ok: true, recovered };
   } catch {
     return { ok: false, phase: 'unknown' };
