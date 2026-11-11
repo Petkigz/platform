@@ -1598,3 +1598,18 @@ separate PGlite databases, 2,163 web tests, lint, typecheck, repository checks
 and build passed. Focused tests also exercised support, retention, child purge and
 account merge together. Separate databases do not prove every shared-state order
 or real concurrent transactions.
+
+**Coursework file-list aggregation (migration 1260):** the existing authorized
+file list now uses one ordered JSON aggregate instead of repeatedly appending to
+a growing array. Attached files appear in attachment order, followed by pending
+or quarantined declarations in stable creation/ID order. Its permissions and
+response shape are unchanged. This does not bound the number of pending uploads
+or the response size, prove a performance improvement on the hosted database,
+remove storage objects, or fix oversized signed PUTs. A paginated interface and
+safe pending-upload recovery and cleanup remain necessary.
+
+Migration 1260 local verification: 2,653 assertions in 170 suites across eight
+separate PGlite databases, including a 62-entry list with household and marker
+access checks; 66 focused file/review assertions, lint, typecheck and repository
+checks passed. The prior web tree passed 2,163 tests and build. No hosted load
+test or production deployment is implied.

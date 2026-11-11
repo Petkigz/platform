@@ -343,6 +343,30 @@ export async function run(ctx) {
       () => declare(who.userId, submission, { name: 'Page 11.jpg' }));
   });
 
+  await test('a large unfinished-file list stays complete, ordered and private', async () => {
+    const who=await learner('Many unfinished files',{course,version});
+    const outsider=await learner('Unrelated file reader',{course,version});
+    const submission=await draft(who.userId,assignment,who.learnerId);
+    const attached=[];
+    for(let i=0;i<2;i++) {
+      const item=await declare(who.userId,submission,{name:`Attached ${i}.jpg`});
+      attached.push(item.asset_id); await call(who.userId,SQL_CONFIRM,[item.asset_id]);
+    }
+    const pending=[];
+    for(let i=0;i<60;i++) pending.push((await declare(who.userId,submission,{name:`Pending ${i}.jpg`})).asset_id);
+    const list=(await call(who.userId,SQL_FILES,[submission])).f;
+    const repeated=(await call(who.userId,SQL_FILES,[submission])).f;
+    assert(list.length===62 && new Set(list.map(x=>x.assetId)).size===62,'list was truncated or duplicated');
+    assert(list[0].assetId===attached[0] && list[1].assetId===attached[1], 'attachment order changed');
+    assert(pending.every(id=>list.some(x=>x.assetId===id && x.status==='pending')),'pending file missing');
+    assert(JSON.stringify(list)===JSON.stringify(repeated),'unchanged file list order was unstable');
+    assert(list.every(x=>!Object.hasOwn(x,'review') && !Object.hasOwn(x,'reviewedAt')), 'review state leaked to household');
+    await refused(outsider.userId,SQL_FILES,[submission],/not yours to read/i);
+    const marker=(await call(teacher,SQL_FILES,[submission])).f;
+    assert(marker.length===62 && marker.every(x=>Object.hasOwn(x,'review')),'authorized marker lost review data');
+    assert(!(await scalar("select has_function_privilege('authenticated','public.assignment_submission_files_internal(uuid)','execute') as can")).can,'internal list became callable');
+  });
+
   await test('a stranger cannot declare a file against somebody else’s draft', async () => {
     const who = await learner('Somebody', { course, version });
     const outsider = await learner('Stranger', { course, version });
