@@ -1532,3 +1532,15 @@ people's cases, privacy and access to held material, concurrent closure/hold and
 message changes, and how pending erasure is completed after release. It cannot
 restore already-erased information or control external copies. Privacy and
 safeguarding review and real hosted PostgreSQL concurrency tests are required.
+
+**Closed-account support boundary (migration 1210):** local code prevents a
+closed or deleted profile from reading support cases/messages through their
+policies, from opening, replying to or closing cases through those RPCs, and
+from accessing the data-export RPC that bypasses support RLS. The
+writers serialize on the same profile row used by account closure. Active staff
+and requesters retain their existing access. This does not revoke provider
+sessions, invalidate already-started reads or signed links, cover other app
+features, or preserve evidence against account-erasure redaction. The existing
+support read policy still permits privileged staff; the cleanup pause itself does
+not make a support case owner-only. Hosted migrations and concurrent-session
+verification are still required.

@@ -381,6 +381,33 @@ export async function run(ctx) {
       assert((await caseRow(id)).status === 'closed');
     });
 
+    await test('a closed account cannot read or write support with an old database session', async () => {
+      await q("update public.platform_settings set value_text='true' where key='platform.support'");
+      const a = await newAsker('Closed support');
+      const name = (await q('select display_name from public.user_profiles where user_id=$1', [a.userId])).rows[0].display_name;
+      const id = (await open(a.userId, 'other', 'A private case', 'A private question.')).rows[0].id;
+      await reply(agent, id, 'Staff response.');
+      const erased = (await asActor(a.userId, 'select public.erase_my_account($1) as result', [name])).rows[0].result;
+      assert(erased.closed === true, 'account closure did not complete');
+      assert((await asActor(a.userId, 'select id from public.support_cases where id=$1', [id])).rows.length === 0,
+        'closed requester can read a case');
+      assert((await asActor(a.userId, 'select id from public.support_case_messages where case_id=$1', [id])).rows.length === 0,
+        'closed requester can read case messages');
+      await refused(a.userId, SQL_OPEN, ['other', 'Another case', 'Should be refused.', null, null], /support:account_closed_or_missing/);
+      await refused(a.userId, SQL_REPLY, [id, 'Should be refused.', false], /support:account_closed_or_missing/);
+      await refused(a.userId, 'select public.close_support_case($1,$2)', [id, 'Should be refused.'], /support:account_closed_or_missing/);
+      await refused(a.userId, 'select public.export_my_data()', [], /support:account_closed_or_missing/);
+      assert((await asActor(agent, 'select id from public.support_cases where id=$1', [id])).rows.length === 1,
+        'active staff lost case access');
+      assert((await reply(agent, id, 'Staff can continue work.')).rows[0].id, 'active staff lost reply access');
+      const internals = await q(`select
+        has_function_privilege('authenticated','public.open_support_case_before_closed_boundary(text,text,text,uuid,uuid)','execute') as open,
+        has_function_privilege('authenticated','public.reply_to_support_case_before_closed_boundary(uuid,text,boolean)','execute') as reply,
+        has_function_privilege('authenticated','public.close_support_case_before_closed_boundary(uuid,text)','execute') as close,
+        has_function_privilege('authenticated','public.export_my_data_before_closed_boundary()','execute') as export`);
+      assert(!internals.rows[0].open && !internals.rows[0].reply && !internals.rows[0].close && !internals.rows[0].export, 'internal writer is callable by an application role');
+    });
+
     await test('opening, triage and closure are audited', async () => {
       await q("update public.platform_settings set value_text='true' where key='platform.support'");
       const a = await newAsker('Audited');
