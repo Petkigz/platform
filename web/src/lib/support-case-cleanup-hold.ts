@@ -39,3 +39,20 @@ export function parseSupportCleanupHoldHistory(data: unknown): SupportCleanupHol
   }
   return result;
 }
+
+export type SupportHeldVersion = { id: string; sourceKind: 'case' | 'message'; sourceId: string; capturedAt: string; content: Record<string, unknown> };
+export function parseSupportHeldVersions(data: unknown): SupportHeldVersion[] | null {
+  if (!Array.isArray(data) || data.length > 21) return null;
+  const result: SupportHeldVersion[] = [];
+  for (const item of data) {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return null;
+    const row = item as Record<string, unknown>;
+    if (typeof row.version_id !== 'string' || !SUPPORT_HOLD_ID.test(row.version_id) ||
+        (row.source_kind !== 'case' && row.source_kind !== 'message') ||
+        typeof row.source_id !== 'string' || !SUPPORT_HOLD_ID.test(row.source_id) ||
+        typeof row.captured_at !== 'string' || !Number.isFinite(Date.parse(row.captured_at)) ||
+        !row.content || typeof row.content !== 'object' || Array.isArray(row.content)) return null;
+    result.push({id:row.version_id,sourceKind:row.source_kind,sourceId:row.source_id,capturedAt:row.captured_at,content:row.content as Record<string, unknown>});
+  }
+  return result;
+}

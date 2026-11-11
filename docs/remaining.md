@@ -1560,9 +1560,7 @@ hold, release, concurrent account closure and public privacy wording together.
 message deletion while a case pause exists, including deletion outside the
 scheduled job. Release removes the pause and applies deferred account erasure
 in the same transaction; failure rolls the whole release back. Competing case
-and message lock orders can deadlock and must be retried. The safeguard does not
-stop edits to case content, privileged trigger bypass, loss of external copies or
-changes to linked records. Migration 1240 later adds a separate guard for child-record purge, described below. No live concurrency or deployment test has been
+and message lock orders can deadlock and must be retried. The safeguard does not itself stop edits to case content, privileged trigger bypass, loss of external copies or changes to linked records. Migration 1250 adds private prior versions for edits, described below. Migration 1240 later adds a separate guard for child-record purge, described below. No live concurrency or deployment test has been
 performed.
 
 Local migration 1230 regression: 2,650 assertions in 170 suites across eight
@@ -1584,3 +1582,19 @@ Migration 1240 local verification: 2,651 assertions in 170 suites across eight
 separate PGlite databases, 2,162 web tests, lint, typecheck, repository checks
 and build passed. The batches do not cover every cross-suite interaction, and
 they do not prove PostgreSQL concurrency.
+
+**Held case prior versions (migration 1250):** edits to held case and message
+rows save their previous values in a private, owner-only paginated view while
+ordinary case and account-merge workflows continue. These copies may contain
+sensitive information and are deleted atomically on release; the owner is warned
+before releasing. Current case access rules remain unchanged. This captures
+updates after a hold is active, not content lost before it was placed, external
+copies, separately stored records or privileged trigger bypass. Real PostgreSQL
+concurrency, rollback and deployment behavior still need verification; conflicting
+message/case lock orders can abort transactions and require retry.
+
+Migration 1250 local verification: 2,652 assertions in 170 suites across eight
+separate PGlite databases, 2,163 web tests, lint, typecheck, repository checks
+and build passed. Focused tests also exercised support, retention, child purge and
+account merge together. Separate databases do not prove every shared-state order
+or real concurrent transactions.

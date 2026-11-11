@@ -450,6 +450,22 @@ export async function run(ctx) {
       assert(await exists('support_case_messages',ownMessage) && await exists('support_case_messages',otherMessage) && await exists('support_case_messages',requesterMessage),'a held message was lost');
       assert((await one('select count(*)::int n from public.support_case_deferred_erasures where case_id=$1',[other])).n===2,'multiple closure tasks not recorded');
       assert(!(await one("select has_table_privilege('authenticated','public.support_case_deferred_erasures','select') as can")).can,'deferred erasures are exposed');
+      await q("update public.support_cases set body='Edited held case body' where id=$1",[own]);
+      await q("update public.support_cases set body='Edited again' where id=$1",[own]);
+      await q("update public.support_case_messages set body='Edited response for Held Requester' where id=$1",[staffReply]);
+      const ownVersions=(await asActor(owner,'select * from public.support_case_held_version_page($1,null,20)',[own])).rows;
+      const otherVersions=(await asActor(owner,'select * from public.support_case_held_version_page($1,null,20)',[other])).rows;
+      assert(ownVersions.some(v=>v.source_kind==='case' && v.content.body==='Original held case body'),'held case previous version missing');
+      const first=(await asActor(owner,'select * from public.support_case_held_version_page($1,null,1)',[own])).rows;
+      const next=(await asActor(owner,'select * from public.support_case_held_version_page($1,$2,1)',[own,first[0].version_id])).rows;
+      assert(first.length===1 && next.length===1 && first[0].version_id!==next[0].version_id,'version pagination failed');
+      await rejects(() => asActor(owner,'select * from public.support_case_held_version_page($1,null,101)',[own]),/invalid version page/i);
+
+      assert(otherVersions.some(v=>v.source_kind==='message' && v.content.body==='Response for Held Requester'),'held message previous version missing');
+      await rejects(() => asActor(governance,'select * from public.support_case_held_version_page($1,null,20)',[other]),/not_allowed/i);
+      assert(!(await one("select has_table_privilege('authenticated','public.support_case_held_versions','select') as can")).can,'held versions table exposed');
+      assert(!(await one("select has_function_privilege('anon','public.support_case_held_version_page(uuid,uuid,integer)','execute') as can")).can,'anonymous can read held versions');
+
       await rejects(() => q('delete from public.support_case_messages where id=$1',[otherMessage]),/held from deletion/i);
       assert(await exists('support_case_messages',otherMessage),'direct delete lost held evidence');
       // A failure during release must roll back the pause removal and all erasure.
@@ -461,6 +477,7 @@ export async function run(ctx) {
         await rejects(() => call(owner,"select public.change_support_case_cleanup_hold($1,'release','Review complete') as r",[other]),/test:release_failure/);
         assert((await call(owner,'select public.support_case_cleanup_hold_status($1) as r',[other])).held === true,'failed release lost hold');
         assert(await exists('support_case_messages',otherMessage),'failed release lost message');
+        assert((await one('select count(*)::int n from public.support_case_held_versions where case_id=$1',[other])).n>0,'failed release lost version evidence');
         assert((await one('select count(*)::int n from public.support_case_deferred_erasures where case_id=$1',[other])).n===2,'failed release lost pending work');
       } finally { await q('drop trigger test_reject_held_release on public.support_case_messages'); }
       await rejects(() => call(governance,"select public.change_support_case_cleanup_hold($1,'release','Review complete') as r",[other]),/not_allowed/i);
@@ -468,8 +485,10 @@ export async function run(ctx) {
       await call(owner,"select public.change_support_case_cleanup_hold($1,'release','Review complete') as r",[other]);
       assert(!(await exists('support_case_messages',otherMessage)) && !(await exists('support_case_messages',requesterMessage)),'closed accounts messages survived release');
       assert((await one('select body from public.support_cases where id=$1',[other])).body==='[erased]');
-      assert((await one('select body from public.support_case_messages where id=$1',[staffReply])).body==='Response for the account holder');
+      assert((await one('select body from public.support_case_messages where id=$1',[staffReply])).body==='Edited response for the account holder');
       assert((await one('select count(*)::int n from public.support_case_deferred_erasures where case_id=$1',[other])).n===0,'deferred personal data retained after release');
+      assert((await one('select count(*)::int n from public.support_case_held_versions where case_id=$1',[other])).n===0,'held versions retained after release');
+      await rejects(() => asActor(owner,'select * from public.support_case_held_version_page($1,null,20)',[other]),/not held/i);
       assert(await exists('support_case_messages',ownMessage),'release of a different case removed held evidence');
       await call(owner,"select public.change_support_case_cleanup_hold($1,'release','Review complete') as r",[own]);
       assert(!(await exists('support_case_messages',ownMessage)),'own message survived release');

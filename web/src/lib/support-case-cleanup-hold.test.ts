@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
-import { parseSupportCleanupHoldStatus, parseSupportCleanupHolds, parseSupportCleanupHoldHistory } from './support-case-cleanup-hold.ts';
+import { parseSupportCleanupHoldStatus, parseSupportCleanupHolds, parseSupportCleanupHoldHistory, parseSupportHeldVersions } from './support-case-cleanup-hold.ts';
 
 const row = {case_id:'00000000-0000-4000-8000-000000000001',case_number:'SC-000001',reason:'Review needed',opened_at:'2026-01-01T00:00:00Z'};
 test('owner hold data is validated rather than treating a failed list as empty', () => {
@@ -25,11 +25,23 @@ test('pause controls are owner-only and describe their limits and uncertain resu
   const list=readFileSync(new URL('../app/admin/retention/page.tsx',import.meta.url),'utf8');
   assert.match(page, /owner && <section/);
   assert.match(page, /defers account-closure erasure/);
-  assert.match(page, /releasing this pause applies deferred account-closure and child-link erasure immediately/);
+  assert.match(page, /releasing this pause deletes saved prior versions/);
+  assert.match(page, /support_case_held_version_page/);
+  assert.match(page, /Saved versions could not be loaded/);
   assert.match(page, /Existing support access still applies/);
   assert.match(page, /could not be confirmed/);
   assert.match(action, /change_support_case_cleanup_hold/);
   assert.match(action, /result\.error/);
   assert.match(list, /support_case_cleanup_hold_page/);
   assert.match(list, /Do not assume it is empty/);
+});
+
+
+test('held versions are bounded and checked before the owner sees them', () => {
+  const version={version_id:row.case_id,source_kind:'case',source_id:row.case_id,captured_at:row.opened_at,content:{body:'Original'}};
+  assert.equal(parseSupportHeldVersions([version])?.[0]?.content.body,'Original');
+  assert.equal(parseSupportHeldVersions(null),null);
+  assert.equal(parseSupportHeldVersions([{...version,source_kind:'unknown'}]),null);
+  assert.equal(parseSupportHeldVersions([{...version,content:[]}]),null);
+  assert.equal(parseSupportHeldVersions(Array(22).fill(version)),null);
 });

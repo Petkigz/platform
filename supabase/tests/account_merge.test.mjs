@@ -231,6 +231,31 @@ export async function run(ctx) {
     eq(await audit('account.merged'), 1, 'the audit row');
   });
 
+  await test('a merge still works and saves the prior held-case attribution for the owner', async () => {
+    await flag(true);
+    const prior=(await q('select owner_user_id,configured_at from public.safeguarding_owner where singleton')).rows[0];
+    const supportBefore=(await q("select value_text from public.platform_settings where key='platform.support'")).rows[0].value_text;
+    await q('delete from public.safeguarding_owner where singleton');
+    await q('select public.bootstrap_safeguarding_owner($1)',[admin]);
+    await q("update public.platform_settings set value_text='true' where key='platform.support'");
+    try {
+      const a=await account('merge-held-a@example.com','Held Merge A');
+      const b=await account('merge-held-b@example.com','Held Merge B');
+      const caseId=await call(a,"select public.open_support_case('other','Held merge case','Original case') as r");
+      await call(admin,"select public.change_support_case_cleanup_hold($1,'hold','Review attribution') as r",[caseId]);
+      const req=await request(a,'merge-held-b@example.com');
+      assert((await decide(b,req.requestId,true,'Held Merge B')).merged===true,'hold disabled merge');
+      eq((await q('select requested_by from public.support_cases where id=$1',[caseId])).rows[0].requested_by,b,'merged requester');
+      const versions=await call(admin,"select coalesce(jsonb_agg(v),'[]'::jsonb) as r from public.support_case_held_version_page($1,null,100) v",[caseId]);
+      assert(versions.some(v=>v.source_kind==='case' && v.content.requested_by===a),'the original requester was not preserved');
+      await call(admin,"select public.change_support_case_cleanup_hold($1,'release','Review complete') as r",[caseId]);
+    } finally {
+      await q("update public.platform_settings set value_text=$1 where key='platform.support'",[supportBefore]);
+      await q('delete from public.safeguarding_owner where singleton');
+      if(prior) await q('insert into public.safeguarding_owner(singleton,owner_user_id,configured_at) values(true,$1,$2)',[prior.owner_user_id,prior.configured_at]);
+    }
+  });
+
   await test('the surviving account inherits the other one’s roles', async () => {
     await flag(true);
     const a = await account('merge-role-a@example.com', 'Role A');

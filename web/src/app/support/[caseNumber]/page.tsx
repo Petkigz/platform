@@ -10,7 +10,7 @@ import {
 } from '@/lib/support';
 import { CaseActions } from './case-actions';
 import { CaseHistory } from './case-history';
-import { parseSupportCleanupHoldStatus, parseSupportCleanupHoldHistory, SUPPORT_HOLD_ID } from '@/lib/support-case-cleanup-hold';
+import { parseSupportCleanupHoldStatus, parseSupportCleanupHoldHistory, parseSupportHeldVersions, SUPPORT_HOLD_ID } from '@/lib/support-case-cleanup-hold';
 import { changeCleanupHold } from './cleanup-hold-action';
 
 export const metadata = { title: 'Support request' };
@@ -38,7 +38,7 @@ export default async function SupportCasePage({
   params, searchParams,
 }: {
   params: Promise<{ caseNumber: string }>;
-  searchParams: Promise<{ cleanupHold?: string; holdEventAfter?: string }>;
+  searchParams: Promise<{ cleanupHold?: string; holdEventAfter?: string; heldVersionAfter?: string }>;
 }) {
   if (!isSupabaseConfigured()) redirect('/');
 
@@ -72,6 +72,13 @@ export default async function SupportCasePage({
   }) : null;
   const events = eventResult && !eventResult.error ? parseSupportCleanupHoldHistory(eventResult.data) : null;
   const eventNext = events && events.length > 50 ? events[49]?.id : null;
+  const versionCursorValid = !query.heldVersionAfter || SUPPORT_HOLD_ID.test(query.heldVersionAfter);
+  const versionResult = owner && hold?.held && versionCursorValid ? await supabase.rpc('support_case_held_version_page', {
+    p_case_id: supportCaseRow.id, p_after: query.heldVersionAfter ?? null, p_limit: 21,
+  }) : null;
+  const versions = versionResult && !versionResult.error ? parseSupportHeldVersions(versionResult.data) : null;
+  const versionNext = versions && versions.length > 20 ? versions[19]?.id : null;
+
 
   return (
     <div className="page">
@@ -174,6 +181,20 @@ export default async function SupportCasePage({
         {result === 'already' && <p role="status">No change was needed; check the current status.</p>}
         {result === 'uncertain' && <p className="notice warn" role="alert">The action could not be confirmed. Refresh and check the current status before trying again.</p>}
         {result === 'invalid' && <p className="notice warn" role="alert">Confirm the action and give a reason.</p>}
+        {hold?.held && <section aria-label="Saved prior versions">
+          <h3>Saved prior versions</h3>
+          <p className="muted">Private to the safeguarding owner. When a held case or message is edited, its previous version is saved here. The current conversation is above. Versions are erased on release; review the evidence before releasing. Earlier losses and outside copies cannot be restored. Entries are ordered by ID, not date; check the first page again for new entries.</p>
+          {versions === null ? <p className="notice warn">Saved versions could not be loaded. Do not assume there are none.</p>
+            : versions.length === 0 ? <p className="muted">No prior versions were returned on this page.</p>
+            : versions.slice(0,20).map(version => <details key={version.id}>
+              <summary>{version.sourceKind === 'case' ? 'Case' : 'Message'} · saved {new Date(version.capturedAt).toLocaleString()}</summary>
+              <dl>{Object.entries(version.content).map(([key,value]) => <div key={key}>
+                <dt>{key.replaceAll('_',' ')}</dt><dd style={{overflowWrap:'anywhere',whiteSpace:'pre-wrap'}}>{value === null ? '—' : typeof value === 'string' ? value : JSON.stringify(value)}</dd>
+              </div>)}</dl>
+            </details>)}
+          {query.heldVersionAfter && <p><Link href={`/support/${supportCaseRow.caseNumber}#cleanup-hold`}>First versions page</Link></p>}
+          {versionNext && <p><Link href={`/support/${supportCaseRow.caseNumber}?${new URLSearchParams({ heldVersionAfter: versionNext })}#cleanup-hold`}>More prior versions</Link></p>}
+        </section>}
         <h3>Pause history</h3>
         <p className="muted">Entries are ordered by event ID, not by date. New entries can appear on an earlier page, so return to the first page to check again. History for a case that has since been deleted is retained privately but is not displayed here.</p>
         {events === null ? <p className="notice warn">History could not be loaded; do not assume there were no earlier actions.</p>
@@ -191,7 +212,7 @@ export default async function SupportCasePage({
             <input type="hidden" name="caseNumber" value={supportCaseRow.caseNumber} />
             <input type="hidden" name="action" value={hold.held ? 'release' : 'hold'} />
             <label>Reason <textarea name="reason" required minLength={3} maxLength={1000} rows={2} /></label>
-            <label><input type="checkbox" name="reviewed" value="yes" required /> I understand releasing this pause applies deferred account-closure and child-link erasure immediately and may allow scheduled deletion.</label>
+            <label><input type="checkbox" name="reviewed" value="yes" required /> I understand releasing this pause deletes saved prior versions, applies deferred account-closure and child-link erasure immediately and may allow scheduled deletion.</label>
             <button className="btn ghost" type="submit">{hold.held ? 'Release cleanup pause' : 'Pause scheduled cleanup'}</button>
           </form>
         </>}
