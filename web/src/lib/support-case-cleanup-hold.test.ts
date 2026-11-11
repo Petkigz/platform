@@ -25,7 +25,7 @@ test('pause controls are owner-only and describe their limits and uncertain resu
   const list=readFileSync(new URL('../app/admin/retention/page.tsx',import.meta.url),'utf8');
   assert.match(page, /owner && <section/);
   assert.match(page, /defers account-closure erasure/);
-  assert.match(page, /releasing this pause applies deferred account-closure erasure immediately/);
+  assert.match(page, /releasing this pause applies deferred account-closure and child-link erasure immediately/);
   assert.match(page, /Existing support access still applies/);
   assert.match(page, /could not be confirmed/);
   assert.match(action, /change_support_case_cleanup_hold/);

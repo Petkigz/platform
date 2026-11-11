@@ -1562,12 +1562,25 @@ scheduled job. Release removes the pause and applies deferred account erasure
 in the same transaction; failure rolls the whole release back. Competing case
 and message lock orders can deadlock and must be retried. The safeguard does not
 stop edits to case content, privileged trigger bypass, loss of external copies or
-changes to linked records. In particular, the child-record purge currently
-removes the learner link from a held support case; that still needs a preservation
-and post-release erasure design. No live concurrency or deployment test has been
+changes to linked records. Migration 1240 later adds a separate guard for child-record purge, described below. No live concurrency or deployment test has been
 performed.
 
 Local migration 1230 regression: 2,650 assertions in 170 suites across eight
 separate PGlite databases, plus the focused support, account-erasure, retention
 and child-record suites together (67 assertions). Lint, typecheck and repository
 checks passed. Separate databases do not test every cross-suite interaction.
+
+**Held case child-link boundary (migration 1240):** child-record purge now
+defers unlinking an identified child from a held case. The child record itself
+can still be erased/anonymised on its normal clock, so retaining the link does
+not preserve the child record or reconstruct a name. A private deferred-link
+task is removed and the link cleared when the owner releases the pause, in the
+same transaction as other deferred case erasure. The purge receipt reports
+retained held-case links and does not claim nothing remains. Other case edits,
+merges, provider copies and previously lost information remain outside this
+change. Real concurrent-session and deployment testing remains necessary.
+
+Migration 1240 local verification: 2,651 assertions in 170 suites across eight
+separate PGlite databases, 2,162 web tests, lint, typecheck, repository checks
+and build passed. The batches do not cover every cross-suite interaction, and
+they do not prove PostgreSQL concurrency.

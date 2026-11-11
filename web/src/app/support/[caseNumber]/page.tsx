@@ -191,7 +191,7 @@ export default async function SupportCasePage({
             <input type="hidden" name="caseNumber" value={supportCaseRow.caseNumber} />
             <input type="hidden" name="action" value={hold.held ? 'release' : 'hold'} />
             <label>Reason <textarea name="reason" required minLength={3} maxLength={1000} rows={2} /></label>
-            <label><input type="checkbox" name="reviewed" value="yes" required /> I understand releasing this pause applies deferred account-closure erasure immediately and may allow scheduled deletion.</label>
+            <label><input type="checkbox" name="reviewed" value="yes" required /> I understand releasing this pause applies deferred account-closure and child-link erasure immediately and may allow scheduled deletion.</label>
             <button className="btn ghost" type="submit">{hold.held ? 'Release cleanup pause' : 'Pause scheduled cleanup'}</button>
           </form>
         </>}

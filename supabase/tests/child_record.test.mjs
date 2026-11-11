@@ -504,4 +504,32 @@ export async function run(ctx) {
     const verified = await one('select valid from public.verify_certificate($1)', [number]);
     assert(verified.valid === true, 'a certificate whose evidence was removed no longer verifies');
   });
+  await test('a held support case keeps its child link through purge and clears it at release', async () => {
+    const prior=await one('select owner_user_id,configured_at from public.safeguarding_owner where singleton');
+    await q('delete from public.safeguarding_owner where singleton');
+    await q('select public.bootstrap_safeguarding_owner($1)',[owner]);
+    try {
+      const g=await newUser('child-held-support-guardian@example.com');
+      await newProfile(g,'Case Guardian');
+      const f=await call(g,"select public.create_family('Case family') as r");
+      const c=await call(g,"select public.add_child_to_family($1,'Case child','8-10') as r",[f]);
+      const held=await withFlag('platform.support',()=>call(g,"select public.open_support_case('other','Held child case','Held case text',$1) as r",[c]));
+      const ordinary=await withFlag('platform.support',()=>call(g,"select public.open_support_case('other','Other child case','Other case text',$1) as r",[c]));
+      await call(owner,"select public.change_support_case_cleanup_hold($1,'hold','Safety review') as r",[held]);
+      assert((await call(g,'select public.erase_my_account($1) as r',['Case Guardian'])).closed===true);
+      const result=(await q('select public.purge_learner_record($1) as r',[c])).rows[0].r;
+      assert(result.erased===true && result.heldSupportCaseLinks===1 && result.nothingLeft===false,'purge did not disclose the held link');
+      assert((await one('select learner_profile_id from public.support_cases where id=$1',[held])).learner_profile_id===c,'held child link was lost');
+      assert((await one('select learner_profile_id from public.support_cases where id=$1',[ordinary])).learner_profile_id===null,'ordinary child link survived');
+      assert((await one('select status from public.learner_profiles where id=$1',[c])).status==='erased','child purge was blocked');
+      assert(!(await one("select has_table_privilege('authenticated','public.support_case_deferred_child_links','select') as can")).can,'deferred links are exposed');
+      await call(owner,"select public.change_support_case_cleanup_hold($1,'release','Review complete') as r",[held]);
+      assert((await one('select learner_profile_id from public.support_cases where id=$1',[held])).learner_profile_id===null,'released link was not removed');
+      assert(await count('select 1 from public.support_case_deferred_child_links where case_id=$1',[held])===0,'released task remains');
+    } finally {
+      await q('delete from public.safeguarding_owner where singleton');
+      if(prior) await q('insert into public.safeguarding_owner(singleton,owner_user_id,configured_at) values(true,$1,$2)',[prior.owner_user_id,prior.configured_at]);
+    }
+  });
+
 }
