@@ -103,11 +103,11 @@ export function ChildLoginCard({
         body: JSON.stringify({ learnerId, reason }),
       });
       const json = (await res.json().catch(() => null)) as
-        | { ok?: boolean; code?: string }
+        | { ok?: boolean; code?: string; message?: string; removed?: { removed?: boolean } }
         | null;
-      if (!res.ok || !json?.ok) {
-        setError(json?.code ? childLoginSentence(json.code) :
-          'We could not confirm detachment. Refresh the page or contact privacy@ayahspring.com before trying again.');
+      if (!res.ok || json?.ok !== true || json.removed?.removed !== true) {
+        setError(json?.message ?? (json?.code ? childLoginSentence(json.code) :
+          'We could not confirm detachment. Refresh the page or contact privacy@ayahspring.com before trying again.'));
         return;
       }
       setConfirmRemove(false);

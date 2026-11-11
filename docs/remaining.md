@@ -1613,3 +1613,17 @@ separate PGlite databases, including a 62-entry list with household and marker
 access checks; 66 focused file/review assertions, lint, typecheck and repository
 checks passed. The prior web tree passed 2,163 tests and build. No hosted load
 test or production deployment is implied.
+
+**Child-login detachment acknowledgement:** the family API and card now require
+an explicit, well-shaped database detachment receipt before showing success.
+Malformed requests are refused before the RPC; an interrupted call, unexpected
+response or unrecognized upstream error is reported as unconfirmed, not as a
+failed or successful detachment. The JSON content-type check adds a browser
+request boundary but is not a complete CSRF audit. This does not delete the
+provider identity, revoke its sessions, implement password reset, or replace the
+owner-reviewed removal workflow. A lost reply still requires a refresh or review;
+hosted provider and concurrency testing remain open.
+
+Local verification for the detachment acknowledgement: 2,167 web tests, lint,
+typecheck, repository checks and build passed. The database was unchanged; its
+most recent separate-batch run passed 2,653 assertions in 170 suites.

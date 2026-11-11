@@ -703,7 +703,7 @@ Optional author-provided transcripts now exist and are searchable only when the 
 have since been updated; their switches did not move.
 
 Verification: **The current tree has 333 migrations. This tree passed 2 653 database assertions in
-170 suites across eight separate PGlite databases. The preceding web tree passed 2 163 tests. Lint, TypeScript,
+170 suites across eight separate PGlite databases. The current web tree passed 2 167 tests. Lint, TypeScript,
 `check:repo` and build passed. Hosted deployment and real concurrent PostgreSQL
 and storage behavior remain unverified.**
 
