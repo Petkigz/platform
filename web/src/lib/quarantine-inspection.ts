@@ -7,6 +7,24 @@ export type QuarantineInspectionResult =
   | { ok: true; matches: boolean; declaredBytes: number; reportedBytes: number }
   | { ok: false; message: string; status: number };
 
+/** Only one well-formed row for the requested file may be used for a storage check. */
+export function parseQuarantineTarget(value: unknown, assetId: string): QuarantineInspectionTarget | null {
+  if (!Array.isArray(value) || value.length !== 1 || !value[0] || typeof value[0] !== 'object' || Array.isArray(value[0])) return null;
+  const row = value[0] as Record<string, unknown>;
+  if (typeof row.asset_id !== 'string' || row.asset_id.toLowerCase() !== assetId.toLowerCase() ||
+      typeof row.storage_backend !== 'string' || !row.storage_backend.trim() ||
+      typeof row.master_bucket !== 'string' || !row.master_bucket.trim() ||
+      typeof row.master_key !== 'string' || !row.master_key.trim() ||
+      !((typeof row.declared_bytes === 'number' && Number.isSafeInteger(row.declared_bytes) && row.declared_bytes > 0) ||
+        (typeof row.declared_bytes === 'string' && /^[1-9][0-9]*$/.test(row.declared_bytes) && Number.isSafeInteger(Number(row.declared_bytes))))) return null;
+  return row as QuarantineInspectionTarget;
+}
+
+export function sameQuarantineTarget(a: QuarantineInspectionTarget, b: QuarantineInspectionTarget): boolean {
+  return a.asset_id.toLowerCase() === b.asset_id.toLowerCase() && a.storage_backend === b.storage_backend &&
+    a.master_bucket === b.master_bucket && a.master_key === b.master_key && Number(a.declared_bytes) === Number(b.declared_bytes);
+}
+
 /** A single HEAD checks reported size only; it does not inspect or scan content. */
 export async function inspectQuarantinedObject(
   target: QuarantineInspectionTarget, config: R2Config, fetchImpl: typeof fetch = fetch,

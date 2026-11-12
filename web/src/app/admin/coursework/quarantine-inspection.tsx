@@ -14,7 +14,8 @@ export function QuarantineInspection({ assetId }: { assetId: string }) {
       const r = data as Record<string, unknown>;
       if (!response.ok || r.ok !== true) throw new Error(typeof r.message === 'string' ? r.message : 'The storage check could not be completed.');
       if (typeof r.matches !== 'boolean' || typeof r.declaredBytes !== 'number' || typeof r.reportedBytes !== 'number' ||
-          r.contentVerified !== false || r.malwareScanned !== false) throw new Error('The storage response could not be read.');
+          !Number.isSafeInteger(r.declaredBytes) || r.declaredBytes <= 0 || !Number.isSafeInteger(r.reportedBytes) || r.reportedBytes < 0 ||
+          r.matches !== (r.declaredBytes === r.reportedBytes) || r.contentVerified !== false || r.malwareScanned !== false) throw new Error('The storage response could not be read.');
       setMessage(`At the time of the check, storage reported ${r.reportedBytes} bytes; the file record declares ${r.declaredBytes}. ${r.matches ? 'The sizes match.' : 'The sizes do not match.'} Contents and malware were not checked; the object may change after this check.`);
     } catch (error) { setMessage(error instanceof Error ? error.message : 'The storage check could not be completed.'); }
     finally { setBusy(false); }

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { readR2Config } from '@/lib/media-r2';
-import { inspectQuarantinedObject, type QuarantineInspectionTarget } from '@/lib/quarantine-inspection';
+import { inspectQuarantinedObject, parseQuarantineTarget, sameQuarantineTarget } from '@/lib/quarantine-inspection';
 import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -18,16 +18,17 @@ export async function GET(request: Request) {
   if (!user) return fail('Sign in to review this file.', 401);
   const result = await supabase.rpc('coursework_quarantine_inspection_target', { p_asset_id: asset });
   if (result.error) return fail('This quarantine cannot be inspected by this account.', 403);
-  const rows = result.data as QuarantineInspectionTarget[] | null;
-  if (!Array.isArray(rows) || rows.length !== 1) return fail('This quarantined file is not available for inspection.', 404);
-  const target = rows[0];
+  const target = parseQuarantineTarget(result.data, asset);
   if (!target) return fail('This quarantined file is not available for inspection.', 404);
   const config = readR2Config();
   if (!config) return fail('Storage is not configured for this check.', 503);
   const outcome = await inspectQuarantinedObject(target, config);
-  // The owner could have been removed while storage was being contacted.
-  const owner = await supabase.rpc('safeguarding_owner_status');
-  if (owner.error || owner.data?.is_owner !== true) return fail('This quarantine cannot be inspected by this account.', 403);
+  // Recheck both authorization and the file record after contacting storage.
+  // This cannot prevent a later change to the object or record.
+  const checked = await supabase.rpc('coursework_quarantine_inspection_target', { p_asset_id: asset });
+  const current = checked.error ? null : parseQuarantineTarget(checked.data, asset);
+  if (!current || !sameQuarantineTarget(target, current))
+    return fail('The file or permission changed during the check. Refresh and try again.', 409);
   if (!outcome.ok) return fail(outcome.message, outcome.status);
   return NextResponse.json({ ok: true, matches: outcome.matches, declaredBytes: outcome.declaredBytes,
     reportedBytes: outcome.reportedBytes, contentVerified: false, malwareScanned: false }, { headers });

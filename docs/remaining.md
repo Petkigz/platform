@@ -1677,3 +1677,11 @@ The check does not expose secrets or claim the scheduler is running, credentials
 are valid or email was received. Those still require an actual configured end-to-end
 test. A malformed sender result is recorded as uncertain instead of aborting the
 lease handler; this does not make an unconfigured provider deliver mail.
+
+**Quarantine inspection recheck:** a size inspection now validates that its
+single database target is the requested file, and re-reads the authorized target
+after contacting storage. A changed file record, quarantine state or owner access
+makes the result unavailable. The browser also rejects internally inconsistent
+size reports. This remains a point-in-time HEAD size check, not a content scan or
+proof of deletion, and changes after the recheck cannot be ruled out. The real
+storage and concurrent authorization behavior still need deployment testing.
