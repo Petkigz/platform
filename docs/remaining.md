@@ -341,6 +341,15 @@ not sent to AyahSpring. The browser or OS may contact a location provider. The
 library suggests Moonsighting Committee for the UK and North America; this is
 not an authoritative region mapping and other regions have no suggested default.
 The method has its own seasonal/high-latitude behaviour; polar fallback is disabled.
+The tool rejects invalid or out-of-order results: a local Tromsø polar-night
+probe produced an Asr later than Maghrib from the underlying library. The
+sunrise/Dhuhr device-date guard also refuses mismatched dates; for example a
+Kiritimati probe is refused rather than showing the next day's times. This guard
+does not verify that coordinates match the time zone. A test reproduces the
+[upstream v4.4.6 Raleigh example](https://github.com/batoulapps/adhan-js/blob/v4.4.6/test/adhan.test.ts) and checks a New York DST boundary; these are not
+independent scholarly or astronomical verification. An open display is cleared
+when a date or zone change is detected (focus, visibility change or periodic
+check); it does not recalculate itself.
 The screen is English-only. Local religious review, more regional guidance,
 independent calculation and date/time-zone/high-latitude verification, privacy,
 accessibility, translation and hosted-browser review remain before enabling. It

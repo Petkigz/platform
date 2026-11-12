@@ -21,7 +21,17 @@ export function calculatePrayerTimes(latitude:number, longitude:number, date:Dat
     params.polarCircleResolution=PolarCircleResolution.Unresolved;
     const result=new PrayerTimes(new Coordinates(latitude,longitude),date,params);
     const times=[['Fajr',result.fajr],['Sunrise',result.sunrise],['Dhuhr',result.dhuhr],['Asr',result.asr],['Maghrib',result.maghrib],['Isha',result.isha]] as const;
-    if(times.some(([,time])=>!Number.isFinite(time.getTime()))) return null;
+    // Near polar night the library can produce finite but out-of-order times,
+    // e.g. Asr after Maghrib. Never present these as a usable timetable.
+    if(times.some(([,time],index)=>!Number.isFinite(time.getTime()) || (index>0 && time.getTime()<=times[index-1]![1].getTime()))) return null;
     return times;
   } catch { return null; }
+}
+
+/** This is a necessary date check, not proof that the zone matches the location. */
+export function prayerTimesMatchDeviceDay(times: NonNullable<ReturnType<typeof calculatePrayerTimes>>, date: Date, zone: string): boolean {
+  try {
+    const day=new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'});
+    return day.format(times[1][1])===day.format(date) && day.format(times[2][1])===day.format(date);
+  } catch { return false; }
 }

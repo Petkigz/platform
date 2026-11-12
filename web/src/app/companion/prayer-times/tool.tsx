@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { calculatePrayerTimes, methods, type Asr, type Method, type NightRule } from '@/lib/prayer-calculation';
+import { calculatePrayerTimes, prayerTimesMatchDeviceDay, methods, type Asr, type Method, type NightRule } from '@/lib/prayer-calculation';
 
 type Result = { lines: readonly (readonly [string,string])[]; date:string; zone:string; method:string; asr:string; night:string };
 export function PrayerTimesTool() {
@@ -10,6 +10,23 @@ export function PrayerTimesTool() {
   const [result,setResult]=useState<Result|null>(null); const [locating,setLocating]=useState(false);
   const [deviceZone,setDeviceZone]=useState('');
   useEffect(()=>{setDeviceZone(Intl.DateTimeFormat().resolvedOptions().timeZone || '');},[]);
+  useEffect(()=>{
+    if(!result) return;
+    function invalidateIfOutdated() {
+      const zone=Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+      let day='';
+      try { if(zone) day=new Intl.DateTimeFormat('en',{timeZone:zone,dateStyle:'full'}).format(new Date()); } catch { /* Fail closed if the zone is invalid. */ }
+      if(zone!==result!.zone || day!==result!.date) {
+        setResult(null);
+        setMessage('The date or device time zone changed. Check your settings and calculate again.');
+        if(zone!==result!.zone) {setDeviceZone(zone);setConfirmZone(false);}
+      }
+    }
+    const timer=window.setInterval(invalidateIfOutdated,60000);
+    window.addEventListener('focus',invalidateIfOutdated);
+    document.addEventListener('visibilitychange',invalidateIfOutdated);
+    return ()=>{window.clearInterval(timer);window.removeEventListener('focus',invalidateIfOutdated);document.removeEventListener('visibilitychange',invalidateIfOutdated);};
+  },[result]);
   function locate() {
     setResult(null); setMessage('');
     if (!navigator.geolocation) { setMessage('Location is not available in this browser. You can enter coordinates manually.'); return; }
@@ -28,9 +45,8 @@ export function PrayerTimesTool() {
     if(!zone) {setMessage('Your device time zone could not be identified.');return;}
     if(zone!==deviceZone) {setDeviceZone(zone);setConfirmZone(false);setMessage('Your device time zone changed. Check it and confirm again.');return;}
     const times=calculatePrayerTimes(lat,lon,now,method as Method,asr as Asr,night as NightRule);
-    if(!times) {setMessage('Times could not be calculated. Check the coordinates; some polar locations or dates need a different local timetable.');return;}
-    const dayFmt=new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'});
-    if(dayFmt.format(times[1][1])!==dayFmt.format(now) || dayFmt.format(times[2][1])!==dayFmt.format(now)) {setMessage('The calculated date does not match your device date. Check the time zone and location or consult a local timetable.');return;}
+    if(!times) {setMessage('A valid sequence of times could not be calculated. Check the coordinates or consult a local timetable, especially at high latitudes.');return;}
+    if(!prayerTimesMatchDeviceDay(times,now,zone)) {setMessage('The calculated date does not match your device date. Check the time zone and location or consult a local timetable.');return;}
     const fmt=new Intl.DateTimeFormat('en', { timeZone:zone, year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short' });
     setResult({lines:times.map(([name,time])=>[name,fmt.format(time)] as const),date:new Intl.DateTimeFormat('en',{timeZone:zone,dateStyle:'full'}).format(now),zone,method:methods[method as Method],asr:asr==='hanafi'?'Hanafi (later)':'Standard (earlier)',night:night==='middle'?'Middle of the night':night==='seventh'?'One seventh of the night':'Twilight angle'});
   }
@@ -51,6 +67,6 @@ export function PrayerTimesTool() {
     <label><input type="checkbox" checked={confirmZone} onChange={e=>{setConfirmZone(e.target.checked);changed();}} /> My device time zone matches this location.</label>
     <p><button type="button" className="btn" onClick={calculate} disabled={locating}>Calculate today</button></p>
     {message && <p className="notice" role="status">{message}</p>}
-    {result && <div aria-live="polite"><h3>Times for {result.date}</h3><p>{result.zone} · {result.method} · Asr: {result.asr} · Night rule: {result.method==='Moonsighting Committee'?'Moonsighting Committee seasonal rule':result.night}</p><ul>{result.lines.map(([name,time])=><li key={name}><strong>{name}:</strong> {time}</li>)}</ul><p>These times do not update automatically. Recalculate after a date, location or time-zone change.</p></div>}
+    {result && <div aria-live="polite"><h3>Times for {result.date}</h3><p>{result.zone} · {result.method} · Asr: {result.asr} · Night rule: {result.method==='Moonsighting Committee'?'Moonsighting Committee seasonal rule':result.night}</p><ul>{result.lines.map(([name,time])=><li key={name}><strong>{name}:</strong> {time}</li>)}</ul><p>Times do not recalculate automatically. Check the date and recalculate after a location or time-zone change. An old display is cleared when a date or zone change is detected.</p></div>}
   </section>;
 }
