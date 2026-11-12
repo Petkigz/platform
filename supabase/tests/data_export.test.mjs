@@ -122,6 +122,8 @@ export async function run(ctx) {
       const mine = (await scalar(
         `insert into public.discussion_posts (lesson_id, author_user_id, body, author_kind)
          values ($1,$2,'My own words','learner') returning id`, [lesson, person.userId])).id;
+      // A peer can reply only after the root question is reviewed.
+      await asActor(admin, `select public.moderate_discussion_post($1,'visible','Reviewed','My own words','pending',null,null,null)`, [mine]);
       await q(`insert into public.discussion_posts (lesson_id, parent_id, author_user_id, body, author_kind)
                values ($1,$2,$3,'A reply that is not mine','learner')`, [lesson, mine, other.userId]);
     });

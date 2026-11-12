@@ -93,7 +93,13 @@ export default async function AdminDiscussionPage() {
             <footer className="muted">— {item.authorName}</footer>
           </blockquote>
 
-          <ModerateForm postId={item.id} reviewedBody={item.body} reviewedState={item.visibilityState} />
+          {item.isReply && (item.parent ? (
+            <div className="notice"><strong>Question being answered</strong>
+              <p style={{ whiteSpace: 'pre-wrap' }}>{item.parent.body}</p>
+              <p className="muted">Question state: {item.parent.state}.</p>
+            </div>
+          ) : <p className="notice warn">The question is unavailable. Review the thread before deciding.</p>)}
+          {(!item.isReply || item.parent) && <ModerateForm postId={item.id} reviewedBody={item.body} reviewedState={item.visibilityState} parent={item.parent} />}
         </section>
       ))}
     </div>

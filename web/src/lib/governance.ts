@@ -1,3 +1,4 @@
+import { fetchDiscussionContexts, type DiscussionContext } from './discussion-context.ts';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export type ReportCategory =
@@ -124,7 +125,7 @@ export type QueueReport = {
   reporter: { display_name: string | null } | null;
   lesson: { title: string | null } | null;
   discussion_post_id: string | null;
-  discussionPost: { body: string; visibility_state: string } | null;
+  discussionPost: { body: string; visibility_state: string; parent_id: string | null; parent: DiscussionContext | null } | null;
 };
 
 /** Reports waiting on a person. RLS decides who can see this. */
@@ -135,7 +136,7 @@ export async function fetchReportQueue(
     .from('content_reports')
     .select(
       'id, report_category, description, status, created_at, lesson_id, discussion_post_id,' +
-        'reporter:reported_by(display_name), lesson:lesson_id(title), discussion_post:discussion_post_id(body,visibility_state)',
+        'reporter:reported_by(display_name), lesson:lesson_id(title), discussion_post:discussion_post_id(body,visibility_state,parent_id,lesson_id)',
     )
     .in('status', ['submitted', 'triaged', 'under_review'])
     .order('created_at', { ascending: true });
@@ -145,7 +146,7 @@ export async function fetchReportQueue(
   const oneRelation = <T>(value: T | T[] | null): T | null =>
     Array.isArray(value) ? value[0] ?? null : value;
 
-  return ((data ?? []) as unknown as {
+  const rows=((data ?? []) as unknown as {
     id: string;
     report_category: string;
     description: string;
@@ -154,13 +155,16 @@ export async function fetchReportQueue(
     reporter: { display_name: string | null } | { display_name: string | null }[] | null;
     lesson: { title: string | null } | { title: string | null }[] | null;
     discussion_post_id: string | null;
-    discussion_post: { body: string; visibility_state: string } | { body: string; visibility_state: string }[] | null;
-  }[]).map(({ reporter, lesson, discussion_post, ...row }) => ({
-    ...row,
-    reporter: oneRelation(reporter),
-    lesson: oneRelation(lesson),
-    discussionPost: oneRelation(discussion_post),
-  }));
+    discussion_post: { body: string; visibility_state: string; parent_id: string | null; lesson_id: string } | { body: string; visibility_state: string; parent_id: string | null; lesson_id: string }[] | null;
+  }[]);
+  const posts=rows.map(r=>oneRelation(r.discussion_post));
+  const parents=await fetchDiscussionContexts(supabase,posts.flatMap(p=>p?.parent_id ? [p.parent_id] : []));
+  return rows.map(({ reporter, lesson, discussion_post, ...row }) => {
+    const post=oneRelation(discussion_post);
+    const parent=post?.parent_id ? parents.get(post.parent_id) : null;
+    return {...row,reporter:oneRelation(reporter),lesson:oneRelation(lesson),
+      discussionPost:post ? {...post,parent:parent?.lessonId===post.lesson_id ? parent : null} : null};
+  });
 }
 
 export type ResolveInput = {

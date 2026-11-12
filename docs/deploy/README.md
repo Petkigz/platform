@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-338 files in `supabase/migrations/`, applied in filename order — the 14-digit
+339 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -1200,3 +1200,22 @@ Encrypted and unsupported contents, old signatures and compromised scanners can
 be missed. Scan output is not a permanent record. The in-process scan cap is not
 a distributed rate limit. Run a real daemon and provider integration test before
 relying on it; no live ClamAV or R2 test has been performed here.
+
+### Discussion moderation test and rollout
+
+Keep `learning.discussion` off until the reviewer and escalation arrangements
+are ready and the hosted flow has been tested. Apply migrations 1310 and 1320
+with the corresponding web deployment: older moderation clients use revoked
+RPC signatures and must be refreshed. The moderation queue remains readable
+when posting is off. Check pending questions, peer replies, reports, stale review
+conflicts and withdrawn parent questions with separate test accounts; review
+legacy threads and decisions rather than silently publishing them. A queue and a
+successful API response are not proof that a human reviewed content promptly.
+
+For a repeatable local lock experiment only, create a disposable **empty**
+PostgreSQL database named `ayahspring_discussion_lock_test`, set `PGHOST` to its
+absolute local Unix socket directory and set `PGPORT` and `PGUSER` as needed.
+With `DISCUSSION_LOCK_TEST=1`, run `npm run test:discussion-locks:postgres`.
+The script applies every migration and leaves synthetic fixtures behind; never
+point it at an existing project or data. It checks selected interleavings, not
+all possible races or the hosted PostgREST/browser integration.

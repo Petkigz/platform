@@ -1892,9 +1892,13 @@ archives, encrypted content, scan limits or current signatures are covered. The
 ZIP check and integration probe have only been exercised against simulated
 sockets so far; the real daemon and R2 still need testing.
 
-Discussion moderation still needs an end-to-end usability and safety review:
-the queue currently shows a reply without its parent question, so an approver may
-lack context. Review how parent withdrawal, queued replies and report actions
-interact, and exercise the final flow with real PostgreSQL concurrency and hosted
-users before enabling it. The full database suite was stopped before completion;
-the focused discussion, governance and group-three suites passed locally.
+The discussion and report queues now show the parent question for replies and
+refuse decisions without the context. Migration 1320 compares the reviewed
+question and reply under database locks, and will not publish a reply to a hidden
+question. A local PostgreSQL 17.11 experiment applied all migrations and passed
+three selected body-edit and parent-withdrawal races. This is not proof of every
+interleaving or the hosted Supabase/PostgREST and browser flows. Moderation needs
+an operating policy, assigned reviewers and escalation before enabling it; review
+legacy threads and previous moderation decisions. A single-process full database run was stopped before completion. All 170 suites
+subsequently passed as eight separate PGlite batches (2,660 assertions); this
+does not test interactions across batch boundaries.

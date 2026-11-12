@@ -162,7 +162,7 @@ export async function run(ctx) {
 
     const row = (await q(
       `select visibility_state, moderated_by, moderated_at is not null as stamped
-         from public.moderate_discussion_post($1,'visible','Accurate and on topic',(select body from public.discussion_posts where id=$1),(select visibility_state from public.discussion_posts where id=$1))`,
+         from public.moderate_discussion_post($1,'visible','Accurate and on topic',(select body from public.discussion_posts where id=$1),(select visibility_state from public.discussion_posts where id=$1),(select parent_id from public.discussion_posts where id=$1),(select p.body from public.discussion_posts c join public.discussion_posts p on p.id=c.parent_id where c.id=$1),(select p.visibility_state from public.discussion_posts c join public.discussion_posts p on p.id=c.parent_id where c.id=$1))`,
       [postId])).rows[0];
 
     assert(row.visibility_state === 'visible', 'the post was not published');
@@ -189,7 +189,7 @@ export async function run(ctx) {
 
     await asUser(learner.userId, async () => {
       await rejects(() => q(
-        `select id from public.moderate_discussion_post($1,'visible','looks fine',(select body from public.discussion_posts where id=$1),(select visibility_state from public.discussion_posts where id=$1))`,
+        `select id from public.moderate_discussion_post($1,'visible','looks fine',(select body from public.discussion_posts where id=$1),(select visibility_state from public.discussion_posts where id=$1),(select parent_id from public.discussion_posts where id=$1),(select p.body from public.discussion_posts c join public.discussion_posts p on p.id=c.parent_id where c.id=$1),(select p.visibility_state from public.discussion_posts c join public.discussion_posts p on p.id=c.parent_id where c.id=$1))`,
         [postId]),
         'a learner approved another learner’s post');
     });
@@ -206,7 +206,7 @@ export async function run(ctx) {
 
     await asUser(admin, async () => {
       await rejects(() => q(
-        `select id from public.moderate_discussion_post($1,'removed',null,(select body from public.discussion_posts where id=$1),(select visibility_state from public.discussion_posts where id=$1))`, [postId]),
+        `select id from public.moderate_discussion_post($1,'removed',null,(select body from public.discussion_posts where id=$1),(select visibility_state from public.discussion_posts where id=$1),(select parent_id from public.discussion_posts where id=$1),(select p.body from public.discussion_posts c join public.discussion_posts p on p.id=c.parent_id where c.id=$1),(select p.visibility_state from public.discussion_posts c join public.discussion_posts p on p.id=c.parent_id where c.id=$1))`, [postId]),
         'a post was withdrawn with no reason recorded');
     });
   });
@@ -291,7 +291,7 @@ export async function run(ctx) {
     await committed(async () => {
       await q(`select set_config('request.jwt.claims', $1, true)`, [JSON.stringify({ sub: admin })]);
       await q('set local role authenticated');
-      await q(`select id from public.moderate_discussion_post($1,'visible','Reviewed',(select body from public.discussion_posts where id=$1),(select visibility_state from public.discussion_posts where id=$1))`, [parent]);
+      await q(`select id from public.moderate_discussion_post($1,'visible','Reviewed',(select body from public.discussion_posts where id=$1),(select visibility_state from public.discussion_posts where id=$1),(select parent_id from public.discussion_posts where id=$1),(select p.body from public.discussion_posts c join public.discussion_posts p on p.id=c.parent_id where c.id=$1),(select p.visibility_state from public.discussion_posts c join public.discussion_posts p on p.id=c.parent_id where c.id=$1))`, [parent]);
     });
     await asUser(peer.userId, async () => {
       const row = (await q(`insert into public.discussion_posts
@@ -311,7 +311,7 @@ export async function run(ctx) {
     await committed(async () => {
       await q(`select set_config('request.jwt.claims', $1, true)`, [JSON.stringify({ sub: admin })]);
       await q('set local role authenticated');
-      await q(`select id from public.moderate_discussion_post($1,'visible','Reviewed',(select body from public.discussion_posts where id=$1),(select visibility_state from public.discussion_posts where id=$1))`, [parent]);
+      await q(`select id from public.moderate_discussion_post($1,'visible','Reviewed',(select body from public.discussion_posts where id=$1),(select visibility_state from public.discussion_posts where id=$1),(select parent_id from public.discussion_posts where id=$1),(select p.body from public.discussion_posts c join public.discussion_posts p on p.id=c.parent_id where c.id=$1),(select p.visibility_state from public.discussion_posts c join public.discussion_posts p on p.id=c.parent_id where c.id=$1))`, [parent]);
     });
     await asUser(L.teacher, async () => {
       const row = (await q(`insert into public.discussion_posts
@@ -333,7 +333,7 @@ export async function run(ctx) {
        values ($1,$2,'Reviewed wording') returning id`, [L.lesson, learner.userId])).rows[0].id;
 
     await asUser(admin, async () => {
-      await q(`select id from public.moderate_discussion_post($1,'visible','approved',(select body from public.discussion_posts where id=$1),(select visibility_state from public.discussion_posts where id=$1))`, [postId]);
+      await q(`select id from public.moderate_discussion_post($1,'visible','approved',(select body from public.discussion_posts where id=$1),(select visibility_state from public.discussion_posts where id=$1),(select parent_id from public.discussion_posts where id=$1),(select p.body from public.discussion_posts c join public.discussion_posts p on p.id=c.parent_id where c.id=$1),(select p.visibility_state from public.discussion_posts c join public.discussion_posts p on p.id=c.parent_id where c.id=$1))`, [postId]);
     });
 
     // Not rejects(): an RLS-blocked UPDATE matches zero rows and raises
@@ -374,6 +374,9 @@ export async function run(ctx) {
     const id = (await q(`insert into public.discussion_posts (lesson_id, author_user_id, body)
       values ($1,$2,'Pending wording') returning id`, [L.lesson, learner.userId])).rows[0].id;
     await asUser(learner.userId, async () => {
+      const inserted=(await q(`insert into public.discussion_posts (lesson_id,author_kind,visibility_state,body)
+        values ($1,'teacher','visible','Spoofed authority') returning author_kind,visibility_state`,[L.lesson])).rows[0];
+      assert(inserted.author_kind==='learner' && inserted.visibility_state==='pending','legacy author fields bypassed the trigger');
       await q(`update public.discussion_posts set body='Edited while pending' where id=$1`, [id]);
       const row=(await q('select body from public.discussion_posts where id=$1',[id])).rows[0];
       assert(row.body === 'Edited while pending','the author cannot edit pending wording');
@@ -387,7 +390,7 @@ export async function run(ctx) {
     await asUser(admin, async()=>await rejects(()=>q(`update public.discussion_posts set visibility_state='visible',moderated_by=$2,moderated_at=now() where id=$1`,[id,admin]), 'staff bypassed the audited moderation RPC'));
     await asUser(admin, async()=>await rejects(()=>q(`delete from public.discussion_posts where id=$1`,[id]), 'staff hard-deleted evidence'));
     await asUser(admin, async () => {
-      const row=(await q(`select visibility_state from public.moderate_discussion_post($1,'visible','Reviewed',(select body from public.discussion_posts where id=$1),(select visibility_state from public.discussion_posts where id=$1))`,[id])).rows[0];
+      const row=(await q(`select visibility_state from public.moderate_discussion_post($1,'visible','Reviewed',(select body from public.discussion_posts where id=$1),(select visibility_state from public.discussion_posts where id=$1),(select parent_id from public.discussion_posts where id=$1),(select p.body from public.discussion_posts c join public.discussion_posts p on p.id=c.parent_id where c.id=$1),(select p.visibility_state from public.discussion_posts c join public.discussion_posts p on p.id=c.parent_id where c.id=$1))`,[id])).rows[0];
       assert(row.visibility_state === 'visible','audited moderation stopped working');
     });
   });
@@ -404,14 +407,14 @@ export async function run(ctx) {
     await committed(async()=>{
       await q(`select set_config('request.jwt.claims',$1,true)`,[JSON.stringify({sub:admin})]);
       await q('set local role authenticated');
-      await q(`select id from public.moderate_discussion_post($1,'visible','Reviewed',(select body from public.discussion_posts where id=$1),(select visibility_state from public.discussion_posts where id=$1))`,[id]);
+      await q(`select id from public.moderate_discussion_post($1,'visible','Reviewed',(select body from public.discussion_posts where id=$1),(select visibility_state from public.discussion_posts where id=$1),(select parent_id from public.discussion_posts where id=$1),(select p.body from public.discussion_posts c join public.discussion_posts p on p.id=c.parent_id where c.id=$1),(select p.visibility_state from public.discussion_posts c join public.discussion_posts p on p.id=c.parent_id where c.id=$1))`,[id]);
     });
     const reply=(await q(`insert into public.discussion_posts (lesson_id,parent_id,author_user_id,body)
       values ($1,$2,$3,'Held reply') returning id`,[L.lesson,id,peer.userId])).rows[0].id;
     await committed(async()=>{
       await q(`select set_config('request.jwt.claims',$1,true)`,[JSON.stringify({sub:admin})]);
       await q('set local role authenticated');
-      await q(`select id from public.moderate_discussion_post($1,'visible','Reviewed',(select body from public.discussion_posts where id=$1),(select visibility_state from public.discussion_posts where id=$1))`,[reply]);
+      await q(`select id from public.moderate_discussion_post($1,'visible','Reviewed',(select body from public.discussion_posts where id=$1),(select visibility_state from public.discussion_posts where id=$1),(select parent_id from public.discussion_posts where id=$1),(select p.body from public.discussion_posts c join public.discussion_posts p on p.id=c.parent_id where c.id=$1),(select p.visibility_state from public.discussion_posts c join public.discussion_posts p on p.id=c.parent_id where c.id=$1))`,[reply]);
     });
     await asUser(asker.userId,async()=>{
       await rejects(()=>q(`insert into public.discussion_posts (lesson_id,parent_id,body) values ($1,$2,'nested')`,[L.lesson,reply]),'a reply to a reply was accepted');
@@ -428,18 +431,18 @@ export async function run(ctx) {
       values ($1,$2,'Root') returning id`,[L.lesson,asker.userId])).rows[0].id;
     await committed(async()=>{
       await q(`select set_config('request.jwt.claims',$1,true)`,[JSON.stringify({sub:admin})]);await q('set local role authenticated');
-      await q(`select id from public.moderate_discussion_post($1,'visible','Reviewed',(select body from public.discussion_posts where id=$1),(select visibility_state from public.discussion_posts where id=$1))`,[root]);
+      await q(`select id from public.moderate_discussion_post($1,'visible','Reviewed',(select body from public.discussion_posts where id=$1),(select visibility_state from public.discussion_posts where id=$1),(select parent_id from public.discussion_posts where id=$1),(select p.body from public.discussion_posts c join public.discussion_posts p on p.id=c.parent_id where c.id=$1),(select p.visibility_state from public.discussion_posts c join public.discussion_posts p on p.id=c.parent_id where c.id=$1))`,[root]);
     });
     const reply=(await q(`insert into public.discussion_posts (lesson_id,parent_id,author_user_id,body)
       values ($1,$2,$3,'Reply') returning id`,[L.lesson,root,peer.userId])).rows[0].id;
     await committed(async()=>{
       await q(`select set_config('request.jwt.claims',$1,true)`,[JSON.stringify({sub:admin})]);await q('set local role authenticated');
-      await q(`select id from public.moderate_discussion_post($1,'visible','Reviewed',(select body from public.discussion_posts where id=$1),(select visibility_state from public.discussion_posts where id=$1))`,[reply]);
+      await q(`select id from public.moderate_discussion_post($1,'visible','Reviewed',(select body from public.discussion_posts where id=$1),(select visibility_state from public.discussion_posts where id=$1),(select parent_id from public.discussion_posts where id=$1),(select p.body from public.discussion_posts c join public.discussion_posts p on p.id=c.parent_id where c.id=$1),(select p.visibility_state from public.discussion_posts c join public.discussion_posts p on p.id=c.parent_id where c.id=$1))`,[reply]);
     });
     await asUser(reader.userId,async()=>assert(await count('select 1 from public.discussion_posts where id=$1',[reply])===1,'visible reply was not readable'));
     await committed(async()=>{
       await q(`select set_config('request.jwt.claims',$1,true)`,[JSON.stringify({sub:admin})]);await q('set local role authenticated');
-      await q(`select id from public.moderate_discussion_post($1,'hidden','Withdrawn',(select body from public.discussion_posts where id=$1),(select visibility_state from public.discussion_posts where id=$1))`,[root]);
+      await q(`select id from public.moderate_discussion_post($1,'hidden','Withdrawn',(select body from public.discussion_posts where id=$1),(select visibility_state from public.discussion_posts where id=$1),(select parent_id from public.discussion_posts where id=$1),(select p.body from public.discussion_posts c join public.discussion_posts p on p.id=c.parent_id where c.id=$1),(select p.visibility_state from public.discussion_posts c join public.discussion_posts p on p.id=c.parent_id where c.id=$1))`,[root]);
     });
     await asUser(reader.userId,async()=>assert(await count('select 1 from public.discussion_posts where id=$1',[reply])===0,'reply leaked after root was hidden'));
     await asUser(reader.userId,async()=>await rejects(()=>q(`select public.report_content($1,'other','Report',$2)`,[L.lesson,reply]),'a hidden reply was reportable'));
@@ -456,12 +459,37 @@ export async function run(ctx) {
       await q(`select set_config('request.jwt.claims',$1,true)`,[JSON.stringify({sub:learner.userId})]);await q('set local role authenticated');
       await q(`update public.discussion_posts set body='Changed' where id=$1`,[id]);
     });
-    await asUser(admin,async()=>await rejects(()=>q(`select id from public.moderate_discussion_post($1,'visible','review','Original','pending')`,[id]),'stale wording approved'));
-    await asUser(admin,async()=>await rejects(()=>q(`select id from public.moderate_discussion_post($1,'visible','review','Changed','hidden')`,[id]),'stale state approved'));
+    await asUser(admin,async()=>await rejects(()=>q(`select id from public.moderate_discussion_post($1,'visible','review','Original','pending',null,null,null)`,[id]),'stale wording approved'));
+    await asUser(admin,async()=>await rejects(()=>q(`select id from public.moderate_discussion_post($1,'visible','review','Changed','hidden',null,null,null)`,[id]),'stale state approved'));
     await asUser(admin,async()=>await rejects(()=>q(`select id from public.moderate_discussion_post($1,'visible','review')`,[id]),'old unchecked RPC callable'));
     await asUser(admin,async()=>{
-      const row=(await q(`select visibility_state from public.moderate_discussion_post($1,'visible','review','Changed','pending')`,[id])).rows[0];
+      const row=(await q(`select visibility_state from public.moderate_discussion_post($1,'visible','review','Changed','pending',null,null,null)`,[id])).rows[0];
       assert(row.visibility_state==='visible','the reviewed wording was not approved');
+    });
+  });
+
+
+  await test('a reply decision checks the reviewed parent and refuses a hidden question', async () => {
+    const L=await lesson();const learner=await enrolledLearner('ds-parent-context@example.com',L.version,L.course);
+    const root=(await q(`insert into public.discussion_posts (lesson_id,author_user_id,body)
+      values ($1,$2,'The question') returning id`,[L.lesson,learner.userId])).rows[0].id;
+    await committed(async()=>{
+      await q(`select set_config('request.jwt.claims',$1,true)`,[JSON.stringify({sub:admin})]);await q('set local role authenticated');
+      await q(`select id from public.moderate_discussion_post($1,'visible','ok','The question','pending',null,null,null)`,[root]);
+    });
+    const reply=(await q(`insert into public.discussion_posts (lesson_id,parent_id,author_user_id,body)
+      values ($1,$2,$3,'The answer') returning id`,[L.lesson,root,learner.userId])).rows[0].id;
+    await asUser(admin,async()=>await rejects(()=>q(`select id from public.moderate_discussion_post($1,'visible','ok','The answer','pending',$2,'Wrong question','visible')`,[reply,root]),'different context accepted'));
+    await asUser(admin,async()=>await rejects(()=>q(`select id from public.moderate_discussion_post($1,'visible','ok','The answer','pending')`,[reply]),'old context-free RPC callable'));
+    await committed(async()=>{
+      await q(`select set_config('request.jwt.claims',$1,true)`,[JSON.stringify({sub:admin})]);await q('set local role authenticated');
+      await q(`select id from public.moderate_discussion_post($1,'hidden','withdraw','The question','visible',null,null,null)`,[root]);
+    });
+    await asUser(admin,async()=>await rejects(()=>q(`select id from public.moderate_discussion_post($1,'visible','ok','The answer','pending',$2,'The question','visible')`,[reply,root]),'stale parent state accepted'));
+    await asUser(admin,async()=>await rejects(()=>q(`select id from public.moderate_discussion_post($1,'visible','ok','The answer','pending',$2,'The question','hidden')`,[reply,root]),'reply to hidden question published'));
+    await asUser(admin,async()=>{
+      const row=(await q(`select visibility_state from public.moderate_discussion_post($1,'removed','withdraw','The answer','pending',$2,'The question','hidden')`,[reply,root])).rows[0];
+      assert(row.visibility_state==='removed','a moderator could not remove the reply');
     });
   });
 

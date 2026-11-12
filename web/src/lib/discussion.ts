@@ -16,6 +16,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { fetchDiscussionContexts, type DiscussionContext } from './discussion-context.ts';
 
 export type VisibilityState = 'pending' | 'visible' | 'hidden' | 'removed';
 
@@ -162,6 +163,7 @@ export type QueueItem = {
   createdAt: string;
   isReply: boolean;
   visibilityState: string;
+  parent: DiscussionContext | null;
 };
 
 /** The moderation queue: learner posts waiting on a person. */
@@ -172,7 +174,7 @@ export async function fetchModerationQueue(
   const { data, error } = await supabase
     .from('discussion_posts')
     .select(
-      'id, body, parent_id, created_at, author_user_id, visibility_state, ' +
+      'id, lesson_id, body, parent_id, created_at, author_user_id, visibility_state, ' +
         'user_profiles ( display_name ), lessons ( title )',
     )
     .eq('visibility_state', 'pending')
@@ -184,6 +186,7 @@ export async function fetchModerationQueue(
 
   type Row = {
     id: string;
+    lesson_id: string;
     body: string;
     parent_id: string | null;
     created_at: string;
@@ -192,7 +195,9 @@ export async function fetchModerationQueue(
     lessons: { title: string }[] | null;
   };
 
-  return ((data ?? []) as unknown as Row[]).map((r) => ({
+  const rows=(data ?? []) as unknown as Row[];
+  const parents=await fetchDiscussionContexts(supabase,rows.flatMap(r=>r.parent_id ? [r.parent_id] : []));
+  return rows.map((r) => ({
     id: r.id,
     body: r.body,
     authorName: r.user_profiles?.[0]?.display_name ?? 'Someone',
@@ -200,6 +205,7 @@ export async function fetchModerationQueue(
     createdAt: r.created_at,
     isReply: r.parent_id !== null,
     visibilityState: r.visibility_state,
+    parent: r.parent_id && parents.get(r.parent_id)?.lessonId===r.lesson_id ? parents.get(r.parent_id)! : null,
   }));
 }
 
@@ -207,7 +213,7 @@ export type ModerationOutcome = { ok: true } | { ok: false; message: string };
 
 export async function moderatePost(
   supabase: SupabaseClient,
-  args: { postId: string; state: 'visible' | 'hidden' | 'removed'; note?: string; reviewedBody: string; reviewedState: string },
+  args: { postId: string; state: 'visible' | 'hidden' | 'removed'; note?: string; reviewedBody: string; reviewedState: string; parent: DiscussionContext | null },
 ): Promise<ModerationOutcome> {
   // The function requires a written reason before withdrawing anything. Saying
   // so here gives the reviewer a sentence rather than a database error.
@@ -221,6 +227,9 @@ export async function moderatePost(
     p_note: args.note ?? null,
     p_reviewed_body: args.reviewedBody,
     p_reviewed_state: args.reviewedState,
+    p_parent_id: args.parent?.id ?? null,
+    p_parent_body: args.parent?.body ?? null,
+    p_parent_state: args.parent?.state ?? null,
   });
 
   if (error) return { ok: false, message: error.message };

@@ -11,6 +11,7 @@ type Body = {
   note?: unknown;
   reviewedBody?: unknown;
   reviewedState?: unknown;
+  parent?: unknown;
 };
 
 const STATES = ['visible', 'hidden', 'removed'] as const;
@@ -66,6 +67,14 @@ export async function POST(request: Request) {
   if (typeof payload.reviewedBody !== 'string' || typeof payload.reviewedState !== 'string') {
     return NextResponse.json({ error: 'Refresh and review the post before deciding.' }, { status: 400 });
   }
+  const parent = payload.parent;
+  if (parent !== null && (!parent || typeof parent !== 'object' || Array.isArray(parent) ||
+      typeof (parent as Record<string,unknown>).id !== 'string' ||
+      typeof (parent as Record<string,unknown>).lessonId !== 'string' ||
+      typeof (parent as Record<string,unknown>).body !== 'string' ||
+      typeof (parent as Record<string,unknown>).state !== 'string')) {
+    return NextResponse.json({ error: 'Refresh and review the question before deciding.' }, { status: 400 });
+  }
   if (!postId) {
     return NextResponse.json({ error: 'postId is required.' }, { status: 400 });
   }
@@ -82,6 +91,7 @@ export async function POST(request: Request) {
     note,
     reviewedBody: payload.reviewedBody,
     reviewedState: payload.reviewedState,
+    parent: parent as import('@/lib/discussion-context').DiscussionContext | null,
   });
 
   if (!result.ok) {
