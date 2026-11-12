@@ -106,6 +106,11 @@ export async function confirmMediaUpload(
     return { ok: false, message: 'That upload does not exist.', status: 404 };
   }
 
+  if (typeof row.id !== 'string' || row.id.toLowerCase() !== assetId.toLowerCase() ||
+      typeof row.master_bucket !== 'string' || typeof row.master_key !== 'string') {
+    return { ok: false, message: 'The upload record could not be checked. Refresh before trying again.', status: 502 };
+  }
+
   const coursework = options.mode === 'coursework';
   // A previous request may have committed while its HTTP response was lost.
   // Recheck the object, then let the database validate the available attachment.
@@ -118,7 +123,9 @@ export async function confirmMediaUpload(
   }
 
   const declaredBytes = Number(row.byte_size);
-  if (!Number.isFinite(declaredBytes) || declaredBytes <= 0) {
+  if (!((typeof row.byte_size === 'number' && Number.isSafeInteger(row.byte_size)) ||
+        (typeof row.byte_size === 'string' && /^[1-9][0-9]*$/.test(row.byte_size))) ||
+      !Number.isSafeInteger(declaredBytes) || declaredBytes <= 0) {
     return {
       ok: false,
       message: 'That row does not record a usable size, so the object cannot be checked against it.',
@@ -154,7 +161,7 @@ export async function confirmMediaUpload(
 
   let response: Response;
   try {
-    response = await doFetch(signedUrl, { method: 'HEAD' });
+    response = await doFetch(signedUrl, { method: 'HEAD', redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(10_000) });
   } catch {
     return {
       ok: false,
@@ -181,8 +188,8 @@ export async function confirmMediaUpload(
   }
 
   const reported = response.headers.get('content-length');
-  const reportedBytes = reported === null ? null : Number(reported);
-  if (reportedBytes === null || !Number.isFinite(reportedBytes)) {
+  const reportedBytes = reported !== null && /^[0-9]+$/.test(reported) ? Number(reported) : null;
+  if (reportedBytes === null || !Number.isSafeInteger(reportedBytes)) {
     return {
       ok: false,
       message:
@@ -207,9 +214,15 @@ export async function confirmMediaUpload(
   if (coursework && !options.confirmCoursework) {
     return { ok: false, message: 'The server confirmation service is not configured.', status: 503 };
   }
-  const { data: confirmed, error: confirmError } = coursework
-    ? await options.confirmCoursework!(row, declaredBytes)
-    : await client.rpc('confirm_media_upload', { p_asset_id: assetId });
+  let result: { data: unknown; error: { message: string } | null };
+  try {
+    result = coursework
+      ? await options.confirmCoursework!(row, declaredBytes)
+      : await client.rpc('confirm_media_upload', { p_asset_id: assetId });
+  } catch {
+    return { ok: false, message: 'The confirmation response was lost. Refresh and check the file before trying again; it may already be attached.', status: 503 };
+  }
+  const { data: confirmed, error: confirmError } = result;
 
   if (confirmError) {
     const message = confirmError.message;
@@ -227,13 +240,13 @@ export async function confirmMediaUpload(
   // attachment's id. Anything else — false, null, an empty string — means the
   // database did not do it, and a caller must not be told it did.
   const done = coursework
-    ? typeof confirmed === 'string' && confirmed !== ''
+    ? typeof confirmed === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(confirmed)
     : confirmed === true;
 
   if (!done) {
     return {
       ok: false,
-      message: 'The file was seen in storage but the database did not confirm it.',
+      message: 'The file was seen in storage but the database confirmation could not be verified; refresh and check before retrying.',
       status: 409,
     };
   }

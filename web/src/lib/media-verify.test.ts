@@ -160,7 +160,7 @@ await test('a file storage cannot find is not confirmed', async () => {
   assert.equal(outcome.ok, false);
   assert.ok(!outcome.ok);
   assert.equal(outcome.status, 409, 'not a permissions problem and not our fault');
-  assert.match(outcome.message, /did not confirm/);
+  assert.match(outcome.message, /confirmation could not be verified/);
   assert.equal(calls.some((c) => c.startsWith('rpc:')), false, 'nothing was confirmed');
 });
 
@@ -302,7 +302,7 @@ await test('a database that confirms nothing is reported rather than treated as 
   assert.equal(outcome.ok, false);
   assert.ok(!outcome.ok);
   assert.equal(outcome.status, 409);
-  assert.match(outcome.message, /did not confirm/);
+  assert.match(outcome.message, /confirmation could not be verified/);
 });
 
 await test('a failed row read is an error, not a missing file', async () => {
@@ -333,11 +333,11 @@ await test('a key that is not a master key is refused before any request', async
 
 
 test('a coursework retry checks storage and reuses the database attachment', async () => {
-  const { client, calls } = stubClient({ row: row({ status: 'available' }), rpcResult: 'attachment-id' });
+  const { client, calls } = stubClient({ row: row({ status: 'available' }), rpcResult: '22222222-2222-4222-8222-222222222222' });
   const confirmCoursework = async (checked: MasterRow, bytes: number) => client.rpc('trusted', { key: checked.master_key, bytes });
   const storage = stubStorage({ status: 200, contentLength: 10_485_760 });
   const result = await confirmMediaUpload(client, assetId, { config, mode: 'coursework', fetchImpl: storage.fetchImpl, now: fixed, confirmCoursework });
-  assert.deepEqual(result, { ok: true, verifiedBytes: 10_485_760, assetId, attachmentId: 'attachment-id' });
+  assert.deepEqual(result, { ok: true, verifiedBytes: 10_485_760, assetId, attachmentId: '22222222-2222-4222-8222-222222222222' });
   assert.equal(storage.requests.length, 1);
   assert.ok(calls.some((call) => call.startsWith('rpc:trusted:')));
 });
@@ -352,11 +352,11 @@ test('a quarantine between the storage check and database confirmation is not re
 });
 
 test('a retry does not confirm when the object cannot be checked', async () => {
-  const { client, calls } = stubClient({ row: row({ status: 'available' }), rpcResult: 'attachment-id' });
+  const { client, calls } = stubClient({ row: row({ status: 'available' }), rpcResult: '22222222-2222-4222-8222-222222222222' });
   const storage = stubStorage({ status: 403 });
   const result = await confirmMediaUpload(client, assetId, { config, mode: 'coursework', fetchImpl: storage.fetchImpl, now: fixed });
   assert.equal(result.ok, false);
-  if (!result.ok) assert.match(result.message, /did not confirm/);
+  if (!result.ok) assert.match(result.message, /confirmation could not be verified/);
   assert.ok(!calls.some((call) => call.startsWith('rpc:')));
 });
 
@@ -368,4 +368,28 @@ test('coursework confirmation needs a server callback and never calls a client R
   assert.equal(result.ok, false);
   if (!result.ok) assert.equal(result.status, 503);
   assert.ok(!calls.some((call) => call.startsWith('rpc:')));
+});
+
+
+test('confirmation refuses a mismatched row, malformed storage length and receipt', async () => {
+  const wrong = stubClient({row:row({id:'11111111-1111-4111-8111-111111111111'})});
+  const storage = stubStorage({status:200,contentLength:10_485_760});
+  assert.equal((await confirmMediaUpload(wrong.client,assetId,{config,fetchImpl:storage.fetchImpl})).ok,false);
+  assert.equal(storage.requests.length,0);
+  const client = stubClient();
+  const malformed: typeof fetch = async () => new Response(null,{status:200,headers:{'content-length':'1.048576e7'}});
+  assert.equal((await confirmMediaUpload(client.client,assetId,{config,fetchImpl:malformed})).ok,false);
+  assert.equal(client.calls.some(c=>c.startsWith('rpc:')),false);
+  const badReceipt = await confirmMediaUpload(client.client,assetId,{config,mode:'coursework',fetchImpl:storage.fetchImpl,
+    confirmCoursework:async()=>({data:'not-a-uuid',error:null})});
+  assert.equal(badReceipt.ok,false);
+  if (!badReceipt.ok) assert.match(badReceipt.message,/could not be verified/);
+});
+
+test('a lost database confirmation is uncertain, not a claim that nothing attached', async () => {
+  const {client}=stubClient();
+  const result=await confirmMediaUpload(client,assetId,{config,mode:'coursework',fetchImpl:stubStorage({contentLength:10_485_760}).fetchImpl,
+    confirmCoursework:async()=>{throw new Error('lost reply')}});
+  assert.equal(result.ok,false);
+  if (!result.ok) assert.match(result.message,/may already be attached/);
 });

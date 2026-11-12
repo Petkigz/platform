@@ -1727,3 +1727,11 @@ for authority and the existing storage presigner for key shape. This does not
 prevent an oversized direct PUT, scan contents, verify a checksum, guarantee
 storage-key uniqueness against concurrent external writes, or remove an upload
 that may already have been registered when its response is lost.
+
+**Upload confirmation response audit:** the server now rejects a mismatched
+asset row, malformed or unsafe byte lengths and a non-UUID coursework attachment
+receipt. Storage HEAD requests have a timeout, reject redirects and request no
+caching. A lost confirmation response says the result is uncertain, rather than
+claiming that no write happened. This is still only a size check, not malware or
+content verification; storage and database changes are not one atomic operation,
+and actual R2/Supabase behavior remains untested.
