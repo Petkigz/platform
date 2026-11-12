@@ -1741,3 +1741,34 @@ referrer, and the owner quarantine-size HEAD rejects redirects rather than
 following them. Both continue to avoid caching. This limits accidental referrer
 and redirect exposure; it does not hide the signed bearer URL from the authorized
 recipient or revoke it, scan the file, or replace hosted browser/storage tests.
+
+### Child-login password recovery: authorization boundary still open
+
+Password recovery is **not implemented**. A verified guardian's permission can
+be revoked, consent can expire, or a child login can be detached between an
+application-level authorization check and the Supabase Auth password update.
+An identity may also acquire another role or family relationship, making a
+password change affect more than the child's login. A service-role Auth call
+following only an RPC check is therefore not a safe recovery implementation.
+
+A local, discarded prototype reserved a short-lived reset and used a deferred
+`auth.users` password-update trigger to verify and consume it within the Auth
+transaction. A simulated Auth transaction in the PGlite child-login suite
+passed basic success, replay, missing-marker and revoked-guardian checks (30
+suite assertions), but this is not a concurrency test or hosted-provider test.
+The prototype was not retained or deployed: in particular, checking identity
+exclusivity does not serialize with concurrent role and relationship changes,
+and existing-row reactivation needs protection as well as new inserts. A
+trigger on a provider-owned table also needs confirmation of hosted privileges,
+transaction behavior, upgrade compatibility and side effects on ordinary Auth
+flows. Upstream Auth source currently shows password and app-metadata writes as
+separate statements in one admin-update transaction; that is not a guarantee
+about the project's hosted version.
+
+Before enabling recovery, design and test a consistent lock protocol across
+all exclusivity-changing paths, guardian revocation, detachment and password
+updates; use wall-clock expiration after lock waits; test lost provider replies,
+replays, deadlocks and real PostgreSQL interleavings; and exercise the actual
+hosted Supabase Auth endpoint. A successful password change must not be
+represented as ending existing sessions unless session revocation is separately
+implemented and verified. Do not log or store the new plaintext password.
