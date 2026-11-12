@@ -53,3 +53,8 @@ export async function runSafeguardingAlert(options: {
     id: 'safeguarding-alert', to, subject: SUBJECT, body: BODY, templateCode: 'private-alert', attempts: 0,
   }, options.fetchImpl) });
 }
+
+/** Only setup failures independent of private queue contents are exposed to the scheduler. */
+export function safeguardingSchedulerStatus(outcome: AlertResult | 'provider_unavailable'): 200 | 503 {
+  return outcome === 'provider_unavailable' ? 503 : 200;
+}

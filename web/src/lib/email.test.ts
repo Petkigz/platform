@@ -239,6 +239,22 @@ test('the real transport turns a thrown fetch into a retry', async () => {
   assert.equal(result.outcome, 'retry');
 });
 
+test('transport aborts a slow request, refuses redirects and never marks it sent', async () => {
+  const config=resolveEmailProvider({RESEND_API_KEY:'test'});
+  if (config.kind !== 'resend') throw new Error('expected provider');
+  const fake=(async (_url: string, init: RequestInit) => {
+    assert.equal(init.redirect,'error');
+    assert.ok(init.signal);
+    return await new Promise<Response>((_resolve,reject) => {
+      const keepAlive=setTimeout(() => reject(new Error('abort was not delivered')),1000);
+      init.signal?.addEventListener('abort',() => {clearTimeout(keepAlive);reject(new Error('timed out'));},{once:true});
+    });
+  }) as unknown as typeof fetch;
+  const result=await sendWithResend(config,message(),fake,10);
+  assert.equal(result.outcome,'retry');
+  if (result.outcome==='retry') assert.match(result.error,/timed out/);
+});
+
 // ---------------------------------------------------------------------------
 // The loop
 // ---------------------------------------------------------------------------

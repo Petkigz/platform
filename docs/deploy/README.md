@@ -1126,7 +1126,7 @@ The owner must be bootstrapped as the active safeguarding owner, with a verified
 email in Supabase Auth. Configure the server-only `SUPABASE_SERVICE_ROLE_KEY`,
 `RESEND_API_KEY`, `EMAIL_FROM`, and `CRON_SECRET`; configure and verify the sender
 domain and turn on `delivery.notifications` only after testing. Schedule a POST to
-`/api/cron/safeguarding-alert` with `Authorization: Bearer <CRON_SECRET>`. The scheduler response does not reveal whether a concern exists or was sent; the owner checks the private dashboard for status. One
+`/api/cron/safeguarding-alert` with `Authorization: Bearer <CRON_SECRET>`. The scheduler response does not reveal whether a concern exists or was sent; the owner checks the private dashboard for status. It returns HTTP 503 if email-provider configuration is missing, regardless of the queue; configure scheduler failure monitoring. Other queue and provider outcomes still return 200 to protect concern privacy, so scheduler success is not proof of delivery. Provider requests use a 10-second timeout; a timeout can still follow provider acceptance and retries may duplicate email. One
 request handles at most one alert. Scheduler frequency and provider limits affect
 how quickly a backlog is processed; the free provider quota may be exhausted.
 No card or paid plan is assumed. Never expose the service key or scheduler secret

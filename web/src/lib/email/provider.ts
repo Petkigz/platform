@@ -203,6 +203,7 @@ export async function sendWithResend(
   config: Extract<ProviderConfig, { kind: 'resend' }>,
   message: OutboundEmail,
   fetchImpl: typeof fetch = fetch,
+  timeoutMs = 10_000,
 ): Promise<SendResult> {
   const request = buildResendRequest(config, message);
   try {
@@ -210,6 +211,8 @@ export async function sendWithResend(
       method: 'POST',
       headers: request.headers,
       body: request.body,
+      redirect: 'error',
+      signal: AbortSignal.timeout(timeoutMs),
     });
     const text = await response.text();
     return classifyResendResponse(response.status, text);

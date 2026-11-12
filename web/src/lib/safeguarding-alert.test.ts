@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { dispatchSafeguardingAlert, runSafeguardingAlert, type AlertPorts } from './safeguarding-alert.ts';
+import { dispatchSafeguardingAlert, runSafeguardingAlert, safeguardingSchedulerStatus, type AlertPorts } from './safeguarding-alert.ts';
 import { safeguardingReadiness } from './safeguarding-readiness.ts';
 import { describeSafeguardingAlert, parseSafeguardingAlertStatus, parseSafeguardingAlertFullHistory, isAlertHistoryCursor } from './safeguarding-alert-status.ts';
 const reviewId='11111111-1111-4111-8111-111111111111';
@@ -81,4 +81,11 @@ test('owner setup hints distinguish absent settings from unverified delivery', (
   const configured = safeguardingReadiness({providerConfigured:true,schedulerSecretConfigured:true,serviceRoleConfigured:true,notificationsEnabled:true,ownerEmailVerified:true});
   assert.equal(configured.length,1);
   assert.match(configured[0] ?? '', /cannot confirm/);
+});
+
+
+test('scheduler reports missing provider configuration without disclosing queue outcomes', () => {
+  assert.equal(safeguardingSchedulerStatus('provider_unavailable'),503);
+  for (const state of ['disabled','owner_unavailable','empty','sent','recorded','uncertain'] as const)
+    assert.equal(safeguardingSchedulerStatus(state),200, state);
 });

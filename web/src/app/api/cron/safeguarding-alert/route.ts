@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { checkScheduler } from '@/lib/cron';
 import { isServiceRoleConfigured, isSupabaseConfigured } from '@/lib/env';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { runSafeguardingAlert } from '@/lib/safeguarding-alert';
+import { runSafeguardingAlert, safeguardingSchedulerStatus } from '@/lib/safeguarding-alert';
 
 export const dynamic = 'force-dynamic';
 export async function POST(request: Request) {
@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   if (!gate.ok) return NextResponse.json(gate.body, { status: gate.status, headers });
   if (!isSupabaseConfigured() || !isServiceRoleConfigured()) return NextResponse.json({ ok: false, result: 'not_configured' }, { status: 503, headers });
   const service = createAdminClient();
-  await runSafeguardingAlert({ env: process.env, ports: {
+  const outcome = await runSafeguardingAlert({ env: process.env, ports: {
     async claim() {
       const { data, error } = await service.rpc('claim_safeguarding_alert');
       if (error) throw new Error('claim failed');
@@ -35,5 +35,10 @@ export async function POST(request: Request) {
   } });
   // The scheduler can hold this shared secret without being the safeguarding
   // owner. Do not reveal whether any concern exists, was sent, or failed.
+  if (safeguardingSchedulerStatus(outcome) === 503) {
+    // Provider setup is independent of whether a concern exists. The scheduler
+    // can alert on this configuration failure without receiving queue details.
+    return NextResponse.json({ ok: false }, { status: 503, headers });
+  }
   return NextResponse.json({ ok: true }, { status: 200, headers });
 }

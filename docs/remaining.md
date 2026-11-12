@@ -1810,3 +1810,13 @@ The migration and UI are not deployed, and real provider compatibility,
 privileges, lock-order deadlocks, account-erasure paths, and production
 operability remain to be verified. A service-role key alone is not proof of a
 working or safe deployed flow.
+
+
+**D1 alert transport and scheduler setup:** the Resend transport now uses a
+10-second abort signal and refuses redirects. A timeout is an uncertain provider
+outcome, not proof the email was not sent; a later retry can duplicate it. The
+private alert cron now returns HTTP 503 for missing provider configuration,
+independently of whether any concern exists. All private queue outcomes still
+share a 200 response: scheduler success does not prove delivery, and the owner
+must inspect the private queue. Real scheduler and provider delivery remain
+untested. This change also affects ordinary Resend email transport.
