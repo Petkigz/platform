@@ -162,7 +162,7 @@ test('only a refusal that names the recipient may suppress', () => {
   );
   assert.equal(
     classifyResendResponse(422, '{"message":"Not a valid email address."}').outcome,
-    'bounce',
+    'retry',
   );
   assert.equal(
     classifyResendResponse(400, '{"message":"550 5.1.1 recipient address rejected"}').outcome,
@@ -177,6 +177,10 @@ test('only a refusal that names the recipient may suppress', () => {
     '{"message":"Missing required field: html"}',
     '{"message":"The `from` domain is not verified"}',
     '{"message":"Validation failed"}',
+    '{"message":"Invalid email address in from field"}',
+    '{"message":"Not a valid email address"}',
+    '{"message":"Reply-to address rejected"}',
+    '{"message":"Invalid subject","unrelated":"invalid recipient"}',
   ]) {
     const result = classifyResendResponse(422, body);
     assert.equal(result.outcome, 'retry', `suppressed an address over: ${body}`);
@@ -186,7 +190,9 @@ test('only a refusal that names the recipient may suppress', () => {
 test('the recipient matcher is narrow enough to read', () => {
   assert.equal(namesRecipient('Invalid `to` field.'), true);
   assert.equal(namesRecipient('recipient address rejected'), true);
-  assert.equal(namesRecipient('address unknown'), true);
+  assert.equal(namesRecipient('address unknown'), false);
+  assert.equal(namesRecipient('invalid sender email'), false);
+  assert.equal(classifyResendResponse(404, '{"message":"invalid recipient"}').outcome, 'retry');
   assert.equal(namesRecipient('Invalid subject'), false);
   assert.equal(namesRecipient('invalid api key'), false);
 });

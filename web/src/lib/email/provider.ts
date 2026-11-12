@@ -125,7 +125,7 @@ export function buildResendRequest(
  * is a parent who never hears from the platform again.
  */
 const RECIPIENT_FAULT =
-  /invalid\s+[`"']?to[`"']?\s+field|invalid\s+(recipient|email|address)|recipient\s+(address\s+)?(is\s+)?invalid|not\s+a\s+valid\s+email|(recipient|address).{0,40}(rejected|unknown|does\s+not\s+exist|not\s+found|undeliverable)/i;
+  /invalid\s+[`"']?to[`"']?\s+field|invalid\s+recipient|recipient\s+(address\s+)?(is\s+)?invalid|recipient\s+address.{0,40}(rejected|unknown|does\s+not\s+exist|not\s+found|undeliverable)/i;
 
 export function namesRecipient(body: string): boolean {
   return RECIPIENT_FAULT.test(body);
@@ -180,7 +180,7 @@ export function classifyResendResponse(status: number, body: string): SendResult
         + `configuration is not. ${message}`,
     };
   }
-  if (namesRecipient(body)) {
+  if ((status === 400 || status === 422) && namesRecipient(message)) {
     return { outcome: 'bounce', error: `the address is not usable: ${message}` };
   }
   return { outcome: 'retry', error: `resend answered ${status}: ${message}` };

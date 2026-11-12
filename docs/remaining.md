@@ -1709,3 +1709,13 @@ project team addresses. `privacy@ayahspring.com` is not a working contact merely
 because it is in the site copy. Do not accept real users or present test email as
 production-ready until an accessible contact and working sending arrangement
 have been established and the owner has agreed to any changed disclosures.
+
+**Email refusal classification:** generic invalid-email and address messages can
+refer to the sender or reply-to, so the Resend adapter no longer automatically
+suppresses the recipient for those ambiguous errors. It considers only an
+explicit recipient or `to`-field message from a 400/422 response; unrelated JSON
+fields are not searched. Other refusals retry and can reach the existing
+operator-review/dead-letter workflow. This does not verify delivery or provide a
+signed, asynchronous provider bounce webhook; existing suppression records are
+not changed, and explicit validation errors are not independent proof of a
+mailbox's status. Review historical suppressions individually where applicable.
