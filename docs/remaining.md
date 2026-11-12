@@ -1874,3 +1874,9 @@ The application cannot establish that timezone from the response. A freshness
 gate needs an independently verified timezone and update mechanism (and
 real-daemon integration tests), or another trustworthy freshness signal. EICAR
 detection alone does not prove freshness.
+
+The on-demand scan's readiness check also requires detection of EICAR inside a
+ZIP before it fetches a private file. A passing check is not proof that other
+archives, encrypted content, scan limits or current signatures are covered. The
+ZIP check and integration probe have only been exercised against simulated
+sockets so far; the real daemon and R2 still need testing.

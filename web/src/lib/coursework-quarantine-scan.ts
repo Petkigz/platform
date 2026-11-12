@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { scannerTestSamples } from './coursework-clamav-self-test.ts';
 import { masterKeyAssetId, presignMasterDownload, type R2Config } from './media-r2.ts';
 import { COURSEWORK_SCAN_MAX_BYTES, scanCourseworkBytes, type CourseworkScanResult } from './coursework-clamav.ts';
 import type { QuarantineInspectionTarget } from './quarantine-inspection.ts';
@@ -22,14 +23,15 @@ export async function scanQuarantinedCoursework(input: {
   const declared=Number(target.declared_bytes);
   if (!Number.isSafeInteger(declared) || declared<1 || declared>COURSEWORK_SCAN_MAX_BYTES)
     return {ok:false,status:409,message:'The file size is not supported by the scanner.'};
-  // Harmless EICAR test string, constructed at runtime. A daemon that cannot
-  // detect this standard test sample must not produce a reassuring result.
-  // This is a basic readiness check, not proof signatures are current or complete.
-  const testBytes=Buffer.from(['X5O!P%@AP[4\\PZX54(P^)7CC)7}$','EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*'].join(''));
+  // Require detection of both the harmless EICAR sample and the same sample
+  // inside a ZIP. This is not proof of freshness, broad archive coverage, or
+  // safety; a missing, slow or misconfigured scanner fails before storage GET.
   try {
-    const test=await (input.scan ?? scanCourseworkBytes)({bytes:testBytes,socketPath:input.socketPath,timeoutMs:10_000});
-    if (!test || test.outcome!=='infected' || test.bytes!==testBytes.length || test.sha256!==createHash('sha256').update(testBytes).digest('hex'))
-      return {ok:false,status:503,message:'The local scanner failed its test. No file was scanned.'};
+    for (const bytes of scannerTestSamples()) {
+      const test=await (input.scan ?? scanCourseworkBytes)({bytes,socketPath:input.socketPath,timeoutMs:10_000});
+      if (!test || test.outcome!=='infected' || test.bytes!==bytes.length || test.sha256!==createHash('sha256').update(bytes).digest('hex'))
+        return {ok:false,status:503,message:'The local scanner failed its test. No file was scanned.'};
+    }
   } catch {return {ok:false,status:503,message:'The local scanner failed its test. No file was scanned.'};}
   let response:Response;
   try {

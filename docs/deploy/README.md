@@ -1193,7 +1193,7 @@ send child files to an external scanner without an approved data arrangement.
 This is **an on-demand inspection, not an upload or access gate**. It downloads
 at most the recorded 25 MiB, scans only those bytes, and never releases quarantine
 or changes the file's status. A clean response means no configured signature
-was reported, not that the file is safe or that a future download is unchanged. Each inspection first checks that the local scanner detects the harmless EICAR test sample, but this does not prove its signatures are up to date or its coverage is adequate.
+was reported, not that the file is safe or that a future download is unchanged. Each inspection first checks that the local scanner detects the harmless EICAR test sample both directly and inside a ZIP. This does not prove its signatures are up to date, its scan limits are safe, or its coverage is adequate.
 For an explicitly configured local daemon, run `COURSEWORK_CLAMAV_SOCKET=/absolute/path/to/clamd.sock npm run test:clamav:integration` from the repository root. The opt-in probe sends only synthetic content: a clean sample, the EICAR test sample, EICAR inside a ZIP, and a 25 MiB clean stream. It fails if those expected results do not match. It does not test R2, prove that all bytes or archive types were scanned, validate daemon limits or freshness, or enable scanning in upload/download flows. Run it against the actual daemon and settings used by the deployment; do not send private files to a test daemon.
 
 Encrypted and unsupported contents, old signatures and compromised scanners can
