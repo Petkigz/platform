@@ -1784,8 +1784,21 @@ and `PGUSER` as appropriate, then `npm run test:child-locks:postgres`. The
 script refuses an already-populated database and leaves its fixtures in place.
 
 This tests a **candidate locking pattern**, not the recovery flow or all
-identity associations. PostgreSQL 16.11 locally passed the three checks with
-all 334 migrations applied; it does not establish guardian/consent/detachment
-ordering, expiry after waiting, Auth trigger permissions, hosted GoTrue
-behavior, session revocation, or the absence of other conflicting uses. The
+identity associations. PostgreSQL 16.11 locally passed the role-lock checks with
+all 335 migrations applied; it does not establish all guardian/consent/detachment
+orderings, hosted Auth trigger behavior, session revocation, or the absence
+of other conflicting uses. The
 recovery feature remains unimplemented and must not be enabled on this basis.
+
+A further PostgreSQL 16.11 test exercises the actual creation and detachment
+RPCs against a competing guardian revocation and creation while consent
+expires during a lock wait. Migration 1280 changes the guardian predicate to
+check wall-clock time and to be volatile. The expiration race failed with the
+original predicate and passed with 1280; the sampled revocation races passed
+with 1280. These do not implement password recovery or prove all schedules.
+The existing empty AyahSpring Supabase project was inspected: PostgreSQL 17.11,
+Auth v2.197.0 and no application tables or Auth users. A rolled-back test
+confirmed the management connection can create a deferred trigger on
+`auth.users`; an attempt to simulate the Auth database role was denied because
+`postgres` cannot assume `supabase_auth_admin`. The failed transaction rolled
+back. This is not a live Auth API test, and no app migrations were deployed.
