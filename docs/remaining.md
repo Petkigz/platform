@@ -1685,3 +1685,27 @@ makes the result unavailable. The browser also rejects internally inconsistent
 size reports. This remains a point-in-time HEAD size check, not a content scan or
 proof of deletion, and changes after the recheck cannot be ruled out. The real
 storage and concurrent authorization behavior still need deployment testing.
+
+**Cloudflare test-host investigation:** the owner reports having Supabase,
+Google Cloud, Cloudflare R2, Resend and cron-job.org accounts, and chose a
+provider subdomain for testing without buying a domain. This is not evidence of
+configured credentials, permissions, a deployed website or working email. In a
+separate disposable copy, vinext 1.4.5's static check reported 6/6 imports and
+1/1 config option supported; its generated Cloudflare setup built successfully.
+An unauthenticated local Worker preview served the home and sign-in pages and
+correctly refused an unconfigured storage request and scheduler POST. The
+preview did not reach a real Cloudflare deployment, Supabase, R2 or Resend and
+did not test sign-in, private routes, uploads, server actions, deletion,
+concurrency, or the free-plan CPU and bundle limits. The generated setup used
+Node 22.22.3 even though `cf` declared a newer supported Node version; the
+experimental dependency tree reported 5 moderate and 1 high npm audit findings.
+Those dependencies and configuration were not added to the application. Do not
+interpret the compatibility report or build as production readiness. The test
+copy uses no credentials and was not deployed.
+
+Without a domain, `onboarding@resend.dev` is limited by Resend to the email
+address on its account, and the Supabase default mailer is limited to authorized
+project team addresses. `privacy@ayahspring.com` is not a working contact merely
+because it is in the site copy. Do not accept real users or present test email as
+production-ready until an accessible contact and working sending arrangement
+have been established and the owner has agreed to any changed disclosures.
