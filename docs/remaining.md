@@ -1719,3 +1719,11 @@ operator-review/dead-letter workflow. This does not verify delivery or provide a
 signed, asynchronous provider bounce webhook; existing suppression records are
 not changed, and explicit validation errors are not independent proof of a
 mailbox's status. Review historical suppressions individually where applicable.
+
+**Coursework upload target validation:** the web route now refuses ambiguous or
+malformed registration responses and will not sign an object key whose asset ID
+differs from the declared asset or requested retry. It still uses the database
+for authority and the existing storage presigner for key shape. This does not
+prevent an oversized direct PUT, scan contents, verify a checksum, guarantee
+storage-key uniqueness against concurrent external writes, or remove an upload
+that may already have been registered when its response is lost.

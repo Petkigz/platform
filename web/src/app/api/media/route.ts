@@ -1,3 +1,4 @@
+import { parseCourseworkUploadTarget } from '@/lib/coursework-upload-target';
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isServiceRoleConfigured, isSupabaseConfigured } from '@/lib/env';
@@ -186,17 +187,12 @@ export async function POST(request: Request) {
       return fail(message, status);
     }
 
-    const row = (registered.data ?? null) as
-      | { asset_id?: unknown; master_bucket?: unknown; master_key?: unknown }[]
-      | { asset_id?: unknown; master_bucket?: unknown; master_key?: unknown }
-      | null;
-    // PostgREST returns the named composite as an object, or a one-row array when
-    // asked for a set; both are accepted rather than assuming one.
-    const target = (Array.isArray(row) ? row[0] : row) ?? {};
-    const assetId = String(target.asset_id ?? '');
-    const bucket = String(target.master_bucket ?? '');
-    const key = String(target.master_key ?? '');
-    if (!UUID.test(assetId) || !key || (action === 'retry_coursework_upload' && assetId !== retryAsset)) return fail('The upload could not be opened.', 500);
+    // Never sign an ambiguous or mismatched database response. A failed response
+    // can still have registered a pending declaration; the UI asks for a refresh.
+    const target = parseCourseworkUploadTarget(registered.data,
+      action === 'retry_coursework_upload' ? retryAsset : undefined);
+    if (!target) return fail('The upload could not be opened.', 500);
+    const { assetId, bucket, key } = target;
     if (bucket !== config.mastersBucket) {
       return fail(
         `Storage is misconfigured: the database derived "${bucket}" but this deployment signs for "${config.mastersBucket}".`,
