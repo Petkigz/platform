@@ -1772,3 +1772,20 @@ replays, deadlocks and real PostgreSQL interleavings; and exercise the actual
 hosted Supabase Auth endpoint. A successful password change must not be
 represented as ending existing sessions unless session revocation is separately
 implemented and verified. Do not log or store the new plaintext password.
+
+The proposed identity-lock subset now has a repeatable **local PostgreSQL**
+experiment: `supabase/tests/child_login_lock_protocol.postgres.mjs`. It applies
+all migrations to an explicitly named empty local database, then checks that a
+profile row lock blocks a new role reference, an existing assignment row lock
+blocks reactivation, and a waiting recheck sees a committed role. Run only on a
+disposable database: set `CHILD_LOGIN_LOCK_TEST=1`, `PGHOST` to an absolute
+Unix socket directory, `PGDATABASE=ayahspring_child_lock_test`, and `PGPORT`
+and `PGUSER` as appropriate, then `npm run test:child-locks:postgres`. The
+script refuses an already-populated database and leaves its fixtures in place.
+
+This tests a **candidate locking pattern**, not the recovery flow or all
+identity associations. PostgreSQL 16.11 locally passed the three checks with
+all 334 migrations applied; it does not establish guardian/consent/detachment
+ordering, expiry after waiting, Auth trigger permissions, hosted GoTrue
+behavior, session revocation, or the absence of other conflicting uses. The
+recovery feature remains unimplemented and must not be enabled on this basis.
