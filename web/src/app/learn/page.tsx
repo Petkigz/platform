@@ -150,6 +150,7 @@ export default async function LearnPage() {
   // while the feature is on, so a link never leads to a page that says "not
   // switched on".
   const hifzOn = await isFlagEnabled(supabase, 'learning.hifz').catch(() => false);
+  const counterOn = await isFlagEnabled(supabase, 'companion.dhikr_counter').catch(() => false);
 
   // What this page is supposed to lead with: where the learner left off.
   //
@@ -265,6 +266,14 @@ export default async function LearnPage() {
           <p style={{ margin: 0 }}>
             <Link href="/hifz">Open your memorisation list</Link>
           </p>
+        </section>
+      )}
+
+      {counterOn && (
+        <section className="card" style={{ marginTop: '1.25rem' }}>
+          <h2 style={{ marginTop: 0 }}>Private counter</h2>
+          <p className="muted">Keep a count on this page without saving it to your account.</p>
+          <Link href="/companion/counter">Open the counter</Link>
         </section>
       )}
 

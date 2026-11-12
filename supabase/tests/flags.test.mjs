@@ -78,8 +78,8 @@ export async function run(ctx) {
   // -------------------------------------------------------------------
   // The seed
   // -------------------------------------------------------------------
-  await test('incomplete coursework and subscription switches cannot be enabled or demoted by an admin', async () => {
-    for (const key of ['learning.assignments', 'learning.cohorts', 'commerce.subscriptions']) {
+  await test('incomplete coursework, subscriptions and D7 switches cannot be enabled or demoted by an admin', async () => {
+    for (const key of ['learning.assignments', 'learning.cohorts', 'commerce.subscriptions', 'companion.ayah_daily', 'learning.quran_sync', 'companion.prayer_tools', 'platform.calendar']) {
       const row = (await q('select value_text, gate_type from public.platform_settings where key=$1', [key])).rows[0];
       assert(row.value_text === 'false' && row.gate_type === 'code', `${key} is not off and deployment-gated`);
       await rejects(() => asUser(admin, () => q(
@@ -89,6 +89,36 @@ export async function run(ctx) {
       const after = (await q('select value_text, gate_type from public.platform_settings where key=$1', [key])).rows[0];
       assert(after.value_text === 'false' && after.gate_type === 'code', `${key} changed through the runtime door`);
     }
+  });
+
+  await test('D7 deployment gates preserve previously enabled and disabled values', async () => {
+    const migration=readFileSync('supabase/migrations/20261281133000_companion_counter_and_gates.sql','utf8');
+    await q('begin');
+    try {
+      await q("set local app.bypassing_code_flag='on'");
+      await q("update public.platform_settings set value_text='true' where key in ('companion.ayah_daily','learning.quran_sync')");
+      await ctx.exec(migration);
+      const rows=(await q("select key,value_text,gate_type from public.platform_settings where key in ('companion.ayah_daily','learning.quran_sync','companion.prayer_tools','platform.calendar') order by key")).rows;
+      assert(rows.length===4,'the gate did not cover all four features');
+      for(const r of rows) {
+        const expected=['companion.ayah_daily','learning.quran_sync'].includes(r.key) ? 'true' : 'false';
+        assert(r.value_text===expected && r.gate_type==='code',`migration changed ${r.key} from ${expected}`);
+      }
+    } finally {await q('rollback');}
+  });
+
+  await test('the session counter ships off and can be switched independently by an administrator', async () => {
+    const row=(await q("select value_text,gate_type from public.platform_settings where key='companion.dhikr_counter'")).rows[0];
+    assert(row.value_text==='false' && row.gate_type==='admin_setup', 'the counter did not ship off and independently switchable');
+    await asUser(admin,async()=>{
+      await q("update public.platform_settings set value_text='true' where key='companion.dhikr_counter'");
+      assert((await q("select public.setting_bool('companion.dhikr_counter',false) v")).rows[0].v===true,'admin could not enable counter');
+      assert((await q("select public.setting_bool('companion.prayer_tools',false) v")).rows[0].v===false,'counter enabled unbuilt prayer tools');
+    });
+    await asUser(nobody,async()=>{
+      const result=await q("update public.platform_settings set value_text='true' where key='companion.dhikr_counter' returning key");
+      assert(result.rows.length===0,'non-admin changed the counter switch');
+    });
   });
 
   await test('child login can be switched on only by an administrator after deployment', async () => {

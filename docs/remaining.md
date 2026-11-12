@@ -309,6 +309,16 @@ building the day there are more than 30 learners on one course.
 
 ### D7. Companion and worship content — four decisions, one shape
 
+**Started locally:** an independently switched, session-only counting tool is
+available at `/companion/counter`. It offers count, undo and confirmed reset;
+no count is saved to browser storage or sent to the platform. Reloading clears
+it; browser back-navigation may temporarily restore the page. It prescribes no devotional text or number. The broader
+prayer tools, ayah of the day, Quran sync and calendar are not implemented and
+are now CODE-gated; any previously enabled values are preserved and require an
+operator to review and turn them off. The counter is English-only and needs
+translation and accessibility review; the counter and gates are not deployed.
+
+
 **Blocks** `companion.ayah_daily`, `learning.quran_sync`, `companion.prayer_tools`,
 `platform.calendar`.
 

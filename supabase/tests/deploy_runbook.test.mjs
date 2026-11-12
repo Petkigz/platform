@@ -53,9 +53,10 @@ export async function run(ctx) {
     const pkg = JSON.parse(readFileSync(join(here, '..', '..', 'package.json'), 'utf8'));
     const declared = new Set(Object.keys(pkg.scripts ?? {}));
     const commands = new Set(
-      [...runbook.matchAll(/npm run ([a-z:]+)/g)].map((m) => m[1]).filter(Boolean),
+      [...runbook.matchAll(/npm run ([a-z0-9:_-]+)/gi)].map((m) => m[1]).filter(Boolean),
     );
     assert(commands.size > 0, 'the runbook names no npm script at all');
+    assert(commands.has('test:discussion-locks:postgres'), 'hyphenated discussion test command was not parsed');
     const missing = [...commands].filter((c) => !declared.has(c));
     assert(missing.length === 0, `the runbook names scripts that do not exist: ${missing.join(', ')}`);
 

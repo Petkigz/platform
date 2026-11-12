@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-339 files in `supabase/migrations/`, applied in filename order — the 14-digit
+340 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -152,7 +152,7 @@ done
   first run. What you are watching for is the loop *stopping*, and the file name
   above the error.
 - Takes a few minutes. The last file printed should be
-  `20261281132000_discussion_moderation_context.sql`.
+  `20261281133000_companion_counter_and_gates.sql`.
 
 **Existing installations:** the subscription safety migration preserves the current
 `commerce.subscriptions` value. If it is already on, review existing customer
@@ -1224,3 +1224,18 @@ The discussion and content-report queues show up to 50 items per page, with
 next and first-page links. Counts are page counts, not totals; pages can change
 as people work. Check the first page again regularly. Verify pagination against
 the hosted Supabase/PostgREST deployment before relying on it.
+
+### Companion counter and unfinished worship tools
+
+`companion.dhikr_counter` is a separate, default-off switch on the feature
+screen. `/learn` links signed-in users to the counter only while it is enabled.
+The count is held in page memory, not saved to account or browser storage;
+reloading clears it, though browsers may restore a page temporarily on Back.
+It is currently English-only and needs translation, accessibility and hosted
+browser review before enabling. An already-open page can remain usable after the
+switch is turned off until it is reloaded.
+
+Migration 1330 marks the unimplemented ayah-of-the-day, Quran-sync, prayer-tools
+and calendar switches as requiring code. It preserves existing enabled values;
+if any were already enabled, review them and switch them off in the admin screen.
+The separate counter switch does not mean those services or their content exist.
