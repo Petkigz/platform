@@ -326,11 +326,25 @@ verification remain before enabling. `platform.calendar` remains CODE-gated.
 available at `/companion/counter`. It offers count, undo and confirmed reset;
 no count is saved to browser storage or sent to the platform. Reloading clears
 it; browser back-navigation may temporarily restore the page. It prescribes no devotional text or number. The broader
-prayer tools, ayah of the day, Quran sync and the full calendar are not implemented and
+the full prayer tools, ayah of the day, Quran sync and the full calendar are not implemented and
 are now CODE-gated; any previously enabled values are preserved and require an
 operator to review and turn them off. The counter is English-only and needs
 translation and accessibility review; the counter and gates are not deployed.
 
+
+An independent `companion.calculated_prayer_times` switch is default off.
+`/companion/prayer-times` calculates estimates in page memory with the MIT-licensed
+[Adhan JS](https://github.com/batoulapps/adhan-js) library. Users explicitly
+choose method, Asr and a high-latitude rule and confirm the device time zone;
+coordinates come from permission-based browser location or manual entry and are
+not sent to AyahSpring. The browser or OS may contact a location provider. The
+library suggests Moonsighting Committee for the UK and North America; this is
+not an authoritative region mapping and other regions have no suggested default.
+The method has its own seasonal/high-latitude behaviour; polar fallback is disabled.
+The screen is English-only. Local religious review, more regional guidance,
+independent calculation and date/time-zone/high-latitude verification, privacy,
+accessibility, translation and hosted-browser review remain before enabling. It
+does not implement qibla, adhkar, notifications or the full prayer tools suite.
 
 **Source investigation (15 October 2026; recheck before use):**
 - [Tanzil Arabic text terms](https://tanzil.net/docs/text_license) permit

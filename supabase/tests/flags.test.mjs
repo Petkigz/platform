@@ -134,6 +134,20 @@ export async function run(ctx) {
     });
   });
 
+  await test('calculated prayer times are independently switched off by default', async () => {
+    const row=(await q("select value_text,gate_type from public.platform_settings where key='companion.calculated_prayer_times'")).rows[0];
+    assert(row.value_text==='false' && row.gate_type==='admin_setup','prayer times must ship off');
+    await asUser(admin,async()=>{
+      await q("update public.platform_settings set value_text='true' where key='companion.calculated_prayer_times'");
+      assert((await q("select public.setting_bool('companion.calculated_prayer_times',false) v")).rows[0].v===true,'admin cannot enable');
+      assert((await q("select public.setting_bool('companion.prayer_tools',false) v")).rows[0].v===false,'broader prayer tools unexpectedly enabled');
+    });
+    await asUser(nobody,async()=>{
+      const result=await q("update public.platform_settings set value_text='true' where key='companion.calculated_prayer_times' returning key");
+      assert(result.rows.length===0,'non-admin changed switch');
+    });
+  });
+
   await test('child login can be switched on only by an administrator after deployment', async () => {
     const row = (await q("select value_text, gate_type from public.platform_settings where key='family.child_login'")).rows[0];
     assert(row.value_text === 'false' && row.gate_type === 'admin_setup', 'the creation switch did not ship off');

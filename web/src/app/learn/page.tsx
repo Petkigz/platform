@@ -152,6 +152,7 @@ export default async function LearnPage() {
   const hifzOn = await isFlagEnabled(supabase, 'learning.hifz').catch(() => false);
   const counterOn = await isFlagEnabled(supabase, 'companion.dhikr_counter').catch(() => false);
   const hijriOn = await isFlagEnabled(supabase, 'companion.hijri_date').catch(() => false);
+  const prayerTimesOn = await isFlagEnabled(supabase, 'companion.calculated_prayer_times').catch(() => false);
 
   // What this page is supposed to lead with: where the learner left off.
   //
@@ -267,6 +268,14 @@ export default async function LearnPage() {
           <p style={{ margin: 0 }}>
             <Link href="/hifz">Open your memorisation list</Link>
           </p>
+        </section>
+      )}
+
+      {prayerTimesOn && (
+        <section className="card" style={{ marginTop: '1.25rem' }}>
+          <h2 style={{ marginTop: 0 }}>Calculated prayer times</h2>
+          <p className="muted">Estimate times on your device and check them with your local community.</p>
+          <Link href="/companion/prayer-times">Open prayer times</Link>
         </section>
       )}
 

@@ -1,0 +1,56 @@
+'use client';
+import { useEffect, useState } from 'react';
+import { calculatePrayerTimes, methods, type Asr, type Method, type NightRule } from '@/lib/prayer-calculation';
+
+type Result = { lines: readonly (readonly [string,string])[]; date:string; zone:string; method:string; asr:string; night:string };
+export function PrayerTimesTool() {
+  const [latitude,setLatitude]=useState(''); const [longitude,setLongitude]=useState('');
+  const [method,setMethod]=useState(''); const [asr,setAsr]=useState(''); const [night,setNight]=useState('');
+  const [confirmZone,setConfirmZone]=useState(false); const [message,setMessage]=useState('');
+  const [result,setResult]=useState<Result|null>(null); const [locating,setLocating]=useState(false);
+  const [deviceZone,setDeviceZone]=useState('');
+  useEffect(()=>{setDeviceZone(Intl.DateTimeFormat().resolvedOptions().timeZone || '');},[]);
+  function locate() {
+    setResult(null); setMessage('');
+    if (!navigator.geolocation) { setMessage('Location is not available in this browser. You can enter coordinates manually.'); return; }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(position=>{
+      setLatitude(String(position.coords.latitude)); setLongitude(String(position.coords.longitude));
+      setLocating(false); setConfirmZone(false);
+      setMessage(`Location received. Estimated accuracy: ${Math.round(position.coords.accuracy)} metres. Check that this location and your device time zone are correct.`);
+    },()=>{setLocating(false);setMessage('Location was unavailable or permission was denied. You can enter coordinates manually.');}, {enableHighAccuracy:false,timeout:15000,maximumAge:0});
+  }
+  function calculate() {
+    setResult(null); setMessage('');
+    if(!latitude.trim() || !longitude.trim() || !method || !asr || !night || !confirmZone) {setMessage('Enter coordinates, choose the calculation settings and confirm your device time zone.');return;}
+    const lat=Number(latitude); const lon=Number(longitude); const now=new Date();
+    const zone=Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if(!zone) {setMessage('Your device time zone could not be identified.');return;}
+    if(zone!==deviceZone) {setDeviceZone(zone);setConfirmZone(false);setMessage('Your device time zone changed. Check it and confirm again.');return;}
+    const times=calculatePrayerTimes(lat,lon,now,method as Method,asr as Asr,night as NightRule);
+    if(!times) {setMessage('Times could not be calculated. Check the coordinates; some polar locations or dates need a different local timetable.');return;}
+    const dayFmt=new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'});
+    if(dayFmt.format(times[1][1])!==dayFmt.format(now) || dayFmt.format(times[2][1])!==dayFmt.format(now)) {setMessage('The calculated date does not match your device date. Check the time zone and location or consult a local timetable.');return;}
+    const fmt=new Intl.DateTimeFormat('en', { timeZone:zone, year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short' });
+    setResult({lines:times.map(([name,time])=>[name,fmt.format(time)] as const),date:new Intl.DateTimeFormat('en',{timeZone:zone,dateStyle:'full'}).format(now),zone,method:methods[method as Method],asr:asr==='hanafi'?'Hanafi (later)':'Standard (earlier)',night:night==='middle'?'Middle of the night':night==='seventh'?'One seventh of the night':'Twilight angle'});
+  }
+  const changed=()=>{setResult(null);setMessage('');};
+  return <section className="card" aria-labelledby="prayer-heading">
+    <h2 id="prayer-heading">Today’s estimated times</h2>
+    <p>Calculations may differ from your mosque or local authority. Confirm prayer times and calculation choices with your community, especially at high latitudes. Sunrise is shown for reference; it is not a prayer.</p>
+    <p>Location is used on this device and is not saved or sent to AyahSpring. Your browser or operating system may use a location provider. Reloading clears the entries; browser back navigation may restore them.</p>
+    <button type="button" className="btn secondary" onClick={locate} disabled={locating}>{locating?'Finding location…':'Use device location'}</button>
+    <div><label htmlFor="latitude">Latitude</label><input id="latitude" type="number" min="-90" max="90" step="any" disabled={locating} value={latitude} onChange={e=>{setLatitude(e.target.value);setConfirmZone(false);changed();}} /></div>
+    <div><label htmlFor="longitude">Longitude</label><input id="longitude" type="number" min="-180" max="180" step="any" disabled={locating} value={longitude} onChange={e=>{setLongitude(e.target.value);setConfirmZone(false);changed();}} /></div>
+    <p>For North America and the UK, the calculation library suggests the Moonsighting Committee method; this is not a local-authority ruling. For other regions, ask your local community which method to use.</p>
+    <div><label htmlFor="method">Calculation method</label><select id="method" value={method} onChange={e=>{setMethod(e.target.value);changed();}}><option value="">Choose a method</option>{Object.entries(methods).map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></div>
+    <div><label htmlFor="asr">Asr calculation</label><select id="asr" value={asr} onChange={e=>{setAsr(e.target.value);changed();}}><option value="">Choose an Asr method</option><option value="standard">Standard (earlier)</option><option value="hanafi">Hanafi (later)</option></select></div>
+    <div><label htmlFor="night">High-latitude night rule</label><select id="night" value={night} onChange={e=>{setNight(e.target.value);changed();}}><option value="">Choose a night rule</option><option value="middle">Middle of the night</option><option value="seventh">One seventh of the night</option><option value="angle">Twilight angle</option></select></div>
+    <p>Night rules can limit Fajr and Isha even outside polar regions. The Moonsighting Committee method uses its own seasonal adjustments and a one-seventh approximation at northern latitudes of 55° or above instead of this selection. No polar fallback is applied.</p>
+    <p>Your device time zone is <strong>{deviceZone || 'unavailable'}</strong>. It must match the coordinates, including daylight saving.</p>
+    <label><input type="checkbox" checked={confirmZone} onChange={e=>{setConfirmZone(e.target.checked);changed();}} /> My device time zone matches this location.</label>
+    <p><button type="button" className="btn" onClick={calculate} disabled={locating}>Calculate today</button></p>
+    {message && <p className="notice" role="status">{message}</p>}
+    {result && <div aria-live="polite"><h3>Times for {result.date}</h3><p>{result.zone} · {result.method} · Asr: {result.asr} · Night rule: {result.method==='Moonsighting Committee'?'Moonsighting Committee seasonal rule':result.night}</p><ul>{result.lines.map(([name,time])=><li key={name}><strong>{name}:</strong> {time}</li>)}</ul><p>These times do not update automatically. Recalculate after a date, location or time-zone change.</p></div>}
+  </section>;
+}
