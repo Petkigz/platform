@@ -1865,3 +1865,12 @@ EICAR test sample, and compares the scanner receipt to the downloaded bytes.
 A failed self-test prevents the file download and scan. This does not prove
 signature freshness or comprehensive protection; real ClamAV and R2 remain
 untested and scanning is not an upload/download gate.
+
+Do not infer signature freshness directly from the timestamp in clamd's
+`VERSION` response: ClamAV 1.5.4 formats it with `ctime`, in the daemon's local
+timezone, without a timezone offset. See [version output](https://github.com/Cisco-Talos/clamav/blob/clamav-1.5.4/clamd/session.c)
+and [time formatting](https://github.com/Cisco-Talos/clamav/blob/clamav-1.5.4/libclamav/others_common.c).
+The application cannot establish that timezone from the response. A freshness
+gate needs an independently verified timezone and update mechanism (and
+real-daemon integration tests), or another trustworthy freshness signal. EICAR
+detection alone does not prove freshness.
