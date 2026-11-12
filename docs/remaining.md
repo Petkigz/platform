@@ -1826,10 +1826,7 @@ bounded in-memory snapshot (up to 25 MiB) only to a configured local Unix
 socket using ClamAV INSTREAM, hashes the actual snapshot, and treats timeouts,
 malformed replies and daemon errors as unavailable. The tests use a simulated
 socket server; no real ClamAV installation or signature database was tested.
-It is not connected to uploads, quarantine, or downloads, and therefore does
-not scan platform files yet. Before enforcing it, run an isolated, maintained
-scanner, arrange secure object access, bind results to immutable object bytes,
-and gate every relevant access path. A clean result would never prove that a
+It is now connected to an owner-only, on-demand quarantine inspection, but not to upload or access gates. Before enforcing scanning, run an isolated, maintained scanner, bind results to immutable object bytes, and gate every relevant access path. A clean result would never prove that a
 file is harmless. No file bytes are sent to a third-party scanning service.
 
 **D1 storage presence check:** migration 1300 and the owner storage queue add a
@@ -1840,3 +1837,24 @@ uploads and holds still require attention. It does not delete objects, mark the
 queue complete, or verify all renditions. Automatic deletion remains unsafe until
 an external-write protocol handles concurrent holds, shared keys, in-flight PUTs,
 and indeterminate DELETE/HEAD outcomes. Actual R2 behavior is untested.
+
+
+**D1 quarantine scanning (local code):** the owner-only quarantine queue can now
+request a non-mutating scan of the downloaded master through a local ClamAV Unix
+socket. Storage downloads are bounded and the owner/target are rechecked after
+scanning; detected infections do not automatically release quarantine. This is
+not upload scanning, content disarm, malware protection for ordinary downloads,
+or proof the object remains unchanged. A real daemon and R2 have not been tested.
+The sandbox could not fetch the ClamAV release asset: its redirected host is
+outside the allowed network. A no-match report is not a safety guarantee.
+
+**R2 deletion boundary:** Cloudflare's conditional-operations documentation
+(https://developers.cloudflare.com/r2/api/s3/conditional-operations/) lists
+conditional PUT and COPY, not conditional DELETE; its S3 compatibility page
+(https://developers.cloudflare.com/r2/api/s3/api/) lists DeleteObject but no
+atomic If-Match deletion guarantee. Do not rely on an assumed conditional DELETE
+for a held or replaced object. Database holds cannot by themselves cancel a
+request already sent to storage. A safe automated workflow needs a documented,
+tested protocol for in-flight uploads, holds, object identity and ambiguous
+replies, and operator-visible incident handling; a subsequent HEAD is only a
+point-in-time observation, not proof that all copies are gone.

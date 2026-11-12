@@ -35,6 +35,7 @@ import { parseSafeguardingAlertStatus, describeSafeguardingAlert, parseSafeguard
 import { attestClassEnd } from './class-end-actions';
 import { releaseQuarantine, reviewUnknownQuarantine } from './quarantine-actions';
 import { QuarantineInspection } from './quarantine-inspection';
+import { QuarantineScan } from './quarantine-scan';
 import { StoragePresence } from './storage-presence';
 import { reviewErasureFile } from './erasure-review-actions';
 import { reviewSharedRetention, reviewDetachedRetention } from './shared-retention-actions';
@@ -382,6 +383,7 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
                   <a href={courseworkFileHref(row.asset_id)} target="_blank" rel="noreferrer">Try opening the file for review</a>
                   <p>A storage-size check is read-only and does not inspect the content or scan for malware.</p>
                   <QuarantineInspection assetId={row.asset_id} />
+                  <QuarantineScan assetId={row.asset_id} />
                   {row.previous_status && <form action={releaseQuarantine}>
                     <input type="hidden" name="assetId" value={row.asset_id} />
                     <input type="hidden" name="after" value={params.quarantineAfter ?? ''} />

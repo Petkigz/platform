@@ -1179,3 +1179,22 @@ again**, and **Resend same file** on a non-production bucket. A retry uses the
 existing pending entry; it does not prove bytes match the declared digest or
 remove a previously uploaded object. Signed URLs already issued can remain
 usable until expiry, and no malware scanner is connected.
+
+### Local quarantine malware inspection
+
+`COURSEWORK_CLAMAV_SOCKET` is an optional absolute Unix socket path to an
+isolated, locally maintained ClamAV daemon on the same Node server. The named
+active safeguarding owner may request a scan of an already quarantined coursework
+master in the private queue. Configure scanner limits for at least 25 MiB, enable
+warnings for encrypted files and exceeded archive limits, and keep signatures
+current. Secure the socket and scanner process; do not expose it to a network or
+send child files to an external scanner without an approved data arrangement.
+
+This is **an on-demand inspection, not an upload or access gate**. It downloads
+at most the recorded 25 MiB, scans only those bytes, and never releases quarantine
+or changes the file's status. A clean response means no configured signature
+was reported, not that the file is safe or that a future download is unchanged.
+Encrypted and unsupported contents, old signatures and compromised scanners can
+be missed. Scan output is not a permanent record. The in-process scan cap is not
+a distributed rate limit. Run a real daemon and provider integration test before
+relying on it; no live ClamAV or R2 test has been performed here.
