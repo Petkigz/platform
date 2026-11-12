@@ -1820,3 +1820,23 @@ independently of whether any concern exists. All private queue outcomes still
 share a 200 response: scheduler success does not prove delivery, and the owner
 must inspect the private queue. Real scheduler and provider delivery remain
 untested. This change also affects ordinary Resend email transport.
+
+**D1 local malware-scanner building block:** `coursework-clamav.ts` sends a
+bounded in-memory snapshot (up to 25 MiB) only to a configured local Unix
+socket using ClamAV INSTREAM, hashes the actual snapshot, and treats timeouts,
+malformed replies and daemon errors as unavailable. The tests use a simulated
+socket server; no real ClamAV installation or signature database was tested.
+It is not connected to uploads, quarantine, or downloads, and therefore does
+not scan platform files yet. Before enforcing it, run an isolated, maintained
+scanner, arrange secure object access, bind results to immutable object bytes,
+and gate every relevant access path. A clean result would never prove that a
+file is harmless. No file bytes are sent to a third-party scanning service.
+
+**D1 storage presence check:** migration 1300 and the owner storage queue add a
+read-only R2 master HEAD check with a second owner/target check afterwards. A
+404 is displayed only as the provider's point-in-time response, not as verified
+deletion; permissions, bucket identity, other copies, later recreation, in-flight
+uploads and holds still require attention. It does not delete objects, mark the
+queue complete, or verify all renditions. Automatic deletion remains unsafe until
+an external-write protocol handles concurrent holds, shared keys, in-flight PUTs,
+and indeterminate DELETE/HEAD outcomes. Actual R2 behavior is untested.

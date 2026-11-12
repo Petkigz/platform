@@ -680,6 +680,18 @@ export async function run(ctx) {
     assert(listed.master_bucket && listed.master_key, 'the queue gives no key to delete');
   });
 
+  await test('only the active safeguarding owner can obtain a tombstoned presence target', async () => {
+    const row=await handedIn();
+    assert((await asActor(owner,()=>q('select * from public.coursework_storage_presence_target($1)',[row.asset]))).rows.length===0,'readable file became a storage queue target');
+    await backdate(row,'2 years'); await purge();
+    const target=(await asActor(owner,()=>q('select * from public.coursework_storage_presence_target($1)',[row.asset]))).rows;
+    assert(target.length===1 && target[0].asset_id===row.asset && target[0].master_key,'the target did not identify the tombstoned asset');
+    await refuses(/coursework:not_allowed/,()=>call(governance,'select * from public.coursework_storage_presence_target($1)',[row.asset]));
+    await refuses(/coursework:not_allowed/,()=>call(teacher,'select * from public.coursework_storage_presence_target($1)',[row.asset]));
+    await call(owner,'select public.record_coursework_purge($1)',[row.asset]);
+    assert((await asActor(owner,()=>q('select * from public.coursework_storage_presence_target($1)',[row.asset]))).rows.length===0,'recorded item remained in the unrecorded queue');
+  });
+
   await test('the owner can page past 120 storage entries with equal sort times', async () => {
     await q('begin');
     try {

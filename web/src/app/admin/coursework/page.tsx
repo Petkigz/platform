@@ -35,6 +35,7 @@ import { parseSafeguardingAlertStatus, describeSafeguardingAlert, parseSafeguard
 import { attestClassEnd } from './class-end-actions';
 import { releaseQuarantine, reviewUnknownQuarantine } from './quarantine-actions';
 import { QuarantineInspection } from './quarantine-inspection';
+import { StoragePresence } from './storage-presence';
 import { reviewErasureFile } from './erasure-review-actions';
 import { reviewSharedRetention, reviewDetachedRetention } from './shared-retention-actions';
 import { isQuarantineCursor, parseCourseworkQuarantines } from '@/lib/coursework-quarantine';
@@ -721,6 +722,7 @@ export default async function AdminCourseworkPage({ searchParams }: { searchPara
                       {row.backend}: {row.bucket}/{row.key}
                     </code>
                   </span>
+                  <StoragePresence assetId={row.assetId} />
                   {storageDeadlineStatus(row, storageCheckedAt) === 'future' && <p className="notice warn">The recorded byte deadline has not arrived. Do not delete this object yet. If it was already deleted early, <Link href="/admin/incidents">report the incident</Link> and record what happened.</p>}
                   {storageDeadlineStatus(row, storageCheckedAt) === 'unknown' && <p className="notice warn">The byte deadline is unknown. Do not delete this object as routine cleanup; review its case individually. If it was already deleted, <Link href="/admin/incidents">report the incident</Link> and record what happened.</p>}
                   {row.held ? (
