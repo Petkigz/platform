@@ -670,7 +670,7 @@ non-production Supabase project. Local cross-layer tests use
 a simulated Auth provider, not Supabase's real API or deployed concurrency.
 
 Pending attempts may need individual owner review; the guardian-consent page
-is paginated and can complete a uniquely marked existing identity after rechecking guardian permission. Detachment itself does not delete the auth identity or revoke existing sessions; migration 730 adds a separate owner-reviewed provider deletion path for eligible marked identities, not yet tested with Supabase. Password reset remains unimplemented. If a retry recovers an earlier identity,
+is paginated and can complete a uniquely marked existing identity after rechecking guardian permission. Detachment itself does not delete the auth identity or revoke existing sessions; migration 730 adds a separate owner-reviewed provider deletion path for eligible marked identities, not yet tested with Supabase. Password recovery is implemented locally for eligible marked identities, but hosted Auth integration remains untested. If a retry recovers an earlier identity,
 the original password remains in effect. The older general profile-management
 predicate still needs review on its other paths. Do not delete guardian verification
 machinery. No migration has been deployed as part of this work.
@@ -1620,7 +1620,7 @@ Malformed requests are refused before the RPC; an interrupted call, unexpected
 response or unrecognized upstream error is reported as unconfirmed, not as a
 failed or successful detachment. The JSON content-type check adds a browser
 request boundary but is not a complete CSRF audit. This does not delete the
-provider identity, revoke its sessions, implement password reset, or replace the
+provider identity, revoke its sessions, or replace the
 owner-reviewed removal workflow. A lost reply still requires a refresh or review;
 hosted provider and concurrency testing remain open.
 
@@ -1744,7 +1744,7 @@ recipient or revoke it, scan the file, or replace hosted browser/storage tests.
 
 ### Child-login password recovery: authorization boundary still open
 
-Password recovery is **not implemented**. A verified guardian's permission can
+Password recovery is **implemented locally, not yet verified with hosted Auth**. A verified guardian's permission can
 be revoked, consent can expire, or a child login can be detached between an
 application-level authorization check and the Supabase Auth password update.
 An identity may also acquire another role or family relationship, making a
@@ -1765,11 +1765,7 @@ flows. Upstream Auth source currently shows password and app-metadata writes as
 separate statements in one admin-update transaction; that is not a guarantee
 about the project's hosted version.
 
-Before enabling recovery, design and test a consistent lock protocol across
-all exclusivity-changing paths, guardian revocation, detachment and password
-updates; use wall-clock expiration after lock waits; test lost provider replies,
-replays, deadlocks and real PostgreSQL interleavings; and exercise the actual
-hosted Supabase Auth endpoint. A successful password change must not be
+Migration 1290 adds a new reservation and a deferred guarded Auth update, with identity and authority locks and a one-use receipt. Before enabling recovery, test additional concurrency schedules and deadlocks, the actual hosted Supabase Auth endpoint, and provider upgrade behavior. A successful password change must not be
 represented as ending existing sessions unless session revocation is separately
 implemented and verified. Do not log or store the new plaintext password.
 
@@ -1783,12 +1779,7 @@ Unix socket directory, `PGDATABASE=ayahspring_child_lock_test`, and `PGPORT`
 and `PGUSER` as appropriate, then `npm run test:child-locks:postgres`. The
 script refuses an already-populated database and leaves its fixtures in place.
 
-This tests a **candidate locking pattern**, not the recovery flow or all
-identity associations. PostgreSQL 16.11 locally passed the role-lock checks with
-all 335 migrations applied; it does not establish all guardian/consent/detachment
-orderings, hosted Auth trigger behavior, session revocation, or the absence
-of other conflicting uses. The
-recovery feature remains unimplemented and must not be enabled on this basis.
+The extended test now covers selected recovery races against guardian revocation, detachment, role addition and Auth-linked contact creation, plus success. PostgreSQL 16.11 passed with all 336 migrations. It does not establish every ordering, hosted Auth behavior, session revocation or the absence of other conflicting uses. Do not enable recovery on this basis alone.
 
 A further PostgreSQL 16.11 test exercises the actual creation and detachment
 RPCs against a competing guardian revocation and creation while consent
@@ -1799,6 +1790,23 @@ with 1280. These do not implement password recovery or prove all schedules.
 The existing empty AyahSpring Supabase project was inspected: PostgreSQL 17.11,
 Auth v2.197.0 and no application tables or Auth users. A rolled-back test
 confirmed the management connection can create a deferred trigger on
-`auth.users`; an attempt to simulate the Auth database role was denied because
+`auth.users`. A separate rolled-back SQL simulation updated password and
+metadata in separate statements and consumed a marker with a deferred trigger;
+this was not an Auth API request. An attempt to simulate the Auth database role was denied because
 `postgres` cannot assume `supabase_auth_admin`. The failed transaction rolled
 back. This is not a live Auth API test, and no app migrations were deployed.
+
+
+**Local child password recovery implementation:** migration 1290 and the
+family card/API, behind a separate default-off admin setup switch, allow a current verified guardian to set a new password for a
+trusted marked child identity. A short-lived reservation is rechecked and
+consumed in a deferred Auth password trigger; responses depend on its matching
+receipt, and an uncertain provider reply is not reported as failure or success.
+Passwords are not stored by the application. The test provider updates password
+and app metadata in separate SQL statements in one transaction, as observed in
+GoTrue v2.197.0 source; it is not the hosted Auth API. Existing sessions may
+remain active. Old, unmarked or shared identities require separate review.
+The migration and UI are not deployed, and real provider compatibility,
+privileges, lock-order deadlocks, account-erasure paths, and production
+operability remain to be verified. A service-role key alone is not proof of a
+working or safe deployed flow.

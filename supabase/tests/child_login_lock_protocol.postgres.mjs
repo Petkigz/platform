@@ -58,7 +58,7 @@ try {
   const guardian = randomUUID();
   await a.query('insert into auth.users(id,email) values($1,$2)', [guardian,`${guardian}@example.test`]);
   await a.query("select set_config('app.bypassing_code_flag','on',false)");
-  await a.query("update public.platform_settings set value_text='true' where key='family.child_login'");
+  await a.query("update public.platform_settings set value_text='true' where key in ('family.child_login','family.child_password_recovery')");
   await a.query('begin');
   await a.query("select set_config('request.jwt.claims',$1,true)",[JSON.stringify({sub:guardian,role:'authenticated'})]);
   const family=(await a.query("select public.create_family('Lock test') id")).rows[0].id;
@@ -105,7 +105,59 @@ try {
   const removalRejected=assert.rejects(removal,/verified_guardian_required/);
   await b.query('commit'); await removalRejected; await a.query('rollback');
   assert.equal((await a.query('select linked_user_id from public.learner_profiles where id=$1',[learner])).rows[0].linked_user_id,child);
-  console.log('PostgreSQL lock experiment passed: role locks, creation/revocation, expiry and detachment/revocation');
+  await a.query("update public.guardian_relationships set status='active',can_manage_profile=true where guardian_user_id=$1 and learner_profile_id=$2",[guardian,learner]);
+  async function prepareRecovery() {
+    await a.query('begin'); await a.query("select set_config('request.jwt.claims',$1,true)",[JSON.stringify({sub:guardian,role:'authenticated'})]);
+    const result=(await a.query('select public.prepare_child_password_recovery($1) r',[learner])).rows[0].r;
+    await a.query('commit'); return result;
+  }
+  async function providerStart(reset) {
+    await a.query('begin');
+    await a.query("update auth.users set encrypted_password='provider-hash' where id=$1",[child]);
+    await a.query("update auth.users set raw_app_meta_data=raw_app_meta_data||jsonb_build_object('ayahspring_child_password_recovery',$2::text) where id=$1",[child,reset]);
+  }
+  async function assertWaiting() {
+    await b.query('select pg_sleep(0.1)');
+    assert.ok((await b.query('select pg_blocking_pids($1) ids',[a.processID])).rows[0].ids.includes(b.processID),'provider guard did not wait');
+  }
+  // Password and app metadata are separate statements in the same transaction,
+  // matching the observed GoTrue admin implementation, but this is not GoTrue.
+  let recovery=await prepareRecovery();
+  await b.query('begin'); await b.query("update public.guardian_relationships set status='revoked',can_manage_profile=false,can_manage_learning=false,can_view_progress=false where guardian_user_id=$1 and learner_profile_id=$2",[guardian,learner]);
+  await providerStart(recovery.resetId);
+  const committed1=a.query('commit'); const rejected1=assert.rejects(committed1,/reset_not_authorized/);
+  await assertWaiting(); await b.query('commit'); await rejected1;
+  assert.equal((await a.query('select encrypted_password from auth.users where id=$1',[child])).rows[0].encrypted_password,null);
+  await a.query("update public.child_password_recovery_attempts set expires_at=clock_timestamp()-interval '1 second' where id=$1",[recovery.resetId]);
+  await a.query("update public.guardian_relationships set status='active',can_manage_profile=true where guardian_user_id=$1 and learner_profile_id=$2",[guardian,learner]);
+  recovery=await prepareRecovery();
+  await b.query('begin'); await b.query('insert into public.user_role_assignments(user_id,role_id) values($1,$2)',[child,role]);
+  await providerStart(recovery.resetId);
+  const committed2=a.query('commit'); const rejected2=assert.rejects(committed2,/reset_not_authorized/);
+  await assertWaiting(); await b.query('commit'); await rejected2;
+  assert.equal((await a.query('select encrypted_password from auth.users where id=$1',[child])).rows[0].encrypted_password,null);
+  await a.query('delete from public.user_role_assignments where user_id=$1 and role_id=$2',[child,role]);
+  await a.query("update public.child_password_recovery_attempts set expires_at=clock_timestamp()-interval '1 second' where id=$1",[recovery.resetId]);
+  recovery=await prepareRecovery();
+  await b.query('begin'); await b.query('insert into public.user_contact_details(user_id) values($1)',[child]);
+  await providerStart(recovery.resetId);
+  const contactCommit=a.query('commit'); const contactRejected=assert.rejects(contactCommit,/reset_not_authorized/);
+  await assertWaiting(); await b.query('commit'); await contactRejected;
+  await a.query('delete from public.user_contact_details where user_id=$1',[child]);
+  await a.query("update public.child_password_recovery_attempts set expires_at=clock_timestamp()-interval '1 second' where id=$1",[recovery.resetId]);
+  recovery=await prepareRecovery();
+  await providerStart(recovery.resetId); await a.query('commit');
+  const receipt=(await a.query('select completed_at from public.child_password_recovery_attempts where id=$1',[recovery.resetId])).rows[0];
+  assert.ok(receipt.completed_at,'provider success was not recorded');
+  assert.equal((await a.query("select raw_app_meta_data->>'ayahspring_child_password_recovery' marker from auth.users where id=$1",[child])).rows[0].marker,null);
+  recovery=await prepareRecovery();
+  await b.query('begin'); await b.query("select set_config('request.jwt.claims',$1,true)",[JSON.stringify({sub:guardian,role:'authenticated'})]);
+  await b.query("select public.remove_child_login($1,'recovery race')",[learner]);
+  await providerStart(recovery.resetId);
+  const committed3=a.query('commit'); const rejected3=assert.rejects(committed3,/reset_not_authorized/);
+  await assertWaiting(); await b.query('commit'); await rejected3;
+  assert.equal((await a.query('select linked_user_id from public.learner_profiles where id=$1',[learner])).rows[0].linked_user_id,null);
+  console.log('PostgreSQL passed role locks, guardian races, consent expiry and guarded recovery races');
 } finally {
   await a.end().catch(()=>{}); await b.end().catch(()=>{});
 }

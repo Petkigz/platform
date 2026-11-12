@@ -12,6 +12,7 @@ export type ChildLoginState = {
   createdAt: string | null;
   canManage: boolean;
   canCreate?: boolean;
+  canReset?: boolean;
 };
 
 /**
@@ -49,6 +50,8 @@ export function ChildLoginCard({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [made, setMade] = useState<{ username: string; recovered: boolean } | null>(null);
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetDone, setResetDone] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [reason, setReason] = useState('');
   const [, startTransition] = useTransition();
@@ -91,6 +94,20 @@ export function ChildLoginCard({
     } finally {
       setBusy(false);
     }
+  }
+
+  async function resetPassword() {
+    setError(null); setResetDone(false);
+    const issue=passwordProblem(password);
+    if (issue) {setError(issue); return;}
+    setBusy(true);
+    try {
+      const res=await fetch('/api/family/child-login',{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({learnerId,password})});
+      const json=await res.json().catch(()=>null) as {ok?:unknown;message?:unknown}|null;
+      if (!res.ok || json?.ok !== true) setError(typeof json?.message==='string' ? json.message : 'We could not confirm the change. Try the new password before retrying.');
+      else {setPassword(''); setResetOpen(false); setResetDone(true);}
+    } catch {setError('We could not confirm the change. Try the new password before retrying.');}
+    finally {setBusy(false);}
   }
 
   async function remove() {
@@ -154,10 +171,19 @@ export function ChildLoginCard({
                 year: 'numeric',
               })}.`
             : '.'}{' '}
-          Password reset is not available here yet. Contact privacy@ayahspring.com
-          if you need help with the sign-in.
+          {state.canReset ? 'A verified guardian can request a new password for a trusted child login. Existing sessions may remain active.' : 'Password recovery is not available here right now.'}
         </p>
 
+        {state.canReset && (!resetOpen ? (
+          <button type="button" className="btn ghost" disabled={busy} onClick={() => {setResetOpen(true);setResetDone(false);setError(null);}}>Set a new password</button>
+        ) : <div>
+          <label htmlFor={`reset-password-${learnerId}`}>New password</label>
+          <input id={`reset-password-${learnerId}`} type="password" autoComplete="new-password" minLength={8} value={password} onChange={(e)=>setPassword(e.target.value)} />
+          <p className="muted">Use at least eight characters. Shared or older sign-ins may require review. Existing sessions may remain active.</p>
+          <button type="button" className="btn" disabled={busy} onClick={() => void resetPassword()}>{busy ? 'Checking…' : 'Change password'}</button>{' '}
+          <button type="button" className="btn ghost" disabled={busy} onClick={() => {setResetOpen(false);setPassword('');setError(null);}}>Cancel</button>
+        </div>)}
+        {resetDone && <p role="status">The password change was recorded. Existing sessions may remain active.</p>}
         {!confirmRemove ? (
           <button type="button" className="btn ghost" onClick={() => setConfirmRemove(true)}>
             Detach this learner

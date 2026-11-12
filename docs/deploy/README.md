@@ -129,7 +129,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-335 files in `supabase/migrations/`, applied in filename order — the 14-digit
+336 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -1069,8 +1069,7 @@ Supabase service role key and test creation and recovery in a non-production
 project. The admin dashboard controls the flag. Local
 tests use a simulated Auth provider. Pending attempts may require owner review;
 the named owner can complete an existing uniquely marked identity. Migration 730 also adds an owner-reviewed deletion action for an eligible detached marked identity, not yet verified with real Supabase. Detaching a child learner does not
-remove the provider identity or revoke sessions, and password reset is not yet
-implemented. These migrations have not been deployed by this repository change.
+remove the provider identity or revoke sessions. Migration 1290 and the family card implement guardian password recovery locally for verified, exclusive marked child identities. Test the actual hosted Auth update before enabling it; a changed password does not guarantee session revocation. These migrations have not been deployed by this repository change.
 
 
 Migration 670 makes a private identity-removal task when a child login is detached

@@ -7,6 +7,7 @@ create schema if not exists auth;
 create table if not exists auth.users (
   id uuid primary key default gen_random_uuid(),
   email text,
+  encrypted_password text,
   phone text,
   -- Supabase stores the provider's claims here. An OAuth sign-up arrives with
   -- full_name/name/avatar_url and handle_new_user() reads them; a password

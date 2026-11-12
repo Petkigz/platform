@@ -460,6 +460,44 @@ export async function run(ctx) {
     } finally { await setFlag('family.child_login', false); }
   });
 
+  await test('password recovery requires a current guardian and consumes the provider marker once', async () => {
+    const guardian=await person('Recovery guardian');
+    const {childId:learner}=await familyWithChild(guardian,'Recovery learner');
+    await setFlag('family.child_login',true);
+    await setFlag('family.child_password_recovery',true);
+    try {
+      const creation=(await asActor(guardian,"select public.prepare_child_login($1,'recover.child') id",[learner])).rows[0].id;
+      const child=await newUser('recover.child@learners.ayahspring.com');
+      await q("update auth.users set raw_app_meta_data=jsonb_build_object('ayahspring_child_attempt',$2::text) where id=$1",[child,creation]);
+      await q('select public.complete_child_login_attempt($1,$2,$3)',[creation,guardian,child]);
+      const prepare=async()=>(await asActor(guardian,'select public.prepare_child_password_recovery($1) r',[learner])).rows[0].r;
+      const provider=async reset=>committed(async()=>{
+        await q('update auth.users set encrypted_password=$2 where id=$1',[child,'test-hash']);
+        await q("update auth.users set raw_app_meta_data=raw_app_meta_data||jsonb_build_object('ayahspring_child_password_recovery',$2::text) where id=$1",[child,reset]);
+      });
+      const ordinary=await newUser('ordinary-password@example.com');
+      await q("update auth.users set encrypted_password='ordinary-hash' where id=$1",[ordinary]);
+      assert((await q('select encrypted_password from auth.users where id=$1',[ordinary])).rows[0].encrypted_password==='ordinary-hash','ordinary password change blocked');
+      await setFlag('family.child_password_recovery',false);
+      await rejects(prepare,/reset_disabled/);
+      await setFlag('family.child_password_recovery',true);
+      const reset=await prepare();
+      assert(reset.userId===child,'incorrect identity');
+      await rejects(prepare,/reset_pending/);
+      await rejects(()=>q("update auth.users set encrypted_password='wrong' where id=$1",[child]),/reset_marker_required/);
+      await provider(reset.resetId);
+      const row=(await q('select u.encrypted_password,u.raw_app_meta_data,r.completed_at from auth.users u join public.child_password_recovery_attempts r on r.identity_id=u.id where r.id=$1',[reset.resetId])).rows[0];
+      assert(row.encrypted_password==='test-hash' && row.completed_at && !row.raw_app_meta_data.ayahspring_child_password_recovery,'missing completion or marker not consumed');
+      await rejects(()=>provider(reset.resetId),/reset_not_authorized/);
+      const next=await prepare();
+      await q("update public.guardian_relationships set status='revoked',can_manage_profile=false,can_manage_learning=false,can_view_progress=false where guardian_user_id=$1 and learner_profile_id=$2",[guardian,learner]);
+      await rejects(()=>provider(next.resetId),/reset_not_authorized/);
+      await setFlag('family.child_password_recovery',false);
+      await rejects(()=>provider(next.resetId),/reset_not_authorized/);
+      assert((await q('select encrypted_password from auth.users where id=$1',[child])).rows[0].encrypted_password==='test-hash','revoked guardian changed the password');
+    } finally {await setFlag('family.child_password_recovery',false); await setFlag('family.child_login',false);}
+  });
+
   await test('a trusted identity with a separate role is not automatically blocked on detachment', async () => {
     const guardian = await person('Role guardian');
     const theirs = await familyWithChild(guardian, 'Role child');
