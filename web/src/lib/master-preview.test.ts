@@ -216,4 +216,5 @@ test('media address responses ask intermediaries not to store bearer links', () 
   }
   const open = readFileSync(new URL('../app/api/media/open/route.ts', import.meta.url), 'utf8');
   assert.match(open, /response\.headers\.set\('cache-control', 'private, no-store'\)/);
+  assert.match(open, /response\.headers\.set\('referrer-policy', 'no-referrer'\)/);
 });

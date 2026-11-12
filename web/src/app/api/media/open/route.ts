@@ -71,6 +71,8 @@ export async function GET(request: Request) {
     // A signed URL must never be cached by anything in the middle: the next
     // request is a different person, or the same one after the signature expired.
     response.headers.set('cache-control', 'private, no-store');
+    // Do not expose the referring AyahSpring page to the storage endpoint.
+    response.headers.set('referrer-policy', 'no-referrer');
     return response;
   } catch (cause) {
     const message =

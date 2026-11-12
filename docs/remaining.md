@@ -1735,3 +1735,9 @@ caching. A lost confirmation response says the result is uncertain, rather than
 claiming that no write happened. This is still only a size check, not malware or
 content verification; storage and database changes are not one atomic operation,
 and actual R2/Supabase behavior remains untested.
+
+**Coursework file-opening privacy:** the master-file redirect now requests no
+referrer, and the owner quarantine-size HEAD rejects redirects rather than
+following them. Both continue to avoid caching. This limits accidental referrer
+and redirect exposure; it does not hide the signed bearer URL from the authorized
+recipient or revoke it, scan the file, or replace hosted browser/storage tests.

@@ -7,10 +7,12 @@ const config: R2Config = { accountId: 'acct-123', credentials: { accessKeyId: 't
 const target: QuarantineInspectionTarget = { asset_id: '4f30fd1d-6f2c-4c1e-9a5b-0d2f6c8a1b23', storage_backend: 'r2', master_bucket: DEFAULT_MASTERS_BUCKET, master_key: '4f30fd1d-6f2c-4c1e-9a5b-0d2f6c8a1b23/image-png', declared_bytes: 42 };
 
 test('quarantine inspection performs a HEAD and compares reported length only', async () => {
-  let method = '';
-  const fetcher: typeof fetch = async (_url, init) => { method = init?.method ?? ''; return new Response(null, { status: 200, headers: { 'content-length': '42' } }); };
+  let method = ''; let redirect: RequestRedirect | undefined; let cache: RequestCache | undefined;
+  const fetcher: typeof fetch = async (_url, init) => { method = init?.method ?? ''; redirect = init?.redirect; cache = init?.cache; return new Response(null, { status: 200, headers: { 'content-length': '42' } }); };
   assert.deepEqual(await inspectQuarantinedObject(target, config, fetcher), { ok: true, matches: true, declaredBytes: 42, reportedBytes: 42 });
   assert.equal(method, 'HEAD');
+  assert.equal(redirect, 'error');
+  assert.equal(cache, 'no-store');
   assert.deepEqual(await inspectQuarantinedObject(target, config, async () => new Response(null, { headers: { 'content-length': '41' } })), { ok: true, matches: false, declaredBytes: 42, reportedBytes: 41 });
 });
 

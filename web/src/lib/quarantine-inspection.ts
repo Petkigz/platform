@@ -37,7 +37,7 @@ export async function inspectQuarantinedObject(
   let response: Response;
   try {
     const signed = presignMasterHead(config, target.master_key);
-    response = await fetchImpl(signed.url, { method: 'HEAD', signal: AbortSignal.timeout(10_000), cache: 'no-store' });
+    response = await fetchImpl(signed.url, { method: 'HEAD', redirect: 'error', signal: AbortSignal.timeout(10_000), cache: 'no-store' });
   } catch {
     return { ok: false, message: 'Storage could not be reached. The file presence is unknown.', status: 503 };
   }
