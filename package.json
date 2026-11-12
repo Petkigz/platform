@@ -16,7 +16,8 @@
     "test:web": "npm run test --workspace @ayahspring/web",
     "test": "npm run check:repo && npm run lint && npm run test:db && npm run test:web",
     "lint": "npm run lint --workspace @ayahspring/web",
-    "test:child-locks:postgres": "node supabase/tests/child_login_lock_protocol.postgres.mjs"
+    "test:child-locks:postgres": "node supabase/tests/child_login_lock_protocol.postgres.mjs",
+    "test:clamav:integration": "node --experimental-strip-types scripts/clamav-integration.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.3.11",
