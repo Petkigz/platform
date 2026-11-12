@@ -121,6 +121,19 @@ export async function run(ctx) {
     });
   });
 
+  await test('calculated Hijri date is independently switched off by default', async () => {
+    const row=(await q("select value_text,gate_type from public.platform_settings where key='companion.hijri_date'")).rows[0];
+    assert(row.value_text==='false' && row.gate_type==='admin_setup','date display must ship off');
+    await asUser(admin,async()=>{
+      await q("update public.platform_settings set value_text='true' where key='companion.hijri_date'");
+      assert((await q("select public.setting_bool('companion.hijri_date',false) v")).rows[0].v===true,'admin cannot enable');
+    });
+    await asUser(nobody,async()=>{
+      const result=await q("update public.platform_settings set value_text='true' where key='companion.hijri_date' returning key");
+      assert(result.rows.length===0,'non-admin changed switch');
+    });
+  });
+
   await test('child login can be switched on only by an administrator after deployment', async () => {
     const row = (await q("select value_text, gate_type from public.platform_settings where key='family.child_login'")).rows[0];
     assert(row.value_text === 'false' && row.gate_type === 'admin_setup', 'the creation switch did not ship off');

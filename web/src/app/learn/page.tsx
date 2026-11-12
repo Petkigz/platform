@@ -151,6 +151,7 @@ export default async function LearnPage() {
   // switched on".
   const hifzOn = await isFlagEnabled(supabase, 'learning.hifz').catch(() => false);
   const counterOn = await isFlagEnabled(supabase, 'companion.dhikr_counter').catch(() => false);
+  const hijriOn = await isFlagEnabled(supabase, 'companion.hijri_date').catch(() => false);
 
   // What this page is supposed to lead with: where the learner left off.
   //
@@ -266,6 +267,14 @@ export default async function LearnPage() {
           <p style={{ margin: 0 }}>
             <Link href="/hifz">Open your memorisation list</Link>
           </p>
+        </section>
+      )}
+
+      {hijriOn && (
+        <section className="card" style={{ marginTop: '1.25rem' }}>
+          <h2 style={{ marginTop: 0 }}>Calculated Hijri date</h2>
+          <p className="muted">See a labelled Umm al-Qura civil date; local announcements may differ.</p>
+          <Link href="/companion/hijri">Open the date display</Link>
         </section>
       )}
 

@@ -309,15 +309,47 @@ building the day there are more than 30 learners on one course.
 
 ### D7. Companion and worship content — four decisions, one shape
 
+**Owner choices:** suggest regional prayer methods only after verification, allow
+changes, and calculate location on-device without saving it. Show a labelled
+calculated Hijri date. Investigate Quran sources and their individual rights; do
+not assume licensing or review.
+
+An independent default-off `companion.hijri_date` display at `/companion/hijri`
+uses the browser's Umm al-Qura civil calendar and device time zone. It labels the
+method, midnight rather than sunset rollover, and the need to check local
+announcements. Browser data may differ or be unavailable. This is a date display,
+not a complete calendar, event schedule, or religious ruling. It is English-only;
+translation, accessibility, date accuracy across supported browsers, and hosted
+verification remain before enabling. `platform.calendar` remains CODE-gated.
+
 **Started locally:** an independently switched, session-only counting tool is
 available at `/companion/counter`. It offers count, undo and confirmed reset;
 no count is saved to browser storage or sent to the platform. Reloading clears
 it; browser back-navigation may temporarily restore the page. It prescribes no devotional text or number. The broader
-prayer tools, ayah of the day, Quran sync and calendar are not implemented and
+prayer tools, ayah of the day, Quran sync and the full calendar are not implemented and
 are now CODE-gated; any previously enabled values are preserved and require an
 operator to review and turn them off. The counter is English-only and needs
 translation and accessibility review; the counter and gates are not deployed.
 
+
+**Source investigation (15 October 2026; recheck before use):**
+- [Tanzil Arabic text terms](https://tanzil.net/docs/text_license) permit
+  verbatim use with attribution, link and notice; changing the text is prohibited.
+  Its [translations page](https://tanzil.net/trans/) separately restricts those
+  translations to non-commercial use without permission. Do not conflate them.
+- [QuranEnc translation terms](https://quranenc.com/en/home/api/) describe
+  republication subject to conditions including no modification, publisher and
+  source attribution, version and updates. Confirm the selected edition and the
+  planned excerpt/display satisfy all terms before use.
+- [Quran Foundation developer terms](https://api-docs.quran.foundation/legal/developer-terms/)
+  permit qualifying in-app commercial experiences subject to conditions and
+  source-specific rights; raw-content redistribution differs. Recordings may have
+  separate owners. Its [audio API](https://api-docs.quran.foundation/docs/sdk/javascript/audio/)
+  describes optional timing metadata, not a guarantee of coverage or rights for a
+  particular reciter. Verify terms, access, audio and timings per resource.
+
+These are candidates, not clearance, content selection or scholarly approval. No
+Quran content, audio, or timing data has been imported or enabled.
 
 **Blocks** `companion.ayah_daily`, `learning.quran_sync`, `companion.prayer_tools`,
 `platform.calendar`.
@@ -327,8 +359,8 @@ translation and accessibility review; the counter and gates are not deployed.
 - Quran sync needs a **timing dataset**, licensed or generated.
 - Prayer times need a **calculation method** per region and a position on whether
   a location is stored, derived, or asked each time.
-- The Hijri calendar needs a **source**, because a calculated date and an observed
-  date differ by a day and somebody will notice.
+- The full Hijri calendar needs reviewed date sources and behaviour; a calculated
+  civil date can differ from local announcements and is not a sunset calendar.
 
 **Recommendation:** do none of these before the first paid course. Each is a
 licensing and scholarly-accuracy question, and a wrong prayer time is worse than no
