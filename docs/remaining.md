@@ -1909,3 +1909,11 @@ count, not a total. Pages are not a snapshot: decisions and new reports can
 change the queue between requests, so moderators should return to the first
 page. The query and cursor are tested with simulated clients; verify paging and
 authenticated RLS against hosted PostgREST before enabling discussion.
+
+
+A read-only test on the empty AyahSpring Supabase project’s PostgreSQL 17.11
+checked a 90-row synthetic CTE across a 50-row timestamp/UUID boundary: 50 and
+40 rows, with 90 distinct results. No tables or users were created. A local test
+now also exercises the actual Supabase client’s encoded REST URLs with simulated
+responses. Neither test exercises hosted PostgREST, RLS, logged-in users or the
+moderation UI; those remain deployment checks.
