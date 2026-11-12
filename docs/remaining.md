@@ -1902,3 +1902,10 @@ an operating policy, assigned reviewers and escalation before enabling it; revie
 legacy threads and previous moderation decisions. A single-process full database run was stopped before completion. All 170 suites
 subsequently passed as eight separate PGlite batches (2,660 assertions); this
 does not test interactions across batch boundaries.
+
+The discussion moderation and content-report queues now use oldest-first keyset
+paging with a timestamp and UUID tie-breaker. The displayed count is a page
+count, not a total. Pages are not a snapshot: decisions and new reports can
+change the queue between requests, so moderators should return to the first
+page. The query and cursor are tested with simulated clients; verify paging and
+authenticated RLS against hosted PostgREST before enabling discussion.

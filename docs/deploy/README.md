@@ -1219,3 +1219,8 @@ With `DISCUSSION_LOCK_TEST=1`, run `npm run test:discussion-locks:postgres`.
 The script applies every migration and leaves synthetic fixtures behind; never
 point it at an existing project or data. It checks selected interleavings, not
 all possible races or the hosted PostgREST/browser integration.
+
+The discussion and content-report queues show up to 50 items per page, with
+next and first-page links. Counts are page counts, not totals; pages can change
+as people work. Check the first page again regularly. Verify pagination against
+the hosted Supabase/PostgREST deployment before relying on it.

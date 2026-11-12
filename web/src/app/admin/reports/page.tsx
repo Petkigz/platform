@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { fetchReportQueue } from '@/lib/governance';
+import { decodeDiscussionCursor } from '@/lib/discussion-queue-cursor';
 import { ModerateForm } from '../discussion/moderate-form';
 import { ResolveForm } from './resolve-form';
 
@@ -20,7 +21,7 @@ export const dynamic = 'force-dynamic';
  * Ordered oldest first: a report left sitting is the thing that makes the
  * button a lie.
  */
-export default async function AdminReportsPage() {
+export default async function AdminReportsPage({ searchParams }: { searchParams: Promise<{ after?: string | string[] }> }) {
   if (!isSupabaseConfigured()) redirect('/');
 
   const supabase = await createClient();
@@ -33,7 +34,11 @@ export default async function AdminReportsPage() {
   const { data: privileged } = await supabase.rpc('is_privileged', { p_user_id: user.id });
   if (privileged !== true) redirect('/');
 
-  const reports = await fetchReportQueue(supabase);
+  const params=await searchParams;
+  const raw=typeof params.after==='string' ? params.after : undefined;
+  const cursor=raw ? decodeDiscussionCursor(raw) : null;
+  const invalidCursor=params.after !== undefined && !cursor;
+  const {items:reports,nextCursor} = await fetchReportQueue(supabase,{cursor});
 
   return (
     <div className="container section">
@@ -42,7 +47,7 @@ export default async function AdminReportsPage() {
       </p>
       <h1>Content reports</h1>
       <p className="lede">
-        {reports.length} report{reports.length === 1 ? '' : 's'} waiting.
+        Showing {reports.length} report{reports.length === 1 ? '' : 's'}{nextCursor ? '; more are waiting' : ''}.
       </p>
       <p className="muted">
         Every one of these was filed by someone reading a lesson. Closing one
@@ -50,11 +55,12 @@ export default async function AdminReportsPage() {
         readers that reporting does nothing.
       </p>
 
+      {invalidCursor && <p className="notice warn">That page link is invalid. Showing the first page.</p>}
+      <p className="muted">Reports can change while you work. Return to the first page to check again.</p>
       {reports.length === 0 ? (
         <div className="card">
           <p className="muted" style={{ margin: 0 }}>
-            Nothing waiting. When someone flags a lesson or a discussion post it
-            lands here.
+            {cursor ? 'No more reports on this page.' : 'Nothing waiting. When someone flags a lesson or discussion post it lands here.'}
           </p>
         </div>
       ) : (
@@ -95,6 +101,10 @@ export default async function AdminReportsPage() {
           ))}
         </ul>
       )}
+      <nav className="row" aria-label="Content report pages">
+        {cursor && <Link href="/admin/reports">First page</Link>}
+        {nextCursor && <Link href={`/admin/reports?after=${encodeURIComponent(nextCursor)}`}>Next page</Link>}
+      </nav>
     </div>
   );
 }

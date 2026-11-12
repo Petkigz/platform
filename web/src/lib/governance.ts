@@ -1,4 +1,5 @@
 import { fetchDiscussionContexts, type DiscussionContext } from './discussion-context.ts';
+import { encodeDiscussionCursor, type DiscussionCursor } from './discussion-queue-cursor.ts';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export type ReportCategory =
@@ -131,22 +132,32 @@ export type QueueReport = {
 /** Reports waiting on a person. RLS decides who can see this. */
 export async function fetchReportQueue(
   supabase: SupabaseClient,
-): Promise<QueueReport[]> {
-  const { data, error } = await supabase
+  options: { cursor?: DiscussionCursor | null; limit?: number } = {},
+): Promise<{ items: QueueReport[]; nextCursor: string | null }> {
+  const limit=options.limit ?? 50;
+  if(!Number.isInteger(limit) || limit<1 || limit>100) throw new Error('Invalid report queue page size.');
+  let query = supabase
     .from('content_reports')
     .select(
       'id, report_category, description, status, created_at, lesson_id, discussion_post_id,' +
         'reporter:reported_by(display_name), lesson:lesson_id(title), discussion_post:discussion_post_id(body,visibility_state,parent_id,lesson_id)',
     )
     .in('status', ['submitted', 'triaged', 'under_review'])
-    .order('created_at', { ascending: true });
-
+    .order('created_at', { ascending: true })
+    .order('id', { ascending: true })
+    .limit(limit+1);
+  if(options.cursor) {
+    encodeDiscussionCursor(options.cursor);
+    const {createdAt,id}=options.cursor;
+    query=query.or(`created_at.gt."${createdAt}",and(created_at.eq."${createdAt}",id.gt.${id})`);
+  }
+  const {data,error}=await query;
   if (error) throw new Error(error.message);
 
   const oneRelation = <T>(value: T | T[] | null): T | null =>
     Array.isArray(value) ? value[0] ?? null : value;
 
-  const rows=((data ?? []) as unknown as {
+  const fetched=((data ?? []) as unknown as {
     id: string;
     report_category: string;
     description: string;
@@ -157,14 +168,18 @@ export async function fetchReportQueue(
     discussion_post_id: string | null;
     discussion_post: { body: string; visibility_state: string; parent_id: string | null; lesson_id: string } | { body: string; visibility_state: string; parent_id: string | null; lesson_id: string }[] | null;
   }[]);
+  const rows=fetched.slice(0,limit);
+  const last=rows.at(-1);
+  const nextCursor=fetched.length>limit && last ? encodeDiscussionCursor({createdAt:last.created_at,id:last.id}) : null;
   const posts=rows.map(r=>oneRelation(r.discussion_post));
   const parents=await fetchDiscussionContexts(supabase,posts.flatMap(p=>p?.parent_id ? [p.parent_id] : []));
-  return rows.map(({ reporter, lesson, discussion_post, ...row }) => {
+  const items=rows.map(({ reporter, lesson, discussion_post, ...row }) => {
     const post=oneRelation(discussion_post);
     const parent=post?.parent_id ? parents.get(post.parent_id) : null;
     return {...row,reporter:oneRelation(reporter),lesson:oneRelation(lesson),
       discussionPost:post ? {...post,parent:parent?.lessonId===post.lesson_id ? parent : null} : null};
   });
+  return {items,nextCursor};
 }
 
 export type ResolveInput = {

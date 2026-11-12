@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
 import { fetchModerationQueue } from '@/lib/discussion';
+import { decodeDiscussionCursor } from '@/lib/discussion-queue-cursor';
 import { ModerateForm } from './moderate-form';
 
 export const dynamic = 'force-dynamic';
@@ -23,7 +24,7 @@ export const dynamic = 'force-dynamic';
  * on fiqh topics; who reviews; escalation" — the queue being empty today is not
  * evidence that it will stay manageable.
  */
-export default async function AdminDiscussionPage() {
+export default async function AdminDiscussionPage({ searchParams }: { searchParams: Promise<{ after?: string | string[] }> }) {
   if (!isSupabaseConfigured()) redirect('/');
 
   const supabase = await createClient();
@@ -38,7 +39,11 @@ export default async function AdminDiscussionPage() {
   if (privileged !== true) redirect('/');
 
   const enabled = await isFlagEnabled(supabase, 'learning.discussion');
-  const queue = await fetchModerationQueue(supabase);
+  const params=await searchParams;
+  const rawCursor=typeof params.after==='string' ? params.after : undefined;
+  const cursor=rawCursor ? decodeDiscussionCursor(rawCursor) : null;
+  const invalidCursor=params.after !== undefined && !cursor;
+  const {items:queue,nextCursor} = await fetchModerationQueue(supabase,{cursor});
 
   return (
     <div className="page wide">
@@ -69,17 +74,19 @@ export default async function AdminDiscussionPage() {
         </div>
       )}
 
+      {invalidCursor && <p className="notice warn">That page link is invalid. Showing the first page.</p>}
       {queue.length === 0 && (
-        <p className="muted">Nothing is waiting for review.</p>
+        <p className="muted">{cursor ? 'No more posts on this page.' : 'Nothing is waiting for review.'}</p>
       )}
 
       {queue.length > 0 && (
         <p className="muted">
           Showing {queue.length} post{queue.length === 1 ? '' : 's'}, oldest first
-          {queue.length === 50 ? '; more may be waiting' : ''}.
+          {nextCursor ? '; more are waiting' : ''}.
         </p>
       )}
 
+      <p className="muted">The queue can change while you work. Return to the first page to check for new or changed posts.</p>
       {queue.map((item) => (
         <section className="card" key={item.id}>
           <p className="eyebrow">
@@ -102,6 +109,10 @@ export default async function AdminDiscussionPage() {
           {(!item.isReply || item.parent) && <ModerateForm postId={item.id} reviewedBody={item.body} reviewedState={item.visibilityState} parent={item.parent} />}
         </section>
       ))}
+      <nav className="row" aria-label="Discussion queue pages">
+        {cursor && <Link href="/admin/discussion">First page</Link>}
+        {nextCursor && <Link href={`/admin/discussion?after=${encodeURIComponent(nextCursor)}`}>Next page</Link>}
+      </nav>
     </div>
   );
 }

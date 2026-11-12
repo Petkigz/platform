@@ -17,6 +17,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { fetchDiscussionContexts, type DiscussionContext } from './discussion-context.ts';
+import { encodeDiscussionCursor, type DiscussionCursor } from './discussion-queue-cursor.ts';
 
 export type VisibilityState = 'pending' | 'visible' | 'hidden' | 'removed';
 
@@ -169,9 +170,11 @@ export type QueueItem = {
 /** The moderation queue: learner posts waiting on a person. */
 export async function fetchModerationQueue(
   supabase: SupabaseClient,
-  limit = 50,
-): Promise<QueueItem[]> {
-  const { data, error } = await supabase
+  options: { cursor?: DiscussionCursor | null; limit?: number } = {},
+): Promise<{ items: QueueItem[]; nextCursor: string | null }> {
+  const limit=options.limit ?? 50;
+  if(!Number.isInteger(limit) || limit<1 || limit>100) throw new Error('Invalid discussion queue page size.');
+  let query = supabase
     .from('discussion_posts')
     .select(
       'id, lesson_id, body, parent_id, created_at, author_user_id, visibility_state, ' +
@@ -180,8 +183,15 @@ export async function fetchModerationQueue(
     .eq('visibility_state', 'pending')
     .is('deleted_at', null)
     .order('created_at', { ascending: true })
-    .limit(limit);
-
+    .order('id', { ascending: true })
+    .limit(limit+1);
+  if(options.cursor) {
+    // Validate again at the query boundary: callers must not interpolate raw filter text.
+    encodeDiscussionCursor(options.cursor);
+    const {createdAt,id}=options.cursor;
+    query=query.or(`created_at.gt."${createdAt}",and(created_at.eq."${createdAt}",id.gt.${id})`);
+  }
+  const {data,error}=await query;
   if (error) throw new Error(error.message);
 
   type Row = {
@@ -195,9 +205,12 @@ export async function fetchModerationQueue(
     lessons: { title: string }[] | null;
   };
 
-  const rows=(data ?? []) as unknown as Row[];
+  const fetched=(data ?? []) as unknown as Row[];
+  const rows=fetched.slice(0,limit);
+  const last=rows.at(-1);
+  const nextCursor=fetched.length>limit && last ? encodeDiscussionCursor({createdAt:last.created_at,id:last.id}) : null;
   const parents=await fetchDiscussionContexts(supabase,rows.flatMap(r=>r.parent_id ? [r.parent_id] : []));
-  return rows.map((r) => ({
+  const items=rows.map((r) => ({
     id: r.id,
     body: r.body,
     authorName: r.user_profiles?.[0]?.display_name ?? 'Someone',
@@ -207,6 +220,7 @@ export async function fetchModerationQueue(
     visibilityState: r.visibility_state,
     parent: r.parent_id && parents.get(r.parent_id)?.lessonId===r.lesson_id ? parents.get(r.parent_id)! : null,
   }));
+  return {items,nextCursor};
 }
 
 export type ModerationOutcome = { ok: true } | { ok: false; message: string };

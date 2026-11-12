@@ -19,9 +19,9 @@ test('stale decision is not presented as successful',async()=>{
 });
 test('the queue remains available when posting is switched off',()=>{
   const page=readFileSync(new URL('../app/admin/discussion/page.tsx',import.meta.url),'utf8');
-  assert.match(page,/const queue = await fetchModerationQueue\(supabase\)/);
+  assert.match(page,/await fetchModerationQueue\(supabase,\{cursor\}\)/);
   assert.match(page,/existing posts still need review/i);
-  assert.match(page,/more may be waiting/);
+  assert.match(page,/Next page/);
 });
 
 
@@ -38,7 +38,7 @@ function queryStub(batches: unknown[][]) {
   const client={from:(table:string)=>{
     calls.push(table);const data=batches[index++] ?? [];
     const chain:Record<string,unknown>={};
-    for(const name of ['select','eq','is','in','order','limit'])chain[name]=()=>chain;
+    for(const name of ['select','eq','is','in','order','limit','or'])chain[name]=()=>chain;
     chain.then=(resolve:(value:unknown)=>void)=>resolve({data,error:null});
     return chain;
   }} as unknown as SupabaseClient;
@@ -50,16 +50,16 @@ test('moderation queue shows the actual parent and rejects mismatched or missing
   const parent={id:'root',lesson_id:'lesson',body:'Question',visibility_state:'visible',parent_id:null,deleted_at:null};
   const found=queryStub([[reply],[parent]]);const items=await fetchModerationQueue(found.client);
   assert.deepEqual(found.calls,['discussion_posts','discussion_posts']);
-  assert.deepEqual(items[0]?.parent,{id:'root',lessonId:'lesson',body:'Question',state:'visible'});
+  assert.deepEqual(items.items[0]?.parent,{id:'root',lessonId:'lesson',body:'Question',state:'visible'});
   const mismatch=queryStub([[reply],[{...parent,lesson_id:'other'}]]);
-  assert.equal((await fetchModerationQueue(mismatch.client))[0]?.parent,null);
-  const missing=queryStub([[reply],[]]);assert.equal((await fetchModerationQueue(missing.client))[0]?.parent,null);
+  assert.equal((await fetchModerationQueue(mismatch.client)).items[0]?.parent,null);
+  const missing=queryStub([[reply],[]]);assert.equal((await fetchModerationQueue(missing.client)).items[0]?.parent,null);
 });
 
 test('reported replies carry their reviewed question too',async()=>{
   const report={id:'report',report_category:'other',description:'Problem',status:'submitted',created_at:'2026-01-01',discussion_post_id:'reply',reporter:null,lesson:null,discussion_post:{body:'Answer',visibility_state:'visible',parent_id:'root',lesson_id:'lesson'}};
   const parent={id:'root',lesson_id:'lesson',body:'Question',visibility_state:'visible',parent_id:null,deleted_at:null};
-  const stub=queryStub([[report],[parent]]);const rows=await fetchReportQueue(stub.client);
+  const stub=queryStub([[report],[parent]]);const {items:rows}=await fetchReportQueue(stub.client);
   assert.deepEqual(rows[0]?.discussionPost?.parent,{id:'root',lessonId:'lesson',body:'Question',state:'visible'});
   assert.deepEqual(stub.calls,['content_reports','discussion_posts']);
 });
