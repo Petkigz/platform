@@ -38,7 +38,7 @@ export default async function AdminDiscussionPage() {
   if (privileged !== true) redirect('/');
 
   const enabled = await isFlagEnabled(supabase, 'learning.discussion');
-  const queue = enabled ? await fetchModerationQueue(supabase) : [];
+  const queue = await fetchModerationQueue(supabase);
 
   return (
     <div className="page wide">
@@ -63,22 +63,20 @@ export default async function AdminDiscussionPage() {
           <strong>
             <code>learning.discussion</code> is off.
           </strong>{' '}
-          Nothing can be posted, so the queue is empty by construction rather
-          than because it is being worked. Before enabling it, settle who
-          reviews and how quickly — this is a human queue on a platform that
-          teaches faith to children, and contentious fiqh threads are exactly
-          where it will get hard.
+          New posts are blocked, but existing posts still need review. Before
+          enabling it, settle who reviews and how quickly — this is a human
+          queue on a platform that teaches faith to children.
         </div>
       )}
 
-      {enabled && queue.length === 0 && (
+      {queue.length === 0 && (
         <p className="muted">Nothing is waiting for review.</p>
       )}
 
-      {enabled && queue.length > 0 && (
+      {queue.length > 0 && (
         <p className="muted">
-          {queue.length} post{queue.length === 1 ? '' : 's'} waiting, oldest
-          first.
+          Showing {queue.length} post{queue.length === 1 ? '' : 's'}, oldest first
+          {queue.length === 50 ? '; more may be waiting' : ''}.
         </p>
       )}
 
@@ -95,7 +93,7 @@ export default async function AdminDiscussionPage() {
             <footer className="muted">— {item.authorName}</footer>
           </blockquote>
 
-          <ModerateForm postId={item.id} />
+          <ModerateForm postId={item.id} reviewedBody={item.body} reviewedState={item.visibilityState} />
         </section>
       ))}
     </div>

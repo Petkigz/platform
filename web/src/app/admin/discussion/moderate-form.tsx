@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
  * that too — so the prompt here is a convenience, not the rule. If it were only
  * enforced in the form, a second caller would quietly bypass it.
  */
-export function ModerateForm({ postId }: { postId: string }) {
+export function ModerateForm({ postId, reviewedBody, reviewedState }: { postId: string; reviewedBody: string; reviewedState: string }) {
   const router = useRouter();
   const noteId = useId();
   const [pending, startTransition] = useTransition();
@@ -30,7 +30,7 @@ export function ModerateForm({ postId }: { postId: string }) {
     const res = await fetch('/api/admin/discussion', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ postId, state, note: note || undefined }),
+      body: JSON.stringify({ postId, state, note: note || undefined, reviewedBody, reviewedState }),
     });
     const json = (await res.json().catch(() => ({}))) as { error?: string };
 

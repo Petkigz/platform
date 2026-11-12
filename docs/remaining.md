@@ -280,6 +280,17 @@ percentage-based recommendation. The requester cannot approve their own request.
 
 ### D6. Discussion — who answers
 
+**Security audit in progress:** migration 1310 restricts direct discussion writes,
+keeps pending-body edits and audited staff moderation, blocks hard deletes and
+unreviewed metadata changes, restricts replies to visible top-level posts, and
+hides replies from other readers when their root is withdrawn. It also aligns
+report visibility and enforces a 4,000-character limit for new database writes.
+Existing content and older moderation actions are not retroactively validated.
+Moderation also checks the displayed body and state atomically before applying
+a decision; stale decisions fail. Further real PostgreSQL concurrency, hosted
+deployment and moderation-policy/operational review are still required before
+enabling.
+
 **Progress, 2026-11-03:** Learner replies already go through the moderation
 queue; course-author posts appear immediately. The author can now open the
 live thread from the preview of a published lesson when discussion is enabled,
@@ -1880,3 +1891,10 @@ ZIP before it fetches a private file. A passing check is not proof that other
 archives, encrypted content, scan limits or current signatures are covered. The
 ZIP check and integration probe have only been exercised against simulated
 sockets so far; the real daemon and R2 still need testing.
+
+Discussion moderation still needs an end-to-end usability and safety review:
+the queue currently shows a reply without its parent question, so an approver may
+lack context. Review how parent withdrawal, queued replies and report actions
+interact, and exercise the final flow with real PostgreSQL concurrency and hosted
+users before enabling it. The full database suite was stopped before completion;
+the focused discussion, governance and group-three suites passed locally.

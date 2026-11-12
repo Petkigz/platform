@@ -80,7 +80,7 @@ export default async function AdminReportsPage() {
                     <>
                       <p style={{ whiteSpace: 'pre-wrap' }}>{r.discussionPost.body}</p>
                       <p className="muted">Current state: {r.discussionPost.visibility_state}. Moderating the post and resolving the report are separate actions.</p>
-                      <ModerateForm postId={r.discussion_post_id} />
+                      <ModerateForm postId={r.discussion_post_id} reviewedBody={r.discussionPost.body} reviewedState={r.discussionPost.visibility_state} />
                     </>
                   ) : <p className="muted">This post is no longer available to view.</p>}
                 </div>

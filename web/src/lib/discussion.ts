@@ -161,6 +161,7 @@ export type QueueItem = {
   lessonTitle: string;
   createdAt: string;
   isReply: boolean;
+  visibilityState: string;
 };
 
 /** The moderation queue: learner posts waiting on a person. */
@@ -171,7 +172,7 @@ export async function fetchModerationQueue(
   const { data, error } = await supabase
     .from('discussion_posts')
     .select(
-      'id, body, parent_id, created_at, author_user_id, ' +
+      'id, body, parent_id, created_at, author_user_id, visibility_state, ' +
         'user_profiles ( display_name ), lessons ( title )',
     )
     .eq('visibility_state', 'pending')
@@ -186,6 +187,7 @@ export async function fetchModerationQueue(
     body: string;
     parent_id: string | null;
     created_at: string;
+    visibility_state: string;
     user_profiles: { display_name: string }[] | null;
     lessons: { title: string }[] | null;
   };
@@ -197,6 +199,7 @@ export async function fetchModerationQueue(
     lessonTitle: r.lessons?.[0]?.title ?? 'Unknown lesson',
     createdAt: r.created_at,
     isReply: r.parent_id !== null,
+    visibilityState: r.visibility_state,
   }));
 }
 
@@ -204,7 +207,7 @@ export type ModerationOutcome = { ok: true } | { ok: false; message: string };
 
 export async function moderatePost(
   supabase: SupabaseClient,
-  args: { postId: string; state: 'visible' | 'hidden' | 'removed'; note?: string },
+  args: { postId: string; state: 'visible' | 'hidden' | 'removed'; note?: string; reviewedBody: string; reviewedState: string },
 ): Promise<ModerationOutcome> {
   // The function requires a written reason before withdrawing anything. Saying
   // so here gives the reviewer a sentence rather than a database error.
@@ -216,6 +219,8 @@ export async function moderatePost(
     p_post_id: args.postId,
     p_state: args.state,
     p_note: args.note ?? null,
+    p_reviewed_body: args.reviewedBody,
+    p_reviewed_state: args.reviewedState,
   });
 
   if (error) return { ok: false, message: error.message };

@@ -9,6 +9,8 @@ type Body = {
   postId?: unknown;
   state?: unknown;
   note?: unknown;
+  reviewedBody?: unknown;
+  reviewedState?: unknown;
 };
 
 const STATES = ['visible', 'hidden', 'removed'] as const;
@@ -54,10 +56,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Malformed request body.' }, { status: 400 });
   }
 
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return NextResponse.json({ error: 'Malformed request body.' }, { status: 400 });
+  }
   const postId = typeof payload.postId === 'string' ? payload.postId.trim() : '';
   const state = typeof payload.state === 'string' ? payload.state : '';
   const note = typeof payload.note === 'string' ? payload.note : undefined;
 
+  if (typeof payload.reviewedBody !== 'string' || typeof payload.reviewedState !== 'string') {
+    return NextResponse.json({ error: 'Refresh and review the post before deciding.' }, { status: 400 });
+  }
   if (!postId) {
     return NextResponse.json({ error: 'postId is required.' }, { status: 400 });
   }
@@ -72,6 +80,8 @@ export async function POST(request: Request) {
     postId,
     state: state as State,
     note,
+    reviewedBody: payload.reviewedBody,
+    reviewedState: payload.reviewedState,
   });
 
   if (!result.ok) {
