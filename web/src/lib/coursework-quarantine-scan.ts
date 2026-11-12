@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { masterKeyAssetId, presignMasterDownload, type R2Config } from './media-r2.ts';
 import { COURSEWORK_SCAN_MAX_BYTES, scanCourseworkBytes, type CourseworkScanResult } from './coursework-clamav.ts';
 import type { QuarantineInspectionTarget } from './quarantine-inspection.ts';
@@ -21,6 +22,15 @@ export async function scanQuarantinedCoursework(input: {
   const declared=Number(target.declared_bytes);
   if (!Number.isSafeInteger(declared) || declared<1 || declared>COURSEWORK_SCAN_MAX_BYTES)
     return {ok:false,status:409,message:'The file size is not supported by the scanner.'};
+  // Harmless EICAR test string, constructed at runtime. A daemon that cannot
+  // detect this standard test sample must not produce a reassuring result.
+  // This is a basic readiness check, not proof signatures are current or complete.
+  const testBytes=Buffer.from(['X5O!P%@AP[4\\PZX54(P^)7CC)7}$','EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*'].join(''));
+  try {
+    const test=await (input.scan ?? scanCourseworkBytes)({bytes:testBytes,socketPath:input.socketPath,timeoutMs:10_000});
+    if (!test || test.outcome!=='infected' || test.bytes!==testBytes.length || test.sha256!==createHash('sha256').update(testBytes).digest('hex'))
+      return {ok:false,status:503,message:'The local scanner failed its test. No file was scanned.'};
+  } catch {return {ok:false,status:503,message:'The local scanner failed its test. No file was scanned.'};}
   let response:Response;
   try {
     const url=presignMasterDownload(config,target.master_key,{expiresInSeconds:60}).url;
@@ -42,10 +52,12 @@ export async function scanQuarantinedCoursework(input: {
     }
   } catch {await reader.cancel().catch(()=>{});return {ok:false,status:503,message:'The file transfer was interrupted. No scan was completed.'};}
   if (received!==declared) return {ok:false,status:409,message:'The received file was incomplete. No scan was completed.'};
+  const downloaded=Buffer.concat(chunks,received);
+  const expectedHash=createHash('sha256').update(downloaded).digest('hex');
   let result:CourseworkScanResult;
-  try {result=await (input.scan ?? scanCourseworkBytes)({bytes:Buffer.concat(chunks,received),socketPath:input.socketPath});}
+  try {result=await (input.scan ?? scanCourseworkBytes)({bytes:downloaded,socketPath:input.socketPath});}
   catch {return {ok:false,status:503,message:'The local scanner failed. No scan was completed.'};}
-  if (!result || (result.outcome!=='clean' && result.outcome!=='infected') || result.bytes!==received || !/^[a-f0-9]{64}$/.test(result.sha256))
+  if (!result || (result.outcome!=='clean' && result.outcome!=='infected') || result.bytes!==received || result.sha256!==expectedHash)
     return {ok:false,status:503,message:'The local scanner did not return a usable result.'};
   return {ok:true,outcome:result.outcome,bytes:received};
 }

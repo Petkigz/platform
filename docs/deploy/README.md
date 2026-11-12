@@ -1193,7 +1193,7 @@ send child files to an external scanner without an approved data arrangement.
 This is **an on-demand inspection, not an upload or access gate**. It downloads
 at most the recorded 25 MiB, scans only those bytes, and never releases quarantine
 or changes the file's status. A clean response means no configured signature
-was reported, not that the file is safe or that a future download is unchanged.
+was reported, not that the file is safe or that a future download is unchanged. Each inspection first checks that the local scanner detects the harmless EICAR test sample, but this does not prove its signatures are up to date or its coverage is adequate.
 Encrypted and unsupported contents, old signatures and compromised scanners can
 be missed. Scan output is not a permanent record. The in-process scan cap is not
 a distributed rate limit. Run a real daemon and provider integration test before

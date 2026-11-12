@@ -1858,3 +1858,10 @@ request already sent to storage. A safe automated workflow needs a documented,
 tested protocol for in-flight uploads, holds, object identity and ambiguous
 replies, and operator-visible incident handling; a subsequent HEAD is only a
 point-in-time observation, not proof that all copies are gone.
+
+
+The on-demand scanner now first checks that the local daemon detects the harmless
+EICAR test sample, and compares the scanner receipt to the downloaded bytes.
+A failed self-test prevents the file download and scan. This does not prove
+signature freshness or comprehensive protection; real ClamAV and R2 remain
+untested and scanning is not an upload/download gate.
