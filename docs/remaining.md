@@ -334,12 +334,15 @@ translation and accessibility review; the counter and gates are not deployed.
 An independent `companion.calculated_prayer_times` switch is default off.
 `/companion/prayer-times` calculates estimates in page memory with the MIT-licensed
 [Adhan JS](https://github.com/batoulapps/adhan-js) library. Users explicitly
-choose method, Asr and a high-latitude rule and confirm the device time zone;
+choose method and Asr, choose a high-latitude rule where applicable, and confirm the device time zone;
 coordinates come from permission-based browser location or manual entry and are
 not sent to AyahSpring. The browser or OS may contact a location provider. The
 library suggests Moonsighting Committee for the UK and North America; this is
 not an authoritative region mapping and other regions have no suggested default.
-The method has its own seasonal/high-latitude behaviour; polar fallback is disabled.
+The Moonsighting Committee method has its own seasonal/high-latitude behaviour,
+so the screen no longer asks for an ignored night-rule choice for that method.
+Polar fallback is disabled; unavailable or inconsistent days explain why no
+complete set is shown and direct learners to their local authority.
 The tool rejects invalid or out-of-order results: a local Tromsø polar-night
 probe produced an Asr later than Maghrib from the underlying library. The
 calculation now checks neighbouring astronomical dates and selects a unique
@@ -363,6 +366,12 @@ endorsement or worldwide accuracy. Do not silently adjust estimates to fit.
 Tests also exercise six time zones, DST and high-latitude cases. An open display is cleared
 when a date or zone change is detected (focus, visibility change or periodic
 check); it does not recalculate itself.
+A local headless Chromium component probe with simulated London geolocation and
+clock exercised granted and denied location, selection and calculation, invalid
+coordinates, midnight invalidation, polar rejection and the MUIS link. It used an
+isolated React bundle with mocked location, not the authenticated Next route,
+hosted browser, actual device location provider, or a screen-reader test. It is
+not a production-readiness verification.
 The screen is English-only. Local religious review, more regional guidance,
 independent calculation and date/time-zone/high-latitude verification, privacy,
 accessibility, translation and hosted-browser review remain before enabling. It

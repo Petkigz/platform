@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { calculatePrayerTimes, calculatePrayerTimesForDeviceDay, prayerTimesMatchDeviceDay } from './prayer-calculation.ts';
+import { calculatePrayerTimes, calculatePrayerTimesForDeviceDay, prayerTimesMatchDeviceDay, selectedNightRule } from './prayer-calculation.ts';
 
 test('calculation rejects invalid inputs and unresolved polar days',()=>{
   const date=new Date(2026,5,21);
@@ -158,4 +158,21 @@ test('Nairobi estimate is close to one published MWL timetable',()=>{
     const minutes=(s:string)=>Number(s.slice(0,2))*60+Number(s.slice(3));
     times.forEach(([,time],i)=>assert.ok(Math.abs(minutes(fmt.format(time))-minutes(published[i]!))<=2));
   } finally {if(previous===undefined) delete process.env.TZ; else process.env.TZ=previous;}
+});
+
+
+test('Moonsighting Committee does not require an unused night rule',()=>{
+  assert.equal(selectedNightRule('MoonsightingCommittee',''),'middle');
+  assert.equal(selectedNightRule('MuslimWorldLeague',''),null);
+  assert.equal(selectedNightRule('MuslimWorldLeague','seventh'),'seventh');
+  assert.equal(selectedNightRule('MuslimWorldLeague','invalid'),null);
+  const date=new Date(2026,5,21,12);
+  const first=calculatePrayerTimes(51.5,-0.12,date,'MoonsightingCommittee','standard','middle');
+  const second=calculatePrayerTimes(51.5,-0.12,date,'MoonsightingCommittee','standard','seventh');
+  assert.ok(first); assert.ok(second);
+  assert.deepEqual(first.map(([,t])=>t.getTime()),second.map(([,t])=>t.getTime()));
+  const tool=readFileSync(new URL('../app/companion/prayer-times/tool.tsx',import.meta.url),'utf8');
+  assert.match(tool,/selectedNightRule\(method,night\)/);
+  assert.match(tool,/no separate night rule is needed/);
+  assert.match(tool,/No polar approximation has been applied/);
 });

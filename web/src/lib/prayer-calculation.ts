@@ -12,6 +12,12 @@ export type Method = keyof typeof methods;
 export type Asr = 'standard' | 'hanafi';
 export type NightRule = 'middle' | 'seventh' | 'angle';
 
+/** Moonsighting Committee uses its own seasonal rule and ignores this setting. */
+export function selectedNightRule(method:string, choice:string): NightRule | null {
+  if(method==='MoonsightingCommittee') return 'middle'; // ignored by Adhan for this method
+  return choice==='middle' || choice==='seventh' || choice==='angle' ? choice : null;
+}
+
 export function calculatePrayerTimes(latitude:number, longitude:number, date:Date, method:Method, asr:Asr, night:NightRule) {
   if(!Number.isFinite(latitude) || Math.abs(latitude)>90 || !Number.isFinite(longitude) || Math.abs(longitude)>180 || !Number.isFinite(date.getTime()) || !Object.hasOwn(methods,method) || !['standard','hanafi'].includes(asr) || !['middle','seventh','angle'].includes(night)) return null;
   try {

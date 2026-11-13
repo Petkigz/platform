@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { calculatePrayerTimesForDeviceDay, methods, type Asr, type Method, type NightRule } from '@/lib/prayer-calculation';
+import { calculatePrayerTimesForDeviceDay, methods, selectedNightRule, type Asr, type Method } from '@/lib/prayer-calculation';
 
 type Result = { lines: readonly (readonly [string,string])[]; date:string; zone:string; method:string; asr:string; night:string };
 export function PrayerTimesTool() {
@@ -39,13 +39,15 @@ export function PrayerTimesTool() {
   }
   function calculate() {
     setResult(null); setMessage('');
-    if(!latitude.trim() || !longitude.trim() || !method || !asr || !night || !confirmZone) {setMessage('Enter coordinates, choose the calculation settings and confirm your device time zone.');return;}
+    const nightRule=selectedNightRule(method,night);
+    if(!latitude.trim() || !longitude.trim() || !method || !asr || !nightRule || !confirmZone) {setMessage('Enter coordinates, choose the calculation settings and confirm your device time zone.');return;}
     const lat=Number(latitude); const lon=Number(longitude); const now=new Date();
+    if(!Number.isFinite(lat) || Math.abs(lat)>90 || !Number.isFinite(lon) || Math.abs(lon)>180) {setMessage('Enter a latitude between −90 and 90 and a longitude between −180 and 180.');return;}
     const zone=Intl.DateTimeFormat().resolvedOptions().timeZone;
     if(!zone) {setMessage('Your device time zone could not be identified.');return;}
     if(zone!==deviceZone) {setDeviceZone(zone);setConfirmZone(false);setMessage('Your device time zone changed. Check it and confirm again.');return;}
-    const times=calculatePrayerTimesForDeviceDay(lat,lon,now,zone,method as Method,asr as Asr,night as NightRule);
-    if(!times) {setMessage('A valid sequence of times could not be calculated. Check the coordinates or consult a local timetable, especially at high latitudes.');return;}
+    const times=calculatePrayerTimesForDeviceDay(lat,lon,now,zone,method as Method,asr as Asr,nightRule);
+    if(!times) {setMessage('A complete, consistent set of times could not be calculated for this location and date. At high latitudes normal solar events can be unavailable or fall in an unexpected order. Check the location and time zone and follow a timetable from your local mosque or authority. No polar approximation has been applied.');return;}
     const fmt=new Intl.DateTimeFormat('en', { timeZone:zone, year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short' });
     setResult({lines:times.map(([name,time])=>[name,fmt.format(time)] as const),date:new Intl.DateTimeFormat('en',{timeZone:zone,dateStyle:'full'}).format(now),zone,method:methods[method as Method],asr:asr==='hanafi'?'Hanafi (later)':'Standard (earlier)',night:night==='middle'?'Middle of the night':night==='seventh'?'One seventh of the night':'Twilight angle'});
   }
@@ -61,8 +63,11 @@ export function PrayerTimesTool() {
     <div><label htmlFor="method">Calculation method</label><select id="method" value={method} onChange={e=>{setMethod(e.target.value);changed();}}><option value="">Choose a method</option>{Object.entries(methods).map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></div>
     {method==='Singapore' && <p className="notice">This calculation is not the official Singapore timetable and can differ by minutes. For Singapore, check the <a href="https://www.muis.gov.sg/resources/islamic-calendar/" target="_blank" rel="noopener noreferrer">MUIS prayer timetable</a>, especially around the start or end of a prayer time.</p>}
     <div><label htmlFor="asr">Asr calculation</label><select id="asr" value={asr} onChange={e=>{setAsr(e.target.value);changed();}}><option value="">Choose an Asr method</option><option value="standard">Standard (earlier)</option><option value="hanafi">Hanafi (later)</option></select></div>
-    <div><label htmlFor="night">High-latitude night rule</label><select id="night" value={night} onChange={e=>{setNight(e.target.value);changed();}}><option value="">Choose a night rule</option><option value="middle">Middle of the night</option><option value="seventh">One seventh of the night</option><option value="angle">Twilight angle</option></select></div>
-    <p>Night rules can limit Fajr and Isha even outside polar regions. The Moonsighting Committee method uses its own seasonal adjustments and a one-seventh approximation at northern latitudes of 55° or above instead of this selection. No polar fallback is applied.</p>
+    {method==='MoonsightingCommittee' ? <p>This method uses its own seasonal adjustments and a one-seventh approximation at northern latitudes of 55° or above; no separate night rule is needed.</p> : <>
+      <div><label htmlFor="night">High-latitude night rule</label><select id="night" value={night} onChange={e=>{setNight(e.target.value);changed();}}><option value="">Choose a night rule</option><option value="middle">Middle of the night</option><option value="seventh">One seventh of the night</option><option value="angle">Twilight angle</option></select></div>
+      <p>Night rules can limit Fajr and Isha even outside polar regions. Ask your community which rule it follows.</p>
+    </>}
+    <p>No polar fallback is applied. If a complete set of times cannot be calculated, consult your local mosque or authority.</p>
     <p>Your device time zone is <strong>{deviceZone || 'unavailable'}</strong>. It must match the coordinates, including daylight saving.</p>
     <label><input type="checkbox" checked={confirmZone} onChange={e=>{setConfirmZone(e.target.checked);changed();}} /> My device time zone matches this location.</label>
     <p><button type="button" className="btn" onClick={calculate} disabled={locating}>Calculate today</button></p>
