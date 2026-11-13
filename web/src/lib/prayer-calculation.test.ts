@@ -31,6 +31,17 @@ test('permission is explicit, coordinates stay on device, and both links check t
   assert.match(tool,/visibilitychange/); assert.match(tool,/setInterval/);
 });
 
+test('requesting a fresh location clears old coordinates and time-zone confirmation before any browser outcome',()=>{
+  const tool=readFileSync(new URL('../app/companion/prayer-times/tool.tsx',import.meta.url),'utf8');
+  const locate=tool.slice(tool.indexOf('  function locate() {'),tool.indexOf('  function calculate() {'));
+  const beforeRequest=locate.slice(0,locate.indexOf('if (!navigator.geolocation)'));
+  assert.match(beforeRequest,/setLatitude\(''\)/);
+  assert.match(beforeRequest,/setLongitude\(''\)/);
+  assert.match(beforeRequest,/setConfirmZone\(false\)/);
+  assert.match(beforeRequest,/setResult\(null\)/);
+  assert.match(locate,/permission was denied/);
+});
+
 test('rejects finite but impossible ordering near polar night',()=>{
   // Tromsø, Norway: the underlying calculation returns Asr after Maghrib.
   assert.equal(calculatePrayerTimes(69.65,18.95,new Date(2026,0,15),'MuslimWorldLeague','standard','middle'),null);

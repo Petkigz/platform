@@ -398,6 +398,10 @@ A local 360-pixel Chromium component preview with simulated London location
 exercised the suggestion, location and calculation without horizontal overflow.
 The check exposed a full-width checkbox; the confirmation now uses an inline
 checkbox and clickable label. This is not a screen-reader or hosted-device test.
+A later jsdom component interaction with simulated location confirmed that a
+successful location followed by a denied refresh clears both old coordinates
+and the time-zone confirmation. This is not a real browser or location-provider
+test. The committed regression also checks the reset is before any browser outcome.
 
 The existing Supabase test project was healthy with no app tables, Auth users or
 migration history at the last read-only check. Vercel's default scope returned no

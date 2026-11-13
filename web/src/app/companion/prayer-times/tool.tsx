@@ -33,7 +33,9 @@ export function PrayerTimesTool() {
     return ()=>{window.clearInterval(timer);window.removeEventListener('focus',invalidateIfOutdated);document.removeEventListener('visibilitychange',invalidateIfOutdated);};
   },[result,deviceZone]);
   function locate() {
-    setResult(null); setMessage('');
+    // A new request replaces the old location even if permission is denied or
+    // the browser times out. Never let a failed refresh reuse stale coordinates.
+    setResult(null); setMessage(''); setLatitude(''); setLongitude(''); setConfirmZone(false);
     if (!navigator.geolocation) { setMessage('Location is not available in this browser. You can enter coordinates manually.'); return; }
     setLocating(true);
     navigator.geolocation.getCurrentPosition(position=>{
