@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "AyahSpring \u2014 Islamic e-learning platform.",
+  "description": "AyahSpring — Islamic e-learning platform.",
   "scripts": {
     "test:db": "node supabase/tests/run.mjs",
     "check:repo": "node scripts/repo-check.mjs",
@@ -14,15 +14,18 @@
     "build": "npm run build --workspace @ayahspring/web",
     "typecheck": "npm run typecheck --workspace @ayahspring/web",
     "test:web": "npm run test --workspace @ayahspring/web",
-    "test": "npm run check:repo && npm run lint && npm run test:db && npm run test:web",
+    "test": "npm run check:repo && npm run lint && npm run test:db && npm run test:web && npm run test:prayer-component",
     "lint": "npm run lint --workspace @ayahspring/web",
     "test:child-locks:postgres": "node supabase/tests/child_login_lock_protocol.postgres.mjs",
     "test:clamav:integration": "node --experimental-strip-types scripts/clamav-integration.mjs",
     "test:discussion-locks:postgres": "node supabase/tests/discussion_lock_protocol.postgres.mjs",
-    "test:prayer-route": "node scripts/prayer-route-smoke.mjs"
+    "test:prayer-route": "node scripts/prayer-route-smoke.mjs",
+    "test:prayer-component": "node scripts/prayer-component-test.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.3.11",
+    "esbuild": "0.25.12",
+    "jsdom": "26.1.0",
     "pg": "^8.16.3"
   },
   "workspaces": [
