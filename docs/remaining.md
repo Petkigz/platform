@@ -338,7 +338,12 @@ choose method and Asr, choose a high-latitude rule where applicable, and confirm
 coordinates come from permission-based browser location or manual entry and are
 not sent to AyahSpring. The browser or OS may contact a location provider. The
 library suggests Moonsighting Committee for the UK and North America; this is
-not an authoritative region mapping and other regions have no suggested default.
+not an authoritative region mapping. For a small set of device time zones, the
+screen now offers an optional example method based on the documented library
+recommendation (UK and North America) or the timetable comparisons below (Cairo,
+Nairobi, Karachi and Singapore). A user must explicitly apply it; time zone is
+not treated as proof of location or local practice. Other zones receive no
+example. The user still selects Asr and any applicable night rule.
 The Moonsighting Committee method has its own seasonal/high-latitude behaviour,
 so the screen no longer asks for an ignored night-rule choice for that method.
 Polar fallback is disabled; unavailable or inconsistent days explain why no
@@ -375,7 +380,9 @@ A local headless Chromium component probe with simulated London geolocation and
 clock exercised granted and denied location, selection and calculation, invalid
 coordinates, midnight invalidation, polar rejection and the MUIS link. It used an
 isolated React bundle with mocked location, not the authenticated Next route,
-hosted browser, actual device location provider, or a screen-reader test. It is
+hosted browser, actual device location provider, or a screen-reader test. A
+second local component probe exercised explicit suggestion acceptance and
+clearing results after a method change. It is
 not a production-readiness verification.
 The screen is English-only. Local religious review, more regional guidance,
 independent calculation and date/time-zone/high-latitude verification, privacy,

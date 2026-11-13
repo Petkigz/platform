@@ -12,6 +12,20 @@ export type Method = keyof typeof methods;
 export type Asr = 'standard' | 'hanafi';
 export type NightRule = 'middle' | 'seventh' | 'angle';
 
+// These are examples to consider, not claims about a user's location or a
+// local ruling. Time zones are not country boundaries. See docs/remaining.md.
+const methodExamples: Record<string,{place:string; method:Method}> = {
+  'Europe/London': {place:'the UK',method:'MoonsightingCommittee'},
+  'America/New_York': {place:'North America',method:'MoonsightingCommittee'},
+  'Africa/Cairo': {place:'Cairo',method:'Egyptian'},
+  'Africa/Nairobi': {place:'Nairobi',method:'MuslimWorldLeague'},
+  'Asia/Karachi': {place:'Karachi',method:'Karachi'},
+  'Asia/Singapore': {place:'Singapore',method:'Singapore'},
+};
+export function methodExampleForZone(zone:string): {place:string;method:Method} | null {
+  return Object.hasOwn(methodExamples,zone) ? methodExamples[zone]! : null;
+}
+
 /** Moonsighting Committee uses its own seasonal rule and ignores this setting. */
 export function selectedNightRule(method:string, choice:string): NightRule | null {
   if(method==='MoonsightingCommittee') return 'middle'; // ignored by Adhan for this method

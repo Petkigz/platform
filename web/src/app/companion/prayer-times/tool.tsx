@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { calculatePrayerTimesForDeviceDay, methods, selectedNightRule, type Asr, type Method } from '@/lib/prayer-calculation';
+import { calculatePrayerTimesForDeviceDay, methodExampleForZone, methods, selectedNightRule, type Asr, type Method } from '@/lib/prayer-calculation';
 
 type Result = { lines: readonly (readonly [string,string])[]; date:string; zone:string; method:string; asr:string; night:string };
 export function PrayerTimesTool() {
@@ -11,22 +11,27 @@ export function PrayerTimesTool() {
   const [deviceZone,setDeviceZone]=useState('');
   useEffect(()=>{setDeviceZone(Intl.DateTimeFormat().resolvedOptions().timeZone || '');},[]);
   useEffect(()=>{
-    if(!result) return;
+    if(!deviceZone) return;
     function invalidateIfOutdated() {
       const zone=Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+      if(zone!==deviceZone) {
+        setDeviceZone(zone); setConfirmZone(false); setResult(null);
+        setMessage('The device time zone changed. Check your location, method and time zone before calculating.');
+        return;
+      }
+      if(!result) return;
       let day='';
-      try { if(zone) day=new Intl.DateTimeFormat('en',{timeZone:zone,dateStyle:'full'}).format(new Date()); } catch { /* Fail closed if the zone is invalid. */ }
-      if(zone!==result!.zone || day!==result!.date) {
+      try { day=new Intl.DateTimeFormat('en',{timeZone:zone,dateStyle:'full'}).format(new Date()); } catch { /* Fail closed if the zone is invalid. */ }
+      if(day!==result.date) {
         setResult(null);
-        setMessage('The date or device time zone changed. Check your settings and calculate again.');
-        if(zone!==result!.zone) {setDeviceZone(zone);setConfirmZone(false);}
+        setMessage('The date changed. Check your settings and calculate again.');
       }
     }
     const timer=window.setInterval(invalidateIfOutdated,60000);
     window.addEventListener('focus',invalidateIfOutdated);
     document.addEventListener('visibilitychange',invalidateIfOutdated);
     return ()=>{window.clearInterval(timer);window.removeEventListener('focus',invalidateIfOutdated);document.removeEventListener('visibilitychange',invalidateIfOutdated);};
-  },[result]);
+  },[result,deviceZone]);
   function locate() {
     setResult(null); setMessage('');
     if (!navigator.geolocation) { setMessage('Location is not available in this browser. You can enter coordinates manually.'); return; }
@@ -52,6 +57,7 @@ export function PrayerTimesTool() {
     setResult({lines:times.map(([name,time])=>[name,fmt.format(time)] as const),date:new Intl.DateTimeFormat('en',{timeZone:zone,dateStyle:'full'}).format(now),zone,method:methods[method as Method],asr:asr==='hanafi'?'Hanafi (later)':'Standard (earlier)',night:night==='middle'?'Middle of the night':night==='seventh'?'One seventh of the night':'Twilight angle'});
   }
   const changed=()=>{setResult(null);setMessage('');};
+  const example=methodExampleForZone(deviceZone);
   return <section className="card" aria-labelledby="prayer-heading">
     <h2 id="prayer-heading">Today’s estimated times</h2>
     <p>Calculations may differ from your mosque or local authority. Confirm prayer times and calculation choices with your community, especially at high latitudes. Sunrise is shown for reference; it is not a prayer.</p>
@@ -59,7 +65,12 @@ export function PrayerTimesTool() {
     <button type="button" className="btn secondary" onClick={locate} disabled={locating}>{locating?'Finding location…':'Use device location'}</button>
     <div><label htmlFor="latitude">Latitude</label><input id="latitude" type="number" min="-90" max="90" step="any" disabled={locating} value={latitude} onChange={e=>{setLatitude(e.target.value);setConfirmZone(false);changed();}} /></div>
     <div><label htmlFor="longitude">Longitude</label><input id="longitude" type="number" min="-180" max="180" step="any" disabled={locating} value={longitude} onChange={e=>{setLongitude(e.target.value);setConfirmZone(false);changed();}} /></div>
-    <p>For North America and the UK, the calculation library suggests the Moonsighting Committee method; this is not a local-authority ruling. For other regions, ask your local community which method to use.</p>
+    <p>Choose a method used by your community. The calculation library suggests the Moonsighting Committee method for North America and the UK, but this is not a local-authority ruling.</p>
+    {example && <div className="notice">
+      <p>Your device is set to {deviceZone}. If your location is in {example.place}, you could consider {methods[example.method]}; check your mosque or local authority first. A time zone does not identify your location, and other methods may be used there.</p>
+      <button type="button" className="btn secondary" onClick={()=>{setMethod(example.method);changed();}}>Use this method</button>
+    </div>}
+
     <div><label htmlFor="method">Calculation method</label><select id="method" value={method} onChange={e=>{setMethod(e.target.value);changed();}}><option value="">Choose a method</option>{Object.entries(methods).map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></div>
     {method==='Singapore' && <p className="notice">This calculation is not the official Singapore timetable and can differ by minutes. For Singapore, check the <a href="https://www.muis.gov.sg/resources/islamic-calendar/" target="_blank" rel="noopener noreferrer">MUIS prayer timetable</a>, especially around the start or end of a prayer time.</p>}
     <div><label htmlFor="asr">Asr calculation</label><select id="asr" aria-describedby="asr-explanation" value={asr} onChange={e=>{setAsr(e.target.value);changed();}}><option value="">Choose an Asr method</option><option value="standard">Standard (earlier)</option><option value="hanafi">Hanafi (later)</option></select></div>

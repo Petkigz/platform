@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { calculatePrayerTimes, calculatePrayerTimesForDeviceDay, prayerTimesMatchDeviceDay, selectedNightRule } from './prayer-calculation.ts';
+import { calculatePrayerTimes, calculatePrayerTimesForDeviceDay, prayerTimesMatchDeviceDay, selectedNightRule, methodExampleForZone } from './prayer-calculation.ts';
 
 test('calculation rejects invalid inputs and unresolved polar days',()=>{
   const date=new Date(2026,5,21);
@@ -205,4 +205,19 @@ test('calculation choices link to plain-language explanations',()=>{
   assert.match(tool,/aria-describedby="night-explanation"/);
   assert.match(tool,/noon shadow/);
   assert.match(tool,/Ask your community which rule/);
+});
+
+
+test('regional examples are explicit, limited, and never a default',()=>{
+  assert.deepEqual(methodExampleForZone('Europe/London'),{place:'the UK',method:'MoonsightingCommittee'});
+  assert.deepEqual(methodExampleForZone('Asia/Karachi'),{place:'Karachi',method:'Karachi'});
+  assert.deepEqual(methodExampleForZone('Asia/Singapore'),{place:'Singapore',method:'Singapore'});
+  assert.deepEqual(methodExampleForZone('Africa/Cairo'),{place:'Cairo',method:'Egyptian'});
+  assert.deepEqual(methodExampleForZone('Africa/Nairobi'),{place:'Nairobi',method:'MuslimWorldLeague'});
+  assert.equal(methodExampleForZone('Asia/Tokyo'),null);
+  assert.equal(methodExampleForZone('__proto__'),null);
+  const tool=readFileSync(new URL('../app/companion/prayer-times/tool.tsx',import.meta.url),'utf8');
+  assert.match(tool,/useState\(''\); const \[asr/);
+  assert.match(tool,/A time zone does not identify your location/);
+  assert.match(tool,/onClick=\{\(\)=>\{setMethod\(example.method\);changed\(\);\}\}/);
 });
