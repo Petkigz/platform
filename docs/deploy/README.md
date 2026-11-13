@@ -154,6 +154,50 @@ After a successful application, verify that the history contains every expected
 version, through `20261281135000_calculated_prayer_times.sql`, as well as running
 the checks in section 2. A history entry alone does not prove the schema works.
 
+#### Optional GitHub Actions preview for the existing test project
+
+The `Supabase test migration dry-run` workflow is a **preview only**: it has no
+apply job. It is restricted to this session branch and a specific trigger commit;
+normal pushes do not run it. It uses the test project ref
+`glhxtsgrhhvtbsnlxgxu`, CLI 3.1.0, `--dry-run` and `--skip-vault`. On a local
+blank PostgreSQL probe, this CLI dry-run did not create the migration-history
+table. Hosted behaviour and permissions are still unverified.
+
+Before triggering it, the owner must configure a GitHub environment named
+`ayahspring-test-dry-run` in repository **Settings → Environments**:
+
+1. Add a required reviewer and allow this branch to deploy. Confirm approvals
+   work for your account (including self-review settings). An environment name
+   alone does **not** require approval. If required review is unavailable, stop;
+   do not assume the workflow is protected.
+2. Add the environment secret `AYAHSPRING_TEST_DATABASE_URL` privately in GitHub,
+   never in chat, source files, a commit message or logs. Use the **session
+   pooler** connection for the existing AyahSpring test project, port 5432,
+   database `postgres`, with `sslmode=verify-full`. The project-specific pooler
+   username must be `postgres.glhxtsgrhhvtbsnlxgxu`. Use the provider's URL-encoded
+   connection string and add or replace the `sslmode` parameter as needed.
+3. After reviewing the workflow and setting approval, add the environment
+   variable `AYAHSPRING_TEST_DRY_RUN_READY` with value `yes`. Do not place the URL
+   in this variable. A missing variable or an unexpected URL refuses to start.
+
+Tell the builder when the environment is configured; do not send its secret. A
+subsequent commit whose entire message is `test: preview ayahspring test migrations`
+triggers the preview. Review the exact commit and approve the job in Actions;
+if it is not awaiting the expected approval, stop and check environment rules.
+The run prints only recognized migration filenames, not raw provider output or
+credentials. A failure is deliberately generic; do not paste a connection URL or
+unredacted logs into chat. A successful preview is not permission to apply the
+chain: compare all pending versions against the local tree, inspect the remote
+history, and review Auth ownership and the recovery plan first. A separate,
+reviewed apply procedure and approval will be necessary.
+
+The workflow installs the pinned CLI before providing the secret, but the CLI
+itself must receive the connection string. Treat the checked-out commit and its
+dependencies as trusted code; environment approvals and branch restrictions are
+important. Never expose the environment secret to untrusted pull-request code.
+The test-project URL check is a guard, not proof of the server's identity or an
+assurance that the selected database is empty; inspect the project independently.
+
 **Do not use the former raw `psql` file loop.** It did not register migration
 history, could stop partway, and could leave a schema that a later CLI push would
 try to apply again. Do not paste individual failed files into the SQL editor and
