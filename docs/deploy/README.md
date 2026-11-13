@@ -141,9 +141,15 @@ there is data to preserve and confirm the project reference before any write.
 
 A tracked migration workflow is needed: inspect the remote migration history,
 compare it to the local files, and dry-run the pending changes before applying
-anything. The Supabase CLI is a candidate, but its setup and this repository's
-migration sequence have not yet been validated together on the hosted project.
-Do not assume that a dry run verifies trigger permissions or runtime behavior.
+anything. In a disposable PostgreSQL 17.11 instance with the test-only Supabase
+harness, Supabase CLI 3.1.0 dry-ran and applied the full chain, recorded matching
+versions and names, and reported no pending migrations on a second dry run. A
+separate two-file failure probe committed the first file and its history entry,
+while rolling back the second file and leaving it unrecorded. This is not a
+hosted Supabase test: the harness does not reproduce the real Auth service,
+ownership, privileges, extensions or network failure behavior. CLI setup and
+this chain still need hosted validation. Do not assume that a dry run verifies
+trigger permissions or runtime behavior.
 After a successful application, verify that the history contains every expected
 version, through `20261281135000_calculated_prayer_times.sql`, as well as running
 the checks in section 2. A history entry alone does not prove the schema works.
