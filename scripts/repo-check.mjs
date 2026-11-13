@@ -668,6 +668,13 @@ function appRoutes() {
     fail('deploy', `docs/deploy/README.md says ${stated[1]} migrations; there are ${count}`);
   }
 
+  // The runbook's completion marker must move with the migration chain.
+  const lastMigration = readdirSync(join(root, 'supabase', 'migrations'))
+    .filter((f) => f.endsWith('.sql')).sort().at(-1);
+  if (!lastMigration || !runbook.includes(`\`${lastMigration}\``)) {
+    fail('deploy', `runbook must name the latest migration: ${lastMigration}`);
+  }
+
   process.stdout.write(
     `deploy: ${declared.size} variables in .env.example, all named in the runbook; ${count} migrations\n`,
   );

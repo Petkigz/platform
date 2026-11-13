@@ -133,26 +133,34 @@ error.
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
-**Path A — no extra tooling, and the path the test suite uses.** From the
-repository root:
+**Do not apply these to a hosted project yet.** The complete migration chain and
+its history have not been verified on hosted Supabase. The existing empty
+AyahSpring project is intended for testing, but an interrupted or partially
+applied chain needs explicit reconciliation before any retry. Take a backup if
+there is data to preserve and confirm the project reference before any write.
 
-```bash
-export DATABASE_URL='postgresql://postgres.<ref>:<password>@aws-0-eu-central-1.pooler.supabase.com:5432/postgres'
+A tracked migration workflow is needed: inspect the remote migration history,
+compare it to the local files, and dry-run the pending changes before applying
+anything. The Supabase CLI is a candidate, but its setup and this repository's
+migration sequence have not yet been validated together on the hosted project.
+Do not assume that a dry run verifies trigger permissions or runtime behavior.
+After a successful application, verify that the history contains every expected
+version, through `20261281135000_calculated_prayer_times.sql`, as well as running
+the checks in section 2. A history entry alone does not prove the schema works.
 
-for f in supabase/migrations/*.sql; do
-  printf '%s\n' "$f"
-  psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -q -f "$f" || break
-done
-```
+**Do not use the former raw `psql` file loop.** It did not register migration
+history, could stop partway, and could leave a schema that a later CLI push would
+try to apply again. Do not paste individual failed files into the SQL editor and
+continue: that also risks making schema and migration history disagree. If a
+migration fails or the result is uncertain, stop and inspect both the schema and
+history before choosing a recovery procedure; do not blindly retry or mark a
+version applied.
 
-- `--single-transaction` makes each file all-or-nothing, which is how the suite
-  applies them: a file that fails halfway leaves nothing behind instead of half a
-  table.
-- `-q` hides the hundreds of `NOTICE` lines that `drop … if exists` produces on a
-  first run. What you are watching for is the loop *stopping*, and the file name
-  above the error.
-- Takes a few minutes. The last file printed should be
-  `20261281133000_companion_counter_and_gates.sql`.
+Some migrations attach triggers to `auth.users`, a Supabase-owned table. Trigger
+creation was simulated locally, but the hosted Auth API, trigger ownership and
+permissions have not been verified for the complete chain. An ownership error is
+a blocker to investigate, not a reason to assume the SQL editor has sufficient
+privileges or to bypass history.
 
 **Existing installations:** the subscription safety migration preserves the current
 `commerce.subscriptions` value. If it is already on, review existing customer
@@ -160,26 +168,6 @@ commitments and switch it off through the admin controls; the new CODE gate only
 prevents runtime re-enabling. Checkout is gated, but the chosen renewal and grace
 rules and a reliable renewal worker are not yet complete. Switching off checkout
 does not by itself cancel subscriptions or resolve existing commitments.
-
-**Path B — the Supabase CLI**, if you would rather have migration history tracked:
-
-```bash
-npx supabase@latest link --project-ref <ref>
-npx supabase@latest db push
-```
-
-**Do not mix the two paths.** The CLI records what it applied in
-`supabase_migrations.schema_migrations`; a database filled by psql looks empty to
-it, and `db push` would then re-apply all 295 files from the top and fail on the
-first `create table`. Pick one on day one and stay with it.
-
-**The one known snag.** Two migrations attach a trigger to `auth.users`
-(`20261105000100_profile_on_signup.sql`, `20261263000100_google_sign_in.sql`),
-which is a table Supabase owns. If either is refused with
-`must be owner of relation users` or `permission denied for relation users`, open
-**SQL editor** in the dashboard, paste that file's contents, and run it there —
-the SQL editor connects with privileges the migration path does not always have.
-Then carry on with the loop from the next file.
 
 ---
 
@@ -208,7 +196,7 @@ On a brand-new project it reads:
 The exact table and policy counts move as migrations land; `staff = 0`,
 `features on = 0` and `published versions = 0` are the three that describe a
 deployment nobody can run yet. If `signup trigger` says `MISSING`, go back to
-1.3's snag — a signed-up account would have no profile.
+section 1.3 and investigate before proceeding — a signed-up account would have no profile.
 
 `supabase/tests/deploy_runbook.test.mjs` executes this file, so it cannot quietly
 stop matching the schema it describes.
