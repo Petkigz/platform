@@ -361,7 +361,12 @@ minute in these samples, including sunrise and Maghrib. It is not the official
 timetable; the tool links to MUIS when this method is chosen. One Nairobi MWL
 example was compared with [a published timetable](https://www.prayertime.online/kenya/nairobi/)
 and differed by at most one minute. The sources may use different coordinates,
-rounding or shared calculation code; the tests are samples, not proof of local
+rounding or shared calculation code. Two more 15 October comparisons used
+[an Egyptian-method Cairo timetable](https://sajda.com/en/prayer-times/egypt/cairo/360630)
+and [a Karachi-method, Hanafi timetable](https://hamariweb.com/islam/pt_city.aspx?id=1);
+representative coordinates produced results within one minute. These are
+third-party sources, not verified official timetables or evidence of independent
+algorithms. The tests are samples, not proof of local
 endorsement or worldwide accuracy. Do not silently adjust estimates to fit.
 Tests also exercise six time zones, DST and high-latitude cases. An open display is cleared
 when a date or zone change is detected (focus, visibility change or periodic

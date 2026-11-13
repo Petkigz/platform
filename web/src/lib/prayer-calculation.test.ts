@@ -176,3 +176,33 @@ test('Moonsighting Committee does not require an unused night rule',()=>{
   assert.match(tool,/no separate night rule is needed/);
   assert.match(tool,/No polar approximation has been applied/);
 });
+
+
+test('Egyptian and Karachi calculations compare with published labelled timetables',()=>{
+  // A small cross-check, not proof of independent calculation or of local authority approval.
+  // Cairo: https://sajda.com/en/prayer-times/egypt/cairo/360630
+  // Karachi: https://hamariweb.com/islam/pt_city.aspx?id=1
+  const prior=process.env.TZ;
+  try {
+    const cases=[
+      {zone:'Africa/Cairo',lat:30.0444,lon:31.2357,method:'Egyptian',asr:'standard',reference:['05:30','06:57','12:41','15:57','18:24','19:42']},
+      {zone:'Asia/Karachi',lat:24.8607,lon:67.0011,method:'Karachi',asr:'hanafi',reference:['05:14','06:30','12:18','16:28','18:05','19:21']},
+    ] as const;
+    const minutes=(s:string)=>Number(s.slice(0,2))*60+Number(s.slice(3));
+    for(const {zone,lat,lon,method,asr,reference} of cases) {
+      process.env.TZ=zone;
+      const times=calculatePrayerTimesForDeviceDay(lat,lon,new Date(2026,9,15,12),zone,method,asr,'middle');
+      assert.ok(times);
+      const fmt=new Intl.DateTimeFormat('en-GB',{timeZone:zone,hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+      times.forEach(([,time],index)=>assert.ok(Math.abs(minutes(fmt.format(time))-minutes(reference[index]!))<=2,`${zone} ${index}`));
+    }
+  } finally {if(prior===undefined) delete process.env.TZ; else process.env.TZ=prior;}
+});
+
+test('calculation choices link to plain-language explanations',()=>{
+  const tool=readFileSync(new URL('../app/companion/prayer-times/tool.tsx',import.meta.url),'utf8');
+  assert.match(tool,/aria-describedby="asr-explanation"/);
+  assert.match(tool,/aria-describedby="night-explanation"/);
+  assert.match(tool,/noon shadow/);
+  assert.match(tool,/Ask your community which rule/);
+});
