@@ -81,7 +81,7 @@ export function PrayerTimesTool() {
     </>}
     <p>No polar fallback is applied. If a complete set of times cannot be calculated, consult your local mosque or authority.</p>
     <p>Your device time zone is <strong>{deviceZone || 'unavailable'}</strong>. It must match the coordinates, including daylight saving.</p>
-    <label><input type="checkbox" checked={confirmZone} onChange={e=>{setConfirmZone(e.target.checked);changed();}} /> My device time zone matches this location.</label>
+    <label className="row" style={{alignItems:'center',paddingBlock:'0.5rem'}}><input type="checkbox" checked={confirmZone} onChange={e=>{setConfirmZone(e.target.checked);changed();}} style={{width:'1.25rem',height:'1.25rem',flex:'0 0 1.25rem',margin:0}} /><span>My device time zone matches this location.</span></label>
     <p><button type="button" className="btn" onClick={calculate} disabled={locating}>Calculate today</button></p>
     {message && <p className="notice" role="status">{message}</p>}
     {result && <div aria-live="polite"><h3>Times for {result.date}</h3><p>{result.zone} · {result.method} · Asr: {result.asr} · Night rule: {result.method==='Moonsighting Committee'?'Moonsighting Committee seasonal rule':result.night}</p><ul>{result.lines.map(([name,time])=><li key={name}><strong>{name}:</strong> {time}</li>)}</ul><p>Times do not recalculate automatically. Check the date and recalculate after a location or time-zone change. An old display is cleared when a date or zone change is detected.</p></div>}

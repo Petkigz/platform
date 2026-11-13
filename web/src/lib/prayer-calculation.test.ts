@@ -221,3 +221,11 @@ test('regional examples are explicit, limited, and never a default',()=>{
   assert.match(tool,/A time zone does not identify your location/);
   assert.match(tool,/onClick=\{\(\)=>\{setMethod\(example.method\);changed\(\);\}\}/);
 });
+
+
+test('time zone confirmation checkbox has an accessible label and does not inherit full-width input styling',()=>{
+  const tool=readFileSync(new URL('../app/companion/prayer-times/tool.tsx',import.meta.url),'utf8');
+  assert.match(tool,/<label className="row"[^>]*><input type="checkbox"/);
+  assert.match(tool,/width:'1\.25rem',height:'1\.25rem',flex:'0 0 1\.25rem'/);
+  assert.match(tool,/<span>My device time zone matches this location\.<\/span><\/label>/);
+});

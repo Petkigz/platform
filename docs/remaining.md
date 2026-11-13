@@ -394,6 +394,17 @@ off/on/off and RPC-error fail-closed behaviour and no-store headers using synthe
 responses. Neither test proves real Supabase Auth, RLS, a real location provider,
 hosted operation, network privacy under every browser extension, or a screen-reader
 experience. The switch does not remotely revoke an already open page.
+A local 360-pixel Chromium component preview with simulated London location
+exercised the suggestion, location and calculation without horizontal overflow.
+The check exposed a full-width checkbox; the confirmation now uses an inline
+checkbox and clickable label. This is not a screen-reader or hosted-device test.
+
+The existing Supabase test project was healthy with no app tables, Auth users or
+migration history at the last read-only check. Vercel's default scope returned no
+projects, and the team-list request was denied; team access/scope requires owner
+review. No provider settings, project data or migrations were changed. A
+standalone, labelled interactive preview is a temporary component demo, not an
+authenticated hosted deployment, and does not establish deployment readiness.
 The screen is English-only. Local religious review, more regional guidance,
 independent calculation and date/time-zone/high-latitude verification, privacy,
 accessibility, translation and hosted-browser review remain before enabling. It
