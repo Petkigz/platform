@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { calculatePrayerTimes, prayerTimesMatchDeviceDay, methods, type Asr, type Method, type NightRule } from '@/lib/prayer-calculation';
+import { calculatePrayerTimesForDeviceDay, methods, type Asr, type Method, type NightRule } from '@/lib/prayer-calculation';
 
 type Result = { lines: readonly (readonly [string,string])[]; date:string; zone:string; method:string; asr:string; night:string };
 export function PrayerTimesTool() {
@@ -44,9 +44,8 @@ export function PrayerTimesTool() {
     const zone=Intl.DateTimeFormat().resolvedOptions().timeZone;
     if(!zone) {setMessage('Your device time zone could not be identified.');return;}
     if(zone!==deviceZone) {setDeviceZone(zone);setConfirmZone(false);setMessage('Your device time zone changed. Check it and confirm again.');return;}
-    const times=calculatePrayerTimes(lat,lon,now,method as Method,asr as Asr,night as NightRule);
+    const times=calculatePrayerTimesForDeviceDay(lat,lon,now,zone,method as Method,asr as Asr,night as NightRule);
     if(!times) {setMessage('A valid sequence of times could not be calculated. Check the coordinates or consult a local timetable, especially at high latitudes.');return;}
-    if(!prayerTimesMatchDeviceDay(times,now,zone)) {setMessage('The calculated date does not match your device date. Check the time zone and location or consult a local timetable.');return;}
     const fmt=new Intl.DateTimeFormat('en', { timeZone:zone, year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short' });
     setResult({lines:times.map(([name,time])=>[name,fmt.format(time)] as const),date:new Intl.DateTimeFormat('en',{timeZone:zone,dateStyle:'full'}).format(now),zone,method:methods[method as Method],asr:asr==='hanafi'?'Hanafi (later)':'Standard (earlier)',night:night==='middle'?'Middle of the night':night==='seventh'?'One seventh of the night':'Twilight angle'});
   }

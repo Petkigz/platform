@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { calculatePrayerTimes, prayerTimesMatchDeviceDay } from './prayer-calculation.ts';
+import { calculatePrayerTimes, calculatePrayerTimesForDeviceDay, prayerTimesMatchDeviceDay } from './prayer-calculation.ts';
 
 test('calculation rejects invalid inputs and unresolved polar days',()=>{
   const date=new Date(2026,5,21);
@@ -51,6 +51,11 @@ test('date guard catches a dateline offset and does not assert geographic zone a
     const result=calculatePrayerTimes(1.87,-157.4,date,'MuslimWorldLeague','standard','middle');
     assert.ok(result);
     assert.equal(prayerTimesMatchDeviceDay(result,date,'Pacific/Kiritimati'),false);
+    const corrected=calculatePrayerTimesForDeviceDay(1.87,-157.4,date,'Pacific/Kiritimati','MuslimWorldLeague','standard','middle');
+    assert.ok(corrected);
+    assert.equal(prayerTimesMatchDeviceDay(corrected,date,'Pacific/Kiritimati'),true);
+    assert.equal(corrected[1][1].toISOString(), '2026-10-14T16:13:00.000Z');
+    assert.equal(calculatePrayerTimesForDeviceDay(1.87,-157.4,date,'America/New_York','MuslimWorldLeague','standard','middle'),null);
     assert.equal(prayerTimesMatchDeviceDay(result,date,'Not/AZone'),false);
     process.env.TZ='America/New_York';
     for(const day of [7,8,9]) {
@@ -58,6 +63,51 @@ test('date guard catches a dateline offset and does not assert geographic zone a
       const result=calculatePrayerTimes(40.7,-74,date,'NorthAmerica','standard','middle');
       assert.ok(result);
       assert.equal(prayerTimesMatchDeviceDay(result,date,'America/New_York'),true);
+      const adjusted=calculatePrayerTimesForDeviceDay(40.7,-74,date,'America/New_York','NorthAmerica','standard','middle');
+      assert.ok(adjusted);
+      assert.deepEqual(adjusted.map(([,t])=>t.toISOString()),result.map(([,t])=>t.toISOString()));
     }
   } finally { if(previous===undefined) delete process.env.TZ; else process.env.TZ=previous; }
+});
+
+test('labelled London Moonsighting Committee example agrees with a published timetable',()=>{
+  // Comparison only: source coordinates, algorithms and independence are not established.
+  // https://hnco.org.uk/prayer-timetable/prayer-times-london (15 Oct 2026)
+  const previous=process.env.TZ;
+  try {
+    process.env.TZ='Europe/London';
+    const result=calculatePrayerTimesForDeviceDay(51.5074,-0.1278,new Date(2026,9,15,12),'Europe/London','MoonsightingCommittee','standard','middle');
+    assert.ok(result);
+    const fmt=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+    assert.deepEqual(result.map(([,date])=>fmt.format(date)),['05:49','07:24','12:51','15:31','18:10','19:30']);
+  } finally { if(previous===undefined) delete process.env.TZ; else process.env.TZ=previous; }
+});
+
+test('selected civil day holds across zones, new year and both DST changes',()=>{
+  const previous=process.env.TZ;
+  try {
+    for(const [zone,lat,lon] of [['Asia/Tokyo',35.7,139.7],['Pacific/Auckland',-36.85,174.76],['Pacific/Honolulu',21.3,-157.8],['Pacific/Kiritimati',1.87,-157.4],['America/New_York',40.7,-74],['Europe/London',51.5,-0.12]] as const) {
+      process.env.TZ=zone;
+      for(const [month,day] of [[0,1],[2,8],[2,29],[5,21],[9,25],[10,1],[11,31]] as const) {
+        const date=new Date(2026,month,day,12);
+        const times=calculatePrayerTimesForDeviceDay(lat,lon,date,zone,'MuslimWorldLeague','standard','middle');
+        assert.ok(times, `${zone} ${date.toDateString()}`);
+        assert.ok(prayerTimesMatchDeviceDay(times,date,zone));
+      }
+    }
+  } finally { if(previous===undefined) delete process.env.TZ; else process.env.TZ=previous; }
+});
+
+test('summer high-latitude choices affect estimates and polar days fail closed',()=>{
+  const prior=process.env.TZ;
+  try {
+    process.env.TZ='Europe/London';
+    const date=new Date(2026,5,21,12);
+    const middle=calculatePrayerTimesForDeviceDay(51.5074,-0.1278,date,'Europe/London','MuslimWorldLeague','standard','middle');
+    const seventh=calculatePrayerTimesForDeviceDay(51.5074,-0.1278,date,'Europe/London','MuslimWorldLeague','standard','seventh');
+    assert.ok(middle); assert.ok(seventh);
+    assert.notEqual(middle[0][1].getTime(),seventh[0][1].getTime());
+    process.env.TZ='Europe/Oslo';
+    assert.equal(calculatePrayerTimesForDeviceDay(69.65,18.95,date,'Europe/Oslo','MuslimWorldLeague','standard','middle'),null);
+  } finally {if(prior===undefined) delete process.env.TZ; else process.env.TZ=prior;}
 });

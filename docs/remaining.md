@@ -325,8 +325,7 @@ verification remain before enabling. `platform.calendar` remains CODE-gated.
 **Started locally:** an independently switched, session-only counting tool is
 available at `/companion/counter`. It offers count, undo and confirmed reset;
 no count is saved to browser storage or sent to the platform. Reloading clears
-it; browser back-navigation may temporarily restore the page. It prescribes no devotional text or number. The broader
-the full prayer tools, ayah of the day, Quran sync and the full calendar are not implemented and
+it; browser back-navigation may temporarily restore the page. It prescribes no devotional text or number. The full prayer tools, ayah of the day, Quran sync and the full calendar are not implemented and
 are now CODE-gated; any previously enabled values are preserved and require an
 operator to review and turn them off. The counter is English-only and needs
 translation and accessibility review; the counter and gates are not deployed.
@@ -343,11 +342,16 @@ not an authoritative region mapping and other regions have no suggested default.
 The method has its own seasonal/high-latitude behaviour; polar fallback is disabled.
 The tool rejects invalid or out-of-order results: a local Tromsø polar-night
 probe produced an Asr later than Maghrib from the underlying library. The
-sunrise/Dhuhr device-date guard also refuses mismatched dates; for example a
-Kiritimati probe is refused rather than showing the next day's times. This guard
-does not verify that coordinates match the time zone. A test reproduces the
+calculation now checks neighbouring astronomical dates and selects a unique
+candidate whose sunrise and Dhuhr fall on the device's civil day. This fixes the
+previously refused Kiritimati test without shifting timestamps by 24 hours;
+unmatched or ambiguous dates still fail closed. This check does not verify that
+coordinates match the time zone. A test reproduces the
 [upstream v4.4.6 Raleigh example](https://github.com/batoulapps/adhan-js/blob/v4.4.6/test/adhan.test.ts) and checks a New York DST boundary; these are not
-independent scholarly or astronomical verification. An open display is cleared
+independent scholarly or astronomical verification. A London Moonsighting
+Committee example agrees with [one published timetable](https://hnco.org.uk/prayer-timetable/prayer-times-london)
+but the source calculation and exact coordinates may not be independent.
+Tests also exercise six time zones, DST and high-latitude cases. An open display is cleared
 when a date or zone change is detected (focus, visibility change or periodic
 check); it does not recalculate itself.
 The screen is English-only. Local religious review, more regional guidance,

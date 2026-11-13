@@ -35,3 +35,21 @@ export function prayerTimesMatchDeviceDay(times: NonNullable<ReturnType<typeof c
     return day.format(times[1][1])===day.format(date) && day.format(times[2][1])===day.format(date);
   } catch { return false; }
 }
+
+/** Find the unshifted astronomical calculation whose noon and sunrise fall on
+ * the requested device day. Some civil zones cross the international date
+ * line relative to solar longitude. Never shift timestamps by 24 hours: that
+ * would use the wrong day's solar position. Ambiguous days fail closed. */
+export function calculatePrayerTimesForDeviceDay(latitude:number, longitude:number, date:Date, zone:string, method:Method, asr:Asr, night:NightRule) {
+  if (!Number.isFinite(date.getTime())) return null;
+  // Adhan reads the host's local date. Require the caller's zone to be that
+  // same zone so candidate civil dates cannot silently diverge from its input.
+  if (Intl.DateTimeFormat().resolvedOptions().timeZone !== zone) return null;
+  const matches: NonNullable<ReturnType<typeof calculatePrayerTimes>>[]=[];
+  for (const offset of [-1,0,1]) {
+    const candidate=new Date(date.getFullYear(),date.getMonth(),date.getDate()+offset,12);
+    const times=calculatePrayerTimes(latitude,longitude,candidate,method,asr,night);
+    if (times && prayerTimesMatchDeviceDay(times,date,zone)) matches.push(times);
+  }
+  return matches.length===1 ? matches[0]! : null;
+}
