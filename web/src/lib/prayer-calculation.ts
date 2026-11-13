@@ -6,7 +6,7 @@ export const methods = {
   Karachi: 'University of Islamic Sciences, Karachi',
   MoonsightingCommittee: 'Moonsighting Committee',
   NorthAmerica: 'ISNA / North America',
-  Singapore: 'Singapore',
+  Singapore: 'Singapore (calculated estimate)',
 } as const;
 export type Method = keyof typeof methods;
 export type Asr = 'standard' | 'hanafi';

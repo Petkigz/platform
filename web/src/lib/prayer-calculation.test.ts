@@ -111,3 +111,51 @@ test('summer high-latitude choices affect estimates and polar days fail closed',
     assert.equal(calculatePrayerTimesForDeviceDay(69.65,18.95,date,'Europe/Oslo','MuslimWorldLeague','standard','middle'),null);
   } finally {if(prior===undefined) delete process.env.TZ; else process.env.TZ=prior;}
 });
+
+
+test('Singapore estimate is close to, but explicitly not identical to, MUIS published times',()=>{
+  // MUIS 2026 official timetable, Jan 1, Apr 15 and Oct 15. This uses a
+  // representative point, not necessarily the official calculation location.
+  // https://www.muis.gov.sg/resources/islamic-calendar/
+  const previous=process.env.TZ;
+  try {
+    process.env.TZ='Asia/Singapore';
+    const fmt=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Singapore',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+    const cases=[
+      [0,1,['05:44','07:08','13:10','16:34','19:11','20:25']],
+      [3,15,['05:43','07:01','13:06','16:20','19:09','20:19']],
+      [9,15,['05:31','06:48','12:52','16:06','18:53','20:03']],
+    ] as const;
+    const minutes=(s:string)=>Number(s.slice(0,2))*60+Number(s.slice(3));
+    let differences=0;
+    for (const [month,day,official] of cases) {
+      const times=calculatePrayerTimesForDeviceDay(1.3521,103.8198,new Date(2026,month,day,12),'Asia/Singapore','Singapore','standard','middle');
+      assert.ok(times);
+      times.forEach(([,time],i)=>{
+        const difference=Math.abs(minutes(fmt.format(time))-minutes(official[i]!));
+        assert.ok(difference<=2, `Singapore ${month+1}/${day}, ${i}: ${difference} minutes`);
+        differences+=difference;
+      });
+    }
+    assert.ok(differences>0, 'do not misrepresent this calculation as the official timetable');
+  } finally {if(previous===undefined) delete process.env.TZ; else process.env.TZ=previous;}
+  const tool=readFileSync(new URL('../app/companion/prayer-times/tool.tsx',import.meta.url),'utf8');
+  assert.match(tool,/not the official Singapore timetable/);
+  assert.match(tool,/muis\.gov\.sg\/resources\/islamic-calendar/);
+});
+
+test('Nairobi estimate is close to one published MWL timetable',()=>{
+  // Source settings name MWL and Shafii. Independence and exact coordinates
+  // are unknown: this is a comparison, not proof of accuracy or endorsement.
+  // https://www.prayertime.online/kenya/nairobi/
+  const previous=process.env.TZ;
+  try {
+    process.env.TZ='Africa/Nairobi';
+    const times=calculatePrayerTimesForDeviceDay(-1.2921,36.8219,new Date(2026,9,15,12),'Africa/Nairobi','MuslimWorldLeague','standard','middle');
+    assert.ok(times);
+    const fmt=new Intl.DateTimeFormat('en-GB',{timeZone:'Africa/Nairobi',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+    const published=['05:05','06:14','12:19','15:31','18:23','19:28'];
+    const minutes=(s:string)=>Number(s.slice(0,2))*60+Number(s.slice(3));
+    times.forEach(([,time],i)=>assert.ok(Math.abs(minutes(fmt.format(time))-minutes(published[i]!))<=2));
+  } finally {if(previous===undefined) delete process.env.TZ; else process.env.TZ=previous;}
+});

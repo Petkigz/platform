@@ -351,6 +351,15 @@ coordinates match the time zone. A test reproduces the
 independent scholarly or astronomical verification. A London Moonsighting
 Committee example agrees with [one published timetable](https://hnco.org.uk/prayer-timetable/prayer-times-london)
 but the source calculation and exact coordinates may not be independent.
+Three Singapore dates (1 January, 15 April and 15 October 2026) were compared
+with the [MUIS official 2026 timetable](https://www.muis.gov.sg/resources/islamic-calendar/):
+at coordinates 1.3521, 103.8198 the Singapore estimate differs by at most one
+minute in these samples, including sunrise and Maghrib. It is not the official
+timetable; the tool links to MUIS when this method is chosen. One Nairobi MWL
+example was compared with [a published timetable](https://www.prayertime.online/kenya/nairobi/)
+and differed by at most one minute. The sources may use different coordinates,
+rounding or shared calculation code; the tests are samples, not proof of local
+endorsement or worldwide accuracy. Do not silently adjust estimates to fit.
 Tests also exercise six time zones, DST and high-latitude cases. An open display is cleared
 when a date or zone change is detected (focus, visibility change or periodic
 check); it does not recalculate itself.
