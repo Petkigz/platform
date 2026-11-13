@@ -18,7 +18,8 @@
     "lint": "npm run lint --workspace @ayahspring/web",
     "test:child-locks:postgres": "node supabase/tests/child_login_lock_protocol.postgres.mjs",
     "test:clamav:integration": "node --experimental-strip-types scripts/clamav-integration.mjs",
-    "test:discussion-locks:postgres": "node supabase/tests/discussion_lock_protocol.postgres.mjs"
+    "test:discussion-locks:postgres": "node supabase/tests/discussion_lock_protocol.postgres.mjs",
+    "test:prayer-route": "node scripts/prayer-route-smoke.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.3.11",

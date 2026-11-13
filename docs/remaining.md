@@ -384,6 +384,16 @@ hosted browser, actual device location provider, or a screen-reader test. A
 second local component probe exercised explicit suggestion acceptance and
 clearing results after a method change. It is
 not a production-readiness verification.
+The real Next route was also exercised in a local Chromium browser against a
+synthetic Auth/flag server: anonymous redirect, off/on/off, a simulated flag RPC
+outage, a mocked location and calculation. The browser requests observed in that
+probe did not contain its test coordinates. An already-open tool remained usable
+after the flag was switched off until reload, which then hid it. The repeatable
+`npm run test:prayer-route` checks the HTTP route's authentication redirect,
+off/on/off and RPC-error fail-closed behaviour and no-store headers using synthetic
+responses. Neither test proves real Supabase Auth, RLS, a real location provider,
+hosted operation, network privacy under every browser extension, or a screen-reader
+experience. The switch does not remotely revoke an already open page.
 The screen is English-only. Local religious review, more regional guidance,
 independent calculation and date/time-zone/high-latitude verification, privacy,
 accessibility, translation and hosted-browser review remain before enabling. It
