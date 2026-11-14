@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { isTestDatabaseUrl, verifiedTlsUrl, trustedCaReady, extractMigrationNames, failureCategories } from './hosted-migration-dry-run.mjs';
+import { isTestDatabaseUrl, verifiedTlsUrl, trustedCaReady, extractMigrationNames, pendingMatchesLocal, failureCategories } from './hosted-migration-dry-run.mjs';
 
 test('only the explicitly named test project and session port are accepted', () => {
   const direct = 'postgresql://postgres:dummy@db.glhxtsgrhhvtbsnlxgxu.supabase.co:5432/postgres?sslmode=verify-full';
@@ -27,6 +27,13 @@ test('only safe migration names are displayed, never arbitrary CLI output', () =
   assert.deepEqual(extractMigrationNames('Would push these migrations:\n • 20261015000100_helpers.sql\nsecret@host\n • 20261281135000_calculated_prayer_times.sql\n • not_a_file\n'), ['20261015000100_helpers.sql', '20261281135000_calculated_prayer_times.sql']);
 });
 
+test('pending names must match the full local chain exactly and in order', () => {
+  assert.equal(pendingMatchesLocal(['a.sql', 'b.sql'], ['a.sql', 'b.sql']), true);
+  assert.equal(pendingMatchesLocal(['b.sql', 'a.sql'], ['a.sql', 'b.sql']), false);
+  assert.equal(pendingMatchesLocal(['a.sql', 'a.sql'], ['a.sql', 'b.sql']), false);
+  assert.equal(pendingMatchesLocal(['a.sql'], ['a.sql', 'b.sql']), false);
+});
+
 test('failure categories are fixed labels and never include raw provider output', () => {
   assert.deepEqual(failureCategories('FATAL: password authentication failed for secret-user'), ['Database authentication or pooler tenant']);
   assert.deepEqual(failureCategories('x509: certificate signed by unknown authority secret-value'), ['TLS certificate or handshake']);
@@ -43,7 +50,7 @@ test('runner passes only a dry-run to the CLI and suppresses provider errors and
   const fake = join(dir, 'supabase');
   const url = 'postgresql://postgres:secret-value@db.glhxtsgrhhvtbsnlxgxu.supabase.co:5432/postgres?sslmode=verify-full';
   try {
-    writeFileSync(fake, `#!/bin/sh\ncase "$*" in *"?sslmode=verify-full&sslrootcert="*"supabase-prod-ca-2021.crt --skip-vault --dry-run"*) ;; *) exit 2;; esac\nprintf ' • 20261015000100_helpers.sql\\n'\n`, { mode: 0o755 });
+    writeFileSync(fake, `#!/bin/sh\ncase "$*" in *"?sslmode=verify-full&sslrootcert="*"supabase-prod-ca-2021.crt --skip-vault --dry-run"*) ;; *) exit 2;; esac\nfor f in supabase/migrations/*.sql; do printf ' • %s\\n' "\${f##*/}"; done\n`, { mode: 0o755 });
     const env = { ...process.env, SUPABASE_CLI_BIN: fake, AYAHSPRING_TEST_DATABASE_URL: `${url}&sslmode=disable`, AYAHSPRING_TEST_DATABASE_PASSWORD: 'secret-value', AYAHSPRING_TEST_DRY_RUN_READY: 'yes' };
     const ok = spawnSync(process.execPath, ['scripts/hosted-migration-dry-run.mjs'], { encoding: 'utf8', env });
     assert.equal(ok.status, 0); assert.match(ok.stdout, /20261015000100_helpers\.sql/);

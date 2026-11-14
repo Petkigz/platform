@@ -161,7 +161,13 @@ apply job. It is restricted to this session branch and a specific trigger commit
 normal pushes do not run it. It uses the test project ref
 `glhxtsgrhhvtbsnlxgxu`, CLI 3.1.0, `--dry-run` and `--skip-vault`. On a local
 blank PostgreSQL probe, this CLI dry-run did not create the migration-history
-table. Hosted behaviour and permissions are still unverified.
+table. The owner-approved GitHub run `43589350162` connected to the hosted test
+project and reported 342 pending files; the owner shared the count and list,
+whose first and last names match the local chain. A separate read-only connector
+check found zero public tables, zero Auth users and empty migration history. The
+full displayed list has not been independently compared file by file. This dry
+run neither executes migrations nor verifies hosted trigger permissions, Auth,
+RLS or runtime behaviour. No migration has been applied.
 
 Before triggering it, the owner must configure a GitHub environment named
 `ayahspring-test-dry-run` in repository **Settings → Environments**:

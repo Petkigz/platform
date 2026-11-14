@@ -2,7 +2,7 @@
 // Never print the connection string or raw CLI output, even on failure.
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { createHash, X509Certificate } from 'node:crypto';
 
 const projectRef = 'glhxtsgrhhvtbsnlxgxu';
@@ -55,6 +55,9 @@ export function extractMigrationNames(output) {
     .map(line => line.match(/^•\s+(\d{14}_[a-z0-9_]+\.sql)$/)?.[1])
     .filter(Boolean);
 }
+export function pendingMatchesLocal(names, local) {
+  return names.length === local.length && names.every((name, index) => name === local[index]);
+}
 // Return fixed labels only, never fragments of the untrusted CLI response.
 export function failureCategories(output) {
   const checks = [
@@ -104,6 +107,14 @@ async function main() {
   if (names.length) {
     console.log(`Pending migration files reported by the CLI: ${names.length}`);
     for (const name of names) console.log(name);
+    const local = readdirSync(fileURLToPath(new URL('../supabase/migrations/', import.meta.url)))
+      .filter(name => name.endsWith('.sql')).sort();
+    if (!pendingMatchesLocal(names, local)) {
+      console.error('Pending list does not exactly match the complete local chain in order. Stop and review remote history before proceeding.');
+      process.exitCode = 1;
+    } else {
+      console.log('Pending filenames exactly match the full local chain in order.');
+    }
   } else if (output.includes('Remote database is up to date.')) {
     console.log('CLI reports no pending migrations. Compare remote history and schema separately.');
   } else {
