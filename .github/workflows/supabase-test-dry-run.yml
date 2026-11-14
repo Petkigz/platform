@@ -14,7 +14,7 @@ concurrency:
 jobs:
   preview:
     if: >-
-      github.repository == 'Petkigz/platform' && github.ref == 'refs/heads/arena/4f30fd1d-platform' && github.event.head_commit.message == 'test: preview ayahspring test migrations'
+      github.repository == 'Petkigz/platform' && github.ref == 'refs/heads/arena/4f30fd1d-platform' && startsWith(github.event.head_commit.message, 'test: preview ayahspring test migrations')
     runs-on: ubuntu-latest
     environment: ayahspring-test-dry-run
     timeout-minutes: 10

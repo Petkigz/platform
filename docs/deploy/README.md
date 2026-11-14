@@ -181,8 +181,9 @@ Before triggering it, the owner must configure a GitHub environment named
    in this variable. A missing variable or an unexpected URL refuses to start.
 
 Tell the builder when the environment is configured; do not send its secret. A
-subsequent commit whose entire message is `test: preview ayahspring test migrations`
-triggers the preview. Review the exact commit and approve the job in Actions;
+subsequent commit whose message starts with `test: preview ayahspring test migrations`
+triggers the preview (Git may append attribution trailers). Review the exact commit
+and approve the job in Actions;
 if it is not awaiting the expected approval, stop and check environment rules.
 The run prints only recognized migration filenames, not raw provider output or
 credentials. A failure is deliberately generic; do not paste a connection URL or
