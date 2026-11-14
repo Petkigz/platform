@@ -35,4 +35,5 @@ jobs:
         env:
           SUPABASE_CLI_BIN: ${{ runner.temp }}/ayahspring-cli/node_modules/.bin/supabase
           AYAHSPRING_TEST_DATABASE_URL: ${{ secrets.AYAHSPRING_TEST_DATABASE_URL }}
+          AYAHSPRING_TEST_DATABASE_PASSWORD: ${{ secrets.AYAHSPRING_TEST_DATABASE_PASSWORD }}
           AYAHSPRING_TEST_DRY_RUN_READY: ${{ vars.AYAHSPRING_TEST_DRY_RUN_READY }}

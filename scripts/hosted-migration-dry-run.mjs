@@ -31,7 +31,6 @@ export function databaseUrlChecks(value) {
       'Test-project host and username': direct || pooler,
       'Session port 5432': url.port === '5432',
       'Database is postgres': url.pathname === '/postgres',
-      'Password is present': !!url.password,
       'No URL fragment': !url.hash,
     };
   } catch { return { 'URL secret present': true, 'URL can be parsed': false }; }
@@ -41,9 +40,11 @@ export function isTestDatabaseUrl(value) {
 }
 // Discard supplied options, including duplicate or weaker sslmode values. Only
 // the verified-TLS option reaches the CLI; target identity is checked first.
-export function verifiedTlsUrl(value) {
-  if (!isTestDatabaseUrl(value)) return null;
+export function verifiedTlsUrl(value, password) {
+  if (!isTestDatabaseUrl(value) || !password) return null;
   const url = new URL(value);
+  // URL.password alone leaves literal percent signs unescaped.
+  url.password = encodeURIComponent(password);
   url.search = '';
   url.searchParams.set('sslmode', 'verify-full');
   url.searchParams.set('sslrootcert', caPath);
@@ -69,9 +70,11 @@ export function failureCategories(output) {
 async function main() {
   const ready = process.env.AYAHSPRING_TEST_DRY_RUN_READY === 'yes';
   const checks = databaseUrlChecks(process.env.AYAHSPRING_TEST_DATABASE_URL || '');
-  if (!ready || !Object.values(checks).every(Boolean)) {
+  const passwordPresent = !!process.env.AYAHSPRING_TEST_DATABASE_PASSWORD;
+  if (!ready || !passwordPresent || !Object.values(checks).every(Boolean)) {
     console.error('Dry-run not started. Only pass/fail checks are shown; no connection values are printed.');
     console.error(`Readiness variable equals yes: ${ready ? 'PASS' : 'FAIL'}`);
+    console.error(`Separate database password secret present: ${passwordPresent ? 'PASS' : 'FAIL'}`);
     for (const [label, ok] of Object.entries(checks)) console.error(`${label}: ${ok ? 'PASS' : 'FAIL'}`);
     process.exitCode = 1; return;
   }
@@ -79,7 +82,7 @@ async function main() {
     console.error('Dry-run not started: the pinned public Supabase CA is missing, changed or outside its validity period.');
     process.exitCode = 1; return;
   }
-  const target = verifiedTlsUrl(process.env.AYAHSPRING_TEST_DATABASE_URL || '');
+  const target = verifiedTlsUrl(process.env.AYAHSPRING_TEST_DATABASE_URL || '', process.env.AYAHSPRING_TEST_DATABASE_PASSWORD || '');
   console.log('URL options are replaced with verified TLS and the pinned Supabase CA for this preview.');
   const child = spawn(process.env.SUPABASE_CLI_BIN || 'supabase', ['db', 'push', `--remote=${target}`, '--skip-vault', '--dry-run'], {
     stdio: ['ignore', 'pipe', 'pipe'], env: process.env,

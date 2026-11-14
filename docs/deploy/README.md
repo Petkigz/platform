@@ -174,16 +174,19 @@ Before triggering it, the owner must configure a GitHub environment named
    never in chat, source files, a commit message or logs. Use the **session
    pooler** connection for the existing AyahSpring test project, port 5432 and
    database `postgres`. The project-specific pooler username must be
-   `postgres.glhxtsgrhhvtbsnlxgxu`. Use the provider's URL-encoded connection
-   string. The preview discards any supplied URL options and forces
-   `sslmode=verify-full` with the pinned public Supabase CA; it does not change
-   the stored secret. The CA is from the [Supabase CLI source](https://github.com/supabase/cli/blob/d6a376c82436c908efa142f4c17977f477c264b8/apps/cli-go/internal/gen/types/templates/prod-ca-2021.crt),
+   `postgres.glhxtsgrhhvtbsnlxgxu`. The password in this URL is ignored: the
+   provider's placeholder is acceptable. The preview discards URL options and
+   forces `sslmode=verify-full` with the pinned public Supabase CA. The CA is
+   from the [Supabase CLI source](https://github.com/supabase/cli/blob/d6a376c82436c908efa142f4c17977f477c264b8/apps/cli-go/internal/gen/types/templates/prod-ca-2021.crt),
    expires in April 2031, and must be reviewed when Supabase rotates it. A local
    CLI test verified that a trusted test CA succeeds and a mismatched hostname
    fails; the hosted pooler connection remains unverified until this preview runs.
-3. After reviewing the workflow and setting approval, add the environment
+3. Add the **raw database password**, not URL-encoded, as a separate environment
+   secret named `AYAHSPRING_TEST_DATABASE_PASSWORD`. The preview encodes it for
+   the connection; never put it in chat, a variable, a file, or a commit.
+4. After reviewing the workflow and setting approval, add the environment
    variable `AYAHSPRING_TEST_DRY_RUN_READY` with value `yes`. Do not place the URL
-   in this variable. A missing variable or an unexpected URL refuses to start.
+   or password in this variable. Missing secrets or an unexpected target refuse to start.
 
 Tell the builder when the environment is configured; do not send its secret. A
 subsequent commit whose message starts with `test: preview ayahspring test migrations`
