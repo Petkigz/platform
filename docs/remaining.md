@@ -406,11 +406,14 @@ that calculation cannot proceed without a new location. This is not a real
 browser or location-provider test. A separate source-level regression checks
 that the reset occurs before any browser outcome.
 
-The existing Supabase test project was healthy with no app tables, Auth users or
-migration history at the last read-only check. Vercel's default scope returned no
-projects, and the team-list request was denied; team access/scope requires owner
-review. No provider settings, project data or migrations were changed. A
-standalone, labelled interactive preview is a temporary component demo, not an
+The existing Supabase test project now has the initial 342 migrations applied
+via the owner-approved GitHub run `43611493767`. A subsequent read-only check
+found 185 public base tables and zero Auth users. The signup and child-identity
+triggers exist, and the prayer and Hijri switches remain off; this does not test
+real Auth requests, RLS, hosted app operation or religious accuracy. Vercel's
+default scope and reported default team returned no projects, while the team-list
+request was denied; other team access remains unverified. A standalone,
+labelled interactive preview is a temporary component demo, not an
 authenticated hosted deployment, and does not establish deployment readiness.
 The screen is English-only. Local religious review, more regional guidance,
 independent calculation and date/time-zone/high-latitude verification, privacy,

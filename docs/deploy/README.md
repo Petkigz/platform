@@ -133,11 +133,14 @@ error.
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
-**Do not apply these to a hosted project yet.** The complete migration chain and
-its history have not been verified on hosted Supabase. The existing empty
-AyahSpring project is intended for testing, but an interrupted or partially
-applied chain needs explicit reconciliation before any retry. Take a backup if
-there is data to preserve and confirm the project reference before any write.
+**Test project status:** owner-approved GitHub run `43611493767` applied the
+initial chain to `glhxtsgrhhvtbsnlxgxu` and completed its version/name history
+check. A separate read-only query found 342 history entries, 185 public base
+tables and zero Auth users. This is a test deployment of the database only—not
+proof of live Auth, application behaviour or production readiness. The initial
+apply job must not be rerun against it. For any other project or later migration,
+review history, backups, target and a separate migration plan first. An
+interrupted or partial application needs explicit reconciliation, not blind retry.
 
 A tracked migration workflow is needed: inspect the remote migration history,
 compare it to the local files, and dry-run the pending changes before applying
@@ -147,9 +150,9 @@ versions and names, and reported no pending migrations on a second dry run. A
 separate two-file failure probe committed the first file and its history entry,
 while rolling back the second file and leaving it unrecorded. This is not a
 hosted Supabase test: the harness does not reproduce the real Auth service,
-ownership, privileges, extensions or network failure behavior. CLI setup and
-this chain still need hosted validation. Do not assume that a dry run verifies
-trigger permissions or runtime behavior.
+ownership, privileges, extensions or network failure behavior. The subsequent
+hosted apply succeeded, but does not verify real Auth requests or runtime
+behaviour. Do not assume that a dry run verifies trigger permissions.
 After a successful application, verify that the history contains every expected
 version, through `20261281135000_calculated_prayer_times.sql`, as well as running
 the checks in section 2. A history entry alone does not prove the schema works.
@@ -165,9 +168,9 @@ table. The owner-approved GitHub run `43589350162` connected to the hosted test
 project and reported 342 pending files; the owner shared the count and list,
 whose first and last names match the local chain. A separate read-only connector
 check found zero public tables, zero Auth users and empty migration history. The
-full displayed list has not been independently compared file by file. This dry
-run neither executes migrations nor verifies hosted trigger permissions, Auth,
-RLS or runtime behaviour. No migration has been applied.
+full displayed list was not independently compared file by file at that stage.
+The dry run did not execute migrations or verify hosted Auth, RLS or runtime
+behaviour; the separate initial apply described above subsequently succeeded.
 
 Before triggering it, the owner must configure a GitHub environment named
 `ayahspring-test-dry-run` in repository **Settings → Environments**:
