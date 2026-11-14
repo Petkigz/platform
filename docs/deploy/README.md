@@ -172,10 +172,11 @@ Before triggering it, the owner must configure a GitHub environment named
    do not assume the workflow is protected.
 2. Add the environment secret `AYAHSPRING_TEST_DATABASE_URL` privately in GitHub,
    never in chat, source files, a commit message or logs. Use the **session
-   pooler** connection for the existing AyahSpring test project, port 5432,
-   database `postgres`, with `sslmode=verify-full`. The project-specific pooler
-   username must be `postgres.glhxtsgrhhvtbsnlxgxu`. Use the provider's URL-encoded
-   connection string and add or replace the `sslmode` parameter as needed.
+   pooler** connection for the existing AyahSpring test project, port 5432 and
+   database `postgres`. The project-specific pooler username must be
+   `postgres.glhxtsgrhhvtbsnlxgxu`. Use the provider's URL-encoded connection
+   string. The preview discards any supplied URL options and forces
+   `sslmode=verify-full`; it does not change the stored secret.
 3. After reviewing the workflow and setting approval, add the environment
    variable `AYAHSPRING_TEST_DRY_RUN_READY` with value `yes`. Do not place the URL
    in this variable. A missing variable or an unexpected URL refuses to start.

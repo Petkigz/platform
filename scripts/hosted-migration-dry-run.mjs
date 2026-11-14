@@ -11,7 +11,6 @@ export function databaseUrlChecks(value) {
     const username = decodeURIComponent(url.username);
     const direct = url.hostname === `db.${projectRef}.supabase.co` && username === 'postgres';
     const pooler = url.hostname.endsWith('.pooler.supabase.com') && username === `postgres.${projectRef}`;
-    const options = [...url.searchParams.entries()];
     return {
       'URL secret present': true,
       'URL can be parsed': true,
@@ -21,12 +20,19 @@ export function databaseUrlChecks(value) {
       'Database is postgres': url.pathname === '/postgres',
       'Password is present': !!url.password,
       'No URL fragment': !url.hash,
-      'Only option is sslmode=verify-full': options.length === 1 && options[0][0] === 'sslmode' && options[0][1] === 'verify-full',
     };
   } catch { return { 'URL secret present': true, 'URL can be parsed': false }; }
 }
 export function isTestDatabaseUrl(value) {
   return Object.values(databaseUrlChecks(value)).every(Boolean);
+}
+// Discard supplied options, including duplicate or weaker sslmode values. Only
+// the verified-TLS option reaches the CLI; target identity is checked first.
+export function verifiedTlsUrl(value) {
+  if (!isTestDatabaseUrl(value)) return null;
+  const url = new URL(value);
+  url.search = '?sslmode=verify-full';
+  return url.toString();
 }
 export function extractMigrationNames(output) {
   return output.split(/\r?\n/).map(line => line.trim())
@@ -42,7 +48,9 @@ async function main() {
     for (const [label, ok] of Object.entries(checks)) console.error(`${label}: ${ok ? 'PASS' : 'FAIL'}`);
     process.exitCode = 1; return;
   }
-  const child = spawn(process.env.SUPABASE_CLI_BIN || 'supabase', ['db', 'push', `--remote=${process.env.AYAHSPRING_TEST_DATABASE_URL}`, '--skip-vault', '--dry-run'], {
+  const target = verifiedTlsUrl(process.env.AYAHSPRING_TEST_DATABASE_URL || '');
+  console.log('URL options are replaced with sslmode=verify-full for this preview.');
+  const child = spawn(process.env.SUPABASE_CLI_BIN || 'supabase', ['db', 'push', `--remote=${target}`, '--skip-vault', '--dry-run'], {
     stdio: ['ignore', 'pipe', 'pipe'], env: process.env,
   });
   let output = '';
