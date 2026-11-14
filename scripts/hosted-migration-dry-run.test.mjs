@@ -31,6 +31,12 @@ test('runner passes only a dry-run to the CLI and suppresses provider errors and
     const failed = spawnSync(process.execPath, ['scripts/hosted-migration-dry-run.mjs'], { encoding: 'utf8', env });
     assert.equal(failed.status, 1); assert.ok(!(failed.stdout + failed.stderr).includes('secret-value'));
     const blocked = spawnSync(process.execPath, ['scripts/hosted-migration-dry-run.mjs'], { encoding: 'utf8', env: { ...env, AYAHSPRING_TEST_DRY_RUN_READY: '' } });
-    assert.equal(blocked.status, 1); assert.match(blocked.stderr, /not started/);
+    assert.equal(blocked.status, 1); assert.match(blocked.stderr, /Readiness variable equals yes: FAIL/);
+    assert.ok(!(blocked.stdout + blocked.stderr).includes('secret-value'));
+    const badUrl = spawnSync(process.execPath, ['scripts/hosted-migration-dry-run.mjs'], { encoding: 'utf8', env: { ...env, AYAHSPRING_TEST_DATABASE_URL: url.replace('verify-full', 'require') } });
+    assert.equal(badUrl.status, 1); assert.match(badUrl.stderr, /Only option is sslmode=verify-full: FAIL/);
+    assert.ok(!(badUrl.stdout + badUrl.stderr).includes('secret-value'));
+    const missing = spawnSync(process.execPath, ['scripts/hosted-migration-dry-run.mjs'], { encoding: 'utf8', env: { ...env, AYAHSPRING_TEST_DATABASE_URL: '' } });
+    assert.equal(missing.status, 1); assert.match(missing.stderr, /URL secret present: FAIL/);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });

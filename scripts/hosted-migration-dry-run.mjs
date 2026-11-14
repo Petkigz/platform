@@ -4,16 +4,29 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const projectRef = 'glhxtsgrhhvtbsnlxgxu';
-export function isTestDatabaseUrl(value) {
+export function databaseUrlChecks(value) {
+  if (!value) return { 'URL secret present': false };
   try {
     const url = new URL(value);
-    const direct = url.hostname === `db.${projectRef}.supabase.co` && decodeURIComponent(url.username) === 'postgres';
-    const pooler = url.hostname.endsWith('.pooler.supabase.com') && decodeURIComponent(url.username) === `postgres.${projectRef}`;
+    const username = decodeURIComponent(url.username);
+    const direct = url.hostname === `db.${projectRef}.supabase.co` && username === 'postgres';
+    const pooler = url.hostname.endsWith('.pooler.supabase.com') && username === `postgres.${projectRef}`;
     const options = [...url.searchParams.entries()];
-    return ['postgres:', 'postgresql:'].includes(url.protocol) && (direct || pooler) &&
-      url.port === '5432' && url.pathname === '/postgres' && !!url.password && !url.hash &&
-      options.length === 1 && options[0][0] === 'sslmode' && options[0][1] === 'verify-full';
-  } catch { return false; }
+    return {
+      'URL secret present': true,
+      'URL can be parsed': true,
+      'PostgreSQL scheme': ['postgres:', 'postgresql:'].includes(url.protocol),
+      'Test-project host and username': direct || pooler,
+      'Session port 5432': url.port === '5432',
+      'Database is postgres': url.pathname === '/postgres',
+      'Password is present': !!url.password,
+      'No URL fragment': !url.hash,
+      'Only option is sslmode=verify-full': options.length === 1 && options[0][0] === 'sslmode' && options[0][1] === 'verify-full',
+    };
+  } catch { return { 'URL secret present': true, 'URL can be parsed': false }; }
+}
+export function isTestDatabaseUrl(value) {
+  return Object.values(databaseUrlChecks(value)).every(Boolean);
 }
 export function extractMigrationNames(output) {
   return output.split(/\r?\n/).map(line => line.trim())
@@ -21,8 +34,12 @@ export function extractMigrationNames(output) {
     .filter(Boolean);
 }
 async function main() {
-  if (process.env.AYAHSPRING_TEST_DRY_RUN_READY !== 'yes' || !isTestDatabaseUrl(process.env.AYAHSPRING_TEST_DATABASE_URL || '')) {
-    console.error('Dry-run not started: check the environment approval, readiness variable and test-project session-pooler URL.');
+  const ready = process.env.AYAHSPRING_TEST_DRY_RUN_READY === 'yes';
+  const checks = databaseUrlChecks(process.env.AYAHSPRING_TEST_DATABASE_URL || '');
+  if (!ready || !Object.values(checks).every(Boolean)) {
+    console.error('Dry-run not started. Only pass/fail checks are shown; no connection values are printed.');
+    console.error(`Readiness variable equals yes: ${ready ? 'PASS' : 'FAIL'}`);
+    for (const [label, ok] of Object.entries(checks)) console.error(`${label}: ${ok ? 'PASS' : 'FAIL'}`);
     process.exitCode = 1; return;
   }
   const child = spawn(process.env.SUPABASE_CLI_BIN || 'supabase', ['db', 'push', `--remote=${process.env.AYAHSPRING_TEST_DATABASE_URL}`, '--skip-vault', '--dry-run'], {
