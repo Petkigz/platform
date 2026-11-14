@@ -176,7 +176,11 @@ Before triggering it, the owner must configure a GitHub environment named
    database `postgres`. The project-specific pooler username must be
    `postgres.glhxtsgrhhvtbsnlxgxu`. Use the provider's URL-encoded connection
    string. The preview discards any supplied URL options and forces
-   `sslmode=verify-full`; it does not change the stored secret.
+   `sslmode=verify-full` with the pinned public Supabase CA; it does not change
+   the stored secret. The CA is from the [Supabase CLI source](https://github.com/supabase/cli/blob/d6a376c82436c908efa142f4c17977f477c264b8/apps/cli-go/internal/gen/types/templates/prod-ca-2021.crt),
+   expires in April 2031, and must be reviewed when Supabase rotates it. A local
+   CLI test verified that a trusted test CA succeeds and a mismatched hostname
+   fails; the hosted pooler connection remains unverified until this preview runs.
 3. After reviewing the workflow and setting approval, add the environment
    variable `AYAHSPRING_TEST_DRY_RUN_READY` with value `yes`. Do not place the URL
    in this variable. A missing variable or an unexpected URL refuses to start.

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { isTestDatabaseUrl, verifiedTlsUrl, extractMigrationNames, failureCategories } from './hosted-migration-dry-run.mjs';
+import { isTestDatabaseUrl, verifiedTlsUrl, trustedCaReady, extractMigrationNames, failureCategories } from './hosted-migration-dry-run.mjs';
 
 test('only the explicitly named test project and session port are accepted', () => {
   const direct = 'postgresql://postgres:dummy@db.glhxtsgrhhvtbsnlxgxu.supabase.co:5432/postgres?sslmode=verify-full';
@@ -13,9 +13,12 @@ test('supplied URL options are discarded and TLS verification is always enforced
   const base = 'postgresql://postgres:dummy@db.glhxtsgrhhvtbsnlxgxu.supabase.co:5432/postgres';
   for (const suffix of ['', '?sslmode=disable', '?sslmode=require&sslmode=disable', '?other=untrusted']) {
     const target = new URL(verifiedTlsUrl(base + suffix));
-    assert.deepEqual([...target.searchParams.entries()], [['sslmode', 'verify-full']]);
+    assert.equal(target.searchParams.get('sslmode'), 'verify-full');
+    assert.match(target.searchParams.get('sslrootcert'), /supabase-prod-ca-2021\.crt$/);
+    assert.deepEqual([...target.searchParams.keys()], ['sslmode', 'sslrootcert']);
   }
   assert.equal(verifiedTlsUrl(base.replace('glhxtsgrhhvtbsnlxgxu', 'other')), null);
+  assert.equal(trustedCaReady(), true);
 });
 
 test('only safe migration names are displayed, never arbitrary CLI output', () => {
@@ -38,7 +41,7 @@ test('runner passes only a dry-run to the CLI and suppresses provider errors and
   const fake = join(dir, 'supabase');
   const url = 'postgresql://postgres:secret-value@db.glhxtsgrhhvtbsnlxgxu.supabase.co:5432/postgres?sslmode=verify-full';
   try {
-    writeFileSync(fake, `#!/bin/sh\ncase "$*" in *"?sslmode=verify-full --skip-vault --dry-run"*) ;; *) exit 2;; esac\nprintf ' • 20261015000100_helpers.sql\\n'\n`, { mode: 0o755 });
+    writeFileSync(fake, `#!/bin/sh\ncase "$*" in *"?sslmode=verify-full&sslrootcert="*"supabase-prod-ca-2021.crt --skip-vault --dry-run"*) ;; *) exit 2;; esac\nprintf ' • 20261015000100_helpers.sql\\n'\n`, { mode: 0o755 });
     const env = { ...process.env, SUPABASE_CLI_BIN: fake, AYAHSPRING_TEST_DATABASE_URL: `${url}&sslmode=disable`, AYAHSPRING_TEST_DRY_RUN_READY: 'yes' };
     const ok = spawnSync(process.execPath, ['scripts/hosted-migration-dry-run.mjs'], { encoding: 'utf8', env });
     assert.equal(ok.status, 0); assert.match(ok.stdout, /20261015000100_helpers\.sql/);

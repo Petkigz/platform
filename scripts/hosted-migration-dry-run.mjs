@@ -2,8 +2,21 @@
 // Never print the connection string or raw CLI output, even on failure.
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { readFileSync } from 'node:fs';
+import { createHash, X509Certificate } from 'node:crypto';
 
 const projectRef = 'glhxtsgrhhvtbsnlxgxu';
+const caPath = fileURLToPath(new URL('../certs/supabase-prod-ca-2021.crt', import.meta.url));
+const expectedCaHash = '700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7';
+export function trustedCaReady() {
+  try {
+    const bytes = readFileSync(caPath);
+    const cert = new X509Certificate(bytes);
+    const now = Date.now();
+    return createHash('sha256').update(bytes).digest('hex') === expectedCaHash && cert.ca &&
+      now >= Date.parse(cert.validFrom) && now <= Date.parse(cert.validTo);
+  } catch { return false; }
+}
 export function databaseUrlChecks(value) {
   if (!value) return { 'URL secret present': false };
   try {
@@ -31,7 +44,9 @@ export function isTestDatabaseUrl(value) {
 export function verifiedTlsUrl(value) {
   if (!isTestDatabaseUrl(value)) return null;
   const url = new URL(value);
-  url.search = '?sslmode=verify-full';
+  url.search = '';
+  url.searchParams.set('sslmode', 'verify-full');
+  url.searchParams.set('sslrootcert', caPath);
   return url.toString();
 }
 export function extractMigrationNames(output) {
@@ -60,8 +75,12 @@ async function main() {
     for (const [label, ok] of Object.entries(checks)) console.error(`${label}: ${ok ? 'PASS' : 'FAIL'}`);
     process.exitCode = 1; return;
   }
+  if (!trustedCaReady()) {
+    console.error('Dry-run not started: the pinned public Supabase CA is missing, changed or outside its validity period.');
+    process.exitCode = 1; return;
+  }
   const target = verifiedTlsUrl(process.env.AYAHSPRING_TEST_DATABASE_URL || '');
-  console.log('URL options are replaced with sslmode=verify-full for this preview.');
+  console.log('URL options are replaced with verified TLS and the pinned Supabase CA for this preview.');
   const child = spawn(process.env.SUPABASE_CLI_BIN || 'supabase', ['db', 'push', `--remote=${target}`, '--skip-vault', '--dry-run'], {
     stdio: ['ignore', 'pipe', 'pipe'], env: process.env,
   });
