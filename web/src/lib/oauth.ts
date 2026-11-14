@@ -10,9 +10,11 @@
  * come back to, and what to say when Google or Supabase says no.
  */
 
+import { safeNextPath as safeLocalPath } from './auth.ts';
+
 /** The `redirectTo` Supabase should return to, carrying the caller's destination. */
 export function oauthRedirectUrl(origin: string, next: string): string {
-  const safe = next.startsWith('/') && !next.startsWith('//') ? next : '/dashboard';
+  const safe = safeNextPath(next);
   return `${origin.replace(/\/+$/, '')}/auth/callback?next=${encodeURIComponent(safe)}`;
 }
 
@@ -22,11 +24,7 @@ export function oauthRedirectUrl(origin: string, next: string): string {
  * a phishing kit's favourite component.
  */
 export function safeNextPath(raw: string | null | undefined, fallback = '/dashboard'): string {
-  if (!raw) return fallback;
-  if (!raw.startsWith('/') || raw.startsWith('//')) return fallback;
-  // Backslashes are normalised to slashes by some browsers; refuse them.
-  if (raw.includes('\\')) return fallback;
-  return raw;
+  return safeLocalPath(raw, fallback);
 }
 
 /**

@@ -16,7 +16,7 @@ test('an invitation link survives signing in', () => {
 });
 
 test('safeNextPath rejects external, protocol-relative and malformed destinations', () => {
-  for (const value of ['https://evil.example', '//evil.example/path', '/\\evil.example/path', 'javascript:alert(1)', '', null, undefined]) {
+  for (const value of ['https://evil.example', '//evil.example/path', '/\\evil.example/path', '/\n/evil.example/path', '/\t/evil.example/path', '/a/..//evil.example/path', '/%2e%2e//evil.example/path', 'javascript:alert(1)', '', null, undefined]) {
     assert.equal(safeNextPath(value), '/learn');
   }
 });

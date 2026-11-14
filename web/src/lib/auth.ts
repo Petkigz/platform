@@ -1,10 +1,13 @@
-/** Accept only same-origin app paths for post-auth redirects. */
+/** Accept only same-origin app paths for redirects. Fallback must be a trusted local path. */
 export function safeNextPath(candidate: string | null | undefined, fallback = '/learn'): string {
-  if (!candidate || !candidate.startsWith('/') || candidate.startsWith('//')) return fallback;
+  if (!candidate || !candidate.startsWith('/') || candidate.startsWith('//') ||
+      candidate.includes('\\') || /[\u0000-\u001f\u007f]/.test(candidate)) return fallback;
   try {
     const base = new URL('https://ayahspring.invalid');
     const destination = new URL(candidate, base);
-    if (destination.origin !== base.origin) return fallback;
+    // Dot-segment normalization can turn /a/..//host into //host. Returning
+    // that pathname would turn it into an external URL when resolved again.
+    if (destination.origin !== base.origin || destination.pathname.startsWith('//')) return fallback;
     return `${destination.pathname}${destination.search}${destination.hash}`;
   } catch {
     return fallback;

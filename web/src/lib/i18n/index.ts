@@ -12,6 +12,7 @@ import {
   type LocaleCode,
   type LocaleSource,
 } from './locales.ts';
+import { safeNextPath as safeLocalPath } from '../auth.ts';
 import { CATALOGUES } from './messages/catalogues.ts';
 import { en, type MessageKey, type Messages } from './messages/en.ts';
 
@@ -202,15 +203,10 @@ export function localeLabel(locale: Locale): string {
  * A `next` field is an open redirect unless it is checked, and the check is not
  * "starts with a slash": `//evil.example` is a protocol-relative address, and a
  * browser that normalises a backslash turns `/\evil.example` into the same
- * thing. Only a path that begins with one slash and contains no backslash is a
- * path on this site.
+ * thing. Control characters and normalized dot segments also need validation.
  */
 export function safeNextPath(next: string | null | undefined, fallback = '/language'): string {
-  if (!next) return fallback;
-  if (!next.startsWith('/')) return fallback;
-  if (next.startsWith('//')) return fallback;
-  if (next.includes('\\')) return fallback;
-  return next;
+  return safeLocalPath(next, fallback);
 }
 
 /** One sentence about where the current language came from. */

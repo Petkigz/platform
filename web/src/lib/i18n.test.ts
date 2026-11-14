@@ -278,6 +278,11 @@ test('a form can only send somebody to a page on this site', () => {
   assert.equal(safeNextPath('/courses/tajweed?x=1'), '/courses/tajweed?x=1');
   assert.equal(safeNextPath('//evil.example'), '/language');
   assert.equal(safeNextPath('/\\evil.example'), '/language');
+  for (const path of ['/\n/evil.example', '/\t/evil.example', '/a/..//evil.example', '/%2e%2e//evil.example']) {
+    const safe = safeNextPath(path);
+    assert.equal(safe, '/language');
+    assert.equal(new URL(safe, 'https://ayahspring.example/api/locale').origin, 'https://ayahspring.example');
+  }
   assert.equal(safeNextPath('https://evil.example'), '/language');
   assert.equal(safeNextPath('javascript:alert(1)'), '/language');
   assert.equal(safeNextPath(''), '/language');

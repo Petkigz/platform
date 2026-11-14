@@ -27,6 +27,10 @@ test('a destination can never leave the site', () => {
   assert.equal(safeNextPath('//evil.example'), '/dashboard');
   assert.equal(safeNextPath('https://evil.example'), '/dashboard');
   assert.equal(safeNextPath('/\\evil.example'), '/dashboard');
+  for (const path of ['/\n/evil.example', '/\t/evil.example', '/a/..//evil.example', '/%2e%2e//evil.example']) {
+    assert.equal(safeNextPath(path), '/dashboard');
+    assert.equal(new URL(oauthRedirectUrl('https://a.example', path)).searchParams.get('next'), '/dashboard');
+  }
   assert.equal(safeNextPath(null), '/dashboard');
   assert.equal(safeNextPath(undefined, '/learn'), '/learn');
 });

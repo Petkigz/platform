@@ -53,6 +53,9 @@ jobs:
       - name: Prayer component simulation
         run: npm run test:prayer-component
 
+      - name: Redirect route HTTP regression
+        run: node scripts/redirect-route-smoke.mjs
+
       # The runner applies the current migrations to an in-memory database,
       # then runs every registered suite against it.
       - name: Database suite
