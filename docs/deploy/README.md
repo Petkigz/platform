@@ -284,22 +284,35 @@ On a brand-new project it reads:
 | fact | value | what it means |
 |---|---|---|
 | `tables` | ~153 | the schema is here at all |
-| `policies` | ~280 | row level security rules; a table without any is readable by anybody holding the anon key |
+| `policies` | ~280 | row level security rules; the count alone does not prove correct access |
 | `signup trigger` | `present` | creates a profile when somebody signs up; without it a new account cannot be given a role |
 | `roles` | 10 | the role vocabulary the writers will accept |
 | `people` | 0 | accounts that have a profile |
 | `staff` | **0** | nobody can administer this deployment yet — **this is the number to watch** |
-| `settings` | 109 | every flag and threshold, whether or not anybody changed one |
-| `features on` | **0** | features this deployment runs; everything ships off on purpose |
+| `settings` | 102 | every flag and threshold, whether or not anybody changed one |
+| `features on` | 2 | true boolean settings, not a list of launched features; inspect their names |
 | `subject areas` | 11 | the top-level shelves a course can be filed under |
 | `courses` | 0 | a course is written by a teacher, not by the platform |
 | `published versions` | 0 | nothing a visitor can study yet |
 | `audit events` | ~10 | the governance record; only what the seed itself wrote |
 
-The exact table and policy counts move as migrations land; `staff = 0`,
-`features on = 0` and `published versions = 0` are the three that describe a
-deployment nobody can run yet. If `signup trigger` says `MISSING`, go back to
-section 1.3 and investigate before proceeding — a signed-up account would have no profile.
+These counts can change as migrations land. In the initial hosted test project,
+`staff = 0` and `published versions = 0` mean no owner or published course exists
+yet. The two true booleans are `family.guardian_verification` and
+`platform.withdrawal_right`; do not switch off safeguards to force a zero count.
+The aggregate alone cannot establish readiness: review the individual settings
+and their preconditions. If `signup trigger` says `MISSING`, investigate before
+proceeding — a signed-up account would have no profile. Trigger presence does
+not prove that an actual Auth request succeeds.
+
+The hosted test project's read-only check also found 282 policies and no public
+base tables with RLS disabled. This is an inventory, not an authorization test.
+Auth, database and REST health checks were healthy. Auth currently has email
+signup and confirmation enabled, no custom SMTP, Google sign-in disabled, and
+its site URL set to localhost with no additional redirect URLs. A provider-hosted
+app URL and appropriately configured redirects are needed before real callback
+testing; Google and email delivery need separate setup. Do not disable email
+confirmation merely to make testing appear to work.
 
 `supabase/tests/deploy_runbook.test.mjs` executes this file, so it cannot quietly
 stop matching the schema it describes.
@@ -860,7 +873,7 @@ titled **"Before anyone can study here"**, one row per missing thing, each linki
 to the screen that fixes it: a subject to file courses under, a reviewer who is
 verified, a course, something published.
 
-Then the feature switches. `/admin/settings` lists all 109 with what each one
+Then the feature switches. `/admin/settings` lists the settings with what each one
 gates and what has to be true first. The register with the reasoning is
 [`FLAGS.md`](../../FLAGS.md); the short version:
 
@@ -1160,7 +1173,7 @@ Supabase service role key and test creation and recovery in a non-production
 project. The admin dashboard controls the flag. Local
 tests use a simulated Auth provider. Pending attempts may require owner review;
 the named owner can complete an existing uniquely marked identity. Migration 730 also adds an owner-reviewed deletion action for an eligible detached marked identity, not yet verified with real Supabase. Detaching a child learner does not
-remove the provider identity or revoke sessions. Migration 1290 and the family card implement guardian password recovery locally for verified, exclusive marked child identities. Test the actual hosted Auth update before enabling it; a changed password does not guarantee session revocation. These migrations have not been deployed by this repository change.
+remove the provider identity or revoke sessions. Migration 1290 and the family card implement guardian password recovery locally for verified, exclusive marked child identities. Test the actual hosted Auth update before enabling it; a changed password does not guarantee session revocation. These migrations are present on the test project, but hosted Auth behaviour remains unverified.
 
 
 Migration 670 makes a private identity-removal task when a child login is detached

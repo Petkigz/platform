@@ -24,7 +24,7 @@ with facts as (
   union all
   select 2, 'policies',
          (select count(*)::text from pg_policies where schemaname = 'public'),
-         'row level security rules; a table without any is readable by anybody holding the anon key'
+         'row level security rules; counts alone do not prove access is correctly restricted'
 
   union all
   select 3, 'signup trigger',
@@ -59,7 +59,7 @@ with facts as (
   select 8, 'features on',
          (select count(*)::text from public.platform_settings
            where value_type = 'boolean' and value_text = 'true'),
-         'features this deployment currently runs; everything ships off on purpose'
+         'boolean settings that are true; inspect their names and purpose, not just their count'
 
   union all
   select 9, 'subject areas',

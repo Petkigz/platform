@@ -109,12 +109,12 @@ export async function run(ctx) {
     }
   });
 
-  await test('the runbook says what the two alarming numbers mean', async () => {
-    // `staff = 0` and `features on = 0` are the two that look like a broken
-    // deployment and are in fact the intended state. Both are spelled out.
-    assert(/staff = 0/.test(runbook), 'the runbook does not say that staff = 0 is the state to watch');
-    assert(/features on`? \| \*\*0\*\*/.test(runbook),
-      'the runbook does not say that every feature shipping off is deliberate');
+  await test('the runbook explains the initial staff and safety settings', async () => {
+    assert(/staff = 0/.test(runbook), 'the runbook does not explain an empty staff register');
+    assert(runbook.includes('family.guardian_verification') && runbook.includes('platform.withdrawal_right'),
+      'the runbook must identify the initially enabled safety settings');
+    assert(!/features on`? \| \*\*0\*\*/.test(runbook),
+      'the runbook must not claim every boolean setting starts off');
   });
 
   // -------------------------------------------------------------------------
