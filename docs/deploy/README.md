@@ -15,8 +15,24 @@ production hosting.** Check current eligibility, signup, quotas and terms before
 creating accounts. Vercel Hobby is restricted to non-commercial personal use and
 is not an appropriate assumption for a paid learning business. R2 has a free
 allowance, but its subscription/signup requirements must be checked; do not assume
-no card is required. No alternative commercial host has been tested with this app.
+no card is required. No alternative commercial host has been proven to run this app.
 The owner has not approved paid services.
+
+**Cloudflare Workers feasibility probe (local only):** An isolated copy used
+OpenNext Cloudflare 1.20.12, Wrangler 4.162.0 and this app's Next.js 16.4.2.
+Next's production build compiled and generated pages, but the adapter's server
+bundling did not complete within three minutes; it exited 137 after an attempted
+stop. The cause is not established. There is no completed Worker bundle, local
+Workers runtime test, bundle-size measurement or deployed app from this probe.
+The experimental dependency audit reported a high-severity `glob` CLI advisory
+and a moderate `minimatch` advisory through build dependencies; assess and
+resolve applicable advisories before adopting them. An older compatible adapter,
+1.19.11, also had a high-severity middleware/cache advisory
+([GHSA-2vc4-c4r6-p6v6](https://github.com/advisories/GHSA-2vc4-c4r6-p6v6));
+1.20.12 is outside that advisory's affected range. These dependencies were not
+added to the application. See [OpenNext's setup and limitations](https://opennext.js.org/cloudflare/get-started)
+and check current versions, free-plan limits and terms before another experiment.
+Do not treat a successful Next build alone as proof of Workers compatibility.
 
 ---
 
