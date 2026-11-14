@@ -47,8 +47,8 @@ jobs:
           cache: npm
       - run: npm ci
 
-      - name: Migration preview guard tests
-        run: node --test scripts/hosted-migration-dry-run.test.mjs
+      - name: Migration preview and apply guard tests
+        run: node --test scripts/hosted-migration-dry-run.test.mjs scripts/hosted-migration-apply.test.mjs
 
       - name: Prayer component simulation
         run: npm run test:prayer-component

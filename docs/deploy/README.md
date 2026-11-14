@@ -213,6 +213,41 @@ important. Never expose the environment secret to untrusted pull-request code.
 The test-project URL check is a guard, not proof of the server's identity or an
 assurance that the selected database is empty; inspect the project independently.
 
+#### Prepared initial apply — separate approval and environment
+
+`.github/workflows/supabase-test-apply.yml` is an **actual database write**, not
+another preview. It is not triggered by ordinary pushes or by the preview marker.
+Its distinct environment `ayahspring-test-migration-apply` must be explicitly
+created with required reviewers before any secret or readiness variable is added;
+a named environment alone is not a protection rule. If approval is unavailable,
+stop. Create environment secrets `AYAHSPRING_TEST_DATABASE_URL` and
+`AYAHSPRING_TEST_DATABASE_PASSWORD` in that environment, privately in GitHub,
+using the same session pooler details and raw password as the preview. Add the
+variable `AYAHSPRING_TEST_APPLY_READY` = `yes` only after reviewing the code and
+protection rules. Never send either secret in chat. Approval in this environment
+means **apply the full migration chain to the existing test project**.
+
+The one-time job accepts only the test-project target and the pinned reviewed
+migration-file digest. It checks the database and actor, zero Auth users, zero
+public relations/functions and empty migration history, runs a fresh dry-run
+whose pending filenames must match the full local chain, and repeats the empty
+check before applying. It verifies all version/name pairs afterward. The checks
+and apply use separate sessions: they cannot exclude an external writer racing
+the check. Before starting, keep other writers and Supabase automatic GitHub
+deploy/branching off. The GitHub concurrency group only serializes jobs using the
+same group, not other services. Never use this initial-only job on a populated
+project. Review the exact commit before approving it.
+
+A local PostgreSQL 17.11 test with the test-only Auth harness exercised the
+actual orchestration, CLI dry run, application and matching history for the full
+chain. It does not reproduce hosted Auth, RLS, privileges, concurrent writers,
+network interruption or every possible failure. If an apply fails, times out,
+is cancelled, or its result is uncertain, some earlier migrations may already
+be committed. **Do not retry automatically or reset the database.** Stop and
+inspect remote migration history and schema before a reviewed recovery. Success
+is not proof of real Auth behaviour, application safety, or deployment readiness.
+A successful initial apply is not a general ongoing migration procedure.
+
 **Do not use the former raw `psql` file loop.** It did not register migration
 history, could stop partway, and could leave a schema that a later CLI push would
 try to apply again. Do not paste individual failed files into the SQL editor and

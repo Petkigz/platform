@@ -1,0 +1,39 @@
+# Explicit one-time test-project apply only. Configure the environment with
+# required reviewers BEFORE adding its secrets and readiness variable.
+name: Apply initial Supabase test migrations
+on:
+  push:
+    branches:
+      - arena/4f30fd1d-platform
+permissions:
+  contents: read
+concurrency:
+  group: ayahspring-supabase-test-migrations
+  cancel-in-progress: false
+jobs:
+  apply:
+    if: >-
+      github.repository == 'Petkigz/platform' && github.ref == 'refs/heads/arena/4f30fd1d-platform' && startsWith(github.event.head_commit.message, 'test: apply initial ayahspring test migrations')
+    runs-on: ubuntu-latest
+    environment: ayahspring-test-migration-apply
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: '22.22.3'
+      # Install dependencies before giving the database secret to any process.
+      - name: Install reviewed dependencies and CLI
+        run: |
+          npm ci --no-audit --no-fund
+          npm install --prefix "$RUNNER_TEMP/ayahspring-cli" --no-save --no-audit --no-fund supabase@3.1.0
+          test "$("$RUNNER_TEMP/ayahspring-cli/node_modules/.bin/supabase" --version)" = '3.1.0'
+      - name: Preflight and apply to the empty test project
+        run: node scripts/hosted-migration-apply.mjs
+        env:
+          SUPABASE_CLI_BIN: ${{ runner.temp }}/ayahspring-cli/node_modules/.bin/supabase
+          AYAHSPRING_TEST_DATABASE_URL: ${{ secrets.AYAHSPRING_TEST_DATABASE_URL }}
+          AYAHSPRING_TEST_DATABASE_PASSWORD: ${{ secrets.AYAHSPRING_TEST_DATABASE_PASSWORD }}
+          AYAHSPRING_TEST_APPLY_READY: ${{ vars.AYAHSPRING_TEST_APPLY_READY }}
