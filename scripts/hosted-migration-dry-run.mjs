@@ -39,6 +39,18 @@ export function extractMigrationNames(output) {
     .map(line => line.match(/^•\s+(\d{14}_[a-z0-9_]+\.sql)$/)?.[1])
     .filter(Boolean);
 }
+// Return fixed labels only, never fragments of the untrusted CLI response.
+export function failureCategories(output) {
+  const checks = [
+    ['Database authentication or pooler tenant', /password authentication failed|authentication failed|authentication error|invalid (?:password|credentials)|wrong password|tenant or user not found|tenant not found|invalid login|sasl authentication/i],
+    ['TLS certificate or handshake', /certificate|x509|tls handshake|ssl handshake|hostname mismatch/i],
+    ['DNS lookup', /no such host|enotfound|dns lookup|name or service not known|temporary failure in name resolution/i],
+    ['Network connection or timeout', /econnrefused|connection refused|econnreset|connection reset|network is unreachable|timed? ?out|i\/o timeout|etimedout|connection terminated/i],
+    ['Database permissions or migration history', /permission denied|insufficient privilege|sqlstate 42501|remote migration versions not found|migration history/i],
+    ['Connection string or CLI argument', /invalid connection string|cannot parse|failed to parse|invalid url|unknown flag|invalid value/i],
+  ];
+  return checks.filter(([, pattern]) => pattern.test(output)).map(([label]) => label);
+}
 async function main() {
   const ready = process.env.AYAHSPRING_TEST_DRY_RUN_READY === 'yes';
   const checks = databaseUrlChecks(process.env.AYAHSPRING_TEST_DATABASE_URL || '');
@@ -60,7 +72,10 @@ async function main() {
     child.on('close', code => resolve(code));
   });
   if (status !== 0) {
-    console.error('Dry-run failed. No raw provider output is shown to avoid exposing connection details. Check project access, TLS, the session-pooler URL and runner connectivity; do not apply migrations.');
+    const categories = failureCategories(output);
+    console.error('Dry-run failed. No raw provider output is shown to avoid exposing connection details.');
+    console.error(categories.length ? `Possible cause categories: ${categories.join('; ')}` : 'Possible cause category: Unclassified CLI failure');
+    console.error('These are pattern matches, not a diagnosis. Do not apply migrations.');
     process.exitCode = 1; return;
   }
   const names = extractMigrationNames(output);

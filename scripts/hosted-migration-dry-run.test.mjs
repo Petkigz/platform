@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { isTestDatabaseUrl, verifiedTlsUrl, extractMigrationNames } from './hosted-migration-dry-run.mjs';
+import { isTestDatabaseUrl, verifiedTlsUrl, extractMigrationNames, failureCategories } from './hosted-migration-dry-run.mjs';
 
 test('only the explicitly named test project and session port are accepted', () => {
   const direct = 'postgresql://postgres:dummy@db.glhxtsgrhhvtbsnlxgxu.supabase.co:5432/postgres?sslmode=verify-full';
@@ -22,6 +22,13 @@ test('only safe migration names are displayed, never arbitrary CLI output', () =
   assert.deepEqual(extractMigrationNames('Would push these migrations:\n • 20261015000100_helpers.sql\nsecret@host\n • 20261281135000_calculated_prayer_times.sql\n • not_a_file\n'), ['20261015000100_helpers.sql', '20261281135000_calculated_prayer_times.sql']);
 });
 
+test('failure categories are fixed labels and never include raw provider output', () => {
+  assert.deepEqual(failureCategories('FATAL: password authentication failed for secret-user'), ['Database authentication or pooler tenant']);
+  assert.deepEqual(failureCategories('x509: certificate signed by unknown authority secret-value'), ['TLS certificate or handshake']);
+  assert.deepEqual(failureCategories('dial error: connect ECONNREFUSED secret-value'), ['Network connection or timeout']);
+  assert.deepEqual(failureCategories('unexpected error secret-value'), []);
+});
+
 test('runner passes only a dry-run to the CLI and suppresses provider errors and secrets', async () => {
   const { mkdtempSync, writeFileSync, rmSync } = await import('node:fs');
   const { tmpdir } = await import('node:os');
@@ -36,9 +43,9 @@ test('runner passes only a dry-run to the CLI and suppresses provider errors and
     const ok = spawnSync(process.execPath, ['scripts/hosted-migration-dry-run.mjs'], { encoding: 'utf8', env });
     assert.equal(ok.status, 0); assert.match(ok.stdout, /20261015000100_helpers\.sql/);
     assert.ok(!(ok.stdout + ok.stderr).includes('secret-value'));
-    writeFileSync(fake, '#!/bin/sh\necho "secret-value" >&2\nexit 1\n', { mode: 0o755 });
+    writeFileSync(fake, '#!/bin/sh\necho "password authentication failed secret-value" >&2\nexit 1\n', { mode: 0o755 });
     const failed = spawnSync(process.execPath, ['scripts/hosted-migration-dry-run.mjs'], { encoding: 'utf8', env });
-    assert.equal(failed.status, 1); assert.ok(!(failed.stdout + failed.stderr).includes('secret-value'));
+    assert.equal(failed.status, 1); assert.match(failed.stderr, /Database authentication or pooler tenant/); assert.ok(!(failed.stdout + failed.stderr).includes('secret-value'));
     const blocked = spawnSync(process.execPath, ['scripts/hosted-migration-dry-run.mjs'], { encoding: 'utf8', env: { ...env, AYAHSPRING_TEST_DRY_RUN_READY: '' } });
     assert.equal(blocked.status, 1); assert.match(blocked.stderr, /Readiness variable equals yes: FAIL/);
     assert.ok(!(blocked.stdout + blocked.stderr).includes('secret-value'));
