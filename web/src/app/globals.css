@@ -1886,3 +1886,23 @@ html[data-motion='reduce'] *::after {
 @media (min-width: 120rem) {
   .learner-course-grid.cols-2 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
+
+/* Lessons can use a maximised screen for media and activities; prose remains
+   comfortably readable instead of stretching across the whole viewport. */
+.lesson-page {
+  width: 100%;
+  max-width: none;
+  padding-block: clamp(2rem, 4vw, 4rem) 4rem;
+  padding-inline: clamp(1.25rem, 4vw, 4rem);
+}
+.lesson-page .page-head h1 {
+  font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+  font-size: clamp(2.1rem, 3.5vw, 3.5rem);
+  font-weight: 500;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+.lesson-page > .card { border-radius: 1rem; padding: clamp(1.2rem, 2.2vw, 2rem); }
+.lesson-page > .card > p { max-width: 72ch; overflow-wrap: anywhere; }
+.lesson-page .crumbs { font-size: .9rem; }
+.lesson-page .crumbs span, .lesson-page .crumbs a { overflow-wrap: anywhere; }

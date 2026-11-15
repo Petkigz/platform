@@ -263,8 +263,8 @@ export default async function LessonPage({
   const duration = formatDuration(lesson.durationSeconds);
 
   return (
-    <div className="page">
-      <nav className="crumbs">
+    <div className="page lesson-page">
+      <nav className="crumbs" aria-label="Breadcrumb">
         <Link href="/learn">Dashboard</Link>
         <span aria-hidden>›</span>
         <Link href={`/learn/${enrolmentId}`}>{courseTitle}</Link>
