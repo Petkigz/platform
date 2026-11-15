@@ -1828,3 +1828,61 @@ html[data-motion='reduce'] *::after {
 @media (min-width: 120rem) {
   .discovery-page .grid.cols-2 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
+
+/* Learner workspace: a calm greeting and clearly separated shortcuts, with
+   course facts and learner names still drawn from the existing scoped data. */
+.learner-dashboard { max-width: none; padding-block: clamp(2rem, 4vw, 4rem); }
+.learner-welcome {
+  border: 1px solid #d9e8da;
+  border-radius: 1.1rem;
+  background: #edf6ed;
+  padding: clamp(1.25rem, 3vw, 2.5rem);
+}
+.learner-welcome h1 {
+  font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+  font-size: clamp(2rem, 3vw, 3rem);
+  font-weight: 500;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+.learner-identity { margin-block: .6rem 1.25rem; overflow-wrap: anywhere; }
+.learner-shortcuts { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.learner-shortcuts a, .learner-shortcuts .btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: .5rem .8rem;
+  margin: 0;
+  width: auto;
+  border: 1px solid #c7dec9;
+  border-radius: .6rem;
+  background: #fff;
+  color: var(--green-800);
+  font: inherit;
+  font-weight: 600;
+}
+.learner-shortcuts a:hover, .learner-shortcuts .btn:hover {
+  border-color: var(--green-700);
+  background: var(--green-50);
+  color: var(--green-900);
+  text-decoration: none;
+}
+.learner-shortcuts form { margin: 0; }
+.learner-courses-heading { margin-block: 2.5rem 1rem; font-size: 1.35rem; }
+.learner-course-grid { gap: 1rem; }
+.learner-course, .learner-empty {
+  border: 1px solid #dce9de;
+  border-block-start: .3rem solid #a9d0b0;
+  border-radius: 1rem;
+  padding: 1.4rem;
+  box-shadow: none;
+  min-width: 0;
+}
+.learner-course .title { font-size: 1.18rem; overflow-wrap: anywhere; }
+.learner-course .btn { width: auto; }
+@media (min-width: 80rem) {
+  .learner-course-grid.cols-2 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 120rem) {
+  .learner-course-grid.cols-2 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}

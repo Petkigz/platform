@@ -127,37 +127,26 @@ export default async function LearnPage() {
   });
 
   return (
-    <div className="container section">
-      <p className="eyebrow">My learning</p>
-      <h1>
-        {profiles?.display_name
-          ? `Assalamu alaikum, ${profiles.display_name}`
-          : 'Your courses'}
-      </h1>
-      <p className="muted">
-        Signed in as {user.email ?? user.phone ?? 'unknown'}.{' '}
-        <Link href="/account">Account settings</Link>
-        {' · '}
-        <Link href="/saved">
-          Saved courses{savedCount > 0 ? ` (${savedCount})` : ''}
-        </Link>{' · '}
-        <Link href="/downloads">On this device</Link>
-        {' · '}
-        {/* Unconditional, like the saved list: a question asked while the assistant
-            was on leaves a record, and the page that explains it should not vanish
-            when the flag is turned off. */}
-        <Link href="/learn/ask">Ask about a lesson</Link>
-        {' · '}
-        <form action="/sign-out" method="post" style={{ display: 'inline' }}>
-          <button
-            type="submit"
-            className="btn ghost"
-            style={{ width: 'auto', margin: 0, padding: '0 0.25rem', fontSize: 'inherit' }}
-          >
-            Sign out
-          </button>
-        </form>
-      </p>
+    <div className="container section learner-dashboard">
+      <div className="learner-welcome">
+        <p className="eyebrow">My learning</p>
+        <h1>
+          {profiles?.display_name
+            ? `Assalamu alaikum, ${profiles.display_name}`
+            : 'Your courses'}
+        </h1>
+        <p className="muted learner-identity">Signed in as {user.email ?? user.phone ?? 'unknown'}.</p>
+        <nav className="learner-shortcuts" aria-label="Learning shortcuts">
+          <Link href="/account">Account settings</Link>
+          <Link href="/saved">Saved courses{savedCount > 0 ? ` (${savedCount})` : ''}</Link>
+          <Link href="/downloads">On this device</Link>
+          {/* Remains reachable when the assistant flag is off, like saved courses. */}
+          <Link href="/learn/ask">Ask about a lesson</Link>
+          <form action="/sign-out" method="post">
+            <button type="submit" className="btn ghost">Sign out</button>
+          </form>
+        </nav>
+      </div>
 
       {/* The screen is described as "led by continue where you stopped", and it
           was not: the greeting, then live classes, then every enrolment as an
@@ -257,8 +246,9 @@ export default async function LearnPage() {
         </div>
       )}
 
+      {rows.length > 0 && <h2 className="learner-courses-heading">Your courses</h2>}
       {rows.length === 0 && !error ? (
-        <div className="card">
+        <div className="card learner-empty">
           <p className="empty">No enrolments yet.</p>
           {!myProfileId && (
             <>
@@ -271,11 +261,11 @@ export default async function LearnPage() {
           <Link href="/catalogue" className="btn">Browse the catalogue</Link>
         </div>
       ) : (
-        <div className="grid cols-2">
+        <div className="grid cols-2 learner-course-grid">
           {rows.map((r, i) => {
             const s = summaries[i]!;
             return (
-              <div className="card" key={r.id}>
+              <div className="card learner-course" key={r.id}>
                 <Link href={`/learn/${r.id}`} className="course" style={{ display: 'block' }}>
                   <span className="title">{courseTitle(r)}</span>
                 </Link>

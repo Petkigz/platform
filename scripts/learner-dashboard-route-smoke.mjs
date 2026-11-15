@@ -5,6 +5,7 @@ import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const encode = (value) => Buffer.from(JSON.stringify(value)).toString('base64url');
 const user = { id: '0ca318e2-8b44-4a64-9b58-2af31ab941c7', aud: 'authenticated', role: 'authenticated', email: 'probe@example.invalid', app_metadata: {}, user_metadata: {}, created_at: '2026-01-01T00:00:00Z' };
@@ -58,7 +59,7 @@ const next = spawn(process.execPath, [resolve(root, 'node_modules/next/dist/bin/
   env: { PATH: process.env.PATH, HOME: process.env.HOME, TMPDIR: process.env.TMPDIR, NEXT_TELEMETRY_DISABLED: '1', NEXT_PUBLIC_SUPABASE_URL: `http://127.0.0.1:${fake.address().port}`, NEXT_PUBLIC_SUPABASE_ANON_KEY: 'fake-anon' },
   stdio: ['ignore', 'pipe', 'pipe'],
 });
-let logs = '';
+let logs = ''; let browser;
 try {
   await new Promise((resolveReady, reject) => {
     const timeout = setTimeout(() => reject(new Error(`Next startup timed out\n${logs}`)), 60000);
@@ -88,8 +89,38 @@ try {
     assert.ok(maximum >= 2, `independent synthetic REST calls did not overlap in ${state}`);
   }
   console.log('Learner dashboard HTTP smoke passed: anonymous redirect, own/child labels, flags off/on/outage, profile error, no-store, gated calls and overlapping synthetic reads. Not real Auth or RLS.');
+  if (process.env.RESPONSIVE_PLAYWRIGHT && process.env.RESPONSIVE_CHROME) {
+    const { chromium } = await import(pathToFileURL(process.env.RESPONSIVE_PLAYWRIGHT).href);
+    browser = await chromium.launch({ executablePath: process.env.RESPONSIVE_CHROME, headless: true, args: ['--no-sandbox'] });
+    enabled = true; flagOutage = false; profileOutage = false;
+    for (const width of [320, 390, 768, 1440, 1920, 2560]) {
+      const context = await browser.newContext({ viewport: { width, height: 900 }, locale: 'en' });
+      await context.addCookies([{ name: 'sb-127-auth-token', value: `base64-${encode(session)}`, url: `http://localhost:${port}` }]);
+      const page = await context.newPage();
+      await page.goto(`http://localhost:${port}/learn`, { waitUntil: 'networkidle' });
+      const metrics = await page.evaluate(() => {
+        const area = document.querySelector('.learner-dashboard');
+        const grid = document.querySelector('.learner-course-grid');
+        if (!area || !grid) throw new Error('Synthetic learner dashboard missing');
+        return { scroll: document.documentElement.scrollWidth, area: area.getBoundingClientRect().width,
+          columns: getComputedStyle(grid).gridTemplateColumns.split(' ').length };
+      });
+      assert.ok(metrics.scroll <= width + 1, `${width}: page overflow ${metrics.scroll}`);
+      assert.ok(metrics.area >= width - 1, `${width}: learner area not full-width`);
+      assert.equal(metrics.columns, width >= 1920 ? 4 : width >= 1280 ? 3 : width >= 736 ? 2 : 1);
+      assert.equal(await page.getByRole('navigation', { name: 'Learning shortcuts' }).count(), 1);
+      assert.equal(await page.locator('form[action="/sign-out"] button').count(), 1);
+      assert.equal(await page.getByText('Synthetic adult course').count(), 1);
+      assert.equal(await page.getByText('Synthetic child course').count(), 1);
+      assert.equal(await page.getByText('Synthetic child', { exact: true }).count(), 1);
+      assert.equal(await page.getByText('Me', { exact: true }).count(), 1);
+      console.log(`Synthetic learner dashboard ${width}: no overflow, ${metrics.columns} columns, distinct learner labels`);
+      await context.close();
+    }
+  }
 } catch (e) { console.error(logs); throw e; }
 finally {
+  if (browser) await browser.close();
   try { process.kill(-next.pid, 'SIGTERM'); } catch { /* already exited */ }
   if (next.exitCode === null) await Promise.race([once(next, 'exit'), new Promise((r) => setTimeout(r, 5000))]);
   try { process.kill(-next.pid, 'SIGKILL'); } catch { /* already exited */ }
