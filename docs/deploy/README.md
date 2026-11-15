@@ -1488,11 +1488,11 @@ analytics, `no-store` and concurrent independent work. It does not exercise
 hosted PostgREST filtering, actual prices, JWT validation, RLS or real-world
 latency.
 
-Media resume writes from one player are serialized and coalesced in the browser;
-a lost or malformed response stops that player's further writes and warns the
-learner to reload. The exit flush uses `keepalive` as a best effort only: a
-browser may terminate before a queued final write begins or finishes. Different
-players, tabs and devices remain uncoordinated, and an earlier request whose
-response was lost can commit later. The current database RPC has no cross-device
-ordering token; do not treat this client queue as durable last-position or
-concurrency protection. No real hosted media/resume test has been performed.
+Media resume work is incomplete; see [resume reliability](../resume-reliability-work.md).
+The updated player uses revision-checked writes and prompts on conflicts, but old
+unconditional write paths still exist and device recovery is not connected. It
+requires the pending migration 1360, which has not been deployed. The exit flush
+is best effort; a browser can stop before a queued write begins or finishes.
+A lost response may still hide a later commit. No real hosted media/resume or
+PostgreSQL concurrency test has been performed; do not deploy this as a complete
+fix.

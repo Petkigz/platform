@@ -8,6 +8,7 @@ import { deviceKey, storeLesson } from '@/lib/offline';
 import { track } from '@/lib/analytics';
 import { LatestRequest } from '@/lib/latest-request';
 import { useMediaPosition } from './use-media-position';
+import { PositionStatus } from './position-status';
 
 import {
   PROFILE_LABEL,
@@ -83,11 +84,8 @@ export function RenditionPlayer({
   /** Where the database says this learner stopped, read on the server. */
   resumeAt?: number | null;
 }) {
-  const { ref: mediaRef, notice, saveError, handlers } = useMediaPosition({
-    enrolmentId,
-    lessonId,
-    resumeAt,
-  });
+  const position = useMediaPosition({ enrolmentId, lessonId, resumeAt });
+  const { ref: mediaRef, ready, handlers } = position;
 
   const choices = renditionChoices(renditions);
   const initial = pickStreamRendition(renditions, null);
@@ -257,7 +255,7 @@ export function RenditionPlayer({
       {video ? (
         <video
           ref={mediaRef as RefObject<HTMLVideoElement>}
-          controls
+          controls={ready}
           playsInline
           preload="metadata"
           src={playback?.id === chosen.id ? playback.url : undefined}
@@ -276,7 +274,7 @@ export function RenditionPlayer({
       ) : (
         <audio
           ref={mediaRef as RefObject<HTMLAudioElement>}
-          controls
+          controls={ready}
           preload="metadata"
           src={playback?.id === chosen.id ? playback.url : undefined}
           aria-label={displayName}
@@ -325,6 +323,7 @@ export function RenditionPlayer({
         )}
       </div>
 
+      <PositionStatus position={position} />
       {loading && <p className="muted">Preparing the player…</p>}
       {error && <p className="muted">{error}</p>}
       <p className="muted" style={{ fontSize: '0.85rem' }}>

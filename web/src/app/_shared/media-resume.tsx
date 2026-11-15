@@ -11,6 +11,7 @@ import {
 } from '@/lib/resume';
 
 import { useMediaPosition } from './use-media-position';
+import { PositionStatus } from './position-status';
 
 type PlayerProps = {
   name: string;
@@ -20,15 +21,6 @@ type PlayerProps = {
   resumeAt: number | null;
 };
 
-function SaveNote({ notice, error }: { notice: string | null; error: string | null }) {
-  if (!notice && !error) return null;
-  return (
-    <p className="meta" role="status" style={{ margin: 0 }}>
-      {error ? <span className="danger">{error}</span> : notice}
-    </p>
-  );
-}
-
 /**
  * A recorded lesson, resumed where it was left.
  *
@@ -36,14 +28,15 @@ function SaveNote({ notice, error }: { notice: string | null; error: string | nu
  * about it was wrong, so nothing else about it changed.
  */
 export function VideoWithResume({ name, src, enrolmentId, lessonId, resumeAt }: PlayerProps) {
-  const { ref, notice, saveError, handlers } = useMediaPosition({ enrolmentId, lessonId, resumeAt });
+  const position = useMediaPosition({ enrolmentId, lessonId, resumeAt });
+  const { ref, ready, handlers } = position;
 
   return (
     <div style={{ display: 'grid', gap: '0.4rem' }}>
       <strong>{name}</strong>
       <video
         ref={ref as RefObject<HTMLVideoElement>}
-        controls
+        controls={ready}
         playsInline
         preload="metadata"
         src={src ?? undefined}
@@ -60,7 +53,7 @@ export function VideoWithResume({ name, src, enrolmentId, lessonId, resumeAt }: 
           </a>
         </p>
       )}
-      <SaveNote notice={notice} error={saveError} />
+      <PositionStatus position={position} />
     </div>
   );
 }
@@ -85,7 +78,8 @@ export function VideoWithResume({ name, src, enrolmentId, lessonId, resumeAt }: 
  * course to feel considered.
  */
 export function AudioPlayer({ name, src, enrolmentId, lessonId, resumeAt }: PlayerProps) {
-  const { ref, notice, saveError, handlers } = useMediaPosition({ enrolmentId, lessonId, resumeAt });
+  const position = useMediaPosition({ enrolmentId, lessonId, resumeAt });
+  const { ref, ready, handlers } = position;
   const [speed, setSpeed] = useState(1);
   const [loop, setLoop] = useState<Loop>({ from: null, to: null });
 
@@ -102,7 +96,7 @@ export function AudioPlayer({ name, src, enrolmentId, lessonId, resumeAt }: Play
 
       <audio
         ref={ref as RefObject<HTMLAudioElement>}
-        controls
+        controls={ready}
         preload="metadata"
         src={src ?? undefined}
         aria-label={name}
@@ -182,7 +176,7 @@ export function AudioPlayer({ name, src, enrolmentId, lessonId, resumeAt }: Play
         </p>
       )}
 
-      <SaveNote notice={notice} error={saveError} />
+      <PositionStatus position={position} />
     </div>
   );
 }
