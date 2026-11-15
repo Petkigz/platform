@@ -29,16 +29,15 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/ayah-probe"
-          cp package.json package-lock.json "$RUNNER_TEMP/ayah-probe/"
+          node scripts/cloudflare-probe-lock/check.mjs
+          cp scripts/cloudflare-probe-lock/package.json scripts/cloudflare-probe-lock/package-lock.json "$RUNNER_TEMP/ayah-probe/"
           cp -a web "$RUNNER_TEMP/ayah-probe/web"
+          cp scripts/cloudflare-probe-lock/web-package.json "$RUNNER_TEMP/ayah-probe/web/package.json"
           cp scripts/cloudflare-local-probe.mjs scripts/cloudflare-prayer-synthetic.mjs "$RUNNER_TEMP/ayah-probe/"
           cd "$RUNNER_TEMP/ayah-probe"
           npm ci --no-audit --no-fund
-          # Next is upgraded only in this disposable copy to meet this adapter's peer requirement.
-          npm install -w @ayahspring/web --save --save-exact --no-audit --no-fund next@16.4.5
-          npm install -w @ayahspring/web --save-dev --save-exact --no-audit --no-fund @opennextjs/cloudflare@1.20.17 wrangler@4.162.0
           npm audit --json > audit.json || true
-          node -e 'const a=require("./audit.json"); if(!a.metadata?.vulnerabilities) throw Error("audit result unavailable"); const summary=JSON.stringify(a.metadata.vulnerabilities); const names=Object.entries(a.vulnerabilities||{}).map(([n,v])=>`${n}:${v.severity}`).join(", "); console.log(`::notice title=Experimental dependency audit::${summary} ${names}`);'
+          node -e 'const a=require("./audit.json"); if(!a.metadata?.vulnerabilities) throw Error("audit result unavailable"); const summary=JSON.stringify(a.metadata.vulnerabilities); const names=Object.entries(a.vulnerabilities||{}).map(([n,v])=>`${n}:${v.severity}`).join(", "); console.log(`::notice title=Experimental dependency audit::${summary} ${names}`); if(a.metadata.vulnerabilities.total !== 0) throw Error("Review experimental dependency advisories before proceeding");'
           cat > web/wrangler.jsonc <<'EOF'
           {
             "name": "ayahspring-local-probe",

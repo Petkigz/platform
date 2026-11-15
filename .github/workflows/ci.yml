@@ -33,6 +33,7 @@ jobs:
         with:
           node-version: '22.22.3'
       - run: node scripts/repo-check.mjs
+      - run: node scripts/cloudflare-probe-lock/check.mjs
 
   gates:
     name: Database, web, types and build
