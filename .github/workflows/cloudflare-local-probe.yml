@@ -33,7 +33,8 @@ jobs:
           cp scripts/cloudflare-probe-lock/package.json scripts/cloudflare-probe-lock/package-lock.json "$RUNNER_TEMP/ayah-probe/"
           cp -a web "$RUNNER_TEMP/ayah-probe/web"
           cp scripts/cloudflare-probe-lock/web-package.json "$RUNNER_TEMP/ayah-probe/web/package.json"
-          cp scripts/cloudflare-local-probe.mjs scripts/cloudflare-prayer-synthetic.mjs "$RUNNER_TEMP/ayah-probe/"
+          cp scripts/cloudflare-local-probe.mjs scripts/cloudflare-prayer-synthetic.mjs scripts/cloudflare-preview-gate-smoke.mjs "$RUNNER_TEMP/ayah-probe/"
+          cp scripts/cloudflare-probe-lock/preview-gate.mjs scripts/cloudflare-probe-lock/preview-worker.mjs "$RUNNER_TEMP/ayah-probe/web/"
           cd "$RUNNER_TEMP/ayah-probe"
           npm ci --no-audit --no-fund
           npm audit --json > audit.json || true
@@ -72,6 +73,21 @@ jobs:
           else
             cat probe.log
             node -e 'const s=require("fs").readFileSync("probe.log","utf8").slice(-6000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A"); console.log(`::error title=Local Workers probe failed::${s}`)'
+            exit 1
+          fi
+      - name: Test data-free preview gate in local Workers
+        working-directory: ${{ runner.temp }}/ayah-probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp web/wrangler.jsonc web/wrangler.original.jsonc
+          trap 'mv web/wrangler.original.jsonc web/wrangler.jsonc' EXIT
+          node -e 'const fs=require("fs");const f="web/wrangler.jsonc";const c=JSON.parse(fs.readFileSync(f,"utf8"));c.main="preview-worker.mjs";c.assets.run_worker_first=true;fs.writeFileSync(f,JSON.stringify(c,null,2));'
+          if node cloudflare-preview-gate-smoke.mjs > gate-probe.log 2>&1; then
+            cat gate-probe.log
+          else
+            cat gate-probe.log
+            node -e 'const s=require("fs").readFileSync("gate-probe.log","utf8").slice(-6000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A"); console.log(`::error title=Preview gate probe failed::${s}`)'
             exit 1
           fi
       # Rebuild with a fake loopback target baked in; no real credentials or data.

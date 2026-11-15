@@ -34,6 +34,7 @@ jobs:
           node-version: '22.22.3'
       - run: node scripts/repo-check.mjs
       - run: node scripts/cloudflare-probe-lock/check.mjs
+      - run: node --test scripts/cloudflare-probe-lock/preview-gate.test.mjs
 
   gates:
     name: Database, web, types and build
