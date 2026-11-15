@@ -90,9 +90,11 @@ try {
   entitled = true; mismatch = false; multipleMedia = true;
   const multiResponse = await request({ cookie }); const multiHtml = await multiResponse.text();
   assert.equal(multiResponse.status, 200); assert.match(multiHtml, /Synthetic audio/);
-  assert.match(multiHtml, /shared between recordings/);
+  assert.ok(multiHtml.includes('resourceId') && multiHtml.includes('resource-two'), 'players must receive recording identities');
+  assert.ok(multiHtml.includes('legacyActorId') && multiHtml.includes(user.id), 'players must bind old places to the rendered actor');
+  assert.ok(!multiHtml.includes('shared between recordings'), 'recordings have separate saved places');
   multipleMedia = false;
-  console.log('Lesson route HTTP smoke passed: anonymous redirect, entitlement-gated transcript and outline, version mismatch, shared-position notice and no-store. Synthetic data only.');
+  console.log('Lesson route HTTP smoke passed: anonymous redirect, entitlement-gated transcript and outline, version mismatch, separate recording players and no-store. Synthetic data only.');
   if (process.env.RESPONSIVE_PLAYWRIGHT && process.env.RESPONSIVE_CHROME) {
     const { chromium } = await import(pathToFileURL(process.env.RESPONSIVE_PLAYWRIGHT).href);
     browser = await chromium.launch({ executablePath: process.env.RESPONSIVE_CHROME, headless: true, args: ['--no-sandbox'] });

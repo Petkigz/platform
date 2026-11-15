@@ -88,6 +88,16 @@ export async function run(ctx) {
     }
   }
 
+  // Historical lesson-wide behavior below is exercised only with a temporary
+  // test-fixture grant. The shipped migration revokes it, which is checked both
+  // before and after those historical assertions. No deployed role is changed.
+  await test('retired lesson-wide writer is unavailable to ordinary clients', async () => {
+    await rejects(() => asCommitted(learner.userId, 'select public.compare_record_lesson_position($1,$2,$3,$4)',
+      [enrolmentId, built.lessons[0], 5, null]), /permission denied/);
+    assert(!(await q("select has_function_privilege('authenticated','public.compare_record_lesson_position(uuid,uuid,integer,uuid)','EXECUTE') allowed")).rows[0].allowed, 'legacy writer still executable');
+  });
+  await q('grant execute on function public.compare_record_lesson_position(uuid,uuid,integer,uuid) to authenticated');
+
   const record = async (actor, enrolment, lesson, seconds) => {
     const snapshot = (await asCommitted(actor, 'select public.resume_position_snapshot($1,$2) r', [enrolment, lesson])).rows[0].r;
     const result = (await asCommitted(actor, 'select public.compare_record_lesson_position($1,$2,$3,$4) r',
@@ -297,6 +307,12 @@ export async function run(ctx) {
     await rejects(() => compare(stranger.userId, built.lessons[0], 10, null), /not your learning/);
     await rejects(() => ctx.asAnon(() => q('select public.resume_position_snapshot($1,$2)', [enrolmentId, built.lessons[0]])), /sign in/);
     await rejects(() => ctx.asAnon(() => q('select public.compare_record_lesson_position($1,$2,$3,$4)', [enrolmentId, built.lessons[0], 10, null])), /sign in/);
+  });
+
+  await q('revoke all on function public.compare_record_lesson_position(uuid,uuid,integer,uuid) from authenticated');
+  await test('resource mode leaves the lesson-wide writer retired', async () => {
+    await rejects(() => asCommitted(learner.userId, 'select public.compare_record_lesson_position($1,$2,$3,$4)',
+      [enrolmentId, built.lessons[0], 5, null]), /permission denied/);
   });
 
   const resourceSnapshot = async (actor, lesson, resource) =>

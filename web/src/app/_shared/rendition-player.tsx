@@ -64,6 +64,7 @@ export function RenditionPlayer({
   saveNote = null,
   enrolmentId = null,
   resumeAt = null,
+  legacyActorId,
 }: {
   displayName: string;
   lessonId: string;
@@ -83,8 +84,9 @@ export function RenditionPlayer({
   enrolmentId?: string | null;
   /** Where the database says this learner stopped, read on the server. */
   resumeAt?: number | null;
+  legacyActorId?: string;
 }) {
-  const position = useMediaPosition({ enrolmentId, lessonId, resumeAt });
+  const position = useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActorId, resumeAt });
   const { ref: mediaRef, ready, handlers } = position;
 
   const choices = renditionChoices(renditions);

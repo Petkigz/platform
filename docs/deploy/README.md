@@ -195,7 +195,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-346 files in `supabase/migrations/`, applied in filename order — the 14-digit
+347 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -220,10 +220,9 @@ ownership, privileges, extensions or network failure behavior. The subsequent
 hosted apply succeeded, but does not verify real Auth requests or runtime
 behaviour. Do not assume that a dry run verifies trigger permissions.
 After a successful application, verify that the history contains every expected
-version, through `20261281139000_resource_resume_export.sql`, as well as running
-the checks in section 2. The initial hosted apply stopped at 1350; 1360–1390
-are pending and require a reviewed, coordinated app/database rollout. Resource
-resume is not yet integrated. Do not apply these changes alone. A history entry
+version, through `20261281140000_retire_lesson_resume_writes.sql`, as well as running
+the checks in section 2. The initial hosted apply stopped at 1350; 1360–1400
+are pending and require a reviewed, coordinated app/database rollout. Resource resume requires app/database coordination, stale-worker draining and verification. Do not apply these changes alone. A history entry
 alone does not prove the schema works.
 
 #### Optional GitHub Actions preview for the existing test project

@@ -42,6 +42,10 @@ try {
     assert.ok(pids.includes(blocker.processID), `expected ${waiter.processID} to wait for ${blocker.processID}; got ${pids}`);
   }
   const write = (client, id, seconds, revision) => client.query('select public.compare_record_lesson_position($1,$2,$3,$4) r', [enrolment, id, seconds, revision]);
+  // The real migration retires this writer. Temporarily grant it only in this
+  // disposable fixture for the historical race checks, then revoke it again.
+  await begin(a); await assert.rejects(write(a, emptyLesson, 20, null), (e) => e.code === '42501'); await a.query('rollback');
+  await observer.query('grant execute on function public.compare_record_lesson_position(uuid,uuid,integer,uuid) to authenticated');
   // Two first writes observed no row. The loser must see a conflict, not overwrite.
   await begin(a); await begin(b);
   const first = (await write(a, emptyLesson, 20, null)).rows[0].r;
@@ -64,6 +68,8 @@ try {
   await blocked(b, a); await a.query('commit'); await rejected; await b.query('rollback');
   const completion = (await observer.query('select status,last_video_position from public.lesson_progress where course_enrolment_id=$1 and lesson_id=$2', [enrolment, completionLesson])).rows[0];
   assert.deepEqual(completion, { status: 'completed', last_video_position: null });
+  await observer.query('revoke all on function public.compare_record_lesson_position(uuid,uuid,integer,uuid) from authenticated');
+  await begin(a); await assert.rejects(write(a, emptyLesson, 30, first.revision), (e) => e.code === '42501'); await a.query('rollback');
   // Resource positions share a parent progress row but compare independently.
   const resourceWrite = (client, resource, seconds, revision) => client.query(
     'select public.compare_record_resource_position($1,$2,$3,$4,$5) r', [enrolment, lesson, resource, seconds, revision]);
@@ -84,16 +90,5 @@ try {
   const waitingResourcePin = resourceWrite(b, resourceA, 99, resourceRewind.revision);
   const resourcePinRejected = assert.rejects(waitingResourcePin, /not in the version this learner is on/);
   await blocked(b, a); await a.query('commit'); await resourcePinRejected; await b.query('rollback');
-  await a.query('begin'); await a.query("set local app.bypassing_enrolment_pin='on'");
-  await a.query('update public.course_enrolments set course_version_id=$2 where id=$1', [enrolment, v1]); await a.query('commit');
-  // An already validated writer waits for a concurrent pin change and then
-  // rechecks the lesson against the new version. Synthetic update uses the
-  // same row lock as the audited repin RPC but is not itself that RPC.
-  await a.query('begin'); await a.query("set local app.bypassing_enrolment_pin='on'");
-  await a.query('update public.course_enrolments set course_version_id=$2 where id=$1', [enrolment, v2]);
-  await begin(b);
-  const waitingPin = write(b, emptyLesson, 90, firstRewind.revision);
-  const pinRejected = assert.rejects(waitingPin, /not in the version this learner is on/);
-  await blocked(b, a); await a.query('commit'); await pinRejected; await b.query('rollback');
-  console.log('PostgreSQL selected resume races passed: first writes, stale rewind, completion insert, resource isolation and pin changes.');
+  console.log('PostgreSQL selected resume races passed: retired writer boundary, historical races under fixture grant, resource isolation and synthetic pin change.');
 } finally { await Promise.all([a.end().catch(() => {}), b.end().catch(() => {}), observer.end().catch(() => {})]); }
