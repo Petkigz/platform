@@ -44,7 +44,12 @@ and the same local runtime smoke passed. Follow-up run `43694107734` also loaded
 an emitted static asset and verified that `/admin`, `/learn` and the prayer page
 redirect when Supabase is unconfigured and that an admin flag write returns 503.
 That unconfigured case does not test authenticated authorization or RLS.
-Wrangler reported **20,310.28 KiB uncompressed** (about 4,131 KiB gzipped), below Cloudflare's currently documented
+Run `43695931326` rebuilt with a synthetic loopback Auth/settings server and
+exercised the actual prayer route in local Workers: anonymous redirect, simulated
+signed-in flag off/on/outage/off and no-store headers passed. This is not real
+Supabase Auth, PostgREST, RLS, browser geolocation or a hosted Worker; local
+loopback fetch behavior need not match hosted Workers egress. Wrangler reported
+**20,310.28 KiB uncompressed** (about 4,131 KiB gzipped), below Cloudflare's currently documented
 [64 MiB uncompressed Worker limit](https://developers.cloudflare.com/workers/platform/limits/).
 This was a different, experimental Next version, not a verified upgrade or a
 measurement of every future build. The isolated `npm audit` reported no high or
