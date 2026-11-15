@@ -42,6 +42,8 @@ async function run(configured) {
     const home = await get('/', { authorization });
     assert.equal(home.status, 200); assert.match(home.headers.get('cache-control') || '', /no-store/);
     const html = await home.text(); assert.match(html, /AyahSpring/i);
+    assert.match(html, /PRIVATE TEST PREVIEW/);
+    assert.match(html, /no real accounts or data/);
     const asset = html.match(/(?:src|href)="(\/_next\/static\/[^"?#]+\.(?:js|css))[^" ]*"/)?.[1];
     assert.ok(asset, 'home must reference a built asset');
     assert.equal((await get(asset)).status, 401, 'actual asset must not bypass gate');

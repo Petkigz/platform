@@ -33,6 +33,7 @@ jobs:
           cp scripts/cloudflare-probe-lock/package.json scripts/cloudflare-probe-lock/package-lock.json "$RUNNER_TEMP/ayah-probe/"
           cp -a web "$RUNNER_TEMP/ayah-probe/web"
           cp scripts/cloudflare-probe-lock/web-package.json "$RUNNER_TEMP/ayah-probe/web/package.json"
+          node scripts/cloudflare-probe-lock/preview-label.mjs "$RUNNER_TEMP/ayah-probe/web/src/app/layout.tsx"
           cp scripts/cloudflare-local-probe.mjs scripts/cloudflare-prayer-synthetic.mjs scripts/cloudflare-preview-gate-smoke.mjs "$RUNNER_TEMP/ayah-probe/"
           cp scripts/cloudflare-probe-lock/preview-gate.mjs scripts/cloudflare-probe-lock/preview-worker.mjs "$RUNNER_TEMP/ayah-probe/web/"
           cd "$RUNNER_TEMP/ayah-probe"
