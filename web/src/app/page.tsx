@@ -290,7 +290,7 @@ export default async function Home({
         </div>
       </section>
 
-      <section className="band">
+      <section className="band home-band">
         <div className="container band-inner">
           <div>
             <p className="eyebrow">{t('home.teachEyebrow')}</p>
@@ -309,7 +309,7 @@ export default async function Home({
         </div>
       </section>
 
-      <section className="closing">
+      <section className="closing home-closing">
         <div className="container">
           <h2>{t('home.closingTitle')}</h2>
           <p>{t(signedIn ? 'home.closingSignedIn' : 'home.closingSignedOut')}</p>
