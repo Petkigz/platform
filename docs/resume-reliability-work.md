@@ -62,6 +62,14 @@ before enabling. The existing export provides progress summaries, not a full
 resource-position inventory. Additional PostgreSQL interleavings, hosted
 RLS/privileges, retention, and real browser lifecycle need verification.
 
+A separate, currently unused resource recovery helper namespaces records by actor,
+enrolment, lesson, resource and session. It shares the existing device opt-in;
+lesson-only pending records remain separate and are never silently assigned to a
+recording. Either updated helper clears both formats when consent is withdrawn.
+A cached old client cannot clear the new namespace, however; coordinated rollout
+and stale-client handling remain necessary. Unit tests cover isolation, expiry,
+withdrawal and legacy separation, not browser lifecycle or cross-tab atomicity.
+
 Recovery is best effort: the account must first be confirmed online, storage can
 be unavailable or cleared, and positions may be lost before the first local
 write or if the learner never returns to that browser. Records expire after

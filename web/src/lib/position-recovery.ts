@@ -5,6 +5,7 @@
 const PREFIX = 'ayahspring:resume-recovery:v1:';
 const CONSENT = `${PREFIX}enabled`;
 const ITEM = `${PREFIX}item:`;
+const RESOURCE_ITEM = 'ayahspring:resume-recovery:v3:item:';
 const MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 const idPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -32,7 +33,12 @@ export function positionRecovery(store: Store, clock: () => number = Date.now) {
     disable() {
       // Remove consent first so a partial cleanup does not silently resume writes.
       store.removeItem(CONSENT);
-      for (const key of keys()) store.removeItem(key);
+      const allKeys = keys();
+      for (let i = 0; i < store.length; i++) {
+        const key = store.key(i);
+        if (key?.startsWith(RESOURCE_ITEM)) allKeys.push(key);
+      }
+      for (const key of allKeys) store.removeItem(key);
     },
     save(record: RecoveryRecord) {
       if (store.getItem(CONSENT) !== 'yes') return false;
