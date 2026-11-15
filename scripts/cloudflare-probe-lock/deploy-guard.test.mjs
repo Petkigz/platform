@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { workerName, previewConfig, validateConfig, assertAbsent } from './deploy-guard.mjs';
+import { workerName, previewConfig, validateConfig, assertAbsent, deploymentDiagnostic } from './deploy-guard.mjs';
 
 test('worker names are unique to a GitHub run and attempt', () => {
   assert.equal(workerName('12345', '1'), 'ayahspring-test-12345-1');
@@ -32,4 +32,13 @@ test('preview configuration contains only the reviewed data-free bindings', () =
 test('only a clear not-found response permits first deployment', () => {
   assert.doesNotThrow(() => assertAbsent(404, { success: false, errors: [{ code: 10007 }] }));
   for (const [status, body] of [[200, {}], [403, { success: false, errors: [{ code: 10007 }] }], [404, {}], [404, { success: false, errors: [{ code: 999 }] }], [404, { success: false, errors: [{ code: 10007 }, { code: 42 }] }]]) assert.throws(() => assertAbsent(status, body));
+});
+
+test('deployment diagnostics emit only fixed categories and numeric error codes', () => {
+  const privateText = 'secret-token-and-account-info';
+  const result = deploymentDiagnostic(`\u001b[31mAuthentication error [code: 10000]\u001b[0m ${privateText} [code: 10000] [code: 42]`);
+  assert.equal(result, 'Wrangler diagnostics: authentication; Cloudflare error codes: 10000, 42.');
+  assert.equal(result.includes(privateText), false);
+  assert.equal(deploymentDiagnostic(`unrecognized ${privateText} [code: ${privateText}]`), 'Wrangler diagnostics: no recognized category; Cloudflare error codes: none detected.');
+  assert.match(deploymentDiagnostic('Workers.dev subdomain not registered'), /workers\.dev configuration/);
 });

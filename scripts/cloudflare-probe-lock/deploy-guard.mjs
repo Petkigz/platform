@@ -31,6 +31,20 @@ export function assertAbsent(status, data) {
   }
 }
 
+// Never print Wrangler's raw output: it can contain account details or secrets.
+// Report only fixed descriptions and numeric Cloudflare error codes.
+export function deploymentDiagnostic(logs) {
+  const clean = logs.replace(/\x1b\[[0-9;]*m/g, '');
+  const codes = [...new Set([...clean.matchAll(/\[code:\s*(\d{1,8})\]/gi)].map((m) => m[1]))].slice(0, 10);
+  const categories = [];
+  if (/authentication error|unable to authenticate|invalid api token/i.test(clean)) categories.push('authentication');
+  if (/not authorized|permission denied|insufficient permissions|unauthorized/i.test(clean)) categories.push('permissions');
+  if (/workers\.dev.*(?:subdomain|register)|(?:subdomain|register).*workers\.dev/i.test(clean)) categories.push('workers.dev configuration');
+  if (/exceeded.*(?:limit|quota)|(?:limit|quota).*exceeded/i.test(clean)) categories.push('limit or quota');
+  if (/could not resolve|network error|fetch failed|timed? out/i.test(clean)) categories.push('network');
+  return `Wrangler diagnostics: ${categories.length ? categories.join(', ') : 'no recognized category'}; Cloudflare error codes: ${codes.length ? codes.join(', ') : 'none detected'}.`;
+}
+
 async function run() {
   const e = process.env;
   if (e.GITHUB_REPOSITORY !== 'Petkigz/platform' || e.GITHUB_REF !== 'refs/heads/arena/4f30fd1d-platform' || e.GITHUB_EVENT_NAME !== 'push' || e.CF_PREVIEW_READY !== 'free-data-free') throw new Error('Preview authorization or target is not configured');
@@ -52,7 +66,10 @@ async function run() {
   let logs = '';
   for (const stream of [cli.stdout, cli.stderr]) stream.on('data', (chunk) => { logs = (logs + chunk.toString()).slice(-100000); });
   const code = await new Promise((resolve, reject) => { cli.once('error', reject); cli.once('exit', resolve); });
-  if (code !== 0) throw new Error('Cloudflare deploy did not report success. Outcome may be partial or uncertain; inspect the dashboard before any retry.');
+  if (code !== 0) {
+    console.error(deploymentDiagnostic(logs));
+    throw new Error('Cloudflare deploy did not report success. Outcome may be partial or uncertain; inspect the dashboard before any retry.');
+  }
   const url = logs.match(new RegExp(`https://${name}\\.[a-z0-9-]+\\.workers\\.dev(?=[/\\s]|$)`, 'i'))?.[0];
   console.log(`Cloudflare CLI reported success for ${name}. Preview stays closed until PREVIEW_PASSWORD is set privately in Cloudflare.`);
   if (url) console.log(`Reported preview URL: ${url}`);
