@@ -195,7 +195,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-342 files in `supabase/migrations/`, applied in filename order — the 14-digit
+343 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -220,8 +220,10 @@ ownership, privileges, extensions or network failure behavior. The subsequent
 hosted apply succeeded, but does not verify real Auth requests or runtime
 behaviour. Do not assume that a dry run verifies trigger permissions.
 After a successful application, verify that the history contains every expected
-version, through `20261281135000_calculated_prayer_times.sql`, as well as running
-the checks in section 2. A history entry alone does not prove the schema works.
+version, through `20261281136000_resume_position_revision.sql`, as well as running
+the checks in section 2. The initial hosted apply stopped at 1350; 1360 is an
+unintegrated local foundation and must not be deployed alone. A history entry
+alone does not prove the schema works.
 
 #### Optional GitHub Actions preview for the existing test project
 
