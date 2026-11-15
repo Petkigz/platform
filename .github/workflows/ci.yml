@@ -80,6 +80,9 @@ jobs:
       - name: Conflict-aware position route simulation
         run: node scripts/media-position-v2-route-test.mjs
 
+      - name: Resource-scoped position route simulation
+        run: node scripts/media-position-v3-route-test.mjs
+
       - name: Legacy position route regression
         run: node scripts/legacy-position-route-test.mjs
 
