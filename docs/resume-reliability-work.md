@@ -51,14 +51,16 @@ Migration 1380 adds a private resource-position table tied to the existing
 progress row (and cascaded with it on deletion), plus resource-checked snapshot
 and compare-and-write functions. It does not infer or copy legacy positions.
 PGlite tests cover resource isolation, access checks, stale saves, completion
-and parent-deletion cascade. This is an unintegrated foundation: the old
+and parent-deletion cascade. Disposable PostgreSQL run `43748596832` also passed
+selected simultaneous same-resource, independent-resource and synthetic pin
+change races. These do not prove all interleavings. This is an unintegrated foundation: the old
 lesson-level API and player still run, and the new table must not be deployed
 alone. Update the API, player, optional recovery keys and old-client boundary;
 provide an explicit choice for ambiguous existing positions rather than silently
 mapping them. Review account/child erasure and export of resource positions
 before enabling. The existing export provides progress summaries, not a full
-resource-position inventory. Real PostgreSQL races, hosted RLS/privileges,
-retention, and real browser lifecycle need verification.
+resource-position inventory. Additional PostgreSQL interleavings, hosted
+RLS/privileges, retention, and real browser lifecycle need verification.
 
 Recovery is best effort: the account must first be confirmed online, storage can
 be unavailable or cleared, and positions may be lost before the first local
