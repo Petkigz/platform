@@ -30,7 +30,10 @@ try {
   });
   assert.equal(response.status, 303);
   const location = new URL(response.headers.get('location'), origin);
-  assert.equal(location.origin, origin);
+  // Wrangler may expose the loopback listener as localhost inside the Worker.
+  assert.equal(location.protocol, 'http:');
+  assert.ok(['127.0.0.1', 'localhost'].includes(location.hostname));
+  assert.equal(location.port, String(port));
   assert.equal(location.pathname, '/language');
   console.log('Local Workers smoke passed: homepage and unsafe locale redirect. No Supabase, RLS or hosted runtime was tested.');
 } catch (error) { console.error(logs); throw error; }
