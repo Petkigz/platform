@@ -109,7 +109,7 @@ try {
       assert.ok(metrics.area >= width - 1, `${width}: learner area not full-width`);
       assert.equal(metrics.columns, width >= 1920 ? 4 : width >= 1280 ? 3 : width >= 736 ? 2 : 1);
       assert.equal(await page.getByRole('navigation', { name: 'Learning shortcuts' }).count(), 1);
-      assert.equal(await page.locator('form[action="/sign-out"] button').count(), 1);
+      assert.equal(await page.locator('.learner-shortcuts form[action="/sign-out"] button').count(), 1);
       assert.equal(await page.getByText('Synthetic adult course').count(), 1);
       assert.equal(await page.getByText('Synthetic child course').count(), 1);
       assert.equal(await page.getByText('Synthetic child', { exact: true }).count(), 1);
