@@ -57,4 +57,12 @@ jobs:
         run: npx --no-install opennextjs-cloudflare build
       - name: Test local Workers runtime without hosted services
         working-directory: ${{ runner.temp }}/ayah-probe
-        run: node cloudflare-local-probe.mjs
+        shell: bash
+        run: |
+          if node cloudflare-local-probe.mjs > probe.log 2>&1; then
+            cat probe.log
+          else
+            cat probe.log
+            node -e 'const s=require("fs").readFileSync("probe.log","utf8").slice(-6000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A"); console.log(`::error title=Local Workers probe failed::${s}`)'
+            exit 1
+          fi
