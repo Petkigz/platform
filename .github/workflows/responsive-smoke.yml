@@ -35,7 +35,13 @@ jobs:
         run: |
           set -euo pipefail
           export RESPONSIVE_CHROME="$(command -v google-chrome || command -v chromium)"
-          node scripts/media-resume-browser-smoke.mjs
+          if node scripts/media-resume-browser-smoke.mjs > "$RUNNER_TEMP/media-resume-browser.log" 2>&1; then
+            cat "$RUNNER_TEMP/media-resume-browser.log"
+          else
+            cat "$RUNNER_TEMP/media-resume-browser.log"
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Media resume browser test::${s}`)' "$RUNNER_TEMP/media-resume-browser.log"
+            exit 1
+          fi
       - name: Check populated catalogue layouts and search with synthetic data
         env:
           RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs
