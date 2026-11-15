@@ -179,15 +179,16 @@ export default async function CourseViewPage({
   const carryCopy = carryOn ? carryOnHeading(carryOn, progressRows.length > 0) : null;
 
   return (
-    <div className="container section">
-      <p className="eyebrow">
-        <Link href="/learn">My learning</Link>
-        {course ? ` · ${course.title}` : ''}
-      </p>
-      <h1>{course?.title ?? 'Course'}</h1>
-      <p className="muted">
-        Version {version?.version_number ?? '?'} · {(version?.language ?? '?').toUpperCase()}
-      </p>
+    <div className="container section course-workspace">
+      <header className="course-workspace-head">
+        <p className="eyebrow">
+          <Link href="/learn">My learning</Link>
+        </p>
+        <h1>{course?.title ?? 'Course'}</h1>
+        <p className="muted">
+          Version {version?.version_number ?? '?'} · {(version?.language ?? '?').toUpperCase()}
+        </p>
+      </header>
 
       {!progressOn && (
         <div className="notice warn">

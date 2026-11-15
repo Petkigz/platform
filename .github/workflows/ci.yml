@@ -70,6 +70,9 @@ jobs:
       - name: Lesson synthetic HTTP regression
         run: node scripts/lesson-route-smoke.mjs
 
+      - name: Enrolled-course synthetic HTTP regression
+        run: node scripts/course-workspace-route-smoke.mjs
+
       # The runner applies the current migrations to an in-memory database,
       # then runs every registered suite against it.
       - name: Database suite

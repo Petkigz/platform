@@ -1906,3 +1906,28 @@ html[data-motion='reduce'] *::after {
 .lesson-page > .card > p { max-width: 72ch; overflow-wrap: anywhere; }
 .lesson-page .crumbs { font-size: .9rem; }
 .lesson-page .crumbs span, .lesson-page .crumbs a { overflow-wrap: anywhere; }
+
+/* Enrolled course: wide enough for lesson lists on larger displays, while
+   long teacher-written titles and the progress control can wrap on a phone. */
+.course-workspace { max-width: none; padding-block: clamp(2rem, 4vw, 4rem); }
+.course-workspace-head {
+  background: #edf6ed;
+  border: 1px solid #d9e8da;
+  border-radius: 1.1rem;
+  padding: clamp(1.25rem, 3vw, 2.5rem);
+  margin-bottom: 1.5rem;
+}
+.course-workspace-head h1 {
+  font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+  font-size: clamp(2rem, 3.5vw, 3.5rem);
+  font-weight: 500;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+.course-workspace-head p:last-child { margin-block: .75rem 0; }
+.course-workspace .outline-h h3 { font-size: 1.15rem; overflow-wrap: anywhere; }
+.course-workspace .card { border-radius: 1rem; padding: clamp(1.2rem, 2vw, 1.8rem); }
+.course-workspace .lessons .t { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 40rem) {
+  .course-workspace .lessons li { flex-wrap: wrap; }
+}
