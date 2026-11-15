@@ -43,7 +43,7 @@ export async function run(ctx) {
 
   const course = await newCourse(teacher, { status: 'active' });
   const v1 = await newVersion(course, teacher);
-  const built = await publish(v1, { lessons: 3 });
+  const built = await publish(v1, { lessons: 4 });
 
   const learner = await adult('resume-learner@example.com', 'Resume Learner');
   const enrolmentId = await committed(async () =>
@@ -211,6 +211,7 @@ export async function run(ctx) {
     const childId = (await q(
       `insert into public.learner_profiles (family_id, display_name, learner_type, age_band)
        values ($1, 'Resume Child', 'child', '8-10') returning id`, [familyId])).rows[0].id;
+    await ctx.verifyGuardian(parent.userId, childId);
     const childEnrolment = (await q(
       `insert into public.course_enrolments
          (learner_profile_id, course_id, course_version_id, source, status)
@@ -219,5 +220,50 @@ export async function run(ctx) {
 
     const result = await record(parent.userId, childEnrolment, built.lessons[0], 42);
     assert(result.seconds === 42, `stored ${result.seconds}`);
+  });
+
+  const snapshot = async (actor, lesson = built.lessons[0]) =>
+    (await asCommitted(actor, 'select public.resume_position_snapshot($1,$2) r', [enrolmentId, lesson])).rows[0].r;
+  const compare = async (actor, lesson, seconds, revision) =>
+    (await asCommitted(actor, 'select public.compare_record_lesson_position($1,$2,$3,$4) r',
+      [enrolmentId, lesson, seconds, revision])).rows[0].r;
+
+  await test('revision comparison detects stale devices and allows deliberate rewind after review', async () => {
+    const initial = await snapshot(learner.userId);
+    const saved = await compare(learner.userId, built.lessons[0], 1900, initial.revision);
+    assert(saved.ok && saved.seconds === 1900 && saved.revision !== initial.revision, 'first save failed');
+    const stale = await compare(learner.userId, built.lessons[0], 20, initial.revision);
+    assert(!stale.ok && stale.seconds === 1900 && stale.revision === saved.revision, 'stale write overwrote');
+    const rewind = await compare(learner.userId, built.lessons[0], 20, stale.revision);
+    assert(rewind.ok && rewind.seconds === 20, 'reviewed rewind failed');
+    const delayed = await compare(learner.userId, built.lessons[0], 1900, initial.revision);
+    assert(!delayed.ok && delayed.seconds === 20, 'delayed write overwrote rewind');
+  });
+
+  await test('null revision creates only an absent row and completion stays complete', async () => {
+    const fresh = built.lessons[3];
+    const before = await snapshot(learner.userId, fresh);
+    assert(before.revision === null && before.seconds === null, 'expected no row');
+    const first = await compare(learner.userId, fresh, 15, null);
+    assert(first.ok && first.seconds === 15 && first.revision, 'initial write failed');
+    const stale = await compare(learner.userId, fresh, 25, null);
+    assert(!stale.ok && stale.seconds === 15, 'second absent-row write overwrote');
+    const done = await snapshot(learner.userId, built.lessons[2]);
+    const changed = await compare(learner.userId, built.lessons[2], 1, done.revision);
+    assert(changed.ok && (await stored(built.lessons[2])).status === 'completed', 'completion changed');
+  });
+
+  await test('old progress writes invalidate a previously observed revision', async () => {
+    const initial = await snapshot(learner.userId);
+    await record(learner.userId, enrolmentId, built.lessons[0], 555);
+    const stale = await compare(learner.userId, built.lessons[0], 12, initial.revision);
+    assert(!stale.ok && stale.seconds === 555, 'legacy write did not rotate revision');
+  });
+
+  await test('revision read and write refuse another learner and anonymous callers', async () => {
+    await rejects(() => snapshot(stranger.userId), /not your learning/);
+    await rejects(() => compare(stranger.userId, built.lessons[0], 10, null), /not your learning/);
+    await rejects(() => ctx.asAnon(() => q('select public.resume_position_snapshot($1,$2)', [enrolmentId, built.lessons[0]])), /sign in/);
+    await rejects(() => ctx.asAnon(() => q('select public.compare_record_lesson_position($1,$2,$3,$4)', [enrolmentId, built.lessons[0], 10, null])), /sign in/);
   });
 }
