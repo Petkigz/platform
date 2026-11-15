@@ -1478,3 +1478,10 @@ uses a synthetic loopback Auth/REST service and fabricated accounts and course
 rows. It checks anonymous redirect, own/child labels, flag off/on/outage,
 profile failure, no-store, gated calls, and overlapping independent REST reads.
 It is not a hosted latency benchmark or a real Auth, JWT or RLS isolation test.
+
+The local catalogue route smoke (`scripts/catalogue-route-smoke.mjs`) uses
+synthetic loopback responses to exercise filters, a country-specific sample
+price, unpublished-version exclusion, lesson-search flags and outages,
+analytics, `no-store` and concurrent independent work. It does not exercise
+hosted PostgREST filtering, actual prices, JWT validation, RLS or real-world
+latency.

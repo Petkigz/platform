@@ -61,6 +61,9 @@ jobs:
       - name: Learner dashboard synthetic HTTP regression
         run: node scripts/learner-dashboard-route-smoke.mjs
 
+      - name: Catalogue synthetic HTTP regression
+        run: node scripts/catalogue-route-smoke.mjs
+
       # The runner applies the current migrations to an in-memory database,
       # then runs every registered suite against it.
       - name: Database suite
