@@ -47,6 +47,19 @@ and multi-resource tests. Simply treating an old place as belonging to every
 recording would preserve the error. The lesson page now warns when it renders
 more than one playable resource; this is disclosure, not a resource-scoping fix.
 
+Migration 1380 adds a private resource-position table tied to the existing
+progress row (and cascaded with it on deletion), plus resource-checked snapshot
+and compare-and-write functions. It does not infer or copy legacy positions.
+PGlite tests cover resource isolation, access checks, stale saves, completion
+and parent-deletion cascade. This is an unintegrated foundation: the old
+lesson-level API and player still run, and the new table must not be deployed
+alone. Update the API, player, optional recovery keys and old-client boundary;
+provide an explicit choice for ambiguous existing positions rather than silently
+mapping them. Review account/child erasure and export of resource positions
+before enabling. The existing export provides progress summaries, not a full
+resource-position inventory. Real PostgreSQL races, hosted RLS/privileges,
+retention, and real browser lifecycle need verification.
+
 Recovery is best effort: the account must first be confirmed online, storage can
 be unavailable or cleared, and positions may be lost before the first local
 write or if the learner never returns to that browser. Records expire after
@@ -66,9 +79,10 @@ before writing, so a concurrent pin change cannot silently cross that check.
 PGlite tested these privileges, the versioned writer and ordinary completion;
 the route checks use simulated dependencies.
 
-**Not yet verified end to end:** migrations 1360 and 1370 and the updated app
+**Not yet verified end to end:** migrations 1360–1380 and the updated app
 are local only and need a reviewed, coordinated rollout. An old deployed app
-would fail to save after 1370; the new app cannot save before 1360. Privileged
+would fail to save after 1370; the new app cannot save before 1360. The resource
+foundation is not yet connected to the current player. Privileged
 service/owner writes can bypass the ordinary-role boundary. The selected real
 PostgreSQL race tests in `supabase/tests/resume_position_lock_protocol.postgres.mjs`
 passed on a disposable GitHub runner in run `43745135170`: competing first

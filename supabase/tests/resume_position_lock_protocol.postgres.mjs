@@ -19,6 +19,7 @@ try {
   for (const file of (await readdir(dir)).filter((f) => f.endsWith('.sql')).sort()) await a.query(await readFile(new URL(file, dir), 'utf8'));
   const actor = randomUUID(), learner = randomUUID(), course = randomUUID(), v1 = randomUUID(), v2 = randomUUID();
   const section = randomUUID(), lesson = randomUUID(), emptyLesson = randomUUID(), completionLesson = randomUUID(), enrolment = randomUUID();
+  const resourceA = randomUUID(), resourceB = randomUUID();
   await a.query('insert into auth.users(id,email) values($1,$2)', [actor, `${actor}@example.test`]);
   await a.query("set session_replication_role='replica'");
   await a.query("insert into public.learner_profiles(id,linked_user_id,display_name,learner_type,age_band) values($1,$2,'Synthetic learner','adult','18+')", [learner, actor]);
@@ -26,7 +27,9 @@ try {
   await a.query('insert into public.course_versions(id,course_id,version_number,created_by) values($1,$2,1,$3),($4,$2,2,$3)', [v1, course, actor, v2]);
   await a.query("insert into public.course_sections(id,course_version_id,title) values($1,$2,'Synthetic section')", [section, v1]);
   await a.query("insert into public.lessons(id,section_id,title,position) values($1,$4,'First',1),($2,$4,'Second',2),($3,$4,'Third',3)", [lesson, emptyLesson, completionLesson, section]);
+  await a.query("insert into public.lesson_resources(id,lesson_id,resource_type,display_name,external_url,position) values($1,$3,'audio','First','https://example.invalid/a.mp3',1),($2,$3,'audio','Second','https://example.invalid/b.mp3',2)", [resourceA, resourceB, lesson]);
   await a.query('insert into public.course_enrolments(id,learner_profile_id,course_id,course_version_id) values($1,$2,$3,$4)', [enrolment, learner, course, v1]);
+  await a.query("insert into public.entitlement_grants(learner_profile_id,scope_type,course_version_id,source_type,status) values($1,'course_version',$2,'free','active')", [learner, v1]);
   await a.query("set session_replication_role='origin'");
   async function begin(client) {
     await client.query('begin');
@@ -61,6 +64,28 @@ try {
   await blocked(b, a); await a.query('commit'); await rejected; await b.query('rollback');
   const completion = (await observer.query('select status,last_video_position from public.lesson_progress where course_enrolment_id=$1 and lesson_id=$2', [enrolment, completionLesson])).rows[0];
   assert.deepEqual(completion, { status: 'completed', last_video_position: null });
+  // Resource positions share a parent progress row but compare independently.
+  const resourceWrite = (client, resource, seconds, revision) => client.query(
+    'select public.compare_record_resource_position($1,$2,$3,$4,$5) r', [enrolment, lesson, resource, seconds, revision]);
+  await begin(a); await begin(b);
+  const resourceFirst = (await resourceWrite(a, resourceA, 30, null)).rows[0].r;
+  const waitingResource = resourceWrite(b, resourceA, 60, null); await blocked(b, a);
+  await a.query('commit'); const staleResource = (await waitingResource).rows[0].r; await b.query('commit');
+  assert.equal(resourceFirst.ok, true); assert.equal(staleResource.ok, false); assert.equal(staleResource.seconds, 30);
+  await begin(a); await begin(b);
+  const resourceRewind = (await resourceWrite(a, resourceA, 5, resourceFirst.revision)).rows[0].r;
+  const waitingOther = resourceWrite(b, resourceB, 90, null); await blocked(b, a);
+  await a.query('commit'); const other = (await waitingOther).rows[0].r; await b.query('commit');
+  assert.equal(resourceRewind.ok, true); assert.equal(other.ok, true); assert.equal(other.seconds, 90);
+  // The resource writer also rechecks the pin after waiting on the enrolment.
+  await a.query('begin'); await a.query("set local app.bypassing_enrolment_pin='on'");
+  await a.query('update public.course_enrolments set course_version_id=$2 where id=$1', [enrolment, v2]);
+  await begin(b);
+  const waitingResourcePin = resourceWrite(b, resourceA, 99, resourceRewind.revision);
+  const resourcePinRejected = assert.rejects(waitingResourcePin, /not in the version this learner is on/);
+  await blocked(b, a); await a.query('commit'); await resourcePinRejected; await b.query('rollback');
+  await a.query('begin'); await a.query("set local app.bypassing_enrolment_pin='on'");
+  await a.query('update public.course_enrolments set course_version_id=$2 where id=$1', [enrolment, v1]); await a.query('commit');
   // An already validated writer waits for a concurrent pin change and then
   // rechecks the lesson against the new version. Synthetic update uses the
   // same row lock as the audited repin RPC but is not itself that RPC.
@@ -70,5 +95,5 @@ try {
   const waitingPin = write(b, emptyLesson, 90, firstRewind.revision);
   const pinRejected = assert.rejects(waitingPin, /not in the version this learner is on/);
   await blocked(b, a); await a.query('commit'); await pinRejected; await b.query('rollback');
-  console.log('PostgreSQL selected resume races passed: concurrent first writes, stale rewind, completion insert and pin change.');
+  console.log('PostgreSQL selected resume races passed: first writes, stale rewind, completion insert, resource isolation and pin changes.');
 } finally { await Promise.all([a.end().catch(() => {}), b.end().catch(() => {}), observer.end().catch(() => {})]); }

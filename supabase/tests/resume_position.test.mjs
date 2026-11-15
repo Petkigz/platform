@@ -34,16 +34,26 @@ export async function run(ctx) {
     const section = await newSection(version);
     const ids = [];
     for (let i = 1; i <= lessons; i++) ids.push(await newLesson(section, { position: i }));
+    const resources = [];
+    for (let i = 1; i <= 2; i++) {
+      resources.push((await q(`insert into public.lesson_resources
+        (lesson_id, resource_type, display_name, external_url, position)
+        values ($1, 'audio', $2, $3, $4) returning id`,
+      [ids[0], `Recording ${i}`, `https://example.invalid/${i}.mp3`, i])).rows[0].id);
+    }
+    if (ids[4]) resources.push((await q(`insert into public.lesson_resources
+      (lesson_id, resource_type, display_name, external_url, position)
+      values ($1, 'audio', 'Fresh', 'https://example.invalid/fresh.mp3', 1) returning id`, [ids[4]])).rows[0].id);
     await setVersion(version, 'submitted', teacher);
     await setVersion(version, 'approved', reviewer);
     await satisfyReview(version, reviewer, admin);
     await setVersion(version, 'published', admin);
-    return { section, lessons: ids };
+    return { section, lessons: ids, resources };
   }
 
   const course = await newCourse(teacher, { status: 'active' });
   const v1 = await newVersion(course, teacher);
-  const built = await publish(v1, { lessons: 4 });
+  const built = await publish(v1, { lessons: 5 });
 
   const learner = await adult('resume-learner@example.com', 'Resume Learner');
   const enrolmentId = await committed(async () =>
@@ -279,5 +289,67 @@ export async function run(ctx) {
     await rejects(() => compare(stranger.userId, built.lessons[0], 10, null), /not your learning/);
     await rejects(() => ctx.asAnon(() => q('select public.resume_position_snapshot($1,$2)', [enrolmentId, built.lessons[0]])), /sign in/);
     await rejects(() => ctx.asAnon(() => q('select public.compare_record_lesson_position($1,$2,$3,$4)', [enrolmentId, built.lessons[0], 10, null])), /sign in/);
+  });
+
+  const resourceSnapshot = async (actor, lesson, resource) =>
+    (await asCommitted(actor, 'select public.resume_resource_snapshot($1,$2,$3) r', [enrolmentId, lesson, resource])).rows[0].r;
+  const resourceWrite = async (actor, lesson, resource, seconds, revision) =>
+    (await asCommitted(actor, 'select public.compare_record_resource_position($1,$2,$3,$4,$5) r',
+      [enrolmentId, lesson, resource, seconds, revision])).rows[0].r;
+  const grant = (await q(`insert into public.entitlement_grants
+    (learner_profile_id, scope_type, course_version_id, source_type, status)
+    values ($1, 'course_version', $2, 'free', 'active') returning id`, [learner.learnerId, v1])).rows[0].id;
+
+  await test('each recording has a separate revision and old lesson positions are not guessed', async () => {
+    const [a, b] = built.resources;
+    const first = await resourceSnapshot(learner.userId, built.lessons[0], a);
+    const second = await resourceSnapshot(learner.userId, built.lessons[0], b);
+    assert(first.seconds === null && first.revision === null && second.seconds === null, 'legacy position copied into a resource');
+    const savedA = await resourceWrite(learner.userId, built.lessons[0], a, 100, null);
+    const savedB = await resourceWrite(learner.userId, built.lessons[0], b, 200, null);
+    assert(savedA.ok && savedB.ok, 'separate first writes failed');
+    const rewind = await resourceWrite(learner.userId, built.lessons[0], a, 15, savedA.revision);
+    assert(rewind.ok && rewind.seconds === 15, 'rewind failed');
+    const stale = await resourceWrite(learner.userId, built.lessons[0], a, 40, savedA.revision);
+    assert(!stale.ok && stale.seconds === 15 && stale.revision === rewind.revision, 'stale writer overwrote rewind');
+    const untouched = await resourceSnapshot(learner.userId, built.lessons[0], b);
+    assert(untouched.seconds === 200 && untouched.revision === savedB.revision, 'other recording changed or conflicted');
+  });
+
+  await test('a stale revision for an absent parent does not create progress', async () => {
+    const lesson = built.lessons[4], resource = built.resources[2];
+    const stale = await resourceWrite(learner.userId, lesson, resource, 10, crypto.randomUUID());
+    assert(!stale.ok && stale.revision === null, 'expected a conflict');
+    const count = (await q('select count(*)::int n from public.lesson_progress where course_enrolment_id=$1 and lesson_id=$2', [enrolmentId, lesson])).rows[0].n;
+    assert(count === 0, 'conflict unexpectedly created progress');
+    const fresh = await resourceWrite(learner.userId, lesson, resource, 10, null);
+    assert(fresh.ok && fresh.seconds === 10, 'fresh resource write failed');
+  });
+
+  await test('resource positions require the learner, lesson entitlement and visible matching resource', async () => {
+    const resource = built.resources[0];
+    await rejects(() => resourceSnapshot(stranger.userId, built.lessons[0], resource), /not your learning/);
+    await rejects(() => resourceSnapshot(learner.userId, built.lessons[1], resource), /resource is not available/);
+    await rejects(() => ctx.asAnon(() => q('select public.resume_resource_snapshot($1,$2,$3)', [enrolmentId, built.lessons[0], resource])), /sign in/);
+    await rejects(() => asCommitted(learner.userId, 'select * from public.lesson_resource_positions'), /permission denied/);
+    await rejects(() => asCommitted(learner.userId, 'update public.lesson_resource_positions set seconds = 7'), /permission denied/);
+    const suspended = (await q(`update public.entitlement_grants set status = 'suspended'
+      where learner_profile_id = $1 and course_version_id = $2 and status = 'active' returning id`, [learner.learnerId, v1])).rows.map((row) => row.id);
+    assert(suspended.includes(grant), 'test grant was not suspended');
+    try { await rejects(() => resourceSnapshot(learner.userId, built.lessons[0], resource), /cannot access that lesson/); }
+    finally { await q("update public.entitlement_grants set status = 'active' where id = any($1::uuid[])", [suspended]); }
+  });
+
+  await test('resource records follow progress erasure and status remains completed', async () => {
+    await asCommitted(learner.userId, `update public.lesson_progress set status='completed', progress_percent=100, completed_at=now()
+      where course_enrolment_id=$1 and lesson_id=$2`, [enrolmentId, built.lessons[0]]);
+    const current = await resourceSnapshot(learner.userId, built.lessons[0], built.resources[0]);
+    const saved = await resourceWrite(learner.userId, built.lessons[0], built.resources[0], 8, current.revision);
+    assert(saved.ok && (await stored(built.lessons[0])).status === 'completed', 'resource save changed completion');
+    await ctx.asSuperuser(async () => {
+      await q('delete from public.lesson_progress where course_enrolment_id=$1 and lesson_id=$2', [enrolmentId, built.lessons[0]]);
+      const count = (await q('select count(*)::int n from public.lesson_resource_positions where lesson_resource_id = any($1::uuid[])', [built.resources.slice(0, 2)])).rows[0].n;
+      assert(count === 0, 'position rows survived parent deletion');
+    });
   });
 }
