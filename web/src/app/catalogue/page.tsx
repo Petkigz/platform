@@ -156,7 +156,7 @@ export default async function CataloguePage({
   };
 
   return (
-    <div className="container section">
+    <div className="container section discovery-page">
       <p className="eyebrow">{t('nav.catalogue')}</p>
       <h1>{t('catalogue.title')}</h1>
       <p className="lede">{t('catalogue.lede')}</p>

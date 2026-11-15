@@ -130,17 +130,6 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
               AyahSpring
             </Link>
 
-            <nav className="nav" aria-label={t('nav.main')}>
-              <NavLink href="/catalogue">{t('nav.catalogue')}</NavLink>
-              <NavLink href="/learn">{t('nav.learn')}</NavLink>
-              <NavLink href="/family">{t('nav.family')}</NavLink>
-              <NavLink href="/plans">{t('nav.plans')}</NavLink>
-              <NavLink href="/subscriptions">{t('nav.subscriptions')}</NavLink>
-              <NavLink href="/teach">{t('nav.teach')}</NavLink>
-              <NavLink href="/review">{t('nav.review')}</NavLink>
-              <NavLink href="/certificates">{t('nav.certificates')}</NavLink>
-            </nav>
-
             {/* Auth-agnostic on the server, refined after hydration: see
                 `_shared/masthead-actions.tsx`. */}
             <MastheadActions
@@ -151,6 +140,18 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
                 area: t('footer.area'),
               }}
             />
+
+            <nav className="nav" aria-label={t('nav.main')} tabIndex={0}>
+              <NavLink href="/catalogue">{t('nav.catalogue')}</NavLink>
+              <NavLink href="/learn">{t('nav.learn')}</NavLink>
+              <NavLink href="/family">{t('nav.family')}</NavLink>
+              <NavLink href="/plans">{t('nav.plans')}</NavLink>
+              <NavLink href="/subscriptions">{t('nav.subscriptions')}</NavLink>
+              <NavLink href="/teach">{t('nav.teach')}</NavLink>
+              <NavLink href="/review">{t('nav.review')}</NavLink>
+              <NavLink href="/certificates">{t('nav.certificates')}</NavLink>
+              <NavLink href="/language">{t('language.title')}</NavLink>
+            </nav>
           </div>
         </header>
 

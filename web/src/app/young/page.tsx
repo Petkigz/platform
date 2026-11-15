@@ -86,7 +86,7 @@ export default async function YoungLearnersPage({
   );
 
   return (
-    <div className="container section">
+    <div className="container section discovery-page">
       <p className="eyebrow">{t('young.eyebrow')}</p>
       <h1>{t('young.title')}</h1>
       <p className="lede">{t('young.lede')}</p>

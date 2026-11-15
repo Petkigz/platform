@@ -66,7 +66,7 @@ export function CourseShelfCard({
           : 'card-price unavailable';
 
   return (
-    <article className="card">
+    <article className="card course-shelf-card">
       <div className="card-head">
         <Link href={`/courses/${course.slug}`} className="course" style={{ display: 'block' }}>
           {/* A shelf is where a course in Arabic is first met, so this is the one

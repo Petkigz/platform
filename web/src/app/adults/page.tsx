@@ -77,7 +77,7 @@ export default async function AdultsPage({
   );
 
   return (
-    <div className="container section">
+    <div className="container section discovery-page">
       <p className="eyebrow">{t('adults.eyebrow')}</p>
       <h1>{t('adults.title')}</h1>
       <p className="lede">{t('adults.lede')}</p>
