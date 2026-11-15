@@ -81,8 +81,14 @@ all other erasure paths remain unverified.
 A resource-aware mode has been prepared in the media-position hook and native
 players, but no lesson page or rendition player selects it yet. Synthetic React
 checks exercise the v3 request, conflict and recovery flow; they are not a real
-browser or hosted end-to-end test. The rollout still requires a stale-client
-write boundary and explicit handling of old lesson-only places.
+browser or hosted end-to-end test. A resource-mode native player can now offer
+an earlier lesson-wide server place for explicit review, never automatic mapping;
+the server-rendered actor must match the freshly authenticated actor. Seeking
+installs a conflict choice before any save, and a newer resource revision still
+conflicts. This remains unintegrated; the page must pass the authenticated actor,
+and the rendition player also needs this mode. Lesson-only device recovery
+records remain separate and still need an explicit review/discard experience.
+A stale-client write boundary and coordinated rollout remain necessary.
 
 A separate resource recovery helper namespaces records by actor,
 enrolment, lesson, resource and session. It shares the existing device opt-in;

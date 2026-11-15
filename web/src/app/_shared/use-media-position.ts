@@ -6,7 +6,7 @@ import { createVersionedPositionWriter, type PositionSnapshot } from '@/lib/vers
 import { positionRecovery, type RecoveryRecord } from '@/lib/position-recovery';
 import { resourcePositionRecovery } from '@/lib/resource-position-recovery';
 
-type Options = { enrolmentId?: string | null; lessonId: string; resourceId?: string; resumeAt?: number | null };
+type Options = { enrolmentId?: string | null; lessonId: string; resourceId?: string; legacyActorId?: string; resumeAt?: number | null };
 
 // The resource mode is prepared for integration but is not enabled by current
 // lesson pages. Never treat a missing resource identity as a resource bookmark.
@@ -31,7 +31,7 @@ function validSnapshot(value: unknown): value is PositionSnapshot {
 
 /** One player's version-checked writes. Playback remains available on failure;
  * a failed initialization or an ambiguous write disables saving until reload. */
-export function useMediaPosition({ enrolmentId, lessonId, resourceId, resumeAt }: Options) {
+export function useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActorId, resumeAt }: Options) {
   const ref = useRef<HTMLMediaElement | null>(null);
   const writerRef = useRef<Writer | null>(null);
   const initial = useRef<number | null>(null);
@@ -54,6 +54,8 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, resumeAt }
   const [notice, setNotice] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [conflict, setConflict] = useState<Conflict | null>(null);
+  const [legacyPlace, setLegacyPlace] = useState<number | null>(null);
+  const [legacyError, setLegacyError] = useState<string | null>(null);
 
   const forget = useCallback((record: RecoveryRecord | null) => {
     if (!record || !recovery.current) return;
@@ -98,6 +100,7 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, resumeAt }
     snapshotReady.current = !enrolmentId;
     initial.current = enrolmentId ? null : (resumeAt ?? null);
     setReady(!enrolmentId); setConflict(null); setNotice(null); setSaveError(null);
+    setLegacyPlace(null); setLegacyError(null);
     if (!enrolmentId) {
       applyResume();
       return () => controller.abort();
@@ -123,6 +126,11 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, resumeAt }
         if (cancelled) return;
         const server: PositionSnapshot = { seconds: data.seconds, revision: data.revision };
         serverSnapshot.current = server;
+        // The old value belongs to the lesson, not necessarily this recording.
+        // Offer it only as a voluntary review, never as the initial resource place.
+        if (resourceId !== undefined && legacyActorId === actorId && typeof resumeAt === 'number' && Number.isFinite(resumeAt) && resumeAt > 0) {
+          setLegacyPlace(resumeAt);
+        }
         try {
           const store = storageRef.current;
           if (store) {
@@ -160,14 +168,15 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, resumeAt }
               window.clearTimeout(deadline);
             }
           },
-          onConfirmed: (seconds, queued) => {
+          onConfirmed: (seconds, queued, revision) => {
+            serverSnapshot.current = { seconds, revision };
             setSaveError(null);
             if (selectedRecord.current) { forget(selectedRecord.current); selectedRecord.current = null; }
             if (queued === null && ownRecord.current?.seconds === seconds) {
               forget(ownRecord.current); ownRecord.current = null;
             }
           },
-          onConflict: (snapshot, local) => setConflict({ server: snapshot, local }),
+          onConflict: (snapshot, local) => { serverSnapshot.current = snapshot; setConflict({ server: snapshot, local }); },
           onUnconfirmed: () => setSaveError('Could not confirm your saved place. Reload the lesson to check before continuing to save.'),
         });
         writerRef.current = writer;
@@ -200,7 +209,7 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, resumeAt }
       writerRef.current?.dispose();
       writerRef.current = null;
     };
-  }, [enrolmentId, lessonId, resourceId, resumeAt, applyResume, forget, persist]);
+  }, [enrolmentId, lessonId, resourceId, legacyActorId, resumeAt, applyResume, forget, persist]);
 
   const save = useCallback((seconds: number, force: boolean) => {
     if (!enrolmentId) return;
@@ -246,6 +255,7 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, resumeAt }
     if (!selected) return;
     forget(selectedRecord.current); selectedRecord.current = null;
     forget(ownRecord.current); ownRecord.current = null;
+    serverSnapshot.current = selected;
     setConflict(null); setNotice(null);
     if (ref.current) ref.current.currentTime = clampPosition(selected.seconds ?? 0);
   };
@@ -254,6 +264,30 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, resumeAt }
     setConflict(null);
     writerRef.current.useLocal();
   };
+  const reviewLegacyPlace = () => {
+    const writer = writerRef.current; const element = ref.current; const server = serverSnapshot.current;
+    if (legacyPlace === null || !writer || !element || !server || recoveryGate.current || !writer.canChallenge()) {
+      setLegacyError('Finish the current save or recovery choice before reviewing the old place.');
+      return;
+    }
+    if (!metadata.current) { setLegacyError('Wait for the recording to load before reviewing the old place.'); return; }
+    const target = clampPosition(legacyPlace);
+    if (Number.isFinite(element.duration) && element.duration > 0 && target >= element.duration) {
+      setLegacyError('The old place is beyond this recording. It may belong to another recording.');
+      return;
+    }
+    // Install the conflict gate before seeking: a timeupdate cannot silently
+    // write the ambiguous lesson-wide value to this recording.
+    writer.challenge(server, target);
+    try {
+      element.currentTime = target;
+      setLegacyPlace(null); setLegacyError(null);
+    } catch {
+      writer.useServer(); setConflict(null);
+      setLegacyError('Could not seek to the old place. Try again when the recording is ready.');
+    }
+  };
+  const dismissLegacyPlace = () => { setLegacyPlace(null); setLegacyError(null); };
   const toggleRecovery = (enabled: boolean) => {
     const store = storageRef.current;
     if (!store) return;
@@ -332,5 +366,6 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, resumeAt }
     onEnded: () => { if (ref.current) save(ref.current.currentTime, true); },
   };
   return { ref, ready, notice, saveError, conflict, useServer, useLocal, handlers,
+    legacyPlace, legacyError, reviewLegacyPlace, dismissLegacyPlace,
     recoveryEnabled, recoveryAvailable, recoveryError, recoveries, toggleRecovery, discardRecovery, useRecovery };
 }

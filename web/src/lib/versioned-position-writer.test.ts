@@ -57,3 +57,22 @@ test('disposed player ignores late responses', async () => {
   writer.enqueue(1, true); writer.dispose(); pending.resolve({ ok: true, seconds: 1, revision: 'r' }); await tick();
   assert.equal(callbacks, 0);
 });
+
+test('manual review cannot replace an in-flight write, unresolved conflict, or uncertain result', async () => {
+  const pending = deferred();
+  const writer = createVersionedPositionWriter({ revision: 'a', write: () => pending.promise,
+    onConfirmed: () => {}, onConflict: () => {}, onUnconfirmed: () => {} });
+  assert.equal(writer.canChallenge(), true);
+  writer.enqueue(15, true);
+  assert.equal(writer.canChallenge(), false);
+  pending.resolve({ ok: false, seconds: 20, revision: 'b' }); await tick();
+  assert.equal(writer.canChallenge(), false);
+  writer.useServer(); assert.equal(writer.canChallenge(), true);
+  writer.dispose(); assert.equal(writer.canChallenge(), false);
+
+  const failed = deferred();
+  const uncertain = createVersionedPositionWriter({ revision: null, write: () => failed.promise,
+    onConfirmed: () => {}, onConflict: () => {}, onUnconfirmed: () => {} });
+  uncertain.enqueue(12, true); failed.reject(new Error('lost')); await tick();
+  assert.equal(uncertain.canChallenge(), false);
+});

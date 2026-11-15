@@ -7,11 +7,25 @@ type Position = ReturnType<typeof useMediaPosition>;
 
 export function PositionStatus({ position }: { position: Position }) {
   const { ready, notice, saveError, conflict, useServer, useLocal,
+    legacyPlace, legacyError, reviewLegacyPlace, dismissLegacyPlace,
     recoveryEnabled, recoveryAvailable, recoveryError, recoveries, toggleRecovery, discardRecovery, useRecovery } = position;
   return (
     <div style={{ display: 'grid', gap: '0.4rem' }}>
       {!ready && <p className="meta" role="status">Checking your saved place…</p>}
       {(saveError || notice) && <p className="meta" role="status">{saveError ? <span className="danger">{saveError}</span> : notice}</p>}
+      {legacyPlace !== null && (
+        <div role="group" aria-label="Earlier lesson-wide place" style={{ display: 'grid', gap: '0.4rem' }}>
+          <p className="meta" style={{ margin: 0 }}>
+            An earlier lesson-wide place is {formatPosition(legacyPlace)}{legacyPlace > 86400 ? ' (player limit: 24 hours)' : ''}.
+            It might belong to a different recording. You can review it here; it will not replace this recording’s saved place without your choice.
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <button type="button" className="secondary" disabled={Boolean(conflict) || recoveries.length > 0} onClick={reviewLegacyPlace}>Review earlier place</button>
+            <button type="button" className="ghost" onClick={dismissLegacyPlace}>Not now</button>
+          </div>
+          {legacyError && <p className="meta danger" role="status">{legacyError}</p>}
+        </div>
+      )}
       {recoveryAvailable && (
         <div style={{ display: 'grid', gap: '0.3rem' }}>
           <label>

@@ -8,7 +8,7 @@ export type PositionWriteResult = PositionSnapshot & { ok: boolean };
 export function createVersionedPositionWriter(options: {
   revision: string | null;
   write: (seconds: number, revision: string | null) => Promise<PositionWriteResult>;
-  onConfirmed: (seconds: number, queued: number | null) => void;
+  onConfirmed: (seconds: number, queued: number | null, revision: string) => void;
   onConflict: (server: PositionSnapshot, local: number) => void;
   onUnconfirmed: (local: number) => void;
 }) {
@@ -35,7 +35,7 @@ export function createVersionedPositionWriter(options: {
       } else {
         if (result.seconds !== seconds || result.revision === null) throw new Error('Invalid confirmation');
         revision = result.revision;
-        options.onConfirmed(seconds, queued);
+        options.onConfirmed(seconds, queued, revision);
       }
     } catch {
       if (disposed) return;
@@ -59,6 +59,8 @@ export function createVersionedPositionWriter(options: {
       else if (uncertain) options.onUnconfirmed(seconds);
       else void drain();
     },
+    /** A manual choice must not replace a write already in flight or a pending choice. */
+    canChallenge() { return !disposed && !running && !uncertain && !conflict && queued === null; },
     /** Playback began before the initial snapshot arrived; require a choice. */
     challenge(server: PositionSnapshot, value: number) {
       if (disposed || running || uncertain || conflict) return;
