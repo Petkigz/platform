@@ -10,6 +10,7 @@ import { fetchEngagement } from '@/lib/engagement';
 import { describeReason, describeWhen, type LiveSession } from '@/lib/live';
 import { EngagementStrip } from '@/components/engagement-strip';
 import { isFlagEnabled } from '@/lib/flags';
+import { loadLearnerDashboardExtras } from '@/lib/learner-dashboard-work';
 
 export const dynamic = 'force-dynamic';
 
@@ -77,103 +78,53 @@ export default async function LearnPage() {
 
   if (!user) redirect('/sign-in?next=/learn');
 
-  const { data: profiles, error: profileError } = await supabase
-    .from('user_profiles')
-    .select('display_name')
-    .eq('user_id', user.id)
-    .maybeSingle();
+  // Authentication precedes every read. Independent requests use this same
+  // request-scoped client, preserving RLS and avoiding shared user caches.
+  const [
+    profileResult, enrolmentResult, learnerResult, savedResult,
+    liveOn, streaksOn, progressOn, hifzOn, counterOn, hijriOn, prayerTimesOn,
+  ] = await Promise.all([
+    supabase.from('user_profiles').select('display_name').eq('user_id', user.id).maybeSingle(),
+    supabase.from('course_enrolments')
+      .select(
+        'id, status, enrolled_at, learner_profile_id, course_version_id, ' +
+          'learner_profiles ( display_name, learner_type ), ' +
+          'courses ( title, slug ), course_versions ( version_number, language )',
+      )
+      .eq('deleted_at', null)
+      .order('enrolled_at', { ascending: false }),
+    supabase.from('learner_profiles').select('id').eq('linked_user_id', user.id)
+      .is('deleted_at', null).maybeSingle(),
+    supabase.from('course_wishlist').select('id', { count: 'exact', head: true }),
+    isFlagEnabled(supabase, 'delivery.live_classes').catch(() => false),
+    isFlagEnabled(supabase, 'learning.streaks').catch(() => false),
+    isFlagEnabled(supabase, 'learning.progress').catch(() => false),
+    isFlagEnabled(supabase, 'learning.hifz').catch(() => false),
+    isFlagEnabled(supabase, 'companion.dhikr_counter').catch(() => false),
+    isFlagEnabled(supabase, 'companion.hijri_date').catch(() => false),
+    isFlagEnabled(supabase, 'companion.calculated_prayer_times').catch(() => false),
+  ]);
 
-  const { data: enrolments, error } = await supabase
-    .from('course_enrolments')
-    .select(
-      'id, status, enrolled_at, learner_profile_id, course_version_id, ' +
-        'learner_profiles ( display_name, learner_type ), ' +
-        'courses ( title, slug ), course_versions ( version_number, language )',
-    )
-    .eq('deleted_at', null)
-    .order('enrolled_at', { ascending: false });
-
-  // Cast through unknown: a select built by string concatenation defeats
-  // PostgREST's generated types, which then resolve to an error type rather
-  // than to the columns actually requested.
+  const { data: profiles, error: profileError } = profileResult;
+  const { data: enrolments, error } = enrolmentResult;
+  // The string-built select cannot be inferred precisely by PostgREST types.
   const rows = (enrolments ?? []) as unknown as Enrolment[];
-
-  // Needed to label each row as mine or a child's. A parent's dashboard
-  // legitimately holds both now, and mixing them would let a parent open a
-  // child's course believing it was their own progress.
-  const { data: myProfile } = await supabase
-    .from('learner_profiles')
-    .select('id')
-    .eq('linked_user_id', user.id)
-    .is('deleted_at', null)
-    .maybeSingle();
-  const myProfileId =
-    ((myProfile as unknown as { id: string } | null)?.id) ?? null;
-
-  const distinctLearners = new Set(
-    rows.map((r) => learnerName(r, myProfileId)),
-  );
+  const myProfileId = ((learnerResult.data as unknown as { id: string } | null)?.id) ?? null;
+  const savedCount = savedResult.count ?? 0;
+  const distinctLearners = new Set(rows.map((r) => learnerName(r, myProfileId)));
   const showLearner = distinctLearners.size > 1;
 
-  // Progress per enrolment. Fetched in parallel: each call is an independent
-  // RPC and there is no reason to serialise them.
-  const summaries = await Promise.all(
-    rows.map(async (r) => {
-      try {
-        return await fetchSummary(supabase, r.id);
-      } catch {
-        return { lessonsTotal: 0, lessonsDone: 0, percentComplete: 0 };
-      }
-    }),
-  );
-
-  // A streak is a display over progress that already exists, so a failure to read it is
-  // silence rather than an error: `fetchEngagement` returns null when the feature is
-  // off, when the learner is not the caller's, and when the reply is unreadable.
-  // Live classes, if the owner has switched them on. An rpc that fails is
-  // silence rather than a broken dashboard: a class list is an addition to
-  // learning, not a precondition for it.
-  const liveOn = await isFlagEnabled(supabase, 'delivery.live_classes').catch(() => false);
-  const liveSessions = liveOn
-    ? (((await supabase.rpc('my_live_sessions', { p_course_id: null })).data ??
-        []) as unknown as LiveSession[])
-    : [];
-
-  const streaksOn = await isFlagEnabled(supabase, 'learning.streaks').catch(() => false);
-  const engagement = streaksOn && myProfileId
-    ? await fetchEngagement(supabase, myProfileId)
-    : null;
-
-  const progressOn = await isFlagEnabled(supabase, 'learning.progress').catch(() => false);
-  // Memorisation is its own list rather than a course: a passage somebody is
-  // learning by heart may belong to no course at all. The card appears only
-  // while the feature is on, so a link never leads to a page that says "not
-  // switched on".
-  const hifzOn = await isFlagEnabled(supabase, 'learning.hifz').catch(() => false);
-  const counterOn = await isFlagEnabled(supabase, 'companion.dhikr_counter').catch(() => false);
-  const hijriOn = await isFlagEnabled(supabase, 'companion.hijri_date').catch(() => false);
-  const prayerTimesOn = await isFlagEnabled(supabase, 'companion.calculated_prayer_times').catch(() => false);
-
-  // What this page is supposed to lead with: where the learner left off.
-  //
-  // One query for the activity of every enrolment, then at most three outlines
-  // for the courses worth offering. Three is `CANDIDATES`: the warmest course is
-  // usually the answer, and the cap covers the case where it is not — somebody
-  // who finished their newest course yesterday should be offered the one before
-  // it rather than a finished course whose "carry on" leads nowhere — without
-  // letting a large library turn one card into fifty queries.
-  const lead = progressOn && rows.length > 0
-    ? await fetchCarryOn(supabase, rows)
-    : null;
-
-  // Saved courses live here rather than in the masthead: the nav is already
-  // eight links wide on a phone, and this is where someone looks for their own
-  // things. The link appears whether or not the flag is on, because a list
-  // somebody built while it was on must stay reachable after it is turned off.
-  const savedCount = await supabase
-    .from('course_wishlist')
-    .select('id', { count: 'exact', head: true })
-    .then((r) => r.count ?? 0);
+  // Summaries, gated extras and carry-on are independent once the initial reads
+  // are complete. Failed summaries retain their existing fallback; optional
+  // features are never queried when their flag or prerequisite is absent.
+  const { summaries, liveSessions, engagement, lead } = await loadLearnerDashboardExtras({
+    rows, myProfileId, liveOn, streaksOn, progressOn,
+    summary: (row) => fetchSummary(supabase, row.id),
+    summaryFallback: () => ({ lessonsTotal: 0, lessonsDone: 0, percentComplete: 0 }),
+    live: async () => (((await supabase.rpc('my_live_sessions', { p_course_id: null })).data ?? []) as unknown as LiveSession[]),
+    engagement: (id) => fetchEngagement(supabase, id),
+    lead: (enrolments) => fetchCarryOn(supabase, enrolments),
+  });
 
   return (
     <div className="container section">
