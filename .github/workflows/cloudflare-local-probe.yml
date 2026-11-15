@@ -1,0 +1,60 @@
+# One-off compatibility experiment: no Cloudflare credentials, bindings to
+# hosted resources, uploads, deployments, application secrets or real data.
+name: Cloudflare local compatibility probe
+on:
+  push:
+    branches:
+      - arena/4f30fd1d-platform
+permissions:
+  contents: read
+jobs:
+  probe:
+    if: >-
+      github.repository == 'Petkigz/platform' && github.ref == 'refs/heads/arena/4f30fd1d-platform' && startsWith(github.event.head_commit.message, 'test: local cloudflare compatibility probe')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      WRANGLER_SEND_METRICS: 'false'
+      NEXT_PUBLIC_ALLOW_MISSING_SUPABASE: '1'
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: '22.22.3'
+      - name: Prepare isolated copy and experimental dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/ayah-probe"
+          cp package.json package-lock.json "$RUNNER_TEMP/ayah-probe/"
+          cp -a web "$RUNNER_TEMP/ayah-probe/web"
+          cp scripts/cloudflare-local-probe.mjs "$RUNNER_TEMP/ayah-probe/"
+          cd "$RUNNER_TEMP/ayah-probe"
+          npm ci --no-audit --no-fund
+          npm install -w @ayahspring/web --save-dev --save-exact --no-audit --no-fund @opennextjs/cloudflare@1.20.12 wrangler@4.162.0
+          npm audit --json > audit.json || true
+          node -e 'const a=require("./audit.json"); console.log("Experimental dependency audit:", JSON.stringify(a.metadata?.vulnerabilities)); for(const [n,v] of Object.entries(a.vulnerabilities||{})) console.log(n,v.severity);'
+          cat > web/wrangler.jsonc <<'EOF'
+          {
+            "name": "ayahspring-local-probe",
+            "main": ".open-next/worker.js",
+            "compatibility_date": "2026-10-15",
+            "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+            "assets": {"directory": ".open-next/assets", "binding": "ASSETS"},
+            "services": [{"binding": "WORKER_SELF_REFERENCE", "service": "ayahspring-local-probe"}],
+            "images": {"binding": "IMAGES"}
+          }
+          EOF
+          cat > web/open-next.config.ts <<'EOF'
+          import { defineCloudflareConfig } from '@opennextjs/cloudflare';
+          export default defineCloudflareConfig();
+          EOF
+      - name: Build locally without deploying
+        working-directory: ${{ runner.temp }}/ayah-probe/web
+        run: npx --no-install opennextjs-cloudflare build
+      - name: Test local Workers runtime without hosted services
+        working-directory: ${{ runner.temp }}/ayah-probe
+        run: node cloudflare-local-probe.mjs
