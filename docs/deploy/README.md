@@ -354,6 +354,13 @@ not prove that an actual Auth request succeeds.
 
 The hosted test project's read-only check also found 282 policies and no public
 base tables with RLS disabled. This is an inventory, not an authorization test.
+A separate read-only SQL transaction under the `anon` role saw zero of the 102
+seeded settings and 37 subject areas. Under `authenticated` with no `auth.uid()`,
+settings were also hidden. Both roles saw zero profiles and guardian links;
+the no-UID role saw zero support cases, support messages and assignment
+submissions. The project had zero Auth users, and those private tables had no
+test records, so the zero counts do not prove isolation between real users. These
+were database role checks, not requests through PostgREST or real JWTs.
 Auth, database and REST health checks were healthy. Auth currently has email
 signup and confirmation enabled, no custom SMTP, Google sign-in disabled, and
 its site URL set to localhost with no additional redirect URLs. A provider-hosted
