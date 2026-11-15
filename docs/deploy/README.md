@@ -1459,3 +1459,16 @@ and browsers may cache credentials; it is not production authentication. Delete
 the specific test Worker manually when finished and revoke the temporary API
 token. Hosted runtime, Free CPU/memory limits, real Auth/RLS and account
 isolation remain unverified.
+
+Hosted test follow-up: approved run `43718519738` failed during deployment;
+the dashboard showed no projects and its suppressed diagnostic did not reveal
+the cause. Approved run `43719307687` then reported successful creation of
+`ayahspring-test-43719307687-1`. After the owner privately configured the
+password, unauthenticated requests to the homepage and `/favicon.ico` returned
+"Test preview access required"; the owner confirmed Firefox opened the page
+after login and displayed the test notice. Another browser reported
+`ERR_TOO_MANY_RETRIES`; its cause has not been established. These checks do not
+prove resistance to brute force, hosted Auth/RLS, Free-tier performance, or
+production readiness. The newer homepage and course-discovery changes are not
+in this deployed Worker. Delete the specific temporary Worker and revoke its
+API token when the test is complete.

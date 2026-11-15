@@ -12,6 +12,7 @@ import { createClient } from '@/lib/supabase/server';
 import { countryFromHeaders } from '@/lib/geo';
 import { fetchCourseCards } from '@/lib/catalogue-cards';
 import { fetchCataloguePage } from '@/lib/catalogue';
+import { completeCatalogueWork, searchLessonsIfEnabled } from '@/lib/catalogue-work';
 import { offsetFor, pageNumber, PAGE_SIZE } from '@/lib/paging';
 import { canonicalCataloguePath } from '@/lib/crawl';
 import { parseLanguages, textProps } from '@/lib/language';
@@ -94,7 +95,7 @@ export default async function CataloguePage({
   // whole page.
   const page = pageNumber(pageParam);
 
-  const [subjects, shelf, doors, languageChips, languageOn] = await Promise.all([
+  const [subjects, shelf, doors, languageChips, languageOn, lessonSearchOn] = await Promise.all([
     fetchSubjectAreas(supabase),
     fetchCataloguePage(supabase, { q, subject, audience, language: lang }, {
       limit: PAGE_SIZE,
@@ -108,6 +109,7 @@ export default async function CataloguePage({
     // empty. `course_languages()` already applies that rule.
     supabase.rpc('course_languages').then(({ data }) => parseLanguages(data), () => []),
     isFlagEnabled(supabase, 'learning.multi_language').catch(() => false),
+    searching ? isFlagEnabled(supabase, 'learning.lesson_search').catch(() => false) : false,
   ]);
 
   // A course is only shelf-ready if it has a published version. RLS may show
@@ -121,27 +123,20 @@ export default async function CataloguePage({
   // One call for the whole shelf: what each course contains and what it would
   // cost this visitor. The country is a display hint — the database prefers the
   // account's recorded country when there is one.
-  const cards = await fetchCourseCards(
-    supabase,
-    visible.map((c) => c.id),
-    countryFromHeaders(hdrs),
+  // Once the shelf is known, card prices, permitted lesson matches and the
+  // search event are independent. Start them together; still await the event
+  // rather than losing it when a serverless request ends. All work uses this
+  // visitor's client and no results are shared between requests.
+  const { cards, lessons } = await completeCatalogueWork(
+    fetchCourseCards(supabase, visible.map((c) => c.id), countryFromHeaders(hdrs)),
+    searchLessonsIfEnabled(searching, async () => lessonSearchOn, () => fetchLessonHits(supabase, q ?? '')),
+    q && q.trim()
+      ? recordEvent(supabase, 'search.performed', {
+          properties: { query: q.trim().slice(0, 200), results: visible.length },
+        })
+      : Promise.resolve(),
   );
-
-  // Lessons that match, when the flag is on. A second list rather than a second
-  // search: `search_lessons()` matches the lesson's own words, and who may see
-  // which words is decided inside it.
-  const lessonSearchOn = searching
-    ? await isFlagEnabled(supabase, 'learning.lesson_search').catch(() => false)
-    : false;
-  const lessonHits = lessonSearchOn ? await fetchLessonHits(supabase, q ?? '') : [];
-
-  // What people look for is the whole point of search analytics, and the query
-  // is already in hand here. A signed-out search records nothing.
-  if (q && q.trim()) {
-    await recordEvent(supabase, 'search.performed', {
-      properties: { query: q.trim().slice(0, 200), results: visible.length },
-    });
-  }
+  const lessonHits = lessons.hits;
 
   // A chip is a filter change, so it always returns to the first page: staying
   // on page four of a different subject would show nothing and look broken.
