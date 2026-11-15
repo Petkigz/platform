@@ -55,6 +55,9 @@ jobs:
       - name: Prayer component simulation
         run: npm run test:prayer-component
 
+      - name: Progress control component simulation
+        run: node scripts/mark-complete-component-test.mjs
+
       - name: Redirect route HTTP regression
         run: node scripts/redirect-route-smoke.mjs
 

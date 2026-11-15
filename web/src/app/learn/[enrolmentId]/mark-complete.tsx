@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 
 /**
  * The mark-complete control for one lesson.
  *
  * Optimistic, because a progress tick that waits on a round trip feels broken
- * on a slow connection — and this is a product whose first design constraint
- * is ease of use. On failure it reverts and says why.
+ * on a slow connection. A lost or ambiguous response is not proof that the
+ * write failed: show the last confirmed state and require a fresh page read.
  */
 export function MarkComplete({
   enrolmentId,
@@ -21,29 +21,38 @@ export function MarkComplete({
 }) {
   const router = useRouter();
   const [done, setDone] = useState(initiallyDone);
-  const [error, setError] = useState<string | null>(null);
+  const [uncertain, setUncertain] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [pending, startTransition] = useTransition();
+  const inFlight = useRef(false);
 
   async function send(status: 'completed' | 'in_progress') {
+    if (inFlight.current || uncertain || pending) return;
+    inFlight.current = true;
+    setSaving(true);
     const previous = done;
-    setError(null);
     setDone(status === 'completed');
 
-    const res = await fetch('/api/progress', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ enrolmentId, lessonId, status }),
-    });
+    try {
+      const res = await fetch('/api/progress', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ enrolmentId, lessonId, status }),
+      });
+      const reply = await res.json().catch(() => null) as { ok?: unknown; status?: unknown } | null;
+      if (!res.ok || reply?.ok !== true || reply.status !== status) throw new Error('Unconfirmed progress');
 
-    if (!res.ok) {
-      const json = (await res.json().catch(() => null)) as { message?: string } | null;
+      // Re-read the summary so the bar and the counts move together.
+      startTransition(() => router.refresh());
+    } catch {
+      // The server may have committed even when the reply is lost. A retry in
+      // the opposite direction could overwrite it, so require a fresh read.
       setDone(previous);
-      setError(json?.message ?? 'Could not save your progress.');
-      return;
+      setUncertain(true);
+    } finally {
+      inFlight.current = false;
+      setSaving(false);
     }
-
-    // Re-read the summary so the bar and the counts move together.
-    startTransition(() => router.refresh());
   }
 
   return (
@@ -54,23 +63,26 @@ export function MarkComplete({
           type="button"
           className="btn ghost tiny"
           onClick={() => send('in_progress')}
-          disabled={pending}
+          disabled={saving || pending || uncertain}
         >
-          Undo
+          {saving ? 'Saving…' : 'Undo'}
         </button>
       ) : (
         <button
           type="button"
           className="btn tiny"
           onClick={() => send('completed')}
-          disabled={pending}
+          disabled={saving || pending || uncertain}
         >
-          {pending ? 'Saving…' : 'Mark complete'}
+          {saving || pending ? 'Saving…' : 'Mark complete'}
         </button>
       )}
-      {error && (
+      {uncertain && (
         <span className="danger" style={{ fontSize: '0.8rem' }} role="alert">
-          {error}
+          Could not confirm whether progress was saved. Reload this page to check before trying again.{' '}
+          <button type="button" className="btn ghost tiny" onClick={() => window.location.reload()}>
+            Reload page
+          </button>
         </span>
       )}
     </span>
