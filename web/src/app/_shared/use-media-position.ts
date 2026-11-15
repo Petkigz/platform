@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { clampPosition, resumeLabel, shouldResume } from '@/lib/resume';
 import { createVersionedPositionWriter, type PositionSnapshot } from '@/lib/versioned-position-writer';
+import { positionRecovery, type RecoveryRecord } from '@/lib/position-recovery';
 
 type Options = { enrolmentId?: string | null; lessonId: string; resumeAt?: number | null };
 type Conflict = { server: PositionSnapshot; local: number };
@@ -24,10 +25,40 @@ export function useMediaPosition({ enrolmentId, lessonId, resumeAt }: Options) {
   const snapshotReady = useRef(false);
   const resumed = useRef(false);
   const touched = useRef(false);
+  const storageRef = useRef<ReturnType<typeof positionRecovery> | null>(null);
+  const recovery = useRef<{ store: ReturnType<typeof positionRecovery>; actorId: string; enrolmentId: string; lessonId: string; sessionId: string } | null>(null);
+  const ownRecord = useRef<RecoveryRecord | null>(null);
+  const selectedRecord = useRef<RecoveryRecord | null>(null);
+  const recoveryGate = useRef(false);
+  const pendingPlayback = useRef<number | null>(null);
+  const serverSnapshot = useRef<PositionSnapshot | null>(null);
+  const [recoveryEnabled, setRecoveryEnabled] = useState(false);
+  const [recoveryAvailable, setRecoveryAvailable] = useState(false);
+  const [recoveryError, setRecoveryError] = useState<string | null>(null);
+  const [recoveries, setRecoveries] = useState<RecoveryRecord[]>([]);
   const [ready, setReady] = useState(!enrolmentId);
   const [notice, setNotice] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [conflict, setConflict] = useState<Conflict | null>(null);
+
+  const forget = useCallback((record: RecoveryRecord | null) => {
+    if (!record || !recovery.current) return;
+    try { recovery.current.store.remove(record); }
+    catch { setRecoveryError('Device storage could not be cleared. Check your browser storage settings.'); }
+  }, []);
+
+  const persist = useCallback((seconds: number) => {
+    const context = recovery.current;
+    if (!context) return;
+    const whole = clampPosition(seconds);
+    try {
+      if (!context.store.enabled()) return;
+      if (ownRecord.current?.seconds === whole) return;
+      const record: RecoveryRecord = { actorId: context.actorId, enrolmentId: context.enrolmentId,
+        lessonId: context.lessonId, sessionId: context.sessionId, seconds: whole, updatedAt: Date.now() };
+      if (context.store.save(record)) ownRecord.current = record;
+    } catch { setRecoveryError('Could not save a recovery place on this device.'); }
+  }, []);
 
   const applyResume = useCallback(() => {
     const element = ref.current;
@@ -45,6 +76,9 @@ export function useMediaPosition({ enrolmentId, lessonId, resumeAt }: Options) {
     let cancelled = false;
     const controller = new AbortController();
     writerRef.current = null;
+    storageRef.current = null; recovery.current = null; ownRecord.current = null; selectedRecord.current = null;
+    recoveryGate.current = false; pendingPlayback.current = null; serverSnapshot.current = null;
+    setRecoveries([]); setRecoveryEnabled(false); setRecoveryAvailable(false); setRecoveryError(null);
     resumed.current = false;
     touched.current = false;
     snapshotReady.current = !enrolmentId;
@@ -54,6 +88,13 @@ export function useMediaPosition({ enrolmentId, lessonId, resumeAt }: Options) {
       applyResume();
       return () => controller.abort();
     }
+    // The device opt-out must remain available even if the network is down.
+    try {
+      const store = positionRecovery(window.localStorage);
+      const enabled = store.enabled();
+      storageRef.current = store;
+      setRecoveryEnabled(enabled); setRecoveryAvailable(true);
+    } catch { setRecoveryError('Recovery storage is unavailable in this browser.'); }
     // A stalled connection must not leave native playback controls hidden.
     const timeout = window.setTimeout(() => controller.abort(), 10000);
     void (async () => {
@@ -62,8 +103,26 @@ export function useMediaPosition({ enrolmentId, lessonId, resumeAt }: Options) {
         const response = await fetch(`/api/learn/position-v2?${query}`, { cache: 'no-store', signal: controller.signal });
         const data: unknown = await response.json();
         if (!response.ok || !validSnapshot(data) || (data as { ok?: unknown }).ok !== true) throw new Error('Invalid snapshot');
+        const actorId = (data as PositionSnapshot & { actorId?: unknown }).actorId;
+        if (typeof actorId !== 'string' || !validRevision(actorId)) throw new Error('Invalid actor');
         if (cancelled) return;
         const server: PositionSnapshot = { seconds: data.seconds, revision: data.revision };
+        serverSnapshot.current = server;
+        try {
+          const store = storageRef.current;
+          if (store) {
+            const sessionId = window.crypto.randomUUID();
+            const scope = { actorId, enrolmentId, lessonId };
+            recovery.current = { store, ...scope, sessionId };
+            const enabled = store.enabled();
+            const records = enabled ? store.list(scope) : [];
+            recoveryGate.current = records.length > 0;
+            setRecoveries(records); setRecoveryEnabled(enabled); setRecoveryError(null);
+          }
+        } catch {
+          recovery.current = null;
+          setRecoveryError('Recovery storage is unavailable in this browser.');
+        }
         initial.current = server.seconds;
         snapshotReady.current = true;
         const writer = createVersionedPositionWriter({
@@ -74,7 +133,7 @@ export function useMediaPosition({ enrolmentId, lessonId, resumeAt }: Options) {
             try {
               const result = await fetch('/api/learn/position-v2', {
                 method: 'POST', headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ enrolmentId, lessonId, seconds, revision }),
+                body: JSON.stringify({ enrolmentId, lessonId, actorId, seconds, revision }),
                 keepalive: true, signal: requestController.signal,
               });
               const value: unknown = await result.json();
@@ -86,13 +145,23 @@ export function useMediaPosition({ enrolmentId, lessonId, resumeAt }: Options) {
               window.clearTimeout(deadline);
             }
           },
-          onConfirmed: () => setSaveError(null),
+          onConfirmed: (seconds, queued) => {
+            setSaveError(null);
+            if (selectedRecord.current) { forget(selectedRecord.current); selectedRecord.current = null; }
+            if (queued === null && ownRecord.current?.seconds === seconds) {
+              forget(ownRecord.current); ownRecord.current = null;
+            }
+          },
           onConflict: (snapshot, local) => setConflict({ server: snapshot, local }),
           onUnconfirmed: () => setSaveError('Could not confirm your saved place. Reload the lesson to check before continuing to save.'),
         });
         writerRef.current = writer;
-        if (touched.current && ref.current) writer.challenge(server, ref.current.currentTime);
-        else applyResume();
+        if (touched.current && ref.current) {
+          if (recoveryGate.current) {
+            pendingPlayback.current = clampPosition(ref.current.currentTime);
+            persist(ref.current.currentTime);
+          } else writer.challenge(server, ref.current.currentTime);
+        } else applyResume();
         setReady(true);
       } catch {
         if (!cancelled) {
@@ -111,23 +180,52 @@ export function useMediaPosition({ enrolmentId, lessonId, resumeAt }: Options) {
       writerRef.current?.dispose();
       writerRef.current = null;
     };
-  }, [enrolmentId, lessonId, resumeAt, applyResume]);
+  }, [enrolmentId, lessonId, resumeAt, applyResume, forget, persist]);
 
   const save = useCallback((seconds: number, force: boolean) => {
     if (!enrolmentId) return;
     if (!writerRef.current) { if (seconds > 0) touched.current = true; return; }
+    persist(seconds);
+    if (recoveryGate.current) { pendingPlayback.current = clampPosition(seconds); return; }
     writerRef.current.enqueue(seconds, force);
-  }, [enrolmentId]);
+  }, [enrolmentId, persist]);
 
   useEffect(() => {
     const flush = () => { if (ref.current && ref.current.currentTime > 0) save(ref.current.currentTime, true); };
+    const syncConsent = () => {
+      const store = storageRef.current;
+      if (!store) return;
+      try {
+        const enabled = store.enabled();
+        setRecoveryEnabled(enabled);
+        if (!enabled) {
+          ownRecord.current = null; selectedRecord.current = null;
+          setRecoveries([]); recoveryGate.current = false;
+          if (pendingPlayback.current !== null) writerRef.current?.enqueue(pendingPlayback.current, true);
+          pendingPlayback.current = null;
+          setRecoveryError('Recovery was turned off or cleared elsewhere in this browser.');
+        }
+      } catch { setRecoveryError('Could not check recovery storage in this browser.'); }
+    };
+    const storageChanged = (event: StorageEvent) => {
+      if (event.key === null || event.key === 'ayahspring:resume-recovery:v1:enabled') syncConsent();
+    };
     window.addEventListener('pagehide', flush);
-    return () => { window.removeEventListener('pagehide', flush); flush(); };
+    window.addEventListener('storage', storageChanged);
+    window.addEventListener('ayahspring-resume-consent', syncConsent);
+    return () => {
+      window.removeEventListener('pagehide', flush);
+      window.removeEventListener('storage', storageChanged);
+      window.removeEventListener('ayahspring-resume-consent', syncConsent);
+      flush();
+    };
   }, [save]);
 
   const useServer = () => {
     const selected = writerRef.current?.useServer();
     if (!selected) return;
+    forget(selectedRecord.current); selectedRecord.current = null;
+    forget(ownRecord.current); ownRecord.current = null;
     setConflict(null); setNotice(null);
     if (ref.current) ref.current.currentTime = clampPosition(selected.seconds ?? 0);
   };
@@ -136,11 +234,83 @@ export function useMediaPosition({ enrolmentId, lessonId, resumeAt }: Options) {
     setConflict(null);
     writerRef.current.useLocal();
   };
+  const toggleRecovery = (enabled: boolean) => {
+    const store = storageRef.current;
+    if (!store) return;
+    try {
+      if (enabled) {
+        store.enable();
+        window.dispatchEvent(new Event('ayahspring-resume-consent'));
+        setRecoveryEnabled(true);
+        setRecoveryError(recovery.current ? null : 'Recovery cannot record a place until your account is confirmed. Reload when connected.');
+        if (ref.current && ref.current.currentTime > 0) persist(ref.current.currentTime);
+      } else {
+        store.disable();
+        window.dispatchEvent(new Event('ayahspring-resume-consent'));
+        ownRecord.current = null; selectedRecord.current = null;
+        setRecoveryEnabled(false); setRecoveryError(null); setRecoveries([]);
+        recoveryGate.current = false;
+        if (pendingPlayback.current !== null) writerRef.current?.enqueue(pendingPlayback.current, true);
+        pendingPlayback.current = null;
+      }
+    } catch {
+      // A failed cleanup may already have removed consent. Synchronize other
+      // players, but warn that some records may still need manual deletion.
+      window.dispatchEvent(new Event('ayahspring-resume-consent'));
+      setRecoveryError('Device storage could not be changed or cleared completely. Check your browser storage settings.');
+    }
+  };
+
+  const discardRecovery = (record: RecoveryRecord) => {
+    const context = recovery.current;
+    if (!context) return;
+    try {
+      context.store.remove(record);
+      const remaining = context.store.list(context).filter((item) => item.sessionId !== context.sessionId);
+      setRecoveries(remaining);
+      if (!remaining.length) {
+        recoveryGate.current = false;
+        if (pendingPlayback.current !== null) writerRef.current?.enqueue(pendingPlayback.current, true);
+        pendingPlayback.current = null;
+      }
+    } catch { setRecoveryError('Could not remove this recovery place from the device.'); }
+  };
+
+  const useRecovery = (record: RecoveryRecord) => {
+    const context = recovery.current; const writer = writerRef.current; const element = ref.current;
+    const server = serverSnapshot.current;
+    if (!context || !writer || !element || !server || conflict || !recoveryGate.current) return;
+    try {
+      const current = context.store.list(context).find((item) => item.sessionId === record.sessionId);
+      if (!current || JSON.stringify(current) !== JSON.stringify(record)) {
+        const remaining = context.store.list(context).filter((item) => item.sessionId !== context.sessionId);
+        setRecoveries(remaining);
+        if (!remaining.length) {
+          recoveryGate.current = false;
+          if (pendingPlayback.current !== null) writer.enqueue(pendingPlayback.current, true);
+          pendingPlayback.current = null;
+        }
+        setRecoveryError('The device place changed. Review the updated list.');
+        return;
+      }
+      element.currentTime = clampPosition(record.seconds);
+      // The learner chose this recovered place instead of this session's
+      // tentative playback; retain the chosen record until a confirmed save.
+      forget(ownRecord.current); ownRecord.current = null;
+      selectedRecord.current = record;
+      recoveryGate.current = false; pendingPlayback.current = null;
+      setRecoveries([]); setRecoveryError(null);
+      setNotice('Other device recovery places, if any, remain available when you reopen this lesson.');
+      writer.challenge(server, element.currentTime);
+    } catch { setRecoveryError('Could not use this device place. Try again after the media loads.'); }
+  };
+
   const handlers = {
     onLoadedMetadata: () => { metadata.current = true; applyResume(); },
     onTimeUpdate: () => { if (ref.current) save(ref.current.currentTime, false); },
     onPause: () => { if (ref.current) save(ref.current.currentTime, true); },
     onEnded: () => { if (ref.current) save(ref.current.currentTime, true); },
   };
-  return { ref, ready, notice, saveError, conflict, useServer, useLocal, handlers };
+  return { ref, ready, notice, saveError, conflict, useServer, useLocal, handlers,
+    recoveryEnabled, recoveryAvailable, recoveryError, recoveries, toggleRecovery, discardRecovery, useRecovery };
 }

@@ -58,9 +58,11 @@ export async function POST(request: Request) {
   if (!validId(input.enrolmentId) || !validId(input.lessonId)) return reply({ error: 'A valid enrolment and lesson are required.' }, 400);
   if (!Number.isInteger(input.seconds) || (input.seconds as number) < 0 || (input.seconds as number) > 86400) return reply({ error: 'A position must be whole seconds between 0 and 86400.' }, 400);
   if (input.revision !== null && !validId(input.revision)) return reply({ error: 'An observed revision is required.' }, 400);
+  if (!validId(input.actorId)) return reply({ error: 'An authenticated actor is required.' }, 400);
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return reply({ error: 'Sign in to keep your place.' }, 401);
+  if (user.id !== input.actorId) return reply({ error: 'Your account changed. Reload this lesson.' }, 403);
   const { data, error } = await supabase.rpc('compare_record_lesson_position', {
     p_enrolment_id: input.enrolmentId, p_lesson_id: input.lessonId,
     p_seconds: input.seconds, p_revision: input.revision,

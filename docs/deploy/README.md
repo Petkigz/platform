@@ -1489,9 +1489,9 @@ hosted PostgREST filtering, actual prices, JWT validation, RLS or real-world
 latency.
 
 Media resume work is incomplete; see [resume reliability](../resume-reliability-work.md).
-The updated player uses revision-checked writes and prompts on conflicts, but old
-unconditional write paths still exist and device recovery is not connected. It
-requires the pending migration 1360, which has not been deployed. The exit flush
+The updated player uses revision-checked writes, prompts on conflicts and offers
+optional best-effort device recovery, but old unconditional write paths still
+exist. It requires the pending migration 1360, which has not been deployed. The exit flush
 is best effort; a browser can stop before a queued write begins or finishes.
 A lost response may still hide a later commit. No real hosted media/resume or
 PostgreSQL concurrency test has been performed; do not deploy this as a complete
