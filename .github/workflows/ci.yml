@@ -61,6 +61,9 @@ jobs:
       - name: Media position component simulation
         run: node scripts/media-position-component-test.mjs
 
+      - name: Conflict-aware position route simulation
+        run: node scripts/media-position-v2-route-test.mjs
+
       - name: Redirect route HTTP regression
         run: node scripts/redirect-route-smoke.mjs
 
