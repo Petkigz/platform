@@ -66,6 +66,7 @@ jobs:
           node --input-type=module -e 'import {writeFileSync} from "node:fs";import {workerName,previewConfig} from "./deploy-guard.mjs";writeFileSync("web/wrangler.jsonc",JSON.stringify(previewConfig(workerName(process.env.GITHUB_RUN_ID,process.env.GITHUB_RUN_ATTEMPT)),null,2));'
           if (cd web && npx --no-install opennextjs-cloudflare build) > build-probe.log 2>&1; then
             cat build-probe.log
+            node --input-type=module -e 'import {readFileSync} from "node:fs";import {workerName,validateConfig} from "./deploy-guard.mjs";validateConfig(JSON.parse(readFileSync("web/wrangler.jsonc","utf8")),workerName(process.env.GITHUB_RUN_ID,process.env.GITHUB_RUN_ATTEMPT));'
           else
             cat build-probe.log
             node -e 'const s=require("fs").readFileSync("build-probe.log","utf8").slice(-6000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A"); console.log(`::error title=Guarded build failed::${s}`)'
@@ -96,7 +97,7 @@ jobs:
           set -euo pipefail
           cp web/wrangler.jsonc web/wrangler.original.jsonc
           trap 'mv web/wrangler.original.jsonc web/wrangler.jsonc' EXIT
-          node -e 'const fs=require("fs");const f="web/wrangler.jsonc";const c=JSON.parse(fs.readFileSync(f,"utf8"));c.main="preview-worker.mjs";c.assets.run_worker_first=true;fs.writeFileSync(f,JSON.stringify(c,null,2));'
+          node --input-type=module -e 'import {writeFileSync} from "node:fs";import {workerName,previewConfig} from "./deploy-guard.mjs";writeFileSync("web/wrangler.jsonc",JSON.stringify(previewConfig(workerName(process.env.GITHUB_RUN_ID,process.env.GITHUB_RUN_ATTEMPT)),null,2));'
           if node cloudflare-preview-gate-smoke.mjs > gate-probe.log 2>&1; then
             cat gate-probe.log
           else

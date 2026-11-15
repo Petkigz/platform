@@ -16,6 +16,8 @@ test('preview configuration contains only the reviewed data-free bindings', () =
   assert.equal(c.assets.run_worker_first, true);
   for (const mutate of [
     (x) => { x.assets.run_worker_first = false; },
+    (x) => { x.assets.html_handling = 'auto-trailing-slash'; },
+    (x) => { x.assets.not_found_handling = 'single-page-application'; },
     (x) => { x.main = '.open-next/worker.js'; },
     (x) => { x.vars.NEXT_PUBLIC_SUPABASE_URL = 'https://real.example'; },
     (x) => { x.vars.SUPABASE_SERVICE_ROLE_KEY = 'anything'; },

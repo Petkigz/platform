@@ -14,7 +14,7 @@ export function previewConfig(name) {
     name, main: 'preview-worker.mjs', compatibility_date: '2026-10-15',
     compatibility_flags: ['nodejs_compat', 'global_fetch_strictly_public'],
     workers_dev: true,
-    assets: { directory: '.open-next/assets', binding: 'ASSETS', run_worker_first: true },
+    assets: { directory: '.open-next/assets', binding: 'ASSETS', run_worker_first: true, html_handling: 'none', not_found_handling: 'none' },
     services: [{ binding: 'WORKER_SELF_REFERENCE', service: name }],
     images: { binding: 'IMAGES' },
     vars: { NEXT_PUBLIC_ALLOW_MISSING_SUPABASE: '1', NEXT_PUBLIC_SUPABASE_URL: '', NEXT_PUBLIC_SUPABASE_ANON_KEY: '' },
