@@ -14,6 +14,7 @@ const token = `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode({ sub: user.id, 
 const session = { access_token: token, refresh_token: 'fake-refresh', token_type: 'bearer', expires_in: 3600, expires_at: exp, user };
 const cookie = `sb-127-auth-token=base64-${encode(session)}`;
 let entitled = false; let mismatch = false; const calls = [];
+const active = new Set(); const overlaps = [];
 const fake = createServer(async (req, res) => {
   res.setHeader('content-type', 'application/json');
   if (req.url === '/auth/v1/user') {
@@ -24,6 +25,13 @@ const fake = createServer(async (req, res) => {
   let body = ''; for await (const part of req) body += part;
   const path = new URL(req.url, 'http://localhost').pathname;
   calls.push(path);
+  if (['/rest/v1/lesson_transcripts', '/rest/v1/course_sections', '/rest/v1/lesson_progress', '/rest/v1/rpc/lesson_positions'].includes(path)) {
+    for (const other of active) overlaps.push([path, other]);
+    active.add(path);
+    // Explicit delay makes overlap deterministic; it is not a latency benchmark.
+    await new Promise((r) => setTimeout(r, 60));
+    active.delete(path);
+  }
   if (path === '/rest/v1/course_enrolments') res.end(JSON.stringify([{ id: 'enrolment', learner_profile_id: 'learner', status: 'active', source: 'free', course_version_id: 'version', courses: [{ id: 'course', title: 'Synthetic course' }] }]));
   else if (path === '/rest/v1/learner_profiles') res.end(JSON.stringify([{ id: 'learner' }]));
   else if (path === '/rest/v1/lessons') res.end(JSON.stringify({ id: 'lesson', section_id: 'section', title: 'Synthetic lesson', description: 'Synthetic reading text.', type: 'video', position: 1, duration_seconds: 120, is_preview: false, course_sections: [{ title: 'Synthetic section', course_version_id: mismatch ? 'other-version' : 'version' }] }));
@@ -61,7 +69,7 @@ try {
   const redirect = new URL(anonymous.headers.get('location'), url);
   assert.equal(redirect.pathname, '/sign-in'); assert.equal(redirect.searchParams.get('next'), '/learn/enrolment/lesson/lesson');
   for (const state of ['denied', 'entitled', 'mismatch']) {
-    entitled = state === 'entitled'; mismatch = state === 'mismatch'; calls.length = 0;
+    entitled = state === 'entitled'; mismatch = state === 'mismatch'; calls.length = 0; overlaps.length = 0;
     const response = await request({ cookie }); const html = await response.text();
     if (mismatch) { assert.equal(response.status, 404); assert.ok(!calls.includes('/rest/v1/rpc/can_access_lesson')); continue; }
     assert.equal(response.status, 200); assert.match(response.headers.get('cache-control') || '', /no-store/);
@@ -71,6 +79,9 @@ try {
     assert.equal(calls.includes('/rest/v1/course_sections'), entitled);
     assert.equal(calls.includes('/rest/v1/rpc/record_analytics_event'), entitled);
     assert.equal(html.includes('Synthetic next lesson'), entitled);
+    const overlap = (a, b) => overlaps.some((pair) => pair.includes(a) && pair.includes(b));
+    assert.ok(overlap('/rest/v1/lesson_progress', '/rest/v1/rpc/lesson_positions'), 'progress and positions should overlap');
+    if (entitled) assert.ok(overlap('/rest/v1/lesson_transcripts', '/rest/v1/course_sections'), 'transcript and outline should overlap');
   }
   console.log('Lesson route HTTP smoke passed: anonymous redirect, entitlement-gated transcript and outline, version mismatch and no-store. Synthetic data only.');
   if (process.env.RESPONSIVE_PLAYWRIGHT && process.env.RESPONSIVE_CHROME) {

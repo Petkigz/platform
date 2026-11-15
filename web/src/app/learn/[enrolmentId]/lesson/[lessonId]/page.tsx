@@ -134,8 +134,15 @@ export default async function LessonPage({
   // open. Only asked when the reader may open the lessons at all: a preview
   // viewer sees a handful of them, and offering "next" would walk them into one
   // they are not entitled to.
-  const transcript = entitled ? (await fetchTranscripts(supabase, [lesson.id]))[lesson.id] : undefined;
-  const steps = entitled ? await fetchOutline(supabase, lesson.courseVersionId) : [];
+  // Both reads are allowed only after the entitlement and pinned-version checks.
+  // They are independent and use the same request-scoped client.
+  const [transcripts, steps] = entitled
+    ? await Promise.all([
+        fetchTranscripts(supabase, [lesson.id]),
+        fetchOutline(supabase, lesson.courseVersionId),
+      ])
+    : [Object.create(null) as Record<string, string>, []];
+  const transcript = transcripts[lesson.id];
   const here = lessonNeighbours(steps, lesson.id);
 
   // An opened lesson, recorded against the learner it was opened for — not the
@@ -149,39 +156,30 @@ export default async function LessonPage({
     });
   }
 
-  const { data: progressData } = await supabase
-    .from('lesson_progress')
-    .select('lesson_id, status, progress_percent')
-    .eq('course_enrolment_id', enrolmentId)
-    .eq('lesson_id', lessonId)
-    .maybeSingle();
-
-  const progress = progressData as unknown as ProgressRow | null;
-  const done = progress?.status === 'completed';
-
-  // Where this learner stopped, for every lesson in the enrolment, in one call.
-  // `last_video_position` has been in the schema since the first progress
-  // migration and nothing wrote it until now, so every player used to start at
-  // zero — including a forty-minute recitation reopened the next evening.
-  const { data: positionsData } = await supabase.rpc('lesson_positions', {
-    p_enrolment_id: enrolmentId,
-  });
-  const positions = (positionsData ?? {}) as Record<string, number>;
-  const savedPosition = positions[lesson.id];
-  const resumeAt: number | null = entitled && typeof savedPosition === 'number'
-    ? savedPosition
-    : null;
-
-  // Discussion is behind a flag, off by default, because the moderation policy
-  // behind it is a human queue with a retention obligation attached. The thread
-  // is only fetched when it is on — no reason to query a table nobody can see.
-  const [discussionOn, provenanceOn, previewsOn, studyToolsOn, practiceOn] = await Promise.all([
+  // Resume position, completion status and feature switches are independent.
+  // Keep all of them behind the preceding enrolment/version checks and retain
+  // the original fail-closed behavior of each flag.
+  const [progressResult, positionsResult, discussionOn, provenanceOn, previewsOn, studyToolsOn, practiceOn] = await Promise.all([
+    supabase.from('lesson_progress')
+      .select('lesson_id, status, progress_percent')
+      .eq('course_enrolment_id', enrolmentId)
+      .eq('lesson_id', lessonId)
+      .maybeSingle(),
+    supabase.rpc('lesson_positions', { p_enrolment_id: enrolmentId }),
     isFlagEnabled(supabase, 'learning.discussion'),
     isFlagEnabled(supabase, 'learning.provenance'),
     isFlagEnabled(supabase, 'learning.previews').catch(() => false),
     isFlagEnabled(supabase, 'learning.notes_bookmarks').catch(() => false),
     isFlagEnabled(supabase, 'learning.assessments').catch(() => false),
   ]);
+  const progress = progressResult.data as unknown as ProgressRow | null;
+  const done = progress?.status === 'completed';
+  const positions = (positionsResult.data ?? {}) as Record<string, number>;
+  const savedPosition = positions[lesson.id];
+  const resumeAt: number | null = entitled && typeof savedPosition === 'number'
+    ? savedPosition
+    : null;
+
   // A practice assessment attached to this lesson is the "interactive" half of
   // the lesson: a question you answer while you are still reading. Only
   // practice ones — a graded quiz has an attempt limit and its own sitting.
