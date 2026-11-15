@@ -5,6 +5,7 @@ import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const encode = (value) => Buffer.from(JSON.stringify(value)).toString('base64url');
 const user = { id: '0ca318e2-8b44-4a64-9b58-2af31ab941c7', aud: 'authenticated', role: 'authenticated', email: 'probe@example.invalid', app_metadata: {}, user_metadata: {}, created_at: '2026-01-01T00:00:00Z' };
@@ -56,7 +57,7 @@ const next = spawn(process.execPath, [resolve(root, 'node_modules/next/dist/bin/
   env: { PATH: process.env.PATH, HOME: process.env.HOME, TMPDIR: process.env.TMPDIR, NEXT_TELEMETRY_DISABLED: '1', NEXT_PUBLIC_SUPABASE_URL: `http://127.0.0.1:${fake.address().port}`, NEXT_PUBLIC_SUPABASE_ANON_KEY: 'fake-anon' },
   stdio: ['ignore', 'pipe', 'pipe'],
 });
-let logs = '';
+let logs = ''; let browser;
 try {
   await new Promise((resolveReady, reject) => {
     const timeout = setTimeout(() => reject(new Error(`Next startup timed out\n${logs}`)), 60000);
@@ -91,8 +92,43 @@ try {
     if (state === 'on') assert.ok(overlapped('catalogue_cards', 'search_lessons'), 'card and permitted lesson reads did not overlap');
   }
   console.log('Catalogue route smoke passed: filters, country/price, published-only cards, gated lessons, search analytics, no-store and overlapping synthetic calls. Not hosted Auth or RLS.');
+  // Optional browser coverage uses the same synthetic data and route. The HTTP
+  // smoke does not need a browser; CI opts in using its isolated driver.
+  if (process.env.RESPONSIVE_PLAYWRIGHT && process.env.RESPONSIVE_CHROME) {
+    const { chromium } = await import(pathToFileURL(process.env.RESPONSIVE_PLAYWRIGHT).href);
+    browser = await chromium.launch({ executablePath: process.env.RESPONSIVE_CHROME, headless: true, args: ['--no-sandbox'] });
+    flag = 'on';
+    for (const width of [320, 390, 768, 1440, 1920, 2560]) {
+      const context = await browser.newContext({ viewport: { width, height: 900 }, locale: 'en', extraHTTPHeaders: { 'cf-ipcountry': 'UG' } });
+      await context.addCookies([{ name: 'sb-127-auth-token', value: `base64-${encode(session)}`, url: `http://localhost:${port}` }]);
+      const page = await context.newPage();
+      await page.goto(`http://localhost:${port}/catalogue`, { waitUntil: 'networkidle' });
+      const measures = await page.evaluate(() => {
+        const shelf = document.querySelector('.discovery-page');
+        const grid = document.querySelector('.discovery-page .grid.cols-2');
+        if (!shelf || !grid) throw new Error('Synthetic shelf not rendered');
+        return { scrollWidth: document.documentElement.scrollWidth, shelfWidth: shelf.getBoundingClientRect().width,
+          columns: getComputedStyle(grid).gridTemplateColumns.split(' ').length };
+      });
+      assert.ok(measures.scrollWidth <= width + 1, `${width}: document overflowed: ${measures.scrollWidth}`);
+      assert.ok(measures.shelfWidth >= width - 1, `${width}: shelf does not use viewport`);
+      assert.equal(measures.columns, width >= 1920 ? 4 : width >= 1280 ? 3 : width >= 736 ? 2 : 1, `${width}: grid columns`);
+      assert.equal(await page.getByText('Synthetic published course').count(), 1);
+      assert.equal(await page.getByText('Synthetic unpublished course').count(), 0);
+      assert.equal(await page.getByText('UGX 25000').count(), 1);
+      await page.locator('input[name="q"]').fill('match');
+      await page.locator('select[name="audience"]').selectOption('adult');
+      await Promise.all([page.waitForURL((url) => url.searchParams.get('q') === 'match'), page.locator('form.search button[type="submit"]').click()]);
+      assert.equal(new URL(page.url()).searchParams.get('audience'), 'adult');
+      await page.getByText('Synthetic matched lesson').waitFor({ state: 'visible' });
+      assert.equal(await page.getByText('Synthetic matched lesson').count(), 1);
+      console.log(`Synthetic catalogue ${width}: no overflow, ${measures.columns} columns, usable search`);
+      await context.close();
+    }
+  }
 } catch (e) { console.error(logs); throw e; }
 finally {
+  if (browser) await browser.close();
   try { process.kill(-next.pid, 'SIGTERM'); } catch { /* already exited */ }
   if (next.exitCode === null) await Promise.race([once(next, 'exit'), new Promise((r) => setTimeout(r, 5000))]);
   try { process.kill(-next.pid, 'SIGKILL'); } catch { /* already exited */ }
