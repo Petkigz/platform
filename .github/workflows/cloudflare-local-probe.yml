@@ -31,7 +31,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/ayah-probe"
           cp package.json package-lock.json "$RUNNER_TEMP/ayah-probe/"
           cp -a web "$RUNNER_TEMP/ayah-probe/web"
-          cp scripts/cloudflare-local-probe.mjs "$RUNNER_TEMP/ayah-probe/"
+          cp scripts/cloudflare-local-probe.mjs scripts/cloudflare-prayer-synthetic.mjs "$RUNNER_TEMP/ayah-probe/"
           cd "$RUNNER_TEMP/ayah-probe"
           npm ci --no-audit --no-fund
           # Next is upgraded only in this disposable copy to meet this adapter's peer requirement.
@@ -73,5 +73,23 @@ jobs:
           else
             cat probe.log
             node -e 'const s=require("fs").readFileSync("probe.log","utf8").slice(-6000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A"); console.log(`::error title=Local Workers probe failed::${s}`)'
+            exit 1
+          fi
+      # Rebuild with a fake loopback target baked in; no real credentials or data.
+      - name: Build for synthetic prayer test
+        working-directory: ${{ runner.temp }}/ayah-probe/web
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:34567
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: fake-anon
+        run: npx --no-install opennextjs-cloudflare build
+      - name: Test prayer route with synthetic loopback services
+        working-directory: ${{ runner.temp }}/ayah-probe
+        shell: bash
+        run: |
+          if node cloudflare-prayer-synthetic.mjs > prayer-probe.log 2>&1; then
+            cat prayer-probe.log
+          else
+            cat prayer-probe.log
+            node -e 'const s=require("fs").readFileSync("prayer-probe.log","utf8").slice(-6000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A"); console.log(`::error title=Synthetic prayer probe failed::${s}`)'
             exit 1
           fi
