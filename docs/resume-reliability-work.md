@@ -36,6 +36,17 @@ actor isolation, review, successful confirmation and offline opt-out. It also
 checks that changing player props cannot flush a write past an unresolved
 recovery choice; the tentative local place remains available for review.
 
+**Multiple recordings in one lesson need further work.** The current bookmark,
+revision and device recovery scope are per enrolment and lesson, not per media
+resource. A lesson can render multiple playable resources, so a place from one
+recording may be offered or resumed on a different recording; the players also
+conflict with one another. Do not present the current implementation as
+resource-specific. A complete fix needs resource-scoped database, API and local
+recovery identities, safe handling of existing ambiguous lesson-level places,
+and multi-resource tests. Simply treating an old place as belonging to every
+recording would preserve the error. The lesson page now warns when it renders
+more than one playable resource; this is disclosure, not a resource-scoping fix.
+
 Recovery is best effort: the account must first be confirmed online, storage can
 be unavailable or cleared, and positions may be lost before the first local
 write or if the learner never returns to that browser. Records expire after

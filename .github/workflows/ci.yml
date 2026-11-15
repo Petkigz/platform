@@ -3,7 +3,7 @@
 # They are here because the person building this works with an AI assistant in
 # sessions that end and restart, and a gate that lives only in somebody's memory
 # of the last session is a gate that gets skipped. Nothing in this file deploys
-# anything or holds a secret: the whole suite runs against PGlite in memory, and
+# anything or holds a secret: database suites run against PGlite in memory, and
 # the web build succeeds with no Supabase credentials configured at all.
 
 name: CI
@@ -36,8 +36,24 @@ jobs:
       - run: node scripts/cloudflare-probe-lock/check.mjs
       - run: node --test scripts/cloudflare-probe-lock/preview-gate.test.mjs scripts/cloudflare-probe-lock/preview-label.test.mjs scripts/cloudflare-probe-lock/deploy-guard.test.mjs scripts/cloudflare-probe-lock/reviewer-guard.test.mjs
 
+  database:
+    name: Full database suite
+    runs-on: ubuntu-latest
+    # A stalled in-memory run must report a failure instead of consuming a
+    # runner indefinitely. The independent web job can still provide feedback.
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: '22.22.3'
+          cache: npm
+      - run: npm ci
+      - name: Run all registered database suites together
+        run: npm run test:db
+
   gates:
-    name: Database, web, types and build
+    name: Web, routes, types and build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -81,11 +97,6 @@ jobs:
 
       - name: Enrolled-course synthetic HTTP regression
         run: node scripts/course-workspace-route-smoke.mjs
-
-      # The runner applies the current migrations to an in-memory database,
-      # then runs every registered suite against it.
-      - name: Database suite
-        run: npm run test:db
 
       - name: Web unit suite
         run: npm run test:web

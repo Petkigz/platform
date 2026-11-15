@@ -230,6 +230,10 @@ export default async function LessonPage({
       : Promise.resolve(null),
   ]);
   const renditionsByAsset = groupByAsset(renditions);
+  const playableResourceCount = lesson.resources.filter((resource) =>
+    resource.externalUrl ? Boolean(nativeMediaKind(resource))
+      : Boolean(resource.mediaAssetId && (renditionsByAsset.get(resource.mediaAssetId)?.length ?? 0) > 0),
+  ).length;
   const standing = parseStanding(standingData);
 
   // Said above the materials, and only when something in the lesson is not
@@ -323,6 +327,12 @@ export default async function LessonPage({
 
       <section className="card">
         <h2>Materials</h2>
+        {playableResourceCount > 1 && (
+          <p className="notice">
+            Your saved place is shared between recordings in this lesson. When switching recordings,
+            check the position: it may come from a different recording.
+          </p>
+        )}
 
         {lesson.resources.length === 0 ? (
           // The two cases that produce an empty list look identical in the
