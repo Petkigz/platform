@@ -40,8 +40,11 @@ and check current versions, free-plan limits and terms before another experiment
 A second isolated probe, GitHub Actions run `43692993427`, used Next 16.4.5
 instead of the app's pinned 16.4.2 to satisfy OpenNext Cloudflare 1.20.17,
 with Wrangler 4.162.0. Its local build, Wrangler `deploy --dry-run` (no upload),
-and the same local runtime smoke passed. Wrangler reported **20,310.28 KiB
-uncompressed** (4,131.33 KiB gzipped), below Cloudflare's currently documented
+and the same local runtime smoke passed. Follow-up run `43694107734` also loaded
+an emitted static asset and verified that `/admin`, `/learn` and the prayer page
+redirect when Supabase is unconfigured and that an admin flag write returns 503.
+That unconfigured case does not test authenticated authorization or RLS.
+Wrangler reported **20,310.28 KiB uncompressed** (about 4,131 KiB gzipped), below Cloudflare's currently documented
 [64 MiB uncompressed Worker limit](https://developers.cloudflare.com/workers/platform/limits/).
 This was a different, experimental Next version, not a verified upgrade or a
 measurement of every future build. The isolated `npm audit` reported no high or
