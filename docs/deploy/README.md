@@ -20,11 +20,16 @@ The owner has not approved paid services.
 
 **Cloudflare Workers feasibility probe (local only):** An isolated copy used
 OpenNext Cloudflare 1.20.12, Wrangler 4.162.0 and this app's Next.js 16.4.2.
-Next's production build compiled and generated pages, but the adapter's server
-bundling did not complete within three minutes; it exited 137 after an attempted
-stop. The cause is not established. There is no completed Worker bundle, local
-Workers runtime test, bundle-size measurement or deployed app from this probe.
-The experimental dependency audit reported a high-severity `glob` CLI advisory
+In the sandbox, Next's production build compiled, but adapter bundling did not
+complete within three minutes and exited 137 after an attempted stop; the cause
+is not established. Subsequently, GitHub Actions run `43692527936` completed the
+bundle and tested the homepage and a malicious language redirect in Wrangler's
+local Workers runtime without credentials or external services. An earlier run
+failed because Wrangler reported localhost rather than 127.0.0.1; the probe now
+accepts either loopback host on the expected port. This is a narrow local smoke
+test, not a hosted deployment, a bundle-size or free-quota check, an Auth/RLS
+test, or validation of other routes and features. The experimental dependency
+audit reported a high-severity `glob` CLI advisory
 and a moderate `minimatch` advisory through build dependencies; assess and
 resolve applicable advisories before adopting them. An older compatible adapter,
 1.19.11, also had a high-severity middleware/cache advisory
