@@ -1416,3 +1416,46 @@ Migration 1330 marks the unimplemented ayah-of-the-day, Quran-sync, prayer-tools
 and calendar switches as requiring code. It preserves existing enabled values;
 if any were already enabled, review them and switch them off in the admin screen.
 The separate counter switch does not mean those services or their content exist.
+
+### Guarded, data-free Workers preview preparation
+
+The separate `cloudflare-test-preview.yml` is an experimental first-deployment
+path, not a production deployment. Its isolated build is labelled, has no
+Supabase URL or key, and includes no storage, email or payment bindings. A
+missing `PREVIEW_PASSWORD` makes the Worker fail closed, including assets.
+Run `43703022206` tested the deployment configuration and labelled gate in
+local Workers, after correcting OpenNext's required `html_handling: none` and
+`not_found_handling: none`. **Nothing has been deployed or verified on
+Cloudflare.**
+
+Before triggering, the owner must configure GitHub environment
+`ayahspring-worker-test` with Petkigz as the sole required reviewer, and add
+its environment variables `CF_PREVIEW_READY` = `free-data-free` and
+`CF_PREVIEW_ACCOUNT_ID` = the target Cloudflare account ID. Store a short-lived,
+account-scoped Cloudflare API token in the environment secret
+`CF_PREVIEW_API_TOKEN`, never in chat or the repository. Cloudflare's Workers
+Scripts write permission can affect other Workers in the account; use the
+narrowest practical scope and avoid R2, KV, routes, zone, and unrelated access.
+Creating a Worker may need account-level Workers permissions. If those are not
+acceptable, do not proceed. Cloudflare's free Workers plan and workers.dev
+subdomain must already be active; don't accept a paid upgrade or new charges.
+
+Only a push whose commit message starts with `test: publish guarded datafree
+preview` on the session branch can start the job. It checks the reviewer and
+builds/tests before exposing the token. It generates a unique name from the
+Actions run ID and attempt and demands a specific API not-found response before
+creation. This reduces accidental overwrite risk but is not an atomic create:
+an external writer could create the same name between preflight and deploy.
+It refuses ambiguous responses. Failed deploys can still leave partial
+resources; inspect Cloudflare before retrying. The workflow does not delete
+anything automatically.
+
+After an approved successful deployment, privately add a strong unique
+`PREVIEW_PASSWORD` as a Worker secret in the Cloudflare dashboard. The Basic
+username is `preview`. Never paste passwords or tokens into chat. Check that
+unauthenticated HTML and assets are blocked, authenticated pages show the test
+notice, and no real accounts or data are used. Basic auth has no rate limiting
+and browsers may cache credentials; it is not production authentication. Delete
+the specific test Worker manually when finished and revoke the temporary API
+token. Hosted runtime, Free CPU/memory limits, real Auth/RLS and account
+isolation remain unverified.
