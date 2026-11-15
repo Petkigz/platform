@@ -64,7 +64,13 @@ jobs:
           cp web/wrangler.jsonc web/wrangler.local.jsonc
           trap 'mv web/wrangler.local.jsonc web/wrangler.jsonc' EXIT
           node --input-type=module -e 'import {writeFileSync} from "node:fs";import {workerName,previewConfig} from "./deploy-guard.mjs";writeFileSync("web/wrangler.jsonc",JSON.stringify(previewConfig(workerName(process.env.GITHUB_RUN_ID,process.env.GITHUB_RUN_ATTEMPT)),null,2));'
-          (cd web && npx --no-install opennextjs-cloudflare build)
+          if (cd web && npx --no-install opennextjs-cloudflare build) > build-probe.log 2>&1; then
+            cat build-probe.log
+          else
+            cat build-probe.log
+            node -e 'const s=require("fs").readFileSync("build-probe.log","utf8").slice(-6000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A"); console.log(`::error title=Guarded build failed::${s}`)'
+            exit 1
+          fi
       - name: Measure bundle with Wrangler dry-run only
         working-directory: ${{ runner.temp }}/ayah-probe/web
         shell: bash
