@@ -83,6 +83,9 @@ jobs:
       - name: Earlier lesson-wide place simulation
         run: node scripts/media-legacy-position-component-test.mjs
 
+      - name: Earlier lesson-wide recovery simulation
+        run: node scripts/media-legacy-recovery-component-test.mjs
+
       - name: Conflict-aware position route simulation
         run: node scripts/media-position-v2-route-test.mjs
 

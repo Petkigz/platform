@@ -43,6 +43,8 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActo
   const recovery = useRef<{ store: ReturnType<typeof positionRecovery>; actorId: string; enrolmentId: string; lessonId: string; sessionId: string } | null>(null);
   const ownRecord = useRef<RecoveryRecord | null>(null);
   const selectedRecord = useRef<RecoveryRecord | null>(null);
+  const selectedLegacyRecovery = useRef<RecoveryRecord | null>(null);
+  const legacyRecoveryStore = useRef<ReturnType<typeof positionRecovery> | null>(null);
   const recoveryGate = useRef(false);
   const pendingPlayback = useRef<number | null>(null);
   const serverSnapshot = useRef<PositionSnapshot | null>(null);
@@ -50,6 +52,7 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActo
   const [recoveryAvailable, setRecoveryAvailable] = useState(false);
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
   const [recoveries, setRecoveries] = useState<RecoveryRecord[]>([]);
+  const [legacyRecoveries, setLegacyRecoveries] = useState<RecoveryRecord[]>([]);
   const [ready, setReady] = useState(!enrolmentId);
   const [notice, setNotice] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -93,8 +96,9 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActo
     const controller = new AbortController();
     writerRef.current = null;
     storageRef.current = null; recovery.current = null; ownRecord.current = null; selectedRecord.current = null;
+    legacyRecoveryStore.current = null; selectedLegacyRecovery.current = null;
     recoveryGate.current = false; pendingPlayback.current = null; serverSnapshot.current = null;
-    setRecoveries([]); setRecoveryEnabled(false); setRecoveryAvailable(false); setRecoveryError(null);
+    setRecoveries([]); setLegacyRecoveries([]); setRecoveryEnabled(false); setRecoveryAvailable(false); setRecoveryError(null);
     resumed.current = false;
     touched.current = false;
     snapshotReady.current = !enrolmentId;
@@ -141,6 +145,16 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActo
             const records = enabled ? store.list(scope) : [];
             recoveryGate.current = records.length > 0;
             setRecoveries(records); setRecoveryEnabled(enabled); setRecoveryError(null);
+            if (resourceId !== undefined) {
+              try {
+                const oldStore = positionRecovery(window.localStorage);
+                legacyRecoveryStore.current = oldStore;
+                setLegacyRecoveries(enabled ? oldStore.list(scope) : []);
+              } catch {
+                legacyRecoveryStore.current = null;
+                setRecoveryError('Could not read earlier device places. Check your browser storage settings.');
+              }
+            }
           }
         } catch {
           recovery.current = null;
@@ -172,6 +186,13 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActo
             serverSnapshot.current = { seconds, revision };
             setSaveError(null);
             if (selectedRecord.current) { forget(selectedRecord.current); selectedRecord.current = null; }
+            if (selectedLegacyRecovery.current && legacyRecoveryStore.current) {
+              try {
+                legacyRecoveryStore.current.remove(selectedLegacyRecovery.current);
+                setLegacyRecoveries(legacyRecoveryStore.current.list({ actorId, enrolmentId, lessonId }));
+                selectedLegacyRecovery.current = null;
+              } catch { setRecoveryError('Could not clear the earlier device place. Check your browser storage settings.'); }
+            }
             if (queued === null && ownRecord.current?.seconds === seconds) {
               forget(ownRecord.current); ownRecord.current = null;
             }
@@ -228,8 +249,8 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActo
         const enabled = store.enabled();
         setRecoveryEnabled(enabled);
         if (!enabled) {
-          ownRecord.current = null; selectedRecord.current = null;
-          setRecoveries([]); recoveryGate.current = false;
+          ownRecord.current = null; selectedRecord.current = null; selectedLegacyRecovery.current = null;
+          setLegacyRecoveries([]); setRecoveries([]); recoveryGate.current = false;
           if (pendingPlayback.current !== null) writerRef.current?.enqueue(pendingPlayback.current, true);
           pendingPlayback.current = null;
           setRecoveryError('Recovery was turned off or cleared elsewhere in this browser.');
@@ -254,6 +275,7 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActo
     const selected = writerRef.current?.useServer();
     if (!selected) return;
     forget(selectedRecord.current); selectedRecord.current = null;
+    selectedLegacyRecovery.current = null; // Choosing the account place does not discard the old device record.
     forget(ownRecord.current); ownRecord.current = null;
     serverSnapshot.current = selected;
     setConflict(null); setNotice(null);
@@ -288,6 +310,40 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActo
     }
   };
   const dismissLegacyPlace = () => { setLegacyPlace(null); setLegacyError(null); };
+  const refreshLegacyRecoveries = () => {
+    const store = legacyRecoveryStore.current; const context = recovery.current;
+    if (!store || !context) return;
+    setLegacyRecoveries(store.list(context));
+  };
+  const discardLegacyRecovery = (record: RecoveryRecord) => {
+    const store = legacyRecoveryStore.current;
+    if (!store) return;
+    try { store.remove(record); refreshLegacyRecoveries(); }
+    catch { setRecoveryError('Could not remove the earlier device place.'); }
+  };
+  const reviewLegacyRecovery = (record: RecoveryRecord) => {
+    const store = legacyRecoveryStore.current; const context = recovery.current;
+    const writer = writerRef.current; const element = ref.current; const server = serverSnapshot.current;
+    if (!store || !context || !writer || !element || !server || recoveryGate.current || !writer.canChallenge()) {
+      setRecoveryError('Finish the current save or recovery choice before reviewing an earlier device place.'); return;
+    }
+    if (!metadata.current) { setRecoveryError('Wait for the recording to load before reviewing the earlier device place.'); return; }
+    try {
+      const current = store.list(context).find((item) => item.sessionId === record.sessionId);
+      if (!current || JSON.stringify(current) !== JSON.stringify(record)) {
+        refreshLegacyRecoveries(); setRecoveryError('The earlier device place changed. Review the updated list.'); return;
+      }
+      if (Number.isFinite(element.duration) && element.duration > 0 && record.seconds >= element.duration) {
+        setRecoveryError('The earlier device place is beyond this recording. It may belong to another recording.'); return;
+      }
+      writer.challenge(server, record.seconds);
+      try { element.currentTime = record.seconds; }
+      catch { writer.useServer(); setConflict(null); setRecoveryError('Could not seek to the earlier device place.'); return; }
+      selectedLegacyRecovery.current = record;
+      setRecoveryError(null);
+    } catch { setRecoveryError('Could not read the earlier device place.'); }
+  };
+
   const toggleRecovery = (enabled: boolean) => {
     const store = storageRef.current;
     if (!store) return;
@@ -301,8 +357,8 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActo
       } else {
         store.disable();
         window.dispatchEvent(new Event('ayahspring-resume-consent'));
-        ownRecord.current = null; selectedRecord.current = null;
-        setRecoveryEnabled(false); setRecoveryError(null); setRecoveries([]);
+        ownRecord.current = null; selectedRecord.current = null; selectedLegacyRecovery.current = null;
+        setRecoveryEnabled(false); setRecoveryError(null); setRecoveries([]); setLegacyRecoveries([]);
         recoveryGate.current = false;
         if (pendingPlayback.current !== null) writerRef.current?.enqueue(pendingPlayback.current, true);
         pendingPlayback.current = null;
@@ -367,5 +423,6 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActo
   };
   return { ref, ready, notice, saveError, conflict, useServer, useLocal, handlers,
     legacyPlace, legacyError, reviewLegacyPlace, dismissLegacyPlace,
+    legacyRecoveries, reviewLegacyRecovery, discardLegacyRecovery,
     recoveryEnabled, recoveryAvailable, recoveryError, recoveries, toggleRecovery, discardRecovery, useRecovery };
 }

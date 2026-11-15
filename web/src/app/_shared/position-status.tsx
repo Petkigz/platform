@@ -8,6 +8,7 @@ type Position = ReturnType<typeof useMediaPosition>;
 export function PositionStatus({ position }: { position: Position }) {
   const { ready, notice, saveError, conflict, useServer, useLocal,
     legacyPlace, legacyError, reviewLegacyPlace, dismissLegacyPlace,
+    legacyRecoveries, reviewLegacyRecovery, discardLegacyRecovery,
     recoveryEnabled, recoveryAvailable, recoveryError, recoveries, toggleRecovery, discardRecovery, useRecovery } = position;
   return (
     <div style={{ display: 'grid', gap: '0.4rem' }}>
@@ -38,6 +39,20 @@ export function PositionStatus({ position }: { position: Position }) {
         </div>
       )}
       {recoveryError && <p className="meta danger" role="status">{recoveryError}</p>}
+      {legacyRecoveries.length > 0 && (
+        <div role="group" aria-label="Earlier lesson-wide device places" style={{ display: 'grid', gap: '0.5rem' }}>
+          <p className="meta" style={{ margin: 0 }}>
+            These older device places were saved for the whole lesson, not a specific recording. They may belong to another recording. Review one here or discard it; reviewing does not replace the account place without another choice.
+          </p>
+          {legacyRecoveries.map((record) => (
+            <div key={record.sessionId} style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+              <span>{formatPosition(record.seconds)} · {new Date(record.updatedAt).toLocaleString()}</span>
+              <button type="button" className="secondary" disabled={Boolean(conflict) || recoveries.length > 0} onClick={() => reviewLegacyRecovery(record)} aria-label={`Review earlier device place ${formatPosition(record.seconds)} from ${new Date(record.updatedAt).toLocaleString()}`}>Review earlier device place</button>
+              <button type="button" className="ghost" disabled={Boolean(conflict)} onClick={() => discardLegacyRecovery(record)} aria-label={`Discard earlier device place ${formatPosition(record.seconds)} from ${new Date(record.updatedAt).toLocaleString()}`}>Discard earlier place</button>
+            </div>
+          ))}
+        </div>
+      )}
       {recoveries.length > 0 && (
         <div role="group" aria-label="Device recovery places" style={{ display: 'grid', gap: '0.5rem' }}>
           <p role="status" style={{ margin: 0 }}>A place from this browser may not have reached your account. Review or discard each place before automatic saving continues. Choosing one leaves other places for a later visit.</p>

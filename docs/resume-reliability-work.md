@@ -86,9 +86,13 @@ an earlier lesson-wide server place for explicit review, never automatic mapping
 the server-rendered actor must match the freshly authenticated actor. Seeking
 installs a conflict choice before any save, and a newer resource revision still
 conflicts. This remains unintegrated; the page must pass the authenticated actor,
-and the rendition player also needs this mode. Lesson-only device recovery
-records remain separate and still need an explicit review/discard experience.
-A stale-client write boundary and coordinated rollout remain necessary.
+and the rendition player also needs this mode. Resource-mode native players now
+also offer lesson-only device recovery records for explicit review or discard,
+scoped to the freshly authenticated actor. They are not assigned automatically;
+the selected old record remains until a resource save is confirmed or the
+learner discards it. The flow is covered by a synthetic React test, not a real
+browser lifecycle test. A stale-client write boundary and coordinated rollout
+remain necessary.
 
 A separate resource recovery helper namespaces records by actor,
 enrolment, lesson, resource and session. It shares the existing device opt-in;
