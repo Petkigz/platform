@@ -37,7 +37,25 @@ resolve applicable advisories before adopting them. An older compatible adapter,
 1.20.12 is outside that advisory's affected range. These dependencies were not
 added to the application. See [OpenNext's setup and limitations](https://opennext.js.org/cloudflare/get-started)
 and check current versions, free-plan limits and terms before another experiment.
-Do not treat a successful Next build alone as proof of Workers compatibility.
+A second isolated probe, GitHub Actions run `43692993427`, used Next 16.4.5
+instead of the app's pinned 16.4.2 to satisfy OpenNext Cloudflare 1.20.17,
+with Wrangler 4.162.0. Its local build, Wrangler `deploy --dry-run` (no upload),
+and the same local runtime smoke passed. Wrangler reported **20,310.28 KiB
+uncompressed** (4,131.33 KiB gzipped), below Cloudflare's currently documented
+[64 MiB uncompressed Worker limit](https://developers.cloudflare.com/workers/platform/limits/).
+This was a different, experimental Next version, not a verified upgrade or a
+measurement of every future build. The isolated `npm audit` reported no high or
+critical vulnerabilities but three moderate affected packages: OpenNext via
+`glob`, plus `glob` and `minimatch` (advisories
+[GHSA-3g3m-2fjr-6pw4](https://github.com/advisories/GHSA-3g3m-2fjr-6pw4) and
+[GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249)).
+Transitive dependencies were resolved at probe time, not locked for production;
+reassess and resolve applicable findings before adoption. Cloudflare currently
+documents 10 ms CPU per request and 128 MB per isolate on the free plan; a local
+smoke or size check does not demonstrate those limits will suffice for real
+server-rendered and authenticated traffic. No hosted Worker, cache, R2 binding,
+service secret, or production configuration was created. Do not treat a
+successful build alone as proof of deployment readiness.
 
 ---
 
