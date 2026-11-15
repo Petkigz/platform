@@ -67,7 +67,11 @@ try {
     await page.locator('audio').evaluate(async (audio, target) => { await audio.play(); audio.currentTime = target; audio.pause(); }, seconds);
   }
   await playSeekPause(a, 5);
-  await waitFor(() => saved === 5, 'first tab save');
+  try { await waitFor(() => saved === 5, 'first tab save'); }
+  catch (error) {
+    console.error('First-tab diagnostics:', JSON.stringify({ saved, revision, calls, audio: await a.locator('audio').evaluate((el) => ({ currentTime: el.currentTime, duration: el.duration, paused: el.paused, readyState: el.readyState })), text: await a.locator('body').innerText() }));
+    throw error;
+  }
   await playSeekPause(b, 12);
   await b.getByRole('button', { name: /Keep this player/ }).waitFor();
   assert.equal(saved, 5, 'stale tab overwrote the first save');
