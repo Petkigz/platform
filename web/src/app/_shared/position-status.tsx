@@ -39,7 +39,9 @@ export function PositionStatus({ position }: { position: Position }) {
       {conflict && (
         <div role="group" aria-label="Choose your saved place" style={{ display: 'grid', gap: '0.5rem' }}>
           <p role="status" style={{ margin: 0 }}>
-            Your saved place changed elsewhere. Saved place: {formatPosition(conflict.server.seconds)}. This player: {formatPosition(conflict.local)}. Which should be kept?
+            The account’s saved place may differ from this player.{' '}
+            {conflict.server.seconds === null ? 'No saved place.' : `Saved place: ${formatPosition(conflict.server.seconds)}${conflict.server.seconds > 86400 ? ' (player limit: 24 hours)' : ''}.`}{' '}
+            This player: {formatPosition(conflict.local)}. Which should be kept?
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
             <button type="button" className="secondary" onClick={useServer}>Use saved place</button>

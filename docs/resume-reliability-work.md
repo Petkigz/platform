@@ -32,7 +32,9 @@ requires an explicit comparison against the account's saved place. Confirmed
 writes remove the corresponding recovery record. Opt-out remains available
 when the snapshot request fails. POST checks that the authenticated account has
 not changed since the snapshot. The DOM simulation covers an interrupted save,
-actor isolation, review, successful confirmation and offline opt-out.
+actor isolation, review, successful confirmation and offline opt-out. It also
+checks that changing player props cannot flush a write past an unresolved
+recovery choice; the tentative local place remains available for review.
 
 Recovery is best effort: the account must first be confirmed online, storage can
 be unavailable or cleared, and positions may be lost before the first local

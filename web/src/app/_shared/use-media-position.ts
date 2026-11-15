@@ -176,7 +176,12 @@ export function useMediaPosition({ enrolmentId, lessonId, resumeAt }: Options) {
       cancelled = true;
       window.clearTimeout(timeout);
       controller.abort();
-      if (ref.current && ref.current.currentTime > 0) writerRef.current?.enqueue(ref.current.currentTime, true);
+      if (ref.current && ref.current.currentTime > 0) {
+        // Cleanup can run on a prop change while the element is still mounted.
+        // Preserve the local place, but never bypass a pending recovery choice.
+        persist(ref.current.currentTime);
+        if (!recoveryGate.current) writerRef.current?.enqueue(ref.current.currentTime, true);
+      }
       writerRef.current?.dispose();
       writerRef.current = null;
     };
