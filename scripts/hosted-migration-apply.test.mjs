@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { executePlan, historyMatches, isPristine, migrationInventory } from './hosted-migration-apply.mjs';
 const names = ['20260101000000_first.sql', '20260101000001_second.sql'];
 const blank = { database: 'postgres', actor: 'postgres', auth_users: 0, public_relations: 0, public_functions: 0, history_exists: false };
@@ -19,8 +21,18 @@ const final = () => ({ row: { ...blank, history_exists: true, public_relations: 
 
 test('reviewed chain identity, pristine state and history matching', () => {
   const inventory = migrationInventory();
-  assert.equal(inventory.names.length, 342);
-  assert.equal(inventory.hash, 'ebde8bfc2ec7d2d27b5e9d6dc6969a0d076ef5cf65e8d2a9c9379babe395c2d2');
+  // The one-time apply guard must stay pinned to the original 342 files and
+  // refuse today's larger chain; adding later migrations must not authorize it.
+  const reviewed = inventory.names.slice(0, 342);
+  assert.equal(reviewed.at(-1), '20261281135000_calculated_prayer_times.sql');
+  const hash = createHash('sha256');
+  for (const name of reviewed) {
+    const data = readFileSync(new URL(`../supabase/migrations/${name}`, import.meta.url));
+    hash.update(`${name}\0${data.length}\0`); hash.update(data);
+  }
+  assert.equal(hash.digest('hex'), 'ebde8bfc2ec7d2d27b5e9d6dc6969a0d076ef5cf65e8d2a9c9379babe395c2d2');
+  assert.ok(inventory.names.length > 342);
+  assert.notEqual(inventory.hash, 'ebde8bfc2ec7d2d27b5e9d6dc6969a0d076ef5cf65e8d2a9c9379babe395c2d2');
   assert.ok(isPristine(blank, 0));
   for (const field of ['auth_users', 'public_relations', 'public_functions']) assert.equal(isPristine({ ...blank, [field]: 1 }, 0), false);
   assert.equal(isPristine(blank, 1), false);

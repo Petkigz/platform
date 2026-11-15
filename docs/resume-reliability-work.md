@@ -56,10 +56,13 @@ the route checks use simulated dependencies.
 **Not yet verified end to end:** migrations 1360 and 1370 and the updated app
 are local only and need a reviewed, coordinated rollout. An old deployed app
 would fail to save after 1370; the new app cannot save before 1360. Privileged
-service/owner writes can bypass the ordinary-role boundary. Selected PostgreSQL
-race tests are in `supabase/tests/resume_position_lock_protocol.postgres.mjs`;
-check their actual run result, and do not equate them with proof of every
-interleaving. In particular, concurrent authorization revocation, hosted
+service/owner writes can bypass the ordinary-role boundary. The selected real
+PostgreSQL race tests in `supabase/tests/resume_position_lock_protocol.postgres.mjs`
+passed on a disposable GitHub runner in run `43745135170`: competing first
+writes, a stale rewind, a concurrent completion insert and a synthetic pin
+change. Fixture setup bypassed triggers; the tested writes did not. These are
+not proof of every interleaving or of the audited re-pin RPC. In particular,
+concurrent authorization revocation, hosted
 PostgREST/Auth/RLS, migration ownership/default grants and real browser lifecycle
 remain to be verified before claiming cross-device safety.
 
