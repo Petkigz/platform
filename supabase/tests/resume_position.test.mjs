@@ -355,6 +355,9 @@ export async function run(ctx) {
     assert(positions.some((row) => row.resourceId === built.resources[0] && row.seconds === 15), 'first recording missing');
     assert(positions.some((row) => row.resourceId === built.resources[1] && row.seconds === 200), 'second recording missing');
     assert(own.meta.counts.resourcePositions === 3 && !own.meta.truncated.includes('resourcePositions'), 'export completeness incorrect');
+    const audit = (await q(`select detail from public.governance_audit_events
+      where actor=$1 and action='data.resource_positions_exported' order by occurred_at desc limit 1`, [learner.userId])).rows[0]?.detail;
+    assert(audit?.count === 3 && audit.truncated === false, 'resource export audit missing or incorrect');
     const other = (await asCommitted(stranger.userId, 'select public.export_my_data() r')).rows[0].r;
     assert(other.resourcePositions.length === 0 && other.meta.counts.resourcePositions === 0, 'another learner\'s positions leaked');
     await rejects(() => ctx.asAnon(() => q('select public.export_my_data()')), /sign in/);

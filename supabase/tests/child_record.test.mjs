@@ -123,6 +123,9 @@ export async function run(ctx) {
   const version = await newVersion(course, teacher);
   const section = await newSection(version);
   const lesson = await newLesson(section, { title: 'Letters', position: 1 });
+  const resource = (await q(`insert into public.lesson_resources
+    (lesson_id, resource_type, display_name, external_url, position)
+    values ($1, 'audio', 'Letters recording', 'https://example.invalid/letters.mp3', 1) returning id`, [lesson])).rows[0].id;
   const transition = (status, actor) =>
     q('select id from public.set_course_version_status($1,$2,$3,$4)',
       [version, status, actor, 'child record']);
@@ -145,6 +148,9 @@ export async function run(ctx) {
   await q(`insert into public.lesson_progress
              (course_enrolment_id, lesson_id, status, progress_percent, started_at, completed_at)
            values ($1, $2, 'completed', 100, now(), now())`, [enrolment, lesson]);
+  await q(`insert into public.lesson_resource_positions (lesson_progress_id, lesson_resource_id, seconds)
+    select id, $3, 42 from public.lesson_progress where course_enrolment_id=$1 and lesson_id=$2`,
+    [enrolment, lesson, resource]);
 
   // A purchase, so the ledger has something to keep. The child is named on the
   // order, which is exactly the link that has to go while the money facts stay.
@@ -207,6 +213,8 @@ export async function run(ctx) {
     assert(await count('select 1 from public.course_enrolments where learner_profile_id = $1', [child]) === 1,
       'the enrolment went with the account, so this suite is testing nothing');
     assert(await count('select 1 from public.lesson_progress where course_enrolment_id = $1', [enrolment]) === 1);
+    assert(await count('select 1 from public.lesson_resource_positions where lesson_resource_id = $1', [resource]) === 1,
+      'the recording place was unexpectedly removed at closure');
   });
 
   await test('the sweep the purge is judged by would find the child today', async () => {
@@ -309,6 +317,8 @@ export async function run(ctx) {
       'the enrolment survived the purge');
     assert(await count('select 1 from public.lesson_progress where course_enrolment_id = $1', [enrolment]) === 0,
       'the lesson progress survived the purge');
+    assert(await count('select 1 from public.lesson_resource_positions where lesson_resource_id = $1', [resource]) === 0,
+      'the recording place survived the child purge');
 
     // The certificate, which is the whole point of the schema change.
     const cert = await one(

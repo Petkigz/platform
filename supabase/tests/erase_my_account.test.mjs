@@ -59,12 +59,15 @@ export async function run(ctx) {
     q('select id from public.set_course_version_status($1,$2,$3,$4)',
       [versionId, status, actor, 'erasure test']);
 
-  async function publishedCourse({ certificate = false } = {}) {
+  async function publishedCourse({ certificate = false, recording = false } = {}) {
     seq += 1;
     const course = await newCourse(teacher, { status: 'active', title: `Erase Course ${seq}` });
     const version = await newVersion(course, teacher);
     const section = await newSection(version);
     const lesson = await newLesson(section);
+    const resource = recording ? (await q(`insert into public.lesson_resources
+      (lesson_id, resource_type, display_name, external_url, position)
+      values ($1, 'audio', 'Recording', 'https://example.invalid/erase.mp3', 1) returning id`, [lesson])).rows[0].id : null;
     if (certificate) {
       await q(`insert into public.course_completion_policies
                  (course_version_id, completion_mode, certificate_enabled, certificate_template_version)
@@ -74,7 +77,7 @@ export async function run(ctx) {
     await transition(version, 'approved', reviewer);
     await satisfyReview(version, reviewer, admin);
     await transition(version, 'published', admin);
-    return { course, version, lesson };
+    return { course, version, lesson, resource };
   }
 
   async function enrolAs(actor, learnerId, course, version) {
@@ -164,10 +167,16 @@ export async function run(ctx) {
 
   await test('the study record survives the learner profile it belonged to', async () => {
     const me = await adult('Still Enrolled');
-    const course = await publishedCourse();
+    const course = await publishedCourse({ recording: true });
     const enrolmentId = await enrolAs(me.userId, me.learnerId, course.course, course.version);
+    const progress = (await q(`insert into public.lesson_progress (course_enrolment_id, lesson_id, status)
+      values ($1,$2,'in_progress') returning id`, [enrolmentId, course.lesson])).rows[0].id;
+    await q(`insert into public.lesson_resource_positions (lesson_progress_id, lesson_resource_id, seconds)
+      values ($1,$2,30)`, [progress, course.resource]);
 
     await eraseAs(me.userId, 'Still Enrolled');
+    assert(await count('select 1 from public.lesson_resource_positions where lesson_progress_id=$1', [progress]) === 1,
+      'the recording position no longer follows retained adult progress');
 
     const enrolment = await scalar(
       `select id, learner_profile_id from public.course_enrolments where id = $1`,

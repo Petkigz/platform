@@ -62,6 +62,12 @@ begin
     v_result := jsonb_set(v_result, '{meta,note}', to_jsonb(
       coalesce(v_result#>>'{meta,note}', '') || ' Recording positions were cut at the 1,000-row limit.'));
   end if;
+  -- The underlying export has already logged its ordinary sections. Record the
+  -- added count separately, without recording any positions, and in the same
+  -- transaction so a failed audit cannot produce an apparently successful file.
+  insert into public.governance_audit_events (actor, action, target_type, target_id, detail)
+    values (v_actor, 'data.resource_positions_exported', 'user_profile', v_actor,
+      jsonb_build_object('count', v_count, 'truncated', v_count > v_cap));
   return v_result;
 end;
 $$;

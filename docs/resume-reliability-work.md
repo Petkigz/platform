@@ -61,13 +61,22 @@ mapping them. Review account/child erasure and export of resource positions
 before enabling. Migration 1390 adds authorized recording positions to JSON,
 CSV and print exports, with a 1,000-row cap and explicit count/truncation; the
 resume, export and support PGlite suites passed together (48 assertions),
-including a guardian-permission and cap check. The existing audit event is
-produced by the underlying export and does not include this added section in
-its counts. Resource rows cascade when progress is deleted, but adult account
-closure archives learner profiles instead of deleting progress, so account and
-child erasure/retention policy still needs explicit review before use. Additional
-PostgreSQL interleavings, hosted RLS/privileges and real browser lifecycle need
-verification.
+including a guardian-permission and cap check. The existing export audit event
+covers its original sections; a separate audit event records the count and
+truncation of recording positions, without recording their values.
+
+The resume, account-closure and child-record PGlite suites passed together
+(50 assertions), with their usual test-only guardian-verification setting.
+They exercise actual closure and retention-job paths: recording positions
+follow the retained adult study record after account closure, and eligible child
+positions survive closure but cascade away with progress at the 30-day purge.
+A separate child login or held coursework may block closure; held support links
+follow their own rules. This is the existing retention policy, not proof that
+archived records are fully anonymous or that external copies and browser storage
+are erased. Open devices retain recovery records until cleared, expired on a
+later visit, or deleted manually. Closure does not itself reach localStorage.
+Concurrent closure/save races, hosted privileges, real browser lifecycle and
+all other erasure paths remain unverified.
 
 A resource-aware mode has been prepared in the media-position hook and native
 players, but no lesson page or rendition player selects it yet. Synthetic React
