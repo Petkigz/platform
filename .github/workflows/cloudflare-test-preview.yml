@@ -1,0 +1,65 @@
+# One-time, owner-approved, data-free test Worker. No automatic triggers for
+# normal pushes; no Supabase, R2, email, payment or application credentials.
+name: Publish guarded data-free test preview
+on:
+  push:
+    branches:
+      - arena/4f30fd1d-platform
+permissions:
+  contents: read
+jobs:
+  preview:
+    if: >-
+      github.repository == 'Petkigz/platform' && github.ref == 'refs/heads/arena/4f30fd1d-platform' && startsWith(github.event.head_commit.message, 'test: publish guarded datafree preview')
+    runs-on: ubuntu-latest
+    environment: ayahspring-worker-test
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      WRANGLER_SEND_METRICS: 'false'
+      NEXT_PUBLIC_ALLOW_MISSING_SUPABASE: '1'
+      NEXT_PUBLIC_SUPABASE_URL: ''
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ''
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: '22.22.3'
+      # An unprotected environment can be auto-created by GitHub; explicitly
+      # reject it before a step receives the Cloudflare token.
+      - name: Verify the required reviewer remains configured
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api repos/Petkigz/platform/environments/ayahspring-worker-test > "$RUNNER_TEMP/preview-environment.json"
+          node scripts/cloudflare-probe-lock/reviewer-guard.mjs "$RUNNER_TEMP/preview-environment.json"
+      - name: Build and locally test the data-free preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/cloudflare-probe-lock/check.mjs
+          node --test scripts/cloudflare-probe-lock/preview-gate.test.mjs scripts/cloudflare-probe-lock/preview-label.test.mjs scripts/cloudflare-probe-lock/deploy-guard.test.mjs scripts/cloudflare-probe-lock/reviewer-guard.test.mjs
+          mkdir -p "$RUNNER_TEMP/ayah-preview"
+          cp scripts/cloudflare-probe-lock/package.json scripts/cloudflare-probe-lock/package-lock.json "$RUNNER_TEMP/ayah-preview/"
+          cp -a web "$RUNNER_TEMP/ayah-preview/web"
+          cp scripts/cloudflare-probe-lock/web-package.json "$RUNNER_TEMP/ayah-preview/web/package.json"
+          node scripts/cloudflare-probe-lock/preview-label.mjs "$RUNNER_TEMP/ayah-preview/web/src/app/layout.tsx"
+          cp scripts/cloudflare-probe-lock/preview-gate.mjs scripts/cloudflare-probe-lock/preview-worker.mjs "$RUNNER_TEMP/ayah-preview/web/"
+          cp scripts/cloudflare-probe-lock/deploy-guard.mjs scripts/cloudflare-preview-gate-smoke.mjs "$RUNNER_TEMP/ayah-preview/"
+          cd "$RUNNER_TEMP/ayah-preview"
+          npm ci --no-audit --no-fund
+          npm audit --audit-level=low
+          node --input-type=module -e 'import {writeFileSync} from "node:fs"; import {workerName,previewConfig} from "./deploy-guard.mjs"; const name=workerName(process.env.GITHUB_RUN_ID,process.env.GITHUB_RUN_ATTEMPT); writeFileSync("web/wrangler.jsonc",JSON.stringify(previewConfig(name),null,2));'
+          printf '%s\n' "import { defineCloudflareConfig } from '@opennextjs/cloudflare';" 'export default defineCloudflareConfig();' > web/open-next.config.ts
+          (cd web && npx --no-install opennextjs-cloudflare build)
+          node cloudflare-preview-gate-smoke.mjs
+      - name: Create the new guarded preview Worker
+        working-directory: ${{ runner.temp }}/ayah-preview
+        env:
+          CF_PREVIEW_READY: ${{ vars.CF_PREVIEW_READY }}
+          CF_PREVIEW_ACCOUNT_ID: ${{ vars.CF_PREVIEW_ACCOUNT_ID }}
+          CF_PREVIEW_API_TOKEN: ${{ secrets.CF_PREVIEW_API_TOKEN }}
+        run: node deploy-guard.mjs

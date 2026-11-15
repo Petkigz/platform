@@ -36,6 +36,7 @@ jobs:
           node scripts/cloudflare-probe-lock/preview-label.mjs "$RUNNER_TEMP/ayah-probe/web/src/app/layout.tsx"
           cp scripts/cloudflare-local-probe.mjs scripts/cloudflare-prayer-synthetic.mjs scripts/cloudflare-preview-gate-smoke.mjs "$RUNNER_TEMP/ayah-probe/"
           cp scripts/cloudflare-probe-lock/preview-gate.mjs scripts/cloudflare-probe-lock/preview-worker.mjs "$RUNNER_TEMP/ayah-probe/web/"
+          cp scripts/cloudflare-probe-lock/deploy-guard.mjs "$RUNNER_TEMP/ayah-probe/"
           cd "$RUNNER_TEMP/ayah-probe"
           npm ci --no-audit --no-fund
           npm audit --json > audit.json || true
@@ -55,9 +56,15 @@ jobs:
           import { defineCloudflareConfig } from '@opennextjs/cloudflare';
           export default defineCloudflareConfig();
           EOF
-      - name: Build locally without deploying
-        working-directory: ${{ runner.temp }}/ayah-probe/web
-        run: npx --no-install opennextjs-cloudflare build
+      - name: Build locally with the guarded deployment configuration
+        working-directory: ${{ runner.temp }}/ayah-probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp web/wrangler.jsonc web/wrangler.local.jsonc
+          trap 'mv web/wrangler.local.jsonc web/wrangler.jsonc' EXIT
+          node --input-type=module -e 'import {writeFileSync} from "node:fs";import {workerName,previewConfig} from "./deploy-guard.mjs";writeFileSync("web/wrangler.jsonc",JSON.stringify(previewConfig(workerName(process.env.GITHUB_RUN_ID,process.env.GITHUB_RUN_ATTEMPT)),null,2));'
+          (cd web && npx --no-install opennextjs-cloudflare build)
       - name: Measure bundle with Wrangler dry-run only
         working-directory: ${{ runner.temp }}/ayah-probe/web
         shell: bash
