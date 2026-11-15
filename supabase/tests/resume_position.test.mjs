@@ -234,6 +234,14 @@ export async function run(ctx) {
 
     const result = await record(parent.userId, childEnrolment, built.lessons[0], 42);
     assert(result.seconds === 42, `stored ${result.seconds}`);
+    await q(`insert into public.lesson_resource_positions (lesson_progress_id, lesson_resource_id, seconds)
+      select id, $3, 44 from public.lesson_progress where course_enrolment_id=$1 and lesson_id=$2`,
+      [childEnrolment, built.lessons[0], built.resources[0]]);
+    let exported = (await asCommitted(parent.userId, 'select public.export_my_data() r')).rows[0].r;
+    assert(exported.resourcePositions.some((row) => row.enrolmentId === childEnrolment && row.seconds === 44), 'verified guardian export omitted child');
+    await q('update public.guardian_relationships set can_view_progress=false where guardian_user_id=$1 and learner_profile_id=$2', [parent.userId, childId]);
+    exported = (await asCommitted(parent.userId, 'select public.export_my_data() r')).rows[0].r;
+    assert(!exported.resourcePositions.some((row) => row.enrolmentId === childEnrolment), 'guardian without progress permission saw child position');
   });
 
   const snapshot = async (actor, lesson = built.lessons[0]) =>
@@ -340,6 +348,39 @@ export async function run(ctx) {
     finally { await q("update public.entitlement_grants set status = 'active' where id = any($1::uuid[])", [suspended]); }
   });
 
+  await test('data export includes only authorized learner recording positions', async () => {
+    const own = (await asCommitted(learner.userId, 'select public.export_my_data() r')).rows[0].r;
+    const positions = own.resourcePositions.filter((row) => row.enrolmentId === enrolmentId);
+    assert(positions.length === 3, `expected three positions, got ${positions.length}`);
+    assert(positions.some((row) => row.resourceId === built.resources[0] && row.seconds === 15), 'first recording missing');
+    assert(positions.some((row) => row.resourceId === built.resources[1] && row.seconds === 200), 'second recording missing');
+    assert(own.meta.counts.resourcePositions === 3 && !own.meta.truncated.includes('resourcePositions'), 'export completeness incorrect');
+    const other = (await asCommitted(stranger.userId, 'select public.export_my_data() r')).rows[0].r;
+    assert(other.resourcePositions.length === 0 && other.meta.counts.resourcePositions === 0, 'another learner\'s positions leaked');
+    await rejects(() => ctx.asAnon(() => q('select public.export_my_data()')), /sign in/);
+  });
+
+  await test('recording export reports its 1,000-row cap without claiming completeness', async () => {
+    await ctx.asSuperuser(async () => {
+      // Fixture-only bypass to generate a large published resource list; the
+      // export itself runs under the ordinary caller and rolls back afterward.
+      await q("select set_config('app.bypassing_version_lock', 'on', true)");
+      await q(`with added as (
+        insert into public.lesson_resources (lesson_id, resource_type, display_name, external_url, position)
+        select $1, 'audio', 'Bulk ' || n, 'https://example.invalid/bulk/' || n, n+10
+          from generate_series(1,1001) n returning id
+      ) insert into public.lesson_resource_positions (lesson_progress_id, lesson_resource_id, seconds)
+        select p.id, added.id, 8 from added cross join public.lesson_progress p
+          where p.course_enrolment_id=$2 and p.lesson_id=$1`, [built.lessons[0], enrolmentId]);
+      await q("select set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: learner.userId, role: 'authenticated' })]);
+      await q('set local role authenticated');
+      const exported = (await q('select public.export_my_data() r')).rows[0].r;
+      assert(exported.resourcePositions.length === 1000, 'wrong list limit');
+      assert(exported.meta.counts.resourcePositions === 1004, 'wrong total');
+      assert(exported.meta.truncated.includes('resourcePositions') && exported.meta.note.includes('cut'), 'missing truncation disclosure');
+    });
+  });
+
   await test('resource records follow progress erasure and status remains completed', async () => {
     await asCommitted(learner.userId, `update public.lesson_progress set status='completed', progress_percent=100, completed_at=now()
       where course_enrolment_id=$1 and lesson_id=$2`, [enrolmentId, built.lessons[0]]);
@@ -348,7 +389,9 @@ export async function run(ctx) {
     assert(saved.ok && (await stored(built.lessons[0])).status === 'completed', 'resource save changed completion');
     await ctx.asSuperuser(async () => {
       await q('delete from public.lesson_progress where course_enrolment_id=$1 and lesson_id=$2', [enrolmentId, built.lessons[0]]);
-      const count = (await q('select count(*)::int n from public.lesson_resource_positions where lesson_resource_id = any($1::uuid[])', [built.resources.slice(0, 2)])).rows[0].n;
+      const count = (await q(`select count(*)::int n from public.lesson_resource_positions rp
+        join public.lesson_progress p on p.id=rp.lesson_progress_id
+        where p.course_enrolment_id=$1 and rp.lesson_resource_id = any($2::uuid[])`, [enrolmentId, built.resources.slice(0, 2)])).rows[0].n;
       assert(count === 0, 'position rows survived parent deletion');
     });
   });

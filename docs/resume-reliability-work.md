@@ -58,9 +58,16 @@ lesson-level API and player still run, and the new table must not be deployed
 alone. Update the API, player, optional recovery keys and old-client boundary;
 provide an explicit choice for ambiguous existing positions rather than silently
 mapping them. Review account/child erasure and export of resource positions
-before enabling. The existing export provides progress summaries, not a full
-resource-position inventory. Additional PostgreSQL interleavings, hosted
-RLS/privileges, retention, and real browser lifecycle need verification.
+before enabling. Migration 1390 adds authorized recording positions to JSON,
+CSV and print exports, with a 1,000-row cap and explicit count/truncation; the
+resume, export and support PGlite suites passed together (48 assertions),
+including a guardian-permission and cap check. The existing audit event is
+produced by the underlying export and does not include this added section in
+its counts. Resource rows cascade when progress is deleted, but adult account
+closure archives learner profiles instead of deleting progress, so account and
+child erasure/retention policy still needs explicit review before use. Additional
+PostgreSQL interleavings, hosted RLS/privileges and real browser lifecycle need
+verification.
 
 A resource-aware mode has been prepared in the media-position hook and native
 players, but no lesson page or rendition player selects it yet. Synthetic React
@@ -95,7 +102,7 @@ before writing, so a concurrent pin change cannot silently cross that check.
 PGlite tested these privileges, the versioned writer and ordinary completion;
 the route checks use simulated dependencies.
 
-**Not yet verified end to end:** migrations 1360–1380 and the updated app
+**Not yet verified end to end:** migrations 1360–1390 and the updated app
 are local only and need a reviewed, coordinated rollout. An old deployed app
 would fail to save after 1370; the new app cannot save before 1360. The resource
 foundation is not yet connected to the current player. Privileged
