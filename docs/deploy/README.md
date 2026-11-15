@@ -1472,3 +1472,9 @@ prove resistance to brute force, hosted Auth/RLS, Free-tier performance, or
 production readiness. The newer homepage and course-discovery changes are not
 in this deployed Worker. Delete the specific temporary Worker and revoke its
 API token when the test is complete.
+
+The local learner-dashboard route smoke (`scripts/learner-dashboard-route-smoke.mjs`)
+uses a synthetic loopback Auth/REST service and fabricated accounts and course
+rows. It checks anonymous redirect, own/child labels, flag off/on/outage,
+profile failure, no-store, gated calls, and overlapping independent REST reads.
+It is not a hosted latency benchmark or a real Auth, JWT or RLS isolation test.

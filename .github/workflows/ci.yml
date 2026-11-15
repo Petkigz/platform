@@ -58,6 +58,9 @@ jobs:
       - name: Redirect route HTTP regression
         run: node scripts/redirect-route-smoke.mjs
 
+      - name: Learner dashboard synthetic HTTP regression
+        run: node scripts/learner-dashboard-route-smoke.mjs
+
       # The runner applies the current migrations to an in-memory database,
       # then runs every registered suite against it.
       - name: Database suite
