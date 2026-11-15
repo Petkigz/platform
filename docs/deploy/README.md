@@ -67,8 +67,16 @@ compatibility, and advisories can change. Neither the candidate Next version nor
 the adapter was added to the application dependencies. Review the override and
 re-audit before adopting or deploying it. The owner confirmed their Workers plan
 is Free for a guarded provider-hosted test without real user data; no Worker has
-been deployed yet. Cloudflare currently documents 10 ms CPU per request and 128
-MB per isolate on the free plan; a local
+been deployed yet. A candidate preview-only Basic-auth gate was tested in local
+Workers in run `43700125387`: absent secret, wrong credentials and direct static
+asset requests were blocked, while correct synthetic credentials served the home
+page and an asset. `run_worker_first` is essential to prevent the platform's
+asset handling from bypassing that gate. It is a basic data-free preview guard,
+not production authentication, does not provide rate limiting or revocation of
+browser-cached credentials, and has not been tested on hosted Cloudflare. Never
+connect real user data, real Supabase credentials or privileged keys to it.
+Cloudflare currently documents 10 ms CPU per request and 128 MB per isolate on
+the free plan; a local
 smoke or size check does not demonstrate those limits will suffice for real
 server-rendered and authenticated traffic. No hosted Worker, cache, R2 binding,
 service secret, or production configuration was created. Do not treat a
