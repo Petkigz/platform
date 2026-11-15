@@ -57,9 +57,18 @@ critical vulnerabilities but three moderate affected packages: OpenNext via
 `glob`, plus `glob` and `minimatch` (advisories
 [GHSA-3g3m-2fjr-6pw4](https://github.com/advisories/GHSA-3g3m-2fjr-6pw4) and
 [GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249)).
-Transitive dependencies were resolved at probe time, not locked for production;
-reassess and resolve applicable findings before adoption. Cloudflare currently
-documents 10 ms CPU per request and 128 MB per isolate on the free plan; a local
+A subsequent isolated candidate uses a committed probe-only lockfile in
+`scripts/cloudflare-probe-lock/`, and overrides OpenNext's `glob` dependency
+from its declared 13.x range to 14.0.6. Run `43699014825` passed the two local
+Workers smoke tests, produced the same 20,310.28 KiB bundle, and reported zero
+npm audit findings at that time. This major-version override is outside the
+adapter's declared range: the narrow smoke tests do not establish complete
+compatibility, and advisories can change. Neither the candidate Next version nor
+the adapter was added to the application dependencies. Review the override and
+re-audit before adopting or deploying it. The owner confirmed their Workers plan
+is Free for a guarded provider-hosted test without real user data; no Worker has
+been deployed yet. Cloudflare currently documents 10 ms CPU per request and 128
+MB per isolate on the free plan; a local
 smoke or size check does not demonstrate those limits will suffice for real
 server-rendered and authenticated traffic. No hosted Worker, cache, R2 binding,
 service secret, or production configuration was created. Do not treat a
