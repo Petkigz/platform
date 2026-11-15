@@ -62,7 +62,13 @@ before enabling. The existing export provides progress summaries, not a full
 resource-position inventory. Additional PostgreSQL interleavings, hosted
 RLS/privileges, retention, and real browser lifecycle need verification.
 
-A separate, currently unused resource recovery helper namespaces records by actor,
+A resource-aware mode has been prepared in the media-position hook and native
+players, but no lesson page or rendition player selects it yet. Synthetic React
+checks exercise the v3 request, conflict and recovery flow; they are not a real
+browser or hosted end-to-end test. The rollout still requires a stale-client
+write boundary and explicit handling of old lesson-only places.
+
+A separate resource recovery helper namespaces records by actor,
 enrolment, lesson, resource and session. It shares the existing device opt-in;
 lesson-only pending records remain separate and are never silently assigned to a
 recording. Either updated helper clears both formats when consent is withdrawn.

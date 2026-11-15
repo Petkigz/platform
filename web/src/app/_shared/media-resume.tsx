@@ -18,6 +18,7 @@ type PlayerProps = {
   src: string | null;
   enrolmentId: string | null;
   lessonId: string;
+  resourceId?: string;
   resumeAt: number | null;
 };
 
@@ -27,8 +28,8 @@ type PlayerProps = {
  * The plain `<video>` this replaces started at zero every time. Nothing else
  * about it was wrong, so nothing else about it changed.
  */
-export function VideoWithResume({ name, src, enrolmentId, lessonId, resumeAt }: PlayerProps) {
-  const position = useMediaPosition({ enrolmentId, lessonId, resumeAt });
+export function VideoWithResume({ name, src, enrolmentId, lessonId, resourceId, resumeAt }: PlayerProps) {
+  const position = useMediaPosition({ enrolmentId, lessonId, resourceId, resumeAt });
   const { ref, ready, handlers } = position;
 
   return (
@@ -77,8 +78,8 @@ export function VideoWithResume({ name, src, enrolmentId, lessonId, resumeAt }: 
  * free — the platform does not need to reinvent the play button for a Qur'an
  * course to feel considered.
  */
-export function AudioPlayer({ name, src, enrolmentId, lessonId, resumeAt }: PlayerProps) {
-  const position = useMediaPosition({ enrolmentId, lessonId, resumeAt });
+export function AudioPlayer({ name, src, enrolmentId, lessonId, resourceId, resumeAt }: PlayerProps) {
+  const position = useMediaPosition({ enrolmentId, lessonId, resourceId, resumeAt });
   const { ref, ready, handlers } = position;
   const [speed, setSpeed] = useState(1);
   const [loop, setLoop] = useState<Loop>({ from: null, to: null });

@@ -77,6 +77,9 @@ jobs:
       - name: Media position component simulation
         run: node scripts/media-position-component-test.mjs
 
+      - name: Resource media position component simulation
+        run: node scripts/media-resource-position-component-test.mjs
+
       - name: Conflict-aware position route simulation
         run: node scripts/media-position-v2-route-test.mjs
 

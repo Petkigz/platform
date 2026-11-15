@@ -19,7 +19,7 @@ export function PositionStatus({ position }: { position: Position }) {
             Keep a temporary recovery place on this browser
           </label>
           <p className="meta" style={{ margin: 0 }}>
-            Optional. Anyone with access to this browser profile may see lesson identifiers and positions, including for other accounts using it. Turning this off removes recovery places for all accounts on this browser. Your account must be confirmed online before a place can be stored. Records expire after seven days and are cleared on a later visit; storage may be unavailable or cleared sooner.
+            Optional. Anyone with access to this browser profile may see account, enrolment, lesson and recording identifiers, session identifiers, positions and timestamps, including for other accounts using it. Turning this off removes recovery places for all accounts on this browser. Your account must be confirmed online before a place can be stored. Records expire after seven days and are cleared on a later visit; storage may be unavailable or cleared sooner.
           </p>
         </div>
       )}

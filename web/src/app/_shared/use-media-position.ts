@@ -4,8 +4,22 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { clampPosition, resumeLabel, shouldResume } from '@/lib/resume';
 import { createVersionedPositionWriter, type PositionSnapshot } from '@/lib/versioned-position-writer';
 import { positionRecovery, type RecoveryRecord } from '@/lib/position-recovery';
+import { resourcePositionRecovery } from '@/lib/resource-position-recovery';
 
-type Options = { enrolmentId?: string | null; lessonId: string; resumeAt?: number | null };
+type Options = { enrolmentId?: string | null; lessonId: string; resourceId?: string; resumeAt?: number | null };
+
+// The resource mode is prepared for integration but is not enabled by current
+// lesson pages. Never treat a missing resource identity as a resource bookmark.
+function recoveryStore(storage: Storage, resourceId?: string): ReturnType<typeof positionRecovery> {
+  if (resourceId === undefined) return positionRecovery(storage);
+  const store = resourcePositionRecovery(storage);
+  return {
+    enabled: store.enabled, enable: store.enable, disable: store.disable,
+    save: (record) => store.save({ ...record, resourceId }),
+    list: (scope) => store.list({ ...scope, resourceId }),
+    remove: (record) => store.remove({ ...record, resourceId }),
+  };
+}
 type Conflict = { server: PositionSnapshot; local: number };
 type Writer = ReturnType<typeof createVersionedPositionWriter>;
 const validRevision = (value: unknown): value is string | null => value === null || (typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value));
@@ -17,7 +31,7 @@ function validSnapshot(value: unknown): value is PositionSnapshot {
 
 /** One player's version-checked writes. Playback remains available on failure;
  * a failed initialization or an ambiguous write disables saving until reload. */
-export function useMediaPosition({ enrolmentId, lessonId, resumeAt }: Options) {
+export function useMediaPosition({ enrolmentId, lessonId, resourceId, resumeAt }: Options) {
   const ref = useRef<HTMLMediaElement | null>(null);
   const writerRef = useRef<Writer | null>(null);
   const initial = useRef<number | null>(null);
@@ -90,7 +104,7 @@ export function useMediaPosition({ enrolmentId, lessonId, resumeAt }: Options) {
     }
     // The device opt-out must remain available even if the network is down.
     try {
-      const store = positionRecovery(window.localStorage);
+      const store = recoveryStore(window.localStorage, resourceId);
       const enabled = store.enabled();
       storageRef.current = store;
       setRecoveryEnabled(enabled); setRecoveryAvailable(true);
@@ -99,8 +113,9 @@ export function useMediaPosition({ enrolmentId, lessonId, resumeAt }: Options) {
     const timeout = window.setTimeout(() => controller.abort(), 10000);
     void (async () => {
       try {
-        const query = new URLSearchParams({ enrolmentId, lessonId });
-        const response = await fetch(`/api/learn/position-v2?${query}`, { cache: 'no-store', signal: controller.signal });
+        const query = new URLSearchParams({ enrolmentId, lessonId, ...(resourceId !== undefined ? { resourceId } : {}) });
+        const endpoint = resourceId !== undefined ? '/api/learn/position-v3' : '/api/learn/position-v2';
+        const response = await fetch(`${endpoint}?${query}`, { cache: 'no-store', signal: controller.signal });
         const data: unknown = await response.json();
         if (!response.ok || !validSnapshot(data) || (data as { ok?: unknown }).ok !== true) throw new Error('Invalid snapshot');
         const actorId = (data as PositionSnapshot & { actorId?: unknown }).actorId;
@@ -131,9 +146,9 @@ export function useMediaPosition({ enrolmentId, lessonId, resumeAt }: Options) {
             const requestController = new AbortController();
             const deadline = window.setTimeout(() => requestController.abort(), 15000);
             try {
-              const result = await fetch('/api/learn/position-v2', {
+              const result = await fetch(endpoint, {
                 method: 'POST', headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ enrolmentId, lessonId, actorId, seconds, revision }),
+                body: JSON.stringify({ enrolmentId, lessonId, ...(resourceId !== undefined ? { resourceId } : {}), actorId, seconds, revision }),
                 keepalive: true, signal: requestController.signal,
               });
               const value: unknown = await result.json();
@@ -185,7 +200,7 @@ export function useMediaPosition({ enrolmentId, lessonId, resumeAt }: Options) {
       writerRef.current?.dispose();
       writerRef.current = null;
     };
-  }, [enrolmentId, lessonId, resumeAt, applyResume, forget, persist]);
+  }, [enrolmentId, lessonId, resourceId, resumeAt, applyResume, forget, persist]);
 
   const save = useCallback((seconds: number, force: boolean) => {
     if (!enrolmentId) return;
