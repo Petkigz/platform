@@ -12,6 +12,7 @@ const { chromium } = await import(pathToFileURL(modulePath).href);
 const server = spawn('npm', ['run', 'dev'], {
   env: { ...process.env, NEXT_TELEMETRY_DISABLED: '1', NEXT_PUBLIC_ALLOW_MISSING_SUPABASE: '1', PORT: '3000' },
   stdio: ['ignore', 'pipe', 'pipe'],
+  detached: true,
 });
 let logs = '';
 for (const stream of [server.stdout, server.stderr]) stream.on('data', (chunk) => { logs = (logs + chunk).slice(-5000); });
@@ -51,5 +52,7 @@ try {
   }
 } finally {
   if (browser) await browser.close();
-  server.kill('SIGTERM');
+  // npm starts Next as a child; stop the whole group so its open pipes do not
+  // keep the smoke-test process alive after the browser has closed.
+  try { process.kill(-server.pid, 'SIGTERM'); } catch { /* already exited */ }
 }
