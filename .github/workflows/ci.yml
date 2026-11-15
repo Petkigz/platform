@@ -58,6 +58,9 @@ jobs:
       - name: Progress control component simulation
         run: node scripts/mark-complete-component-test.mjs
 
+      - name: Media position component simulation
+        run: node scripts/media-position-component-test.mjs
+
       - name: Redirect route HTTP regression
         run: node scripts/redirect-route-smoke.mjs
 

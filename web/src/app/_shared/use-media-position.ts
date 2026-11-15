@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { clampPosition, resumeLabel, shouldResume } from '@/lib/resume';
+import { createPositionWriter } from '@/lib/position-writer';
 
 type Options = {
   /** The enrolment the position belongs to. Null means "do not save". */
@@ -22,55 +23,52 @@ type Options = {
  * back to a position the database still holds from ten minutes ago.
  *
  * **Save on a timer and at the edges.** `timeupdate` fires four times a second;
- * a write on every tick would be 14 000 requests for an hour of recitation. Ten
- * seconds of drift is invisible to a person and one write every ten seconds to a
- * database. Pause, the end of the media, and leaving the page are the moments
- * that matter, so those are forced.
+ * a write on every tick could be thousands of requests per hour. Normal writes
+ * are spaced by ten seconds of playback; pause, the end and leaving the page
+ * request a save too. Page exit remains best effort and can lose the last place.
  *
  * **Never let saving break playback.** A refused write is a lost bookmark, not a
  * broken lesson; the player says so quietly and says it once.
  */
 export function useMediaPosition({ enrolmentId, lessonId, resumeAt }: Options) {
   const ref = useRef<HTMLMediaElement | null>(null);
-  const resumed = useRef(false);
-  const lastSent = useRef<number | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  const save = useCallback(
-    async (seconds: number, force: boolean) => {
-      if (!enrolmentId) return;
-      const whole = clampPosition(seconds);
-      if (!force && lastSent.current !== null && Math.abs(whole - lastSent.current) < 10) return;
-      lastSent.current = whole;
-      try {
-        const response = await fetch('/api/learn/position', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ enrolmentId, lessonId, seconds: whole }),
-        });
-        if (!response.ok) {
-          const result = (await response.json().catch(() => ({}))) as { error?: string };
-          throw new Error(result.error ?? 'That place was not kept.');
-        }
-        setSaveError(null);
-      } catch (cause) {
-        // Said once, quietly. A learner who sees an error mid-recitation should
-        // be able to keep listening.
-        setSaveError(cause instanceof Error ? cause.message : 'That place was not kept.');
+  const writer = useMemo(() => createPositionWriter({
+    write: async (seconds) => {
+      const response = await fetch('/api/learn/position', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ enrolmentId, lessonId, seconds }),
+        // Best effort only: browsers can still stop the request when leaving.
+        keepalive: true,
+      });
+      const result = await response.json().catch(() => null) as { ok?: unknown; seconds?: unknown } | null;
+      if (!response.ok || result?.ok !== true || result.seconds !== seconds) {
+        throw new Error('Position not confirmed');
       }
     },
-    [enrolmentId, lessonId],
-  );
+    onUnconfirmed: () => setSaveError('Could not confirm your saved place. Reload the lesson to check before continuing to save.'),
+  }), [enrolmentId, lessonId]);
 
-  // Leaving the page is the most common way a lesson ends, and `beforeunload` is
-  // the only hook that runs then. `sendBeacon` would be tidier but cannot carry
-  // the auth cookie the same way under every browser, so the fetch is fired and
-  // left to settle.
+  const resumedFor = useRef<typeof writer | null>(null);
+  const save = useCallback((seconds: number, force: boolean) => {
+    if (enrolmentId) writer.enqueue(seconds, force);
+  }, [enrolmentId, writer]);
+
   useEffect(() => {
+    setNotice(null);
+    setSaveError(null);
+  }, [writer]);
+
+  // Page exit is a best-effort flush, not a durability guarantee. If an earlier
+  // request is still in flight, the queued final position may never be sent
+  // before the browser suspends or terminates this page.
+  useEffect(() => {
+    const element = ref.current;
     const flush = () => {
-      const element = ref.current;
-      if (element && element.currentTime > 0) void save(element.currentTime, true);
+      if (element && element.currentTime > 0) save(element.currentTime, true);
     };
     window.addEventListener('pagehide', flush);
     return () => {
@@ -82,8 +80,8 @@ export function useMediaPosition({ enrolmentId, lessonId, resumeAt }: Options) {
   const handlers = {
     onLoadedMetadata: () => {
       const element = ref.current;
-      if (!element || resumed.current) return;
-      resumed.current = true;
+      if (!element || resumedFor.current === writer) return;
+      resumedFor.current = writer;
       const duration = Number.isFinite(element.duration) ? element.duration : null;
       if (resumeAt !== null && resumeAt !== undefined && shouldResume(resumeAt, duration)) {
         element.currentTime = clampPosition(resumeAt);
