@@ -70,8 +70,10 @@ is Free for a guarded provider-hosted test without real user data; no Worker has
 been deployed yet. A candidate preview-only Basic-auth gate was tested in local
 Workers in run `43700125387`: absent secret, wrong credentials and direct static
 asset requests were blocked, while correct synthetic credentials served the home
-page and an asset. `run_worker_first` is essential to prevent the platform's
-asset handling from bypassing that gate. It is a basic data-free preview guard,
+page and an asset. Follow-up run `43702472771` also built and displayed a
+prominent data-free test notice injected only into the disposable preview copy;
+the application source was not modified by the injection. `run_worker_first` is
+essential to prevent the platform's asset handling from bypassing that gate. It is a basic data-free preview guard,
 not production authentication, does not provide rate limiting or revocation of
 browser-cached credentials, and has not been tested on hosted Cloudflare. Never
 connect real user data, real Supabase credentials or privileged keys to it.
