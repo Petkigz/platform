@@ -42,15 +42,26 @@ the browser is closed. localStorage cannot atomically compare and delete across
 tabs, so another tab can race record removal. Do not describe it as a durable or
 cross-device outbox.
 
-**Neither limit is fixed end to end yet.** The old unconditional API and RPC
-can still overwrite a newer position. Existing RLS-authorized progress updates
-can also write positions unconditionally. The new player requires migration
-1360 and must not be deployed without it; neither should be deployed alone as a
-fix. Remove or protect all legacy write paths in a coordinated rollout, and test the
-actual PostgreSQL interleavings, authorized roles and hosted Auth/RLS before
-claiming cross-device safety. PGlite tests are sequential, not a concurrency or
-hosted PostgREST test. Review concurrent enrolment re-pinning and authorization
-changes too.
+Migration 1370 revokes authenticated access to the unconditional legacy RPC
+and removes ordinary direct permission to insert or update position and revision
+columns, move progress identity keys, or delete progress rows. Status-only
+progress insert/update remains permitted subject to RLS. The old position HTTP
+endpoint responds 410, and the progress endpoint refuses a legacy position
+payload rather than silently discarding it. Stale pages must reload. The new
+compare-and-write function also locks the enrolment and rechecks the version
+before writing, so a concurrent pin change cannot silently cross that check.
+PGlite tested these privileges, the versioned writer and ordinary completion;
+the route checks use simulated dependencies.
+
+**Not yet verified end to end:** migrations 1360 and 1370 and the updated app
+are local only and need a reviewed, coordinated rollout. An old deployed app
+would fail to save after 1370; the new app cannot save before 1360. Privileged
+service/owner writes can bypass the ordinary-role boundary. Selected PostgreSQL
+race tests are in `supabase/tests/resume_position_lock_protocol.postgres.mjs`;
+check their actual run result, and do not equate them with proof of every
+interleaving. In particular, concurrent authorization revocation, hosted
+PostgREST/Auth/RLS, migration ownership/default grants and real browser lifecycle
+remain to be verified before claiming cross-device safety.
 
 Even opt-in recovery cannot guarantee a position after storage is disabled,
 cleared or fails, before any recovery record can be written, or if the learner

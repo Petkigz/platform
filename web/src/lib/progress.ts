@@ -58,17 +58,13 @@ export type CompletionEvaluation = {
  */
 export function fieldsForStatus(
   status: LessonStatus,
-  opts: { videoPosition?: number; alreadyStarted?: boolean } = {},
+  opts: { alreadyStarted?: boolean } = {},
 ): Record<string, unknown> {
   const now = new Date().toISOString();
   const base: Record<string, unknown> = {
     status,
     last_seen_at: now,
   };
-
-  if (opts.videoPosition !== undefined) {
-    base.last_video_position = Math.max(0, Math.floor(opts.videoPosition));
-  }
 
   if (status === 'completed') {
     base.progress_percent = 100;
@@ -81,9 +77,6 @@ export function fieldsForStatus(
 
   if (status === 'in_progress') {
     if (!opts.alreadyStarted) base.started_at = now;
-    // Never 100 while in_progress: lp_completed_means_full runs in the other
-    // direction, but a full bar on an unfinished lesson is a lie either way.
-    if (opts.videoPosition !== undefined) base.progress_percent = 50;
     return base;
   }
 
@@ -197,7 +190,7 @@ export type ProgressErrorCode =
  */
 export async function recordLessonProgress(
   supabase: SupabaseClient,
-  args: { userId: string; enrolmentId: string; lessonId: string; status: LessonStatus; videoPosition?: number },
+  args: { userId: string; enrolmentId: string; lessonId: string; status: LessonStatus },
 ): Promise<ProgressOutcome> {
   const { data: enrolment } = await supabase
     .from('course_enrolments')
@@ -232,7 +225,6 @@ export async function recordLessonProgress(
   const existing = (existingRows ?? [])[0] as { id: string; started_at: string | null } | undefined;
 
   const fields = fieldsForStatus(args.status, {
-    videoPosition: args.videoPosition,
     alreadyStarted: Boolean(existing?.started_at),
   });
 

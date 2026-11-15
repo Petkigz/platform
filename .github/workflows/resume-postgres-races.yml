@@ -1,0 +1,36 @@
+name: Resume PostgreSQL races
+on:
+  push:
+    branches:
+      - arena/4f30fd1d-platform
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: resume-postgres-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  selected-races:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: '22.22.3'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Start disposable PostgreSQL and create an empty local database
+        run: |
+          set -euo pipefail
+          sudo service postgresql start
+          if ! sudo -u postgres psql -tAc "select 1 from pg_roles where rolname = '$USER'" | grep -qx 1; then
+            sudo -u postgres createuser --superuser "$USER"
+          fi
+          createdb -h /var/run/postgresql ayahspring_resume_lock_test
+      - name: Run selected real PostgreSQL interleavings
+        env:
+          RESUME_LOCK_TEST: '1'
+          PGHOST: /var/run/postgresql
+          PGDATABASE: ayahspring_resume_lock_test
+        run: node supabase/tests/resume_position_lock_protocol.postgres.mjs

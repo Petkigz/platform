@@ -31,6 +31,9 @@ export async function POST(request: Request) {
     );
   }
 
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ ok: false, code: 'rejected', message: 'Malformed request.' }, { status: 400 });
+  }
   const b = body as {
     enrolmentId?: unknown;
     lessonId?: unknown;
@@ -58,10 +61,14 @@ export async function POST(request: Request) {
     );
   }
 
-  const videoPosition =
-    typeof b.videoPosition === 'number' && Number.isFinite(b.videoPosition)
-      ? b.videoPosition
-      : undefined;
+  // Older clients used this progress endpoint to overwrite a bookmark without
+  // a revision. Refuse rather than silently dropping an intended position.
+  if (Object.hasOwn(b, 'videoPosition')) {
+    return NextResponse.json(
+      { ok: false, code: 'rejected', message: 'This player is out of date. Reload the lesson to save your place.' },
+      { status: 409, headers: { 'cache-control': 'private, no-store' } },
+    );
+  }
 
   const supabase = await createClient();
   const {
@@ -80,7 +87,6 @@ export async function POST(request: Request) {
     enrolmentId: b.enrolmentId,
     lessonId: b.lessonId,
     status: b.status as LessonStatus,
-    videoPosition,
   });
 
   if (!outcome.ok) {

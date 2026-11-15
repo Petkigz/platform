@@ -64,6 +64,9 @@ jobs:
       - name: Conflict-aware position route simulation
         run: node scripts/media-position-v2-route-test.mjs
 
+      - name: Legacy position route regression
+        run: node scripts/legacy-position-route-test.mjs
+
       - name: Redirect route HTTP regression
         run: node scripts/redirect-route-smoke.mjs
 

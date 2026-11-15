@@ -78,9 +78,13 @@ export async function run(ctx) {
     }
   }
 
-  const record = async (actor, enrolment, lesson, seconds) =>
-    (await asCommitted(actor, 'select public.record_lesson_position($1,$2,$3) r',
-      [enrolment, lesson, seconds])).rows[0].r;
+  const record = async (actor, enrolment, lesson, seconds) => {
+    const snapshot = (await asCommitted(actor, 'select public.resume_position_snapshot($1,$2) r', [enrolment, lesson])).rows[0].r;
+    const result = (await asCommitted(actor, 'select public.compare_record_lesson_position($1,$2,$3,$4) r',
+      [enrolment, lesson, seconds, snapshot.revision])).rows[0].r;
+    const row = (await asCommitted(actor, 'select status from public.lesson_progress where course_enrolment_id=$1 and lesson_id=$2', [enrolment, lesson])).rows[0];
+    return { ...result, status: row?.status };
+  };
 
   const positions = async (actor, enrolment) =>
     (await asCommitted(actor, 'select public.lesson_positions($1) p', [enrolment])).rows[0].p;
@@ -174,7 +178,7 @@ export async function run(ctx) {
 
   await test('a signed-out caller is refused both ways', async () => {
     await rejects(() => ctx.asAnon(() => q(
-      'select public.record_lesson_position($1,$2,$3)', [enrolmentId, built.lessons[0], 5])),
+      'select public.compare_record_lesson_position($1,$2,$3,$4)', [enrolmentId, built.lessons[0], 5, null])),
       /sign in/);
     await rejects(() => ctx.asAnon(() => q(
       'select public.lesson_positions($1)', [enrolmentId])), /sign in/);
@@ -253,11 +257,21 @@ export async function run(ctx) {
     assert(changed.ok && (await stored(built.lessons[2])).status === 'completed', 'completion changed');
   });
 
-  await test('old progress writes invalidate a previously observed revision', async () => {
+  await test('ordinary progress writes rotate revision without changing the place', async () => {
     const initial = await snapshot(learner.userId);
-    await record(learner.userId, enrolmentId, built.lessons[0], 555);
+    await asCommitted(learner.userId, 'update public.lesson_progress set last_seen_at = now() where course_enrolment_id = $1 and lesson_id = $2', [enrolmentId, built.lessons[0]]);
     const stale = await compare(learner.userId, built.lessons[0], 12, initial.revision);
-    assert(!stale.ok && stale.seconds === 555, 'legacy write did not rotate revision');
+    assert(!stale.ok && stale.seconds === initial.seconds, 'status write did not rotate revision');
+  });
+
+  await test('legacy RPC and direct writes cannot bypass revision comparison', async () => {
+    await rejects(() => asCommitted(learner.userId, 'select public.record_lesson_position($1,$2,$3)', [enrolmentId, built.lessons[0], 80]), /permission denied/);
+    await rejects(() => asCommitted(learner.userId, 'update public.lesson_progress set last_video_position = 80 where course_enrolment_id=$1 and lesson_id=$2', [enrolmentId, built.lessons[0]]), /permission denied/);
+    await rejects(() => asCommitted(learner.userId, 'update public.lesson_progress set position_revision = gen_random_uuid() where course_enrolment_id=$1 and lesson_id=$2', [enrolmentId, built.lessons[0]]), /permission denied/);
+    await rejects(() => asCommitted(learner.userId, 'update public.lesson_progress set lesson_id = $3 where course_enrolment_id=$1 and lesson_id=$2', [enrolmentId, built.lessons[0], built.lessons[1]]), /permission denied/);
+    await rejects(() => asCommitted(learner.userId, 'insert into public.lesson_progress (course_enrolment_id, lesson_id, last_video_position) values ($1,$2,80)', [enrolmentId, built.lessons[0]]), /permission denied/);
+    await rejects(() => asCommitted(learner.userId, 'delete from public.lesson_progress where course_enrolment_id=$1 and lesson_id=$2', [enrolmentId, built.lessons[0]]), /permission denied/);
+    assert(!await q("select has_column_privilege('authenticated','public.lesson_progress','last_video_position','UPDATE') allowed").then(r => r.rows[0].allowed), 'position grant remains');
   });
 
   await test('revision read and write refuse another learner and anonymous callers', async () => {

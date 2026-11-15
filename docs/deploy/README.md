@@ -195,7 +195,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-343 files in `supabase/migrations/`, applied in filename order — the 14-digit
+344 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -220,10 +220,10 @@ ownership, privileges, extensions or network failure behavior. The subsequent
 hosted apply succeeded, but does not verify real Auth requests or runtime
 behaviour. Do not assume that a dry run verifies trigger permissions.
 After a successful application, verify that the history contains every expected
-version, through `20261281136000_resume_position_revision.sql`, as well as running
-the checks in section 2. The initial hosted apply stopped at 1350; 1360 is an
-unintegrated local foundation and must not be deployed alone. A history entry
-alone does not prove the schema works.
+version, through `20261281137000_resume_position_write_boundary.sql`, as well as running
+the checks in section 2. The initial hosted apply stopped at 1350; 1360 and 1370
+are pending and require a reviewed, coordinated app/database rollout. Do not
+apply either alone. A history entry alone does not prove the schema works.
 
 #### Optional GitHub Actions preview for the existing test project
 
@@ -1490,9 +1490,9 @@ latency.
 
 Media resume work is incomplete; see [resume reliability](../resume-reliability-work.md).
 The updated player uses revision-checked writes, prompts on conflicts and offers
-optional best-effort device recovery, but old unconditional write paths still
-exist. It requires the pending migration 1360, which has not been deployed. The exit flush
-is best effort; a browser can stop before a queued write begins or finishes.
-A lost response may still hide a later commit. No real hosted media/resume or
-PostgreSQL concurrency test has been performed; do not deploy this as a complete
-fix.
+optional best-effort device recovery. Pending migration 1370 retires old
+unconditional learner write paths, but neither it nor migration 1360 has been
+applied to the hosted project. They and the app need a reviewed coordinated
+rollout. The exit flush is best effort; a browser can stop before a queued write
+begins or finishes. A lost response may still hide a later commit. Real hosted
+media/resume and Auth/RLS have not been verified.
