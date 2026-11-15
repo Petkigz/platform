@@ -1619,3 +1619,119 @@ html[data-motion='reduce'] *::after {
   direction: ltr;
   unicode-bidi: isolate;
 }
+
+/* Front-door art direction: a calm editorial canvas and a geometric motif,
+   made from CSS rather than images, remote fonts or illustrative people. */
+.home-hero {
+  background: #f4f8f2;
+  padding-block: clamp(3.5rem, 7vw, 6.5rem);
+}
+.home-hero::before {
+  background-image: radial-gradient(#b7d1bf 1px, transparent 1px);
+  background-size: 18px 18px;
+  mask-image: linear-gradient(120deg, transparent 20%, #000 100%);
+  opacity: .45;
+}
+.home-hero .container, .home-study .container, .home-how .container {
+  max-width: 72rem;
+}
+.home-hero .hero-grid { gap: clamp(2rem, 5vw, 5rem); }
+.home-hero .display {
+  font-size: clamp(2.8rem, 5.5vw, 4.8rem);
+  line-height: 1.04;
+  max-width: 13ch;
+  letter-spacing: -.035em;
+}
+.home-hero .lede { line-height: 1.7; }
+.home-hero .hero-actions { margin-top: 2rem; gap: .75rem; }
+.home-hero .hero-actions .btn { padding: .85rem 1.4rem; }
+.home-panel {
+  overflow: hidden;
+  padding: 2rem;
+  border-radius: 1.25rem;
+  border-color: #d5e5d8;
+  box-shadow: 0 1.5rem 4rem -2.4rem rgba(6, 61, 34, .35);
+}
+.home-panel::before { display: none; }
+.home-motif {
+  height: 10.5rem;
+  position: relative;
+  overflow: hidden;
+  border-radius: .8rem;
+  margin-bottom: 1.65rem;
+  background: #0a5230;
+}
+.home-motif::before, .home-motif::after, .home-motif-ring,
+.home-motif-star, .home-motif-centre {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  transform: translate(-50%, -50%);
+}
+/* Centre decorative pieces independently of writing direction. */
+[dir='rtl'] .home-motif::before, [dir='rtl'] .home-motif::after,
+[dir='rtl'] .home-motif-ring, [dir='rtl'] .home-motif-star,
+[dir='rtl'] .home-motif-centre { transform: translate(50%, -50%); }
+.home-motif::before, .home-motif::after {
+  content: '';
+  width: 15rem;
+  height: 15rem;
+  border: 1px solid rgba(216, 239, 221, .24);
+  border-radius: 50%;
+}
+.home-motif::after { width: 11rem; height: 11rem; }
+.home-motif-ring {
+  width: 8.8rem;
+  height: 8.8rem;
+  border: 1px solid rgba(216, 239, 221, .5);
+  border-radius: 50%;
+}
+.home-motif-star {
+  width: 7rem;
+  height: 7rem;
+  background: #b8d9ba;
+  clip-path: polygon(50% 0, 61% 26%, 85% 15%, 74% 39%, 100% 50%, 74% 61%, 85% 85%, 61% 74%, 50% 100%, 39% 74%, 15% 85%, 26% 61%, 0 50%, 26% 39%, 15% 15%, 39% 26%);
+}
+.home-motif-star-inner { width: 5.4rem; height: 5.4rem; background: #0a5230; }
+.home-motif-centre { width: 1.5rem; height: 1.5rem; background: #d4e8c5; border-radius: 50%; }
+.home-panel .assurances li { padding-block: .2rem .8rem; border-bottom: 1px solid #ecf2ee; }
+.home-panel .assurances li:last-child { border-bottom: 0; padding-bottom: 0; }
+.home-study { padding-block: clamp(3.5rem, 6vw, 5.5rem); background: #fff; }
+.home-study h2, .home-how h2 {
+  font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+  font-size: clamp(2rem, 3.4vw, 3rem);
+  font-weight: 500;
+  letter-spacing: -.025em;
+  line-height: 1.15;
+  color: var(--green-900);
+}
+.home-study .grid { gap: 1rem; }
+.home-door {
+  padding: clamp(1.4rem, 3vw, 2.25rem);
+  border-radius: 1rem;
+  background: #f1f7ef;
+  border: 1px solid #dbe9dc;
+  box-shadow: none;
+}
+.home-door:nth-child(2) { background: #f8f8ef; border-color: #e7eadb; }
+.home-door h3 { font-size: 1.3rem; color: var(--green-900); }
+.home-door a { font-weight: 700; }
+.home-door-symbol {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: #dbeedc;
+  color: #0a5230;
+  font-size: 1.45rem;
+  margin-bottom: 1.5rem;
+}
+.home-how { background: #f4f8f2; padding-block: clamp(3.5rem, 6vw, 5rem); }
+.home-how .step { border-color: #a5c9ae; padding-top: 1.25rem; }
+.home-how .step h3 { font-size: 1.15rem; }
+@media (max-width: 53.99rem) {
+  .home-hero .display { max-width: 15ch; }
+  .home-panel { padding: 1.3rem; }
+  .home-motif { height: 8rem; }
+}

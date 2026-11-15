@@ -159,7 +159,7 @@ export default async function Home({
 
   return (
     <>
-      <section className="hero">
+      <section className="hero home-hero">
         <div className="container">
           <div className="hero-grid">
             <div>
@@ -187,7 +187,13 @@ export default async function Home({
             {/* Labelled by its own heading rather than by a string in English:
                 `aria-labelledby` is what a screen reader wants anyway, and it
                 cannot drift from what is printed in the panel. */}
-            <aside className="panel" aria-labelledby="home-means">
+            <aside className="panel home-panel" aria-labelledby="home-means">
+              <div className="home-motif" aria-hidden="true">
+                <span className="home-motif-ring" />
+                <span className="home-motif-star" />
+                <span className="home-motif-star home-motif-star-inner" />
+                <span className="home-motif-centre" />
+              </div>
               <p className="eyebrow" style={{ marginBottom: '0.15rem' }}>
                 {t('home.meansEyebrow')}
               </p>
@@ -205,7 +211,7 @@ export default async function Home({
         </div>
       </section>
 
-      <section className="section">
+      <section className="section home-study">
         <div className="container">
           <h2 style={{ marginTop: 0 }}>{t('home.studyTitle')}</h2>
           {subjects.length > 0 ? (
@@ -236,7 +242,8 @@ export default async function Home({
 
           <div className="grid cols-2">
             {DOORS.map((door) => (
-              <div key={door.href} className="card">
+              <div key={door.href} className="card home-door">
+                <span className="home-door-symbol" aria-hidden="true">✳</span>
                 <h3 style={{ marginTop: 0 }}>{t(door.label)}</h3>
                 <p className="muted" style={{ margin: 0, fontSize: '0.93rem' }}>
                   {t(door.body)}
@@ -261,7 +268,7 @@ export default async function Home({
         </div>
       </section>
 
-      <section className="section" style={{ paddingTop: 0 }}>
+      <section className="section home-how">
         <div className="container">
           <h2 style={{ marginTop: 0 }}>{t('home.howTitle')}</h2>
           <div className="steps">
