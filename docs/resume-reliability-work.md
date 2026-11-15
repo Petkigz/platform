@@ -125,6 +125,11 @@ never returns to that browser profile. Do not promise lossless page-exit saves.
 The PGlite resume, progress, closure and child-retention suites passed together
 with 63 assertions after integration. Historical lesson-writer behavior in the
 resume suite uses a temporary **test-only** grant; separate checks confirm the
-shipped function is unavailable before and after that fixture grant. Real
-PostgreSQL tests for this revision are pending, including the new privilege
-boundary; historical real-PostgreSQL results predate migration 1400.
+shipped function is unavailable before and after that fixture grant.
+Disposable real PostgreSQL run `43754670192` passed the updated
+privilege boundary and selected resource races. Its historical lesson-writer
+races used an explicitly temporary fixture grant; the resource races ran after
+the grant was revoked. These selected cases do not establish all races or hosted
+PostgREST/Auth/RLS behavior. Responsive Chromium run `43754670108` passed the
+synthetic lesson layout checks; it did not play real media or exercise hosted
+resume writes.
