@@ -31,7 +31,17 @@ const server = createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', 'http://localhost');
   if (url.pathname === '/') { res.setHeader('content-type', 'text/html'); res.end('<!doctype html><html><body><div id="root"></div><script src="/bundle.js"></script></body></html>'); return; }
   if (url.pathname === '/bundle.js') { res.setHeader('content-type', 'text/javascript'); res.end(bundle.outputFiles[0].text); return; }
-  if (url.pathname === '/silence.wav') { res.setHeader('content-type', 'audio/wav'); res.end(wav); return; }
+  if (url.pathname === '/silence.wav') {
+    res.setHeader('content-type', 'audio/wav'); res.setHeader('accept-ranges', 'bytes');
+    const range = /^bytes=(\d+)-(\d*)$/.exec(req.headers.range ?? '');
+    if (range) {
+      const start = Number(range[1]); const end = Math.min(range[2] ? Number(range[2]) : wav.length - 1, wav.length - 1);
+      if (start > end || start >= wav.length) { res.statusCode = 416; res.setHeader('content-range', `bytes */${wav.length}`); res.end(); return; }
+      res.statusCode = 206; res.setHeader('content-range', `bytes ${start}-${end}/${wav.length}`);
+      res.setHeader('content-length', end - start + 1); res.end(wav.subarray(start, end + 1)); return;
+    }
+    res.setHeader('content-length', wav.length); res.end(wav); return;
+  }
   if (url.pathname === '/api/learn/position-v3') {
     res.setHeader('content-type', 'application/json');
     if (req.method === 'GET') {
@@ -64,7 +74,11 @@ try {
   }
   assert.equal(calls.filter((c) => c.method === 'GET' && c.resourceId === id(3)).length, 2);
   async function playSeekPause(page, seconds) {
-    await page.locator('audio').evaluate(async (audio, target) => { await audio.play(); audio.currentTime = target; audio.pause(); }, seconds);
+    await page.locator('audio').evaluate(async (audio, target) => {
+      await audio.play();
+      const seeked = new Promise((done) => audio.addEventListener('seeked', done, { once: true }));
+      audio.currentTime = target; await seeked; audio.pause();
+    }, seconds);
   }
   await playSeekPause(a, 5);
   try { await waitFor(() => saved === 5, 'first tab save'); }
