@@ -42,4 +42,10 @@ jobs:
         run: |
           set -euo pipefail
           export RESPONSIVE_CHROME="$(command -v google-chrome || command -v chromium)"
-          node scripts/learner-dashboard-route-smoke.mjs
+          if node scripts/learner-dashboard-route-smoke.mjs > "$RUNNER_TEMP/learner-responsive.log" 2>&1; then
+            cat "$RUNNER_TEMP/learner-responsive.log"
+          else
+            cat "$RUNNER_TEMP/learner-responsive.log"
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Learner responsive test::${s}`)' "$RUNNER_TEMP/learner-responsive.log"
+            exit 1
+          fi
