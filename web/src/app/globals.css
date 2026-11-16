@@ -1931,3 +1931,176 @@ html[data-motion='reduce'] *::after {
 @media (max-width: 40rem) {
   .course-workspace .lessons li { flex-wrap: wrap; }
 }
+
+/* --------------------------------------------------------------------------
+   Companion tools: prayer times, the Hijri date and the private counter.
+
+   The same head panel and card proportions as the lesson and the enrolled
+   course, so these read as part of the learner's space rather than a form
+   bolted on beside it. Nothing here is decoration that carries meaning: a row
+   that needs a date or an offset says so in words (see `prayer-timetable.ts`).
+   -------------------------------------------------------------------------- */
+.companion-page { max-width: none; padding-block: clamp(2rem, 4vw, 4rem); }
+.companion-head {
+  background: #edf6ed;
+  border: 1px solid #d9e8da;
+  border-radius: 1.1rem;
+  padding: clamp(1.25rem, 3vw, 2.5rem);
+  margin-bottom: 1.5rem;
+}
+.companion-head h1 {
+  font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+  font-size: clamp(2rem, 3.5vw, 3.25rem);
+  font-weight: 500;
+  line-height: 1.15;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.companion-page > .card { border-radius: 1rem; padding: clamp(1.2rem, 2.2vw, 2rem); }
+.companion-page > .card > h2:first-child,
+.prayer-tool .prayer-intro h2 { margin-top: 0; font-size: 1.3rem; }
+.companion-page > .card p { overflow-wrap: anywhere; }
+.companion-tool > p { max-width: 72ch; }
+.companion-back { margin: 1.25rem 0 0; }
+/* The shared button is a full-width block, which is right in a narrow form and
+   wrong across a wide card. Here a button is as wide as its sentence, never
+   wider than its container, and tall enough for a thumb. */
+.companion-page .card .btn {
+  width: auto;
+  max-width: 100%;
+  min-height: 2.75rem;
+  margin-top: 0;
+  padding-inline: 1.25rem;
+  white-space: normal;
+}
+
+.prayer-intro { max-width: 72ch; }
+.prayer-privacy {
+  border-inline-start: 3px solid var(--green-600);
+  padding-inline-start: 0.9rem;
+  color: var(--text-soft);
+  margin-bottom: 0;
+}
+.prayer-fields { display: grid; gap: 1.25rem; margin-top: 1.5rem; }
+@media (min-width: 62rem) {
+  .prayer-fields { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+}
+.prayer-group {
+  min-width: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: clamp(1rem, 2vw, 1.5rem);
+}
+.prayer-group > :first-child { margin-top: 0; }
+.prayer-group > :last-child { margin-bottom: 0; }
+.prayer-group input, .prayer-group select { min-height: 2.75rem; }
+.prayer-coords {
+  display: grid;
+  gap: 0 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  margin-top: 0.25rem;
+}
+.prayer-hint {
+  font-size: 0.9rem;
+  color: var(--text-soft);
+  margin: 0.5rem 0 0;
+  max-width: 72ch;
+}
+.prayer-example { margin: 0.9rem 0 0; }
+.prayer-example p { margin: 0 0 0.75rem; }
+.prayer-group > .notice { margin: 0.9rem 0 0; }
+.prayer-confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+  margin: 1rem 0 0;
+  padding: 0.75rem 0.9rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  color: var(--text);
+  cursor: pointer;
+}
+.prayer-confirm input {
+  width: 1.25rem; height: 1.25rem; min-height: 0;
+  flex: 0 0 1.25rem;
+  margin: 0.15rem 0 0;
+  padding: 0;
+  accent-color: var(--green-700);
+}
+.prayer-confirm span { min-width: 0; overflow-wrap: anywhere; }
+.prayer-actions { display: grid; gap: 1rem; justify-items: start; margin-top: 1.5rem; }
+.prayer-actions .notice { justify-self: stretch; max-width: 72ch; margin: 0; }
+.prayer-result { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+.prayer-result h3 {
+  font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+  font-size: clamp(1.25rem, 2vw, 1.6rem);
+  font-weight: 500;
+  line-height: 1.25;
+  margin: 0 0 1rem;
+}
+/* A phone gets the timetable as rows — name on one side, time on the other —
+   because six tiles two abreast break "12:36 PM" in the middle. From a tablet
+   up there is room for tiles, and on a desk all six sit on one line. */
+.prayer-timetable { display: grid; gap: 0.5rem; margin: 0; }
+.prayer-timetable > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  min-width: 0;
+  padding: 0.75rem 1rem;
+  background: var(--green-50);
+  border: 1px solid var(--green-100);
+  border-radius: var(--radius);
+}
+.prayer-timetable dt { font-weight: 600; color: var(--green-800); min-width: 0; overflow-wrap: anywhere; }
+.prayer-timetable dd { margin: 0; text-align: end; min-width: 0; }
+.prayer-time {
+  display: block;
+  font-size: clamp(1.25rem, 2.2vw, 1.7rem);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--green-900);
+  font-variant-numeric: tabular-nums;
+}
+.prayer-qualifier { display: block; font-size: 0.8rem; color: var(--text-soft); margin-top: 0.15rem; }
+@media (min-width: 40rem) {
+  .prayer-timetable { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; }
+  .prayer-timetable > div { display: block; padding: 1rem 1.1rem; }
+  .prayer-timetable dt { font-size: 0.85rem; letter-spacing: 0.02em; }
+  .prayer-timetable dd { margin-top: 0.25rem; text-align: start; }
+}
+@media (min-width: 72rem) {
+  .prayer-timetable { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+.prayer-summary { margin: 1rem 0 0; font-size: 0.9rem; color: var(--text-soft); }
+
+.hijri-date { margin: 1.25rem 0; }
+.hijri-date strong {
+  display: block;
+  font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+  font-size: clamp(1.6rem, 3vw, 2.5rem);
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--green-900);
+}
+.hijri-date span { display: block; margin-top: 0.4rem; color: var(--text-soft); }
+
+.counter-count {
+  display: block;
+  margin: 1rem 0;
+  font-size: clamp(3rem, 8vw, 5rem);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--green-900);
+  font-variant-numeric: tabular-nums;
+}
+.counter-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+/* The one button pressed a hundred times is the large one. */
+.companion-page .counter-tap { min-height: 3.5rem; padding-inline: 2.25rem; font-size: 1.1rem; }
+.companion-head .lede { margin: 0.9rem 0 0; max-width: 60ch; }
+.companion-head .muted { margin: 0.4rem 0 0; max-width: 60ch; }

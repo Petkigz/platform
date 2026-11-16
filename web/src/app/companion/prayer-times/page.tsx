@@ -23,9 +23,9 @@ export default async function Page() {
     acceptLanguage: hdrs.get('accept-language'),
   });
   const t = translator(locale);
-  return <div className="container section">
-    <p className="eyebrow">{t('companion.eyebrow')}</p><h1>{t('companion.prayerTitle')}</h1>
+  return <div className="container section companion-page">
+    <div className="companion-head"><p className="eyebrow">{t('companion.eyebrow')}</p><h1>{t('companion.prayerTitle')}</h1></div>
     {enabled ? <I18nProvider locale={locale} messages={companionMessagesFor(locale)}><PrayerTimesTool /></I18nProvider> : <p className="notice">{t('companion.prayerOff')}</p>}
-    <p style={{marginTop:'1rem'}}><Link href="/learn">{t('companion.backToLearning')}</Link></p>
+    <p className="companion-back"><Link href="/learn">{t('companion.backToLearning')}</Link></p>
   </div>;
 }

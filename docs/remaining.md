@@ -406,7 +406,7 @@ that calculation cannot proceed without a new location. This is not a real
 browser or location-provider test. A separate source-level regression checks
 that the reset occurs before any browser outcome.
 
-**Companion screens in the reader's language (2026-10-15).** The prayer tool,
+**Companion screens in the reader's language (2026-11-16).** The prayer tool,
 the Hijri date, the private counter, their three pages and the three dashboard
 cards were the last learner screens written only in English. Their 80 sentences
 now live in the catalogue (`companion.*` in `web/src/lib/i18n/messages/en.ts`)

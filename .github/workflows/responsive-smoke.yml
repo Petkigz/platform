@@ -88,3 +88,47 @@ jobs:
             node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Course responsive test::${s}`)' "$RUNNER_TEMP/course-responsive.log"
             exit 1
           fi
+  # The companion tools in their own job: a real browser's zone, location
+  # prompt, storage and clock, in four languages. Kept apart from the job above
+  # so neither spends the other's ten minutes, and so the screenshots are kept
+  # whether or not an assertion failed.
+  companion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: '22.22.3'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Install isolated browser driver
+        run: npm install --prefix "$RUNNER_TEMP/responsive" --no-audit --no-fund playwright-core@1.58.2
+      - name: Install fonts for Arabic and Burmese so measured widths are real glyphs
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends fonts-noto-core
+          fc-list | grep -ci -E 'myanmar|arabic'
+      - name: Prayer times, Hijri date and counter in Chromium with synthetic data
+        env:
+          RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs
+          RESPONSIVE_SCREENSHOTS: ${{ runner.temp }}/companion-screenshots
+        run: |
+          set -euo pipefail
+          export RESPONSIVE_CHROME="$(command -v google-chrome || command -v chromium)"
+          if node scripts/companion-browser-smoke.mjs > "$RUNNER_TEMP/companion-browser.log" 2>&1; then
+            cat "$RUNNER_TEMP/companion-browser.log"
+          else
+            cat "$RUNNER_TEMP/companion-browser.log"
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Companion browser test::${s}`)' "$RUNNER_TEMP/companion-browser.log"
+            exit 1
+          fi
+      - name: Keep the screenshots
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: companion-screenshots
+          path: ${{ runner.temp }}/companion-screenshots
+          if-no-files-found: ignore
+          retention-days: 7

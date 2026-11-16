@@ -25,7 +25,9 @@ test('the route and dashboard both check the independent switch; count remains m
   // The privacy promise is a catalogue sentence now; the page asks for it.
   const en=readFileSync(new URL('./i18n/messages/en.ts',import.meta.url),'utf8');
   assert.match(page,/isFlagEnabled\(supabase,'companion\.dhikr_counter'\)/);
-  assert.match(page,/enabled \? <>/);assert.match(en,/not saved or sent/);
+  // The counter and the two sentences introducing it exist only when the switch is on.
+  assert.match(page,/\{enabled\s*\? <I18nProvider[^\n]*<Counter \/><\/I18nProvider>\s*: <p className="notice">\{t\('companion\.counterOff'\)\}<\/p>\}/);
+  assert.match(page,/\{enabled && <>\s*<p className="lede">\{t\('companion\.counterLede'\)\}<\/p>\s*<p className="muted">\{t\('companion\.counterPrivacy'\)\}<\/p>/);assert.match(en,/not saved or sent/);
   assert.match(dashboard,/counterOn &&/);assert.match(dashboard,/href="\/companion\/counter"/);
   assert.doesNotMatch(component,/localStorage|sessionStorage|indexedDB|fetch\(|sendBeacon|document\.cookie/);
 });

@@ -241,8 +241,13 @@ test('regional examples are explicit, limited, and never a default',()=>{
 
 test('time zone confirmation checkbox has an accessible label and does not inherit full-width input styling',()=>{
   const tool=readFileSync(new URL('../app/companion/prayer-times/tool.tsx',import.meta.url),'utf8');
-  assert.match(tool,/<label className="row"[^>]*><input type="checkbox"/);
-  assert.match(tool,/width:'1\.25rem',height:'1\.25rem',flex:'0 0 1\.25rem'/);
+  // The checkbox is wrapped by its own label, and its size lives in the
+  // stylesheet now rather than inline: the shared `input` rule is full-width
+  // with padding, which turned a checkbox into a bar.
+  assert.match(tool,/<label className="prayer-confirm"><input type="checkbox"/);
+  const css=readFileSync(new URL('../app/globals.css',import.meta.url),'utf8');
+  const rule=css.slice(css.indexOf('.prayer-confirm input {'));
+  assert.match(rule.slice(0,rule.indexOf('}')),/width: 1\.25rem; height: 1\.25rem;[\s\S]*flex: 0 0 1\.25rem;[\s\S]*padding: 0;/);
   assert.match(tool,/<span>\{t\('companion\.prayerZoneConfirm'\)\}<\/span><\/label>/);
   assert.match(en,/My device time zone matches this location\./);
 });

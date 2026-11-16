@@ -1,9 +1,10 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { calculatePrayerTimesForDeviceDay, methodExampleForZone, methods, selectedNightRule, type Asr, type Method, type NightRule } from '@/lib/prayer-calculation';
+import { timetableRows, type TimetableLine } from '@/lib/prayer-timetable';
 import { useLocaleCode, useT } from '@/lib/i18n/client';
 
-type Result = { lines: readonly (readonly [string,string])[]; date:string; zone:string; method:string; asr:Asr; night:NightRule };
+type Result = { lines: readonly TimetableLine[]; date:string; zone:string; method:string; asr:Asr; night:NightRule };
 
 /** A number as this language writes it, with English behind a bad tag. */
 function number(locale: string, value: number): string {
@@ -71,37 +72,62 @@ export function PrayerTimesTool() {
     if(zone!==deviceZone) {setDeviceZone(zone);setConfirmZone(false);setMessage(t('companion.prayerMsgZoneChangedAgain'));return;}
     const times=calculatePrayerTimesForDeviceDay(lat,lon,now,zone,method as Method,asr as Asr,nightRule);
     if(!times) {setMessage(t('companion.prayerMsgCannotCalculate'));return;}
-    const fmtOptions: Intl.DateTimeFormatOptions = { timeZone:zone, year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short' };
-    setResult({lines:times.map(([name,time])=>[name,date(locale,fmtOptions,time)] as const),date:date(locale,{timeZone:zone,dateStyle:'full'},now),zone,method:methods[method as Method],asr:asr as Asr,night:nightRule});
+    const rows=timetableRows(locale,zone,now,times);
+    setResult({lines:rows.lines,date:date(locale,{timeZone:zone,dateStyle:'full'},now),zone:rows.sharedOffset ? `${zone} (${rows.sharedOffset})` : zone,method:methods[method as Method],asr:asr as Asr,night:nightRule});
   }
   const changed=()=>{setResult(null);setMessage('');};
   const example=methodExampleForZone(deviceZone);
-  return <section className="card" aria-labelledby="prayer-heading">
-    <h2 id="prayer-heading">{t('companion.prayerHeading')}</h2>
-    <p>{t('companion.prayerLede')}</p>
-    <p>{t('companion.prayerPrivacy')}</p>
-    <button type="button" className="btn secondary" onClick={locate} disabled={locating}>{locating?t('companion.prayerLocating'):t('companion.prayerUseLocation')}</button>
-    <div><label htmlFor="latitude">{t('companion.prayerLatitude')}</label><input id="latitude" type="number" min="-90" max="90" step="any" disabled={locating} value={latitude} onChange={e=>{setLatitude(e.target.value);setConfirmZone(false);changed();}} /></div>
-    <div><label htmlFor="longitude">{t('companion.prayerLongitude')}</label><input id="longitude" type="number" min="-180" max="180" step="any" disabled={locating} value={longitude} onChange={e=>{setLongitude(e.target.value);setConfirmZone(false);changed();}} /></div>
-    <p>{t('companion.prayerMethodIntro')}</p>
-    {example && <div className="notice">
-      <p>{t('companion.prayerExample', { zone: deviceZone, place: example.place, method: methods[example.method] })}</p>
-      <button type="button" className="btn secondary" onClick={()=>{setMethod(example.method);changed();}}>{t('companion.prayerUseMethod')}</button>
+  return <section className="card prayer-tool" aria-labelledby="prayer-heading">
+    <div className="prayer-intro">
+      <h2 id="prayer-heading">{t('companion.prayerHeading')}</h2>
+      <p>{t('companion.prayerLede')}</p>
+      <p className="prayer-privacy">{t('companion.prayerPrivacy')}</p>
+    </div>
+    <div className="prayer-fields">
+      {/* Where: the coordinates and the clock they are read against. The
+          confirmation sits with the location because changing either one
+          withdraws it. */}
+      <div className="prayer-group">
+        <button type="button" className="btn secondary" onClick={locate} disabled={locating}>{locating?t('companion.prayerLocating'):t('companion.prayerUseLocation')}</button>
+        <div className="prayer-coords">
+          <div><label htmlFor="latitude">{t('companion.prayerLatitude')}</label><input id="latitude" type="number" min="-90" max="90" step="any" disabled={locating} value={latitude} onChange={e=>{setLatitude(e.target.value);setConfirmZone(false);changed();}} /></div>
+          <div><label htmlFor="longitude">{t('companion.prayerLongitude')}</label><input id="longitude" type="number" min="-180" max="180" step="any" disabled={locating} value={longitude} onChange={e=>{setLongitude(e.target.value);setConfirmZone(false);changed();}} /></div>
+        </div>
+        <p className="prayer-hint">{t('companion.prayerZone', { zone: deviceZone || t('companion.prayerZoneUnavailable') })}</p>
+        <label className="prayer-confirm"><input type="checkbox" checked={confirmZone} onChange={e=>{setConfirmZone(e.target.checked);changed();}} /><span>{t('companion.prayerZoneConfirm')}</span></label>
+      </div>
+      {/* How: the convention, which is the reader's choice and never ours. */}
+      <div className="prayer-group">
+        <p className="prayer-hint">{t('companion.prayerMethodIntro')}</p>
+        {example && <div className="notice prayer-example">
+          <p>{t('companion.prayerExample', { zone: deviceZone, place: example.place, method: methods[example.method] })}</p>
+          <button type="button" className="btn secondary" onClick={()=>{setMethod(example.method);changed();}}>{t('companion.prayerUseMethod')}</button>
+        </div>}
+        <div><label htmlFor="method">{t('companion.prayerMethodLabel')}</label><select id="method" value={method} onChange={e=>{setMethod(e.target.value);changed();}}><option value="">{t('companion.prayerMethodChoose')}</option>{Object.entries(methods).map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></div>
+        {method==='Singapore' && <p className="notice">{t('companion.prayerSingaporeBefore')} <a href="https://www.muis.gov.sg/resources/islamic-calendar/" target="_blank" rel="noopener noreferrer">{t('companion.prayerSingaporeLink')}</a> {t('companion.prayerSingaporeAfter')}</p>}
+        <div><label htmlFor="asr">{t('companion.prayerAsrLabel')}</label><select id="asr" aria-describedby="asr-explanation" value={asr} onChange={e=>{setAsr(e.target.value);changed();}}><option value="">{t('companion.prayerAsrChoose')}</option><option value="standard">{t('companion.prayerAsrStandard')}</option><option value="hanafi">{t('companion.prayerAsrHanafi')}</option></select></div>
+        <p id="asr-explanation" className="prayer-hint">{t('companion.prayerAsrNote')}</p>
+        {method==='MoonsightingCommittee' ? <p className="prayer-hint">{t('companion.prayerMoonsightingNote')}</p> : <>
+          <div><label htmlFor="night">{t('companion.prayerNightLabel')}</label><select id="night" aria-describedby="night-explanation" value={night} onChange={e=>{setNight(e.target.value);changed();}}><option value="">{t('companion.prayerNightChoose')}</option><option value="middle">{t('companion.prayerNightMiddle')}</option><option value="seventh">{t('companion.prayerNightSeventh')}</option><option value="angle">{t('companion.prayerNightAngle')}</option></select></div>
+          <p id="night-explanation" className="prayer-hint">{t('companion.prayerNightNote')}</p>
+        </>}
+        <p className="prayer-hint">{t('companion.prayerNoPolar')}</p>
+      </div>
+    </div>
+    <div className="prayer-actions">
+      <button type="button" className="btn" onClick={calculate} disabled={locating}>{t('companion.prayerCalculate')}</button>
+      {message && <p className="notice" role="status">{message}</p>}
+    </div>
+    {result && <div className="prayer-result" aria-live="polite">
+      <h3>{t('companion.prayerTimesFor', { date: result.date })}</h3>
+      <dl className="prayer-timetable">
+        {result.lines.map(line=><div key={line.name}>
+          <dt>{line.name}</dt>
+          <dd><span className="prayer-time">{line.time}</span>{(line.otherDay || line.offset) && <span className="prayer-qualifier">{[line.otherDay,line.offset].filter(Boolean).join(' · ')}</span>}</dd>
+        </div>)}
+      </dl>
+      <p className="prayer-summary">{t('companion.prayerSummary', { zone: result.zone, method: result.method, asr: result.asr==='hanafi' ? t('companion.prayerAsrHanafi') : t('companion.prayerAsrStandard'), night: result.method==='Moonsighting Committee' ? t('companion.prayerSummaryMoonsighting') : result.night==='middle' ? t('companion.prayerNightMiddle') : result.night==='seventh' ? t('companion.prayerNightSeventh') : t('companion.prayerNightAngle') })}</p>
+      <p className="prayer-hint">{t('companion.prayerResultNote')}</p>
     </div>}
-
-    <div><label htmlFor="method">{t('companion.prayerMethodLabel')}</label><select id="method" value={method} onChange={e=>{setMethod(e.target.value);changed();}}><option value="">{t('companion.prayerMethodChoose')}</option>{Object.entries(methods).map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></div>
-    {method==='Singapore' && <p className="notice">{t('companion.prayerSingaporeBefore')} <a href="https://www.muis.gov.sg/resources/islamic-calendar/" target="_blank" rel="noopener noreferrer">{t('companion.prayerSingaporeLink')}</a> {t('companion.prayerSingaporeAfter')}</p>}
-    <div><label htmlFor="asr">{t('companion.prayerAsrLabel')}</label><select id="asr" aria-describedby="asr-explanation" value={asr} onChange={e=>{setAsr(e.target.value);changed();}}><option value="">{t('companion.prayerAsrChoose')}</option><option value="standard">{t('companion.prayerAsrStandard')}</option><option value="hanafi">{t('companion.prayerAsrHanafi')}</option></select></div>
-    <p id="asr-explanation">{t('companion.prayerAsrNote')}</p>
-    {method==='MoonsightingCommittee' ? <p>{t('companion.prayerMoonsightingNote')}</p> : <>
-      <div><label htmlFor="night">{t('companion.prayerNightLabel')}</label><select id="night" aria-describedby="night-explanation" value={night} onChange={e=>{setNight(e.target.value);changed();}}><option value="">{t('companion.prayerNightChoose')}</option><option value="middle">{t('companion.prayerNightMiddle')}</option><option value="seventh">{t('companion.prayerNightSeventh')}</option><option value="angle">{t('companion.prayerNightAngle')}</option></select></div>
-      <p id="night-explanation">{t('companion.prayerNightNote')}</p>
-    </>}
-    <p>{t('companion.prayerNoPolar')}</p>
-    <p>{t('companion.prayerZone', { zone: deviceZone || t('companion.prayerZoneUnavailable') })}</p>
-    <label className="row" style={{alignItems:'center',paddingBlock:'0.5rem'}}><input type="checkbox" checked={confirmZone} onChange={e=>{setConfirmZone(e.target.checked);changed();}} style={{width:'1.25rem',height:'1.25rem',flex:'0 0 1.25rem',margin:0}} /><span>{t('companion.prayerZoneConfirm')}</span></label>
-    <p><button type="button" className="btn" onClick={calculate} disabled={locating}>{t('companion.prayerCalculate')}</button></p>
-    {message && <p className="notice" role="status">{message}</p>}
-    {result && <div aria-live="polite"><h3>{t('companion.prayerTimesFor', { date: result.date })}</h3><p>{t('companion.prayerSummary', { zone: result.zone, method: result.method, asr: result.asr==='hanafi' ? t('companion.prayerAsrHanafi') : t('companion.prayerAsrStandard'), night: result.method==='Moonsighting Committee' ? t('companion.prayerSummaryMoonsighting') : result.night==='middle' ? t('companion.prayerNightMiddle') : result.night==='seventh' ? t('companion.prayerNightSeventh') : t('companion.prayerNightAngle') })}</p><ul>{result.lines.map(([name,time])=><li key={name}><strong>{name}:</strong> {time}</li>)}</ul><p>{t('companion.prayerResultNote')}</p></div>}
   </section>;
 }

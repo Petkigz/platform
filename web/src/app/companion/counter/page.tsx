@@ -25,15 +25,19 @@ export default async function CounterPage() {
   });
   const t = translator(locale);
   return (
-    <div className="container section">
-      <p className="eyebrow">{t('companion.eyebrow')}</p>
-      <h1>{t('companion.counterTitle')}</h1>
-      {enabled ? <>
-        <p className="lede">{t('companion.counterLede')}</p>
-        <p className="muted">{t('companion.counterPrivacy')}</p>
-        <I18nProvider locale={locale} messages={companionMessagesFor(locale)}><Counter /></I18nProvider>
-      </> : <p className="notice">{t('companion.counterOff')}</p>}
-      <p style={{marginTop:'1rem'}}><Link href="/learn">{t('companion.backToLearning')}</Link></p>
+    <div className="container section companion-page">
+      <div className="companion-head">
+        <p className="eyebrow">{t('companion.eyebrow')}</p>
+        <h1>{t('companion.counterTitle')}</h1>
+        {enabled && <>
+          <p className="lede">{t('companion.counterLede')}</p>
+          <p className="muted">{t('companion.counterPrivacy')}</p>
+        </>}
+      </div>
+      {enabled
+        ? <I18nProvider locale={locale} messages={companionMessagesFor(locale)}><Counter /></I18nProvider>
+        : <p className="notice">{t('companion.counterOff')}</p>}
+      <p className="companion-back"><Link href="/learn">{t('companion.backToLearning')}</Link></p>
     </div>
   );
 }

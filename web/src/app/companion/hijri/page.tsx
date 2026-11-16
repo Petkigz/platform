@@ -23,9 +23,9 @@ export default async function HijriPage() {
     acceptLanguage: hdrs.get('accept-language'),
   });
   const t = translator(locale);
-  return <div className="container section">
-    <p className="eyebrow">{t('companion.eyebrow')}</p><h1>{t('companion.hijriTitle')}</h1>
+  return <div className="container section companion-page">
+    <div className="companion-head"><p className="eyebrow">{t('companion.eyebrow')}</p><h1>{t('companion.hijriTitle')}</h1></div>
     {enabled ? <I18nProvider locale={locale} messages={companionMessagesFor(locale)}><HijriDate /></I18nProvider> : <p className="notice">{t('companion.hijriOff')}</p>}
-    <p style={{marginTop:'1rem'}}><Link href="/learn">{t('companion.backToLearning')}</Link></p>
+    <p className="companion-back"><Link href="/learn">{t('companion.backToLearning')}</Link></p>
   </div>;
 }
