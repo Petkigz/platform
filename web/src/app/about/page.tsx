@@ -126,11 +126,18 @@ export default function AboutPage() {
 
       <h2 style={{ marginTop: '2.5rem' }}>The interface, and who has read it</h2>
       <p>
-        The interface speaks fifty-one languages. Every one of them was written by the
-        people who built this platform, and <strong>not one has been read by somebody who
-        speaks it</strong>. The language page says so on each catalogue rather than in a
-        footnote, because &ldquo;translated&rdquo; and &ldquo;read by a person who speaks
-        it&rdquo; are two different claims and only the first one is true.
+        The interface is offered in forty-seven languages. Every one of them but English
+        was written by the people who built this platform, and <strong>not one has been
+        read by somebody who speaks it</strong>. The language page says so on each catalogue
+        rather than in a footnote, because &ldquo;translated&rdquo; and &ldquo;read by a
+        person who speaks it&rdquo; are two different claims and only the first one is true.
+      </p>
+      <p>
+        Where we could not write a language well enough to trust what we had written, we
+        show English instead until a speaker has read it. That is true of four whole
+        languages &mdash; Wolof, Fulfulde, Bambara and Dhivehi, which are written but not
+        offered &mdash; and of the prayer-times, Hijri-date and counter screens in nineteen
+        more. The language page lists each of them with the share a reader is actually shown.
       </p>
       <p>
         If a word looks wrong to you in your own language,{' '}

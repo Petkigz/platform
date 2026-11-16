@@ -4,31 +4,48 @@ import test from 'node:test';
 
 import {
   LOCALES,
+  chooseLocale,
   companionMessagesFor,
   coverageOf,
   heldSections,
   isHeld,
+  isLocaleCode,
+  isOfferedLocale,
+  isWithheld,
   languageShownFor,
   localeByCode,
+  localeGroups,
+  matchLocale,
   messagesFor,
   shellMessagesFor,
+  translatedLocales,
   translator,
+  withheldLocales,
+  writtenLocales,
   writtenTranslator,
   type LocaleCode,
 } from './i18n/index.ts';
 import { CATALOGUES, WRITTEN } from './i18n/messages/catalogues.ts';
 import { en } from './i18n/messages/en.ts';
-import { HELD_FOR_REVIEW } from './i18n/messages/held.ts';
+import { HELD_FOR_REVIEW, WHOLE_LANGUAGE } from './i18n/messages/held.ts';
 import { auditAll } from './translation-audit.ts';
 import { SECTIONS } from './translations.ts';
 
 // Owner's decision, 2026-11-16: a language the builder cannot write properly
 // falls back to English until a first-language speaker has reviewed it. These
 // tests pin what that means on a page, and what it must never mean.
+//
+// There are two sizes of hold. Nineteen languages have one part held (the
+// companion tools) and are otherwise shown in their own words. Four — Wolof,
+// Fulfulde, Bambara and Dhivehi — are withheld whole, by the owner's second
+// answer the same day, and are not offered to readers at all.
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const held = Object.entries(HELD_FOR_REVIEW) as [LocaleCode, readonly string[]][];
 const companionKeys = (Object.keys(en) as (keyof typeof en)[]).filter((k) => k.startsWith('companion.'));
+const allKeys = Object.keys(en) as (keyof typeof en)[];
+const partly = held.filter(([code]) => !isWithheld(code));
+const whole = held.filter(([code]) => isWithheld(code));
 
 test('the hold list names real languages and real parts, once each', () => {
   const codes = new Set<string>(LOCALES.map((l) => l.code));
@@ -39,22 +56,31 @@ test('the hold list names real languages and real parts, once each', () => {
     assert.notEqual(code, 'en', 'English is the source; there is nothing to fall back to');
     assert.ok(sections.length > 0, `${code} is listed with nothing held — delete the line`);
     assert.equal(new Set(sections).size, sections.length, `${code} holds a part twice`);
-    for (const section of sections) {
-      assert.ok(parts.has(section), `${code} holds "${section}", which is not a part of the interface`);
+    if (sections.includes(WHOLE_LANGUAGE)) {
+      // Whole means whole. "Everything, and also the footer" is a line somebody
+      // half-edited, and the half that wins should not be a guess.
+      assert.deepEqual(sections, [WHOLE_LANGUAGE], `${code} is withheld whole and also lists parts`);
+    } else {
+      for (const section of sections) {
+        assert.ok(parts.has(section), `${code} holds "${section}", which is not a part of the interface`);
+      }
     }
     assert.deepEqual(heldSections(code), sections);
   }
+  assert.equal(partly.length + whole.length, held.length);
   assert.deepEqual(heldSections('en'), []);
   assert.deepEqual(heldSections('ar'), []);
 });
 
-test('the frame can never be held', () => {
+test('a part can be held or a whole language withheld, and never the frame alone', () => {
   // A reader has to be able to find the language page, read in their own
   // language that nobody has reviewed it, and leave for another language. A
-  // hold that took the navigation or the language page with it would strand
-  // the very reader it was meant to protect.
+  // hold that took the navigation or the language page with it, and left the
+  // language on offer, would strand the very reader it was meant to protect.
+  // So there is nothing in between: either the frame is shown, or the language
+  // is not offered at all (the test after next).
   const frame = ['skip', 'nav', 'footer', 'action', 'region', 'language', 'auth'];
-  for (const [code, sections] of held) {
+  for (const [code, sections] of partly) {
     for (const section of frame) {
       assert.ok(!sections.includes(section), `${code} holds "${section}", which a reader needs to find their way`);
     }
@@ -72,29 +98,38 @@ test('a held sentence is shown in English, everywhere a reader can meet it', () 
     const t = translator(code);
     const all = messagesFor(code);
     const companion = companionMessagesFor(code);
-    for (const key of Object.keys(en) as (keyof typeof en)[]) {
-      if (!sections.includes(key.split('.')[0] ?? '')) continue;
-      assert.equal(isHeld(code, key), true);
+    for (const key of allKeys) {
+      const expected = isWithheld(code) || sections.includes(key.split('.')[0] ?? '');
+      assert.equal(isHeld(code, key), expected, `${code}.${key}`);
+      if (!expected) continue;
       assert.equal(CATALOGUES[code]?.[key], undefined, `${code}.${key} is held but still served`);
       assert.equal(t(key), en[key], `${code}.${key} is held but t() does not return English`);
       assert.equal(all[key], en[key]);
     }
     // What the three companion pages hand their tools: English, whole.
-    if (sections.includes('companion')) {
-      assert.equal(Object.keys(companion).length, companionKeys.length);
-      for (const key of companionKeys) assert.equal(companion[key], en[key], `${code}.${key}`);
-    }
-    // And the frame around them is untouched: still the reader's language.
+    assert.equal(Object.keys(companion).length, companionKeys.length);
+    for (const key of companionKeys) assert.equal(companion[key], en[key], `${code}.${key}`);
+  }
+  // Where one part is held, the frame around it is untouched: still the
+  // reader's language.
+  for (const [code] of partly) {
     assert.notEqual(shellMessagesFor(code)['language.title'], en['language.title'], `${code} lost its frame`);
+  }
+  // Where the whole language is withheld, there is nothing of it left to serve:
+  // not one sentence, by any of the three ways a page gets its words.
+  for (const [code] of whole) {
+    assert.deepEqual(CATALOGUES[code], {}, `${code} is withheld and still serves sentences`);
+    assert.deepEqual(messagesFor(code), en);
+    assert.deepEqual(shellMessagesFor(code), shellMessagesFor('en'));
   }
 });
 
 test('held is not deleted: the draft is kept for the person who will correct it', () => {
-  for (const [code, sections] of held) {
+  for (const [code] of held) {
     const draft = writtenTranslator(code);
     let differs = 0;
-    for (const key of Object.keys(en) as (keyof typeof en)[]) {
-      if (!sections.includes(key.split('.')[0] ?? '')) continue;
+    for (const key of allKeys) {
+      if (!isHeld(code, key)) continue;
       const written = WRITTEN[code]?.[key];
       assert.ok(written && written.trim() !== '', `${code}.${key} is held, but there is no draft to review`);
       assert.equal(draft(key), written);
@@ -125,11 +160,14 @@ test('a language that is not held is served exactly what was written', () => {
   assert.equal(held.length, 23);
 });
 
-test('the four placeholder languages are held, and none of the held is called reviewed', () => {
+test('the four placeholder languages are withheld whole, and none of the held is called reviewed', () => {
   // Wolof, Fulfulde, Bambara and Dhivehi were written to make a count pass.
+  assert.deepEqual(whole.map(([code]) => code).sort(), ['bm', 'dv', 'ff', 'wo']);
   for (const code of ['wo', 'ff', 'bm', 'dv'] as const) {
-    assert.ok(HELD_FOR_REVIEW[code]?.includes('companion'), `${code} companion text is being served`);
+    assert.equal(isWithheld(code), true, `${code} is being served`);
   }
+  assert.equal(partly.length, 19);
+  for (const [code, sections] of partly) assert.deepEqual(sections, ['companion'], code);
   // "Reviewed" and "held until reviewed" cannot both be true of one language.
   for (const [code] of held) {
     assert.equal(localeByCode(code).reviewed, false, `${code} is marked reviewed and still held — release it or unmark it`);
@@ -137,29 +175,39 @@ test('the four placeholder languages are held, and none of the held is called re
 });
 
 test('the number on the language page describes the screen, not the file', () => {
-  for (const [code] of held) {
+  for (const [code] of partly) {
     const coverage = coverageOf(code);
     assert.equal(coverage.held, companionKeys.length);
     assert.equal(coverage.translated + coverage.held, coverage.total);
     assert.ok(coverage.percent < 100, `${code} hides sentences and still says 100%`);
     assert.equal(coverage.percent, Math.round((coverage.translated / coverage.total) * 100));
   }
+  // A withheld language is every sentence written and none shown, and the page
+  // lists it at the 0% that is.
+  for (const [code] of whole) {
+    assert.deepEqual(coverageOf(code), { translated: 0, total: allKeys.length, percent: 0, held: allKeys.length });
+  }
   // The page builds its "not complete" list from that number, so a held
   // language appears in it without being told to.
   const page = read('../app/language/page.tsx');
   assert.match(page, /entry\.coverage\.percent < 100/u);
+  assert.match(page, /const incomplete = \[\.\.\.locales, \.\.\.withheldLocales\(\)\]/u);
   assert.match(page, /t\('language\.coverage', \{/u);
 });
 
 test('a held page says it is English, and reads left to right', () => {
-  // Dhivehi and Pashto are right-to-left. Their document says so; the held
-  // companion pages inside it are English and must not inherit that.
-  for (const code of ['dv', 'ps'] as const) {
-    assert.equal(localeByCode(code).dir, 'rtl');
-    const shown = languageShownFor(code, 'companion');
-    assert.equal(shown.code, 'en');
-    assert.equal(shown.dir, 'ltr');
-    assert.equal(languageShownFor(code, 'nav').code, code);
+  // Pashto is right-to-left with its companion text held. The document says
+  // right-to-left; the held companion pages inside it are English and must not
+  // inherit that.
+  assert.equal(localeByCode('ps').dir, 'rtl');
+  assert.equal(isWithheld('ps'), false);
+  assert.equal(languageShownFor('ps', 'companion').code, 'en');
+  assert.equal(languageShownFor('ps', 'companion').dir, 'ltr');
+  assert.equal(languageShownFor('ps', 'nav').code, 'ps');
+  assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');
+  // Dhivehi is withheld whole: no part of it is shown in Dhivehi.
+  for (const section of SECTIONS) {
+    assert.equal(languageShownFor('dv', section.prefix).code, 'en', section.prefix);
   }
   assert.equal(languageShownFor('ar', 'companion').code, 'ar');
   assert.equal(languageShownFor('ar', 'companion').dir, 'rtl');
@@ -175,8 +223,12 @@ test('the reviewer is handed the draft, and told readers cannot see it', () => {
   const sheet = read('../app/contribute/page.tsx');
   assert.match(sheet, /const current = target \? writtenTranslator\(target\.code\) : null;/u);
   assert.match(sheet, /const held = target \? isHeld\(target\.code, `\$\{section\.prefix\}\.`\) : false;/u);
-  assert.match(sheet, /\{held && \(/u);
+  assert.match(sheet, /\{held && !withheld && \(/u);
   assert.match(sheet, /Readers do not see this part in \{target\.englishName\} yet\./u);
+  // A withheld language gets the other sentence, on every part of it.
+  assert.match(sheet, /const withheld = target \? isWithheld\(target\.code\) : false;/u);
+  assert.match(sheet, /\{withheld && \(/u);
+  assert.match(sheet, /\{target\.englishName\} is not offered to readers yet\./u);
   // The route compares a submission with the same text the sheet prefilled, or
   // every untouched line of a held part would arrive as a proposed change.
   const route = read('../app/api/contribute/route.ts');
@@ -196,6 +248,81 @@ test('the reviewer is handed the draft, and told readers cannot see it', () => {
     );
     assert.deepEqual(missingCompanion, [], `${summary.locale}: the audit thinks held text does not exist`);
   }
+});
+
+test('a withheld language is not offered anywhere a reader is given a language', () => {
+  const codes = whole.map(([code]) => code);
+  const offered = translatedLocales().map((l) => l.code);
+  const inPicker = localeGroups().flatMap((g) => g.locales.map((l) => l.code));
+
+  for (const code of codes) {
+    // Still a language the project knows, so it can be named, corrected and
+    // one day released...
+    assert.equal(isLocaleCode(code), true);
+    assert.ok(writtenLocales().some((l) => l.code === code), `${code} cannot be corrected: it is not on the sheet`);
+    assert.equal(Object.keys(WRITTEN[code] ?? {}).length, allKeys.length, `${code} lost its draft`);
+    // ...and not one a reader can have.
+    assert.equal(isOfferedLocale(code), false);
+    assert.ok(!offered.includes(code), `${code} is withheld and offered`);
+    assert.ok(!inPicker.includes(code), `${code} is withheld and in the picker`);
+    // Not by asking for it, with or without a region...
+    assert.equal(matchLocale(code), null);
+    assert.equal(matchLocale(`${code}-XX`), null);
+    // ...not from a cookie set before it was withheld...
+    assert.deepEqual(chooseLocale({ chosen: code, acceptLanguage: null }), { code: 'en', source: 'default' });
+    // ...and not from the device. A device that lists another language after
+    // it gets that one — its own second choice, not ours — and English only
+    // when it lists nothing else we have.
+    assert.deepEqual(
+      chooseLocale({ chosen: null, acceptLanguage: `${code},fr;q=0.9,en;q=0.8` }),
+      { code: 'fr', source: 'device' },
+    );
+    assert.deepEqual(
+      chooseLocale({ chosen: code, acceptLanguage: `${code}-XX,ar;q=0.7` }),
+      { code: 'ar', source: 'device' },
+    );
+    assert.deepEqual(chooseLocale({ chosen: null, acceptLanguage: code }), { code: 'en', source: 'default' });
+  }
+  assert.deepEqual(withheldLocales().map((l) => l.code).sort(), [...codes].sort());
+
+  // Whatever is asked for, what comes back is something a reader can be shown.
+  for (const locale of LOCALES) {
+    for (const input of [{ chosen: locale.code }, { acceptLanguage: locale.code }, { acceptLanguage: `${locale.code}-ZZ` }]) {
+      const { code } = chooseLocale(input);
+      assert.equal(isOfferedLocale(code), true, `${locale.code} resolves to ${code}, which is withheld`);
+    }
+  }
+  // The nineteen with one part held are still offered: that is the difference.
+  for (const [code] of partly) {
+    assert.equal(isOfferedLocale(code), true);
+    assert.equal(matchLocale(code), code);
+    assert.ok(inPicker.includes(code), `${code} fell out of the picker`);
+  }
+  // Fifty-one in the register, forty-seven on offer.
+  assert.equal(LOCALES.length, 51);
+  assert.equal(offered.length, 47);
+  assert.equal(writtenLocales().length, 51);
+
+  // The route that stores a choice refuses one of these by hand as well.
+  const route = read('../app/api/locale/route.ts');
+  assert.match(route, /if \(!clears && !isOfferedLocale\(chosen\)\)/u);
+});
+
+test('what the site says about itself matches what it offers', () => {
+  const words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
+    'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+  const tens: Record<number, string> = { 2: 'twenty', 3: 'thirty', 4: 'forty', 5: 'fifty' };
+  const spell = (n: number) => (n < 20 ? words[n]! : `${tens[Math.floor(n / 10)]}${n % 10 ? `-${words[n % 10]}` : ''}`);
+
+  // The about page counts the languages on offer and names the ones that are not.
+  const about = read('../app/about/page.tsx');
+  assert.match(about, new RegExp(`The interface is offered in ${spell(translatedLocales().length)} languages\\.`, 'u'));
+  assert.doesNotMatch(about, /speaks fifty-one languages/u);
+  assert.match(about, new RegExp(`true of ${spell(whole.length)} whole\\s+languages`, 'u'));
+  for (const locale of withheldLocales()) {
+    assert.ok(about.includes(locale.englishName), `the about page does not say ${locale.englishName} is withheld`);
+  }
+  assert.match(about, new RegExp(`screens in ${spell(partly.length)}\\s+more`, 'u'));
 });
 
 test('no page reaches past the hold', () => {

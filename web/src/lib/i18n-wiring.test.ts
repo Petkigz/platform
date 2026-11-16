@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
-import { LOCALES, translator } from './i18n/index.ts';
+import { LOCALES, translator, writtenTranslator } from './i18n/index.ts';
 
 /**
  * The wiring, not the catalogue.
@@ -72,8 +72,9 @@ test('the sign-in screen reads differently in every other language', () => {
   // worse than an obviously missing translation.
   const keys = ['auth.signInTitle', 'auth.password', 'auth.noAccount', 'auth.forgot'] as const;
 
+  // Asked of the files, so a language withheld from readers is still held to it.
   for (const locale of LOCALES.filter((l) => l.code !== 'en')) {
-    const t = translator(locale.code);
+    const t = writtenTranslator(locale.code);
     for (const key of keys) {
       assert.notEqual(
         t(key),
@@ -132,7 +133,7 @@ test('the reset confirmation does not say whether the address exists', () => {
   // account here. The sentence is a conditional one, and stays that way in every
   // language — the same promise the sign-in page makes for a phone code.
   for (const locale of LOCALES.filter((l) => l.code !== 'en')) {
-    const sentence = translator(locale.code)('auth.resetSent');
+    const sentence = writtenTranslator(locale.code)('auth.resetSent');
     assert.notEqual(sentence.trim(), '', `${locale.code} has no confirmation`);
     assert.notEqual(
       sentence,

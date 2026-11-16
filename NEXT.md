@@ -2618,6 +2618,24 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### Four languages the site does not have yet, 2026-11-16
+
+The second question of the day: should the *rest* of the interface in Wolof,
+Fulfulde, Bambara and Dhivehi fall back to English too? The owner said yes.
+Holding every part of a language that is still on offer would have produced a
+page that says `lang="wo"` and reads in English, so the four are withheld
+whole instead: out of the picker (47 languages), refused by `/api/locale`,
+never returned by `matchLocale()` — which means a device asking for Wolof then
+French gets French, the same as for any language the site lacks. They remain in
+the register (51), on the correction sheet with their drafts, and on `/language`
+at 0% with a link to that sheet. `/about` and the accessibility page said
+fifty-one languages and six right-to-left ones; both now say what is offered,
+and tests tie the sentences to the register. Tests that asked "is this
+translated?" by calling the reader's translator now ask the files, so the four
+drafts are still held to being complete. The browser check moved its
+right-to-left case to Pashto and its reviewer case to Hausa, and gained a
+section for Wolof.
+
 ### Written is not shown, 2026-11-16
 
 The owner was asked whether languages the builder cannot write properly should

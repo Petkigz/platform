@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 import { en } from './i18n/messages/en.ts';
-import { LOCALES, countLabel, directionOf, formatNumber, translator } from './i18n/index.ts';
+import { LOCALES, countLabel, directionOf, formatNumber, translator, writtenTranslator } from './i18n/index.ts';
 import { frontDoorCta } from './session.ts';
 
 /**
@@ -85,9 +85,13 @@ test('every string on the front page comes from the catalogue', () => {
   assert.doesNotMatch(HOME, /Islamic learning, worldwide/u);
 });
 
-test('the copy is written for every language the picker offers', () => {
+test('the copy is written for every language in the register', () => {
+  // "Written" is a claim about the files, so it is asked of the files: four of
+  // these languages are withheld from readers until a speaker has read them,
+  // and their text still has to exist for that speaker to correct. Whether a
+  // reader is shown it is pinned in `held-translations.test.ts`.
   for (const locale of TRANSLATED) {
-    const t = translator(locale.code);
+    const t = writtenTranslator(locale.code);
     for (const key of Object.keys(en).filter((k) => k.startsWith('home.'))) {
       assert.notEqual(
         t(key as keyof typeof en),

@@ -7906,3 +7906,24 @@ write properly" was the builder's own assessment, not a speaker's. The remaining
 sentences of the same twenty-three languages are still shown, and the
 twenty-seven languages still served on the companion screens are unreviewed too.
 
+## Wolof, Fulfulde, Bambara and Dhivehi are withheld whole — **DECIDED 2026-11-16**
+
+Asked whether the rest of the interface in Wolof, Fulfulde, Bambara and Dhivehi
+should also fall back to English — with the warning that this would leave those
+four languages almost entirely in English — the owner answered: **yes, they
+should.**
+
+**Implemented locally, not deployed.** Every part of those four is held, and a
+language with nothing left to show is not offered: it is not in the picker, the
+route that stores a choice refuses it, and a device that asks for it is given
+the next language on its own list, or English if it lists no other the site has.
+The interface is therefore offered in forty-seven languages, not fifty-one, and
+the about and accessibility pages now say so. The four keep their files and
+their place on the correction sheet, and are listed on the language page at 0%.
+
+**A consequence the owner was not asked about in these words.** "Fall back to
+English" is implemented as "treat as a language the site does not have". For a
+device that lists only one of the four, that is English. For one that lists
+French or Arabic after it, it is that language. If English is wanted in every
+case, that is a one-line change in `matchLocale()` and a different decision.
+

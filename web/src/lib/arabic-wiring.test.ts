@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
-import { LOCALES } from './i18n/locales.ts';
+import { LOCALES, isOfferedLocale } from './i18n/locales.ts';
 
 /**
  * The wiring, not the logic.
@@ -84,12 +84,26 @@ test('every right-to-left language in the register is named as one', () => {
   const sentence = page.match(/Right-to-left is for ([^.]+)\./u)?.[1] ?? '';
   assert.notEqual(sentence, '', 'the accessibility page no longer lists the RTL languages');
 
-  const rtl = LOCALES.filter((locale) => locale.dir === 'rtl');
+  // The languages a reader can choose, not every row in the register: the page
+  // says "choosing one of those turns the whole page around", and a language
+  // withheld until a speaker has read it cannot be chosen.
+  const rtl = LOCALES.filter((locale) => locale.dir === 'rtl' && isOfferedLocale(locale.code));
   assert.ok(rtl.length > 0);
   for (const locale of rtl) {
     assert.ok(
       sentence.includes(locale.englishName),
       `${locale.code} is right-to-left but the page does not say so`,
+    );
+  }
+  // And the count in the next sentence is the count of that list.
+  const words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'];
+  assert.match(page, new RegExp(`Choosing one of those ${words[rtl.length]} turns`, 'u'));
+  // Dhivehi is right-to-left and withheld: promising it here would send a
+  // reader to a picker that does not have it.
+  for (const locale of LOCALES.filter((l) => l.dir === 'rtl' && !isOfferedLocale(l.code))) {
+    assert.ok(
+      !sentence.includes(locale.englishName),
+      `the page offers ${locale.code}, which a reader cannot choose yet`,
     );
   }
   // The other direction matters too: a left-to-right language claimed as RTL

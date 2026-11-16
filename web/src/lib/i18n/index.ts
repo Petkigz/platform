@@ -5,6 +5,7 @@ import {
   chooseLocale,
   directionOf,
   isLocaleCode,
+  isOfferedLocale,
   localeByCode,
   matchLocale,
   type Direction,
@@ -14,7 +15,7 @@ import {
 } from './locales.ts';
 import { safeNextPath as safeLocalPath } from '../auth.ts';
 import { CATALOGUES, WRITTEN } from './messages/catalogues.ts';
-import { HELD_FOR_REVIEW, isHeld } from './messages/held.ts';
+import { HELD_FOR_REVIEW, isHeld, isWithheld } from './messages/held.ts';
 import { en, type MessageKey, type Messages } from './messages/en.ts';
 
 export {
@@ -24,6 +25,7 @@ export {
   chooseLocale,
   directionOf,
   isLocaleCode,
+  isOfferedLocale,
   localeByCode,
   matchLocale,
 };
@@ -119,7 +121,7 @@ export function heldSections(code: LocaleCode): readonly string[] {
   return HELD_FOR_REVIEW[code] ?? [];
 }
 
-export { isHeld };
+export { isHeld, isWithheld };
 
 /**
  * The language one part of the interface is actually shown in.
@@ -214,9 +216,32 @@ export function regionLabel(region: Locale['region']): MessageKey {
   }
 }
 
-/** Every language that has a catalogue at all, English first. */
+/**
+ * Every language a reader can choose, English first.
+ *
+ * It has a catalogue and it is not withheld. This is the picker, and anything
+ * else that tells a reader "we have this".
+ */
 export function translatedLocales(): Locale[] {
-  return LOCALES.filter((locale) => locale.code === DEFAULT_LOCALE || CATALOGUES[locale.code]);
+  return LOCALES.filter(
+    (locale) =>
+      locale.code === DEFAULT_LOCALE || (CATALOGUES[locale.code] && !isWithheld(locale.code)),
+  );
+}
+
+/**
+ * Every language somebody has written a file for, offered or not.
+ *
+ * For the correction sheet: a withheld language is exactly the one that most
+ * needs a speaker, and it cannot be invited back from a list it is not on.
+ */
+export function writtenLocales(): Locale[] {
+  return LOCALES.filter((locale) => locale.code === DEFAULT_LOCALE || WRITTEN[locale.code]);
+}
+
+/** The languages that are written, withheld whole, and waiting for a speaker. */
+export function withheldLocales(): Locale[] {
+  return LOCALES.filter((locale) => WRITTEN[locale.code] && isWithheld(locale.code));
 }
 
 /**

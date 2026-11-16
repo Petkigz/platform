@@ -54,7 +54,9 @@ test('Asia is a block, and it is not empty', () => {
     [
       'ur', 'id', 'ms', 'bn', 'hi',
       'uz', 'kk', 'az', 'ps', 'fa-af',
-      'ta', 'ne', 'si', 'th', 'dv',
+      // Dhivehi sat after Thai until 2026-11-16. It is written and withheld
+      // until a speaker has read it, so it is not a choice a reader is given.
+      'ta', 'ne', 'si', 'th',
       'ky', 'tg', 'tk',
       'zh-hans', 'zh-hant', 'vi', 'fil', 'my',
     ],
@@ -64,7 +66,7 @@ test('Asia is a block, and it is not empty', () => {
     [
       'Urdu', 'Indonesian', 'Malay', 'Bengali', 'Hindi',
       'Uzbek', 'Kazakh', 'Azerbaijani', 'Pashto', 'Dari',
-      'Tamil', 'Nepali', 'Sinhala', 'Thai', 'Dhivehi',
+      'Tamil', 'Nepali', 'Sinhala', 'Thai',
       'Kyrgyz', 'Tajik', 'Turkmen',
       'Chinese, Simplified', 'Chinese, Traditional', 'Vietnamese', 'Tagalog', 'Burmese',
     ],
@@ -93,8 +95,10 @@ test('the choice is a form post, so it works with JavaScript off', () => {
   assert.ok(choices.length >= 2, `only ${choices.length} choices submit a language`);
   assert.match(PAGE, /value="device"/u, 'the “my device’s language” choice is gone');
   assert.match(ROUTE, /const clears = chosen === 'device';/u);
-  // The route refuses anything that is not a language in the register.
-  assert.match(ROUTE, /if \(!clears && !isLocaleCode\(chosen\)\)/u);
+  // The route refuses anything that is not a language a reader can be given:
+  // unknown codes, and the ones withheld until a speaker has read them.
+  assert.match(ROUTE, /if \(!clears && !isOfferedLocale\(chosen\)\)/u);
+  assert.doesNotMatch(ROUTE, /isLocaleCode/u);
 });
 
 test('the language in force is marked, and each name is in its own script', () => {

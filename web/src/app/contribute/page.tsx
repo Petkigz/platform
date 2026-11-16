@@ -11,8 +11,9 @@ import {
   isLocaleCode,
   localeByCode,
   isHeld,
-  translatedLocales,
+  isWithheld,
   translator,
+  writtenLocales,
   writtenTranslator,
 } from '@/lib/i18n';
 import { auditLine } from '@/lib/translation-audit';
@@ -95,7 +96,9 @@ export default async function ContributePage({
     ? await isFlagEnabled(supabase, 'platform.translation_reviews').catch(() => false)
     : false;
 
-  const languages = translatedLocales();
+  // Every language with a file, including the four withheld from readers: this
+  // sheet is the only way one of those comes back.
+  const languages = writtenLocales();
   const target =
     chosenLocale && isLocaleCode(chosenLocale) && chosenLocale !== 'en'
       ? localeByCode(chosenLocale)
@@ -111,6 +114,7 @@ export default async function ContributePage({
   // that is waiting on them, and the sheet says which they are looking at.
   const current = target ? writtenTranslator(target.code) : null;
   const held = target ? isHeld(target.code, `${section.prefix}.`) : false;
+  const withheld = target ? isWithheld(target.code) : false;
 
   const errorSentence: Record<string, string> = {
     closed: 'That form is not open at the moment. Nothing was saved.',
@@ -215,12 +219,22 @@ export default async function ContributePage({
             The English is on the left. Change any line below into what it should say in{' '}
             {target.englishName}, and leave the rest alone. Only the lines you change are sent.
           </p>
-          {held && (
+          {held && !withheld && (
             <div className="notice warn">
               <strong>Readers do not see this part in {target.englishName} yet.</strong> We wrote
               the lines below ourselves and do not trust them, so for now these screens are
               shown in English. Treat each line as a rough draft: rewrite it freely. Once a
               speaker has read this part, it will be shown in {target.englishName}.
+            </div>
+          )}
+          {withheld && (
+            <div className="notice warn">
+              <strong>{target.englishName} is not offered to readers yet.</strong> We wrote every
+              line of it ourselves, in a language none of us can write, and we do not trust
+              any of it — so nobody can choose {target.englishName} on this site for now, and
+              a device that asks for it is given another language. Treat each line below as a
+              placeholder: rewrite it freely. {target.englishName} returns to the list of
+              languages once a speaker has read it, a part at a time.
             </div>
           )}
 

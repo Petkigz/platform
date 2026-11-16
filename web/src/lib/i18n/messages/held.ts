@@ -26,13 +26,28 @@ import type { LocaleCode } from '../locales.ts';
  *
  * Each entry names sections by their key prefix, the same unit a reviewer
  * signs off (`SECTIONS` in `lib/translations.ts`).
+ *
+ * **A whole language can be withheld**, and four are. Wolof, Fulfulde, Bambara
+ * and Dhivehi were asked about separately, because their companion text was
+ * not a rough draft but a placeholder, and nobody here can say whether their
+ * navigation and sign-in pages are any better. Owner's second answer,
+ * 2026-11-16: the rest of the interface in those four falls back to English
+ * too. A language with nothing left to show is not a language the site has, so
+ * it is treated as one: it is not in the picker, a device that asks for it is
+ * given the next language on its own list (and English if there is none), and
+ * it is listed on `/language` at 0%. It stays in the register and on the
+ * correction sheet, which is the only place it can come back from.
  */
+
+/** In place of a list of parts: every part, so the language is not offered. */
+export const WHOLE_LANGUAGE = '*';
+
 export const HELD_FOR_REVIEW: Partial<Record<LocaleCode, readonly string[]>> = {
-  // Placeholders: not a draft to correct, a page to write again.
-  wo: ['companion'],
-  ff: ['companion'],
-  bm: ['companion'],
-  dv: ['companion'],
+  // Withheld whole: not drafts to correct, pages to write again.
+  wo: [WHOLE_LANGUAGE],
+  ff: [WHOLE_LANGUAGE],
+  bm: [WHOLE_LANGUAGE],
+  dv: [WHOLE_LANGUAGE],
   // Drafts with errors the builder can see and cannot reliably repair.
   am: ['companion'],
   ti: ['companion'],
@@ -63,5 +78,16 @@ export function sectionOf(key: string): string {
 /** Whether readers of this language are shown English for this key for now. */
 export function isHeld(code: string, key: string): boolean {
   const held = (HELD_FOR_REVIEW as Record<string, readonly string[] | undefined>)[code];
-  return held !== undefined && held.includes(sectionOf(key));
+  return held !== undefined && (held.includes(WHOLE_LANGUAGE) || held.includes(sectionOf(key)));
+}
+
+/**
+ * Whether a whole language is withheld, and so not offered to readers at all.
+ *
+ * Different from a language with one part held: that one is still chosen,
+ * still sets `<html lang>`, and still reads in its own words everywhere else.
+ */
+export function isWithheld(code: string): boolean {
+  const held = (HELD_FOR_REVIEW as Record<string, readonly string[] | undefined>)[code];
+  return held !== undefined && held.includes(WHOLE_LANGUAGE);
 }

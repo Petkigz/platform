@@ -15,8 +15,9 @@ import type { Messages } from './en.ts';
  * them reliably, so `held.ts` keeps them back and those readers get these
  * screens in English until a first-language speaker has read them. The blocks
  * for Wolof, Fulfulde, Bambara and Dhivehi in particular are placeholders to
- * rewrite, not translations to polish. Nothing here is deleted, because this
- * text is what the correction sheet at `/contribute` hands a reviewer.
+ * rewrite, not translations to polish, and those four languages are withheld
+ * whole: no reader is offered them at all. Nothing here is deleted, because
+ * this text is what the correction sheet at `/contribute` hands a reviewer.
  *
  * The rule this replaced demanded that every African language be *shown* at
  * 100%, and in a language nobody here can write, the only way to pass it was

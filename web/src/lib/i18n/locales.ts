@@ -26,7 +26,15 @@
  * intends to write it. `coverageOf()` reports how much of the interface each one
  * actually translates, and the page shows that number rather than implying a
  * completeness that would be found out on the second screen.
+ *
+ * **In the register is not the same as offered.** Four languages below — Wolof,
+ * Fulfulde, Bambara and Dhivehi — have a file and are withheld from readers
+ * until a speaker has read them (`messages/held.ts`). They keep their rows so
+ * the correction sheet can name them; `matchLocale()` does not return them, so
+ * neither a cookie nor a device can put a reader in one.
  */
+
+import { isWithheld } from './messages/held.ts';
 
 export type Direction = 'ltr' | 'rtl';
 
@@ -205,9 +213,28 @@ export const LOCALE_COOKIE = 'ayahspring_locale';
 
 const BY_CODE = new Map<string, Locale>(LOCALES.map((l) => [l.code, l]));
 
-/** Is this a language the interface is written in? */
+/**
+ * Is this a language in the register?
+ *
+ * The register, not the picker: four languages are in it and withheld from
+ * readers (`messages/held.ts`). This is the right question for the correction
+ * sheet and the owner's queue, which have to be able to name a language in
+ * order to fix it. For anything that decides what a reader is *shown*, ask
+ * `isOfferedLocale()`.
+ */
 export function isLocaleCode(value: unknown): value is LocaleCode {
   return typeof value === 'string' && BY_CODE.has(value);
+}
+
+/**
+ * Is this a language a reader can actually be given?
+ *
+ * In the register and not withheld. A withheld language has every sentence
+ * held until a speaker has read it, so choosing it would set `<html lang>` to a
+ * language the page is not in and print English underneath.
+ */
+export function isOfferedLocale(value: unknown): value is LocaleCode {
+  return isLocaleCode(value) && !isWithheld(value);
 }
 
 export function localeByCode(code: LocaleCode): Locale {
@@ -243,7 +270,11 @@ export function matchLocale(tag: string | null | undefined): LocaleCode | null {
   const parts = cleaned.split('-');
   for (let i = parts.length; i >= 1; i -= 1) {
     const candidate = parts.slice(0, i).join('-');
-    if (isLocaleCode(candidate)) return candidate;
+    // Offered, not merely registered. A device that asks for Wolof first and
+    // French second gets French, exactly as it would if Wolof had never been
+    // written: the answer to "do you have this language?" is no until a
+    // speaker has read it. The same test refuses a stale cookie.
+    if (isOfferedLocale(candidate)) return candidate;
   }
 
   // **Chinese without a script, which is most Chinese devices.** A phone in Taipei

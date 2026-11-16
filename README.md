@@ -281,6 +281,12 @@ returns `{enabled:false}` rather than an empty list that would read as "nothing
 memorised".
 
 **The interface speaks fifty-one languages, and the device picks first.**
+*(Corrected 2026-11-16: fifty-one are written and **forty-seven are offered**.
+Wolof, Fulfulde, Bambara and Dhivehi are withheld whole until a first-language
+speaker has read them, and nineteen more show the prayer-times, Hijri-date and
+counter screens in English for the same reason — `lib/i18n/messages/held.ts`,
+and D7 in `docs/remaining.md`. Where the paragraphs below say fifty-one, read
+"written"; where they say 100%, read the number on `/language`.)*
 `/language` is public, because the language is decided before anybody signs in:
 `lib/i18n/` holds a register of fifty-one languages and the root layout sets
 `<html lang dir>` from `chooseLocale()` — the cookie if this browser set one,

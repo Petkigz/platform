@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { LOCALE_COOKIE, isLocaleCode, safeNextPath } from '@/lib/i18n';
+import { LOCALE_COOKIE, isOfferedLocale, safeNextPath } from '@/lib/i18n';
 
 /**
  * Remember the interface language this browser should use.
@@ -43,7 +43,10 @@ export async function POST(request: Request) {
 
   // `device` is not a language: it is the instruction to stop overriding one.
   const clears = chosen === 'device';
-  if (!clears && !isLocaleCode(chosen)) {
+  // Offered, not merely known: a language withheld until a speaker has read it
+  // is not in the picker, and a hand-built request for it is refused in the
+  // same words as one for a language that was never written.
+  if (!clears && !isOfferedLocale(chosen)) {
     return NextResponse.json(
       { ok: false, message: 'That is not one of the languages this interface has.' },
       { status: 400 },

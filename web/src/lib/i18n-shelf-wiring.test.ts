@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 import { contentLine, formatMinutes } from './catalogue-cards.ts';
-import { LOCALES, translator } from './i18n/index.ts';
+import { LOCALES, translator, writtenTranslator } from './i18n/index.ts';
 import { emptyShelfMessage } from './lesson-search.ts';
 import { rangeLabel } from './paging.ts';
 
@@ -188,12 +188,14 @@ test('the notice on the children’s door is written in every language', () => {
   // child does not sign up on their own, which is still true — a guardian makes
   // the login). What it tests is that the sentence a parent came to read is not
   // simply the English one with a coverage count in front of it.
+  // Asked of the files (`writtenTranslator`), so the four withheld languages
+  // are held to it too: their text has to exist for a speaker to correct.
   for (const locale of LOCALES.filter((l) => l.code !== 'en')) {
-    const notice = translator(locale.code)('young.notice');
+    const notice = writtenTranslator(locale.code)('young.notice');
     assert.notEqual(notice, translator('en')('young.notice'), `${locale.code} is still English`);
     assert.notEqual(notice.trim(), '', `${locale.code} has no sentence at all`);
     assert.notEqual(
-      translator(locale.code)('young.title'),
+      writtenTranslator(locale.code)('young.title'),
       translator('en')('young.title'),
       `${locale.code}.young.title is still English`,
     );

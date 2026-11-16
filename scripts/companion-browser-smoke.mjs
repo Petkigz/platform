@@ -90,14 +90,17 @@ try {
   browser = await chromium.launch({ executablePath: process.env.RESPONSIVE_CHROME, headless: true, args: ['--no-sandbox'] });
 
   /** A signed-in tab in one language, zone and (optionally) granted location. */
-  async function open({ locale = 'en', zone, width = 1440, geolocation = null, fixClock = true }) {
+  async function open({ locale = 'en', zone, width = 1440, geolocation = null, fixClock = true, chosen = locale, acceptLanguage = null }) {
+    // `chosen` is the language cookie (null for a browser that never chose);
+    // `acceptLanguage` replaces the header the browser would send for `locale`.
     const context = await browser.newContext({
       viewport: { width, height: 900 }, locale, timezoneId: zone,
       ...(geolocation ? { geolocation, permissions: ['geolocation'] } : {}),
+      ...(acceptLanguage ? { extraHTTPHeaders: { 'accept-language': acceptLanguage } } : {}),
     });
     await context.addCookies([
       { name: 'sb-127-auth-token', value: `base64-${encode(session)}`, url: origin },
-      { name: 'ayahspring_locale', value: locale, url: origin },
+      ...(chosen ? [{ name: 'ayahspring_locale', value: chosen, url: origin }] : []),
     ]);
     const page = await context.newPage();
     const pageErrors = [];
@@ -411,11 +414,11 @@ try {
     console.log('Held for review (my): the prayer page, Hijri date and counter are served in English inside a Burmese frame; the prayer tool still calculates six rows.');
     await tab.context.close();
   }
-  // Dhivehi is held too, and is written right to left. The document keeps its
+  // Pashto is held too, and is written right to left. The document keeps its
   // direction; the English page inside it must not inherit it, or every full
   // stop lands on the wrong side of its sentence.
   {
-    const tab = await open({ locale: 'dv', zone: 'Indian/Maldives', width: 390 });
+    const tab = await open({ locale: 'ps', zone: 'Asia/Kabul', width: 390 });
     await tab.page.goto(prayerUrl, { waitUntil: 'networkidle' });
     const m = await tab.page.evaluate(() => {
       const scope = document.querySelector('.companion-page');
@@ -430,14 +433,14 @@ try {
     });
     assert.deepEqual(
       { documentDir: m.documentDir, documentLang: m.documentLang, pageDir: m.pageDir, pageLang: m.pageLang, computed: m.computed, navDirection: m.navDirection },
-      { documentDir: 'rtl', documentLang: 'dv', pageDir: 'ltr', pageLang: 'en', computed: 'ltr', navDirection: 'rtl' },
+      { documentDir: 'rtl', documentLang: 'ps', pageDir: 'ltr', pageLang: 'en', computed: 'ltr', navDirection: 'rtl' },
     );
     assert.equal(clean(await tab.page.locator('.companion-head h1').textContent()), ENGLISH_TITLE);
-    assert.ok(['start', 'left'].includes(m.align), `held page in dv: text is aligned ${m.align}`);
-    assertFits(await measure(tab.page), 'held prayer page dv 390');
-    await shoot(tab.page, 'prayer-dv-held-390');
+    assert.ok(['start', 'left'].includes(m.align), `held page in ps: text is aligned ${m.align}`);
+    assertFits(await measure(tab.page), 'held prayer page ps 390');
+    await shoot(tab.page, 'prayer-ps-held-390');
     assert.deepEqual(tab.pageErrors, []);
-    console.log('Held for review (dv): the document is right-to-left Dhivehi; the English prayer page inside it is marked lang="en" and reads left to right.');
+    console.log('Held for review (ps): the document is right-to-left Pashto; the English prayer page inside it is marked lang="en" and reads left to right.');
     await tab.context.close();
   }
   // The other side of a hold: the person who can lift it. The correction sheet
@@ -445,10 +448,10 @@ try {
   // see it, and says nothing of the kind about a part that is being served.
   {
     const tab = await open({ locale: 'en', zone: 'Africa/Kampala', width: 390 });
-    await tab.page.goto(`${origin}/contribute?locale=wo&section=companion`, { waitUntil: 'networkidle' });
-    const warning = tab.page.locator('form[action="/api/contribute"] .notice.warn');
-    assert.equal(await warning.count(), 1, 'the sheet does not say this part is held');
-    assert.ok(clean(await warning.textContent()).startsWith('Readers do not see this part in Wolof yet.'));
+    const notice = tab.page.locator('form[action="/api/contribute"] .notice.warn');
+    await tab.page.goto(`${origin}/contribute?locale=ha&section=companion`, { waitUntil: 'networkidle' });
+    assert.equal(await notice.count(), 1, 'the sheet does not say this part is held');
+    assert.ok(clean(await notice.textContent()).startsWith('Readers do not see this part in Hausa yet.'));
     const boxes = await tab.page.locator('textarea[name^="t__companion."]').count();
     const draft = await tab.page.locator('textarea[name="t__companion.prayerTitle"]').inputValue();
     assert.ok(boxes >= 80, `the sheet shows ${boxes} companion lines`);
@@ -456,20 +459,76 @@ try {
     assert.ok(draft.trim().length > 0);
     assert.ok((await tab.page.evaluate(() => document.documentElement.scrollWidth)) <= 391, 'the held sheet scrolls sideways at 390px');
     await tab.page.goto(`${origin}/contribute?locale=sw&section=companion`, { waitUntil: 'networkidle' });
-    assert.equal(await tab.page.locator('form[action="/api/contribute"] .notice.warn').count(), 0, 'Swahili is served, and the sheet says it is held');
-    await tab.page.goto(`${origin}/contribute?locale=wo&section=nav`, { waitUntil: 'networkidle' });
-    assert.equal(await tab.page.locator('form[action="/api/contribute"] .notice.warn').count(), 0, 'the Wolof navigation is served, and the sheet says it is held');
+    assert.equal(await notice.count(), 0, 'Swahili is served, and the sheet says it is held');
+    await tab.page.goto(`${origin}/contribute?locale=ha&section=nav`, { waitUntil: 'networkidle' });
+    assert.equal(await notice.count(), 0, 'the Hausa navigation is served, and the sheet says it is held');
     assert.deepEqual(tab.pageErrors, []);
     await tab.context.close();
-    // And the language page tells a Wolof reader, in Wolof, how much they are shown.
-    const reader = await open({ locale: 'wo', zone: 'Africa/Dakar', width: 390 });
+    // And the language page tells a Hausa reader, in Hausa, how much they are shown.
+    const reader = await open({ locale: 'ha', zone: 'Africa/Lagos', width: 390 });
     await reader.page.goto(`${origin}/language`, { waitUntil: 'networkidle' });
-    const settings = await reader.page.locator('main, body').first().textContent();
+    assert.equal(await reader.page.evaluate(() => document.documentElement.lang), 'ha');
+    const settings = await reader.page.locator('body').textContent();
     assert.ok(settings.includes('71%'), 'the language page does not show the lower number');
-    assert.ok(!settings.includes('71% of these interface strings'), 'the coverage sentence is in English for a Wolof reader');
+    assert.ok(!settings.includes('71% of these interface strings'), 'the coverage sentence is in English for a Hausa reader');
     assert.deepEqual(reader.pageErrors, []);
     await reader.context.close();
-    console.log(`Held for review (wo): the correction sheet opens the ${boxes} companion lines with the draft ("${draft}") and a notice that readers cannot see it; served parts carry no notice; /language shows a Wolof reader 71% in Wolof.`);
+    console.log(`Held for review (ha): the correction sheet opens the ${boxes} companion lines with the draft ("${draft}") and a notice that readers cannot see it; served parts carry no notice; /language shows a Hausa reader 71% in Hausa.`);
+  }
+
+  // ------------------------------------------------------ 6. withheld whole
+  // Wolof, Fulfulde, Bambara and Dhivehi are written and not offered at all:
+  // every part is held, so there is nothing of them to show. Wolof stands for
+  // the four here; `held-translations.test.ts` asks the same of each.
+  {
+    // A browser that chose Wolof before it was withheld, on a device that asks
+    // for Wolof and nothing else: English, and a document that says English.
+    const stale = await open({ locale: 'wo', zone: 'Africa/Dakar', width: 390 });
+    await stale.page.goto(`${origin}/language`, { waitUntil: 'networkidle' });
+    assert.equal(await stale.page.evaluate(() => document.documentElement.lang), 'en', 'a withheld language set <html lang>');
+    assert.equal(await stale.page.evaluate(() => document.documentElement.dir), 'ltr');
+    // Not in the picker...
+    const choices = await stale.page.locator('button[name="locale"]').evaluateAll((buttons) => buttons.map((b) => b.value));
+    assert.ok(choices.includes('sw') && choices.includes('ha'), 'the picker lost languages it should offer');
+    for (const code of ['wo', 'ff', 'bm', 'dv']) assert.ok(!choices.includes(code), `${code} is withheld and still a button in the picker`);
+    assert.equal(choices.length, 48, `the picker has ${choices.length} buttons, not the device option and 47 languages`);
+    // ...and listed underneath at 0%, with a way to the sheet that can change that.
+    const row = stale.page.locator('li', { has: stale.page.locator('a[href="/contribute?locale=wo"]') });
+    assert.equal(await row.count(), 1, 'Wolof is not listed as waiting');
+    assert.ok(clean(await row.textContent()).endsWith('0%'), `Wolof is listed as "${clean(await row.textContent())}"`);
+    assert.ok((await stale.page.evaluate(() => document.documentElement.scrollWidth)) <= 391, 'the language page scrolls sideways at 390px');
+    await shoot(stale.page, 'language-wo-withheld-390');
+    // A hand-built request for it is refused; one for an offered language is not.
+    const refused = await stale.page.request.post(`${origin}/api/locale`, { form: { locale: 'wo', next: '/language' }, maxRedirects: 0 });
+    assert.equal(refused.status(), 400, 'the locale route stored a withheld language');
+    const accepted = await stale.page.request.post(`${origin}/api/locale`, { form: { locale: 'sw', next: '/language' }, maxRedirects: 0 });
+    assert.equal(accepted.status(), 303);
+    assert.deepEqual(stale.pageErrors, []);
+    await stale.context.close();
+
+    // A device that asks for Wolof first and French second, and never chose:
+    // its own second choice, not English.
+    const device = await open({ locale: 'fr-SN', zone: 'Africa/Dakar', width: 390, chosen: null, acceptLanguage: 'wo-SN,wo;q=0.9,fr;q=0.8,en;q=0.5' });
+    await device.page.goto(`${origin}/language`, { waitUntil: 'networkidle' });
+    assert.equal(await device.page.evaluate(() => document.documentElement.lang), 'fr', 'a Wolof-then-French device was not given French');
+    assert.deepEqual(device.pageErrors, []);
+    await device.context.close();
+
+    // The sheet still has it, on every part, with the draft and the other notice.
+    const sheet = await open({ locale: 'en', zone: 'Africa/Kampala', width: 390 });
+    const notice = sheet.page.locator('form[action="/api/contribute"] .notice.warn');
+    for (const part of ['nav', 'companion']) {
+      await sheet.page.goto(`${origin}/contribute?locale=wo&section=${part}`, { waitUntil: 'networkidle' });
+      assert.equal(await notice.count(), 1, `wo ${part}: the sheet does not say the language is withheld`);
+      assert.ok(clean(await notice.textContent()).startsWith('Wolof is not offered to readers yet.'), `wo ${part}`);
+    }
+    const draft = await sheet.page.locator('textarea[name="t__companion.prayerTitle"]').inputValue();
+    assert.notEqual(draft, ENGLISH_TITLE, 'the reviewer of a withheld language is handed English');
+    const offeredOnSheet = await sheet.page.locator('select#locale option').evaluateAll((options) => options.map((o) => o.value));
+    for (const code of ['wo', 'ff', 'bm', 'dv']) assert.ok(offeredOnSheet.includes(code), `${code} cannot be corrected: it is not on the sheet`);
+    assert.deepEqual(sheet.pageErrors, []);
+    await sheet.context.close();
+    console.log(`Withheld (wo): a browser that had chosen Wolof gets English (lang="en"); the picker has ${choices.length - 1} languages and none of wo/ff/bm/dv; Wolof is listed at 0% with a link to its sheet; /api/locale refuses it (400); a wo-then-fr device gets French; the sheet still opens it with the draft ("${draft}").`);
   }
   console.log('Companion browser smoke passed in Chromium against `next dev` with a synthetic backend. Not real Auth or RLS, not a real location provider, not Safari or Firefox, not a review of any translation.');
 } catch (e) { console.error(logs.slice(-4000)); throw e; }

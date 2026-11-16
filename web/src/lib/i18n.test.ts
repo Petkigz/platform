@@ -186,14 +186,18 @@ test('every offered language actually translates something', () => {
 test('every language in the register has a catalogue, and says so about itself', () => {
   // The register is the offer; the catalogues are the goods. A row here with no
   // file behind it is a language the picker promises and the page cannot deliver.
+  //
+  // The files (`WRITTEN`), because the register also lists four languages that
+  // are written and withheld from readers; what a reader is *served* is asked
+  // of the offered languages just below.
   for (const locale of LOCALES) {
     assert.ok(
-      locale.code === 'en' || CATALOGUES[locale.code],
-      `${locale.code} is offered but has no catalogue`,
+      locale.code === 'en' || WRITTEN[locale.code],
+      `${locale.code} is in the register but has no catalogue`,
     );
     assert.equal(typeof locale.reviewed, 'boolean', `${locale.code} does not say whether it was reviewed`);
     // Every catalogue carries both halves of the review sentence, translated.
-    const messages = CATALOGUES[locale.code];
+    const messages = WRITTEN[locale.code];
     if (messages) {
       assert.ok(messages['language.unreviewed'], `${locale.code} has no unreviewed sentence`);
       assert.ok(messages['language.reviewed'], `${locale.code} has no reviewed sentence`);

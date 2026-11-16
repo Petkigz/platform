@@ -497,22 +497,23 @@ until a speaker reviews them, the owner said yes. The whole low-confidence list
 above — twenty-three languages — now has its companion text *held*:
 `web/src/lib/i18n/messages/held.ts` names them, and a reader in any of them gets
 the prayer times, Hijri date and counter screens, and the three dashboard cards,
-in English, inside a navigation and footer that stay in their own language.
-The twenty-seven languages in the first list are served as before, still
-unreviewed and still saying so.
+in English. For nineteen of them that is inside a navigation and footer that
+stay in their own language; the other four are withheld whole (next paragraph
+but one). The twenty-seven languages in the first list are served as before,
+still unreviewed and still saying so.
 
 - *Held is not deleted.* The drafts stay in `companion.ts`. Readers are served
   `CATALOGUES`, which leaves held keys out; the correction sheet (`/contribute`),
   the owner's queue and the audit read `WRITTEN`, which keeps them. A reviewer
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
-- *The number tells the reader.* `/language` counts what is shown, so each held
-  language reads 71% there (192 of 272 sentences), in the reader's own language,
+- *The number tells the reader.* `/language` counts what is shown, so each of
+  the nineteen reads 71% there (192 of 272 sentences), in the reader's own language,
   with the existing sentence that the rest is in English. No new sentence was
   written for this, because it would have had to be written in the same
   twenty-three languages.
 - *A held page says it is English.* The three companion pages carry
-  `lang="en" dir="ltr"` while held, so Dhivehi and Pashto readers do not get
+  `lang="en" dir="ltr"` while held, so a Pashto reader does not get
   English set right-to-left, and a screen reader does not read it in the wrong
   voice. Dates and times inside are still formatted for the reader's language;
   those come from the browser, not from the builder.
@@ -529,17 +530,56 @@ unreviewed and still saying so.
 - *Checked in a browser.* `scripts/companion-browser-smoke.mjs` opens the three
   tools in Burmese: Burmese navigation, English tool, no message key and no
   Burmese sentence on the page, and the tool still calculates six rows. It does
-  the direction check in Dhivehi, opens the correction sheet on the Wolof
+  the direction check in Pashto, opens the correction sheet on the Hausa
   companion part (eighty boxes, each with the draft, and the notice; no notice
-  on the Wolof navigation or on Swahili), and reads 71% on `/language` in Wolof.
+  on the Hausa navigation or on Swahili), and reads 71% on `/language` in Hausa.
 
-What this does not do: it does not judge the *other* 192 sentences of those
-twenty-three languages (navigation, sign-in, catalogue, front page), which were
-written by the same builder with the same limits and are still shown. They are
-lower-stakes sentences and the mechanism can hold any part by name, but nobody
-has assessed them, and that is a decision for the owner. Nor does it make the
-twenty-seven served languages reviewed. And no speaker has been found yet: until
-one is, these twenty-three stay in English on these screens indefinitely.
+**Four languages withheld whole (owner's second answer, 2026-11-16).** Asked
+whether the rest of the interface in Wolof, Fulfulde, Bambara and Dhivehi should
+fall back to English as well — their companion text was placeholder quality and
+nobody had checked the rest — the owner said yes. Every part of those four is
+now held (`[WHOLE_LANGUAGE]` in `held.ts`). A language with nothing left to show
+is treated as one the site does not have:
+
+- *It is not offered.* It is not a button in the picker (47 languages, from 51);
+  `/api/locale` refuses it with the same 400 as an unknown code; a cookie set
+  before it was withheld is ignored. `<html lang>` is never one of the four.
+- *A device that asks for it gets its own next choice.* `matchLocale()` no
+  longer returns a withheld code, so a phone sending `wo, fr, en` is given
+  French, and English only if it lists nothing else the site has. That is the
+  existing rule for any language the site lacks, applied to these four; it does
+  mean "falls back to English" is literally true only when English is the next
+  language the device has.
+- *It is still listed and still correctable.* `/language` shows each of the four
+  under the coverage sentence at 0%, by its own name, linked to its correction
+  sheet when the sheet is open. `/contribute` lists all 51 and opens any part of
+  a withheld language with the draft and a notice that the language is not
+  offered yet. The files are untouched: 272 sentences each.
+- *What the site says about itself was corrected.* `/about` said the interface
+  "speaks fifty-one languages"; it now says forty-seven are offered, names the
+  four, and says where English is shown instead. The accessibility page listed
+  Dhivehi among the right-to-left languages a reader can choose; it now lists
+  five. Tests tie both sentences to the register.
+- *Checked in a browser* (same script): a browser that had chosen Wolof gets an
+  English page marked `lang="en"`; the picker has 47 languages and none of the
+  four; Wolof is listed at 0% with its link; the route refuses it; a
+  Wolof-then-French device gets French; the sheet opens Wolof with its draft.
+
+Releasing one of the four is the same kind of change as releasing a part:
+replace `[WHOLE_LANGUAGE]` with the list of parts still unread (or delete the
+line), after a speaker's corrections are in the file. Until the navigation,
+sign-in and language-page parts have been read it cannot be partly released:
+`held-translations.test.ts` refuses a language that is on offer with its frame
+held.
+
+What none of this does: it does not judge the other 192 sentences of the
+*nineteen* partly held languages (navigation, sign-in, catalogue, front page),
+which were written by the same builder with the same limits and are still
+shown. Which languages were "placeholder quality" and which merely
+"low-confidence" was the builder's own estimate, not a speaker's. Nor does it
+make the twenty-seven served languages reviewed. And no speaker has been found
+for any language: until one is, the four stay unavailable and the nineteen stay
+in English on the companion screens, indefinitely.
 
 The existing Supabase test project now has the initial 342 migrations applied
 via the owner-approved GitHub run `43611493767`. A subsequent read-only check

@@ -280,7 +280,10 @@ test('every language on the sheet has a catalogue behind it', () => {
   // corrections to nothing, and a locale list that drifted from the register is
   // exactly the kind of second register this project keeps refusing to have.
   const contribute = read('app/contribute/page.tsx');
-  assert.match(contribute, /translatedLocales\(\)/u);
+  // `writtenLocales`, not the picker's list: four languages are withheld from
+  // readers, and the sheet is the only place they can be corrected from.
+  assert.match(contribute, /const languages = writtenLocales\(\);/u);
+  assert.doesNotMatch(contribute, /translatedLocales/u);
   assert.ok(LOCALES.length >= 51, `the register has shrunk to ${LOCALES.length}`);
   assert.ok(LOCALES.filter((l) => l.code !== 'en').length >= 50);
 });

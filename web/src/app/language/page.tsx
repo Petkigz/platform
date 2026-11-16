@@ -16,6 +16,7 @@ import {
   localeGroups,
   regionLabel,
   translatedLocales,
+  withheldLocales,
   translator,
 } from '@/lib/i18n';
 
@@ -53,7 +54,14 @@ export default async function LanguagePage() {
   // the list would be thirty-three rows of "100%", which trains a reader to skim
   // the one number on this page that matters. The day a string is added to the
   // English catalogue and not translated, its language appears here.
-  const incomplete = locales
+  //
+  // The withheld languages are appended to the same list, at the 0% they are:
+  // written, not shown, and not in the picker above. They are here rather than
+  // nowhere because a speaker of one who lands on this page in French or
+  // English should be able to find out that it exists and is waiting for them
+  // — and here rather than under a new sentence because that sentence would
+  // have had to be written, unreviewed, in forty-six more languages.
+  const incomplete = [...locales, ...withheldLocales()]
     .map((locale) => ({ locale, coverage: coverageOf(locale.code) }))
     .filter((entry) => entry.coverage.percent < 100);
 
@@ -256,7 +264,16 @@ export default async function LanguagePage() {
           <ul style={{ margin: '0.75rem 0 0', paddingInlineStart: '1.1rem', fontSize: '0.9rem' }}>
             {incomplete.map(({ locale, coverage: c }) => (
               <li key={locale.code}>
-                <span lang={locale.code} dir={locale.dir}>{locale.nativeName}</span>
+                {/* A language's own name is a link to its correction sheet when
+                    the sheet is open: the number beside it is the problem, and
+                    the sheet is the only thing that changes it. */}
+                {sheetOpen ? (
+                  <Link href={`/contribute?locale=${locale.code}`} lang={locale.code} dir={locale.dir}>
+                    {locale.nativeName}
+                  </Link>
+                ) : (
+                  <span lang={locale.code} dir={locale.dir}>{locale.nativeName}</span>
+                )}
                 {' — '}
                 {c.percent}%
               </li>
