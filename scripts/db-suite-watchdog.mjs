@@ -6,20 +6,26 @@ import { createInterface } from 'node:readline';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 
-export function runWithWatchdog({ command = process.execPath, args = ['supabase/tests/run.mjs'], timeoutMs = 240_000, output = process.stdout, errors = process.stderr } = {}) {
+export function runWithWatchdog({ command = process.execPath, args = ['supabase/tests/run.mjs'], timeoutMs = 240_000, overallTimeoutMs = 2_400_000, output = process.stdout, errors = process.stderr } = {}) {
   return new Promise((done) => {
     const child = spawn(command, args, { detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
     let current = 'harness and migrations'; let query = ''; let timedOut = false; let deadline; let finished = false;
-    const finish = (code) => { if (!finished) { finished = true; clearTimeout(deadline); done(code); } };
+    let overallDeadline;
+    const finish = (code) => { if (!finished) { finished = true; clearTimeout(deadline); clearTimeout(overallDeadline); done(code); } };
     const escapeAnnotation = (s) => s.replaceAll('%', '%25').replaceAll('\r', '%0D').replaceAll('\n', '%0A');
+    const stop = (title, detail) => {
+      if (timedOut || finished) return;
+      timedOut = true;
+      clearTimeout(deadline); clearTimeout(overallDeadline);
+      errors.write(`::error title=${title}::${escapeAnnotation(current)} ${detail}; last query: ${escapeAnnotation(query || 'not traced')}; the full run was stopped and did not pass.\n`);
+      try { process.kill(-child.pid, 'SIGKILL'); } catch { child.kill('SIGKILL'); }
+    };
     const arm = () => {
       clearTimeout(deadline);
-      deadline = setTimeout(() => {
-        timedOut = true;
-        errors.write(`::error title=Database suite stalled::${escapeAnnotation(current)} made no traced query or suite progress for ${timeoutMs}ms; last query: ${escapeAnnotation(query || 'not traced')}; the full run was stopped and did not pass.\n`);
-        try { process.kill(-child.pid, 'SIGKILL'); } catch { child.kill('SIGKILL'); }
-      }, timeoutMs);
+      deadline = setTimeout(() => stop('Database suite stalled', `made no traced query or suite progress for ${timeoutMs}ms`), timeoutMs);
     };
+    // Fail with diagnostic context before the CI job's harder 45-minute limit.
+    overallDeadline = setTimeout(() => stop('Database suite overall deadline', `was running when the ${overallTimeoutMs}ms overall deadline was reached`), overallTimeoutMs);
     arm();
     const lines = createInterface({ input: child.stdout, crlfDelay: Infinity });
     lines.on('line', (line) => {

@@ -29,6 +29,17 @@ test('allows an active suite to exceed the inactivity timeout', async () => {
   assert.equal(result, 0); assert.equal(errors.text(), '');
 });
 
+test('reports the current suite when the overall deadline expires despite activity', async () => {
+  const output = capture(), errors = capture();
+  const script = `console.log('--- lengthy suite ---');
+    setInterval(() => console.log('@@db-query select $1'), 50);`;
+  const result = await runWithWatchdog({ args: ['-e', script], timeoutMs: 500, overallTimeoutMs: 300, output: output.stream, errors: errors.stream });
+  assert.equal(result, 1);
+  assert.match(errors.text(), /Database suite overall deadline/);
+  assert.match(errors.text(), /lengthy suite was running when the 300ms overall deadline was reached/);
+  assert.match(errors.text(), /last query: select \$1/);
+});
+
 test('kills an unresponsive child and names the suite', async () => {
   const output = capture(), errors = capture();
   const result = await runWithWatchdog({ args: ['-e', 'console.log("--- synthetic suite ---"); console.log("@@db-query select test($1)"); setInterval(() => {}, 1000)'], timeoutMs: 300, output: output.stream, errors: errors.stream });

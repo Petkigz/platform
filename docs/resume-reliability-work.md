@@ -152,7 +152,10 @@ is still unknown. Run `43823318260` subsequently passed those suites but stopped
 in a different suite, `data export`. It remains unclear whether these are slow
 suites or blocked operations. Synthetic query-shape tracing now covers all
 suites, without bound values, so the watchdog measures inactivity rather than
-misclassifying active long-running suites. Chromium run `43755476152` passed real audio seek,
+misclassifying active long-running suites. Run `43825736795` reached the 45-minute
+CI job limit and was cancelled; the full suite did not pass. The watchdog now
+also stops at an overall 40-minute deadline and reports its current suite and
+query before the CI limit, even if the suite is making progress. Chromium run `43755476152` passed real audio seek,
 competing-tab conflict and recovery after a failed response and reload against a
 synthetic HTTP server, as well as the synthetic lesson layout checks. It did
 not exercise abrupt browser termination, mobile browsers or hosted resume writes.
