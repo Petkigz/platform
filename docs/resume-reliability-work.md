@@ -70,9 +70,10 @@ The resource snapshot now refuses closed accounts and archived/deleted learners;
 resource writes share-lock the account and learner before locking the enrolment,
 then recheck the pinned resource. The PGlite closure, child-retention and resume
 suites passed together (53 checks), including refusal after real closure.
-A real PostgreSQL synthetic closure-versus-write race has been added but is
-pending its runner result. These locks do not prove all authorization revocations,
-all lock orders or deadlock freedom. Reads already underway before closure,
+Disposable PostgreSQL run `43794797559` passed a synthetic profile-closure
+versus write race: the waiting write was refused and the prior position remained.
+It did not run the full account-closure workflow. These locks do not prove all
+authorization revocations, all lock orders or deadlock freedom. Reads already underway before closure,
 other APIs, hosted privileges and other erasure paths remain unverified.
 
 Resource-aware native and rendition players use the v3 route. A learner can
