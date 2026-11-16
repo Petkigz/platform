@@ -161,7 +161,21 @@ query before the CI limit, even if the suite is making progress. Run
 did not pass. The harness now also names the active test, and the 1,005-row
 notification fixture uses one bulk insert instead of 1,005 round trips while
 still exercising the real constraints, indexes and export cap. The focused
-data-export suite passed 9/9 locally after this change. Chromium run `43755476152` passed real audio seek,
+data-export suite passed 9/9 locally after this change. Run `43837872120`
+then named the exact test — `ten an hour is the limit, and the eleventh is
+refused` — stuck inside `export_my_data()`. Per-suite timing and
+`EXPLAIN ANALYZE` in the shared database showed the cause: the export
+filtered `learner_profiles` through `can_export_learner()` in its counts and
+four sections (eight full scans, each calling a security-definer function per
+learner row, about thirteen seconds per export in PGlite). Migrations 1410
+materialize the eligible-learner set once per export, 1420 makes
+`can_access_lesson_now()` check only the actor's learners first, and 1430
+materializes the `candidates` CTE in `search_lessons_base()`. The predicates,
+rate limit, audit event, format, ranking and snippets are unchanged. The full
+local suite then passed 2,678 assertions in 170 suites with zero failures,
+and CI run `43877802838` passed the full database suite, web/build and
+repository checks; the PostgreSQL race and responsive browser runs also
+passed. Chromium run `43755476152` passed real audio seek,
 competing-tab conflict and recovery after a failed response and reload against a
 synthetic HTTP server, as well as the synthetic lesson layout checks. It did
 not exercise abrupt browser termination, mobile browsers or hosted resume writes.
