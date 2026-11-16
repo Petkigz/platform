@@ -384,6 +384,7 @@ for (const [name, fn] of [
   ['assessments', assessments],
 ]) {
   console.log(`\n--- ${name} ---\n`);
+  const suiteStarted = Date.now();
   await ctx.q(
     `update public.platform_settings set value_text = $1 where key = 'family.guardian_verification'`,
     [VERIFICATION_ON_SUITES.has(name) ? 'true' : 'false']);
@@ -422,6 +423,9 @@ for (const [name, fn] of [
   }
 
   const s = ctx.summary();
+  // Per-suite timing: the shared database makes later suites slower as data
+  // accumulates, so the watchdog needs to know which suites consume the run.
+  console.log(`@@db-suite-time ${name} ${Date.now() - suiteStarted}ms`);
   suites.push([name, {
     passed: s.passed - prev.passed,
     failures: s.failures.slice(prev.failures),
