@@ -12,7 +12,7 @@ const reply = (data: object, status = 200) => NextResponse.json(data, {
 
 function rpcFailure(message: string) {
   const lower = message.toLowerCase();
-  if (lower.includes('not your learning') || lower.includes('cannot access that lesson') || lower.includes('resource is not available')) {
+  if (lower.includes('not your learning') || lower.includes('cannot access that lesson') || lower.includes('resource is not available') || lower.includes('account or learner is closed')) {
     return reply({ error: 'This recording is not available for this learner.' }, 403);
   }
   if (lower.includes('not in the version')) return reply({ error: 'That lesson is not in this course version.' }, 409);

@@ -66,8 +66,14 @@ follow their own rules. This is the existing retention policy, not proof that
 archived records are fully anonymous or that external copies and browser storage
 are erased. Open devices retain recovery records until cleared, expired on a
 later visit, or deleted manually. Closure does not itself reach localStorage.
-Concurrent closure/save races, hosted privileges, real browser lifecycle and
-all other erasure paths remain unverified.
+The resource snapshot now refuses closed accounts and archived/deleted learners;
+resource writes share-lock the account and learner before locking the enrolment,
+then recheck the pinned resource. The PGlite closure, child-retention and resume
+suites passed together (53 checks), including refusal after real closure.
+A real PostgreSQL synthetic closure-versus-write race has been added but is
+pending its runner result. These locks do not prove all authorization revocations,
+all lock orders or deadlock freedom. Reads already underway before closure,
+other APIs, hosted privileges and other erasure paths remain unverified.
 
 Resource-aware native and rendition players use the v3 route. A learner can
 review an older lesson-wide server place only if the freshly authenticated actor
@@ -130,6 +136,7 @@ Disposable real PostgreSQL run `43754670192` passed the updated
 privilege boundary and selected resource races. Its historical lesson-writer
 races used an explicitly temporary fixture grant; the resource races ran after
 the grant was revoked. These selected cases do not establish all races or hosted
-PostgREST/Auth/RLS behavior. Responsive Chromium run `43754670108` passed the
-synthetic lesson layout checks; it did not play real media or exercise hosted
-resume writes.
+PostgREST/Auth/RLS behavior. Chromium run `43755476152` passed real audio seek,
+competing-tab conflict and recovery after a failed response and reload against a
+synthetic HTTP server, as well as the synthetic lesson layout checks. It did
+not exercise abrupt browser termination, mobile browsers or hosted resume writes.

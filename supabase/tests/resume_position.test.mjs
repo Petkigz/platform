@@ -350,6 +350,15 @@ export async function run(ctx) {
     assert(fresh.ok && fresh.seconds === 10, 'fresh resource write failed');
   });
 
+  await test('an archived learner cannot read or save a recording place', async () => {
+    await ctx.asSuperuser(async () => {
+      await q("update public.learner_profiles set status='archived', deleted_at=now() where id=$1", [learner.learnerId]);
+      await q("select set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: learner.userId, role: 'authenticated' })]);
+      await q('set local role authenticated');
+      await rejects(() => q('select public.resume_resource_snapshot($1,$2,$3)', [enrolmentId, built.lessons[0], built.resources[0]]), /account or learner is closed/);
+    });
+  });
+
   await test('resource positions require the learner, lesson entitlement and visible matching resource', async () => {
     const resource = built.resources[0];
     await rejects(() => resourceSnapshot(stranger.userId, built.lessons[0], resource), /not your learning/);

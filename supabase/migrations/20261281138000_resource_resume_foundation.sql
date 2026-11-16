@@ -24,8 +24,19 @@ declare
   checked jsonb;
   place public.lesson_resource_positions;
 begin
+  if public.current_user_id() is null then
+    raise exception 'sign in to keep your place' using errcode = 'insufficient_privilege';
+  end if;
+  if not exists (select 1 from public.user_profiles up where up.user_id = public.current_user_id()
+                 and up.account_status <> 'closed' and up.deleted_at is null) then
+    raise exception 'this account or learner is closed' using errcode = 'insufficient_privilege';
+  end if;
   checked := public.resume_position_snapshot(p_enrolment_id, p_lesson_id);
   select * into e from public.course_enrolments where id = p_enrolment_id;
+  if not exists (select 1 from public.learner_profiles lp where lp.id = e.learner_profile_id
+                 and lp.status = 'active' and lp.deleted_at is null) then
+    raise exception 'this account or learner is closed' using errcode = 'insufficient_privilege';
+  end if;
   if not public.can_access_lesson(e.learner_profile_id, p_lesson_id) then
     raise exception 'this learner cannot access that lesson' using errcode = 'insufficient_privilege';
   end if;
@@ -66,11 +77,25 @@ declare
   parent public.lesson_progress;
   place public.lesson_resource_positions;
   e public.course_enrolments;
+  v_learner uuid;
   v_seconds integer := greatest(0, least(coalesce(p_seconds, 0), 86400));
 begin
   checked := public.resume_resource_snapshot(p_enrolment_id, p_lesson_id, p_resource_id);
+  -- Closure locks the user profile first and affected learners later; child
+  -- purge locks the learner. Share locks serialize these writes with those
+  -- operations. Recheck after each wait and after locking the enrolment.
+  perform 1 from public.user_profiles where user_id = public.current_user_id()
+    and account_status <> 'closed' and deleted_at is null for share;
+  if not found then raise exception 'this account or learner is closed' using errcode = 'insufficient_privilege'; end if;
+  select learner_profile_id into v_learner from public.course_enrolments where id = p_enrolment_id;
+  perform 1 from public.learner_profiles where id = v_learner
+    and status = 'active' and deleted_at is null for share;
+  if not found then raise exception 'this account or learner is closed' using errcode = 'insufficient_privilege'; end if;
   select * into e from public.course_enrolments where id = p_enrolment_id for share;
   if e.id is null then raise exception 'no such enrolment' using errcode = 'P0002'; end if;
+  if e.learner_profile_id is distinct from v_learner then
+    raise exception 'enrolment changed; reload the lesson' using errcode = 'check_violation';
+  end if;
   perform 1 from public.lesson_resources where id = p_resource_id and lesson_id = p_lesson_id for share;
   checked := public.resume_resource_snapshot(p_enrolment_id, p_lesson_id, p_resource_id);
   perform pg_advisory_xact_lock(hashtextextended(p_enrolment_id::text || ':' || p_lesson_id::text, 0));

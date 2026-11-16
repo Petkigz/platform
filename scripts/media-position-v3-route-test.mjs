@@ -59,6 +59,8 @@ response = await route.GET(new Request(url)); assert.equal(response.status, 403)
 assert.match(response.headers.get('cache-control'), /no-store/);
 fixture.rpc = async () => ({ data: null, error: { message: 'this learner cannot access that lesson' } });
 response = await route.POST(request(body)); assert.equal(response.status, 403);
+fixture.rpc = async () => ({ data: null, error: { message: 'this account or learner is closed' } });
+response = await route.POST(request(body)); assert.equal(response.status, 403);
 fixture.rpc = async () => ({ data: null, error: { message: 'unexpected sensitive backend detail' } });
 response = await route.GET(new Request(url)); assert.equal(response.status, 503);
 assert.ok(!(await response.text()).includes('sensitive backend detail'));

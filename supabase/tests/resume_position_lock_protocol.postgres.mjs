@@ -90,5 +90,18 @@ try {
   const waitingResourcePin = resourceWrite(b, resourceA, 99, resourceRewind.revision);
   const resourcePinRejected = assert.rejects(waitingResourcePin, /not in the version this learner is on/);
   await blocked(b, a); await a.query('commit'); await resourcePinRejected; await b.query('rollback');
-  console.log('PostgreSQL selected resume races passed: retired writer boundary, historical races under fixture grant, resource isolation and synthetic pin change.');
+  await a.query('begin'); await a.query("set local app.bypassing_enrolment_pin='on'");
+  await a.query('update public.course_enrolments set course_version_id=$2 where id=$1', [enrolment, v1]); await a.query('commit');
+  // Simulate the profile-row part of closure: the writer must wait and then
+  // refuse, rather than recreate a position after the account is closed. This
+  // is not the full account-closure workflow or hosted session revocation.
+  await a.query('begin'); await a.query("set local app.account_erasure='on'");
+  assert.equal((await a.query("update public.user_profiles set account_status='closed', deleted_at=now() where user_id=$1", [actor])).rowCount, 1);
+  await begin(b);
+  const waitingClose = resourceWrite(b, resourceA, 99, resourceRewind.revision);
+  const closeRejected = assert.rejects(waitingClose, /account or learner is closed/);
+  await blocked(b, a); await a.query('commit'); await closeRejected; await b.query('rollback');
+  const retained = (await observer.query('select seconds from public.lesson_resource_positions where lesson_resource_id=$1', [resourceA])).rows[0];
+  assert.equal(retained.seconds, 5);
+  console.log('PostgreSQL selected resume races passed: retired writer boundary, historical races under fixture grant, resource isolation, synthetic pin and closure changes.');
 } finally { await Promise.all([a.end().catch(() => {}), b.end().catch(() => {}), observer.end().catch(() => {})]); }

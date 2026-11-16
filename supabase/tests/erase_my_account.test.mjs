@@ -177,6 +177,10 @@ export async function run(ctx) {
     await eraseAs(me.userId, 'Still Enrolled');
     assert(await count('select 1 from public.lesson_resource_positions where lesson_progress_id=$1', [progress]) === 1,
       'the recording position no longer follows retained adult progress');
+    await rejects(() => asActor(me.userId, 'select public.resume_resource_snapshot($1,$2,$3)',
+      [enrolmentId, course.lesson, course.resource]), /account or learner is closed/);
+    await rejects(() => asActor(me.userId, 'select public.compare_record_resource_position($1,$2,$3,$4,$5)',
+      [enrolmentId, course.lesson, course.resource, 70, null]), /account or learner is closed/);
 
     const enrolment = await scalar(
       `select id, learner_profile_id from public.course_enrolments where id = $1`,
