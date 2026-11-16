@@ -97,6 +97,9 @@ export async function createHarness() {
     console.log(`  \u2717 ${name}\n      ${short(err)}`);
   };
   async function test(name, fn) {
+    // Names are fixed test descriptions, not fixture data. This helps the
+    // external watchdog identify a slow query within a long suite.
+    console.log(`@@db-test ${name.replace(/[\r\n]/g, ' ')}`);
     try { await fn(); ok(name); } catch (e) { fail(name, e); }
   }
   function assert(cond, msg) { if (!cond) throw new Error(msg || 'assertion failed'); }

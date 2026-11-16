@@ -172,11 +172,11 @@ export async function run(ctx) {
 
   await test('a list at the limit is cut, and says so', async () => {
     const person = await adult('Prolific');
-    for (let i = 0; i < 1005; i += 1) {
-      await q(`insert into public.notifications (user_id, kind, title, body, href)
-               values ($1,'payout_paid',$2,'A message','/teach/payouts')`,
-        [person.userId, `Message ${i}`]);
-    }
+    // One statement still inserts 1,005 distinct rows and exercises the real
+    // constraints and indexes; it avoids 1,005 separate PGlite round trips.
+    await q(`insert into public.notifications (user_id, kind, title, body, href)
+             select $1, 'payout_paid', 'Message ' || i, 'A message', '/teach/payouts'
+               from generate_series(0, 1004) as i`, [person.userId]);
 
     const doc = await exportOf(person.userId);
     assert(doc.notifications.length === 1000, `${doc.notifications.length} notifications`);

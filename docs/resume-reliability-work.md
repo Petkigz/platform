@@ -155,7 +155,13 @@ suites, without bound values, so the watchdog measures inactivity rather than
 misclassifying active long-running suites. Run `43825736795` reached the 45-minute
 CI job limit and was cancelled; the full suite did not pass. The watchdog now
 also stops at an overall 40-minute deadline and reports its current suite and
-query before the CI limit, even if the suite is making progress. Chromium run `43755476152` passed real audio seek,
+query before the CI limit, even if the suite is making progress. Run
+`43831571860` then stopped at that overall deadline in `data export`, with
+`select public.export_my_data() d` as the last traced query; the full suite
+did not pass. The harness now also names the active test, and the 1,005-row
+notification fixture uses one bulk insert instead of 1,005 round trips while
+still exercising the real constraints, indexes and export cap. The focused
+data-export suite passed 9/9 locally after this change. Chromium run `43755476152` passed real audio seek,
 competing-tab conflict and recovery after a failed response and reload against a
 synthetic HTTP server, as well as the synthetic lesson layout checks. It did
 not exercise abrupt browser termination, mobile browsers or hosted resume writes.

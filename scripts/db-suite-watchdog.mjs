@@ -9,7 +9,7 @@ import { resolve } from 'node:path';
 export function runWithWatchdog({ command = process.execPath, args = ['supabase/tests/run.mjs'], timeoutMs = 240_000, overallTimeoutMs = 2_400_000, output = process.stdout, errors = process.stderr } = {}) {
   return new Promise((done) => {
     const child = spawn(command, args, { detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
-    let current = 'harness and migrations'; let query = ''; let timedOut = false; let deadline; let finished = false;
+    let current = 'harness and migrations'; let test = ''; let query = ''; let timedOut = false; let deadline; let finished = false;
     let overallDeadline;
     const finish = (code) => { if (!finished) { finished = true; clearTimeout(deadline); clearTimeout(overallDeadline); done(code); } };
     const escapeAnnotation = (s) => s.replaceAll('%', '%25').replaceAll('\r', '%0D').replaceAll('\n', '%0A');
@@ -17,7 +17,7 @@ export function runWithWatchdog({ command = process.execPath, args = ['supabase/
       if (timedOut || finished) return;
       timedOut = true;
       clearTimeout(deadline); clearTimeout(overallDeadline);
-      errors.write(`::error title=${title}::${escapeAnnotation(current)} ${detail}; last query: ${escapeAnnotation(query || 'not traced')}; the full run was stopped and did not pass.\n`);
+      errors.write(`::error title=${title}::${escapeAnnotation(current)} ${detail}; test: ${escapeAnnotation(test || 'setup or leak check')}; last query: ${escapeAnnotation(query || 'not traced')}; the full run was stopped and did not pass.\n`);
       try { process.kill(-child.pid, 'SIGKILL'); } catch { child.kill('SIGKILL'); }
     };
     const arm = () => {
@@ -31,7 +31,8 @@ export function runWithWatchdog({ command = process.execPath, args = ['supabase/
     lines.on('line', (line) => {
       output.write(`${line}\n`);
       const header = /^--- (.+) ---$/.exec(line);
-      if (header) { current = header[1]; query = ''; arm(); }
+      if (header) { current = header[1]; test = ''; query = ''; arm(); }
+      else if (line.startsWith('@@db-test ')) { test = line.slice(10); arm(); }
       else if (line.startsWith('@@db-query ')) { query = line.slice(11); arm(); }
     });
     child.stderr.pipe(errors, { end: false });
