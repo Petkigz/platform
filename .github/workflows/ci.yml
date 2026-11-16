@@ -34,14 +34,14 @@ jobs:
           node-version: '22.22.3'
       - run: node scripts/repo-check.mjs
       - run: node scripts/cloudflare-probe-lock/check.mjs
-      - run: node --test scripts/cloudflare-probe-lock/preview-gate.test.mjs scripts/cloudflare-probe-lock/preview-label.test.mjs scripts/cloudflare-probe-lock/deploy-guard.test.mjs scripts/cloudflare-probe-lock/reviewer-guard.test.mjs
+      - run: node --test scripts/cloudflare-probe-lock/preview-gate.test.mjs scripts/cloudflare-probe-lock/preview-label.test.mjs scripts/cloudflare-probe-lock/deploy-guard.test.mjs scripts/cloudflare-probe-lock/reviewer-guard.test.mjs scripts/db-suite-watchdog.test.mjs
 
   database:
     name: Full database suite
     runs-on: ubuntu-latest
     # A stalled in-memory run must report a failure instead of consuming a
     # runner indefinitely. The independent web job can still provide feedback.
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
@@ -50,7 +50,7 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Run all registered database suites together
-        run: npm run test:db
+        run: node scripts/db-suite-watchdog.mjs
 
   gates:
     name: Web, routes, types and build
