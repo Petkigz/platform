@@ -233,9 +233,15 @@ p  { margin: 0 0 1rem; }
   .grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
-.section { padding: 2.5rem 0; }
+/* Vertical rhythm only. These were `padding: 2.5rem 0`, and the `0` was not
+   nothing: on the ninety-odd pages written as `container section` it replaced
+   the container's side padding, so on a phone every heading and card touched
+   the edge of the screen, and on the pages allowed to use a wide window they
+   did at any size. A section says how much air is above and below it; how far
+   content sits from the side of the screen is the container's to say. */
+.section { padding-block: 2.5rem; }
 /* A section inside a page that already has its own top padding. */
-.section-sm { padding: 1.5rem 0; }
+.section-sm { padding-block: 1.5rem; }
 
 /* --------------------------------------------------------------------------
    Hero
@@ -1983,7 +1989,16 @@ html[data-motion='reduce'] *::after {
 }
 .prayer-fields { display: grid; gap: 1.25rem; margin-top: 1.5rem; }
 @media (min-width: 62rem) {
-  .prayer-fields { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+  .prayer-fields {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas: 'where how' 'actions how';
+    gap: 1.5rem;
+    align-items: start;
+  }
+  .prayer-where { grid-area: where; }
+  .prayer-how { grid-area: how; }
+  .prayer-actions { grid-area: actions; }
 }
 .prayer-group {
   min-width: 0;
@@ -2032,7 +2047,7 @@ html[data-motion='reduce'] *::after {
   accent-color: var(--green-700);
 }
 .prayer-confirm span { min-width: 0; overflow-wrap: anywhere; }
-.prayer-actions { display: grid; gap: 1rem; justify-items: start; margin-top: 1.5rem; }
+.prayer-actions { display: grid; gap: 1rem; justify-items: start; min-width: 0; }
 .prayer-actions .notice { justify-self: stretch; max-width: 72ch; margin: 0; }
 .prayer-result { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
 .prayer-result h3 {

@@ -182,7 +182,7 @@ try {
     await tab.page.locator('.prayer-result').waitFor({ state: 'detached' });
     assert.match(await tab.page.locator('.prayer-actions [role=status]').textContent(), /The date changed/);
     assert.deepEqual(tab.pageErrors, []);
-    console.log(`Manual entry: Kampala timetable ${KAMPALA_TIMES.join(', ')} in Chromium; refused without confirmation; Hanafi moves Asr only; ${sentAfterEntry} request(s) after entry, none carrying a coordinate; storage ${JSON.stringify(stored)}; result cleared when the date changed.`);
+    console.log(`Manual entry: Kampala timetable ${KAMPALA_TIMES.join(', ')} in Chromium; refused without confirmation; Hanafi moves Asr only; ${sentAfterEntry} request(s) after entry, none carrying a coordinate; device storage holds only ${JSON.stringify({ local: Object.keys(stored.local), session: Object.keys(stored.session), databases: stored.databases, caches: stored.caches })}; result cleared when the date changed.`);
     await tab.context.close();
   }
 
@@ -274,6 +274,8 @@ try {
     return { scroll: document.documentElement.scrollWidth, width, outside, clipped, small,
       dir: document.documentElement.dir, lang: document.documentElement.lang,
       scopeWidth: scope.getBoundingClientRect().width,
+      // How close the page's own blocks come to either edge of the screen.
+      gutter: [...scope.children].filter((c) => { const r = c.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(c).position !== 'fixed'; }).reduce((least, c) => { const r = c.getBoundingClientRect(); return Math.min(least, r.left, document.documentElement.clientWidth - r.right); }, Infinity),
       fields: cols('.prayer-fields'), timetable: cols('.prayer-timetable') };
   });
   const assertFits = (m, label) => {
@@ -282,6 +284,7 @@ try {
     assert.deepEqual(m.clipped, [], `${label}: clipped text`);
     assert.deepEqual(m.small, [], `${label}: control under 44px`);
     assert.ok(m.scopeWidth >= m.width - 1, `${label}: the page does not use the window's width`);
+    assert.ok(m.gutter >= 16, `${label}: content is ${m.gutter}px from the edge of the screen`);
   };
   const shoot = async (page, name) => { if (shots) await page.screenshot({ path: resolve(shots, `${name}.png`), fullPage: true }); };
   const wantShot = (locale, width) => (locale === 'en' && [390, 1440, 2560].includes(width)) || (locale === 'ar' && [390, 1440].includes(width)) || (locale === 'my' && width === 390) || (locale === 'sw' && width === 768);

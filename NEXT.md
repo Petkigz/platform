@@ -2618,6 +2618,32 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### Where the words were, 2026-11-16
+
+`.section { padding: 2.5rem 0 }` sits after `.container` in the stylesheet, so on
+every page written as `container section` — ninety-two page files — the `0`
+replaced the container's side padding. On a phone every heading and card touched
+the edge of the screen; on the pages allowed the full window (dashboard, course,
+catalogue shelves) they did at any width. It had been true since the first
+commit, and five browser checks had passed over it, because each asked whether
+the page was as wide as the window and none asked where the words were. It was
+found by looking: this is the first unit in which a screenshot could be opened
+(`@sparticuz/chromium` from npm runs here, which the runner's Chrome never
+could show). The rule is now `padding-block`; the dashboard, course and
+catalogue checks measure the distance from content to the edge and were
+confirmed to fail on the old rule; `web/src/lib/layout-gutter.test.ts` names the
+cause; and `scripts/edge-sweep.mjs` loads all 104 static routes at 320 and 1440
+pixels and fails on sideways scroll or anything within 12 pixels of the edge.
+
+The sweep's limits are printed by the sweep: its backend is empty, so it sees
+frames and empty states; 49 routes redirect for an account with no role (every
+`/admin` page among them) and are measured as their destination; dynamic routes
+are not visited. Adding forty pixels of gutter to a 320-pixel phone could have
+pushed a full table sideways on a page this cannot populate.
+
+The same unit put the companion tools in a browser for the first time and
+turned the prayer times into a timetable — see `docs/remaining.md`, D7.
+
 ### A review is a person, a moment and a word, 2026-11-01
 
 The second half of the coursework question, and the gap had the same shape as the

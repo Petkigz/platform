@@ -89,10 +89,13 @@ try {
       const page = await context.newPage(); await page.goto(url, { waitUntil: 'networkidle' });
       const metrics = await page.evaluate(() => {
         const area = document.querySelector('.course-workspace'); if (!area) throw new Error('Synthetic course workspace missing');
-        return { scroll: document.documentElement.scrollWidth, area: area.getBoundingClientRect().width };
+        return { scroll: document.documentElement.scrollWidth, area: area.getBoundingClientRect().width,
+          // How close the page's own blocks come to either edge of the screen.
+          gutter: [...area.children].filter((c) => { const r = c.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(c).position !== 'fixed'; }).reduce((least, c) => { const r = c.getBoundingClientRect(); return Math.min(least, r.left, document.documentElement.clientWidth - r.right); }, Infinity) };
       });
       assert.ok(metrics.scroll <= width + 1, `${width}: page overflow ${metrics.scroll}`);
       assert.ok(metrics.area >= width - 1, `${width}: course workspace not full-width`);
+      assert.ok(metrics.gutter >= 16, `${width}: course content is ${metrics.gutter}px from the edge of the screen`);
       assert.equal(await page.getByRole('heading', { name: 'Synthetic course' }).count(), 1);
       assert.ok(await page.getByRole('link', { name: 'Synthetic lesson' }).count() >= 1);
       assert.equal(await page.getByText('Synthetic other child assignment').count(), 0);

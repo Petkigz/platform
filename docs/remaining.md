@@ -420,6 +420,37 @@ if an English sentence is written back into a component, and
 cookie) and Swahili (asked for by the device) and refuses an English button on
 either.
 
+**The prayer tool in a real browser, and as a timetable (2026-11-16).** Until
+now the tool had been run in Node and in a simulated DOM, never in a browser.
+`scripts/companion-browser-smoke.mjs` drives Chromium against the real route:
+typed coordinates and a granted device location both give the six Kampala times
+`adhan` gives in Node for 15 October 2026 (5:23, 6:32, 12:36, 15:49, 18:39,
+19:44, Muslim World League, standard Asr); a refused location leaves the fields
+empty and typing still works; nothing is calculated without the time-zone
+confirmation; and after the coordinates are entered the tab sends no request
+that contains them, the synthetic backend receives none, and cookies, local and
+session storage, IndexedDB and the cache hold none. Thirteen hours on, the
+result is withdrawn because the date changed. The same script lays out all
+three tools at 320, 390, 768, 1440 and 2560 pixels in English, Arabic, Burmese
+and Swahili and fails on sideways scroll, clipped text or a control under 44
+pixels.
+
+The rows used to read "Oct 15, 2026, 5:23 AM GMT+3" six times. They are now
+clock times, with the date once in the heading and the zone and its offset once
+in the summary. `web/src/lib/prayer-timetable.ts` keeps the two cases where that
+would mislead: a time after midnight carries its own date (London on 21 June:
+Isha is marked "Jun 22", from a real calculation), and on a day the clocks
+change every row carries its own offset. The Hijri date is now written in the
+reader's language; the calendar is requested as an option rather than a tag on
+the locale, because a browser that does not know the language discards the tag
+with it and would have printed a Gregorian date under a Hijri heading.
+
+What this still is not: a real location provider (the script hands the browser
+its coordinates), Safari or Firefox, the production build (`next dev`), real
+Auth or RLS, or any judgement of a method. It shows a browser computes what the
+library computes; whether the library's method is right for a place remains the
+reader's and their community's decision, as the page says.
+
 **No other page pays for them.** The layout serialises the reader's catalogue
 into every page so client components can translate, and the companion sentences
 are more than a third of all the words (about 7 KB in English, 18 KB in Burmese,

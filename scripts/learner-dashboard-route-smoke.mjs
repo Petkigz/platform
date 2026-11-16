@@ -103,10 +103,13 @@ try {
         const grid = document.querySelector('.learner-course-grid');
         if (!area || !grid) throw new Error('Synthetic learner dashboard missing');
         return { scroll: document.documentElement.scrollWidth, area: area.getBoundingClientRect().width,
+          // How close the page's own blocks come to either edge of the screen.
+          gutter: [...area.children].filter((c) => { const r = c.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(c).position !== 'fixed'; }).reduce((least, c) => { const r = c.getBoundingClientRect(); return Math.min(least, r.left, document.documentElement.clientWidth - r.right); }, Infinity),
           columns: getComputedStyle(grid).gridTemplateColumns.split(' ').length };
       });
       assert.ok(metrics.scroll <= width + 1, `${width}: page overflow ${metrics.scroll}`);
       assert.ok(metrics.area >= width - 1, `${width}: learner area not full-width`);
+      assert.ok(metrics.gutter >= 16, `${width}: dashboard content is ${metrics.gutter}px from the edge of the screen`);
       assert.equal(metrics.columns, width >= 1920 ? 4 : width >= 1280 ? 3 : width >= 736 ? 2 : 1);
       assert.equal(await page.getByRole('navigation', { name: 'Learning shortcuts' }).count(), 1);
       assert.equal(await page.locator('.learner-shortcuts form[action="/sign-out"] button').count(), 1);
@@ -114,6 +117,7 @@ try {
       assert.equal(await page.getByText('Synthetic child course').count(), 1);
       assert.equal(await page.getByText('Synthetic child', { exact: true }).count(), 1);
       assert.equal(await page.getByText('Me', { exact: true }).count(), 1);
+      if (process.env.RESPONSIVE_SCREENSHOTS && [390, 1440].includes(width)) await page.screenshot({ path: `${process.env.RESPONSIVE_SCREENSHOTS}/dashboard-en-${width}.png`, fullPage: true });
       console.log(`Synthetic learner dashboard ${width}: no overflow, ${metrics.columns} columns, distinct learner labels`);
       await context.close();
     }

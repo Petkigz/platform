@@ -108,10 +108,13 @@ try {
         const grid = document.querySelector('.discovery-page .grid.cols-2');
         if (!shelf || !grid) throw new Error('Synthetic shelf not rendered');
         return { scrollWidth: document.documentElement.scrollWidth, shelfWidth: shelf.getBoundingClientRect().width,
+          // How close the page's own blocks come to either edge of the screen.
+          gutter: [...shelf.children].filter((c) => { const r = c.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(c).position !== 'fixed'; }).reduce((least, c) => { const r = c.getBoundingClientRect(); return Math.min(least, r.left, document.documentElement.clientWidth - r.right); }, Infinity),
           columns: getComputedStyle(grid).gridTemplateColumns.split(' ').length };
       });
       assert.ok(measures.scrollWidth <= width + 1, `${width}: document overflowed: ${measures.scrollWidth}`);
       assert.ok(measures.shelfWidth >= width - 1, `${width}: shelf does not use viewport`);
+      assert.ok(measures.gutter >= 16, `${width}: shelf content is ${measures.gutter}px from the edge of the screen`);
       assert.equal(measures.columns, width >= 1920 ? 4 : width >= 1280 ? 3 : width >= 736 ? 2 : 1, `${width}: grid columns`);
       assert.equal(await page.getByText('Synthetic published course').count(), 1);
       assert.equal(await page.getByText('Synthetic unpublished course').count(), 0);

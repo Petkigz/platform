@@ -87,7 +87,7 @@ export function PrayerTimesTool() {
       {/* Where: the coordinates and the clock they are read against. The
           confirmation sits with the location because changing either one
           withdraws it. */}
-      <div className="prayer-group">
+      <div className="prayer-group prayer-where">
         <button type="button" className="btn secondary" onClick={locate} disabled={locating}>{locating?t('companion.prayerLocating'):t('companion.prayerUseLocation')}</button>
         <div className="prayer-coords">
           <div><label htmlFor="latitude">{t('companion.prayerLatitude')}</label><input id="latitude" type="number" min="-90" max="90" step="any" disabled={locating} value={latitude} onChange={e=>{setLatitude(e.target.value);setConfirmZone(false);changed();}} /></div>
@@ -97,7 +97,7 @@ export function PrayerTimesTool() {
         <label className="prayer-confirm"><input type="checkbox" checked={confirmZone} onChange={e=>{setConfirmZone(e.target.checked);changed();}} /><span>{t('companion.prayerZoneConfirm')}</span></label>
       </div>
       {/* How: the convention, which is the reader's choice and never ours. */}
-      <div className="prayer-group">
+      <div className="prayer-group prayer-how">
         <p className="prayer-hint">{t('companion.prayerMethodIntro')}</p>
         {example && <div className="notice prayer-example">
           <p>{t('companion.prayerExample', { zone: deviceZone, place: example.place, method: methods[example.method] })}</p>
@@ -113,10 +113,13 @@ export function PrayerTimesTool() {
         </>}
         <p className="prayer-hint">{t('companion.prayerNoPolar')}</p>
       </div>
-    </div>
-    <div className="prayer-actions">
-      <button type="button" className="btn" onClick={calculate} disabled={locating}>{t('companion.prayerCalculate')}</button>
-      {message && <p className="notice" role="status">{message}</p>}
+      {/* Last in the document, so it is reached after both groups by keyboard
+          and on a phone; on a wide screen it sits under the location, where
+          the shorter column would otherwise leave a hole. */}
+      <div className="prayer-actions">
+        <button type="button" className="btn" onClick={calculate} disabled={locating}>{t('companion.prayerCalculate')}</button>
+        {message && <p className="notice" role="status">{message}</p>}
+      </div>
     </div>
     {result && <div className="prayer-result" aria-live="polite">
       <h3>{t('companion.prayerTimesFor', { date: result.date })}</h3>

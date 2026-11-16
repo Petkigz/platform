@@ -119,6 +119,7 @@ jobs:
           export RESPONSIVE_CHROME="$(command -v google-chrome || command -v chromium)"
           if node scripts/companion-browser-smoke.mjs > "$RUNNER_TEMP/companion-browser.log" 2>&1; then
             cat "$RUNNER_TEMP/companion-browser.log"
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").split("\n").filter(l=>/^(Manual entry|Device location|After-midnight|Layout|Hijri [a-z]+:)/.test(l)).map(l=>l.slice(0,400)).join("\n").replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::notice title=Companion browser test::${s}`)' "$RUNNER_TEMP/companion-browser.log"
           else
             cat "$RUNNER_TEMP/companion-browser.log"
             node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Companion browser test::${s}`)' "$RUNNER_TEMP/companion-browser.log"
@@ -132,3 +133,32 @@ jobs:
           path: ${{ runner.temp }}/companion-screenshots
           if-no-files-found: ignore
           retention-days: 7
+  # Every static route at a phone's width and a desk's: no sideways scroll and
+  # nothing touching the edge of the screen. Its own job because it compiles
+  # every page in `next dev`, which is slow and unrelated to the checks above.
+  edges:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: '22.22.3'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Install isolated browser driver
+        run: npm install --prefix "$RUNNER_TEMP/responsive" --no-audit --no-fund playwright-core@1.58.2
+      - name: Sweep every static route for sideways scroll and edge-touching content
+        env:
+          RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs
+        run: |
+          set -euo pipefail
+          export RESPONSIVE_CHROME="$(command -v google-chrome || command -v chromium)"
+          if node scripts/edge-sweep.mjs > "$RUNNER_TEMP/edge-sweep.log" 2>&1; then
+            cat "$RUNNER_TEMP/edge-sweep.log"
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").trim().split("\n").pop().replaceAll("%","%25");console.log(`::notice title=Edge sweep::${s}`)' "$RUNNER_TEMP/edge-sweep.log"
+          else
+            cat "$RUNNER_TEMP/edge-sweep.log"
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Edge sweep::${s}`)' "$RUNNER_TEMP/edge-sweep.log"
+            exit 1
+          fi
