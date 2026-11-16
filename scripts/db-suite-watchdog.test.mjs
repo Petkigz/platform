@@ -20,6 +20,15 @@ test('reports a failing child rather than claiming success', async () => {
   assert.equal(result, 1); assert.match(errors.text(), /exited 7/);
 });
 
+test('allows an active suite to exceed the inactivity timeout', async () => {
+  const output = capture(), errors = capture();
+  const script = `console.log('--- active suite ---'); let n = 0;
+    const timer = setInterval(() => { console.log('@@db-query select $1');
+      if (++n === 6) { clearInterval(timer); } }, 100);`;
+  const result = await runWithWatchdog({ args: ['-e', script], timeoutMs: 400, output: output.stream, errors: errors.stream });
+  assert.equal(result, 0); assert.equal(errors.text(), '');
+});
+
 test('kills an unresponsive child and names the suite', async () => {
   const output = capture(), errors = capture();
   const result = await runWithWatchdog({ args: ['-e', 'console.log("--- synthetic suite ---"); console.log("@@db-query select test($1)"); setInterval(() => {}, 1000)'], timeoutMs: 300, output: output.stream, errors: errors.stream });
