@@ -146,7 +146,9 @@ next full run rather than skipping the remaining suites. Run `43798126397`
 identified the stalled suite as `master access`; that suite passed 19 checks in
 a fresh PGlite database, so the shared-suite cause is not yet known. A bounded
 synthetic query-shape trace (without bind values) has been added for the next
-full run. Chromium run `43755476152` passed real audio seek,
+full run. Run `43803466380` progressed beyond master access but then stopped
+in `export my data` after four minutes without a traced operation; the reason
+is still unknown. Tracing now also covers that suite. Chromium run `43755476152` passed real audio seek,
 competing-tab conflict and recovery after a failed response and reload against a
 synthetic HTTP server, as well as the synthetic lesson layout checks. It did
 not exercise abrupt browser termination, mobile browsers or hosted resume writes.
