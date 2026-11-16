@@ -9,14 +9,14 @@ import { resolve } from 'node:path';
 export function runWithWatchdog({ command = process.execPath, args = ['supabase/tests/run.mjs'], timeoutMs = 240_000, output = process.stdout, errors = process.stderr } = {}) {
   return new Promise((done) => {
     const child = spawn(command, args, { detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
-    let current = 'harness and migrations'; let timedOut = false; let deadline; let finished = false;
+    let current = 'harness and migrations'; let query = ''; let timedOut = false; let deadline; let finished = false;
     const finish = (code) => { if (!finished) { finished = true; clearTimeout(deadline); done(code); } };
     const escapeAnnotation = (s) => s.replaceAll('%', '%25').replaceAll('\r', '%0D').replaceAll('\n', '%0A');
     const arm = () => {
       clearTimeout(deadline);
       deadline = setTimeout(() => {
         timedOut = true;
-        errors.write(`::error title=Database suite stalled::${escapeAnnotation(current)} exceeded ${timeoutMs}ms; the full run was stopped and did not pass.\n`);
+        errors.write(`::error title=Database suite stalled::${escapeAnnotation(current)} exceeded ${timeoutMs}ms; last query: ${escapeAnnotation(query || 'not traced')}; the full run was stopped and did not pass.\n`);
         try { process.kill(-child.pid, 'SIGKILL'); } catch { child.kill('SIGKILL'); }
       }, timeoutMs);
     };
@@ -25,7 +25,8 @@ export function runWithWatchdog({ command = process.execPath, args = ['supabase/
     lines.on('line', (line) => {
       output.write(`${line}\n`);
       const header = /^--- (.+) ---$/.exec(line);
-      if (header) { current = header[1]; arm(); }
+      if (header) { current = header[1]; query = ''; arm(); }
+      else if (line.startsWith('@@db-query ')) { query = line.slice(11); arm(); }
     });
     child.stderr.pipe(errors, { end: false });
     child.on('error', (error) => { errors.write(`${error.message}\n`); finish(1); });

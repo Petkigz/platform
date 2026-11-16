@@ -22,7 +22,17 @@ const short = (e) => String(e?.message ?? e).split('\n')[0];
 export async function createHarness() {
   const db = new PGlite();
   const exec = (sql) => db.exec(sql);
-  const q = (sql, params = []) => db.query(sql, params);
+  let traceQueries = false;
+  const q = (sql, params = []) => {
+    if (traceQueries) {
+      // Test SQL only: strip literals and never print bind values. The watchdog
+      // uses the last statement shape to diagnose a blocked shared-suite query.
+      const shape = String(sql).replace(/'(?:''|[^'])*'/g, "'?' ").replace(/\s+/g, ' ').trim().slice(0, 160);
+      console.log(`@@db-query ${shape}`);
+    }
+    return db.query(sql, params);
+  };
+  const setQueryTracing = (enabled) => { traceQueries = enabled; };
 
   console.log('\nApplying harness + migrations');
   try {
@@ -346,7 +356,7 @@ export async function createHarness() {
   const close = () => db.close();
 
   return {
-    db, exec, q, count,
+    db, exec, q, count, setQueryTracing,
     test, assert, rejects,
     asSuperuser, asUser, asAnon, committed,
     newUser, newProfile, grantRole, bootstrapAdmin, newInstructor, newReviewer,

@@ -398,8 +398,12 @@ for (const [name, fn] of [
   if (courseworkFixtures.has(name)) {
     await ctx.q("select set_config('app.bypassing_code_flag', 'on', false)");
   }
+  // Diagnostic tracing is limited to synthetic SQL in the suite identified by
+  // the previous watchdog failure. Bind parameters are never logged.
+  ctx.setQueryTracing(name === 'master access');
   try { await fn(ctx); }
   finally {
+    ctx.setQueryTracing(false);
     if (courseworkFixtures.has(name)) {
       await ctx.q("select set_config('app.bypassing_code_flag', '', false)");
     }
