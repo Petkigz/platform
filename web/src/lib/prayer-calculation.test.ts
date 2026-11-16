@@ -3,6 +3,11 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { calculatePrayerTimes, calculatePrayerTimesForDeviceDay, prayerTimesMatchDeviceDay, selectedNightRule, methodExampleForZone } from './prayer-calculation.ts';
 
+// The tool's sentences live in the catalogue now, not in the component: the
+// wording assertions below read `en.ts`, and the wiring test proves the
+// component asks the catalogue for them.
+const en = readFileSync(new URL('./i18n/messages/en.ts', import.meta.url),'utf8');
+
 test('calculation rejects invalid inputs and unresolved polar days',()=>{
   const date=new Date(2026,5,21);
   assert.equal(calculatePrayerTimes(NaN,0,date,'Karachi','standard','middle'),null);
@@ -27,7 +32,7 @@ test('permission is explicit, coordinates stay on device, and both links check t
   assert.match(page,/isFlagEnabled\(supabase,'companion\.calculated_prayer_times'\)/);
   assert.match(dashboard,/prayerTimesOn &&/); assert.match(tool,/getCurrentPosition/);
   assert.doesNotMatch(tool,/localStorage|sessionStorage|indexedDB|fetch\(|sendBeacon/);
-  assert.match(tool,/time zone matches/); assert.match(tool,/local authority/);
+  assert.match(en,/time zone matches/); assert.match(en,/local authority/);
   assert.match(tool,/visibilitychange/); assert.match(tool,/setInterval/);
 });
 
@@ -39,7 +44,7 @@ test('requesting a fresh location clears old coordinates and time-zone confirmat
   assert.match(beforeRequest,/setLongitude\(''\)/);
   assert.match(beforeRequest,/setConfirmZone\(false\)/);
   assert.match(beforeRequest,/setResult\(null\)/);
-  assert.match(locate,/permission was denied/);
+  assert.match(en,/permission was denied/);
 });
 
 test('rejects finite but impossible ordering near polar night',()=>{
@@ -151,7 +156,7 @@ test('Singapore estimate is close to, but explicitly not identical to, MUIS publ
     assert.ok(differences>0, 'do not misrepresent this calculation as the official timetable');
   } finally {if(previous===undefined) delete process.env.TZ; else process.env.TZ=previous;}
   const tool=readFileSync(new URL('../app/companion/prayer-times/tool.tsx',import.meta.url),'utf8');
-  assert.match(tool,/not the official Singapore timetable/);
+  assert.match(en,/not the official Singapore timetable/);
   assert.match(tool,/muis\.gov\.sg\/resources\/islamic-calendar/);
 });
 
@@ -184,8 +189,8 @@ test('Moonsighting Committee does not require an unused night rule',()=>{
   assert.deepEqual(first.map(([,t])=>t.getTime()),second.map(([,t])=>t.getTime()));
   const tool=readFileSync(new URL('../app/companion/prayer-times/tool.tsx',import.meta.url),'utf8');
   assert.match(tool,/selectedNightRule\(method,night\)/);
-  assert.match(tool,/no separate night rule is needed/);
-  assert.match(tool,/No polar approximation has been applied/);
+  assert.match(en,/no separate night rule is needed/);
+  assert.match(en,/No polar approximation has been applied/);
 });
 
 
@@ -214,8 +219,8 @@ test('calculation choices link to plain-language explanations',()=>{
   const tool=readFileSync(new URL('../app/companion/prayer-times/tool.tsx',import.meta.url),'utf8');
   assert.match(tool,/aria-describedby="asr-explanation"/);
   assert.match(tool,/aria-describedby="night-explanation"/);
-  assert.match(tool,/noon shadow/);
-  assert.match(tool,/Ask your community which rule/);
+  assert.match(en,/noon shadow/);
+  assert.match(en,/Ask your community which rule/);
 });
 
 
@@ -229,7 +234,7 @@ test('regional examples are explicit, limited, and never a default',()=>{
   assert.equal(methodExampleForZone('__proto__'),null);
   const tool=readFileSync(new URL('../app/companion/prayer-times/tool.tsx',import.meta.url),'utf8');
   assert.match(tool,/useState\(''\); const \[asr/);
-  assert.match(tool,/A time zone does not identify your location/);
+  assert.match(en,/A time zone does not identify your location/);
   assert.match(tool,/onClick=\{\(\)=>\{setMethod\(example.method\);changed\(\);\}\}/);
 });
 
@@ -238,5 +243,6 @@ test('time zone confirmation checkbox has an accessible label and does not inher
   const tool=readFileSync(new URL('../app/companion/prayer-times/tool.tsx',import.meta.url),'utf8');
   assert.match(tool,/<label className="row"[^>]*><input type="checkbox"/);
   assert.match(tool,/width:'1\.25rem',height:'1\.25rem',flex:'0 0 1\.25rem'/);
-  assert.match(tool,/<span>My device time zone matches this location\.<\/span><\/label>/);
+  assert.match(tool,/<span>\{t\('companion\.prayerZoneConfirm'\)\}<\/span><\/label>/);
+  assert.match(en,/My device time zone matches this location\./);
 });

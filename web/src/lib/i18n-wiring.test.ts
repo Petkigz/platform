@@ -58,10 +58,12 @@ for (const [what, source] of FORMS) {
 
 test('the layout hands the reader’s own catalogue to every client component', () => {
   assert.match(LAYOUT, /import \{ I18nProvider \} from '@\/lib\/i18n\/client'/u);
-  assert.match(LAYOUT, /<I18nProvider locale=\{code\} messages=\{messagesFor\(code\)\}>/u);
-  // Only the reader's language is shipped. `messagesFor` merges English behind
-  // it, so a browser never receives thirty-three catalogues to display one.
-  assert.match(LAYOUT, /messagesFor\(code\)/u);
+  assert.match(LAYOUT, /<I18nProvider locale=\{code\} messages=\{shellMessagesFor\(code\)\}>/u);
+  // Only the reader's language is shipped. `shellMessagesFor` is `messagesFor`
+  // — the reader's catalogue with English behind it — without the companion
+  // tools' sentences, which their own pages hand over: a browser never receives
+  // fifty-one catalogues to display one, nor a prayer tool to display a shelf.
+  assert.match(LAYOUT, /shellMessagesFor\(code\)/u);
 });
 
 test('the sign-in screen reads differently in every other language', () => {

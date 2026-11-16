@@ -59,7 +59,22 @@ try {
     assert.equal(html.includes('>Calculate today</button>'),visible,`flag ${state}`);
     if(!visible) assert.match(html,/Calculated prayer times are not switched on/);
   }
-  console.log('Prayer route HTTP smoke passed: anonymous redirect, off/on/off and simulated setting outage fail closed; responses are no-store. Synthetic Supabase only.');
+  // The same route in the reader's language. The cookie is the reader's own
+  // choice from /language; the header is what the device asked for. Both must
+  // reach the server page and the client tool, and English must not be left
+  // behind on either. This proves the wiring, not the quality of the wording.
+  for(const [headers,button,off] of [
+    [{cookie:`${cookie}; ayahspring_locale=ar`},'احسب اليوم','أوقات الصلاة المحسوبة غير مفعّلة.'],
+    [{cookie,'accept-language':'sw'},'Hesabu leo','Nyakati za sala zilizohesabiwa hazijawashwa.'],
+  ]) {
+    flag='on';let html=await (await request(headers)).text();
+    assert.ok(html.includes(`>${button}</button>`),`translated calculate button missing: ${button}`);
+    assert.ok(!html.includes('>Calculate today</button>'),'English button left on a translated page');
+    flag='off';html=await (await request(headers)).text();
+    assert.ok(html.includes(off),`translated switched-off sentence missing: ${off}`);
+    assert.ok(!html.includes(`>${button}</button>`),'tool rendered while switched off');
+  }
+  console.log('Prayer route HTTP smoke passed: anonymous redirect, off/on/off and simulated setting outage fail closed; responses are no-store; Arabic (cookie) and Swahili (device header) render translated. Synthetic Supabase only.');
 } catch(e) {console.error(logs);throw e;}
 finally {
   try {process.kill(-next.pid,'SIGTERM');} catch { /* already exited */ }

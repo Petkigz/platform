@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { cookies, headers } from 'next/headers';
 import { ClaimLearner } from '@/components/claim-learner';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -10,6 +11,7 @@ import { fetchEngagement } from '@/lib/engagement';
 import { describeReason, describeWhen, type LiveSession } from '@/lib/live';
 import { EngagementStrip } from '@/components/engagement-strip';
 import { isFlagEnabled } from '@/lib/flags';
+import { LOCALE_COOKIE, chooseLocale, translator } from '@/lib/i18n';
 import { loadLearnerDashboardExtras } from '@/lib/learner-dashboard-work';
 
 export const dynamic = 'force-dynamic';
@@ -77,6 +79,17 @@ export default async function LearnPage() {
   } = await supabase.auth.getUser();
 
   if (!user) redirect('/sign-in?next=/learn');
+
+  // The companion cards are written in the reader's language, like the rest of
+  // the interface. The cookie is the reader's own choice from `/language`; the
+  // header is what the device asked for before they met us.
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code: locale } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  const t = translator(locale);
 
   // Authentication precedes every read. Independent requests use this same
   // request-scoped client, preserving RLS and avoiding shared user caches.
@@ -213,25 +226,25 @@ export default async function LearnPage() {
 
       {prayerTimesOn && (
         <section className="card" style={{ marginTop: '1.25rem' }}>
-          <h2 style={{ marginTop: 0 }}>Calculated prayer times</h2>
-          <p className="muted">Estimate times on your device and check them with your local community.</p>
-          <Link href="/companion/prayer-times">Open prayer times</Link>
+          <h2 style={{ marginTop: 0 }}>{t('companion.prayerTitle')}</h2>
+          <p className="muted">{t('companion.cardPrayerBody')}</p>
+          <Link href="/companion/prayer-times">{t('companion.cardPrayerLink')}</Link>
         </section>
       )}
 
       {hijriOn && (
         <section className="card" style={{ marginTop: '1.25rem' }}>
-          <h2 style={{ marginTop: 0 }}>Calculated Hijri date</h2>
-          <p className="muted">See a labelled Umm al-Qura civil date; local announcements may differ.</p>
-          <Link href="/companion/hijri">Open the date display</Link>
+          <h2 style={{ marginTop: 0 }}>{t('companion.hijriTitle')}</h2>
+          <p className="muted">{t('companion.cardHijriBody')}</p>
+          <Link href="/companion/hijri">{t('companion.cardHijriLink')}</Link>
         </section>
       )}
 
       {counterOn && (
         <section className="card" style={{ marginTop: '1.25rem' }}>
-          <h2 style={{ marginTop: 0 }}>Private counter</h2>
-          <p className="muted">Keep a count on this page without saving it to your account.</p>
-          <Link href="/companion/counter">Open the counter</Link>
+          <h2 style={{ marginTop: 0 }}>{t('companion.counterTitle')}</h2>
+          <p className="muted">{t('companion.cardCounterBody')}</p>
+          <Link href="/companion/counter">{t('companion.cardCounterLink')}</Link>
         </section>
       )}
 

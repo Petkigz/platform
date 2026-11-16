@@ -4,7 +4,7 @@ import { cookies, headers } from 'next/headers';
 
 import { A11Y_BOOT } from '@/lib/a11y';
 import {
-  LOCALE_COOKIE, chooseLocale, directionOf, localeByCode, messagesFor, translator,
+  LOCALE_COOKIE, chooseLocale, directionOf, localeByCode, shellMessagesFor, translator,
 } from '@/lib/i18n';
 import { I18nProvider } from '@/lib/i18n/client';
 import Link from 'next/link';
@@ -157,9 +157,11 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
 
         {/* The one catalogue the reader needs, handed to every client
             component below: a form is in the same language as the page that
-            opened it, and no other language is shipped to their browser. */}
+            opened it, and no other language is shipped to their browser.
+            The companion tools' sentences are left out here and handed over
+            by their own pages, so no other page pays for them. */}
         <main id="main">
-          <I18nProvider locale={code} messages={messagesFor(code)}>
+          <I18nProvider locale={code} messages={shellMessagesFor(code)}>
             {children}
           </I18nProvider>
         </main>

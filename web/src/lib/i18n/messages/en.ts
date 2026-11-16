@@ -262,6 +262,115 @@ export const en = {
   'home.closingSignedIn':
     'Every published course is listed with what it contains and who teaches it. Your enrolments, progress and certificates are in one place.',
 
+  // The companion tools: prayer times, the Hijri date and the private counter.
+  // These three screens sit behind the `companion.*` flags, and they were the
+  // last surfaces on the site written in English — the wrong place to leave
+  // them, because a reader who chose their language for the shelf should not
+  // meet English when they open the tool they actually came for. The prayer
+  // names (Fajr, Dhuhr) and the calculation method names are proper names and
+  // stay as they are, the way a brand does.
+  'companion.eyebrow': 'Companion',
+  'companion.backToLearning': 'Back to my learning',
+  'companion.prayerTitle': 'Calculated prayer times',
+  'companion.prayerOff': 'Calculated prayer times are not switched on.',
+  'companion.hijriTitle': 'Calculated Hijri date',
+  'companion.hijriOff': 'The calculated date display is not switched on.',
+  'companion.counterTitle': 'Private counter',
+  'companion.counterOff': 'The private counter is not switched on.',
+  'companion.counterLede': 'A simple tool for keeping a count while this page is open.',
+  'companion.counterPrivacy':
+    'Your count is not saved or sent to AyahSpring. Reloading clears it. Your browser may temporarily restore the page if you navigate back. It does not sync across devices or accounts.',
+  'companion.cardPrayerBody': 'Estimate times on your device and check them with your local community.',
+  'companion.cardPrayerLink': 'Open prayer times',
+  'companion.cardHijriBody': 'See a labelled Umm al-Qura civil date; local announcements may differ.',
+  'companion.cardHijriLink': 'Open the date display',
+  'companion.cardCounterBody': 'Keep a count on this page without saving it to your account.',
+  'companion.cardCounterLink': 'Open the counter',
+
+  'companion.prayerHeading': "Today's estimated times",
+  'companion.prayerLede':
+    'Calculations may differ from your mosque or local authority. Confirm prayer times and calculation choices with your community, especially at high latitudes. Sunrise is shown for reference; it is not a prayer.',
+  'companion.prayerPrivacy':
+    'Location is used on this device and is not saved or sent to AyahSpring. Your browser or operating system may use a location provider. Reloading clears the entries; browser back navigation may restore them.',
+  'companion.prayerLocating': 'Finding location…',
+  'companion.prayerUseLocation': 'Use device location',
+  'companion.prayerLatitude': 'Latitude',
+  'companion.prayerLongitude': 'Longitude',
+  'companion.prayerMethodIntro':
+    'Choose a method used by your community. The calculation library suggests the Moonsighting Committee method for North America and the UK, but this is not a local-authority ruling.',
+  'companion.prayerExample':
+    'Your device is set to {zone}. If your location is in {place}, you could consider {method}; check your mosque or local authority first. A time zone does not identify your location, and other methods may be used there.',
+  'companion.prayerUseMethod': 'Use this method',
+  'companion.prayerMethodLabel': 'Calculation method',
+  'companion.prayerMethodChoose': 'Choose a method',
+  'companion.prayerSingaporeBefore':
+    'This calculation is not the official Singapore timetable and can differ by minutes. For Singapore, check the',
+  'companion.prayerSingaporeLink': 'MUIS prayer timetable',
+  'companion.prayerSingaporeAfter': 'especially around the start or end of a prayer time.',
+  'companion.prayerAsrLabel': 'Asr calculation',
+  'companion.prayerAsrChoose': 'Choose an Asr method',
+  'companion.prayerAsrStandard': 'Standard (earlier)',
+  'companion.prayerAsrHanafi': 'Hanafi (later)',
+  'companion.prayerAsrNote':
+    'Standard uses a shadow factor of one; Hanafi uses a factor of two, in addition to the noon shadow. Ask your community if you are unsure.',
+  'companion.prayerMoonsightingNote':
+    'This method uses its own seasonal adjustments and a one-seventh approximation at northern latitudes of 55° or above; no separate night rule is needed.',
+  'companion.prayerNightLabel': 'High-latitude night rule',
+  'companion.prayerNightChoose': 'Choose a night rule',
+  'companion.prayerNightMiddle': 'Middle of the night',
+  'companion.prayerNightSeventh': 'One seventh of the night',
+  'companion.prayerNightAngle': 'Twilight angle',
+  'companion.prayerNightNote':
+    'These rules divide the night to limit Fajr and Isha: one half, one seventh, or a portion based on the twilight angle. They can apply even outside polar regions. Ask your community which rule it follows.',
+  'companion.prayerNoPolar':
+    'No polar fallback is applied. If a complete set of times cannot be calculated, consult your local mosque or authority.',
+  'companion.prayerZone': 'Your device time zone is {zone}. It must match the coordinates, including daylight saving.',
+  'companion.prayerZoneUnavailable': 'unavailable',
+  'companion.prayerZoneConfirm': 'My device time zone matches this location.',
+  'companion.prayerCalculate': 'Calculate today',
+  'companion.prayerTimesFor': 'Times for {date}',
+  'companion.prayerSummary': '{zone} · {method} · Asr: {asr} · Night rule: {night}',
+  'companion.prayerSummaryMoonsighting': 'Moonsighting Committee seasonal rule',
+  'companion.prayerResultNote':
+    'Times do not recalculate automatically. Check the date and recalculate after a location or time-zone change. An old display is cleared when a date or zone change is detected.',
+  'companion.prayerMsgZoneChanged':
+    'The device time zone changed. Check your location, method and time zone before calculating.',
+  'companion.prayerMsgDateChanged': 'The date changed. Check your settings and calculate again.',
+  'companion.prayerMsgNoGeo': 'Location is not available in this browser. You can enter coordinates manually.',
+  'companion.prayerMsgLocationReceived':
+    'Location received. Estimated accuracy: {accuracy} metres. Check that this location and your device time zone are correct.',
+  'companion.prayerMsgLocationDenied':
+    'Location was unavailable or permission was denied. You can enter coordinates manually.',
+  'companion.prayerMsgIncomplete':
+    'Enter coordinates, choose the calculation settings and confirm your device time zone.',
+  'companion.prayerMsgRange': 'Enter a latitude between −90 and 90 and a longitude between −180 and 180.',
+  'companion.prayerMsgZoneUnknown': 'Your device time zone could not be identified.',
+  'companion.prayerMsgZoneChangedAgain': 'Your device time zone changed. Check it and confirm again.',
+  'companion.prayerMsgCannotCalculate':
+    'A complete, consistent set of times could not be calculated for this location and date. At high latitudes normal solar events can be unavailable or fall in an unexpected order. Check the location and time zone and follow a timetable from your local mosque or authority. No polar approximation has been applied.',
+
+  'companion.hijriHeading': 'Umm al-Qura civil calendar',
+  'companion.hijriLede':
+    "This is a calculated civil date, not a moon-sighting announcement. Local religious dates may differ; check your community's announcements for Ramadan, Eid and other observances.",
+  'companion.hijriClock':
+    "The date uses your device's clock and time zone and changes at midnight, not sunset. Browser calendar data may vary. Refresh to update the date.",
+  'companion.hijriLoading': 'Loading date…',
+  'companion.hijriUnsupported': 'This browser cannot display this calendar.',
+  'companion.hijriDeviceDate': 'Device civil date: {date}',
+  'companion.hijriRefresh': 'Refresh date',
+
+  'companion.counterHeading': 'Your count',
+  'companion.counterToolLede': 'Use this for a count of your choice. There is no required target.',
+  'companion.counterCurrent': 'Current count',
+  'companion.counterOne': 'Count one',
+  'companion.counterUndo': 'Undo one',
+  'companion.counterReset': 'Reset',
+  'companion.counterConfirmLabel': 'Confirm reset',
+  'companion.counterConfirmQuestion': 'Reset this count to zero?',
+  'companion.counterYes': 'Yes, reset',
+  'companion.counterKeep': 'Keep count',
+  'companion.counterLimit': 'The counter has reached its limit.',
+
   'language.reviewed': 'A first-language speaker has read this translation.',
   // Between "nobody has read this" and "somebody has". A part read is a real
   // fact and it is not the whole claim, so it gets its own sentence rather than

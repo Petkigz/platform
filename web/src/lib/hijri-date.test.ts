@@ -14,8 +14,10 @@ test('page and dashboard independently gate the display and explain its limits',
   const page=readFileSync(new URL('../app/companion/hijri/page.tsx',import.meta.url),'utf8');
   const view=readFileSync(new URL('../app/companion/hijri/view.tsx',import.meta.url),'utf8');
   const dashboard=readFileSync(new URL('../app/learn/page.tsx',import.meta.url),'utf8');
+  // The limits are catalogue sentences now; the view asks the catalogue for them.
+  const en=readFileSync(new URL('./i18n/messages/en.ts',import.meta.url),'utf8');
   assert.match(page,/isFlagEnabled\(supabase,'companion\.hijri_date'\)/);
   assert.match(dashboard,/hijriOn &&/);
-  assert.match(view,/not sunset/); assert.match(view,/announcements/);
+  assert.match(en,/not sunset/); assert.match(en,/announcements/);
   assert.doesNotMatch(view,/localStorage|sessionStorage|fetch\(|geolocation/);
 });

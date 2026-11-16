@@ -52,6 +52,32 @@ export function messagesFor(code: LocaleCode): Messages {
 }
 
 /**
+ * The sentences only the companion tools read.
+ *
+ * The layout serialises its catalogue into every page so client components can
+ * translate. The prayer tool alone is eighty sentences — more than a third of
+ * the whole catalogue — and it sits behind a switch that ships off, so sending
+ * it with the front page would charge every reader for a screen most of them
+ * cannot open. The shell carries everything else; the three companion pages
+ * hand these to their own tool.
+ */
+const COMPANION_PREFIX = 'companion.';
+
+/** Everything a client component outside the companion pages can ask for. */
+export function shellMessagesFor(code: LocaleCode): Partial<Messages> {
+  return Object.fromEntries(
+    Object.entries(messagesFor(code)).filter(([key]) => !key.startsWith(COMPANION_PREFIX)),
+  ) as Partial<Messages>;
+}
+
+/** The companion sentences alone, for the provider on a companion page. */
+export function companionMessagesFor(code: LocaleCode): Partial<Messages> {
+  return Object.fromEntries(
+    Object.entries(messagesFor(code)).filter(([key]) => key.startsWith(COMPANION_PREFIX)),
+  ) as Partial<Messages>;
+}
+
+/**
  * A `t()` for one language.
  *
  * Every lookup falls back to English, so a key that nobody has translated yet

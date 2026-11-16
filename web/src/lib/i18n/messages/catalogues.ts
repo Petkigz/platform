@@ -15,6 +15,7 @@ import { HOME_AFRICA_EAST } from './home-africa-east.ts';
 import { HOME_AFRICA_SOUTH } from './home-africa-south.ts';
 import { HOME_AFRICA_WEST } from './home-africa-west.ts';
 import { HOME_WORLD } from './home-world.ts';
+import { COMPANION } from './companion.ts';
 import { ASIA_AZ } from './asia-az.ts';
 import { ASIA_CENTRAL } from './asia-uz.ts';
 import { ASIA_KK } from './asia-kk.ts';
@@ -775,4 +776,8 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   ASIA_VI,
   ASIA_FIL,
   ASIA_MY,
+  // The companion tools: prayer times, the Hijri date and the private counter.
+  // They were the last surfaces on the site written in English, so they got a
+  // whole file rather than a screen at a time.
+  COMPANION,
 );

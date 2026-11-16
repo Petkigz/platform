@@ -1,9 +1,25 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { calculatePrayerTimesForDeviceDay, methodExampleForZone, methods, selectedNightRule, type Asr, type Method } from '@/lib/prayer-calculation';
+import { calculatePrayerTimesForDeviceDay, methodExampleForZone, methods, selectedNightRule, type Asr, type Method, type NightRule } from '@/lib/prayer-calculation';
+import { useLocaleCode, useT } from '@/lib/i18n/client';
 
-type Result = { lines: readonly (readonly [string,string])[]; date:string; zone:string; method:string; asr:string; night:string };
+type Result = { lines: readonly (readonly [string,string])[]; date:string; zone:string; method:string; asr:Asr; night:NightRule };
+
+/** A number as this language writes it, with English behind a bad tag. */
+function number(locale: string, value: number): string {
+  try { return new Intl.NumberFormat(locale).format(value); }
+  catch { return String(value); }
+}
+
+/** A date in this language, with English behind a bad tag. */
+function date(locale: string, options: Intl.DateTimeFormatOptions, value: Date): string {
+  try { return new Intl.DateTimeFormat(locale, options).format(value); }
+  catch { return new Intl.DateTimeFormat('en', options).format(value); }
+}
+
 export function PrayerTimesTool() {
+  const t = useT();
+  const locale = useLocaleCode();
   const [latitude,setLatitude]=useState(''); const [longitude,setLongitude]=useState('');
   const [method,setMethod]=useState(''); const [asr,setAsr]=useState(''); const [night,setNight]=useState('');
   const [confirmZone,setConfirmZone]=useState(false); const [message,setMessage]=useState('');
@@ -16,76 +32,76 @@ export function PrayerTimesTool() {
       const zone=Intl.DateTimeFormat().resolvedOptions().timeZone || '';
       if(zone!==deviceZone) {
         setDeviceZone(zone); setConfirmZone(false); setResult(null);
-        setMessage('The device time zone changed. Check your location, method and time zone before calculating.');
+        setMessage(t('companion.prayerMsgZoneChanged'));
         return;
       }
       if(!result) return;
       let day='';
-      try { day=new Intl.DateTimeFormat('en',{timeZone:zone,dateStyle:'full'}).format(new Date()); } catch { /* Fail closed if the zone is invalid. */ }
+      try { day=date(locale,{timeZone:zone,dateStyle:'full'},new Date()); } catch { /* Fail closed if the zone is invalid. */ }
       if(day!==result.date) {
         setResult(null);
-        setMessage('The date changed. Check your settings and calculate again.');
+        setMessage(t('companion.prayerMsgDateChanged'));
       }
     }
     const timer=window.setInterval(invalidateIfOutdated,60000);
     window.addEventListener('focus',invalidateIfOutdated);
     document.addEventListener('visibilitychange',invalidateIfOutdated);
     return ()=>{window.clearInterval(timer);window.removeEventListener('focus',invalidateIfOutdated);document.removeEventListener('visibilitychange',invalidateIfOutdated);};
-  },[result,deviceZone]);
+  },[result,deviceZone,t,locale]);
   function locate() {
     // A new request replaces the old location even if permission is denied or
     // the browser times out. Never let a failed refresh reuse stale coordinates.
     setResult(null); setMessage(''); setLatitude(''); setLongitude(''); setConfirmZone(false);
-    if (!navigator.geolocation) { setMessage('Location is not available in this browser. You can enter coordinates manually.'); return; }
+    if (!navigator.geolocation) { setMessage(t('companion.prayerMsgNoGeo')); return; }
     setLocating(true);
     navigator.geolocation.getCurrentPosition(position=>{
       setLatitude(String(position.coords.latitude)); setLongitude(String(position.coords.longitude));
       setLocating(false); setConfirmZone(false);
-      setMessage(`Location received. Estimated accuracy: ${Math.round(position.coords.accuracy)} metres. Check that this location and your device time zone are correct.`);
-    },()=>{setLocating(false);setMessage('Location was unavailable or permission was denied. You can enter coordinates manually.');}, {enableHighAccuracy:false,timeout:15000,maximumAge:0});
+      setMessage(t('companion.prayerMsgLocationReceived', { accuracy: number(locale, Math.round(position.coords.accuracy)) }));
+    },()=>{setLocating(false);setMessage(t('companion.prayerMsgLocationDenied'));}, {enableHighAccuracy:false,timeout:15000,maximumAge:0});
   }
   function calculate() {
     setResult(null); setMessage('');
     const nightRule=selectedNightRule(method,night);
-    if(!latitude.trim() || !longitude.trim() || !method || !asr || !nightRule || !confirmZone) {setMessage('Enter coordinates, choose the calculation settings and confirm your device time zone.');return;}
+    if(!latitude.trim() || !longitude.trim() || !method || !asr || !nightRule || !confirmZone) {setMessage(t('companion.prayerMsgIncomplete'));return;}
     const lat=Number(latitude); const lon=Number(longitude); const now=new Date();
-    if(!Number.isFinite(lat) || Math.abs(lat)>90 || !Number.isFinite(lon) || Math.abs(lon)>180) {setMessage('Enter a latitude between −90 and 90 and a longitude between −180 and 180.');return;}
+    if(!Number.isFinite(lat) || Math.abs(lat)>90 || !Number.isFinite(lon) || Math.abs(lon)>180) {setMessage(t('companion.prayerMsgRange'));return;}
     const zone=Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if(!zone) {setMessage('Your device time zone could not be identified.');return;}
-    if(zone!==deviceZone) {setDeviceZone(zone);setConfirmZone(false);setMessage('Your device time zone changed. Check it and confirm again.');return;}
+    if(!zone) {setMessage(t('companion.prayerMsgZoneUnknown'));return;}
+    if(zone!==deviceZone) {setDeviceZone(zone);setConfirmZone(false);setMessage(t('companion.prayerMsgZoneChangedAgain'));return;}
     const times=calculatePrayerTimesForDeviceDay(lat,lon,now,zone,method as Method,asr as Asr,nightRule);
-    if(!times) {setMessage('A complete, consistent set of times could not be calculated for this location and date. At high latitudes normal solar events can be unavailable or fall in an unexpected order. Check the location and time zone and follow a timetable from your local mosque or authority. No polar approximation has been applied.');return;}
-    const fmt=new Intl.DateTimeFormat('en', { timeZone:zone, year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short' });
-    setResult({lines:times.map(([name,time])=>[name,fmt.format(time)] as const),date:new Intl.DateTimeFormat('en',{timeZone:zone,dateStyle:'full'}).format(now),zone,method:methods[method as Method],asr:asr==='hanafi'?'Hanafi (later)':'Standard (earlier)',night:night==='middle'?'Middle of the night':night==='seventh'?'One seventh of the night':'Twilight angle'});
+    if(!times) {setMessage(t('companion.prayerMsgCannotCalculate'));return;}
+    const fmtOptions: Intl.DateTimeFormatOptions = { timeZone:zone, year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short' };
+    setResult({lines:times.map(([name,time])=>[name,date(locale,fmtOptions,time)] as const),date:date(locale,{timeZone:zone,dateStyle:'full'},now),zone,method:methods[method as Method],asr:asr as Asr,night:nightRule});
   }
   const changed=()=>{setResult(null);setMessage('');};
   const example=methodExampleForZone(deviceZone);
   return <section className="card" aria-labelledby="prayer-heading">
-    <h2 id="prayer-heading">Today’s estimated times</h2>
-    <p>Calculations may differ from your mosque or local authority. Confirm prayer times and calculation choices with your community, especially at high latitudes. Sunrise is shown for reference; it is not a prayer.</p>
-    <p>Location is used on this device and is not saved or sent to AyahSpring. Your browser or operating system may use a location provider. Reloading clears the entries; browser back navigation may restore them.</p>
-    <button type="button" className="btn secondary" onClick={locate} disabled={locating}>{locating?'Finding location…':'Use device location'}</button>
-    <div><label htmlFor="latitude">Latitude</label><input id="latitude" type="number" min="-90" max="90" step="any" disabled={locating} value={latitude} onChange={e=>{setLatitude(e.target.value);setConfirmZone(false);changed();}} /></div>
-    <div><label htmlFor="longitude">Longitude</label><input id="longitude" type="number" min="-180" max="180" step="any" disabled={locating} value={longitude} onChange={e=>{setLongitude(e.target.value);setConfirmZone(false);changed();}} /></div>
-    <p>Choose a method used by your community. The calculation library suggests the Moonsighting Committee method for North America and the UK, but this is not a local-authority ruling.</p>
+    <h2 id="prayer-heading">{t('companion.prayerHeading')}</h2>
+    <p>{t('companion.prayerLede')}</p>
+    <p>{t('companion.prayerPrivacy')}</p>
+    <button type="button" className="btn secondary" onClick={locate} disabled={locating}>{locating?t('companion.prayerLocating'):t('companion.prayerUseLocation')}</button>
+    <div><label htmlFor="latitude">{t('companion.prayerLatitude')}</label><input id="latitude" type="number" min="-90" max="90" step="any" disabled={locating} value={latitude} onChange={e=>{setLatitude(e.target.value);setConfirmZone(false);changed();}} /></div>
+    <div><label htmlFor="longitude">{t('companion.prayerLongitude')}</label><input id="longitude" type="number" min="-180" max="180" step="any" disabled={locating} value={longitude} onChange={e=>{setLongitude(e.target.value);setConfirmZone(false);changed();}} /></div>
+    <p>{t('companion.prayerMethodIntro')}</p>
     {example && <div className="notice">
-      <p>Your device is set to {deviceZone}. If your location is in {example.place}, you could consider {methods[example.method]}; check your mosque or local authority first. A time zone does not identify your location, and other methods may be used there.</p>
-      <button type="button" className="btn secondary" onClick={()=>{setMethod(example.method);changed();}}>Use this method</button>
+      <p>{t('companion.prayerExample', { zone: deviceZone, place: example.place, method: methods[example.method] })}</p>
+      <button type="button" className="btn secondary" onClick={()=>{setMethod(example.method);changed();}}>{t('companion.prayerUseMethod')}</button>
     </div>}
 
-    <div><label htmlFor="method">Calculation method</label><select id="method" value={method} onChange={e=>{setMethod(e.target.value);changed();}}><option value="">Choose a method</option>{Object.entries(methods).map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></div>
-    {method==='Singapore' && <p className="notice">This calculation is not the official Singapore timetable and can differ by minutes. For Singapore, check the <a href="https://www.muis.gov.sg/resources/islamic-calendar/" target="_blank" rel="noopener noreferrer">MUIS prayer timetable</a>, especially around the start or end of a prayer time.</p>}
-    <div><label htmlFor="asr">Asr calculation</label><select id="asr" aria-describedby="asr-explanation" value={asr} onChange={e=>{setAsr(e.target.value);changed();}}><option value="">Choose an Asr method</option><option value="standard">Standard (earlier)</option><option value="hanafi">Hanafi (later)</option></select></div>
-    <p id="asr-explanation">Standard uses a shadow factor of one; Hanafi uses a factor of two, in addition to the noon shadow. Ask your community if you are unsure.</p>
-    {method==='MoonsightingCommittee' ? <p>This method uses its own seasonal adjustments and a one-seventh approximation at northern latitudes of 55° or above; no separate night rule is needed.</p> : <>
-      <div><label htmlFor="night">High-latitude night rule</label><select id="night" aria-describedby="night-explanation" value={night} onChange={e=>{setNight(e.target.value);changed();}}><option value="">Choose a night rule</option><option value="middle">Middle of the night</option><option value="seventh">One seventh of the night</option><option value="angle">Twilight angle</option></select></div>
-      <p id="night-explanation">These rules divide the night to limit Fajr and Isha: one half, one seventh, or a portion based on the twilight angle. They can apply even outside polar regions. Ask your community which rule it follows.</p>
+    <div><label htmlFor="method">{t('companion.prayerMethodLabel')}</label><select id="method" value={method} onChange={e=>{setMethod(e.target.value);changed();}}><option value="">{t('companion.prayerMethodChoose')}</option>{Object.entries(methods).map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></div>
+    {method==='Singapore' && <p className="notice">{t('companion.prayerSingaporeBefore')} <a href="https://www.muis.gov.sg/resources/islamic-calendar/" target="_blank" rel="noopener noreferrer">{t('companion.prayerSingaporeLink')}</a> {t('companion.prayerSingaporeAfter')}</p>}
+    <div><label htmlFor="asr">{t('companion.prayerAsrLabel')}</label><select id="asr" aria-describedby="asr-explanation" value={asr} onChange={e=>{setAsr(e.target.value);changed();}}><option value="">{t('companion.prayerAsrChoose')}</option><option value="standard">{t('companion.prayerAsrStandard')}</option><option value="hanafi">{t('companion.prayerAsrHanafi')}</option></select></div>
+    <p id="asr-explanation">{t('companion.prayerAsrNote')}</p>
+    {method==='MoonsightingCommittee' ? <p>{t('companion.prayerMoonsightingNote')}</p> : <>
+      <div><label htmlFor="night">{t('companion.prayerNightLabel')}</label><select id="night" aria-describedby="night-explanation" value={night} onChange={e=>{setNight(e.target.value);changed();}}><option value="">{t('companion.prayerNightChoose')}</option><option value="middle">{t('companion.prayerNightMiddle')}</option><option value="seventh">{t('companion.prayerNightSeventh')}</option><option value="angle">{t('companion.prayerNightAngle')}</option></select></div>
+      <p id="night-explanation">{t('companion.prayerNightNote')}</p>
     </>}
-    <p>No polar fallback is applied. If a complete set of times cannot be calculated, consult your local mosque or authority.</p>
-    <p>Your device time zone is <strong>{deviceZone || 'unavailable'}</strong>. It must match the coordinates, including daylight saving.</p>
-    <label className="row" style={{alignItems:'center',paddingBlock:'0.5rem'}}><input type="checkbox" checked={confirmZone} onChange={e=>{setConfirmZone(e.target.checked);changed();}} style={{width:'1.25rem',height:'1.25rem',flex:'0 0 1.25rem',margin:0}} /><span>My device time zone matches this location.</span></label>
-    <p><button type="button" className="btn" onClick={calculate} disabled={locating}>Calculate today</button></p>
+    <p>{t('companion.prayerNoPolar')}</p>
+    <p>{t('companion.prayerZone', { zone: deviceZone || t('companion.prayerZoneUnavailable') })}</p>
+    <label className="row" style={{alignItems:'center',paddingBlock:'0.5rem'}}><input type="checkbox" checked={confirmZone} onChange={e=>{setConfirmZone(e.target.checked);changed();}} style={{width:'1.25rem',height:'1.25rem',flex:'0 0 1.25rem',margin:0}} /><span>{t('companion.prayerZoneConfirm')}</span></label>
+    <p><button type="button" className="btn" onClick={calculate} disabled={locating}>{t('companion.prayerCalculate')}</button></p>
     {message && <p className="notice" role="status">{message}</p>}
-    {result && <div aria-live="polite"><h3>Times for {result.date}</h3><p>{result.zone} · {result.method} · Asr: {result.asr} · Night rule: {result.method==='Moonsighting Committee'?'Moonsighting Committee seasonal rule':result.night}</p><ul>{result.lines.map(([name,time])=><li key={name}><strong>{name}:</strong> {time}</li>)}</ul><p>Times do not recalculate automatically. Check the date and recalculate after a location or time-zone change. An old display is cleared when a date or zone change is detected.</p></div>}
+    {result && <div aria-live="polite"><h3>{t('companion.prayerTimesFor', { date: result.date })}</h3><p>{t('companion.prayerSummary', { zone: result.zone, method: result.method, asr: result.asr==='hanafi' ? t('companion.prayerAsrHanafi') : t('companion.prayerAsrStandard'), night: result.method==='Moonsighting Committee' ? t('companion.prayerSummaryMoonsighting') : result.night==='middle' ? t('companion.prayerNightMiddle') : result.night==='seventh' ? t('companion.prayerNightSeventh') : t('companion.prayerNightAngle') })}</p><ul>{result.lines.map(([name,time])=><li key={name}><strong>{name}:</strong> {time}</li>)}</ul><p>{t('companion.prayerResultNote')}</p></div>}
   </section>;
 }

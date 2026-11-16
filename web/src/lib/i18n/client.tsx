@@ -29,21 +29,33 @@ type Value = { locale: LocaleCode; t: (key: MessageKey, vars?: Record<string, st
 
 const I18nContext = createContext<Value | null>(null);
 
+/**
+ * **A provider may carry part of the catalogue.** The layout's provider holds
+ * everything except the companion tools' sentences; a companion page wraps its
+ * tool in a second provider that holds only those. A key this provider does not
+ * have is asked of the one above it, and English is behind the last of them —
+ * so a nested provider adds sentences and can never take one away.
+ */
 export function I18nProvider({
   locale,
   messages,
   children,
 }: {
   locale: LocaleCode;
-  messages: Messages;
+  messages: Partial<Messages>;
   children: ReactNode;
 }) {
+  const parent = useContext(I18nContext);
   const value = useMemo<Value>(
     () => ({
       locale,
-      t: (key, vars) => fill(messages[key] ?? en[key], vars),
+      t: (key, vars) => {
+        const own = messages[key];
+        if (own !== undefined) return fill(own, vars);
+        return parent ? parent.t(key, vars) : fill(en[key], vars);
+      },
     }),
-    [locale, messages],
+    [locale, messages, parent],
   );
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;

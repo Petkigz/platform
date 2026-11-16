@@ -406,6 +406,59 @@ that calculation cannot proceed without a new location. This is not a real
 browser or location-provider test. A separate source-level regression checks
 that the reset occurs before any browser outcome.
 
+**Companion screens in the reader's language (2026-10-15).** The prayer tool,
+the Hijri date, the private counter, their three pages and the three dashboard
+cards were the last learner screens written only in English. Their 80 sentences
+now live in the catalogue (`companion.*` in `web/src/lib/i18n/messages/en.ts`)
+with a translation for each of the 50 other languages in
+`web/src/lib/i18n/messages/companion.ts`. Dates, times and the accuracy figure
+are formatted for the reader's language; the prayer names and the calculation
+method names are proper names and are left as they are.
+`web/src/lib/companion-i18n.test.ts` fails if a language is short a sentence or
+if an English sentence is written back into a component, and
+`npm run test:prayer-route` now renders the real route in Arabic (chosen by
+cookie) and Swahili (asked for by the device) and refuses an English button on
+either.
+
+**No other page pays for them.** The layout serialises the reader's catalogue
+into every page so client components can translate, and the companion sentences
+are more than a third of all the words (about 7 KB in English, 18 KB in Burmese,
+before compression). The first version of this change shipped them with every
+page; the dashboard smoke test caught it by finding "Open prayer times" on a
+page whose switch was off. The layout now sends `shellMessagesFor()` — the
+catalogue without `companion.*` — and each companion page wraps its tool in a
+second provider holding only `companionMessagesFor()`. A nested provider asks
+the one above it for anything it lacks, so it can add sentences and never
+remove one. The English source for these sentences is still in the shared
+client script, where it is fetched once and cached rather than sent per page.
+
+**What that does not establish.** Every one of these translations was written
+by the builder and none has been read by a first-language speaker, so every
+language still says so on `/language`. Confidence is uneven, and the screens
+carry religious caveats where a wrong word matters more than usual:
+
+- Reasonable confidence, still unreviewed: Arabic, Urdu, Persian, Dari, Turkish,
+  Indonesian, Malay, Bengali, Hindi, French, Spanish, Portuguese, Swahili,
+  Afrikaans, both Chinese scripts, Vietnamese, Thai, Filipino, Uzbek, Kazakh,
+  Azerbaijani, Tajik, Kyrgyz, Turkmen, Tamil, Nepali.
+- Low confidence, likely to contain wrong or unnatural wording: Wolof, Fulfulde,
+  Bambara, Dhivehi, Tigrinya, Amharic, Oromo, Somali, Igbo, Yoruba, Hausa,
+  Kinyarwanda, Luganda, Lingala, Malagasy, Chichewa, Shona, Sesotho, Zulu,
+  Xhosa, Pashto, Sinhala, Burmese. The Wolof, Fulfulde, Bambara and Dhivehi
+  texts in particular should be treated as placeholders that a speaker must
+  rewrite, not as translations to correct lightly.
+
+A self-review before commit found and fixed errors of exactly this kind: Hausa
+said "seventy" for "one seventh", Swahili said "sunset" where the sentence is
+about sunrise, Chichewa and Yoruba named the wrong fraction, Zulu and Xhosa had
+lost the minus signs from the coordinate range, and the Amharic and Dhivehi
+texts contained stray characters from other scripts. That those were found by
+the author rereading is a reason to expect more that were not. **Before a
+companion switch is turned on for a language in the low-confidence list, a
+first-language speaker should read its 80 lines** through the existing
+`/admin/translations` review loop. The switches ship off, so nothing here is
+reachable until the owner turns one on.
+
 The existing Supabase test project now has the initial 342 migrations applied
 via the owner-approved GitHub run `43611493767`. A subsequent read-only check
 found 185 public base tables and zero Auth users. The signup and child-identity
