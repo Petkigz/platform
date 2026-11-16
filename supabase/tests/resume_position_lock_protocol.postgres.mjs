@@ -18,16 +18,16 @@ try {
   const dir = new URL('../migrations/', import.meta.url);
   for (const file of (await readdir(dir)).filter((f) => f.endsWith('.sql')).sort()) await a.query(await readFile(new URL(file, dir), 'utf8'));
   const actor = randomUUID(), learner = randomUUID(), course = randomUUID(), v1 = randomUUID(), v2 = randomUUID();
-  const section = randomUUID(), lesson = randomUUID(), emptyLesson = randomUUID(), completionLesson = randomUUID(), enrolment = randomUUID();
-  const resourceA = randomUUID(), resourceB = randomUUID();
+  const section = randomUUID(), lesson = randomUUID(), emptyLesson = randomUUID(), completionLesson = randomUUID(), resourceCompletionLesson = randomUUID(), enrolment = randomUUID();
+  const resourceA = randomUUID(), resourceB = randomUUID(), completionResource = randomUUID();
   await a.query('insert into auth.users(id,email) values($1,$2)', [actor, `${actor}@example.test`]);
   await a.query("set session_replication_role='replica'");
   await a.query("insert into public.learner_profiles(id,linked_user_id,display_name,learner_type,age_band) values($1,$2,'Synthetic learner','adult','18+')", [learner, actor]);
   await a.query("insert into public.courses(id,slug,title,created_by) values($1,'resume-race','Synthetic course',$2)", [course, actor]);
   await a.query('insert into public.course_versions(id,course_id,version_number,created_by) values($1,$2,1,$3),($4,$2,2,$3)', [v1, course, actor, v2]);
   await a.query("insert into public.course_sections(id,course_version_id,title) values($1,$2,'Synthetic section')", [section, v1]);
-  await a.query("insert into public.lessons(id,section_id,title,position) values($1,$4,'First',1),($2,$4,'Second',2),($3,$4,'Third',3)", [lesson, emptyLesson, completionLesson, section]);
-  await a.query("insert into public.lesson_resources(id,lesson_id,resource_type,display_name,external_url,position) values($1,$3,'audio','First','https://example.invalid/a.mp3',1),($2,$3,'audio','Second','https://example.invalid/b.mp3',2)", [resourceA, resourceB, lesson]);
+  await a.query("insert into public.lessons(id,section_id,title,position) values($1,$5,'First',1),($2,$5,'Second',2),($3,$5,'Third',3),($4,$5,'Fourth',4)", [lesson, emptyLesson, completionLesson, resourceCompletionLesson, section]);
+  await a.query("insert into public.lesson_resources(id,lesson_id,resource_type,display_name,external_url,position) values($1,$3,'audio','First','https://example.invalid/a.mp3',1),($2,$3,'audio','Second','https://example.invalid/b.mp3',2),($4,$5,'audio','Fourth','https://example.invalid/c.mp3',1)", [resourceA, resourceB, lesson, completionResource, resourceCompletionLesson]);
   await a.query('insert into public.course_enrolments(id,learner_profile_id,course_id,course_version_id) values($1,$2,$3,$4)', [enrolment, learner, course, v1]);
   await a.query("insert into public.entitlement_grants(learner_profile_id,scope_type,course_version_id,source_type,status) values($1,'course_version',$2,'free','active')", [learner, v1]);
   await a.query("set session_replication_role='origin'");
@@ -83,6 +83,18 @@ try {
   const waitingOther = resourceWrite(b, resourceB, 90, null); await blocked(b, a);
   await a.query('commit'); const other = (await waitingOther).rows[0].r; await b.query('commit');
   assert.equal(resourceRewind.ok, true); assert.equal(other.ok, true); assert.equal(other.seconds, 90);
+  // First resource save competes with a completion-only parent insert. The
+  // insert wins, but the resource save can attach to it without undoing status.
+  await begin(a);
+  await a.query("insert into public.lesson_progress(course_enrolment_id,lesson_id,status,progress_percent,started_at,completed_at) values($1,$2,'completed',100,now(),now())", [enrolment, resourceCompletionLesson]);
+  await begin(b);
+  const waitingResourceCompletion = b.query('select public.compare_record_resource_position($1,$2,$3,$4,$5) r',
+    [enrolment, resourceCompletionLesson, completionResource, 42, null]);
+  await blocked(b, a); await a.query('commit');
+  const resourceCompletion = (await waitingResourceCompletion).rows[0].r; await b.query('commit');
+  assert.equal(resourceCompletion.ok, true); assert.equal(resourceCompletion.seconds, 42);
+  const completedParent = (await observer.query('select status,progress_percent,completed_at from public.lesson_progress where course_enrolment_id=$1 and lesson_id=$2', [enrolment, resourceCompletionLesson])).rows[0];
+  assert.equal(completedParent.status, 'completed'); assert.equal(Number(completedParent.progress_percent), 100); assert.ok(completedParent.completed_at);
   // The resource writer also rechecks the pin after waiting on the enrolment.
   await a.query('begin'); await a.query("set local app.bypassing_enrolment_pin='on'");
   await a.query('update public.course_enrolments set course_version_id=$2 where id=$1', [enrolment, v2]);

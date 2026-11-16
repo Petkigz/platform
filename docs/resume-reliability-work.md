@@ -49,7 +49,9 @@ change races. These do not prove all interleavings. Migration 1400 revokes the
 lesson-wide compare-and-write RPC from ordinary roles, while retaining read
 access for explicit review. It cannot cancel a statement already in flight;
 rollout must drain old workers and wait for old database transactions before
-enabling new writes. Do not deploy the foundation or app alone. Migration 1390 adds authorized recording positions to JSON,
+enabling new writes. Do not deploy the foundation or app alone. The proposed,
+not-yet-approved test sequence is in `docs/deploy/resume-rollout.md`.
+Migration 1390 adds authorized recording positions to JSON,
 CSV and print exports, with a 1,000-row cap and explicit count/truncation; the
 resume, export and support PGlite suites passed together (48 assertions),
 including a guardian-permission and cap check. The existing export audit event
@@ -137,7 +139,10 @@ Disposable real PostgreSQL run `43754670192` passed the updated
 privilege boundary and selected resource races. Its historical lesson-writer
 races used an explicitly temporary fixture grant; the resource races ran after
 the grant was revoked. These selected cases do not establish all races or hosted
-PostgREST/Auth/RLS behavior. Chromium run `43755476152` passed real audio seek,
+PostgREST/Auth/RLS behavior. Full CI run `43794868213` passed its web and
+repository jobs, but its full database job timed out at 30 minutes; it did not
+pass. A separate-process per-suite watchdog was added to identify a stall in the
+next full run rather than skipping the remaining suites. Chromium run `43755476152` passed real audio seek,
 competing-tab conflict and recovery after a failed response and reload against a
 synthetic HTTP server, as well as the synthetic lesson layout checks. It did
 not exercise abrupt browser termination, mobile browsers or hosted resume writes.
