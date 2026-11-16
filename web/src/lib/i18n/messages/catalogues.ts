@@ -16,6 +16,7 @@ import { HOME_AFRICA_SOUTH } from './home-africa-south.ts';
 import { HOME_AFRICA_WEST } from './home-africa-west.ts';
 import { HOME_WORLD } from './home-world.ts';
 import { COMPANION } from './companion.ts';
+import { isHeld } from './held.ts';
 import { ASIA_AZ } from './asia-az.ts';
 import { ASIA_CENTRAL } from './asia-uz.ts';
 import { ASIA_KK } from './asia-kk.ts';
@@ -731,7 +732,13 @@ const BASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
   },
 };
 
-export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
+/**
+ * Everything the files hold, held parts included.
+ *
+ * This is what a reviewer works from and what the audit reads. It is **not**
+ * what a reader is shown — that is `CATALOGUES`, below.
+ */
+export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   // The frame: navigation, footer, the language page.
   AFRICA_EAST,
   AFRICA_WEST,
@@ -780,4 +787,19 @@ export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   // They were the last surfaces on the site written in English, so they got a
   // whole file rather than a screen at a time.
   COMPANION,
+);
+
+/**
+ * What readers are served: `WRITTEN` without the parts held for review.
+ *
+ * A held key is simply absent, so everything downstream — `translator()`,
+ * `messagesFor()`, the coverage number — treats it exactly like a sentence
+ * nobody has translated: English on the page, and a lower percentage on
+ * `/language`. See `held.ts` for which parts, and why.
+ */
+export const CATALOGUES: Partial<Record<LocaleCode, Partial<Messages>>> = Object.fromEntries(
+  Object.entries(WRITTEN).map(([code, messages]) => [
+    code,
+    Object.fromEntries(Object.entries(messages ?? {}).filter(([key]) => !isHeld(code, key))),
+  ]),
 );

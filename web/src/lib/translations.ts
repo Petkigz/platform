@@ -274,6 +274,7 @@ const SECTION_LABELS: Record<string, string> = {
   young: 'The young learners page',
   adults: 'The adults page',
   home: 'The front page',
+  companion: 'Prayer times, the Hijri date and the counter',
 };
 
 export const SECTIONS: Section[] = (() => {

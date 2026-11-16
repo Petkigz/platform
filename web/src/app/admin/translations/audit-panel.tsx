@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { translator, type LocaleCode } from '@/lib/i18n';
+import { writtenTranslator, type LocaleCode } from '@/lib/i18n';
 import {
   AUDIT_LIMITS,
   auditHeadline,
@@ -138,7 +138,7 @@ export function AuditPanel({ summaries }: { summaries: AuditSummary[] }) {
             </summary>
             <div style={{ display: 'grid', gap: '1rem', marginTop: '0.8rem' }}>
               {summaries.map((summary) => {
-                const t = translator(summary.locale as LocaleCode);
+                const t = writtenTranslator(summary.locale as LocaleCode);
                 return (
                   <div key={summary.locale}>
                     <p style={{ margin: '0 0 0.3rem', fontWeight: 600 }}>

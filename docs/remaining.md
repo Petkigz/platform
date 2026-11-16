@@ -431,9 +431,10 @@ confirmation; and after the coordinates are entered the tab sends no request
 that contains them, the synthetic backend receives none, and cookies, local and
 session storage, IndexedDB and the cache hold none. Thirteen hours on, the
 result is withdrawn because the date changed. The same script lays out all
-three tools at 320, 390, 768, 1440 and 2560 pixels in English, Arabic, Burmese
+three tools at 320, 390, 768, 1440 and 2560 pixels in English, Arabic, Tamil
 and Swahili and fails on sideways scroll, clipped text or a control under 44
-pixels.
+pixels. (Tamil took Burmese's place when Burmese was held for review, below;
+Burmese is now the language the script uses to check the fallback itself.)
 
 The rows used to read "Oct 15, 2026, 5:23 AM GMT+3" six times. They are now
 clock times, with the date once in the heading and the zone and its offset once
@@ -489,6 +490,56 @@ companion switch is turned on for a language in the low-confidence list, a
 first-language speaker should read its 80 lines** through the existing
 `/admin/translations` review loop. The switches ship off, so nothing here is
 reachable until the owner turns one on.
+
+**Held until a speaker has read them (owner's decision, 2026-11-16).** Asked
+whether languages the builder cannot write properly should fall back to English
+until a speaker reviews them, the owner said yes. The whole low-confidence list
+above — twenty-three languages — now has its companion text *held*:
+`web/src/lib/i18n/messages/held.ts` names them, and a reader in any of them gets
+the prayer times, Hijri date and counter screens, and the three dashboard cards,
+in English, inside a navigation and footer that stay in their own language.
+The twenty-seven languages in the first list are served as before, still
+unreviewed and still saying so.
+
+- *Held is not deleted.* The drafts stay in `companion.ts`. Readers are served
+  `CATALOGUES`, which leaves held keys out; the correction sheet (`/contribute`),
+  the owner's queue and the audit read `WRITTEN`, which keeps them. A reviewer
+  opening a held part sees the draft in each box and a notice that readers
+  cannot see it yet. The companion tools are now a named part on that sheet.
+- *The number tells the reader.* `/language` counts what is shown, so each held
+  language reads 71% there (192 of 272 sentences), in the reader's own language,
+  with the existing sentence that the rest is in English. No new sentence was
+  written for this, because it would have had to be written in the same
+  twenty-three languages.
+- *A held page says it is English.* The three companion pages carry
+  `lang="en" dir="ltr"` while held, so Dhivehi and Pashto readers do not get
+  English set right-to-left, and a screen reader does not read it in the wrong
+  voice. Dates and times inside are still formatted for the reader's language;
+  those come from the browser, not from the builder.
+- *Releasing a language* is deleting its line in `held.ts` after a speaker's
+  corrections for that part have been applied. It is a reviewed code change, not
+  an admin switch: turning a companion flag on does not release anything.
+- *The test that caused this is changed.* `i18n.test.ts` used to require every
+  African language to be shown at 100%, which could only be met by writing
+  sentences nobody could vouch for. It now requires every African language to be
+  *written* whole and allows only a named hold to keep a sentence from a reader.
+  `held-translations.test.ts` pins the rest: a hold can never take the
+  navigation, sign-in or the language page; held text is English wherever a
+  reader can meet it; and no learner page may read `WRITTEN`.
+- *Checked in a browser.* `scripts/companion-browser-smoke.mjs` opens the three
+  tools in Burmese: Burmese navigation, English tool, no message key and no
+  Burmese sentence on the page, and the tool still calculates six rows. It does
+  the direction check in Dhivehi, opens the correction sheet on the Wolof
+  companion part (eighty boxes, each with the draft, and the notice; no notice
+  on the Wolof navigation or on Swahili), and reads 71% on `/language` in Wolof.
+
+What this does not do: it does not judge the *other* 192 sentences of those
+twenty-three languages (navigation, sign-in, catalogue, front page), which were
+written by the same builder with the same limits and are still shown. They are
+lower-stakes sentences and the mechanism can hold any part by name, but nobody
+has assessed them, and that is a decision for the owner. Nor does it make the
+twenty-seven served languages reviewed. And no speaker has been found yet: until
+one is, these twenty-three stay in English on these screens indefinitely.
 
 The existing Supabase test project now has the initial 342 migrations applied
 via the owner-approved GitHub run `43611493767`. A subsequent read-only check

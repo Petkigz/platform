@@ -7,9 +7,20 @@ import type { Messages } from './en.ts';
  * Prayer times, the Hijri date and the private counter were the last surfaces
  * on the site written in English. They are behind the `companion.*` flags, but
  * a flag being off is not a reason for the words to be in the wrong language
- * when it is on — and the African catalogues are held to 100% by
- * `i18n.test.ts`, so a key added to `en.ts` without a translation here would
- * fail the suite rather than quietly fall back.
+ * when it is on.
+ *
+ * **Written is not the same as shown.** This file holds a text for all fifty
+ * languages, and `companion-i18n.test.ts` fails if one is short a sentence.
+ * Twenty-three of them are not served to readers: the builder could not write
+ * them reliably, so `held.ts` keeps them back and those readers get these
+ * screens in English until a first-language speaker has read them. The blocks
+ * for Wolof, Fulfulde, Bambara and Dhivehi in particular are placeholders to
+ * rewrite, not translations to polish. Nothing here is deleted, because this
+ * text is what the correction sheet at `/contribute` hands a reviewer.
+ *
+ * The rule this replaced demanded that every African language be *shown* at
+ * 100%, and in a language nobody here can write, the only way to pass it was
+ * to write the sentences anyway. That is how they got here.
  *
  * The prayer names (Fajr, Dhuhr, Asr, Maghrib, Isha) and the calculation
  * method names are proper names and are not translated, the way a brand is

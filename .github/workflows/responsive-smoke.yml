@@ -104,12 +104,12 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - name: Install isolated browser driver
         run: npm install --prefix "$RUNNER_TEMP/responsive" --no-audit --no-fund playwright-core@1.58.2
-      - name: Install fonts for Arabic and Burmese so measured widths are real glyphs
+      - name: Install fonts for Arabic, Tamil, Burmese and Thaana so measured widths are real glyphs
         run: |
           set -euo pipefail
           sudo apt-get update -qq
           sudo apt-get install -y -qq --no-install-recommends fonts-noto-core
-          fc-list | grep -ci -E 'myanmar|arabic'
+          fc-list | grep -ci -E 'myanmar|arabic|tamil|thaana'
       - name: Prayer times, Hijri date and counter in Chromium with synthetic data
         env:
           RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs
@@ -119,7 +119,7 @@ jobs:
           export RESPONSIVE_CHROME="$(command -v google-chrome || command -v chromium)"
           if node scripts/companion-browser-smoke.mjs > "$RUNNER_TEMP/companion-browser.log" 2>&1; then
             cat "$RUNNER_TEMP/companion-browser.log"
-            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").split("\n").filter(l=>/^(Manual entry|Device location|After-midnight|Layout|Hijri [a-z]+:)/.test(l)).map(l=>l.slice(0,400)).join("\n").replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::notice title=Companion browser test::${s}`)' "$RUNNER_TEMP/companion-browser.log"
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").split("\n").filter(l=>/^(Manual entry|Device location|After-midnight|Layout|Hijri [a-z]+:|Held for review)/.test(l)).map(l=>l.slice(0,400)).join("\n").replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::notice title=Companion browser test::${s}`)' "$RUNNER_TEMP/companion-browser.log"
           else
             cat "$RUNNER_TEMP/companion-browser.log"
             node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Companion browser test::${s}`)' "$RUNNER_TEMP/companion-browser.log"

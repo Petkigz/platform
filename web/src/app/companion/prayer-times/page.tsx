@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
-import { LOCALE_COOKIE, chooseLocale, companionMessagesFor, translator } from '@/lib/i18n';
+import { LOCALE_COOKIE, chooseLocale, companionMessagesFor, languageShownFor, translator } from '@/lib/i18n';
 import { I18nProvider } from '@/lib/i18n/client';
 import { PrayerTimesTool } from './tool';
 
@@ -23,7 +23,10 @@ export default async function Page() {
     acceptLanguage: hdrs.get('accept-language'),
   });
   const t = translator(locale);
-  return <div className="container section companion-page">
+  // English and left-to-right while this language's companion text is held for
+  // review; the reader's own language and direction otherwise.
+  const shown = languageShownFor(locale, 'companion');
+  return <div className="container section companion-page" lang={shown.code} dir={shown.dir}>
     <div className="companion-head"><p className="eyebrow">{t('companion.eyebrow')}</p><h1>{t('companion.prayerTitle')}</h1></div>
     {enabled ? <I18nProvider locale={locale} messages={companionMessagesFor(locale)}><PrayerTimesTool /></I18nProvider> : <p className="notice">{t('companion.prayerOff')}</p>}
     <p className="companion-back"><Link href="/learn">{t('companion.backToLearning')}</Link></p>

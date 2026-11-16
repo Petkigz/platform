@@ -18,6 +18,9 @@ const hijriPage = readFileSync(new URL('../app/companion/hijri/page.tsx', import
 const counterPage = readFileSync(new URL('../app/companion/counter/page.tsx', import.meta.url), 'utf8');
 const dashboard = readFileSync(new URL('../app/learn/page.tsx', import.meta.url), 'utf8');
 
+// "Has a translation" is a statement about the file. Whether a reader is shown
+// it is a separate decision, made in `held.ts` and pinned in
+// `held-translations.test.ts`: twenty-three of these fifty are drafts kept back.
 test('every companion key in English has a translation in all fifty languages', () => {
   const keys = Object.keys(en).filter((k) => k.startsWith('companion.'));
   assert.ok(keys.length > 0, 'no companion keys in en.ts');

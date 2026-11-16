@@ -40,7 +40,7 @@
  */
 
 import { en } from './i18n/messages/en.ts';
-import { CATALOGUES } from './i18n/messages/catalogues.ts';
+import { WRITTEN } from './i18n/messages/catalogues.ts';
 
 export type FindingKind =
   | 'same-as-english'
@@ -308,7 +308,9 @@ export function auditAll(
   names: Record<string, string>,
 ): AuditSummary[] {
   const summaries: AuditSummary[] = [];
-  for (const [locale, catalogue] of Object.entries(CATALOGUES)) {
+  // Everything written, held parts included: the audit is for the people
+  // correcting the files, and a held draft is exactly what needs reading.
+  for (const [locale, catalogue] of Object.entries(WRITTEN)) {
     if (locale === 'en') continue;
     const findings = auditLocale(locale, catalogue as Partial<Record<string, string>>);
     if (findings.length === 0) continue;

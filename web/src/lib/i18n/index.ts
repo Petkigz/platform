@@ -13,7 +13,8 @@ import {
   type LocaleSource,
 } from './locales.ts';
 import { safeNextPath as safeLocalPath } from '../auth.ts';
-import { CATALOGUES } from './messages/catalogues.ts';
+import { CATALOGUES, WRITTEN } from './messages/catalogues.ts';
+import { HELD_FOR_REVIEW, isHeld } from './messages/held.ts';
 import { en, type MessageKey, type Messages } from './messages/en.ts';
 
 export {
@@ -96,7 +97,55 @@ export function translator(code: LocaleCode): Translate {
   };
 }
 
-export type Coverage = { translated: number; total: number; percent: number };
+/**
+ * A `t()` over everything the files hold, held drafts included.
+ *
+ * For the people correcting a language, never for a page a reader sees: the
+ * correction sheet opens each box with this, so a reviewer of a held part
+ * starts from the builder's draft instead of from English. Outside a held part
+ * it is the same as `translator()`.
+ */
+export function writtenTranslator(code: LocaleCode): Translate {
+  const own = code === DEFAULT_LOCALE ? undefined : WRITTEN[code];
+  return (key, vars) => {
+    const translated = own?.[key];
+    const template = translated && translated.trim() !== '' ? translated : en[key];
+    return fill(template, vars);
+  };
+}
+
+/** The sections of one language that readers are shown in English for now. */
+export function heldSections(code: LocaleCode): readonly string[] {
+  return HELD_FOR_REVIEW[code] ?? [];
+}
+
+export { isHeld };
+
+/**
+ * The language one part of the interface is actually shown in.
+ *
+ * English when the part is held, the reader's own language otherwise. A page
+ * whose sentences are all from one part puts this on its wrapper as `lang` and
+ * `dir`, because the document says `lang="dv" dir="rtl"` and the sentences
+ * inside are English: without it a screen reader pronounces English with a
+ * Dhivehi voice and every full stop lands on the wrong side of its sentence.
+ *
+ * Dates and numbers inside such a page are still formatted for the reader's
+ * own language. Those come from the browser's locale data, not from us, and
+ * are not what the hold is about.
+ */
+export function languageShownFor(code: LocaleCode, section: string): Locale {
+  return localeByCode(isHeld(code, `${section}.`) ? DEFAULT_LOCALE : code);
+}
+
+export type Coverage = {
+  /** Sentences a reader is shown in this language. */
+  translated: number;
+  total: number;
+  percent: number;
+  /** Sentences written but held back until a speaker has read them. */
+  held: number;
+};
 
 const TOTAL = Object.keys(en).length;
 
@@ -107,15 +156,21 @@ const TOTAL = Object.keys(en).length;
  * 57%, and the page prints that rather than "beta".
  */
 export function coverageOf(code: LocaleCode): Coverage {
-  if (code === DEFAULT_LOCALE) return { translated: TOTAL, total: TOTAL, percent: 100 };
-  const own = CATALOGUES[code] ?? {};
-  const translated = Object.entries(own).filter(
-    ([, value]) => typeof value === 'string' && value.trim() !== '',
+  if (code === DEFAULT_LOCALE) return { translated: TOTAL, total: TOTAL, percent: 100, held: 0 };
+  const written = (value: unknown) => typeof value === 'string' && value.trim() !== '';
+  const translated = Object.values(CATALOGUES[code] ?? {}).filter(written).length;
+  // Held is counted from the files, not from the hold list: a part that is held
+  // and was never written is simply missing, and must not look like a draft.
+  const held = Object.entries(WRITTEN[code] ?? {}).filter(
+    ([key, value]) => written(value) && isHeld(code, key),
   ).length;
   return {
     translated,
     total: TOTAL,
+    // What a reader is shown, so a held part lowers it. The number on the
+    // settings page is a description of the screen, not of the files.
     percent: Math.round((translated / TOTAL) * 100),
+    held,
   };
 }
 

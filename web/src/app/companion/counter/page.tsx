@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
-import { LOCALE_COOKIE, chooseLocale, companionMessagesFor, translator } from '@/lib/i18n';
+import { LOCALE_COOKIE, chooseLocale, companionMessagesFor, languageShownFor, translator } from '@/lib/i18n';
 import { I18nProvider } from '@/lib/i18n/client';
 import { Counter } from './counter';
 
@@ -24,8 +24,11 @@ export default async function CounterPage() {
     acceptLanguage: hdrs.get('accept-language'),
   });
   const t = translator(locale);
+  // English and left-to-right while this language's companion text is held for
+  // review; the reader's own language and direction otherwise.
+  const shown = languageShownFor(locale, 'companion');
   return (
-    <div className="container section companion-page">
+    <div className="container section companion-page" lang={shown.code} dir={shown.dir}>
       <div className="companion-head">
         <p className="eyebrow">{t('companion.eyebrow')}</p>
         <h1>{t('companion.counterTitle')}</h1>

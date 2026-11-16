@@ -32,7 +32,9 @@ const user = { id: '0ca318e2-8b44-4a64-9b58-2af31ab941c7', aud: 'authenticated',
 const exp = Math.floor(Date.now() / 1000) + 3600;
 const token = `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode({ sub: user.id, role: 'authenticated', exp })}.fake`;
 const session = { access_token: token, refresh_token: 'fake-refresh', token_type: 'bearer', expires_in: 3600, expires_at: exp, user };
-const COMPANION_FLAGS = new Set(['companion.calculated_prayer_times', 'companion.hijri_date', 'companion.dhikr_counter']);
+// The three companion switches, and the correction sheet, which is where a
+// held translation goes to be read.
+const COMPANION_FLAGS = new Set(['companion.calculated_prayer_times', 'companion.hijri_date', 'companion.dhikr_counter', 'platform.translation_reviews']);
 
 // Everything the synthetic backend is asked, so a coordinate that reached the
 // server by any route — including one the page made server-side — is seen.
@@ -71,6 +73,9 @@ const origin = `http://localhost:${port}`;
 // Noon in Kampala on a fixed day, so the expected times below are constants.
 const FIXED_NOW = new Date('2026-10-15T09:00:00Z');
 const clean = (s) => s.replace(/[\u202f\u00a0]/g, ' ').trim();
+// `companion.prayerTitle` in `web/src/lib/i18n/messages/en.ts`: what a reader is
+// shown when their language has no companion text, or has it held for review.
+const ENGLISH_TITLE = 'Calculated prayer times';
 
 let logs = ''; let browser;
 try {
@@ -250,7 +255,9 @@ try {
   const places = [
     { locale: 'en', zone: 'Europe/London', latitude: 51.5074, longitude: -0.1278, method: 'MoonsightingCommittee' },
     { locale: 'ar', zone: 'Africa/Cairo', latitude: 30.0444, longitude: 31.2357, method: 'Egyptian' },
-    { locale: 'my', zone: 'Asia/Yangon', latitude: 16.8409, longitude: 96.1735, method: 'Karachi', asr: 'hanafi' },
+    // Tamil for its long words in a script that is neither Latin nor Arabic.
+    // (Burmese held this place until its companion text was held for review.)
+    { locale: 'ta', zone: 'Asia/Colombo', latitude: 6.9271, longitude: 79.8612, method: 'Karachi', asr: 'hanafi' },
     { locale: 'sw', zone: 'Africa/Nairobi', latitude: -1.2921, longitude: 36.8219, method: 'MuslimWorldLeague' },
   ];
   const widths = [320, 390, 768, 1440, 2560];
@@ -287,7 +294,7 @@ try {
     assert.ok(m.gutter >= 16, `${label}: content is ${m.gutter}px from the edge of the screen`);
   };
   const shoot = async (page, name) => { if (shots) await page.screenshot({ path: resolve(shots, `${name}.png`), fullPage: true }); };
-  const wantShot = (locale, width) => (locale === 'en' && [390, 1440, 2560].includes(width)) || (locale === 'ar' && [390, 1440].includes(width)) || (locale === 'my' && width === 390) || (locale === 'sw' && width === 768);
+  const wantShot = (locale, width) => (locale === 'en' && [390, 1440, 2560].includes(width)) || (locale === 'ar' && [390, 1440].includes(width)) || (locale === 'ta' && width === 390) || (locale === 'sw' && width === 768);
 
   for (const place of places) {
     const tab = await open({ locale: place.locale, zone: place.zone, width: widths[0] });
@@ -295,6 +302,11 @@ try {
     const first = await measure(tab.page);
     assert.equal(first.lang, place.locale);
     assert.equal(first.dir, place.locale === 'ar' ? 'rtl' : 'ltr');
+    // These four languages are served their own companion text, so the heading
+    // is the English one in English and nowhere else.
+    const heading = clean(await tab.page.locator('.companion-head h1').textContent());
+    if (place.locale === 'en') assert.equal(heading, ENGLISH_TITLE);
+    else assert.notEqual(heading, ENGLISH_TITLE, `${place.locale}: the prayer page fell back to English`);
     assert.equal(await tab.page.locator('.prayer-example').count(), ['en', 'ar', 'sw'].includes(place.locale) ? 1 : 0, `${place.locale}: method example for ${place.zone}`);
     for (const width of widths) {
       await tab.page.setViewportSize({ width, height: 900 });
@@ -354,6 +366,110 @@ try {
     }
     console.log(`Hijri date and counter ${place.locale}: fit at ${widths.join('/')}px; counter counts, clears on confirmation and is gone after a reload.`);
     await tab.context.close();
+  }
+  // ------------------------------------------------------- 5. held for review
+  // Burmese is one of the languages whose companion text is written but held
+  // until a speaker has read it (`web/src/lib/i18n/messages/held.ts`). The
+  // reader keeps their language everywhere else and gets these screens in
+  // English: not a blank, not a key name, and not the builder's draft.
+  {
+    const tab = await open({ locale: 'my', zone: 'Asia/Yangon', width: 390 });
+    await tab.page.goto(prayerUrl, { waitUntil: 'networkidle' });
+    assert.equal(await tab.page.evaluate(() => document.documentElement.lang), 'my');
+    assert.equal(clean(await tab.page.locator('.companion-head h1').textContent()), ENGLISH_TITLE);
+    assert.equal(clean(await calculateButton(tab.page).textContent()), 'Calculate today');
+    // The page says what it is, for a screen reader choosing a voice.
+    assert.equal(await tab.page.locator('.companion-page').getAttribute('lang'), 'en');
+    const body = await tab.page.locator('.companion-page').textContent();
+    assert.ok(!/companion\.[a-zA-Z]/.test(body), 'a message key is printed where a sentence should be');
+    assert.ok(!/[\u1000-\u109f]/u.test(body), 'held Burmese companion text reached the page');
+    // The frame around it is still Burmese: the hold is on these screens only.
+    const frame = await tab.page.locator('nav.nav').textContent();
+    assert.ok(/[\u1000-\u109f]/u.test(frame), 'the navigation is not in Burmese');
+    // And the tool still works in English: same form, six rows.
+    await fillChoices(tab.page, { latitude: 16.8409, longitude: 96.1735, method: 'Karachi', asr: 'hanafi' });
+    await calculateButton(tab.page).click();
+    await tab.page.locator('.prayer-result').waitFor();
+    assert.equal(await tab.page.locator('.prayer-timetable > div').count(), 6);
+    assertFits(await measure(tab.page), 'held prayer page my 390');
+    await shoot(tab.page, 'prayer-my-held-390');
+    assert.deepEqual(tab.pageErrors, []);
+    for (const path of ['hijri', 'counter']) {
+      await tab.page.goto(`${origin}/companion/${path}`, { waitUntil: 'networkidle' });
+      const text = await tab.page.locator('.companion-page').textContent();
+      assert.ok(!/companion\.[a-zA-Z]/.test(text), `${path}: a message key is printed where a sentence should be`);
+      // The Hijri date itself is formatted by the browser for the reader's
+      // language and is not ours to hold; every sentence around it is.
+      const sentences = await tab.page.locator('.companion-page').evaluate((scope) => {
+        const copy = scope.cloneNode(true);
+        for (const el of copy.querySelectorAll('.hijri-date strong, .hijri-date time')) el.remove();
+        return copy.textContent ?? '';
+      });
+      assert.ok(!/[\u1000-\u109f]/u.test(sentences), `${path}: held Burmese companion text reached the page`);
+      assert.deepEqual(tab.pageErrors, []);
+    }
+    console.log('Held for review (my): the prayer page, Hijri date and counter are served in English inside a Burmese frame; the prayer tool still calculates six rows.');
+    await tab.context.close();
+  }
+  // Dhivehi is held too, and is written right to left. The document keeps its
+  // direction; the English page inside it must not inherit it, or every full
+  // stop lands on the wrong side of its sentence.
+  {
+    const tab = await open({ locale: 'dv', zone: 'Indian/Maldives', width: 390 });
+    await tab.page.goto(prayerUrl, { waitUntil: 'networkidle' });
+    const m = await tab.page.evaluate(() => {
+      const scope = document.querySelector('.companion-page');
+      const lede = scope.querySelector('.prayer-tool p, p');
+      return {
+        documentDir: document.documentElement.dir, documentLang: document.documentElement.lang,
+        pageDir: scope.getAttribute('dir'), pageLang: scope.getAttribute('lang'),
+        computed: getComputedStyle(scope.querySelector('h1')).direction,
+        align: getComputedStyle(lede).textAlign,
+        navDirection: getComputedStyle(document.querySelector('nav.nav')).direction,
+      };
+    });
+    assert.deepEqual(
+      { documentDir: m.documentDir, documentLang: m.documentLang, pageDir: m.pageDir, pageLang: m.pageLang, computed: m.computed, navDirection: m.navDirection },
+      { documentDir: 'rtl', documentLang: 'dv', pageDir: 'ltr', pageLang: 'en', computed: 'ltr', navDirection: 'rtl' },
+    );
+    assert.equal(clean(await tab.page.locator('.companion-head h1').textContent()), ENGLISH_TITLE);
+    assert.ok(['start', 'left'].includes(m.align), `held page in dv: text is aligned ${m.align}`);
+    assertFits(await measure(tab.page), 'held prayer page dv 390');
+    await shoot(tab.page, 'prayer-dv-held-390');
+    assert.deepEqual(tab.pageErrors, []);
+    console.log('Held for review (dv): the document is right-to-left Dhivehi; the English prayer page inside it is marked lang="en" and reads left to right.');
+    await tab.context.close();
+  }
+  // The other side of a hold: the person who can lift it. The correction sheet
+  // opens a held part with the builder's draft in each box, says readers cannot
+  // see it, and says nothing of the kind about a part that is being served.
+  {
+    const tab = await open({ locale: 'en', zone: 'Africa/Kampala', width: 390 });
+    await tab.page.goto(`${origin}/contribute?locale=wo&section=companion`, { waitUntil: 'networkidle' });
+    const warning = tab.page.locator('form[action="/api/contribute"] .notice.warn');
+    assert.equal(await warning.count(), 1, 'the sheet does not say this part is held');
+    assert.ok(clean(await warning.textContent()).startsWith('Readers do not see this part in Wolof yet.'));
+    const boxes = await tab.page.locator('textarea[name^="t__companion."]').count();
+    const draft = await tab.page.locator('textarea[name="t__companion.prayerTitle"]').inputValue();
+    assert.ok(boxes >= 80, `the sheet shows ${boxes} companion lines`);
+    assert.notEqual(draft, ENGLISH_TITLE, 'the reviewer is handed English instead of the draft');
+    assert.ok(draft.trim().length > 0);
+    assert.ok((await tab.page.evaluate(() => document.documentElement.scrollWidth)) <= 391, 'the held sheet scrolls sideways at 390px');
+    await tab.page.goto(`${origin}/contribute?locale=sw&section=companion`, { waitUntil: 'networkidle' });
+    assert.equal(await tab.page.locator('form[action="/api/contribute"] .notice.warn').count(), 0, 'Swahili is served, and the sheet says it is held');
+    await tab.page.goto(`${origin}/contribute?locale=wo&section=nav`, { waitUntil: 'networkidle' });
+    assert.equal(await tab.page.locator('form[action="/api/contribute"] .notice.warn').count(), 0, 'the Wolof navigation is served, and the sheet says it is held');
+    assert.deepEqual(tab.pageErrors, []);
+    await tab.context.close();
+    // And the language page tells a Wolof reader, in Wolof, how much they are shown.
+    const reader = await open({ locale: 'wo', zone: 'Africa/Dakar', width: 390 });
+    await reader.page.goto(`${origin}/language`, { waitUntil: 'networkidle' });
+    const settings = await reader.page.locator('main, body').first().textContent();
+    assert.ok(settings.includes('71%'), 'the language page does not show the lower number');
+    assert.ok(!settings.includes('71% of these interface strings'), 'the coverage sentence is in English for a Wolof reader');
+    assert.deepEqual(reader.pageErrors, []);
+    await reader.context.close();
+    console.log(`Held for review (wo): the correction sheet opens the ${boxes} companion lines with the draft ("${draft}") and a notice that readers cannot see it; served parts carry no notice; /language shows a Wolof reader 71% in Wolof.`);
   }
   console.log('Companion browser smoke passed in Chromium against `next dev` with a synthetic backend. Not real Auth or RLS, not a real location provider, not Safari or Firefox, not a review of any translation.');
 } catch (e) { console.error(logs.slice(-4000)); throw e; }

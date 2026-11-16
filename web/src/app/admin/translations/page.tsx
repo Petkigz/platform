@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/server';
-import { LOCALES, translator, type LocaleCode } from '@/lib/i18n';
+import { LOCALES, writtenTranslator, type LocaleCode } from '@/lib/i18n';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
 import { auditAll, auditProposal } from '@/lib/translation-audit';
@@ -64,13 +64,15 @@ export default async function AdminTranslationsPage() {
 
   const reviews = parseQueue(data);
 
-  // What the code says, per correction. `translator` merges English behind the
-  // catalogue, which is exactly right here: a key that falls back to English is
+  // What the code says, per correction. The translator merges English behind the
+  // files, which is exactly right here: a key that falls back to English is
   // a key whose translation does not exist, and the proposed text is then the
   // only translation there is — `stale` is the honest word, not `pending`.
   const states: Record<string, ProposalState> = {};
   const live = (locale: string, key: string) =>
-    translator(locale as LocaleCode)(key as never);
+    // What the file says, held drafts included: a correction is compared with
+    // the line it corrects, whether or not readers are being shown that line.
+    writtenTranslator(locale as LocaleCode)(key as never);
   for (const review of reviews) {
     for (const proposal of review.proposals) {
       states[proposal.id] = stateIn(proposal, review.locale, live);

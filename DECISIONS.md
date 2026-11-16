@@ -7879,3 +7879,30 @@ wrote on another case, and applies deferred erasure on release. Existing support
 access rules still apply. Other paths can change or delete information, and
 already erased information and external copies cannot be recovered. Privacy and
 safeguarding review and hosted concurrency verification remain necessary.
+
+## A language the builder cannot write falls back to English — **DECIDED 2026-11-16**
+
+Asked "Should languages I cannot write properly fall back to English until a
+speaker reviews them?", the owner answered: **yes, they should.**
+
+**What it replaces.** A test required every African language to be shown at
+100%. When the companion tools (prayer times, Hijri date, private counter) were
+translated, that rule could only be met in several languages by writing
+sentences nobody involved could vouch for, on screens whose caveats are
+religious ones.
+
+**Implemented locally, not deployed.** The companion text of twenty-three
+languages is held: Wolof, Fulfulde, Bambara, Dhivehi, Tigrinya, Amharic, Oromo,
+Somali, Igbo, Yoruba, Hausa, Kinyarwanda, Luganda, Lingala, Malagasy, Chichewa,
+Shona, Sesotho, Zulu, Xhosa, Pashto, Sinhala and Burmese. Readers of those
+languages see those screens in English and the rest of the interface in their
+own language; the language page shows 71% for each. The drafts are kept for a
+reviewer and are not shown to learners. A language is released by removing its
+line from `web/src/lib/i18n/messages/held.ts` once a first-language speaker's
+review of that part has been applied.
+
+**Scope the owner has not been asked about.** Which languages count as "cannot
+write properly" was the builder's own assessment, not a speaker's. The remaining
+sentences of the same twenty-three languages are still shown, and the
+twenty-seven languages still served on the companion screens are unreviewed too.
+

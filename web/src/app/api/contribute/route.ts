@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
 import { createClient } from '@/lib/supabase/server';
-import { isLocaleCode, localeByCode, translator } from '@/lib/i18n';
+import { isLocaleCode, localeByCode, writtenTranslator } from '@/lib/i18n';
 import { sectionByPrefix, type Scope } from '@/lib/translations';
 
 /**
@@ -99,7 +99,9 @@ export async function POST(request: Request) {
   if (name.length < 2 || name.length > 120) return back('name');
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || email.length > 254) return back('email');
 
-  const current = translator(locale.code);
+  // The same text the sheet prefilled its boxes with, held drafts included, so
+  // "unchanged" means unchanged from what the reviewer was shown.
+  const current = writtenTranslator(locale.code);
   const placeholders = (value: string) =>
     [...value.matchAll(/\{([a-zA-Z][a-zA-Z0-9]*)\}/g)].map((m) => m[1]).sort().join(',');
 

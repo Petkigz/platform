@@ -2618,6 +2618,31 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### Written is not shown, 2026-11-16
+
+The owner was asked whether languages the builder cannot write properly should
+fall back to English until a speaker reviews them, and said yes. The question
+came from one test: `i18n.test.ts` required every African language to be shown
+at 100%, and when eighty companion sentences were added, the only way to pass it
+in Wolof, Fulfulde or Bambara was to write them anyway. Those sentences are
+about how a prayer time was calculated.
+
+Twenty-three languages now have their companion text held
+(`web/src/lib/i18n/messages/held.ts`): the four placeholders and the rest of the
+low-confidence list in `docs/remaining.md`. Their readers get the three
+companion screens and the three dashboard cards in English, marked
+`lang="en" dir="ltr"`, inside a frame that stays in their language; `/language`
+shows 71% for each. The drafts are kept and are what `/contribute` hands a
+reviewer, with a notice that readers cannot see them. Release is deleting a line
+in `held.ts` after a speaker's review, not a switch. The test now requires
+African languages to be written whole and lets only a named hold keep a sentence
+from a reader. A browser check covers the fallback in Burmese and the direction
+in Dhivehi.
+
+Not done, and the owner's call: the other 192 sentences of those languages
+(navigation, sign-in, catalogue, front page) come from the same builder and are
+still shown. No speaker has been found for any language.
+
 ### Where the words were, 2026-11-16
 
 `.section { padding: 2.5rem 0 }` sits after `.container` in the stylesheet, so on

@@ -10,8 +10,10 @@ import {
   chooseLocale,
   isLocaleCode,
   localeByCode,
+  isHeld,
   translatedLocales,
   translator,
+  writtenTranslator,
 } from '@/lib/i18n';
 import { auditLine } from '@/lib/translation-audit';
 import {
@@ -103,7 +105,12 @@ export default async function ContributePage({
   // correcting rather than an empty rectangle: most corrections are one wrong
   // word inside a long sentence, and retyping the sentence is how a reviewer
   // gives up.
-  const current = target ? translator(target.code) : null;
+  //
+  // `writtenTranslator`, not `translator`: a part held for review is shown to
+  // readers in English, but the person reviewing it should start from the draft
+  // that is waiting on them, and the sheet says which they are looking at.
+  const current = target ? writtenTranslator(target.code) : null;
+  const held = target ? isHeld(target.code, `${section.prefix}.`) : false;
 
   const errorSentence: Record<string, string> = {
     closed: 'That form is not open at the moment. Nothing was saved.',
@@ -208,6 +215,14 @@ export default async function ContributePage({
             The English is on the left. Change any line below into what it should say in{' '}
             {target.englishName}, and leave the rest alone. Only the lines you change are sent.
           </p>
+          {held && (
+            <div className="notice warn">
+              <strong>Readers do not see this part in {target.englishName} yet.</strong> We wrote
+              the lines below ourselves and do not trust them, so for now these screens are
+              shown in English. Treat each line as a rough draft: rewrite it freely. Once a
+              speaker has read this part, it will be shown in {target.englishName}.
+            </div>
+          )}
 
           <div style={{ display: 'grid', gap: '1rem' }}>
             {section.keys.map((key) => {

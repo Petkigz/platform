@@ -18,7 +18,7 @@ import {
   translatedLocales,
   translator,
 } from './i18n/index.ts';
-import { CATALOGUES } from './i18n/messages/catalogues.ts';
+import { CATALOGUES, WRITTEN } from './i18n/messages/catalogues.ts';
 import { en } from './i18n/messages/en.ts';
 
 const REGION_HEADINGS = [
@@ -138,7 +138,9 @@ test('every right-to-left language says so, and nothing else does', () => {
 
 test('every catalogue is inside the English key set, and none is empty', () => {
   const known = new Set(Object.keys(en));
-  for (const [code, catalogue] of Object.entries(CATALOGUES)) {
+  // `WRITTEN`, not `CATALOGUES`: a part held for review is still a file somebody
+  // will be handed to correct, and it is held to the same rules as the rest.
+  for (const [code, catalogue] of Object.entries(WRITTEN)) {
     for (const [key, value] of Object.entries(catalogue ?? {})) {
       assert(known.has(key), `${code} has a key English does not: ${key}`);
       assert(typeof value === 'string' && value.trim() !== '', `${code}.${key} is empty`);
@@ -148,8 +150,9 @@ test('every catalogue is inside the English key set, and none is empty', () => {
 
 test('every placeholder survives translation', () => {
   // A translation that drops `{year}` is a sentence that quietly lost a number,
-  // and it would never be reported by a reader.
-  for (const [code, catalogue] of Object.entries(CATALOGUES)) {
+  // and it would never be reported by a reader. Held drafts included: the
+  // correction sheet refuses a line whose placeholders differ from the draft's.
+  for (const [code, catalogue] of Object.entries(WRITTEN)) {
     for (const [key, value] of Object.entries(catalogue ?? {})) {
       const source = en[key as keyof typeof en] ?? '';
       const expected = [...source.matchAll(/\{([a-zA-Z][a-zA-Z0-9]*)\}/g)].map((m) => m[1]).sort();
@@ -163,9 +166,19 @@ test('every offered language actually translates something', () => {
   for (const locale of translatedLocales()) {
     const coverage = coverageOf(locale.code);
     assert.equal(coverage.total, Object.keys(en).length, `${locale.code} counts the wrong total`);
+    // The floor is on what has been *written*. A part held until a speaker has
+    // read it lowers what a reader is shown, on purpose, and must not be what
+    // gets a language taken out of the picker.
+    const written = Math.round(((coverage.translated + coverage.held) / coverage.total) * 100);
     assert(
-      coverage.percent >= 80,
-      `${locale.code} is offered at ${coverage.percent}% — too little to be useful`,
+      written >= 80,
+      `${locale.code} is offered with ${written}% written — too little to be useful`,
+    );
+    // And a hold has a limit of its own: a language most of whose screens are
+    // English is not being offered honestly, however good the reason.
+    assert(
+      coverage.percent >= 60,
+      `${locale.code} shows a reader ${coverage.percent}% — too much of it is held back`,
     );
   }
 });
@@ -221,22 +234,31 @@ test('the African languages are in the register, and Africa is the first block',
   }
 });
 
-test('every African catalogue is complete, not a sample', () => {
+test('every African catalogue is written whole, and only a hold keeps a sentence from a reader', () => {
   // A picker built on hope is worse than a short list: a language at 40% looks
   // translated in the menu and reads as English on the page. These twenty-one
   // were written whole.
+  //
+  // This used to demand that a reader be *shown* 100%. That rule is what put
+  // sentences nobody could vouch for on the prayer-times page: the only way to
+  // satisfy it in a language the builder cannot write was to write it anyway.
+  // Owner's decision, 2026-11-16: such a part falls back to English until a
+  // speaker has read it. So the rule is now two rules. Every sentence exists in
+  // the file — nothing is a sample — and the only sentences a reader does not
+  // see are ones held by name in `held.ts`, never ones that were not written.
   for (const locale of LOCALES.filter((l) => l.region === 'Africa')) {
     const coverage = coverageOf(locale.code);
     assert.equal(
-      coverage.percent,
-      100,
-      `${locale.code} is offered at ${coverage.percent}% — finish it or take it out`,
+      coverage.translated + coverage.held,
+      coverage.total,
+      `${locale.code} has ${coverage.total - coverage.translated - coverage.held} sentences nobody wrote — finish it or take it out`,
     );
+    if (coverage.held === 0) assert.equal(coverage.percent, 100);
   }
 });
 
 test('English is complete, and a language with no catalogue is not offered', () => {
-  assert.deepEqual(coverageOf('en'), { translated: Object.keys(en).length, total: Object.keys(en).length, percent: 100 });
+  assert.deepEqual(coverageOf('en'), { translated: Object.keys(en).length, total: Object.keys(en).length, percent: 100, held: 0 });
   const offered = translatedLocales().map((l) => l.code);
   assert(offered.includes('en'));
   assert.equal(new Set(offered).size, offered.length, 'a language is offered twice');
