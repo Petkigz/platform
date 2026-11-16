@@ -148,7 +148,11 @@ a fresh PGlite database, so the shared-suite cause is not yet known. A bounded
 synthetic query-shape trace (without bind values) has been added for the next
 full run. Run `43803466380` progressed beyond master access but then stopped
 in `export my data` after four minutes without a traced operation; the reason
-is still unknown. Tracing now also covers that suite. Chromium run `43755476152` passed real audio seek,
+is still unknown. Run `43823318260` subsequently passed those suites but stopped
+in a different suite, `data export`. It remains unclear whether these are slow
+suites or blocked operations. Synthetic query-shape tracing now covers all
+suites, without bound values, so the watchdog measures inactivity rather than
+misclassifying active long-running suites. Chromium run `43755476152` passed real audio seek,
 competing-tab conflict and recovery after a failed response and reload against a
 synthetic HTTP server, as well as the synthetic lesson layout checks. It did
 not exercise abrupt browser termination, mobile browsers or hosted resume writes.

@@ -16,7 +16,7 @@ export function runWithWatchdog({ command = process.execPath, args = ['supabase/
       clearTimeout(deadline);
       deadline = setTimeout(() => {
         timedOut = true;
-        errors.write(`::error title=Database suite stalled::${escapeAnnotation(current)} exceeded ${timeoutMs}ms; last query: ${escapeAnnotation(query || 'not traced')}; the full run was stopped and did not pass.\n`);
+        errors.write(`::error title=Database suite stalled::${escapeAnnotation(current)} made no traced query or suite progress for ${timeoutMs}ms; last query: ${escapeAnnotation(query || 'not traced')}; the full run was stopped and did not pass.\n`);
         try { process.kill(-child.pid, 'SIGKILL'); } catch { child.kill('SIGKILL'); }
       }, timeoutMs);
     };

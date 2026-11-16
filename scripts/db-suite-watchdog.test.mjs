@@ -23,6 +23,6 @@ test('reports a failing child rather than claiming success', async () => {
 test('kills an unresponsive child and names the suite', async () => {
   const output = capture(), errors = capture();
   const result = await runWithWatchdog({ args: ['-e', 'console.log("--- synthetic suite ---"); console.log("@@db-query select test($1)"); setInterval(() => {}, 1000)'], timeoutMs: 300, output: output.stream, errors: errors.stream });
-  assert.equal(result, 1); assert.match(errors.text(), /synthetic suite exceeded 300ms/);
+  assert.equal(result, 1); assert.match(errors.text(), /synthetic suite made no traced query or suite progress for 300ms/);
   assert.match(errors.text(), /last query: select test\(\$1\)/);
 });
