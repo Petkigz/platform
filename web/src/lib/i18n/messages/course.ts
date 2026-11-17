@@ -843,9 +843,9 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Natija saqlangani tasdiqlanmadi. Qayta urinishdan oldin tekshirish uchun sahifani qayta yuklang.',
     'course.reload': 'Sahifani qayta yuklash',
     'course.back': 'Taʼlimimga qaytish',
-    'course.cohortHeading': 'Bu ro‘yxatdan o‘tishning sanali sinflari',
+    'course.cohortHeading': 'Bu roʻyxatdan oʻtishning sanali sinflari',
     'course.cohortPaused':
-      'Sinflarga qo‘shilish vaqtincha to‘xtatilgan. Avval qo‘shilgan sinfingizni hali ham tark etishingiz mumkin.',
+      'Sinflarga qoʻshilish vaqtincha toʻxtatilgan. Avval qoʻshilgan sinfingizni hali ham tark etishingiz mumkin.',
     'course.cohortStatusDraft': 'Hali ochilmagan',
     'course.cohortStatusOpen': 'Ochiq',
     'course.cohortStatusClosed': 'Yopiq',
@@ -856,7 +856,7 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'course.cohortLeaving': 'Tark etilmoqda…',
     'course.cohortLeft': 'Siz sinfni tark etdingiz.',
     'course.cohortLeaveFailed':
-      'Sinfni tark etish tasdiqlanmadi. Hali ham unda ekaningizni ko‘rish uchun sahifani qayta yuklang.',
+      'Sinfni tark etish tasdiqlanmadi. Hali ham unda ekaningizni koʻrish uchun sahifani qayta yuklang.',
   },
   kk: {
     'learn.needProfile': 'Тіркелу үшін оқушы профилі қажет, ал бұл тіркелгіде ол әлі жоқ.',

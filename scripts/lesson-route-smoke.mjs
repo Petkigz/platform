@@ -13,7 +13,7 @@ const exp = Math.floor(Date.now() / 1000) + 3600;
 const token = `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode({ sub: user.id, role: 'authenticated', exp })}.fake`;
 const session = { access_token: token, refresh_token: 'fake-refresh', token_type: 'bearer', expires_in: 3600, expires_at: exp, user };
 const cookie = `sb-127-auth-token=base64-${encode(session)}`;
-let entitled = false; let mismatch = false; let multipleMedia = false; let uploads = null; let extras = false; const calls = [];
+let entitled = false; let mismatch = false; let multipleMedia = false; let uploads = null; let extras = false; let sourcesListed = true; const calls = [];
 const active = new Set(); const overlaps = [];
 const fake = createServer(async (req, res) => {
   res.setHeader('content-type', 'application/json');
@@ -60,9 +60,14 @@ const fake = createServer(async (req, res) => {
   else if (path === '/rest/v1/rpc/lesson_positions') res.end('{}');
   else if (path === '/rest/v1/media_renditions') res.end('[]');
   else if (path === '/rest/v1/rpc/lesson_playback_standing') res.end(JSON.stringify(uploads ?? []));
-  // `extras` switches on the two parts of a lesson that ship switched off and
-  // gives each something to show: practice questions, and a note with no bookmark.
-  else if (path === '/rest/v1/rpc/setting_bool') res.end(JSON.stringify(extras && ['learning.assessments', 'learning.notes_bookmarks'].includes(JSON.parse(body || '{}').p_key)));
+  // `extras` switches on three parts of a lesson that ship switched off and
+  // gives each something to show: practice questions, a note with no bookmark,
+  // and two sources, one with every field and a link and one with a title only.
+  else if (path === '/rest/v1/rpc/setting_bool') res.end(JSON.stringify(extras && ['learning.assessments', 'learning.notes_bookmarks', 'learning.provenance'].includes(JSON.parse(body || '{}').p_key)));
+  else if (extras && path === '/rest/v1/content_source_links') res.end(JSON.stringify(sourcesListed ? [
+    { anchor: 'Synthetic paragraph two', content_sources: { id: 'source-full', source_type: 'fiqh_reference', title: 'Synthetic fiqh title', author_or_compiler: 'Synthetic compiler', edition_or_version: 'Synthetic edition', reference_locator: 'Synthetic page 12', url: 'https://example.invalid/source' } },
+    { anchor: null, content_sources: { id: 'source-bare', source_type: 'quran', title: 'Synthetic bare title', author_or_compiler: null, edition_or_version: null, reference_locator: null, url: null } },
+  ] : []));
   else if (extras && path === '/rest/v1/assessments') res.end(JSON.stringify([{ id: 'practice', title: 'Synthetic practice', instructions: 'Synthetic instructions.', type: 'practice', pass_threshold: null, attempt_limit: null, lesson_id: 'lesson' }]));
   else if (extras && path === '/rest/v1/assessment_questions') res.end(JSON.stringify([
     { id: 'q-choice', assessment_id: 'practice', type: 'single_choice', content: { prompt: 'Synthetic choice question', choices: [{ id: 'a', text: 'Synthetic first choice' }, { id: 'b', text: 'Synthetic second choice' }] }, points: 1, position: 1, explanation: null, grading_method: 'automatic' },
@@ -221,6 +226,16 @@ try {
     for (const text of [...englishExtras, 'Synthetic practice', 'Synthetic instructions.', '<bdi>Synthetic choice question</bdi>', '<span dir="auto">Synthetic first choice</span>', 'Synthetic saved note.', counter('en')]) assert.ok(body.includes(text), `English: ${text}`);
     assert.equal(body.includes('lang="en"'), false);
     assert.equal(body.split('>Check<').length - 1, 3, 'one Check button for each of three questions');
+    // The sources card: the kind of a source by its name, not the column's
+    // word; the link on a line of its own, tied to its title.
+    for (const text of ['<h2>Sources and references</h2>', '<strong id="source-source-full"><bdi>Synthetic fiqh title</bdi></strong>', '<bdi>Synthetic compiler</bdi>', '<bdi>Synthetic edition</bdi>', '<bdi>Synthetic page 12</bdi>', 'Used at: <bdi>Synthetic paragraph two</bdi>', '<a href="https://example.invalid/source" target="_blank" rel="noreferrer" aria-describedby="source-source-full">Open the source</a>', '<span class="badge neutral">Fiqh reference</span>', '<span class="badge neutral">Qur’an</span>', 'Synthetic bare title']) assert.ok(body.includes(text) || body.includes(text.replace('’', '&#x27;')), `English: ${text}`);
+    for (const text of ['fiqh reference', 'fiqh_reference', '>quran<', '>Open source<']) assert.equal(body.includes(text), false, `English sources card says "${text}"`);
+    assert.equal(body.split('Open the source').length - 1, 1, 'a source with no address is given a link');
+    assert.equal(body.split('Used at:').length - 1, 1, 'a source with no place is given one');
+    sourcesListed = false;
+    const none = visible(await (await request({ cookie })).text());
+    assert.ok(none.includes('<p class="muted">No references are listed for this lesson yet.</p>'));
+    sourcesListed = true;
   }
   {
     const body = visible(await (await request({ cookie, 'accept-language': 'ar' })).text());
@@ -231,17 +246,21 @@ try {
     // The question numbers and the counter are written the reader's way.
     assert.ok(body.includes(counter('ar')), `Arabic: the counter is not ${counter('ar')}`);
     assert.ok(body.includes(`${new Intl.NumberFormat('ar').format(3)}<!-- -->. `), 'Arabic: the third question is not numbered the reader\u2019s way');
-    // Neither part is marked as English any more: the player's row is the only one.
+    for (const text of ['<h2>المصادر والمراجع</h2>', 'موضع استخدامه: <bdi>Synthetic paragraph two</bdi>', '>افتح المصدر</a>', '<span class="badge neutral">مرجع فقهي</span>', '<span class="badge neutral">القرآن</span>', '<bdi>Synthetic fiqh title</bdi>']) assert.ok(body.includes(text), `Arabic: ${text}`);
+    for (const text of ['Sources and references', 'Used at', 'Open the source', 'Fiqh reference', 'Qur’an', 'Qur&#x27;an', 'fiqh reference', 'fiqh_reference', 'quran<']) assert.equal(body.includes(text), false, `Arabic sources card says "${text}"`);
+    // None of these parts is marked as English any more: the player's row is the only one.
     assert.equal(body.split('lang="en" dir="ltr"').length - 1, 1);
   }
   {
     const body = visible(await (await request({ cookie: `${cookie}; ayahspring_locale=fr`, 'accept-language': 'ar' })).text());
+    assert.ok(body.includes('Passage concerné\u00a0: <bdi>Synthetic paragraph two</bdi>'), 'French: the place a source is used, with its no-break space');
+    for (const text of ['<h2>Sources et références</h2>', '>Ouvrir la source</a>', '>Référence de fiqh<', '>Coran<']) assert.ok(body.includes(text), `French: ${text}`);
     for (const text of ['Testez-vous', '>Vérifier<', '>Vrai<', '>Faux<', 'Vos outils d’étude', '>Ajouter la leçon aux favoris<', '>Enregistrer la note<', '>Effacer la note<']) assert.ok(body.includes(text) || body.includes(text.replace('’', '&#x27;')), `French: ${text}`);
   }
   {
     // A held language reads both in English, inside its English lesson.
     const body = visible(await (await request({ cookie, 'accept-language': 'ha' })).text());
-    for (const text of englishExtras) assert.ok(body.includes(text), `ha: ${text}`);
+    for (const text of [...englishExtras, 'Sources and references', 'Used at: <bdi>Synthetic paragraph two</bdi>', '>Open the source</a>', '>Fiqh reference<']) assert.ok(body.includes(text), `ha: ${text}`);
     assert.ok(body.includes(counter('en')));
   }
   extras = false;
@@ -249,7 +268,7 @@ try {
     const html = await (await request({ cookie, 'accept-language': 'wo, fr' })).text();
     assert.match(html, /<html[^>]*lang="en"/); assert.ok(visible(html).includes('>Materials<')); assert.equal(visible(html).includes('Supports'), false);
   }
-  console.log('Lesson languages passed: English, Arabic (frame, report link, the notes about a recording that cannot play, practice questions and study tools translated, player marked English), French by cookie, Hausa and Pashto frames with an English lesson, Wolof to English. No translation here has been read by a speaker.');
+  console.log('Lesson languages passed: English, Arabic (frame, report link, the notes about a recording that cannot play, practice questions, study tools and the sources card translated, player marked English), French by cookie, Hausa and Pashto frames with an English lesson, Wolof to English. No translation here has been read by a speaker.');
   if (process.env.RESPONSIVE_PLAYWRIGHT && process.env.RESPONSIVE_CHROME) {
     const { chromium } = await import(pathToFileURL(process.env.RESPONSIVE_PLAYWRIGHT).href);
     browser = await chromium.launch({ executablePath: process.env.RESPONSIVE_CHROME, headless: true, args: ['--no-sandbox'] });
@@ -305,7 +324,7 @@ try {
             english: [...lesson.querySelectorAll('[lang="en"]')].map((el) => getComputedStyle(el).direction),
             clipped: [...lesson.querySelectorAll('.badge, .lessons .n, .btn:not(.lesson-nav .btn)')].filter((el) => el.scrollWidth > el.clientWidth + 1).map((el) => el.textContent),
             kind: Math.max(...[...lesson.querySelectorAll('.lessons .n')].map((el) => el.getBoundingClientRect().right - el.getBoundingClientRect().left)),
-            overlap: [...lesson.querySelectorAll('.lessons li')].some((li) => { const n = li.querySelector('.n').getBoundingClientRect(); const t = li.querySelector('.t').getBoundingClientRect(); return n.width > 0 && t.width > 0 && n.left < t.right && t.left < n.right && n.top < t.bottom && t.top < n.bottom; }) };
+            overlap: [...lesson.querySelectorAll('.lessons li')].filter((li) => li.querySelector('.n')).some((li) => { const n = li.querySelector('.n').getBoundingClientRect(); const t = li.querySelector('.t').getBoundingClientRect(); return n.width > 0 && t.width > 0 && n.left < t.right && t.left < n.right && n.top < t.bottom && t.top < n.bottom; }) };
         });
         assert.ok(m.scroll <= width + 1, `${code} ${width}: page overflow ${m.scroll}`);
         assert.equal(m.dir, dir, `${code} ${width}: lesson direction`);
@@ -351,6 +370,22 @@ try {
         assert.equal(await section.locator('textarea').getAttribute('dir'), 'auto');
         await section.locator('.btn.ghost').click();
         assert.equal(await section.locator('button.linklike').count(), 1, `${code} ${width}: Cancel after a refusal does not bring the link back`);
+        // The sources card: the kind of a source does not run into what the
+        // teacher wrote about it, the link has a line to itself, and the
+        // teacher's Latin words read left to right inside a right-to-left row.
+        const sourcesCard = await page.evaluate(() => {
+          const row = document.getElementById('source-source-full').closest('li');
+          const words = row.querySelector('.t').getBoundingClientRect(); const kind = row.querySelector('.badge').getBoundingClientRect();
+          const link = row.querySelector('a').getBoundingClientRect(); const title = document.getElementById('source-source-full').getBoundingClientRect();
+          const touching = words.left < kind.right && kind.left < words.right && words.top < kind.bottom && kind.top < words.bottom;
+          return { touching, linkBelow: link.top >= title.bottom - 1, kind: row.querySelector('.badge').textContent, clipped: row.querySelector('.badge').scrollWidth > row.querySelector('.badge').clientWidth + 1,
+            written: getComputedStyle(row.querySelector('bdi')).direction, right: Math.max(words.right, kind.right), left: Math.min(words.left, kind.left) };
+        });
+        assert.equal(sourcesCard.touching, false, `${code} ${width}: the kind of a source runs into the source`);
+        assert.equal(sourcesCard.linkBelow, true, `${code} ${width}: the link to a source runs on from its title`);
+        assert.ok(sourcesCard.kind.length > 0 && !/fiqh/iu.test(sourcesCard.kind) && !sourcesCard.clipped, `${code} ${width}: the kind of a source reads "${sourcesCard.kind}"`);
+        assert.equal(sourcesCard.written, 'ltr', `${code} ${width}: the teacher's words are laid out ${sourcesCard.written}`);
+        assert.ok(sourcesCard.left >= -1 && sourcesCard.right <= width + 1, `${code} ${width}: a source row is outside the page`);
         // Practice questions: a wrong answer, a refusal and a reply that never
         // came are each answered in the reader's language, and the button is
         // not left busy.
@@ -381,6 +416,21 @@ try {
         // different things, neither of them the server's; a note that saves
         // says so; the counter is in the reader's digits.
         const tools = page.locator('.lesson-page section.card:has(#lesson-note)');
+        // Laid out as a heading with a button beside it and a row of actions:
+        // it used a form row, which squeezed the heading and the save button
+        // onto two lines each and stretched the bookmark button across the card.
+        if (width >= 768) {
+          const layout = await tools.evaluate((card) => {
+            const lines = (el) => { const range = document.createRange(); range.selectNodeContents(el); return new Set([...range.getClientRects()].map((r) => Math.round(r.top))).size; };
+            const save = card.querySelector('.study-actions .btn'); const mark = card.querySelector('.study-head .btn');
+            return { heading: lines(card.querySelector('h2')), save: lines(save), mark: mark.getBoundingClientRect().width / card.getBoundingClientRect().width,
+              check: Math.max(...[...document.querySelectorAll('.practice-check .btn')].map((b) => b.getBoundingClientRect().width)) / card.getBoundingClientRect().width };
+          });
+          assert.equal(layout.heading, 1, `${code} ${width}: the study tools heading is on ${layout.heading} lines`);
+          assert.equal(layout.save, 1, `${code} ${width}: the save button is on ${layout.save} lines`);
+          assert.ok(layout.mark < 0.5, `${code} ${width}: the bookmark button fills ${Math.round(layout.mark * 100)}% of the card`);
+          assert.ok(layout.check < 0.5, `${code} ${width}: a Check button fills ${Math.round(layout.check * 100)}% of the card`);
+        }
         const refusals = [];
         for (const status of [401, 409]) {
           await page.route('**/api/lesson-study-tools', (route) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify({ error: 'SERVER ENGLISH SENTENCE' }) }));
@@ -407,7 +457,7 @@ try {
         if (process.env.RESPONSIVE_SCREENSHOTS) await page.screenshot({ path: resolve(process.env.RESPONSIVE_SCREENSHOTS, `lesson-${code}-${width}.png`), fullPage: true });
         await context.close();
       }
-      console.log(`Synthetic lesson ${code}: 320, 390 and 1440 wide, no overflow, no clipped label, English parts left to right, arrows ${dir === 'rtl' ? 'turned round' : 'as typed'}; practice questions and study tools answer a refusal and a lost reply in ${code}`);
+      console.log(`Synthetic lesson ${code}: 320, 390 and 1440 wide, no overflow, no clipped label, English parts left to right, arrows ${dir === 'rtl' ? 'turned round' : 'as typed'}; practice questions and study tools answer a refusal and a lost reply in ${code}; the sources card fits`);
     }
     extras = false;
   }

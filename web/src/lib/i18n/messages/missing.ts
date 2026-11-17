@@ -229,14 +229,14 @@ export const MISSING: Partial<Record<LocaleCode, Partial<Messages>>> = {
   },
   uz: {
     'missing.title': 'Topilmadi',
-    'missing.heading': 'U sahifa bu yerda yo‘q',
+    'missing.heading': 'U sahifa bu yerda yoʻq',
     'missing.lede':
-      'Yo manzil biroz xato, yo bu yerda bo‘lgan narsa olib tashlangan. Kurs o‘qituvchi uni o‘qitishni to‘xtatganda olib tashlanadi, olib tashlangan kursni esa unga avval yozilganlar {learn} orqali o‘qiy oladi.',
+      'Yo manzil biroz xato, yo bu yerda boʻlgan narsa olib tashlangan. Kurs oʻqituvchi uni oʻqitishni toʻxtatganda olib tashlanadi, olib tashlangan kursni esa unga avval yozilganlar {learn} orqali oʻqiy oladi.',
     'missing.home': 'Bosh sahifa',
-    'missing.help': 'Yordam so‘rash',
+    'missing.help': 'Yordam soʻrash',
     'missing.fault':
-      'Agar AyahSpring ichidagi havola orqali bu yerga kelgan bo‘lsangiz, bu bizning xatomiz va havolani tuzatamiz.',
-    'missing.tell': 'Havola qayerda bo‘lganini bizga ayting',
+      'Agar AyahSpring ichidagi havola orqali bu yerga kelgan boʻlsangiz, bu bizning xatomiz va havolani tuzatamiz.',
+    'missing.tell': 'Havola qayerda boʻlganini bizga ayting',
   },
   kk: {
     'missing.title': 'Табылмады',

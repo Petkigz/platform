@@ -142,7 +142,7 @@ export function PracticeCheck({
   }
 
   return (
-    <section className="card">
+    <section className="card practice-check">
       <h2>{say.heading}</h2>
       <p className="muted" style={{ marginTop: 0 }}>
         {say.intro}

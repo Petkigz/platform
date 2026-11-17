@@ -1935,6 +1935,21 @@ html[data-motion='reduce'] *::after {
 .lesson-badges { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
 .lesson-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1rem; }
 .lesson-actions .btn { width: auto; margin-top: 0; }
+/* The learner's note and bookmark. `.row` is a form row whose first child is
+   a label 6.5rem wide. Here the first child was the heading in one row and
+   the save button in the other: each was squeezed onto two lines, and the
+   bookmark button beside the heading filled the rest of the card. */
+.study-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1rem; }
+.study-head h2 { margin: 0; }
+.study-head .btn { width: auto; margin-top: 0; }
+.study-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; margin-top: 0.75rem; }
+.study-actions .btn { width: auto; margin-top: 0; }
+.study-actions .study-count { margin-inline-start: auto; font-variant-numeric: tabular-nums; }
+/* Practice questions: once there is room, "Check" is as wide as its word
+   rather than as wide as the card. */
+@media (min-width: 640px) {
+  .practice-check .btn { width: auto; min-width: 8rem; }
+}
 /* Every input is given the full width of its line, which for a tick box means
    a box alone in the middle of a row above its own label. */
 .lesson-page input[type="checkbox"] { width: auto; margin: 0; }

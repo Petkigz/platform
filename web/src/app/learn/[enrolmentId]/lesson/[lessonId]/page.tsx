@@ -26,7 +26,7 @@ import { fetchThread } from '@/lib/discussion';
 import { isFlagEnabled } from '@/lib/flags';
 import { Discussion } from './discussion';
 import { ReportForm, type ReportFormWords } from './report-form';
-import { fetchLessonSources } from '@/lib/provenance';
+import { fetchLessonSources, type SourceType } from '@/lib/provenance';
 import { fetchLessonStudyTools } from '@/lib/lesson-study-tools';
 import { StudyTools, type StudyToolsWords } from './study-tools';
 import { fetchPlayableRenditions, groupByAsset, posterFor } from '@/lib/playback';
@@ -77,6 +77,23 @@ const RESOURCE_KEY: Record<ResourceType, MessageKey> = {
   link: 'lesson.typeLink',
   quiz: 'lesson.typeQuiz',
   other: 'lesson.typeOther',
+};
+
+/**
+ * The kind of each source, as the reader's language names it. The value in
+ * the database (`fiqh_reference`) is a column's word, not a reader's.
+ */
+const SOURCE_KEY: Record<SourceType, MessageKey> = {
+  quran: 'lesson.sourceQuran',
+  hadith: 'lesson.sourceHadith',
+  tafsir: 'lesson.sourceTafsir',
+  fiqh_reference: 'lesson.sourceFiqh',
+  book: 'lesson.sourceBook',
+  article: 'lesson.sourceArticle',
+  lecture: 'lesson.sourceLecture',
+  fatwa: 'lesson.sourceFatwa',
+  manuscript: 'lesson.sourceManuscript',
+  other: 'lesson.sourceOther',
 };
 
 /**
@@ -186,6 +203,9 @@ export default async function LessonPage({
     retry: t('lesson.practiceRetry'),
     failed: t('lesson.practiceFailed'),
   };
+  // The words before the place a source is used, and whatever follows it, which in every language
+  // written so far is nothing. The place is the teacher's own words.
+  const [usedBefore = '', usedAfter = ''] = t('lesson.sourcesUsedAt').split('{place}');
   // The learner's own note and bookmark.
   const studyWords: StudyToolsWords = {
     label: t('lesson.studyLabel'),
@@ -585,24 +605,40 @@ export default async function LessonPage({
         <PracticeCheck items={practiceItems} words={practiceWords} locale={shown.code} />
       )}
 
+      {/* What the lesson rests on. The frame is the reader's; a source's title,
+          author, edition and reference are the teacher's, shown as written and
+          each finding its own direction. */}
       {provenanceOn && (
-        <section className="card" {...english}>
-          <h2>Sources and references</h2>
+        <section className="card">
+          <h2>{t('lesson.sourcesHeading')}</h2>
           {sources.length === 0 ? (
-            <p className="muted">No references are listed for this lesson yet.</p>
+            <p className="muted">{t('lesson.sourcesNone')}</p>
           ) : (
             <ol className="lessons">
               {sources.map((source) => (
                 <li key={source.id}>
                   <div className="t">
-                    <strong>{source.title}</strong>
-                    {source.authorOrCompiler && <span> · {source.authorOrCompiler}</span>}
-                    {source.editionOrVersion && <span> · {source.editionOrVersion}</span>}
-                    {source.referenceLocator && <span> · {source.referenceLocator}</span>}
-                    {source.anchor && <p className="muted" style={{ margin: '.2rem 0 0' }}>Used at: {source.anchor}</p>}
-                    {source.url && <a href={source.url} target="_blank" rel="noreferrer">Open source</a>}
+                    <strong id={`source-${source.id}`}><bdi>{source.title}</bdi></strong>
+                    {source.authorOrCompiler && <span> · <bdi>{source.authorOrCompiler}</bdi></span>}
+                    {source.editionOrVersion && <span> · <bdi>{source.editionOrVersion}</bdi></span>}
+                    {source.referenceLocator && <span> · <bdi>{source.referenceLocator}</bdi></span>}
+                    {source.anchor && (
+                      <p className="muted" style={{ margin: '.2rem 0 0' }}>
+                        {usedBefore}<bdi>{source.anchor}</bdi>{usedAfter}
+                      </p>
+                    )}
+                    {/* On a line of its own: it used to run straight on from
+                        the reference with no space between them. Every link
+                        says the same words, so each is tied to its title. */}
+                    {source.url && (
+                      <p style={{ margin: '.2rem 0 0' }}>
+                        <a href={source.url} target="_blank" rel="noreferrer" aria-describedby={`source-${source.id}`}>
+                          {t('lesson.sourcesOpen')}
+                        </a>
+                      </p>
+                    )}
                   </div>
-                  <span className="badge neutral">{source.sourceType.replaceAll('_', ' ')}</span>
+                  <span className="badge neutral">{t(SOURCE_KEY[source.sourceType] ?? 'lesson.sourceOther')}</span>
                 </li>
               ))}
             </ol>

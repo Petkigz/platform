@@ -28,6 +28,7 @@ import {
 import { CATALOGUES, WRITTEN } from './i18n/messages/catalogues.ts';
 import { en } from './i18n/messages/en.ts';
 import { HELD_FOR_REVIEW, UNWRITTEN_WHILE_HELD, WHOLE_LANGUAGE, isUnwritten } from './i18n/messages/held.ts';
+import { SOURCE_TYPES } from './provenance.ts';
 import { LEARN } from './i18n/messages/learn.ts';
 import { COURSE } from './i18n/messages/course.ts';
 import { ASSESS } from './i18n/messages/assess.ts';
@@ -406,18 +407,19 @@ test('the learner dashboard is written for the languages with nothing held, and 
   assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign', 'missing']);
   // Thirty-seven for the dashboard (the learner-profile prompt is seven of
   // them), twenty-eight for the course page (twelve are the list of dated
-  // classes), seventy-six for the lesson page (its frame, the report form,
-  // the notes about a recording, the practice questions, the study tools),
+  // classes), ninety for the lesson page (its frame, the report form, the
+  // notes about a recording, the practice questions, the study tools, the
+  // sources card),
   // forty for the assessment page, its quiz and the assessment list on the
   // course page, and a hundred and seven for the assignment page and the
   // assignment list, of which forty-seven are the files part, and seven for
   // the page for an address with nothing at it.
-  assert.equal(unwrittenKeys.length, 295);
+  assert.equal(unwrittenKeys.length, 309);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('missing.')).length, 7);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('assign.')).length, 107);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('learn.')).length, 37);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('course.')).length, 28);
-  assert.equal(unwrittenKeys.filter((key) => key.startsWith('lesson.')).length, 76);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('lesson.')).length, 90);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('assess.')).length, 40);
 
   // Six files, one rule: the same languages in each.
@@ -471,7 +473,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     }
   }
   // What that costs the nineteen that are still in the picker, said out loud:
-  // 192 of 567 sentences, which is 34%. Nothing holds a floor under
+  // 192 of 581 sentences, which is 33%. Nothing holds a floor under
   // it any more: the owner chose on 2026-11-17 to keep these languages in the
   // picker and show the number. The count is pinned here so that it moves only
   // when somebody means it to, and is seen when it does. It moved from 55% to
@@ -484,12 +486,12 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // address added seven and the rounded number did not move (35.96%); the
   // notes about a recording that cannot play added ten and it is 35%; the
   // practice questions and the notes and bookmark on the lesson page added
-  // twenty-three and it is 34%. What they are shown did not get smaller; what
-  // is counted got bigger.
+  // twenty-three and it is 34%; the sources card added fourteen and it is
+  // 33%. What they are shown did not get smaller; what is counted got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 567);
-    assert.equal(coverageOf(code).percent, 34, code);
+    assert.equal(coverageOf(code).total, 581);
+    assert.equal(coverageOf(code).percent, 33, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');
   assert.equal(languageShownFor('en', 'learn').code, 'en');
@@ -678,18 +680,40 @@ test('the lesson page translates its frame and marks every English part inside i
     assert.ok(!page.includes(sentence), `"${sentence}" is still typed into the lesson page`);
   }
 
-  // Three places hold a client component, or a sentence written for one, that
-  // is English for every reader. Each says so: a material that is a player,
-  // sources, and the open discussion. The note about a recording that cannot
-  // play was one more and is the reader's now, above the materials and in its
-  // row; so are the practice questions and the notes and bookmark.
+  // Two places hold a client component that is English for every reader.
+  // Each says so: a material that is a player, and the open discussion. The
+  // note about a recording that cannot play was one more and is the reader's
+  // now, above the materials and in its row; so are the practice questions,
+  // the notes and bookmark, and the sources card.
   assert.match(page, /const english = shown\.code === 'en' \? \{\} : \(\{ lang: 'en', dir: 'ltr' \} as const\);/u);
-  assert.equal(page.match(/\{\.\.\.english\}/gu)?.length, 2);
+  assert.equal(page.match(/\{\.\.\.english\}/gu)?.length, 1);
   assert.match(page, /\{\.\.\.\(speaksEnglish \? english : \{\}\)\}/u);
   assert.match(page, /<div className="notice" style=\{\{ marginBottom: '1rem' \}\}>\s+<strong style=\{\{ display: 'block' \}\}>\{t\(summary\.headingKey\)\}/u);
   assert.doesNotMatch(page, /noteFor\(standing\.get\(r\.id\) \?\? null\) !== null/u);
   assert.match(page, /<PracticeCheck items=\{practiceItems\} words=\{practiceWords\} locale=\{shown\.code\} \/>/u);
-  assert.match(page, /\{provenanceOn && \(\s+<section className="card" \{\.\.\.english\}>/u);
+  // The sources card is the page's own. Its frame is the reader's; the kind
+  // of a source is named from the catalogue, one name for each value the
+  // database accepts, and the column's own word is never printed.
+  assert.match(page, /\{provenanceOn && \(\s+<section className="card">\s+<h2>\{t\('lesson\.sourcesHeading'\)\}<\/h2>/u);
+  assert.match(page, /<span className="badge neutral">\{t\(SOURCE_KEY\[source\.sourceType\] \?\? 'lesson\.sourceOther'\)\}<\/span>/u);
+  const sourceKeys = page.split('const SOURCE_KEY: Record<SourceType, MessageKey> = {')[1]?.split('};')[0] ?? '';
+  for (const kind of SOURCE_TYPES) assert.match(sourceKeys, new RegExp(`\\b${kind}: 'lesson\\.source[A-Z][a-z]+',`, 'u'), kind);
+  assert.equal(new Set(sourceKeys.match(/'lesson\.source[A-Za-z]+'/gu)).size, SOURCE_TYPES.length);
+  assert.doesNotMatch(page, /sourceType\.replaceAll|Sources and references|No references are listed|Used at:|>Open source</u);
+  // The place a source is used is the teacher's words, and comes last in
+  // every language written, so nothing is typed after it.
+  assert.match(page, /const \[usedBefore = '', usedAfter = ''\] = t\('lesson\.sourcesUsedAt'\)\.split\('\{place\}'\);/u);
+  assert.match(page, /\{usedBefore\}<bdi>\{source\.anchor\}<\/bdi>\{usedAfter\}/u);
+  for (const code of writtenLocales().map((l) => l.code)) {
+    const value = (WRITTEN[code] as Record<string, string> | undefined)?.['lesson.sourcesUsedAt'];
+    if (value !== undefined) assert.ok(value.endsWith('{place}') && value.length > '{place}'.length, `${code}: "${value}"`);
+  }
+  assert.ok(en['lesson.sourcesUsedAt'].endsWith('{place}'));
+  // What the teacher wrote keeps its own direction, and each link, which
+  // says the same words as every other, is tied to the title it opens.
+  assert.equal(page.match(/ · <bdi>\{source\.(?:authorOrCompiler|editionOrVersion|referenceLocator)\}<\/bdi>/gu)?.length, 3);
+  assert.match(page, /<strong id=\{`source-\$\{source\.id\}`\}><bdi>\{source\.title\}<\/bdi><\/strong>/u);
+  assert.match(page, /<a href=\{source\.url\} target="_blank" rel="noreferrer" aria-describedby=\{`source-\$\{source\.id\}`\}>/u);
   assert.match(page, /<StudyTools\s[^>]*words=\{studyWords\}\s+locale=\{shown\.code\}\s+\/>/u);
   // Both are client components handed their words. Neither asks a catalogue
   // for any, neither has a sentence typed into what it draws, and neither
@@ -970,4 +994,14 @@ test('the page for a wrong address is in the reader’s language, and English as
   // A held language reads the whole page in English, borrowed names included.
   assert.equal(languageShownFor('ha', 'missing').code, 'en');
   assert.equal(languageShownFor('ps', 'missing').dir, 'ltr');
+});
+
+test('Uzbek writes oʻ and gʻ with the letter, not with a quotation mark', () => {
+  // Half the Uzbek catalogue wrote "o‘" (a left quotation mark) and half
+  // "oʻ" (the letter, U+02BB), so one page showed both. The same for the
+  // tutuq belgisi in "maʼlum" (U+02BC), which is not a closing quote.
+  const uz = WRITTEN.uz as Record<string, string>;
+  const marked = Object.entries(uz).filter(([, value]) => /[\u2018\u2019`']/u.test(value));
+  assert.deepEqual(marked.map(([key]) => key), []);
+  assert.ok(Object.values(uz).some((value) => value.includes('\u02bb')));
 });

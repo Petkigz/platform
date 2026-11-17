@@ -7954,14 +7954,15 @@ owner chose the first.
   assessment list, 38% since the list of dated classes, 36% since the report
   form on the lesson page (and still 36%, rounded, with the page for a wrong
   address), 35% since the notes about a recording that cannot play, 34% since
-  the practice questions and the study tools on the lesson page.
+  the practice questions and the study tools on the lesson page, 33% since
+  its sources card.
 - **The test that refused a language under half is removed.** Nothing in the
   tests now limits how much English one of these languages shows. That is the
   cost of this choice and it was put to the owner in those words.
 - What the tests still require of every offered language: every sentence that
   is neither held nor deliberately unwritten is present, and the sentence
   that gives the percentage is in that language rather than English. The
-  count (192 of 567; it was 192 of 347 when this was decided) is pinned in
+  count (192 of 581; it was 192 of 347 when this was decided) is pinned in
   `held-translations.test.ts`, so it changes only on purpose.
 - The four withheld languages are unaffected. So is the rule that a new screen
   is not written for a language with anything held.
@@ -8054,7 +8055,8 @@ address with nothing at it followed: seven sentences in a new part,
 about a recording that cannot be played followed: ten sentences in
 `lesson.ts`, 35% for the nineteen. The practice questions and the learner's
 own note and bookmark followed: twenty-three sentences in `lesson.ts`, 34%
-for the nineteen.
+for the nineteen. The sources card followed: fourteen sentences in
+`lesson.ts`, ten of them the kinds of source, 33% for the nineteen.
 `UNWRITTEN_WHILE_HELD` is now `learn`, `course`, `lesson`, `assess`,
 `assign` and `missing`.
 

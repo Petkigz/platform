@@ -131,8 +131,8 @@ export function StudyTools({
 
   return (
     <section className="card" aria-label={say.label}>
-      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2 style={{ margin: 0 }}>{say.heading}</h2>
+      <div className="study-head">
+        <h2>{say.heading}</h2>
         <button type="button" className="btn secondary" onClick={toggleBookmark} disabled={busy}>
           {bookmarked ? say.unbookmark : say.bookmark}
         </button>
@@ -148,7 +148,7 @@ export function StudyTools({
         placeholder={say.placeholder}
         disabled={busy}
       />
-      <div className="row">
+      <div className="study-actions">
         <button type="button" className="btn" onClick={saveNote} disabled={busy || note.trim() === savedNote}>
           {busy ? say.saving : say.save}
         </button>
@@ -157,7 +157,7 @@ export function StudyTools({
             {say.clear}
           </button>
         )}
-        <span className="muted" aria-live="polite">
+        <span className="muted study-count" aria-live="polite">
           {formatNumber(locale, note.length)}/{formatNumber(locale, MAX_LESSON_NOTE_LENGTH)}
         </span>
       </div>

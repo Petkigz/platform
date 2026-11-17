@@ -556,6 +556,25 @@ export const en = {
   'lesson.studyFailed': 'We could not confirm that change. Try again.',
   'lesson.studySignIn': 'Sign in again to save notes and bookmarks.',
 
+  // The card that lists what a lesson rests on. `{place}` is where in the
+  // lesson a source is used, as the teacher wrote it, and comes last. The ten
+  // kinds are the ones the database accepts (`SOURCE_TYPES`); a source's
+  // title, author, edition and reference are the teacher's and not translated.
+  'lesson.sourcesHeading': 'Sources and references',
+  'lesson.sourcesNone': 'No references are listed for this lesson yet.',
+  'lesson.sourcesUsedAt': 'Used at: {place}',
+  'lesson.sourcesOpen': 'Open the source',
+  'lesson.sourceQuran': 'Qur’an',
+  'lesson.sourceHadith': 'Hadith',
+  'lesson.sourceTafsir': 'Tafsir',
+  'lesson.sourceFiqh': 'Fiqh reference',
+  'lesson.sourceBook': 'Book',
+  'lesson.sourceArticle': 'Article',
+  'lesson.sourceLecture': 'Lecture',
+  'lesson.sourceFatwa': 'Fatwa',
+  'lesson.sourceManuscript': 'Manuscript',
+  'lesson.sourceOther': 'Other',
+
   // Taking an assessment: the page and the quiz on it. Same twenty-seven
   // languages (`assess.ts`). No sentence here types a number or a percent
   // sign; `{count}`, `{earned}`, `{possible}`, `{number}`, `{answered}`,

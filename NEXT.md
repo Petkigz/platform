@@ -2618,6 +2618,49 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The sources card, in the reader's language, 2026-11-17
+
+The card that lists what a lesson rests on (`learning.provenance`, shipped
+off) was English, marked as English, for every reader, and printed the kind
+of each source as the database stores it: "fiqh reference", "quran".
+
+- *Translated.* Fourteen sentences (`lesson.sources*`, `lesson.source*`) in
+  the twenty-seven languages with nothing held: the heading, the sentence for
+  a lesson with none, "Used at: {place}", the link, and a name for each of the
+  ten kinds. **Unreviewed, and these are words of the religion**: Qur’an,
+  hadith, tafsir, fiqh reference, fatwa. Each follows the spelling the same
+  language's front page already uses. Swahili says "Tafsiri ya Qur’ani"
+  because "tafsiri" alone means a translation.
+- *What the teacher wrote is not translated:* a source's title, author,
+  edition, reference and the place it is used are shown as written, each
+  finding its own direction.
+- *Three changes every reader gets.* The kind reads "Fiqh reference" and
+  "Qur’an" rather than the column's lower-case word. The link reads "Open the
+  source" (it read "Open source") and has a line to itself: it used to run
+  straight on from the reference with no space. Each link is tied to its
+  title for a screen reader, since every one says the same words.
+- *Layout, found in the browser.* The study tools used a form row whose first
+  child is a label 6.5rem wide. The heading and the save button were each
+  squeezed onto two lines and the bookmark button filled the rest of the
+  card, in every language. They have their own two rows now. "Check" under a
+  practice question is as wide as its word from 640 pixels up, rather than as
+  wide as the card.
+- *Uzbek, one letter.* Part of the Uzbek catalogue wrote oʻ and gʻ with a
+  left quotation mark, part with an ASCII apostrophe and part with the letter
+  (U+02BB), so one page showed more than one. 215 marks in six files are the
+  letter now, and the tutuq belgisi is U+02BC. A test keeps it so.
+- *What it did to the nineteen.* `/language` tells each of them **33%** (192
+  of 581).
+- *Checked* over HTTP against a synthetic backend with the switch on and two
+  sources (one with every field and a link, one with a title only), and with
+  none: English, Arabic, French, Hausa (English). *Checked in Chromium* in
+  Arabic and Tamil at 320, 390 and 1440 wide: the kind does not run into the
+  source, the link is below its title, nothing outside the page; at 1440 the
+  study tools heading and save button are on one line. **Not checked:** a
+  real source row read through row-level security.
+- *Still English on the lesson for everybody:* the players and their
+  saved-place messages, and an open discussion.
+
 ### Practice questions and study tools, in the reader's language, 2026-11-17
 
 Two parts of the lesson page that ship switched off (`learning.assessments`,
