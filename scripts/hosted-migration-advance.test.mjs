@@ -132,17 +132,29 @@ test('a history that is not exactly the 342 does not start', async () => {
   await db.close();
 });
 
-test('a failure while applying says how far it got and is never retried here', async () => {
+test('a failure while applying says how far it got, and a second run refuses', async () => {
   const { db, client } = await hosted();
   const calls = [];
   let result = await run(client, fakeCli(db, calls, { upTo: 3, code: 1 }));
   assert.equal(result.ok, false);
   assert.match(result.message, /history now records 345 migrations \(the first 3 of the ten\)/);
-  assert.match(result.message, /Do not rerun this/); assert.doesNotMatch(result.message, /secret-value/);
+  assert.match(result.message, /does not continue from a partial history/); assert.doesNotMatch(result.message, /secret-value/);
   calls.length = 0;
   result = await run(client, fakeCli(db, calls));
-  assert.equal(result.ok, false); assert.deepEqual(calls, []);
+  assert.equal(result.ok, false); assert.deepEqual(calls, []); assert.match(result.message, /it records 345/);
   await db.close();
+  // The CLI fails before applying anything: a second run starts from the same 342 and may apply.
+  const early = await hosted(); const earlyCalls = [];
+  result = await run(early.client, fakeCli(early.db, earlyCalls, { upTo: 0, code: 1 }));
+  assert.equal(result.ok, false); assert.match(result.message, /history now records 342 migrations\./);
+  result = await run(early.client, fakeCli(early.db, earlyCalls));
+  assert.equal(result.ok, true, result.message); assert.deepEqual(earlyCalls, ['dry-run', 'apply', 'dry-run', 'apply']);
+  await early.db.close();
+  // A lost connection after the CLI started: the outcome is said to be unknown.
+  const lost = await hosted();
+  result = await run(lost.client, async (args) => { if (args.includes('--dry-run')) return { code: 0, output: names(pending) }; lost.client.query = async () => { throw new Error('connection terminated host.example'); }; return { code: 0, output: '' }; });
+  assert.equal(result.ok, false); assert.match(result.message, /is not known/); assert.doesNotMatch(result.message, /host\.example/);
+  await lost.db.close();
   // The CLI says it succeeded but recorded fewer.
   const other = await hosted();
   result = await run(other.client, fakeCli(other.db, [], { upTo: 9 }));

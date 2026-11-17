@@ -439,7 +439,9 @@ What the job cannot do:
 
 - It cannot undo a migration the CLI has committed. The CLI commits file by
   file; a failure at the seventh leaves six applied. The job says how many are
-  recorded and refuses to run again. Reconcile by hand.
+  recorded. Run again it applies only from exactly 342, only reports at 352,
+  and refuses anything between: continuing from a partial apply was not
+  reviewed. Reconcile by hand.
 - The rehearsal runs the ten in one transaction and the CLI runs them in ten.
   Something that only works one way would not be seen. None of the ten has a
   statement that ends or escapes a transaction; the job checks that too.

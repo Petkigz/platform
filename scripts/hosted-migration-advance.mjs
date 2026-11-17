@@ -24,7 +24,8 @@
 // its checks (separate sessions; nothing else should be writing), undo a
 // migration the CLI has committed, or prove anything about Auth, PostgREST or
 // the application. A run that finds all 352 already recorded applies nothing
-// and only repeats the comparison.
+// and only repeats the comparison; a run that finds anything between 342 and
+// 352 refuses, because continuing from a partial apply was not reviewed.
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -185,14 +186,14 @@ export async function advancePlan({ client, runCli, target, applied, pending, ex
     const after = await inspect(client);
     if (apply.code !== 0) {
       const done = after.history.length - applied.length;
-      return { ok: false, message: `The CLI reported a failure while applying. Possible categories: ${failureCategories(apply.output).join('; ') || 'Unclassified CLI failure'}. The history now records ${after.history.length} migrations${done > 0 && done <= pending.length && historyMatches(after.history, all.slice(0, after.history.length)) ? ` (the first ${done} of the ten)` : ''}. Stop; compare history and schema before anything else. Do not rerun this.` };
+      return { ok: false, message: `The CLI reported a failure while applying. Possible categories: ${failureCategories(apply.output).join('; ') || 'Unclassified CLI failure'}. The history now records ${after.history.length} migrations${done > 0 && done <= pending.length && historyMatches(after.history, all.slice(0, after.history.length)) ? ` (the first ${done} of the ten)` : ''}. Stop; compare history and schema before anything else. This job does not continue from a partial history: run again, it applies only if the history is still exactly the first ${applied.length}, and otherwise only reports.` };
     }
     if (!historyMatches(after.history, all)) return { ok: false, message: `The CLI reported success, but the history records ${after.history.length} migrations and is not the ${all.length} expected. Stop and investigate.` };
     const problems = privilegeProblems(expected, await readPrivileges(client));
     if (problems.length) return { ok: false, message: `All ${all.length} migrations are recorded, but the API roles do not hold what the tested database gives them:\n  ${problems.join('\n  ')}` };
     return { ok: true, message: `Applied. The history records all ${all.length} migrations in order, and anon and authenticated hold exactly the ${expected.privileges.length} privileges of the tested database, with the same ${expected.defaults.length} defaults for new objects. This does not prove Auth, PostgREST or the application.` };
   } catch {
-    return { ok: false, message: applyStarted ? 'The outcome of the apply, or of the checks after it, is not known. Stop; compare history and schema before anything else. Do not rerun this.' : 'Not applied: a check could not be completed.' };
+    return { ok: false, message: applyStarted ? 'The outcome of the apply, or of the checks after it, is not known. Compare history and schema before anything else. Run again, this job applies only if the history is still exactly the first 342; with all 352 recorded it only repeats the comparison, and with anything between it refuses.' : 'Not applied: a check could not be completed.' };
   }
 }
 
