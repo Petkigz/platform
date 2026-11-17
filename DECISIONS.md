@@ -7958,7 +7958,7 @@ owner chose the first.
 - What the tests still require of every offered language: every sentence that
   is neither held nor deliberately unwritten is present, and the sentence
   that gives the percentage is in that language rather than English. The
-  count (192 of 492; it was 192 of 347 when this was decided) is pinned in
+  count (192 of 494; it was 192 of 347 when this was decided) is pinned in
   `held-translations.test.ts`, so it changes only on purpose.
 - The four withheld languages are unaffected. So is the rule that a new screen
   is not written for a language with anything held.
@@ -8041,7 +8041,7 @@ thirty-seven sentences (`assess.ts`), the same twenty-seven languages, 50% for
 the nineteen. The assignment page and the assignment list followed: sixty
 sentences (`assign.ts`), the same twenty-seven languages, 43% for the
 nineteen. The files part of the assignment page and the assessment list on the
-course page followed: forty-five sentences in `assign.ts` and three in
+course page followed: forty-seven sentences in `assign.ts` and three in
 `assess.ts`, the same twenty-seven languages, 39% for the nineteen.
 `UNWRITTEN_WHILE_HELD` is now `learn`, `course`, `lesson`, `assess`
 and `assign`.
@@ -8097,19 +8097,29 @@ raise a distinct code for each refusal; that is a migration and was not made
 here.
 
 **The same for a file.** Checking, uploading, confirming and removing a file
-(`lib/coursework.ts`) answer with a `code` beside the English `message`:
-`no_name`, `empty`, `too_big`, `wrong_kind`, `too_many`, `unreadable`,
-`uncertain`, `remove_uncertain`. The first five are decided in the browser
-before anything is sent. **Everything the server refuses is `uncertain`.** The
-learner is told the upload could not be confirmed and to refresh and check the
-list before sending again; they are not told why the server refused. In
-English that page used to print the server's own sentence in front of the same
-advice. A learner in another language has lost that sentence, and a learner in
-English has lost it too, because the page has one behaviour and not two. What
-they are told to do is unchanged and is still the right thing to do. Giving
-the reason back means the media route answering with a code, as the
-assignments route does; that was not done here. A code the page does not know
-reads as `uncertain`, never as "refused". File sizes are printed as
+(`lib/coursework.ts`) answer with a `code` beside the English `message`. Five
+are decided in the browser before anything is sent (`no_name`, `empty`,
+`too_big`, `wrong_kind`, `too_many`) and one while reading the file
+(`unreadable`). When the database refuses to open an upload, `/api/media`
+answers 4xx with a code of its own (`coursework-refusal.ts`): `not_signed_in`
+401, `not_allowed` 403, `not_found` 404, `not_draft` 409, `list_changed` 409,
+`different_file` 409, `too_many` 409, `too_big` 413, `wrong_kind` 415,
+`no_name` 400. Those are known refusals: the function raised, nothing was
+registered, and the learner is told what is so. The route used to answer most
+of them 400, as though the request had been malformed.
+
+**Everything else is `uncertain`**: a lost reply, a server error, a reply with
+no code, a code the page has never heard of, and every failure to *confirm* a
+file that was sent. The learner is told the outcome is not known and to
+refresh and check the list before sending again. A confirmation the server
+refused is in that group on purpose. By then the bytes have been sent, and
+"refused" would have a learner send them twice.
+
+Unlike the assignments route, the sentences are not copied into the test.
+`coursework-refusal.test.ts` reads the two migrations and fails if either
+function raises a sentence nobody has decided about. That holds for these two
+functions only; a trigger that refuses underneath them is not read, has no
+code, and is `uncertain`. File sizes are printed as
 `describeFileSize` writes them ("25.0 MiB") in every language, and the format
 names PDF, JPEG, PNG and WebP are left as they are; JPEG and WebP were added
 to the translation audit's list of words that are not translated, beside PDF.

@@ -17,7 +17,7 @@ import type { Messages } from './en.ts';
  * `assess.pointsOne`, `assess.pointsOther`, `assess.score`,
  * `assess.submitting`).
  *
- * The files part of the page is here too (`assign.file*`, forty-five
+ * The files part of the page is here too (`assign.file*`, forty-seven
  * sentences): choosing, checking and uploading a file, and everything it says
  * when storage and the record disagree. Several of those are said when it is
  * not known whether a file arrived or was removed. They say that it is not
@@ -27,8 +27,7 @@ import type { Messages } from './en.ts';
  *
  * **What is not here.** What a teacher or a learner wrote, and a file's name,
  * are shown as written. File sizes ("25.0 MiB") and the format names PDF,
- * JPEG, PNG and WebP are the same in every language. Why the server refused a
- * file is not said in any language: see `CourseworkFileCode`.
+ * JPEG, PNG and WebP are the same in every language.
  *
  * **Unreviewed.** No speaker has read any of these. `errUnconfirmed` is what a
  * learner reads when their work may or may not have been saved, and it tells
@@ -165,6 +164,10 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'الملفات المسجَّلة مع هذه النسخة. فتح الملف يتحقق من صلاحيتك الحالية؛ وقد لا يكون الملف متاحًا بعد الآن.',
     'assign.fileRevisionOpen': 'حاول فتح الملف {number}',
     'assign.fileRevisionInvalid': 'مرجع الملف {number} غير صالح ويحتاج إلى مراجعة خاصة.',
+    'assign.fileErrNotDraft':
+      'لا يمكن إضافة ملف إلا عندما يكون هذا العمل مسودة والواجب مفتوحًا. حدّث الصفحة لترى حالته.',
+    'assign.fileErrDifferent':
+      'هذا ليس الملف المعلّق. اختر الملف نفسه مرة أخرى؛ لا يمكن إرسال ملف آخر مكانه.',
   },
   ur: {
     'assign.label': 'اسائنمنٹ',
@@ -295,6 +298,10 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.fileRevisionOpen': 'فائل {number} کھولنے کی کوشش کریں',
     'assign.fileRevisionInvalid':
       'فائل کا حوالہ {number} درست نہیں اور اسے الگ سے دیکھنے کی ضرورت ہے۔',
+    'assign.fileErrNotDraft':
+      'فائل صرف اسی وقت شامل کی جا سکتی ہے جب یہ کام مسودہ ہو اور اسائنمنٹ کھلی ہو۔ اس کی حالت دیکھنے کے لیے صفحہ ریفریش کریں۔',
+    'assign.fileErrDifferent':
+      'یہ وہ فائل نہیں ہے جو زیرِ التوا ہے۔ وہی فائل دوبارہ منتخب کریں؛ اس کی جگہ کوئی دوسری فائل نہیں بھیجی جا سکتی۔',
   },
   fa: {
     'assign.label': 'تکلیف',
@@ -421,6 +428,10 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'فایل‌های ثبت‌شده با این نسخه. باز کردن فایل دسترسی فعلی شما را بررسی می‌کند؛ ممکن است فایل دیگر در دسترس نباشد.',
     'assign.fileRevisionOpen': 'تلاش برای باز کردن فایل {number}',
     'assign.fileRevisionInvalid': 'ارجاع فایل {number} نامعتبر است و به بررسی جداگانه نیاز دارد.',
+    'assign.fileErrNotDraft':
+      'فقط وقتی می‌توان فایل افزود که این کار پیش‌نویس و تکلیف باز باشد. برای دیدن وضعیت آن، صفحه را تازه کنید.',
+    'assign.fileErrDifferent':
+      'این همان فایلی نیست که در انتظار است. همان فایل را دوباره انتخاب کنید؛ فایل دیگری را نمی‌توان به جای آن ارسال کرد.',
   },
   'fa-af': {
     'assign.label': 'کار خانگی',
@@ -549,6 +560,10 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'فایل‌های ثبت‌شده با این نسخه. باز کردن فایل دسترسی فعلی شما را بررسی می‌کند؛ ممکن است فایل دیگر در دسترس نباشد.',
     'assign.fileRevisionOpen': 'تلاش برای باز کردن فایل {number}',
     'assign.fileRevisionInvalid': 'ارجاع فایل {number} نامعتبر است و به بررسی جداگانه نیاز دارد.',
+    'assign.fileErrNotDraft':
+      'فقط وقتی می‌توان فایل افزود که این کار پیش‌نویس و کار خانگی باز باشد. برای دیدن وضعیت آن، صفحه را تازه کنید.',
+    'assign.fileErrDifferent':
+      'این همان فایلی نیست که در انتظار است. همان فایل را دوباره انتخاب کنید؛ فایل دیگری را نمی‌توان به جای آن فرستاد.',
   },
   tr: {
     'assign.label': 'Ödev',
@@ -679,6 +694,10 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.fileRevisionOpen': '{number}. dosyayı açmayı dene',
     'assign.fileRevisionInvalid':
       '{number}. dosya başvurusu geçersiz ve ayrıca incelenmesi gerekiyor.',
+    'assign.fileErrNotDraft':
+      'Dosya yalnızca bu çalışma taslakken ve ödev açıkken eklenebilir. Durumunu görmek için sayfayı yenileyin.',
+    'assign.fileErrDifferent':
+      'Bu, bekleyen dosya değil. Aynı dosyayı yeniden seçin; onun yerine başka bir dosya gönderilemez.',
   },
   id: {
     'assign.label': 'Tugas',
@@ -813,6 +832,10 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.fileRevisionOpen': 'Coba buka berkas {number}',
     'assign.fileRevisionInvalid':
       'Rujukan berkas {number} tidak valid dan perlu ditinjau tersendiri.',
+    'assign.fileErrNotDraft':
+      'Berkas hanya dapat ditambahkan selama pekerjaan ini masih draf dan tugasnya masih dibuka. Muat ulang halaman untuk melihat keadaannya.',
+    'assign.fileErrDifferent':
+      'Itu bukan berkas yang sedang tertunda. Pilih lagi berkas yang sama; berkas lain tidak dapat dikirim sebagai gantinya.',
   },
   ms: {
     'assign.label': 'Tugasan',
@@ -946,6 +969,10 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.fileRevisionOpen': 'Cuba buka fail {number}',
     'assign.fileRevisionInvalid':
       'Rujukan fail {number} tidak sah dan perlu disemak secara berasingan.',
+    'assign.fileErrNotDraft':
+      'Fail hanya boleh ditambah semasa kerja ini masih draf dan tugasan masih dibuka. Muat semula halaman untuk melihat keadaannya.',
+    'assign.fileErrDifferent':
+      'Itu bukan fail yang sedang tertangguh. Pilih fail yang sama sekali lagi; fail lain tidak boleh dihantar sebagai gantinya.',
   },
   bn: {
     'assign.label': 'অ্যাসাইনমেন্ট',
@@ -1078,6 +1105,10 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.fileRevisionOpen': 'ফাইল {number} খোলার চেষ্টা করুন',
     'assign.fileRevisionInvalid':
       'ফাইলের সূত্র {number} সঠিক নয় এবং আলাদাভাবে পর্যালোচনা প্রয়োজন।',
+    'assign.fileErrNotDraft':
+      'এই কাজটি খসড়া থাকা অবস্থায় এবং অ্যাসাইনমেন্ট খোলা থাকলেই কেবল ফাইল যোগ করা যায়। এর অবস্থা দেখতে পৃষ্ঠাটি রিফ্রেশ করুন।',
+    'assign.fileErrDifferent':
+      'এটি সেই অপেক্ষমাণ ফাইল নয়। একই ফাইল আবার বেছে নিন; তার জায়গায় অন্য ফাইল পাঠানো যায় না।',
   },
   hi: {
     'assign.label': 'असाइनमेंट',
@@ -1209,6 +1240,10 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.fileRevisionOpen': 'फ़ाइल {number} खोलने की कोशिश करें',
     'assign.fileRevisionInvalid':
       'फ़ाइल संदर्भ {number} अमान्य है और इसे अलग से देखने की ज़रूरत है।',
+    'assign.fileErrNotDraft':
+      'फ़ाइल तभी जोड़ी जा सकती है जब यह काम ड्राफ़्ट हो और असाइनमेंट खुला हो। इसकी स्थिति देखने के लिए पेज रीफ़्रेश करें।',
+    'assign.fileErrDifferent':
+      'यह वह फ़ाइल नहीं है जो लंबित है। वही फ़ाइल दोबारा चुनें; उसकी जगह कोई दूसरी फ़ाइल नहीं भेजी जा सकती।',
   },
   fr: {
     'assign.label': 'Devoir',
@@ -1342,6 +1377,10 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.fileRevisionOpen': 'Essayer d’ouvrir le fichier {number}',
     'assign.fileRevisionInvalid':
       'La référence de fichier {number} n’est pas valide et nécessite un examen individuel.',
+    'assign.fileErrNotDraft':
+      'Un fichier ne peut être ajouté que tant que ce travail est un brouillon et que le devoir est ouvert. Actualisez la page pour voir où il en est.',
+    'assign.fileErrDifferent':
+      'Ce n’est pas le fichier en attente. Choisissez de nouveau le même fichier ; un autre ne peut pas être envoyé à sa place.',
   },
   es: {
     'assign.label': 'Tarea',
@@ -1475,6 +1514,10 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.fileRevisionOpen': 'Intentar abrir el archivo {number}',
     'assign.fileRevisionInvalid':
       'La referencia de archivo {number} no es válida y necesita una revisión individual.',
+    'assign.fileErrNotDraft':
+      'Solo se puede añadir un archivo mientras este trabajo sea un borrador y la tarea esté abierta. Actualiza la página para ver en qué estado está.',
+    'assign.fileErrDifferent':
+      'Ese no es el archivo que está pendiente. Elige de nuevo el mismo archivo; no se puede enviar otro en su lugar.',
   },
   pt: {
     'assign.label': 'Tarefa',
@@ -1608,6 +1651,10 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.fileRevisionOpen': 'Tentar abrir o ficheiro {number}',
     'assign.fileRevisionInvalid':
       'A referência de ficheiro {number} é inválida e precisa de revisão individual.',
+    'assign.fileErrNotDraft':
+      'Só é possível adicionar um ficheiro enquanto este trabalho for um rascunho e a tarefa estiver aberta. Atualize a página para ver em que estado está.',
+    'assign.fileErrDifferent':
+      'Esse não é o ficheiro que está pendente. Escolha novamente o mesmo ficheiro; não é possível enviar outro no seu lugar.',
   },
   sw: {
     'assign.label': 'Zoezi',
@@ -1737,6 +1784,10 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.fileRevisionOpen': 'Jaribu kufungua faili ya {number}',
     'assign.fileRevisionInvalid':
       'Rejeo la faili ya {number} si sahihi na linahitaji ukaguzi wa kipekee.',
+    'assign.fileErrNotDraft':
+      'Faili inaweza kuongezwa tu wakati kazi hii ni rasimu na zoezi liko wazi. Onyesha upya ukurasa ili kuona hali yake.',
+    'assign.fileErrDifferent':
+      'Hiyo si faili inayosubiri. Chagua tena faili ileile; faili nyingine haiwezi kutumwa mahali pake.',
   },
   af: {
     'assign.label': 'Opdrag',
@@ -1870,6 +1921,10 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.fileRevisionOpen': 'Probeer lêer {number} oopmaak',
     'assign.fileRevisionInvalid':
       'Lêerverwysing {number} is ongeldig en moet afsonderlik hersien word.',
+    'assign.fileErrNotDraft':
+      '’n Lêer kan net bygevoeg word terwyl hierdie werk ’n konsep is en die opdrag oop is. Verfris die bladsy om te sien hoe dit staan.',
+    'assign.fileErrDifferent':
+      'Dit is nie die lêer wat hangend is nie. Kies weer dieselfde lêer; ’n ander een kan nie in die plek daarvan gestuur word nie.',
   },
   'zh-hans': {
     'assign.label': '作业',
@@ -1978,6 +2033,8 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.fileRevisionNote': '随这一版记录的文件。打开文件时会检查你当前的访问权限；文件可能已不可用。',
     'assign.fileRevisionOpen': '尝试打开文件 {number}',
     'assign.fileRevisionInvalid': '文件引用 {number} 无效，需要单独审核。',
+    'assign.fileErrNotDraft': '只有在这份作业仍是草稿且作业开放时才能添加文件。请刷新页面查看当前状态。',
+    'assign.fileErrDifferent': '这不是那个待处理的文件。请重新选择同一文件；不能用其他文件代替它发送。',
   },
   'zh-hant': {
     'assign.label': '作業',
@@ -2086,6 +2143,8 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.fileRevisionNote': '隨這一版記錄的檔案。開啟檔案時會檢查你目前的存取權限；檔案可能已無法使用。',
     'assign.fileRevisionOpen': '嘗試開啟檔案 {number}',
     'assign.fileRevisionInvalid': '檔案參照 {number} 無效，需要個別審核。',
+    'assign.fileErrNotDraft': '只有在這份作業仍是草稿且作業開放時才能加入檔案。請重新整理頁面查看目前狀態。',
+    'assign.fileErrDifferent': '這不是那個待處理的檔案。請重新選擇同一個檔案；不能用其他檔案代替它傳送。',
   },
   vi: {
     'assign.label': 'Bài tập',
@@ -2214,6 +2273,10 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Các tệp được ghi nhận cùng phiên bản này. Khi mở tệp, quyền truy cập hiện tại của bạn sẽ được kiểm tra; tệp có thể không còn khả dụng.',
     'assign.fileRevisionOpen': 'Thử mở tệp {number}',
     'assign.fileRevisionInvalid': 'Tham chiếu tệp {number} không hợp lệ và cần được xem xét riêng.',
+    'assign.fileErrNotDraft':
+      'Chỉ có thể thêm tệp khi bài làm này còn là bản nháp và bài tập còn mở. Hãy làm mới trang để xem tình trạng hiện tại.',
+    'assign.fileErrDifferent':
+      'Đó không phải là tệp đang chờ. Hãy chọn lại cùng tệp đó; không thể gửi tệp khác thay cho nó.',
   },
   th: {
     'assign.label': 'งานที่มอบหมาย',
@@ -2341,6 +2404,10 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.fileRevisionOpen': 'ลองเปิดไฟล์ที่ {number}',
     'assign.fileRevisionInvalid':
       'การอ้างอิงไฟล์ที่ {number} ไม่ถูกต้องและต้องได้รับการตรวจสอบเป็นรายกรณี',
+    'assign.fileErrNotDraft':
+      'เพิ่มไฟล์ได้เฉพาะเมื่องานนี้ยังเป็นฉบับร่างและงานที่มอบหมายยังเปิดอยู่ โปรดรีเฟรชหน้าเพื่อดูสถานะล่าสุด',
+    'assign.fileErrDifferent':
+      'นั่นไม่ใช่ไฟล์ที่รอดำเนินการอยู่ โปรดเลือกไฟล์เดิมอีกครั้ง ไม่สามารถส่งไฟล์อื่นแทนได้',
   },
   fil: {
     'assign.label': 'Takdang-aralin',
@@ -2475,6 +2542,10 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.fileRevisionOpen': 'Subukang buksan ang file {number}',
     'assign.fileRevisionInvalid':
       'Hindi wasto ang reference ng file {number} at kailangan itong suriin nang hiwalay.',
+    'assign.fileErrNotDraft':
+      'Makakapagdagdag lang ng file habang draft pa ang gawang ito at bukas ang takdang-aralin. I-refresh ang pahina para makita ang kalagayan nito.',
+    'assign.fileErrDifferent':
+      'Hindi iyan ang file na nakabinbin. Piliin muli ang parehong file; hindi maipapadala ang ibang file kapalit nito.',
   },
   uz: {
     'assign.label': 'Topshiriq',
@@ -2608,6 +2679,10 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.fileRevisionOpen': '{number}-faylni ochib ko‘rish',
     'assign.fileRevisionInvalid':
       '{number}-fayl havolasi yaroqsiz va alohida ko‘rib chiqilishi kerak.',
+    'assign.fileErrNotDraft':
+      'Faylni faqat bu ish qoralama bo‘lgan va topshiriq ochiq bo‘lgan paytda qo‘shish mumkin. Holatini ko‘rish uchun sahifani yangilang.',
+    'assign.fileErrDifferent':
+      'Bu kutilayotgan fayl emas. Shu faylni qayta tanlang; uning o‘rniga boshqa faylni yuborib bo‘lmaydi.',
   },
   kk: {
     'assign.label': 'Тапсырма',
@@ -2736,6 +2811,10 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Осы нұсқамен бірге жазылған файлдар. Файлды ашқанда ағымдағы рұқсатыңыз тексеріледі; файл енді қолжетімді болмауы мүмкін.',
     'assign.fileRevisionOpen': '{number}-файлды ашып көру',
     'assign.fileRevisionInvalid': '{number}-файл сілтемесі жарамсыз және жеке қарауды қажет етеді.',
+    'assign.fileErrNotDraft':
+      'Файлды тек осы жұмыс жоба күйінде және тапсырма ашық болғанда ғана қосуға болады. Күйін көру үшін бетті жаңартыңыз.',
+    'assign.fileErrDifferent':
+      'Бұл күтудегі файл емес. Сол файлды қайта таңдаңыз; оның орнына басқа файлды жіберу мүмкін емес.',
   },
   az: {
     'assign.label': 'Tapşırıq',
@@ -2867,6 +2946,10 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.fileRevisionOpen': '{number} nömrəli faylı açmağa cəhd et',
     'assign.fileRevisionInvalid':
       '{number} nömrəli fayl istinadı etibarsızdır və ayrıca yoxlanılmalıdır.',
+    'assign.fileErrNotDraft':
+      'Faylı yalnız bu iş qaralama olduqda və tapşırıq açıq olduqda əlavə etmək olar. Vəziyyətini görmək üçün səhifəni yeniləyin.',
+    'assign.fileErrDifferent':
+      'Bu, gözləmədə olan fayl deyil. Eyni faylı yenidən seçin; onun yerinə başqa fayl göndərmək olmaz.',
   },
   tg: {
     'assign.label': 'Супориш',
@@ -3000,6 +3083,10 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.fileRevisionOpen': 'Кӯшиши кушодани файли {number}',
     'assign.fileRevisionInvalid':
       'Истиноди файли {number} нодуруст аст ва баррасии алоҳида мехоҳад.',
+    'assign.fileErrNotDraft':
+      'Файлро танҳо вақте илова кардан мумкин аст, ки ин кор сиёҳнавис ва супориш кушода бошад. Барои дидани ҳолати он саҳифаро нав кунед.',
+    'assign.fileErrDifferent':
+      'Ин он файле нест, ки дар интизор аст. Ҳамон файлро дубора интихоб кунед; ба ҷойи он файли дигарро фиристодан мумкин нест.',
   },
   ky: {
     'assign.label': 'Тапшырма',
@@ -3128,6 +3215,10 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.fileRevisionOpen': '{number}-файлды ачып көрүү',
     'assign.fileRevisionInvalid':
       '{number}-файлдын шилтемеси жараксыз жана өзүнчө карап чыгууну талап кылат.',
+    'assign.fileErrNotDraft':
+      'Файлды бул иш каралама болуп, тапшырма ачык турганда гана кошууга болот. Абалын көрүү үчүн баракты жаңыртыңыз.',
+    'assign.fileErrDifferent':
+      'Бул күтүүдөгү файл эмес. Ошол эле файлды кайра тандаңыз; анын ордуна башка файлды жөнөтүүгө болбойт.',
   },
   tk: {
     'assign.label': 'Ýumuş',
@@ -3256,6 +3347,10 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.fileRevisionOpen': '{number}-nji faýly açyp görmek',
     'assign.fileRevisionInvalid':
       '{number}-nji faýl salgylanmasy nädogry we aýratyn gözden geçirilmelidir.',
+    'assign.fileErrNotDraft':
+      'Faýly diňe bu iş garalama bolup, ýumuş açyk wagty goşup bolýar. Ýagdaýyny görmek üçin sahypany täzeläň.',
+    'assign.fileErrDifferent':
+      'Bu garaşylýan faýl däl. Şol faýly täzeden saýlaň; onuň ýerine başga faýly iberip bolmaýar.',
   },
   ta: {
     'assign.label': 'ஒப்படைப்பு',
@@ -3390,6 +3485,10 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'இந்தப் பதிப்புடன் பதிவான கோப்புகள். ஒரு கோப்பைத் திறக்கும்போது உங்கள் தற்போதைய அணுகல் சரிபார்க்கப்படும்; கோப்பு இனி கிடைக்காமல் இருக்கலாம்.',
     'assign.fileRevisionOpen': 'கோப்பு {number} ஐத் திறக்க முயல்க',
     'assign.fileRevisionInvalid': 'கோப்புக் குறிப்பு {number} செல்லாதது; தனியாக மதிப்பாய்வு தேவை.',
+    'assign.fileErrNotDraft':
+      'இந்தப் பணி வரைவாகவும் ஒப்படைப்பு திறந்தும் இருக்கும்போது மட்டுமே கோப்பைச் சேர்க்க முடியும். அதன் நிலையைப் பார்க்கப் பக்கத்தைப் புதுப்பியுங்கள்.',
+    'assign.fileErrDifferent':
+      'அது நிலுவையிலுள்ள கோப்பு அல்ல. அதே கோப்பை மீண்டும் தேர்ந்தெடுங்கள்; அதற்குப் பதிலாக வேறு கோப்பை அனுப்ப முடியாது.',
   },
   ne: {
     'assign.label': 'गृहकार्य',
@@ -3516,5 +3615,9 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'यो संस्करणसँग अभिलेख गरिएका फाइलहरू। फाइल खोल्दा तपाईंको हालको पहुँच जाँचिन्छ; फाइल अब उपलब्ध नहुन सक्छ।',
     'assign.fileRevisionOpen': 'फाइल {number} खोल्ने प्रयास गर्नुहोस्',
     'assign.fileRevisionInvalid': 'फाइल सन्दर्भ {number} अमान्य छ र छुट्टै समीक्षा आवश्यक छ।',
+    'assign.fileErrNotDraft':
+      'यो काम मस्यौदा रहेको र गृहकार्य खुला रहेको बेला मात्र फाइल थप्न सकिन्छ। यसको अवस्था हेर्न पृष्ठ रिफ्रेस गर्नुहोस्।',
+    'assign.fileErrDifferent':
+      'त्यो पेन्डिङ रहेको फाइल होइन। त्यही फाइल फेरि छान्नुहोस्; त्यसको सट्टा अर्को फाइल पठाउन सकिँदैन।',
   },
 };

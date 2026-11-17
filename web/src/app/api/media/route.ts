@@ -25,6 +25,7 @@ import {
 } from '@/lib/media';
 import { shouldUploadInParts } from '@/lib/browser-upload';
 import { confirmMediaUpload } from '@/lib/media-verify';
+import { mapCourseworkUploadError } from '@/lib/coursework-refusal';
 import { privateNoStore } from '@/lib/private-response';
 import { createAdminClient } from '@/lib/supabase/admin';
 
@@ -178,13 +179,15 @@ export async function POST(request: Request) {
       // Every refusal here is a sentence written for the person reading it — the
       // size cap, the type list, the ten-file limit, a closed task — so it is
       // passed through rather than replaced with a generic one.
+      //
+      // It also carries a code, because the learner's page says the reason in
+      // the reader's language and cannot do that from an English sentence.
       const message = registered.error.message;
-      const status = /sign in|responsible for|uploader|verified guardian/i.test(message)
-        ? 403
-        : /not found/i.test(message)
-          ? 404
-          : 400;
-      return fail(message, status);
+      const refusal = mapCourseworkUploadError(message);
+      return privateJson(
+        { ok: false, ...(refusal.code ? { code: refusal.code } : {}), message },
+        { status: refusal.status },
+      );
     }
 
     // Never sign an ambiguous or mismatched database response. A failed response

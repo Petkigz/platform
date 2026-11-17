@@ -76,8 +76,17 @@ export type FileFacts = { name: string; size: number; type: string };
  *
  * `message` beside it is English and is what the teacher's screens print. The
  * learner's page reads the code and says the sentence in the reader's
- * language. Everything from `uncertain` down means the outcome is not known:
- * something may have been registered, attached or removed.
+ * language.
+ *
+ * The first six are decided in the browser before anything is sent; the
+ * server can answer with four of them too. The next six are the server's
+ * alone: the database refused to open an upload and said why
+ * (`coursework-refusal.ts`). All twelve are known refusals; nothing was
+ * registered.
+ *
+ * `uncertain` and `remove_uncertain` mean the outcome is not known: something
+ * may have been registered, attached or removed. A reply the page cannot
+ * read, a server error, or a code it has never heard of, is `uncertain`.
  */
 export type CourseworkFileCode =
   | 'no_name'
@@ -86,8 +95,34 @@ export type CourseworkFileCode =
   | 'wrong_kind'
   | 'too_many'
   | 'unreadable'
+  | 'not_signed_in'
+  | 'not_allowed'
+  | 'not_found'
+  | 'not_draft'
+  | 'list_changed'
+  | 'different_file'
   | 'uncertain'
   | 'remove_uncertain';
+
+/** The words the server may answer a refused upload with. */
+const SERVER_REFUSALS: ReadonlySet<string> = new Set<CourseworkFileCode>([
+  'no_name', 'too_big', 'wrong_kind', 'too_many',
+  'not_signed_in', 'not_allowed', 'not_found', 'not_draft', 'list_changed', 'different_file',
+]);
+
+/**
+ * What a refused request to open an upload means.
+ *
+ * Known only when the server answered 4xx **and** named one of its own
+ * reasons. A 5xx, a reply with no code, or a code this page does not know is
+ * not a refusal anybody can vouch for, and is `uncertain`.
+ */
+export function refusalCodeOf(status: number, code: unknown): CourseworkFileCode {
+  if (status >= 400 && status < 500 && typeof code === 'string' && SERVER_REFUSALS.has(code)) {
+    return code as CourseworkFileCode;
+  }
+  return 'uncertain';
+}
 
 export type FileCheck = { ok: true } | { ok: false; code: CourseworkFileCode; message: string };
 
@@ -388,7 +423,7 @@ export async function uploadCourseworkFile(file: File, options: UploadOptions): 
   if (!registered.ok || registeredBody.ok !== true) {
     return {
       ok: false,
-      code: 'uncertain',
+      code: registered.ok ? 'uncertain' : refusalCodeOf(registered.status, registeredBody.code),
       message:
         `${typeof registeredBody.message === 'string' ? registeredBody.message : 'The upload request could not be confirmed.'} ${uncertainTarget}`,
     };

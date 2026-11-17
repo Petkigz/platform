@@ -205,6 +205,11 @@ export default async function AssignmentPage({
       msgRemoved: t('assign.fileMsgRemoved'),
       errRemove: t('assign.fileErrRemove'),
       errRemoveList: t('assign.fileErrRemoveList'),
+      errSignIn: t('assign.errSignIn'),
+      errNotAllowed: t('assign.errNotAllowed'),
+      errNotFound: t('assign.errNotFound'),
+      errNotDraft: t('assign.fileErrNotDraft'),
+      errDifferent: t('assign.fileErrDifferent'),
     },
     revisionFiles: {
       note: t('assign.fileRevisionNote'),

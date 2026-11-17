@@ -406,10 +406,10 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // Thirty-seven for the dashboard (the learner-profile prompt is seven of
   // them), sixteen for the course page, twenty-two for the lesson's frame,
   // forty for the assessment page, its quiz and the assessment list on the
-  // course page, and a hundred and five for the assignment page and the
-  // assignment list, of which forty-five are the files part.
-  assert.equal(unwrittenKeys.length, 220);
-  assert.equal(unwrittenKeys.filter((key) => key.startsWith('assign.')).length, 105);
+  // course page, and a hundred and seven for the assignment page and the
+  // assignment list, of which forty-seven are the files part.
+  assert.equal(unwrittenKeys.length, 222);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('assign.')).length, 107);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('learn.')).length, 37);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('course.')).length, 16);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('lesson.')).length, 22);
@@ -464,18 +464,18 @@ test('the learner dashboard is written for the languages with nothing held, and 
     }
   }
   // What that costs the nineteen that are still in the picker, said out loud:
-  // 192 of 492 sentences, which is 39%. Nothing holds a floor under
+  // 192 of 494 sentences, which is 39%. Nothing holds a floor under
   // it any more: the owner chose on 2026-11-17 to keep these languages in the
   // picker and show the number. The count is pinned here so that it moves only
   // when somebody means it to, and is seen when it does. It moved from 55% to
   // 50% when the assessment page was written, and from 50% to 43% when the
   // assignment page was: sixty more sentences these readers see in English,
   // on a page they already saw in English. It moved from 43% to 39% when the
-  // files part of that page and the assessment list were written, forty-eight
+  // files part of that page and the assessment list were written, fifty
   // more. What they are shown did not get smaller; what is counted got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 492);
+    assert.equal(coverageOf(code).total, 494);
     assert.equal(coverageOf(code).percent, 39, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');

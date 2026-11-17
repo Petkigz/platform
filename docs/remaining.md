@@ -528,7 +528,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 39% there (192 of 492 sentences; it was 71% of 272, then
+  the nineteen reads 39% there (192 of 494 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,

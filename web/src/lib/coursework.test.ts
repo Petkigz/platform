@@ -166,6 +166,26 @@ test('a refusal carries a word beside its English sentence', async () => {
     fetchImpl: async () => new Response(JSON.stringify({ ok: false, message: 'an assignment file cannot exceed 25 MiB' }), { status: 400 }),
   });
   assert.equal(refused.ok ? null : refused.code, 'uncertain');
+
+  // When the server names its reason on a 4xx, that is what the learner is
+  // told: the request was refused and nothing was registered. The same word on
+  // a 5xx is not believed.
+  const answer = (status: number, body: unknown) => uploadCourseworkFile(blobFile(5), {
+    submissionId: 'sub',
+    fetchImpl: async () => new Response(JSON.stringify(body), { status }),
+    putImpl: async () => { throw new Error('nothing may be sent after a refusal'); },
+  });
+  const closed = await answer(409, { ok: false, code: 'not_draft', message: 'files can only be attached to an open draft' });
+  assert.equal(closed.ok ? null : closed.code, 'not_draft');
+  const other = await answer(409, { ok: false, code: 'different_file', message: 'choose the same file and file type as the original upload' });
+  assert.equal(other.ok ? null : other.code, 'different_file');
+  const broken = await answer(500, { ok: false, code: 'not_draft', message: 'x' });
+  assert.equal(broken.ok ? null : broken.code, 'uncertain');
+  const invented = await answer(400, { ok: false, code: 'whatever', message: 'x' });
+  assert.equal(invented.ok ? null : invented.code, 'uncertain');
+  // A reply that says yes and no at once is not a refusal either.
+  const confused = await answer(200, { ok: false, code: 'not_draft', message: 'x' });
+  assert.equal(confused.ok ? null : confused.code, 'uncertain');
   const unconfirmed = await confirmCourseworkFile('a1', async () => { throw new Error('offline'); });
   assert.equal(unconfirmed.ok ? null : unconfirmed.code, 'uncertain');
   const removal = await removeCourseworkFile('s', 'a', async () => { throw new Error('lost reply'); });

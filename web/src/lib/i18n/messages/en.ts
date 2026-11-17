@@ -643,6 +643,12 @@ export const en = {
     'Files recorded with this version. Opening a file checks your current access; a file may no longer be available.',
   'assign.fileRevisionOpen': 'Try opening file {number}',
   'assign.fileRevisionInvalid': 'File reference {number} is invalid and needs individual review.',
+  // Two reasons only the server knows. Both are known refusals: nothing was
+  // registered, and sending the same thing again will be refused again.
+  'assign.fileErrNotDraft':
+    'A file can only be added while this work is a draft and the assignment is open. Refresh the page to see where it stands.',
+  'assign.fileErrDifferent':
+    'That is not the file that is waiting. Choose the same file again; a different one cannot be sent in its place.',
 } as const;
 
 export type MessageKey = keyof typeof en;

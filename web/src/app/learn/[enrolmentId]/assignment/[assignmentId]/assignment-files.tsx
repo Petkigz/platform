@@ -79,6 +79,12 @@ export type FileWords = {
   msgRemoved: string;
   errRemove: string;
   errRemoveList: string;
+  /** What the server said no to. The first three are the page's own. */
+  errSignIn: string;
+  errNotAllowed: string;
+  errNotFound: string;
+  errNotDraft: string;
+  errDifferent: string;
 };
 
 /**
@@ -147,6 +153,14 @@ export function AssignmentFiles({
       case 'wrong_kind': return words.errKind;
       case 'too_many': return fill(words.errTooMany, { count: num(COURSEWORK_MAX_FILES) });
       case 'unreadable': return words.errUnreadable;
+      // The server's own reasons. Each is a known refusal: nothing was
+      // registered, so the learner is told what is so and not to go and check.
+      case 'not_signed_in': return words.errSignIn;
+      case 'not_allowed': return words.errNotAllowed;
+      case 'not_found': return words.errNotFound;
+      case 'not_draft': return words.errNotDraft;
+      case 'list_changed': return words.errListChanged;
+      case 'different_file': return words.errDifferent;
       case 'remove_uncertain': return words.errRemove;
       default: return words.errUncertain;
     }
