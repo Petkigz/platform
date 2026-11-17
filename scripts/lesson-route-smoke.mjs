@@ -13,7 +13,7 @@ const exp = Math.floor(Date.now() / 1000) + 3600;
 const token = `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode({ sub: user.id, role: 'authenticated', exp })}.fake`;
 const session = { access_token: token, refresh_token: 'fake-refresh', token_type: 'bearer', expires_in: 3600, expires_at: exp, user };
 const cookie = `sb-127-auth-token=base64-${encode(session)}`;
-let entitled = false; let mismatch = false; let multipleMedia = false; const calls = [];
+let entitled = false; let mismatch = false; let multipleMedia = false; let uploads = null; const calls = [];
 const active = new Set(); const overlaps = [];
 const fake = createServer(async (req, res) => {
   res.setHeader('content-type', 'application/json');
@@ -44,6 +44,12 @@ const fake = createServer(async (req, res) => {
   else if (path === '/rest/v1/lessons') res.end(JSON.stringify({ id: 'lesson', section_id: 'section', title: 'Synthetic lesson', description: 'Synthetic reading text.', type: 'video', position: 1, duration_seconds: 120, is_preview: false, course_sections: { title: 'Synthetic section', course_version_id: mismatch ? 'other-version' : 'version' } }));
   else if (path === '/rest/v1/lesson_resources') res.end(JSON.stringify([
     { id: 'resource', lesson_id: 'lesson', resource_type: 'video', display_name: 'Synthetic video', position: 1, external_url: 'https://example.invalid/demo.mp4', media_asset_id: null, access_classification: 'public_preview' },
+    // Two uploaded files with no copy to play: one still on its way, one that
+    // needs a person. `uploads` is what the database says of each.
+    ...(uploads ? [
+      { id: 'upload-waiting', lesson_id: 'lesson', resource_type: 'audio', display_name: 'Synthetic waiting upload', position: 3, external_url: null, media_asset_id: 'asset-waiting', access_classification: 'enrolled' },
+      { id: 'upload-broken', lesson_id: 'lesson', resource_type: 'video', display_name: 'Synthetic broken upload', position: 4, external_url: null, media_asset_id: 'asset-broken', access_classification: 'enrolled' },
+    ] : []),
     ...(multipleMedia ? [{ id: 'resource-two', lesson_id: 'lesson', resource_type: 'audio', display_name: 'Synthetic audio', position: 2, external_url: 'https://example.invalid/demo.mp3', media_asset_id: null, access_classification: 'public_preview' }] : []),
   ]));
   else if (path === '/rest/v1/rpc/can_access_lesson') res.end(JSON.stringify(entitled));
@@ -52,6 +58,8 @@ const fake = createServer(async (req, res) => {
   else if (path === '/rest/v1/rpc/record_analytics_event') res.end('{"recorded":true}');
   else if (path === '/rest/v1/lesson_progress') res.end('[]');
   else if (path === '/rest/v1/rpc/lesson_positions') res.end('{}');
+  else if (path === '/rest/v1/media_renditions') res.end('[]');
+  else if (path === '/rest/v1/rpc/lesson_playback_standing') res.end(JSON.stringify(uploads ?? []));
   else if (path === '/rest/v1/rpc/setting_bool') res.end('false');
   else { res.writeHead(404); res.end('{}'); }
 });
@@ -152,11 +160,51 @@ try {
     assert.ok(body.includes('2 min'), `${code}: an English lesson gives its length in another language`);
     for (const text of ['aria-label="Breadcrumb"', '>Materials<', 'Mark complete', 'Lesson 1 of 2', 'Discussion is not open on this lesson.', '>Report a problem<']) assert.ok(body.includes(text), `${code}: ${text}`);
   }
+  // A recording that cannot be played is explained in the reader's language,
+  // and the way to tell a person about it is too. It was English, marked as
+  // English, in the middle of a translated page.
+  uploads = [{ resource_id: 'upload-waiting', state: 'preparing' }, { resource_id: 'upload-broken', state: 'unavailable' }];
+  {
+    const body = visible(await (await request({ cookie })).text());
+    for (const text of ['One recording cannot be played', 'Synthetic waiting upload', 'Not ready yet', 'still being prepared', 'Synthetic broken upload', 'Not available', 'waiting will not fix it']) assert.ok(body.includes(text), `English: ${text}`);
+    assert.equal(body.split('>Tell us about this recording<').length - 1, 2, 'the way to tell a person is offered above the materials and beside the broken recording, and nowhere else');
+    assert.equal(body.includes('lang="en"'), false);
+    assert.equal(/not ready yet\./.test(body), false, 'the heading is still lower-cased into the sentence');
+  }
+  {
+    const body = visible(await (await request({ cookie, 'accept-language': 'ar' })).text());
+    for (const text of ['تسجيل واحد لا يمكن تشغيله', 'الانتظار لن يصلح هذا', 'ليس جاهزًا بعد', 'ما زال قيد الإعداد', 'غير متاح', 'لا يمكن تشغيل هذا التسجيل الآن']) assert.ok(body.includes(text), `Arabic: ${text}`);
+    assert.equal(body.split('>أخبرنا عن هذا التسجيل<').length - 1, 2);
+    for (const text of ['cannot be played', 'Not ready yet', 'Not available', 'Tell us about this recording', 'being prepared']) assert.equal(body.includes(text), false, `Arabic lesson still says "${text}"`);
+    // The notice above the materials is not marked as English, and neither is
+    // a row that holds a note; the row that holds a player still is.
+    assert.doesNotMatch(body, /<div class="notice"[^>]*lang="en"/);
+    assert.match(body, /<span class="t"><span class="muted"><strong><bdi>Synthetic broken upload<\/bdi><\/strong>/);
+    assert.equal(body.split('<span class="t" lang="en" dir="ltr">').length - 1, 1);
+    // Still being prepared: nobody is sent to a queue about it.
+    const waiting = body.slice(body.indexOf('Synthetic waiting upload'), body.indexOf('Synthetic broken upload'));
+    assert.equal(waiting.includes('أخبرنا عن هذا التسجيل'), false);
+  }
+  {
+    // One still on its way and nothing broken: the quieter heading, and no way to report.
+    uploads = [{ resource_id: 'upload-waiting', state: 'preparing' }, { resource_id: 'upload-broken', state: 'plays' }];
+    const body = visible(await (await request({ cookie: `${cookie}; ayahspring_locale=fr`, 'accept-language': 'ar' })).text());
+    assert.ok(body.includes('Une partie est encore en préparation') && body.includes('Pas encore prêt'), 'French: the preparing notes');
+    assert.equal(body.includes('Nous signaler cet enregistrement'), false);
+  }
+  {
+    // A held language reads the same notes in English inside its English lesson.
+    uploads = [{ resource_id: 'upload-waiting', state: 'unavailable' }, { resource_id: 'upload-broken', state: 'unavailable' }];
+    const body = visible(await (await request({ cookie, 'accept-language': 'ha' })).text());
+    assert.ok(body.includes('Some recordings cannot be played'));
+    assert.equal(body.split('>Tell us about this recording<').length - 1, 3);
+  }
+  uploads = null;
   {
     const html = await (await request({ cookie, 'accept-language': 'wo, fr' })).text();
     assert.match(html, /<html[^>]*lang="en"/); assert.ok(visible(html).includes('>Materials<')); assert.equal(visible(html).includes('Supports'), false);
   }
-  console.log('Lesson languages passed: English, Arabic (frame and report link translated, player marked English), French by cookie, Hausa and Pashto frames with an English lesson, Wolof to English. No translation here has been read by a speaker.');
+  console.log('Lesson languages passed: English, Arabic (frame, report link and the notes about a recording that cannot play translated, player marked English), French by cookie, Hausa and Pashto frames with an English lesson, Wolof to English. No translation here has been read by a speaker.');
   if (process.env.RESPONSIVE_PLAYWRIGHT && process.env.RESPONSIVE_CHROME) {
     const { chromium } = await import(pathToFileURL(process.env.RESPONSIVE_PLAYWRIGHT).href);
     browser = await chromium.launch({ executablePath: process.env.RESPONSIVE_CHROME, headless: true, args: ['--no-sandbox'] });

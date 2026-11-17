@@ -411,12 +411,12 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // course page, and a hundred and seven for the assignment page and the
   // assignment list, of which forty-seven are the files part, and seven for
   // the page for an address with nothing at it.
-  assert.equal(unwrittenKeys.length, 262);
+  assert.equal(unwrittenKeys.length, 272);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('missing.')).length, 7);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('assign.')).length, 107);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('learn.')).length, 37);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('course.')).length, 28);
-  assert.equal(unwrittenKeys.filter((key) => key.startsWith('lesson.')).length, 43);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('lesson.')).length, 53);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('assess.')).length, 40);
 
   // Six files, one rule: the same languages in each.
@@ -470,7 +470,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     }
   }
   // What that costs the nineteen that are still in the picker, said out loud:
-  // 192 of 534 sentences, which is 36%. Nothing holds a floor under
+  // 192 of 544 sentences, which is 35%. Nothing holds a floor under
   // it any more: the owner chose on 2026-11-17 to keep these languages in the
   // picker and show the number. The count is pinned here so that it moves only
   // when somebody means it to, and is seen when it does. It moved from 55% to
@@ -480,12 +480,13 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // files part of that page and the assessment list were written, fifty
   // more, to 38% with the list of dated classes, twelve more, and to 36% with
   // the report form on the lesson page, twenty-one more. The page for a wrong
-  // address added seven and the rounded number did not move (35.96%). What
+  // address added seven and the rounded number did not move (35.96%); the
+  // notes about a recording that cannot play added ten and it is 35%. What
   // they are shown did not get smaller; what is counted got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 534);
-    assert.equal(coverageOf(code).percent, 36, code);
+    assert.equal(coverageOf(code).total, 544);
+    assert.equal(coverageOf(code).percent, 35, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');
   assert.equal(languageShownFor('en', 'learn').code, 'en');
@@ -649,10 +650,19 @@ test('the lesson page translates its frame and marks every English part inside i
   assert.doesNotMatch(page, /^'use client'/u);
 
   // Every lesson sentence is on the page: the seven kinds through the table,
-  // the rest by name.
+  // the nine about a recording that cannot play through the function that
+  // chooses between them, and the rest by name.
+  const standing = read('./playback-standing.ts');
   for (const key of unwrittenKeys.filter((k) => k.startsWith('lesson.'))) {
-    assert.ok(page.includes(`'${key}'`), `${key} is translated and never shown`);
+    const chosen = /^lesson\.rec(?!Tell)/u.test(key);
+    assert.ok((chosen ? standing : page).includes(`'${key}'`), `${key} is translated and never shown`);
   }
+  assert.equal(unwrittenKeys.filter((k) => /^lesson\.rec(?!Tell)/u.test(k)).length, 9);
+  assert.match(page, /\{t\(summary\.headingKey\)\}<\/strong>\s+\{t\(summary\.sentenceKey\)\}/u);
+  assert.match(page, /\{t\(note\.headingKey\)\}\s+<span style=\{\{ display: 'block' \}\}>\{t\(note\.sentenceKey\)\}<\/span>/u);
+  // The English of those sentences is the catalogue's, not a second copy.
+  assert.match(standing, /heading: en\[headingKey\], sentence: en\[sentenceKey\]/u);
+  assert.doesNotMatch(page, /note\.heading\b|note\.sentence\b|summary\.heading\b|summary\.sentence\b|toLowerCase\(\)\}\./u);
   assert.match(page, /<span className="n">\{t\(RESOURCE_KEY\[r\.resourceType\]\)\}<\/span>/u);
   assert.doesNotMatch(page, /RESOURCE_LABEL/u);
 
@@ -665,23 +675,26 @@ test('the lesson page translates its frame and marks every English part inside i
     assert.ok(!page.includes(sentence), `"${sentence}" is still typed into the lesson page`);
   }
 
-  // Six places hold a client component, or a sentence written for one, that
-  // is English for every reader. Each says so: the note above the materials, a
-  // material that is a player or stands in for one, practice questions,
-  // sources, notes and bookmarks, and the open discussion.
+  // Five places hold a client component, or a sentence written for one, that
+  // is English for every reader. Each says so: a material that is a player,
+  // practice questions, sources, notes and bookmarks, and the open discussion.
+  // The note about a recording that cannot play was a sixth and is the
+  // reader's now, above the materials and in its row.
   assert.match(page, /const english = shown\.code === 'en' \? \{\} : \(\{ lang: 'en', dir: 'ltr' \} as const\);/u);
-  assert.equal(page.match(/\{\.\.\.english\}/gu)?.length, 5);
+  assert.equal(page.match(/\{\.\.\.english\}/gu)?.length, 4);
   assert.match(page, /\{\.\.\.\(speaksEnglish \? english : \{\}\)\}/u);
-  assert.match(page, /<div className="notice" style=\{\{[^}]+\}\} \{\.\.\.english\}>\s+<strong>\{summary\.heading\}/u);
+  assert.match(page, /<div className="notice" style=\{\{ marginBottom: '1rem' \}\}>\s+<strong style=\{\{ display: 'block' \}\}>\{t\(summary\.headingKey\)\}/u);
+  assert.doesNotMatch(page, /noteFor\(standing\.get\(r\.id\) \?\? null\) !== null/u);
   assert.match(page, /<div \{\.\.\.english\}>\s+<PracticeCheck/u);
   assert.match(page, /\{provenanceOn && \(\s+<section className="card" \{\.\.\.english\}>/u);
   assert.match(page, /<div \{\.\.\.english\}>\s+<StudyTools/u);
   // The report form at the foot is the reader's: the page hands it its words
-  // and the language they are in. The same form inside a part that is still
-  // English (the note about a recording) is handed none.
+  // and the language they are in, and so does the one beside a recording that
+  // cannot play, which opens on the technical kind under its own link.
   assert.match(page, /<ReportForm lessonId=\{lesson\.id\} words=\{reportWords\} locale=\{shown\.code\} \/>/u);
-  assert.equal(page.match(/words=\{reportWords\}/gu)?.length, 1);
-  assert.equal(page.match(/label="Tell us about this recording"/gu)?.length, 2);
+  assert.equal(page.match(/words=\{reportWords\}/gu)?.length, 3);
+  assert.equal(page.match(/label=\{t\('lesson\.recTell'\)\}\s+category="technical_fault"\s+words=\{reportWords\}\s+locale=\{shown\.code\}/gu)?.length, 2);
+  assert.doesNotMatch(page, /Tell us about this recording/u);
   const form = read('../app/learn/[enrolmentId]/lesson/[lessonId]/report-form.tsx');
   assert.doesNotMatch(form, /useT\(/u);
   assert.doesNotMatch(form, /from '@\/lib\/i18n'/u);

@@ -18,9 +18,16 @@ import type { Messages } from './en.ts';
  * on 2026-11-17: the link, the form, the seven kinds of problem, and five
  * sentences for a report that did not go through. `{max}` is a number.
  *
+ * **A recording that cannot be played** (`lesson.rec*`) was added the same
+ * day: the note in its row, the notice above the materials, and the link that
+ * opens the report form on the technical kind. Two situations that ask
+ * opposite things of a learner: wait, or tell somebody. The English closes on
+ * an idiom ("it becomes a person's job rather than yours"); here it is said
+ * plainly in each language as "one of us will take it up". None gives a time,
+ * because nothing in this deployment can keep one.
+ *
  * **What is not here**, and is still English on that page for everybody:
- * the players and their saved-place messages, the sentences for a recording
- * that is not ready or cannot be played, practice questions,
+ * the players and their saved-place messages, practice questions,
  * notes and bookmarks, sources, and the discussion. Those are client
  * components with a great many sentences each, several of which tell a
  * learner what to do when something has gone wrong; they are a unit of their
@@ -75,6 +82,20 @@ export const LESSON: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'lesson.reportDuplicate': 'لديك بلاغ مفتوح من هذا النوع هنا. لم يُهمَل.',
     'lesson.reportRefused': 'تعذّر قبول هذا البلاغ. أعد تحميل الصفحة وحاول مرة أخرى.',
     'lesson.reportUncertain': 'لم نتمكن من التأكد من إرسال بلاغك. يُرجى إرساله مرة أخرى.',
+    'lesson.recPreparingHead': 'ليس جاهزًا بعد',
+    'lesson.recPreparing':
+      'تسجيل هذا الدرس ما زال قيد الإعداد، فلا يوجد ما يُشغَّل بعد. يمكنك قراءة بقية الدرس والعودة إلى هذا لاحقًا.',
+    'lesson.recUnavailableHead': 'غير متاح',
+    'lesson.recUnavailable':
+      'لا يمكن تشغيل هذا التسجيل الآن، والانتظار لن يصلحه؛ لا بد أن ينظر فيه أحد. إذا احتجت إليه في هذا الدرس فأخبرنا وسيتولى شخص منّا أمره.',
+    'lesson.recSummaryOne': 'تسجيل واحد لا يمكن تشغيله',
+    'lesson.recSummarySome': 'بعض التسجيلات لا يمكن تشغيلها',
+    'lesson.recSummaryBroken':
+      'الانتظار لن يصلح هذا؛ لا بد أن ينظر فيه أحد. بقية الدرس في الأسفل. إذا أخبرتنا فسيتولى شخص منّا أمره.',
+    'lesson.recSummaryPreparingHead': 'بعض هذا ما زال قيد الإعداد',
+    'lesson.recSummaryPreparing':
+      'الأجزاء الجاهزة في الأسفل. ما لم يجهز بعد لن يظهر بإعادة تحميل الصفحة، فلا حاجة إلى تكرار المحاولة. اقرأ ما هو موجود وعُد للباقي لاحقًا.',
+    'lesson.recTell': 'أخبرنا عن هذا التسجيل',
   },
   ur: {
     'lesson.crumbs': 'صفحے کا راستہ',
@@ -123,6 +144,20 @@ export const LESSON: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'lesson.reportRefused': 'یہ اطلاع قبول نہیں ہو سکی۔ صفحہ دوبارہ لوڈ کریں اور پھر کوشش کریں۔',
     'lesson.reportUncertain':
       'ہم تصدیق نہیں کر سکے کہ آپ کی اطلاع بھیجی گئی۔ براہِ کرم دوبارہ بھیجیں۔',
+    'lesson.recPreparingHead': 'ابھی تیار نہیں',
+    'lesson.recPreparing':
+      'اس سبق کی ریکارڈنگ ابھی تیار کی جا رہی ہے، اس لیے ابھی چلانے کو کچھ نہیں۔ آپ سبق کا باقی حصہ پڑھ سکتے ہیں اور بعد میں اس پر واپس آ سکتے ہیں۔',
+    'lesson.recUnavailableHead': 'دستیاب نہیں',
+    'lesson.recUnavailable':
+      'یہ ریکارڈنگ اس وقت نہیں چل سکتی، اور انتظار سے یہ ٹھیک نہیں ہوگی؛ کسی کو اسے دیکھنا ہوگا۔ اگر آپ کو اس سبق کے لیے اس کی ضرورت ہے تو ہمیں بتائیں، ہم میں سے کوئی اسے دیکھے گا۔',
+    'lesson.recSummaryOne': 'ایک ریکارڈنگ نہیں چل سکتی',
+    'lesson.recSummarySome': 'کچھ ریکارڈنگز نہیں چل سکتیں',
+    'lesson.recSummaryBroken':
+      'انتظار سے یہ ٹھیک نہیں ہوگا؛ کسی کو اسے دیکھنا ہوگا۔ سبق کا باقی حصہ نیچے ہے۔ اگر آپ ہمیں بتائیں تو ہم میں سے کوئی اسے دیکھے گا۔',
+    'lesson.recSummaryPreparingHead': 'اس کا کچھ حصہ ابھی تیار ہو رہا ہے',
+    'lesson.recSummaryPreparing':
+      'جو حصے تیار ہیں وہ نیچے ہیں۔ جو ابھی تیار نہیں وہ صفحہ دوبارہ لوڈ کرنے سے ظاہر نہیں ہوگا، اس لیے بار بار کوشش کی ضرورت نہیں۔ جو موجود ہے اسے پڑھیں اور باقی کے لیے بعد میں آئیں۔',
+    'lesson.recTell': 'ہمیں اس ریکارڈنگ کے بارے میں بتائیں',
   },
   fa: {
     'lesson.crumbs': 'مسیر صفحه',
@@ -172,6 +207,20 @@ export const LESSON: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'این گزارش پذیرفته نشد. صفحه را دوباره بارگذاری کنید و دوباره تلاش کنید.',
     'lesson.reportUncertain':
       'نتوانستیم تأیید کنیم که گزارش شما ارسال شده است. لطفاً دوباره بفرستید.',
+    'lesson.recPreparingHead': 'هنوز آماده نیست',
+    'lesson.recPreparing':
+      'ضبطِ این درس هنوز در حال آماده‌سازی است و فعلاً چیزی برای پخش نیست. می‌توانید بقیهٔ درس را بخوانید و بعداً به این بخش برگردید.',
+    'lesson.recUnavailableHead': 'در دسترس نیست',
+    'lesson.recUnavailable':
+      'این ضبط در حال حاضر پخش نمی‌شود و با صبر کردن درست نمی‌شود؛ کسی باید آن را بررسی کند. اگر برای این درس به آن نیاز دارید به ما بگویید تا یکی از ما پیگیری کند.',
+    'lesson.recSummaryOne': 'یک ضبط پخش نمی‌شود',
+    'lesson.recSummarySome': 'چند ضبط پخش نمی‌شود',
+    'lesson.recSummaryBroken':
+      'این با صبر کردن درست نمی‌شود؛ کسی باید آن را بررسی کند. بقیهٔ درس در پایین است. اگر به ما بگویید، یکی از ما پیگیری می‌کند.',
+    'lesson.recSummaryPreparingHead': 'بخشی از این هنوز در حال آماده‌سازی است',
+    'lesson.recSummaryPreparing':
+      'بخش‌های آماده در پایین هستند. آنچه هنوز آماده نیست با بارگذاری دوبارهٔ صفحه ظاهر نمی‌شود، پس لازم نیست پی‌درپی تلاش کنید. آنچه هست را بخوانید و برای بقیه بعداً برگردید.',
+    'lesson.recTell': 'دربارهٔ این ضبط به ما بگویید',
   },
   'fa-af': {
     'lesson.crumbs': 'مسیر صفحه',
@@ -220,6 +269,20 @@ export const LESSON: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'lesson.reportRefused': 'این گزارش پذیرفته نشد. صفحه را دوباره باز کنید و دوباره کوشش کنید.',
     'lesson.reportUncertain':
       'نتوانستیم تأیید کنیم که گزارش شما فرستاده شده است. لطفاً دوباره بفرستید.',
+    'lesson.recPreparingHead': 'هنوز آماده نیست',
+    'lesson.recPreparing':
+      'ثبتِ این درس هنوز در حال آماده‌شدن است و فعلاً چیزی برای پخش نیست. می‌توانید باقی درس را بخوانید و بعداً به این بخش برگردید.',
+    'lesson.recUnavailableHead': 'در دسترس نیست',
+    'lesson.recUnavailable':
+      'این ثبت فعلاً پخش نمی‌شود و با انتظار درست نمی‌شود؛ کسی باید آن را ببیند. اگر برای این درس به آن ضرورت دارید به ما بگویید تا یکی از ما آن را پیگیری کند.',
+    'lesson.recSummaryOne': 'یک ثبت پخش نمی‌شود',
+    'lesson.recSummarySome': 'چند ثبت پخش نمی‌شود',
+    'lesson.recSummaryBroken':
+      'این با انتظار درست نمی‌شود؛ کسی باید آن را ببیند. باقی درس در پایین است. اگر به ما بگویید، یکی از ما آن را پیگیری می‌کند.',
+    'lesson.recSummaryPreparingHead': 'بخشی از این هنوز در حال آماده‌شدن است',
+    'lesson.recSummaryPreparing':
+      'بخش‌های آماده در پایین است. آنچه هنوز آماده نیست با دوباره باز کردن صفحه ظاهر نمی‌شود، پس لازم نیست پی‌هم کوشش کنید. آنچه هست را بخوانید و برای باقی بعداً برگردید.',
+    'lesson.recTell': 'دربارهٔ این ثبت به ما بگویید',
   },
   tr: {
     'lesson.crumbs': 'Sayfa yolu',
@@ -268,6 +331,20 @@ export const LESSON: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'lesson.reportRefused': 'Bu bildirim kabul edilemedi. Sayfayı yeniden yükleyip tekrar deneyin.',
     'lesson.reportUncertain':
       'Bildiriminizin gönderildiğini doğrulayamadık. Lütfen yeniden gönderin.',
+    'lesson.recPreparingHead': 'Henüz hazır değil',
+    'lesson.recPreparing':
+      'Bu dersin kaydı hâlâ hazırlanıyor, bu yüzden henüz oynatılacak bir şey yok. Dersin geri kalanını okuyup buna sonra dönebilirsiniz.',
+    'lesson.recUnavailableHead': 'Kullanılamıyor',
+    'lesson.recUnavailable':
+      'Bu kayıt şu anda oynatılamıyor ve beklemek bunu düzeltmez; birinin bakması gerekiyor. Bu ders için ona ihtiyacınız varsa bize bildirin, içimizden biri ilgilenecektir.',
+    'lesson.recSummaryOne': 'Bir kayıt oynatılamıyor',
+    'lesson.recSummarySome': 'Bazı kayıtlar oynatılamıyor',
+    'lesson.recSummaryBroken':
+      'Beklemek bunu düzeltmez; birinin bakması gerekiyor. Dersin geri kalanı aşağıda. Bize bildirirseniz içimizden biri ilgilenecektir.',
+    'lesson.recSummaryPreparingHead': 'Bunun bir kısmı hâlâ hazırlanıyor',
+    'lesson.recSummaryPreparing':
+      'Hazır olan bölümler aşağıda. Henüz hazır olmayanlar sayfayı yenilemekle görünmez, bu yüzden tekrar tekrar denemeye gerek yok. Burada olanı okuyun, kalanı için sonra dönün.',
+    'lesson.recTell': 'Bu kayıt hakkında bize bildirin',
   },
   id: {
     'lesson.crumbs': 'Jejak halaman',
@@ -317,6 +394,20 @@ export const LESSON: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'lesson.reportRefused': 'Laporan itu tidak dapat diterima. Muat ulang halaman dan coba lagi.',
     'lesson.reportUncertain':
       'Kami tidak dapat memastikan laporan Anda terkirim. Mohon kirim lagi.',
+    'lesson.recPreparingHead': 'Belum siap',
+    'lesson.recPreparing':
+      'Rekaman untuk pelajaran ini masih disiapkan, jadi belum ada yang bisa diputar. Anda dapat membaca bagian lain pelajaran ini dan kembali lagi nanti.',
+    'lesson.recUnavailableHead': 'Tidak tersedia',
+    'lesson.recUnavailable':
+      'Rekaman ini tidak dapat diputar saat ini, dan menunggu tidak akan memperbaikinya; seseorang harus memeriksanya. Jika Anda membutuhkannya untuk pelajaran ini, beri tahu kami dan salah satu dari kami akan menanganinya.',
+    'lesson.recSummaryOne': 'Satu rekaman tidak dapat diputar',
+    'lesson.recSummarySome': 'Beberapa rekaman tidak dapat diputar',
+    'lesson.recSummaryBroken':
+      'Menunggu tidak akan memperbaiki hal ini; seseorang harus memeriksanya. Bagian lain pelajaran ada di bawah. Jika Anda memberi tahu kami, salah satu dari kami akan menanganinya.',
+    'lesson.recSummaryPreparingHead': 'Sebagian masih disiapkan',
+    'lesson.recSummaryPreparing':
+      'Bagian yang sudah siap ada di bawah. Yang belum siap tidak akan muncul dengan memuat ulang halaman, jadi tidak perlu terus mencoba. Bacalah yang sudah ada dan kembali lagi untuk sisanya.',
+    'lesson.recTell': 'Beri tahu kami tentang rekaman ini',
   },
   ms: {
     'lesson.crumbs': 'Jejak halaman',
@@ -366,6 +457,20 @@ export const LESSON: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'lesson.reportRefused': 'Laporan itu tidak dapat diterima. Muat semula halaman dan cuba lagi.',
     'lesson.reportUncertain':
       'Kami tidak dapat mengesahkan laporan anda telah dihantar. Sila hantar sekali lagi.',
+    'lesson.recPreparingHead': 'Belum sedia',
+    'lesson.recPreparing':
+      'Rakaman untuk pelajaran ini masih disediakan, jadi belum ada apa-apa untuk dimainkan. Anda boleh membaca bahagian lain pelajaran ini dan kembali semula kemudian.',
+    'lesson.recUnavailableHead': 'Tidak tersedia',
+    'lesson.recUnavailable':
+      'Rakaman ini tidak dapat dimainkan buat masa ini, dan menunggu tidak akan membetulkannya; seseorang perlu memeriksanya. Jika anda memerlukannya untuk pelajaran ini, beritahu kami dan salah seorang daripada kami akan menguruskannya.',
+    'lesson.recSummaryOne': 'Satu rakaman tidak dapat dimainkan',
+    'lesson.recSummarySome': 'Beberapa rakaman tidak dapat dimainkan',
+    'lesson.recSummaryBroken':
+      'Menunggu tidak akan membetulkan perkara ini; seseorang perlu memeriksanya. Bahagian lain pelajaran ada di bawah. Jika anda memberitahu kami, salah seorang daripada kami akan menguruskannya.',
+    'lesson.recSummaryPreparingHead': 'Sebahagiannya masih disediakan',
+    'lesson.recSummaryPreparing':
+      'Bahagian yang sudah sedia ada di bawah. Yang belum sedia tidak akan muncul dengan memuat semula halaman, jadi tidak perlu terus mencuba. Baca apa yang ada dan kembali semula untuk yang selebihnya.',
+    'lesson.recTell': 'Beritahu kami tentang rakaman ini',
   },
   bn: {
     'lesson.crumbs': 'পৃষ্ঠার পথ',
@@ -414,6 +519,20 @@ export const LESSON: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'lesson.reportRefused': 'রিপোর্টটি গ্রহণ করা যায়নি। পৃষ্ঠাটি আবার লোড করে আবার চেষ্টা করুন।',
     'lesson.reportUncertain':
       'আপনার রিপোর্ট পাঠানো হয়েছে কি না আমরা নিশ্চিত হতে পারিনি। অনুগ্রহ করে আবার পাঠান।',
+    'lesson.recPreparingHead': 'এখনও প্রস্তুত নয়',
+    'lesson.recPreparing':
+      'এই পাঠের রেকর্ডিং এখনও প্রস্তুত করা হচ্ছে, তাই এখনই চালানোর মতো কিছু নেই। আপনি পাঠের বাকি অংশ পড়ে পরে এখানে ফিরে আসতে পারেন।',
+    'lesson.recUnavailableHead': 'পাওয়া যাচ্ছে না',
+    'lesson.recUnavailable':
+      'এই রেকর্ডিং এখন চালানো যাচ্ছে না, আর অপেক্ষা করলে এটি ঠিক হবে না; কাউকে এটি দেখতে হবে। এই পাঠের জন্য এটি দরকার হলে আমাদের জানান, আমাদের একজন বিষয়টি দেখবেন।',
+    'lesson.recSummaryOne': 'একটি রেকর্ডিং চালানো যাচ্ছে না',
+    'lesson.recSummarySome': 'কয়েকটি রেকর্ডিং চালানো যাচ্ছে না',
+    'lesson.recSummaryBroken':
+      'অপেক্ষা করলে এটি ঠিক হবে না; কাউকে এটি দেখতে হবে। পাঠের বাকি অংশ নিচে আছে। আমাদের জানালে আমাদের একজন বিষয়টি দেখবেন।',
+    'lesson.recSummaryPreparingHead': 'এর কিছু অংশ এখনও প্রস্তুত করা হচ্ছে',
+    'lesson.recSummaryPreparing':
+      'যে অংশগুলো প্রস্তুত সেগুলো নিচে আছে। যা এখনও প্রস্তুত নয় তা পৃষ্ঠা আবার লোড করলে আসবে না, তাই বারবার চেষ্টা করার দরকার নেই। যা আছে তা পড়ুন এবং বাকিটার জন্য পরে ফিরে আসুন।',
+    'lesson.recTell': 'এই রেকর্ডিং সম্পর্কে আমাদের জানান',
   },
   hi: {
     'lesson.crumbs': 'पेज का पथ',
@@ -461,6 +580,20 @@ export const LESSON: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'यहाँ इस तरह की आपकी एक सूचना पहले से खुली है। उसे नज़रअंदाज़ नहीं किया गया है।',
     'lesson.reportRefused': 'यह सूचना स्वीकार नहीं हो सकी। पेज दोबारा लोड करें और फिर कोशिश करें।',
     'lesson.reportUncertain': 'हम पुष्टि नहीं कर सके कि आपकी सूचना भेजी गई। कृपया दोबारा भेजें।',
+    'lesson.recPreparingHead': 'अभी तैयार नहीं',
+    'lesson.recPreparing':
+      'इस पाठ की रिकॉर्डिंग अभी तैयार की जा रही है, इसलिए अभी चलाने के लिए कुछ नहीं है। आप पाठ का बाकी हिस्सा पढ़ सकते हैं और बाद में इस पर लौट सकते हैं।',
+    'lesson.recUnavailableHead': 'उपलब्ध नहीं',
+    'lesson.recUnavailable':
+      'यह रिकॉर्डिंग अभी नहीं चल सकती, और इंतज़ार करने से यह ठीक नहीं होगी; किसी को इसे देखना होगा। अगर आपको इस पाठ के लिए इसकी ज़रूरत है तो हमें बताएँ, हममें से कोई इसे देखेगा।',
+    'lesson.recSummaryOne': 'एक रिकॉर्डिंग नहीं चल सकती',
+    'lesson.recSummarySome': 'कुछ रिकॉर्डिंग नहीं चल सकतीं',
+    'lesson.recSummaryBroken':
+      'इंतज़ार करने से यह ठीक नहीं होगा; किसी को इसे देखना होगा। पाठ का बाकी हिस्सा नीचे है। अगर आप हमें बताएँ तो हममें से कोई इसे देखेगा।',
+    'lesson.recSummaryPreparingHead': 'इसका कुछ हिस्सा अभी तैयार हो रहा है',
+    'lesson.recSummaryPreparing':
+      'जो हिस्से तैयार हैं वे नीचे हैं। जो अभी तैयार नहीं है वह पेज दोबारा लोड करने से नहीं दिखेगा, इसलिए बार-बार कोशिश करने की ज़रूरत नहीं। जो यहाँ है उसे पढ़ें और बाकी के लिए बाद में लौटें।',
+    'lesson.recTell': 'हमें इस रिकॉर्डिंग के बारे में बताएँ',
   },
   fr: {
     'lesson.crumbs': 'Fil d’Ariane',
@@ -512,6 +645,20 @@ export const LESSON: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Ce signalement n’a pas pu être accepté. Rechargez la page et réessayez.',
     'lesson.reportUncertain':
       'Nous n’avons pas pu confirmer l’envoi de votre signalement. Veuillez l’envoyer à nouveau.',
+    'lesson.recPreparingHead': 'Pas encore prêt',
+    'lesson.recPreparing':
+      'L’enregistrement de cette leçon est encore en préparation, il n’y a donc rien à lire pour l’instant. Vous pouvez lire le reste de la leçon et y revenir plus tard.',
+    'lesson.recUnavailableHead': 'Indisponible',
+    'lesson.recUnavailable':
+      'Cet enregistrement ne peut pas être lu pour le moment, et attendre n’y changera rien. Quelqu’un doit s’en occuper. Si vous en avez besoin pour cette leçon, dites-le-nous et l’un de nous s’en chargera.',
+    'lesson.recSummaryOne': 'Un enregistrement ne peut pas être lu',
+    'lesson.recSummarySome': 'Certains enregistrements ne peuvent pas être lus',
+    'lesson.recSummaryBroken':
+      'Attendre n’y changera rien. Quelqu’un doit s’en occuper. Le reste de la leçon se trouve ci-dessous. Si vous nous le signalez, l’un de nous s’en chargera.',
+    'lesson.recSummaryPreparingHead': 'Une partie est encore en préparation',
+    'lesson.recSummaryPreparing':
+      'Les parties prêtes se trouvent ci-dessous. Ce qui n’est pas encore prêt n’apparaîtra pas en rechargeant la page, il est donc inutile de réessayer. Lisez ce qui est là et revenez pour le reste.',
+    'lesson.recTell': 'Nous signaler cet enregistrement',
   },
   es: {
     'lesson.crumbs': 'Ruta de navegación',
@@ -560,6 +707,20 @@ export const LESSON: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'lesson.reportRefused': 'No se pudo aceptar ese aviso. Recarga la página e inténtalo de nuevo.',
     'lesson.reportUncertain':
       'No pudimos confirmar que tu aviso se haya enviado. Envíalo de nuevo.',
+    'lesson.recPreparingHead': 'Aún no está listo',
+    'lesson.recPreparing':
+      'La grabación de esta lección todavía se está preparando, así que aún no hay nada que reproducir. Puedes leer el resto de la lección y volver a esto más tarde.',
+    'lesson.recUnavailableHead': 'No disponible',
+    'lesson.recUnavailable':
+      'Esta grabación no se puede reproducir en este momento, y esperar no lo arreglará; alguien tiene que revisarla. Si la necesitas para esta lección, dínoslo y una persona se encargará.',
+    'lesson.recSummaryOne': 'Una grabación no se puede reproducir',
+    'lesson.recSummarySome': 'Algunas grabaciones no se pueden reproducir',
+    'lesson.recSummaryBroken':
+      'Esperar no lo arreglará; alguien tiene que revisarlo. El resto de la lección está abajo. Si nos lo dices, una persona se encargará.',
+    'lesson.recSummaryPreparingHead': 'Parte de esto todavía se está preparando',
+    'lesson.recSummaryPreparing':
+      'Las partes que están listas se encuentran abajo. Lo que aún no está listo no aparecerá al recargar la página, así que no hace falta seguir intentándolo. Lee lo que hay y vuelve más tarde por el resto.',
+    'lesson.recTell': 'Avísanos sobre esta grabación',
   },
   pt: {
     'lesson.crumbs': 'Caminho de navegação',
@@ -608,6 +769,20 @@ export const LESSON: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Não foi possível aceitar essa comunicação. Recarregue a página e tente novamente.',
     'lesson.reportUncertain':
       'Não conseguimos confirmar que a sua comunicação foi enviada. Envie-a novamente.',
+    'lesson.recPreparingHead': 'Ainda não está pronta',
+    'lesson.recPreparing':
+      'A gravação desta aula ainda está a ser preparada, por isso ainda não há nada para reproduzir. Pode ler o resto da aula e voltar a isto mais tarde.',
+    'lesson.recUnavailableHead': 'Indisponível',
+    'lesson.recUnavailable':
+      'Esta gravação não pode ser reproduzida neste momento, e esperar não resolve; alguém tem de a verificar. Se precisar dela para esta aula, diga-nos e uma pessoa tratará do assunto.',
+    'lesson.recSummaryOne': 'Uma gravação não pode ser reproduzida',
+    'lesson.recSummarySome': 'Algumas gravações não podem ser reproduzidas',
+    'lesson.recSummaryBroken':
+      'Esperar não resolve isto; alguém tem de verificar. O resto da aula está abaixo. Se nos disser, uma pessoa tratará do assunto.',
+    'lesson.recSummaryPreparingHead': 'Parte disto ainda está a ser preparada',
+    'lesson.recSummaryPreparing':
+      'As partes que estão prontas encontram-se abaixo. O que ainda não está pronto não aparecerá ao recarregar a página, por isso não é preciso continuar a tentar. Leia o que aqui está e volte mais tarde para o resto.',
+    'lesson.recTell': 'Fale-nos desta gravação',
   },
   sw: {
     'lesson.crumbs': 'Njia ya ukurasa',
@@ -656,6 +831,20 @@ export const LESSON: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Ripoti hiyo haikuweza kukubaliwa. Pakia ukurasa upya kisha ujaribu tena.',
     'lesson.reportUncertain':
       'Hatukuweza kuthibitisha kuwa ripoti yako imetumwa. Tafadhali itume tena.',
+    'lesson.recPreparingHead': 'Bado haiko tayari',
+    'lesson.recPreparing':
+      'Rekodi ya kipindi hiki bado inaandaliwa, kwa hiyo hakuna cha kucheza kwa sasa. Unaweza kusoma sehemu nyingine za kipindi na kurudi hapa baadaye.',
+    'lesson.recUnavailableHead': 'Haipatikani',
+    'lesson.recUnavailable':
+      'Rekodi hii haiwezi kuchezwa kwa sasa, na kusubiri hakutairekebisha; lazima mtu aiangalie. Ikiwa unaihitaji kwa kipindi hiki, tuambie na mmoja wetu ataishughulikia.',
+    'lesson.recSummaryOne': 'Rekodi moja haiwezi kuchezwa',
+    'lesson.recSummarySome': 'Baadhi ya rekodi haziwezi kuchezwa',
+    'lesson.recSummaryBroken':
+      'Kusubiri hakutarekebisha jambo hili; lazima mtu aliangalie. Sehemu nyingine za kipindi ziko hapa chini. Ukituambia, mmoja wetu atalishughulikia.',
+    'lesson.recSummaryPreparingHead': 'Sehemu ya haya bado inaandaliwa',
+    'lesson.recSummaryPreparing':
+      'Sehemu zilizo tayari ziko hapa chini. Kisichokuwa tayari hakitaonekana kwa kupakia ukurasa upya, kwa hiyo hakuna haja ya kuendelea kujaribu. Soma kilichopo kisha urudi baadaye kwa kilichobaki.',
+    'lesson.recTell': 'Tuambie kuhusu rekodi hii',
   },
   af: {
     'lesson.crumbs': 'Bladsypad',
@@ -707,6 +896,20 @@ export const LESSON: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Daardie melding kon nie aanvaar word nie. Herlaai die bladsy en probeer weer.',
     'lesson.reportUncertain':
       'Ons kon nie bevestig dat jou melding gestuur is nie. Stuur dit asseblief weer.',
+    'lesson.recPreparingHead': 'Nog nie gereed nie',
+    'lesson.recPreparing':
+      'Die opname vir hierdie les word nog voorberei, so daar is nog niks om te speel nie. Jy kan die res van die les lees en later hierheen terugkom.',
+    'lesson.recUnavailableHead': 'Nie beskikbaar nie',
+    'lesson.recUnavailable':
+      'Hierdie opname kan nie nou gespeel word nie, en wag sal dit nie regmaak nie; iemand moet daarna kyk. As jy dit vir hierdie les nodig het, sê vir ons en een van ons sal dit hanteer.',
+    'lesson.recSummaryOne': 'Een opname kan nie gespeel word nie',
+    'lesson.recSummarySome': 'Sommige opnames kan nie gespeel word nie',
+    'lesson.recSummaryBroken':
+      'Wag sal dit nie regmaak nie; iemand moet daarna kyk. Die res van die les is hier onder. As jy vir ons sê, sal een van ons dit hanteer.',
+    'lesson.recSummaryPreparingHead': '’n Deel hiervan word nog voorberei',
+    'lesson.recSummaryPreparing':
+      'Die dele wat gereed is, is hier onder. Wat nog nie gereed is nie, sal nie verskyn deur die bladsy te herlaai nie, so dit is nie nodig om aan te hou probeer nie. Lees wat hier is en kom later terug vir die res.',
+    'lesson.recTell': 'Vertel ons van hierdie opname',
   },
   'zh-hans': {
     'lesson.crumbs': '页面路径',
@@ -752,6 +955,16 @@ export const LESSON: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'lesson.reportDuplicate': '您在这里已有一份同类的未结报告。它没有被忽略。',
     'lesson.reportRefused': '该报告未能被接受。请重新加载页面后再试。',
     'lesson.reportUncertain': '我们无法确认您的报告已发送。请重新发送。',
+    'lesson.recPreparingHead': '尚未就绪',
+    'lesson.recPreparing': '这节课的录制内容仍在准备中，目前还没有可播放的内容。您可以先阅读这节课的其余部分，稍后再回来。',
+    'lesson.recUnavailableHead': '无法使用',
+    'lesson.recUnavailable': '此录制内容目前无法播放，等待也无法解决，需要有人处理。如果您在这节课中需要它，请告诉我们，我们会有人跟进。',
+    'lesson.recSummaryOne': '有一项录制内容无法播放',
+    'lesson.recSummarySome': '有几项录制内容无法播放',
+    'lesson.recSummaryBroken': '等待无法解决这个问题，需要有人处理。这节课的其余部分在下方。如果您告诉我们，我们会有人跟进。',
+    'lesson.recSummaryPreparingHead': '部分内容仍在准备中',
+    'lesson.recSummaryPreparing': '已准备好的部分在下方。尚未准备好的内容不会因为刷新页面而出现，因此不必反复尝试。请先阅读现有内容，稍后再回来看其余部分。',
+    'lesson.recTell': '向我们反映此录制内容的问题',
   },
   'zh-hant': {
     'lesson.crumbs': '頁面路徑',
@@ -797,6 +1010,16 @@ export const LESSON: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'lesson.reportDuplicate': '您在這裡已有一份同類的未結回報。它沒有被忽略。',
     'lesson.reportRefused': '該回報未能被接受。請重新載入頁面後再試。',
     'lesson.reportUncertain': '我們無法確認您的回報已傳送。請重新傳送。',
+    'lesson.recPreparingHead': '尚未就緒',
+    'lesson.recPreparing': '這個單元的錄製內容仍在準備中，目前還沒有可播放的內容。您可以先閱讀這個單元的其餘部分，稍後再回來。',
+    'lesson.recUnavailableHead': '無法使用',
+    'lesson.recUnavailable': '此錄製內容目前無法播放，等待也無法解決，需要有人處理。如果您在這個單元中需要它，請告訴我們，我們會有人跟進。',
+    'lesson.recSummaryOne': '有一項錄製內容無法播放',
+    'lesson.recSummarySome': '有幾項錄製內容無法播放',
+    'lesson.recSummaryBroken': '等待無法解決這個問題，需要有人處理。這個單元的其餘部分在下方。如果您告訴我們，我們會有人跟進。',
+    'lesson.recSummaryPreparingHead': '部分內容仍在準備中',
+    'lesson.recSummaryPreparing': '已準備好的部分在下方。尚未準備好的內容不會因為重新整理頁面而出現，因此不必反覆嘗試。請先閱讀現有內容，稍後再回來看其餘部分。',
+    'lesson.recTell': '向我們反映此錄製內容的問題',
   },
   vi: {
     'lesson.crumbs': 'Đường dẫn trang',
@@ -845,6 +1068,20 @@ export const LESSON: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'lesson.reportRefused': 'Không thể chấp nhận báo cáo đó. Hãy tải lại trang và thử lại.',
     'lesson.reportUncertain':
       'Chúng tôi không thể xác nhận báo cáo của bạn đã được gửi. Vui lòng gửi lại.',
+    'lesson.recPreparingHead': 'Chưa sẵn sàng',
+    'lesson.recPreparing':
+      'Bản ghi của bài học này vẫn đang được chuẩn bị nên chưa có gì để phát. Bạn có thể đọc phần còn lại của bài học rồi quay lại sau.',
+    'lesson.recUnavailableHead': 'Không khả dụng',
+    'lesson.recUnavailable':
+      'Hiện không thể phát bản ghi này, và chờ đợi cũng không khắc phục được; cần có người xem xét. Nếu bạn cần nó cho bài học này, hãy cho chúng tôi biết và sẽ có người xử lý.',
+    'lesson.recSummaryOne': 'Một bản ghi không phát được',
+    'lesson.recSummarySome': 'Một số bản ghi không phát được',
+    'lesson.recSummaryBroken':
+      'Chờ đợi không khắc phục được việc này; cần có người xem xét. Phần còn lại của bài học ở bên dưới. Nếu bạn cho chúng tôi biết, sẽ có người xử lý.',
+    'lesson.recSummaryPreparingHead': 'Một phần vẫn đang được chuẩn bị',
+    'lesson.recSummaryPreparing':
+      'Những phần đã sẵn sàng ở bên dưới. Phần chưa sẵn sàng sẽ không xuất hiện khi tải lại trang, nên không cần thử lại nhiều lần. Hãy đọc những gì đang có rồi quay lại sau để xem phần còn lại.',
+    'lesson.recTell': 'Cho chúng tôi biết về bản ghi này',
   },
   th: {
     'lesson.crumbs': 'เส้นทางของหน้า',
@@ -891,6 +1128,20 @@ export const LESSON: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'คุณมีรายงานประเภทนี้ที่ยังเปิดอยู่ที่นี่แล้ว รายงานนั้นไม่ได้ถูกเพิกเฉย',
     'lesson.reportRefused': 'ไม่สามารถรับรายงานนั้นได้ โหลดหน้านี้ใหม่แล้วลองอีกครั้ง',
     'lesson.reportUncertain': 'เราไม่สามารถยืนยันได้ว่ารายงานของคุณถูกส่งแล้ว โปรดส่งอีกครั้ง',
+    'lesson.recPreparingHead': 'ยังไม่พร้อม',
+    'lesson.recPreparing':
+      'สื่อบันทึกของบทเรียนนี้ยังอยู่ระหว่างการเตรียม จึงยังไม่มีอะไรให้เล่น คุณอ่านส่วนที่เหลือของบทเรียนก่อนแล้วค่อยกลับมาได้',
+    'lesson.recUnavailableHead': 'ไม่พร้อมใช้งาน',
+    'lesson.recUnavailable':
+      'สื่อบันทึกนี้เล่นไม่ได้ในขณะนี้ และการรอจะไม่ช่วยแก้ไข ต้องมีคนเข้ามาตรวจสอบ หากคุณต้องใช้สำหรับบทเรียนนี้ โปรดแจ้งเรา แล้วจะมีคนของเราดูแลเรื่องนี้',
+    'lesson.recSummaryOne': 'มีสื่อบันทึกหนึ่งรายการที่เล่นไม่ได้',
+    'lesson.recSummarySome': 'มีสื่อบันทึกบางรายการที่เล่นไม่ได้',
+    'lesson.recSummaryBroken':
+      'การรอจะไม่ช่วยแก้ไขเรื่องนี้ ต้องมีคนเข้ามาตรวจสอบ ส่วนที่เหลือของบทเรียนอยู่ด้านล่าง หากคุณแจ้งเรา จะมีคนของเราดูแลเรื่องนี้',
+    'lesson.recSummaryPreparingHead': 'บางส่วนยังอยู่ระหว่างการเตรียม',
+    'lesson.recSummaryPreparing':
+      'ส่วนที่พร้อมแล้วอยู่ด้านล่าง ส่วนที่ยังไม่พร้อมจะไม่ปรากฏด้วยการโหลดหน้าใหม่ จึงไม่จำเป็นต้องลองซ้ำ อ่านสิ่งที่มีอยู่ก่อนแล้วค่อยกลับมาดูส่วนที่เหลือ',
+    'lesson.recTell': 'แจ้งเราเกี่ยวกับสื่อบันทึกนี้',
   },
   fil: {
     'lesson.crumbs': 'Landas ng pahina',
@@ -941,6 +1192,20 @@ export const LESSON: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'lesson.reportRefused':
       'Hindi natanggap ang ulat na iyon. I-reload ang pahina at subukang muli.',
     'lesson.reportUncertain': 'Hindi namin makumpirma na naipadala ang ulat mo. Pakipadala muli.',
+    'lesson.recPreparingHead': 'Hindi pa handa',
+    'lesson.recPreparing':
+      'Inihahanda pa ang recording para sa araling ito, kaya wala pang mapapatugtog. Maaari mong basahin ang natitirang bahagi ng aralin at balikan ito mamaya.',
+    'lesson.recUnavailableHead': 'Hindi available',
+    'lesson.recUnavailable':
+      'Hindi mapatugtog ang recording na ito sa ngayon, at hindi ito maaayos ng paghihintay; kailangang may tumingin dito. Kung kailangan mo ito para sa araling ito, sabihin sa amin at isa sa amin ang aasikaso.',
+    'lesson.recSummaryOne': 'May isang recording na hindi mapatugtog',
+    'lesson.recSummarySome': 'May ilang recording na hindi mapatugtog',
+    'lesson.recSummaryBroken':
+      'Hindi ito maaayos ng paghihintay; kailangang may tumingin dito. Nasa ibaba ang natitirang bahagi ng aralin. Kapag sinabi mo sa amin, isa sa amin ang aasikaso.',
+    'lesson.recSummaryPreparingHead': 'Inihahanda pa ang ilang bahagi nito',
+    'lesson.recSummaryPreparing':
+      'Nasa ibaba ang mga bahaging handa na. Ang hindi pa handa ay hindi lalabas sa pag-reload ng pahina, kaya hindi na kailangang paulit-ulit na subukan. Basahin ang narito at bumalik mamaya para sa iba.',
+    'lesson.recTell': 'Sabihin sa amin ang tungkol sa recording na ito',
   },
   uz: {
     'lesson.crumbs': 'Sahifa yoʻli',
@@ -989,6 +1254,20 @@ export const LESSON: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'lesson.reportRefused': 'Bu xabar qabul qilinmadi. Sahifani qayta yuklab, yana urinib ko‘ring.',
     'lesson.reportUncertain':
       'Xabaringiz yuborilganini tasdiqlay olmadik. Iltimos, qayta yuboring.',
+    'lesson.recPreparingHead': 'Hali tayyor emas',
+    'lesson.recPreparing':
+      'Bu dars yozuvi hali tayyorlanmoqda, shuning uchun hozircha ijro etadigan narsa yo‘q. Darsning qolgan qismini o‘qib, bunga keyinroq qaytishingiz mumkin.',
+    'lesson.recUnavailableHead': 'Mavjud emas',
+    'lesson.recUnavailable':
+      'Bu yozuvni hozir ijro etib bo‘lmaydi va kutish buni tuzatmaydi; kimdir uni ko‘rib chiqishi kerak. Agar u shu dars uchun kerak bo‘lsa, bizga ayting, oramizdan biri shug‘ullanadi.',
+    'lesson.recSummaryOne': 'Bitta yozuvni ijro etib bo‘lmaydi',
+    'lesson.recSummarySome': 'Ba’zi yozuvlarni ijro etib bo‘lmaydi',
+    'lesson.recSummaryBroken':
+      'Kutish buni tuzatmaydi; kimdir uni ko‘rib chiqishi kerak. Darsning qolgan qismi quyida. Bizga aytsangiz, oramizdan biri shug‘ullanadi.',
+    'lesson.recSummaryPreparingHead': 'Buning bir qismi hali tayyorlanmoqda',
+    'lesson.recSummaryPreparing':
+      'Tayyor qismlar quyida. Hali tayyor bo‘lmagani sahifani qayta yuklash bilan paydo bo‘lmaydi, shuning uchun qayta-qayta urinish shart emas. Bor narsani o‘qing va qolgani uchun keyinroq qayting.',
+    'lesson.recTell': 'Bu yozuv haqida bizga ayting',
   },
   kk: {
     'lesson.crumbs': 'Бет жолы',
@@ -1035,6 +1314,20 @@ export const LESSON: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'lesson.reportDuplicate': 'Мұнда осы түрдегі ашық хабарламаңыз бар. Ол елеусіз қалған жоқ.',
     'lesson.reportRefused': 'Бұл хабарлама қабылданбады. Бетті қайта жүктеп, қайталап көріңіз.',
     'lesson.reportUncertain': 'Хабарламаңыздың жіберілгенін растай алмадық. Қайта жіберіңіз.',
+    'lesson.recPreparingHead': 'Әлі дайын емес',
+    'lesson.recPreparing':
+      'Бұл сабақтың жазбасы әлі дайындалып жатыр, сондықтан әзірге ойнататын ештеңе жоқ. Сабақтың қалған бөлігін оқып, бұған кейінірек оралуыңызға болады.',
+    'lesson.recUnavailableHead': 'Қолжетімсіз',
+    'lesson.recUnavailable':
+      'Бұл жазбаны қазір ойнату мүмкін емес, күту оны түзетпейді; оны біреу қарауы керек. Егер ол осы сабақ үшін қажет болса, бізге айтыңыз, арамыздан біреу айналысады.',
+    'lesson.recSummaryOne': 'Бір жазбаны ойнату мүмкін емес',
+    'lesson.recSummarySome': 'Кейбір жазбаларды ойнату мүмкін емес',
+    'lesson.recSummaryBroken':
+      'Күту мұны түзетпейді; оны біреу қарауы керек. Сабақтың қалған бөлігі төменде. Бізге айтсаңыз, арамыздан біреу айналысады.',
+    'lesson.recSummaryPreparingHead': 'Мұның бір бөлігі әлі дайындалып жатыр',
+    'lesson.recSummaryPreparing':
+      'Дайын бөліктер төменде. Әлі дайын емесі бетті қайта жүктегеннен пайда болмайды, сондықтан қайта-қайта әрекеттенудің қажеті жоқ. Бар нәрсені оқып, қалғаны үшін кейінірек оралыңыз.',
+    'lesson.recTell': 'Осы жазба туралы бізге айтыңыз',
   },
   az: {
     'lesson.crumbs': 'Səhifə yolu',
@@ -1084,6 +1377,20 @@ export const LESSON: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Bu bildiriş qəbul edilə bilmədi. Səhifəni yenidən yükləyib bir daha cəhd edin.',
     'lesson.reportUncertain':
       'Bildirişinizin göndərildiyini təsdiqləyə bilmədik. Zəhmət olmasa, yenidən göndərin.',
+    'lesson.recPreparingHead': 'Hələ hazır deyil',
+    'lesson.recPreparing':
+      'Bu dərsin yazılışı hələ hazırlanır, ona görə hələlik oxudulacaq heç nə yoxdur. Dərsin qalan hissəsini oxuyub buna sonra qayıda bilərsiniz.',
+    'lesson.recUnavailableHead': 'Əlçatan deyil',
+    'lesson.recUnavailable':
+      'Bu yazılışı hazırda oxutmaq mümkün deyil və gözləmək bunu düzəltməyəcək; kimsə ona baxmalıdır. Bu dərs üçün sizə lazımdırsa, bizə bildirin, aramızdan biri məşğul olacaq.',
+    'lesson.recSummaryOne': 'Bir yazılışı oxutmaq mümkün deyil',
+    'lesson.recSummarySome': 'Bəzi yazılışları oxutmaq mümkün deyil',
+    'lesson.recSummaryBroken':
+      'Gözləmək bunu düzəltməyəcək; kimsə ona baxmalıdır. Dərsin qalan hissəsi aşağıdadır. Bizə bildirsəniz, aramızdan biri məşğul olacaq.',
+    'lesson.recSummaryPreparingHead': 'Bunun bir hissəsi hələ hazırlanır',
+    'lesson.recSummaryPreparing':
+      'Hazır olan hissələr aşağıdadır. Hələ hazır olmayan səhifəni yenidən yükləməklə görünməyəcək, ona görə təkrar-təkrar cəhd etməyə ehtiyac yoxdur. Burada olanı oxuyun və qalanı üçün sonra qayıdın.',
+    'lesson.recTell': 'Bu yazılış barədə bizə bildirin',
   },
   tg: {
     'lesson.crumbs': 'Роҳи саҳифа',
@@ -1136,6 +1443,20 @@ export const LESSON: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Ин хабар пазируфта нашуд. Саҳифаро аз нав бор кунед ва боз кӯшиш кунед.',
     'lesson.reportUncertain':
       'Мо тасдиқ карда натавонистем, ки хабари шумо фиристода шудааст. Лутфан дубора фиристед.',
+    'lesson.recPreparingHead': 'Ҳанӯз тайёр нест',
+    'lesson.recPreparing':
+      'Сабти ин дарс ҳанӯз омода мешавад, бинобар ин ҳоло чизе барои пахш нест. Шумо метавонед боқии дарсро хонед ва баъдтар ба ин баргардед.',
+    'lesson.recUnavailableHead': 'Дастрас нест',
+    'lesson.recUnavailable':
+      'Ин сабтро ҳоло пахш кардан мумкин нест ва интизорӣ онро ислоҳ намекунад; касе бояд онро бубинад. Агар он барои ин дарс ба шумо лозим бошад, ба мо гӯед, яке аз мо ба он машғул мешавад.',
+    'lesson.recSummaryOne': 'Як сабтро пахш кардан мумкин нест',
+    'lesson.recSummarySome': 'Баъзе сабтҳоро пахш кардан мумкин нест',
+    'lesson.recSummaryBroken':
+      'Интизорӣ инро ислоҳ намекунад; касе бояд онро бубинад. Боқии дарс дар поён аст. Агар ба мо гӯед, яке аз мо ба он машғул мешавад.',
+    'lesson.recSummaryPreparingHead': 'Як қисми ин ҳанӯз омода мешавад',
+    'lesson.recSummaryPreparing':
+      'Қисмҳои тайёр дар поён мебошанд. Он чи ҳанӯз тайёр нест, бо аз нав бор кардани саҳифа пайдо намешавад, бинобар ин такрор ба такрор кӯшиш кардан лозим нест. Он чиро, ки ҳаст, хонед ва барои боқимонда баъдтар баргардед.',
+    'lesson.recTell': 'Дар бораи ин сабт ба мо гӯед',
   },
   ky: {
     'lesson.crumbs': 'Барактын жолу',
@@ -1185,6 +1506,20 @@ export const LESSON: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Бул билдирүү кабыл алынган жок. Баракты кайра жүктөп, дагы аракет кылыңыз.',
     'lesson.reportUncertain':
       'Билдирүүңүз жөнөтүлгөнүн ырастай алган жокпуз. Сураныч, кайра жөнөтүңүз.',
+    'lesson.recPreparingHead': 'Азырынча даяр эмес',
+    'lesson.recPreparing':
+      'Бул сабактын жазуусу азырынча даярдалып жатат, ошондуктан азыр ойното турган эч нерсе жок. Сабактын калган бөлүгүн окуп, буга кийинчерээк кайтсаңыз болот.',
+    'lesson.recUnavailableHead': 'Жеткиликтүү эмес',
+    'lesson.recUnavailable':
+      'Бул жазууну азыр ойнотуу мүмкүн эмес, күтүү аны оңдобойт; аны кимдир бирөө карашы керек. Эгер ал ушул сабак үчүн керек болсо, бизге айтыңыз, арабыздан бирөө алектенет.',
+    'lesson.recSummaryOne': 'Бир жазууну ойнотуу мүмкүн эмес',
+    'lesson.recSummarySome': 'Айрым жазууларды ойнотуу мүмкүн эмес',
+    'lesson.recSummaryBroken':
+      'Күтүү муну оңдобойт; аны кимдир бирөө карашы керек. Сабактын калган бөлүгү төмөндө. Бизге айтсаңыз, арабыздан бирөө алектенет.',
+    'lesson.recSummaryPreparingHead': 'Мунун бир бөлүгү азырынча даярдалып жатат',
+    'lesson.recSummaryPreparing':
+      'Даяр бөлүктөр төмөндө. Азырынча даяр эмеси баракты кайра жүктөө менен пайда болбойт, ошондуктан кайра-кайра аракет кылуунун кереги жок. Бар нерсени окуп, калганы үчүн кийинчерээк кайтыңыз.',
+    'lesson.recTell': 'Бул жазуу тууралуу бизге айтыңыз',
   },
   tk: {
     'lesson.crumbs': 'Sahypa ýoly',
@@ -1234,6 +1569,20 @@ export const LESSON: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Bu habar kabul edilip bilinmedi. Sahypany täzeden ýükläp, ýene synanyşyň.',
     'lesson.reportUncertain':
       'Habaryňyzyň iberilendigini tassyklap bilmedik. Täzeden ibermegiňizi haýyş edýäris.',
+    'lesson.recPreparingHead': 'Entek taýýar däl',
+    'lesson.recPreparing':
+      'Bu sapagyň ýazgysy entek taýýarlanýar, şonuň üçin häzirlikçe oýnatmaga zat ýok. Sapagyň galan bölegini okap, muňa soňrak dolanyp bilersiňiz.',
+    'lesson.recUnavailableHead': 'Elýeterli däl',
+    'lesson.recUnavailable':
+      'Bu ýazgyny häzir oýnadyp bolmaýar we garaşmak ony düzetmez; oňa kimdir biri seretmeli. Eger ol şu sapak üçin gerek bolsa, bize aýdyň, aramyzdan biri meşgullanar.',
+    'lesson.recSummaryOne': 'Bir ýazgyny oýnadyp bolmaýar',
+    'lesson.recSummarySome': 'Käbir ýazgylary oýnadyp bolmaýar',
+    'lesson.recSummaryBroken':
+      'Garaşmak muny düzetmez; oňa kimdir biri seretmeli. Sapagyň galan bölegi aşakda. Bize aýtsaňyz, aramyzdan biri meşgullanar.',
+    'lesson.recSummaryPreparingHead': 'Munuň bir bölegi entek taýýarlanýar',
+    'lesson.recSummaryPreparing':
+      'Taýýar bölekler aşakda. Entek taýýar däli sahypany täzeden ýüklemek bilen peýda bolmaz, şonuň üçin gaýta-gaýta synanyşmagyň geregi ýok. Bar zady okaň we galany üçin soňrak dolanyň.',
+    'lesson.recTell': 'Bu ýazgy barada bize aýdyň',
   },
   ta: {
     'lesson.crumbs': 'பக்கப் பாதை',
@@ -1285,6 +1634,20 @@ export const LESSON: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'அந்தப் புகாரை ஏற்க முடியவில்லை. பக்கத்தை மீண்டும் ஏற்றி மறுபடி முயலுங்கள்.',
     'lesson.reportUncertain':
       'உங்கள் புகார் அனுப்பப்பட்டதா என்பதை உறுதிப்படுத்த முடியவில்லை. மீண்டும் அனுப்புங்கள்.',
+    'lesson.recPreparingHead': 'இன்னும் தயாராகவில்லை',
+    'lesson.recPreparing':
+      'இந்தப் பாடத்தின் பதிவு இன்னும் தயாராகிக்கொண்டிருக்கிறது, எனவே இப்போது இயக்க எதுவும் இல்லை. பாடத்தின் மீதியைப் படித்துவிட்டு, பின்னர் இதற்குத் திரும்பலாம்.',
+    'lesson.recUnavailableHead': 'கிடைக்கவில்லை',
+    'lesson.recUnavailable':
+      'இந்தப் பதிவை இப்போது இயக்க முடியாது, காத்திருப்பதால் இது சரியாகாது; யாராவது இதைப் பார்க்க வேண்டும். இந்தப் பாடத்திற்கு இது தேவைப்பட்டால் எங்களிடம் சொல்லுங்கள், எங்களில் ஒருவர் இதைக் கவனிப்பார்.',
+    'lesson.recSummaryOne': 'ஒரு பதிவை இயக்க முடியவில்லை',
+    'lesson.recSummarySome': 'சில பதிவுகளை இயக்க முடியவில்லை',
+    'lesson.recSummaryBroken':
+      'காத்திருப்பதால் இது சரியாகாது; யாராவது இதைப் பார்க்க வேண்டும். பாடத்தின் மீதி கீழே உள்ளது. எங்களிடம் சொன்னால், எங்களில் ஒருவர் இதைக் கவனிப்பார்.',
+    'lesson.recSummaryPreparingHead': 'இதில் சில பகுதிகள் இன்னும் தயாராகிக்கொண்டிருக்கின்றன',
+    'lesson.recSummaryPreparing':
+      'தயாரான பகுதிகள் கீழே உள்ளன. இன்னும் தயாராகாதது பக்கத்தை மீண்டும் ஏற்றுவதால் தோன்றாது, எனவே திரும்பத் திரும்ப முயல வேண்டியதில்லை. இங்கே உள்ளதைப் படித்துவிட்டு, மீதிக்குப் பின்னர் திரும்புங்கள்.',
+    'lesson.recTell': 'இந்தப் பதிவைப் பற்றி எங்களிடம் சொல்லுங்கள்',
   },
   ne: {
     'lesson.crumbs': 'पृष्ठको बाटो',
@@ -1333,5 +1696,19 @@ export const LESSON: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'lesson.reportRefused':
       'त्यो रिपोर्ट स्वीकार गर्न सकिएन। पृष्ठ फेरि लोड गरेर पुनः प्रयास गर्नुहोस्।',
     'lesson.reportUncertain': 'तपाईंको रिपोर्ट पठाइएको पुष्टि गर्न सकिएन। कृपया फेरि पठाउनुहोस्।',
+    'lesson.recPreparingHead': 'अझै तयार छैन',
+    'lesson.recPreparing':
+      'यस पाठको रेकर्डिङ अझै तयार हुँदै छ, त्यसैले अहिले बजाउन केही छैन। तपाईं पाठको बाँकी भाग पढेर पछि यसमा फर्कन सक्नुहुन्छ।',
+    'lesson.recUnavailableHead': 'उपलब्ध छैन',
+    'lesson.recUnavailable':
+      'यो रेकर्डिङ अहिले बजाउन सकिँदैन, र पर्खेर यो ठीक हुँदैन; कसैले यसलाई हेर्नुपर्छ। यस पाठका लागि तपाईंलाई यो चाहिन्छ भने हामीलाई भन्नुहोस्, हामीमध्ये एक जनाले यसलाई हेर्नेछ।',
+    'lesson.recSummaryOne': 'एउटा रेकर्डिङ बजाउन सकिँदैन',
+    'lesson.recSummarySome': 'केही रेकर्डिङ बजाउन सकिँदैन',
+    'lesson.recSummaryBroken':
+      'पर्खेर यो ठीक हुँदैन; कसैले यसलाई हेर्नुपर्छ। पाठको बाँकी भाग तल छ। तपाईंले हामीलाई भन्नुभयो भने हामीमध्ये एक जनाले यसलाई हेर्नेछ।',
+    'lesson.recSummaryPreparingHead': 'यसको केही भाग अझै तयार हुँदै छ',
+    'lesson.recSummaryPreparing':
+      'तयार भएका भागहरू तल छन्। अझै तयार नभएको कुरा पृष्ठ फेरि लोड गरेर देखिँदैन, त्यसैले बारम्बार प्रयास गर्नुपर्दैन। यहाँ भएको पढ्नुहोस् र बाँकीका लागि पछि फर्कनुहोस्।',
+    'lesson.recTell': 'यो रेकर्डिङबारे हामीलाई भन्नुहोस्',
   },
 };

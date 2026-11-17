@@ -142,8 +142,9 @@ export default async function LessonPage({
     unconfirmed: t('course.unconfirmed'),
     reload: t('course.reload'),
   };
-  // The form at the foot of the lesson. The same form inside a part of the
-  // page that is still English is given no words and stays English.
+  // The report form: at the foot of the lesson, and beside a recording that
+  // cannot be played. The same form inside a part of the page that is still
+  // English (the discussion) is given no words and stays English.
   const reportWords: ReportFormWords = {
     open: t('lesson.reportOpen'),
     intro: t('lesson.reportIntro'),
@@ -311,17 +312,16 @@ export default async function LessonPage({
   const renditionsByAsset = groupByAsset(renditions);
   const standing = parseStanding(standingData);
 
-  // A player, or the note that stands in for one, speaks English and is marked
-  // as English on a page in another language. A plain name or link is the
-  // teacher's and is left alone.
+  // A player speaks English and is marked as English on a page in another
+  // language. A plain name or link is the teacher's and is left alone, and the
+  // note that stands in for a recording that cannot play is the reader's.
   const englishMaterials = new Set(
     lesson.resources
       .filter((r) =>
         r.externalUrl
           ? nativeMediaKind(r) !== null
           : Boolean(r.mediaAssetId) &&
-            ((renditionsByAsset.get(r.mediaAssetId ?? '')?.length ?? 0) > 0 ||
-              noteFor(standing.get(r.id) ?? null) !== null))
+            (renditionsByAsset.get(r.mediaAssetId ?? '')?.length ?? 0) > 0)
       .map((r) => r.id),
   );
 
@@ -408,14 +408,19 @@ export default async function LessonPage({
       )}
 
       {summary && (
-        <div className="notice" style={{ marginBottom: '1rem' }} {...english}>
-          <strong>{summary.heading}.</strong> {summary.sentence}
+        // The heading has a line to itself: a full stop after it is not the
+        // same mark in every script, and some have none.
+        <div className="notice" style={{ marginBottom: '1rem' }}>
+          <strong style={{ display: 'block' }}>{t(summary.headingKey)}</strong>
+          {t(summary.sentenceKey)}
           {summary.tellSomeone && (
             <span style={{ display: 'block', marginTop: '0.5rem' }}>
               <ReportForm
                 lessonId={lesson.id}
-                label="Tell us about this recording"
+                label={t('lesson.recTell')}
                 category="technical_fault"
+                words={reportWords}
+                locale={shown.code}
               />
             </span>
           )}
@@ -503,16 +508,24 @@ export default async function LessonPage({
                           // is just quiet.
                           return <span className="muted">{r.displayName}</span>;
                         }
+                        // The name is the teacher's; what follows is the
+                        // reader's. The heading is not lower-cased into the
+                        // sentence: that is an English habit, and wrong in
+                        // scripts that have no case or use it differently.
                         return (
                           <span className="muted">
-                            <strong>{r.displayName}</strong> — {note.heading.toLowerCase()}.{' '}
-                            {note.sentence}
+                            <strong><bdi>{r.displayName}</bdi></strong>
+                            {' · '}
+                            {t(note.headingKey)}
+                            <span style={{ display: 'block' }}>{t(note.sentenceKey)}</span>
                             {note.tellSomeone && (
                               <span style={{ display: 'block', marginTop: '0.35rem' }}>
                                 <ReportForm
                                   lessonId={lesson.id}
-                                  label="Tell us about this recording"
+                                  label={t('lesson.recTell')}
                                   category="technical_fault"
+                                  words={reportWords}
+                                  locale={shown.code}
                                 />
                               </span>
                             )}

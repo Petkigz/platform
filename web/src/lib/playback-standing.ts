@@ -25,6 +25,8 @@
  * the two where nobody is coming unless somebody is told.
  */
 
+import { en, type MessageKey } from './i18n/messages/en.ts';
+
 /** One resource's standing, from `lesson_playback_standing()`. */
 export type Standing = 'plays' | 'preparing' | 'unavailable';
 
@@ -62,9 +64,20 @@ export type Note = {
   heading: string;
   /** One sentence, in the learner's terms, that refuses to promise anything. */
   sentence: string;
+  /**
+   * Where those two are in the catalogue, for a page written in another
+   * language. `heading` and `sentence` are the English of the same two keys,
+   * so there is one wording and the page chooses the language.
+   */
+  headingKey: MessageKey;
+  sentenceKey: MessageKey;
   /** Whether the learner should be pointed at the report form. */
   tellSomeone: boolean;
 };
+
+function note(headingKey: MessageKey, sentenceKey: MessageKey, tellSomeone: boolean): Note {
+  return { heading: en[headingKey], sentence: en[sentenceKey], headingKey, sentenceKey, tellSomeone };
+}
 
 /**
  * The sentence a learner reads in place of the player.
@@ -80,23 +93,13 @@ export function noteFor(state: Standing | null | undefined): Note | null {
   if (state === 'plays') return null;
 
   if (state === 'preparing') {
-    return {
-      heading: 'Not ready yet',
-      sentence:
-        'The recording for this lesson is still being prepared, so there is nothing to play yet. You can read the rest of the lesson and come back to this.',
-      // Nothing to do about it, and saying "report it" would send a person to a
-      // queue for something that is already on its way through one.
-      tellSomeone: false,
-    };
+    // Nothing to do about it, and saying "report it" would send a person to a
+    // queue for something that is already on its way through one.
+    return note('lesson.recPreparingHead', 'lesson.recPreparing', false);
   }
 
   if (state === 'unavailable') {
-    return {
-      heading: 'Not available',
-      sentence:
-        'This recording cannot be played at the moment, and waiting will not fix it — somebody has to look at it. If you need it for this lesson, tell us and it becomes a person’s job rather than yours.',
-      tellSomeone: true,
-    };
+    return note('lesson.recUnavailableHead', 'lesson.recUnavailable', true);
   }
 
   return null;
@@ -116,21 +119,12 @@ export function lessonNote(states: readonly (Standing | null | undefined)[]): No
   // is the one that needs a person, and it is the one worth leading with.
   if (states.some((state) => state === 'unavailable')) {
     const count = states.filter((state) => state === 'unavailable').length;
-    return {
-      heading: count === 1 ? 'One recording cannot be played' : 'Some recordings cannot be played',
-      sentence:
-        'This is not something waiting will fix — somebody has to look at it. The rest of the lesson is below, and telling us turns it into a person’s job rather than yours.',
-      tellSomeone: true,
-    };
+    // "One" and "some", not a number: no language has to make a noun agree.
+    return note(count === 1 ? 'lesson.recSummaryOne' : 'lesson.recSummarySome', 'lesson.recSummaryBroken', true);
   }
 
   if (states.some((state) => state === 'preparing')) {
-    return {
-      heading: 'Some of this is still being prepared',
-      sentence:
-        'The parts that are ready are below. Anything not ready yet will not appear by refreshing, so there is no need to keep trying; read what is here and come back to the rest.',
-      tellSomeone: false,
-    };
+    return note('lesson.recSummaryPreparingHead', 'lesson.recSummaryPreparing', false);
   }
 
   return null;

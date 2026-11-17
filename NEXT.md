@@ -2618,6 +2618,35 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### A recording that cannot be played, in the reader's language, 2026-11-17
+
+When an uploaded recording has no copy to play, the lesson says so in its row
+and above the materials, and in one of the two cases offers a way to tell a
+person. Those were English, marked as English, in a translated lesson.
+
+- *Translated.* Ten sentences (`lesson.rec*`) in the twenty-seven languages
+  with nothing held. **Unreviewed.** The English ends on an idiom ("it becomes
+  a person's job rather than yours"); each language says "one of us will take
+  it up" instead. None of them gives a time.
+- *One wording.* `lib/playback-standing.ts` held the English itself. It now
+  names catalogue keys and takes its English from the catalogue, so the page
+  chooses the language and there is no second copy to drift.
+- *The report form beside it* is handed the reader's words and still opens on
+  the technical kind. The form inside an open discussion is the only English
+  one left.
+- *Two changes to the English page.* The heading has a line to itself instead
+  of a full stop after it, and in a row it is no longer lower-cased into the
+  sentence ("Name — not ready yet."). A full stop and a lower case are not the
+  same thing in every script.
+- *What it did to the nineteen.* `/language` tells each of them **35%** (192
+  of 544).
+- *Checked* over HTTP against a synthetic backend that reports one upload
+  still being prepared and one that needs a person: English, Arabic, French
+  (the quieter notice, no report link), Hausa (English). **Not checked** in a
+  browser, and not against the real `lesson_playback_standing()`; the
+  database suite covers that function and was not rerun, because no migration
+  changed.
+
 ### The page for a wrong address, 2026-11-17
 
 The 404 was typed in English into its file. Two people reach it: one who

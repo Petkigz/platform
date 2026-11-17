@@ -502,6 +502,26 @@ export const en = {
   'lesson.reportRefused': 'That report could not be accepted. Reload the page and try again.',
   'lesson.reportUncertain': 'We could not confirm that your report was sent. Please send it again.',
 
+  // What is said in place of a recording that cannot be played, and above the
+  // materials when a lesson has one. Two situations that ask opposite things
+  // of the learner: wait, or tell somebody. None of them gives a time, blames
+  // the reader, or names the machinery. `lib/playback-standing.ts` chooses.
+  'lesson.recPreparingHead': 'Not ready yet',
+  'lesson.recPreparing':
+    'The recording for this lesson is still being prepared, so there is nothing to play yet. You can read the rest of the lesson and come back to this.',
+  'lesson.recUnavailableHead': 'Not available',
+  'lesson.recUnavailable':
+    'This recording cannot be played at the moment, and waiting will not fix it — somebody has to look at it. If you need it for this lesson, tell us and it becomes a person’s job rather than yours.',
+  'lesson.recSummaryOne': 'One recording cannot be played',
+  'lesson.recSummarySome': 'Some recordings cannot be played',
+  'lesson.recSummaryBroken':
+    'This is not something waiting will fix — somebody has to look at it. The rest of the lesson is below, and telling us turns it into a person’s job rather than yours.',
+  'lesson.recSummaryPreparingHead': 'Some of this is still being prepared',
+  'lesson.recSummaryPreparing':
+    'The parts that are ready are below. Anything not ready yet will not appear by refreshing, so there is no need to keep trying; read what is here and come back to the rest.',
+  // The link that opens the report form on "technical fault".
+  'lesson.recTell': 'Tell us about this recording',
+
   // Taking an assessment: the page and the quiz on it. Same twenty-seven
   // languages (`assess.ts`). No sentence here types a number or a percent
   // sign; `{count}`, `{earned}`, `{possible}`, `{number}`, `{answered}`,
