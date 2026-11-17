@@ -358,6 +358,8 @@ async function run() {
           for (const p of mine) by[p.status] = (by[p.status] ?? 0) + 1;
           return `${pass}: ${mine.length} pages — ${Object.entries(by).map(([status, n]) => `${n}×${status}`).join(', ')}`;
         }),
+        // A page that says "not found" is not a failure, but it should be one somebody expected.
+        ...[...new Set(pages.filter((p) => p.status === 404).map((p) => `not found: ${p.route.replace(/[0-9a-f]{8}-[0-9a-f-]{27}/g, '<id>')} (${p.pass})`))],
       ]);
     } finally { await db.end(); }
 
