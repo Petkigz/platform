@@ -8,6 +8,7 @@ import {
   coverageOf,
   directionOf,
   fill,
+  isUnwritten,
   localeByCode,
   localeGroups,
   localeLabel,
@@ -238,26 +239,39 @@ test('the African languages are in the register, and Africa is the first block',
   }
 });
 
-test('every African catalogue is written whole, and only a hold keeps a sentence from a reader', () => {
+test('an African catalogue is short only where a speaker is being waited for', () => {
   // A picker built on hope is worse than a short list: a language at 40% looks
-  // translated in the menu and reads as English on the page. These twenty-one
-  // were written whole.
+  // translated in the menu and reads as English on the page.
   //
-  // This used to demand that a reader be *shown* 100%. That rule is what put
-  // sentences nobody could vouch for on the prayer-times page: the only way to
-  // satisfy it in a language the builder cannot write was to write it anyway.
-  // Owner's decision, 2026-11-16: such a part falls back to English until a
-  // speaker has read it. So the rule is now two rules. Every sentence exists in
-  // the file — nothing is a sample — and the only sentences a reader does not
-  // see are ones held by name in `held.ts`, never ones that were not written.
+  // This rule has been loosened twice, both times by the owner's decision of
+  // 2026-11-16 that a language the builder cannot write properly falls back to
+  // English until a speaker has reviewed it.
+  //
+  // First it demanded that a reader be *shown* 100%. That is what put sentences
+  // nobody could vouch for on the prayer-times page, so it became: every
+  // sentence exists in the file, and the only ones a reader does not see are
+  // held by name in `held.ts`.
+  //
+  // Then it still demanded that every sentence be *written*, which for a new
+  // screen meant writing the same guesses in order to hide them. Now a language
+  // with something held may also lack the parts named in `UNWRITTEN_WHILE_HELD`
+  // and nothing else. A language with nothing held is still whole, and a gap
+  // anywhere else in any of them still fails here.
   for (const locale of LOCALES.filter((l) => l.region === 'Africa')) {
     const coverage = coverageOf(locale.code);
+    const unwritten = (Object.keys(en) as (keyof typeof en)[]).filter((key) => isUnwritten(locale.code, key));
     assert.equal(
-      coverage.translated + coverage.held,
+      coverage.translated + coverage.held + unwritten.length,
       coverage.total,
-      `${locale.code} has ${coverage.total - coverage.translated - coverage.held} sentences nobody wrote — finish it or take it out`,
+      `${locale.code} has ${coverage.total - coverage.translated - coverage.held - unwritten.length} sentences nobody wrote and nobody decided to leave — finish it or take it out`,
     );
-    if (coverage.held === 0) assert.equal(coverage.percent, 100);
+    for (const key of unwritten) {
+      assert.equal(WRITTEN[locale.code]?.[key], undefined, `${locale.code}.${key} is written and listed as unwritten`);
+    }
+    if (coverage.held === 0) {
+      assert.equal(unwritten.length, 0);
+      assert.equal(coverage.percent, 100);
+    }
   }
 });
 

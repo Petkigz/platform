@@ -71,6 +71,29 @@ export const HELD_FOR_REVIEW: Partial<Record<LocaleCode, readonly string[]>> = {
   my: ['companion'],
 };
 
+/**
+ * Parts that were never written for a language with anything held.
+ *
+ * Different from a hold. A held part is a draft in the file that readers are
+ * not shown; these have no draft. They were written after the owner's decision
+ * of 2026-11-16 — a language the builder cannot write properly falls back to
+ * English until a speaker has reviewed it — so for the twenty-three languages
+ * above, nothing was written at all rather than written and hidden.
+ *
+ * It follows the hold list on purpose: a language that leaves `HELD_FOR_REVIEW`
+ * is one a speaker has read, and from that moment these parts are expected of
+ * it like any other. The audit then reports them as missing, which is the
+ * reminder to ask that speaker for them.
+ */
+export const UNWRITTEN_WHILE_HELD: readonly string[] = ['learn'];
+
+/** Whether this sentence is deliberately absent from this language's file. */
+export function isUnwritten(code: string, key: string): boolean {
+  return (
+    Object.hasOwn(HELD_FOR_REVIEW, code) && UNWRITTEN_WHILE_HELD.includes(sectionOf(key))
+  );
+}
+
 /** The part of a key a hold is written against: `companion.prayerTitle` → `companion`. */
 export function sectionOf(key: string): string {
   return key.split('.')[0] ?? key;

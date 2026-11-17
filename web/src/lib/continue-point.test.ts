@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { carryOnHeading, continuePoint, type ContinueRow } from './continue-point.ts';
+import { formatNumber, translator } from './i18n/index.ts';
 import { flattenOutline, type OutlineSectionRow } from './outline.ts';
 
 const outline: OutlineSectionRow[] = [
@@ -160,4 +161,52 @@ test('a finished lesson leads to the next one, not back to itself', () => {
 
   assert.equal(copy.eyebrow, 'Next up');
   assert.equal(copy.action, 'Open lesson 2');
+});
+
+test('given no words, the card is the English it always was, with no position line', () => {
+  // The course page is not translated yet and passes nothing. It must keep
+  // getting exactly what it got, and the card supplies its own English line.
+  const copy = carryOnHeading(continuePoint(steps, [])!, false);
+
+  assert.deepEqual(copy, { eyebrow: 'Start the course', action: 'Open lesson 1' });
+});
+
+test('given a language, all three states and the position line are in it', () => {
+  const english = { t: translator('en'), number: (value: number) => formatNumber('en', value) };
+  const resumed = continuePoint(steps, [row('l2', 'in_progress', '2026-10-02T09:00:00Z')])!;
+  const next = continuePoint(steps, [row('l1', 'completed', '2026-10-01T09:00:00Z')])!;
+  const fresh = continuePoint(steps, [])!;
+
+  // English through the catalogue says what the literals say.
+  for (const [point, hasProgress] of [[resumed, true], [next, true], [fresh, false]] as const) {
+    const plain = carryOnHeading(point, hasProgress);
+    const viaCatalogue = carryOnHeading(point, hasProgress, english);
+    assert.equal(viaCatalogue.eyebrow, plain.eyebrow);
+    assert.equal(viaCatalogue.action, plain.action);
+    assert.equal(viaCatalogue.meta, `Lesson ${point.index} of ${point.total}`);
+  }
+
+  // Arabic: the words and the digits both change, and the lesson number is the
+  // right one in each state.
+  const arabic = { t: translator('ar'), number: (value: number) => formatNumber('ar', value) };
+  const two = formatNumber('ar', 2);
+  const total = formatNumber('ar', resumed.total);
+
+  const carry = carryOnHeading(resumed, true, arabic);
+  assert.equal(carry.eyebrow, translator('ar')('learn.carryResume'));
+  assert.notEqual(carry.eyebrow, 'Carry on where you stopped');
+  assert.equal(carry.action, translator('ar')('learn.carryContinue', { number: two }));
+  assert.equal(carry.meta, translator('ar')('learn.carryMeta', { index: two, total }));
+  assert.ok(carry.action.includes(two) && !/\{/u.test(carry.action + carry.meta));
+
+  const upNext = carryOnHeading(next, true, arabic);
+  assert.equal(upNext.eyebrow, translator('ar')('learn.carryNext'));
+  assert.equal(upNext.action, translator('ar')('learn.carryOpen', { number: two }));
+
+  const start = carryOnHeading(fresh, false, arabic);
+  assert.equal(start.eyebrow, translator('ar')('learn.carryStart'));
+  assert.equal(start.action, translator('ar')('learn.carryOpen', { number: formatNumber('ar', 1) }));
+
+  // Without a number writer the digits are plain rather than missing.
+  assert.equal(carryOnHeading(resumed, true, { t: translator('en') }).action, 'Continue lesson 2');
 });

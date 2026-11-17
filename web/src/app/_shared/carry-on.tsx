@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import type { ContinuePoint } from '@/lib/continue-point';
+import type { CarryOnCopy, ContinuePoint } from '@/lib/continue-point';
 
 /**
  * "Carry on where you stopped", on the course page.
@@ -15,6 +15,10 @@ import type { ContinuePoint } from '@/lib/continue-point';
  * is deliberate rather than careless: a card whose only affordance is a button
  * makes the title feel like a label, and on a phone the title is the larger
  * target.
+ *
+ * The words come in through `copy`. The dashboard passes them in the reader's
+ * language, position line included; the course page, which is not translated
+ * yet, passes none and gets the English line below.
  */
 export function CarryOn({
   enrolmentId,
@@ -23,7 +27,7 @@ export function CarryOn({
 }: {
   enrolmentId: string;
   point: NonNullable<ContinuePoint>;
-  copy: { eyebrow: string; action: string };
+  copy: CarryOnCopy;
 }) {
   const href = `/learn/${enrolmentId}/lesson/${point.lesson.id}`;
 
@@ -35,7 +39,7 @@ export function CarryOn({
           <Link href={href}>{point.lesson.title}</Link>
         </p>
         <p className="muted carry-on-meta">
-          Lesson {point.index} of {point.total}
+          {copy.meta ?? `Lesson ${point.index} of ${point.total}`}
           {point.lesson.sectionTitle ? ` · ${point.lesson.sectionTitle}` : ''}
         </p>
       </div>

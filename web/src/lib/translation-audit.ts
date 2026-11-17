@@ -40,6 +40,7 @@
  */
 
 import { en } from './i18n/messages/en.ts';
+import { isUnwritten } from './i18n/messages/held.ts';
 import { WRITTEN } from './i18n/messages/catalogues.ts';
 
 export type FindingKind =
@@ -70,6 +71,7 @@ export const AUDIT_LIMITS: readonly string[] = [
   'Whether a plural, a gender or a case agrees with its sentence.',
   'Whether the sentence reads naturally, or like something a machine wrote.',
   'Anything at all about a language whose script it can only partly recognise.',
+  'The parts deliberately not written yet for a language with something held — the learner dashboard, for now. Those read in English and lower the percentage on the language page.',
 ];
 
 /**
@@ -245,7 +247,10 @@ export function auditLocale(
     const english = (en as Record<string, string>)[key] ?? '';
     const value = catalogue[key];
     if (typeof value !== 'string') {
-      findings.push({ key, kind: 'missing', detail: [] });
+      // A part nobody wrote for this language on purpose is not a finding: it
+      // would put thirty identical lines in front of the one person who reads
+      // this, about a decision they made. `AUDIT_LIMITS` says so instead.
+      if (!isUnwritten(locale, key)) findings.push({ key, kind: 'missing', detail: [] });
       continue;
     }
     findings.push(...auditLine(locale, key, value, english));

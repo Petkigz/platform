@@ -1,6 +1,12 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { carryOnHeading, continuePoint, type ContinuePoint } from './continue-point.ts';
+import {
+  carryOnHeading,
+  continuePoint,
+  type CarryOnCopy,
+  type CarryOnWords,
+  type ContinuePoint,
+} from './continue-point.ts';
 import { CANDIDATES, rankEnrolments } from './dashboard.ts';
 import { flattenOutline, type OutlineSectionRow } from './outline.ts';
 
@@ -25,7 +31,7 @@ import { flattenOutline, type OutlineSectionRow } from './outline.ts';
 export type CarryOnLead = {
   enrolmentId: string;
   point: NonNullable<ContinuePoint>;
-  copy: { eyebrow: string; action: string };
+  copy: CarryOnCopy;
 };
 
 export type CarryOnEnrolment = {
@@ -44,6 +50,8 @@ type ProgressRow = {
 export async function fetchCarryOn(
   supabase: SupabaseClient,
   enrolments: readonly CarryOnEnrolment[],
+  // The dashboard's language. Absent, the card is in English as it always was.
+  words?: CarryOnWords,
 ): Promise<CarryOnLead | null> {
   if (enrolments.length === 0) return null;
 
@@ -104,7 +112,7 @@ export async function fetchCarryOn(
     return {
       enrolmentId: candidate.id,
       point,
-      copy: carryOnHeading(point, ownRows.length > 0),
+      copy: carryOnHeading(point, ownRows.length > 0, words),
     };
   }
 

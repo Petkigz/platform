@@ -27,7 +27,8 @@ import {
 } from './i18n/index.ts';
 import { CATALOGUES, WRITTEN } from './i18n/messages/catalogues.ts';
 import { en } from './i18n/messages/en.ts';
-import { HELD_FOR_REVIEW, WHOLE_LANGUAGE } from './i18n/messages/held.ts';
+import { HELD_FOR_REVIEW, UNWRITTEN_WHILE_HELD, WHOLE_LANGUAGE, isUnwritten } from './i18n/messages/held.ts';
+import { LEARN } from './i18n/messages/learn.ts';
 import { auditAll } from './translation-audit.ts';
 import { SECTIONS } from './translations.ts';
 
@@ -44,6 +45,7 @@ const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf
 const held = Object.entries(HELD_FOR_REVIEW) as [LocaleCode, readonly string[]][];
 const companionKeys = (Object.keys(en) as (keyof typeof en)[]).filter((k) => k.startsWith('companion.'));
 const allKeys = Object.keys(en) as (keyof typeof en)[];
+const unwrittenKeys = allKeys.filter((k) => UNWRITTEN_WHILE_HELD.includes(k.split('.')[0] ?? k));
 const partly = held.filter(([code]) => !isWithheld(code));
 const whole = held.filter(([code]) => isWithheld(code));
 
@@ -131,6 +133,11 @@ test('held is not deleted: the draft is kept for the person who will correct it'
     for (const key of allKeys) {
       if (!isHeld(code, key)) continue;
       const written = WRITTEN[code]?.[key];
+      // A part that was never written has no draft to keep, and says so.
+      if (isUnwritten(code, key)) {
+        assert.equal(written, undefined, `${code}.${key} is listed as unwritten and has a sentence`);
+        continue;
+      }
       assert.ok(written && written.trim() !== '', `${code}.${key} is held, but there is no draft to review`);
       assert.equal(draft(key), written);
       if (written !== en[key]) differs += 1;
@@ -178,14 +185,21 @@ test('the number on the language page describes the screen, not the file', () =>
   for (const [code] of partly) {
     const coverage = coverageOf(code);
     assert.equal(coverage.held, companionKeys.length);
-    assert.equal(coverage.translated + coverage.held, coverage.total);
+    // Shown, held, or never written: every sentence is one of the three, and
+    // only the first counts towards the number a reader is given.
+    assert.equal(coverage.translated + coverage.held + unwrittenKeys.length, coverage.total);
     assert.ok(coverage.percent < 100, `${code} hides sentences and still says 100%`);
     assert.equal(coverage.percent, Math.round((coverage.translated / coverage.total) * 100));
   }
   // A withheld language is every sentence written and none shown, and the page
   // lists it at the 0% that is.
   for (const [code] of whole) {
-    assert.deepEqual(coverageOf(code), { translated: 0, total: allKeys.length, percent: 0, held: allKeys.length });
+    assert.deepEqual(coverageOf(code), {
+      translated: 0,
+      total: allKeys.length,
+      percent: 0,
+      held: allKeys.length - unwrittenKeys.length,
+    });
   }
   // The page builds its "not complete" list from that number, so a held
   // language appears in it without being told to.
@@ -260,7 +274,11 @@ test('a withheld language is not offered anywhere a reader is given a language',
     // one day released...
     assert.equal(isLocaleCode(code), true);
     assert.ok(writtenLocales().some((l) => l.code === code), `${code} cannot be corrected: it is not on the sheet`);
-    assert.equal(Object.keys(WRITTEN[code] ?? {}).length, allKeys.length, `${code} lost its draft`);
+    assert.equal(
+      Object.keys(WRITTEN[code] ?? {}).length,
+      allKeys.length - unwrittenKeys.length,
+      `${code} lost its draft`,
+    );
     // ...and not one a reader can have.
     assert.equal(isOfferedLocale(code), false);
     assert.ok(!offered.includes(code), `${code} is withheld and offered`);
@@ -374,4 +392,104 @@ test('no page reaches past the hold', () => {
     (file) => !allowed.has(file) && /\bWRITTEN\b|writtenTranslator/u.test(readFileSync(new URL(file, root), 'utf8')),
   );
   assert.deepEqual(offenders, []);
+});
+
+test('the learner dashboard is written for the languages with nothing held, and for no other', () => {
+  // Owner's decision, 2026-11-16: a language the builder cannot write properly
+  // falls back to English until a speaker has reviewed it. For a new screen
+  // that means not writing it — a held draft would be the same guess, kept.
+  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn']);
+  assert.equal(unwrittenKeys.length, 30);
+  assert.ok(unwrittenKeys.every((key) => key.startsWith('learn.')));
+
+  const written = Object.keys(LEARN).sort();
+  const expected = LOCALES.map((l) => l.code)
+    .filter((code) => code !== 'en' && !Object.hasOwn(HELD_FOR_REVIEW, code))
+    .sort();
+  assert.deepEqual(written, expected);
+  assert.equal(written.length, 27);
+
+  for (const code of expected) {
+    const own = LEARN[code] ?? {};
+    assert.deepEqual(Object.keys(own).sort(), [...unwrittenKeys].sort(), `${code} is short a dashboard sentence`);
+    for (const key of unwrittenKeys) {
+      const value = own[key] ?? '';
+      assert.ok(value.trim() !== '' && value === value.trim(), `${code}.${key}`);
+      // The reader is served it, and the page calls itself that language.
+      assert.equal(translator(code)(key), value);
+      assert.equal(isUnwritten(code, key), false);
+      // Placeholders travel: a sentence that loses `{done}` prints a gap.
+      const names = (text: string) => [...text.matchAll(/\{([a-zA-Z]+)\}/gu)].map((m) => m[1]).sort();
+      assert.deepEqual(names(value), names(en[key]), `${code}.${key} changed its placeholders`);
+    }
+    assert.equal(languageShownFor(code, 'learn').code, code);
+    assert.equal(coverageOf(code).percent, 100);
+  }
+
+  // Everybody else: nothing in the file, English on the page, and a wrapper
+  // that says English — including Pashto, whose frame is right-to-left.
+  for (const [code] of held) {
+    for (const key of unwrittenKeys) {
+      assert.equal(WRITTEN[code]?.[key], undefined, `${code}.${key} was written for a held language`);
+      assert.equal(isUnwritten(code, key), true);
+      if (!isWithheld(code)) assert.equal(translator(code)(key), en[key]);
+    }
+    assert.equal(languageShownFor(code, 'learn').code, 'en');
+    assert.equal(languageShownFor(code, 'learn').dir, 'ltr');
+  }
+  assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');
+  assert.equal(languageShownFor('en', 'learn').code, 'en');
+  // A part that does not exist is English too, rather than a claim.
+  assert.equal(languageShownFor('ar', 'nosuchpart').code, 'en');
+});
+
+test('the dashboard page reads its words from the catalogue, in one language', () => {
+  const page = read('../app/learn/page.tsx');
+
+  // One language for the whole screen, on the wrapper when it is not the
+  // frame's, and the same language for its numbers.
+  assert.match(page, /const shown = languageShownFor\(locale, 'learn'\);/u);
+  assert.match(page, /const t = translator\(shown\.code\);/u);
+  assert.match(page, /formatNumber\(shown\.code, value\)/u);
+  assert.match(page, /mismatch \? \{ lang: shown\.code, dir: shown\.dir \} : \{\}/u);
+
+  // Every sentence the file holds is used by the page or by the card it leads
+  // with: a key nobody reads is a translation somebody wrote for nothing.
+  const sources = page + read('./continue-point.ts');
+  for (const key of unwrittenKeys) {
+    assert.ok(sources.includes(`'${key}'`), `${key} is translated and never shown`);
+  }
+
+  // The English that used to be typed into the page is gone from it.
+  for (const sentence of [
+    'Your courses', 'Signed in as', 'Account settings', 'Saved courses', 'On this device',
+    'Ask about a lesson', 'Could not load', 'No enrolments yet', 'Untitled course',
+    'In progress', 'Start course', 'Browse the catalogue', 'Sign out', 'My learning',
+  ]) {
+    assert.ok(!page.includes(sentence), `"${sentence}" is still typed into the dashboard`);
+  }
+
+  // What is still English is marked as English rather than left to inherit a
+  // right-to-left frame: live classes, the streak strip, memorisation and the
+  // learner-profile prompt.
+  assert.match(page, /const english = shown\.code === 'en' \? \{\} : \(\{ lang: 'en', dir: 'ltr' \} as const\);/u);
+  assert.equal(page.match(/\{\.\.\.english\}/gu)?.length, 4);
+
+  // The dashboard's sentences are left out of the catalogue every page
+  // carries, which is only safe while no client component asks for one.
+  assert.doesNotMatch(page, /^'use client'/u);
+  const src = new URL('../', import.meta.url);
+  const files = (dir: string): string[] =>
+    readdirSync(new URL(dir, src), { withFileTypes: true }).flatMap((entry) =>
+      entry.isDirectory() ? files(`${dir}${entry.name}/`) : /\.tsx?$/u.test(entry.name) ? [`${dir}${entry.name}`] : [],
+    );
+  const clients = files('').filter((file) => {
+    const text = readFileSync(new URL(file, src), 'utf8');
+    return /^\s*'use client'/u.test(text) && /'learn\.[a-zA-Z]+'/u.test(text);
+  });
+  assert.deepEqual(clients, [], 'a client component asks for a dashboard sentence the shell does not carry');
+
+  // The carry-on card is given the same words and digits.
+  assert.match(page, /fetchCarryOn\(supabase, enrolments, \{ t, number: num \}\)/u);
+  assert.match(read('../app/_shared/carry-on.tsx'), /copy\.meta \?\? `Lesson \$\{point\.index\} of \$\{point\.total\}`/u);
 });

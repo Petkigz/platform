@@ -15,7 +15,7 @@ import {
 } from './locales.ts';
 import { safeNextPath as safeLocalPath } from '../auth.ts';
 import { CATALOGUES, WRITTEN } from './messages/catalogues.ts';
-import { HELD_FOR_REVIEW, isHeld, isWithheld } from './messages/held.ts';
+import { HELD_FOR_REVIEW, isHeld, isUnwritten, isWithheld } from './messages/held.ts';
 import { en, type MessageKey, type Messages } from './messages/en.ts';
 
 export {
@@ -66,10 +66,26 @@ export function messagesFor(code: LocaleCode): Messages {
  */
 const COMPANION_PREFIX = 'companion.';
 
+/**
+ * Sentences only a server-rendered page reads.
+ *
+ * The learner dashboard is a Server Component: its words are in the HTML by the
+ * time a browser sees it, and no client component asks for one. Thirty
+ * sentences in the catalogue every page carries would be paid for by every
+ * reader of the front page and used by none of them. If a client component
+ * ever needs one, it will render the key instead of the sentence — which is
+ * loud — and the fix is to take its prefix out of this list.
+ */
+const SERVER_ONLY_PREFIXES: readonly string[] = ['learn.'];
+
 /** Everything a client component outside the companion pages can ask for. */
 export function shellMessagesFor(code: LocaleCode): Partial<Messages> {
   return Object.fromEntries(
-    Object.entries(messagesFor(code)).filter(([key]) => !key.startsWith(COMPANION_PREFIX)),
+    Object.entries(messagesFor(code)).filter(
+      ([key]) =>
+        !key.startsWith(COMPANION_PREFIX) &&
+        !SERVER_ONLY_PREFIXES.some((prefix) => key.startsWith(prefix)),
+    ),
   ) as Partial<Messages>;
 }
 
@@ -121,7 +137,7 @@ export function heldSections(code: LocaleCode): readonly string[] {
   return HELD_FOR_REVIEW[code] ?? [];
 }
 
-export { isHeld, isWithheld };
+export { isHeld, isUnwritten, isWithheld };
 
 /**
  * The language one part of the interface is actually shown in.
@@ -135,9 +151,20 @@ export { isHeld, isWithheld };
  * Dates and numbers inside such a page are still formatted for the reader's
  * own language. Those come from the browser's locale data, not from us, and
  * are not what the hold is about.
+ *
+ * **English, too, when the part was never written.** The learner dashboard is
+ * written in the languages its writer can write and in no others (`learn.ts`),
+ * so for the rest there is no hold to find — the sentences are simply not
+ * there, and `translator()` is already answering in English. The wrapper has
+ * to say so for the same reason.
  */
 export function languageShownFor(code: LocaleCode, section: string): Locale {
-  return localeByCode(isHeld(code, `${section}.`) ? DEFAULT_LOCALE : code);
+  if (code === DEFAULT_LOCALE || isHeld(code, `${section}.`)) return localeByCode(DEFAULT_LOCALE);
+  const prefix = `${section}.`;
+  const written = Object.entries(CATALOGUES[code] ?? {}).some(
+    ([key, value]) => key.startsWith(prefix) && typeof value === 'string' && value.trim() !== '',
+  );
+  return localeByCode(written ? code : DEFAULT_LOCALE);
 }
 
 export type Coverage = {

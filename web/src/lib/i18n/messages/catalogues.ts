@@ -16,6 +16,7 @@ import { HOME_AFRICA_SOUTH } from './home-africa-south.ts';
 import { HOME_AFRICA_WEST } from './home-africa-west.ts';
 import { HOME_WORLD } from './home-world.ts';
 import { COMPANION } from './companion.ts';
+import { LEARN } from './learn.ts';
 import { isHeld } from './held.ts';
 import { ASIA_AZ } from './asia-az.ts';
 import { ASIA_CENTRAL } from './asia-uz.ts';
@@ -787,6 +788,9 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   // They were the last surfaces on the site written in English, so they got a
   // whole file rather than a screen at a time.
   COMPANION,
+  // The learner dashboard, in the twenty-seven languages with nothing held.
+  // The first file that is deliberately not written for everybody.
+  LEARN,
 );
 
 /**

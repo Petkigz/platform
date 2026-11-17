@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 import {
@@ -62,8 +63,17 @@ test('signing out is a POST, because the route refuses GET', () => {
 });
 
 test('the accessible name says who is signed in when it is known', () => {
-  assert.equal(accountLabel({ signedIn: true, name: 'Amina' }), 'Your area — signed in as Amina');
+  assert.equal(accountLabel({ signedIn: true, name: 'Amina' }), 'Your area — Amina');
   assert.equal(accountLabel({ signedIn: true, name: null }), 'Your area');
+  // No English between the two in a header that is in another language, and
+  // the name starts with the words on the button.
+  assert.equal(accountLabel({ signedIn: true, name: 'Amina' }, 'صفحتك'), 'صفحتك — Amina');
+
+  // It is the accessible name, not the words on the button: the header has no
+  // room for a name on a phone, and used to print one anyway.
+  const masthead = readFileSync(new URL('../app/_shared/masthead-actions.tsx', import.meta.url), 'utf8');
+  assert.match(masthead, /aria-label=\{name === action\.label \? undefined : name\}/u);
+  assert.match(masthead, /className=\{className\}\s+aria-label=[^>]+>\s+\{action\.label\}\s+<\/Link>/u);
 });
 
 test('the front door stops offering sign-up to somebody who signed up', () => {

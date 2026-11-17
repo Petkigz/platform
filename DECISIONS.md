@@ -7896,7 +7896,8 @@ languages is held: Wolof, Fulfulde, Bambara, Dhivehi, Tigrinya, Amharic, Oromo,
 Somali, Igbo, Yoruba, Hausa, Kinyarwanda, Luganda, Lingala, Malagasy, Chichewa,
 Shona, Sesotho, Zulu, Xhosa, Pashto, Sinhala and Burmese. Readers of those
 languages see those screens in English and the rest of the interface in their
-own language; the language page shows 71% for each. The drafts are kept for a
+own language; the language page shows 71% for each (64% once the learner
+dashboard was added, below). The drafts are kept for a
 reviewer and are not shown to learners. A language is released by removing its
 line from `web/src/lib/i18n/messages/held.ts` once a first-language speaker's
 review of that part has been applied.
@@ -7929,4 +7930,34 @@ asks for one of the four first is now answered in English, whatever else the
 device lists; a device that lists another offered language *ahead* of it still
 gets that language. The cost, stated when the choice was put: a reader who told
 their device they also read French is shown English rather than French.
+
+## New screens are not written in a language that has anything held — **DECIDED 2026-11-16**
+
+Offered as the plan for the learner dashboard — translate it in the twenty-seven
+languages the builder can write reasonably, write nothing for the other
+twenty-three, and relax the test that required every African language to be
+written in full — the owner answered: **continue.** It follows from the first
+answer of the day (a language the builder cannot write properly falls back to
+English until a speaker reviews it): writing a draft in order to hold it is the
+same guess, kept.
+
+**Implemented locally, not deployed.** `/learn` is in the catalogue as thirty
+sentences, written for Arabic, Urdu, Persian, Dari, Turkish, Indonesian, Malay,
+Bengali, Hindi, French, Spanish, Portuguese, Swahili, Afrikaans, Chinese
+(Simplified and Traditional), Vietnamese, Thai, Filipino, Uzbek, Kazakh,
+Azerbaijani, Tajik, Kyrgyz, Turkmen, Tamil and Nepali. The twenty-three
+languages with a part held have no entry; their readers see the dashboard in
+English, marked as English, and the language page counts it against them (64%
+for each of the nineteen, from 71%).
+
+**The rule going forward.** A part named in `UNWRITTEN_WHILE_HELD`
+(`web/src/lib/i18n/messages/held.ts`) may be absent from a language that has
+anything held, and from no other. Releasing a language from its hold makes its
+missing parts ordinary gaps the audit reports. A future screen is added to that
+list rather than written fifty times.
+
+**What it costs.** A Hausa, Amharic or Zulu reader now sees more English than
+before on the page they land on after signing in, inside navigation in their own
+language, and will until a first-language speaker writes it. None has been
+found. The twenty-seven that were written are unreviewed like everything else.
 

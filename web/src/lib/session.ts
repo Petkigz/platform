@@ -98,9 +98,15 @@ export function mastheadActions(
  * On a shared family device — the ordinary case here, since a parent's account
  * holds a child's learning — who is signed in is information the visible header
  * has no room for and the accessible name has plenty of.
+ *
+ * It is the button's words and then the name, and nothing else. It used to say
+ * "signed in as" between them, in English, inside an Arabic or Swahili header;
+ * the name after the button's own words says the same thing in every language.
+ * It also begins with the visible words, which is what lets somebody using
+ * voice control say what they can see.
  */
 export function accountLabel(session: SessionSummary, area = 'Your area'): string {
-  return session.name ? `${area} — signed in as ${session.name}` : area;
+  return session.name ? `${area} — ${session.name}` : area;
 }
 
 export type CallToAction = { label: string; href: string };

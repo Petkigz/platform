@@ -109,17 +109,75 @@ export function continuePoint<T extends ContinueCandidate>(
  * opened four is being offered what is next. All three point at a lesson and a
  * position, and none of them should read as if the product assumed the others.
  */
+/**
+ * The words, in the reader's language.
+ *
+ * `t` is `translator()` for the language the surrounding page is shown in and
+ * `number` writes a lesson number in that language's digits. Without them the
+ * answer is the English this function has always given, which is what the
+ * course page — not translated yet — still asks for.
+ */
+export type CarryOnWords = {
+  t: (
+    key:
+      | 'learn.carryResume'
+      | 'learn.carryStart'
+      | 'learn.carryNext'
+      | 'learn.carryContinue'
+      | 'learn.carryOpen'
+      | 'learn.carryMeta',
+    vars?: Record<string, string | number>,
+  ) => string;
+  number?: (value: number) => string;
+};
+
+export type CarryOnCopy = {
+  eyebrow: string;
+  action: string;
+  /** "Lesson 3 of 12". Absent when no words were given; the card has English. */
+  meta?: string;
+};
+
 export function carryOnHeading(
   point: NonNullable<ContinuePoint>,
   hasProgress: boolean,
-): { eyebrow: string; action: string } {
+  words?: CarryOnWords,
+): CarryOnCopy {
+  if (!words) {
+    if (point.reason === 'resume') {
+      return { eyebrow: 'Carry on where you stopped', action: `Continue lesson ${point.index}` };
+    }
+
+    if (!hasProgress && point.index === 1) {
+      return { eyebrow: 'Start the course', action: 'Open lesson 1' };
+    }
+
+    return { eyebrow: 'Next up', action: `Open lesson ${point.index}` };
+  }
+
+  const { t } = words;
+  const number = words.number ?? String;
+  const meta = t('learn.carryMeta', { index: number(point.index), total: number(point.total) });
+
   if (point.reason === 'resume') {
-    return { eyebrow: 'Carry on where you stopped', action: `Continue lesson ${point.index}` };
+    return {
+      eyebrow: t('learn.carryResume'),
+      action: t('learn.carryContinue', { number: number(point.index) }),
+      meta,
+    };
   }
 
   if (!hasProgress && point.index === 1) {
-    return { eyebrow: 'Start the course', action: 'Open lesson 1' };
+    return {
+      eyebrow: t('learn.carryStart'),
+      action: t('learn.carryOpen', { number: number(1) }),
+      meta,
+    };
   }
 
-  return { eyebrow: 'Next up', action: `Open lesson ${point.index}` };
+  return {
+    eyebrow: t('learn.carryNext'),
+    action: t('learn.carryOpen', { number: number(point.index) }),
+    meta,
+  };
 }

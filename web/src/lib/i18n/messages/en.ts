@@ -381,6 +381,39 @@ export const en = {
     'No first-language speaker has read this translation yet. It was written by the people who built the platform — if a word looks wrong to you, that is a mistake we owe you.',
   'language.notTranslated':
     'Interface translation only. Course titles, lessons, teacher pages and the published policies appear in the language they were written in.',
+
+  // The learner dashboard. Written in twenty-seven languages (`learn.ts`); the
+  // rest read these in English until a speaker has written theirs.
+  'learn.greeting': 'Assalamu alaikum, {name}',
+  'learn.yourCourses': 'Your courses',
+  'learn.signedInAs': 'Signed in as {identity}.',
+  'learn.shortcuts': 'Learning shortcuts',
+  'learn.account': 'Account settings',
+  'learn.saved': 'Saved courses',
+  'learn.savedCount': 'Saved courses ({count})',
+  'learn.onDevice': 'On this device',
+  'learn.ask': 'Ask about a lesson',
+  'learn.errorEnrolments': 'Could not load enrolments.',
+  'learn.errorProfile': 'Could not load your profile.',
+  'learn.empty': 'No enrolments yet.',
+  'learn.me': 'Me',
+  'learn.someoneElse': 'Someone else',
+  'learn.untitled': 'Untitled course',
+  'learn.statusActive': 'In progress',
+  'learn.statusCompleted': 'Completed',
+  'learn.statusWithdrawn': 'Withdrawn',
+  'learn.statusSuspended': 'Suspended',
+  'learn.statusExpired': 'Expired',
+  'learn.progressLabel': '{course} progress',
+  'learn.lessonsDone': '{done} of {total} lessons · {percent}%',
+  'learn.start': 'Start course',
+  'learn.continue': 'Continue',
+  'learn.carryResume': 'Carry on where you stopped',
+  'learn.carryStart': 'Start the course',
+  'learn.carryNext': 'Next up',
+  'learn.carryContinue': 'Continue lesson {number}',
+  'learn.carryOpen': 'Open lesson {number}',
+  'learn.carryMeta': 'Lesson {index} of {total}',
 } as const;
 
 export type MessageKey = keyof typeof en;

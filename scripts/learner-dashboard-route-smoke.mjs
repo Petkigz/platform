@@ -18,6 +18,14 @@ const rows = [
   { id: 'child-enrolment', status: 'active', enrolled_at: '2026-01-01T00:00:00Z', learner_profile_id: 'child', course_version_id: 'v2', learner_profiles: [{ display_name: 'Synthetic child', learner_type: 'child' }], courses: [{ title: 'Synthetic child course', slug: 'child-course' }], course_versions: [{ version_number: 2, language: 'en' }] },
 ];
 let enabled = false; let flagOutage = false; let profileOutage = false;
+// Off for the original three states, which pin that an empty outline makes no
+// carry-on card; on for the language checks, which need the card to read.
+let outline = false;
+const sections = [{ course_version_id: 'v1', id: 's1', title: 'Synthetic section', position: 1, lessons: [
+  { id: 'l1', title: 'Synthetic lesson one', position: 1 }, { id: 'l2', title: 'Synthetic lesson two', position: 2 }, { id: 'l3', title: 'Synthetic lesson three', position: 3 }] }];
+const progress = [
+  { course_enrolment_id: 'own-enrolment', lesson_id: 'l1', status: 'completed', last_seen_at: '2026-01-02T00:00:00Z' },
+  { course_enrolment_id: 'own-enrolment', lesson_id: 'l2', status: 'in_progress', last_seen_at: '2026-01-03T00:00:00Z' }];
 let active = 0; let maximum = 0; const calls = [];
 const fake = createServer(async (req, res) => {
   res.setHeader('content-type', 'application/json');
@@ -45,8 +53,8 @@ const fake = createServer(async (req, res) => {
   else if (path === '/rest/v1/course_wishlist') { res.setHeader('content-range', '*/0'); res.end(); }
   else if (path === '/rest/v1/rpc/enrolment_progress_summary') {
     res.end(JSON.stringify({ lessons_total: 4, lessons_done: payload.p_enrolment_id === 'own-enrolment' ? 1 : 0, percent_complete: payload.p_enrolment_id === 'own-enrolment' ? 25 : 0 }));
-  } else if (path === '/rest/v1/lesson_progress') res.end('[]');
-  else if (path === '/rest/v1/course_sections') res.end('[]');
+  } else if (path === '/rest/v1/lesson_progress') res.end(JSON.stringify(outline ? progress : []));
+  else if (path === '/rest/v1/course_sections') res.end(JSON.stringify(outline ? sections : []));
   else { res.writeHead(404); res.end('{}'); }
   active--;
 });
@@ -87,13 +95,74 @@ try {
     assert.equal(calls.some((c) => c.path === '/rest/v1/rpc/my_live_sessions'), false);
     assert.equal(calls.some((c) => c.path === '/rest/v1/lesson_progress'), state === 'on');
     assert.ok(maximum >= 2, `independent synthetic REST calls did not overlap in ${state}`);
+    assert.equal(html.includes('carry-on'), false, `${state}: a carry-on card with no outline to read`);
   }
+
+  // ---------------------------------------------------------------- languages
+  // The dashboard in the reader's language. Twenty-seven languages have it; a
+  // language with a part held for review reads this screen in English, marked
+  // as English; a withheld language is English throughout. The expected
+  // sentences are typed here rather than imported, so this fails if a catalogue
+  // changes without anybody looking at the page.
+  enabled = true; flagOutage = false; profileOutage = false; outline = true;
+  const digits = (code, value) => new Intl.NumberFormat(code).format(value);
+  const wrapper = (html) => html.match(/<div class="container section learner-dashboard"([^>]*)>/)?.[1];
+  const root = (html) => html.match(/<html[^>]*>/)?.[0] ?? '';
+  const page = async (headers) => { const response = await request({ cookie, ...headers }); assert.equal(response.status, 200); return response.text(); };
+
+  const english = await page({ 'accept-language': 'en' });
+  for (const sentence of ['Assalamu alaikum, Synthetic learner', 'Signed in as ', 'Learning shortcuts', 'Account settings', 'Saved courses', 'On this device', 'Ask about a lesson', 'Sign out', 'Your courses', 'In progress', '1 of 4 lessons · 25%', '0 of 4 lessons · 0%', 'Start course', 'Carry on where you stopped', 'Continue lesson 2', 'Lesson 2 of 3', 'Synthetic lesson two', 'Browse the catalogue']) {
+    assert.ok(english.includes(sentence), `English dashboard lost "${sentence}"`);
+  }
+  assert.equal(wrapper(english), '', 'an English page marks its own dashboard as a different language');
+  assert.match(english, /<bdi dir="ltr">probe@example\.invalid<\/bdi>/);
+
+  const two = digits('ar', 2); const three = digits('ar', 3);
+  const arabic = await page({ 'accept-language': 'ar' });
+  assert.match(root(arabic), /lang="ar"/); assert.match(root(arabic), /dir="rtl"/);
+  assert.equal(wrapper(arabic), '', 'the Arabic dashboard is Arabic and needs no wrapper');
+  for (const sentence of ['السلام عليكم، Synthetic learner', 'تم تسجيل الدخول باسم ', 'aria-label="اختصارات التعلّم"', 'إعدادات الحساب', 'الدورات المحفوظة', 'على هذا الجهاز', 'السؤال عن درس', 'تسجيل الخروج', 'دوراتك', 'قيد التقدّم', `الدروس: ${digits('ar', 1)} من ${digits('ar', 4)} · ${digits('ar', 25)}%`, 'بدء الدورة', 'aria-label="التقدّم في Synthetic adult course"', 'المتابعة من حيث توقفت', `متابعة الدرس ${two}`, `الدرس ${two} من ${three}`, 'Synthetic lesson two', 'Synthetic section', 'أنا']) {
+    assert.ok(arabic.includes(sentence), `Arabic dashboard lacks "${sentence}"`);
+  }
+  for (const sentence of ['Your courses', 'Signed in as', 'Learning shortcuts', 'Account settings', 'In progress', 'Start course', 'Continue lesson', 'Carry on where', 'Lesson 2 of 3', 'of 4 lessons', '{']) {
+    assert.ok(!arabic.slice(arabic.indexOf('learner-dashboard'), arabic.indexOf('</main>')).replace(/<script[\s\S]*?<\/script>/g, '').includes(sentence), `Arabic dashboard still says "${sentence}"`);
+  }
+  // The address keeps its own direction inside the Arabic sentence.
+  assert.match(arabic, /<bdi dir="ltr">probe@example\.invalid<\/bdi>/);
+
+  // The reader's own choice from /language outranks the device.
+  const french = await page({ 'accept-language': 'ar', cookie: `${cookie}; ayahspring_locale=fr` });
+  assert.match(root(french), /lang="fr"/);
+  for (const sentence of ['Assalamou alaykoum, Synthetic learner', 'Vos cours', 'Reprenez là où vous en étiez', 'Continuer la leçon 2', 'Leçon 2 sur 3', '1 sur 4 leçons · 25 %']) {
+    assert.ok(french.includes(sentence), `French dashboard lacks "${sentence}"`);
+  }
+
+  // Hausa has its companion text held, so this screen was not written for it:
+  // Hausa frame, English dashboard, and the dashboard says it is English.
+  const hausa = await page({ 'accept-language': 'ha' });
+  assert.match(root(hausa), /lang="ha"/);
+  assert.equal(wrapper(hausa), ' lang="en" dir="ltr"');
+  for (const sentence of ['Your courses', 'Carry on where you stopped', 'Lesson 2 of 3', '1 of 4 lessons · 25%', 'Open prayer times']) assert.ok(hausa.includes(sentence), `Hausa reader's dashboard lacks English "${sentence}"`);
+
+  // Pashto is right-to-left with the same hold: the English must not inherit it.
+  const pashto = await page({ 'accept-language': 'ps' });
+  assert.match(root(pashto), /lang="ps"/); assert.match(root(pashto), /dir="rtl"/);
+  assert.equal(wrapper(pashto), ' lang="en" dir="ltr"');
+
+  // Wolof is withheld whole: English everywhere, so nothing to mark.
+  const wolof = await page({ 'accept-language': 'wo, fr' });
+  assert.match(root(wolof), /lang="en"/);
+  assert.equal(wrapper(wolof), '');
+  assert.ok(wolof.includes('Your courses') && !wolof.includes('Vos cours'));
+  console.log(`Learner dashboard languages: English, Arabic (right-to-left, digits ${two}/${three}, address isolated), French by the reader's own choice over an Arabic device, carry-on card in each; Hausa and Pashto frames with an English dashboard marked lang="en" dir="ltr"; Wolof-then-French device in English. Synthetic backend; no translation here has been read by a speaker.`);
+  outline = false;
   console.log('Learner dashboard HTTP smoke passed: anonymous redirect, own/child labels, flags off/on/outage, profile error, no-store, gated calls and overlapping synthetic reads. Not real Auth or RLS.');
   if (process.env.RESPONSIVE_PLAYWRIGHT && process.env.RESPONSIVE_CHROME) {
     const { chromium } = await import(pathToFileURL(process.env.RESPONSIVE_PLAYWRIGHT).href);
     browser = await chromium.launch({ executablePath: process.env.RESPONSIVE_CHROME, headless: true, args: ['--no-sandbox'] });
     enabled = true; flagOutage = false; profileOutage = false;
     for (const width of [320, 390, 768, 1440, 1920, 2560]) {
+      outline = false;
       const context = await browser.newContext({ viewport: { width, height: 900 }, locale: 'en' });
       await context.addCookies([{ name: 'sb-127-auth-token', value: `base64-${encode(session)}`, url: `http://localhost:${port}` }]);
       const page = await context.newPage();
@@ -120,6 +189,37 @@ try {
       if (process.env.RESPONSIVE_SCREENSHOTS && [390, 1440].includes(width)) await page.screenshot({ path: `${process.env.RESPONSIVE_SCREENSHOTS}/dashboard-en-${width}.png`, fullPage: true });
       console.log(`Synthetic learner dashboard ${width}: no overflow, ${metrics.columns} columns, distinct learner labels`);
       await context.close();
+    }
+    // The same screen in Arabic and in Tamil (long words), with the carry-on
+    // card: nothing may push the page sideways, and the page must be mirrored.
+    outline = true;
+    for (const [code, heading, shortcuts] of [['ar', 'دوراتك', 'اختصارات التعلّم'], ['ta', 'உங்கள் பாடநெறிகள்', 'கற்றல் குறுக்குவழிகள்']]) {
+      for (const width of [320, 390, 1440]) {
+        const context = await browser.newContext({ viewport: { width, height: 900 }, locale: 'en' });
+        await context.addCookies([
+          { name: 'sb-127-auth-token', value: `base64-${encode(session)}`, url: `http://localhost:${port}` },
+          { name: 'ayahspring_locale', value: code, url: `http://localhost:${port}` },
+        ]);
+        const page = await context.newPage();
+        const errors = []; page.on('pageerror', (e) => errors.push(String(e)));
+        await page.goto(`http://localhost:${port}/learn`, { waitUntil: 'networkidle' });
+        assert.equal(await page.evaluate(() => document.documentElement.lang), code);
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth) <= width + 1, true, `${code} ${width}: the dashboard scrolls sideways`);
+        assert.equal(await page.getByRole('heading', { name: heading, exact: true }).count(), 1, `${code} ${width}: heading`);
+        assert.equal(await page.getByRole('navigation', { name: shortcuts }).count(), 1, `${code} ${width}: shortcuts`);
+        assert.equal(await page.locator('.carry-on').count(), 1, `${code} ${width}: carry-on card`);
+        const inside = await page.locator('.carry-on').evaluate((el) => { const r = el.getBoundingClientRect(); return r.left >= 0 && r.right <= window.innerWidth + 1 && el.scrollWidth <= el.clientWidth + 1; });
+        assert.ok(inside, `${code} ${width}: the carry-on card does not fit`);
+        if (code === 'ar') {
+          // Mirrored: the heading starts at the right-hand edge of its column.
+          const side = await page.locator('.learner-welcome h1').evaluate((el) => getComputedStyle(el).direction);
+          assert.equal(side, 'rtl');
+        }
+        assert.deepEqual(errors, [], `${code} ${width}: page errors`);
+        if (process.env.RESPONSIVE_SCREENSHOTS && [390, 1440].includes(width)) await page.screenshot({ path: `${process.env.RESPONSIVE_SCREENSHOTS}/dashboard-${code}-${width}.png`, fullPage: true });
+        await context.close();
+      }
+      console.log(`Synthetic learner dashboard in ${code}: fits at 320, 390 and 1440px with the carry-on card, heading and shortcuts in that language`);
     }
   }
 } catch (e) { console.error(logs); throw e; }

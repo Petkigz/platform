@@ -43,7 +43,9 @@ export function MastheadActions({ labels }: { labels?: MastheadLabels } = {}) {
     <div className="masthead-actions">
       {mastheadActions(session, labels).map((action) => {
         const className = action.emphasis === 'primary' ? 'btn' : 'btn ghost';
-        const label =
+        // Who is signed in goes in the accessible name only. The button keeps
+        // its own short words, so the header fits a phone in every language.
+        const name =
           action.href === '/dashboard' ? accountLabel(session, labels?.area) : action.label;
 
         if (action.method === 'post') {
@@ -57,8 +59,13 @@ export function MastheadActions({ labels }: { labels?: MastheadLabels } = {}) {
         }
 
         return (
-          <Link key={action.href} href={action.href} className={className}>
-            {label}
+          <Link
+            key={action.href}
+            href={action.href}
+            className={className}
+            aria-label={name === action.label ? undefined : name}
+          >
+            {action.label}
           </Link>
         );
       })}

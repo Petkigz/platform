@@ -2618,6 +2618,65 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The learner dashboard, in the languages that can be written, 2026-11-16
+
+`/learn` was a translated frame around an English page: the greeting, the
+shortcuts, the course cards and the carry-on card were typed into the file.
+They are thirty sentences in the catalogue now (`learn.*`,
+`web/src/lib/i18n/messages/learn.ts`), written for the twenty-seven languages
+with nothing held and **for no other**. This is the first part that is
+deliberately not written for everybody: the owner's decision of the same day
+was that a language the builder cannot write properly falls back to English
+until a speaker has reviewed it, and for a new screen that means not writing
+the guess, rather than writing it and holding it.
+
+- *The rule has a name.* `UNWRITTEN_WHILE_HELD` in `held.ts` lists the parts a
+  language with anything held may lack (`learn`, for now). It follows the hold
+  list, so releasing a language makes the audit report its dashboard as
+  missing: the moment to ask the speaker who released it.
+- *The test that required every African language to be written whole is
+  relaxed*, to exactly that: a held language may lack those parts and nothing
+  else; an unheld language is still whole; a gap anywhere else still fails.
+- *The twenty-three read the dashboard in English, all of it.* The page asks
+  `languageShownFor(locale, 'learn')`, which now answers English for a part
+  that was never written as well as for a held one, and renders the whole
+  dashboard through that language: wrapper marked `lang="en" dir="ltr"`,
+  numbers in Latin digits. The four labels the page shares with the navigation
+  ("My learning", "Sign out", "Browse the catalogue", the lesson count) are
+  English there too, so the screen does not change language line by line.
+- *`/language` says so.* Each of the nineteen partly held languages now reads
+  64% (192 of 302), down from 71% (192 of 272), with the existing sentence that
+  the rest is in English.
+- *Not on every page.* The layout serialises its catalogue into each page for
+  client components. The dashboard is rendered on the server, so its thirty
+  sentences are left out of that (`SERVER_ONLY_PREFIXES`); a test fails if a
+  client component ever asks for one.
+- *Still English on that page, and marked as English:* the live-classes list,
+  the streak strip, the memorisation card and the "learn on this account"
+  prompt (`ClaimLearner`, shared with three other pages). The first three are
+  behind switches that ship off. The course page (`/learn/[enrolmentId]`) is
+  not translated; it calls the same carry-on function without words and gets
+  the English it always got.
+- *An address inside a sentence.* The identity line is split around its
+  placeholder and the address sits in `<bdi dir="ltr">`, so an email in an
+  Arabic sentence is not reordered. When an account has neither an email nor a
+  phone the line is left out; it used to say "Signed in as unknown."
+- *Found while looking at the Arabic screenshot:* the green button in the
+  header read "Your area — signed in as Amina" on every page, in English
+  between two translated words, and at that length on a phone. The name was
+  meant for a screen reader (the comment said so) and was being printed. The
+  button now says "Your area" in the reader's language and carries the name in
+  its accessible name only, with no English between them.
+- *Checked:* `scripts/learner-dashboard-route-smoke.mjs` requests the page in
+  English, Arabic, French (chosen by cookie over an Arabic device), Hausa,
+  Pashto and Wolof-then-French and reads the sentences, the wrapper and the
+  carry-on card in each; with a browser it loads Arabic and Tamil at 320, 390
+  and 1440 pixels. Synthetic backend throughout.
+
+No speaker has read any of the twenty-seven. They were written because they are
+short labels in languages with a large body of interface text to compare
+against, which is grounds to expect fewer mistakes and not evidence of none.
+
 ### Loose ends from the gutter and the companion pages, 2026-11-16
 
 - The three companion pages had fixed English tab titles; each now uses its own
@@ -2664,7 +2723,8 @@ Twenty-three languages now have their companion text held
 low-confidence list in `docs/remaining.md`. Their readers get the three
 companion screens and the three dashboard cards in English, marked
 `lang="en" dir="ltr"`, inside a frame that stays in their language; `/language`
-shows 71% for each. The drafts are kept and are what `/contribute` hands a
+shows 71% for each (64% since the learner dashboard was added in twenty-seven
+languages only; see the entry above). The drafts are kept and are what `/contribute` hands a
 reviewer, with a notice that readers cannot see them. Release is deleting a line
 in `held.ts` after a speaker's review, not a switch. The test now requires
 African languages to be written whole and lets only a named hold keep a sentence

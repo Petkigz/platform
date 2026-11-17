@@ -508,7 +508,9 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 71% there (192 of 272 sentences), in the reader's own language,
+  the nineteen reads 64% there (192 of 302 sentences; it was 71% of 272 until
+  the learner dashboard was added in twenty-seven languages only, below), in
+  the reader's own language,
   with the existing sentence that the rest is in English. No new sentence was
   written for this, because it would have had to be written in the same
   twenty-three languages.
@@ -524,6 +526,7 @@ still unreviewed and still saying so.
   African language to be shown at 100%, which could only be met by writing
   sentences nobody could vouch for. It now requires every African language to be
   *written* whole and allows only a named hold to keep a sentence from a reader.
+  (Relaxed once more for the learner dashboard: see the paragraph on it below.)
   `held-translations.test.ts` pins the rest: a hold can never take the
   navigation, sign-in or the language page; held text is English wherever a
   reader can meet it; and no learner page may read `WRITTEN`.
@@ -532,7 +535,7 @@ still unreviewed and still saying so.
   Burmese sentence on the page, and the tool still calculates six rows. It does
   the direction check in Pashto, opens the correction sheet on the Hausa
   companion part (eighty boxes, each with the draft, and the notice; no notice
-  on the Hausa navigation or on Swahili), and reads 71% on `/language` in Hausa.
+  on the Hausa navigation or on Swahili), and reads 64% on `/language` in Hausa.
 
 **Four languages withheld whole (owner's second answer, 2026-11-16).** Asked
 whether the rest of the interface in Wolof, Fulfulde, Bambara and Dhivehi should
@@ -581,6 +584,38 @@ line), after a speaker's corrections are in the file. Until the navigation,
 sign-in and language-page parts have been read it cannot be partly released:
 `held-translations.test.ts` refuses a language that is on offer with its frame
 held.
+
+**The learner dashboard is written in twenty-seven languages and in no other
+(owner's "continue", 2026-11-16).** `/learn` was English inside a translated
+frame. Its greeting, shortcuts, notices, empty state, course cards and carry-on
+card are now thirty catalogue sentences (`learn.*`), written for the
+twenty-seven languages with nothing held. For the twenty-three above nothing was
+written: not a held draft, nothing.
+
+- *Their readers get the whole dashboard in English*, marked
+  `lang="en" dir="ltr"`, with Latin digits, inside navigation that stays in
+  their language (or, for the four withheld, inside an English page).
+- *The rule is named and tested.* `UNWRITTEN_WHILE_HELD` in `held.ts` lists the
+  parts a held language may lack. The test that required every African language
+  to be written whole now allows exactly those parts for exactly those
+  languages; an unheld language must still have every sentence. The owner's
+  audit panel does not list the 690 absent lines as findings and says, in its
+  list of what it does not check, that it leaves them out.
+- *The correction sheet offers the part.* "The learner dashboard" is a part on
+  `/contribute` for all fifty languages; for a held language each box opens on
+  the English sentence, since there is no draft.
+- *Still English on `/learn` in every language:* live classes, the streak
+  strip, memorisation (all three behind switches that are off) and the
+  learner-profile prompt shown to an account with no learner yet, which is a
+  component three other pages share. They are marked as English. The course
+  page and the lesson page are not translated at all.
+- *Checked by request and in a browser* against a synthetic backend: English,
+  Arabic, French, Hausa, Pashto, Wolof; Arabic and Tamil at three widths. See
+  `scripts/learner-dashboard-route-smoke.mjs`.
+
+The same pass shortened the green header button, which printed "Your area —
+signed in as (name)" with the middle in English in every language; the name is
+now in the accessible name only.
 
 What none of this does: it does not judge the other 192 sentences of the
 *nineteen* partly held languages (navigation, sign-in, catalogue, front page),
