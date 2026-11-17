@@ -2622,7 +2622,11 @@ claim external integrations work without credentials or provider callbacks.
 
 The owner said to apply 1440 and 1450 to the hosted test project now, and then
 chose all ten (1360–1450) when told the two cannot go without the eight before
-them. **Requested; waiting for the owner's approval in GitHub. Not yet run.**
+them. **Applied 2026-11-17, run `44131878224`.** Read back separately through
+the read-only connector: 352 recorded; no user, no learner; the hosted
+database and the tested one agree hash for hash on 2,775 names in `public`,
+on the 1,453 privileges the two roles hold (3,067 before) and on the 4
+defaults (24 before).
 
 - *The job.* `.github/workflows/supabase-test-advance.yml` and
   `scripts/hosted-migration-advance.mjs`. One-time, pinned to the reviewed

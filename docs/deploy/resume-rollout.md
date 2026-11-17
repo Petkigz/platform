@@ -6,9 +6,10 @@ change. Initial test-project application ended at migration 1350.
 
 **2026-11-17:** the owner approved applying 1360–1450 to the test project
 ahead of the application, because that project has no user and no row and the
-grants migration (1440) cannot be applied without them. The one-time job, what
-it checks and whether it has run are in `docs/deploy/README.md`, "The ten
-after the first 342". That decision is about an empty project. The matching
+grants migration (1440) cannot be applied without them. They were applied that
+day (run `44131878224`); the test project's database is now at 1450. The
+one-time job, what it checked and what was read back are in
+`docs/deploy/README.md`, "The ten after the first 342". That decision is about an empty project. The matching
 app has not been deployed, and everything below is still what a project with
 people in it needs.
 

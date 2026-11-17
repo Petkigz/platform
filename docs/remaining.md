@@ -15,8 +15,9 @@ session spends a day building something nobody asked for. So:
 > needs the owner. (1) The hosted platform grants every function to visitors
 > who are not signed in unless a migration takes it back by name; the
 > migrations did not, and some server-only functions were callable by anybody.
-> Repaired in migration `20261281144000`, **not yet applied to the hosted
-> project: do not give anyone an account there until it is.** (2) About thirty
+> Repaired in migration `20261281144000`, **applied to the hosted test project
+> on 2026-11-17** and read back: the two browser roles hold there exactly what
+> they hold in the tested database. (2) About thirty
 > reads treated a single related row as a list and came back empty, two asked
 > for columns that do not exist and seven named a relation the server refuses
 > to guess; on a real database every lesson was "not found". Repaired, with a
@@ -26,9 +27,9 @@ session spends a day building something nobody asked for. So:
 > **And a third, the same day, from sitting a quiz as a learner for the first
 > time.** A learner could write their own mark and pass any assessment; could
 > not change an answer, and was told it was saved; and could never hand in a
-> practice quiz. Repaired in migration `20261281145000`, which goes to the
-> hosted project **with** `20261281144000` and after it, on the same owner
-> decision. Also in `NEXT.md`.
+> practice quiz. Repaired in migration `20261281145000`, applied to the hosted
+> test project after `20261281144000` in the same approved step. The
+> application that matches it is not deployed. Also in `NEXT.md`.
 
 Measured at `84df989`, 2026-11-02: **231 migrations**, **2 517 database
 assertions in 166 suites**, **2 026 web tests**, **142 tables**, 109 rows in
@@ -688,9 +689,12 @@ make the twenty-seven served languages reviewed. And no speaker has been found
 for any language: until one is, the four stay unavailable and the nineteen stay
 in English on the companion screens, indefinitely.
 
-The existing Supabase test project now has the initial 342 migrations applied
-via the owner-approved GitHub run `43611493767`. A subsequent read-only check
-found 185 public base tables and zero Auth users. The signup and child-identity
+The existing Supabase test project has all 352 migrations applied: the initial
+342 via the owner-approved GitHub run `43611493767`, and 1360–1450 via the
+owner-approved run `44131878224` on 2026-11-17. A read-only check after the
+first found 185 public base tables and zero Auth users; after the second, zero
+Auth users and the same names and browser-role privileges as the tested
+database. The signup and child-identity
 triggers exist, and the prayer and Hijri switches remain off; this does not test
 real Auth requests, RLS, hosted app operation or religious accuracy. Vercel's
 default scope and reported default team returned no projects, while the team-list

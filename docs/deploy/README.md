@@ -223,8 +223,8 @@ After a successful application, verify that the history contains every expected
 version, through `20261281145000_assessment_answer_integrity.sql`, as well as running
 the checks in section 2. The initial hosted apply stopped at 1350. The ten
 after it (1360–1450) were approved for the test project on 2026-11-17 and go
-through their own one-time job; see "The ten after the first 342" below for
-whether it has run. On any other project 1360–1430 require a reviewed,
+through their own one-time job and were applied that day; see "The ten after
+the first 342" below. On any other project 1360–1430 require a reviewed,
 coordinated app/database rollout. 1440
 (`platform_default_grants`) and 1450 (`assessment_answer_integrity`) are the
 two that matter most before any person is given an
@@ -246,8 +246,8 @@ ledger functions). `20261281144000_platform_default_grants.sql` removes the
 platform's grants and makes again, by name, the ones the migrations meant.
 
 - **Any project that has run migrations up to 1430 and not 1440 must not hold
-  real accounts.** The existing test project stopped at 1350 and is in that
-  state; it has no users.
+  real accounts.** The existing test project has had 1440 since 2026-11-17
+  (it went from 1350 to 1450 in one approved step) and has no users.
 - After applying, check from the SQL editor. Both must return no rows:
 
   ```sql
@@ -289,7 +289,8 @@ could not, and were told they had) and lets a practice assessment be handed in
 
 - **Any project that holds real accounts and has not run 1450 can have its
   assessment results forged by the people sitting them.** The existing test
-  project is in that state and has no users, attempts or responses.
+  project has had 1450 since 2026-11-17 and has no users, attempts or
+  responses.
 - It needs the application from the same commit or later: older code writes
   to the table directly and every save is then refused.
 - After applying, check from the SQL editor. The first must return no rows,
@@ -396,7 +397,26 @@ project. Review the exact commit before approving it.
 
 #### The ten after the first 342 — approved 2026-11-17
 
-**Status: requested on 2026-11-17; waiting for the owner's approval in GitHub. Not yet run.**
+**Status: applied on 2026-11-17** by the owner-approved GitHub run
+`44131878224` (commit `9996437`). The job is spent: run again it would apply
+nothing and only repeat the comparison.
+
+Read back afterwards through the read-only connector, separately from the job:
+
+- the history records 352 migrations, the last ten being 1360–1450 in order;
+- there is still no Auth user and no learner;
+- the hosted database and the tested database built from all 352 agree hash
+  for hash on every function, table, view, sequence and column name in
+  `public` (2,775), on every privilege `anon` and `authenticated` hold (1,453,
+  down from 3,067) and on the defaults for the migrating role's next object
+  (4, down from 24);
+- `anon` can no longer execute `notify_user`; a signed-in person can execute
+  `save_assessment_response` and cannot insert into `assessment_responses`;
+  the old lesson-wide resume writer is closed to them.
+
+That is the history and the privileges. It is not a request made through
+PostgREST as a real signed-in person, and no application build that matches
+these migrations is deployed.
 
 The owner approved 1440 and 1450 for the test project. They cannot be applied
 alone: the grants migration names functions that 1360 and 1380 create, and the

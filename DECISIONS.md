@@ -8077,6 +8077,8 @@ What it does not change: `docs/deploy/resume-rollout.md` remains the plan for
 a project with people in it, the application is still not deployed, and every
 flag stays off.
 
+Applied the same day by the owner-approved run `44131878224`.
+
 ## Learners do not write to the answer sheet — **DECIDED 2026-11-17**
 
 Not an owner's choice between options; a rule the software now keeps, written
