@@ -70,7 +70,9 @@ test('the eight reads that were wrong now ask for an empty column', () => {
     ['app/learn/page.tsx', 2],
     ['app/learn/[enrolmentId]/page.tsx', 1],
     ['app/learn/[enrolmentId]/lesson/[lessonId]/page.tsx', 1],
-    ['app/learn/[enrolmentId]/assessment/[assessmentId]/page.tsx', 1],
+    // The assessment page's read moved, with the rest of what it asks for,
+    // into `fetchAssessmentContext`.
+    ['lib/assessment.ts', 1],
     ['app/api/assessment/route.ts', 1],
     ['lib/enrolment.ts', 2],
     ['lib/family.ts', 1],

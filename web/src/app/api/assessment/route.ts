@@ -164,11 +164,12 @@ export async function POST(request: Request) {
 
     if (!outcome.ok) {
       return NextResponse.json(
-        { ok: false, code: 'rejected', message: outcome.message },
-        { status: 409 },
+        { ok: false, code: outcome.code, message: outcome.message },
+        { status: outcome.code === 'not_signed_in' ? 401 : 409 },
       );
     }
-    return NextResponse.json({ ok: true }, { status: 200 });
+    // `held` is false when the answer was an empty one and has been taken back.
+    return NextResponse.json({ ok: true, held: outcome.held }, { status: 200 });
   }
 
   // submit
@@ -184,8 +185,8 @@ export async function POST(request: Request) {
     // The server refuses an attempt with unanswered questions. That is a real
     // answer to show the learner, not a server error.
     return NextResponse.json(
-      { ok: false, code: 'rejected', message: outcome.message },
-      { status: 409 },
+      { ok: false, code: outcome.code, message: outcome.message },
+      { status: outcome.code === 'not_signed_in' ? 401 : 409 },
     );
   }
   return NextResponse.json({ ok: true, attempt: outcome.attempt }, { status: 200 });

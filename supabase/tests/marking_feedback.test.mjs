@@ -208,14 +208,13 @@ export async function run(ctx) {
       `feedback was not trimmed and stored as written: ${JSON.stringify(row.grading_feedback)}`);
 
     // The attempt is graded and immutable now, and the comment is protected two
-    // ways over. A client has no update policy on responses at all, so the edit
-    // matches no rows; a superuser, who bypasses RLS, is stopped by the lock
-    // trigger that protects the learner's answers.
-    const asClient = await asActor(teacher,
+    // ways over. A client holds no write privilege on responses at all (since
+    // migration 20261281145000 the table is written through functions only),
+    // so the edit is refused outright; a superuser, who bypasses that, is
+    // stopped by the lock trigger that protects the learner's answers.
+    await rejects(() => asActor(teacher,
       'update public.assessment_responses set grading_feedback=$1 where id=$2 returning id',
-      ['Retracted.', response]);
-    assert(asClient.rows.length === 0,
-      `a client updated a graded response (${asClient.rows.length} rows)`);
+      ['Retracted.', response]), /permission denied/i);
 
     await rejects(() => q(
       'update public.assessment_responses set grading_feedback=$1 where id=$2',

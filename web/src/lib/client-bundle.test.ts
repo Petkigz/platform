@@ -15,11 +15,12 @@ import { fileURLToPath } from 'node:url';
 // sentence. Two ways in:
 //
 //   * `i18n/client.tsx` — the provider in the root layout, so every page —
-//     took `fill` from `i18n/index.ts`. Whether the bundler dropped the
-//     catalogues behind it was the bundler's decision; nothing here said so.
+//     took `fill` from `i18n/index.ts`. The bundler did not drop the
+//     catalogues behind it: measured, one script of 1 432 001 bytes holding
+//     every language, named by 132 of 133 pages.
 //   * the save button on the public course page took two numbers from
-//     `wishlist.ts`, which reads enrolments, which translates. That one was
-//     measured: the catalogues were in the chunk the course page loads.
+//     `wishlist.ts`, which reads enrolments, which translates. Measured too:
+//     the catalogues were in the chunk the course page loads.
 //
 // The rule is on the imports, not on the build output, because a build takes a
 // minute and this takes a moment, and because the import is the thing a person

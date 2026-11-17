@@ -30,6 +30,7 @@ import { en } from './i18n/messages/en.ts';
 import { HELD_FOR_REVIEW, UNWRITTEN_WHILE_HELD, WHOLE_LANGUAGE, isUnwritten } from './i18n/messages/held.ts';
 import { LEARN } from './i18n/messages/learn.ts';
 import { COURSE } from './i18n/messages/course.ts';
+import { ASSESS } from './i18n/messages/assess.ts';
 import { LESSON } from './i18n/messages/lesson.ts';
 import { auditAll } from './translation-audit.ts';
 import { SECTIONS } from './translations.ts';
@@ -400,18 +401,21 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // Owner's decision, 2026-11-16: a language the builder cannot write properly
   // falls back to English until a speaker has reviewed it. For a new screen
   // that means not writing it — a held draft would be the same guess, kept.
-  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson']);
+  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess']);
   // Thirty-seven for the dashboard (the learner-profile prompt is seven of
-  // them), sixteen for the course page and twenty-two for the lesson's frame.
-  assert.equal(unwrittenKeys.length, 75);
+  // them), sixteen for the course page, twenty-two for the lesson's frame and
+  // thirty-seven for the assessment page and its quiz.
+  assert.equal(unwrittenKeys.length, 112);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('learn.')).length, 37);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('course.')).length, 16);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('lesson.')).length, 22);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('assess.')).length, 37);
 
-  // Three files, one rule: the same languages in each.
+  // Four files, one rule: the same languages in each.
   const written = Object.keys(LEARN).sort();
   assert.deepEqual(Object.keys(COURSE).sort(), written);
   assert.deepEqual(Object.keys(LESSON).sort(), written);
+  assert.deepEqual(Object.keys(ASSESS).sort(), written);
   const expected = LOCALES.map((l) => l.code)
     .filter((code) => code !== 'en' && !Object.hasOwn(HELD_FOR_REVIEW, code))
     .sort();
@@ -419,8 +423,8 @@ test('the learner dashboard is written for the languages with nothing held, and 
   assert.equal(written.length, 27);
 
   for (const code of expected) {
-    const own: Partial<Record<string, string>> = { ...LEARN[code], ...COURSE[code], ...LESSON[code] };
-    assert.deepEqual(Object.keys(own).sort(), [...unwrittenKeys].sort(), `${code} is short a dashboard, course or lesson sentence`);
+    const own: Partial<Record<string, string>> = { ...LEARN[code], ...COURSE[code], ...LESSON[code], ...ASSESS[code] };
+    assert.deepEqual(Object.keys(own).sort(), [...unwrittenKeys].sort(), `${code} is short a dashboard, course, lesson or assessment sentence`);
     for (const key of unwrittenKeys) {
       const value = own[key] ?? '';
       assert.ok(value.trim() !== '' && value === value.trim(), `${code}.${key}`);
@@ -434,6 +438,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     assert.equal(languageShownFor(code, 'learn').code, code);
     assert.equal(languageShownFor(code, 'course').code, code);
     assert.equal(languageShownFor(code, 'lesson').code, code);
+    assert.equal(languageShownFor(code, 'assess').code, code);
     assert.equal(coverageOf(code).percent, 100);
   }
 
@@ -451,14 +456,16 @@ test('the learner dashboard is written for the languages with nothing held, and 
     }
   }
   // What that costs the nineteen that are still in the picker, said out loud:
-  // 192 of 347 sentences. Nothing holds a floor under it any more: the owner
-  // chose on 2026-11-17 to keep these languages in the picker and show the
-  // number. The count is pinned here so that it moves only when somebody
-  // means it to, and is seen when it does.
+  // 192 of 384 sentences, which is exactly half. Nothing holds a floor under
+  // it any more: the owner chose on 2026-11-17 to keep these languages in the
+  // picker and show the number. The count is pinned here so that it moves only
+  // when somebody means it to, and is seen when it does. It moved from 55% to
+  // 50% when the assessment page was written: thirty-seven more sentences
+  // these readers see in English, on a page they already saw in English.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 347);
-    assert.equal(coverageOf(code).percent, 55, code);
+    assert.equal(coverageOf(code).total, 384);
+    assert.equal(coverageOf(code).percent, 50, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');
   assert.equal(languageShownFor('en', 'learn').code, 'en');
@@ -638,3 +645,84 @@ test('the lesson page translates its frame and marks every English part inside i
   assert.match(page, /countLabel\(shown\.code, here\.total, \{ one: 'card\.lessonsOne', other: 'card\.lessonsOther' \}\)/u);
   assert.match(read('../app/globals.css'), /\.lesson-nav-dir:dir\(rtl\) \{ transform: scaleX\(-1\); \}/u);
 });
+
+test('the assessment page is translated whole, and opens an attempt only when somebody means it', () => {
+  const dir = '../app/learn/[enrolmentId]/assessment/[assessmentId]';
+  const page = read(`${dir}/page.tsx`);
+  const quiz = read(`${dir}/quiz.tsx`);
+  const action = read(`${dir}/actions.ts`);
+
+  assert.match(page, /const shown = languageShownFor\(locale, 'assess'\);/u);
+  assert.match(page, /const t = translator\(shown\.code\);/u);
+  assert.match(page, /lang=\{mismatch \? shown\.code : undefined\}\s+dir=\{mismatch \? shown\.dir : undefined\}/u);
+  assert.doesNotMatch(page, /^'use client'/u);
+
+  // Every sentence written for it is on the page, by name.
+  for (const key of unwrittenKeys.filter((k) => k.startsWith('assess.'))) {
+    assert.ok(page.includes(`'${key}'`), `${key} is translated and never shown`);
+  }
+  // The quiz is a client component. It is handed its words and does not ask
+  // the catalogue for any: these keys are not in what a browser is sent.
+  assert.match(quiz, /^'use client';/u);
+  assert.doesNotMatch(quiz, /useT\(|assess\./u);
+  assert.match(page, /<Quiz\s+key=\{attempt\.id\}[^>]*words=\{quizWords\}/u);
+  for (const sentence of [
+    'Answer every question', '>Submit<', 'Submitting…', '>Saved<', "'Saved'", 'Your answer',
+    '>True<', '>False<', 'could not be saved', 'Something went wrong',
+  ]) {
+    assert.ok(!quiz.includes(sentence), `the quiz still says "${sentence}" in English`);
+  }
+  // A refusal is told by its reason, and the sentence is the page's own. What
+  // the server said is not printed.
+  assert.doesNotMatch(quiz, /json\??\.message|\.message\)/u);
+
+  // What a teacher wrote keeps its own direction inside a translated frame.
+  assert.match(quiz, /<bdi>\{prompt\}<\/bdi>/u);
+  assert.match(page, /<p className="lede" dir="auto">/u);
+
+  // The page opened an attempt on every render: handing in the first of three
+  // opened the second, and coming back to read the result opened the third.
+  // It opens the first one only, and only where there is something to sit.
+  const calls = [...page.matchAll(/startAttempt\(/gu)];
+  assert.equal(calls.length, 1, 'the page starts attempts in more than one place');
+  const before = page.slice(0, calls[0]?.index ?? 0);
+  const guard = before.lastIndexOf('} else if (standing.used === 0) {');
+  assert.ok(guard !== -1, 'the page no longer checks that no attempt has been used');
+  assert.doesNotMatch(before.slice(guard + 1), /\}\s*else|\n {2}\}/u, 'the call has left the branch that guards it');
+  assert.match(before, /\} else if \(questions\.length === 0\) \{[^}]*\} else if \(standing\.used === 0\) \{/u);
+
+  // Every later attempt is a button and a server action.
+  assert.match(page, /<form\s+action=\{startAnotherAttempt\.bind\(null, enrolment\.id, assessment\.id\)\}/u);
+  assert.match(page, /\{mayStartAnother && \(/u);
+  assert.match(action, /^'use server';/u);
+  assert.match(action, /fetchAssessmentContext\(supabase, \{ enrolmentId, assessmentId \}\)/u);
+  // The quiz no longer refreshes the page it is on, which is what opened the
+  // next attempt; it goes to the same page told that something was handed in.
+  assert.doesNotMatch(quiz, /router\.refresh\(\)/u);
+  assert.match(quiz, /router\.replace\(/u);
+
+  // A practice attempt has a score and no verdict: neither word is shown.
+  assert.match(page, /passed === null \? null : t\(passed \? 'assess\.passed' : 'assess\.notPassed'\)/u);
+  assert.match(quiz, /a\.passed === null \? null : a\.passed \? words\.passed : words\.notPassed/u);
+
+  // Nothing else in the application starts one: the page, the button's action
+  // and the route somebody has to post to on purpose.
+  const starters: string[] = [];
+  const walk = (folder: URL) => {
+    for (const entry of readdirSync(folder, { withFileTypes: true })) {
+      const child = new URL(`${entry.name}${entry.isDirectory() ? '/' : ''}`, folder);
+      if (entry.isDirectory()) walk(child);
+      else if (/\.tsx?$/u.test(entry.name) && !entry.name.endsWith('.test.ts')) {
+        if (/\bstartAttempt\(/u.test(readFileSync(child, 'utf8'))) starters.push(decodeURIComponent(child.pathname).split('/web/src/')[1] ?? '');
+      }
+    }
+  };
+  walk(new URL('../', import.meta.url));
+  assert.deepEqual(starters.sort(), [
+    'app/api/assessment/route.ts',
+    'app/learn/[enrolmentId]/assessment/[assessmentId]/actions.ts',
+    'app/learn/[enrolmentId]/assessment/[assessmentId]/page.tsx',
+    'lib/assessment.ts',
+  ]);
+});
+

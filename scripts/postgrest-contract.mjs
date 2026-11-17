@@ -87,7 +87,7 @@ async function prepare() {
     await db.query(`alter role authenticator password '${password}'`);
     await db.query('grant anon, authenticated, service_role to authenticator');
 
-    const id = Object.fromEntries(['learner', 'teacher', 'owner', 'stranger', 'learnerProfile', 'course', 'version', 'section', 'lesson', 'secondLesson', 'resource', 'enrolment', 'assessment', 'assignment'].map((name) => [name, randomUUID()]));
+    const id = Object.fromEntries(['learner', 'teacher', 'owner', 'stranger', 'learnerProfile', 'course', 'version', 'section', 'lesson', 'secondLesson', 'resource', 'enrolment', 'assessment', 'assignment', 'question', 'secondQuestion'].map((name) => [name, randomUUID()]));
     // Inserted with triggers on, so each gets the profile a real sign-up gets.
     for (const who of ['learner', 'teacher', 'owner', 'stranger']) {
       await db.query('insert into auth.users (id, email) values ($1, $2)', [id[who], `${who}@example.test`]);
@@ -103,7 +103,11 @@ async function prepare() {
     await db.query("insert into public.lesson_resources (id, lesson_id, resource_type, display_name, external_url, position) values ($1, $2, 'video', 'Contract video', 'https://example.invalid/contract.mp4', 1)", [id.resource, id.lesson]);
     await db.query('insert into public.course_enrolments (id, learner_profile_id, course_id, course_version_id) values ($1, $2, $3, $4)', [id.enrolment, id.learnerProfile, id.course, id.version]);
     await db.query("insert into public.entitlement_grants (learner_profile_id, scope_type, course_version_id, source_type, status) values ($1, 'course_version', $2, 'free', 'active')", [id.learnerProfile, id.version]);
-    await db.query("insert into public.assessments (id, course_version_id, title, type, status) values ($1, $2, 'Contract quiz', 'practice', 'active')", [id.assessment, id.version]);
+    await db.query("insert into public.assessments (id, course_version_id, title, type, status, attempt_limit) values ($1, $2, 'Contract quiz', 'practice', 'active', 2)", [id.assessment, id.version]);
+    // Two questions the server can mark by itself, so the quiz can be sat to the end.
+    await db.query(`insert into public.assessment_questions (id, assessment_id, type, content, answer_key, points, position) values
+      ($1, $3, 'true_false', '{"prompt":"Contract statement"}'::jsonb, '"true"'::jsonb, 1, 1),
+      ($2, $3, 'single_choice', '{"prompt":"Contract choice","choices":[{"id":"a","text":"Contract first"},{"id":"b","text":"Contract second"}]}'::jsonb, '"b"'::jsonb, 1, 2)`, [id.question, id.secondQuestion, id.assessment]);
     await db.query("insert into public.course_assignments (id, course_id, course_version_id, title, status, created_by) values ($1, $2, $3, 'Contract assignment', 'open', $4)", [id.assignment, id.course, id.version, id.teacher]);
     for (const [who, role] of [['teacher', 'instructor'], ['owner', 'platform_admin']]) {
       await db.query('insert into public.user_role_assignments (user_id, role_id, assigned_by) select $1, id, $1 from public.roles where code = $2', [id[who], role]);
@@ -350,6 +354,83 @@ async function run() {
         expect(quiz.includes('Contract quiz') && quiz.includes('Contract course'), 'the quiz page does not show the quiz and its course');
         const assignment = await body(`/learn/${id.enrolment}/assignment/${id.assignment}`);
         expect(assignment.includes('Contract assignment') && assignment.includes('Contract course'), 'the assignment page does not show the assignment and its course');
+
+        // The quiz, sat to the end. Everything above loads pages; this is the
+        // one place the walk writes as a learner, because the defects here
+        // were in what a page does to the database when it is merely opened.
+        // The two refusals it provokes on purpose are reported with the rest
+        // under this name.
+        current = { pass: 'the quiz, sat to the end', route: 'refusals here are provoked on purpose' };
+        const quizRoute = `/learn/${id.enrolment}/assessment/${id.assessment}`;
+        const attempts = async () => (await db.query('select id, attempt_number, status, score_earned, score_possible from public.assessment_attempts where assessment_id = $1 order by attempt_number', [id.assessment])).rows;
+        const act = async (payload) => {
+          const reply = await fetch(`http://127.0.0.1:${port}/api/assessment`, { method: 'POST', headers: { cookie: people.learner.cookie, 'content-type': 'application/json' }, body: JSON.stringify(payload), signal: AbortSignal.timeout(120000) });
+          return { status: reply.status, json: await reply.json().catch(() => null) };
+        };
+        const said = (reply) => `${reply.status} ${JSON.stringify(reply.json).slice(0, 200)}`;
+        let sat = await attempts();
+        expect(sat.length === 1 && sat[0].status === 'in_progress', `opening the quiz should have opened exactly one attempt; found ${JSON.stringify(sat.map((a) => a.status))}`);
+        await body(quizRoute);
+        expect((await attempts()).length === 1, 'opening the quiz a second time opened a second attempt');
+        if (sat.length === 1) {
+          const attemptId = sat[0].id;
+          expect(quiz.includes('Contract statement') && quiz.includes('Contract second') && quiz.includes('0 of 2 answered'), 'the quiz does not show its questions, its choices and an honest count before anything is answered');
+          const early = await act({ action: 'submit', attemptId });
+          expect(early.status === 409 && early.json?.code === 'unanswered', `handing in an unanswered attempt should be refused as "unanswered"; got ${said(early)}`);
+          expect(!JSON.stringify(early.json).includes(attemptId), 'the refusal carries the attempt id, which is the database’s own wording');
+          // Straight to the request server, as the learner, without the site:
+          // an answer with its own mark on it, which is how any assessment
+          // could be passed before migration 20261281145000; then an honest
+          // row, because the table is now written through one function only.
+          const write = async (row) => {
+            const reply = await fetch(`${upstream}/assessment_responses`, { method: 'POST', headers: { authorization: `Bearer ${people.learner.access}`, 'content-type': 'application/json' }, body: JSON.stringify(row) });
+            return { status: reply.status, json: await reply.json().catch(() => null) };
+          };
+          const forged = await write({ assessment_attempt_id: attemptId, question_id: id.question, response_content: 'false', score: 1, is_correct: true, graded_by: id.learner, graded_at: new Date().toISOString() });
+          expect(forged.json?.code === '42501', `a learner's answer carrying its own mark was not refused for lack of permission: ${said(forged)}`);
+          const direct = await write({ assessment_attempt_id: attemptId, question_id: id.question, response_content: 'false' });
+          expect(direct.json?.code === '42501', `a learner wrote to the answer sheet directly: ${said(direct)}`);
+          const written = await db.query('select count(*)::int as n from public.assessment_responses where assessment_attempt_id = $1', [attemptId]);
+          expect(written.rows[0].n === 0, 'a response was written directly to the table by a learner');
+
+          // The first answer to the statement is the wrong one, and is then
+          // changed. A change used to be dropped and reported as saved; the
+          // marking at the end is what shows this one was kept.
+          for (const [questionId, content] of [[id.question, 'false'], [id.secondQuestion, 'b'], [id.question, 'true']]) {
+            const saved = await act({ action: 'answer', attemptId, questionId, content });
+            expect(saved.status === 200 && saved.json?.ok === true && saved.json?.held === true, `saving an answer was refused: ${said(saved)}`);
+          }
+          const changed = await db.query('select response_content from public.assessment_responses where assessment_attempt_id = $1 and question_id = $2', [attemptId, id.question]);
+          expect(changed.rowCount === 1 && changed.rows[0].response_content === 'true', `a changed answer was not kept: ${JSON.stringify(changed.rows)}`);
+          // An emptied answer is taken back, and the attempt is unanswered again.
+          const cleared = await act({ action: 'answer', attemptId, questionId: id.secondQuestion, content: '' });
+          expect(cleared.status === 200 && cleared.json?.held === false, `emptying an answer should take it back: ${said(cleared)}`);
+          const again = await act({ action: 'submit', attemptId });
+          expect(again.status === 409 && again.json?.code === 'unanswered', `an attempt with a taken-back answer should be refused as "unanswered"; got ${said(again)}`);
+          const restored = await act({ action: 'answer', attemptId, questionId: id.secondQuestion, content: 'b' });
+          expect(restored.status === 200 && restored.json?.held === true, `answering again was refused: ${said(restored)}`);
+          // A reload has to show what was saved, or "saved as you go" is a claim.
+          const reloaded = await body(quizRoute);
+          expect((reloaded.match(/<input[^>]*\bchecked=""/g) ?? []).length === 2 && reloaded.includes('2 of 2 answered'), 'a reload does not show the two saved answers as chosen');
+          const handed = await act({ action: 'submit', attemptId });
+          expect(handed.status === 200 && handed.json?.ok === true && handed.json?.attempt?.status === 'graded' && Number(handed.json?.attempt?.score_earned) === 2, `handing in two right answers should be marked 2 of 2 by the server; got ${said(handed)}`);
+          // What the quiz does next in a browser: the same page, with `done`.
+          const after = await body(`${quizRoute}?done=1`);
+          sat = await attempts();
+          expect(sat.length === 1 && sat[0].status === 'graded', `handing in an attempt opened the next one without being asked; attempts are now ${JSON.stringify(sat.map((a) => a.status))}`);
+          // A practice assessment has no pass mark. Until 20261281145000 that
+          // made it impossible to hand in at all.
+          const verdict = await db.query('select passed from public.assessment_attempts where id = $1', [attemptId]);
+          expect(verdict.rows[0]?.passed === null, `a practice attempt was given a verdict: ${JSON.stringify(verdict.rows)}`);
+          expect(after.includes('Start another attempt') && after.includes('Starting uses one of your attempts.'), 'after handing in, the page does not offer the next attempt as a choice');
+          expect(after.includes('Score: 2 of 2') && after.includes('Submitted.'), 'after handing in, the page does not show the score and that it was submitted');
+          expect(!after.includes('0 of 2 answered'), 'after handing in, the page still draws a quiz');
+          expect(!after.includes('Not passed') && !after.includes('Passed'), 'a practice attempt is shown with a verdict it does not have');
+          const late = await act({ action: 'answer', attemptId, questionId: id.question, content: 'false' });
+          expect(late.status === 409 && late.json?.code === 'already_submitted', `changing an answer after handing in should be refused as "already_submitted"; got ${said(late)}`);
+          const kept = await db.query('select response_content from public.assessment_responses where assessment_attempt_id = $1 and question_id = $2', [attemptId, id.question]);
+          expect(kept.rows[0]?.response_content === 'true', 'an answer was changed after the attempt was handed in');
+        }
       }
       publish('Contract walk', [
         `${server}; ${pages.length} page loads, ${forwarded} requests forwarded to the request server, ${refusals.length} refused; ${switched.rowCount} switches turned on for the later passes.`,

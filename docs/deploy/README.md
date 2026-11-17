@@ -195,7 +195,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-351 files in `supabase/migrations/`, applied in filename order — the 14-digit
+352 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -220,12 +220,16 @@ ownership, privileges, extensions or network failure behavior. The subsequent
 hosted apply succeeded, but does not verify real Auth requests or runtime
 behaviour. Do not assume that a dry run verifies trigger permissions.
 After a successful application, verify that the history contains every expected
-version, through `20261281144000_platform_default_grants.sql`, as well as running
+version, through `20261281145000_assessment_answer_integrity.sql`, as well as running
 the checks in section 2. The initial hosted apply stopped at 1350; 1360–1430
 are pending and require a reviewed, coordinated app/database rollout. 1440
-(`platform_default_grants`) is also pending and is the one that matters most
-before any person is given an account: see "What the platform grants on its
-own" below. Resource resume requires app/database coordination, stale-worker draining and verification. Do not apply these changes alone. A history entry
+(`platform_default_grants`) and 1450 (`assessment_answer_integrity`) are also
+pending and are the two that matter most before any person is given an
+account: see "What the platform grants on its own" and "Who may write a mark"
+below. **1450 must be applied after 1440, never before:** 1440 takes every
+grant away and makes again the ones it lists, and it was written before 1450
+existed, so run second it would close the function learners save answers
+through and reopen the table that function replaced. Resource resume requires app/database coordination, stale-worker draining and verification. Do not apply these changes alone. A history entry
 alone does not prove the schema works.
 
 #### What the platform grants on its own
@@ -269,6 +273,39 @@ platform's grants and makes again, by name, the ones the migrations meant.
   project), or the platform's defaults for another role apply again.
   `scripts/platform-grants-check.mjs` guards the repository; it does not look
   at a project.
+
+#### Who may write a mark
+
+Until `20261281145000_assessment_answer_integrity.sql`, a signed-in learner
+could insert an answer with its mark already on it, and the marking skipped
+any answer that looked marked: a wrong answer, a self-written score, and the
+attempt came out passed. That verdict is what completion rules and
+certificates read. The same migration lets a learner change an answer (they
+could not, and were told they had) and lets a practice assessment be handed in
+(none could be).
+
+- **Any project that holds real accounts and has not run 1450 can have its
+  assessment results forged by the people sitting them.** The existing test
+  project is in that state and has no users, attempts or responses.
+- It needs the application from the same commit or later: older code writes
+  to the table directly and every save is then refused.
+- After applying, check from the SQL editor. The first must return no rows,
+  the second one row:
+
+  ```sql
+  -- a browser role that can still write the answer sheet directly
+  select r.rolname, p.privilege
+    from (values ('anon'), ('authenticated')) r(rolname),
+         (values ('insert'), ('update'), ('delete')) p(privilege)
+   where has_table_privilege(r.rolname, 'public.assessment_responses', p.privilege);
+
+  -- the one writer, for signed-in callers only
+  select 1
+   where has_function_privilege('authenticated',
+           'public.save_assessment_response(uuid, uuid, jsonb)', 'execute')
+     and not has_function_privilege('anon',
+           'public.save_assessment_response(uuid, uuid, jsonb)', 'execute');
+  ```
 
 #### Optional GitHub Actions preview for the existing test project
 

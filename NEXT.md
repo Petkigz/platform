@@ -702,7 +702,7 @@ moves; `platform.search` blamed a missing index when no transcript text existed.
 Optional author-provided transcripts now exist and are searchable only when the caller may read them. Both rows
 have since been updated; their switches did not move.
 
-Verification: **The current tree has 351 migrations. An earlier tree passed 2 653 database assertions in
+Verification: **The current tree has 352 migrations. An earlier tree passed 2 653 database assertions in
 170 suites across eight separate PGlite databases. An earlier web tree passed 2 175 tests. Lint, TypeScript,
 `check:repo` and build passed. Hosted deployment and real concurrent PostgreSQL
 and storage behavior remain unverified.**
@@ -2617,6 +2617,108 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### A learner could write their own mark; three more found by sitting a quiz, 2026-11-17
+
+Found while translating the assessment page. The page's tests and the
+database's tests both passed. Neither had ever sat a quiz as a learner: the
+database tests write answers as the database owner, and the web tests stub
+the database.
+
+- *A learner could pass anything.* A signed-in learner could insert an answer
+  with `score`, `is_correct`, `graded_by` and `graded_at` already filled in.
+  Marking marks only what is not yet marked, so it skipped that answer.
+  **Reproduced locally:** a wrong answer, a self-written mark of 1, handed in,
+  and the attempt came back graded 1.00 of 1.00, passed. That verdict is what
+  the `assessment_passed` completion rule reads, and so what a certificate
+  rests on. It needed no skill: one request with the learner's own session.
+- *A changed answer was thrown away and reported as saved.* The page looked
+  for the answer and then updated it. No rule let a learner update one, and
+  the database's way of saying so is to change nothing and report no error.
+  The page printed "Saved". A learner who changed their mind was marked on
+  the first answer they gave.
+- *A practice quiz could never be handed in.* A practice assessment may not
+  have a pass mark, so it has no verdict; a constraint required a verdict on
+  every graded attempt. Every submission of one was refused, with "Something
+  went wrong".
+- *Opening the page used up attempts.* The page started an attempt whenever
+  it was drawn and none was open, and the quiz redrew the page after handing
+  in. With three attempts allowed, handing in the first opened the second and
+  coming back to read the result opened the third.
+- *A smaller one.* Handing in could overtake the save of a short answer still
+  on its way, and the attempt was refused as unanswered or marked without it.
+
+**Repair.**
+
+- Migration `20261281145000_assessment_answer_integrity.sql` (the 352nd;
+  changes no rows). Learners no longer hold any write privilege on
+  `assessment_responses`; the insert policy is dropped. Answers go through
+  `save_assessment_response(attempt, question, content)`: the caller's own
+  in-progress attempt only, an insert or a change, and an empty answer takes
+  the answer back. A trigger refuses marks on any write outside grading,
+  whoever makes it, so the rule does not depend on the privileges staying as
+  they are. The constraint now asks a graded attempt for a score, not a
+  verdict.
+- `saveResponse` calls that function and nothing else. "Saved" appears when
+  an answer is held and goes when it is taken back.
+- The page opens the first attempt only, and not on an assessment with no
+  questions. Each later attempt is a button, "Start another attempt", with
+  the sentence that it uses one, and a server action that checks the caller
+  again. The quiz waits for saves in flight before handing in, and goes to
+  the same page marked as just submitted rather than redrawing it.
+- A practice attempt shows its score and neither "Passed" nor "Not passed".
+- Refusals reach the reader by reason (unanswered, already submitted, not
+  signed in), in the page's words. The database's sentence, which carries the
+  attempt's id, goes no further than the server.
+- Saved answers are shown when the page is reloaded. They were not before:
+  the quiz began empty each time, over answers that were in the database.
+
+**The page in twenty-seven languages.** Thirty-seven sentences
+(`messages/assess.ts`), everything the page and the quiz say themselves. For
+the nineteen held languages it is English, marked as English, and `/language`
+now tells each of them **50%** (192 of 384), from 55%. Unreviewed, like the
+rest; five of these sentences are what a learner reads when their work was
+not saved.
+
+**Tests.**
+
+- `supabase/tests/assessment.test.mjs`: nine new tests acting as the learner
+  and committing. With the migration taken out, all nine fail and the twelve
+  older ones pass, which is the measure of what the older ones could see.
+  `marking_feedback.test.mjs` had one test expecting a teacher's direct edit
+  to match no rows; it is now refused outright and the test says so.
+- `scripts/postgrest-contract.mjs`, on the real request server: the forged
+  answer and a plain direct insert are both refused 42501 with nothing
+  written; a wrong answer is saved, then changed, and the marking gives 2 of
+  2; an emptied answer makes the attempt unanswered again; opening the page
+  twice leaves one attempt; handing in opens no other; the practice attempt
+  is graded with no verdict; a late answer is refused. **Not yet run:** it
+  runs only in CI, on the push of this commit.
+- Web: `saveResponse` calls one function and no table; each refusal maps to a
+  reason and leaks no database wording; a wiring test holds the page to one
+  guarded `startAttempt` and lists every file that calls it.
+
+**Rollout.** On the hosted test project this migration goes with
+`20261281144000` **and after it**. The other order closes the function and
+reopens the table (`docs/deploy/README.md`, "Who may write a mark"). Neither
+is applied. Nobody should be given an account there until both are.
+
+- `supabase/tests/assessment_answer_lock_protocol.postgres.mjs`, on real
+  PostgreSQL with two connections, each wait confirmed with
+  `pg_blocking_pids`: two first answers to one question leave one row holding
+  the later answer; a submission waits for a change in flight and marks the
+  changed answer; a change or a taking-back that arrives during a submission
+  waits and is refused, and the marked answer is untouched; an answer taken
+  back just ahead of a submission leaves the attempt open and unanswered; of
+  two submissions one marks and the other is refused. Passed locally on
+  PostgreSQL 16; it now runs in the race workflow beside the resume races.
+
+**Not proven.** No button was pressed in a browser: the walk posts what the
+quiz posts, and reads the HTML. The quiz waiting for its own saves before
+handing in is reasoned from the code, not reproduced; the database now puts
+the two in an order either way. Manual marking through this path was not
+walked on the real server. The `start` action of `/api/assessment` still opens an attempt
+for anybody who posts to it deliberately; nothing in the site calls it.
 
 ### Every page was sending every language to the browser, 2026-11-17
 

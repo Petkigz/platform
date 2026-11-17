@@ -7949,15 +7949,15 @@ owner chose the first.
   written it.
 - The language page tells each reader the percentage, in their own language,
   with the sentence that the rest is in English. That number will keep
-  falling: 55% today.
+  falling: 55% on the day of the decision, 50% since the assessment page.
 - **The test that refused a language under half is removed.** Nothing in the
   tests now limits how much English one of these languages shows. That is the
   cost of this choice and it was put to the owner in those words.
 - What the tests still require of every offered language: every sentence that
   is neither held nor deliberately unwritten is present, and the sentence
   that gives the percentage is in that language rather than English. The
-  count (192 of 347) is pinned in `held-translations.test.ts`, so it changes
-  only on purpose.
+  count (192 of 384; it was 192 of 347 when this was decided) is pinned in
+  `held-translations.test.ts`, so it changes only on purpose.
 - The four withheld languages are unaffected. So is the rule that a new screen
   is not written for a language with anything held.
 
@@ -8034,7 +8034,10 @@ The course page and the new-account prompt followed on the same rule the same
 day: twenty-three more sentences (`course.ts`), the same twenty-seven
 languages, 59% for the nineteen. The lesson page followed on 2026-11-17:
 twenty-two sentences (`lesson.ts`), the same twenty-seven languages, 55% for
-the nineteen. `UNWRITTEN_WHILE_HELD` is now `learn`, `course` and `lesson`.
+the nineteen. The assessment page and its quiz followed the same day:
+thirty-seven sentences (`assess.ts`), the same twenty-seven languages, 50% for
+the nineteen. `UNWRITTEN_WHILE_HELD` is now `learn`, `course`, `lesson` and
+`assess`.
 
 **The rule going forward.** A part named in `UNWRITTEN_WHILE_HELD`
 (`web/src/lib/i18n/messages/held.ts`) may be absent from a language that has
@@ -8047,3 +8050,29 @@ before on the page they land on after signing in, inside navigation in their own
 language, and will until a first-language speaker writes it. None has been
 found. The twenty-seven that were written are unreviewed like everything else.
 
+## Learners do not write to the answer sheet — **DECIDED 2026-11-17**
+
+Not an owner's choice between options; a rule the software now keeps, written
+here because it will be tempting to undo.
+
+**The rule.** A learner's answers are written by one database function,
+`save_assessment_response`, and by nothing else. No browser role may insert,
+update or delete a row of `assessment_responses`. A mark is written by grading
+and at no other moment, and a trigger holds that even for the database owner.
+
+**Why.** Until migration `20261281145000` a learner could insert an answer
+with its mark already on it and be recorded as having passed. The table's
+policy checked whose attempt the row belonged to and not what was in it.
+Fixing the policy alone would have left the next column added to that table
+open in the same way; taking the privilege away does not.
+
+**What it rules out.** Reading the table and writing it from a page "because
+it is simpler". Granting `insert` back to make a feature work. A new marking
+path that does not set `app.grading_attempt`. Each of those brings the defect
+back, and the tests in `supabase/tests/assessment.test.mjs` under "The answer
+sheet, written as a learner" are there to fail when one does.
+
+**A practice assessment has no verdict.** It has a score. `passed` is null and
+the page shows neither word. A completion rule that requires an assessment to
+be *passed* cannot be met by a practice one; a rule that requires it to be
+*submitted* can.

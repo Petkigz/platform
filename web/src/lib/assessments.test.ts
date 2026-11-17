@@ -11,6 +11,7 @@ import {
   choicesOf,
   fetchPendingManualResponses,
   markManualAssessmentResponse,
+  saveResponse,
   submitAttempt,
   type Question,
   ASSESSMENT_TYPES,
@@ -564,4 +565,73 @@ test('manual grading rejects a negative score before the database call', async (
   });
   assert.equal(result.ok, false);
   assert.equal(calls.length, 0);
+});
+
+// ---------------------------------------------------------------------------
+// Saving an answer.
+//
+// This used to read the table and then insert or update a row in it. Two
+// things were wrong with that and neither could be seen from here: the update
+// matched nothing a learner may change and failed without an error, and the
+// insert accepted a mark. The answer sheet now has one writer, and what is
+// worth pinning on this side is that nothing else is called.
+// ---------------------------------------------------------------------------
+
+test('an answer is saved through the one writer, and through nothing else', async () => {
+  const { client, calls } = stubRpc({ data: true });
+  // A client with no `.from`: a direct write to the table throws here.
+  const saved = await saveResponse(client, { attemptId: 'a-1', questionId: 'q-1', content: 'b' });
+  assert.deepEqual(saved, { ok: true, held: true });
+  assert.deepEqual(calls, [
+    { fn: 'save_assessment_response', args: { p_attempt_id: 'a-1', p_question_id: 'q-1', p_content: 'b' } },
+  ]);
+});
+
+test('an emptied answer is reported as taken back, not as saved', async () => {
+  const { client, calls } = stubRpc({ data: false });
+  const cleared = await saveResponse(client, { attemptId: 'a-1', questionId: 'q-1', content: '' });
+  assert.deepEqual(cleared, { ok: true, held: false });
+  assert.equal(calls[0]?.args.p_content, '');
+  // `undefined` would drop the argument and the request server would look for
+  // a function with two parameters.
+  const { client: second, calls: secondCalls } = stubRpc({ data: false });
+  await saveResponse(second, { attemptId: 'a-1', questionId: 'q-1', content: undefined });
+  assert.equal(secondCalls[0]?.args.p_content, null);
+  assert.ok('p_content' in (secondCalls[0]?.args ?? {}));
+});
+
+test('a refused answer is given a reason and never the database wording', async () => {
+  const cases: Array<[string, string]> = [
+    ['this attempt has already been submitted', 'already_submitted'],
+    ['sign in to answer this assessment', 'not_signed_in'],
+    ['that attempt was not found', 'rejected'],
+    ['response question 3f2c does not belong to this attempt\'s assessment', 'rejected'],
+    ['permission denied for table assessment_responses', 'rejected'],
+  ];
+  for (const [message, code] of cases) {
+    const { client } = stubRpc({ data: null, error: { message } });
+    const outcome = await saveResponse(client, { attemptId: 'a-1', questionId: 'q-1', content: 'b' });
+    assert.equal(outcome.ok, false);
+    if (outcome.ok) continue;
+    assert.equal(outcome.code, code, message);
+    assert.equal(outcome.message.includes(message), false, `the database's sentence reached the reader: ${message}`);
+  }
+});
+
+test('a refused submission is given its reason', async () => {
+  // The sentences are the ones the migrations raise, copied.
+  const cases: Array<[string, string]> = [
+    ['attempt 7c1e has unanswered questions', 'unanswered'],
+    ['attempt 7c1e is graded and cannot be submitted', 'already_submitted'],
+    ['sign in to submit this assessment', 'not_signed_in'],
+    ['new row for relation "assessment_attempts" violates check constraint "aa_graded_has_verdict"', 'rejected'],
+  ];
+  for (const [message, code] of cases) {
+    const { client } = stubRpc({ data: null, error: { message } });
+    const outcome = await submitAttempt(client, 'a-1');
+    assert.equal(outcome.ok, false);
+    if (outcome.ok) continue;
+    assert.equal(outcome.code, code, message);
+    assert.equal(outcome.message.includes('7c1e'), false);
+  }
 });

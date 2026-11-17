@@ -18,6 +18,7 @@ import { HOME_WORLD } from './home-world.ts';
 import { COMPANION } from './companion.ts';
 import { LEARN } from './learn.ts';
 import { COURSE } from './course.ts';
+import { ASSESS } from './assess.ts';
 import { LESSON } from './lesson.ts';
 import { isHeld } from './held.ts';
 import { ASIA_AZ } from './asia-az.ts';
@@ -797,6 +798,8 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   COURSE,
   // The lesson page's own frame, on the same rule.
   LESSON,
+  // The assessment page and its quiz, on the same rule.
+  ASSESS,
 );
 
 /**

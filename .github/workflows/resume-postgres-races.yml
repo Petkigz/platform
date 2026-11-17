@@ -28,9 +28,16 @@ jobs:
             sudo -u postgres createuser --superuser "$USER"
           fi
           createdb -h /var/run/postgresql ayahspring_resume_lock_test
+          createdb -h /var/run/postgresql ayahspring_assessment_lock_test
       - name: Run selected real PostgreSQL interleavings
         env:
           RESUME_LOCK_TEST: '1'
           PGHOST: /var/run/postgresql
           PGDATABASE: ayahspring_resume_lock_test
         run: node supabase/tests/resume_position_lock_protocol.postgres.mjs
+      - name: An answer and a submission arriving together
+        env:
+          ASSESSMENT_LOCK_TEST: '1'
+          PGHOST: /var/run/postgresql
+          PGDATABASE: ayahspring_assessment_lock_test
+        run: node supabase/tests/assessment_answer_lock_protocol.postgres.mjs

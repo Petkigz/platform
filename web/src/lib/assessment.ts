@@ -97,11 +97,21 @@ export type AssessmentAction =
   | { ok: true; attempt: Attempt }
   | { ok: false; code: AssessmentErrorCode; message: string };
 
+/**
+ * Why something was refused, as a word the page can translate.
+ *
+ * The `message` beside it is English and is for a log, a test or somebody
+ * reading the response by hand. The quiz shows the learner a sentence chosen
+ * by this code, in their language; it never prints `message`, because that is
+ * how a database's own wording ("attempt 6f1c… has unanswered questions")
+ * reached a child's screen.
+ */
 export type AssessmentErrorCode =
   | 'no_enrolment'
   | 'no_assessment'
   | 'attempt_limit_reached'
   | 'already_submitted'
+  | 'unanswered'
   | 'not_signed_in'
   | 'rejected';
 
@@ -150,57 +160,228 @@ export async function startAttempt(
     .single();
 
   if (error) {
+    // `enforce_attempt_limit` says "has used all N permitted attempts". Every
+    // other refusal used to be reported as that too: a learner whose insert
+    // failed for any reason at all was told to ask their teacher for another
+    // attempt, with attempts left.
+    if (/permitted attempts/i.test(error.message)) {
+      return {
+        ok: false,
+        code: 'attempt_limit_reached',
+        message:
+          'You have used all your attempts for this assessment. Ask your teacher ' +
+          'if you need another.',
+      };
+    }
     return {
       ok: false,
-      code: 'attempt_limit_reached',
-      message:
-        'You have used all your attempts for this assessment. Ask your teacher ' +
-        'if you need another.',
+      code: 'rejected',
+      message: 'This assessment could not be opened just now. Reload the page to try again.',
     };
   }
 
   return { ok: true, attempt: data as unknown as Attempt };
 }
 
+export type AssessmentContext = {
+  enrolment: { id: string; learnerProfileId: string; courseTitle: string | null };
+  assessment: {
+    id: string;
+    title: string;
+    instructions: string | null;
+    type: string;
+    passThreshold: number | null;
+    attemptLimit: number | null;
+  };
+};
+
 /**
- * Save one answer.
+ * The enrolment and the assessment, if this caller may sit one under the other.
  *
- * Upserts: a learner changing their mind before submitting is normal and must
- * not create a second response row. `enforce_response_question_match` ties the
- * response to a question that belongs to the same assessment.
+ * Read under the caller's session, so row-level security decides whether the
+ * enrolment exists for them. A missing assessment, a draft, and one that
+ * belongs to a different course version than the enrolment is pinned to all
+ * answer `null`: none is worth distinguishing to somebody who did not have
+ * access in the first place. The page and the "start another attempt" action
+ * both ask here, so the action cannot be more permissive than the page.
+ */
+export async function fetchAssessmentContext(
+  supabase: SupabaseClient,
+  args: { enrolmentId: string; assessmentId: string },
+): Promise<AssessmentContext | null> {
+  const { data: enrolmentData } = await supabase
+    .from('course_enrolments')
+    .select('id, learner_profile_id, course_version_id, courses ( title )')
+    .eq('id', args.enrolmentId)
+    .is('deleted_at', null)
+    .maybeSingle();
+  const enrolment = enrolmentData as unknown as {
+    id: string;
+    learner_profile_id: string;
+    course_version_id: string;
+    courses: Embedded<{ title: string }>;
+  } | null;
+  if (!enrolment) return null;
+
+  const { data: assessmentData } = await supabase
+    .from('assessments')
+    .select('id, title, instructions, type, pass_threshold, attempt_limit, course_version_id')
+    .eq('id', args.assessmentId)
+    .eq('status', 'active')
+    .maybeSingle();
+  const assessment = assessmentData as unknown as {
+    id: string;
+    title: string;
+    instructions: string | null;
+    type: string;
+    pass_threshold: string | number | null;
+    attempt_limit: number | null;
+    course_version_id: string;
+  } | null;
+  if (!assessment || assessment.course_version_id !== enrolment.course_version_id) return null;
+
+  return {
+    enrolment: {
+      id: enrolment.id,
+      learnerProfileId: enrolment.learner_profile_id,
+      courseTitle: one(enrolment.courses)?.title ?? null,
+    },
+    assessment: {
+      id: assessment.id,
+      title: assessment.title,
+      instructions: assessment.instructions,
+      type: assessment.type,
+      passThreshold: assessment.pass_threshold === null ? null : Number(assessment.pass_threshold),
+      attemptLimit: assessment.attempt_limit,
+    },
+  };
+}
+
+export type AttemptStanding = {
+  /** The attempt in progress under this enrolment, if there is one. */
+  open: Attempt | null;
+  /** Attempts that count against the limit: every one not abandoned. */
+  used: number;
+  /** Attempt numbers handed in and not yet fully marked. */
+  awaiting: number[];
+};
+
+/**
+ * Where a learner stands on an assessment, before anything is started.
+ *
+ * **Why this exists.** The page used to call `startAttempt()` on every render.
+ * The first visit is meant to open an attempt. But the quiz refreshes the page
+ * when it is submitted, and with no attempt in progress any more, that refresh
+ * opened the next one: a learner who handed in attempt 1 of 3 had attempt 2
+ * running before they had read their score, and coming back a week later to
+ * read the teacher's comment opened attempt 3. Nobody chose either.
+ *
+ * `used` counts the way `enforce_attempt_limit` does, across the learner
+ * rather than the enrolment and leaving out abandoned attempts, so the page
+ * and the trigger agree about when the limit is reached. The trigger still
+ * decides; this is so the page can say so without first trying.
+ *
+ * `null` when the attempts could not be read. That is not the same as none,
+ * and must not be treated as a first visit.
+ */
+export async function fetchAttemptStanding(
+  supabase: SupabaseClient,
+  args: { learnerProfileId: string; enrolmentId: string; assessmentId: string },
+): Promise<AttemptStanding | null> {
+  const { data, error } = await supabase
+    .from('assessment_attempts')
+    .select('id, assessment_id, attempt_number, status, score_earned, score_possible, passed, course_enrolment_id')
+    .eq('assessment_id', args.assessmentId)
+    .eq('learner_profile_id', args.learnerProfileId)
+    .order('attempt_number', { ascending: false });
+  if (error) return null;
+
+  const rows = (data ?? []) as unknown as (Attempt & { course_enrolment_id: string })[];
+  const here = rows.filter((row) => row.course_enrolment_id === args.enrolmentId);
+  const open = here.find((row) => row.status === 'in_progress') ?? null;
+  return {
+    open: open
+      ? {
+          id: open.id,
+          assessment_id: open.assessment_id,
+          attempt_number: open.attempt_number,
+          status: open.status,
+          score_earned: open.score_earned,
+          score_possible: open.score_possible,
+          passed: open.passed,
+        }
+      : null,
+    used: rows.filter((row) => row.status !== 'abandoned').length,
+    awaiting: here
+      .filter((row) => row.status === 'submitted' || row.status === 'awaiting_manual_grading')
+      .map((row) => row.attempt_number),
+  };
+}
+
+/**
+ * The answers already saved on an attempt, by question.
+ *
+ * The page says answers are saved as the learner goes, and they are. It then
+ * drew an empty quiz on every reload, so a learner who came back saw none of
+ * them, a count of "0 answered", and no way to tell that submitting would send
+ * what they had chosen before. Row-level security returns only the learner's
+ * own responses (`assessment_responses_read`); the score and the verdict are
+ * not asked for.
+ */
+export async function fetchSavedResponses(
+  supabase: SupabaseClient,
+  attemptId: string,
+): Promise<Record<string, unknown>> {
+  const { data, error } = await supabase
+    .from('assessment_responses')
+    .select('question_id, response_content')
+    .eq('assessment_attempt_id', attemptId);
+  // An unreadable answer sheet is an empty one: the quiz still works, and
+  // choosing an answer again overwrites the row.
+  if (error) return {};
+  const saved: Record<string, unknown> = {};
+  for (const row of (data ?? []) as { question_id: string; response_content: unknown }[]) {
+    if (row.response_content !== null && row.response_content !== undefined) {
+      saved[row.question_id] = row.response_content;
+    }
+  }
+  return saved;
+}
+
+/**
+ * Save one answer: the first, a changed one, or none.
+ *
+ * Through `save_assessment_response()`, which is the only way a learner
+ * writes to the answer sheet (migration 20261281145000). This function used to
+ * look for a row and then insert or update it directly. The update matched
+ * nothing a learner was allowed to change, the database said so by changing
+ * nothing and raising no error, and the page printed "Saved" — so a learner
+ * who changed their mind was marked on their first answer. The direct insert,
+ * for its part, accepted a mark written by the learner.
+ *
+ * An empty answer (an emptied box, every tick removed) takes the answer back;
+ * `held` says whether one is there afterwards.
  */
 export async function saveResponse(
   supabase: SupabaseClient,
   args: { attemptId: string; questionId: string; content: unknown },
-): Promise<{ ok: true } | { ok: false; message: string }> {
-  const { data: found } = await supabase
-    .from('assessment_responses')
-    .select('id')
-    .eq('assessment_attempt_id', args.attemptId)
-    .eq('question_id', args.questionId)
-    .limit(1);
-
-  const row = (found ?? [])[0] as { id: string } | undefined;
-
-  const { error } = row
-    ? await supabase
-        .from('assessment_responses')
-        .update({ response_content: args.content })
-        .eq('id', row.id)
-    : await supabase.from('assessment_responses').insert({
-        assessment_attempt_id: args.attemptId,
-        question_id: args.questionId,
-        response_content: args.content,
-      });
+): Promise<{ ok: true; held: boolean } | { ok: false; code: AssessmentErrorCode; message: string }> {
+  const { data, error } = await supabase.rpc('save_assessment_response', {
+    p_attempt_id: args.attemptId,
+    p_question_id: args.questionId,
+    p_content: args.content ?? null,
+  });
 
   if (error) {
-    // A submitted attempt is locked by trigger. Say so rather than "rejected".
-    if (/submit|lock/i.test(error.message)) {
-      return { ok: false, message: 'This attempt has already been submitted.' };
+    if (/already been submitted/i.test(error.message)) {
+      return { ok: false, code: 'already_submitted', message: 'This attempt has already been submitted.' };
     }
-    return { ok: false, message: 'Could not save that answer.' };
+    if (/sign in to answer/i.test(error.message)) {
+      return { ok: false, code: 'not_signed_in', message: 'Sign in first.' };
+    }
+    return { ok: false, code: 'rejected', message: 'Could not save that answer.' };
   }
-  return { ok: true };
+  return { ok: true, held: data === true };
 }
 
 /**
@@ -211,10 +392,22 @@ export async function saveResponse(
 export async function submitAttempt(
   supabase: SupabaseClient,
   attemptId: string,
-): Promise<{ ok: true; attempt: Attempt } | { ok: false; message: string }> {
+): Promise<{ ok: true; attempt: Attempt } | { ok: false; code: AssessmentErrorCode; message: string }> {
   const { data, error } = await supabase.rpc('submit_assessment_attempt', { p_attempt_id: attemptId });
   if (error) {
-    return { ok: false, message: error.message };
+    // The database's sentence carries the attempt's id and is written for
+    // whoever reads the log. It is turned into a reason here and goes no
+    // further.
+    if (/unanswered questions/i.test(error.message)) {
+      return { ok: false, code: 'unanswered', message: 'Answer every question before you submit.' };
+    }
+    if (/cannot be submitted/i.test(error.message)) {
+      return { ok: false, code: 'already_submitted', message: 'This attempt has already been submitted.' };
+    }
+    if (/sign in to submit/i.test(error.message)) {
+      return { ok: false, code: 'not_signed_in', message: 'Sign in first.' };
+    }
+    return { ok: false, code: 'rejected', message: 'Your answers could not be submitted.' };
   }
   return { ok: true, attempt: data as unknown as Attempt };
 }
