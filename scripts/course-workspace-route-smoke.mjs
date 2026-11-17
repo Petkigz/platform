@@ -107,9 +107,13 @@ try {
     assert.match(html, /<html[^>]*lang="ar"[^>]*dir="rtl"/); assert.equal(workspace(html), '<div class="container section course-workspace">');
     for (const text of ['aria-label="التقدّم في الدورة"', 'الإصدار 2 · EN', 'الدروس المكتملة: 0 من 1 · 0%', 'ما زال مطلوبًا:', 'تحديد كمكتمل', 'العودة إلى تعلّمي', 'الدرس 1 من 1']) assert.ok(html.includes(text), `Arabic: ${text}`);
     for (const text of ['Course progress', 'lessons complete', 'Still to do', 'Mark complete', 'Back to my learning', 'My learning', 'Start the course', 'Lesson 1 of 1']) assert.equal(visible(html).includes(text), false, `Arabic page still says "${text}"`);
-    // The database's reason and the assignment list stay English, and say so.
+    // The database's reason stays English, and says so.
     assert.match(html, /<ul[^>]*lang="en" dir="ltr"[^>]*><li>Synthetic reason from the database<\/li>/);
-    assert.match(html, /<div lang="en" dir="ltr"><div class="outline-h"><h3>Assignments<\/h3>/);
+    // The assignment list is the reader's: its heading, "no deadline", the
+    // status and the button. The titles are the teacher's, as written.
+    assert.match(html, /<div><div class="outline-h"><h3>الواجبات<\/h3>/);
+    for (const text of ['بلا موعد نهائي', 'لم يبدأ', 'بانتظار التصحيح', '>فتح<', '>عرض التسليم<']) assert.ok(visible(html).includes(text), `Arabic assignment list: ${text}`);
+    for (const text of ['>Assignments<', 'No deadline', 'Not started', 'Waiting for marking', 'View submission', '>Open<']) assert.equal(visible(html).includes(text), false, `Arabic assignment list still says "${text}"`);
     progressOn = false;
     const off = await (await request({ cookie, 'accept-language': 'ar' })).text();
     assert.ok(off.includes('تتبّع التقدّم غير مفعّل بعد.')); assert.equal(off.includes('Progress tracking is not enabled yet.'), false);
@@ -169,7 +173,7 @@ try {
     // The translated page, where the longer sentences and the other direction
     // are: Arabic (right-to-left) and Tamil (the longest words here).
     blocking = ['Synthetic reason from the database'];
-    for (const [code, dir, mark] of [['ar', 'rtl', 'تحديد كمكتمل'], ['ta', 'ltr', 'முடிந்ததாகக் குறி']]) {
+    for (const [code, dir, mark, tasks] of [['ar', 'rtl', 'تحديد كمكتمل', 'الواجبات'], ['ta', 'ltr', 'முடிந்ததாகக் குறி', 'ஒப்படைப்புகள்']]) {
       for (const width of [320, 390, 1440]) {
         const context = await browser.newContext({ viewport: { width, height: 900 }, locale: 'en' });
         await context.addCookies([{ name: 'sb-127-auth-token', value: `base64-${encode(session)}`, url: `http://localhost:${port}` }, { name: 'ayahspring_locale', value: code, url: `http://localhost:${port}` }]);
@@ -186,7 +190,10 @@ try {
         assert.ok(m.scroll <= width + 1, `${code} ${width}: page overflow ${m.scroll}`);
         assert.equal(m.pageDir, dir, `${code} ${width}: page direction`);
         assert.equal(m.reasonsDir, 'ltr', `${code} ${width}: the database's English reasons inherit the page direction`);
-        assert.ok(m.englishBlocks.length >= 1 && m.englishBlocks.every((d) => d === 'ltr'), `${code} ${width}: an English list is laid out ${m.englishBlocks}`);
+        // The assignment list was the English block here until it was
+        // translated; any that remain are still laid out left to right.
+        assert.ok(m.englishBlocks.every((d) => d === 'ltr'), `${code} ${width}: an English list is laid out ${m.englishBlocks}`);
+        assert.equal(await page.getByRole('heading', { name: tasks, exact: true }).count(), 1, `${code} ${width}: the assignment list has no heading in ${code}`);
         assert.deepEqual(m.clipped, [], `${code} ${width}: a control's label is cut off`);
         assert.ok(m.title >= 100, `${code} ${width}: a lesson or assignment title is ${m.title}px wide`);
         assert.equal(await page.getByRole('button', { name: mark }).count(), 1);
