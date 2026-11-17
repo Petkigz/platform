@@ -2618,6 +2618,53 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The report form at the foot of the lesson, 2026-11-17
+
+"Report a problem" is how a learner tells a person that a lesson teaches
+something wrong. It was English for every reader.
+
+- *Translated.* Twenty-one sentences (`lesson.report*`) in the twenty-seven
+  languages with nothing held: the link, the heading, the seven kinds of
+  problem, both questions, the buttons, and five answers. **Unreviewed**, and
+  this is the form where a wrong word matters most: "doctrinal error" and
+  "misattribution" were written by the builder in each language and nobody who
+  speaks them has read them. The nineteen held languages see the form in
+  English; `/language` tells each of them **36%** (192 of 527).
+- *Only the one at the foot.* The same form opens from a note about a recording
+  that cannot play and from under an answer in the discussion. Those parts are
+  still English, so the form inside them is too.
+- *When sending fails.* `/api/reports` now sends a code beside its English
+  sentence (`too_long`, `not_visible`, `duplicate`, and five the reader cannot
+  act on). A translated page reads the code: too long, cannot see it, already
+  reported, or "could not be accepted, reload". A reply with no known code, a
+  server error or no reply at all says the report **could not be confirmed**
+  and to send it again, which is safe because the database keeps one open
+  report of a kind per person per thing. Before this a lost reply showed
+  nothing or a browser's error text.
+- *Three refusals share one code on purpose.* The database tells apart a lesson
+  the reader cannot see, a discussion they cannot see and a post that is gone.
+  The form does not: telling a reader which of those it was says something
+  about content they are not allowed to see.
+- *A test reads the migrations.* It takes every `raise exception` sentence
+  from the newest `report_content` and fails if one appears that the code does
+  not name. It does not cover the unique index that makes "already reported"
+  (`cr_one_open_per_reporter`): that is recognised by PostgreSQL's words
+  "duplicate key", so any other unique index added to that table would be
+  answered "already reported" as well. A database sentence nobody has named
+  still reaches an English page as written; a translated page says "could not
+  be confirmed" for it.
+- *Small repairs.* The box now stops at the 2,000 characters the server
+  accepts, and follows the direction of what is typed. Cancel after a refusal
+  used to leave the refusal where the link was, with no way to open the form
+  again.
+- *Checked.* Over HTTP: the link in English, Arabic and French, English for
+  Hausa and Pashto, and that nothing marks it as English in Arabic. In
+  Chromium on the build server only (there is no browser where this was
+  written): Arabic and Tamil at three widths, form opened, seven kinds, a
+  refusal and a lost reply each answered in the reader's language, Cancel.
+  **Not checked:** a report really reaching the database from this form; the
+  synthetic backend answers for it.
+
 ### The ten migrations after the first 342, for the test project, 2026-11-17
 
 The owner said to apply 1440 and 1450 to the hosted test project now, and then

@@ -529,12 +529,12 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 38% there (192 of 506 sentences; it was 71% of 272, then
+  the nineteen reads 36% there (192 of 527 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
-  39% of 494 with its files part and the assessment list, then this with the
-  list of dated classes),
+  39% of 494 with its files part and the assessment list, 38% of 506 with the
+  list of dated classes, then this with the report form on the lesson),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -561,7 +561,7 @@ still unreviewed and still saying so.
   Burmese sentence on the page, and the tool still calculates six rows. It does
   the direction check in Pashto, opens the correction sheet on the Hausa
   companion part (eighty boxes, each with the draft, and the notice; no notice
-  on the Hausa navigation or on Swahili), and reads 38% on `/language` in Hausa.
+  on the Hausa navigation or on Swahili), and reads 36% on `/language` in Hausa.
 
 **Four languages withheld whole (owner's second answer, 2026-11-16).** Asked
 whether the rest of the interface in Wolof, Fulfulde, Bambara and Dhivehi should
@@ -654,7 +654,11 @@ written: not a held draft, nothing.
   as English:** the players and every saved-place and recovery message
   (including the long privacy notice for keeping a place on the device), the
   stand-in notes for a recording that cannot play, practice questions, sources,
-  notes and bookmarks, the report form, and an open discussion. Checked over
+  notes and bookmarks, and an open discussion. *The report form at the foot of
+  the lesson was added on 2026-11-17:* twenty-one more sentences, the seven
+  kinds of problem by name, and a sentence for each way sending can fail. The
+  same form opened from a note about a recording, or under an answer in the
+  discussion, is still English, because the part it sits in is. Checked over
   HTTP in six languages and in Chromium in Arabic and Tamil at three widths,
   on a synthetic backend; no button pressed, no real recording, and only a
   lesson with one video.

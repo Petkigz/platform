@@ -1,8 +1,12 @@
 import assert from 'node:assert/strict';
+import { readFileSync, readdirSync } from 'node:fs';
 import test from 'node:test';
 
+import { LESSON } from './i18n/messages/lesson.ts';
 import {
   reportContent,
+  reportOutcomeOf,
+  REPORT_DESCRIPTION_MAX,
   fetchReportQueue,
   resolveReport,
   appealDecision,
@@ -488,4 +492,98 @@ test('an unavailable discussion post is presented without inventing content', as
   const {items: rows} = await fetchReportQueue(client);
   assert.equal(rows[0]?.discussionPost, null);
   assert.equal(rows[0]?.discussion_post_id, 'p2');
+});
+
+// ---------------------------------------------------------------------------
+// A refused report says why in the reader's language, which needs a word for
+// each reason rather than an English sentence.
+// ---------------------------------------------------------------------------
+
+test('every refusal of a report carries a code, and an unknown one carries none', async () => {
+  const send = async (message: string) => {
+    const { client } = stubRpc({ error: { message } });
+    return reportContent(client, { lessonId: 'lesson-1', category: 'doctrinal_error', description: 'Wrong.', discussionPostId: 'post-1' });
+  };
+  const table: Array<[string, string, number]> = [
+    ['lesson not found', 'not_found', 404],
+    ['you cannot report content you cannot see', 'not_visible', 403],
+    ['you cannot report a discussion you cannot see', 'not_visible', 403],
+    ['discussion post unavailable', 'not_visible', 403],
+    ['say what the problem is', 'no_description', 400],
+    ['duplicate key value violates unique constraint "cr_one_open_per_reporter"', 'duplicate', 409],
+  ];
+  for (const [sentence, code, status] of table) {
+    const res = await send(sentence);
+    assert.equal(res.ok, false);
+    if (!res.ok) assert.deepEqual([res.code, res.status], [code, status], sentence);
+  }
+  const unknown = await send('something nobody has decided about');
+  assert.equal(unknown.ok, false);
+  if (!unknown.ok) assert.equal(unknown.code, undefined);
+
+  // The three the form's own checks answer before the database is asked.
+  const { client, calls } = stubRpc();
+  const local = async (input: Record<string, unknown>) => reportContent(client, input);
+  const a = await local({ category: 'other', description: 'x' });
+  const b = await local({ lessonId: 'l', category: 'nonsense', description: 'x' });
+  const c = await local({ lessonId: 'l', category: 'other', description: ' ' });
+  const d = await local({ lessonId: 'l', category: 'other', description: 'x'.repeat(REPORT_DESCRIPTION_MAX + 1) });
+  assert.deepEqual([a, b, c, d].map((r) => (r.ok ? 'ok' : r.code)), ['no_lesson', 'no_category', 'no_description', 'too_long']);
+  assert.equal(calls.length, 0);
+});
+
+test('the database refuses a report with no sentence nobody has decided about', () => {
+  // Read from the migrations, not copied: the newest definition of
+  // report_content wins, and a refusal added or reworded there fails here
+  // until somebody decides what the reader is told. Without this it would
+  // fall to "no code" and the form would say "could not be confirmed" about
+  // something that was refused.
+  const dir = new URL('../../../supabase/migrations/', import.meta.url);
+  const newest = readdirSync(dir)
+    .filter((name) => name.endsWith('.sql'))
+    .sort()
+    .filter((name) => /create (?:or replace )?function public\.report_content\s*\(/u.test(readFileSync(new URL(name, dir), 'utf8')))
+    .at(-1);
+  assert.ok(newest, 'report_content is not defined in any migration');
+  const sql = readFileSync(new URL(newest, dir), 'utf8');
+  const start = sql.search(/create (?:or replace )?function public\.report_content\s*\(/u);
+  const body = sql.slice(start, sql.indexOf('$$;', sql.indexOf('$$', start) + 2));
+  const raised = [...body.matchAll(/raise exception\s+'((?:[^']|'')+)'/gu)].map((m) => m[1] ?? '');
+  assert.deepEqual([...new Set(raised)].sort(), [
+    'discussion post unavailable',
+    'lesson not found',
+    'say what the problem is',
+    'you cannot report a discussion you cannot see',
+    'you cannot report content you cannot see',
+  ]);
+});
+
+test('only a refusal that names a known reason is treated as a refusal', () => {
+  assert.equal(reportOutcomeOf(400, 'too_long'), 'too_long');
+  assert.equal(reportOutcomeOf(403, 'not_visible'), 'not_visible');
+  assert.equal(reportOutcomeOf(409, 'duplicate'), 'duplicate');
+  // Refusals the reader cannot do anything about share one sentence.
+  for (const code of ['no_lesson', 'no_category', 'no_description', 'not_found', 'wrong_lesson']) {
+    assert.equal(reportOutcomeOf(400, code), 'refused', code);
+  }
+  // Everything else may or may not have arrived.
+  assert.equal(reportOutcomeOf(500, 'duplicate'), 'uncertain');
+  assert.equal(reportOutcomeOf(503, undefined), 'uncertain');
+  assert.equal(reportOutcomeOf(400, undefined), 'uncertain');
+  assert.equal(reportOutcomeOf(400, 'never_heard_of_it'), 'uncertain');
+  assert.equal(reportOutcomeOf(200, 'duplicate'), 'uncertain');
+  assert.equal(reportOutcomeOf(409, 7), 'uncertain');
+});
+
+test('the form is offered every category the database accepts, in every written language', () => {
+  for (const [code, messages] of Object.entries(LESSON)) {
+    for (const key of [
+      'lesson.reportKindDoctrinal', 'lesson.reportKindTranslation', 'lesson.reportKindInappropriate',
+      'lesson.reportKindMisattribution', 'lesson.reportKindCopyright', 'lesson.reportKindTechnical', 'lesson.reportKindOther',
+    ] as const) {
+      assert.ok(messages?.[key], `${code} has no name for ${key}`);
+    }
+    assert.ok(messages?.['lesson.reportTooLong']?.includes('{max}'), `${code}: the length sentence lost its number`);
+  }
+  assert.equal(REPORT_CATEGORIES.length, 7);
 });

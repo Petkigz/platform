@@ -31,7 +31,11 @@ export async function POST(request: Request) {
   const supabase = await createClient();
   const result = await reportContent(supabase, (body ?? {}) as Record<string, unknown>);
   if (!result.ok) {
-    return NextResponse.json({ error: result.error }, { status: result.status });
+    // `code` is what a page in another language reads; `error` is English.
+    return NextResponse.json(
+      { error: result.error, ...(result.code ? { code: result.code } : {}) },
+      { status: result.status },
+    );
   }
 
   return NextResponse.json({ ok: true, reportId: result.reportId }, { status: 201 });

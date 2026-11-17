@@ -2,7 +2,14 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { REPORT_CATEGORIES, type ReportCategory } from '@/lib/governance';
+import {
+  REPORT_CATEGORIES,
+  REPORT_DESCRIPTION_MAX,
+  reportOutcomeOf,
+  type ReportCategory,
+} from '@/lib/governance';
+import { fill, formatNumber } from '@/lib/i18n/format';
+import type { LocaleCode } from '@/lib/i18n/locales';
 
 /**
  * Flag a problem with a lesson, or with one answer in its discussion.
@@ -16,12 +23,67 @@ import { REPORT_CATEGORIES, type ReportCategory } from '@/lib/governance';
  * `postId` is set when reporting a specific discussion post, which is what makes
  * "this answer is wrong" actionable rather than ambiguous between the lesson and
  * something someone said about it.
+ *
+ * **The words can be handed in.** The lesson page passes `words` in the
+ * reader's language. A place that is still English (the discussion, the note
+ * about a recording) passes nothing and gets the English below. They arrive as
+ * props from the server rather than being looked up here, so these sentences
+ * are not in a catalogue every page carries.
+ *
+ * **When it does not go through.** A page with `words` reads the reply's code,
+ * not its English sentence: three refusals have a sentence of their own, any
+ * other refusal has one between them, and a reply that is not a refusal at all
+ * (lost, a server error, no code) says the report could not be confirmed and
+ * to send it again. That is safe to say: one person holds at most one open
+ * report of a kind on a thing, so a second copy is answered "you already have
+ * one".
  */
+export type ReportFormWords = {
+  /** The link that opens the form, and the form's heading. */
+  open: string;
+  intro: string;
+  kind: string;
+  /** One name for each category the database accepts. */
+  categories: Record<ReportCategory, string>;
+  what: string;
+  placeholder: string;
+  send: string;
+  sending: string;
+  cancel: string;
+  sent: string;
+  /** Carries `{max}`. */
+  tooLong: string;
+  notVisible: string;
+  duplicate: string;
+  refused: string;
+  uncertain: string;
+};
+
+const ENGLISH: ReportFormWords = {
+  open: 'Report a problem',
+  intro: 'A person reviews every report. Please say what is wrong, not only that you disagree.',
+  kind: 'What kind of problem?',
+  categories: Object.fromEntries(REPORT_CATEGORIES.map((c) => [c.value, c.label])) as Record<ReportCategory, string>,
+  what: 'What is wrong?',
+  placeholder: 'Quote the part you mean, if you can',
+  send: 'Send report',
+  sending: 'Sending…',
+  cancel: 'Cancel',
+  sent: 'Sent. A person will look at it.',
+  tooLong: 'Please keep it under {max} characters.',
+  notVisible: 'You cannot report something you cannot see.',
+  duplicate: 'You already have an open report of this kind here. It has not been ignored.',
+  refused: 'That report could not be accepted. Reload the page and try again.',
+  uncertain: 'We could not confirm that your report was sent. Please send it again.',
+};
+
 export function ReportForm({
   lessonId,
   postId,
   label,
   category: initialCategory = 'doctrinal_error',
+  words,
+  locale = 'en',
 }: {
   lessonId: string;
   postId?: string;
@@ -34,7 +96,11 @@ export function ReportForm({
    * or, worse, to leave it and send a doctrinal complaint about a broken file.
    */
   category?: ReportCategory;
+  words?: ReportFormWords;
+  /** The language `words` is in, for the number in "under 2,000 characters". */
+  locale?: LocaleCode;
 }) {
+  const say = words ?? ENGLISH;
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
@@ -42,34 +108,55 @@ export function ReportForm({
   const [description, setDescription] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [tone, setTone] = useState<'info' | 'error'>('info');
+  const [sending, setSending] = useState(false);
+
+  function failure(status: number, code: unknown): string {
+    const outcome = reportOutcomeOf(status, code);
+    if (outcome === 'too_long') return fill(say.tooLong, { max: formatNumber(locale, REPORT_DESCRIPTION_MAX) });
+    if (outcome === 'not_visible') return say.notVisible;
+    if (outcome === 'duplicate') return say.duplicate;
+    return outcome === 'refused' ? say.refused : say.uncertain;
+  }
 
   async function submit() {
     setMessage(null);
+    setSending(true);
+    try {
+      const res = await fetch('/api/reports', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          lessonId,
+          category,
+          description,
+          discussionPostId: postId ?? undefined,
+        }),
+      });
+      const json = (await res.json().catch(() => ({}))) as { error?: string; code?: unknown };
 
-    const res = await fetch('/api/reports', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        lessonId,
-        category,
-        description,
-        discussionPostId: postId ?? undefined,
-      }),
-    });
-    const json = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setTone('error');
+        // The server's sentence is English. A page in another language gets
+        // its own; an English one keeps the server's, which is more exact.
+        setMessage(words ? failure(res.status, json.code) : (json.error ?? failure(res.status, json.code)));
+        return;
+      }
 
-    if (!res.ok) {
+      setTone('info');
+      setOpen(false);
+      setDescription('');
+      setMessage(say.sent);
+      startTransition(() => router.refresh());
+    } catch {
+      // No reply at all.
       setTone('error');
-      setMessage(json.error ?? 'Could not send that report.');
-      return;
+      setMessage(say.uncertain);
+    } finally {
+      setSending(false);
     }
-
-    setTone('info');
-    setOpen(false);
-    setDescription('');
-    setMessage('Sent. A person will look at it.');
-    startTransition(() => router.refresh());
   }
+
+  const busy = pending || sending;
 
   if (message && !open) {
     return (
@@ -100,21 +187,18 @@ export function ReportForm({
           textDecoration: 'underline',
         }}
       >
-        {label ?? 'Report a problem'}
+        {label ?? say.open}
       </button>
     );
   }
 
   return (
     <div className="card" style={{ marginTop: '0.75rem' }}>
-      <h3 style={{ marginTop: 0 }}>Report a problem</h3>
-      <p className="muted">
-        A person reviews every report. Please say what is wrong, not only that
-        you disagree.
-      </p>
+      <h3 style={{ marginTop: 0 }}>{say.open}</h3>
+      <p className="muted">{say.intro}</p>
 
       <label className="eyebrow" htmlFor={`c-${lessonId}-${postId ?? 'lesson'}`}>
-        What kind of problem?
+        {say.kind}
       </label>
       <select
         id={`c-${lessonId}-${postId ?? 'lesson'}`}
@@ -123,38 +207,46 @@ export function ReportForm({
       >
         {REPORT_CATEGORIES.map((c) => (
           <option key={c.value} value={c.value}>
-            {c.label}
+            {say.categories[c.value]}
           </option>
         ))}
       </select>
 
       <label className="eyebrow" htmlFor={`d-${lessonId}-${postId ?? 'lesson'}`}>
-        What is wrong?
+        {say.what}
       </label>
+      {/* What the reader types is theirs, in whichever direction they write. */}
       <textarea
         id={`d-${lessonId}-${postId ?? 'lesson'}`}
         rows={3}
+        dir="auto"
+        maxLength={REPORT_DESCRIPTION_MAX}
         value={description}
         onChange={(e) => setDescription(e.target.value)}
-        placeholder="Quote the part you mean, if you can"
+        placeholder={say.placeholder}
       />
 
       <div className="row" style={{ gap: '0.5rem' }}>
         <button
           type="button"
           className="btn"
-          disabled={pending || description.trim().length === 0}
+          disabled={busy || description.trim().length === 0}
           onClick={submit}
         >
-          {pending ? 'Sending…' : 'Send report'}
+          {busy ? say.sending : say.send}
         </button>
         <button
           type="button"
           className="btn ghost"
-          disabled={pending}
-          onClick={() => setOpen(false)}
+          disabled={busy}
+          onClick={() => {
+            // A refusal left on screen would otherwise take the place of the
+            // link, and the form could not be opened again.
+            setMessage(null);
+            setOpen(false);
+          }}
         >
-          Cancel
+          {say.cancel}
         </button>
       </div>
 

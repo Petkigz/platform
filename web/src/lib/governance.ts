@@ -22,7 +22,51 @@ export const REPORT_CATEGORIES: { value: ReportCategory; label: string }[] = [
   { value: 'other', label: 'Something else' },
 ];
 
-const DESCRIPTION_MAX = 2000;
+/** The longest description the form accepts; the textarea stops there too. */
+export const REPORT_DESCRIPTION_MAX = 2000;
+const DESCRIPTION_MAX = REPORT_DESCRIPTION_MAX;
+
+/**
+ * Why a report was refused, as a word a page can translate.
+ *
+ * The sentences beside them are English and stay in the reply for a page that
+ * is English. A page in another language reads the code.
+ *
+ * `not_visible` is three refusals the database makes (the lesson, the
+ * discussion, the post): each means the reporter may not see the thing, and
+ * telling them which would tell them it exists.
+ */
+export type ReportCode =
+  | 'no_lesson'
+  | 'no_category'
+  | 'no_description'
+  | 'too_long'
+  | 'not_found'
+  | 'not_visible'
+  | 'wrong_lesson'
+  | 'duplicate';
+
+const REPORT_CODES = new Set<string>([
+  'no_lesson', 'no_category', 'no_description', 'too_long', 'not_found', 'not_visible', 'wrong_lesson', 'duplicate',
+]);
+
+/** What the form says when a report did not go through. */
+export type ReportOutcome = 'too_long' | 'not_visible' | 'duplicate' | 'refused' | 'uncertain';
+
+/**
+ * What a reply to POST /api/reports means to the person who sent it.
+ *
+ * Only a 4xx that names a code is a refusal. A lost reply, a server error, a
+ * reply with no code and a code this page has never heard of are all
+ * `uncertain`: the report may or may not have arrived. Sending it again is
+ * safe, because one person can hold only one open report of a kind on a thing
+ * and the second is answered `duplicate`.
+ */
+export function reportOutcomeOf(status: number, code: unknown): ReportOutcome {
+  if (status < 400 || status > 499 || typeof code !== 'string' || !REPORT_CODES.has(code)) return 'uncertain';
+  if (code === 'too_long' || code === 'not_visible' || code === 'duplicate') return code;
+  return 'refused';
+}
 
 /**
  * The categories the database accepts. Kept next to the labels so the form
@@ -40,7 +84,7 @@ export type ReportInput = {
 
 export type ReportResult =
   | { ok: true; reportId: string }
-  | { ok: false; status: number; error: string };
+  | { ok: false; status: number; error: string; code?: ReportCode };
 
 /**
  * Flag a problem with a lesson or with a discussion post on it.
@@ -66,17 +110,18 @@ export async function reportContent(
       ? input.discussionPostId
       : null;
 
-  if (!lessonId) return { ok: false, status: 400, error: 'lessonId is required.' };
+  if (!lessonId) return { ok: false, status: 400, code: 'no_lesson', error: 'lessonId is required.' };
   if (!VALID_CATEGORIES.has(category)) {
-    return { ok: false, status: 400, error: 'Choose what kind of problem this is.' };
+    return { ok: false, status: 400, code: 'no_category', error: 'Choose what kind of problem this is.' };
   }
   if (!description) {
-    return { ok: false, status: 400, error: 'Say what the problem is.' };
+    return { ok: false, status: 400, code: 'no_description', error: 'Say what the problem is.' };
   }
   if (description.length > DESCRIPTION_MAX) {
     return {
       ok: false,
       status: 400,
+      code: 'too_long',
       error: `Please keep it under ${DESCRIPTION_MAX} characters.`,
     };
   }
@@ -90,28 +135,38 @@ export async function reportContent(
   if (error) {
     const msg = error.message.toLowerCase();
     if (msg.includes('cannot report content you cannot see')) {
-      return { ok: false, status: 403, error: 'You cannot report content you cannot see.' };
+      return { ok: false, status: 403, code: 'not_visible', error: 'You cannot report content you cannot see.' };
     }
     if (msg.includes('cannot report a discussion you cannot see')) {
       return {
         ok: false,
         status: 403,
+        code: 'not_visible',
         error: 'You cannot report a discussion you are not enrolled in.',
       };
     }
     if (msg.includes('discussion post unavailable')) {
-      return { ok: false, status: 403, error: 'That post is unavailable to report.' };
+      return { ok: false, status: 403, code: 'not_visible', error: 'That post is unavailable to report.' };
     }
     if (msg.includes('not on this lesson')) {
-      return { ok: false, status: 400, error: 'That post is not on this lesson.' };
+      return { ok: false, status: 400, code: 'wrong_lesson', error: 'That post is not on this lesson.' };
+    }
+    if (msg.includes('lesson not found')) {
+      return { ok: false, status: 404, code: 'not_found', error: 'That lesson was not found.' };
+    }
+    if (msg.includes('say what the problem is')) {
+      return { ok: false, status: 400, code: 'no_description', error: 'Say what the problem is.' };
     }
     if (msg.includes('duplicate key')) {
       return {
         ok: false,
         status: 409,
+        code: 'duplicate',
         error: 'You already have an open report of this kind here. It has not been ignored.',
       };
     }
+    // Anything else has no code: the page cannot say what happened, and says
+    // that rather than print a database's sentence.
     return { ok: false, status: 400, error: error.message };
   }
 

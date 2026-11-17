@@ -115,6 +115,7 @@ try {
     assert.equal(wrapper(html), '<div class="page lesson-page">');
     for (const text of ['aria-label="Breadcrumb"', '>My learning<', 'Not started', '>Transcript<', '>Materials<', '>Video<', 'Mark complete', 'Back to course', 'aria-label="Lesson navigation"', 'Course contents', 'Lesson 1 of 2', '>Discussion<', 'Discussion is not open on this lesson.']) assert.ok(body.includes(text), `English: ${text}`);
     assert.equal(body.includes('lang="en"'), false, 'an English lesson marks part of itself as English');
+    assert.match(body, /<section class="section"[^>]*>\s*<button type="button" class="linklike"[^>]*>Report a problem<\/button>/);
     assert.ok(body.includes('2 min'), 'the length of the lesson is missing');
   }
   {
@@ -124,9 +125,12 @@ try {
     for (const text of ['Breadcrumb', 'My learning', 'Not started', 'Transcript', 'Materials', '>Video<', 'Mark complete', 'Back to course', 'Lesson navigation', 'Course contents', 'Lesson 1 of', 'Discussion']) assert.equal(body.includes(text), false, `Arabic lesson still says "${text}"`);
     // The length of the lesson is said by the language's own locale data.
     assert.ok(body.includes('2 د'), 'the length of the lesson is not in Arabic'); assert.equal(body.includes('2 min'), false);
-    // The player and the report form are English, and say so.
+    // The player is English, and says so. The report form at the foot is the
+    // reader's: its link is Arabic and nothing marks it as English.
     assert.match(body, /<span class="t"[^>]*lang="en" dir="ltr"[^>]*>/);
-    assert.match(body, /<section class="section"[^>]*lang="en" dir="ltr"/);
+    assert.doesNotMatch(body, /<section class="section"[^>]*lang="en"/);
+    assert.match(body, /<section class="section"[^>]*>\s*<button type="button" class="linklike"[^>]*>الإبلاغ عن مشكلة<\/button>/);
+    assert.equal(body.includes('Report a problem'), false, 'Arabic lesson still says "Report a problem"');
     // What the teacher wrote is not marked as anything.
     assert.match(body, /<h1>[^<]*(?:<[^>]+>)?Synthetic lesson/);
     entitled = false;
@@ -137,6 +141,7 @@ try {
   {
     const html = await (await request({ cookie: `${cookie}; ayahspring_locale=fr`, 'accept-language': 'ar' })).text(); const body = visible(html);
     assert.match(html, /<html[^>]*lang="fr"/);
+    assert.ok(body.includes('>Signaler un problème<'), 'French: the report link');
     for (const text of ['Fil d’Ariane', 'Non commencée', '>Supports<', '>Vidéo<', 'Marquer comme terminée', 'Retour au cours', 'Leçon 1 sur 2', 'La discussion n’est pas ouverte pour cette leçon.']) assert.ok(body.includes(text) || body.includes(text.replace('’', '&#x27;')), `French: ${text}`);
   }
   for (const [code, dir] of [['ha', 'ltr'], ['ps', 'rtl']]) {
@@ -144,13 +149,13 @@ try {
     assert.match(html, new RegExp(`<html[^>]*lang="${code}"[^>]*dir="${dir}"`));
     assert.equal(wrapper(html), '<div class="page lesson-page" lang="en" dir="ltr">');
     assert.ok(body.includes('2 min'), `${code}: an English lesson gives its length in another language`);
-    for (const text of ['aria-label="Breadcrumb"', '>Materials<', 'Mark complete', 'Lesson 1 of 2', 'Discussion is not open on this lesson.']) assert.ok(body.includes(text), `${code}: ${text}`);
+    for (const text of ['aria-label="Breadcrumb"', '>Materials<', 'Mark complete', 'Lesson 1 of 2', 'Discussion is not open on this lesson.', '>Report a problem<']) assert.ok(body.includes(text), `${code}: ${text}`);
   }
   {
     const html = await (await request({ cookie, 'accept-language': 'wo, fr' })).text();
     assert.match(html, /<html[^>]*lang="en"/); assert.ok(visible(html).includes('>Materials<')); assert.equal(visible(html).includes('Supports'), false);
   }
-  console.log('Lesson languages passed: English, Arabic (frame translated, player and report form marked English), French by cookie, Hausa and Pashto frames with an English lesson, Wolof to English. No translation here has been read by a speaker.');
+  console.log('Lesson languages passed: English, Arabic (frame and report link translated, player marked English), French by cookie, Hausa and Pashto frames with an English lesson, Wolof to English. No translation here has been read by a speaker.');
   if (process.env.RESPONSIVE_PLAYWRIGHT && process.env.RESPONSIVE_CHROME) {
     const { chromium } = await import(pathToFileURL(process.env.RESPONSIVE_PLAYWRIGHT).href);
     browser = await chromium.launch({ executablePath: process.env.RESPONSIVE_CHROME, headless: true, args: ['--no-sandbox'] });
@@ -208,11 +213,48 @@ try {
         });
         assert.ok(m.scroll <= width + 1, `${code} ${width}: page overflow ${m.scroll}`);
         assert.equal(m.dir, dir, `${code} ${width}: lesson direction`);
-        assert.ok(m.english.length >= 2 && m.english.every((d) => d === 'ltr'), `${code} ${width}: an English part is laid out ${m.english}`);
+        assert.ok(m.english.length >= 1 && m.english.every((d) => d === 'ltr'), `${code} ${width}: an English part is laid out ${m.english}`);
         assert.deepEqual(m.clipped, [], `${code} ${width}: a label is cut off`);
         assert.equal(m.overlap, false, `${code} ${width}: the kind of a material runs into the material`);
         // Arrows are turned round right-to-left and left alone otherwise.
         assert.ok(m.arrows.length === 2 && m.arrows.every((a) => (dir === 'rtl') === a.startsWith('matrix(-1')), `${code} ${width}: arrows ${m.arrows}`);
+        // The report form is the reader's: it opens in their language and
+        // direction, with a name for each of the seven kinds, and fits.
+        await page.locator('.lesson-page section.section button.linklike').click();
+        await page.locator('.lesson-page section.section h3').waitFor();
+        const form = await page.evaluate(() => {
+          const section = document.querySelector('.lesson-page section.section');
+          return { heading: section.querySelector('h3').textContent, dir: getComputedStyle(section).direction,
+            kinds: [...section.querySelectorAll('select option')].map((o) => o.textContent),
+            buttons: [...section.querySelectorAll('.btn')].map((b) => b.textContent),
+            scroll: document.documentElement.scrollWidth,
+            clipped: [...section.querySelectorAll('.btn, select')].filter((el) => el.scrollWidth > el.clientWidth + 1).length };
+        });
+        assert.equal(form.dir, dir, `${code} ${width}: report form direction`);
+        assert.equal(form.kinds.length, 7, `${code} ${width}: report kinds ${form.kinds}`);
+        for (const english of ['Report a problem', 'Doctrinal error', 'Something else', 'Send report', 'Cancel']) assert.equal([form.heading, ...form.kinds, ...form.buttons].includes(english), false, `${code} ${width}: the report form says "${english}"`);
+        assert.ok(form.scroll <= width + 1, `${code} ${width}: the open report form overflows to ${form.scroll}`);
+        assert.equal(form.clipped, 0, `${code} ${width}: a report control is cut off`);
+        // A refusal is said in the reader's language, never in the server's
+        // English; a reply that never came says something else again; and
+        // Cancel after either brings the link back.
+        const section = page.locator('.lesson-page section.section');
+        const said = [];
+        for (const reply of ['refused', 'lost']) {
+          await page.route('**/api/reports', (route) => (reply === 'lost' ? route.abort() : route.fulfill({ status: 409, contentType: 'application/json', body: JSON.stringify({ error: 'SERVER ENGLISH SENTENCE', code: 'duplicate' }) })));
+          await section.locator('textarea').fill('Synthetic report.');
+          const answered = reply === 'lost' ? page.waitForEvent('requestfailed', (request) => request.url().endsWith('/api/reports')) : page.waitForResponse('**/api/reports');
+          await section.locator('.btn').first().click();
+          await answered;
+          await section.locator('.notice.error').waitFor();
+          said.push((await section.locator('.notice.error').textContent()).trim());
+          await page.unroute('**/api/reports');
+        }
+        assert.ok(said.every((text) => text.length > 0 && !/SERVER ENGLISH|already have an open report|could not confirm/u.test(text)), `${code} ${width}: a failed report is answered ${JSON.stringify(said)}`);
+        assert.notEqual(said[0], said[1], `${code} ${width}: a refusal and a lost reply say the same thing`);
+        assert.equal(await section.locator('textarea').getAttribute('dir'), 'auto');
+        await section.locator('.btn.ghost').click();
+        assert.equal(await section.locator('button.linklike').count(), 1, `${code} ${width}: Cancel after a refusal does not bring the link back`);
         if (process.env.RESPONSIVE_SCREENSHOTS) await page.screenshot({ path: resolve(process.env.RESPONSIVE_SCREENSHOTS, `lesson-${code}-${width}.png`), fullPage: true });
         await context.close();
       }

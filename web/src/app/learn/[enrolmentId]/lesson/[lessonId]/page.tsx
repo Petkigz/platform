@@ -25,7 +25,7 @@ import { MarkComplete, type MarkCompleteWords } from '../../mark-complete';
 import { fetchThread } from '@/lib/discussion';
 import { isFlagEnabled } from '@/lib/flags';
 import { Discussion } from './discussion';
-import { ReportForm } from './report-form';
+import { ReportForm, type ReportFormWords } from './report-form';
 import { fetchLessonSources } from '@/lib/provenance';
 import { fetchLessonStudyTools } from '@/lib/lesson-study-tools';
 import { StudyTools } from './study-tools';
@@ -141,6 +141,33 @@ export default async function LessonPage({
     saving: t('course.saving'),
     unconfirmed: t('course.unconfirmed'),
     reload: t('course.reload'),
+  };
+  // The form at the foot of the lesson. The same form inside a part of the
+  // page that is still English is given no words and stays English.
+  const reportWords: ReportFormWords = {
+    open: t('lesson.reportOpen'),
+    intro: t('lesson.reportIntro'),
+    kind: t('lesson.reportKind'),
+    categories: {
+      doctrinal_error: t('lesson.reportKindDoctrinal'),
+      translation_error: t('lesson.reportKindTranslation'),
+      inappropriate_content: t('lesson.reportKindInappropriate'),
+      misattribution: t('lesson.reportKindMisattribution'),
+      copyright: t('lesson.reportKindCopyright'),
+      technical_fault: t('lesson.reportKindTechnical'),
+      other: t('lesson.reportKindOther'),
+    },
+    what: t('lesson.reportWhat'),
+    placeholder: t('lesson.reportPlaceholder'),
+    send: t('lesson.reportSend'),
+    sending: t('lesson.reportSending'),
+    cancel: t('lesson.reportCancel'),
+    sent: t('lesson.reportSent'),
+    tooLong: t('lesson.reportTooLong'),
+    notVisible: t('lesson.reportNotVisible'),
+    duplicate: t('lesson.reportDuplicate'),
+    refused: t('lesson.reportRefused'),
+    uncertain: t('lesson.reportUncertain'),
   };
 
   const { data: enrolmentData } = await supabase
@@ -600,9 +627,8 @@ export default async function LessonPage({
         <section
           className="section"
           style={{ borderTop: '1px solid var(--line, #e6e8e6)', paddingTop: '1rem' }}
-          {...english}
         >
-          <ReportForm lessonId={lesson.id} />
+          <ReportForm lessonId={lesson.id} words={reportWords} locale={shown.code} />
         </section>
       )}
 

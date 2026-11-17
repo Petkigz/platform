@@ -120,7 +120,7 @@ test('no other page pays for the companion sentences', () => {
     const onServer = (k: string) =>
       ['learn.', 'course.', 'lesson.', 'assess.', 'assign.'].some((prefix) => k.startsWith(prefix));
     const serverOnly = Object.fromEntries(Object.entries(whole).filter(([k]) => onServer(k)));
-    assert.equal(Object.keys(serverOnly).length, 234);
+    assert.equal(Object.keys(serverOnly).length, 255);
     assert.equal(Object.keys(shell).some(onServer), false, `${locale.code} shell carries dashboard, course, lesson or assessment sentences`);
     assert.deepEqual({ ...shell, ...companion, ...serverOnly }, whole);
   }

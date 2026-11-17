@@ -409,11 +409,11 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // forty for the assessment page, its quiz and the assessment list on the
   // course page, and a hundred and seven for the assignment page and the
   // assignment list, of which forty-seven are the files part.
-  assert.equal(unwrittenKeys.length, 234);
+  assert.equal(unwrittenKeys.length, 255);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('assign.')).length, 107);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('learn.')).length, 37);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('course.')).length, 28);
-  assert.equal(unwrittenKeys.filter((key) => key.startsWith('lesson.')).length, 22);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('lesson.')).length, 43);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('assess.')).length, 40);
 
   // Five files, one rule: the same languages in each.
@@ -465,7 +465,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     }
   }
   // What that costs the nineteen that are still in the picker, said out loud:
-  // 192 of 506 sentences, which is 38%. Nothing holds a floor under
+  // 192 of 527 sentences, which is 36%. Nothing holds a floor under
   // it any more: the owner chose on 2026-11-17 to keep these languages in the
   // picker and show the number. The count is pinned here so that it moves only
   // when somebody means it to, and is seen when it does. It moved from 55% to
@@ -473,11 +473,13 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // assignment page was: sixty more sentences these readers see in English,
   // on a page they already saw in English. It moved from 43% to 39% when the
   // files part of that page and the assessment list were written, fifty
-  // more, and to 38% with the list of dated classes, twelve more. What they are shown did not get smaller; what is counted got bigger.
+  // more, to 38% with the list of dated classes, twelve more, and to 36% with
+  // the report form on the lesson page, twenty-one more. What they are shown
+  // did not get smaller; what is counted got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 506);
-    assert.equal(coverageOf(code).percent, 38, code);
+    assert.equal(coverageOf(code).total, 527);
+    assert.equal(coverageOf(code).percent, 36, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');
   assert.equal(languageShownFor('en', 'learn').code, 'en');
@@ -657,18 +659,34 @@ test('the lesson page translates its frame and marks every English part inside i
     assert.ok(!page.includes(sentence), `"${sentence}" is still typed into the lesson page`);
   }
 
-  // Seven places hold a client component, or a sentence written for one, that
+  // Six places hold a client component, or a sentence written for one, that
   // is English for every reader. Each says so: the note above the materials, a
   // material that is a player or stands in for one, practice questions,
-  // sources, notes and bookmarks, the report form, and the open discussion.
+  // sources, notes and bookmarks, and the open discussion.
   assert.match(page, /const english = shown\.code === 'en' \? \{\} : \(\{ lang: 'en', dir: 'ltr' \} as const\);/u);
-  assert.equal(page.match(/\{\.\.\.english\}/gu)?.length, 6);
+  assert.equal(page.match(/\{\.\.\.english\}/gu)?.length, 5);
   assert.match(page, /\{\.\.\.\(speaksEnglish \? english : \{\}\)\}/u);
   assert.match(page, /<div className="notice" style=\{\{[^}]+\}\} \{\.\.\.english\}>\s+<strong>\{summary\.heading\}/u);
   assert.match(page, /<div \{\.\.\.english\}>\s+<PracticeCheck/u);
   assert.match(page, /\{provenanceOn && \(\s+<section className="card" \{\.\.\.english\}>/u);
   assert.match(page, /<div \{\.\.\.english\}>\s+<StudyTools/u);
-  assert.match(page, /\{\.\.\.english\}\s+>\s+<ReportForm lessonId=\{lesson\.id\} \/>/u);
+  // The report form at the foot is the reader's: the page hands it its words
+  // and the language they are in. The same form inside a part that is still
+  // English (the note about a recording) is handed none.
+  assert.match(page, /<ReportForm lessonId=\{lesson\.id\} words=\{reportWords\} locale=\{shown\.code\} \/>/u);
+  assert.equal(page.match(/words=\{reportWords\}/gu)?.length, 1);
+  assert.equal(page.match(/label="Tell us about this recording"/gu)?.length, 2);
+  const form = read('../app/learn/[enrolmentId]/lesson/[lessonId]/report-form.tsx');
+  assert.doesNotMatch(form, /useT\(/u);
+  assert.doesNotMatch(form, /from '@\/lib\/i18n'/u);
+  assert.match(form, /const say = words \?\? ENGLISH;/u);
+  // A page in another language never prints the server's English sentence.
+  assert.match(form, /setMessage\(words \? failure\(res\.status, json\.code\) : \(json\.error \?\? failure\(res\.status, json\.code\)\)\);/u);
+  // What the reader types is theirs, and cannot be longer than the server takes.
+  assert.match(form, /dir="auto"\s+maxLength=\{REPORT_DESCRIPTION_MAX\}/u);
+  for (const sentence of ['>Report a problem<', '>Send report<', '>Cancel<', "'Sending…' :", 'What kind of problem?\n', "setMessage('Sent."]) {
+    assert.ok(!form.split('const ENGLISH')[1]?.split('export function ReportForm')[1]?.includes(sentence), `"${sentence}" is still typed into the report form`);
+  }
   assert.match(page, /<div \{\.\.\.english\}>\s+<Discussion/u);
 
   // Discussion ships switched off. The card that says so is the page's own,
