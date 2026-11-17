@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/client';
 import { describeRate, describeScope, type ChargeRule } from '@/lib/charges';
 
 const blank = {
@@ -29,7 +29,7 @@ const blank = {
  * Nothing here is the control. `set_market_charge()` checks the role again and
  * audits the change.
  */
-export function ChargeForm({ client }: { client: SupabaseClient }) {
+export function ChargeForm() {
   const router = useRouter();
   const [form, setForm] = useState(blank);
   const [busy, setBusy] = useState(false);
@@ -60,6 +60,10 @@ export function ChargeForm({ client }: { client: SupabaseClient }) {
     setBusy(true);
     setError(null);
     setDone(null);
+    // Its own browser client, made when it is needed. The page used to hand its
+    // server client down as a prop, which cannot cross from server to browser:
+    // the page failed for everybody allowed to open it.
+    const client = createClient();
     const { data, error: rpcError } = await client.rpc('set_market_charge', {
       p_kind: form.kind,
       p_country: form.country.trim().toUpperCase() || null,

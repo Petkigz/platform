@@ -112,7 +112,7 @@ export default async function TaxPage() {
                     {rule.note ? ` · ${rule.note}` : ''}
                   </p>
                 </div>
-                <RetireButton client={supabase} id={rule.id} label={rule.label} />
+                <RetireButton id={rule.id} label={rule.label} />
               </div>
             ))}
           </div>
@@ -121,7 +121,7 @@ export default async function TaxPage() {
 
       <section className="card" style={{ marginTop: '1rem' }}>
         <h2 style={{ marginTop: 0 }}>Add a rule</h2>
-        <ChargeForm client={supabase} />
+        <ChargeForm />
       </section>
 
       {retired.length > 0 && (

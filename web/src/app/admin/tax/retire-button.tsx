@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/client';
 
 /**
  * Retire a rule, with a reason.
@@ -12,15 +12,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
  * orders and leaves the history intact, which is the only honest way to correct
  * a rate that was entered wrongly.
  */
-export function RetireButton({
-  client,
-  id,
-  label,
-}: {
-  client: SupabaseClient;
-  id: string;
-  label: string;
-}) {
+export function RetireButton({ id, label }: { id: string; label: string }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState('');
@@ -30,6 +22,10 @@ export function RetireButton({
   async function retire() {
     setBusy(true);
     setError(null);
+    // Its own browser client, made when it is needed. The page used to hand its
+    // server client down as a prop, which cannot cross from server to browser:
+    // the page failed for everybody allowed to open it.
+    const client = createClient();
     const { error: rpcError } = await client.rpc('retire_market_charge', {
       p_id: id,
       p_reason: reason.trim(),

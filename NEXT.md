@@ -2738,6 +2738,17 @@ application against the schema, after the first real-server run refused one.
   server the four questions the model answers (object, list, ambiguous,
   missing column) so that if the model is wrong it is wrong there first.
 
+### A page that failed for everybody allowed to open it, 2026-11-17
+
+The first complete walk of the pages against a real request server (415 page
+loads as a visitor, a learner, a teacher and an owner) found one page that
+answered 500: `/admin/tax`, for the owner. It handed the server's database
+client to two browser components as a prop, which cannot be sent to a browser.
+Only a finance admin or the owner can open that page, and every earlier check
+signed in as a learner, who is turned away before it renders. The two
+components now make their own browser client, as the other admin consoles do,
+and `server-client-prop.test.ts` fails on any page that does this again.
+
 ### Eight reads that would have failed on the real database, 2026-11-17
 
 Found by reading the quiz page before translating it. **Not a translation
