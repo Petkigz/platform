@@ -30,8 +30,8 @@
  * **In the register is not the same as offered.** Four languages below — Wolof,
  * Fulfulde, Bambara and Dhivehi — have a file and are withheld from readers
  * until a speaker has read them (`messages/held.ts`). They keep their rows so
- * the correction sheet can name them; `matchLocale()` does not return them, so
- * neither a cookie nor a device can put a reader in one.
+ * the correction sheet can name them; `matchLocale()` does not return them, and
+ * `chooseLocale()` answers a cookie or a device that asks for one in English.
  */
 
 import { isWithheld } from './messages/held.ts';
@@ -255,6 +255,21 @@ export function directionOf(code: LocaleCode): Direction {
  * serving the English one.
  */
 export function matchLocale(tag: string | null | undefined): LocaleCode | null {
+  const code = matchRegistered(tag);
+  // Offered, not merely registered: a language withheld until a speaker has
+  // read it is not one a reader can be given, so the answer to "do you have
+  // this?" is no. `chooseLocale()` asks the register directly, because it has
+  // to tell "we do not know that language" from "we know it and withhold it".
+  return code !== null && isOfferedLocale(code) ? code : null;
+}
+
+/**
+ * Read one tag and return the language in the register, offered or withheld.
+ *
+ * Not exported: everything outside this file wants to know what a reader can
+ * be given, which is `matchLocale()`.
+ */
+function matchRegistered(tag: string | null | undefined): LocaleCode | null {
   if (typeof tag !== 'string') return null;
   const cleaned = tag.trim().toLowerCase().replace('_', '-');
   if (cleaned === '') return null;
@@ -270,11 +285,7 @@ export function matchLocale(tag: string | null | undefined): LocaleCode | null {
   const parts = cleaned.split('-');
   for (let i = parts.length; i >= 1; i -= 1) {
     const candidate = parts.slice(0, i).join('-');
-    // Offered, not merely registered. A device that asks for Wolof first and
-    // French second gets French, exactly as it would if Wolof had never been
-    // written: the answer to "do you have this language?" is no until a
-    // speaker has read it. The same test refuses a stale cookie.
-    if (isOfferedLocale(candidate)) return candidate;
+    if (isLocaleCode(candidate)) return candidate;
   }
 
   // **Chinese without a script, which is most Chinese devices.** A phone in Taipei
@@ -308,8 +319,32 @@ export function chooseLocale(input: {
   chosen?: string | null;
   acceptLanguage?: string | null;
 }): { code: LocaleCode; source: LocaleSource } {
-  const chosen = matchLocale(input.chosen);
-  if (chosen) return { code: chosen, source: 'chosen' };
+  // **A withheld language is answered in English, wherever it was asked for.**
+  // Owner's decision, 2026-11-16, in two steps: a language nobody here can
+  // write falls back to English until a speaker has read it; and that means
+  // English, not the next language on the device's list. So this walks the
+  // preferences in order and stops at the first one the register *knows*:
+  //
+  // - offered: that language;
+  // - withheld: English, and nothing further down the list is consulted;
+  // - unknown (`ja`, `de`): skipped, as it always was.
+  //
+  // A phone set to Wolof then French is given English, not French. That was
+  // argued the other way first — the reader did say they read French — and the
+  // owner chose the simpler promise: ask for one of these four and you get
+  // English, every time, with the sentence on `/language` that says why. A
+  // device that lists French *first* still gets French; the rule is about
+  // what was asked for first, not about a language appearing anywhere.
+  //
+  // `source` is `default` in the withheld case because that is the sentence
+  // the settings page then prints: "a language this interface does not have
+  // yet, so it is in English".
+  const chosen = matchRegistered(input.chosen);
+  if (chosen) {
+    return isWithheld(chosen)
+      ? { code: DEFAULT_LOCALE, source: 'default' }
+      : { code: chosen, source: 'chosen' };
+  }
 
   const header = input.acceptLanguage ?? '';
 
@@ -333,8 +368,10 @@ export function chooseLocale(input: {
     .sort((a, b) => b.quality - a.quality || a.index - b.index);
 
   for (const entry of ranked) {
-    const match = matchLocale(entry.tag);
-    if (match) return { code: match, source: 'device' };
+    const match = matchRegistered(entry.tag);
+    if (match === null) continue;
+    if (isWithheld(match)) return { code: DEFAULT_LOCALE, source: 'default' };
+    return { code: match, source: 'device' };
   }
 
   return { code: DEFAULT_LOCALE, source: 'default' };

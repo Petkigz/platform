@@ -232,7 +232,7 @@ export default async function ContributePage({
               <strong>{target.englishName} is not offered to readers yet.</strong> We wrote every
               line of it ourselves, in a language none of us can write, and we do not trust
               any of it — so nobody can choose {target.englishName} on this site for now, and
-              a device that asks for it is given another language. Treat each line below as a
+              a device that asks for it is given English. Treat each line below as a
               placeholder: rewrite it freely. {target.englishName} returns to the list of
               languages once a speaker has read it, a part at a time.
             </div>

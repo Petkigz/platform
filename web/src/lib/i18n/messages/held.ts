@@ -33,9 +33,10 @@ import type { LocaleCode } from '../locales.ts';
  * navigation and sign-in pages are any better. Owner's second answer,
  * 2026-11-16: the rest of the interface in those four falls back to English
  * too. A language with nothing left to show is not a language the site has, so
- * it is treated as one: it is not in the picker, a device that asks for it is
- * given the next language on its own list (and English if there is none), and
- * it is listed on `/language` at 0%. It stays in the register and on the
+ * it is treated as one: it is not in the picker, a device or a stale cookie
+ * that asks for it is given English (the owner's third answer: English every
+ * time, not the next language on the device's list), and it is listed on
+ * `/language` at 0%. It stays in the register and on the
  * correction sheet, which is the only place it can come back from.
  */
 

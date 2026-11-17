@@ -96,8 +96,14 @@ try {
     const context = await browser.newContext({
       viewport: { width, height: 900 }, locale, timezoneId: zone,
       ...(geolocation ? { geolocation, permissions: ['geolocation'] } : {}),
-      ...(acceptLanguage ? { extraHTTPHeaders: { 'accept-language': acceptLanguage } } : {}),
     });
+    // Rewritten on the way out rather than set as an extra header: Chromium's
+    // locale emulation writes its own Accept-Language over an extra one, which
+    // is how the first version of the withheld-language check passed while
+    // sending plain `fr-SN`. The control case below fails if this stops working.
+    if (acceptLanguage) {
+      await context.route('**/*', (route) => route.continue({ headers: { ...route.request().headers(), 'accept-language': acceptLanguage } }));
+    }
     await context.addCookies([
       { name: 'sb-127-auth-token', value: `base64-${encode(session)}`, url: origin },
       ...(chosen ? [{ name: 'ayahspring_locale', value: chosen, url: origin }] : []),
@@ -310,6 +316,8 @@ try {
     const heading = clean(await tab.page.locator('.companion-head h1').textContent());
     if (place.locale === 'en') assert.equal(heading, ENGLISH_TITLE);
     else assert.notEqual(heading, ENGLISH_TITLE, `${place.locale}: the prayer page fell back to English`);
+    // The tab says what the heading says, in the same language.
+    assert.equal(clean(await tab.page.title()), `${heading} · AyahSpring`, `${place.locale}: the tab title is not the heading`);
     assert.equal(await tab.page.locator('.prayer-example').count(), ['en', 'ar', 'sw'].includes(place.locale) ? 1 : 0, `${place.locale}: method example for ${place.zone}`);
     for (const width of widths) {
       await tab.page.setViewportSize({ width, height: 900 });
@@ -380,6 +388,7 @@ try {
     await tab.page.goto(prayerUrl, { waitUntil: 'networkidle' });
     assert.equal(await tab.page.evaluate(() => document.documentElement.lang), 'my');
     assert.equal(clean(await tab.page.locator('.companion-head h1').textContent()), ENGLISH_TITLE);
+    assert.equal(clean(await tab.page.title()), `${ENGLISH_TITLE} · AyahSpring`, 'held Burmese text reached the tab title');
     assert.equal(clean(await calculateButton(tab.page).textContent()), 'Calculate today');
     // The page says what it is, for a screen reader choosing a voice.
     assert.equal(await tab.page.locator('.companion-page').getAttribute('lang'), 'en');
@@ -506,13 +515,32 @@ try {
     assert.deepEqual(stale.pageErrors, []);
     await stale.context.close();
 
+    // Control: the header this script sets is the header the server reads. A
+    // French-emulating browser sending Swahili first must be given Swahili.
+    const control = await open({ locale: 'fr-SN', zone: 'Africa/Dakar', width: 390, chosen: null, acceptLanguage: 'sw-KE,sw;q=0.9,fr;q=0.8' });
+    await control.page.goto(`${origin}/language`, { waitUntil: 'networkidle' });
+    assert.equal(await control.page.evaluate(() => document.documentElement.lang), 'sw', 'this script is not controlling Accept-Language, so the checks below prove nothing');
+    await control.context.close();
     // A device that asks for Wolof first and French second, and never chose:
-    // its own second choice, not English.
+    // English, not French. The owner's decision — one of these four is
+    // answered in English every time — and the page says why, in English.
     const device = await open({ locale: 'fr-SN', zone: 'Africa/Dakar', width: 390, chosen: null, acceptLanguage: 'wo-SN,wo;q=0.9,fr;q=0.8,en;q=0.5' });
     await device.page.goto(`${origin}/language`, { waitUntil: 'networkidle' });
-    assert.equal(await device.page.evaluate(() => document.documentElement.lang), 'fr', 'a Wolof-then-French device was not given French');
+    assert.equal(await device.page.evaluate(() => document.documentElement.lang), 'en', 'a Wolof-then-French device was not given English');
+    assert.ok((await device.page.locator('body').textContent()).includes('Your device asked for a language this interface does not have yet, so it is in English.'), 'the language page does not say why it is in English');
     assert.deepEqual(device.pageErrors, []);
     await device.context.close();
+    // The same device with French first reads French: the rule is about what
+    // was asked for first.
+    const french = await open({ locale: 'fr-SN', zone: 'Africa/Dakar', width: 390, chosen: null, acceptLanguage: 'fr-SN,fr;q=0.9,wo;q=0.8' });
+    await french.page.goto(`${origin}/language`, { waitUntil: 'networkidle' });
+    assert.equal(await french.page.evaluate(() => document.documentElement.lang), 'fr', 'a French-then-Wolof device was not given French');
+    await french.context.close();
+    // And a browser that had chosen Wolof, on a French device: still English.
+    const both = await open({ locale: 'fr-SN', zone: 'Africa/Dakar', width: 390, chosen: 'wo', acceptLanguage: 'fr-SN,fr;q=0.9' });
+    await both.page.goto(`${origin}/language`, { waitUntil: 'networkidle' });
+    assert.equal(await both.page.evaluate(() => document.documentElement.lang), 'en', 'a stale Wolof choice on a French device was not given English');
+    await both.context.close();
 
     // The sheet still has it, on every part, with the draft and the other notice.
     const sheet = await open({ locale: 'en', zone: 'Africa/Kampala', width: 390 });
@@ -528,7 +556,7 @@ try {
     for (const code of ['wo', 'ff', 'bm', 'dv']) assert.ok(offeredOnSheet.includes(code), `${code} cannot be corrected: it is not on the sheet`);
     assert.deepEqual(sheet.pageErrors, []);
     await sheet.context.close();
-    console.log(`Withheld (wo): a browser that had chosen Wolof gets English (lang="en"); the picker has ${choices.length - 1} languages and none of wo/ff/bm/dv; Wolof is listed at 0% with a link to its sheet; /api/locale refuses it (400); a wo-then-fr device gets French; the sheet still opens it with the draft ("${draft}").`);
+    console.log(`Withheld (wo): a browser that had chosen Wolof gets English (lang="en"); the picker has ${choices.length - 1} languages and none of wo/ff/bm/dv; Wolof is listed at 0% with a link to its sheet; /api/locale refuses it (400); a wo-then-fr device gets English and a fr-then-wo device French; the sheet still opens it with the draft ("${draft}").`);
   }
   console.log('Companion browser smoke passed in Chromium against `next dev` with a synthetic backend. Not real Auth or RLS, not a real location provider, not Safari or Firefox, not a review of any translation.');
 } catch (e) { console.error(logs.slice(-4000)); throw e; }

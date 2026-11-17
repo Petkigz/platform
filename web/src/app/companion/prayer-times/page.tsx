@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -9,7 +10,20 @@ import { I18nProvider } from '@/lib/i18n/client';
 import { PrayerTimesTool } from './tool';
 
 export const dynamic='force-dynamic';
-export const metadata={title:'Calculated prayer times'};
+// The tab's title in the language the heading is in. It was a fixed English
+// string, so a reader in Arabic had an Arabic page under an English tab — and
+// the title is what a screen reader announces first and a history list keeps.
+// No new sentence: it is the page's own heading. Where this language's
+// companion text is held for review, both are English together.
+export async function generateMetadata(): Promise<Metadata> {
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  return { title: translator(code)('companion.prayerTitle') };
+}
 export default async function Page() {
   if(!isSupabaseConfigured()) redirect('/');
   const supabase=await createClient();

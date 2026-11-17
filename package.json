@@ -20,7 +20,9 @@
     "test:clamav:integration": "node --experimental-strip-types scripts/clamav-integration.mjs",
     "test:discussion-locks:postgres": "node supabase/tests/discussion_lock_protocol.postgres.mjs",
     "test:prayer-route": "node scripts/prayer-route-smoke.mjs",
-    "test:prayer-component": "node scripts/prayer-component-test.mjs"
+    "test:prayer-component": "node scripts/prayer-component-test.mjs",
+    "test:companion-browser": "node scripts/companion-browser-smoke.mjs",
+    "test:edge-sweep": "node scripts/edge-sweep.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.3.11",

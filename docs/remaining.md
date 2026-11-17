@@ -544,12 +544,15 @@ is treated as one the site does not have:
 - *It is not offered.* It is not a button in the picker (47 languages, from 51);
   `/api/locale` refuses it with the same 400 as an unknown code; a cookie set
   before it was withheld is ignored. `<html lang>` is never one of the four.
-- *A device that asks for it gets its own next choice.* `matchLocale()` no
-  longer returns a withheld code, so a phone sending `wo, fr, en` is given
-  French, and English only if it lists nothing else the site has. That is the
-  existing rule for any language the site lacks, applied to these four; it does
-  mean "falls back to English" is literally true only when English is the next
-  language the device has.
+- *Asking for one is answered in English, every time* (owner's third answer the
+  same day). The first version gave a phone sending `wo, fr, en` French, as for
+  any language the site lacks; told of that, the owner chose English in every
+  case. `chooseLocale()` now stops at the first preference the register knows:
+  offered gives that language, withheld gives English and nothing further down
+  the list is read, unknown is skipped. A stale cookie for one of the four gives
+  English too, rather than handing the choice to the device. A device that lists
+  French *before* Wolof still reads French. `/language` then prints the existing
+  sentence that the device asked for a language the interface does not have yet.
 - *It is still listed and still correctable.* `/language` shows each of the four
   under the coverage sentence at 0%, by its own name, linked to its correction
   sheet when the sheet is open. `/contribute` lists all 51 and opens any part of
@@ -563,7 +566,14 @@ is treated as one the site does not have:
 - *Checked in a browser* (same script): a browser that had chosen Wolof gets an
   English page marked `lang="en"`; the picker has 47 languages and none of the
   four; Wolof is listed at 0% with its link; the route refuses it; a
-  Wolof-then-French device gets French; the sheet opens Wolof with its draft.
+  Wolof-then-French device gets English with that sentence, a French-then-Wolof
+  device gets French, and a stale Wolof choice on a French device gets English;
+  the sheet opens Wolof with its draft. (The device cases are real only since
+  this change: the first version of the script set `Accept-Language` as an extra
+  header, which Chromium's locale emulation overwrote, so its "Wolof then
+  French" browser was in fact sending plain French. The header is now rewritten
+  on each request, and a control case — Swahili first from a French-emulating
+  browser must give Swahili — fails if that stops working.)
 
 Releasing one of the four is the same kind of change as releasing a part:
 replace `[WHOLE_LANGUAGE]` with the list of parts still unread (or delete the

@@ -108,7 +108,7 @@ export function SubjectEditor({ subjects }: { subjects: SubjectRow[] }) {
 
   return (
     <>
-      <section className="card section">
+      <section className="card">
         <h2 style={{ marginTop: 0 }}>Add a subject</h2>
         <p className="muted">
           The code is the identifier: lowercase, dot-separated, and permanent. It is what course tagging

@@ -72,6 +72,19 @@ test('the three companion pages and the dashboard cards are translated', () => {
   assert.match(dashboard, /t\('companion\.cardCounterBody'\)/);
 });
 
+test('the tab title is the page heading, in the same language', () => {
+  for (const [page, key] of [
+    [prayerPage, 'companion.prayerTitle'],
+    [hijriPage, 'companion.hijriTitle'],
+    [counterPage, 'companion.counterTitle'],
+  ] as const) {
+    assert.doesNotMatch(page, /export const metadata\s*=/u, `${key}: the title is a fixed string again`);
+    assert.match(page, /export async function generateMetadata\(\): Promise<Metadata>/u);
+    assert.ok(page.includes(`return { title: translator(code)('${key}') };`), `${key} is not the tab title`);
+    assert.ok(page.includes(`<h1>{t('${key}')}</h1>`), `${key} is not the heading`);
+  }
+});
+
 test('no English companion sentence is left inline in the components', () => {
   // A sentence that survives in a component is a sentence that never gets
   // translated. The catalogue is the one place English lives. The dashboard

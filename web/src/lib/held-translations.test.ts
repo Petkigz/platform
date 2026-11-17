@@ -270,19 +270,42 @@ test('a withheld language is not offered anywhere a reader is given a language',
     assert.equal(matchLocale(`${code}-XX`), null);
     // ...not from a cookie set before it was withheld...
     assert.deepEqual(chooseLocale({ chosen: code, acceptLanguage: null }), { code: 'en', source: 'default' });
-    // ...and not from the device. A device that lists another language after
-    // it gets that one — its own second choice, not ours — and English only
-    // when it lists nothing else we have.
+    // ...and not from the device. **English, every time** — the owner's
+    // decision, against the first implementation, which gave a Wolof-then-French
+    // phone French. Asking for one of these four first is answered in English
+    // whatever is listed after it, and whatever the weights say about the rest.
+    const english = { code: 'en', source: 'default' } as const;
+    assert.deepEqual(chooseLocale({ chosen: null, acceptLanguage: code }), english);
+    assert.deepEqual(chooseLocale({ chosen: null, acceptLanguage: `${code},fr;q=0.9,en;q=0.8` }), english);
+    assert.deepEqual(chooseLocale({ chosen: null, acceptLanguage: `${code}-XX,${code};q=0.9,ar;q=0.7` }), english);
+    // A stale cookie is the same question asked by the browser instead of the
+    // device, and gets the same answer — it does not hand the decision to the
+    // device's list, which might well be French.
+    assert.deepEqual(chooseLocale({ chosen: code, acceptLanguage: 'fr-FR,fr;q=0.9' }), english);
+    assert.deepEqual(chooseLocale({ chosen: code, acceptLanguage: `${code},sw;q=0.9` }), english);
+    // A language the register does not know at all is still skipped, so it
+    // does not shield the withheld one behind it...
+    assert.deepEqual(chooseLocale({ chosen: null, acceptLanguage: `ja,${code};q=0.9,fr;q=0.8` }), english);
+    // ...and the rule is about what was asked for *first*: a device that puts
+    // French ahead of it reads French, by position or by weight.
     assert.deepEqual(
-      chooseLocale({ chosen: null, acceptLanguage: `${code},fr;q=0.9,en;q=0.8` }),
+      chooseLocale({ chosen: null, acceptLanguage: `fr,${code};q=0.9` }),
       { code: 'fr', source: 'device' },
     );
     assert.deepEqual(
-      chooseLocale({ chosen: code, acceptLanguage: `${code}-XX,ar;q=0.7` }),
-      { code: 'ar', source: 'device' },
+      chooseLocale({ chosen: null, acceptLanguage: `${code};q=0.5,fr;q=0.9` }),
+      { code: 'fr', source: 'device' },
     );
-    assert.deepEqual(chooseLocale({ chosen: null, acceptLanguage: code }), { code: 'en', source: 'default' });
+    // And a browser that chose an offered language keeps it, whatever the device asks.
+    assert.deepEqual(
+      chooseLocale({ chosen: 'sw', acceptLanguage: `${code},fr;q=0.9` }),
+      { code: 'sw', source: 'chosen' },
+    );
   }
+  // The sentence the settings page prints for `default` is the true one here:
+  // a language this interface does not have yet, so it is in English.
+  assert.match(en['language.default'], /does not have yet, so it is in English/u);
+  assert.match(read('../app/language/page.tsx'), /: t\('language\.default'\)/u);
   assert.deepEqual(withheldLocales().map((l) => l.code).sort(), [...codes].sort());
 
   // Whatever is asked for, what comes back is something a reader can be shown.

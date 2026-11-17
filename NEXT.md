@@ -2618,6 +2618,18 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### Loose ends from the gutter and the companion pages, 2026-11-16
+
+- The three companion pages had fixed English tab titles; each now uses its own
+  translated heading (`generateMetadata`), so no new sentence was written.
+- `/saved`, `/support` and `/notifications` were not flagged when the gutter
+  bug was reintroduced. That was correct: they use `.page`, which carries its
+  own side padding and never had the bug.
+- `admin/subjects` had one card written as `card section`; it was the only one,
+  and under the old rule it had no side padding at all. It is a plain card now.
+- `npm run test:companion-browser` and `npm run test:edge-sweep` exist; both
+  still need `RESPONSIVE_PLAYWRIGHT` and `RESPONSIVE_CHROME` and say so.
+
 ### Four languages the site does not have yet, 2026-11-16
 
 The second question of the day: should the *rest* of the interface in Wolof,
@@ -2625,8 +2637,10 @@ Fulfulde, Bambara and Dhivehi fall back to English too? The owner said yes.
 Holding every part of a language that is still on offer would have produced a
 page that says `lang="wo"` and reads in English, so the four are withheld
 whole instead: out of the picker (47 languages), refused by `/api/locale`,
-never returned by `matchLocale()` — which means a device asking for Wolof then
-French gets French, the same as for any language the site lacks. They remain in
+never returned by `matchLocale()`. The first version let a device asking for
+Wolof then French fall through to French; the owner then chose English every
+time, so `chooseLocale()` stops at a withheld language and answers in English,
+for a device and for a stale cookie alike. They remain in
 the register (51), on the correction sheet with their drafts, and on `/language`
 at 0% with a link to that sheet. `/about` and the accessibility page said
 fifty-one languages and six right-to-left ones; both now say what is offered,
