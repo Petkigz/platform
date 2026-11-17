@@ -2692,8 +2692,11 @@ not saved.
   written; a wrong answer is saved, then changed, and the marking gives 2 of
   2; an emptied answer makes the attempt unanswered again; opening the page
   twice leaves one attempt; handing in opens no other; the practice attempt
-  is graded with no verdict; a late answer is refused. **Not yet run:** it
-  runs only in CI, on the push of this commit.
+  is graded with no verdict; a late answer is refused. Run `44087852527`,
+  PostgREST 16.6 on PostgreSQL 18.6: passed. The run before it failed, and
+  not on any of that: the walk counted the two refusals it provokes as
+  malformed requests, because the request server answers 400 to a check
+  violation. `classify` now reads the code before the status.
 - Web: `saveResponse` calls one function and no table; each refusal maps to a
   reason and leaks no database wording; a wiring test holds the page to one
   guarded `startAttempt` and lists every file that calls it.
@@ -2711,7 +2714,7 @@ is applied. Nobody should be given an account there until both are.
   waits and is refused, and the marked answer is untouched; an answer taken
   back just ahead of a submission leaves the attempt open and unanswered; of
   two submissions one marks and the other is refused. Passed locally on
-  PostgreSQL 16; it now runs in the race workflow beside the resume races.
+  PostgreSQL 16 and in the race workflow, run `44087852428`.
 
 **Not proven.** No button was pressed in a browser: the walk posts what the
 quiz posts, and reads the HTML. The quiz waiting for its own saves before
