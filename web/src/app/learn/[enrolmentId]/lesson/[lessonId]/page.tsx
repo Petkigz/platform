@@ -1,17 +1,27 @@
 import { fetchTranscripts } from '@/lib/transcripts';
 import { ArabicInline } from '@/app/_shared/arabic-text';
 import Link from 'next/link';
+import { cookies, headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import {
   canAccessLesson,
   fetchLesson,
-  formatDuration,
   nativeMediaKind,
-  RESOURCE_LABEL,
+  type ResourceType,
 } from '@/lib/lessons';
-import { MarkComplete } from '../../mark-complete';
+import {
+  LOCALE_COOKIE,
+  chooseLocale,
+  countLabel,
+  durationLabel,
+  formatNumber,
+  languageShownFor,
+  translator,
+  type MessageKey,
+} from '@/lib/i18n';
+import { MarkComplete, type MarkCompleteWords } from '../../mark-complete';
 import { fetchThread } from '@/lib/discussion';
 import { isFlagEnabled } from '@/lib/flags';
 import { Discussion } from './discussion';
@@ -57,6 +67,17 @@ type ProgressRow = {
   progress_percent: number;
 };
 
+/** The kind of each material, as a sentence in the catalogue. */
+const RESOURCE_KEY: Record<ResourceType, MessageKey> = {
+  video: 'lesson.typeVideo',
+  audio: 'lesson.typeAudio',
+  document: 'lesson.typeDocument',
+  worksheet: 'lesson.typeWorksheet',
+  link: 'lesson.typeLink',
+  quiz: 'lesson.typeQuiz',
+  other: 'lesson.typeOther',
+};
+
 /**
  * Open a lesson.
  *
@@ -75,6 +96,15 @@ type ProgressRow = {
  * resource list as though the lesson simply had no materials would be a lie of
  * omission: the materials exist, the reader just may not see them. So the page
  * asks `can_access_lesson` explicitly and says which situation it is in.
+ *
+ * **Language.** The page's own frame — breadcrumb, badges, headings, the kind of
+ * each material, the empty-list sentences and the row of buttons at the foot —
+ * is in the reader's language where that language has it (`lesson.ts`), and in
+ * English, marked as English, where it does not. Everything a client component
+ * says is still English for everybody and is marked so here: the players and
+ * their saved-place messages, the note for a recording that will not play, the
+ * report form, practice questions, notes, sources and the discussion. What a
+ * teacher wrote is shown as written.
  */
 export default async function LessonPage({
   params,
@@ -90,6 +120,27 @@ export default async function LessonPage({
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect(`/sign-in?next=/learn/${enrolmentId}/lesson/${lessonId}`);
+
+  // The same choice the dashboard and the course page make.
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code: locale } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  const shown = languageShownFor(locale, 'lesson');
+  const t = translator(shown.code);
+  const num = (value: number) => formatNumber(shown.code, value);
+  const mismatch = shown.code !== locale;
+  // For the parts of this page that are English whatever the reader chose.
+  const english = shown.code === 'en' ? {} : ({ lang: 'en', dir: 'ltr' } as const);
+  const markWords: MarkCompleteWords = {
+    mark: t('course.markComplete'),
+    undo: t('course.undo'),
+    saving: t('course.saving'),
+    unconfirmed: t('course.unconfirmed'),
+    reload: t('course.reload'),
+  };
 
   const { data: enrolmentData } = await supabase
     .from('course_enrolments')
@@ -232,6 +283,20 @@ export default async function LessonPage({
   const renditionsByAsset = groupByAsset(renditions);
   const standing = parseStanding(standingData);
 
+  // A player, or the note that stands in for one, speaks English and is marked
+  // as English on a page in another language. A plain name or link is the
+  // teacher's and is left alone.
+  const englishMaterials = new Set(
+    lesson.resources
+      .filter((r) =>
+        r.externalUrl
+          ? nativeMediaKind(r) !== null
+          : Boolean(r.mediaAssetId) &&
+            ((renditionsByAsset.get(r.mediaAssetId ?? '')?.length ?? 0) > 0 ||
+              noteFor(standing.get(r.id) ?? null) !== null))
+      .map((r) => r.id),
+  );
+
   // Said above the materials, and only when something in the lesson is not
   // playable: a learner who reads the first line and stops is the one who most
   // needs to know whether to wait or to tell somebody.
@@ -257,15 +322,22 @@ export default async function LessonPage({
     canDownload = saveStanding?.allowed === true;
   }
 
-  const courseTitle = enrolment.courses?.[0]?.title ?? 'the course';
-  const duration = formatDuration(lesson.durationSeconds);
+  const namedCourse = enrolment.courses?.[0]?.title ?? null;
+  // The players are English and are handed an English name for a course whose
+  // title could not be read, as before.
+  const courseTitle = namedCourse ?? 'the course';
+  const duration = durationLabel(shown.code, lesson.durationSeconds);
 
   return (
-    <div className="page lesson-page">
-      <nav className="crumbs" aria-label="Breadcrumb">
-        <Link href="/learn">Dashboard</Link>
+    <div
+      className="page lesson-page"
+      lang={mismatch ? shown.code : undefined}
+      dir={mismatch ? shown.dir : undefined}
+    >
+      <nav className="crumbs" aria-label={t('lesson.crumbs')}>
+        <Link href="/learn">{t('nav.learn')}</Link>
         <span aria-hidden>›</span>
-        <Link href={`/learn/${enrolmentId}`}>{courseTitle}</Link>
+        <Link href={`/learn/${enrolmentId}`}>{namedCourse ?? t('course.fallbackTitle')}</Link>
         <span aria-hidden>›</span>
         <span>{lesson.sectionTitle}</span>
       </nav>
@@ -281,33 +353,34 @@ export default async function LessonPage({
         <h1>
           <ArabicInline text={lesson.title} />
         </h1>
-        <div className="row" style={{ gap: '0.5rem', marginTop: '0.75rem' }}>
+        <div className="lesson-badges">
           {lesson.isPreview && previewsOn && (
-            <span className="badge neutral">Preview lesson</span>
+            <span className="badge neutral">{t('lesson.previewLesson')}</span>
           )}
           {done ? (
-            <span className="badge ok">Completed</span>
+            <span className="badge ok">{t('lesson.completed')}</span>
           ) : (
-            <span className="badge neutral">Not started</span>
+            <span className="badge neutral">{t('lesson.notStarted')}</span>
           )}
         </div>
       </div>
 
       {lesson.description && (
         <section className="card">
-          <p>{lesson.description}</p>
+          {/* The teacher's words, in the teacher's direction. */}
+          <p dir="auto">{lesson.description}</p>
         </section>
       )}
 
       {transcript && (
         <section className="card">
-          <h2>Transcript</h2>
+          <h2>{t('lesson.transcript')}</h2>
           <p style={{ whiteSpace: 'pre-wrap' }} dir="auto">{transcript}</p>
         </section>
       )}
 
       {summary && (
-        <div className="notice" style={{ marginBottom: '1rem' }}>
+        <div className="notice" style={{ marginBottom: '1rem' }} {...english}>
           <strong>{summary.heading}.</strong> {summary.sentence}
           {summary.tellSomeone && (
             <span style={{ display: 'block', marginTop: '0.5rem' }}>
@@ -322,28 +395,28 @@ export default async function LessonPage({
       )}
 
       <section className="card">
-        <h2>Materials</h2>
+        <h2>{t('lesson.materials')}</h2>
         {lesson.resources.length === 0 ? (
           // The two cases that produce an empty list look identical in the
           // data and mean opposite things. Say which one this is.
           entitled ? (
-            <p className="muted">
-              No materials have been attached to this lesson yet.
-            </p>
+            <p className="muted">{t('lesson.noMaterials')}</p>
           ) : (
             <p className="muted">
-              You do not have access to this lesson&rsquo;s materials. Enrol in{' '}
-              {courseTitle} to open them.
+              {namedCourse
+                ? t('lesson.noAccess', { course: namedCourse })
+                : t('lesson.noAccessUntitled')}
             </p>
           )
         ) : (
           <ul className="lessons">
             {lesson.resources.map((r) => {
               const nativeKind = nativeMediaKind(r);
+              const speaksEnglish = englishMaterials.has(r.id);
               return (
                 <li key={r.id}>
-                  <span className="n">{RESOURCE_LABEL[r.resourceType]}</span>
-                  <span className="t" style={{ minWidth: 0, flex: 1 }}>
+                  <span className="n">{t(RESOURCE_KEY[r.resourceType])}</span>
+                  <span className="t" {...(speaksEnglish ? english : {})}>
                     {r.externalUrl && nativeKind === 'video' ? (
                       <VideoWithResume
                         name={r.displayName}
@@ -423,7 +496,7 @@ export default async function LessonPage({
                     )}
                   </span>
                   {r.accessClassification === 'public_preview' && previewsOn && (
-                    <span className="badge neutral">Preview</span>
+                    <span className="badge neutral">{t('course.preview')}</span>
                   )}
                 </li>
               );
@@ -433,11 +506,13 @@ export default async function LessonPage({
       </section>
 
       {entitled && practiceItems.length > 0 && (
-        <PracticeCheck items={practiceItems} />
+        <div {...english}>
+          <PracticeCheck items={practiceItems} />
+        </div>
       )}
 
       {provenanceOn && (
-        <section className="card">
+        <section className="card" {...english}>
           <h2>Sources and references</h2>
           {sources.length === 0 ? (
             <p className="muted">No references are listed for this lesson yet.</p>
@@ -462,24 +537,27 @@ export default async function LessonPage({
       )}
 
       {studyTools && (
-        <StudyTools
-          enrolmentId={enrolmentId}
-          lessonId={lesson.id}
-          initialNote={studyTools.note}
-          initiallyBookmarked={studyTools.bookmarked}
-        />
+        <div {...english}>
+          <StudyTools
+            enrolmentId={enrolmentId}
+            lessonId={lesson.id}
+            initialNote={studyTools.note}
+            initiallyBookmarked={studyTools.bookmarked}
+          />
+        </div>
       )}
 
       {entitled && !done && (
         <section className="card">
-          <div className="row">
+          <div className="lesson-actions">
             <MarkComplete
               enrolmentId={enrolment.id}
               lessonId={lesson.id}
               initiallyDone={false}
+              words={markWords}
             />
             <Link className="btn secondary" href={`/learn/${enrolmentId}`}>
-              Back to course
+              {t('lesson.backToCourse')}
             </Link>
           </div>
         </section>
@@ -487,7 +565,7 @@ export default async function LessonPage({
 
       {entitled && done && (
         <p className="muted" style={{ marginBottom: 0 }}>
-          Marked complete.
+          {t('lesson.markedComplete')}
         </p>
       )}
 
@@ -499,8 +577,15 @@ export default async function LessonPage({
           enrolmentId={enrolmentId}
           previous={here.previous}
           next={here.next}
-          index={here.index}
-          total={here.total}
+          words={{
+            label: t('lesson.navLabel'),
+            contents: t('lesson.contents'),
+            back: t('lesson.backToCourse'),
+            at:
+              here.index > 0
+                ? t('learn.carryMeta', { index: num(here.index), total: num(here.total) })
+                : countLabel(shown.code, here.total, { one: 'card.lessonsOne', other: 'card.lessonsOther' }),
+          }}
         />
       )}
 
@@ -511,17 +596,32 @@ export default async function LessonPage({
         is the door that was missing.
       */}
       {entitled && (
-        <section className="section" style={{ borderTop: '1px solid var(--line, #e6e8e6)', paddingTop: '1rem' }}>
+        <section
+          className="section"
+          style={{ borderTop: '1px solid var(--line, #e6e8e6)', paddingTop: '1rem' }}
+          {...english}
+        >
           <ReportForm lessonId={lesson.id} />
         </section>
       )}
 
-      <Discussion
-        lessonId={lesson.id}
-        posts={thread}
-        enabled={discussionOn}
-        canPost={entitled}
-      />
+      {discussionOn ? (
+        <div {...english}>
+          <Discussion
+            lessonId={lesson.id}
+            posts={thread}
+            enabled={discussionOn}
+            canPost={entitled}
+          />
+        </div>
+      ) : (
+        // What ships, since the switch is off: the same card the component
+        // draws when it is closed, said in the reader's language.
+        <section className="card">
+          <h2>{t('lesson.discussion')}</h2>
+          <p className="muted">{t('lesson.discussionClosed')}</p>
+        </section>
+      )}
     </div>
   );
 }

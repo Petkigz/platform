@@ -95,6 +95,55 @@ try {
   assert.ok(!multiHtml.includes('shared between recordings'), 'recordings have separate saved places');
   multipleMedia = false;
   console.log('Lesson route HTTP smoke passed: anonymous redirect, entitlement-gated transcript and outline, version mismatch, separate recording players and no-store. Synthetic data only.');
+
+  // The page's frame, in the reader's language where that language has it and
+  // in English, marked as English, where it does not. What the reader is shown
+  // of this page runs from its wrapper to the footer; the response also
+  // carries the 404 page as a boundary, which is English and not this page's.
+  const visible = (html) => html.slice(html.indexOf('lesson-page'), html.indexOf('<footer')).replace(/<script[\s\S]*?<\/script>/g, '');
+  const wrapper = (html) => html.match(/<div class="page lesson-page"[^>]*>/)?.[0] ?? '';
+  entitled = true; mismatch = false;
+  {
+    const html = await (await request({ cookie })).text(); const body = visible(html);
+    assert.equal(wrapper(html), '<div class="page lesson-page">');
+    for (const text of ['aria-label="Breadcrumb"', '>My learning<', 'Not started', '>Transcript<', '>Materials<', '>Video<', 'Mark complete', 'Back to course', 'aria-label="Lesson navigation"', 'Course contents', 'Lesson 1 of 2', '>Discussion<', 'Discussion is not open on this lesson.']) assert.ok(body.includes(text), `English: ${text}`);
+    assert.equal(body.includes('lang="en"'), false, 'an English lesson marks part of itself as English');
+    assert.ok(body.includes('2 min'), 'the length of the lesson is missing');
+  }
+  {
+    const html = await (await request({ cookie, 'accept-language': 'ar' })).text(); const body = visible(html);
+    assert.match(html, /<html[^>]*lang="ar"[^>]*dir="rtl"/); assert.equal(wrapper(html), '<div class="page lesson-page">');
+    for (const text of ['aria-label="مسار التنقل"', '>تعلّمي<', 'لم يبدأ', '>النص المكتوب<', '>المواد<', '>فيديو<', 'تحديد كمكتمل', 'العودة إلى الدورة', 'aria-label="التنقل بين الدروس"', 'محتويات الدورة', 'الدرس 1 من 2', '>النقاش<', 'النقاش غير مفتوح في هذا الدرس.']) assert.ok(body.includes(text), `Arabic: ${text}`);
+    for (const text of ['Breadcrumb', 'My learning', 'Not started', 'Transcript', 'Materials', '>Video<', 'Mark complete', 'Back to course', 'Lesson navigation', 'Course contents', 'Lesson 1 of', 'Discussion']) assert.equal(body.includes(text), false, `Arabic lesson still says "${text}"`);
+    // The length of the lesson is said by the language's own locale data.
+    assert.ok(body.includes('2 د'), 'the length of the lesson is not in Arabic'); assert.equal(body.includes('2 min'), false);
+    // The player and the report form are English, and say so.
+    assert.match(body, /<span class="t"[^>]*lang="en" dir="ltr"[^>]*>/);
+    assert.match(body, /<section class="section"[^>]*lang="en" dir="ltr"/);
+    // What the teacher wrote is not marked as anything.
+    assert.match(body, /<h1>[^<]*(?:<[^>]+>)?Synthetic lesson/);
+    entitled = false;
+    const denied = visible(await (await request({ cookie, 'accept-language': 'ar' })).text());
+    assert.equal(denied.includes('تحديد كمكتمل'), false); assert.equal(denied.includes('التنقل بين الدروس'), false);
+    entitled = true;
+  }
+  {
+    const html = await (await request({ cookie: `${cookie}; ayahspring_locale=fr`, 'accept-language': 'ar' })).text(); const body = visible(html);
+    assert.match(html, /<html[^>]*lang="fr"/);
+    for (const text of ['Fil d’Ariane', 'Non commencée', '>Supports<', '>Vidéo<', 'Marquer comme terminée', 'Retour au cours', 'Leçon 1 sur 2', 'La discussion n’est pas ouverte pour cette leçon.']) assert.ok(body.includes(text) || body.includes(text.replace('’', '&#x27;')), `French: ${text}`);
+  }
+  for (const [code, dir] of [['ha', 'ltr'], ['ps', 'rtl']]) {
+    const html = await (await request({ cookie, 'accept-language': code })).text(); const body = visible(html);
+    assert.match(html, new RegExp(`<html[^>]*lang="${code}"[^>]*dir="${dir}"`));
+    assert.equal(wrapper(html), '<div class="page lesson-page" lang="en" dir="ltr">');
+    assert.ok(body.includes('2 min'), `${code}: an English lesson gives its length in another language`);
+    for (const text of ['aria-label="Breadcrumb"', '>Materials<', 'Mark complete', 'Lesson 1 of 2', 'Discussion is not open on this lesson.']) assert.ok(body.includes(text), `${code}: ${text}`);
+  }
+  {
+    const html = await (await request({ cookie, 'accept-language': 'wo, fr' })).text();
+    assert.match(html, /<html[^>]*lang="en"/); assert.ok(visible(html).includes('>Materials<')); assert.equal(visible(html).includes('Supports'), false);
+  }
+  console.log('Lesson languages passed: English, Arabic (frame translated, player and report form marked English), French by cookie, Hausa and Pashto frames with an English lesson, Wolof to English. No translation here has been read by a speaker.');
   if (process.env.RESPONSIVE_PLAYWRIGHT && process.env.RESPONSIVE_CHROME) {
     const { chromium } = await import(pathToFileURL(process.env.RESPONSIVE_PLAYWRIGHT).href);
     browser = await chromium.launch({ executablePath: process.env.RESPONSIVE_CHROME, headless: true, args: ['--no-sandbox'] });
@@ -114,10 +163,53 @@ try {
       assert.ok(metrics.scroll <= width + 1, `${width}: page overflow ${metrics.scroll}`);
       assert.ok(metrics.page >= width - 1, `${width}: lesson does not fill viewport`);
       assert.ok(metrics.video > 0 && metrics.videoRight <= width + 1, `${width}: video outside viewport`);
+      // The state badge is as wide as its word, the mark-complete label is on
+      // one line, and the tick box sits beside its label rather than above it.
+      const fit = await page.evaluate(() => {
+        const badge = document.querySelector('.lesson-badges .badge'); const mark = document.querySelector('.lesson-actions button');
+        const box = document.querySelector('.lesson-page input[type="checkbox"]');
+        const range = document.createRange(); range.selectNodeContents(badge);
+        return { badge: badge.getBoundingClientRect().width - range.getBoundingClientRect().width, lines: (() => { const words = document.createRange(); words.selectNodeContents(mark); return new Set([...words.getClientRects()].map((r) => Math.round(r.top))).size; })(), box: box ? box.getBoundingClientRect().width : null };
+      });
+      assert.ok(fit.badge < 24, `${width}: the state badge is ${fit.badge}px wider than its word`);
+      assert.ok(fit.lines <= 1, `${width}: the mark-complete label is on ${fit.lines} lines`);
+      assert.ok(fit.box === null || fit.box < 30, `${width}: a tick box is ${fit.box}px wide`);
+      // "Video" used to be printed in a column sized for a lesson number.
+      assert.equal(await page.evaluate(() => [...document.querySelectorAll('.lesson-page .lessons .n')].filter((el) => el.scrollWidth > el.clientWidth + 1).length), 0, `${width}: the kind of a material spills out of its column`);
       assert.equal(await page.getByRole('navigation', { name: 'Breadcrumb' }).count(), 1);
       assert.equal(await page.getByText('Synthetic private transcript.').count(), 1);
       console.log(`Synthetic lesson ${width}: no overflow, full-width layout, video fits`);
       await context.close();
+    }
+    // The translated frame in the other direction and with the longest words.
+    for (const [code, dir] of [['ar', 'rtl'], ['ta', 'ltr']]) {
+      for (const width of [320, 390, 1440]) {
+        const context = await browser.newContext({ viewport: { width, height: 900 }, locale: 'en' });
+        await context.addCookies([{ name: 'sb-127-auth-token', value: `base64-${encode(session)}`, url: `http://localhost:${port}` }, { name: 'ayahspring_locale', value: code, url: `http://localhost:${port}` }]);
+        const page = await context.newPage();
+        await page.route('https://example.invalid/**', (route) => route.abort());
+        await page.goto(url, { waitUntil: 'networkidle' });
+        const m = await page.evaluate(() => {
+          const lesson = document.querySelector('.lesson-page'); const nav = lesson.querySelector('.lesson-nav');
+          const arrows = [...nav.querySelectorAll('.lesson-nav-dir')].map((el) => getComputedStyle(el).transform);
+          const sides = [...nav.querySelectorAll('.lesson-nav-side')].map((el) => el.getBoundingClientRect().left);
+          return { scroll: document.documentElement.scrollWidth, dir: getComputedStyle(lesson).direction, arrows, sides,
+            english: [...lesson.querySelectorAll('[lang="en"]')].map((el) => getComputedStyle(el).direction),
+            clipped: [...lesson.querySelectorAll('.badge, .lessons .n, .btn:not(.lesson-nav .btn)')].filter((el) => el.scrollWidth > el.clientWidth + 1).map((el) => el.textContent),
+            kind: Math.max(...[...lesson.querySelectorAll('.lessons .n')].map((el) => el.getBoundingClientRect().right - el.getBoundingClientRect().left)),
+            overlap: [...lesson.querySelectorAll('.lessons li')].some((li) => { const n = li.querySelector('.n').getBoundingClientRect(); const t = li.querySelector('.t').getBoundingClientRect(); return n.width > 0 && t.width > 0 && n.left < t.right && t.left < n.right && n.top < t.bottom && t.top < n.bottom; }) };
+        });
+        assert.ok(m.scroll <= width + 1, `${code} ${width}: page overflow ${m.scroll}`);
+        assert.equal(m.dir, dir, `${code} ${width}: lesson direction`);
+        assert.ok(m.english.length >= 2 && m.english.every((d) => d === 'ltr'), `${code} ${width}: an English part is laid out ${m.english}`);
+        assert.deepEqual(m.clipped, [], `${code} ${width}: a label is cut off`);
+        assert.equal(m.overlap, false, `${code} ${width}: the kind of a material runs into the material`);
+        // Arrows are turned round right-to-left and left alone otherwise.
+        assert.ok(m.arrows.length === 2 && m.arrows.every((a) => (dir === 'rtl') === a.startsWith('matrix(-1')), `${code} ${width}: arrows ${m.arrows}`);
+        if (process.env.RESPONSIVE_SCREENSHOTS) await page.screenshot({ path: resolve(process.env.RESPONSIVE_SCREENSHOTS, `lesson-${code}-${width}.png`), fullPage: true });
+        await context.close();
+      }
+      console.log(`Synthetic lesson ${code}: 320, 390 and 1440 wide, no overflow, no clipped label, English parts left to right, arrows ${dir === 'rtl' ? 'turned round' : 'as typed'}`);
     }
   }
 } catch (e) { console.error(logs); throw e; }

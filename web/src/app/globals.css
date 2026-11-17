@@ -1185,6 +1185,10 @@ footer a { color: var(--text-soft); }
   min-width: 0;
 }
 .lesson-nav-dir { flex: none; }
+/* The arrows are typed pointing left for "back" and right for "on". Laid out
+   right to left, back is on the right: turn them round, and only there — an
+   English page inside a right-to-left frame is left-to-right and keeps them. */
+.lesson-nav-dir:dir(rtl) { transform: scaleX(-1); }
 .lesson-nav-at {
   margin: 0;
   font-size: 0.85rem;
@@ -1912,6 +1916,28 @@ html[data-motion='reduce'] *::after {
 .lesson-page > .card > p { max-width: 72ch; overflow-wrap: anywhere; }
 .lesson-page .crumbs { font-size: .9rem; }
 .lesson-page .crumbs span, .lesson-page .crumbs a { overflow-wrap: anywhere; }
+/* In a course outline the first column of a row is a number; here it is a
+   word — "Video", "Worksheet", and longer in other languages — and it was being
+   printed in the number's 1.6rem and running into the material beside it. It
+   takes the width of its word. On a phone it goes on a line of its own so the
+   player below has the whole card. */
+.lesson-page .lessons .n { width: auto; min-width: 1.6rem; }
+.lesson-page .lessons .t { flex: 1; min-width: 0; }
+.lesson-page .lessons li { align-items: flex-start; }
+@media (max-width: 40rem) {
+  .lesson-page .lessons li { flex-wrap: wrap; }
+  .lesson-page .lessons .t { flex: 1 1 100%; }
+}
+/* Two rows on this page used `.row`, which is a form row: it pins its first
+   child to 6.5rem for a label. Here the first child was a badge, drawn as a
+   pill three times the width of its word, and the mark-complete control,
+   squeezed until its label broke over two lines. */
+.lesson-badges { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+.lesson-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1rem; }
+.lesson-actions .btn { width: auto; margin-top: 0; }
+/* Every input is given the full width of its line, which for a tick box means
+   a box alone in the middle of a row above its own label. */
+.lesson-page input[type="checkbox"] { width: auto; margin: 0; }
 
 /* Enrolled course: wide enough for lesson lists on larger displays, while
    long teacher-written titles and the progress control can wrap on a phone. */

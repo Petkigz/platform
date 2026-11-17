@@ -56,7 +56,9 @@ test('the summary is said above the materials, and only to somebody entitled', (
   // A learner who reads the first line and stops is the one who most needs to
   // know whether to wait or to tell somebody.
   const summaryAt = lessonPage.indexOf('{summary && (');
-  const materialsAt = lessonPage.indexOf('<h2>Materials</h2>');
+  // The heading is a catalogue sentence now, so that it is said in the
+  // reader's language; it is still the one heading above the materials.
+  const materialsAt = lessonPage.indexOf("<h2>{t('lesson.materials')}</h2>");
   assert.ok(summaryAt > 0 && materialsAt > summaryAt, 'the summary comes before Materials');
   assert.match(lessonPage, /const summary = entitled/);
 });

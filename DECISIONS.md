@@ -7897,7 +7897,8 @@ Somali, Igbo, Yoruba, Hausa, Kinyarwanda, Luganda, Lingala, Malagasy, Chichewa,
 Shona, Sesotho, Zulu, Xhosa, Pashto, Sinhala and Burmese. Readers of those
 languages see those screens in English and the rest of the interface in their
 own language; the language page shows 71% for each (64% once the learner
-dashboard was added, 59% once the course page was; both below). The drafts are kept for a
+dashboard was added, 59% once the course page was, 55% once the lesson page
+was; all below). The drafts are kept for a
 reviewer and are not shown to learners. A language is released by removing its
 line from `web/src/lib/i18n/messages/held.ts` once a first-language speaker's
 review of that part has been applied.
@@ -7937,7 +7938,8 @@ The rule below (a new screen is not written for a language with a part held)
 has a cost that grows with every screen. Nineteen languages are in the picker
 with their navigation, sign-in, catalogue and front page translated and
 everything since in English: 71% on the language page when the companion tools
-were held, 64% after the learner dashboard, **59% after the course page**.
+were held, 64% after the learner dashboard, 59% after the course page,
+**55% after the lesson page** (192 of 347 sentences).
 
 A test refuses to offer a language "most of whose screens are English". Its
 floor was 60. The course page crossed it, and **the builder moved the floor to
@@ -7945,9 +7947,11 @@ floor was 60. The course page crossed it, and **the builder moved the floor to
 course page untranslated for the twenty-seven languages that can have it. That
 was not the owner's decision and is recorded here as such.
 
-It should not be moved again without one. The lesson page, written the same
-way, puts the nineteen near 53%; the assessment and assignment pages after it
-put them under half, and the test will fail on purpose. The choices then:
+It should not be moved again without one, and has not been. The lesson page
+(2026-11-17) put the nineteen at 55%. The test fails at 388 sentences,
+forty-one more than there are; the assessment and assignment pages, written
+the same way, will very probably cross that, and the test will fail on
+purpose. Those pages are not started. The choices:
 
 1. **Keep them in the picker with the falling number.** The language page
    already tells each reader the percentage, in their own language. The floor
@@ -7960,6 +7964,17 @@ put them under half, and the test will fail on purpose. The choices then:
    before signing in, where these languages are complete, and say so on the
    language page. Honest only if the sentence there changes with it.
 4. **Find speakers**, which is what ends the question for a language.
+
+**A second check, also changed by the builder (2026-11-17).** The same test
+requires an offered language to have 80% of its sentences *written*. It counted
+the screens deliberately left unwritten for a held language as gaps, passed at
+84% after the course page, and failed at 78% after the lesson page. It now
+leaves those screens out of the total, so it measures what its comment said it
+did: whether a language is unfinished, not whether it is held. A held language
+therefore always passes it, and the half floor above is the only check on how
+much English the nineteen show. If the owner chooses option 1 the half floor
+goes and nothing in the tests limits it; that is the cost of that option and
+should be chosen knowingly.
 
 ## New screens are not written in a language that has anything held — **DECIDED 2026-11-16**
 
@@ -7982,8 +7997,9 @@ for each of the nineteen, from 71%).
 
 The course page and the new-account prompt followed on the same rule the same
 day: twenty-three more sentences (`course.ts`), the same twenty-seven
-languages, 59% for the nineteen. `UNWRITTEN_WHILE_HELD` is now `learn` and
-`course`.
+languages, 59% for the nineteen. The lesson page followed on 2026-11-17:
+twenty-two sentences (`lesson.ts`), the same twenty-seven languages, 55% for
+the nineteen. `UNWRITTEN_WHILE_HELD` is now `learn`, `course` and `lesson`.
 
 **The rule going forward.** A part named in `UNWRITTEN_WHILE_HELD`
 (`web/src/lib/i18n/messages/held.ts`) may be absent from a language that has

@@ -277,6 +277,7 @@ const SECTION_LABELS: Record<string, string> = {
   companion: 'Prayer times, the Hijri date and the counter',
   learn: 'The learner dashboard',
   course: 'The course page',
+  lesson: 'The lesson page',
 };
 
 export const SECTIONS: Section[] = (() => {

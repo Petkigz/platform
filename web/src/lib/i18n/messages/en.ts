@@ -442,6 +442,30 @@ export const en = {
     'Could not confirm whether progress was saved. Reload this page to check before trying again.',
   'course.reload': 'Reload page',
   'course.back': 'Back to my learning',
+
+  // The lesson page's own frame. Same twenty-seven languages (`lesson.ts`).
+  'lesson.crumbs': 'Breadcrumb',
+  'lesson.previewLesson': 'Preview lesson',
+  'lesson.completed': 'Completed',
+  'lesson.notStarted': 'Not started',
+  'lesson.transcript': 'Transcript',
+  'lesson.materials': 'Materials',
+  'lesson.noMaterials': 'No materials have been attached to this lesson yet.',
+  'lesson.noAccess': 'You do not have access to this lesson’s materials. Enrol in {course} to open them.',
+  'lesson.noAccessUntitled': 'You do not have access to this lesson’s materials. Enrol in the course to open them.',
+  'lesson.typeVideo': 'Video',
+  'lesson.typeAudio': 'Audio',
+  'lesson.typeDocument': 'Document',
+  'lesson.typeWorksheet': 'Worksheet',
+  'lesson.typeLink': 'Link',
+  'lesson.typeQuiz': 'Quiz',
+  'lesson.typeOther': 'Resource',
+  'lesson.backToCourse': 'Back to course',
+  'lesson.markedComplete': 'Marked complete.',
+  'lesson.navLabel': 'Lesson navigation',
+  'lesson.contents': 'Course contents',
+  'lesson.discussion': 'Discussion',
+  'lesson.discussionClosed': 'Discussion is not open on this lesson.',
 } as const;
 
 export type MessageKey = keyof typeof en;

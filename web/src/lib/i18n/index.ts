@@ -69,17 +69,18 @@ const COMPANION_PREFIX = 'companion.';
 /**
  * Sentences only a server-rendered page reads.
  *
- * The learner dashboard and the course page are Server Components: their words
- * are in the HTML by the time a browser sees it, and no client component asks
- * for one. Fifty-three sentences in the catalogue every page carries would be
- * paid for by every reader of the front page and used by none of them. The two
+ * The learner dashboard, the course page and the lesson page's frame are Server
+ * Components: their words are in the HTML by the time a browser sees it, and no
+ * client component asks for one. Seventy-five sentences in the catalogue every
+ * page carries would be paid for by every reader of the front page and used by
+ * none of them. The two
  * client controls on those pages (mark complete, the learner-profile prompt)
  * are handed their strings as props instead. If a client component ever asks
  * for one of these keys it gets English — the sentence is not in what it was
  * sent — so a test forbids it; the other fix is to take the prefix out of this
  * list.
  */
-const SERVER_ONLY_PREFIXES: readonly string[] = ['learn.', 'course.'];
+const SERVER_ONLY_PREFIXES: readonly string[] = ['learn.', 'course.', 'lesson.'];
 
 /** Everything a client component outside the companion pages can ask for. */
 export function shellMessagesFor(code: LocaleCode): Partial<Messages> {
@@ -305,6 +306,35 @@ export function formatNumber(code: LocaleCode, value: number): string {
     return new Intl.NumberFormat(code).format(value);
   } catch {
     return String(value);
+  }
+}
+
+/**
+ * How long something lasts — "2 min", "٢ دقیقه", "2 мин".
+ *
+ * The unit is not a sentence in the catalogue. It comes from the same locale
+ * data as the digits, which is maintained by people who write these languages
+ * rather than by this project; where that data has no abbreviation of its own
+ * (Tajik, at the time of writing) it gives the international "min" and "s".
+ * Nothing is returned for a missing or zero length, so the caller prints
+ * nothing rather than "0 s".
+ */
+export function durationLabel(code: LocaleCode, seconds: number | null): string | null {
+  if (seconds == null || !Number.isFinite(seconds) || seconds <= 0) return null;
+  let m = Math.floor(seconds / 60);
+  let s = Math.round(seconds % 60);
+  if (s === 60) { m += 1; s = 0; }
+  const parts: Array<[number, 'minute' | 'second']> = [];
+  if (m > 0) parts.push([m, 'minute']);
+  if (s > 0 || m === 0) parts.push([s, 'second']);
+  try {
+    const said = parts.map(([value, unit]) =>
+      new Intl.NumberFormat(code, { style: 'unit', unit, unitDisplay: 'short' }).format(value));
+    return said.length === 1
+      ? said[0]!
+      : new Intl.ListFormat(code, { style: 'narrow', type: 'unit' }).format(said);
+  } catch {
+    return parts.map(([value, unit]) => `${value} ${unit === 'minute' ? 'min' : 's'}`).join(' ');
   }
 }
 

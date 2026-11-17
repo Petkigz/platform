@@ -85,7 +85,7 @@ export const HELD_FOR_REVIEW: Partial<Record<LocaleCode, readonly string[]>> = {
  * it like any other. The audit then reports them as missing, which is the
  * reminder to ask that speaker for them.
  */
-export const UNWRITTEN_WHILE_HELD: readonly string[] = ['learn', 'course'];
+export const UNWRITTEN_WHILE_HELD: readonly string[] = ['learn', 'course', 'lesson'];
 
 /** Whether this sentence is deliberately absent from this language's file. */
 export function isUnwritten(code: string, key: string): boolean {

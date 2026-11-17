@@ -19,52 +19,65 @@ import type { OutlineStep } from '@/lib/outline';
  * The counter in the middle is left out of the buttons and out of the reading
  * order of the links: it is context, not an action, so it is plain text with a
  * `tabular-nums` figure.
+ *
+ * **The words come from the page**, in the language the page is shown in. The
+ * arrows are drawn for a left-to-right reader and are turned round by the
+ * stylesheet when the row is laid out right to left (`.lesson-nav-dir`), so
+ * "previous" points back the way the reader came in Arabic too. They are
+ * decoration: the link's name is the lesson's title.
  */
+export type LessonNavWords = {
+  /** The name of the row, for a screen reader. */
+  label: string;
+  /** On the back button of the first lesson. */
+  contents: string;
+  /** On the forward button of the last lesson. */
+  back: string;
+  /** "Lesson 3 of 12", or "12 lessons" when this lesson is not in the outline. */
+  at: string;
+};
+
 export function LessonNav({
   enrolmentId,
   previous,
   next,
-  index,
-  total,
+  words,
 }: {
   enrolmentId: string;
   previous: OutlineStep | null;
   next: OutlineStep | null;
-  index: number;
-  total: number;
+  words: LessonNavWords;
 }) {
   const href = (lessonId: string) => `/learn/${enrolmentId}/lesson/${lessonId}`;
 
   return (
-    <nav className="lesson-nav" aria-label="Lesson navigation">
+    <nav className="lesson-nav" aria-label={words.label}>
       <div className="lesson-nav-side">
         {previous ? (
           <Link className="btn secondary" href={href(previous.id)}>
-            <span className="lesson-nav-dir">&larr;</span>
+            <span className="lesson-nav-dir" aria-hidden>&larr;</span>
             <span className="lesson-nav-label">{previous.title}</span>
           </Link>
         ) : (
           <Link className="btn ghost" href={`/learn/${enrolmentId}`}>
-            <span className="lesson-nav-dir">&larr;</span>
-            <span className="lesson-nav-label">Course contents</span>
+            <span className="lesson-nav-dir" aria-hidden>&larr;</span>
+            <span className="lesson-nav-label">{words.contents}</span>
           </Link>
         )}
       </div>
 
-      <p className="lesson-nav-at">
-        {index > 0 ? `Lesson ${index} of ${total}` : `${total} lessons`}
-      </p>
+      <p className="lesson-nav-at">{words.at}</p>
 
       <div className="lesson-nav-side lesson-nav-right">
         {next ? (
           <Link className="btn" href={href(next.id)}>
             <span className="lesson-nav-label">{next.title}</span>
-            <span className="lesson-nav-dir">&rarr;</span>
+            <span className="lesson-nav-dir" aria-hidden>&rarr;</span>
           </Link>
         ) : (
           <Link className="btn" href={`/learn/${enrolmentId}`}>
-            <span className="lesson-nav-label">Back to course</span>
-            <span className="lesson-nav-dir">&rarr;</span>
+            <span className="lesson-nav-label">{words.back}</span>
+            <span className="lesson-nav-dir" aria-hidden>&rarr;</span>
           </Link>
         )}
       </div>

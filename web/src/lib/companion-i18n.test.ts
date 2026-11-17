@@ -112,14 +112,14 @@ test('no other page pays for the companion sentences', () => {
     const companion = companionMessagesFor(locale.code);
     assert.equal(Object.keys(shell).some((k) => k.startsWith('companion.')), false, `${locale.code} shell carries companion sentences`);
     assert.equal(Object.keys(companion).every((k) => k.startsWith('companion.')), true);
-    // Nothing is lost between the halves. The third is the learner dashboard
-    // and the course page, which are rendered on the server and so are in
-    // neither (see `SERVER_ONLY_PREFIXES`).
+    // Nothing is lost between the halves. The third is the learner dashboard,
+    // the course page and the lesson page's frame, which are rendered on the
+    // server and so are in neither (see `SERVER_ONLY_PREFIXES`).
     const whole = messagesFor(locale.code);
-    const onServer = (k: string) => k.startsWith('learn.') || k.startsWith('course.');
+    const onServer = (k: string) => ['learn.', 'course.', 'lesson.'].some((prefix) => k.startsWith(prefix));
     const serverOnly = Object.fromEntries(Object.entries(whole).filter(([k]) => onServer(k)));
-    assert.equal(Object.keys(serverOnly).length, 53);
-    assert.equal(Object.keys(shell).some(onServer), false, `${locale.code} shell carries dashboard or course sentences`);
+    assert.equal(Object.keys(serverOnly).length, 75);
+    assert.equal(Object.keys(shell).some(onServer), false, `${locale.code} shell carries dashboard, course or lesson sentences`);
     assert.deepEqual({ ...shell, ...companion, ...serverOnly }, whole);
   }
   for (const [page, component] of [[prayerPage, 'PrayerTimesTool'], [hijriPage, 'HijriDate'], [counterPage, 'Counter']] as const) {
