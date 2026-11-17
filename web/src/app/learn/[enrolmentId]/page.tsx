@@ -11,13 +11,13 @@ import { fetchAssessmentsForVersion } from '@/lib/assessment';
 import { isFlagEnabled } from '@/lib/flags';
 import { LOCALE_COOKIE, chooseLocale, formatNumber, languageShownFor, translator } from '@/lib/i18n';
 import { MarkComplete, type MarkCompleteWords } from './mark-complete';
+import { LocalTime } from '@/components/local-time';
 import { CohortMemberships } from './cohort-memberships';
 import type { CourseCohort } from '@/lib/cohorts';
 import {
   assignmentDeadline,
   fetchAssignmentSubmissionsForLearner,
   fetchCourseAssignments,
-  SUBMISSION_STATUS_LABEL,
 } from '@/lib/course-assignments';
 import { one, type Embedded } from '@/lib/embed';
 
@@ -368,34 +368,65 @@ export default async function CourseViewPage({
       )}
 
       {visibleAssignments.length > 0 && (
-        <div {...english}>
+        <div>
           <div className="outline-h">
-            <h3>Assignments</h3>
+            <h3>{t('assign.heading')}</h3>
           </div>
           <div className="card">
             <ul className="lessons">
               {visibleAssignments.map((assignment) => {
                 const submission = submissionByAssignment.get(assignment.id);
                 const deadline = assignmentDeadline(assignment, enrolment.enrolled_at);
+                const dueSentence = t('assign.due');
+                const dueAt = dueSentence.indexOf('{date}');
                 return (
                   <li key={assignment.id}>
                     <span className="t">
-                      <Link href={`/learn/${enrolment.id}/assignment/${assignment.id}`}>
+                      <Link href={`/learn/${enrolment.id}/assignment/${assignment.id}`} dir="auto">
                         {assignment.title}
                       </Link>
                       <span className="muted" style={{ display: 'block', fontSize: '.85rem' }}>
-                        {deadline ? `Due ${deadline.toLocaleString()}` : 'No deadline'}
-                        {submission?.isLate ? ' · submitted late' : ''}
+                        {deadline ? (
+                          <>
+                            {dueAt === -1 ? `${dueSentence} ` : dueSentence.slice(0, dueAt)}
+                            <LocalTime iso={deadline.toISOString()} locale={shown.code} />
+                            {dueAt === -1 ? '' : dueSentence.slice(dueAt + '{date}'.length)}
+                          </>
+                        ) : (
+                          t('assign.noDeadline')
+                        )}
+                        {submission?.isLate ? ` · ${t('assign.submittedLate')}` : ''}
                       </span>
                     </span>
                     <span className="badge neutral">
-                      {submission ? SUBMISSION_STATUS_LABEL[submission.status] : 'Not started'}
+                      {t(
+                        !submission
+                          ? 'assign.notStarted'
+                          : submission.status === 'graded'
+                            ? 'assign.marked'
+                            : submission.status === 'submitted'
+                              ? 'assign.statusSubmitted'
+                              : 'assign.statusDraft',
+                      )}
                     </span>
                     {submission?.scoreEarned !== null && submission?.scoreEarned !== undefined && (
-                      <span className="badge">{submission.scoreEarned}{assignment.pointsPossible ? ` / ${assignment.pointsPossible}` : ''}</span>
+                      <span className="badge">
+                        {assignment.pointsPossible
+                          ? t('assess.score', {
+                              earned: num(submission.scoreEarned),
+                              possible: num(assignment.pointsPossible),
+                            })
+                          : t('assign.score', { earned: num(submission.scoreEarned) })}
+                      </span>
                     )}
                     <Link href={`/learn/${enrolment.id}/assignment/${assignment.id}`} className="btn tiny secondary">
-                      {submission?.status === 'graded' ? 'View feedback' : submission?.status === 'submitted' ? 'View submission' : 'Open'}
+                      {t(
+                        submission?.status === 'graded'
+                          ? 'assign.viewFeedback'
+                          : submission?.status === 'submitted'
+                            ? 'assign.viewSubmission'
+                            : 'assign.open',
+                      )}
                     </Link>
                   </li>
                 );

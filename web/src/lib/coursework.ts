@@ -221,13 +221,21 @@ export async function removeCourseworkFile(
 
 export type AssignmentActionResponse =
   | { ok: true; id?: string; revisionNumber?: number }
-  | { ok: false; message: string };
+  | { ok: false; code: string; message: string };
 
-/** A lost or malformed reply does not tell us whether the write committed. */
+/**
+ * A lost or malformed reply does not tell us whether the write committed.
+ *
+ * `code` is why, as a word: the reason the server gave, or `unconfirmed` when
+ * there was no answer that could be read. The page turns it into a sentence in
+ * the reader's language. `message` is the same thing in English and is what
+ * this used to return on its own.
+ */
 export async function postLearnerAssignmentAction(
   payload: Record<string, unknown>, doFetch: typeof fetch = fetch,
 ): Promise<AssignmentActionResponse> {
   const guidance = 'The result could not be confirmed. Before trying again, copy any unsaved text somewhere private, reload the page, and check the current work.';
+  const unconfirmed = { ok: false, code: 'unconfirmed', message: guidance } as const;
   try {
     const response = await doFetch('/api/assignments', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload),
@@ -235,22 +243,27 @@ export async function postLearnerAssignmentAction(
     const body = await response.json().catch(() => null) as Record<string, unknown> | null;
     if (!response.ok || !body || body.ok !== true) {
       const detail = !response.ok && typeof body?.message === 'string' ? body.message.trim() : '';
-      return { ok: false, message: detail ? `${detail} ${guidance}` : guidance };
+      // A refusal the server explained is a known outcome: nothing was
+      // written. Anything else, including a 5xx, is not known.
+      const refused = !response.ok && response.status >= 400 && response.status < 500 &&
+        typeof body?.code === 'string' && /^[a-z_]{1,40}$/.test(body.code);
+      if (refused) return { ok: false, code: body.code as string, message: detail || guidance };
+      return { ok: false, code: 'unconfirmed', message: detail ? `${detail} ${guidance}` : guidance };
     }
     if (payload.action === 'save_draft') {
       const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-      if (typeof body.id !== 'string' || !uuid.test(body.id)) return { ok: false, message: guidance };
+      if (typeof body.id !== 'string' || !uuid.test(body.id)) return unconfirmed;
       return { ok: true, id: body.id };
     }
     if (payload.action === 'reopen') {
       if (typeof body.revisionNumber !== 'number' || !Number.isSafeInteger(body.revisionNumber) || body.revisionNumber < 2)
-        return { ok: false, message: guidance };
+        return unconfirmed;
       return { ok: true, revisionNumber: body.revisionNumber };
     }
     if (payload.action === 'submit') return { ok: true };
-    return { ok: false, message: guidance };
+    return unconfirmed;
   } catch {
-    return { ok: false, message: guidance };
+    return unconfirmed;
   }
 }
 

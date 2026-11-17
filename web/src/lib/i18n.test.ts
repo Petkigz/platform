@@ -398,3 +398,33 @@ test('a length of time is said in the language of the page, and nothing is said 
     assert.ok(said && said.length > 0, `${locale.code} says nothing for a length of time`);
   }
 });
+
+test('a moment always says which clock it is on', async () => {
+  const { formatDateTime } = await import('./i18n/format.ts');
+  const iso = '2026-11-20T21:00:00.000Z';
+  // A server does not know the reader's zone. It prints UTC and says "UTC":
+  // an unlabelled "9:00 PM" told a learner in Kampala that a deadline at
+  // their midnight was at nine in the evening.
+  assert.equal(formatDateTime('en', iso, 'UTC'), 'Nov 20, 2026, 9:00 PM UTC');
+  // The same instant on the reader's clock is a different time and, here, a
+  // different day; the zone is named there too.
+  const kampala = formatDateTime('en', iso, 'Africa/Kampala');
+  assert.match(kampala, /^Nov 21, 2026, 12:00 AM /u);
+  assert.match(kampala, /GMT\+3|EAT/u);
+  // Written as the language writes it: its own month names, digits and, for
+  // Persian, Dari and Thai, its own calendar. 20 November 2026 is 29 Aban
+  // 1405 to a reader in Iran and the year 2569 to one in Thailand, and that
+  // is the date their own phone shows them. The zone is still named.
+  assert.match(formatDateTime('fr', iso, 'UTC'), /20 nov\. 2026/u);
+  assert.match(formatDateTime('ar', iso, 'UTC'), /نوفمبر/u);
+  assert.match(formatDateTime('fa', iso, 'UTC'), /۲۹ آبان ۱۴۰۵/u);
+  assert.match(formatDateTime('th', iso, 'UTC'), /2569/u);
+  for (const { code } of LOCALES) {
+    const text = formatDateTime(code, iso, 'UTC');
+    assert.ok(text.length > 8, `${code} prints no moment`);
+  }
+  // Not a moment: nothing, rather than "Invalid Date" on a page.
+  assert.equal(formatDateTime('en', 'not a date', 'UTC'), '');
+  // A language tag the runtime refuses still prints the moment.
+  assert.match(formatDateTime('not a tag!', iso, 'UTC'), /2026/u);
+});

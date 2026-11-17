@@ -149,9 +149,34 @@ export function revisionsRemaining(
   return { allowed: remaining > 0, remaining: Math.max(remaining, 0) };
 }
 
+/**
+ * Why a write was refused, as a word a screen can translate.
+ *
+ * `message` is English and, for some refusals, is the database's own sentence:
+ * the teacher's screens print it. The learner's page does not. It reads the
+ * code and says the sentence in the reader's language.
+ */
+export type AssignmentErrorCode =
+  | 'unavailable'
+  | 'not_signed_in'
+  | 'not_enrolled'
+  | 'revision_limit'
+  | 'no_revisions'
+  | 'not_marked'
+  | 'not_submitted'
+  | 'not_allowed'
+  | 'not_found'
+  | 'deadline_passed'
+  | 'already_submitted'
+  | 'closed'
+  | 'empty'
+  | 'file_unavailable'
+  | 'too_long'
+  | 'rejected';
+
 export type AssignmentWriteResult =
   | { ok: true; id: string | null }
-  | { ok: false; status: number; message: string };
+  | { ok: false; status: number; code: AssignmentErrorCode; message: string };
 
 export type CourseAssignment = {
   id: string;
@@ -311,31 +336,53 @@ function mapRevision(row: RevisionRow): AssignmentRevision {
   };
 }
 
-export function mapAssignmentError(error: { message: string; code?: string }): { status: number; message: string } {
+/**
+ * A database refusal, as a status, a reason and a sentence.
+ *
+ * The order matters: the specific reasons are read before the general ones,
+ * because "the deadline has passed, so this mark stands" contains no word the
+ * general rules would not also match. The sentences matched are the ones the
+ * migrations raise; `course-assignments.test.ts` holds them, copied.
+ */
+export function mapAssignmentError(error: { message: string; code?: string }): {
+  status: number;
+  code: AssignmentErrorCode;
+  message: string;
+} {
   const m = error.message;
   if (/not enabled|not available yet/i.test(m))
-    return { status: 409, message: 'Assignments are not available right now.' };
+    return { status: 409, code: 'unavailable', message: 'Assignments are not available right now.' };
   if (/sign in to/i.test(m))
-    return { status: 401, message: 'Please sign in to do that.' };
+    return { status: 401, code: 'not_signed_in', message: 'Please sign in to do that.' };
   if (/needs an active enrolment/i.test(m))
-    return { status: 403, message: 'This learner is not enrolled in the course right now.' };
+    return { status: 403, code: 'not_enrolled', message: 'This learner is not enrolled in the course right now.' };
   // A ceiling the teacher set, reached. Say the number rather than a generic
   // refusal, because the learner is entitled to know why the button stopped.
-  if (error.code === 'program_limit_exceeded' || /versions and this is version/i.test(m))
-    return { status: 409, message: m };
-  if (/does not allow revisions|only marked work can be revised/i.test(m))
-    return { status: 409, message: m };
-  if (/only the course author|only the uploader|responsible for|insufficient privilege|row-level security/i.test(m))
-    return { status: 403, message: 'You do not have permission to do that.' };
+  // (`54000` is what `program_limit_exceeded` is called on the wire.)
+  if (error.code === '54000' || error.code === 'program_limit_exceeded' || /versions and this is version/i.test(m))
+    return { status: 409, code: 'revision_limit', message: m };
+  if (/does not allow revisions/i.test(m)) return { status: 409, code: 'no_revisions', message: m };
+  if (/only marked work can be revised/i.test(m)) return { status: 409, code: 'not_marked', message: m };
+  if (/only submitted work can be marked/i.test(m)) return { status: 409, code: 'not_submitted', message: m };
+  if (/only the course author|only the uploader|only an active account|responsible for|insufficient privilege|row-level security/i.test(m))
+    return { status: 403, code: 'not_allowed', message: 'You do not have permission to do that.' };
+  if (/no longer available/i.test(m)) return { status: 409, code: 'file_unavailable', message: m };
   if (/not found|no_data_found|does not exist/i.test(m) || error.code === 'P0002')
-    return { status: 404, message: 'That assignment or submission could not be found.' };
-  if (/deadline has passed|already submitted|not open|closed|cannot move|already graded|only a draft/i.test(m))
-    return { status: 409, message: m };
-  if (/permission denied/i.test(m))
-    return { status: 403, message: 'You do not have permission to do that.' };
+    return { status: 404, code: 'not_found', message: 'That assignment or submission could not be found.' };
+  if (/deadline has passed/i.test(m)) return { status: 409, code: 'deadline_passed', message: m };
+  // "this assignment has already been submitted" is what saving over handed-in
+  // work is told. It used to match none of these and fell through to "400",
+  // with the database's sentence, as if the request had been malformed.
+  if (/already (been )?submitted|only an open draft|already graded|only a draft/i.test(m))
+    return { status: 409, code: 'already_submitted', message: m };
+  if (/write an answer or attach a file/i.test(m)) return { status: 409, code: 'empty', message: m };
+  if (/cannot exceed \d+ characters/i.test(m)) return { status: 400, code: 'too_long', message: m };
+  if (/not open|closed|cannot move/i.test(m)) return { status: 409, code: 'closed', message: m };
+  if (/permission denied/i.test(m) || error.code === '42501')
+    return { status: 403, code: 'not_allowed', message: 'You do not have permission to do that.' };
   if (/duplicate|unique/i.test(m))
-    return { status: 409, message: 'This work already has a submission.' };
-  return { status: 400, message: m };
+    return { status: 409, code: 'already_submitted', message: 'This work already has a submission.' };
+  return { status: 400, code: 'rejected', message: m };
 }
 
 async function rpcWrite(
@@ -398,7 +445,7 @@ export async function saveAssignmentDraft(
   input: { assignmentId: string; learnerProfileId: string; bodyText: string },
 ): Promise<AssignmentWriteResult> {
   if (input.bodyText.length > ASSIGNMENT_TEXT_MAX)
-    return { ok: false, status: 400, message: `Keep your answer under ${ASSIGNMENT_TEXT_MAX} characters.` };
+    return { ok: false, status: 400, code: 'too_long', message: `Keep your answer under ${ASSIGNMENT_TEXT_MAX} characters.` };
   return rpcWrite(client, 'save_assignment_draft', {
     p_assignment_id: input.assignmentId,
     p_learner_profile_id: input.learnerProfileId,
@@ -418,7 +465,7 @@ export async function markAssignmentSubmission(
   input: { submissionId: string; score: number | null; feedback: string },
 ): Promise<AssignmentWriteResult> {
   if (input.feedback.length > ASSIGNMENT_FEEDBACK_MAX)
-    return { ok: false, status: 400, message: `Keep feedback under ${ASSIGNMENT_FEEDBACK_MAX} characters.` };
+    return { ok: false, status: 400, code: 'too_long', message: `Keep feedback under ${ASSIGNMENT_FEEDBACK_MAX} characters.` };
   return rpcWrite(client, 'mark_assignment_submission', {
     p_submission_id: input.submissionId,
     p_score: input.score,
@@ -428,7 +475,7 @@ export async function markAssignmentSubmission(
 
 export type AssignmentRevisionResult =
   | { ok: true; revisionNumber: number }
-  | { ok: false; status: number; message: string };
+  | { ok: false; status: number; code: AssignmentErrorCode | 'unconfirmed'; message: string };
 
 /**
  * Reopen marked work as a draft so the learner can act on the feedback.
@@ -443,7 +490,7 @@ export async function reopenAssignmentSubmission(
   });
   if (error) return { ok: false, ...mapAssignmentError(error) };
   if (typeof data !== 'number' || !Number.isSafeInteger(data) || data < 2) {
-    return { ok: false, status: 502, message: 'The revision result could not be confirmed. Check the current work before trying again.' };
+    return { ok: false, status: 502, code: 'unconfirmed', message: 'The revision result could not be confirmed. Check the current work before trying again.' };
   }
   return { ok: true, revisionNumber: data };
 }

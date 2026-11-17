@@ -8,6 +8,7 @@ import {
   type AssignmentWriteResult,
   attachAssignmentAsset,
   createCourseAssignment,
+  mapAssignmentError,
   markAssignmentSubmission,
   removeAssignmentAsset,
   reopenAssignmentSubmission,
@@ -49,11 +50,13 @@ const isUuid = (value: unknown): value is string => typeof value === 'string' &&
 const text = (value: unknown): string => typeof value === 'string' ? value : '';
 const privateJson = (body: unknown, init?: ResponseInit) => privateNoStore(NextResponse.json(body, init));
 const fail = (message: string, status: number) =>
-  privateJson({ ok: false, message }, { status });
+  privateJson({ ok: false, code: status === 401 ? 'not_signed_in' : 'rejected', message }, { status });
+// `code` is the reason as a word; the learner's page says it in the reader's
+// language and does not print `message`.
 const respond = (result: AssignmentWriteResult | AssignmentRevisionResult) =>
   result.ok
     ? privateJson(result)
-    : privateJson({ ok: false, message: result.message }, { status: result.status });
+    : privateJson({ ok: false, code: result.code, message: result.message }, { status: result.status });
 
 /**
  * The files on one submission.
@@ -89,7 +92,12 @@ export async function GET(request: Request) {
   const { data, error } = await supabase.rpc('assignment_submission_files', {
     p_submission_id: submissionId,
   });
-  if (error) return fail(error.message, 403);
+  if (error) {
+    // The reason as a word, and the sentence the rest of this route would
+    // give for it; not whatever the database happened to say.
+    const mapped = mapAssignmentError(error);
+    return privateJson({ ok: false, code: mapped.code, message: mapped.message }, { status: 403 });
+  }
 
   if (!Array.isArray(data)) return fail('The file list could not be loaded. Please refresh and check again.', 502);
   return privateJson({ ok: true, files: data });
@@ -175,7 +183,8 @@ export async function POST(request: Request) {
         : /not found|not attached/i.test(message)
           ? 404
           : 409;
-      return fail(message, status);
+      const mapped = mapAssignmentError(error);
+      return privateJson({ ok: false, code: mapped.code, message: mapped.message }, { status });
     }
     return privateJson({ ok: true, submissionId: body.submissionId, assetId: body.mediaAssetId });
   }

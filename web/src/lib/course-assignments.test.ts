@@ -409,3 +409,67 @@ test('pagination uses the actual Supabase client count and range protocol', asyn
   assert.equal(result.length, rows.length);
   assert.deepEqual(offsets, [0, 2, 4]);
 });
+
+test('every sentence the database refuses an assignment write with has a status and a reason', () => {
+  // Copied from the migrations that raise them (20261281047000, 20261204000100,
+  // 20261281059000), with the code PostgREST puts on each. Before this, five of
+  // them matched nothing and went back as "400" with the database's own words,
+  // as if the request had been malformed: saving over handed-in work was one.
+  const refusals: [string, string, number, string][] = [
+    ['assignment text cannot exceed 10000 characters', '23514', 400, 'too_long'],
+    ['this assignment is not open for submissions', '23514', 409, 'closed'],
+    ['this assignment has already been submitted', '23514', 409, 'already_submitted'],
+    ['you can only submit for a learner you are responsible for as the learner or a currently verified guardian with progress permission', '42501', 403, 'not_allowed'],
+    ['this learner needs an active enrolment in this exact course version and cohort', '42501', 403, 'not_enrolled'],
+    ['only an open draft can be submitted', '23514', 409, 'already_submitted'],
+    ['write an answer or attach a file before submitting', '23514', 409, 'empty'],
+    ['a submission file is no longer available; remove it before submitting', '23514', 409, 'file_unavailable'],
+    ['this assignment deadline has passed', '23514', 409, 'deadline_passed'],
+    ['only marked work can be revised', '23514', 409, 'not_marked'],
+    ['this assignment is not open for revisions', '23514', 409, 'closed'],
+    ['this assignment does not allow revisions', '23514', 409, 'no_revisions'],
+    ['the deadline has passed, so this mark stands', '23514', 409, 'deadline_passed'],
+    ['this assignment allows 2 versions and this is version 2', '54000', 409, 'revision_limit'],
+    ['only submitted work can be marked', '23514', 409, 'not_submitted'],
+    ['only the course author assigned to this work can mark it', '42501', 403, 'not_allowed'],
+    ['only an active account can mark this assignment', '42501', 403, 'not_allowed'],
+    ['a closed or cancelled assignment cannot be changed', '23514', 409, 'closed'],
+    ['assignment submission not found', 'P0002', 404, 'not_found'],
+    ['sign in to submit this assignment', '42501', 401, 'not_signed_in'],
+    ['assignments are not enabled (learning.assignments is off)', '23514', 409, 'unavailable'],
+    ['permission denied for table assignment_submissions', '42501', 403, 'not_allowed'],
+  ];
+  for (const [message, code, status, reason] of refusals) {
+    const mapped = mapAssignmentError({ message, code });
+    assert.equal(mapped.status, status, message);
+    assert.equal(mapped.code, reason, message);
+  }
+  // A refusal that names nobody's business is not repeated to the caller.
+  for (const [message, code] of refusals) {
+    const mapped = mapAssignmentError({ message, code });
+    if (mapped.status === 403 || mapped.status === 404) assert.notEqual(mapped.message, message);
+  }
+  // A sentence nobody has seen before is a 400 and says so, rather than being
+  // guessed into a category. An unknown sentence with the permission code is
+  // still a refusal of permission.
+  assert.deepEqual(mapAssignmentError({ message: 'something new', code: '23514' }), {
+    status: 400, code: 'rejected', message: 'something new',
+  });
+  assert.equal(mapAssignmentError({ message: 'something new', code: '42501' }).code, 'not_allowed');
+});
+
+test('a refused write carries its reason from the database to the caller', async () => {
+  const client = {
+    rpc: async () => ({ data: null, error: { message: 'this assignment has already been submitted', code: '23514' } }),
+  };
+  const result = await saveAssignmentDraft(client as never, {
+    assignmentId: '2b1c7a9e-0000-4000-8000-000000000001',
+    learnerProfileId: '2b1c7a9e-0000-4000-8000-000000000002',
+    bodyText: 'again',
+  });
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.equal(result.status, 409);
+    assert.equal(result.code, 'already_submitted');
+  }
+});

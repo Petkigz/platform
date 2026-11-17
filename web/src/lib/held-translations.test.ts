@@ -31,6 +31,7 @@ import { HELD_FOR_REVIEW, UNWRITTEN_WHILE_HELD, WHOLE_LANGUAGE, isUnwritten } fr
 import { LEARN } from './i18n/messages/learn.ts';
 import { COURSE } from './i18n/messages/course.ts';
 import { ASSESS } from './i18n/messages/assess.ts';
+import { ASSIGN } from './i18n/messages/assign.ts';
 import { LESSON } from './i18n/messages/lesson.ts';
 import { auditAll } from './translation-audit.ts';
 import { SECTIONS } from './translations.ts';
@@ -401,21 +402,24 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // Owner's decision, 2026-11-16: a language the builder cannot write properly
   // falls back to English until a speaker has reviewed it. For a new screen
   // that means not writing it — a held draft would be the same guess, kept.
-  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess']);
+  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign']);
   // Thirty-seven for the dashboard (the learner-profile prompt is seven of
-  // them), sixteen for the course page, twenty-two for the lesson's frame and
-  // thirty-seven for the assessment page and its quiz.
-  assert.equal(unwrittenKeys.length, 112);
+  // them), sixteen for the course page, twenty-two for the lesson's frame,
+  // thirty-seven for the assessment page and its quiz, and sixty for the
+  // assignment page and the assignment list.
+  assert.equal(unwrittenKeys.length, 172);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('assign.')).length, 60);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('learn.')).length, 37);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('course.')).length, 16);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('lesson.')).length, 22);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('assess.')).length, 37);
 
-  // Four files, one rule: the same languages in each.
+  // Five files, one rule: the same languages in each.
   const written = Object.keys(LEARN).sort();
   assert.deepEqual(Object.keys(COURSE).sort(), written);
   assert.deepEqual(Object.keys(LESSON).sort(), written);
   assert.deepEqual(Object.keys(ASSESS).sort(), written);
+  assert.deepEqual(Object.keys(ASSIGN).sort(), written);
   const expected = LOCALES.map((l) => l.code)
     .filter((code) => code !== 'en' && !Object.hasOwn(HELD_FOR_REVIEW, code))
     .sort();
@@ -423,8 +427,10 @@ test('the learner dashboard is written for the languages with nothing held, and 
   assert.equal(written.length, 27);
 
   for (const code of expected) {
-    const own: Partial<Record<string, string>> = { ...LEARN[code], ...COURSE[code], ...LESSON[code], ...ASSESS[code] };
-    assert.deepEqual(Object.keys(own).sort(), [...unwrittenKeys].sort(), `${code} is short a dashboard, course, lesson or assessment sentence`);
+    const own: Partial<Record<string, string>> = {
+      ...LEARN[code], ...COURSE[code], ...LESSON[code], ...ASSESS[code], ...ASSIGN[code],
+    };
+    assert.deepEqual(Object.keys(own).sort(), [...unwrittenKeys].sort(), `${code} is short a dashboard, course, lesson, assessment or assignment sentence`);
     for (const key of unwrittenKeys) {
       const value = own[key] ?? '';
       assert.ok(value.trim() !== '' && value === value.trim(), `${code}.${key}`);
@@ -439,6 +445,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     assert.equal(languageShownFor(code, 'course').code, code);
     assert.equal(languageShownFor(code, 'lesson').code, code);
     assert.equal(languageShownFor(code, 'assess').code, code);
+    assert.equal(languageShownFor(code, 'assign').code, code);
     assert.equal(coverageOf(code).percent, 100);
   }
 
@@ -456,16 +463,18 @@ test('the learner dashboard is written for the languages with nothing held, and 
     }
   }
   // What that costs the nineteen that are still in the picker, said out loud:
-  // 192 of 384 sentences, which is exactly half. Nothing holds a floor under
+  // 192 of 444 sentences, which is 43%. Nothing holds a floor under
   // it any more: the owner chose on 2026-11-17 to keep these languages in the
   // picker and show the number. The count is pinned here so that it moves only
   // when somebody means it to, and is seen when it does. It moved from 55% to
-  // 50% when the assessment page was written: thirty-seven more sentences
-  // these readers see in English, on a page they already saw in English.
+  // 50% when the assessment page was written, and from 50% to 43% when the
+  // assignment page was: sixty more sentences these readers see in English,
+  // on a page they already saw in English. What they are shown did not get
+  // smaller; what is counted got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 384);
-    assert.equal(coverageOf(code).percent, 50, code);
+    assert.equal(coverageOf(code).total, 444);
+    assert.equal(coverageOf(code).percent, 43, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');
   assert.equal(languageShownFor('en', 'learn').code, 'en');
@@ -568,16 +577,24 @@ test('the course page reads its words from the catalogue, and marks what it cann
     assert.ok(!page.includes(sentence), `"${sentence}" is still typed into the course page`);
   }
 
-  // Four things on it are English for every reader, and say so: the reasons
-  // the database gives for a course not being complete, and the cohort,
-  // assessment and assignment lists. A fifth unmarked one would put English
-  // sentences into a right-to-left page with their full stops on the left.
+  // Three things on it are English for every reader, and say so: the reasons
+  // the database gives for a course not being complete, and the cohort and
+  // assessment lists. An unmarked one would put English sentences into a
+  // right-to-left page with their full stops on the left. The assignment list
+  // was the fourth until it was translated.
   assert.match(page, /const english = shown\.code === 'en' \? \{\} : \(\{ lang: 'en', dir: 'ltr' \} as const\);/u);
-  assert.equal(page.match(/\{\.\.\.english\}/gu)?.length, 4);
+  assert.equal(page.match(/\{\.\.\.english\}/gu)?.length, 3);
   assert.match(page, /<ul style=\{\{[^}]+\}\} \{\.\.\.english\}>\s+\{completion\.blocking\.map/u);
   assert.match(page, /<div \{\.\.\.english\}>\s+<CohortMemberships/u);
   assert.match(page, /assessments\.length > 0 && \(\s+<div \{\.\.\.english\}>/u);
-  assert.match(page, /visibleAssignments\.length > 0 && \(\s+<div \{\.\.\.english\}>/u);
+  assert.match(page, /visibleAssignments\.length > 0 && \(\s+<div>\s+<div className="outline-h">\s+<h3>\{t\('assign\.heading'\)\}<\/h3>/u);
+  for (const sentence of ['No deadline', 'submitted late', 'Not started', 'View feedback', 'View submission', 'SUBMISSION_STATUS_LABEL']) {
+    assert.ok(!page.includes(sentence), `"${sentence}" is still typed into the course page`);
+  }
+  // A deadline is a moment on somebody's clock. The server prints it in UTC
+  // and says so; the browser then prints it in the reader's zone.
+  assert.match(page, /<LocalTime iso=\{deadline\.toISOString\(\)\} locale=\{shown\.code\} \/>/u);
+  assert.doesNotMatch(page, /deadline\.toLocaleString\(/u);
 
   // The mark-complete control is a client component. It is handed its five
   // strings; it does not go looking for them in a catalogue it was not sent.
@@ -726,3 +743,60 @@ test('the assessment page is translated whole, and opens an attempt only when so
   ]);
 });
 
+test('the assignment page is translated, and a refusal is said in the reader\'s language', () => {
+  const dir = '../app/learn/[enrolmentId]/assignment/[assignmentId]';
+  const page = read(`${dir}/page.tsx`);
+  const work = read(`${dir}/assignment-work.tsx`);
+  const list = read('../app/learn/[enrolmentId]/page.tsx');
+
+  assert.match(page, /const shown = languageShownFor\(locale, 'assign'\);/u);
+  assert.match(page, /const t = translator\(shown\.code\);/u);
+  assert.match(page, /lang=\{mismatch \? shown\.code : undefined\}\s+dir=\{mismatch \? shown\.dir : undefined\}/u);
+  assert.doesNotMatch(page, /^'use client'/u);
+
+  // Every sentence written is shown somewhere, by name: on the page or in the
+  // list on the course page.
+  for (const key of unwrittenKeys.filter((k) => k.startsWith('assign.'))) {
+    assert.ok(page.includes(`'${key}'`) || list.includes(`'${key}'`), `${key} is translated and never shown`);
+  }
+
+  // The written-answer part is a client component. It is handed its words and
+  // asks the catalogue for none: these keys are not in what a browser is sent.
+  assert.match(work, /^'use client';/u);
+  assert.doesNotMatch(work, /useT\(|'assign\.|@\/lib\/i18n'/u);
+  assert.match(page, /<AssignmentWork[^>]*locale=\{shown\.code\}\s+words=\{words\}/u);
+  for (const sentence of [
+    'Your work', 'Draft saved', 'Save draft', 'Submit assignment', 'Submit revision', 'Revise this work',
+    'Submitted and waiting', 'Written response', 'Write your answer', 'Earlier version', 'course author',
+    'The deadline has passed', 'This assignment is closed', '>Marked<', 'Score:',
+  ]) {
+    assert.ok(!work.includes(sentence), `"${sentence}" is still typed into the assignment component`);
+  }
+
+  // A refusal is turned into a sentence from the reason code. What the server
+  // said in English is not printed.
+  assert.match(work, /setError\(sentenceFor\(result\.code\)\)/u);
+  assert.doesNotMatch(work, /setError\(result\.message\)/u);
+  for (const code of [
+    'unavailable', 'not_signed_in', 'not_enrolled', 'not_allowed', 'not_found', 'deadline_passed',
+    'already_submitted', 'closed', 'empty', 'file_unavailable', 'too_long', 'revision_limit',
+    'no_revisions', 'unconfirmed',
+  ]) {
+    assert.ok(work.includes(`case '${code}':`), `the page has no sentence for "${code}"`);
+  }
+
+  // No moment is printed with the browser's or the server's unlabelled clock.
+  assert.doesNotMatch(work, /toLocaleString\(|Date\.now\(\)/u);
+  assert.match(work, /<LocalTime iso=\{iso\} locale=\{locale\} \/>/u);
+  // Whether the deadline has passed is decided once, by the server, so the
+  // HTML and the browser cannot disagree about it.
+  assert.match(page, /pastDue=\{deadline !== null && deadline\.getTime\(\) < Date\.now\(\)\}/u);
+
+  // What people wrote is printed as written, in its own direction.
+  assert.match(page, /<h1 dir="auto">\{assignment\.title\}<\/h1>/u);
+  assert.match(work, /dir="auto">\{mark\.feedback\}/u);
+  assert.match(work, /dir="auto">\{bodyText\}/u);
+
+  // The files part is English for everybody and says so inside another language.
+  assert.match(work, /<div \{\.\.\.\(locale === 'en' \? \{\} : \{ lang: 'en', dir: 'ltr' as const \}\)\}>\s+<AssignmentFiles/u);
+});

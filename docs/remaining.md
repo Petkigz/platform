@@ -528,10 +528,11 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 50% there (192 of 384 sentences; it was 71% of 272, then
+  the nineteen reads 43% there (192 of 444 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
-  then this with the assessment page), in the reader's own
+  50% of 384 with the assessment page, then this with the assignment page),
+  in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
   written for this, because it would have had to be written in the same
@@ -557,7 +558,7 @@ still unreviewed and still saying so.
   Burmese sentence on the page, and the tool still calculates six rows. It does
   the direction check in Pashto, opens the correction sheet on the Hausa
   companion part (eighty boxes, each with the draft, and the notice; no notice
-  on the Hausa navigation or on Swahili), and reads 50% on `/language` in Hausa.
+  on the Hausa navigation or on Swahili), and reads 43% on `/language` in Hausa.
 
 **Four languages withheld whole (owner's second answer, 2026-11-16).** Asked
 whether the rest of the interface in Wolof, Fulfulde, Bambara and Dhivehi should

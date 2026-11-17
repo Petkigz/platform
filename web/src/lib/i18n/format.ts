@@ -72,3 +72,36 @@ export function formatPercent(code: LocaleCode, value: number): string {
     return `${value}%`;
   }
 }
+
+/**
+ * A moment, with the time zone it is given in said out loud.
+ *
+ * A deadline printed as "20 Nov, 21:00" is a claim about somebody's clock, and
+ * a server does not know the reader's. It runs in UTC; a learner in Kampala is
+ * three hours ahead, so an unlabelled time from the server told them a
+ * deadline was at nine in the evening when it was at midnight. This always
+ * prints the zone ("UTC", "GMT+3", "EAT"), so the same instant can be shown on
+ * the server in UTC and in the browser in the reader's own zone and be true in
+ * both places.
+ *
+ * `timeZone` omitted means the zone of whatever is running this: the reader's
+ * in a browser. Pass `'UTC'` on a server.
+ */
+export function formatDateTime(code: LocaleCode | string, iso: string, timeZone?: string): string {
+  const when = new Date(iso);
+  if (Number.isNaN(when.getTime())) return '';
+  const options: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZoneName: 'short',
+    ...(timeZone ? { timeZone } : {}),
+  };
+  try {
+    return new Intl.DateTimeFormat(code, options).format(when);
+  } catch {
+    return new Intl.DateTimeFormat('en', options).format(when);
+  }
+}

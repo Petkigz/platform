@@ -35,6 +35,7 @@ for (const [file, key] of [
   ['lesson.ts', 'lesson.backToCourse'],
   ['learn.ts', 'learn.title'],
   ['course.ts', 'course.back'],
+  ['assign.ts', 'assign.reviseExplain'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

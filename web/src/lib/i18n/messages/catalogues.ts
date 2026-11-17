@@ -19,6 +19,7 @@ import { COMPANION } from './companion.ts';
 import { LEARN } from './learn.ts';
 import { COURSE } from './course.ts';
 import { ASSESS } from './assess.ts';
+import { ASSIGN } from './assign.ts';
 import { LESSON } from './lesson.ts';
 import { isHeld } from './held.ts';
 import { ASIA_AZ } from './asia-az.ts';
@@ -800,6 +801,8 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   LESSON,
   // The assessment page and its quiz, on the same rule.
   ASSESS,
+  // The assignment page and the assignment list, on the same rule.
+  ASSIGN,
 );
 
 /**

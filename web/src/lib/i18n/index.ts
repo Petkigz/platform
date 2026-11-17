@@ -17,7 +17,7 @@ import { safeNextPath as safeLocalPath } from '../auth.ts';
 import { CATALOGUES, WRITTEN } from './messages/catalogues.ts';
 import { HELD_FOR_REVIEW, isHeld, isUnwritten, isWithheld } from './messages/held.ts';
 import { en, type MessageKey, type Messages } from './messages/en.ts';
-import { fill, formatNumber, formatPercent, pluralForm } from './format.ts';
+import { fill, formatDateTime, formatNumber, formatPercent, pluralForm } from './format.ts';
 
 export {
   DEFAULT_LOCALE,
@@ -31,7 +31,7 @@ export {
   matchLocale,
 };
 // No catalogue behind these: see `format.ts` for why they live apart.
-export { fill, formatNumber, formatPercent, pluralForm };
+export { fill, formatDateTime, formatNumber, formatPercent, pluralForm };
 export type { Direction, Locale, LocaleCode, LocaleSource, MessageKey };
 
 export type Translate = (key: MessageKey, vars?: Record<string, string | number>) => string;
@@ -58,18 +58,18 @@ const COMPANION_PREFIX = 'companion.';
 /**
  * Sentences only a server-rendered page reads.
  *
- * The learner dashboard, the course page, the lesson page's frame and the
- * assessment page are Server Components: their words are in the HTML by the
- * time a browser sees it, and no client component asks for one. A hundred and
- * twelve sentences in the catalogue every page carries would be paid for by
+ * The learner dashboard, the course page, the lesson page's frame, the
+ * assessment page and the assignment page are Server Components: their words
+ * are in the HTML by the time a browser sees it, and no client component asks
+ * for one. A hundred and seventy-two sentences in the catalogue every page carries would be paid for by
  * every reader of the front page and used by none of them. The client controls
- * on those pages (mark complete, the learner-profile prompt, the quiz) are
+ * on those pages (mark complete, the learner-profile prompt, the quiz, the written answer) are
  * handed their strings as props instead. If a client component ever asks
  * for one of these keys it gets English — the sentence is not in what it was
  * sent — so a test forbids it; the other fix is to take the prefix out of this
  * list.
  */
-const SERVER_ONLY_PREFIXES: readonly string[] = ['learn.', 'course.', 'lesson.', 'assess.'];
+const SERVER_ONLY_PREFIXES: readonly string[] = ['learn.', 'course.', 'lesson.', 'assess.', 'assign.'];
 
 /** Everything a client component outside the companion pages can ask for. */
 export function shellMessagesFor(code: LocaleCode): Partial<Messages> {

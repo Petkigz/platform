@@ -378,6 +378,36 @@ test('learner assignment actions distinguish a confirmed write from an uncertain
   }
 });
 
+test('a refusal the server explained is a reason, and anything else is unconfirmed', async () => {
+  const response = (body: unknown, status: number) => async () => new Response(JSON.stringify(body), { status });
+  // The server said why: nothing was written, and the page can say so in the
+  // reader's language. It is not told to copy its text and reload.
+  assert.deepEqual(
+    await postLearnerAssignmentAction({ action: 'save_draft' }, response({ ok: false, code: 'already_submitted', message: 'this assignment has already been submitted' }, 409)),
+    { ok: false, code: 'already_submitted', message: 'this assignment has already been submitted' },
+  );
+  assert.equal((await postLearnerAssignmentAction({ action: 'submit' }, response({ ok: false, code: 'empty', message: 'x' }, 409)) as { code: string }).code, 'empty');
+  // No reason, a reason that is not a word, a server error with a reason, a
+  // success status with a refusal in it, or no reply at all: not known.
+  const unknown: [Record<string, unknown>, typeof fetch][] = [
+    [{ action: 'submit' }, response({ ok: false, message: 'A conflict occurred.' }, 409)],
+    [{ action: 'submit' }, response({ ok: false, code: '<b>', message: 'x' }, 409)],
+    [{ action: 'submit' }, response({ ok: false, code: 42, message: 'x' }, 409)],
+    [{ action: 'submit' }, response({ ok: false, code: 'closed', message: 'x' }, 500)],
+    [{ action: 'submit' }, response({ ok: false, code: 'closed', message: 'x' }, 200)],
+    [{ action: 'submit' }, async () => { throw new Error('reply lost'); }],
+    [{ action: 'save_draft' }, response({ ok: true, id: null }, 200)],
+  ];
+  for (const [payload, fetcher] of unknown) {
+    const result = await postLearnerAssignmentAction(payload, fetcher);
+    assert.equal(result.ok, false);
+    if (!result.ok) {
+      assert.equal(result.code, 'unconfirmed');
+      assert.match(result.message, /copy any unsaved text/i);
+    }
+  }
+});
+
 test('earlier file references are openable and a failed marker list is not empty', () => {
   const learner = readFileSync(new URL('../app/learn/[enrolmentId]/assignment/[assignmentId]/assignment-work.tsx', import.meta.url), 'utf8');
   const marker = readFileSync(new URL('../app/teach/[courseId]/assignments/assignment-manager.tsx', import.meta.url), 'utf8');

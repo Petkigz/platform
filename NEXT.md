@@ -2618,6 +2618,63 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The assignment page, handed in and marked as a learner, 2026-11-17
+
+The assignment page was walked the way the quiz was: on the real request
+server, as a learner, a teacher and the learner again
+(`scripts/postgrest-contract.mjs`, "the assignment, handed in and marked").
+Then it was translated.
+
+- *What the walk found.* One defect. Saving over work that had already been
+  handed in was refused by the database, correctly, and the application
+  answered **400** with the database's own sentence, as though the request had
+  been malformed. Five of the database's refusals matched none of the patterns
+  in `mapAssignmentError` (already submitted, only an open draft, nothing
+  written, a file no longer available, only submitted work can be marked). The
+  learner was shown that sentence, in English, glued to a second English
+  sentence telling them to copy their text and reload, although nothing was in
+  doubt.
+- *What the walk did not find.* Everything else it tried held: opening the page
+  writes nothing; two saves keep one draft; a teacher cannot write a learner's
+  draft; a learner cannot mark their own work through the application or by
+  writing to the table directly; a draft cannot be marked; handed-in text does
+  not change; the mark and the comment reach the learner; revising returns
+  version 2 with the mark cleared and keeps the marked version; a second
+  revise is refused.
+- *The repair.* Every refusal now has a reason code as well as a status
+  (`AssignmentErrorCode`), and `/api/assignments` sends it. The learner's page
+  says the reason in the reader's language and no longer prints the server's
+  English. It tells the learner to copy and reload only when there was no
+  readable answer, which is the only case where the outcome is unknown. A unit
+  test holds twenty-two database sentences, copied from the migrations, with
+  the status and reason each must get.
+- *Translated.* Sixty sentences (`assign.ts`) in the twenty-seven languages
+  with nothing held: the page, the written-answer part, and the assignment
+  list on the course page. **Unreviewed**, like the rest. The nineteen held
+  languages see these in English and `/language` now tells each of them
+  **43%** (192 of 444), from 50%.
+- *Not translated.* The files part of the page (choosing, checking and
+  uploading a file) is still English for every reader and is marked as English
+  inside a translated page. It is some thirty sentences about what did and did
+  not reach storage. The teacher's assignment screens are English.
+- *Times.* The page printed deadlines with `toLocaleString()`. On the server
+  that is UTC with no label: a learner in Uganda was shown a deadline three
+  hours earlier than their own clock would say, with nothing to tell them so.
+  In the browser the same call then printed local time, so the page disagreed
+  with its own HTML. `formatDateTime` always names the zone; `LocalTime`
+  prints UTC from the server and the reader's zone once the page is running.
+  **Only the assignment page and list are repaired.** Twenty-seven other
+  server pages and twenty-two client components still do the old thing.
+- *Not proven.* No browser pressed a button on this page: the walk speaks HTTP
+  and reads HTML. Nothing was uploaded, so the files part was not exercised at
+  all. Whether `LocalTime` changes to the reader's zone was not seen in a
+  browser. The Persian and Thai calendars are what `Intl` chooses and were not
+  asked of anybody.
+
+Checks: `tsc` and lint clean; web tests 2309 of 2309; production build; client
+bundle check (116 scripts, 1736 kB, no catalogue sentence, 57 looked for);
+repository check.
+
 ### A learner could write their own mark; three more found by sitting a quiz, 2026-11-17
 
 Found while translating the assessment page. The page's tests and the

@@ -27,7 +27,10 @@ test('assignment API successes and failures use the private response wrapper', (
   const route = readFileSync(new URL('../app/api/assignments/route.ts', import.meta.url), 'utf8');
   assert.match(route, /privateNoStore\(NextResponse\.json\(body, init\)\)/);
   assert.equal((route.match(/NextResponse\.json\(/g) ?? []).length, 1);
-  assert.match(route, /privateJson\(\{ ok: false, message \}/);
+  // Every refusal goes out with its reason as a word, through the same wrapper.
+  assert.match(route, /privateJson\(\{ ok: false, code: status === 401 \? 'not_signed_in' : 'rejected', message \}, \{ status \}\)/);
+  assert.match(route, /: privateJson\(\{ ok: false, code: result\.code, message: result\.message \}, \{ status: result\.status \}\)/);
+  assert.doesNotMatch(route, /fail\(error\.message|fail\(message, status\)/);
   assert.match(route, /privateJson\(\{ ok: true, files: data \}\)/);
   assert.match(route, /\? privateJson\(result\)/);
 });

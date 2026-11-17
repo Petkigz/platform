@@ -7949,14 +7949,15 @@ owner chose the first.
   written it.
 - The language page tells each reader the percentage, in their own language,
   with the sentence that the rest is in English. That number will keep
-  falling: 55% on the day of the decision, 50% since the assessment page.
+  falling: 55% on the day of the decision, 50% since the assessment page, 43%
+  since the assignment page.
 - **The test that refused a language under half is removed.** Nothing in the
   tests now limits how much English one of these languages shows. That is the
   cost of this choice and it was put to the owner in those words.
 - What the tests still require of every offered language: every sentence that
   is neither held nor deliberately unwritten is present, and the sentence
   that gives the percentage is in that language rather than English. The
-  count (192 of 384; it was 192 of 347 when this was decided) is pinned in
+  count (192 of 444; it was 192 of 347 when this was decided) is pinned in
   `held-translations.test.ts`, so it changes only on purpose.
 - The four withheld languages are unaffected. So is the rule that a new screen
   is not written for a language with anything held.
@@ -8036,8 +8037,10 @@ languages, 59% for the nineteen. The lesson page followed on 2026-11-17:
 twenty-two sentences (`lesson.ts`), the same twenty-seven languages, 55% for
 the nineteen. The assessment page and its quiz followed the same day:
 thirty-seven sentences (`assess.ts`), the same twenty-seven languages, 50% for
-the nineteen. `UNWRITTEN_WHILE_HELD` is now `learn`, `course`, `lesson` and
-`assess`.
+the nineteen. The assignment page and the assignment list followed: sixty
+sentences (`assign.ts`), the same twenty-seven languages, 43% for the
+nineteen. `UNWRITTEN_WHILE_HELD` is now `learn`, `course`, `lesson`, `assess`
+and `assign`.
 
 **The rule going forward.** A part named in `UNWRITTEN_WHILE_HELD`
 (`web/src/lib/i18n/messages/held.ts`) may be absent from a language that has
@@ -8076,3 +8079,27 @@ sheet, written as a learner" are there to fail when one does.
 the page shows neither word. A completion rule that requires an assessment to
 be *passed* cannot be met by a practice one; a rule that requires it to be
 *submitted* can.
+
+**A refusal is a reason, not a sentence (assignments).** `/api/assignments`
+answers a refused write with a status, a `code` and an English `message`. The
+learner's page reads the code and says the sentence in the reader's language;
+it does not print the message. The teacher's screens still print the message.
+The codes are matched from the sentences the migrations raise, and
+`course-assignments.test.ts` holds those sentences, copied. If a migration
+rewords one, that test does not notice: the sentence then falls to `rejected`
+(400) and the learner is told "That could not be done." That is a worse
+sentence, not a wrong one. The durable fix is for the database functions to
+raise a distinct code for each refusal; that is a migration and was not made
+here.
+
+**A moment names its clock.** `formatDateTime` always prints the time zone.
+A server prints UTC and says "UTC"; `LocalTime` then prints the same moment in
+the reader's own zone once the page is running. Dates follow the language's
+own calendar where it has one: Persian and Dari readers see the Solar Hijri
+date and Thai readers the Buddhist year, which is what `Intl` gives for those
+languages and what their own devices show. Nobody chose that for this
+platform; it is the runtime's default and is written here so that it is known.
+Only the assignment page and the assignment list use it so far. Twenty-seven
+other server pages and twenty-two client components still call
+`toLocaleString()` and print a server's UTC time with no zone, or disagree
+with their own HTML on first paint.

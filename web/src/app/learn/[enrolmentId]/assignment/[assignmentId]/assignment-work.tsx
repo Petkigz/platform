@@ -10,6 +10,90 @@ import {
 import { AssignmentFiles } from './assignment-files';
 import { postLearnerAssignmentAction } from '@/lib/coursework';
 import { RevisionFiles } from '@/components/revision-files';
+import { LocalTime } from '@/components/local-time';
+import { fill, formatNumber, pluralForm } from '@/lib/i18n/format';
+import type { LocaleCode } from '@/lib/i18n/locales';
+
+/**
+ * Every sentence this component says, handed in by the page.
+ *
+ * They are not asked of the catalogue here: the assignment sentences are
+ * server-only (`SERVER_ONLY_PREFIXES`), so a browser is never sent them and
+ * the catalogue hook would answer in English.
+ */
+export type AssignmentWords = {
+  yourWork: string;
+  /** `{number}` */
+  version: string;
+  /** `{date}` */
+  due: string;
+  dueLateOk: string;
+  deadlinePassed: string;
+  submittedResponse: string;
+  marked: string;
+  /** `{earned}` */
+  score: string;
+  /** `{earned}`, `{possible}` */
+  scoreOf: string;
+  waiting: string;
+  written: string;
+  placeholder: string;
+  draftSaved: string;
+  saveDraft: string;
+  saving: string;
+  submit: string;
+  submitRevision: string;
+  submitting: string;
+  revise: string;
+  working: string;
+  reviseExplain: string;
+  /** `{count}` */
+  revisionsLeftOne: string;
+  /** `{count}` */
+  revisionsLeftOther: string;
+  blockedClosed: string;
+  blockedDeadline: string;
+  blockedOnce: string;
+  blockedLimit: string;
+  earlierOne: string;
+  earlierOther: string;
+  /** `{date}` */
+  markedOn: string;
+  late: string;
+  closedDraft: string;
+  msgDraftSaved: string;
+  msgSubmitted: string;
+  /** `{number}` */
+  msgSubmittedVersion: string;
+  /** `{number}` */
+  msgReopened: string;
+  errUnconfirmed: string;
+  errUnavailable: string;
+  errSignIn: string;
+  errNotEnrolled: string;
+  errNotAllowed: string;
+  errNotFound: string;
+  errDeadline: string;
+  errAlreadySubmitted: string;
+  errClosed: string;
+  errEmpty: string;
+  errFileGone: string;
+  errTooLong: string;
+  errRejected: string;
+};
+
+/** A sentence with a moment in it: the words either side of `{date}`. */
+function WithTime({ sentence, iso, locale }: { sentence: string; iso: string; locale: string }) {
+  const at = sentence.indexOf('{date}');
+  if (at === -1) return <>{sentence} <LocalTime iso={iso} locale={locale} /></>;
+  return (
+    <>
+      {sentence.slice(0, at)}
+      <LocalTime iso={iso} locale={locale} />
+      {sentence.slice(at + '{date}'.length)}
+    </>
+  );
+}
 
 export function AssignmentWork({
   assignmentId,
@@ -18,11 +102,14 @@ export function AssignmentWork({
   pointsPossible,
   acceptLate,
   deadline,
+  pastDue,
   initialSubmission,
   files,
   revisionsAllowed,
   revisionLimit,
   history,
+  locale,
+  words,
 }: {
   assignmentId: string;
   learnerProfileId: string;
@@ -30,12 +117,21 @@ export function AssignmentWork({
   pointsPossible: number | null;
   acceptLate: boolean;
   deadline: string | null;
+  /**
+   * Whether the deadline had passed when the page was drawn. Decided by the
+   * server so that the HTML and the browser agree; the database decides again
+   * when anything is handed in.
+   */
+  pastDue: boolean;
   initialSubmission: AssignmentSubmission | null;
   /** Named files as `assignment_submission_files()` returned them. */
   files: unknown;
   revisionsAllowed: boolean;
   revisionLimit: number | null;
   history: AssignmentRevision[];
+  /** The language the words are in, for numbers and dates. */
+  locale: LocaleCode;
+  words: AssignmentWords;
 }) {
   const router = useRouter();
   const [submissionId, setSubmissionId] = useState(initialSubmission?.id ?? '');
@@ -58,8 +154,34 @@ export function AssignmentWork({
   // The server owns this list; take its version whenever the page refreshes.
   useEffect(() => { setVersions(history); }, [history]);
 
-  const due = deadline ? new Date(deadline) : null;
-  const pastDue = due !== null && due.getTime() < Date.now();
+  const num = (value: number) => formatNumber(locale, value);
+  const scoreLine = (earned: number) =>
+    pointsPossible
+      ? fill(words.scoreOf, { earned: num(earned), possible: num(pointsPossible) })
+      : fill(words.score, { earned: num(earned) });
+  // The reason a write was refused, in the reader's language. What the server
+  // said in English is not printed.
+  const sentenceFor = (code: string): string => {
+    switch (code) {
+      case 'unavailable': return words.errUnavailable;
+      case 'not_signed_in': return words.errSignIn;
+      case 'not_enrolled': return words.errNotEnrolled;
+      case 'not_allowed': return words.errNotAllowed;
+      case 'not_found': return words.errNotFound;
+      case 'deadline_passed': return words.errDeadline;
+      case 'already_submitted': return words.errAlreadySubmitted;
+      case 'closed': return words.errClosed;
+      case 'empty': return words.errEmpty;
+      case 'file_unavailable': return words.errFileGone;
+      case 'too_long': return words.errTooLong;
+      case 'revision_limit': return words.blockedLimit;
+      case 'no_revisions': return words.blockedOnce;
+      case 'unconfirmed': return words.errUnconfirmed;
+      // A refusal with a reason this page has no sentence for. It was still
+      // a refusal: nothing was written.
+      default: return words.errRejected;
+    }
+  };
   const locked = status === 'submitted' || status === 'graded' || assignmentStatus !== 'open';
   const revision = revisionsRemaining(
     { revisionsAllowed, revisionLimit },
@@ -68,13 +190,13 @@ export function AssignmentWork({
   // Revising gives up a mark, so the button has to be honest about why it is
   // unavailable rather than letting the database refuse after a click.
   const revisionBlocked = assignmentStatus !== 'open'
-    ? 'This assignment is closed.'
+    ? words.blockedClosed
     : pastDue && !acceptLate
-      ? 'The deadline has passed, so this mark stands.'
+      ? words.blockedDeadline
       : !revisionsAllowed
-        ? 'This work is marked once; the teacher has not allowed revisions.'
+        ? words.blockedOnce
         : revision.remaining === 0
-          ? `This task allows ${revisionLimit} version${revisionLimit === 1 ? '' : 's'} and this was the last one.`
+          ? words.blockedLimit
           : '';
 
   async function post(payload: Record<string, unknown>) {
@@ -84,7 +206,7 @@ export function AssignmentWork({
     try {
       const result = await postLearnerAssignmentAction(payload);
       if (!result.ok) {
-        setError(result.message);
+        setError(sentenceFor(result.code));
         return null;
       }
       return result;
@@ -103,7 +225,7 @@ export function AssignmentWork({
     if (!result?.id) return null;
     setSubmissionId(result.id);
     setStatus('draft');
-    setMessage('Draft saved privately.');
+    setMessage(words.msgDraftSaved);
     router.refresh();
     return result.id;
   }
@@ -118,8 +240,8 @@ export function AssignmentWork({
     setStatus('submitted');
     setMessage(
       revisionNumber > 1
-        ? `Version ${revisionNumber} submitted. Your work is with the course author for marking.`
-        : 'Submitted. Your work is now with the course author for marking.',
+        ? fill(words.msgSubmittedVersion, { number: num(revisionNumber) })
+        : words.msgSubmitted,
     );
     router.refresh();
   }
@@ -149,59 +271,58 @@ export function AssignmentWork({
     setRevisionNumber(result.revisionNumber);
     setMark(null);
     setStatus('draft');
-    setMessage(
-      `Your marked version is saved below. Edit your work and submit it again as version ${result.revisionNumber}.`,
-    );
+    setMessage(fill(words.msgReopened, { number: num(result.revisionNumber) }));
     router.refresh();
   }
 
   return (
     <section className="card" style={{ display: 'grid', gap: '.75rem' }}>
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <h2 style={{ margin: 0 }}>Your work</h2>
-        {revisionNumber > 1 && <span className="badge neutral">Version {revisionNumber}</span>}
+        <h2 style={{ margin: 0 }}>{words.yourWork}</h2>
+        {revisionNumber > 1 && (
+          <span className="badge neutral">{fill(words.version, { number: num(revisionNumber) })}</span>
+        )}
       </div>
 
-      {due && (
+      {deadline && (
         <p className="muted" style={{ margin: 0 }}>
-          Due {due.toLocaleString()}
-          {pastDue && acceptLate ? ' · late work is accepted' : ''}
+          <WithTime sentence={words.due} iso={deadline} locale={locale} />
+          {pastDue && acceptLate ? ` · ${words.dueLateOk}` : ''}
         </p>
       )}
       {pastDue && !acceptLate && status !== 'submitted' && status !== 'graded' && (
-        <div className="notice warn">The deadline has passed and late work is not accepted.</div>
+        <div className="notice warn">{words.deadlinePassed}</div>
       )}
 
       {status === 'graded' && bodyText && (
         <div className="card" style={{ background: 'var(--surface, #f8faf8)' }}>
-          <h3 style={{ marginTop: 0 }}>Your submitted response</h3>
-          <div style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{bodyText}</div>
+          <h3 style={{ marginTop: 0 }}>{words.submittedResponse}</h3>
+          <div style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }} dir="auto">{bodyText}</div>
         </div>
       )}
 
       {status === 'graded' && mark && (
         <div className="notice">
-          <strong>Marked</strong>
+          <strong>{words.marked}</strong>
           {mark.scoreEarned !== null && (
-            <p style={{ margin: '.25rem 0 0' }}>
-              Score: {mark.scoreEarned}
-              {pointsPossible ? ` / ${pointsPossible}` : ''}
-            </p>
+            <p style={{ margin: '.25rem 0 0' }}>{scoreLine(mark.scoreEarned)}</p>
           )}
           {mark.feedback && (
-            <p style={{ margin: '.5rem 0 0', whiteSpace: 'pre-wrap' }}>{mark.feedback}</p>
+            <p style={{ margin: '.5rem 0 0', whiteSpace: 'pre-wrap' }} dir="auto">{mark.feedback}</p>
           )}
         </div>
       )}
 
       {status === 'submitted' && (
-        <div className="notice">Submitted and waiting for marking.</div>
+        <div className="notice">{words.waiting}</div>
       )}
 
       {status !== 'graded' && (
         <>
           <label htmlFor="assignment-answer">
-            {revisionNumber > 1 ? `Written response · version ${revisionNumber}` : 'Written response'}
+            {revisionNumber > 1
+              ? `${words.written} · ${fill(words.version, { number: num(revisionNumber) })}`
+              : words.written}
           </label>
           <textarea
             id="assignment-answer"
@@ -210,30 +331,35 @@ export function AssignmentWork({
             value={bodyText}
             onChange={(e) => setBodyText(e.target.value)}
             disabled={locked || busy}
-            placeholder="Write your answer here…"
+            placeholder={words.placeholder}
+            dir="auto"
           />
           <div className="row" style={{ justifyContent: 'space-between' }}>
-            <span className="muted">{bodyText.length}/10000</span>
-            {status === 'draft' && <span className="badge neutral">Draft saved</span>}
+            <span className="muted" dir="ltr">{num(bodyText.length)}/{num(10000)}</span>
+            {status === 'draft' && <span className="badge neutral">{words.draftSaved}</span>}
           </div>
 
         </>
       )}
 
-      <AssignmentFiles
-        submissionId={submissionId}
-        files={files}
-        locked={locked}
-        ensureDraft={async () => saveDraft()}
-      />
+      {/* Uploads are still English for everybody, and say so to a screen
+          reader when the page around them is not. */}
+      <div {...(locale === 'en' ? {} : { lang: 'en', dir: 'ltr' as const })}>
+        <AssignmentFiles
+          submissionId={submissionId}
+          files={files}
+          locked={locked}
+          ensureDraft={async () => saveDraft()}
+        />
+      </div>
 
       {!locked && (
         <div className="row" style={{ gap: '.5rem' }}>
           <button type="button" className="btn secondary" disabled={busy} onClick={saveDraft}>
-            {busy ? 'Saving…' : 'Save draft'}
+            {busy ? words.saving : words.saveDraft}
           </button>
           <button type="button" className="btn" disabled={busy || (pastDue && !acceptLate)} onClick={submit}>
-            {busy ? 'Submitting…' : revisionNumber > 1 ? 'Submit revision' : 'Submit assignment'}
+            {busy ? words.submitting : revisionNumber > 1 ? words.submitRevision : words.submit}
           </button>
         </div>
       )}
@@ -246,14 +372,18 @@ export function AssignmentWork({
             disabled={busy || !revision.allowed || Boolean(revisionBlocked)}
             onClick={revise}
           >
-            {busy ? 'Working…' : 'Revise this work'}
+            {busy ? words.working : words.revise}
           </button>
           {revision.allowed && !revisionBlocked ? (
             <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>
-              Revising clears this mark so you can hand the work in again. The version you
-              were marked on is kept below.
+              {words.reviseExplain}
               {revision.remaining !== null
-                ? ` You have ${revision.remaining} revision${revision.remaining === 1 ? '' : 's'} left.`
+                ? ` ${fill(
+                    pluralForm(locale, revision.remaining) === 'one'
+                      ? words.revisionsLeftOne
+                      : words.revisionsLeftOther,
+                    { count: num(revision.remaining) },
+                  )}`
                 : ''}
             </p>
           ) : (
@@ -265,33 +395,33 @@ export function AssignmentWork({
       {versions.length > 0 && (
         <div style={{ display: 'grid', gap: '.5rem' }}>
           <h3 style={{ margin: 0 }}>
-            {versions.length === 1 ? 'Earlier version' : 'Earlier versions'}
+            {versions.length === 1 ? words.earlierOne : words.earlierOther}
           </h3>
           {versions.map((version) => (
             <div key={version.id} className="card" style={{ background: 'var(--surface, #f8faf8)' }}>
               <div className="row" style={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <strong>Version {version.revisionNumber}</strong>
+                <strong>{fill(words.version, { number: num(version.revisionNumber) })}</strong>
                 <span className="muted" style={{ fontSize: '.8rem' }}>
-                  {version.markedAt ? `Marked ${new Date(version.markedAt).toLocaleString()}` : ''}
-                  {version.isLate ? ' · late' : ''}
+                  {version.markedAt && <WithTime sentence={words.markedOn} iso={version.markedAt} locale={locale} />}
+                  {version.isLate ? `${version.markedAt ? ' · ' : ''}${words.late}` : ''}
                 </span>
               </div>
               {version.scoreEarned !== null && (
-                <p className="muted" style={{ margin: '.25rem 0 0' }}>
-                  Score: {version.scoreEarned}{pointsPossible ? ` / ${pointsPossible}` : ''}
-                </p>
+                <p className="muted" style={{ margin: '.25rem 0 0' }}>{scoreLine(version.scoreEarned)}</p>
               )}
               {version.feedback && (
-                <p style={{ margin: '.35rem 0 0', whiteSpace: 'pre-wrap' }}>{version.feedback}</p>
+                <p style={{ margin: '.35rem 0 0', whiteSpace: 'pre-wrap' }} dir="auto">{version.feedback}</p>
               )}
-              <RevisionFiles assetIds={version.assetIds} />
+              <div {...(locale === 'en' ? {} : { lang: 'en', dir: 'ltr' as const })}>
+                <RevisionFiles assetIds={version.assetIds} />
+              </div>
             </div>
           ))}
         </div>
       )}
 
       {assignmentStatus !== 'open' && status !== 'graded' && status !== 'submitted' && (
-        <div className="notice warn">This assignment is closed; a saved draft can no longer be submitted.</div>
+        <div className="notice warn">{words.closedDraft}</div>
       )}
       {error && <div className="notice error" role="alert">{error}</div>}
       {message && <div className="notice" role="status">{message}</div>}

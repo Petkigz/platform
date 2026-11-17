@@ -484,13 +484,15 @@ async function run() {
           expect(handed.length === 1 && handed[0].status === 'draft' && handed[0].score_earned === null && handed[0].body_text === 'Contract answer', `the hand-in was changed by somebody who must not: ${JSON.stringify(handed)}`);
 
           const early = await work('teacher', { action: 'mark', submissionId, score: 8, feedback: 'Too soon.' });
-          expect(early.status >= 400 && early.status < 500, `a draft was marked before it was handed in: ${told(early)}`);
+          expect(early.status === 409 && early.json?.code === 'not_submitted', `marking a draft before it is handed in should be refused with its reason: ${told(early)}`);
           const submitted = await work('learner', { action: 'submit', submissionId });
           expect(submitted.status === 200 && submitted.json?.ok === true, `handing in was refused: ${told(submitted)}`);
           expect((await handIns())[0]?.status === 'submitted', 'handing in did not change the status');
           expect((await plain(workRoute)).includes('Submitted and waiting for marking.'), 'after handing in, the page does not say it is waiting for marking');
           const late = await work('learner', { action: 'save_draft', assignmentId: id.assignment, learnerProfileId: id.learnerProfile, bodyText: 'Changed after handing in' });
-          expect(late.status === 409, `a hand-in was rewritten after it was submitted: ${told(late)}`);
+          // The reason goes out as a word the page can say in the reader's
+          // language. This used to be "400" with the database's own sentence.
+          expect(late.status === 409 && late.json?.code === 'already_submitted', `saving over handed-in work should be refused with its reason: ${told(late)}`);
           expect((await handIns())[0]?.body_text === 'Contract answer', 'the text of a hand-in changed after it was submitted');
 
           const marked = await work('teacher', { action: 'mark', submissionId, score: 8, feedback: 'Contract feedback' });
@@ -498,7 +500,15 @@ async function run() {
           handed = await handIns();
           expect(handed[0]?.status === 'graded' && Number(handed[0]?.score_earned) === 8, `marking did not record the mark: ${JSON.stringify(handed)}`);
           const seen = await plain(workRoute);
-          expect(seen.includes('Score: 8 / 10') && seen.includes('Contract feedback') && seen.includes('Revise this work'), 'the learner is not shown the mark, the comment and the way to revise');
+          expect(seen.includes('Score: 8 of 10') && seen.includes('Contract feedback') && seen.includes('Revise this work'), 'the learner is not shown the mark, the comment and the way to revise');
+          // The same page for a reader of Arabic: the page's own words are
+          // Arabic, what the teacher wrote is as written, and nothing is
+          // printed in English outside the part marked as English.
+          const inArabic = async (route) => (await (await fetch(`http://127.0.0.1:${port}${route}`, { headers: { cookie: `${people.learner.cookie}; ayahspring_locale=ar` } })).text()).replace(/<script[\s\S]*?<\/script>/g, '').replace(/<!--[\s\S]*?-->/g, '');
+          const arabic = await inArabic(workRoute);
+          expect(arabic.includes('مراجعة هذا العمل') && arabic.includes('تم التصحيح') && arabic.includes('Contract feedback') && !arabic.includes('Revise this work') && !arabic.includes('Your work'), 'the assignment page is not in Arabic for a reader of Arabic');
+          const arabicList = await inArabic(`/learn/${id.enrolment}`);
+          expect(arabicList.includes('الواجبات') && arabicList.includes('عرض الملاحظات') && !arabicList.includes('View feedback'), 'the assignment list on the course page is not in Arabic for a reader of Arabic');
           // The teacher's side shows it too.
           expect((await plain(`/teach/${id.course}/assignments`, 'teacher')).includes('Contract assignment'), 'the teacher’s assignment list does not show the assignment');
 
@@ -507,7 +517,7 @@ async function run() {
           handed = await handIns();
           expect(handed[0]?.status === 'draft' && handed[0]?.revision_number === 2 && handed[0]?.score_earned === null, `revising did not reopen the work as version 2: ${JSON.stringify(handed)}`);
           const revising = await plain(workRoute);
-          expect(revising.includes('Earlier version') && revising.includes('Version 1') && revising.includes('Contract feedback') && revising.includes('Score: 8 / 10'), 'the version that was marked is not kept on the page with its mark');
+          expect(revising.includes('Earlier version') && revising.includes('Version 1') && revising.includes('Contract feedback') && revising.includes('Score: 8 of 10'), 'the version that was marked is not kept on the page with its mark');
           const again = await work('learner', { action: 'reopen', submissionId });
           expect(again.status === 409, `a draft was reopened a second time: ${told(again)}`);
           const revised = await work('learner', { action: 'save_draft', assignmentId: id.assignment, learnerProfileId: id.learnerProfile, bodyText: 'Contract revised' });
