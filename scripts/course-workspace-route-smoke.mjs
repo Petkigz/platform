@@ -53,7 +53,9 @@ const fake = createServer(async (req, res) => {
   } else if (path === '/rest/v1/cohort_members') {
     if (request.searchParams.get('learner_profile_id') !== 'eq.learner') { res.writeHead(400); res.end('{"message":"missing learner scope"}'); return; }
     res.end(JSON.stringify([{ cohort_id: 'cohort-member' }]));
-  } else if (path === '/rest/v1/cohorts') res.end('[]');
+  // The dated class this learner is in, so the list is on the page. The title
+  // is a teacher's and stays as written.
+  } else if (path === '/rest/v1/cohorts') res.end(JSON.stringify([{ id: 'cohort-member', course_id: 'course', course_version_id: 'version', title: 'Synthetic evening class', description: null, starts_at: '2026-03-01T17:00:00Z', ends_at: '2026-06-01T17:00:00Z', capacity: 20, status: 'open', join_closes_at: '2026-03-01T17:00:00Z' }]));
   else { res.writeHead(404); res.end('{}'); }
 });
 await new Promise((r) => fake.listen(0, '127.0.0.1', r));
@@ -106,6 +108,7 @@ try {
     assert.equal(workspace(html), '<div class="container section course-workspace">');
     for (const text of ['My learning', 'Version 2 · EN', '0 of 1 lessons complete · 0%', 'Still to do:', 'Start the course', 'Open lesson 1', 'Lesson 1 of 1', 'Mark complete', 'Back to my learning']) assert.ok(html.includes(text), `English: ${text}`);
     for (const text of ['<h3>Assessments</h3>', '>Practice<', '>Graded<', '>Final assessment<', '>Practise<', '>Take<', 'Synthetic practice quiz']) assert.ok(visible(html).includes(text), `English assessment list: ${text}`);
+    for (const text of ['Dated classes for this enrolment', 'Synthetic evening class', 'Starts ', 'Ends ', '>Leave class<', 'UTC']) assert.ok(visible(html).includes(text), `English class list: ${text}`);
     // Nothing needs marking as English on an English page.
     assert.equal(visible(html).includes('lang="en" dir="ltr"'), false);
   }
@@ -125,8 +128,13 @@ try {
     assert.match(html, /<div><div class="outline-h"><h3>التقييمات<\/h3>/);
     for (const text of ['>تدريبي<', '>بدرجات<', '>التقييم النهائي<', '>تدرّب<', '>ابدأ<', '<span class="t" dir="auto">Synthetic practice quiz</span>']) assert.ok(visible(html).includes(text), `Arabic assessment list: ${text}`);
     for (const text of ['>Assessments<', '>Practice<', '>Graded<', '>Final assessment<', '>Practise<', '>Take<']) assert.equal(visible(html).includes(text), false, `Arabic assessment list still says "${text}"`);
-    // Only the database's reasons and the cohort list are marked as English now.
-    assert.equal((visible(html).match(/lang="en" dir="ltr"/g) ?? []).length <= 2, true, 'more than two English islands on the Arabic course page');
+    // The dated classes are the reader's too. The moment is printed by the
+    // server in UTC, and says so.
+    for (const text of ['الصفوف المحدَّدة بتاريخ لهذا التسجيل', '<strong dir="auto">Synthetic evening class</strong>', 'مفتوح', 'يبدأ: ', 'ينتهي: ', '>مغادرة الصف<']) assert.ok(visible(html).includes(text), `Arabic class list: ${text}`);
+    for (const text of ['Dated classes', 'Leave class', 'Starts ', 'Ends ', 'starts ', ' ends ']) assert.equal(visible(html).includes(text), false, `Arabic class list still says "${text}"`);
+    assert.match(visible(html), /<time dateTime="2026-03-01T17:00:00Z"|<time datetime="2026-03-01T17:00:00Z"/);
+    // Only the database's reasons are marked as English now.
+    assert.equal((visible(html).match(/lang="en" dir="ltr"/g) ?? []).length, 1, 'the Arabic course page should have exactly one English island');
     progressOn = false;
     const off = await (await request({ cookie, 'accept-language': 'ar' })).text();
     assert.ok(off.includes('تتبّع التقدّم غير مفعّل بعد.')); assert.equal(off.includes('Progress tracking is not enabled yet.'), false);

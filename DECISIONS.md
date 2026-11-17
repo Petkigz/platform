@@ -7951,14 +7951,14 @@ owner chose the first.
   with the sentence that the rest is in English. That number will keep
   falling: 55% on the day of the decision, 50% since the assessment page, 43%
   since the assignment page, 39% since the files part of that page and the
-  assessment list.
+  assessment list, 38% since the list of dated classes.
 - **The test that refused a language under half is removed.** Nothing in the
   tests now limits how much English one of these languages shows. That is the
   cost of this choice and it was put to the owner in those words.
 - What the tests still require of every offered language: every sentence that
   is neither held nor deliberately unwritten is present, and the sentence
   that gives the percentage is in that language rather than English. The
-  count (192 of 494; it was 192 of 347 when this was decided) is pinned in
+  count (192 of 506; it was 192 of 347 when this was decided) is pinned in
   `held-translations.test.ts`, so it changes only on purpose.
 - The four withheld languages are unaffected. So is the rule that a new screen
   is not written for a language with anything held.
@@ -8042,7 +8042,9 @@ the nineteen. The assignment page and the assignment list followed: sixty
 sentences (`assign.ts`), the same twenty-seven languages, 43% for the
 nineteen. The files part of the assignment page and the assessment list on the
 course page followed: forty-seven sentences in `assign.ts` and three in
-`assess.ts`, the same twenty-seven languages, 39% for the nineteen.
+`assess.ts`, the same twenty-seven languages, 39% for the nineteen. The list
+of dated classes on the course page followed: twelve sentences in `course.ts`,
+38% for the nineteen.
 `UNWRITTEN_WHILE_HELD` is now `learn`, `course`, `lesson`, `assess`
 and `assign`.
 

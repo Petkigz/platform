@@ -404,14 +404,15 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // that means not writing it — a held draft would be the same guess, kept.
   assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign']);
   // Thirty-seven for the dashboard (the learner-profile prompt is seven of
-  // them), sixteen for the course page, twenty-two for the lesson's frame,
+  // them), twenty-eight for the course page (twelve are the list of dated
+  // classes), twenty-two for the lesson's frame,
   // forty for the assessment page, its quiz and the assessment list on the
   // course page, and a hundred and seven for the assignment page and the
   // assignment list, of which forty-seven are the files part.
-  assert.equal(unwrittenKeys.length, 222);
+  assert.equal(unwrittenKeys.length, 234);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('assign.')).length, 107);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('learn.')).length, 37);
-  assert.equal(unwrittenKeys.filter((key) => key.startsWith('course.')).length, 16);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('course.')).length, 28);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('lesson.')).length, 22);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('assess.')).length, 40);
 
@@ -464,7 +465,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     }
   }
   // What that costs the nineteen that are still in the picker, said out loud:
-  // 192 of 494 sentences, which is 39%. Nothing holds a floor under
+  // 192 of 506 sentences, which is 38%. Nothing holds a floor under
   // it any more: the owner chose on 2026-11-17 to keep these languages in the
   // picker and show the number. The count is pinned here so that it moves only
   // when somebody means it to, and is seen when it does. It moved from 55% to
@@ -472,11 +473,11 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // assignment page was: sixty more sentences these readers see in English,
   // on a page they already saw in English. It moved from 43% to 39% when the
   // files part of that page and the assessment list were written, fifty
-  // more. What they are shown did not get smaller; what is counted got bigger.
+  // more, and to 38% with the list of dated classes, twelve more. What they are shown did not get smaller; what is counted got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 494);
-    assert.equal(coverageOf(code).percent, 39, code);
+    assert.equal(coverageOf(code).total, 506);
+    assert.equal(coverageOf(code).percent, 38, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');
   assert.equal(languageShownFor('en', 'learn').code, 'en');
@@ -579,15 +580,30 @@ test('the course page reads its words from the catalogue, and marks what it cann
     assert.ok(!page.includes(sentence), `"${sentence}" is still typed into the course page`);
   }
 
-  // Two things on it are English for every reader, and say so: the reasons
-  // the database gives for a course not being complete, and the cohort list.
-  // An unmarked one would put English sentences into a right-to-left page
-  // with their full stops on the left. The assignment list and then the
-  // assessment list were the third and fourth until they were translated.
+  // One thing on it is English for every reader, and says so: the reasons
+  // the database gives for a course not being complete. Unmarked, they would
+  // put English sentences into a right-to-left page with their full stops on
+  // the left. The assignment list, the assessment list and the list of dated
+  // classes were marked the same way until each was translated.
   assert.match(page, /const english = shown\.code === 'en' \? \{\} : \(\{ lang: 'en', dir: 'ltr' \} as const\);/u);
-  assert.equal(page.match(/\{\.\.\.english\}/gu)?.length, 2);
+  assert.equal(page.match(/\{\.\.\.english\}/gu)?.length, 1);
   assert.match(page, /<ul style=\{\{[^}]+\}\} \{\.\.\.english\}>\s+\{completion\.blocking\.map/u);
-  assert.match(page, /<div \{\.\.\.english\}>\s+<CohortMemberships/u);
+  // The dated classes: a client component, handed its words, asking the
+  // catalogue for none, and printing no moment with an unlabelled clock.
+  const cohortList = read('../app/learn/[enrolmentId]/cohort-memberships.tsx');
+  assert.match(page, /<CohortMemberships\s[\s\S]{0,200}?locale=\{shown\.code\}\s+words=\{cohortWords\}\s+\/>/u);
+  assert.match(cohortList, /^'use client';/u);
+  assert.doesNotMatch(cohortList, /useT\(|'course\.|@\/lib\/i18n'/u);
+  assert.doesNotMatch(cohortList, /toLocaleString\(|Date\.now\(\)/u);
+  assert.match(cohortList, /<LocalTime iso=\{iso\} locale=\{locale\} \/>/u);
+  assert.match(cohortList, /<strong dir="auto">\{cohort\.title\}<\/strong>/u);
+  for (const sentence of ['Dated classes', 'Leave class', 'Leaving…', 'Left the class', 'Could not leave', 'joining is paused', 'starts ', 'ends ']) {
+    assert.ok(!cohortList.includes(`>${sentence}`) && !cohortList.includes(`'${sentence}`) && !cohortList.includes(`\`${sentence}`), `"${sentence}" is still typed into the class list`);
+  }
+  // What the server said in English when leaving failed is not printed.
+  assert.doesNotMatch(cohortList, /result\.message|cause\.message/u);
+  // The status is a word in the reader's language, never the database's.
+  assert.doesNotMatch(cohortList, /\{cohort\.status\}/u);
   assert.match(page, /assessments\.length > 0 && \(\s+<div>\s+<div className="outline-h">\s+<h3>\{t\('assess\.heading'\)\}<\/h3>/u);
   assert.match(page, /t\(a\.type === 'practice' \? 'assess\.practise' : 'assess\.take'\)/u);
   for (const sentence of ['<h3>Assessments</h3>', "'Practise'", "'Take'", "'Final assessment'"]) {

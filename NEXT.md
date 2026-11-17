@@ -2618,6 +2618,34 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The dated classes on the course page, 2026-11-17
+
+The list of classes a learner is in, with the way out of each, was the third
+English block on the course page.
+
+- *Translated.* Twelve sentences (`course.cohort*`) in the twenty-seven
+  languages with nothing held. **Unreviewed.** The nineteen held languages see
+  them in English; `/language` tells each of them **38%** (192 of 506).
+- *Times.* The start and end of a class were printed with `toLocaleString()`
+  in a client component: the server's UTC with no label, then the browser's
+  local time, disagreeing with its own HTML. They are `LocalTime` now. That is
+  one of the twenty-two client components named below; twenty-one remain.
+- *The status.* The page printed the database's word (`open`, `draft`). It
+  prints a word in the reader's language.
+- *When leaving fails.* The page printed whatever English sentence the server
+  sent. It now says one thing in the reader's language: that leaving could not
+  be confirmed, and to reload and see. It says that for a refusal as well as
+  for a lost reply. A learner who is refused is not told why.
+- *What is left in English on this page.* The reasons the database gives for a
+  course not being complete. Those are sentences the database writes; making
+  them translatable means the database giving a code for each, which is a
+  migration.
+- *Not proven.* No browser pressed "Leave class". The route check reads the
+  list in English and Arabic from a synthetic database and nothing else.
+
+Checks: `tsc` and lint clean; web tests 2314 of 2314; production build; client
+bundle check; course route check; repository check.
+
 ### The files on a hand-in, and the assessment list, in the reader's language, 2026-11-17
 
 The two English blocks left on a learner's assignment page and course page.

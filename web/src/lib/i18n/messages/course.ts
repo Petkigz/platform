@@ -13,8 +13,9 @@ import type { Messages } from './en.ts';
  * Two prefixes live in this file because they were written together:
  *
  *   `course.*`  the course page: its heading line, the progress bar and the
- *               sentence under it, the completion notices, the outline, and the
- *               words on the mark-complete control.
+ *               sentence under it, the completion notices, the outline, the
+ *               words on the mark-complete control, and the list of dated
+ *               classes the learner is in (`course.cohort*`).
  *   `learn.*`   seven more dashboard sentences — the prompt an account with no
  *               learner profile is shown before it can enrol.
  *
@@ -56,6 +57,19 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'course.unconfirmed': 'تعذّر التأكد من حفظ التقدّم. أعد تحميل هذه الصفحة للتحقق قبل المحاولة مرة أخرى.',
     'course.reload': 'إعادة تحميل الصفحة',
     'course.back': 'العودة إلى تعلّمي',
+    'course.cohortHeading': 'الصفوف المحدَّدة بتاريخ لهذا التسجيل',
+    'course.cohortPaused':
+      'الانضمام إلى الصفوف متوقف مؤقتًا. ما زال بإمكانك مغادرة صف انضممت إليه من قبل.',
+    'course.cohortStatusDraft': 'لم يُفتح بعد',
+    'course.cohortStatusOpen': 'مفتوح',
+    'course.cohortStatusClosed': 'مغلق',
+    'course.cohortStatusCancelled': 'ملغى',
+    'course.cohortStarts': 'يبدأ: {date}',
+    'course.cohortEnds': 'ينتهي: {date}',
+    'course.cohortLeave': 'مغادرة الصف',
+    'course.cohortLeaving': 'جارٍ المغادرة…',
+    'course.cohortLeft': 'لقد غادرت الصف.',
+    'course.cohortLeaveFailed': 'تعذّر تأكيد مغادرة الصف. أعد تحميل الصفحة لترى هل ما زلت فيه.',
   },
   ur: {
     'learn.needProfile': 'اندراج کے لیے سیکھنے والے کا پروفائل ضروری ہے، اور اس اکاؤنٹ میں ابھی کوئی نہیں ہے۔',
@@ -85,6 +99,20 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'تصدیق نہیں ہو سکی کہ پیش رفت محفوظ ہوئی یا نہیں۔ دوبارہ کوشش سے پہلے یہ صفحہ دوبارہ لوڈ کر کے دیکھ لیں۔',
     'course.reload': 'صفحہ دوبارہ لوڈ کریں',
     'course.back': 'میری تعلیم پر واپس',
+    'course.cohortHeading': 'اس اندراج کی تاریخ وار کلاسیں',
+    'course.cohortPaused':
+      'کلاسوں میں شامل ہونا فی الحال رکا ہوا ہے۔ آپ اب بھی اس کلاس کو چھوڑ سکتے ہیں جس میں آپ پہلے شامل ہو چکے ہیں۔',
+    'course.cohortStatusDraft': 'ابھی نہیں کھلی',
+    'course.cohortStatusOpen': 'کھلی ہے',
+    'course.cohortStatusClosed': 'بند ہے',
+    'course.cohortStatusCancelled': 'منسوخ',
+    'course.cohortStarts': 'آغاز: {date}',
+    'course.cohortEnds': 'اختتام: {date}',
+    'course.cohortLeave': 'کلاس چھوڑیں',
+    'course.cohortLeaving': 'چھوڑا جا رہا ہے…',
+    'course.cohortLeft': 'آپ نے کلاس چھوڑ دی ہے۔',
+    'course.cohortLeaveFailed':
+      'کلاس چھوڑنے کی تصدیق نہیں ہو سکی۔ یہ دیکھنے کے لیے صفحہ دوبارہ لوڈ کریں کہ آیا آپ اب بھی اس میں ہیں۔',
   },
   fa: {
     'learn.needProfile': 'ثبت‌نام به نمایهٔ یادگیرنده نیاز دارد و این حساب هنوز نمایه‌ای ندارد.',
@@ -112,6 +140,20 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'تأیید نشد که پیشرفت ذخیره شده است یا نه. پیش از تلاش دوباره، این صفحه را دوباره بارگیری و بررسی کنید.',
     'course.reload': 'بارگیری دوبارهٔ صفحه',
     'course.back': 'بازگشت به یادگیری من',
+    'course.cohortHeading': 'کلاس‌های تاریخ‌دار این ثبت‌نام',
+    'course.cohortPaused':
+      'پیوستن به کلاس‌ها موقتاً متوقف است. همچنان می‌توانید کلاسی را که پیش‌تر به آن پیوسته‌اید ترک کنید.',
+    'course.cohortStatusDraft': 'هنوز باز نشده',
+    'course.cohortStatusOpen': 'باز',
+    'course.cohortStatusClosed': 'بسته',
+    'course.cohortStatusCancelled': 'لغوشده',
+    'course.cohortStarts': 'شروع: {date}',
+    'course.cohortEnds': 'پایان: {date}',
+    'course.cohortLeave': 'ترک کلاس',
+    'course.cohortLeaving': 'در حال ترک…',
+    'course.cohortLeft': 'کلاس را ترک کردید.',
+    'course.cohortLeaveFailed':
+      'ترک کلاس تأیید نشد. صفحه را دوباره بارگیری کنید تا ببینید هنوز در آن هستید یا نه.',
   },
   'fa-af': {
     'learn.needProfile': 'ثبت‌نام به پروفایل شاگرد نیاز دارد و این حساب هنوز آن را ندارد.',
@@ -139,6 +181,20 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'تأیید نشد که پیشرفت ذخیره شده یا نه. پیش از تلاش دوباره، این صفحه را دوباره بارگذاری و بررسی کنید.',
     'course.reload': 'بارگذاری دوباره صفحه',
     'course.back': 'برگشت به آموزش من',
+    'course.cohortHeading': 'صنف‌های تاریخ‌دار این ثبت‌نام',
+    'course.cohortPaused':
+      'پیوستن به صنف‌ها موقتاً متوقف است. هنوز می‌توانید صنفی را که پیش‌تر به آن پیوسته‌اید ترک کنید.',
+    'course.cohortStatusDraft': 'هنوز باز نشده',
+    'course.cohortStatusOpen': 'باز',
+    'course.cohortStatusClosed': 'بسته',
+    'course.cohortStatusCancelled': 'لغوشده',
+    'course.cohortStarts': 'آغاز: {date}',
+    'course.cohortEnds': 'پایان: {date}',
+    'course.cohortLeave': 'ترک صنف',
+    'course.cohortLeaving': 'در حال ترک…',
+    'course.cohortLeft': 'صنف را ترک کردید.',
+    'course.cohortLeaveFailed':
+      'ترک صنف تأیید نشد. صفحه را دوباره بارگیری کنید تا ببینید هنوز در آن هستید یا نه.',
   },
   tr: {
     'learn.needProfile': 'Kayıt olmak için bir öğrenci profili gerekir ve bu hesapta henüz yok.',
@@ -168,6 +224,20 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'İlerlemenin kaydedilip kaydedilmediği doğrulanamadı. Yeniden denemeden önce kontrol etmek için bu sayfayı yeniden yükleyin.',
     'course.reload': 'Sayfayı yeniden yükle',
     'course.back': 'Öğrenimime dön',
+    'course.cohortHeading': 'Bu kaydın tarihli sınıfları',
+    'course.cohortPaused':
+      'Sınıflara katılım şu an duraklatıldı. Daha önce katıldığınız bir sınıftan yine de ayrılabilirsiniz.',
+    'course.cohortStatusDraft': 'Henüz açılmadı',
+    'course.cohortStatusOpen': 'Açık',
+    'course.cohortStatusClosed': 'Kapalı',
+    'course.cohortStatusCancelled': 'İptal edildi',
+    'course.cohortStarts': 'Başlangıç: {date}',
+    'course.cohortEnds': 'Bitiş: {date}',
+    'course.cohortLeave': 'Sınıftan ayrıl',
+    'course.cohortLeaving': 'Ayrılınıyor…',
+    'course.cohortLeft': 'Sınıftan ayrıldınız.',
+    'course.cohortLeaveFailed':
+      'Sınıftan ayrılma doğrulanamadı. Hâlâ sınıfta olup olmadığınızı görmek için sayfayı yeniden yükleyin.',
   },
   id: {
     'learn.needProfile': 'Mendaftar memerlukan profil peserta didik, dan akun ini belum memilikinya.',
@@ -197,6 +267,20 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Tidak dapat memastikan apakah kemajuan tersimpan. Muat ulang halaman ini untuk memeriksa sebelum mencoba lagi.',
     'course.reload': 'Muat ulang halaman',
     'course.back': 'Kembali ke pembelajaran saya',
+    'course.cohortHeading': 'Kelas bertanggal untuk pendaftaran ini',
+    'course.cohortPaused':
+      'Bergabung dengan kelas sedang dijeda. Anda masih dapat keluar dari kelas yang sudah Anda ikuti.',
+    'course.cohortStatusDraft': 'Belum dibuka',
+    'course.cohortStatusOpen': 'Dibuka',
+    'course.cohortStatusClosed': 'Ditutup',
+    'course.cohortStatusCancelled': 'Dibatalkan',
+    'course.cohortStarts': 'Mulai: {date}',
+    'course.cohortEnds': 'Selesai: {date}',
+    'course.cohortLeave': 'Keluar dari kelas',
+    'course.cohortLeaving': 'Sedang keluar…',
+    'course.cohortLeft': 'Anda telah keluar dari kelas.',
+    'course.cohortLeaveFailed':
+      'Keluar dari kelas tidak dapat dipastikan. Muat ulang halaman untuk melihat apakah Anda masih berada di dalamnya.',
   },
   ms: {
     'learn.needProfile': 'Pendaftaran memerlukan profil pelajar, dan akaun ini belum mempunyainya.',
@@ -225,6 +309,20 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Tidak dapat mengesahkan sama ada kemajuan telah disimpan. Muat semula halaman ini untuk menyemak sebelum mencuba lagi.',
     'course.reload': 'Muat semula halaman',
     'course.back': 'Kembali ke pembelajaran saya',
+    'course.cohortHeading': 'Kelas bertarikh untuk pendaftaran ini',
+    'course.cohortPaused':
+      'Penyertaan kelas dijeda buat masa ini. Anda masih boleh keluar daripada kelas yang telah anda sertai.',
+    'course.cohortStatusDraft': 'Belum dibuka',
+    'course.cohortStatusOpen': 'Dibuka',
+    'course.cohortStatusClosed': 'Ditutup',
+    'course.cohortStatusCancelled': 'Dibatalkan',
+    'course.cohortStarts': 'Mula: {date}',
+    'course.cohortEnds': 'Tamat: {date}',
+    'course.cohortLeave': 'Keluar daripada kelas',
+    'course.cohortLeaving': 'Sedang keluar…',
+    'course.cohortLeft': 'Anda telah keluar daripada kelas.',
+    'course.cohortLeaveFailed':
+      'Keluar daripada kelas tidak dapat disahkan. Muat semula halaman untuk melihat sama ada anda masih berada di dalamnya.',
   },
   bn: {
     'learn.needProfile': 'ভর্তি হতে একটি শিক্ষার্থী প্রোফাইল লাগে, আর এই অ্যাকাউন্টে এখনো তা নেই।',
@@ -253,6 +351,20 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'অগ্রগতি সংরক্ষিত হয়েছে কি না নিশ্চিত করা যায়নি। আবার চেষ্টা করার আগে পৃষ্ঠাটি পুনরায় লোড করে দেখে নিন।',
     'course.reload': 'পৃষ্ঠা পুনরায় লোড করুন',
     'course.back': 'আমার শেখায় ফিরে যান',
+    'course.cohortHeading': 'এই ভর্তির তারিখ-নির্ধারিত ক্লাস',
+    'course.cohortPaused':
+      'ক্লাসে যোগ দেওয়া আপাতত স্থগিত আছে। আপনি আগে যোগ দেওয়া ক্লাস এখনও ছেড়ে দিতে পারেন।',
+    'course.cohortStatusDraft': 'এখনও খোলেনি',
+    'course.cohortStatusOpen': 'খোলা',
+    'course.cohortStatusClosed': 'বন্ধ',
+    'course.cohortStatusCancelled': 'বাতিল',
+    'course.cohortStarts': 'শুরু: {date}',
+    'course.cohortEnds': 'শেষ: {date}',
+    'course.cohortLeave': 'ক্লাস ছেড়ে দিন',
+    'course.cohortLeaving': 'ছেড়ে দেওয়া হচ্ছে…',
+    'course.cohortLeft': 'আপনি ক্লাসটি ছেড়ে দিয়েছেন।',
+    'course.cohortLeaveFailed':
+      'ক্লাস ছাড়া নিশ্চিত করা যায়নি। আপনি এখনও এতে আছেন কি না দেখতে পৃষ্ঠাটি আবার লোড করুন।',
   },
   hi: {
     'learn.needProfile': 'नामांकन के लिए शिक्षार्थी प्रोफ़ाइल ज़रूरी है, और इस खाते में अभी कोई नहीं है।',
@@ -281,6 +393,20 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'पुष्टि नहीं हो सकी कि प्रगति सहेजी गई या नहीं। दोबारा कोशिश करने से पहले यह पेज फिर से लोड करके देख लें।',
     'course.reload': 'पेज फिर से लोड करें',
     'course.back': 'मेरी पढ़ाई पर वापस',
+    'course.cohortHeading': 'इस नामांकन की तारीख़ वाली कक्षाएँ',
+    'course.cohortPaused':
+      'कक्षाओं में शामिल होना अभी रुका हुआ है। आप जिस कक्षा में पहले शामिल हो चुके हैं उसे अब भी छोड़ सकते हैं।',
+    'course.cohortStatusDraft': 'अभी खुली नहीं',
+    'course.cohortStatusOpen': 'खुली है',
+    'course.cohortStatusClosed': 'बंद है',
+    'course.cohortStatusCancelled': 'रद्द',
+    'course.cohortStarts': 'शुरू: {date}',
+    'course.cohortEnds': 'समाप्त: {date}',
+    'course.cohortLeave': 'कक्षा छोड़ें',
+    'course.cohortLeaving': 'छोड़ी जा रही है…',
+    'course.cohortLeft': 'आपने कक्षा छोड़ दी है।',
+    'course.cohortLeaveFailed':
+      'कक्षा छोड़ने की पुष्टि नहीं हो सकी। आप अब भी उसमें हैं या नहीं, यह देखने के लिए पेज दोबारा लोड करें।',
   },
   fr: {
     'learn.needProfile': 'Pour s’inscrire, il faut un profil d’apprenant, et ce compte n’en a pas encore.',
@@ -310,6 +436,20 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Impossible de confirmer que la progression a été enregistrée. Rechargez cette page pour vérifier avant de réessayer.',
     'course.reload': 'Recharger la page',
     'course.back': 'Retour à mon apprentissage',
+    'course.cohortHeading': 'Classes à dates fixes pour cette inscription',
+    'course.cohortPaused':
+      'L’inscription aux classes est suspendue. Vous pouvez toujours quitter une classe que vous avez déjà rejointe.',
+    'course.cohortStatusDraft': 'Pas encore ouverte',
+    'course.cohortStatusOpen': 'Ouverte',
+    'course.cohortStatusClosed': 'Fermée',
+    'course.cohortStatusCancelled': 'Annulée',
+    'course.cohortStarts': 'Début : {date}',
+    'course.cohortEnds': 'Fin : {date}',
+    'course.cohortLeave': 'Quitter la classe',
+    'course.cohortLeaving': 'Départ en cours…',
+    'course.cohortLeft': 'Vous avez quitté la classe.',
+    'course.cohortLeaveFailed':
+      'Le départ de la classe n’a pas pu être confirmé. Rechargez la page pour voir si vous en faites toujours partie.',
   },
   es: {
     'learn.needProfile': 'Para inscribirse hace falta un perfil de alumno, y esta cuenta aún no tiene uno.',
@@ -337,6 +477,20 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'No se pudo confirmar si el progreso se guardó. Recargue esta página para comprobarlo antes de volver a intentarlo.',
     'course.reload': 'Recargar la página',
     'course.back': 'Volver a mi aprendizaje',
+    'course.cohortHeading': 'Clases con fecha de esta inscripción',
+    'course.cohortPaused':
+      'Unirse a clases está en pausa. Aún puedes salir de una clase a la que ya te uniste.',
+    'course.cohortStatusDraft': 'Aún no abierta',
+    'course.cohortStatusOpen': 'Abierta',
+    'course.cohortStatusClosed': 'Cerrada',
+    'course.cohortStatusCancelled': 'Cancelada',
+    'course.cohortStarts': 'Empieza: {date}',
+    'course.cohortEnds': 'Termina: {date}',
+    'course.cohortLeave': 'Salir de la clase',
+    'course.cohortLeaving': 'Saliendo…',
+    'course.cohortLeft': 'Has salido de la clase.',
+    'course.cohortLeaveFailed':
+      'No se pudo confirmar la salida de la clase. Recarga la página para ver si sigues en ella.',
   },
   pt: {
     'learn.needProfile': 'Para se inscrever é preciso um perfil de aluno, e esta conta ainda não tem um.',
@@ -364,6 +518,20 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Não foi possível confirmar se o progresso foi guardado. Recarregue esta página para verificar antes de tentar de novo.',
     'course.reload': 'Recarregar a página',
     'course.back': 'Voltar à minha aprendizagem',
+    'course.cohortHeading': 'Turmas com datas desta inscrição',
+    'course.cohortPaused':
+      'A entrada em turmas está em pausa. Ainda pode sair de uma turma em que já entrou.',
+    'course.cohortStatusDraft': 'Ainda não aberta',
+    'course.cohortStatusOpen': 'Aberta',
+    'course.cohortStatusClosed': 'Fechada',
+    'course.cohortStatusCancelled': 'Cancelada',
+    'course.cohortStarts': 'Começa: {date}',
+    'course.cohortEnds': 'Termina: {date}',
+    'course.cohortLeave': 'Sair da turma',
+    'course.cohortLeaving': 'A sair…',
+    'course.cohortLeft': 'Saiu da turma.',
+    'course.cohortLeaveFailed':
+      'Não foi possível confirmar a saída da turma. Recarregue a página para ver se ainda faz parte dela.',
   },
   sw: {
     'learn.needProfile': 'Kujisajili kunahitaji wasifu wa mwanafunzi, na akaunti hii bado haina.',
@@ -392,6 +560,20 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Haikuwezekana kuthibitisha kama maendeleo yamehifadhiwa. Pakia upya ukurasa huu ili kuhakiki kabla ya kujaribu tena.',
     'course.reload': 'Pakia upya ukurasa',
     'course.back': 'Rudi kwenye masomo yangu',
+    'course.cohortHeading': 'Madarasa yenye tarehe ya usajili huu',
+    'course.cohortPaused':
+      'Kujiunga na madarasa kumesitishwa kwa sasa. Bado unaweza kuondoka kwenye darasa ulilokwisha kujiunga nalo.',
+    'course.cohortStatusDraft': 'Bado halijafunguliwa',
+    'course.cohortStatusOpen': 'Limefunguliwa',
+    'course.cohortStatusClosed': 'Limefungwa',
+    'course.cohortStatusCancelled': 'Limeghairiwa',
+    'course.cohortStarts': 'Linaanza: {date}',
+    'course.cohortEnds': 'Linaisha: {date}',
+    'course.cohortLeave': 'Ondoka darasani',
+    'course.cohortLeaving': 'Unaondoka…',
+    'course.cohortLeft': 'Umeondoka darasani.',
+    'course.cohortLeaveFailed':
+      'Kuondoka darasani hakukuweza kuthibitishwa. Pakia upya ukurasa ili kuona kama bado umo.',
   },
   af: {
     'learn.needProfile': 'Om in te skryf het jy ’n leerderprofiel nodig, en hierdie rekening het nog nie een nie.',
@@ -419,6 +601,20 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Kon nie bevestig of die vordering gestoor is nie. Herlaai hierdie bladsy om seker te maak voordat jy weer probeer.',
     'course.reload': 'Herlaai bladsy',
     'course.back': 'Terug na my leer',
+    'course.cohortHeading': 'Klasse met datums vir hierdie inskrywing',
+    'course.cohortPaused':
+      'Aansluiting by klasse is onderbreek. Jy kan steeds ’n klas verlaat waarby jy reeds aangesluit het.',
+    'course.cohortStatusDraft': 'Nog nie oop nie',
+    'course.cohortStatusOpen': 'Oop',
+    'course.cohortStatusClosed': 'Gesluit',
+    'course.cohortStatusCancelled': 'Gekanselleer',
+    'course.cohortStarts': 'Begin: {date}',
+    'course.cohortEnds': 'Eindig: {date}',
+    'course.cohortLeave': 'Verlaat klas',
+    'course.cohortLeaving': 'Besig om te verlaat…',
+    'course.cohortLeft': 'Jy het die klas verlaat.',
+    'course.cohortLeaveFailed':
+      'Daar kon nie bevestig word dat jy die klas verlaat het nie. Herlaai die bladsy om te sien of jy nog daarin is.',
   },
   'zh-hans': {
     'learn.needProfile': '报名需要学习者资料，而此账户还没有。',
@@ -444,6 +640,18 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'course.unconfirmed': '无法确认进度是否已保存。请先重新加载此页面查看，再重试。',
     'course.reload': '重新加载页面',
     'course.back': '返回我的学习',
+    'course.cohortHeading': '此报名的定期班级',
+    'course.cohortPaused': '目前暂停加入班级。你仍然可以退出已加入的班级。',
+    'course.cohortStatusDraft': '尚未开放',
+    'course.cohortStatusOpen': '开放中',
+    'course.cohortStatusClosed': '已关闭',
+    'course.cohortStatusCancelled': '已取消',
+    'course.cohortStarts': '开始：{date}',
+    'course.cohortEnds': '结束：{date}',
+    'course.cohortLeave': '退出班级',
+    'course.cohortLeaving': '正在退出…',
+    'course.cohortLeft': '你已退出班级。',
+    'course.cohortLeaveFailed': '无法确认是否已退出班级。请重新加载页面，查看你是否仍在班级中。',
   },
   'zh-hant': {
     'learn.needProfile': '報名需要學習者資料，而此帳號還沒有。',
@@ -469,6 +677,18 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'course.unconfirmed': '無法確認進度是否已儲存。請先重新載入此頁面查看，再重試。',
     'course.reload': '重新載入頁面',
     'course.back': '返回我的學習',
+    'course.cohortHeading': '此報名的定期班級',
+    'course.cohortPaused': '目前暫停加入班級。你仍然可以退出已加入的班級。',
+    'course.cohortStatusDraft': '尚未開放',
+    'course.cohortStatusOpen': '開放中',
+    'course.cohortStatusClosed': '已關閉',
+    'course.cohortStatusCancelled': '已取消',
+    'course.cohortStarts': '開始：{date}',
+    'course.cohortEnds': '結束：{date}',
+    'course.cohortLeave': '退出班級',
+    'course.cohortLeaving': '正在退出…',
+    'course.cohortLeft': '你已退出班級。',
+    'course.cohortLeaveFailed': '無法確認是否已退出班級。請重新載入頁面，查看你是否仍在班級中。',
   },
   vi: {
     'learn.needProfile': 'Ghi danh cần có hồ sơ học viên, và tài khoản này chưa có.',
@@ -497,6 +717,20 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Không thể xác nhận tiến độ đã được lưu hay chưa. Hãy tải lại trang này để kiểm tra trước khi thử lại.',
     'course.reload': 'Tải lại trang',
     'course.back': 'Quay lại việc học của tôi',
+    'course.cohortHeading': 'Các lớp có lịch cố định của lượt ghi danh này',
+    'course.cohortPaused':
+      'Việc tham gia lớp đang tạm dừng. Bạn vẫn có thể rời lớp mà bạn đã tham gia.',
+    'course.cohortStatusDraft': 'Chưa mở',
+    'course.cohortStatusOpen': 'Đang mở',
+    'course.cohortStatusClosed': 'Đã đóng',
+    'course.cohortStatusCancelled': 'Đã hủy',
+    'course.cohortStarts': 'Bắt đầu: {date}',
+    'course.cohortEnds': 'Kết thúc: {date}',
+    'course.cohortLeave': 'Rời lớp',
+    'course.cohortLeaving': 'Đang rời…',
+    'course.cohortLeft': 'Bạn đã rời lớp.',
+    'course.cohortLeaveFailed':
+      'Không thể xác nhận việc rời lớp. Hãy tải lại trang để xem bạn còn ở trong lớp hay không.',
   },
   th: {
     'learn.needProfile': 'การลงทะเบียนต้องมีโปรไฟล์ผู้เรียน และบัญชีนี้ยังไม่มี',
@@ -524,6 +758,20 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'ไม่สามารถยืนยันได้ว่าบันทึกความคืบหน้าแล้วหรือไม่ โหลดหน้านี้ใหม่เพื่อตรวจสอบก่อนลองอีกครั้ง',
     'course.reload': 'โหลดหน้าใหม่',
     'course.back': 'กลับไปที่การเรียนของฉัน',
+    'course.cohortHeading': 'ชั้นเรียนตามกำหนดวันของการลงทะเบียนนี้',
+    'course.cohortPaused':
+      'การเข้าร่วมชั้นเรียนหยุดชั่วคราว คุณยังออกจากชั้นเรียนที่เข้าร่วมไว้แล้วได้',
+    'course.cohortStatusDraft': 'ยังไม่เปิด',
+    'course.cohortStatusOpen': 'เปิดอยู่',
+    'course.cohortStatusClosed': 'ปิดแล้ว',
+    'course.cohortStatusCancelled': 'ยกเลิกแล้ว',
+    'course.cohortStarts': 'เริ่ม: {date}',
+    'course.cohortEnds': 'สิ้นสุด: {date}',
+    'course.cohortLeave': 'ออกจากชั้นเรียน',
+    'course.cohortLeaving': 'กำลังออก…',
+    'course.cohortLeft': 'คุณออกจากชั้นเรียนแล้ว',
+    'course.cohortLeaveFailed':
+      'ไม่สามารถยืนยันการออกจากชั้นเรียนได้ โปรดโหลดหน้านี้ใหม่เพื่อดูว่าคุณยังอยู่ในชั้นเรียนหรือไม่',
   },
   fil: {
     'learn.needProfile': 'Kailangan ng profile ng mag-aaral para makapag-enrol, at wala pa nito ang account na ito.',
@@ -552,6 +800,20 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Hindi matiyak kung na-save ang progreso. I-reload ang pahinang ito para tingnan bago subukang muli.',
     'course.reload': 'I-reload ang pahina',
     'course.back': 'Bumalik sa aking pag-aaral',
+    'course.cohortHeading': 'Mga klaseng may petsa para sa enrolment na ito',
+    'course.cohortPaused':
+      'Naka-pause ang pagsali sa mga klase. Maaari ka pa ring umalis sa klaseng nasalihan mo na.',
+    'course.cohortStatusDraft': 'Hindi pa bukas',
+    'course.cohortStatusOpen': 'Bukas',
+    'course.cohortStatusClosed': 'Sarado',
+    'course.cohortStatusCancelled': 'Kinansela',
+    'course.cohortStarts': 'Magsisimula: {date}',
+    'course.cohortEnds': 'Matatapos: {date}',
+    'course.cohortLeave': 'Umalis sa klase',
+    'course.cohortLeaving': 'Umaalis…',
+    'course.cohortLeft': 'Umalis ka na sa klase.',
+    'course.cohortLeaveFailed':
+      'Hindi makumpirma ang pag-alis sa klase. I-reload ang pahina para makita kung kasali ka pa rin.',
   },
   uz: {
     'learn.needProfile': 'Roʻyxatdan oʻtish uchun oʻquvchi profili kerak, bu hisobda esa hali yoʻq.',
@@ -581,6 +843,20 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Natija saqlangani tasdiqlanmadi. Qayta urinishdan oldin tekshirish uchun sahifani qayta yuklang.',
     'course.reload': 'Sahifani qayta yuklash',
     'course.back': 'Taʼlimimga qaytish',
+    'course.cohortHeading': 'Bu ro‘yxatdan o‘tishning sanali sinflari',
+    'course.cohortPaused':
+      'Sinflarga qo‘shilish vaqtincha to‘xtatilgan. Avval qo‘shilgan sinfingizni hali ham tark etishingiz mumkin.',
+    'course.cohortStatusDraft': 'Hali ochilmagan',
+    'course.cohortStatusOpen': 'Ochiq',
+    'course.cohortStatusClosed': 'Yopiq',
+    'course.cohortStatusCancelled': 'Bekor qilingan',
+    'course.cohortStarts': 'Boshlanishi: {date}',
+    'course.cohortEnds': 'Tugashi: {date}',
+    'course.cohortLeave': 'Sinfni tark etish',
+    'course.cohortLeaving': 'Tark etilmoqda…',
+    'course.cohortLeft': 'Siz sinfni tark etdingiz.',
+    'course.cohortLeaveFailed':
+      'Sinfni tark etish tasdiqlanmadi. Hali ham unda ekaningizni ko‘rish uchun sahifani qayta yuklang.',
   },
   kk: {
     'learn.needProfile': 'Тіркелу үшін оқушы профилі қажет, ал бұл тіркелгіде ол әлі жоқ.',
@@ -608,6 +884,20 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Ілгерілеудің сақталғаны расталмады. Қайта әрекет жасамас бұрын тексеру үшін осы бетті қайта жүктеңіз.',
     'course.reload': 'Бетті қайта жүктеу',
     'course.back': 'Оқуыма оралу',
+    'course.cohortHeading': 'Осы тіркелудің күні белгіленген сыныптары',
+    'course.cohortPaused':
+      'Сыныптарға қосылу уақытша тоқтатылған. Бұрын қосылған сыныбыңыздан әлі де шыға аласыз.',
+    'course.cohortStatusDraft': 'Әлі ашылмаған',
+    'course.cohortStatusOpen': 'Ашық',
+    'course.cohortStatusClosed': 'Жабық',
+    'course.cohortStatusCancelled': 'Бас тартылған',
+    'course.cohortStarts': 'Басталуы: {date}',
+    'course.cohortEnds': 'Аяқталуы: {date}',
+    'course.cohortLeave': 'Сыныптан шығу',
+    'course.cohortLeaving': 'Шығуда…',
+    'course.cohortLeft': 'Сіз сыныптан шықтыңыз.',
+    'course.cohortLeaveFailed':
+      'Сыныптан шығу расталмады. Әлі де сыныпта екеніңізді көру үшін бетті қайта жүктеңіз.',
   },
   az: {
     'learn.needProfile': 'Qeydiyyat üçün öyrənən profili lazımdır, bu hesabda isə hələ yoxdur.',
@@ -635,6 +925,20 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'İrəliləyişin yadda saxlanıldığını təsdiqləmək mümkün olmadı. Yenidən cəhd etməzdən əvvəl yoxlamaq üçün bu səhifəni yenidən yükləyin.',
     'course.reload': 'Səhifəni yenidən yüklə',
     'course.back': 'Təhsilimə qayıt',
+    'course.cohortHeading': 'Bu qeydiyyatın tarixli sinifləri',
+    'course.cohortPaused':
+      'Siniflərə qoşulma müvəqqəti dayandırılıb. Əvvəl qoşulduğunuz sinfi yenə də tərk edə bilərsiniz.',
+    'course.cohortStatusDraft': 'Hələ açılmayıb',
+    'course.cohortStatusOpen': 'Açıqdır',
+    'course.cohortStatusClosed': 'Bağlıdır',
+    'course.cohortStatusCancelled': 'Ləğv edilib',
+    'course.cohortStarts': 'Başlayır: {date}',
+    'course.cohortEnds': 'Bitir: {date}',
+    'course.cohortLeave': 'Sinfi tərk et',
+    'course.cohortLeaving': 'Tərk edilir…',
+    'course.cohortLeft': 'Sinfi tərk etdiniz.',
+    'course.cohortLeaveFailed':
+      'Sinfi tərk etməyi təsdiqləmək mümkün olmadı. Hələ də sinifdə olub-olmadığınızı görmək üçün səhifəni yenidən yükləyin.',
   },
   tg: {
     'learn.needProfile': 'Барои номнависӣ профили хонанда лозим аст ва ин ҳисоб ҳоло онро надорад.',
@@ -662,6 +966,20 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Тасдиқ нашуд, ки пешрафт нигоҳ дошта шудааст ё не. Пеш аз кӯшиши дубора барои санҷиш ин саҳифаро аз нав бор кунед.',
     'course.reload': 'Саҳифаро аз нав бор кардан',
     'course.back': 'Бозгашт ба таълими ман',
+    'course.cohortHeading': 'Синфҳои санадори ин сабти ном',
+    'course.cohortPaused':
+      'Ҳамроҳ шудан ба синфҳо муваққатан боздошта шудааст. Шумо ҳанӯз метавонед синферо, ки қаблан ба он ҳамроҳ шудаед, тарк кунед.',
+    'course.cohortStatusDraft': 'Ҳанӯз кушода нашудааст',
+    'course.cohortStatusOpen': 'Кушода',
+    'course.cohortStatusClosed': 'Баста',
+    'course.cohortStatusCancelled': 'Бекор шудааст',
+    'course.cohortStarts': 'Оғоз: {date}',
+    'course.cohortEnds': 'Анҷом: {date}',
+    'course.cohortLeave': 'Тарк кардани синф',
+    'course.cohortLeaving': 'Тарк шуда истодааст…',
+    'course.cohortLeft': 'Шумо синфро тарк кардед.',
+    'course.cohortLeaveFailed':
+      'Тарк кардани синф тасдиқ нашуд. Барои дидани он ки оё ҳанӯз дар синф ҳастед, саҳифаро дубора бор кунед.',
   },
   ky: {
     'learn.needProfile': 'Катталуу үчүн окуучунун профили керек, ал эми бул аккаунтта азырынча жок.',
@@ -689,6 +1007,20 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Жылыштын сакталганы ырасталган жок. Кайра аракет кылардан мурун текшерүү үчүн бул баракты кайра жүктөңүз.',
     'course.reload': 'Баракты кайра жүктөө',
     'course.back': 'Менин окуума кайтуу',
+    'course.cohortHeading': 'Бул каттоонун датасы белгиленген класстары',
+    'course.cohortPaused':
+      'Класстарга кошулуу убактылуу токтотулган. Мурда кошулган классыңыздан дагы эле чыга аласыз.',
+    'course.cohortStatusDraft': 'Азырынча ачыла элек',
+    'course.cohortStatusOpen': 'Ачык',
+    'course.cohortStatusClosed': 'Жабык',
+    'course.cohortStatusCancelled': 'Жокко чыгарылган',
+    'course.cohortStarts': 'Башталышы: {date}',
+    'course.cohortEnds': 'Аякталышы: {date}',
+    'course.cohortLeave': 'Класстан чыгуу',
+    'course.cohortLeaving': 'Чыгууда…',
+    'course.cohortLeft': 'Сиз класстан чыктыңыз.',
+    'course.cohortLeaveFailed':
+      'Класстан чыгуу ырасталган жок. Дагы эле класста экениңизди көрүү үчүн баракты кайра жүктөңүз.',
   },
   tk: {
     'learn.needProfile': 'Ýazylmak üçin okuwçy profili gerek, bu hasapda bolsa entek ýok.',
@@ -716,6 +1048,20 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Ösüşiň saklanandygyny tassyklap bolmady. Gaýtadan synanyşmazdan öň barlamak üçin şu sahypany täzeden ýükläň.',
     'course.reload': 'Sahypany täzeden ýüklemek',
     'course.back': 'Okuwyma dolanmak',
+    'course.cohortHeading': 'Bu ýazgynyň senesi bellenen synplary',
+    'course.cohortPaused':
+      'Synplara goşulmak wagtlaýyn duruzyldy. Öň goşulan synpyňyzdan henizem çykyp bilersiňiz.',
+    'course.cohortStatusDraft': 'Entek açylmady',
+    'course.cohortStatusOpen': 'Açyk',
+    'course.cohortStatusClosed': 'Ýapyk',
+    'course.cohortStatusCancelled': 'Ýatyryldy',
+    'course.cohortStarts': 'Başlanýar: {date}',
+    'course.cohortEnds': 'Gutarýar: {date}',
+    'course.cohortLeave': 'Synpdan çykmak',
+    'course.cohortLeaving': 'Çykylýar…',
+    'course.cohortLeft': 'Siz synpdan çykdyňyz.',
+    'course.cohortLeaveFailed':
+      'Synpdan çykmagy tassyklap bolmady. Henizem synpdadygyňyzy görmek üçin sahypany täzeden ýükläň.',
   },
   ta: {
     'learn.needProfile': 'பதிவு செய்ய ஒரு கற்பவர் சுயவிவரம் தேவை; இந்தக் கணக்கில் அது இன்னும் இல்லை.',
@@ -745,6 +1091,20 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'முன்னேற்றம் சேமிக்கப்பட்டதா என்பதை உறுதிப்படுத்த முடியவில்லை. மீண்டும் முயற்சிக்கும் முன் இந்தப் பக்கத்தை மீளேற்றிச் சரிபார்க்கவும்.',
     'course.reload': 'பக்கத்தை மீளேற்று',
     'course.back': 'என் கற்றலுக்குத் திரும்பு',
+    'course.cohortHeading': 'இந்தப் பதிவுக்கான தேதியிட்ட வகுப்புகள்',
+    'course.cohortPaused':
+      'வகுப்புகளில் சேர்வது தற்காலிகமாக நிறுத்தப்பட்டுள்ளது. நீங்கள் ஏற்கனவே சேர்ந்த வகுப்பிலிருந்து இன்னும் வெளியேறலாம்.',
+    'course.cohortStatusDraft': 'இன்னும் திறக்கவில்லை',
+    'course.cohortStatusOpen': 'திறந்துள்ளது',
+    'course.cohortStatusClosed': 'மூடப்பட்டது',
+    'course.cohortStatusCancelled': 'ரத்து செய்யப்பட்டது',
+    'course.cohortStarts': 'தொடக்கம்: {date}',
+    'course.cohortEnds': 'முடிவு: {date}',
+    'course.cohortLeave': 'வகுப்பிலிருந்து வெளியேறு',
+    'course.cohortLeaving': 'வெளியேறுகிறது…',
+    'course.cohortLeft': 'நீங்கள் வகுப்பிலிருந்து வெளியேறிவிட்டீர்கள்.',
+    'course.cohortLeaveFailed':
+      'வகுப்பிலிருந்து வெளியேறியதை உறுதிப்படுத்த முடியவில்லை. நீங்கள் இன்னும் அதில் இருக்கிறீர்களா என்று பார்க்கப் பக்கத்தை மீண்டும் ஏற்றுங்கள்.',
   },
   ne: {
     'learn.needProfile': 'भर्ना हुन सिकारु प्रोफाइल चाहिन्छ, र यो खातामा अहिलेसम्म छैन।',
@@ -772,5 +1132,19 @@ export const COURSE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'प्रगति सुरक्षित भयो कि भएन भनेर पुष्टि गर्न सकिएन। फेरि प्रयास गर्नुअघि यो पृष्ठ पुनः लोड गरेर जाँच्नुहोस्।',
     'course.reload': 'पृष्ठ पुनः लोड गर्नुहोस्',
     'course.back': 'मेरो सिकाइमा फर्कनुहोस्',
+    'course.cohortHeading': 'यो भर्नाका मिति तोकिएका कक्षाहरू',
+    'course.cohortPaused':
+      'कक्षामा सामेल हुने काम अहिले रोकिएको छ। तपाईं पहिले सामेल भइसकेको कक्षा अझै छोड्न सक्नुहुन्छ।',
+    'course.cohortStatusDraft': 'अझै खुलेको छैन',
+    'course.cohortStatusOpen': 'खुला',
+    'course.cohortStatusClosed': 'बन्द',
+    'course.cohortStatusCancelled': 'रद्द',
+    'course.cohortStarts': 'सुरु: {date}',
+    'course.cohortEnds': 'अन्त्य: {date}',
+    'course.cohortLeave': 'कक्षा छोड्नुहोस्',
+    'course.cohortLeaving': 'छोडिँदै छ…',
+    'course.cohortLeft': 'तपाईंले कक्षा छोड्नुभयो।',
+    'course.cohortLeaveFailed':
+      'कक्षा छोडेको पुष्टि गर्न सकिएन। तपाईं अझै त्यसमा हुनुहुन्छ कि छैन भनी हेर्न पृष्ठ फेरि लोड गर्नुहोस्।',
   },
 };

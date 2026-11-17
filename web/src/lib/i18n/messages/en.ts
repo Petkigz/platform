@@ -442,6 +442,20 @@ export const en = {
     'Could not confirm whether progress was saved. Reload this page to check before trying again.',
   'course.reload': 'Reload page',
   'course.back': 'Back to my learning',
+  // The dated classes a learner is in for this enrolment.
+  'course.cohortHeading': 'Dated classes for this enrolment',
+  'course.cohortPaused': 'Joining classes is paused. You can still leave a class you already joined.',
+  'course.cohortStatusDraft': 'Not open yet',
+  'course.cohortStatusOpen': 'Open',
+  'course.cohortStatusClosed': 'Closed',
+  'course.cohortStatusCancelled': 'Cancelled',
+  'course.cohortStarts': 'Starts {date}',
+  'course.cohortEnds': 'Ends {date}',
+  'course.cohortLeave': 'Leave class',
+  'course.cohortLeaving': 'Leaving…',
+  'course.cohortLeft': 'You have left the class.',
+  'course.cohortLeaveFailed':
+    'Leaving the class could not be confirmed. Reload the page to see whether you are still in it.',
 
   // The lesson page's own frame. Same twenty-seven languages (`lesson.ts`).
   'lesson.crumbs': 'Breadcrumb',

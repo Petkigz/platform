@@ -12,7 +12,7 @@ import { isFlagEnabled } from '@/lib/flags';
 import { LOCALE_COOKIE, chooseLocale, formatNumber, languageShownFor, translator } from '@/lib/i18n';
 import { MarkComplete, type MarkCompleteWords } from './mark-complete';
 import { LocalTime } from '@/components/local-time';
-import { CohortMemberships } from './cohort-memberships';
+import { CohortMemberships, type CohortWords } from './cohort-memberships';
 import type { CourseCohort } from '@/lib/cohorts';
 import {
   assignmentDeadline,
@@ -99,6 +99,20 @@ export default async function CourseViewPage({
   const english = shown.code === 'en' ? {} : ({ lang: 'en', dir: 'ltr' } as const);
   // Handed to the client control as props, so these sentences are not in the
   // catalogue every page carries.
+  const cohortWords: CohortWords = {
+    heading: t('course.cohortHeading'),
+    paused: t('course.cohortPaused'),
+    statusDraft: t('course.cohortStatusDraft'),
+    statusOpen: t('course.cohortStatusOpen'),
+    statusClosed: t('course.cohortStatusClosed'),
+    statusCancelled: t('course.cohortStatusCancelled'),
+    starts: t('course.cohortStarts'),
+    ends: t('course.cohortEnds'),
+    leave: t('course.cohortLeave'),
+    leaving: t('course.cohortLeaving'),
+    left: t('course.cohortLeft'),
+    leaveFailed: t('course.cohortLeaveFailed'),
+  };
   const markWords: MarkCompleteWords = {
     mark: t('course.markComplete'),
     undo: t('course.undo'),
@@ -286,13 +300,13 @@ export default async function CourseViewPage({
       )}
 
       {learnerCohorts.length > 0 && (
-        <div {...english}>
-          <CohortMemberships
-            enabled={cohortsEnabled}
-            cohorts={learnerCohorts}
-            learnerProfileId={enrolment.learner_profile_id}
-          />
-        </div>
+        <CohortMemberships
+          enabled={cohortsEnabled}
+          cohorts={learnerCohorts}
+          learnerProfileId={enrolment.learner_profile_id}
+          locale={shown.code}
+          words={cohortWords}
+        />
       )}
 
       {sections.length === 0 ? (
