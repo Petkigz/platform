@@ -56,7 +56,7 @@ export default async function AssessmentPage({
     .from('course_enrolments')
     .select('id, learner_profile_id, course_version_id, courses ( title )')
     .eq('id', enrolmentId)
-    .eq('deleted_at', null)
+    .is('deleted_at', null)
     .maybeSingle();
 
   const enrolment = enrolmentData as unknown as

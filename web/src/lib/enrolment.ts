@@ -135,7 +135,7 @@ export async function ownLearnerProfileId(
     .from('learner_profiles')
     .select('id')
     .eq('linked_user_id', userId)
-    .eq('deleted_at', null)
+    .is('deleted_at', null)
     .maybeSingle();
 
   if (error) throw new Error(error.message);
@@ -414,7 +414,7 @@ export async function enrolInFreeCourse(
     .select('id')
     .eq('learner_profile_id', learnerProfileId)
     .eq('course_id', args.courseId)
-    .eq('deleted_at', null)
+    .is('deleted_at', null)
     .limit(1);
 
   if (existing && existing.length > 0) {

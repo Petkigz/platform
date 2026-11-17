@@ -115,7 +115,7 @@ export default async function CourseViewPage({
         'lessons ( id, title, position, is_preview ) ) )',
     )
     .eq('id', enrolmentId)
-    .eq('deleted_at', null)
+    .is('deleted_at', null)
     .maybeSingle();
 
   if (error) throw new Error(error.message);

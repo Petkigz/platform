@@ -115,7 +115,7 @@ export async function POST(request: Request) {
       .eq('learner_profile_id', learnerProfileId)
       .eq('course_version_id', versionId ?? '')
       .eq('status', 'active')
-      .eq('deleted_at', null)
+      .is('deleted_at', null)
       .maybeSingle();
 
     const enrolmentId = (matched as { id: string } | null)?.id;

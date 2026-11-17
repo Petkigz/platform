@@ -174,7 +174,7 @@ export async function fetchChildCourses(
     .from('course_enrolments')
     .select('id, status, courses ( title, slug )')
     .eq('learner_profile_id', childLearnerId)
-    .eq('deleted_at', null)
+    .is('deleted_at', null)
     .order('enrolled_at', { ascending: false });
 
   if (error) throw new Error(error.message);

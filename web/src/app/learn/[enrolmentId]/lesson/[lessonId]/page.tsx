@@ -148,7 +148,7 @@ export default async function LessonPage({
       'id, learner_profile_id, status, source, course_version_id, courses ( id, title )',
     )
     .eq('id', enrolmentId)
-    .eq('deleted_at', null)
+    .is('deleted_at', null)
     .maybeSingle();
 
   const enrolment = enrolmentData as unknown as EnrolmentRow | null;

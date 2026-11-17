@@ -131,7 +131,7 @@ export default async function LearnPage() {
           'learner_profiles ( display_name, learner_type ), ' +
           'courses ( title, slug ), course_versions ( version_number, language )',
       )
-      .eq('deleted_at', null)
+      .is('deleted_at', null)
       .order('enrolled_at', { ascending: false }),
     supabase.from('learner_profiles').select('id').eq('linked_user_id', user.id)
       .is('deleted_at', null).maybeSingle(),

@@ -24,6 +24,13 @@ const fake = createServer(async (req, res) => {
   }
   if (!req.url?.startsWith('/rest/v1/') || req.headers.authorization !== `Bearer ${token}`) { res.writeHead(401); res.end('{}'); return; }
   const request = new URL(req.url, 'http://localhost'); const path = request.pathname;
+  // The real server compares a column with the *word* "null" when asked
+  // `eq.null`, and on a date column that is an error, not an empty answer.
+  // These stand-ins used to answer it like any other request, which is how
+  // eight such reads went unnoticed.
+  if ([...new URL(req.url, 'http://localhost').searchParams.values()].some((value) => /^(?:not\.)?(?:eq|neq)\.(?:null|undefined)$/.test(value))) {
+    res.writeHead(400); res.end(JSON.stringify({ code: '22007', message: 'invalid input syntax for type timestamp with time zone: "null"' })); return;
+  }
   let body = ''; for await (const part of req) body += part;
   const payload = body ? JSON.parse(body) : null; calls.push({ path, params: request.searchParams, payload });
   if (path === '/rest/v1/course_enrolments') res.end(JSON.stringify(available ? [{ id: 'enrolment', status: 'active', course_id: 'course', course_version_id: 'version', learner_profile_id: 'learner', enrolled_at: '2026-01-01T00:00:00Z', courses: [{ title: 'Synthetic course', slug: 'synthetic-course' }], course_versions: [{ version_number: 2, language: 'en', course_sections: [{ id: 'section', title: 'Synthetic section', position: 1, lessons: [{ id: 'lesson', title: 'Synthetic lesson', position: 1, is_preview: false }] }] }] }] : []));

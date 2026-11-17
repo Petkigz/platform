@@ -2618,6 +2618,44 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### Eight reads that would have failed on the real database, 2026-11-17
+
+Found by reading the quiz page before translating it. **Not a translation
+matter, and more serious than anything else in this stretch.**
+
+- *What was wrong.* Eight reads asked for rows that have not been deleted with
+  `.eq('deleted_at', null)`. The client sends that as `deleted_at=eq.null`, and
+  the database server compares the column with the word "null". On a date
+  column that is an error, not an empty answer. The correct spelling is
+  `.is('deleted_at', null)`, which fifty-five other reads already used.
+- *Where.* The learner dashboard's list of courses, the course page, the lesson
+  page, the quiz page, the quiz's save route, the "which learner am I" lookup
+  that most learner pages call, the already-enrolled check, and a child's
+  courses on the family page.
+- *What a learner would have seen on a real database.* No courses on the
+  dashboard; an error page for the course; "not found" for every lesson and
+  quiz. In other words nobody could have studied anything.
+- *Why nothing caught it.* No check in this repository talks to the real
+  request server. The database tests call the database directly; the browser
+  checks use a stand-in that answered any request it was sent. The hosted test
+  project has no users, so nobody had tried.
+- *How it is known.* The client's source shows what is sent; the server's
+  source (PostgREST 16.6, `SqlFragment.hs`) shows it becomes an ordinary
+  comparison with the text given; and that comparison was run on the hosted
+  test database, read-only, and failed with `22007 invalid input syntax for
+  type timestamp with time zone: "null"`. The request server itself was not
+  run: its program cannot be downloaded into this workspace.
+- *The repair.* All eight now use `.is`. A test fails on any comparison with a
+  literal `null` or `undefined` anywhere in the application. The stand-ins in
+  the four learner browser checks now refuse `eq.null` the way the real server
+  does; with the old code the lesson check fails with 404 and the course check
+  with the database's own error, and with the repair both pass.
+- *What this says about everything else.* Every page here has only ever run
+  against stand-ins. A misspelt column or a relationship the server cannot
+  follow would hide the same way. The next piece of work is to run the real
+  pages against the real request server and a real database in GitHub's
+  runners, and fail on any refused request.
+
 ### The lesson page, same languages, 2026-11-17
 
 The page a learner spends the most time on. Same rule as the two before it:

@@ -37,6 +37,13 @@ const fake = createServer(async (req, res) => {
   active++; maximum = Math.max(maximum, active);
   let body = ''; for await (const chunk of req) body += chunk;
   const path = new URL(req.url, 'http://localhost').pathname;
+  // The real server compares a column with the *word* "null" when asked
+  // `eq.null`, and on a date column that is an error, not an empty answer.
+  // These stand-ins used to answer it like any other request, which is how
+  // eight such reads went unnoticed.
+  if ([...new URL(req.url, 'http://localhost').searchParams.values()].some((value) => /^(?:not\.)?(?:eq|neq)\.(?:null|undefined)$/.test(value))) {
+    res.writeHead(400); res.end(JSON.stringify({ code: '22007', message: 'invalid input syntax for type timestamp with time zone: "null"' })); return;
+  }
   const payload = body ? JSON.parse(body) : null;
   calls.push({ path, payload });
   // Deterministic artificial delay makes overlapping requests observable, not
