@@ -71,7 +71,25 @@ export function courseworkMimeAllowed(mime: string): boolean {
 }
 
 export type FileFacts = { name: string; size: number; type: string };
-export type FileCheck = { ok: true } | { ok: false; message: string };
+/**
+ * Why a file, an upload or a removal did not go through, as a word.
+ *
+ * `message` beside it is English and is what the teacher's screens print. The
+ * learner's page reads the code and says the sentence in the reader's
+ * language. Everything from `uncertain` down means the outcome is not known:
+ * something may have been registered, attached or removed.
+ */
+export type CourseworkFileCode =
+  | 'no_name'
+  | 'empty'
+  | 'too_big'
+  | 'wrong_kind'
+  | 'too_many'
+  | 'unreadable'
+  | 'uncertain'
+  | 'remove_uncertain';
+
+export type FileCheck = { ok: true } | { ok: false; code: CourseworkFileCode; message: string };
 
 /**
  * Whether this file can be handed in at all.
@@ -80,13 +98,14 @@ export type FileCheck = { ok: true } | { ok: false; message: string };
  * nothing to gain by spending ten seconds on a file that will be refused.
  */
 export function validateCourseworkFile(file: FileFacts, alreadyAttached = 0): FileCheck {
-  if (!file.name.trim()) return { ok: false, message: 'That file has no name.' };
+  if (!file.name.trim()) return { ok: false, code: 'no_name', message: 'That file has no name.' };
   if (!Number.isFinite(file.size) || file.size <= 0) {
-    return { ok: false, message: 'That file is empty, so there is nothing to hand in.' };
+    return { ok: false, code: 'empty', message: 'That file is empty, so there is nothing to hand in.' };
   }
   if (file.size > COURSEWORK_MAX_BYTES) {
     return {
       ok: false,
+      code: 'too_big',
       message:
         `That file is ${readableByteSize(file.size)} and the cap is ` +
         `${readableByteSize(COURSEWORK_MAX_BYTES)}. A photo of each page, or a scan, is usually ` +
@@ -96,6 +115,7 @@ export function validateCourseworkFile(file: FileFacts, alreadyAttached = 0): Fi
   if (!courseworkMimeAllowed(file.type)) {
     return {
       ok: false,
+      code: 'wrong_kind',
       message:
         'That kind of file cannot be handed in. A PDF, a photo (JPEG, PNG or WebP) or an audio ' +
         'recording works.',
@@ -104,6 +124,7 @@ export function validateCourseworkFile(file: FileFacts, alreadyAttached = 0): Fi
   if (alreadyAttached >= COURSEWORK_MAX_FILES) {
     return {
       ok: false,
+      code: 'too_many',
       message: `An assignment takes ${COURSEWORK_MAX_FILES} files, and this one already has that many.`,
     };
   }
@@ -201,7 +222,7 @@ export function countAttachedCourseworkFiles(files: CourseworkFile[]): number {
 
 export async function removeCourseworkFile(
   submissionId: string, assetId: string, doFetch: typeof fetch = fetch,
-): Promise<{ ok: true } | { ok: false; message: string }> {
+): Promise<{ ok: true } | { ok: false; code: CourseworkFileCode; message: string }> {
   const unknown = 'The removal could not be confirmed. Refresh and check the file list before trying again; it may already have been removed.';
   try {
     const response = await doFetch('/api/assignments', {
@@ -211,11 +232,11 @@ export async function removeCourseworkFile(
     const body = await response.json().catch(() => null) as { ok?: unknown; message?: unknown; submissionId?: unknown; assetId?: unknown } | null;
     if (response.ok && body?.ok === true && body.submissionId === submissionId && body.assetId === assetId) return { ok: true };
     if (!response.ok && typeof body?.message === 'string' && body.message.trim()) {
-      return { ok: false, message: `${body.message} ${unknown}` };
+      return { ok: false, code: 'remove_uncertain', message: `${body.message} ${unknown}` };
     }
-    return { ok: false, message: unknown };
+    return { ok: false, code: 'remove_uncertain', message: unknown };
   } catch {
-    return { ok: false, message: unknown };
+    return { ok: false, code: 'remove_uncertain', message: unknown };
   }
 }
 
@@ -284,17 +305,9 @@ export type UploadPhase =
   | 'confirming'
   | 'done';
 
-export const PHASE_LABEL: Record<UploadPhase, string> = {
-  hashing: 'Reading the file…',
-  registering: 'Asking where to put it…',
-  uploading: 'Sending…',
-  confirming: 'Checking it arrived…',
-  done: 'File attached',
-};
-
 export type UploadOutcome =
   | { ok: true; assetId: string; attachmentId: string }
-  | { ok: false; message: string };
+  | { ok: false; code: CourseworkFileCode; message: string };
 
 export type UploadOptions = {
   submissionId: string;
@@ -329,7 +342,7 @@ export async function uploadCourseworkFile(file: File, options: UploadOptions): 
   const progress = options.onProgress ?? (() => {});
 
   const check = validateCourseworkFile({ name: file.name, size: file.size, type: file.type });
-  if (!check.ok) return { ok: false, message: check.message };
+  if (!check.ok) return { ok: false, code: check.code, message: check.message };
 
   let checksum: string;
   try {
@@ -343,6 +356,7 @@ export async function uploadCourseworkFile(file: File, options: UploadOptions): 
   } catch {
     return {
       ok: false,
+      code: 'unreadable',
       message: 'The file could not be read. If it is on a removable drive, copy it first and try again.',
     };
   }
@@ -367,13 +381,14 @@ export async function uploadCourseworkFile(file: File, options: UploadOptions): 
       }),
     });
   } catch {
-    return { ok: false, message: `The upload request could not be confirmed. ${uncertainTarget}` };
+    return { ok: false, code: 'uncertain', message: `The upload request could not be confirmed. ${uncertainTarget}` };
   }
   const registeredBody = await json(registered);
   const registeredData = (registeredBody.data ?? {}) as Record<string, unknown>;
   if (!registered.ok || registeredBody.ok !== true) {
     return {
       ok: false,
+      code: 'uncertain',
       message:
         `${typeof registeredBody.message === 'string' ? registeredBody.message : 'The upload request could not be confirmed.'} ${uncertainTarget}`,
     };
@@ -383,7 +398,7 @@ export async function uploadCourseworkFile(file: File, options: UploadOptions): 
   const uploadUrl = typeof registeredData.uploadUrl === 'string' ? registeredData.uploadUrl : '';
   const requiredHeaders = (registeredData.requiredHeaders ?? {}) as Record<string, string>;
   if (!assetId || !uploadUrl || (options.retryAssetId && assetId !== options.retryAssetId)) {
-    return { ok: false, message: `The upload response was incomplete. ${uncertainTarget}` };
+    return { ok: false, code: 'uncertain', message: `The upload response was incomplete. ${uncertainTarget}` };
   }
 
   progress('uploading', 0);
@@ -398,6 +413,7 @@ export async function uploadCourseworkFile(file: File, options: UploadOptions): 
   } catch (cause) {
     return {
       ok: false,
+      code: 'uncertain',
       message:
         `${cause instanceof Error ? cause.message : 'The file transfer could not be confirmed.'} Refresh the file list and check the upload before sending it again.`,
     };
@@ -419,15 +435,16 @@ export async function confirmCourseworkFile(assetId: string, doFetch: typeof fet
     const body = await json(response);
     if (!response.ok || body.ok !== true) return {
       ok: false,
+      code: 'uncertain',
       message: `${typeof body.message === 'string' ? body.message : 'The file could not be confirmed.'} Refresh and check the file list before trying again; the file may already be attached.`,
     };
     const data = (body.data ?? {}) as Record<string, unknown>;
     if (data.assetId !== assetId || typeof data.attachmentId !== 'string' || !data.attachmentId.trim()) return {
-      ok: false, message: 'The confirmation response was incomplete. Refresh the file list before trying again; the file may already be attached.',
+      ok: false, code: 'uncertain', message: 'The confirmation response was incomplete. Refresh the file list before trying again; the file may already be attached.',
     };
     return { ok: true, assetId, attachmentId: data.attachmentId };
   } catch {
-    return { ok: false, message: 'The confirmation response was lost. Refresh the file list before trying again; the file may already be attached.' };
+    return { ok: false, code: 'uncertain', message: 'The confirmation response was lost. Refresh the file list before trying again; the file may already be attached.' };
   }
 }
 

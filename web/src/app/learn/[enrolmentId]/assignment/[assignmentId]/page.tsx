@@ -20,14 +20,12 @@ export const dynamic = 'force-dynamic';
  * One assignment: the task, the learner's written answer, its mark and its
  * earlier versions.
  *
- * **Language.** The page's own words and the written-answer part are in the
- * reader's language where that language has them (`assign.ts`), and in
- * English, marked as English, where it does not. The files part (uploads) is
- * still English for everybody and is marked as English inside a translated
- * page: it has some thirty sentences about what did and did not reach storage,
- * and those wait for a reader who can check them. The title, the instructions,
- * the learner's answer and the teacher's comment are printed as written, with
- * `dir="auto"`.
+ * **Language.** The page's own words, the written-answer part and the files
+ * part are in the reader's language where that language has them
+ * (`assign.ts`), and in English, marked as English, where it does not. The
+ * title, the instructions, the learner's answer, a file's name and the
+ * teacher's comment are printed as written, with `dir="auto"` or `<bdi>`. A
+ * file's size is printed the English way ("1.8 MB") in every language.
  *
  * **Times** are printed in UTC, labelled, by the server, and in the reader's
  * own zone once the page is running (`LocalTime`).
@@ -164,6 +162,55 @@ export default async function AssignmentPage({
     errFileGone: t('assign.errFileGone'),
     errTooLong: t('assign.errTooLong'),
     errRejected: t('assign.errRejected'),
+    files: {
+      files: t('assign.files'),
+      countUnknown: t('assign.fileCountUnknown'),
+      attached: t('assign.filesAttached'),
+      notAttached: t('assign.filesNotAttached'),
+      listUnknown: t('assign.fileListUnknown'),
+      unnamed: t('assign.fileUnnamed'),
+      checkAgain: t('assign.fileCheckAgain'),
+      resend: t('assign.fileResend'),
+      remove: t('assign.fileRemove'),
+      showing: t('assign.fileShowing'),
+      showMore: t('assign.fileShowMore'),
+      hint: t('assign.fileHint'),
+      hintRemaining: t('assign.fileHintRemaining'),
+      pendingExplain: t('assign.filePendingExplain'),
+      resendLabel: t('assign.fileResendLabel'),
+      none: t('assign.fileNone'),
+      phaseReading: t('assign.filePhaseReading'),
+      phaseAsking: t('assign.filePhaseAsking'),
+      phaseSending: t('assign.filePhaseSending'),
+      phaseChecking: t('assign.filePhaseChecking'),
+      phaseDone: t('assign.filePhaseDone'),
+      kindImage: t('assign.fileKindImage'),
+      kindAudio: t('assign.fileKindAudio'),
+      kindOther: t('assign.fileKindOther'),
+      statusPending: t('assign.fileStatusPending'),
+      statusHeld: t('assign.fileStatusHeld'),
+      statusUnavailable: t('assign.fileStatusUnavailable'),
+      errNoName: t('assign.fileErrNoName'),
+      errEmpty: t('assign.fileErrEmpty'),
+      errTooBig: t('assign.fileErrTooBig'),
+      errKind: t('assign.fileErrKind'),
+      errTooMany: t('assign.fileErrTooMany'),
+      errDraft: t('assign.fileErrDraft'),
+      errUnreadable: t('assign.fileErrUnreadable'),
+      errUncertain: t('assign.fileErrUncertain'),
+      errListAfterAttach: t('assign.fileErrListAfterAttach'),
+      errListChanged: t('assign.fileErrListChanged'),
+      msgAttached: t('assign.fileMsgAttached'),
+      msgConfirmed: t('assign.fileMsgConfirmed'),
+      msgRemoved: t('assign.fileMsgRemoved'),
+      errRemove: t('assign.fileErrRemove'),
+      errRemoveList: t('assign.fileErrRemoveList'),
+    },
+    revisionFiles: {
+      note: t('assign.fileRevisionNote'),
+      open: t('assign.fileRevisionOpen'),
+      invalid: t('assign.fileRevisionInvalid'),
+    },
   };
 
   return (

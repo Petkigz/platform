@@ -2618,6 +2618,44 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The files on a hand-in, and the assessment list, in the reader's language, 2026-11-17
+
+The two English blocks left on a learner's assignment page and course page.
+
+- *Translated.* Forty-five sentences for the files part of the assignment page
+  (`assign.file*`) and three for the assessment list on the course page
+  (`assess.heading`, `assess.practise`, `assess.take`), in the twenty-seven
+  languages with nothing held. **Unreviewed**, like the rest. Neither block is
+  marked as English any more, because neither is. The nineteen held languages
+  see them in English and `/language` now tells each of them **39%** (192 of
+  492), from 43%.
+- *A file refusal is a word.* `lib/coursework.ts` answers with a `code` beside
+  its English sentence (`CourseworkFileCode`). The learner's page prints the
+  sentence for the code; the teacher's screens print the English as before.
+- *What a learner is no longer told.* When the **server** refuses a file, the
+  page used to print the server's sentence and then the advice to refresh and
+  check. It now prints only the advice, in the reader's language, for every
+  reader including an English one. The five refusals decided in the browser
+  (no name, empty, too big, wrong kind, too many) keep their own sentences.
+  The server's reasons are the next piece of work; see below.
+- *Names and sizes.* A file's name is isolated (`<bdi>`) so that a Latin file
+  name inside an Arabic line does not reorder it. Sizes read "25.0 MiB" in
+  every language. PDF, JPEG, PNG and WebP are not translated, and the audit no
+  longer reports JPEG and WebP as English left in a sentence.
+- *Checked.* The course route check now has three assessments in it, one of
+  each kind, and reads the list in English, in Arabic and inside a Hausa and a
+  Pashto frame. The bundle check looks for the "could not be confirmed"
+  sentence and the list heading in every script, in every language.
+- *Not proven.* No browser chose a file. Nothing was uploaded, so no sentence
+  about a pending, held or unconfirmed file has been seen on a screen by
+  anybody; they were read in the source. The course page's two remaining
+  English blocks are the database's reasons a course is not complete and the
+  cohort list. The teacher's assignment screens are English.
+
+Checks: `tsc` and lint clean; web tests 2310 of 2310; production build; client
+bundle check (117 scripts, 1740 kB, no catalogue sentence, 95 looked for);
+course route check; repository check.
+
 ### The assignment page, handed in and marked as a learner, 2026-11-17
 
 The assignment page was walked the way the quiz was: on the real request

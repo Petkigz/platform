@@ -36,6 +36,11 @@ for (const [file, key] of [
   ['learn.ts', 'learn.title'],
   ['course.ts', 'course.back'],
   ['assign.ts', 'assign.reviseExplain'],
+  // The files part of the assignment page is a client component that is
+  // handed its words; the sentence a learner reads when an upload's outcome
+  // is unknown must not be in any script either.
+  ['assign.ts', 'assign.fileErrUncertain'],
+  ['assess.ts', 'assess.heading'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

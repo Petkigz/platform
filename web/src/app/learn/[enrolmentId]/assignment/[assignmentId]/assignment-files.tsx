@@ -9,17 +9,77 @@ import {
   COURSEWORK_MAX_FILES,
   courseworkFileHref,
   confirmCourseworkFile,
-  describeCourseworkFile,
+  describeFileKind,
   describeFileSize,
   parseCourseworkFilePage,
   parseFirstCourseworkFilePage,
   appendCourseworkFilePage,
   removeCourseworkFile,
-  PHASE_LABEL,
   uploadCourseworkFile,
   validateCourseworkFile,
+  type CourseworkFile,
+  type CourseworkFileCode,
   type UploadPhase,
 } from '@/lib/coursework';
+import { fill, formatNumber, formatPercent } from '@/lib/i18n/format';
+import type { LocaleCode } from '@/lib/i18n/locales';
+
+/**
+ * Every sentence this component says, handed in by the page. Same reason as
+ * `AssignmentWords`: a browser is not sent these.
+ */
+export type FileWords = {
+  files: string;
+  countUnknown: string;
+  /** `{count}` */
+  attached: string;
+  /** `{count}` */
+  notAttached: string;
+  listUnknown: string;
+  unnamed: string;
+  checkAgain: string;
+  resend: string;
+  remove: string;
+  /** `{shown}`, `{total}` */
+  showing: string;
+  showMore: string;
+  /** `{size}` */
+  hint: string;
+  /** `{count}` */
+  hintRemaining: string;
+  pendingExplain: string;
+  resendLabel: string;
+  none: string;
+  phaseReading: string;
+  phaseAsking: string;
+  phaseSending: string;
+  phaseChecking: string;
+  phaseDone: string;
+  kindImage: string;
+  kindAudio: string;
+  kindOther: string;
+  statusPending: string;
+  statusHeld: string;
+  statusUnavailable: string;
+  errNoName: string;
+  errEmpty: string;
+  /** `{size}`, `{limit}` */
+  errTooBig: string;
+  errKind: string;
+  /** `{count}` */
+  errTooMany: string;
+  errDraft: string;
+  errUnreadable: string;
+  errUncertain: string;
+  errListAfterAttach: string;
+  errListChanged: string;
+  /** `{size}` */
+  msgAttached: string;
+  msgConfirmed: string;
+  msgRemoved: string;
+  errRemove: string;
+  errRemoveList: string;
+};
 
 /**
  * The files on one hand-in.
@@ -42,6 +102,8 @@ export function AssignmentFiles({
   files: initialFiles,
   locked,
   ensureDraft,
+  locale,
+  words,
 }: {
   /** Empty until the learner has a draft; the first upload creates one. */
   submissionId: string;
@@ -50,6 +112,9 @@ export function AssignmentFiles({
   locked: boolean;
   /** Saves a draft and returns its id, so a file can be attached to something. */
   ensureDraft: () => Promise<string | null>;
+  /** The language the words are in, for numbers. */
+  locale: LocaleCode;
+  words: FileWords;
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -67,6 +132,44 @@ export function AssignmentFiles({
   const attachedCount = filePage?.attachedCount ?? null;
   const pendingCount = filePage?.pendingCount ?? null;
   const remaining = attachedCount === null ? null : Math.max(0, COURSEWORK_MAX_FILES - attachedCount);
+  const num = (value: number) => formatNumber(locale, value);
+
+  // Why something did not go through, in the reader's language. The English
+  // sentence that came with the code is not printed. Any code this page does
+  // not know is treated as the outcome not being known, which is the careful
+  // reading: check before sending anything again.
+  const sentenceFor = (code: CourseworkFileCode, size: number): string => {
+    switch (code) {
+      case 'no_name': return words.errNoName;
+      case 'empty': return words.errEmpty;
+      case 'too_big':
+        return fill(words.errTooBig, { size: describeFileSize(size), limit: describeFileSize(COURSEWORK_MAX_BYTES) });
+      case 'wrong_kind': return words.errKind;
+      case 'too_many': return fill(words.errTooMany, { count: num(COURSEWORK_MAX_FILES) });
+      case 'unreadable': return words.errUnreadable;
+      case 'remove_uncertain': return words.errRemove;
+      default: return words.errUncertain;
+    }
+  };
+  const phaseWords: Record<UploadPhase, string> = {
+    hashing: words.phaseReading,
+    registering: words.phaseAsking,
+    uploading: words.phaseSending,
+    confirming: words.phaseChecking,
+    done: words.phaseDone,
+  };
+  /** What one file's line says: its kind, its size, and whether it arrived. */
+  const describe = (file: CourseworkFile): string => {
+    const kind = describeFileKind(file.mimeType);
+    const parts = [
+      kind === 'PDF' ? 'PDF' : kind === 'image' ? words.kindImage : kind === 'audio' ? words.kindAudio : words.kindOther,
+      describeFileSize(file.byteSize),
+    ];
+    if (file.status === 'pending') parts.push(words.statusPending);
+    else if (file.status === 'quarantined') parts.push(words.statusHeld);
+    else if (file.status !== 'available') parts.push(words.statusUnavailable);
+    return parts.join(' · ');
+  };
 
   async function fetchPage(target: string, after: string | null = null) {
     const query = new URLSearchParams({submission: target, page: '1'});
@@ -83,7 +186,7 @@ export function AssignmentFiles({
     try {
       const next=await fetchPage(submissionId,filePage.nextCursor);
       const combined=next && appendCourseworkFilePage(filePage,next);
-      if (!combined) setError('The file list changed or could not be checked. Refresh it before relying on it.');
+      if (!combined) setError(words.errListChanged);
       else setFilePage(combined);
     } finally { setBusy(false); }
   }
@@ -100,7 +203,7 @@ export function AssignmentFiles({
       attachedCount ?? 0,
     );
     if (!check.ok) {
-      setError(check.message);
+      setError(sentenceFor(check.code, chosen.size));
       if (inputRef.current) inputRef.current.value = '';
       if (retryInputRef.current) retryInputRef.current.value = '';
       return;
@@ -110,7 +213,7 @@ export function AssignmentFiles({
     try {
       const target = submissionId || (retryAssetId ? null : await ensureDraft());
       if (!target) {
-        setError('The draft could not be confirmed, so this file was not sent. Check the current work before trying again.');
+        setError(words.errDraft);
         return;
       }
 
@@ -124,7 +227,7 @@ export function AssignmentFiles({
       });
 
       if (!outcome.ok) {
-        setError(outcome.message);
+        setError(sentenceFor(outcome.code, chosen.size));
         router.refresh();
         return;
       }
@@ -133,13 +236,11 @@ export function AssignmentFiles({
       // list is the one that will still be there after a refresh.
       const refreshed = await fetchPage(target);
       setFilePage(refreshed);
-      if (!refreshed) setError('The file was attached, but the list could not be checked. Refresh before relying on it.');
-      setNotice(
-        `File attached. ${describeFileSize(chosen.size)} — access remains subject to permissions and review.`,
-      );
+      if (!refreshed) setError(words.errListAfterAttach);
+      setNotice(fill(words.msgAttached, { size: describeFileSize(chosen.size) }));
       router.refresh();
     } catch {
-      setError('The upload response was lost. Refresh the file list before trying again; a file may have been registered or attached.');
+      setError(words.errUncertain);
       router.refresh();
     } finally {
       setBusy(false);
@@ -154,8 +255,8 @@ export function AssignmentFiles({
     setBusy(true); setError(''); setNotice('');
     try {
       const result = await confirmCourseworkFile(assetId);
-      if (result.ok) setNotice('Storage reported the expected size and the file was attached. Its contents have not been scanned for malware.');
-      else setError(result.message);
+      if (result.ok) setNotice(words.msgConfirmed);
+      else setError(sentenceFor(result.code, 0));
       router.refresh();
     } finally { setBusy(false); }
   }
@@ -169,10 +270,10 @@ export function AssignmentFiles({
       if (result.ok) {
         const refreshed = await fetchPage(submissionId);
         setFilePage(refreshed);
-        setNotice('Removed from this hand-in. The stored object is not deleted by this action.');
-        if (!refreshed) setError('The removal was acknowledged, but the file list could not be checked. Refresh before relying on it.');
+        setNotice(words.msgRemoved);
+        if (!refreshed) setError(words.errRemoveList);
       } else {
-        setError(result.message);
+        setError(sentenceFor(result.code, 0));
       }
       router.refresh();
     } finally {
@@ -183,13 +284,15 @@ export function AssignmentFiles({
   return (
     <div style={{ display: 'grid', gap: '.5rem' }}>
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <h3 style={{ margin: 0 }}>Files</h3>
+        <h3 style={{ margin: 0 }}>{words.files}</h3>
         <span className="muted" style={{ fontSize: '.85rem' }}>
-          {attachedCount === null ? 'File count unavailable' : `${attachedCount} attached${pendingCount ? ` · ${pendingCount} not attached` : ''}`}
+          {attachedCount === null
+            ? words.countUnknown
+            : `${fill(words.attached, { count: num(attachedCount) })}${pendingCount ? ` · ${fill(words.notAttached, { count: num(pendingCount) })}` : ''}`}
         </span>
       </div>
 
-      {files === null && <p className="notice warn">The file list could not be checked. Refresh before relying on it; do not assume there are no files.</p>}
+      {files === null && <p className="notice warn">{words.listUnknown}</p>}
       {files !== null && files.length > 0 && (
         <ul className="lessons">
           {files.map((file) => (
@@ -197,20 +300,20 @@ export function AssignmentFiles({
               <span className="t">
                 {file.attachmentId ? (
                   <a href={courseworkFileHref(file.assetId)} target="_blank" rel="noreferrer">
-                    {file.name ?? 'Handed-in file'}
+                    <bdi>{file.name ?? words.unnamed}</bdi>
                   </a>
                 ) : (
-                  (file.name ?? 'Handed-in file')
+                  <bdi>{file.name ?? words.unnamed}</bdi>
                 )}
-                <span className="muted"> · {describeCourseworkFile(file)}</span>
+                <span className="muted"> · {describe(file)}</span>
               </span>
               {!locked && file.status === 'pending' && (
                 <div className="row">
                   <button type="button" className="btn ghost tiny" disabled={busy} onClick={() => void retryConfirmation(file.assetId)}>
-                    Check upload again
+                    {words.checkAgain}
                   </button>
                   <button type="button" className="btn ghost tiny" disabled={busy} onClick={() => { retryAssetRef.current = file.assetId; retryInputRef.current?.click(); }}>
-                    Resend same file
+                    {words.resend}
                   </button>
                 </div>
               )}
@@ -221,7 +324,7 @@ export function AssignmentFiles({
                   disabled={busy}
                   onClick={() => void remove(file.assetId)}
                 >
-                  Remove
+                  {words.remove}
                 </button>
               )}
             </li>
@@ -230,18 +333,23 @@ export function AssignmentFiles({
       )}
 
       {filePage?.nextCursor && <div>
-        <p className="muted">Showing {filePage.files.length} of {filePage.attachedCount + filePage.pendingCount}. The list can change between pages; refresh to check again.</p>
-        <button type="button" className="btn ghost" disabled={busy} onClick={() => void loadMore()}>Show more files</button>
+        <p className="muted">
+          {fill(words.showing, {
+            shown: num(filePage.files.length),
+            total: num(filePage.attachedCount + filePage.pendingCount),
+          })}
+        </p>
+        <button type="button" className="btn ghost" disabled={busy} onClick={() => void loadMore()}>{words.showMore}</button>
       </div>}
 
       {!locked && (
         <div style={{ display: 'grid', gap: '.4rem' }}>
           <label htmlFor="assignment-file" className="muted" style={{ fontSize: '.85rem' }}>
-            A photo of each page, a PDF, or a recording — up to{' '}
-            {describeFileSize(COURSEWORK_MAX_BYTES)} each{remaining === null ? '. The current file count is unavailable.' : `, up to ${remaining} more; the server checks the limit.`}
+            {fill(words.hint, { size: describeFileSize(COURSEWORK_MAX_BYTES) })}{' '}
+            {remaining === null ? words.countUnknown : fill(words.hintRemaining, { count: num(remaining) })}
           </label>
-          <p className="muted">Pending files do not count as attached. The original uploader can check whether a pending file arrived. If it did not, they can select the same file to resend it to the existing entry. Check first and avoid resending while the original transfer is still running.</p>
-          <input ref={retryInputRef} type="file" accept={COURSEWORK_ACCEPT} hidden aria-label="Select the same file to resend" disabled={busy}
+          <p className="muted">{words.pendingExplain}</p>
+          <input ref={retryInputRef} type="file" accept={COURSEWORK_ACCEPT} hidden aria-label={words.resendLabel} disabled={busy}
             onChange={(event) => { const id = retryAssetRef.current; retryAssetRef.current = null; if (id) void choose(event.target.files?.[0] ?? null, id); }} />
           <input
             ref={inputRef}
@@ -253,8 +361,8 @@ export function AssignmentFiles({
           />
           {busy && phase && (
             <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>
-              {PHASE_LABEL[phase]}
-              {phase === 'hashing' || phase === 'uploading' ? ` ${String(percent)}%` : ''}
+              {phaseWords[phase]}
+              {phase === 'hashing' || phase === 'uploading' ? ` ${formatPercent(locale, percent)}` : ''}
             </p>
           )}
         </div>
@@ -262,7 +370,7 @@ export function AssignmentFiles({
 
       {locked && files !== null && files.length === 0 && !filePage?.nextCursor && (
         <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>
-          No files were handed in with this work.
+          {words.none}
         </p>
       )}
 

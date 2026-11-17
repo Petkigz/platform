@@ -509,9 +509,13 @@ export const en = {
   'assess.submitFailed': 'Your answers could not be submitted. Check your connection and try again.',
   'assess.alreadySubmitted': 'This attempt has already been submitted.',
   'assess.unanswered': 'Answer every question before you submit.',
+  // The assessment list on the course page.
+  'assess.heading': 'Assessments',
+  'assess.practise': 'Practise',
+  'assess.take': 'Take',
 
   // The assignment page: a written answer, handed in, marked and revised.
-  // The files part of that page (uploads) is not here and is still English.
+  // The files part of that page (uploads) is further down, as `assign.file*`.
   // Five sentences are the quiz's and are not said twice: `assess.back`,
   // `assess.pointsOne`, `assess.pointsOther`, `assess.score`, `assess.submitting`.
   'assign.label': 'Assignment',
@@ -578,6 +582,67 @@ export const en = {
   'assign.viewFeedback': 'View feedback',
   'assign.viewSubmission': 'View submission',
   'assign.open': 'Open',
+  // The files on a hand-in. Several of these are said when it is not known
+  // whether a file arrived or was removed; they say so, and say to check.
+  'assign.files': 'Files',
+  'assign.fileCountUnknown': 'File count unavailable',
+  'assign.filesAttached': 'Attached: {count}',
+  'assign.filesNotAttached': 'Not attached: {count}',
+  'assign.fileListUnknown':
+    'The file list could not be checked. Refresh before relying on it; do not assume there are no files.',
+  'assign.fileUnnamed': 'Handed-in file',
+  'assign.fileCheckAgain': 'Check upload again',
+  'assign.fileResend': 'Resend same file',
+  'assign.fileRemove': 'Remove',
+  'assign.fileShowing':
+    'Showing {shown} of {total}. The list can change between pages; refresh to check again.',
+  'assign.fileShowMore': 'Show more files',
+  'assign.fileHint': 'A photo of each page, a PDF, or a recording. Up to {size} each.',
+  'assign.fileHintRemaining': 'Files you can still add: {count}. The server checks the limit.',
+  'assign.filePendingExplain':
+    'Pending files do not count as attached. Whoever uploaded a pending file can check whether it arrived. If it did not, they can choose the same file to send it again. Check first, and do not resend while the first transfer is still running.',
+  'assign.fileResendLabel': 'Select the same file to resend',
+  'assign.fileNone': 'No files were handed in with this work.',
+  'assign.filePhaseReading': 'Reading the file…',
+  'assign.filePhaseAsking': 'Asking where to put it…',
+  'assign.filePhaseSending': 'Sending…',
+  'assign.filePhaseChecking': 'Checking it arrived…',
+  'assign.filePhaseDone': 'File attached',
+  'assign.fileKindImage': 'image',
+  'assign.fileKindAudio': 'audio',
+  'assign.fileKindOther': 'file',
+  'assign.fileStatusPending': 'upload pending; arrival not confirmed',
+  'assign.fileStatusHeld': 'held for review',
+  'assign.fileStatusUnavailable': 'not available',
+  'assign.fileErrNoName': 'That file has no name.',
+  'assign.fileErrEmpty': 'That file is empty, so there is nothing to hand in.',
+  'assign.fileErrTooBig':
+    'That file is {size} and the limit is {limit}. A photo of each page, or a scan, is usually smaller.',
+  'assign.fileErrKind':
+    'That kind of file cannot be handed in. A PDF, a photo (JPEG, PNG or WebP) or an audio recording works.',
+  'assign.fileErrTooMany': 'An assignment takes {count} files, and this one already has that many.',
+  'assign.fileErrDraft':
+    'The draft could not be confirmed, so this file was not sent. Check the current work before trying again.',
+  'assign.fileErrUnreadable':
+    'The file could not be read. If it is on a removable drive, copy it first and try again.',
+  'assign.fileErrUncertain':
+    'The upload could not be confirmed. Refresh and check the file list before trying again; a file may have been registered or attached.',
+  'assign.fileErrListAfterAttach':
+    'The file was attached, but the list could not be checked. Refresh before relying on it.',
+  'assign.fileErrListChanged':
+    'The file list changed or could not be checked. Refresh it before relying on it.',
+  'assign.fileMsgAttached': 'File attached ({size}). Access remains subject to permissions and review.',
+  'assign.fileMsgConfirmed':
+    'Storage reported the expected size and the file was attached. Its contents have not been scanned for malware.',
+  'assign.fileMsgRemoved': 'Removed from this hand-in. The stored file is not deleted by this action.',
+  'assign.fileErrRemove':
+    'The removal could not be confirmed. Refresh and check the file list before trying again; it may already have been removed.',
+  'assign.fileErrRemoveList':
+    'The removal was acknowledged, but the file list could not be checked. Refresh before relying on it.',
+  'assign.fileRevisionNote':
+    'Files recorded with this version. Opening a file checks your current access; a file may no longer be available.',
+  'assign.fileRevisionOpen': 'Try opening file {number}',
+  'assign.fileRevisionInvalid': 'File reference {number} is invalid and needs individual review.',
 } as const;
 
 export type MessageKey = keyof typeof en;

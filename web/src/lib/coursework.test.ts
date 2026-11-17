@@ -21,7 +21,6 @@ import {
   appendCourseworkFilePage,
   removeCourseworkFile,
   postLearnerAssignmentAction,
-  PHASE_LABEL,
   uploadCourseworkFile,
   validateCourseworkFile,
 } from './coursework.ts';
@@ -130,12 +129,47 @@ test('a file is opened through the route that checks who may look', () => {
   assert.equal(courseworkFileHref('abc-123'), '/api/media/open?asset=abc-123');
 });
 
-test('the phases are sentences, because a silent spinner is a closed tab', () => {
-  for (const label of Object.values(PHASE_LABEL)) {
-    assert.ok(label.length > 0);
+test('every phase has a sentence in the reader\'s language, because a silent spinner is a closed tab', () => {
+  // The sentences are the page's now (`assign.filePhase*`), handed to the
+  // component as words. What is pinned here is that no phase is left without
+  // one: the component's table is typed by `UploadPhase`, and the page fills
+  // every entry from the catalogue.
+  const component = readFileSync(new URL('../app/learn/[enrolmentId]/assignment/[assignmentId]/assignment-files.tsx', import.meta.url), 'utf8');
+  const page = readFileSync(new URL('../app/learn/[enrolmentId]/assignment/[assignmentId]/page.tsx', import.meta.url), 'utf8');
+  assert.match(component, /Record<UploadPhase, string>/);
+  for (const key of ['filePhaseReading', 'filePhaseAsking', 'filePhaseSending', 'filePhaseChecking', 'filePhaseDone']) {
+    assert.ok(page.includes(`t('assign.${key}')`), `the page does not fill ${key}`);
   }
-  assert.match(PHASE_LABEL.hashing, /Reading/);
-  assert.match(PHASE_LABEL.confirming, /Checking/);
+});
+
+test('a refusal carries a word beside its English sentence', async () => {
+  // The learner's page reads the word and says the sentence in the reader's
+  // language; the teacher's screens still print `message`.
+  const code = (check: ReturnType<typeof validateCourseworkFile>) => (check.ok ? null : check.code);
+  assert.equal(code(validateCourseworkFile(file({ name: '   ' }))), 'no_name');
+  assert.equal(code(validateCourseworkFile(file({ size: 0 }))), 'empty');
+  assert.equal(code(validateCourseworkFile(file({ size: COURSEWORK_MAX_BYTES + 1 }))), 'too_big');
+  assert.equal(code(validateCourseworkFile(file({ type: 'video/mp4' }))), 'wrong_kind');
+  assert.equal(code(validateCourseworkFile(file(), COURSEWORK_MAX_FILES)), 'too_many');
+  assert.equal(code(validateCourseworkFile(file())), null);
+
+  // A refusal decided before anything is sent keeps its own word through the
+  // upload, so the learner is not told to "check the list" for an empty file.
+  const empty = await uploadCourseworkFile(blobFile(0), { submissionId: 'sub', fetchImpl: async () => { throw new Error('never asked'); } });
+  assert.equal(empty.ok ? null : empty.code, 'empty');
+
+  // Everything after the first request is unknown, never "it did not happen".
+  const lost = await uploadCourseworkFile(blobFile(5), { submissionId: 'sub', fetchImpl: async () => { throw new Error('lost'); } });
+  assert.equal(lost.ok ? null : lost.code, 'uncertain');
+  const refused = await uploadCourseworkFile(blobFile(5), {
+    submissionId: 'sub',
+    fetchImpl: async () => new Response(JSON.stringify({ ok: false, message: 'an assignment file cannot exceed 25 MiB' }), { status: 400 }),
+  });
+  assert.equal(refused.ok ? null : refused.code, 'uncertain');
+  const unconfirmed = await confirmCourseworkFile('a1', async () => { throw new Error('offline'); });
+  assert.equal(unconfirmed.ok ? null : unconfirmed.code, 'uncertain');
+  const removal = await removeCourseworkFile('s', 'a', async () => { throw new Error('lost reply'); });
+  assert.equal(removal.ok ? null : removal.code, 'remove_uncertain');
 });
 
 // ---------------------------------------------------------------------------
@@ -307,7 +341,10 @@ test('a missing or malformed file list is unknown rather than empty', () => {
   const component = readFileSync(new URL('../app/learn/[enrolmentId]/assignment/[assignmentId]/assignment-files.tsx', import.meta.url), 'utf8');
   const api = readFileSync(new URL('../app/api/assignments/route.ts', import.meta.url), 'utf8');
   assert.match(page, /files=\{fileResult.error \? null : fileResult.data\}/);
-  assert.match(component, /file list could not be checked/i);
+  // The sentence is `assign.fileListUnknown`; the component prints it only
+  // where the list is unknown, and never an empty list in its place.
+  assert.match(component, /files === null[\s\S]{0,200}words\.listUnknown/);
+  assert.match(page, /listUnknown: t\('assign\.fileListUnknown'\)/);
   assert.match(component, /locked && files !== null && files.length === 0/);
   assert.match(api, /if \(!Array.isArray\(data\)\) return fail/);
 });

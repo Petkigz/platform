@@ -120,6 +120,10 @@ const BRANDS: readonly string[] = [
   'SMS',
   'WhatsApp',
   'PDF',
+  // File formats a learner is told they may hand in. Like PDF, they are the
+  // format's own name in every script, and there is nothing to translate.
+  'JPEG',
+  'WebP',
   'iOS',
   'Android',
   'Email',

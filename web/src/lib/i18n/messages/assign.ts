@@ -17,11 +17,18 @@ import type { Messages } from './en.ts';
  * `assess.pointsOne`, `assess.pointsOther`, `assess.score`,
  * `assess.submitting`).
  *
- * **What is not here.** The files part of the page (choosing, checking and
- * uploading a file, and everything it says when storage and the record
- * disagree) is still English for every reader, and is marked as English
- * inside a translated page. What a teacher or a learner wrote is shown as
- * written.
+ * The files part of the page is here too (`assign.file*`, forty-five
+ * sentences): choosing, checking and uploading a file, and everything it says
+ * when storage and the record disagree. Several of those are said when it is
+ * not known whether a file arrived or was removed. They say that it is not
+ * known and that the list should be checked before sending again; a
+ * translation that says "failed" instead would have a learner send a second
+ * copy, and one that says "done" would have them hand in without the file.
+ *
+ * **What is not here.** What a teacher or a learner wrote, and a file's name,
+ * are shown as written. File sizes ("25.0 MiB") and the format names PDF,
+ * JPEG, PNG and WebP are the same in every language. Why the server refused a
+ * file is not said in any language: see `CourseworkFileCode`.
  *
  * **Unreviewed.** No speaker has read any of these. `errUnconfirmed` is what a
  * learner reads when their work may or may not have been saved, and it tells
@@ -98,6 +105,66 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.viewFeedback': 'عرض الملاحظات',
     'assign.viewSubmission': 'عرض التسليم',
     'assign.open': 'فتح',
+    'assign.files': 'الملفات',
+    'assign.fileCountUnknown': 'عدد الملفات غير متاح',
+    'assign.filesAttached': 'المرفقة: {count}',
+    'assign.filesNotAttached': 'غير المرفقة: {count}',
+    'assign.fileListUnknown':
+      'تعذّر التحقق من قائمة الملفات. حدّث الصفحة قبل الاعتماد عليها؛ لا تفترض أنه لا توجد ملفات.',
+    'assign.fileUnnamed': 'ملف مُسلَّم',
+    'assign.fileCheckAgain': 'تحقّق من الرفع مرة أخرى',
+    'assign.fileResend': 'أعد إرسال الملف نفسه',
+    'assign.fileRemove': 'إزالة',
+    'assign.fileShowing':
+      'يُعرض {shown} من {total}. قد تتغيّر القائمة بين الصفحات؛ حدّث الصفحة للتحقق مجددًا.',
+    'assign.fileShowMore': 'عرض ملفات أخرى',
+    'assign.fileHint': 'صورة لكل صفحة، أو ملف PDF، أو تسجيل صوتي. بحدّ أقصى {size} لكل ملف.',
+    'assign.fileHintRemaining':
+      'عدد الملفات التي يمكنك إضافتها بعد: {count}. الخادم هو الذي يتحقق من الحدّ.',
+    'assign.filePendingExplain':
+      'الملفات المعلّقة لا تُحسب مرفقة. يستطيع من رفع ملفًا معلّقًا أن يتحقق هل وصل. إن لم يصل، يمكنه اختيار الملف نفسه لإرساله مرة أخرى. تحقّق أولًا، ولا تُعِد الإرسال ما دام النقل الأول جاريًا.',
+    'assign.fileResendLabel': 'اختر الملف نفسه لإعادة إرساله',
+    'assign.fileNone': 'لم يُسلَّم أي ملف مع هذا العمل.',
+    'assign.filePhaseReading': 'جارٍ قراءة الملف…',
+    'assign.filePhaseAsking': 'جارٍ السؤال عن مكان وضعه…',
+    'assign.filePhaseSending': 'جارٍ الإرسال…',
+    'assign.filePhaseChecking': 'جارٍ التحقق من وصوله…',
+    'assign.filePhaseDone': 'أُرفق الملف',
+    'assign.fileKindImage': 'صورة',
+    'assign.fileKindAudio': 'صوت',
+    'assign.fileKindOther': 'ملف',
+    'assign.fileStatusPending': 'الرفع معلّق؛ لم يتأكد الوصول',
+    'assign.fileStatusHeld': 'محجوز للمراجعة',
+    'assign.fileStatusUnavailable': 'غير متاح',
+    'assign.fileErrNoName': 'هذا الملف بلا اسم.',
+    'assign.fileErrEmpty': 'هذا الملف فارغ، فلا يوجد ما يُسلَّم.',
+    'assign.fileErrTooBig':
+      'حجم هذا الملف {size} والحدّ الأقصى {limit}. صورة لكل صفحة، أو نسخة ممسوحة ضوئيًا، تكون عادةً أصغر.',
+    'assign.fileErrKind':
+      'لا يمكن تسليم هذا النوع من الملفات. يصلح ملف PDF، أو صورة (JPEG أو PNG أو WebP)، أو تسجيل صوتي.',
+    'assign.fileErrTooMany': 'يقبل الواجب {count} ملفات، وهذا الواجب فيه هذا العدد بالفعل.',
+    'assign.fileErrDraft':
+      'تعذّر التأكد من المسودة، لذلك لم يُرسَل هذا الملف. تحقّق من العمل الحالي قبل المحاولة مجددًا.',
+    'assign.fileErrUnreadable':
+      'تعذّرت قراءة الملف. إن كان على قرص قابل للإزالة، فانسخه أولًا ثم حاول مرة أخرى.',
+    'assign.fileErrUncertain':
+      'تعذّر التأكد من الرفع. حدّث الصفحة وتحقّق من قائمة الملفات قبل المحاولة مجددًا؛ ربما سُجِّل ملف أو أُرفق.',
+    'assign.fileErrListAfterAttach':
+      'أُرفق الملف، لكن تعذّر التحقق من القائمة. حدّث الصفحة قبل الاعتماد عليها.',
+    'assign.fileErrListChanged':
+      'تغيّرت قائمة الملفات أو تعذّر التحقق منها. حدّثها قبل الاعتماد عليها.',
+    'assign.fileMsgAttached': 'أُرفق الملف ({size}). يبقى الوصول إليه خاضعًا للأذونات والمراجعة.',
+    'assign.fileMsgConfirmed':
+      'أفاد التخزين بالحجم المتوقع وأُرفق الملف. لم تُفحص محتوياته بحثًا عن برمجيات خبيثة.',
+    'assign.fileMsgRemoved': 'أُزيل من هذا التسليم. الملف المخزَّن لا يُحذف بهذا الإجراء.',
+    'assign.fileErrRemove':
+      'تعذّر التأكد من الإزالة. حدّث الصفحة وتحقّق من قائمة الملفات قبل المحاولة مجددًا؛ ربما أُزيل بالفعل.',
+    'assign.fileErrRemoveList':
+      'تم استلام طلب الإزالة، لكن تعذّر التحقق من قائمة الملفات. حدّث الصفحة قبل الاعتماد عليها.',
+    'assign.fileRevisionNote':
+      'الملفات المسجَّلة مع هذه النسخة. فتح الملف يتحقق من صلاحيتك الحالية؛ وقد لا يكون الملف متاحًا بعد الآن.',
+    'assign.fileRevisionOpen': 'حاول فتح الملف {number}',
+    'assign.fileRevisionInvalid': 'مرجع الملف {number} غير صالح ويحتاج إلى مراجعة خاصة.',
   },
   ur: {
     'assign.label': 'اسائنمنٹ',
@@ -164,6 +231,70 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.viewFeedback': 'تبصرہ دیکھیں',
     'assign.viewSubmission': 'جمع شدہ کام دیکھیں',
     'assign.open': 'کھولیں',
+    'assign.files': 'فائلیں',
+    'assign.fileCountUnknown': 'فائلوں کی تعداد دستیاب نہیں',
+    'assign.filesAttached': 'منسلک: {count}',
+    'assign.filesNotAttached': 'غیر منسلک: {count}',
+    'assign.fileListUnknown':
+      'فائلوں کی فہرست چیک نہیں ہو سکی۔ اس پر بھروسا کرنے سے پہلے صفحہ ریفریش کریں؛ یہ نہ سمجھیں کہ کوئی فائل نہیں ہے۔',
+    'assign.fileUnnamed': 'جمع کرائی گئی فائل',
+    'assign.fileCheckAgain': 'اپ لوڈ دوبارہ چیک کریں',
+    'assign.fileResend': 'وہی فائل دوبارہ بھیجیں',
+    'assign.fileRemove': 'ہٹائیں',
+    'assign.fileShowing':
+      '{total} میں سے {shown} دکھائی جا رہی ہیں۔ صفحات کے درمیان فہرست بدل سکتی ہے؛ دوبارہ چیک کرنے کے لیے ریفریش کریں۔',
+    'assign.fileShowMore': 'مزید فائلیں دکھائیں',
+    'assign.fileHint': 'ہر صفحے کی تصویر، PDF، یا ریکارڈنگ۔ ہر فائل زیادہ سے زیادہ {size}۔',
+    'assign.fileHintRemaining':
+      'آپ مزید اتنی فائلیں شامل کر سکتے ہیں: {count}۔ حد سرور چیک کرتا ہے۔',
+    'assign.filePendingExplain':
+      'زیرِ التوا فائلیں منسلک شمار نہیں ہوتیں۔ جس نے زیرِ التوا فائل اپ لوڈ کی وہ چیک کر سکتا ہے کہ آیا وہ پہنچ گئی۔ اگر نہیں پہنچی تو وہی فائل دوبارہ بھیجنے کے لیے چن سکتا ہے۔ پہلے چیک کریں، اور جب تک پہلی منتقلی جاری ہو دوبارہ نہ بھیجیں۔',
+    'assign.fileResendLabel': 'دوبارہ بھیجنے کے لیے وہی فائل منتخب کریں',
+    'assign.fileNone': 'اس کام کے ساتھ کوئی فائل جمع نہیں کرائی گئی۔',
+    'assign.filePhaseReading': 'فائل پڑھی جا رہی ہے…',
+    'assign.filePhaseAsking': 'پوچھا جا رہا ہے کہ اسے کہاں رکھنا ہے…',
+    'assign.filePhaseSending': 'بھیجی جا رہی ہے…',
+    'assign.filePhaseChecking': 'چیک کیا جا رہا ہے کہ پہنچ گئی…',
+    'assign.filePhaseDone': 'فائل منسلک ہو گئی',
+    'assign.fileKindImage': 'تصویر',
+    'assign.fileKindAudio': 'آڈیو',
+    'assign.fileKindOther': 'فائل',
+    'assign.fileStatusPending': 'اپ لوڈ زیرِ التوا ہے؛ پہنچنے کی تصدیق نہیں ہوئی',
+    'assign.fileStatusHeld': 'جائزے کے لیے روکی گئی',
+    'assign.fileStatusUnavailable': 'دستیاب نہیں',
+    'assign.fileErrNoName': 'اس فائل کا کوئی نام نہیں ہے۔',
+    'assign.fileErrEmpty': 'یہ فائل خالی ہے، اس لیے جمع کرانے کو کچھ نہیں۔',
+    'assign.fileErrTooBig':
+      'یہ فائل {size} کی ہے اور حد {limit} ہے۔ ہر صفحے کی تصویر یا اسکین عام طور پر چھوٹا ہوتا ہے۔',
+    'assign.fileErrKind':
+      'اس قسم کی فائل جمع نہیں کرائی جا سکتی۔ PDF، تصویر (JPEG، PNG یا WebP) یا آڈیو ریکارڈنگ چلتی ہے۔',
+    'assign.fileErrTooMany':
+      'ایک اسائنمنٹ میں {count} فائلیں آ سکتی ہیں، اور اس میں پہلے ہی اتنی ہیں۔',
+    'assign.fileErrDraft':
+      'مسودے کی تصدیق نہیں ہو سکی، اس لیے یہ فائل نہیں بھیجی گئی۔ دوبارہ کوشش سے پہلے موجودہ کام دیکھ لیں۔',
+    'assign.fileErrUnreadable':
+      'فائل پڑھی نہیں جا سکی۔ اگر یہ کسی ہٹائی جا سکنے والی ڈرائیو پر ہے تو پہلے اسے نقل کریں اور دوبارہ کوشش کریں۔',
+    'assign.fileErrUncertain':
+      'اپ لوڈ کی تصدیق نہیں ہو سکی۔ دوبارہ کوشش سے پہلے ریفریش کر کے فائلوں کی فہرست دیکھیں؛ ہو سکتا ہے کوئی فائل درج یا منسلک ہو چکی ہو۔',
+    'assign.fileErrListAfterAttach':
+      'فائل منسلک ہو گئی، لیکن فہرست چیک نہیں ہو سکی۔ اس پر بھروسا کرنے سے پہلے ریفریش کریں۔',
+    'assign.fileErrListChanged':
+      'فائلوں کی فہرست بدل گئی یا چیک نہیں ہو سکی۔ اس پر بھروسا کرنے سے پہلے اسے ریفریش کریں۔',
+    'assign.fileMsgAttached':
+      'فائل منسلک ہو گئی ({size})۔ رسائی بدستور اجازتوں اور جائزے کے تابع ہے۔',
+    'assign.fileMsgConfirmed':
+      'اسٹوریج نے متوقع سائز بتایا اور فائل منسلک ہو گئی۔ اس کے مواد کو میلویئر کے لیے اسکین نہیں کیا گیا۔',
+    'assign.fileMsgRemoved':
+      'اس جمع کرائے گئے کام سے ہٹا دی گئی۔ محفوظ شدہ فائل اس عمل سے حذف نہیں ہوتی۔',
+    'assign.fileErrRemove':
+      'ہٹانے کی تصدیق نہیں ہو سکی۔ دوبارہ کوشش سے پہلے ریفریش کر کے فائلوں کی فہرست دیکھیں؛ ہو سکتا ہے وہ پہلے ہی ہٹ چکی ہو۔',
+    'assign.fileErrRemoveList':
+      'ہٹانے کی درخواست موصول ہو گئی، لیکن فائلوں کی فہرست چیک نہیں ہو سکی۔ اس پر بھروسا کرنے سے پہلے ریفریش کریں۔',
+    'assign.fileRevisionNote':
+      'اس ورژن کے ساتھ درج فائلیں۔ فائل کھولنے پر آپ کی موجودہ رسائی چیک ہوتی ہے؛ ممکن ہے فائل اب دستیاب نہ ہو۔',
+    'assign.fileRevisionOpen': 'فائل {number} کھولنے کی کوشش کریں',
+    'assign.fileRevisionInvalid':
+      'فائل کا حوالہ {number} درست نہیں اور اسے الگ سے دیکھنے کی ضرورت ہے۔',
   },
   fa: {
     'assign.label': 'تکلیف',
@@ -230,6 +361,66 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.viewFeedback': 'دیدن بازخورد',
     'assign.viewSubmission': 'دیدن کار ارسال‌شده',
     'assign.open': 'باز کردن',
+    'assign.files': 'فایل‌ها',
+    'assign.fileCountUnknown': 'تعداد فایل‌ها در دسترس نیست',
+    'assign.filesAttached': 'پیوست‌شده: {count}',
+    'assign.filesNotAttached': 'پیوست‌نشده: {count}',
+    'assign.fileListUnknown':
+      'فهرست فایل‌ها بررسی نشد. پیش از تکیه بر آن صفحه را تازه کنید؛ فرض نکنید که فایلی وجود ندارد.',
+    'assign.fileUnnamed': 'فایل ارسال‌شده',
+    'assign.fileCheckAgain': 'بررسی دوبارهٔ بارگذاری',
+    'assign.fileResend': 'ارسال دوبارهٔ همان فایل',
+    'assign.fileRemove': 'حذف',
+    'assign.fileShowing':
+      'نمایش {shown} از {total}. فهرست ممکن است بین صفحه‌ها تغییر کند؛ برای بررسی دوباره صفحه را تازه کنید.',
+    'assign.fileShowMore': 'نمایش فایل‌های بیشتر',
+    'assign.fileHint': 'عکسی از هر صفحه، یک PDF، یا یک فایل صوتی. هر فایل حداکثر {size}.',
+    'assign.fileHintRemaining':
+      'تعداد فایل‌هایی که هنوز می‌توانید اضافه کنید: {count}. سرور این حد را بررسی می‌کند.',
+    'assign.filePendingExplain':
+      'فایل‌های در انتظار، پیوست‌شده به شمار نمی‌آیند. کسی که فایل در انتظار را بارگذاری کرده می‌تواند بررسی کند که آیا رسیده است. اگر نرسیده باشد، می‌تواند همان فایل را برای ارسال دوباره انتخاب کند. اول بررسی کنید و تا وقتی انتقال اول در جریان است دوباره نفرستید.',
+    'assign.fileResendLabel': 'همان فایل را برای ارسال دوباره انتخاب کنید',
+    'assign.fileNone': 'هیچ فایلی با این کار ارسال نشده است.',
+    'assign.filePhaseReading': 'در حال خواندن فایل…',
+    'assign.filePhaseAsking': 'در حال پرسیدن محل قرار دادن آن…',
+    'assign.filePhaseSending': 'در حال ارسال…',
+    'assign.filePhaseChecking': 'در حال بررسی رسیدن آن…',
+    'assign.filePhaseDone': 'فایل پیوست شد',
+    'assign.fileKindImage': 'تصویر',
+    'assign.fileKindAudio': 'صدا',
+    'assign.fileKindOther': 'فایل',
+    'assign.fileStatusPending': 'بارگذاری در انتظار است؛ رسیدن آن تأیید نشده',
+    'assign.fileStatusHeld': 'برای بازبینی نگه داشته شده',
+    'assign.fileStatusUnavailable': 'در دسترس نیست',
+    'assign.fileErrNoName': 'این فایل نام ندارد.',
+    'assign.fileErrEmpty': 'این فایل خالی است، پس چیزی برای ارسال نیست.',
+    'assign.fileErrTooBig':
+      'این فایل {size} است و حد مجاز {limit} است. عکسی از هر صفحه یا یک اسکن معمولاً کوچک‌تر است.',
+    'assign.fileErrKind':
+      'این نوع فایل را نمی‌توان ارسال کرد. PDF، عکس (JPEG، PNG یا WebP) یا فایل صوتی پذیرفته می‌شود.',
+    'assign.fileErrTooMany': 'هر تکلیف {count} فایل می‌پذیرد و این تکلیف همین تعداد را دارد.',
+    'assign.fileErrDraft':
+      'پیش‌نویس تأیید نشد، بنابراین این فایل فرستاده نشد. پیش از تلاش دوباره کار فعلی را بررسی کنید.',
+    'assign.fileErrUnreadable':
+      'فایل خوانده نشد. اگر روی حافظهٔ جداشدنی است، اول آن را کپی کنید و دوباره تلاش کنید.',
+    'assign.fileErrUncertain':
+      'بارگذاری تأیید نشد. پیش از تلاش دوباره صفحه را تازه کنید و فهرست فایل‌ها را بررسی کنید؛ ممکن است فایلی ثبت یا پیوست شده باشد.',
+    'assign.fileErrListAfterAttach':
+      'فایل پیوست شد، اما فهرست بررسی نشد. پیش از تکیه بر آن صفحه را تازه کنید.',
+    'assign.fileErrListChanged':
+      'فهرست فایل‌ها تغییر کرد یا بررسی نشد. پیش از تکیه بر آن، آن را تازه کنید.',
+    'assign.fileMsgAttached': 'فایل پیوست شد ({size}). دسترسی همچنان تابع مجوزها و بازبینی است.',
+    'assign.fileMsgConfirmed':
+      'فضای ذخیره‌سازی اندازهٔ مورد انتظار را گزارش کرد و فایل پیوست شد. محتوای آن برای بدافزار بررسی نشده است.',
+    'assign.fileMsgRemoved': 'از این کار ارسالی برداشته شد. فایل ذخیره‌شده با این کار حذف نمی‌شود.',
+    'assign.fileErrRemove':
+      'حذف تأیید نشد. پیش از تلاش دوباره صفحه را تازه کنید و فهرست فایل‌ها را بررسی کنید؛ ممکن است پیش‌تر حذف شده باشد.',
+    'assign.fileErrRemoveList':
+      'درخواست حذف دریافت شد، اما فهرست فایل‌ها بررسی نشد. پیش از تکیه بر آن صفحه را تازه کنید.',
+    'assign.fileRevisionNote':
+      'فایل‌های ثبت‌شده با این نسخه. باز کردن فایل دسترسی فعلی شما را بررسی می‌کند؛ ممکن است فایل دیگر در دسترس نباشد.',
+    'assign.fileRevisionOpen': 'تلاش برای باز کردن فایل {number}',
+    'assign.fileRevisionInvalid': 'ارجاع فایل {number} نامعتبر است و به بررسی جداگانه نیاز دارد.',
   },
   'fa-af': {
     'assign.label': 'کار خانگی',
@@ -296,6 +487,68 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.viewFeedback': 'دیدن نظر استاد',
     'assign.viewSubmission': 'دیدن کار فرستاده‌شده',
     'assign.open': 'باز کردن',
+    'assign.files': 'فایل‌ها',
+    'assign.fileCountUnknown': 'شمار فایل‌ها در دسترس نیست',
+    'assign.filesAttached': 'ضمیمه‌شده: {count}',
+    'assign.filesNotAttached': 'ضمیمه‌نشده: {count}',
+    'assign.fileListUnknown':
+      'فهرست فایل‌ها بررسی نشد. پیش از اعتماد بر آن صفحه را تازه کنید؛ فرض نکنید که فایلی وجود ندارد.',
+    'assign.fileUnnamed': 'فایل فرستاده‌شده',
+    'assign.fileCheckAgain': 'بررسی دوبارهٔ آپلود',
+    'assign.fileResend': 'فرستادن دوبارهٔ همان فایل',
+    'assign.fileRemove': 'حذف',
+    'assign.fileShowing':
+      'نمایش {shown} از {total}. فهرست ممکن است میان صفحه‌ها تغییر کند؛ برای بررسی دوباره صفحه را تازه کنید.',
+    'assign.fileShowMore': 'نمایش فایل‌های بیشتر',
+    'assign.fileHint': 'عکسی از هر صفحه، یک PDF، یا یک فایل صوتی. هر فایل حداکثر {size}.',
+    'assign.fileHintRemaining':
+      'شمار فایل‌هایی که هنوز می‌توانید اضافه کنید: {count}. سرور این حد را بررسی می‌کند.',
+    'assign.filePendingExplain':
+      'فایل‌های در انتظار، ضمیمه‌شده شمرده نمی‌شوند. کسی که فایل در انتظار را آپلود کرده می‌تواند بررسی کند که آیا رسیده است. اگر نرسیده باشد، می‌تواند همان فایل را برای فرستادن دوباره انتخاب کند. اول بررسی کنید و تا وقتی انتقال اول جریان دارد دوباره نفرستید.',
+    'assign.fileResendLabel': 'همان فایل را برای فرستادن دوباره انتخاب کنید',
+    'assign.fileNone': 'هیچ فایلی با این کار فرستاده نشده است.',
+    'assign.filePhaseReading': 'در حال خواندن فایل…',
+    'assign.filePhaseAsking': 'در حال پرسیدن جای گذاشتن آن…',
+    'assign.filePhaseSending': 'در حال فرستادن…',
+    'assign.filePhaseChecking': 'در حال بررسی رسیدن آن…',
+    'assign.filePhaseDone': 'فایل ضمیمه شد',
+    'assign.fileKindImage': 'تصویر',
+    'assign.fileKindAudio': 'صدا',
+    'assign.fileKindOther': 'فایل',
+    'assign.fileStatusPending': 'آپلود در انتظار است؛ رسیدن آن تأیید نشده',
+    'assign.fileStatusHeld': 'برای بازبینی نگه داشته شده',
+    'assign.fileStatusUnavailable': 'در دسترس نیست',
+    'assign.fileErrNoName': 'این فایل نام ندارد.',
+    'assign.fileErrEmpty': 'این فایل خالی است، پس چیزی برای فرستادن نیست.',
+    'assign.fileErrTooBig':
+      'این فایل {size} است و حد مجاز {limit} است. عکسی از هر صفحه یا یک اسکن معمولاً کوچک‌تر است.',
+    'assign.fileErrKind':
+      'این نوع فایل را نمی‌توان فرستاد. PDF، عکس (JPEG، PNG یا WebP) یا فایل صوتی پذیرفته می‌شود.',
+    'assign.fileErrTooMany':
+      'هر کار خانگی {count} فایل می‌پذیرد و این کار خانگی همین شمار را دارد.',
+    'assign.fileErrDraft':
+      'پیش‌نویس تأیید نشد، بنابراین این فایل فرستاده نشد. پیش از تلاش دوباره کار فعلی را بررسی کنید.',
+    'assign.fileErrUnreadable':
+      'فایل خوانده نشد. اگر روی حافظهٔ جداشدنی است، اول آن را کاپی کنید و دوباره تلاش کنید.',
+    'assign.fileErrUncertain':
+      'آپلود تأیید نشد. پیش از تلاش دوباره صفحه را تازه کنید و فهرست فایل‌ها را بررسی کنید؛ ممکن است فایلی ثبت یا ضمیمه شده باشد.',
+    'assign.fileErrListAfterAttach':
+      'فایل ضمیمه شد، اما فهرست بررسی نشد. پیش از اعتماد بر آن صفحه را تازه کنید.',
+    'assign.fileErrListChanged':
+      'فهرست فایل‌ها تغییر کرد یا بررسی نشد. پیش از اعتماد بر آن، آن را تازه کنید.',
+    'assign.fileMsgAttached': 'فایل ضمیمه شد ({size}). دسترسی همچنان تابع اجازه‌ها و بازبینی است.',
+    'assign.fileMsgConfirmed':
+      'ذخیره‌گاه اندازهٔ مورد انتظار را گزارش داد و فایل ضمیمه شد. محتوای آن برای بدافزار بررسی نشده است.',
+    'assign.fileMsgRemoved':
+      'از این کار فرستاده‌شده برداشته شد. فایل ذخیره‌شده با این کار حذف نمی‌شود.',
+    'assign.fileErrRemove':
+      'حذف تأیید نشد. پیش از تلاش دوباره صفحه را تازه کنید و فهرست فایل‌ها را بررسی کنید؛ ممکن است قبلاً حذف شده باشد.',
+    'assign.fileErrRemoveList':
+      'درخواست حذف دریافت شد، اما فهرست فایل‌ها بررسی نشد. پیش از اعتماد بر آن صفحه را تازه کنید.',
+    'assign.fileRevisionNote':
+      'فایل‌های ثبت‌شده با این نسخه. باز کردن فایل دسترسی فعلی شما را بررسی می‌کند؛ ممکن است فایل دیگر در دسترس نباشد.',
+    'assign.fileRevisionOpen': 'تلاش برای باز کردن فایل {number}',
+    'assign.fileRevisionInvalid': 'ارجاع فایل {number} نامعتبر است و به بررسی جداگانه نیاز دارد.',
   },
   tr: {
     'assign.label': 'Ödev',
@@ -363,6 +616,69 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.viewFeedback': 'Geri bildirimi gör',
     'assign.viewSubmission': 'Teslimi gör',
     'assign.open': 'Aç',
+    'assign.files': 'Dosyalar',
+    'assign.fileCountUnknown': 'Dosya sayısı kullanılamıyor',
+    'assign.filesAttached': 'Eklenen: {count}',
+    'assign.filesNotAttached': 'Eklenmeyen: {count}',
+    'assign.fileListUnknown':
+      'Dosya listesi kontrol edilemedi. Güvenmeden önce sayfayı yenileyin; dosya olmadığını varsaymayın.',
+    'assign.fileUnnamed': 'Teslim edilen dosya',
+    'assign.fileCheckAgain': 'Yüklemeyi yeniden kontrol et',
+    'assign.fileResend': 'Aynı dosyayı yeniden gönder',
+    'assign.fileRemove': 'Kaldır',
+    'assign.fileShowing':
+      '{total} dosyadan {shown} tanesi gösteriliyor. Liste sayfalar arasında değişebilir; yeniden kontrol etmek için sayfayı yenileyin.',
+    'assign.fileShowMore': 'Daha fazla dosya göster',
+    'assign.fileHint':
+      'Her sayfanın fotoğrafı, bir PDF veya bir ses kaydı. Her dosya en fazla {size}.',
+    'assign.fileHintRemaining':
+      'Ekleyebileceğiniz dosya sayısı: {count}. Sınırı sunucu kontrol eder.',
+    'assign.filePendingExplain':
+      'Bekleyen dosyalar eklenmiş sayılmaz. Bekleyen bir dosyayı yükleyen kişi, dosyanın ulaşıp ulaşmadığını kontrol edebilir. Ulaşmadıysa aynı dosyayı yeniden göndermek için seçebilir. Önce kontrol edin ve ilk aktarım sürerken yeniden göndermeyin.',
+    'assign.fileResendLabel': 'Yeniden göndermek için aynı dosyayı seçin',
+    'assign.fileNone': 'Bu çalışmayla birlikte dosya teslim edilmedi.',
+    'assign.filePhaseReading': 'Dosya okunuyor…',
+    'assign.filePhaseAsking': 'Nereye konulacağı soruluyor…',
+    'assign.filePhaseSending': 'Gönderiliyor…',
+    'assign.filePhaseChecking': 'Ulaşıp ulaşmadığı kontrol ediliyor…',
+    'assign.filePhaseDone': 'Dosya eklendi',
+    'assign.fileKindImage': 'görsel',
+    'assign.fileKindAudio': 'ses',
+    'assign.fileKindOther': 'dosya',
+    'assign.fileStatusPending': 'yükleme bekliyor; ulaştığı doğrulanmadı',
+    'assign.fileStatusHeld': 'inceleme için bekletiliyor',
+    'assign.fileStatusUnavailable': 'kullanılamıyor',
+    'assign.fileErrNoName': 'Bu dosyanın adı yok.',
+    'assign.fileErrEmpty': 'Bu dosya boş, bu yüzden teslim edilecek bir şey yok.',
+    'assign.fileErrTooBig':
+      'Bu dosya {size} ve sınır {limit}. Her sayfanın fotoğrafı veya bir tarama genellikle daha küçüktür.',
+    'assign.fileErrKind':
+      'Bu tür dosya teslim edilemez. PDF, fotoğraf (JPEG, PNG veya WebP) ya da ses kaydı olur.',
+    'assign.fileErrTooMany': 'Bir ödev {count} dosya alır ve bu ödevde zaten o kadar var.',
+    'assign.fileErrDraft':
+      'Taslak doğrulanamadı, bu yüzden bu dosya gönderilmedi. Yeniden denemeden önce mevcut çalışmayı kontrol edin.',
+    'assign.fileErrUnreadable':
+      'Dosya okunamadı. Çıkarılabilir bir sürücüdeyse önce kopyalayın, sonra yeniden deneyin.',
+    'assign.fileErrUncertain':
+      'Yükleme doğrulanamadı. Yeniden denemeden önce sayfayı yenileyip dosya listesini kontrol edin; bir dosya kaydedilmiş veya eklenmiş olabilir.',
+    'assign.fileErrListAfterAttach':
+      'Dosya eklendi, ancak liste kontrol edilemedi. Güvenmeden önce sayfayı yenileyin.',
+    'assign.fileErrListChanged':
+      'Dosya listesi değişti veya kontrol edilemedi. Güvenmeden önce listeyi yenileyin.',
+    'assign.fileMsgAttached':
+      'Dosya eklendi ({size}). Erişim, izinlere ve incelemeye bağlı olmaya devam eder.',
+    'assign.fileMsgConfirmed':
+      'Depolama beklenen boyutu bildirdi ve dosya eklendi. İçeriği kötü amaçlı yazılımlara karşı taranmadı.',
+    'assign.fileMsgRemoved': 'Bu teslimden kaldırıldı. Depolanan dosya bu işlemle silinmez.',
+    'assign.fileErrRemove':
+      'Kaldırma doğrulanamadı. Yeniden denemeden önce sayfayı yenileyip dosya listesini kontrol edin; dosya zaten kaldırılmış olabilir.',
+    'assign.fileErrRemoveList':
+      'Kaldırma isteği alındı, ancak dosya listesi kontrol edilemedi. Güvenmeden önce sayfayı yenileyin.',
+    'assign.fileRevisionNote':
+      'Bu sürümle kaydedilen dosyalar. Bir dosyayı açmak mevcut erişiminizi kontrol eder; dosya artık kullanılamıyor olabilir.',
+    'assign.fileRevisionOpen': '{number}. dosyayı açmayı dene',
+    'assign.fileRevisionInvalid':
+      '{number}. dosya başvurusu geçersiz ve ayrıca incelenmesi gerekiyor.',
   },
   id: {
     'assign.label': 'Tugas',
@@ -432,6 +748,71 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.viewFeedback': 'Lihat umpan balik',
     'assign.viewSubmission': 'Lihat pengumpulan',
     'assign.open': 'Buka',
+    'assign.files': 'Berkas',
+    'assign.fileCountUnknown': 'Jumlah berkas tidak tersedia',
+    'assign.filesAttached': 'Terlampir: {count}',
+    'assign.filesNotAttached': 'Belum terlampir: {count}',
+    'assign.fileListUnknown':
+      'Daftar berkas tidak dapat diperiksa. Muat ulang sebelum mengandalkannya; jangan menganggap tidak ada berkas.',
+    'assign.fileUnnamed': 'Berkas yang dikumpulkan',
+    'assign.fileCheckAgain': 'Periksa unggahan lagi',
+    'assign.fileResend': 'Kirim ulang berkas yang sama',
+    'assign.fileRemove': 'Hapus',
+    'assign.fileShowing':
+      'Menampilkan {shown} dari {total}. Daftar dapat berubah antarhalaman; muat ulang untuk memeriksa lagi.',
+    'assign.fileShowMore': 'Tampilkan berkas lainnya',
+    'assign.fileHint':
+      'Foto setiap halaman, PDF, atau rekaman suara. Paling besar {size} per berkas.',
+    'assign.fileHintRemaining':
+      'Berkas yang masih dapat Anda tambahkan: {count}. Server yang memeriksa batasnya.',
+    'assign.filePendingExplain':
+      'Berkas yang tertunda tidak dihitung sebagai terlampir. Orang yang mengunggah berkas tertunda dapat memeriksa apakah berkas itu sudah sampai. Jika belum, ia dapat memilih berkas yang sama untuk mengirimnya lagi. Periksa dahulu, dan jangan mengirim ulang selama pengiriman pertama masih berjalan.',
+    'assign.fileResendLabel': 'Pilih berkas yang sama untuk dikirim ulang',
+    'assign.fileNone': 'Tidak ada berkas yang dikumpulkan bersama pekerjaan ini.',
+    'assign.filePhaseReading': 'Membaca berkas…',
+    'assign.filePhaseAsking': 'Menanyakan tempat menyimpannya…',
+    'assign.filePhaseSending': 'Mengirim…',
+    'assign.filePhaseChecking': 'Memeriksa apakah sudah sampai…',
+    'assign.filePhaseDone': 'Berkas terlampir',
+    'assign.fileKindImage': 'gambar',
+    'assign.fileKindAudio': 'audio',
+    'assign.fileKindOther': 'berkas',
+    'assign.fileStatusPending': 'unggahan tertunda; belum dipastikan sampai',
+    'assign.fileStatusHeld': 'ditahan untuk ditinjau',
+    'assign.fileStatusUnavailable': 'tidak tersedia',
+    'assign.fileErrNoName': 'Berkas itu tidak bernama.',
+    'assign.fileErrEmpty': 'Berkas itu kosong, jadi tidak ada yang dapat dikumpulkan.',
+    'assign.fileErrTooBig':
+      'Berkas itu berukuran {size} dan batasnya {limit}. Foto setiap halaman, atau hasil pindai, biasanya lebih kecil.',
+    'assign.fileErrKind':
+      'Jenis berkas itu tidak dapat dikumpulkan. PDF, foto (JPEG, PNG, atau WebP), atau rekaman suara dapat diterima.',
+    'assign.fileErrTooMany':
+      'Satu tugas menerima {count} berkas, dan tugas ini sudah memiliki sebanyak itu.',
+    'assign.fileErrDraft':
+      'Draf tidak dapat dipastikan, jadi berkas ini tidak dikirim. Periksa pekerjaan saat ini sebelum mencoba lagi.',
+    'assign.fileErrUnreadable':
+      'Berkas tidak dapat dibaca. Jika berada di penyimpanan lepas-pasang, salin dahulu lalu coba lagi.',
+    'assign.fileErrUncertain':
+      'Unggahan tidak dapat dipastikan. Muat ulang dan periksa daftar berkas sebelum mencoba lagi; mungkin ada berkas yang sudah terdaftar atau terlampir.',
+    'assign.fileErrListAfterAttach':
+      'Berkas sudah terlampir, tetapi daftarnya tidak dapat diperiksa. Muat ulang sebelum mengandalkannya.',
+    'assign.fileErrListChanged':
+      'Daftar berkas berubah atau tidak dapat diperiksa. Muat ulang sebelum mengandalkannya.',
+    'assign.fileMsgAttached':
+      'Berkas terlampir ({size}). Akses tetap bergantung pada izin dan peninjauan.',
+    'assign.fileMsgConfirmed':
+      'Penyimpanan melaporkan ukuran yang sesuai dan berkas sudah terlampir. Isinya belum dipindai dari perangkat lunak berbahaya.',
+    'assign.fileMsgRemoved':
+      'Dihapus dari pengumpulan ini. Berkas yang tersimpan tidak dihapus oleh tindakan ini.',
+    'assign.fileErrRemove':
+      'Penghapusan tidak dapat dipastikan. Muat ulang dan periksa daftar berkas sebelum mencoba lagi; mungkin berkas itu sudah dihapus.',
+    'assign.fileErrRemoveList':
+      'Permintaan penghapusan diterima, tetapi daftar berkas tidak dapat diperiksa. Muat ulang sebelum mengandalkannya.',
+    'assign.fileRevisionNote':
+      'Berkas yang tercatat bersama versi ini. Membuka berkas akan memeriksa akses Anda saat ini; berkas mungkin sudah tidak tersedia.',
+    'assign.fileRevisionOpen': 'Coba buka berkas {number}',
+    'assign.fileRevisionInvalid':
+      'Rujukan berkas {number} tidak valid dan perlu ditinjau tersendiri.',
   },
   ms: {
     'assign.label': 'Tugasan',
@@ -500,6 +881,71 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.viewFeedback': 'Lihat maklum balas',
     'assign.viewSubmission': 'Lihat hantaran',
     'assign.open': 'Buka',
+    'assign.files': 'Fail',
+    'assign.fileCountUnknown': 'Bilangan fail tidak tersedia',
+    'assign.filesAttached': 'Dilampirkan: {count}',
+    'assign.filesNotAttached': 'Belum dilampirkan: {count}',
+    'assign.fileListUnknown':
+      'Senarai fail tidak dapat disemak. Muat semula sebelum bergantung padanya; jangan anggap tiada fail.',
+    'assign.fileUnnamed': 'Fail yang dihantar',
+    'assign.fileCheckAgain': 'Semak muat naik sekali lagi',
+    'assign.fileResend': 'Hantar semula fail yang sama',
+    'assign.fileRemove': 'Buang',
+    'assign.fileShowing':
+      'Memaparkan {shown} daripada {total}. Senarai boleh berubah antara halaman; muat semula untuk menyemak lagi.',
+    'assign.fileShowMore': 'Tunjukkan lebih banyak fail',
+    'assign.fileHint':
+      'Gambar setiap halaman, PDF, atau rakaman suara. Paling besar {size} setiap fail.',
+    'assign.fileHintRemaining':
+      'Fail yang masih boleh anda tambah: {count}. Pelayan yang menyemak hadnya.',
+    'assign.filePendingExplain':
+      'Fail yang tertangguh tidak dikira sebagai dilampirkan. Orang yang memuat naik fail tertangguh boleh menyemak sama ada fail itu telah sampai. Jika belum, dia boleh memilih fail yang sama untuk menghantarnya semula. Semak dahulu, dan jangan hantar semula selagi pemindahan pertama masih berjalan.',
+    'assign.fileResendLabel': 'Pilih fail yang sama untuk dihantar semula',
+    'assign.fileNone': 'Tiada fail dihantar bersama kerja ini.',
+    'assign.filePhaseReading': 'Membaca fail…',
+    'assign.filePhaseAsking': 'Bertanya di mana hendak meletakkannya…',
+    'assign.filePhaseSending': 'Menghantar…',
+    'assign.filePhaseChecking': 'Menyemak sama ada ia telah sampai…',
+    'assign.filePhaseDone': 'Fail dilampirkan',
+    'assign.fileKindImage': 'imej',
+    'assign.fileKindAudio': 'audio',
+    'assign.fileKindOther': 'fail',
+    'assign.fileStatusPending': 'muat naik tertangguh; ketibaan belum disahkan',
+    'assign.fileStatusHeld': 'ditahan untuk semakan',
+    'assign.fileStatusUnavailable': 'tidak tersedia',
+    'assign.fileErrNoName': 'Fail itu tiada nama.',
+    'assign.fileErrEmpty': 'Fail itu kosong, jadi tiada apa-apa untuk dihantar.',
+    'assign.fileErrTooBig':
+      'Fail itu bersaiz {size} dan hadnya {limit}. Gambar setiap halaman, atau imbasan, biasanya lebih kecil.',
+    'assign.fileErrKind':
+      'Jenis fail itu tidak boleh dihantar. PDF, gambar (JPEG, PNG atau WebP) atau rakaman suara boleh diterima.',
+    'assign.fileErrTooMany':
+      'Satu tugasan menerima {count} fail, dan tugasan ini sudah mempunyai sebanyak itu.',
+    'assign.fileErrDraft':
+      'Draf tidak dapat disahkan, jadi fail ini tidak dihantar. Periksa kerja semasa sebelum mencuba lagi.',
+    'assign.fileErrUnreadable':
+      'Fail tidak dapat dibaca. Jika ia berada pada pemacu boleh tanggal, salin dahulu dan cuba lagi.',
+    'assign.fileErrUncertain':
+      'Muat naik tidak dapat disahkan. Muat semula dan semak senarai fail sebelum mencuba lagi; mungkin ada fail yang telah didaftarkan atau dilampirkan.',
+    'assign.fileErrListAfterAttach':
+      'Fail telah dilampirkan, tetapi senarainya tidak dapat disemak. Muat semula sebelum bergantung padanya.',
+    'assign.fileErrListChanged':
+      'Senarai fail telah berubah atau tidak dapat disemak. Muat semula sebelum bergantung padanya.',
+    'assign.fileMsgAttached':
+      'Fail dilampirkan ({size}). Akses masih tertakluk kepada kebenaran dan semakan.',
+    'assign.fileMsgConfirmed':
+      'Storan melaporkan saiz yang dijangka dan fail telah dilampirkan. Kandungannya belum diimbas untuk perisian hasad.',
+    'assign.fileMsgRemoved':
+      'Dibuang daripada hantaran ini. Fail yang disimpan tidak dipadamkan oleh tindakan ini.',
+    'assign.fileErrRemove':
+      'Pembuangan tidak dapat disahkan. Muat semula dan semak senarai fail sebelum mencuba lagi; mungkin ia telah pun dibuang.',
+    'assign.fileErrRemoveList':
+      'Permintaan pembuangan diterima, tetapi senarai fail tidak dapat disemak. Muat semula sebelum bergantung padanya.',
+    'assign.fileRevisionNote':
+      'Fail yang direkodkan bersama versi ini. Membuka fail akan menyemak akses semasa anda; fail mungkin tidak lagi tersedia.',
+    'assign.fileRevisionOpen': 'Cuba buka fail {number}',
+    'assign.fileRevisionInvalid':
+      'Rujukan fail {number} tidak sah dan perlu disemak secara berasingan.',
   },
   bn: {
     'assign.label': 'অ্যাসাইনমেন্ট',
@@ -567,6 +1013,71 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.viewFeedback': 'মতামত দেখুন',
     'assign.viewSubmission': 'জমা দেওয়া কাজ দেখুন',
     'assign.open': 'খুলুন',
+    'assign.files': 'ফাইল',
+    'assign.fileCountUnknown': 'ফাইলের সংখ্যা পাওয়া যাচ্ছে না',
+    'assign.filesAttached': 'সংযুক্ত: {count}',
+    'assign.filesNotAttached': 'সংযুক্ত হয়নি: {count}',
+    'assign.fileListUnknown':
+      'ফাইলের তালিকা যাচাই করা যায়নি। এর ওপর নির্ভর করার আগে রিফ্রেশ করুন; ধরে নেবেন না যে কোনো ফাইল নেই।',
+    'assign.fileUnnamed': 'জমা দেওয়া ফাইল',
+    'assign.fileCheckAgain': 'আপলোড আবার যাচাই করুন',
+    'assign.fileResend': 'একই ফাইল আবার পাঠান',
+    'assign.fileRemove': 'সরান',
+    'assign.fileShowing':
+      '{total}টির মধ্যে {shown}টি দেখানো হচ্ছে। পৃষ্ঠার মাঝে তালিকা বদলাতে পারে; আবার যাচাই করতে রিফ্রেশ করুন।',
+    'assign.fileShowMore': 'আরও ফাইল দেখান',
+    'assign.fileHint':
+      'প্রতিটি পৃষ্ঠার ছবি, একটি PDF, বা একটি রেকর্ডিং। প্রতিটি ফাইল সর্বোচ্চ {size}।',
+    'assign.fileHintRemaining':
+      'আপনি আরও যতটি ফাইল যোগ করতে পারেন: {count}। সীমাটি সার্ভার যাচাই করে।',
+    'assign.filePendingExplain':
+      'অপেক্ষমাণ ফাইল সংযুক্ত হিসেবে গণ্য হয় না। যিনি অপেক্ষমাণ ফাইলটি আপলোড করেছেন তিনি যাচাই করতে পারেন সেটি পৌঁছেছে কি না। না পৌঁছালে তিনি আবার পাঠানোর জন্য একই ফাইল বেছে নিতে পারেন। আগে যাচাই করুন, আর প্রথম স্থানান্তর চলাকালে আবার পাঠাবেন না।',
+    'assign.fileResendLabel': 'আবার পাঠাতে একই ফাইল বেছে নিন',
+    'assign.fileNone': 'এই কাজের সঙ্গে কোনো ফাইল জমা দেওয়া হয়নি।',
+    'assign.filePhaseReading': 'ফাইল পড়া হচ্ছে…',
+    'assign.filePhaseAsking': 'কোথায় রাখতে হবে তা জানা হচ্ছে…',
+    'assign.filePhaseSending': 'পাঠানো হচ্ছে…',
+    'assign.filePhaseChecking': 'পৌঁছেছে কি না যাচাই করা হচ্ছে…',
+    'assign.filePhaseDone': 'ফাইল সংযুক্ত হয়েছে',
+    'assign.fileKindImage': 'ছবি',
+    'assign.fileKindAudio': 'অডিও',
+    'assign.fileKindOther': 'ফাইল',
+    'assign.fileStatusPending': 'আপলোড অপেক্ষমাণ; পৌঁছানো নিশ্চিত হয়নি',
+    'assign.fileStatusHeld': 'পর্যালোচনার জন্য আটকে রাখা',
+    'assign.fileStatusUnavailable': 'পাওয়া যাচ্ছে না',
+    'assign.fileErrNoName': 'ওই ফাইলের কোনো নাম নেই।',
+    'assign.fileErrEmpty': 'ওই ফাইলটি খালি, তাই জমা দেওয়ার কিছু নেই।',
+    'assign.fileErrTooBig':
+      'ওই ফাইলটি {size} এবং সীমা {limit}। প্রতিটি পৃষ্ঠার ছবি বা স্ক্যান সাধারণত ছোট হয়।',
+    'assign.fileErrKind':
+      'এই ধরনের ফাইল জমা দেওয়া যায় না। PDF, ছবি (JPEG, PNG বা WebP) অথবা অডিও রেকর্ডিং চলবে।',
+    'assign.fileErrTooMany':
+      'একটি অ্যাসাইনমেন্টে {count}টি ফাইল দেওয়া যায়, আর এটিতে ইতিমধ্যে ততগুলো আছে।',
+    'assign.fileErrDraft':
+      'খসড়া নিশ্চিত করা যায়নি, তাই এই ফাইল পাঠানো হয়নি। আবার চেষ্টা করার আগে বর্তমান কাজটি দেখে নিন।',
+    'assign.fileErrUnreadable':
+      'ফাইলটি পড়া যায়নি। এটি অপসারণযোগ্য ড্রাইভে থাকলে আগে কপি করে নিন, তারপর আবার চেষ্টা করুন।',
+    'assign.fileErrUncertain':
+      'আপলোড নিশ্চিত করা যায়নি। আবার চেষ্টা করার আগে রিফ্রেশ করে ফাইলের তালিকা দেখুন; কোনো ফাইল হয়তো নিবন্ধিত বা সংযুক্ত হয়ে গেছে।',
+    'assign.fileErrListAfterAttach':
+      'ফাইল সংযুক্ত হয়েছে, কিন্তু তালিকা যাচাই করা যায়নি। এর ওপর নির্ভর করার আগে রিফ্রেশ করুন।',
+    'assign.fileErrListChanged':
+      'ফাইলের তালিকা বদলে গেছে বা যাচাই করা যায়নি। এর ওপর নির্ভর করার আগে এটি রিফ্রেশ করুন।',
+    'assign.fileMsgAttached':
+      'ফাইল সংযুক্ত হয়েছে ({size})। প্রবেশাধিকার অনুমতি ও পর্যালোচনার অধীন থাকে।',
+    'assign.fileMsgConfirmed':
+      'স্টোরেজ প্রত্যাশিত আকার জানিয়েছে এবং ফাইল সংযুক্ত হয়েছে। এর বিষয়বস্তু ম্যালওয়্যারের জন্য স্ক্যান করা হয়নি।',
+    'assign.fileMsgRemoved':
+      'এই জমা থেকে সরানো হয়েছে। সংরক্ষিত ফাইলটি এই কাজের মাধ্যমে মুছে যায় না।',
+    'assign.fileErrRemove':
+      'সরানো নিশ্চিত করা যায়নি। আবার চেষ্টা করার আগে রিফ্রেশ করে ফাইলের তালিকা দেখুন; এটি হয়তো আগেই সরানো হয়েছে।',
+    'assign.fileErrRemoveList':
+      'সরানোর অনুরোধ গৃহীত হয়েছে, কিন্তু ফাইলের তালিকা যাচাই করা যায়নি। এর ওপর নির্ভর করার আগে রিফ্রেশ করুন।',
+    'assign.fileRevisionNote':
+      'এই সংস্করণের সঙ্গে নথিভুক্ত ফাইল। ফাইল খুললে আপনার বর্তমান প্রবেশাধিকার যাচাই হয়; ফাইলটি হয়তো আর পাওয়া যাবে না।',
+    'assign.fileRevisionOpen': 'ফাইল {number} খোলার চেষ্টা করুন',
+    'assign.fileRevisionInvalid':
+      'ফাইলের সূত্র {number} সঠিক নয় এবং আলাদাভাবে পর্যালোচনা প্রয়োজন।',
   },
   hi: {
     'assign.label': 'असाइनमेंट',
@@ -634,6 +1145,70 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.viewFeedback': 'टिप्पणी देखें',
     'assign.viewSubmission': 'जमा किया गया काम देखें',
     'assign.open': 'खोलें',
+    'assign.files': 'फ़ाइलें',
+    'assign.fileCountUnknown': 'फ़ाइलों की संख्या उपलब्ध नहीं है',
+    'assign.filesAttached': 'संलग्न: {count}',
+    'assign.filesNotAttached': 'संलग्न नहीं: {count}',
+    'assign.fileListUnknown':
+      'फ़ाइलों की सूची जाँची नहीं जा सकी। इस पर भरोसा करने से पहले रीफ़्रेश करें; यह न मानें कि कोई फ़ाइल नहीं है।',
+    'assign.fileUnnamed': 'जमा की गई फ़ाइल',
+    'assign.fileCheckAgain': 'अपलोड दोबारा जाँचें',
+    'assign.fileResend': 'वही फ़ाइल दोबारा भेजें',
+    'assign.fileRemove': 'हटाएँ',
+    'assign.fileShowing':
+      '{total} में से {shown} दिखाई जा रही हैं। पेजों के बीच सूची बदल सकती है; दोबारा जाँचने के लिए रीफ़्रेश करें।',
+    'assign.fileShowMore': 'और फ़ाइलें दिखाएँ',
+    'assign.fileHint': 'हर पन्ने की फ़ोटो, एक PDF, या एक रिकॉर्डिंग। हर फ़ाइल अधिकतम {size}।',
+    'assign.fileHintRemaining':
+      'आप अभी इतनी फ़ाइलें और जोड़ सकते हैं: {count}। सीमा सर्वर जाँचता है।',
+    'assign.filePendingExplain':
+      'लंबित फ़ाइलें संलग्न नहीं गिनी जातीं। जिसने लंबित फ़ाइल अपलोड की थी वह जाँच सकता है कि वह पहुँची या नहीं। अगर नहीं पहुँची, तो वह उसे दोबारा भेजने के लिए वही फ़ाइल चुन सकता है। पहले जाँचें, और जब तक पहला ट्रांसफ़र चल रहा हो तब तक दोबारा न भेजें।',
+    'assign.fileResendLabel': 'दोबारा भेजने के लिए वही फ़ाइल चुनें',
+    'assign.fileNone': 'इस काम के साथ कोई फ़ाइल जमा नहीं की गई।',
+    'assign.filePhaseReading': 'फ़ाइल पढ़ी जा रही है…',
+    'assign.filePhaseAsking': 'पूछा जा रहा है कि इसे कहाँ रखना है…',
+    'assign.filePhaseSending': 'भेजी जा रही है…',
+    'assign.filePhaseChecking': 'जाँचा जा रहा है कि यह पहुँची या नहीं…',
+    'assign.filePhaseDone': 'फ़ाइल संलग्न हो गई',
+    'assign.fileKindImage': 'चित्र',
+    'assign.fileKindAudio': 'ऑडियो',
+    'assign.fileKindOther': 'फ़ाइल',
+    'assign.fileStatusPending': 'अपलोड लंबित है; पहुँचने की पुष्टि नहीं हुई',
+    'assign.fileStatusHeld': 'समीक्षा के लिए रोकी गई',
+    'assign.fileStatusUnavailable': 'उपलब्ध नहीं',
+    'assign.fileErrNoName': 'उस फ़ाइल का कोई नाम नहीं है।',
+    'assign.fileErrEmpty': 'वह फ़ाइल ख़ाली है, इसलिए जमा करने को कुछ नहीं है।',
+    'assign.fileErrTooBig':
+      'वह फ़ाइल {size} की है और सीमा {limit} है। हर पन्ने की फ़ोटो या स्कैन आम तौर पर छोटा होता है।',
+    'assign.fileErrKind':
+      'इस तरह की फ़ाइल जमा नहीं की जा सकती। PDF, फ़ोटो (JPEG, PNG या WebP) या ऑडियो रिकॉर्डिंग चलेगी।',
+    'assign.fileErrTooMany':
+      'एक असाइनमेंट में {count} फ़ाइलें आ सकती हैं, और इसमें पहले से उतनी हैं।',
+    'assign.fileErrDraft':
+      'ड्राफ़्ट की पुष्टि नहीं हो सकी, इसलिए यह फ़ाइल नहीं भेजी गई। दोबारा कोशिश करने से पहले मौजूदा काम देख लें।',
+    'assign.fileErrUnreadable':
+      'फ़ाइल पढ़ी नहीं जा सकी। अगर यह हटाई जा सकने वाली ड्राइव पर है, तो पहले इसे कॉपी करें और फिर कोशिश करें।',
+    'assign.fileErrUncertain':
+      'अपलोड की पुष्टि नहीं हो सकी। दोबारा कोशिश करने से पहले रीफ़्रेश करके फ़ाइलों की सूची देखें; हो सकता है कोई फ़ाइल दर्ज या संलग्न हो चुकी हो।',
+    'assign.fileErrListAfterAttach':
+      'फ़ाइल संलग्न हो गई, लेकिन सूची जाँची नहीं जा सकी। इस पर भरोसा करने से पहले रीफ़्रेश करें।',
+    'assign.fileErrListChanged':
+      'फ़ाइलों की सूची बदल गई या जाँची नहीं जा सकी। इस पर भरोसा करने से पहले इसे रीफ़्रेश करें।',
+    'assign.fileMsgAttached':
+      'फ़ाइल संलग्न हो गई ({size})। पहुँच अब भी अनुमतियों और समीक्षा के अधीन है।',
+    'assign.fileMsgConfirmed':
+      'स्टोरेज ने अपेक्षित आकार बताया और फ़ाइल संलग्न हो गई। इसकी सामग्री को मैलवेयर के लिए स्कैन नहीं किया गया है।',
+    'assign.fileMsgRemoved':
+      'इस जमा किए गए काम से हटा दी गई। सहेजी गई फ़ाइल इस कार्रवाई से मिटती नहीं है।',
+    'assign.fileErrRemove':
+      'हटाने की पुष्टि नहीं हो सकी। दोबारा कोशिश करने से पहले रीफ़्रेश करके फ़ाइलों की सूची देखें; हो सकता है वह पहले ही हट चुकी हो।',
+    'assign.fileErrRemoveList':
+      'हटाने का अनुरोध मिल गया, लेकिन फ़ाइलों की सूची जाँची नहीं जा सकी। इस पर भरोसा करने से पहले रीफ़्रेश करें।',
+    'assign.fileRevisionNote':
+      'इस संस्करण के साथ दर्ज फ़ाइलें। फ़ाइल खोलने पर आपकी मौजूदा पहुँच जाँची जाती है; हो सकता है फ़ाइल अब उपलब्ध न हो।',
+    'assign.fileRevisionOpen': 'फ़ाइल {number} खोलने की कोशिश करें',
+    'assign.fileRevisionInvalid':
+      'फ़ाइल संदर्भ {number} अमान्य है और इसे अलग से देखने की ज़रूरत है।',
   },
   fr: {
     'assign.label': 'Devoir',
@@ -703,6 +1278,70 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.viewFeedback': 'Voir les commentaires',
     'assign.viewSubmission': 'Voir la remise',
     'assign.open': 'Ouvrir',
+    'assign.files': 'Fichiers',
+    'assign.fileCountUnknown': 'Nombre de fichiers indisponible',
+    'assign.filesAttached': 'Joints : {count}',
+    'assign.filesNotAttached': 'Non joints : {count}',
+    'assign.fileListUnknown':
+      'La liste des fichiers n’a pas pu être vérifiée. Actualisez avant de vous y fier ; ne supposez pas qu’il n’y a aucun fichier.',
+    'assign.fileUnnamed': 'Fichier remis',
+    'assign.fileCheckAgain': 'Vérifier à nouveau l’envoi',
+    'assign.fileResend': 'Renvoyer le même fichier',
+    'assign.fileRemove': 'Retirer',
+    'assign.fileShowing':
+      '{shown} affichés sur {total}. La liste peut changer d’une page à l’autre ; actualisez pour vérifier à nouveau.',
+    'assign.fileShowMore': 'Afficher plus de fichiers',
+    'assign.fileHint':
+      'Une photo de chaque page, un PDF ou un enregistrement audio. {size} au maximum par fichier.',
+    'assign.fileHintRemaining':
+      'Fichiers que vous pouvez encore ajouter : {count}. Le serveur vérifie la limite.',
+    'assign.filePendingExplain':
+      'Les fichiers en attente ne comptent pas comme joints. La personne qui a envoyé un fichier en attente peut vérifier s’il est arrivé. S’il n’est pas arrivé, elle peut choisir le même fichier pour le renvoyer. Vérifiez d’abord, et ne renvoyez pas tant que le premier transfert est en cours.',
+    'assign.fileResendLabel': 'Sélectionner le même fichier pour le renvoyer',
+    'assign.fileNone': 'Aucun fichier n’a été remis avec ce travail.',
+    'assign.filePhaseReading': 'Lecture du fichier…',
+    'assign.filePhaseAsking': 'Demande de l’emplacement où le placer…',
+    'assign.filePhaseSending': 'Envoi…',
+    'assign.filePhaseChecking': 'Vérification de son arrivée…',
+    'assign.filePhaseDone': 'Fichier joint',
+    'assign.fileKindImage': 'image',
+    'assign.fileKindAudio': 'audio',
+    'assign.fileKindOther': 'fichier',
+    'assign.fileStatusPending': 'envoi en attente ; arrivée non confirmée',
+    'assign.fileStatusHeld': 'retenu pour examen',
+    'assign.fileStatusUnavailable': 'indisponible',
+    'assign.fileErrNoName': 'Ce fichier n’a pas de nom.',
+    'assign.fileErrEmpty': 'Ce fichier est vide, il n’y a donc rien à remettre.',
+    'assign.fileErrTooBig':
+      'Ce fichier fait {size} et la limite est de {limit}. Une photo de chaque page, ou une numérisation, est généralement plus légère.',
+    'assign.fileErrKind':
+      'Ce type de fichier ne peut pas être remis. Un PDF, une photo (JPEG, PNG ou WebP) ou un enregistrement audio convient.',
+    'assign.fileErrTooMany': 'Un devoir accepte {count} fichiers, et celui-ci en a déjà autant.',
+    'assign.fileErrDraft':
+      'Le brouillon n’a pas pu être confirmé, ce fichier n’a donc pas été envoyé. Vérifiez le travail actuel avant de réessayer.',
+    'assign.fileErrUnreadable':
+      'Le fichier n’a pas pu être lu. S’il se trouve sur un support amovible, copiez-le d’abord puis réessayez.',
+    'assign.fileErrUncertain':
+      'L’envoi n’a pas pu être confirmé. Actualisez et vérifiez la liste des fichiers avant de réessayer ; un fichier a peut-être été enregistré ou joint.',
+    'assign.fileErrListAfterAttach':
+      'Le fichier a été joint, mais la liste n’a pas pu être vérifiée. Actualisez avant de vous y fier.',
+    'assign.fileErrListChanged':
+      'La liste des fichiers a changé ou n’a pas pu être vérifiée. Actualisez-la avant de vous y fier.',
+    'assign.fileMsgAttached':
+      'Fichier joint ({size}). L’accès reste soumis aux autorisations et à l’examen.',
+    'assign.fileMsgConfirmed':
+      'Le stockage a indiqué la taille attendue et le fichier a été joint. Son contenu n’a pas été analysé à la recherche de logiciels malveillants.',
+    'assign.fileMsgRemoved':
+      'Retiré de cette remise. Le fichier stocké n’est pas supprimé par cette action.',
+    'assign.fileErrRemove':
+      'Le retrait n’a pas pu être confirmé. Actualisez et vérifiez la liste des fichiers avant de réessayer ; il a peut-être déjà été retiré.',
+    'assign.fileErrRemoveList':
+      'La demande de retrait a été reçue, mais la liste des fichiers n’a pas pu être vérifiée. Actualisez avant de vous y fier.',
+    'assign.fileRevisionNote':
+      'Fichiers enregistrés avec cette version. L’ouverture d’un fichier vérifie votre accès actuel ; un fichier peut ne plus être disponible.',
+    'assign.fileRevisionOpen': 'Essayer d’ouvrir le fichier {number}',
+    'assign.fileRevisionInvalid':
+      'La référence de fichier {number} n’est pas valide et nécessite un examen individuel.',
   },
   es: {
     'assign.label': 'Tarea',
@@ -772,6 +1411,70 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.viewFeedback': 'Ver comentarios',
     'assign.viewSubmission': 'Ver entrega',
     'assign.open': 'Abrir',
+    'assign.files': 'Archivos',
+    'assign.fileCountUnknown': 'Número de archivos no disponible',
+    'assign.filesAttached': 'Adjuntos: {count}',
+    'assign.filesNotAttached': 'Sin adjuntar: {count}',
+    'assign.fileListUnknown':
+      'No se pudo comprobar la lista de archivos. Actualiza antes de fiarte de ella; no des por hecho que no hay archivos.',
+    'assign.fileUnnamed': 'Archivo entregado',
+    'assign.fileCheckAgain': 'Comprobar la subida de nuevo',
+    'assign.fileResend': 'Reenviar el mismo archivo',
+    'assign.fileRemove': 'Quitar',
+    'assign.fileShowing':
+      'Se muestran {shown} de {total}. La lista puede cambiar entre páginas; actualiza para comprobarla de nuevo.',
+    'assign.fileShowMore': 'Mostrar más archivos',
+    'assign.fileHint':
+      'Una foto de cada página, un PDF o una grabación de audio. Hasta {size} por archivo.',
+    'assign.fileHintRemaining':
+      'Archivos que aún puedes añadir: {count}. El servidor comprueba el límite.',
+    'assign.filePendingExplain':
+      'Los archivos pendientes no cuentan como adjuntos. Quien subió un archivo pendiente puede comprobar si llegó. Si no llegó, puede elegir el mismo archivo para enviarlo de nuevo. Comprueba primero y no lo reenvíes mientras la primera transferencia siga en curso.',
+    'assign.fileResendLabel': 'Selecciona el mismo archivo para reenviarlo',
+    'assign.fileNone': 'No se entregó ningún archivo con este trabajo.',
+    'assign.filePhaseReading': 'Leyendo el archivo…',
+    'assign.filePhaseAsking': 'Preguntando dónde colocarlo…',
+    'assign.filePhaseSending': 'Enviando…',
+    'assign.filePhaseChecking': 'Comprobando que ha llegado…',
+    'assign.filePhaseDone': 'Archivo adjuntado',
+    'assign.fileKindImage': 'imagen',
+    'assign.fileKindAudio': 'audio',
+    'assign.fileKindOther': 'archivo',
+    'assign.fileStatusPending': 'subida pendiente; llegada sin confirmar',
+    'assign.fileStatusHeld': 'retenido para revisión',
+    'assign.fileStatusUnavailable': 'no disponible',
+    'assign.fileErrNoName': 'Ese archivo no tiene nombre.',
+    'assign.fileErrEmpty': 'Ese archivo está vacío, así que no hay nada que entregar.',
+    'assign.fileErrTooBig':
+      'Ese archivo pesa {size} y el límite es {limit}. Una foto de cada página, o un escaneo, suele pesar menos.',
+    'assign.fileErrKind':
+      'Ese tipo de archivo no se puede entregar. Sirve un PDF, una foto (JPEG, PNG o WebP) o una grabación de audio.',
+    'assign.fileErrTooMany': 'Una tarea admite {count} archivos, y esta ya tiene esa cantidad.',
+    'assign.fileErrDraft':
+      'No se pudo confirmar el borrador, así que este archivo no se envió. Comprueba el trabajo actual antes de volver a intentarlo.',
+    'assign.fileErrUnreadable':
+      'No se pudo leer el archivo. Si está en una unidad extraíble, cópialo primero e inténtalo de nuevo.',
+    'assign.fileErrUncertain':
+      'No se pudo confirmar la subida. Actualiza y comprueba la lista de archivos antes de volver a intentarlo; puede que se haya registrado o adjuntado un archivo.',
+    'assign.fileErrListAfterAttach':
+      'El archivo se adjuntó, pero no se pudo comprobar la lista. Actualiza antes de fiarte de ella.',
+    'assign.fileErrListChanged':
+      'La lista de archivos cambió o no se pudo comprobar. Actualízala antes de fiarte de ella.',
+    'assign.fileMsgAttached':
+      'Archivo adjuntado ({size}). El acceso sigue sujeto a los permisos y a la revisión.',
+    'assign.fileMsgConfirmed':
+      'El almacenamiento informó del tamaño esperado y el archivo se adjuntó. Su contenido no se ha analizado en busca de software malicioso.',
+    'assign.fileMsgRemoved':
+      'Quitado de esta entrega. El archivo almacenado no se elimina con esta acción.',
+    'assign.fileErrRemove':
+      'No se pudo confirmar la eliminación. Actualiza y comprueba la lista de archivos antes de volver a intentarlo; puede que ya se haya quitado.',
+    'assign.fileErrRemoveList':
+      'Se recibió la solicitud de eliminación, pero no se pudo comprobar la lista de archivos. Actualiza antes de fiarte de ella.',
+    'assign.fileRevisionNote':
+      'Archivos registrados con esta versión. Al abrir un archivo se comprueba tu acceso actual; puede que un archivo ya no esté disponible.',
+    'assign.fileRevisionOpen': 'Intentar abrir el archivo {number}',
+    'assign.fileRevisionInvalid':
+      'La referencia de archivo {number} no es válida y necesita una revisión individual.',
   },
   pt: {
     'assign.label': 'Tarefa',
@@ -841,6 +1544,70 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.viewFeedback': 'Ver comentários',
     'assign.viewSubmission': 'Ver entrega',
     'assign.open': 'Abrir',
+    'assign.files': 'Ficheiros',
+    'assign.fileCountUnknown': 'Número de ficheiros indisponível',
+    'assign.filesAttached': 'Anexados: {count}',
+    'assign.filesNotAttached': 'Não anexados: {count}',
+    'assign.fileListUnknown':
+      'Não foi possível verificar a lista de ficheiros. Atualize antes de confiar nela; não presuma que não há ficheiros.',
+    'assign.fileUnnamed': 'Ficheiro entregue',
+    'assign.fileCheckAgain': 'Verificar o envio novamente',
+    'assign.fileResend': 'Reenviar o mesmo ficheiro',
+    'assign.fileRemove': 'Remover',
+    'assign.fileShowing':
+      'A mostrar {shown} de {total}. A lista pode mudar entre páginas; atualize para verificar novamente.',
+    'assign.fileShowMore': 'Mostrar mais ficheiros',
+    'assign.fileHint':
+      'Uma fotografia de cada página, um PDF ou uma gravação de áudio. Até {size} por ficheiro.',
+    'assign.fileHintRemaining':
+      'Ficheiros que ainda pode adicionar: {count}. O servidor verifica o limite.',
+    'assign.filePendingExplain':
+      'Os ficheiros pendentes não contam como anexados. Quem enviou um ficheiro pendente pode verificar se ele chegou. Se não chegou, pode escolher o mesmo ficheiro para o enviar novamente. Verifique primeiro e não reenvie enquanto a primeira transferência ainda estiver a decorrer.',
+    'assign.fileResendLabel': 'Selecione o mesmo ficheiro para reenviar',
+    'assign.fileNone': 'Não foi entregue nenhum ficheiro com este trabalho.',
+    'assign.filePhaseReading': 'A ler o ficheiro…',
+    'assign.filePhaseAsking': 'A perguntar onde o colocar…',
+    'assign.filePhaseSending': 'A enviar…',
+    'assign.filePhaseChecking': 'A verificar se chegou…',
+    'assign.filePhaseDone': 'Ficheiro anexado',
+    'assign.fileKindImage': 'imagem',
+    'assign.fileKindAudio': 'áudio',
+    'assign.fileKindOther': 'ficheiro',
+    'assign.fileStatusPending': 'envio pendente; chegada não confirmada',
+    'assign.fileStatusHeld': 'retido para revisão',
+    'assign.fileStatusUnavailable': 'indisponível',
+    'assign.fileErrNoName': 'Esse ficheiro não tem nome.',
+    'assign.fileErrEmpty': 'Esse ficheiro está vazio, por isso não há nada para entregar.',
+    'assign.fileErrTooBig':
+      'Esse ficheiro tem {size} e o limite é {limit}. Uma fotografia de cada página, ou uma digitalização, costuma ser mais pequena.',
+    'assign.fileErrKind':
+      'Esse tipo de ficheiro não pode ser entregue. Serve um PDF, uma fotografia (JPEG, PNG ou WebP) ou uma gravação de áudio.',
+    'assign.fileErrTooMany': 'Uma tarefa aceita {count} ficheiros, e esta já tem esse número.',
+    'assign.fileErrDraft':
+      'Não foi possível confirmar o rascunho, por isso este ficheiro não foi enviado. Verifique o trabalho atual antes de tentar de novo.',
+    'assign.fileErrUnreadable':
+      'Não foi possível ler o ficheiro. Se estiver numa unidade amovível, copie-o primeiro e tente de novo.',
+    'assign.fileErrUncertain':
+      'Não foi possível confirmar o envio. Atualize e verifique a lista de ficheiros antes de tentar de novo; um ficheiro pode ter sido registado ou anexado.',
+    'assign.fileErrListAfterAttach':
+      'O ficheiro foi anexado, mas não foi possível verificar a lista. Atualize antes de confiar nela.',
+    'assign.fileErrListChanged':
+      'A lista de ficheiros mudou ou não pôde ser verificada. Atualize-a antes de confiar nela.',
+    'assign.fileMsgAttached':
+      'Ficheiro anexado ({size}). O acesso continua sujeito às permissões e à revisão.',
+    'assign.fileMsgConfirmed':
+      'O armazenamento indicou o tamanho esperado e o ficheiro foi anexado. O seu conteúdo não foi analisado à procura de software malicioso.',
+    'assign.fileMsgRemoved':
+      'Removido desta entrega. O ficheiro armazenado não é eliminado por esta ação.',
+    'assign.fileErrRemove':
+      'Não foi possível confirmar a remoção. Atualize e verifique a lista de ficheiros antes de tentar de novo; pode já ter sido removido.',
+    'assign.fileErrRemoveList':
+      'O pedido de remoção foi recebido, mas não foi possível verificar a lista de ficheiros. Atualize antes de confiar nela.',
+    'assign.fileRevisionNote':
+      'Ficheiros registados com esta versão. Abrir um ficheiro verifica o seu acesso atual; um ficheiro pode já não estar disponível.',
+    'assign.fileRevisionOpen': 'Tentar abrir o ficheiro {number}',
+    'assign.fileRevisionInvalid':
+      'A referência de ficheiro {number} é inválida e precisa de revisão individual.',
   },
   sw: {
     'assign.label': 'Zoezi',
@@ -907,6 +1674,69 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.viewFeedback': 'Tazama maoni',
     'assign.viewSubmission': 'Tazama wasilisho',
     'assign.open': 'Fungua',
+    'assign.files': 'Faili',
+    'assign.fileCountUnknown': 'Idadi ya faili haipatikani',
+    'assign.filesAttached': 'Zilizoambatishwa: {count}',
+    'assign.filesNotAttached': 'Ambazo hazijaambatishwa: {count}',
+    'assign.fileListUnknown':
+      'Orodha ya faili haikuweza kukaguliwa. Onyesha upya kabla ya kuitegemea; usidhani kwamba hakuna faili.',
+    'assign.fileUnnamed': 'Faili iliyowasilishwa',
+    'assign.fileCheckAgain': 'Kagua upakiaji tena',
+    'assign.fileResend': 'Tuma tena faili ileile',
+    'assign.fileRemove': 'Ondoa',
+    'assign.fileShowing':
+      'Zinaonyeshwa {shown} kati ya {total}. Orodha inaweza kubadilika kati ya kurasa; onyesha upya ili kukagua tena.',
+    'assign.fileShowMore': 'Onyesha faili zaidi',
+    'assign.fileHint': 'Picha ya kila ukurasa, PDF, au rekodi ya sauti. Kila faili isizidi {size}.',
+    'assign.fileHintRemaining':
+      'Faili unazoweza kuongeza bado: {count}. Seva ndiyo inayokagua kikomo.',
+    'assign.filePendingExplain':
+      'Faili zinazosubiri hazihesabiwi kuwa zimeambatishwa. Aliyepakia faili inayosubiri anaweza kukagua kama imefika. Ikiwa haijafika, anaweza kuchagua faili ileile ili kuituma tena. Kagua kwanza, na usitume tena wakati uhamishaji wa kwanza bado unaendelea.',
+    'assign.fileResendLabel': 'Chagua faili ileile ili kuituma tena',
+    'assign.fileNone': 'Hakuna faili iliyowasilishwa pamoja na kazi hii.',
+    'assign.filePhaseReading': 'Inasoma faili…',
+    'assign.filePhaseAsking': 'Inauliza mahali pa kuiweka…',
+    'assign.filePhaseSending': 'Inatuma…',
+    'assign.filePhaseChecking': 'Inakagua kama imefika…',
+    'assign.filePhaseDone': 'Faili imeambatishwa',
+    'assign.fileKindImage': 'picha',
+    'assign.fileKindAudio': 'sauti',
+    'assign.fileKindOther': 'faili',
+    'assign.fileStatusPending': 'upakiaji unasubiri; kufika hakujathibitishwa',
+    'assign.fileStatusHeld': 'imezuiliwa kwa ukaguzi',
+    'assign.fileStatusUnavailable': 'haipatikani',
+    'assign.fileErrNoName': 'Faili hiyo haina jina.',
+    'assign.fileErrEmpty': 'Faili hiyo ni tupu, kwa hiyo hakuna cha kuwasilisha.',
+    'assign.fileErrTooBig':
+      'Faili hiyo ina ukubwa wa {size} na kikomo ni {limit}. Picha ya kila ukurasa, au skani, kwa kawaida huwa ndogo zaidi.',
+    'assign.fileErrKind':
+      'Aina hiyo ya faili haiwezi kuwasilishwa. PDF, picha (JPEG, PNG au WebP) au rekodi ya sauti inafaa.',
+    'assign.fileErrTooMany': 'Zoezi moja hupokea faili {count}, na hili tayari lina idadi hiyo.',
+    'assign.fileErrDraft':
+      'Rasimu haikuweza kuthibitishwa, kwa hiyo faili hii haikutumwa. Kagua kazi ya sasa kabla ya kujaribu tena.',
+    'assign.fileErrUnreadable':
+      'Faili haikuweza kusomwa. Ikiwa iko kwenye diski inayoondolewa, inakili kwanza kisha ujaribu tena.',
+    'assign.fileErrUncertain':
+      'Upakiaji haukuweza kuthibitishwa. Onyesha upya na ukague orodha ya faili kabla ya kujaribu tena; huenda faili imesajiliwa au imeambatishwa.',
+    'assign.fileErrListAfterAttach':
+      'Faili imeambatishwa, lakini orodha haikuweza kukaguliwa. Onyesha upya kabla ya kuitegemea.',
+    'assign.fileErrListChanged':
+      'Orodha ya faili imebadilika au haikuweza kukaguliwa. Ionyeshe upya kabla ya kuitegemea.',
+    'assign.fileMsgAttached':
+      'Faili imeambatishwa ({size}). Ufikiaji bado unategemea ruhusa na ukaguzi.',
+    'assign.fileMsgConfirmed':
+      'Hifadhi imeripoti ukubwa uliotarajiwa na faili imeambatishwa. Maudhui yake hayajakaguliwa kwa programu hasidi.',
+    'assign.fileMsgRemoved':
+      'Imeondolewa kwenye wasilisho hili. Faili iliyohifadhiwa haifutwi na kitendo hiki.',
+    'assign.fileErrRemove':
+      'Kuondoa hakukuweza kuthibitishwa. Onyesha upya na ukague orodha ya faili kabla ya kujaribu tena; huenda tayari imeondolewa.',
+    'assign.fileErrRemoveList':
+      'Ombi la kuondoa limepokelewa, lakini orodha ya faili haikuweza kukaguliwa. Onyesha upya kabla ya kuitegemea.',
+    'assign.fileRevisionNote':
+      'Faili zilizorekodiwa pamoja na toleo hili. Kufungua faili hukagua ufikiaji wako wa sasa; huenda faili haipatikani tena.',
+    'assign.fileRevisionOpen': 'Jaribu kufungua faili ya {number}',
+    'assign.fileRevisionInvalid':
+      'Rejeo la faili ya {number} si sahihi na linahitaji ukaguzi wa kipekee.',
   },
   af: {
     'assign.label': 'Opdrag',
@@ -976,6 +1806,70 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.viewFeedback': 'Bekyk terugvoer',
     'assign.viewSubmission': 'Bekyk indiening',
     'assign.open': 'Maak oop',
+    'assign.files': 'Lêers',
+    'assign.fileCountUnknown': 'Aantal lêers nie beskikbaar nie',
+    'assign.filesAttached': 'Aangeheg: {count}',
+    'assign.filesNotAttached': 'Nie aangeheg nie: {count}',
+    'assign.fileListUnknown':
+      'Die lêerlys kon nie nagegaan word nie. Verfris voordat jy daarop staatmaak; moenie aanneem dat daar geen lêers is nie.',
+    'assign.fileUnnamed': 'Ingediende lêer',
+    'assign.fileCheckAgain': 'Gaan oplaai weer na',
+    'assign.fileResend': 'Stuur dieselfde lêer weer',
+    'assign.fileRemove': 'Verwyder',
+    'assign.fileShowing':
+      'Wys {shown} van {total}. Die lys kan tussen bladsye verander; verfris om weer na te gaan.',
+    'assign.fileShowMore': 'Wys nog lêers',
+    'assign.fileHint':
+      '’n Foto van elke bladsy, ’n PDF of ’n klankopname. Hoogstens {size} per lêer.',
+    'assign.fileHintRemaining':
+      'Lêers wat jy nog kan byvoeg: {count}. Die bediener gaan die perk na.',
+    'assign.filePendingExplain':
+      'Hangende lêers tel nie as aangeheg nie. Wie ook al ’n hangende lêer opgelaai het, kan nagaan of dit aangekom het. Indien nie, kan hulle dieselfde lêer kies om dit weer te stuur. Gaan eers na, en moenie weer stuur terwyl die eerste oordrag nog loop nie.',
+    'assign.fileResendLabel': 'Kies dieselfde lêer om weer te stuur',
+    'assign.fileNone': 'Geen lêers is saam met hierdie werk ingedien nie.',
+    'assign.filePhaseReading': 'Lees tans die lêer…',
+    'assign.filePhaseAsking': 'Vra tans waar om dit te plaas…',
+    'assign.filePhaseSending': 'Stuur tans…',
+    'assign.filePhaseChecking': 'Gaan tans na of dit aangekom het…',
+    'assign.filePhaseDone': 'Lêer aangeheg',
+    'assign.fileKindImage': 'beeld',
+    'assign.fileKindAudio': 'klank',
+    'assign.fileKindOther': 'lêer',
+    'assign.fileStatusPending': 'oplaai hangend; aankoms nie bevestig nie',
+    'assign.fileStatusHeld': 'teruggehou vir hersiening',
+    'assign.fileStatusUnavailable': 'nie beskikbaar nie',
+    'assign.fileErrNoName': 'Daardie lêer het geen naam nie.',
+    'assign.fileErrEmpty': 'Daardie lêer is leeg, dus is daar niks om in te dien nie.',
+    'assign.fileErrTooBig':
+      'Daardie lêer is {size} en die perk is {limit}. ’n Foto van elke bladsy, of ’n skandering, is gewoonlik kleiner.',
+    'assign.fileErrKind':
+      'Daardie soort lêer kan nie ingedien word nie. ’n PDF, ’n foto (JPEG, PNG of WebP) of ’n klankopname werk.',
+    'assign.fileErrTooMany': '’n Opdrag neem {count} lêers, en hierdie een het reeds soveel.',
+    'assign.fileErrDraft':
+      'Die konsep kon nie bevestig word nie, dus is hierdie lêer nie gestuur nie. Kyk na die huidige werk voordat jy weer probeer.',
+    'assign.fileErrUnreadable':
+      'Die lêer kon nie gelees word nie. As dit op ’n verwyderbare skyf is, kopieer dit eers en probeer weer.',
+    'assign.fileErrUncertain':
+      'Die oplaai kon nie bevestig word nie. Verfris en gaan die lêerlys na voordat jy weer probeer; ’n lêer is dalk geregistreer of aangeheg.',
+    'assign.fileErrListAfterAttach':
+      'Die lêer is aangeheg, maar die lys kon nie nagegaan word nie. Verfris voordat jy daarop staatmaak.',
+    'assign.fileErrListChanged':
+      'Die lêerlys het verander of kon nie nagegaan word nie. Verfris dit voordat jy daarop staatmaak.',
+    'assign.fileMsgAttached':
+      'Lêer aangeheg ({size}). Toegang bly onderhewig aan toestemmings en hersiening.',
+    'assign.fileMsgConfirmed':
+      'Die stoorplek het die verwagte grootte gerapporteer en die lêer is aangeheg. Die inhoud is nie vir wanware geskandeer nie.',
+    'assign.fileMsgRemoved':
+      'Verwyder uit hierdie indiening. Die gestoorde lêer word nie deur hierdie handeling geskrap nie.',
+    'assign.fileErrRemove':
+      'Die verwydering kon nie bevestig word nie. Verfris en gaan die lêerlys na voordat jy weer probeer; dit is dalk reeds verwyder.',
+    'assign.fileErrRemoveList':
+      'Die versoek om te verwyder is ontvang, maar die lêerlys kon nie nagegaan word nie. Verfris voordat jy daarop staatmaak.',
+    'assign.fileRevisionNote':
+      'Lêers wat saam met hierdie weergawe aangeteken is. Wanneer jy ’n lêer oopmaak, word jou huidige toegang nagegaan; ’n lêer is dalk nie meer beskikbaar nie.',
+    'assign.fileRevisionOpen': 'Probeer lêer {number} oopmaak',
+    'assign.fileRevisionInvalid':
+      'Lêerverwysing {number} is ongeldig en moet afsonderlik hersien word.',
   },
   'zh-hans': {
     'assign.label': '作业',
@@ -1038,6 +1932,52 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.viewFeedback': '查看反馈',
     'assign.viewSubmission': '查看提交内容',
     'assign.open': '打开',
+    'assign.files': '文件',
+    'assign.fileCountUnknown': '文件数量暂不可用',
+    'assign.filesAttached': '已附加：{count}',
+    'assign.filesNotAttached': '未附加：{count}',
+    'assign.fileListUnknown': '无法检查文件列表。请先刷新再以它为准；不要认为没有文件。',
+    'assign.fileUnnamed': '已提交的文件',
+    'assign.fileCheckAgain': '再次检查上传',
+    'assign.fileResend': '重新发送同一文件',
+    'assign.fileRemove': '移除',
+    'assign.fileShowing': '显示 {total} 个中的 {shown} 个。列表可能在翻页之间发生变化；请刷新后再检查。',
+    'assign.fileShowMore': '显示更多文件',
+    'assign.fileHint': '每一页的照片、PDF 或录音。每个文件最大 {size}。',
+    'assign.fileHintRemaining': '你还可以添加的文件数：{count}。上限由服务器检查。',
+    'assign.filePendingExplain':
+      '待处理的文件不算已附加。上传该文件的人可以检查它是否已送达。如果没有送达，可以选择同一文件重新发送。请先检查，并且不要在第一次传输仍在进行时重新发送。',
+    'assign.fileResendLabel': '选择同一文件以重新发送',
+    'assign.fileNone': '这份作业没有提交任何文件。',
+    'assign.filePhaseReading': '正在读取文件…',
+    'assign.filePhaseAsking': '正在询问存放位置…',
+    'assign.filePhaseSending': '正在发送…',
+    'assign.filePhaseChecking': '正在检查是否送达…',
+    'assign.filePhaseDone': '文件已附加',
+    'assign.fileKindImage': '图片',
+    'assign.fileKindAudio': '音频',
+    'assign.fileKindOther': '文件',
+    'assign.fileStatusPending': '上传待处理；尚未确认送达',
+    'assign.fileStatusHeld': '已暂扣待审核',
+    'assign.fileStatusUnavailable': '不可用',
+    'assign.fileErrNoName': '该文件没有名称。',
+    'assign.fileErrEmpty': '该文件是空的，没有可提交的内容。',
+    'assign.fileErrTooBig': '该文件大小为 {size}，上限为 {limit}。每一页的照片或扫描件通常更小。',
+    'assign.fileErrKind': '这种类型的文件不能提交。可以使用 PDF、照片（JPEG、PNG 或 WebP）或录音。',
+    'assign.fileErrTooMany': '一份作业最多接受 {count} 个文件，这份作业已经达到这个数量。',
+    'assign.fileErrDraft': '无法确认草稿，因此没有发送这个文件。再次尝试之前，请检查当前的作业。',
+    'assign.fileErrUnreadable': '无法读取该文件。如果它在可移动磁盘上，请先复制出来再重试。',
+    'assign.fileErrUncertain': '无法确认上传结果。再次尝试之前，请刷新并检查文件列表；可能已有文件被登记或附加。',
+    'assign.fileErrListAfterAttach': '文件已附加，但无法检查列表。请先刷新再以它为准。',
+    'assign.fileErrListChanged': '文件列表已变化或无法检查。请先刷新再以它为准。',
+    'assign.fileMsgAttached': '文件已附加（{size}）。访问仍受权限和审核的约束。',
+    'assign.fileMsgConfirmed': '存储报告的大小与预期一致，文件已附加。其内容尚未经过恶意软件扫描。',
+    'assign.fileMsgRemoved': '已从这次提交中移除。此操作不会删除已存储的文件。',
+    'assign.fileErrRemove': '无法确认移除结果。再次尝试之前，请刷新并检查文件列表；它可能已经被移除。',
+    'assign.fileErrRemoveList': '移除请求已收到，但无法检查文件列表。请先刷新再以它为准。',
+    'assign.fileRevisionNote': '随这一版记录的文件。打开文件时会检查你当前的访问权限；文件可能已不可用。',
+    'assign.fileRevisionOpen': '尝试打开文件 {number}',
+    'assign.fileRevisionInvalid': '文件引用 {number} 无效，需要单独审核。',
   },
   'zh-hant': {
     'assign.label': '作業',
@@ -1100,6 +2040,52 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.viewFeedback': '查看回饋',
     'assign.viewSubmission': '查看提交內容',
     'assign.open': '開啟',
+    'assign.files': '檔案',
+    'assign.fileCountUnknown': '檔案數量暫時無法取得',
+    'assign.filesAttached': '已附加：{count}',
+    'assign.filesNotAttached': '未附加：{count}',
+    'assign.fileListUnknown': '無法檢查檔案清單。請先重新整理再以它為準；不要認為沒有檔案。',
+    'assign.fileUnnamed': '已提交的檔案',
+    'assign.fileCheckAgain': '再次檢查上傳',
+    'assign.fileResend': '重新傳送同一個檔案',
+    'assign.fileRemove': '移除',
+    'assign.fileShowing': '顯示 {total} 個中的 {shown} 個。清單可能在換頁之間發生變化；請重新整理後再檢查。',
+    'assign.fileShowMore': '顯示更多檔案',
+    'assign.fileHint': '每一頁的照片、PDF 或錄音。每個檔案最大 {size}。',
+    'assign.fileHintRemaining': '你還可以加入的檔案數：{count}。上限由伺服器檢查。',
+    'assign.filePendingExplain':
+      '待處理的檔案不算已附加。上傳該檔案的人可以檢查它是否已送達。如果沒有送達，可以選擇同一個檔案重新傳送。請先檢查，並且不要在第一次傳輸仍在進行時重新傳送。',
+    'assign.fileResendLabel': '選擇同一個檔案以重新傳送',
+    'assign.fileNone': '這份作業沒有提交任何檔案。',
+    'assign.filePhaseReading': '正在讀取檔案…',
+    'assign.filePhaseAsking': '正在詢問存放位置…',
+    'assign.filePhaseSending': '正在傳送…',
+    'assign.filePhaseChecking': '正在檢查是否送達…',
+    'assign.filePhaseDone': '檔案已附加',
+    'assign.fileKindImage': '圖片',
+    'assign.fileKindAudio': '音訊',
+    'assign.fileKindOther': '檔案',
+    'assign.fileStatusPending': '上傳待處理；尚未確認送達',
+    'assign.fileStatusHeld': '已暫扣待審核',
+    'assign.fileStatusUnavailable': '無法使用',
+    'assign.fileErrNoName': '該檔案沒有名稱。',
+    'assign.fileErrEmpty': '該檔案是空的，沒有可提交的內容。',
+    'assign.fileErrTooBig': '該檔案大小為 {size}，上限為 {limit}。每一頁的照片或掃描檔通常更小。',
+    'assign.fileErrKind': '這種類型的檔案不能提交。可以使用 PDF、照片（JPEG、PNG 或 WebP）或錄音。',
+    'assign.fileErrTooMany': '一份作業最多接受 {count} 個檔案，這份作業已經達到這個數量。',
+    'assign.fileErrDraft': '無法確認草稿，因此沒有傳送這個檔案。再次嘗試之前，請檢查目前的作業。',
+    'assign.fileErrUnreadable': '無法讀取該檔案。如果它在卸除式磁碟上，請先複製出來再試一次。',
+    'assign.fileErrUncertain': '無法確認上傳結果。再次嘗試之前，請重新整理並檢查檔案清單；可能已有檔案被登記或附加。',
+    'assign.fileErrListAfterAttach': '檔案已附加，但無法檢查清單。請先重新整理再以它為準。',
+    'assign.fileErrListChanged': '檔案清單已變更或無法檢查。請先重新整理再以它為準。',
+    'assign.fileMsgAttached': '檔案已附加（{size}）。存取仍受權限和審核的約束。',
+    'assign.fileMsgConfirmed': '儲存空間回報的大小與預期一致，檔案已附加。其內容尚未經過惡意軟體掃描。',
+    'assign.fileMsgRemoved': '已從這次提交中移除。此操作不會刪除已儲存的檔案。',
+    'assign.fileErrRemove': '無法確認移除結果。再次嘗試之前，請重新整理並檢查檔案清單；它可能已經被移除。',
+    'assign.fileErrRemoveList': '移除要求已收到，但無法檢查檔案清單。請先重新整理再以它為準。',
+    'assign.fileRevisionNote': '隨這一版記錄的檔案。開啟檔案時會檢查你目前的存取權限；檔案可能已無法使用。',
+    'assign.fileRevisionOpen': '嘗試開啟檔案 {number}',
+    'assign.fileRevisionInvalid': '檔案參照 {number} 無效，需要個別審核。',
   },
   vi: {
     'assign.label': 'Bài tập',
@@ -1166,6 +2152,68 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.viewFeedback': 'Xem nhận xét',
     'assign.viewSubmission': 'Xem bài nộp',
     'assign.open': 'Mở',
+    'assign.files': 'Tệp',
+    'assign.fileCountUnknown': 'Không có số lượng tệp',
+    'assign.filesAttached': 'Đã đính kèm: {count}',
+    'assign.filesNotAttached': 'Chưa đính kèm: {count}',
+    'assign.fileListUnknown':
+      'Không thể kiểm tra danh sách tệp. Hãy làm mới trước khi dựa vào nó; đừng cho rằng không có tệp nào.',
+    'assign.fileUnnamed': 'Tệp đã nộp',
+    'assign.fileCheckAgain': 'Kiểm tra lại việc tải lên',
+    'assign.fileResend': 'Gửi lại cùng tệp đó',
+    'assign.fileRemove': 'Gỡ bỏ',
+    'assign.fileShowing':
+      'Đang hiển thị {shown} trên {total}. Danh sách có thể thay đổi giữa các trang; hãy làm mới để kiểm tra lại.',
+    'assign.fileShowMore': 'Hiển thị thêm tệp',
+    'assign.fileHint':
+      'Ảnh chụp từng trang, một tệp PDF hoặc một bản ghi âm. Mỗi tệp tối đa {size}.',
+    'assign.fileHintRemaining':
+      'Số tệp bạn còn có thể thêm: {count}. Máy chủ kiểm tra giới hạn này.',
+    'assign.filePendingExplain':
+      'Tệp đang chờ không được tính là đã đính kèm. Người đã tải tệp đang chờ lên có thể kiểm tra xem tệp đã đến chưa. Nếu chưa, họ có thể chọn cùng tệp đó để gửi lại. Hãy kiểm tra trước, và đừng gửi lại khi lần truyền đầu tiên vẫn đang chạy.',
+    'assign.fileResendLabel': 'Chọn cùng tệp đó để gửi lại',
+    'assign.fileNone': 'Không có tệp nào được nộp cùng bài này.',
+    'assign.filePhaseReading': 'Đang đọc tệp…',
+    'assign.filePhaseAsking': 'Đang hỏi nơi đặt tệp…',
+    'assign.filePhaseSending': 'Đang gửi…',
+    'assign.filePhaseChecking': 'Đang kiểm tra xem tệp đã đến chưa…',
+    'assign.filePhaseDone': 'Đã đính kèm tệp',
+    'assign.fileKindImage': 'hình ảnh',
+    'assign.fileKindAudio': 'âm thanh',
+    'assign.fileKindOther': 'tệp',
+    'assign.fileStatusPending': 'đang chờ tải lên; chưa xác nhận đã đến',
+    'assign.fileStatusHeld': 'bị giữ lại để xem xét',
+    'assign.fileStatusUnavailable': 'không khả dụng',
+    'assign.fileErrNoName': 'Tệp đó không có tên.',
+    'assign.fileErrEmpty': 'Tệp đó trống, nên không có gì để nộp.',
+    'assign.fileErrTooBig':
+      'Tệp đó nặng {size} và giới hạn là {limit}. Ảnh chụp từng trang, hoặc bản quét, thường nhẹ hơn.',
+    'assign.fileErrKind':
+      'Không thể nộp loại tệp đó. Có thể dùng PDF, ảnh (JPEG, PNG hoặc WebP) hoặc bản ghi âm.',
+    'assign.fileErrTooMany': 'Một bài tập nhận {count} tệp, và bài này đã có đủ số đó.',
+    'assign.fileErrDraft':
+      'Không thể xác nhận bản nháp, nên tệp này chưa được gửi. Hãy kiểm tra bài làm hiện tại trước khi thử lại.',
+    'assign.fileErrUnreadable':
+      'Không thể đọc tệp. Nếu tệp nằm trên ổ đĩa di động, hãy sao chép ra trước rồi thử lại.',
+    'assign.fileErrUncertain':
+      'Không thể xác nhận việc tải lên. Hãy làm mới và kiểm tra danh sách tệp trước khi thử lại; có thể một tệp đã được đăng ký hoặc đính kèm.',
+    'assign.fileErrListAfterAttach':
+      'Tệp đã được đính kèm, nhưng không thể kiểm tra danh sách. Hãy làm mới trước khi dựa vào nó.',
+    'assign.fileErrListChanged':
+      'Danh sách tệp đã thay đổi hoặc không thể kiểm tra. Hãy làm mới trước khi dựa vào nó.',
+    'assign.fileMsgAttached':
+      'Đã đính kèm tệp ({size}). Quyền truy cập vẫn tùy thuộc vào quyền hạn và việc xem xét.',
+    'assign.fileMsgConfirmed':
+      'Kho lưu trữ báo đúng kích thước dự kiến và tệp đã được đính kèm. Nội dung của tệp chưa được quét phần mềm độc hại.',
+    'assign.fileMsgRemoved': 'Đã gỡ khỏi bài nộp này. Thao tác này không xóa tệp đã lưu.',
+    'assign.fileErrRemove':
+      'Không thể xác nhận việc gỡ bỏ. Hãy làm mới và kiểm tra danh sách tệp trước khi thử lại; có thể tệp đã được gỡ rồi.',
+    'assign.fileErrRemoveList':
+      'Yêu cầu gỡ bỏ đã được nhận, nhưng không thể kiểm tra danh sách tệp. Hãy làm mới trước khi dựa vào nó.',
+    'assign.fileRevisionNote':
+      'Các tệp được ghi nhận cùng phiên bản này. Khi mở tệp, quyền truy cập hiện tại của bạn sẽ được kiểm tra; tệp có thể không còn khả dụng.',
+    'assign.fileRevisionOpen': 'Thử mở tệp {number}',
+    'assign.fileRevisionInvalid': 'Tham chiếu tệp {number} không hợp lệ và cần được xem xét riêng.',
   },
   th: {
     'assign.label': 'งานที่มอบหมาย',
@@ -1232,6 +2280,67 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.viewFeedback': 'ดูความคิดเห็น',
     'assign.viewSubmission': 'ดูงานที่ส่ง',
     'assign.open': 'เปิด',
+    'assign.files': 'ไฟล์',
+    'assign.fileCountUnknown': 'ไม่ทราบจำนวนไฟล์',
+    'assign.filesAttached': 'แนบแล้ว: {count}',
+    'assign.filesNotAttached': 'ยังไม่ได้แนบ: {count}',
+    'assign.fileListUnknown':
+      'ไม่สามารถตรวจสอบรายการไฟล์ได้ โปรดรีเฟรชก่อนจะยึดตามรายการนี้ อย่าสรุปว่าไม่มีไฟล์',
+    'assign.fileUnnamed': 'ไฟล์ที่ส่งแล้ว',
+    'assign.fileCheckAgain': 'ตรวจสอบการอัปโหลดอีกครั้ง',
+    'assign.fileResend': 'ส่งไฟล์เดิมอีกครั้ง',
+    'assign.fileRemove': 'นำออก',
+    'assign.fileShowing':
+      'กำลังแสดง {shown} จาก {total} รายการ รายการอาจเปลี่ยนระหว่างหน้า โปรดรีเฟรชเพื่อตรวจสอบอีกครั้ง',
+    'assign.fileShowMore': 'แสดงไฟล์เพิ่มเติม',
+    'assign.fileHint': 'ภาพถ่ายของแต่ละหน้า ไฟล์ PDF หรือไฟล์บันทึกเสียง แต่ละไฟล์ไม่เกิน {size}',
+    'assign.fileHintRemaining':
+      'จำนวนไฟล์ที่คุณยังเพิ่มได้: {count} เซิร์ฟเวอร์เป็นผู้ตรวจสอบขีดจำกัด',
+    'assign.filePendingExplain':
+      'ไฟล์ที่รอดำเนินการไม่นับว่าแนบแล้ว ผู้ที่อัปโหลดไฟล์ที่รอดำเนินการสามารถตรวจสอบได้ว่าไฟล์มาถึงหรือยัง หากยังไม่ถึง ก็เลือกไฟล์เดิมเพื่อส่งอีกครั้งได้ โปรดตรวจสอบก่อน และอย่าส่งซ้ำขณะที่การส่งครั้งแรกยังดำเนินอยู่',
+    'assign.fileResendLabel': 'เลือกไฟล์เดิมเพื่อส่งอีกครั้ง',
+    'assign.fileNone': 'ไม่มีไฟล์ที่ส่งมาพร้อมกับงานนี้',
+    'assign.filePhaseReading': 'กำลังอ่านไฟล์…',
+    'assign.filePhaseAsking': 'กำลังสอบถามตำแหน่งที่จะจัดเก็บ…',
+    'assign.filePhaseSending': 'กำลังส่ง…',
+    'assign.filePhaseChecking': 'กำลังตรวจสอบว่าไฟล์มาถึงแล้ว…',
+    'assign.filePhaseDone': 'แนบไฟล์แล้ว',
+    'assign.fileKindImage': 'รูปภาพ',
+    'assign.fileKindAudio': 'เสียง',
+    'assign.fileKindOther': 'ไฟล์',
+    'assign.fileStatusPending': 'การอัปโหลดรอดำเนินการ ยังไม่ยืนยันว่ามาถึง',
+    'assign.fileStatusHeld': 'ถูกกักไว้เพื่อตรวจสอบ',
+    'assign.fileStatusUnavailable': 'ไม่พร้อมใช้งาน',
+    'assign.fileErrNoName': 'ไฟล์นั้นไม่มีชื่อ',
+    'assign.fileErrEmpty': 'ไฟล์นั้นว่างเปล่า จึงไม่มีอะไรให้ส่ง',
+    'assign.fileErrTooBig':
+      'ไฟล์นั้นมีขนาด {size} และขีดจำกัดคือ {limit} ภาพถ่ายของแต่ละหน้าหรือไฟล์สแกนมักมีขนาดเล็กกว่า',
+    'assign.fileErrKind':
+      'ไม่สามารถส่งไฟล์ประเภทนั้นได้ ใช้ได้กับ PDF รูปถ่าย (JPEG, PNG หรือ WebP) หรือไฟล์บันทึกเสียง',
+    'assign.fileErrTooMany': 'งานหนึ่งรับได้ {count} ไฟล์ และงานนี้มีครบจำนวนนั้นแล้ว',
+    'assign.fileErrDraft':
+      'ไม่สามารถยืนยันฉบับร่างได้ จึงไม่ได้ส่งไฟล์นี้ โปรดตรวจสอบงานปัจจุบันก่อนลองอีกครั้ง',
+    'assign.fileErrUnreadable':
+      'ไม่สามารถอ่านไฟล์ได้ หากไฟล์อยู่ในไดรฟ์แบบถอดได้ ให้คัดลอกออกมาก่อนแล้วลองอีกครั้ง',
+    'assign.fileErrUncertain':
+      'ไม่สามารถยืนยันการอัปโหลดได้ โปรดรีเฟรชและตรวจสอบรายการไฟล์ก่อนลองอีกครั้ง อาจมีไฟล์ที่ถูกลงทะเบียนหรือแนบไปแล้ว',
+    'assign.fileErrListAfterAttach':
+      'แนบไฟล์แล้ว แต่ไม่สามารถตรวจสอบรายการได้ โปรดรีเฟรชก่อนจะยึดตามรายการนี้',
+    'assign.fileErrListChanged':
+      'รายการไฟล์เปลี่ยนไปหรือไม่สามารถตรวจสอบได้ โปรดรีเฟรชก่อนจะยึดตามรายการนี้',
+    'assign.fileMsgAttached': 'แนบไฟล์แล้ว ({size}) การเข้าถึงยังคงขึ้นกับสิทธิ์และการตรวจสอบ',
+    'assign.fileMsgConfirmed':
+      'ที่จัดเก็บรายงานขนาดตรงตามที่คาดไว้และแนบไฟล์แล้ว เนื้อหาของไฟล์ยังไม่ได้สแกนหามัลแวร์',
+    'assign.fileMsgRemoved': 'นำออกจากการส่งงานนี้แล้ว การดำเนินการนี้ไม่ได้ลบไฟล์ที่จัดเก็บไว้',
+    'assign.fileErrRemove':
+      'ไม่สามารถยืนยันการนำออกได้ โปรดรีเฟรชและตรวจสอบรายการไฟล์ก่อนลองอีกครั้ง ไฟล์อาจถูกนำออกไปแล้ว',
+    'assign.fileErrRemoveList':
+      'ได้รับคำขอนำออกแล้ว แต่ไม่สามารถตรวจสอบรายการไฟล์ได้ โปรดรีเฟรชก่อนจะยึดตามรายการนี้',
+    'assign.fileRevisionNote':
+      'ไฟล์ที่บันทึกไว้กับฉบับนี้ การเปิดไฟล์จะตรวจสอบสิทธิ์การเข้าถึงปัจจุบันของคุณ ไฟล์อาจไม่พร้อมใช้งานแล้ว',
+    'assign.fileRevisionOpen': 'ลองเปิดไฟล์ที่ {number}',
+    'assign.fileRevisionInvalid':
+      'การอ้างอิงไฟล์ที่ {number} ไม่ถูกต้องและต้องได้รับการตรวจสอบเป็นรายกรณี',
   },
   fil: {
     'assign.label': 'Takdang-aralin',
@@ -1301,6 +2410,71 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.viewFeedback': 'Tingnan ang puna',
     'assign.viewSubmission': 'Tingnan ang ipinasa',
     'assign.open': 'Buksan',
+    'assign.files': 'Mga file',
+    'assign.fileCountUnknown': 'Hindi available ang bilang ng file',
+    'assign.filesAttached': 'Naka-attach: {count}',
+    'assign.filesNotAttached': 'Hindi naka-attach: {count}',
+    'assign.fileListUnknown':
+      'Hindi masuri ang listahan ng file. Mag-refresh bago umasa rito; huwag ipagpalagay na walang file.',
+    'assign.fileUnnamed': 'Ipinasang file',
+    'assign.fileCheckAgain': 'Suriing muli ang upload',
+    'assign.fileResend': 'Ipadalang muli ang parehong file',
+    'assign.fileRemove': 'Alisin',
+    'assign.fileShowing':
+      'Ipinapakita ang {shown} sa {total}. Maaaring magbago ang listahan sa pagitan ng mga pahina; mag-refresh para suriing muli.',
+    'assign.fileShowMore': 'Magpakita pa ng mga file',
+    'assign.fileHint':
+      'Larawan ng bawat pahina, PDF, o recording ng boses. Hanggang {size} bawat file.',
+    'assign.fileHintRemaining':
+      'Mga file na maidaragdag mo pa: {count}. Ang server ang sumusuri sa limitasyon.',
+    'assign.filePendingExplain':
+      'Hindi ibinibilang na naka-attach ang mga nakabinbing file. Maaaring suriin ng nag-upload ng nakabinbing file kung dumating na ito. Kung hindi pa, maaari niyang piliin ang parehong file para ipadala itong muli. Suriin muna, at huwag magpadalang muli habang tumatakbo pa ang unang paglilipat.',
+    'assign.fileResendLabel': 'Piliin ang parehong file para ipadalang muli',
+    'assign.fileNone': 'Walang file na ipinasa kasama ng gawang ito.',
+    'assign.filePhaseReading': 'Binabasa ang file…',
+    'assign.filePhaseAsking': 'Itinatanong kung saan ito ilalagay…',
+    'assign.filePhaseSending': 'Ipinapadala…',
+    'assign.filePhaseChecking': 'Sinusuri kung dumating na…',
+    'assign.filePhaseDone': 'Naka-attach na ang file',
+    'assign.fileKindImage': 'larawan',
+    'assign.fileKindAudio': 'audio',
+    'assign.fileKindOther': 'file',
+    'assign.fileStatusPending': 'nakabinbin ang upload; hindi pa kumpirmadong dumating',
+    'assign.fileStatusHeld': 'pinigil para suriin',
+    'assign.fileStatusUnavailable': 'hindi available',
+    'assign.fileErrNoName': 'Walang pangalan ang file na iyon.',
+    'assign.fileErrEmpty': 'Walang laman ang file na iyon, kaya walang maipapasa.',
+    'assign.fileErrTooBig':
+      '{size} ang file na iyon at {limit} ang limitasyon. Karaniwang mas maliit ang larawan ng bawat pahina o ang scan.',
+    'assign.fileErrKind':
+      'Hindi maipapasa ang ganoong uri ng file. Puwede ang PDF, larawan (JPEG, PNG o WebP) o recording ng boses.',
+    'assign.fileErrTooMany':
+      'Tumatanggap ang isang takdang-aralin ng {count} file, at ganoon na karami ang narito.',
+    'assign.fileErrDraft':
+      'Hindi makumpirma ang draft, kaya hindi naipadala ang file na ito. Tingnan ang kasalukuyang gawa bago subukang muli.',
+    'assign.fileErrUnreadable':
+      'Hindi mabasa ang file. Kung nasa naaalis na drive ito, kopyahin muna at subukang muli.',
+    'assign.fileErrUncertain':
+      'Hindi makumpirma ang upload. Mag-refresh at suriin ang listahan ng file bago subukang muli; maaaring may file nang nairehistro o nai-attach.',
+    'assign.fileErrListAfterAttach':
+      'Naka-attach na ang file, pero hindi masuri ang listahan. Mag-refresh bago umasa rito.',
+    'assign.fileErrListChanged':
+      'Nagbago ang listahan ng file o hindi ito masuri. I-refresh ito bago umasa rito.',
+    'assign.fileMsgAttached':
+      'Naka-attach na ang file ({size}). Nakadepende pa rin ang access sa mga pahintulot at pagsusuri.',
+    'assign.fileMsgConfirmed':
+      'Iniulat ng storage ang inaasahang laki at naka-attach na ang file. Hindi pa na-scan ang laman nito para sa malware.',
+    'assign.fileMsgRemoved':
+      'Inalis sa ipinasang ito. Hindi binubura ng aksyong ito ang nakaimbak na file.',
+    'assign.fileErrRemove':
+      'Hindi makumpirma ang pag-alis. Mag-refresh at suriin ang listahan ng file bago subukang muli; maaaring naalis na ito.',
+    'assign.fileErrRemoveList':
+      'Natanggap ang kahilingang alisin, pero hindi masuri ang listahan ng file. Mag-refresh bago umasa rito.',
+    'assign.fileRevisionNote':
+      'Mga file na naitala kasama ng bersyong ito. Sinusuri ang kasalukuyan mong access kapag binuksan ang file; maaaring hindi na available ang file.',
+    'assign.fileRevisionOpen': 'Subukang buksan ang file {number}',
+    'assign.fileRevisionInvalid':
+      'Hindi wasto ang reference ng file {number} at kailangan itong suriin nang hiwalay.',
   },
   uz: {
     'assign.label': 'Topshiriq',
@@ -1369,6 +2543,71 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.viewFeedback': 'Fikr-mulohazani ko‘rish',
     'assign.viewSubmission': 'Topshirilgan ishni ko‘rish',
     'assign.open': 'Ochish',
+    'assign.files': 'Fayllar',
+    'assign.fileCountUnknown': 'Fayllar soni mavjud emas',
+    'assign.filesAttached': 'Biriktirilgan: {count}',
+    'assign.filesNotAttached': 'Biriktirilmagan: {count}',
+    'assign.fileListUnknown':
+      'Fayllar ro‘yxatini tekshirib bo‘lmadi. Unga tayanishdan oldin sahifani yangilang; fayl yo‘q deb o‘ylamang.',
+    'assign.fileUnnamed': 'Topshirilgan fayl',
+    'assign.fileCheckAgain': 'Yuklashni qayta tekshirish',
+    'assign.fileResend': 'Shu faylni qayta yuborish',
+    'assign.fileRemove': 'Olib tashlash',
+    'assign.fileShowing':
+      '{total} tadan {shown} tasi ko‘rsatilmoqda. Ro‘yxat sahifalar orasida o‘zgarishi mumkin; qayta tekshirish uchun yangilang.',
+    'assign.fileShowMore': 'Yana fayllarni ko‘rsatish',
+    'assign.fileHint':
+      'Har bir sahifaning surati, PDF yoki ovozli yozuv. Har bir fayl ko‘pi bilan {size}.',
+    'assign.fileHintRemaining':
+      'Yana qo‘shishingiz mumkin bo‘lgan fayllar: {count}. Cheklovni server tekshiradi.',
+    'assign.filePendingExplain':
+      'Kutilayotgan fayllar biriktirilgan deb hisoblanmaydi. Kutilayotgan faylni yuklagan kishi uning yetib kelganini tekshirishi mumkin. Yetib kelmagan bo‘lsa, qayta yuborish uchun shu faylni tanlashi mumkin. Avval tekshiring va birinchi uzatish hali davom etayotganda qayta yubormang.',
+    'assign.fileResendLabel': 'Qayta yuborish uchun shu faylni tanlang',
+    'assign.fileNone': 'Bu ish bilan birga hech qanday fayl topshirilmagan.',
+    'assign.filePhaseReading': 'Fayl o‘qilmoqda…',
+    'assign.filePhaseAsking': 'Uni qayerga qo‘yish so‘ralmoqda…',
+    'assign.filePhaseSending': 'Yuborilmoqda…',
+    'assign.filePhaseChecking': 'Yetib kelgani tekshirilmoqda…',
+    'assign.filePhaseDone': 'Fayl biriktirildi',
+    'assign.fileKindImage': 'rasm',
+    'assign.fileKindAudio': 'audio',
+    'assign.fileKindOther': 'fayl',
+    'assign.fileStatusPending': 'yuklash kutilmoqda; yetib kelgani tasdiqlanmagan',
+    'assign.fileStatusHeld': 'ko‘rib chiqish uchun ushlab turilgan',
+    'assign.fileStatusUnavailable': 'mavjud emas',
+    'assign.fileErrNoName': 'Bu faylning nomi yo‘q.',
+    'assign.fileErrEmpty': 'Bu fayl bo‘sh, shuning uchun topshiradigan narsa yo‘q.',
+    'assign.fileErrTooBig':
+      'Bu fayl hajmi {size}, cheklov esa {limit}. Har bir sahifaning surati yoki skaneri odatda kichikroq bo‘ladi.',
+    'assign.fileErrKind':
+      'Bunday turdagi faylni topshirib bo‘lmaydi. PDF, surat (JPEG, PNG yoki WebP) yoki ovozli yozuv mos keladi.',
+    'assign.fileErrTooMany':
+      'Bitta topshiriq {count} ta fayl qabul qiladi va bunda allaqachon shuncha bor.',
+    'assign.fileErrDraft':
+      'Qoralamani tasdiqlab bo‘lmadi, shuning uchun bu fayl yuborilmadi. Qayta urinishdan oldin joriy ishni tekshiring.',
+    'assign.fileErrUnreadable':
+      'Faylni o‘qib bo‘lmadi. Agar u olinadigan diskda bo‘lsa, avval nusxalab oling va qayta urinib ko‘ring.',
+    'assign.fileErrUncertain':
+      'Yuklashni tasdiqlab bo‘lmadi. Qayta urinishdan oldin sahifani yangilab, fayllar ro‘yxatini tekshiring; fayl ro‘yxatga olingan yoki biriktirilgan bo‘lishi mumkin.',
+    'assign.fileErrListAfterAttach':
+      'Fayl biriktirildi, lekin ro‘yxatni tekshirib bo‘lmadi. Unga tayanishdan oldin sahifani yangilang.',
+    'assign.fileErrListChanged':
+      'Fayllar ro‘yxati o‘zgardi yoki uni tekshirib bo‘lmadi. Unga tayanishdan oldin yangilang.',
+    'assign.fileMsgAttached':
+      'Fayl biriktirildi ({size}). Undan foydalanish ruxsatlar va ko‘rib chiqishga bog‘liq bo‘lib qoladi.',
+    'assign.fileMsgConfirmed':
+      'Xotira kutilgan hajmni ma’lum qildi va fayl biriktirildi. Uning mazmuni zararli dasturlarga tekshirilmagan.',
+    'assign.fileMsgRemoved':
+      'Bu topshirilgan ishdan olib tashlandi. Saqlangan fayl bu amal bilan o‘chirilmaydi.',
+    'assign.fileErrRemove':
+      'Olib tashlashni tasdiqlab bo‘lmadi. Qayta urinishdan oldin sahifani yangilab, fayllar ro‘yxatini tekshiring; u allaqachon olib tashlangan bo‘lishi mumkin.',
+    'assign.fileErrRemoveList':
+      'Olib tashlash so‘rovi qabul qilindi, lekin fayllar ro‘yxatini tekshirib bo‘lmadi. Unga tayanishdan oldin sahifani yangilang.',
+    'assign.fileRevisionNote':
+      'Bu versiya bilan qayd etilgan fayllar. Faylni ochishda joriy ruxsatingiz tekshiriladi; fayl endi mavjud bo‘lmasligi mumkin.',
+    'assign.fileRevisionOpen': '{number}-faylni ochib ko‘rish',
+    'assign.fileRevisionInvalid':
+      '{number}-fayl havolasi yaroqsiz va alohida ko‘rib chiqilishi kerak.',
   },
   kk: {
     'assign.label': 'Тапсырма',
@@ -1436,6 +2675,67 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.viewFeedback': 'Пікірді көру',
     'assign.viewSubmission': 'Тапсырылған жұмысты көру',
     'assign.open': 'Ашу',
+    'assign.files': 'Файлдар',
+    'assign.fileCountUnknown': 'Файлдар саны қолжетімді емес',
+    'assign.filesAttached': 'Тіркелген: {count}',
+    'assign.filesNotAttached': 'Тіркелмеген: {count}',
+    'assign.fileListUnknown':
+      'Файлдар тізімін тексеру мүмкін болмады. Оған сүйенбес бұрын бетті жаңартыңыз; файл жоқ деп ойламаңыз.',
+    'assign.fileUnnamed': 'Тапсырылған файл',
+    'assign.fileCheckAgain': 'Жүктеуді қайта тексеру',
+    'assign.fileResend': 'Сол файлды қайта жіберу',
+    'assign.fileRemove': 'Алып тастау',
+    'assign.fileShowing':
+      '{total} файлдың {shown} көрсетілуде. Тізім беттер арасында өзгеруі мүмкін; қайта тексеру үшін жаңартыңыз.',
+    'assign.fileShowMore': 'Тағы файлдарды көрсету',
+    'assign.fileHint': 'Әр беттің суреті, PDF немесе дыбыс жазбасы. Әр файл ең көбі {size}.',
+    'assign.fileHintRemaining': 'Әлі қоса алатын файлдарыңыз: {count}. Шектеуді сервер тексереді.',
+    'assign.filePendingExplain':
+      'Күтудегі файлдар тіркелген болып саналмайды. Күтудегі файлды жүктеген адам оның жеткенін тексере алады. Жетпеген болса, қайта жіберу үшін сол файлды таңдай алады. Алдымен тексеріңіз және бірінші тасымал әлі жүріп жатқанда қайта жібермеңіз.',
+    'assign.fileResendLabel': 'Қайта жіберу үшін сол файлды таңдаңыз',
+    'assign.fileNone': 'Бұл жұмыспен бірге ешқандай файл тапсырылмаған.',
+    'assign.filePhaseReading': 'Файл оқылуда…',
+    'assign.filePhaseAsking': 'Оны қайда қою керегі сұралуда…',
+    'assign.filePhaseSending': 'Жіберілуде…',
+    'assign.filePhaseChecking': 'Жеткені тексерілуде…',
+    'assign.filePhaseDone': 'Файл тіркелді',
+    'assign.fileKindImage': 'сурет',
+    'assign.fileKindAudio': 'дыбыс',
+    'assign.fileKindOther': 'файл',
+    'assign.fileStatusPending': 'жүктеу күтуде; жеткені расталмаған',
+    'assign.fileStatusHeld': 'қарау үшін ұсталған',
+    'assign.fileStatusUnavailable': 'қолжетімді емес',
+    'assign.fileErrNoName': 'Бұл файлдың атауы жоқ.',
+    'assign.fileErrEmpty': 'Бұл файл бос, сондықтан тапсыратын ештеңе жоқ.',
+    'assign.fileErrTooBig':
+      'Бұл файлдың көлемі {size}, ал шектеу {limit}. Әр беттің суреті немесе сканері әдетте кішірек болады.',
+    'assign.fileErrKind':
+      'Мұндай файл түрін тапсыру мүмкін емес. PDF, сурет (JPEG, PNG немесе WebP) немесе дыбыс жазбасы жарайды.',
+    'assign.fileErrTooMany': 'Бір тапсырма {count} файл қабылдайды, ал мұнда сонша файл бар.',
+    'assign.fileErrDraft':
+      'Жобаны растау мүмкін болмады, сондықтан бұл файл жіберілмеді. Қайта әрекеттенбес бұрын ағымдағы жұмысты тексеріңіз.',
+    'assign.fileErrUnreadable':
+      'Файлды оқу мүмкін болмады. Егер ол алынбалы дискіде болса, алдымен көшіріп алып, қайта көріңіз.',
+    'assign.fileErrUncertain':
+      'Жүктеуді растау мүмкін болмады. Қайта әрекеттенбес бұрын бетті жаңартып, файлдар тізімін тексеріңіз; файл тіркеуге алынған немесе тіркелген болуы мүмкін.',
+    'assign.fileErrListAfterAttach':
+      'Файл тіркелді, бірақ тізімді тексеру мүмкін болмады. Оған сүйенбес бұрын бетті жаңартыңыз.',
+    'assign.fileErrListChanged':
+      'Файлдар тізімі өзгерді немесе оны тексеру мүмкін болмады. Оған сүйенбес бұрын жаңартыңыз.',
+    'assign.fileMsgAttached':
+      'Файл тіркелді ({size}). Қолжетімділік рұқсаттар мен қарауға тәуелді болып қалады.',
+    'assign.fileMsgConfirmed':
+      'Қойма күтілген көлемді хабарлады және файл тіркелді. Оның мазмұны зиянды бағдарламаларға тексерілмеген.',
+    'assign.fileMsgRemoved':
+      'Бұл тапсырылған жұмыстан алып тасталды. Сақталған файл бұл әрекетпен жойылмайды.',
+    'assign.fileErrRemove':
+      'Алып тастауды растау мүмкін болмады. Қайта әрекеттенбес бұрын бетті жаңартып, файлдар тізімін тексеріңіз; ол алып тасталған болуы мүмкін.',
+    'assign.fileErrRemoveList':
+      'Алып тастау сұрауы қабылданды, бірақ файлдар тізімін тексеру мүмкін болмады. Оған сүйенбес бұрын бетті жаңартыңыз.',
+    'assign.fileRevisionNote':
+      'Осы нұсқамен бірге жазылған файлдар. Файлды ашқанда ағымдағы рұқсатыңыз тексеріледі; файл енді қолжетімді болмауы мүмкін.',
+    'assign.fileRevisionOpen': '{number}-файлды ашып көру',
+    'assign.fileRevisionInvalid': '{number}-файл сілтемесі жарамсыз және жеке қарауды қажет етеді.',
   },
   az: {
     'assign.label': 'Tapşırıq',
@@ -1504,6 +2804,69 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.viewFeedback': 'Rəyə bax',
     'assign.viewSubmission': 'Təhvil verilmiş işə bax',
     'assign.open': 'Aç',
+    'assign.files': 'Fayllar',
+    'assign.fileCountUnknown': 'Faylların sayı əlçatan deyil',
+    'assign.filesAttached': 'Əlavə olunub: {count}',
+    'assign.filesNotAttached': 'Əlavə olunmayıb: {count}',
+    'assign.fileListUnknown':
+      'Faylların siyahısını yoxlamaq mümkün olmadı. Ona güvənməzdən əvvəl səhifəni yeniləyin; fayl olmadığını güman etməyin.',
+    'assign.fileUnnamed': 'Təhvil verilmiş fayl',
+    'assign.fileCheckAgain': 'Yükləməni yenidən yoxla',
+    'assign.fileResend': 'Eyni faylı yenidən göndər',
+    'assign.fileRemove': 'Sil',
+    'assign.fileShowing':
+      '{total} fayldan {shown} göstərilir. Siyahı səhifələr arasında dəyişə bilər; yenidən yoxlamaq üçün yeniləyin.',
+    'assign.fileShowMore': 'Daha çox fayl göstər',
+    'assign.fileHint': 'Hər səhifənin şəkli, PDF və ya səs yazısı. Hər fayl ən çoxu {size}.',
+    'assign.fileHintRemaining':
+      'Hələ əlavə edə biləcəyiniz fayllar: {count}. Limiti server yoxlayır.',
+    'assign.filePendingExplain':
+      'Gözləmədə olan fayllar əlavə olunmuş sayılmır. Gözləmədə olan faylı yükləyən şəxs onun çatıb-çatmadığını yoxlaya bilər. Çatmayıbsa, yenidən göndərmək üçün eyni faylı seçə bilər. Əvvəlcə yoxlayın və ilk ötürmə hələ davam edərkən yenidən göndərməyin.',
+    'assign.fileResendLabel': 'Yenidən göndərmək üçün eyni faylı seçin',
+    'assign.fileNone': 'Bu işlə birlikdə heç bir fayl təhvil verilməyib.',
+    'assign.filePhaseReading': 'Fayl oxunur…',
+    'assign.filePhaseAsking': 'Onu hara qoymaq soruşulur…',
+    'assign.filePhaseSending': 'Göndərilir…',
+    'assign.filePhaseChecking': 'Çatdığı yoxlanılır…',
+    'assign.filePhaseDone': 'Fayl əlavə olundu',
+    'assign.fileKindImage': 'şəkil',
+    'assign.fileKindAudio': 'səs',
+    'assign.fileKindOther': 'fayl',
+    'assign.fileStatusPending': 'yükləmə gözləmədədir; çatdığı təsdiqlənməyib',
+    'assign.fileStatusHeld': 'yoxlama üçün saxlanılıb',
+    'assign.fileStatusUnavailable': 'əlçatan deyil',
+    'assign.fileErrNoName': 'Həmin faylın adı yoxdur.',
+    'assign.fileErrEmpty': 'Həmin fayl boşdur, ona görə təhvil veriləsi heç nə yoxdur.',
+    'assign.fileErrTooBig':
+      'Həmin faylın ölçüsü {size}, limit isə {limit}. Hər səhifənin şəkli və ya skan adətən daha kiçik olur.',
+    'assign.fileErrKind':
+      'Bu növ faylı təhvil vermək olmaz. PDF, şəkil (JPEG, PNG və ya WebP) və ya səs yazısı uyğundur.',
+    'assign.fileErrTooMany': 'Bir tapşırıq {count} fayl qəbul edir və bunda artıq o qədər var.',
+    'assign.fileErrDraft':
+      'Qaralamanı təsdiqləmək mümkün olmadı, ona görə bu fayl göndərilmədi. Yenidən cəhd etməzdən əvvəl cari işi yoxlayın.',
+    'assign.fileErrUnreadable':
+      'Faylı oxumaq mümkün olmadı. Əgər o, çıxarıla bilən diskdədirsə, əvvəlcə köçürün və yenidən cəhd edin.',
+    'assign.fileErrUncertain':
+      'Yükləməni təsdiqləmək mümkün olmadı. Yenidən cəhd etməzdən əvvəl səhifəni yeniləyib faylların siyahısını yoxlayın; fayl qeydə alınmış və ya əlavə olunmuş ola bilər.',
+    'assign.fileErrListAfterAttach':
+      'Fayl əlavə olundu, lakin siyahını yoxlamaq mümkün olmadı. Ona güvənməzdən əvvəl səhifəni yeniləyin.',
+    'assign.fileErrListChanged':
+      'Faylların siyahısı dəyişdi və ya onu yoxlamaq mümkün olmadı. Ona güvənməzdən əvvəl yeniləyin.',
+    'assign.fileMsgAttached':
+      'Fayl əlavə olundu ({size}). Giriş icazələrdən və yoxlamadan asılı olaraq qalır.',
+    'assign.fileMsgConfirmed':
+      'Yaddaş gözlənilən ölçünü bildirdi və fayl əlavə olundu. Onun məzmunu zərərli proqramlara görə yoxlanılmayıb.',
+    'assign.fileMsgRemoved':
+      'Bu təhvil verilmiş işdən silindi. Saxlanılan fayl bu əməliyyatla silinmir.',
+    'assign.fileErrRemove':
+      'Silinməni təsdiqləmək mümkün olmadı. Yenidən cəhd etməzdən əvvəl səhifəni yeniləyib faylların siyahısını yoxlayın; o, artıq silinmiş ola bilər.',
+    'assign.fileErrRemoveList':
+      'Silmə sorğusu qəbul edildi, lakin faylların siyahısını yoxlamaq mümkün olmadı. Ona güvənməzdən əvvəl səhifəni yeniləyin.',
+    'assign.fileRevisionNote':
+      'Bu versiya ilə qeydə alınmış fayllar. Faylı açarkən cari girişiniz yoxlanılır; fayl artıq əlçatan olmaya bilər.',
+    'assign.fileRevisionOpen': '{number} nömrəli faylı açmağa cəhd et',
+    'assign.fileRevisionInvalid':
+      '{number} nömrəli fayl istinadı etibarsızdır və ayrıca yoxlanılmalıdır.',
   },
   tg: {
     'assign.label': 'Супориш',
@@ -1573,6 +2936,70 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.viewFeedback': 'Дидани шарҳи омӯзгор',
     'assign.viewSubmission': 'Дидани кори супоридашуда',
     'assign.open': 'Кушодан',
+    'assign.files': 'Файлҳо',
+    'assign.fileCountUnknown': 'Шумораи файлҳо дастрас нест',
+    'assign.filesAttached': 'Замимашуда: {count}',
+    'assign.filesNotAttached': 'Замиманашуда: {count}',
+    'assign.fileListUnknown':
+      'Рӯйхати файлҳоро санҷидан муяссар нашуд. Пеш аз такя ба он саҳифаро нав кунед; гумон накунед, ки файл нест.',
+    'assign.fileUnnamed': 'Файли супоридашуда',
+    'assign.fileCheckAgain': 'Боргузориро дубора санҷед',
+    'assign.fileResend': 'Ҳамон файлро дубора фиристед',
+    'assign.fileRemove': 'Хориҷ кардан',
+    'assign.fileShowing':
+      '{shown} аз {total} нишон дода мешавад. Рӯйхат байни саҳифаҳо метавонад тағйир ёбад; барои санҷиши дубора нав кунед.',
+    'assign.fileShowMore': 'Файлҳои бештарро нишон диҳед',
+    'assign.fileHint': 'Акси ҳар саҳифа, PDF ё сабти овоз. Ҳар файл на бештар аз {size}.',
+    'assign.fileHintRemaining':
+      'Файлҳое, ки ҳанӯз илова карда метавонед: {count}. Маҳдудиятро сервер месанҷад.',
+    'assign.filePendingExplain':
+      'Файлҳои дар интизорбуда замимашуда ҳисоб намешаванд. Касе, ки файли дар интизорбударо бор кардааст, метавонад санҷад, ки оё он расидааст. Агар нарасида бошад, метавонад ҳамон файлро барои дубора фиристодан интихоб кунад. Аввал санҷед ва то вақте ки интиқоли аввал идома дорад, дубора нафиристед.',
+    'assign.fileResendLabel': 'Барои дубора фиристодан ҳамон файлро интихоб кунед',
+    'assign.fileNone': 'Бо ин кор ягон файл супорида нашудааст.',
+    'assign.filePhaseReading': 'Файл хонда шуда истодааст…',
+    'assign.filePhaseAsking': 'Ҷойи гузоштани он пурсида шуда истодааст…',
+    'assign.filePhaseSending': 'Фиристода шуда истодааст…',
+    'assign.filePhaseChecking': 'Расидани он санҷида шуда истодааст…',
+    'assign.filePhaseDone': 'Файл замима шуд',
+    'assign.fileKindImage': 'тасвир',
+    'assign.fileKindAudio': 'овоз',
+    'assign.fileKindOther': 'файл',
+    'assign.fileStatusPending': 'боргузорӣ дар интизор аст; расидан тасдиқ нашудааст',
+    'assign.fileStatusHeld': 'барои баррасӣ нигоҳ дошта шудааст',
+    'assign.fileStatusUnavailable': 'дастрас нест',
+    'assign.fileErrNoName': 'Он файл ном надорад.',
+    'assign.fileErrEmpty': 'Он файл холӣ аст, бинобар ин чизе барои супоридан нест.',
+    'assign.fileErrTooBig':
+      'Ҳаҷми он файл {size} аст ва маҳдудият {limit} аст. Акси ҳар саҳифа ё скан одатан хурдтар аст.',
+    'assign.fileErrKind':
+      'Чунин навъи файлро супоридан мумкин нест. PDF, акс (JPEG, PNG ё WebP) ё сабти овоз мувофиқ аст.',
+    'assign.fileErrTooMany':
+      'Як супориш {count} файл қабул мекунад ва дар ин ҷо аллакай ҳамин қадар ҳаст.',
+    'assign.fileErrDraft':
+      'Сиёҳнависро тасдиқ кардан муяссар нашуд, бинобар ин ин файл фиристода нашуд. Пеш аз кӯшиши дубора кори ҷориро санҷед.',
+    'assign.fileErrUnreadable':
+      'Файлро хондан муяссар нашуд. Агар он дар диски ҷудошаванда бошад, аввал онро нусхабардорӣ кунед ва дубора кӯшиш кунед.',
+    'assign.fileErrUncertain':
+      'Боргузориро тасдиқ кардан муяссар нашуд. Пеш аз кӯшиши дубора саҳифаро нав карда, рӯйхати файлҳоро санҷед; шояд файле сабт ё замима шуда бошад.',
+    'assign.fileErrListAfterAttach':
+      'Файл замима шуд, вале рӯйхатро санҷидан муяссар нашуд. Пеш аз такя ба он саҳифаро нав кунед.',
+    'assign.fileErrListChanged':
+      'Рӯйхати файлҳо тағйир ёфт ё онро санҷидан муяссар нашуд. Пеш аз такя ба он, онро нав кунед.',
+    'assign.fileMsgAttached':
+      'Файл замима шуд ({size}). Дастрасӣ ҳамчунон ба иҷозатҳо ва баррасӣ вобаста аст.',
+    'assign.fileMsgConfirmed':
+      'Анбор ҳаҷми интизоршавандаро хабар дод ва файл замима шуд. Мундариҷаи он барои барномаҳои зараровар санҷида нашудааст.',
+    'assign.fileMsgRemoved':
+      'Аз ин кори супоридашуда хориҷ шуд. Файли нигоҳдошташуда бо ин амал нест карда намешавад.',
+    'assign.fileErrRemove':
+      'Хориҷ карданро тасдиқ кардан муяссар нашуд. Пеш аз кӯшиши дубора саҳифаро нав карда, рӯйхати файлҳоро санҷед; шояд он аллакай хориҷ шуда бошад.',
+    'assign.fileErrRemoveList':
+      'Дархости хориҷ кардан қабул шуд, вале рӯйхати файлҳоро санҷидан муяссар нашуд. Пеш аз такя ба он саҳифаро нав кунед.',
+    'assign.fileRevisionNote':
+      'Файлҳое, ки бо ин нусха сабт шудаанд. Ҳангоми кушодани файл дастрасии ҷории шумо санҷида мешавад; шояд файл дигар дастрас набошад.',
+    'assign.fileRevisionOpen': 'Кӯшиши кушодани файли {number}',
+    'assign.fileRevisionInvalid':
+      'Истиноди файли {number} нодуруст аст ва баррасии алоҳида мехоҳад.',
   },
   ky: {
     'assign.label': 'Тапшырма',
@@ -1639,6 +3066,68 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.viewFeedback': 'Пикирди көрүү',
     'assign.viewSubmission': 'Тапшырылган ишти көрүү',
     'assign.open': 'Ачуу',
+    'assign.files': 'Файлдар',
+    'assign.fileCountUnknown': 'Файлдардын саны жеткиликтүү эмес',
+    'assign.filesAttached': 'Тиркелген: {count}',
+    'assign.filesNotAttached': 'Тиркелген эмес: {count}',
+    'assign.fileListUnknown':
+      'Файлдардын тизмесин текшерүү мүмкүн болгон жок. Ага таянардан мурун баракты жаңыртыңыз; файл жок деп ойлобоңуз.',
+    'assign.fileUnnamed': 'Тапшырылган файл',
+    'assign.fileCheckAgain': 'Жүктөөнү кайра текшерүү',
+    'assign.fileResend': 'Ошол эле файлды кайра жөнөтүү',
+    'assign.fileRemove': 'Алып салуу',
+    'assign.fileShowing':
+      '{total} файлдын {shown} көрсөтүлүүдө. Тизме барактардын ортосунда өзгөрүшү мүмкүн; кайра текшерүү үчүн жаңыртыңыз.',
+    'assign.fileShowMore': 'Дагы файлдарды көрсөтүү',
+    'assign.fileHint': 'Ар бир барактын сүрөтү, PDF же үн жазуусу. Ар бир файл эң көп {size}.',
+    'assign.fileHintRemaining': 'Дагы кошо ала турган файлдарыңыз: {count}. Чекти сервер текшерет.',
+    'assign.filePendingExplain':
+      'Күтүүдөгү файлдар тиркелген болуп эсептелбейт. Күтүүдөгү файлды жүктөгөн адам анын жеткенин текшере алат. Жетпеген болсо, кайра жөнөтүү үчүн ошол эле файлды тандай алат. Адегенде текшериңиз жана биринчи өткөрүү дагы эле жүрүп жатканда кайра жөнөтпөңүз.',
+    'assign.fileResendLabel': 'Кайра жөнөтүү үчүн ошол эле файлды тандаңыз',
+    'assign.fileNone': 'Бул иш менен бирге эч кандай файл тапшырылган эмес.',
+    'assign.filePhaseReading': 'Файл окулууда…',
+    'assign.filePhaseAsking': 'Аны кайда коюу керектиги суралууда…',
+    'assign.filePhaseSending': 'Жөнөтүлүүдө…',
+    'assign.filePhaseChecking': 'Жеткени текшерилүүдө…',
+    'assign.filePhaseDone': 'Файл тиркелди',
+    'assign.fileKindImage': 'сүрөт',
+    'assign.fileKindAudio': 'үн',
+    'assign.fileKindOther': 'файл',
+    'assign.fileStatusPending': 'жүктөө күтүүдө; жеткени ырасталган эмес',
+    'assign.fileStatusHeld': 'карап чыгуу үчүн кармалган',
+    'assign.fileStatusUnavailable': 'жеткиликтүү эмес',
+    'assign.fileErrNoName': 'Ал файлдын аты жок.',
+    'assign.fileErrEmpty': 'Ал файл бош, ошондуктан тапшыра турган эч нерсе жок.',
+    'assign.fileErrTooBig':
+      'Ал файлдын көлөмү {size}, чек болсо {limit}. Ар бир барактын сүрөтү же сканы адатта кичирээк болот.',
+    'assign.fileErrKind':
+      'Мындай түрдөгү файлды тапшырууга болбойт. PDF, сүрөт (JPEG, PNG же WebP) же үн жазуусу жарайт.',
+    'assign.fileErrTooMany': 'Бир тапшырма {count} файл кабыл алат, ал эми мында ошончо файл бар.',
+    'assign.fileErrDraft':
+      'Караламаны ырастоо мүмкүн болгон жок, ошондуктан бул файл жөнөтүлгөн жок. Кайра аракет кылардан мурун учурдагы ишти текшериңиз.',
+    'assign.fileErrUnreadable':
+      'Файлды окуу мүмкүн болгон жок. Эгер ал алынуучу дискте болсо, адегенде көчүрүп алып, кайра аракет кылыңыз.',
+    'assign.fileErrUncertain':
+      'Жүктөөнү ырастоо мүмкүн болгон жок. Кайра аракет кылардан мурун баракты жаңыртып, файлдардын тизмесин текшериңиз; файл катталган же тиркелген болушу мүмкүн.',
+    'assign.fileErrListAfterAttach':
+      'Файл тиркелди, бирок тизмени текшерүү мүмкүн болгон жок. Ага таянардан мурун баракты жаңыртыңыз.',
+    'assign.fileErrListChanged':
+      'Файлдардын тизмеси өзгөрдү же аны текшерүү мүмкүн болгон жок. Ага таянардан мурун жаңыртыңыз.',
+    'assign.fileMsgAttached':
+      'Файл тиркелди ({size}). Жеткиликтүүлүк уруксаттарга жана карап чыгууга көз каранды бойдон калат.',
+    'assign.fileMsgConfirmed':
+      'Сактагыч күтүлгөн көлөмдү билдирди жана файл тиркелди. Анын мазмуну зыяндуу программаларга текшерилген эмес.',
+    'assign.fileMsgRemoved':
+      'Бул тапшырылган иштен алынып салынды. Сакталган файл бул аракет менен өчүрүлбөйт.',
+    'assign.fileErrRemove':
+      'Алып салууну ырастоо мүмкүн болгон жок. Кайра аракет кылардан мурун баракты жаңыртып, файлдардын тизмесин текшериңиз; ал мурунтан эле алынып салынган болушу мүмкүн.',
+    'assign.fileErrRemoveList':
+      'Алып салуу өтүнүчү кабыл алынды, бирок файлдардын тизмесин текшерүү мүмкүн болгон жок. Ага таянардан мурун баракты жаңыртыңыз.',
+    'assign.fileRevisionNote':
+      'Ушул версия менен кошо жазылган файлдар. Файлды ачканда учурдагы уруксатыңыз текшерилет; файл эми жеткиликтүү болбошу мүмкүн.',
+    'assign.fileRevisionOpen': '{number}-файлды ачып көрүү',
+    'assign.fileRevisionInvalid':
+      '{number}-файлдын шилтемеси жараксыз жана өзүнчө карап чыгууну талап кылат.',
   },
   tk: {
     'assign.label': 'Ýumuş',
@@ -1705,6 +3194,68 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.viewFeedback': 'Syny gör',
     'assign.viewSubmission': 'Tabşyrylan işi gör',
     'assign.open': 'Aç',
+    'assign.files': 'Faýllar',
+    'assign.fileCountUnknown': 'Faýllaryň sany elýeterli däl',
+    'assign.filesAttached': 'Goşulan: {count}',
+    'assign.filesNotAttached': 'Goşulmadyk: {count}',
+    'assign.fileListUnknown':
+      'Faýllaryň sanawyny barlap bolmady. Oňa daýanmazdan öň sahypany täzeläň; faýl ýok diýip pikir etmäň.',
+    'assign.fileUnnamed': 'Tabşyrylan faýl',
+    'assign.fileCheckAgain': 'Ýüklemäni täzeden barla',
+    'assign.fileResend': 'Şol faýly täzeden iber',
+    'assign.fileRemove': 'Aýyr',
+    'assign.fileShowing':
+      '{total} faýldan {shown} görkezilýär. Sanaw sahypalaryň arasynda üýtgäp biler; täzeden barlamak üçin täzeläň.',
+    'assign.fileShowMore': 'Ýene faýllary görkez',
+    'assign.fileHint': 'Her sahypanyň suraty, PDF ýa-da ses ýazgysy. Her faýl iň köp {size}.',
+    'assign.fileHintRemaining': 'Ýene goşup biljek faýllaryňyz: {count}. Çägi serwer barlaýar.',
+    'assign.filePendingExplain':
+      'Garaşylýan faýllar goşulan hasaplanmaýar. Garaşylýan faýly ýüklän adam onuň baryp ýetendigini barlap biler. Ýetmedik bolsa, täzeden ibermek üçin şol faýly saýlap biler. Ilki barlaň we birinji geçiriş henizem dowam edýärkä täzeden ibermäň.',
+    'assign.fileResendLabel': 'Täzeden ibermek üçin şol faýly saýlaň',
+    'assign.fileNone': 'Bu iş bilen bilelikde hiç hili faýl tabşyrylmady.',
+    'assign.filePhaseReading': 'Faýl okalýar…',
+    'assign.filePhaseAsking': 'Ony nirä goýmalydygy soralýar…',
+    'assign.filePhaseSending': 'Iberilýär…',
+    'assign.filePhaseChecking': 'Baryp ýetendigi barlanýar…',
+    'assign.filePhaseDone': 'Faýl goşuldy',
+    'assign.fileKindImage': 'surat',
+    'assign.fileKindAudio': 'ses',
+    'assign.fileKindOther': 'faýl',
+    'assign.fileStatusPending': 'ýükleme garaşylýar; baryp ýetendigi tassyklanmady',
+    'assign.fileStatusHeld': 'gözden geçirmek üçin saklanýar',
+    'assign.fileStatusUnavailable': 'elýeterli däl',
+    'assign.fileErrNoName': 'Ol faýlyň ady ýok.',
+    'assign.fileErrEmpty': 'Ol faýl boş, şonuň üçin tabşyrmaga zat ýok.',
+    'assign.fileErrTooBig':
+      'Ol faýlyň göwrümi {size}, çäk bolsa {limit}. Her sahypanyň suraty ýa-da skaneri adatça kiçiräk bolýar.',
+    'assign.fileErrKind':
+      'Şeýle görnüşli faýly tabşyryp bolmaýar. PDF, surat (JPEG, PNG ýa-da WebP) ýa-da ses ýazgysy bolýar.',
+    'assign.fileErrTooMany': 'Bir ýumuş {count} faýl kabul edýär we munda eýýäm şonça bar.',
+    'assign.fileErrDraft':
+      'Garalamany tassyklap bolmady, şonuň üçin bu faýl iberilmedi. Täzeden synanyşmazdan öň häzirki işi barlaň.',
+    'assign.fileErrUnreadable':
+      'Faýly okap bolmady. Eger ol aýrylýan diskde bolsa, ilki göçüriň we täzeden synanyşyň.',
+    'assign.fileErrUncertain':
+      'Ýüklemäni tassyklap bolmady. Täzeden synanyşmazdan öň sahypany täzeläp, faýllaryň sanawyny barlaň; faýl hasaba alnan ýa-da goşulan bolmagy mümkin.',
+    'assign.fileErrListAfterAttach':
+      'Faýl goşuldy, ýöne sanawy barlap bolmady. Oňa daýanmazdan öň sahypany täzeläň.',
+    'assign.fileErrListChanged':
+      'Faýllaryň sanawy üýtgedi ýa-da ony barlap bolmady. Oňa daýanmazdan öň täzeläň.',
+    'assign.fileMsgAttached':
+      'Faýl goşuldy ({size}). Elýeterlilik rugsatlara we gözden geçirişe bagly bolmagynda galýar.',
+    'assign.fileMsgConfirmed':
+      'Ammar garaşylýan göwrümi habar berdi we faýl goşuldy. Onuň mazmuny zyýanly programmalara barlanmady.',
+    'assign.fileMsgRemoved':
+      'Bu tabşyrylan işden aýryldy. Saklanan faýl bu hereket bilen pozulmaýar.',
+    'assign.fileErrRemove':
+      'Aýyrmagy tassyklap bolmady. Täzeden synanyşmazdan öň sahypany täzeläp, faýllaryň sanawyny barlaň; ol eýýäm aýrylan bolmagy mümkin.',
+    'assign.fileErrRemoveList':
+      'Aýyrmak haýyşy kabul edildi, ýöne faýllaryň sanawyny barlap bolmady. Oňa daýanmazdan öň sahypany täzeläň.',
+    'assign.fileRevisionNote':
+      'Şu wersiýa bilen ýazga alnan faýllar. Faýl açylanda häzirki elýeterliligiňiz barlanýar; faýl indi elýeterli bolmazlygy mümkin.',
+    'assign.fileRevisionOpen': '{number}-nji faýly açyp görmek',
+    'assign.fileRevisionInvalid':
+      '{number}-nji faýl salgylanmasy nädogry we aýratyn gözden geçirilmelidir.',
   },
   ta: {
     'assign.label': 'ஒப்படைப்பு',
@@ -1775,6 +3326,70 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.viewFeedback': 'கருத்தைக் காண்க',
     'assign.viewSubmission': 'சமர்ப்பிப்பைக் காண்க',
     'assign.open': 'திற',
+    'assign.files': 'கோப்புகள்',
+    'assign.fileCountUnknown': 'கோப்புகளின் எண்ணிக்கை கிடைக்கவில்லை',
+    'assign.filesAttached': 'இணைக்கப்பட்டவை: {count}',
+    'assign.filesNotAttached': 'இணைக்கப்படாதவை: {count}',
+    'assign.fileListUnknown':
+      'கோப்புப் பட்டியலைச் சரிபார்க்க முடியவில்லை. அதை நம்பும் முன் புதுப்பியுங்கள்; கோப்புகள் இல்லை என்று கருத வேண்டாம்.',
+    'assign.fileUnnamed': 'சமர்ப்பிக்கப்பட்ட கோப்பு',
+    'assign.fileCheckAgain': 'பதிவேற்றத்தை மீண்டும் சரிபார்',
+    'assign.fileResend': 'அதே கோப்பை மீண்டும் அனுப்பு',
+    'assign.fileRemove': 'நீக்கு',
+    'assign.fileShowing':
+      '{total} இல் {shown} காட்டப்படுகின்றன. பக்கங்களுக்கு இடையே பட்டியல் மாறலாம்; மீண்டும் சரிபார்க்கப் புதுப்பியுங்கள்.',
+    'assign.fileShowMore': 'மேலும் கோப்புகளைக் காட்டு',
+    'assign.fileHint':
+      'ஒவ்வொரு பக்கத்தின் புகைப்படம், ஒரு PDF அல்லது ஒரு ஒலிப்பதிவு. ஒவ்வொரு கோப்பும் அதிகபட்சம் {size}.',
+    'assign.fileHintRemaining':
+      'நீங்கள் இன்னும் சேர்க்கக்கூடிய கோப்புகள்: {count}. வரம்பைச் சேவையகம் சரிபார்க்கிறது.',
+    'assign.filePendingExplain':
+      'நிலுவையிலுள்ள கோப்புகள் இணைக்கப்பட்டவையாகக் கணக்கிடப்படாது. நிலுவையிலுள்ள கோப்பைப் பதிவேற்றியவர் அது வந்து சேர்ந்ததா என்று சரிபார்க்கலாம். சேரவில்லை என்றால், அதை மீண்டும் அனுப்ப அதே கோப்பைத் தேர்ந்தெடுக்கலாம். முதலில் சரிபாருங்கள்; முதல் பரிமாற்றம் இன்னும் நடந்துகொண்டிருக்கும்போது மீண்டும் அனுப்ப வேண்டாம்.',
+    'assign.fileResendLabel': 'மீண்டும் அனுப்ப அதே கோப்பைத் தேர்ந்தெடுங்கள்',
+    'assign.fileNone': 'இந்தப் பணியுடன் எந்தக் கோப்பும் சமர்ப்பிக்கப்படவில்லை.',
+    'assign.filePhaseReading': 'கோப்பு படிக்கப்படுகிறது…',
+    'assign.filePhaseAsking': 'அதை எங்கே வைப்பது என்று கேட்கப்படுகிறது…',
+    'assign.filePhaseSending': 'அனுப்பப்படுகிறது…',
+    'assign.filePhaseChecking': 'வந்து சேர்ந்ததா என்று சரிபார்க்கப்படுகிறது…',
+    'assign.filePhaseDone': 'கோப்பு இணைக்கப்பட்டது',
+    'assign.fileKindImage': 'படம்',
+    'assign.fileKindAudio': 'ஒலி',
+    'assign.fileKindOther': 'கோப்பு',
+    'assign.fileStatusPending': 'பதிவேற்றம் நிலுவையில்; வந்து சேர்ந்தது உறுதிப்படுத்தப்படவில்லை',
+    'assign.fileStatusHeld': 'மதிப்பாய்வுக்காக நிறுத்திவைக்கப்பட்டது',
+    'assign.fileStatusUnavailable': 'கிடைக்கவில்லை',
+    'assign.fileErrNoName': 'அந்தக் கோப்புக்குப் பெயர் இல்லை.',
+    'assign.fileErrEmpty': 'அந்தக் கோப்பு காலியாக உள்ளது; எனவே சமர்ப்பிக்க எதுவும் இல்லை.',
+    'assign.fileErrTooBig':
+      'அந்தக் கோப்பின் அளவு {size}; வரம்பு {limit}. ஒவ்வொரு பக்கத்தின் புகைப்படம் அல்லது ஸ்கேன் பொதுவாகச் சிறியதாக இருக்கும்.',
+    'assign.fileErrKind':
+      'அந்த வகைக் கோப்பைச் சமர்ப்பிக்க முடியாது. PDF, புகைப்படம் (JPEG, PNG அல்லது WebP) அல்லது ஒலிப்பதிவு பொருந்தும்.',
+    'assign.fileErrTooMany':
+      'ஒரு ஒப்படைப்பு {count} கோப்புகளை ஏற்கும்; இதில் ஏற்கனவே அத்தனை உள்ளன.',
+    'assign.fileErrDraft':
+      'வரைவை உறுதிப்படுத்த முடியவில்லை; எனவே இந்தக் கோப்பு அனுப்பப்படவில்லை. மீண்டும் முயலும் முன் தற்போதைய பணியைச் சரிபாருங்கள்.',
+    'assign.fileErrUnreadable':
+      'கோப்பைப் படிக்க முடியவில்லை. அது அகற்றக்கூடிய இயக்ககத்தில் இருந்தால், முதலில் நகலெடுத்து மீண்டும் முயலுங்கள்.',
+    'assign.fileErrUncertain':
+      'பதிவேற்றத்தை உறுதிப்படுத்த முடியவில்லை. மீண்டும் முயலும் முன் புதுப்பித்து கோப்புப் பட்டியலைச் சரிபாருங்கள்; ஒரு கோப்பு பதிவுசெய்யப்பட்டோ இணைக்கப்பட்டோ இருக்கலாம்.',
+    'assign.fileErrListAfterAttach':
+      'கோப்பு இணைக்கப்பட்டது, ஆனால் பட்டியலைச் சரிபார்க்க முடியவில்லை. அதை நம்பும் முன் புதுப்பியுங்கள்.',
+    'assign.fileErrListChanged':
+      'கோப்புப் பட்டியல் மாறிவிட்டது அல்லது சரிபார்க்க முடியவில்லை. அதை நம்பும் முன் புதுப்பியுங்கள்.',
+    'assign.fileMsgAttached':
+      'கோப்பு இணைக்கப்பட்டது ({size}). அணுகல் தொடர்ந்து அனுமதிகளுக்கும் மதிப்பாய்வுக்கும் உட்பட்டது.',
+    'assign.fileMsgConfirmed':
+      'சேமிப்பகம் எதிர்பார்த்த அளவைத் தெரிவித்தது; கோப்பு இணைக்கப்பட்டது. அதன் உள்ளடக்கம் தீம்பொருளுக்காக ஸ்கேன் செய்யப்படவில்லை.',
+    'assign.fileMsgRemoved':
+      'இந்தச் சமர்ப்பிப்பிலிருந்து நீக்கப்பட்டது. சேமிக்கப்பட்ட கோப்பு இந்தச் செயலால் அழிக்கப்படாது.',
+    'assign.fileErrRemove':
+      'நீக்கத்தை உறுதிப்படுத்த முடியவில்லை. மீண்டும் முயலும் முன் புதுப்பித்து கோப்புப் பட்டியலைச் சரிபாருங்கள்; அது ஏற்கனவே நீக்கப்பட்டிருக்கலாம்.',
+    'assign.fileErrRemoveList':
+      'நீக்கக் கோரிக்கை பெறப்பட்டது, ஆனால் கோப்புப் பட்டியலைச் சரிபார்க்க முடியவில்லை. அதை நம்பும் முன் புதுப்பியுங்கள்.',
+    'assign.fileRevisionNote':
+      'இந்தப் பதிப்புடன் பதிவான கோப்புகள். ஒரு கோப்பைத் திறக்கும்போது உங்கள் தற்போதைய அணுகல் சரிபார்க்கப்படும்; கோப்பு இனி கிடைக்காமல் இருக்கலாம்.',
+    'assign.fileRevisionOpen': 'கோப்பு {number} ஐத் திறக்க முயல்க',
+    'assign.fileRevisionInvalid': 'கோப்புக் குறிப்பு {number} செல்லாதது; தனியாக மதிப்பாய்வு தேவை.',
   },
   ne: {
     'assign.label': 'गृहकार्य',
@@ -1841,5 +3456,65 @@ export const ASSIGN: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assign.viewFeedback': 'प्रतिक्रिया हेर्नुहोस्',
     'assign.viewSubmission': 'बुझाइएको काम हेर्नुहोस्',
     'assign.open': 'खोल्नुहोस्',
+    'assign.files': 'फाइलहरू',
+    'assign.fileCountUnknown': 'फाइलको सङ्ख्या उपलब्ध छैन',
+    'assign.filesAttached': 'संलग्न: {count}',
+    'assign.filesNotAttached': 'संलग्न नभएका: {count}',
+    'assign.fileListUnknown':
+      'फाइलको सूची जाँच्न सकिएन। यसमा भर पर्नुअघि रिफ्रेस गर्नुहोस्; कुनै फाइल छैन भनी नठान्नुहोस्।',
+    'assign.fileUnnamed': 'बुझाइएको फाइल',
+    'assign.fileCheckAgain': 'अपलोड फेरि जाँच्नुहोस्',
+    'assign.fileResend': 'त्यही फाइल फेरि पठाउनुहोस्',
+    'assign.fileRemove': 'हटाउनुहोस्',
+    'assign.fileShowing':
+      '{total} मध्ये {shown} देखाइँदै छ। पृष्ठहरूबीच सूची बदलिन सक्छ; फेरि जाँच्न रिफ्रेस गर्नुहोस्।',
+    'assign.fileShowMore': 'थप फाइल देखाउनुहोस्',
+    'assign.fileHint': 'हरेक पानाको फोटो, PDF वा आवाजको रेकर्डिङ। हरेक फाइल बढीमा {size}।',
+    'assign.fileHintRemaining': 'तपाईंले अझै थप्न सक्ने फाइल: {count}। सीमा सर्भरले जाँच्छ।',
+    'assign.filePendingExplain':
+      'पेन्डिङ फाइलहरू संलग्न भएको मानिँदैन। पेन्डिङ फाइल अपलोड गर्ने व्यक्तिले त्यो आइपुग्यो कि आइपुगेन भनी जाँच्न सक्छ। आइपुगेको छैन भने फेरि पठाउन त्यही फाइल छान्न सक्छ। पहिले जाँच्नुहोस्, र पहिलो ट्रान्सफर चलिरहेको बेला फेरि नपठाउनुहोस्।',
+    'assign.fileResendLabel': 'फेरि पठाउन त्यही फाइल छान्नुहोस्',
+    'assign.fileNone': 'यो कामसँग कुनै फाइल बुझाइएको छैन।',
+    'assign.filePhaseReading': 'फाइल पढिँदै छ…',
+    'assign.filePhaseAsking': 'यसलाई कहाँ राख्ने भनी सोधिँदै छ…',
+    'assign.filePhaseSending': 'पठाइँदै छ…',
+    'assign.filePhaseChecking': 'आइपुग्यो कि भनी जाँचिँदै छ…',
+    'assign.filePhaseDone': 'फाइल संलग्न भयो',
+    'assign.fileKindImage': 'तस्बिर',
+    'assign.fileKindAudio': 'अडियो',
+    'assign.fileKindOther': 'फाइल',
+    'assign.fileStatusPending': 'अपलोड पेन्डिङ छ; आइपुगेको पुष्टि भएको छैन',
+    'assign.fileStatusHeld': 'समीक्षाका लागि रोकिएको',
+    'assign.fileStatusUnavailable': 'उपलब्ध छैन',
+    'assign.fileErrNoName': 'त्यो फाइलको नाम छैन।',
+    'assign.fileErrEmpty': 'त्यो फाइल खाली छ, त्यसैले बुझाउने केही छैन।',
+    'assign.fileErrTooBig':
+      'त्यो फाइल {size} को छ र सीमा {limit} हो। हरेक पानाको फोटो वा स्क्यान प्रायः सानो हुन्छ।',
+    'assign.fileErrKind':
+      'त्यस्तो किसिमको फाइल बुझाउन सकिँदैन। PDF, फोटो (JPEG, PNG वा WebP) वा आवाजको रेकर्डिङ चल्छ।',
+    'assign.fileErrTooMany': 'एउटा गृहकार्यले {count} वटा फाइल लिन्छ, र यसमा पहिले नै त्यति छन्।',
+    'assign.fileErrDraft':
+      'मस्यौदा पुष्टि गर्न सकिएन, त्यसैले यो फाइल पठाइएन। फेरि प्रयास गर्नुअघि हालको काम जाँच्नुहोस्।',
+    'assign.fileErrUnreadable':
+      'फाइल पढ्न सकिएन। यो हटाउन मिल्ने ड्राइभमा छ भने पहिले प्रतिलिपि गर्नुहोस् र फेरि प्रयास गर्नुहोस्।',
+    'assign.fileErrUncertain':
+      'अपलोड पुष्टि गर्न सकिएन। फेरि प्रयास गर्नुअघि रिफ्रेस गरी फाइलको सूची जाँच्नुहोस्; कुनै फाइल दर्ता वा संलग्न भइसकेको हुन सक्छ।',
+    'assign.fileErrListAfterAttach':
+      'फाइल संलग्न भयो, तर सूची जाँच्न सकिएन। यसमा भर पर्नुअघि रिफ्रेस गर्नुहोस्।',
+    'assign.fileErrListChanged':
+      'फाइलको सूची बदलियो वा जाँच्न सकिएन। यसमा भर पर्नुअघि यसलाई रिफ्रेस गर्नुहोस्।',
+    'assign.fileMsgAttached':
+      'फाइल संलग्न भयो ({size})। पहुँच अझै पनि अनुमति र समीक्षामा निर्भर रहन्छ।',
+    'assign.fileMsgConfirmed':
+      'भण्डारणले अपेक्षित आकार जनायो र फाइल संलग्न भयो। यसको सामग्री मालवेयरका लागि स्क्यान गरिएको छैन।',
+    'assign.fileMsgRemoved': 'यो बुझाइएको कामबाट हटाइयो। भण्डारण गरिएको फाइल यो कार्यले मेटिँदैन।',
+    'assign.fileErrRemove':
+      'हटाइएको पुष्टि गर्न सकिएन। फेरि प्रयास गर्नुअघि रिफ्रेस गरी फाइलको सूची जाँच्नुहोस्; यो पहिले नै हटाइसकिएको हुन सक्छ।',
+    'assign.fileErrRemoveList':
+      'हटाउने अनुरोध प्राप्त भयो, तर फाइलको सूची जाँच्न सकिएन। यसमा भर पर्नुअघि रिफ्रेस गर्नुहोस्।',
+    'assign.fileRevisionNote':
+      'यो संस्करणसँग अभिलेख गरिएका फाइलहरू। फाइल खोल्दा तपाईंको हालको पहुँच जाँचिन्छ; फाइल अब उपलब्ध नहुन सक्छ।',
+    'assign.fileRevisionOpen': 'फाइल {number} खोल्ने प्रयास गर्नुहोस्',
+    'assign.fileRevisionInvalid': 'फाइल सन्दर्भ {number} अमान्य छ र छुट्टै समीक्षा आवश्यक छ।',
   },
 };

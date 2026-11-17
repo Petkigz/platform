@@ -344,21 +344,29 @@ export default async function CourseViewPage({
       )}
 
       {assessmentsOn && assessments.length > 0 && (
-        <div {...english}>
+        <div>
           <div className="outline-h">
-            <h3>Assessments</h3>
+            <h3>{t('assess.heading')}</h3>
           </div>
           <div className="card">
             <ul className="lessons">
               {assessments.map((a) => (
                 <li key={a.id}>
-                  <span className="t">{a.title}</span>
-                  <span className="badge neutral">{a.type}</span>
+                  <span className="t" dir="auto">{a.title}</span>
+                  <span className="badge neutral">
+                    {t(
+                      a.type === 'practice'
+                        ? 'assess.typePractice'
+                        : a.type === 'final'
+                          ? 'assess.typeFinal'
+                          : 'assess.typeGraded',
+                    )}
+                  </span>
                   <Link
                     href={`/learn/${enrolment.id}/assessment/${a.id}`}
                     className="btn tiny secondary"
                   >
-                    {a.type === 'practice' ? 'Practise' : 'Take'}
+                    {t(a.type === 'practice' ? 'assess.practise' : 'assess.take')}
                   </Link>
                 </li>
               ))}

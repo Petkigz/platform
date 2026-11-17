@@ -7950,14 +7950,15 @@ owner chose the first.
 - The language page tells each reader the percentage, in their own language,
   with the sentence that the rest is in English. That number will keep
   falling: 55% on the day of the decision, 50% since the assessment page, 43%
-  since the assignment page.
+  since the assignment page, 39% since the files part of that page and the
+  assessment list.
 - **The test that refused a language under half is removed.** Nothing in the
   tests now limits how much English one of these languages shows. That is the
   cost of this choice and it was put to the owner in those words.
 - What the tests still require of every offered language: every sentence that
   is neither held nor deliberately unwritten is present, and the sentence
   that gives the percentage is in that language rather than English. The
-  count (192 of 444; it was 192 of 347 when this was decided) is pinned in
+  count (192 of 492; it was 192 of 347 when this was decided) is pinned in
   `held-translations.test.ts`, so it changes only on purpose.
 - The four withheld languages are unaffected. So is the rule that a new screen
   is not written for a language with anything held.
@@ -8039,7 +8040,10 @@ the nineteen. The assessment page and its quiz followed the same day:
 thirty-seven sentences (`assess.ts`), the same twenty-seven languages, 50% for
 the nineteen. The assignment page and the assignment list followed: sixty
 sentences (`assign.ts`), the same twenty-seven languages, 43% for the
-nineteen. `UNWRITTEN_WHILE_HELD` is now `learn`, `course`, `lesson`, `assess`
+nineteen. The files part of the assignment page and the assessment list on the
+course page followed: forty-five sentences in `assign.ts` and three in
+`assess.ts`, the same twenty-seven languages, 39% for the nineteen.
+`UNWRITTEN_WHILE_HELD` is now `learn`, `course`, `lesson`, `assess`
 and `assign`.
 
 **The rule going forward.** A part named in `UNWRITTEN_WHILE_HELD`
@@ -8091,6 +8095,24 @@ rewords one, that test does not notice: the sentence then falls to `rejected`
 sentence, not a wrong one. The durable fix is for the database functions to
 raise a distinct code for each refusal; that is a migration and was not made
 here.
+
+**The same for a file.** Checking, uploading, confirming and removing a file
+(`lib/coursework.ts`) answer with a `code` beside the English `message`:
+`no_name`, `empty`, `too_big`, `wrong_kind`, `too_many`, `unreadable`,
+`uncertain`, `remove_uncertain`. The first five are decided in the browser
+before anything is sent. **Everything the server refuses is `uncertain`.** The
+learner is told the upload could not be confirmed and to refresh and check the
+list before sending again; they are not told why the server refused. In
+English that page used to print the server's own sentence in front of the same
+advice. A learner in another language has lost that sentence, and a learner in
+English has lost it too, because the page has one behaviour and not two. What
+they are told to do is unchanged and is still the right thing to do. Giving
+the reason back means the media route answering with a code, as the
+assignments route does; that was not done here. A code the page does not know
+reads as `uncertain`, never as "refused". File sizes are printed as
+`describeFileSize` writes them ("25.0 MiB") in every language, and the format
+names PDF, JPEG, PNG and WebP are left as they are; JPEG and WebP were added
+to the translation audit's list of words that are not translated, beside PDF.
 
 **A moment names its clock.** `formatDateTime` always prints the time zone.
 A server prints UTC and says "UTC"; `LocalTime` then prints the same moment in

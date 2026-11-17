@@ -7,9 +7,9 @@ import {
   type AssignmentSubmission,
   revisionsRemaining,
 } from '@/lib/course-assignments';
-import { AssignmentFiles } from './assignment-files';
+import { AssignmentFiles, type FileWords } from './assignment-files';
 import { postLearnerAssignmentAction } from '@/lib/coursework';
-import { RevisionFiles } from '@/components/revision-files';
+import { RevisionFiles, type RevisionFileWords } from '@/components/revision-files';
 import { LocalTime } from '@/components/local-time';
 import { fill, formatNumber, pluralForm } from '@/lib/i18n/format';
 import type { LocaleCode } from '@/lib/i18n/locales';
@@ -80,6 +80,8 @@ export type AssignmentWords = {
   errFileGone: string;
   errTooLong: string;
   errRejected: string;
+  files: FileWords;
+  revisionFiles: RevisionFileWords;
 };
 
 /** A sentence with a moment in it: the words either side of `{date}`. */
@@ -342,16 +344,14 @@ export function AssignmentWork({
         </>
       )}
 
-      {/* Uploads are still English for everybody, and say so to a screen
-          reader when the page around them is not. */}
-      <div {...(locale === 'en' ? {} : { lang: 'en', dir: 'ltr' as const })}>
-        <AssignmentFiles
-          submissionId={submissionId}
-          files={files}
-          locked={locked}
-          ensureDraft={async () => saveDraft()}
-        />
-      </div>
+      <AssignmentFiles
+        submissionId={submissionId}
+        files={files}
+        locked={locked}
+        ensureDraft={async () => saveDraft()}
+        locale={locale}
+        words={words.files}
+      />
 
       {!locked && (
         <div className="row" style={{ gap: '.5rem' }}>
@@ -412,9 +412,7 @@ export function AssignmentWork({
               {version.feedback && (
                 <p style={{ margin: '.35rem 0 0', whiteSpace: 'pre-wrap' }} dir="auto">{version.feedback}</p>
               )}
-              <div {...(locale === 'en' ? {} : { lang: 'en', dir: 'ltr' as const })}>
-                <RevisionFiles assetIds={version.assetIds} />
-              </div>
+              <RevisionFiles assetIds={version.assetIds} words={words.revisionFiles} locale={locale} />
             </div>
           ))}
         </div>

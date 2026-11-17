@@ -2,8 +2,10 @@ import type { LocaleCode } from '../locales.ts';
 import type { Messages } from './en.ts';
 
 /**
- * The assessment page (`/learn/[enrolmentId]/assessment/[assessmentId]`) and
- * the quiz on it.
+ * The assessment page (`/learn/[enrolmentId]/assessment/[assessmentId]`), the
+ * quiz on it, and the assessment list on the course page (`assess.heading`,
+ * `assess.practise`, `assess.take`, with the three kinds it shares with the
+ * page).
  *
  * Same rule as `learn.ts`, `course.ts` and `lesson.ts`: written for the
  * twenty-seven languages with nothing held in `held.ts`, and for no other. See
@@ -72,6 +74,9 @@ export const ASSESS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assess.submitFailed': 'تعذّر إرسال إجاباتك. تحقّق من اتصالك ثم حاول مرة أخرى.',
     'assess.alreadySubmitted': 'سبق إرسال هذه المحاولة.',
     'assess.unanswered': 'أجب عن جميع الأسئلة قبل الإرسال.',
+    'assess.heading': 'التقييمات',
+    'assess.practise': 'تدرّب',
+    'assess.take': 'ابدأ',
   },
   ur: {
     'assess.label': 'جائزہ',
@@ -112,6 +117,9 @@ export const ASSESS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assess.submitFailed': 'آپ کے جوابات جمع نہیں ہو سکے۔ اپنا کنکشن دیکھیں اور دوبارہ کوشش کریں۔',
     'assess.alreadySubmitted': 'یہ کوشش پہلے ہی جمع کرائی جا چکی ہے۔',
     'assess.unanswered': 'جمع کرانے سے پہلے ہر سوال کا جواب دیں۔',
+    'assess.heading': 'جائزے',
+    'assess.practise': 'مشق کریں',
+    'assess.take': 'شروع کریں',
   },
   fa: {
     'assess.label': 'آزمون',
@@ -152,6 +160,9 @@ export const ASSESS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assess.submitFailed': 'پاسخ‌های شما ارسال نشد. اتصال خود را بررسی کنید و دوباره تلاش کنید.',
     'assess.alreadySubmitted': 'این تلاش پیش‌تر ارسال شده است.',
     'assess.unanswered': 'پیش از ارسال به همهٔ پرسش‌ها پاسخ دهید.',
+    'assess.heading': 'آزمون‌ها',
+    'assess.practise': 'تمرین',
+    'assess.take': 'شروع',
   },
   'fa-af': {
     'assess.label': 'ارزیابی',
@@ -192,6 +203,9 @@ export const ASSESS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assess.submitFailed': 'جواب‌های شما ارسال نشد. اتصال خود را بررسی کنید و دوباره تلاش کنید.',
     'assess.alreadySubmitted': 'این تلاش قبلاً ارسال شده است.',
     'assess.unanswered': 'پیش از ارسال به همهٔ سوال‌ها جواب دهید.',
+    'assess.heading': 'ارزیابی‌ها',
+    'assess.practise': 'تمرین',
+    'assess.take': 'شروع',
   },
   tr: {
     'assess.label': 'Değerlendirme',
@@ -233,6 +247,9 @@ export const ASSESS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assess.submitFailed': 'Yanıtlarınız gönderilemedi. Bağlantınızı kontrol edip yeniden deneyin.',
     'assess.alreadySubmitted': 'Bu deneme zaten gönderildi.',
     'assess.unanswered': 'Göndermeden önce her soruyu yanıtlayın.',
+    'assess.heading': 'Değerlendirmeler',
+    'assess.practise': 'Alıştırma yap',
+    'assess.take': 'Başla',
   },
   id: {
     'assess.label': 'Penilaian',
@@ -274,6 +291,9 @@ export const ASSESS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assess.submitFailed': 'Jawaban Anda tidak dapat dikirim. Periksa koneksi Anda dan coba lagi.',
     'assess.alreadySubmitted': 'Percobaan ini sudah dikirim.',
     'assess.unanswered': 'Jawab semua soal sebelum mengirim.',
+    'assess.heading': 'Penilaian',
+    'assess.practise': 'Berlatih',
+    'assess.take': 'Mulai',
   },
   ms: {
     'assess.label': 'Penilaian',
@@ -315,6 +335,9 @@ export const ASSESS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assess.submitFailed': 'Jawapan anda tidak dapat dihantar. Semak sambungan anda dan cuba lagi.',
     'assess.alreadySubmitted': 'Percubaan ini telah dihantar.',
     'assess.unanswered': 'Jawab semua soalan sebelum menghantar.',
+    'assess.heading': 'Penilaian',
+    'assess.practise': 'Berlatih',
+    'assess.take': 'Mula',
   },
   bn: {
     'assess.label': 'মূল্যায়ন',
@@ -356,6 +379,9 @@ export const ASSESS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assess.submitFailed': 'আপনার উত্তরগুলো জমা দেওয়া যায়নি। আপনার সংযোগ দেখে আবার চেষ্টা করুন।',
     'assess.alreadySubmitted': 'এই চেষ্টাটি আগেই জমা দেওয়া হয়েছে।',
     'assess.unanswered': 'জমা দেওয়ার আগে প্রতিটি প্রশ্নের উত্তর দিন।',
+    'assess.heading': 'মূল্যায়ন',
+    'assess.practise': 'অনুশীলন করুন',
+    'assess.take': 'শুরু করুন',
   },
   hi: {
     'assess.label': 'मूल्यांकन',
@@ -397,6 +423,9 @@ export const ASSESS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assess.submitFailed': 'आपके उत्तर जमा नहीं हो सके। अपना कनेक्शन जाँचें और फिर से कोशिश करें।',
     'assess.alreadySubmitted': 'यह प्रयास पहले ही जमा किया जा चुका है।',
     'assess.unanswered': 'जमा करने से पहले हर प्रश्न का उत्तर दें।',
+    'assess.heading': 'मूल्यांकन',
+    'assess.practise': 'अभ्यास करें',
+    'assess.take': 'शुरू करें',
   },
   fr: {
     'assess.label': 'Évaluation',
@@ -441,6 +470,9 @@ export const ASSESS: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Vos réponses n’ont pas pu être envoyées. Vérifiez votre connexion et réessayez.',
     'assess.alreadySubmitted': 'Cette tentative a déjà été envoyée.',
     'assess.unanswered': 'Répondez à toutes les questions avant d’envoyer.',
+    'assess.heading': 'Évaluations',
+    'assess.practise': 'S’entraîner',
+    'assess.take': 'Commencer',
   },
   es: {
     'assess.label': 'Evaluación',
@@ -484,6 +516,9 @@ export const ASSESS: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'No se pudieron enviar tus respuestas. Comprueba tu conexión e inténtalo de nuevo.',
     'assess.alreadySubmitted': 'Este intento ya se ha enviado.',
     'assess.unanswered': 'Responde todas las preguntas antes de enviar.',
+    'assess.heading': 'Evaluaciones',
+    'assess.practise': 'Practicar',
+    'assess.take': 'Empezar',
   },
   pt: {
     'assess.label': 'Avaliação',
@@ -527,6 +562,9 @@ export const ASSESS: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Não foi possível enviar as suas respostas. Verifique a sua ligação e tente de novo.',
     'assess.alreadySubmitted': 'Esta tentativa já foi enviada.',
     'assess.unanswered': 'Responda a todas as perguntas antes de enviar.',
+    'assess.heading': 'Avaliações',
+    'assess.practise': 'Praticar',
+    'assess.take': 'Começar',
   },
   sw: {
     'assess.label': 'Tathmini',
@@ -570,6 +608,9 @@ export const ASSESS: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Majibu yako hayakuweza kuwasilishwa. Angalia muunganisho wako kisha ujaribu tena.',
     'assess.alreadySubmitted': 'Jaribio hili tayari limewasilishwa.',
     'assess.unanswered': 'Jibu kila swali kabla ya kuwasilisha.',
+    'assess.heading': 'Tathmini',
+    'assess.practise': 'Fanya mazoezi',
+    'assess.take': 'Anza',
   },
   af: {
     'assess.label': 'Assessering',
@@ -613,6 +654,9 @@ export const ASSESS: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Jou antwoorde kon nie ingedien word nie. Gaan jou verbinding na en probeer weer.',
     'assess.alreadySubmitted': 'Hierdie poging is reeds ingedien.',
     'assess.unanswered': 'Beantwoord elke vraag voordat jy indien.',
+    'assess.heading': 'Assesserings',
+    'assess.practise': 'Oefen',
+    'assess.take': 'Begin',
   },
   'zh-hans': {
     'assess.label': '测评',
@@ -652,6 +696,9 @@ export const ASSESS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assess.submitFailed': '您的答案未能提交。请检查网络连接后重试。',
     'assess.alreadySubmitted': '此次作答已提交。',
     'assess.unanswered': '请先回答所有题目再提交。',
+    'assess.heading': '测评',
+    'assess.practise': '练习',
+    'assess.take': '开始',
   },
   'zh-hant': {
     'assess.label': '測驗',
@@ -691,6 +738,9 @@ export const ASSESS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assess.submitFailed': '您的答案未能提交。請檢查網路連線後重試。',
     'assess.alreadySubmitted': '此次作答已提交。',
     'assess.unanswered': '請先回答所有題目再提交。',
+    'assess.heading': '測驗',
+    'assess.practise': '練習',
+    'assess.take': '開始',
   },
   vi: {
     'assess.label': 'Bài đánh giá',
@@ -732,6 +782,9 @@ export const ASSESS: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Không nộp được các câu trả lời của bạn. Hãy kiểm tra kết nối và thử lại.',
     'assess.alreadySubmitted': 'Lần làm này đã được nộp.',
     'assess.unanswered': 'Hãy trả lời mọi câu hỏi trước khi nộp.',
+    'assess.heading': 'Bài đánh giá',
+    'assess.practise': 'Luyện tập',
+    'assess.take': 'Bắt đầu',
   },
   th: {
     'assess.label': 'แบบประเมิน',
@@ -772,6 +825,9 @@ export const ASSESS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'assess.submitFailed': 'ส่งคำตอบของคุณไม่ได้ โปรดตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง',
     'assess.alreadySubmitted': 'ครั้งนี้ส่งไปแล้ว',
     'assess.unanswered': 'โปรดตอบทุกคำถามก่อนส่ง',
+    'assess.heading': 'แบบประเมิน',
+    'assess.practise': 'ฝึกฝน',
+    'assess.take': 'เริ่ม',
   },
   fil: {
     'assess.label': 'Pagtatasa',
@@ -815,6 +871,9 @@ export const ASSESS: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Hindi naipasa ang iyong mga sagot. Tingnan ang iyong koneksyon at subukang muli.',
     'assess.alreadySubmitted': 'Naipasa na ang pagsubok na ito.',
     'assess.unanswered': 'Sagutin ang bawat tanong bago ipasa.',
+    'assess.heading': 'Mga pagtatasa',
+    'assess.practise': 'Magsanay',
+    'assess.take': 'Simulan',
   },
   uz: {
     'assess.label': 'Baholash',
@@ -857,6 +916,9 @@ export const ASSESS: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Javoblaringizni topshirib bo‘lmadi. Ulanishni tekshirib, qayta urinib ko‘ring.',
     'assess.alreadySubmitted': 'Bu urinish allaqachon topshirilgan.',
     'assess.unanswered': 'Topshirishdan oldin har bir savolga javob bering.',
+    'assess.heading': 'Baholashlar',
+    'assess.practise': 'Mashq qilish',
+    'assess.take': 'Boshlash',
   },
   kk: {
     'assess.label': 'Бағалау',
@@ -900,6 +962,9 @@ export const ASSESS: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Жауаптарыңызды тапсыру мүмкін болмады. Байланысты тексеріп, қайталап көріңіз.',
     'assess.alreadySubmitted': 'Бұл әрекет бұрын тапсырылған.',
     'assess.unanswered': 'Тапсырмас бұрын әр сұраққа жауап беріңіз.',
+    'assess.heading': 'Бағалаулар',
+    'assess.practise': 'Жаттығу',
+    'assess.take': 'Бастау',
   },
   az: {
     'assess.label': 'Qiymətləndirmə',
@@ -943,6 +1008,9 @@ export const ASSESS: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Cavablarınızı göndərmək mümkün olmadı. Bağlantınızı yoxlayıb yenidən cəhd edin.',
     'assess.alreadySubmitted': 'Bu cəhd artıq göndərilib.',
     'assess.unanswered': 'Göndərməzdən əvvəl hər suala cavab verin.',
+    'assess.heading': 'Qiymətləndirmələr',
+    'assess.practise': 'Məşq et',
+    'assess.take': 'Başla',
   },
   tg: {
     'assess.label': 'Арзёбӣ',
@@ -985,6 +1053,9 @@ export const ASSESS: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Ҷавобҳои шумо супорида нашуданд. Пайвастро тафтиш карда, дубора кӯшиш кунед.',
     'assess.alreadySubmitted': 'Ин кӯшиш аллакай супорида шудааст.',
     'assess.unanswered': 'Пеш аз супоридан ба ҳар савол ҷавоб диҳед.',
+    'assess.heading': 'Арзёбиҳо',
+    'assess.practise': 'Машқ кардан',
+    'assess.take': 'Оғоз кардан',
   },
   ky: {
     'assess.label': 'Баалоо',
@@ -1028,6 +1099,9 @@ export const ASSESS: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Жоопторуңузду тапшыруу мүмкүн болгон жок. Байланышыңызды текшерип, кайра аракет кылыңыз.',
     'assess.alreadySubmitted': 'Бул аракет мурда эле тапшырылган.',
     'assess.unanswered': 'Тапшыруудан мурун ар бир суроого жооп бериңиз.',
+    'assess.heading': 'Баалоолор',
+    'assess.practise': 'Машыгуу',
+    'assess.take': 'Баштоо',
   },
   tk: {
     'assess.label': 'Baha beriş',
@@ -1071,6 +1145,9 @@ export const ASSESS: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Jogaplaryňyzy tabşyryp bolmady. Baglanyşygyňyzy barlap, täzeden synanyşyň.',
     'assess.alreadySubmitted': 'Bu synanyşyk eýýäm tabşyryldy.',
     'assess.unanswered': 'Tabşyrmazdan öň her soraga jogap beriň.',
+    'assess.heading': 'Bahalandyrmalar',
+    'assess.practise': 'Türgenleşmek',
+    'assess.take': 'Başlamak',
   },
   ta: {
     'assess.label': 'மதிப்பீடு',
@@ -1114,6 +1191,9 @@ export const ASSESS: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'உங்கள் பதில்களைச் சமர்ப்பிக்க முடியவில்லை. உங்கள் இணைப்பைச் சரிபார்த்து மீண்டும் முயலுங்கள்.',
     'assess.alreadySubmitted': 'இந்த முயற்சி ஏற்கனவே சமர்ப்பிக்கப்பட்டுவிட்டது.',
     'assess.unanswered': 'சமர்ப்பிக்கும் முன் எல்லாக் கேள்விகளுக்கும் பதிலளியுங்கள்.',
+    'assess.heading': 'மதிப்பீடுகள்',
+    'assess.practise': 'பயிற்சி செய்',
+    'assess.take': 'தொடங்கு',
   },
   ne: {
     'assess.label': 'मूल्याङ्कन',
@@ -1156,5 +1236,8 @@ export const ASSESS: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'तपाईंका उत्तरहरू बुझाउन सकिएन। आफ्नो जडान जाँचेर फेरि प्रयास गर्नुहोस्।',
     'assess.alreadySubmitted': 'यो प्रयास पहिले नै बुझाइसकिएको छ।',
     'assess.unanswered': 'बुझाउनुअघि हरेक प्रश्नको उत्तर दिनुहोस्।',
+    'assess.heading': 'मूल्याङ्कनहरू',
+    'assess.practise': 'अभ्यास गर्नुहोस्',
+    'assess.take': 'सुरु गर्नुहोस्',
   },
 };

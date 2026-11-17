@@ -34,11 +34,17 @@ const fake = createServer(async (req, res) => {
   let body = ''; for await (const part of req) body += part;
   const payload = body ? JSON.parse(body) : null; calls.push({ path, params: request.searchParams, payload });
   if (path === '/rest/v1/course_enrolments') res.end(JSON.stringify(available ? [{ id: 'enrolment', status: 'active', course_id: 'course', course_version_id: 'version', learner_profile_id: 'learner', enrolled_at: '2026-01-01T00:00:00Z', courses: { title: 'Synthetic course', slug: 'synthetic-course' }, course_versions: { version_number: 2, language: 'en', course_sections: [{ id: 'section', title: 'Synthetic section', position: 1, lessons: [{ id: 'lesson', title: 'Synthetic lesson', position: 1, is_preview: false }] }] } }] : []));
-  else if (path === '/rest/v1/rpc/setting_bool') res.end(JSON.stringify(payload.p_key === 'learning.progress' && progressOn));
+  else if (path === '/rest/v1/rpc/setting_bool') res.end(JSON.stringify((payload.p_key === 'learning.progress' && progressOn) || payload.p_key === 'learning.assessments'));
   else if (path === '/rest/v1/lesson_progress') res.end('[]');
   else if (path === '/rest/v1/rpc/enrolment_progress_summary') res.end(JSON.stringify({ lessons_total: 1, lessons_done: 0, percent_complete: 0 }));
   else if (path === '/rest/v1/rpc/evaluate_completion') res.end(JSON.stringify({ is_complete: false, percent_complete: 0, requirements_met: 0, requirements_total: 1, blocking }));
-  else if (path === '/rest/v1/assessments') res.end('[]');
+  // One of each kind, so the list's heading, the three kinds and both buttons
+  // are on the page. The titles are a teacher's and stay as written.
+  else if (path === '/rest/v1/assessments') res.end(JSON.stringify([
+    { id: 'quiz-practice', title: 'Synthetic practice quiz', instructions: null, type: 'practice', pass_threshold: null, attempt_limit: null, lesson_id: null },
+    { id: 'quiz-graded', title: 'Synthetic graded quiz', instructions: null, type: 'graded', pass_threshold: 70, attempt_limit: 2, lesson_id: null },
+    { id: 'quiz-final', title: 'Synthetic final', instructions: null, type: 'final', pass_threshold: 70, attempt_limit: 1, lesson_id: null },
+  ]));
   else if (path === '/rest/v1/course_assignments') { res.setHeader('content-range', '0-3/4'); res.end(JSON.stringify(assignments)); }
   else if (path === '/rest/v1/assignment_submissions') {
     // Simulate server filtering by the learner explicitly requested by the app.
@@ -99,6 +105,7 @@ try {
     const html = await (await request({ cookie })).text();
     assert.equal(workspace(html), '<div class="container section course-workspace">');
     for (const text of ['My learning', 'Version 2 · EN', '0 of 1 lessons complete · 0%', 'Still to do:', 'Start the course', 'Open lesson 1', 'Lesson 1 of 1', 'Mark complete', 'Back to my learning']) assert.ok(html.includes(text), `English: ${text}`);
+    for (const text of ['<h3>Assessments</h3>', '>Practice<', '>Graded<', '>Final assessment<', '>Practise<', '>Take<', 'Synthetic practice quiz']) assert.ok(visible(html).includes(text), `English assessment list: ${text}`);
     // Nothing needs marking as English on an English page.
     assert.equal(visible(html).includes('lang="en" dir="ltr"'), false);
   }
@@ -114,6 +121,12 @@ try {
     assert.match(html, /<div><div class="outline-h"><h3>الواجبات<\/h3>/);
     for (const text of ['بلا موعد نهائي', 'لم يبدأ', 'بانتظار التصحيح', '>فتح<', '>عرض التسليم<']) assert.ok(visible(html).includes(text), `Arabic assignment list: ${text}`);
     for (const text of ['>Assignments<', 'No deadline', 'Not started', 'Waiting for marking', 'View submission', '>Open<']) assert.equal(visible(html).includes(text), false, `Arabic assignment list still says "${text}"`);
+    // The assessment list is the reader's too: heading, kind and button.
+    assert.match(html, /<div><div class="outline-h"><h3>التقييمات<\/h3>/);
+    for (const text of ['>تدريبي<', '>بدرجات<', '>التقييم النهائي<', '>تدرّب<', '>ابدأ<', '<span class="t" dir="auto">Synthetic practice quiz</span>']) assert.ok(visible(html).includes(text), `Arabic assessment list: ${text}`);
+    for (const text of ['>Assessments<', '>Practice<', '>Graded<', '>Final assessment<', '>Practise<', '>Take<']) assert.equal(visible(html).includes(text), false, `Arabic assessment list still says "${text}"`);
+    // Only the database's reasons and the cohort list are marked as English now.
+    assert.equal((visible(html).match(/lang="en" dir="ltr"/g) ?? []).length <= 2, true, 'more than two English islands on the Arabic course page');
     progressOn = false;
     const off = await (await request({ cookie, 'accept-language': 'ar' })).text();
     assert.ok(off.includes('تتبّع التقدّم غير مفعّل بعد.')); assert.equal(off.includes('Progress tracking is not enabled yet.'), false);
@@ -132,7 +145,7 @@ try {
     const html = await (await request({ cookie, 'accept-language': code })).text();
     assert.match(html, new RegExp(`<html[^>]*lang="${code}"[^>]*dir="${dir}"`));
     assert.equal(workspace(html), '<div class="container section course-workspace" lang="en" dir="ltr">');
-    for (const text of ['aria-label="Course progress"', '0 of 1 lessons complete · 0%', 'Mark complete', 'Back to my learning']) assert.ok(html.includes(text), `${code}: ${text}`);
+    for (const text of ['aria-label="Course progress"', '0 of 1 lessons complete · 0%', 'Mark complete', 'Back to my learning', '<h3>Assessments</h3>', '>Practise<', '>Take<']) assert.ok(html.includes(text), `${code}: ${text}`);
   }
   {
     // A withheld language is English in every case, frame included.
