@@ -1,0 +1,87 @@
+name: PostgREST contract
+# The real pages against the real request server and a real database, on a
+# disposable runner. No project, no secrets, no user data: the database is
+# created here from the migrations and thrown away with the runner. The
+# sign-in server is still a stand-in; see scripts/postgrest-contract.mjs.
+on:
+  push:
+    branches:
+      - arena/4f30fd1d-platform
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: postgrest-contract-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  POSTGREST_VERSION: v16.6
+  POSTGREST_CONTRACT: '1'
+  PGDATABASE: ayahspring_postgrest_contract
+  POSTGREST_URL: http://127.0.0.1:3100
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: '22.22.3'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Start disposable PostgreSQL and make secrets that exist only for this run
+        run: |
+          set -euo pipefail
+          sudo service postgresql start
+          if ! sudo -u postgres psql -tAc "select 1 from pg_roles where rolname = '$USER'" | grep -qx 1; then
+            sudo -u postgres createuser --superuser "$USER"
+          fi
+          createdb -h /var/run/postgresql "$PGDATABASE"
+          password="$(openssl rand -hex 24)"; secret="$(openssl rand -hex 32)"
+          echo "::add-mask::$password"; echo "::add-mask::$secret"
+          {
+            echo "CONTRACT_DB_PASSWORD=$password"
+            echo "CONTRACT_JWT_SECRET=$secret"
+          } >> "$GITHUB_ENV"
+      - name: Apply every migration and put in a fabricated course
+        env:
+          PGHOST: /var/run/postgresql
+        run: node scripts/postgrest-contract.mjs prepare
+      - name: Start PostgREST
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location --retry 3 \
+            --output "$RUNNER_TEMP/postgrest.tar.xz" \
+            "https://github.com/PostgREST/postgrest/releases/download/${POSTGREST_VERSION}/postgrest-${POSTGREST_VERSION}-linux-static-x86-64.tar.xz"
+          tar -xJf "$RUNNER_TEMP/postgrest.tar.xz" -C "$RUNNER_TEMP"
+          "$RUNNER_TEMP/postgrest" --version
+          port="$(sudo -u postgres psql -tAc 'show port')"
+          # What Supabase sets: one schema, the anonymous role, a row limit.
+          PGRST_DB_URI="postgres://authenticator:${CONTRACT_DB_PASSWORD}@127.0.0.1:${port}/${PGDATABASE}" \
+          PGRST_DB_SCHEMAS=public \
+          PGRST_DB_ANON_ROLE=anon \
+          PGRST_DB_MAX_ROWS=1000 \
+          PGRST_JWT_SECRET="$CONTRACT_JWT_SECRET" \
+          PGRST_SERVER_HOST=127.0.0.1 \
+          PGRST_SERVER_PORT=3100 \
+          PGRST_LOG_LEVEL=warn \
+            nohup "$RUNNER_TEMP/postgrest" > "$RUNNER_TEMP/postgrest.log" 2>&1 &
+          for attempt in $(seq 1 60); do
+            if curl --silent --fail --output /dev/null "$POSTGREST_URL/"; then
+              echo "::notice title=PostgREST::$("$RUNNER_TEMP/postgrest" --version) answering after ${attempt} attempt(s)"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error title=PostgREST did not start::$(tail -n 20 "$RUNNER_TEMP/postgrest.log" | tr '\n' ' ' | cut -c1-1500)"
+          exit 1
+      - name: Walk the pages
+        env:
+          PGHOST: /var/run/postgresql
+        run: node scripts/postgrest-contract.mjs run
+      - name: What the request server logged
+        if: failure()
+        run: |
+          log="$(tail -n 40 "$RUNNER_TEMP/postgrest.log" 2>/dev/null | cut -c1-300 || true)"
+          log="${log//'%'/'%25'}"; log="${log//$'\n'/'%0A'}"
+          echo "::notice title=PostgREST log::${log:-no log}"
