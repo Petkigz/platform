@@ -406,17 +406,18 @@ test('the learner dashboard is written for the languages with nothing held, and 
   assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign', 'missing']);
   // Thirty-seven for the dashboard (the learner-profile prompt is seven of
   // them), twenty-eight for the course page (twelve are the list of dated
-  // classes), twenty-two for the lesson's frame,
+  // classes), seventy-six for the lesson page (its frame, the report form,
+  // the notes about a recording, the practice questions, the study tools),
   // forty for the assessment page, its quiz and the assessment list on the
   // course page, and a hundred and seven for the assignment page and the
   // assignment list, of which forty-seven are the files part, and seven for
   // the page for an address with nothing at it.
-  assert.equal(unwrittenKeys.length, 272);
+  assert.equal(unwrittenKeys.length, 295);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('missing.')).length, 7);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('assign.')).length, 107);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('learn.')).length, 37);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('course.')).length, 28);
-  assert.equal(unwrittenKeys.filter((key) => key.startsWith('lesson.')).length, 53);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('lesson.')).length, 76);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('assess.')).length, 40);
 
   // Six files, one rule: the same languages in each.
@@ -470,7 +471,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     }
   }
   // What that costs the nineteen that are still in the picker, said out loud:
-  // 192 of 544 sentences, which is 35%. Nothing holds a floor under
+  // 192 of 567 sentences, which is 34%. Nothing holds a floor under
   // it any more: the owner chose on 2026-11-17 to keep these languages in the
   // picker and show the number. The count is pinned here so that it moves only
   // when somebody means it to, and is seen when it does. It moved from 55% to
@@ -481,12 +482,14 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // more, to 38% with the list of dated classes, twelve more, and to 36% with
   // the report form on the lesson page, twenty-one more. The page for a wrong
   // address added seven and the rounded number did not move (35.96%); the
-  // notes about a recording that cannot play added ten and it is 35%. What
-  // they are shown did not get smaller; what is counted got bigger.
+  // notes about a recording that cannot play added ten and it is 35%; the
+  // practice questions and the notes and bookmark on the lesson page added
+  // twenty-three and it is 34%. What they are shown did not get smaller; what
+  // is counted got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 544);
-    assert.equal(coverageOf(code).percent, 35, code);
+    assert.equal(coverageOf(code).total, 567);
+    assert.equal(coverageOf(code).percent, 34, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');
   assert.equal(languageShownFor('en', 'learn').code, 'en');
@@ -675,19 +678,53 @@ test('the lesson page translates its frame and marks every English part inside i
     assert.ok(!page.includes(sentence), `"${sentence}" is still typed into the lesson page`);
   }
 
-  // Five places hold a client component, or a sentence written for one, that
+  // Three places hold a client component, or a sentence written for one, that
   // is English for every reader. Each says so: a material that is a player,
-  // practice questions, sources, notes and bookmarks, and the open discussion.
-  // The note about a recording that cannot play was a sixth and is the
-  // reader's now, above the materials and in its row.
+  // sources, and the open discussion. The note about a recording that cannot
+  // play was one more and is the reader's now, above the materials and in its
+  // row; so are the practice questions and the notes and bookmark.
   assert.match(page, /const english = shown\.code === 'en' \? \{\} : \(\{ lang: 'en', dir: 'ltr' \} as const\);/u);
-  assert.equal(page.match(/\{\.\.\.english\}/gu)?.length, 4);
+  assert.equal(page.match(/\{\.\.\.english\}/gu)?.length, 2);
   assert.match(page, /\{\.\.\.\(speaksEnglish \? english : \{\}\)\}/u);
   assert.match(page, /<div className="notice" style=\{\{ marginBottom: '1rem' \}\}>\s+<strong style=\{\{ display: 'block' \}\}>\{t\(summary\.headingKey\)\}/u);
   assert.doesNotMatch(page, /noteFor\(standing\.get\(r\.id\) \?\? null\) !== null/u);
-  assert.match(page, /<div \{\.\.\.english\}>\s+<PracticeCheck/u);
+  assert.match(page, /<PracticeCheck items=\{practiceItems\} words=\{practiceWords\} locale=\{shown\.code\} \/>/u);
   assert.match(page, /\{provenanceOn && \(\s+<section className="card" \{\.\.\.english\}>/u);
-  assert.match(page, /<div \{\.\.\.english\}>\s+<StudyTools/u);
+  assert.match(page, /<StudyTools\s[^>]*words=\{studyWords\}\s+locale=\{shown\.code\}\s+\/>/u);
+  // Both are client components handed their words. Neither asks a catalogue
+  // for any, neither has a sentence typed into what it draws, and neither
+  // prints the server's English sentence on a page in another language.
+  const practice = read('../app/learn/[enrolmentId]/lesson/[lessonId]/practice-check.tsx');
+  const tools = read('../app/learn/[enrolmentId]/lesson/[lessonId]/study-tools.tsx');
+  for (const [name, source, component] of [
+    ['practice questions', practice, 'export function PracticeCheck'],
+    ['study tools', tools, 'export function StudyTools'],
+  ] as const) {
+    assert.match(source, /^'use client';/u, name);
+    assert.doesNotMatch(source, /useT\(|from '@\/lib\/i18n'|'lesson\./u, name);
+    assert.match(source, /const say = words \?\? ENGLISH;/u, name);
+    const drawn = source.split(component)[1] ?? '';
+    for (const sentence of [
+      'Check yourself', 'not marked', 'Untitled question', 'Your answer', "'True'", "'Checking…'",
+      'rsquo', 'Not quite', 'Try again', 'study tools', 'Bookmark lesson', 'Remove bookmark', 'bookmarked.', 'Private lesson note',
+      'Save a thought', 'Save note', 'Clear note', 'Note saved', 'Note removed', 'Saving…', '/4000', 'Could not',
+    ]) {
+      assert.ok(!drawn.includes(sentence), `"${sentence}" is still typed into the ${name}`);
+    }
+  }
+  assert.match(practice, /setError\(locale === 'en' && typeof json\.message === 'string' \? json\.message : say\.failed\);/u);
+  assert.match(tools, /const ours = response\.status === 401 \? say\.signIn : say\.failed;\s+setError\(locale === 'en' && typeof result\.error === 'string' \? result\.error : ours\);/u);
+  // No reply at all is answered too, and does not leave a button busy for good.
+  assert.match(practice, /\} catch \{[^}]*res = null;\s+\}/u);
+  assert.match(tools, /\} catch \{[^}]*setError\(say\.failed\);/u);
+  // What a teacher wrote, and what a learner types, keep their own direction.
+  assert.match(practice, /<bdi>\{prompt\}<\/bdi>/u);
+  assert.match(practice, /<span dir="auto">\{c\.text\}<\/span>/u);
+  assert.equal(practice.match(/<bdi>\{outcome\.explanation\}<\/bdi>/gu)?.length, 2);
+  assert.match(tools, /maxLength=\{MAX_LESSON_NOTE_LENGTH\}\s+dir="auto"/u);
+  // The numbers are written the reader's way: which question, and the counter.
+  assert.match(practice, /\{formatNumber\(locale, index \+ 1\)\}\./u);
+  assert.match(tools, /\{formatNumber\(locale, note\.length\)\}\/\{formatNumber\(locale, MAX_LESSON_NOTE_LENGTH\)\}/u);
   // The report form at the foot is the reader's: the page hands it its words
   // and the language they are in, and so does the one beside a recording that
   // cannot play, which opens on the technical kind under its own link.

@@ -28,14 +28,14 @@ import { Discussion } from './discussion';
 import { ReportForm, type ReportFormWords } from './report-form';
 import { fetchLessonSources } from '@/lib/provenance';
 import { fetchLessonStudyTools } from '@/lib/lesson-study-tools';
-import { StudyTools } from './study-tools';
+import { StudyTools, type StudyToolsWords } from './study-tools';
 import { fetchPlayableRenditions, groupByAsset, posterFor } from '@/lib/playback';
 import { lessonNote, noteFor, parseStanding } from '@/lib/playback-standing';
 import { RenditionPlayer } from '@/app/_shared/rendition-player';
 import { AudioPlayer, VideoWithResume } from '@/app/_shared/media-resume';
 import { fetchAssessmentsForVersion, fetchQuestions } from '@/lib/assessment';
 import { practiceForLesson } from '@/lib/practice';
-import { PracticeCheck, type PracticeItem } from './practice-check';
+import { PracticeCheck, type PracticeCheckWords, type PracticeItem } from './practice-check';
 import { recordEvent } from '@/lib/analytics-server';
 import { fetchOutline } from '@/lib/outline-query';
 import { lessonNeighbours } from '@/lib/outline';
@@ -169,6 +169,41 @@ export default async function LessonPage({
     duplicate: t('lesson.reportDuplicate'),
     refused: t('lesson.reportRefused'),
     uncertain: t('lesson.reportUncertain'),
+  };
+  // The questions at the foot of the lesson that are not the quiz. Four of
+  // its words are the quiz's own.
+  const practiceWords: PracticeCheckWords = {
+    heading: t('lesson.practiceHeading'),
+    intro: t('lesson.practiceIntro'),
+    untitled: t('assess.untitledQuestion'),
+    yourAnswer: t('assess.yourAnswer'),
+    yes: t('assess.true'),
+    no: t('assess.false'),
+    check: t('lesson.practiceCheck'),
+    checking: t('lesson.practiceChecking'),
+    right: t('lesson.practiceRight'),
+    wrong: t('lesson.practiceWrong'),
+    retry: t('lesson.practiceRetry'),
+    failed: t('lesson.practiceFailed'),
+  };
+  // The learner's own note and bookmark.
+  const studyWords: StudyToolsWords = {
+    label: t('lesson.studyLabel'),
+    heading: t('lesson.studyHeading'),
+    bookmark: t('lesson.studyBookmark'),
+    unbookmark: t('lesson.studyUnbookmark'),
+    noteLabel: t('lesson.studyNoteLabel'),
+    placeholder: t('lesson.studyPlaceholder'),
+    save: t('lesson.studySave'),
+    saving: t('course.saving'),
+    clear: t('lesson.studyClear'),
+    saved: t('lesson.studySaved'),
+    cleared: t('lesson.studyCleared'),
+    bookmarked: t('lesson.studyBookmarked'),
+    unbookmarked: t('lesson.studyUnbookmarked'),
+    privateNote: t('lesson.studyPrivate'),
+    failed: t('lesson.studyFailed'),
+    signIn: t('lesson.studySignIn'),
   };
 
   const { data: enrolmentData } = await supabase
@@ -547,9 +582,7 @@ export default async function LessonPage({
       </section>
 
       {entitled && practiceItems.length > 0 && (
-        <div {...english}>
-          <PracticeCheck items={practiceItems} />
-        </div>
+        <PracticeCheck items={practiceItems} words={practiceWords} locale={shown.code} />
       )}
 
       {provenanceOn && (
@@ -578,14 +611,14 @@ export default async function LessonPage({
       )}
 
       {studyTools && (
-        <div {...english}>
-          <StudyTools
-            enrolmentId={enrolmentId}
-            lessonId={lesson.id}
-            initialNote={studyTools.note}
-            initiallyBookmarked={studyTools.bookmarked}
-          />
-        </div>
+        <StudyTools
+          enrolmentId={enrolmentId}
+          lessonId={lesson.id}
+          initialNote={studyTools.note}
+          initiallyBookmarked={studyTools.bookmarked}
+          words={studyWords}
+          locale={shown.code}
+        />
       )}
 
       {entitled && !done && (

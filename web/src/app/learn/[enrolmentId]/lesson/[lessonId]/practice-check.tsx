@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import type { Question } from '@/lib/assessment';
+import { formatNumber } from '@/lib/i18n/format';
+import type { LocaleCode } from '@/lib/i18n/locales';
 import { answerIsEmpty, choicesOf, promptOf } from '@/lib/practice';
 
 export type PracticeItem = {
@@ -28,8 +30,60 @@ type Outcome = {
  * A wrong answer gets the explanation too. That is where the learning is, and
  * a practice question that keeps quiet when you are wrong is a test in
  * disguise.
+ *
+ * **The words can be handed in.** The lesson page passes `words` in the
+ * reader's language, and `locale` so the question numbers are written that
+ * language's way. What the teacher wrote (the title, the instructions, each
+ * question, each choice, the explanation) is shown as written and finds its
+ * own direction.
+ *
+ * **When a check does not go through.** The server's sentence is English, so
+ * only an English page prints it. Any other page says one thing, that the
+ * answer could not be checked and to try again, which is always safe to say
+ * because checking writes nothing.
  */
-export function PracticeCheck({ items }: { items: PracticeItem[] }) {
+export type PracticeCheckWords = {
+  heading: string;
+  intro: string;
+  untitled: string;
+  yourAnswer: string;
+  yes: string;
+  no: string;
+  check: string;
+  checking: string;
+  right: string;
+  wrong: string;
+  retry: string;
+  failed: string;
+};
+
+const ENGLISH: PracticeCheckWords = {
+  heading: 'Check yourself',
+  intro:
+    'These are not marked and do not count as an attempt. Answering them changes nothing except what you know — the quiz, if this course has one, is a separate sitting.',
+  untitled: 'Untitled question',
+  yourAnswer: 'Your answer',
+  yes: 'True',
+  no: 'False',
+  check: 'Check',
+  checking: 'Checking…',
+  right: 'That’s right.',
+  wrong: 'Not quite.',
+  retry: 'Try again, or read that part of the lesson once more.',
+  failed: 'That could not be checked. Try again.',
+};
+
+export function PracticeCheck({
+  items,
+  words,
+  locale = 'en',
+}: {
+  items: PracticeItem[];
+  words?: PracticeCheckWords;
+  /** The language `words` is in. */
+  locale?: LocaleCode;
+}) {
+  const say = words ?? ENGLISH;
   const [answers, setAnswers] = useState<Record<string, unknown>>({});
   const [outcomes, setOutcomes] = useState<Record<string, Outcome>>({});
   const [error, setError] = useState<string | null>(null);
@@ -52,25 +106,29 @@ export function PracticeCheck({ items }: { items: PracticeItem[] }) {
     setError(null);
     setOutcomes((prev) => ({ ...prev, [question.id]: { status: 'checking', explanation: null } }));
 
-    const res = await fetch('/api/learn/check', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ questionId: question.id, answer: value }),
-    });
-    const json = (await res.json().catch(() => ({}))) as {
-      ok?: boolean;
-      correct?: boolean;
-      explanation?: string | null;
-      message?: string;
-    };
+    type Reply = { ok?: boolean; correct?: boolean; explanation?: string | null; message?: string };
+    let res: Response | null = null;
+    let json: Reply = {};
+    try {
+      res = await fetch('/api/learn/check', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ questionId: question.id, answer: value }),
+      });
+      json = (await res.json().catch(() => ({}))) as Reply;
+    } catch {
+      // No reply at all. Before this was caught the button stayed on
+      // "Checking…" for good.
+      res = null;
+    }
 
-    if (!res.ok || json.ok !== true) {
+    if (!res?.ok || json.ok !== true) {
       setOutcomes((prev) => {
         const next = { ...prev };
         delete next[question.id];
         return next;
       });
-      setError(json.message ?? 'That could not be checked. Try again.');
+      setError(locale === 'en' && typeof json.message === 'string' ? json.message : say.failed);
       return;
     }
 
@@ -85,18 +143,16 @@ export function PracticeCheck({ items }: { items: PracticeItem[] }) {
 
   return (
     <section className="card">
-      <h2>Check yourself</h2>
+      <h2>{say.heading}</h2>
       <p className="muted" style={{ marginTop: 0 }}>
-        These are not marked and do not count as an attempt. Answering them
-        changes nothing except what you know — the quiz, if this course has one,
-        is a separate sitting.
+        {say.intro}
       </p>
 
       {items.map((item) => (
         <div key={item.id} style={{ marginTop: '1rem' }}>
-          <h3 style={{ marginBottom: '0.25rem' }}>{item.title}</h3>
+          <h3 dir="auto" style={{ marginBottom: '0.25rem' }}>{item.title}</h3>
           {item.instructions && (
-            <p className="muted" style={{ marginTop: 0 }}>
+            <p className="muted" dir="auto" style={{ marginTop: 0 }}>
               {item.instructions}
             </p>
           )}
@@ -106,11 +162,12 @@ export function PracticeCheck({ items }: { items: PracticeItem[] }) {
             const value = answers[q.id];
             const choices = choicesOf(q);
             const locked = outcome?.status === 'correct';
+            const prompt = promptOf(q);
 
             return (
               <div key={q.id} style={{ marginTop: '0.9rem' }}>
                 <p style={{ marginBottom: '0.4rem', fontWeight: 600 }}>
-                  {index + 1}. {promptOf(q) || 'Untitled question'}
+                  {formatNumber(locale, index + 1)}. {prompt ? <bdi>{prompt}</bdi> : say.untitled}
                 </p>
 
                 {choices.length > 0 ? (
@@ -143,7 +200,7 @@ export function PracticeCheck({ items }: { items: PracticeItem[] }) {
                               }
                             }}
                           />
-                          <span>{c.text}</span>
+                          <span dir="auto">{c.text}</span>
                         </label>
                       );
                     })}
@@ -162,16 +219,17 @@ export function PracticeCheck({ items }: { items: PracticeItem[] }) {
                           disabled={locked}
                           onChange={() => setAnswer(q.id, option)}
                         />
-                        <span>{option ? 'True' : 'False'}</span>
+                        <span>{option ? say.yes : say.no}</span>
                       </label>
                     ))}
                   </div>
                 ) : (
                   <>
-                    <label htmlFor={`practice-${q.id}`}>Your answer</label>
+                    <label htmlFor={`practice-${q.id}`}>{say.yourAnswer}</label>
                     <textarea
                       id={`practice-${q.id}`}
                       rows={2}
+                      dir="auto"
                       value={typeof value === 'string' ? value : ''}
                       disabled={locked}
                       onChange={(e) => setAnswer(q.id, e.target.value)}
@@ -188,23 +246,23 @@ export function PracticeCheck({ items }: { items: PracticeItem[] }) {
                     }
                     onClick={() => void check(q)}
                   >
-                    {outcome?.status === 'checking' ? 'Checking…' : 'Check'}
+                    {outcome?.status === 'checking' ? say.checking : say.check}
                   </button>
                 )}
 
                 {outcome?.status === 'correct' && (
                   <div className="notice" role="status" style={{ marginTop: '0.5rem' }}>
-                    <strong>That&rsquo;s right.</strong>
-                    {outcome.explanation && <> {outcome.explanation}</>}
+                    <strong>{say.right}</strong>
+                    {outcome.explanation && <> <bdi>{outcome.explanation}</bdi></>}
                   </div>
                 )}
 
                 {outcome?.status === 'wrong' && (
                   <div className="notice warn" role="status" style={{ marginTop: '0.5rem' }}>
-                    <strong>Not quite.</strong>
+                    <strong>{say.wrong}</strong>
                     {outcome.explanation
-                      ? <> {outcome.explanation}</>
-                      : <> Try again, or read that part of the lesson once more.</>}
+                      ? <> <bdi>{outcome.explanation}</bdi></>
+                      : <> {say.retry}</>}
                   </div>
                 )}
               </div>

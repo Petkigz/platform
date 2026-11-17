@@ -2618,6 +2618,53 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### Practice questions and study tools, in the reader's language, 2026-11-17
+
+Two parts of the lesson page that ship switched off (`learning.assessments`,
+`learning.notes_bookmarks`) and were English, marked as English, for every
+reader: the questions at the foot of a lesson that are not the quiz, and the
+learner's own note and bookmark.
+
+- *Translated.* Twenty-three sentences (`lesson.practice*`, `lesson.study*`)
+  in the twenty-seven languages with nothing held. **Unreviewed.** Four more
+  words are the quiz's own (`assess.untitledQuestion`, `assess.yourAnswer`,
+  `assess.true`, `assess.false`) and "Saving…" is `course.saving`. In most
+  languages the sentence about the quiz says "the assessment", which is what
+  that page is called there.
+- *How.* Both are client components handed their words by the page, like the
+  report form. Neither asks a catalogue for anything, so none of this is in
+  what every page carries.
+- *When it does not go through.* Neither route gives a code. A page in another
+  language never prints the server's English sentence: a check that fails
+  says one thing ("could not be checked, try again"); a note or bookmark has
+  two, sign in again for a session that ended (401) and "we could not confirm
+  that change, try again" for everything else. Both are safe to repeat:
+  checking writes nothing, and a note or bookmark saved twice is one. An
+  English page still prints the server's own sentence, which is more exact.
+- *A defect found on the way.* A check whose reply never arrived left the
+  button on "Checking…" for good, because the request was not caught. It is
+  caught now and answered like any other failure.
+- *Small changes every reader gets.* Question numbers and the note counter
+  are written in the reader's digits, so an English reader's counter reads
+  "21/4,000" where it read "21/4000". What a teacher wrote (title,
+  instructions, question, choices, explanation) and what a learner types keep
+  their own direction inside a right-to-left page. The counter's limit comes
+  from `MAX_LESSON_NOTE_LENGTH` rather than a second typed 4000.
+- *What it did to the nineteen.* `/language` tells each of them **34%** (192
+  of 567).
+- *Checked* over HTTP against a synthetic backend with both switches on:
+  English, Arabic, French, Hausa (English). *Checked in Chromium* in Arabic
+  and Tamil at 320, 390 and 1440 wide, with the replies stubbed in the
+  browser: a wrong answer, a refused check, a check with no reply, a session
+  that ended, another refusal, a note that saves; no label cut off and no
+  overflow. Tamil was drawn without a Tamil font on this machine, so its
+  widths are those of placeholder boxes. **Not checked:** a real
+  `check_lesson_answer()` or a real note reaching the database (the routes
+  did not change, and the database suite was not rerun because no migration
+  changed).
+- *Still English on the lesson for everybody:* the players and their
+  saved-place messages, the sources card, and an open discussion.
+
 ### A recording that cannot be played, in the reader's language, 2026-11-17
 
 When an uploaded recording has no copy to play, the lesson says so in its row

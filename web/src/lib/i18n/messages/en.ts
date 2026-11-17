@@ -522,6 +522,40 @@ export const en = {
   // The link that opens the report form on "technical fault".
   'lesson.recTell': 'Tell us about this recording',
 
+  // The questions at the foot of a lesson that are not the quiz: nothing is
+  // recorded and no attempt is used. Its other words are the quiz's own
+  // (`assess.untitledQuestion`, `assess.yourAnswer`, `assess.true`,
+  // `assess.false`). A check that fails says so in one sentence; it is safe to
+  // say "try again" because checking writes nothing.
+  'lesson.practiceHeading': 'Check yourself',
+  'lesson.practiceIntro':
+    'These are not marked and do not count as an attempt. Answering them changes nothing except what you know — the quiz, if this course has one, is a separate sitting.',
+  'lesson.practiceCheck': 'Check',
+  'lesson.practiceChecking': 'Checking…',
+  'lesson.practiceRight': 'That’s right.',
+  'lesson.practiceWrong': 'Not quite.',
+  'lesson.practiceRetry': 'Try again, or read that part of the lesson once more.',
+  'lesson.practiceFailed': 'That could not be checked. Try again.',
+
+  // A learner's own note on a lesson, and the bookmark. Saving twice leaves
+  // one note and one bookmark, so "try again" is safe here too. The busy word
+  // on the button is `course.saving`.
+  'lesson.studyLabel': 'Your private study tools',
+  'lesson.studyHeading': 'Your study tools',
+  'lesson.studyBookmark': 'Bookmark lesson',
+  'lesson.studyUnbookmark': 'Remove bookmark',
+  'lesson.studyNoteLabel': 'Private lesson note',
+  'lesson.studyPlaceholder': 'Save a thought or reminder for yourself…',
+  'lesson.studySave': 'Save note',
+  'lesson.studyClear': 'Clear note',
+  'lesson.studySaved': 'Note saved privately.',
+  'lesson.studyCleared': 'Note removed.',
+  'lesson.studyBookmarked': 'Lesson bookmarked.',
+  'lesson.studyUnbookmarked': 'Bookmark removed.',
+  'lesson.studyPrivate': 'Notes and bookmarks are private to your account.',
+  'lesson.studyFailed': 'We could not confirm that change. Try again.',
+  'lesson.studySignIn': 'Sign in again to save notes and bookmarks.',
+
   // Taking an assessment: the page and the quiz on it. Same twenty-seven
   // languages (`assess.ts`). No sentence here types a number or a percent
   // sign; `{count}`, `{earned}`, `{possible}`, `{number}`, `{answered}`,

@@ -13,7 +13,7 @@ const exp = Math.floor(Date.now() / 1000) + 3600;
 const token = `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode({ sub: user.id, role: 'authenticated', exp })}.fake`;
 const session = { access_token: token, refresh_token: 'fake-refresh', token_type: 'bearer', expires_in: 3600, expires_at: exp, user };
 const cookie = `sb-127-auth-token=base64-${encode(session)}`;
-let entitled = false; let mismatch = false; let multipleMedia = false; let uploads = null; const calls = [];
+let entitled = false; let mismatch = false; let multipleMedia = false; let uploads = null; let extras = false; const calls = [];
 const active = new Set(); const overlaps = [];
 const fake = createServer(async (req, res) => {
   res.setHeader('content-type', 'application/json');
@@ -60,7 +60,17 @@ const fake = createServer(async (req, res) => {
   else if (path === '/rest/v1/rpc/lesson_positions') res.end('{}');
   else if (path === '/rest/v1/media_renditions') res.end('[]');
   else if (path === '/rest/v1/rpc/lesson_playback_standing') res.end(JSON.stringify(uploads ?? []));
-  else if (path === '/rest/v1/rpc/setting_bool') res.end('false');
+  // `extras` switches on the two parts of a lesson that ship switched off and
+  // gives each something to show: practice questions, and a note with no bookmark.
+  else if (path === '/rest/v1/rpc/setting_bool') res.end(JSON.stringify(extras && ['learning.assessments', 'learning.notes_bookmarks'].includes(JSON.parse(body || '{}').p_key)));
+  else if (extras && path === '/rest/v1/assessments') res.end(JSON.stringify([{ id: 'practice', title: 'Synthetic practice', instructions: 'Synthetic instructions.', type: 'practice', pass_threshold: null, attempt_limit: null, lesson_id: 'lesson' }]));
+  else if (extras && path === '/rest/v1/assessment_questions') res.end(JSON.stringify([
+    { id: 'q-choice', assessment_id: 'practice', type: 'single_choice', content: { prompt: 'Synthetic choice question', choices: [{ id: 'a', text: 'Synthetic first choice' }, { id: 'b', text: 'Synthetic second choice' }] }, points: 1, position: 1, explanation: null, grading_method: 'automatic' },
+    { id: 'q-truth', assessment_id: 'practice', type: 'true_false', content: { prompt: 'Synthetic true or false question' }, points: 1, position: 2, explanation: null, grading_method: 'automatic' },
+    { id: 'q-words', assessment_id: 'practice', type: 'short_answer', content: {}, points: 1, position: 3, explanation: null, grading_method: 'automatic' },
+  ]));
+  else if (extras && path === '/rest/v1/lesson_notes') res.end(JSON.stringify([{ body: 'Synthetic saved note.' }]));
+  else if (extras && path === '/rest/v1/lesson_bookmarks') res.end('[]');
   else { res.writeHead(404); res.end('{}'); }
 });
 await new Promise((r) => fake.listen(0, '127.0.0.1', r));
@@ -200,11 +210,46 @@ try {
     assert.equal(body.split('>Tell us about this recording<').length - 1, 3);
   }
   uploads = null;
+  // Practice questions and the learner's own note and bookmark. Both were
+  // English, marked as English, for every reader. What is checked here is what
+  // the server draws before anybody presses anything.
+  extras = true;
+  const counter = (code) => `${new Intl.NumberFormat(code).format(21)}<!-- -->/<!-- -->${new Intl.NumberFormat(code).format(4000)}`;
+  const englishExtras = ['Check yourself', 'These are not marked', '>Check<', '>True<', '>False<', '>Your answer<', 'Untitled question', 'aria-label="Your private study tools"', 'Your study tools', '>Bookmark lesson<', '>Private lesson note<', 'placeholder="Save a thought or reminder for yourself…"', '>Save note<', '>Clear note<', 'Notes and bookmarks are private to your account.'];
+  {
+    const body = visible(await (await request({ cookie })).text());
+    for (const text of [...englishExtras, 'Synthetic practice', 'Synthetic instructions.', '<bdi>Synthetic choice question</bdi>', '<span dir="auto">Synthetic first choice</span>', 'Synthetic saved note.', counter('en')]) assert.ok(body.includes(text), `English: ${text}`);
+    assert.equal(body.includes('lang="en"'), false);
+    assert.equal(body.split('>Check<').length - 1, 3, 'one Check button for each of three questions');
+  }
+  {
+    const body = visible(await (await request({ cookie, 'accept-language': 'ar' })).text());
+    for (const text of ['اختبر نفسك', 'هذه الأسئلة لا تُصحَّح', '>تحقّق<', '>صواب<', '>خطأ<', '>إجابتك<', 'سؤال بلا عنوان', 'أدوات دراستك', '>أضف الدرس إلى الإشارات المرجعية<', '>ملاحظة خاصة على الدرس<', 'placeholder="احفظ فكرة أو تذكيرًا لنفسك…"', '>حفظ الملاحظة<', '>مسح الملاحظة<', 'الملاحظات والإشارات المرجعية خاصة بحسابك.']) assert.ok(body.includes(text), `Arabic: ${text}`);
+    for (const text of englishExtras) assert.equal(body.includes(text), false, `Arabic lesson still says "${text}"`);
+    // What the teacher and the learner wrote is as they wrote it.
+    for (const text of ['Synthetic practice', 'Synthetic instructions.', '<bdi>Synthetic choice question</bdi>', 'Synthetic saved note.']) assert.ok(body.includes(text), `Arabic: ${text}`);
+    // The question numbers and the counter are written the reader's way.
+    assert.ok(body.includes(counter('ar')), `Arabic: the counter is not ${counter('ar')}`);
+    assert.ok(body.includes(`${new Intl.NumberFormat('ar').format(3)}<!-- -->. `), 'Arabic: the third question is not numbered the reader\u2019s way');
+    // Neither part is marked as English any more: the player's row is the only one.
+    assert.equal(body.split('lang="en" dir="ltr"').length - 1, 1);
+  }
+  {
+    const body = visible(await (await request({ cookie: `${cookie}; ayahspring_locale=fr`, 'accept-language': 'ar' })).text());
+    for (const text of ['Testez-vous', '>Vérifier<', '>Vrai<', '>Faux<', 'Vos outils d’étude', '>Ajouter la leçon aux favoris<', '>Enregistrer la note<', '>Effacer la note<']) assert.ok(body.includes(text) || body.includes(text.replace('’', '&#x27;')), `French: ${text}`);
+  }
+  {
+    // A held language reads both in English, inside its English lesson.
+    const body = visible(await (await request({ cookie, 'accept-language': 'ha' })).text());
+    for (const text of englishExtras) assert.ok(body.includes(text), `ha: ${text}`);
+    assert.ok(body.includes(counter('en')));
+  }
+  extras = false;
   {
     const html = await (await request({ cookie, 'accept-language': 'wo, fr' })).text();
     assert.match(html, /<html[^>]*lang="en"/); assert.ok(visible(html).includes('>Materials<')); assert.equal(visible(html).includes('Supports'), false);
   }
-  console.log('Lesson languages passed: English, Arabic (frame, report link and the notes about a recording that cannot play translated, player marked English), French by cookie, Hausa and Pashto frames with an English lesson, Wolof to English. No translation here has been read by a speaker.');
+  console.log('Lesson languages passed: English, Arabic (frame, report link, the notes about a recording that cannot play, practice questions and study tools translated, player marked English), French by cookie, Hausa and Pashto frames with an English lesson, Wolof to English. No translation here has been read by a speaker.');
   if (process.env.RESPONSIVE_PLAYWRIGHT && process.env.RESPONSIVE_CHROME) {
     const { chromium } = await import(pathToFileURL(process.env.RESPONSIVE_PLAYWRIGHT).href);
     browser = await chromium.launch({ executablePath: process.env.RESPONSIVE_CHROME, headless: true, args: ['--no-sandbox'] });
@@ -242,7 +287,9 @@ try {
       console.log(`Synthetic lesson ${width}: no overflow, full-width layout, video fits`);
       await context.close();
     }
-    // The translated frame in the other direction and with the longest words.
+    // The translated frame in the other direction and with the longest words,
+    // with practice questions and the study tools on the page.
+    extras = true;
     for (const [code, dir] of [['ar', 'rtl'], ['ta', 'ltr']]) {
       for (const width of [320, 390, 1440]) {
         const context = await browser.newContext({ viewport: { width, height: 900 }, locale: 'en' });
@@ -304,11 +351,65 @@ try {
         assert.equal(await section.locator('textarea').getAttribute('dir'), 'auto');
         await section.locator('.btn.ghost').click();
         assert.equal(await section.locator('button.linklike').count(), 1, `${code} ${width}: Cancel after a refusal does not bring the link back`);
+        // Practice questions: a wrong answer, a refusal and a reply that never
+        // came are each answered in the reader's language, and the button is
+        // not left busy.
+        const practice = page.locator('.lesson-page section.card:has(input[name^="practice-"])');
+        const checkButton = practice.locator('button.btn').first();
+        const english = /SERVER ENGLISH|Not quite|Try again|could not be checked|Sign in|could not confirm|Note saved|bookmarked/u;
+        await page.route('**/api/learn/check', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, correct: false, explanation: null }) }));
+        await practice.locator('input[type="radio"]').nth(0).check();
+        await checkButton.click();
+        await practice.locator('.notice.warn').waitFor();
+        const wrong = (await practice.locator('.notice.warn').textContent()).trim();
+        assert.ok(wrong.length > 0 && !english.test(wrong), `${code} ${width}: a wrong practice answer is answered "${wrong}"`);
+        await page.unroute('**/api/learn/check');
+        const unchecked = [];
+        for (const reply of ['refused', 'lost']) {
+          await page.route('**/api/learn/check', (route) => (reply === 'lost' ? route.abort() : route.fulfill({ status: 403, contentType: 'application/json', body: JSON.stringify({ ok: false, message: 'SERVER ENGLISH SENTENCE' }) })));
+          await practice.locator('input[type="radio"]').nth(reply === 'lost' ? 0 : 1).check();
+          const answered = reply === 'lost' ? page.waitForEvent('requestfailed', (request) => request.url().endsWith('/api/learn/check')) : page.waitForResponse('**/api/learn/check');
+          await checkButton.click();
+          await answered;
+          await practice.locator('.notice.error').waitFor();
+          unchecked.push((await practice.locator('.notice.error').textContent()).trim());
+          await page.unroute('**/api/learn/check');
+        }
+        assert.ok(unchecked.every((text) => text.length > 0 && !english.test(text)), `${code} ${width}: a check that failed is answered ${JSON.stringify(unchecked)}`);
+        assert.equal(await checkButton.isEnabled(), true, `${code} ${width}: the Check button is left busy after a reply that never came`);
+        // The study tools: a session that ended and any other refusal say
+        // different things, neither of them the server's; a note that saves
+        // says so; the counter is in the reader's digits.
+        const tools = page.locator('.lesson-page section.card:has(#lesson-note)');
+        const refusals = [];
+        for (const status of [401, 409]) {
+          await page.route('**/api/lesson-study-tools', (route) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify({ error: 'SERVER ENGLISH SENTENCE' }) }));
+          const answered = page.waitForResponse('**/api/lesson-study-tools');
+          await tools.locator('button.btn.secondary').click();
+          await answered;
+          await tools.locator('p.danger').waitFor();
+          refusals.push((await tools.locator('p.danger').textContent()).trim());
+          await page.unroute('**/api/lesson-study-tools');
+        }
+        assert.ok(refusals.every((text) => text.length > 0 && !english.test(text)), `${code} ${width}: a study-tools refusal is answered ${JSON.stringify(refusals)}`);
+        assert.notEqual(refusals[0], refusals[1], `${code} ${width}: a session that ended and another refusal say the same thing`);
+        await page.route('**/api/lesson-study-tools', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' }));
+        await tools.locator('#lesson-note').fill('Synthetic note.');
+        const digits = (value) => new Intl.NumberFormat(code).format(value);
+        assert.ok((await tools.textContent()).includes(`${digits(15)}/${digits(4000)}`), `${code} ${width}: the counter is not ${digits(15)}/${digits(4000)}`);
+        await tools.locator('button.btn:not(.secondary):not(.ghost)').click();
+        await tools.locator('p.notice').waitFor();
+        const kept = (await tools.locator('p.notice').textContent()).trim();
+        assert.ok(kept.length > 0 && !english.test(kept), `${code} ${width}: a saved note is answered "${kept}"`);
+        assert.equal(await tools.locator('#lesson-note').getAttribute('dir'), 'auto');
+        await page.unroute('**/api/lesson-study-tools');
+        assert.ok(await page.evaluate(() => document.documentElement.scrollWidth) <= width + 1, `${code} ${width}: the page overflows after the study tools answered`);
         if (process.env.RESPONSIVE_SCREENSHOTS) await page.screenshot({ path: resolve(process.env.RESPONSIVE_SCREENSHOTS, `lesson-${code}-${width}.png`), fullPage: true });
         await context.close();
       }
-      console.log(`Synthetic lesson ${code}: 320, 390 and 1440 wide, no overflow, no clipped label, English parts left to right, arrows ${dir === 'rtl' ? 'turned round' : 'as typed'}`);
+      console.log(`Synthetic lesson ${code}: 320, 390 and 1440 wide, no overflow, no clipped label, English parts left to right, arrows ${dir === 'rtl' ? 'turned round' : 'as typed'}; practice questions and study tools answer a refusal and a lost reply in ${code}`);
     }
+    extras = false;
   }
 } catch (e) { console.error(logs); throw e; }
 finally {
