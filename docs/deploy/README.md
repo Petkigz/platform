@@ -396,7 +396,7 @@ project. Review the exact commit before approving it.
 
 #### The ten after the first 342 — approved 2026-11-17
 
-**Status: prepared; not yet run.**
+**Status: requested on 2026-11-17; waiting for the owner's approval in GitHub. Not yet run.**
 
 The owner approved 1440 and 1450 for the test project. They cannot be applied
 alone: the grants migration names functions that 1360 and 1380 create, and the
