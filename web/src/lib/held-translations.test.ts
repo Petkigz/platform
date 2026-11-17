@@ -32,6 +32,7 @@ import { LEARN } from './i18n/messages/learn.ts';
 import { COURSE } from './i18n/messages/course.ts';
 import { ASSESS } from './i18n/messages/assess.ts';
 import { ASSIGN } from './i18n/messages/assign.ts';
+import { MISSING } from './i18n/messages/missing.ts';
 import { LESSON } from './i18n/messages/lesson.ts';
 import { auditAll } from './translation-audit.ts';
 import { SECTIONS } from './translations.ts';
@@ -402,26 +403,29 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // Owner's decision, 2026-11-16: a language the builder cannot write properly
   // falls back to English until a speaker has reviewed it. For a new screen
   // that means not writing it — a held draft would be the same guess, kept.
-  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign']);
+  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign', 'missing']);
   // Thirty-seven for the dashboard (the learner-profile prompt is seven of
   // them), twenty-eight for the course page (twelve are the list of dated
   // classes), twenty-two for the lesson's frame,
   // forty for the assessment page, its quiz and the assessment list on the
   // course page, and a hundred and seven for the assignment page and the
-  // assignment list, of which forty-seven are the files part.
-  assert.equal(unwrittenKeys.length, 255);
+  // assignment list, of which forty-seven are the files part, and seven for
+  // the page for an address with nothing at it.
+  assert.equal(unwrittenKeys.length, 262);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('missing.')).length, 7);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('assign.')).length, 107);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('learn.')).length, 37);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('course.')).length, 28);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('lesson.')).length, 43);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('assess.')).length, 40);
 
-  // Five files, one rule: the same languages in each.
+  // Six files, one rule: the same languages in each.
   const written = Object.keys(LEARN).sort();
   assert.deepEqual(Object.keys(COURSE).sort(), written);
   assert.deepEqual(Object.keys(LESSON).sort(), written);
   assert.deepEqual(Object.keys(ASSESS).sort(), written);
   assert.deepEqual(Object.keys(ASSIGN).sort(), written);
+  assert.deepEqual(Object.keys(MISSING).sort(), written);
   const expected = LOCALES.map((l) => l.code)
     .filter((code) => code !== 'en' && !Object.hasOwn(HELD_FOR_REVIEW, code))
     .sort();
@@ -430,7 +434,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
 
   for (const code of expected) {
     const own: Partial<Record<string, string>> = {
-      ...LEARN[code], ...COURSE[code], ...LESSON[code], ...ASSESS[code], ...ASSIGN[code],
+      ...LEARN[code], ...COURSE[code], ...LESSON[code], ...ASSESS[code], ...ASSIGN[code], ...MISSING[code],
     };
     assert.deepEqual(Object.keys(own).sort(), [...unwrittenKeys].sort(), `${code} is short a dashboard, course, lesson, assessment or assignment sentence`);
     for (const key of unwrittenKeys) {
@@ -448,6 +452,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     assert.equal(languageShownFor(code, 'lesson').code, code);
     assert.equal(languageShownFor(code, 'assess').code, code);
     assert.equal(languageShownFor(code, 'assign').code, code);
+    assert.equal(languageShownFor(code, 'missing').code, code);
     assert.equal(coverageOf(code).percent, 100);
   }
 
@@ -465,7 +470,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     }
   }
   // What that costs the nineteen that are still in the picker, said out loud:
-  // 192 of 527 sentences, which is 36%. Nothing holds a floor under
+  // 192 of 534 sentences, which is 36%. Nothing holds a floor under
   // it any more: the owner chose on 2026-11-17 to keep these languages in the
   // picker and show the number. The count is pinned here so that it moves only
   // when somebody means it to, and is seen when it does. It moved from 55% to
@@ -474,11 +479,12 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // on a page they already saw in English. It moved from 43% to 39% when the
   // files part of that page and the assessment list were written, fifty
   // more, to 38% with the list of dated classes, twelve more, and to 36% with
-  // the report form on the lesson page, twenty-one more. What they are shown
-  // did not get smaller; what is counted got bigger.
+  // the report form on the lesson page, twenty-one more. The page for a wrong
+  // address added seven and the rounded number did not move (35.96%). What
+  // they are shown did not get smaller; what is counted got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 527);
+    assert.equal(coverageOf(code).total, 534);
     assert.equal(coverageOf(code).percent, 36, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');
@@ -877,4 +883,41 @@ test('the assignment page is translated, and a refusal is said in the reader\'s 
   // The teacher's screens use the same component for earlier versions and
   // pass no words; it then says the English it always said.
   assert.match(revisions, /words = ENGLISH,/u);
+});
+
+test('the page for a wrong address is in the reader’s language, and English as a whole otherwise', () => {
+  const page = read('../app/not-found.tsx');
+  assert.match(page, /const shown = languageShownFor\(locale, 'missing'\);/u);
+  assert.match(page, /translator\(shown\.code\)/u);
+  // English inside another language's frame is marked, on the one wrapper.
+  assert.match(page, /shown\.code === locale \? \{\} : \(\{ lang: shown\.code, dir: shown\.dir \} as const\)/u);
+  assert.match(page, /<div className="container section" \{\.\.\.wrapper\}>/u);
+  // Its title is the reader's too.
+  assert.match(page, /export async function generateMetadata\(\)/u);
+  assert.doesNotMatch(page, /export const metadata/u);
+
+  // Every sentence of the part is on the page, and nothing is typed into it.
+  const keys = allKeys.filter((key) => key.startsWith('missing.'));
+  assert.equal(keys.length, 7);
+  for (const key of keys) assert.ok(page.includes(`t('${key}')`), `${key} is not used by the page`);
+  const body = page.slice(page.indexOf('export default async function NotFound'));
+  for (const typed of body.matchAll(/>\s*([A-Z][a-z]+(?: [a-z]+)+)[^<{]*</gu)) assert.fail(`the page still types "${typed[1]}"`);
+
+  // The two names it borrows are ones every offered language has, so the
+  // learning page and the catalogue are not called by a second name.
+  assert.ok(page.includes("t('nav.learn')") && page.includes("t('home.browse')"));
+  for (const code of Object.keys(MISSING)) {
+    const t = translator(code as LocaleCode);
+    assert.notEqual(t('nav.learn'), en['nav.learn'], code);
+    // The long sentence names the learning page exactly once, and not at its
+    // very start: the page splits on it.
+    const lede = t('missing.lede');
+    assert.equal(lede.split('{learn}').length, 2, `${code}: {learn}`);
+    assert.ok(lede.indexOf('{learn}') > 0, `${code}: the sentence starts with the link`);
+    // The product's name is written the way it is everywhere.
+    assert.ok(t('missing.fault').includes('AyahSpring'), code);
+  }
+  // A held language reads the whole page in English, borrowed names included.
+  assert.equal(languageShownFor('ha', 'missing').code, 'en');
+  assert.equal(languageShownFor('ps', 'missing').dir, 'ltr');
 });

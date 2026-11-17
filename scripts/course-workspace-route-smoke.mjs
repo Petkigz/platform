@@ -99,8 +99,9 @@ try {
   // this screen and in English, marked as English, where it does not.
   const workspace = (html) => html.match(/<div class="container section course-workspace"[^>]*>/)?.[0] ?? '';
   // What the reader is shown of this page: from its wrapper to the footer. The
-  // response also carries the 404 page as a boundary, which is still English
-  // and is not this page's to answer for.
+  // response also carries the 404 page as a boundary, which has its own
+  // language rule (`redirect-route-smoke.mjs`) and is not this page's to
+  // answer for.
   const visible = (html) => html.slice(html.indexOf('course-workspace'), html.indexOf('<footer'));
   available = true; progressOn = true; blocking = ['Synthetic reason from the database'];
   {

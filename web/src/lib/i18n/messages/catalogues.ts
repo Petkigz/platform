@@ -20,6 +20,7 @@ import { LEARN } from './learn.ts';
 import { COURSE } from './course.ts';
 import { ASSESS } from './assess.ts';
 import { ASSIGN } from './assign.ts';
+import { MISSING } from './missing.ts';
 import { LESSON } from './lesson.ts';
 import { isHeld } from './held.ts';
 import { ASIA_AZ } from './asia-az.ts';
@@ -803,6 +804,8 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   ASSESS,
   // The assignment page and the assignment list, on the same rule.
   ASSIGN,
+  // The page for an address with nothing at it, on the same rule.
+  MISSING,
 );
 
 /**

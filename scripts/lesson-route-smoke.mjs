@@ -106,7 +106,8 @@ try {
   // The page's frame, in the reader's language where that language has it and
   // in English, marked as English, where it does not. What the reader is shown
   // of this page runs from its wrapper to the footer; the response also
-  // carries the 404 page as a boundary, which is English and not this page's.
+  // carries the 404 page as a boundary, which has its own language rule
+  // (`redirect-route-smoke.mjs`) and is not this page's.
   const visible = (html) => html.slice(html.indexOf('lesson-page'), html.indexOf('<footer')).replace(/<script[\s\S]*?<\/script>/g, '');
   const wrapper = (html) => html.match(/<div class="page lesson-page"[^>]*>/)?.[0] ?? '';
   entitled = true; mismatch = false;

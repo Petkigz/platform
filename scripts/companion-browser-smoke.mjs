@@ -478,8 +478,8 @@ try {
     await reader.page.goto(`${origin}/language`, { waitUntil: 'networkidle' });
     assert.equal(await reader.page.evaluate(() => document.documentElement.lang), 'ha');
     const settings = await reader.page.locator('body').textContent();
-    // 192 of 527: the 80 companion lines are held, and the 255 dashboard,
-    // course, lesson, assessment and assignment lines were never written for
+    // 192 of 534: the 80 companion lines are held, and the 262 dashboard,
+    // course, lesson, assessment, assignment and wrong-address lines were never written for
     // a held language (`UNWRITTEN_WHILE_HELD`).
     assert.ok(settings.includes('36%'), 'the language page does not show the lower number');
     assert.ok(!settings.includes('36% of these interface strings'), 'the coverage sentence is in English for a Hausa reader');

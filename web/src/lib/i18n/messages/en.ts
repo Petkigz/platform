@@ -684,6 +684,21 @@ export const en = {
     'A file can only be added while this work is a draft and the assignment is open. Refresh the page to see where it stands.',
   'assign.fileErrDifferent':
     'That is not the file that is waiting. Choose the same file again; a different one cannot be sent in its place.',
+
+  // The page for an address with nothing at it (`app/not-found.tsx`). Two
+  // people arrive there: one mistyped, one followed a link to a course that
+  // has been retired and has made no mistake. `{learn}` is the name of the
+  // learning page, a link, taken from the navigation.
+  'missing.title': 'Not found',
+  'missing.heading': 'That page is not here',
+  'missing.lede':
+    'Either the address is slightly wrong, or what used to be here has been retired. Courses are retired when a teacher stops teaching them, and a retired course stays readable to the people already enrolled in it through {learn}.',
+  'missing.home': 'Home',
+  'missing.help': 'Ask for help',
+  'missing.fault':
+    'If you followed a link from inside AyahSpring and landed here, that is a fault on our side, and we will fix the link.',
+  // A link, on its own after the sentence above.
+  'missing.tell': 'Tell us where the link was',
 } as const;
 
 export type MessageKey = keyof typeof en;

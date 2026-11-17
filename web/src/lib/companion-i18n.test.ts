@@ -113,14 +113,14 @@ test('no other page pays for the companion sentences', () => {
     assert.equal(Object.keys(shell).some((k) => k.startsWith('companion.')), false, `${locale.code} shell carries companion sentences`);
     assert.equal(Object.keys(companion).every((k) => k.startsWith('companion.')), true);
     // Nothing is lost between the halves. The third is the learner dashboard,
-    // the course page, the lesson page's frame, the assessment page and the
-    // assignment page, which are rendered on the server and so are in neither (see
+    // the course page, the lesson page's frame, the assessment page, the
+    // assignment page and the page for a wrong address, which are rendered on the server and so are in neither (see
     // `SERVER_ONLY_PREFIXES`).
     const whole = messagesFor(locale.code);
     const onServer = (k: string) =>
-      ['learn.', 'course.', 'lesson.', 'assess.', 'assign.'].some((prefix) => k.startsWith(prefix));
+      ['learn.', 'course.', 'lesson.', 'assess.', 'assign.', 'missing.'].some((prefix) => k.startsWith(prefix));
     const serverOnly = Object.fromEntries(Object.entries(whole).filter(([k]) => onServer(k)));
-    assert.equal(Object.keys(serverOnly).length, 255);
+    assert.equal(Object.keys(serverOnly).length, 262);
     assert.equal(Object.keys(shell).some(onServer), false, `${locale.code} shell carries dashboard, course, lesson or assessment sentences`);
     assert.deepEqual({ ...shell, ...companion, ...serverOnly }, whole);
   }

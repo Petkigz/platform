@@ -7952,14 +7952,15 @@ owner chose the first.
   falling: 55% on the day of the decision, 50% since the assessment page, 43%
   since the assignment page, 39% since the files part of that page and the
   assessment list, 38% since the list of dated classes, 36% since the report
-  form on the lesson page.
+  form on the lesson page (and still 36%, rounded, with the page for a wrong
+  address).
 - **The test that refused a language under half is removed.** Nothing in the
   tests now limits how much English one of these languages shows. That is the
   cost of this choice and it was put to the owner in those words.
 - What the tests still require of every offered language: every sentence that
   is neither held nor deliberately unwritten is present, and the sentence
   that gives the percentage is in that language rather than English. The
-  count (192 of 527; it was 192 of 347 when this was decided) is pinned in
+  count (192 of 534; it was 192 of 347 when this was decided) is pinned in
   `held-translations.test.ts`, so it changes only on purpose.
 - The four withheld languages are unaffected. So is the rule that a new screen
   is not written for a language with anything held.
@@ -8046,9 +8047,11 @@ course page followed: forty-seven sentences in `assign.ts` and three in
 `assess.ts`, the same twenty-seven languages, 39% for the nineteen. The list
 of dated classes on the course page followed: twelve sentences in `course.ts`,
 38% for the nineteen. The report form at the foot of the lesson followed:
-twenty-one sentences in `lesson.ts`, 36% for the nineteen.
-`UNWRITTEN_WHILE_HELD` is now `learn`, `course`, `lesson`, `assess`
-and `assign`.
+twenty-one sentences in `lesson.ts`, 36% for the nineteen. The page for an
+address with nothing at it followed: seven sentences in a new part,
+`missing.ts`, and the nineteen still read 36% (35.96, rounded).
+`UNWRITTEN_WHILE_HELD` is now `learn`, `course`, `lesson`, `assess`,
+`assign` and `missing`.
 
 **The rule going forward.** A part named in `UNWRITTEN_WHILE_HELD`
 (`web/src/lib/i18n/messages/held.ts`) may be absent from a language that has

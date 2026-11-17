@@ -59,7 +59,8 @@ const COMPANION_PREFIX = 'companion.';
  * Sentences only a server-rendered page reads.
  *
  * The learner dashboard, the course page, the lesson page's frame, the
- * assessment page and the assignment page are Server Components: their words
+ * assessment page, the assignment page and the page for a wrong address are
+ * Server Components: their words
  * are in the HTML by the time a browser sees it, and no client component asks
  * for one. A hundred and seventy-two sentences in the catalogue every page carries would be paid for by
  * every reader of the front page and used by none of them. The client controls
@@ -69,7 +70,7 @@ const COMPANION_PREFIX = 'companion.';
  * sent — so a test forbids it; the other fix is to take the prefix out of this
  * list.
  */
-const SERVER_ONLY_PREFIXES: readonly string[] = ['learn.', 'course.', 'lesson.', 'assess.', 'assign.'];
+const SERVER_ONLY_PREFIXES: readonly string[] = ['learn.', 'course.', 'lesson.', 'assess.', 'assign.', 'missing.'];
 
 /** Everything a client component outside the companion pages can ask for. */
 export function shellMessagesFor(code: LocaleCode): Partial<Messages> {

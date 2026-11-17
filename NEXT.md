@@ -2618,6 +2618,41 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The page for a wrong address, 2026-11-17
+
+The 404 was typed in English into its file. Two people reach it: one who
+mistyped, and one who followed a link to a course that has been withdrawn.
+The second is told there that the course they enrolled in is still theirs to
+read, and was told it in English whatever their menu was in.
+
+- *Translated.* Seven sentences in a new part, `missing.ts`, in the
+  twenty-seven languages with nothing held. **Unreviewed.** The name of the
+  learning page inside the long sentence and the first button are the
+  navigation's and the front page's own words, so nothing is called by a
+  second name. The browser tab's title is translated as well.
+- *Held languages.* The whole page in English, marked as English, inside
+  their own menu. `/language` still tells each of the nineteen **36%**: 192 of
+  534 is 35.96%, and the page rounds. One more screen moves it to 35%.
+- *A sixth unwritten part.* `UNWRITTEN_WHILE_HELD` gained `missing`, and the
+  correction sheet at `/contribute` gained a part for it, so the number of
+  parts a reviewer signs off rose by one. A language whose every part had
+  been read would now have one unread. Nobody has published a read of any
+  part, so nothing changed for anybody.
+- *One sentence changed in English.* "…that is a fault on our side — tell us
+  where it was and we will fix the link" had its link in the middle of the
+  sentence, which cannot be kept in the middle in every language. It is now
+  the sentence, then the link: "Tell us where the link was".
+- *Sent with every page.* Next sends the 404 inside every page as the thing
+  to show if that page turns out not to exist, so it now reads the cookie and
+  the device's language on every request. The layout already reads both.
+- *Still English for everybody:* the page for something that broke
+  (`error.tsx`, `global-error.tsx`). They are client components and run when
+  the catalogue itself may be what failed.
+- *Checked* over HTTP against the development server with no backend:
+  English, Arabic, French by cookie over an Arabic device, Chinese, Hausa and
+  Pashto (English, marked), Wolof (English). **Not checked** in a browser at
+  any width; the page is a heading, a paragraph and three buttons.
+
 ### The report form at the foot of the lesson, 2026-11-17
 
 "Report a problem" is how a learner tells a person that a lesson teaches

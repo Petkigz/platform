@@ -529,12 +529,13 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 36% there (192 of 527 sentences; it was 71% of 272, then
+  the nineteen reads 36% there (192 of 534 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
   39% of 494 with its files part and the assessment list, 38% of 506 with the
-  list of dated classes, then this with the report form on the lesson),
+  list of dated classes, 36% of 527 with the report form on the lesson, then
+  this with the page for a wrong address),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -645,7 +646,9 @@ written: not a held draft, nothing.
   English: the reasons a course is not yet complete (the database writes them
   in `evaluate_completion`), and the assessment, assignment and cohort lists.
   Titles a teacher wrote are shown as written. The assessment and assignment
-  pages are not translated; the 404 page is English too.
+  pages are not translated; the 404 page is English too. *(Since then the
+  three lists, both pages and, on 2026-11-17, the 404 page have been written;
+  the reasons a course is not complete are still English.)*
 - *The lesson page (2026-11-17).* Same twenty-seven languages, twenty-two
   sentences: breadcrumb, state badges, headings, the kind of each material,
   the no-access sentence, mark complete, back to course, the previous/next

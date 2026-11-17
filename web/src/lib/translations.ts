@@ -280,6 +280,7 @@ const SECTION_LABELS: Record<string, string> = {
   lesson: 'The lesson page',
   assess: 'Assessments and quizzes',
   assign: 'Assignments',
+  missing: 'The page for a wrong address',
 };
 
 export const SECTIONS: Section[] = (() => {
