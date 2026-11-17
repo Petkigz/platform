@@ -8059,6 +8059,24 @@ before on the page they land on after signing in, inside navigation in their own
 language, and will until a first-language speaker writes it. None has been
 found. The twenty-seven that were written are unreviewed like everything else.
 
+## The test project gets its database ahead of its application — **DECIDED 2026-11-17**
+
+Asked three times whether to apply the grants migration (1440) and the
+answer-sheet migration (1450) to the hosted test project, the owner answered
+"now". They cannot go alone: 1440 grants by name on functions that the resume
+migrations create, and the CLI applies in order. Asked which, the owner chose
+**all ten, in order** (1360–1450), over holding all ten for the resume rollout.
+
+What that accepts: the test project's database will be ahead of any build
+deployed against it until the matching application is published. An older
+build saving a resume position, or writing an answer row directly, is refused.
+Nobody uses the project; it has no Auth user and no learner, and the job that
+applies the ten refuses to start if that has stopped being true.
+
+What it does not change: `docs/deploy/resume-rollout.md` remains the plan for
+a project with people in it, the application is still not deployed, and every
+flag stays off.
+
 ## Learners do not write to the answer sheet — **DECIDED 2026-11-17**
 
 Not an owner's choice between options; a rule the software now keeps, written

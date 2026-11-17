@@ -20,7 +20,7 @@
 //
 // It also asserts three things about the result that hold on either database:
 // neither role holds a privilege on a sequence; neither holds TRUNCATE,
-// REFERENCES or TRIGGER on a table; `anon` cannot UPDATE or DELETE anything.
+// REFERENCES, TRIGGER or (PostgreSQL 17) MAINTAIN on a table; `anon` cannot UPDATE or DELETE anything.
 //
 // What it does not prove: that the hosted project's defaults are still the
 // ones copied into the harness (they were read on 2026-11-17), or anything
@@ -29,6 +29,7 @@
 // Run from the repository root: node scripts/platform-grants-check.mjs
 
 import { PGlite } from '@electric-sql/pglite';
+import { PRIVILEGES } from './api-role-privileges.mjs';
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -49,36 +50,6 @@ for (const kind of ['tables', 'sequences', 'functions']) {
     process.exit(1);
   }
 }
-
-const PRIVILEGES = `
-select 'function|' || r.rolname || '|' || p.oid::regprocedure::text as line
-  from pg_proc p join pg_namespace n on n.oid = p.pronamespace,
-       (select rolname from pg_roles where rolname in ('anon', 'authenticated')) r
- where n.nspname = 'public' and has_function_privilege(r.rolname, p.oid, 'execute')
-union all
-select 'table|' || r.rolname || '|' || c.relname || '|' || priv
-  from pg_class c join pg_namespace n on n.oid = c.relnamespace,
-       (select rolname from pg_roles where rolname in ('anon', 'authenticated')) r,
-       unnest(array['select','insert','update','delete','truncate','references','trigger']) priv
- where n.nspname = 'public' and c.relkind in ('r','p','v','m')
-   and has_table_privilege(r.rolname, c.oid, priv)
-union all
-select 'column|' || r.rolname || '|' || c.relname || '.' || a.attname || '|' || priv
-  from pg_class c join pg_namespace n on n.oid = c.relnamespace
-       join pg_attribute a on a.attrelid = c.oid and a.attnum > 0 and not a.attisdropped,
-       (select rolname from pg_roles where rolname in ('anon', 'authenticated')) r,
-       unnest(array['select','insert','update','references']) priv
- where n.nspname = 'public' and c.relkind in ('r','p','v','m')
-   and has_column_privilege(r.rolname, c.oid, a.attnum, priv)
-   and not has_table_privilege(r.rolname, c.oid, priv)
-union all
-select 'sequence|' || r.rolname || '|' || c.relname || '|' || priv
-  from pg_class c join pg_namespace n on n.oid = c.relnamespace,
-       (select rolname from pg_roles where rolname in ('anon', 'authenticated')) r,
-       unnest(array['usage','select','update']) priv
- where n.nspname = 'public' and c.relkind = 'S'
-   and has_sequence_privilege(r.rolname, c.oid, priv)
-order by 1`;
 
 // What the next migration's objects would receive.
 const PROBE = `
@@ -145,8 +116,8 @@ for (const [label, got] of [['without the platform defaults', without.probe], ['
 for (const [label, lines] of [['without the platform defaults', without.privileges], ['with the platform defaults', withDefaults.privileges]]) {
   const sequences = lines.filter((l) => l.startsWith('sequence|'));
   if (sequences.length) problems.push(`${label}: an API role holds a sequence privilege:\n    ` + sequences.slice(0, 20).join('\n    '));
-  const structural = lines.filter((l) => /^table\|[^|]+\|[^|]+\|(truncate|references|trigger)$/.test(l));
-  if (structural.length) problems.push(`${label}: an API role may TRUNCATE, REFERENCE or put a TRIGGER on a table:\n    ` + structural.slice(0, 20).join('\n    '));
+  const structural = lines.filter((l) => /^table\|[^|]+\|[^|]+\|(truncate|references|trigger|maintain)$/.test(l));
+  if (structural.length) problems.push(`${label}: an API role may TRUNCATE, REFERENCE, MAINTAIN or put a TRIGGER on a table:\n    ` + structural.slice(0, 20).join('\n    '));
   const anonWrites = lines.filter((l) => /^(table|column)\|anon\|[^|]+\|(update|delete)$/.test(l));
   if (anonWrites.length) problems.push(`${label}: somebody not signed in may UPDATE or DELETE:\n    ` + anonWrites.slice(0, 20).join('\n    '));
 }

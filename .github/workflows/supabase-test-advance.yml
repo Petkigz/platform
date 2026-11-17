@@ -1,0 +1,49 @@
+# The ten migrations after the first 342, on the AyahSpring test project only.
+# Approved by the owner on 2026-11-17 ("apply all ten, in order"). One-time:
+# scripts/hosted-migration-advance.mjs refuses unless the hosted history is
+# exactly the 342 of the first day and the local files are exactly the reviewed
+# 352. The environment requires the owner's approval before the job, and so
+# before any secret, is released.
+name: Advance Supabase test migrations to 352
+on:
+  push:
+    branches:
+      - arena/4f30fd1d-platform
+permissions:
+  contents: read
+concurrency:
+  group: ayahspring-supabase-test-migrations
+  cancel-in-progress: false
+jobs:
+  advance:
+    if: >-
+      github.repository == 'Petkigz/platform' && github.ref == 'refs/heads/arena/4f30fd1d-platform' && startsWith(github.event.head_commit.message, 'test: advance ayahspring test migrations')
+    runs-on: ubuntu-latest
+    environment: ayahspring-test-migration-apply
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: '22.22.3'
+      # Everything below this comment and above the last step runs without the
+      # database secret.
+      - name: Install reviewed dependencies and CLI
+        run: |
+          npm ci --no-audit --no-fund
+          npm install --prefix "$RUNNER_TEMP/ayahspring-cli" --no-save --no-audit --no-fund supabase@3.1.0
+          test "$("$RUNNER_TEMP/ayahspring-cli/node_modules/.bin/supabase" --version)" = '3.1.0'
+      - name: The plan, against the real migrations in a local engine
+        run: node --test scripts/hosted-migration-advance.test.mjs
+      - name: What the tested database gives anon and authenticated
+        run: node scripts/api-role-privileges.mjs --write "$RUNNER_TEMP/expected-privileges.json"
+      - name: Check, rehearse on the test project, apply the ten, compare
+        run: node scripts/hosted-migration-advance.mjs
+        env:
+          SUPABASE_CLI_BIN: ${{ runner.temp }}/ayahspring-cli/node_modules/.bin/supabase
+          AYAHSPRING_EXPECTED_PRIVILEGES: ${{ runner.temp }}/expected-privileges.json
+          AYAHSPRING_TEST_DATABASE_URL: ${{ secrets.AYAHSPRING_TEST_DATABASE_URL }}
+          AYAHSPRING_TEST_DATABASE_PASSWORD: ${{ secrets.AYAHSPRING_TEST_DATABASE_PASSWORD }}
+          AYAHSPRING_TEST_APPLY_READY: ${{ vars.AYAHSPRING_TEST_APPLY_READY }}

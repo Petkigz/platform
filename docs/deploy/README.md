@@ -221,10 +221,13 @@ hosted apply succeeded, but does not verify real Auth requests or runtime
 behaviour. Do not assume that a dry run verifies trigger permissions.
 After a successful application, verify that the history contains every expected
 version, through `20261281145000_assessment_answer_integrity.sql`, as well as running
-the checks in section 2. The initial hosted apply stopped at 1350; 1360–1430
-are pending and require a reviewed, coordinated app/database rollout. 1440
-(`platform_default_grants`) and 1450 (`assessment_answer_integrity`) are also
-pending and are the two that matter most before any person is given an
+the checks in section 2. The initial hosted apply stopped at 1350. The ten
+after it (1360–1450) were approved for the test project on 2026-11-17 and go
+through their own one-time job; see "The ten after the first 342" below for
+whether it has run. On any other project 1360–1430 require a reviewed,
+coordinated app/database rollout. 1440
+(`platform_default_grants`) and 1450 (`assessment_answer_integrity`) are the
+two that matter most before any person is given an
 account: see "What the platform grants on its own" and "Who may write a mark"
 below. **1450 must be applied after 1440, never before:** 1440 takes every
 grant away and makes again the ones it lists, and it was written before 1450
@@ -390,6 +393,67 @@ the check. Before starting, keep other writers and Supabase automatic GitHub
 deploy/branching off. The GitHub concurrency group only serializes jobs using the
 same group, not other services. Never use this initial-only job on a populated
 project. Review the exact commit before approving it.
+
+#### The ten after the first 342 — approved 2026-11-17
+
+**Status: prepared; not yet run.**
+
+The owner approved 1440 and 1450 for the test project. They cannot be applied
+alone: the grants migration names functions that 1360 and 1380 create, and the
+CLI applies files in order. Asked, the owner chose **all ten, in order**
+(1360–1450), on a project that has no user and no row.
+
+`.github/workflows/supabase-test-advance.yml` runs
+`scripts/hosted-migration-advance.mjs` in the same protected environment as
+the first apply, so the job and its secrets wait for the owner's approval. It
+runs only for a commit whose message starts
+`test: advance ayahspring test migrations`. Approval there means **apply these
+ten to the test project**. Before applying, the job:
+
+1. checks the local files are the 342 of the first day, byte for byte,
+   followed by exactly the ten that were reviewed, byte for byte;
+2. checks the hosted history is exactly those 342, and that there is still no
+   Auth user and no learner;
+3. **rehearses on the hosted database itself**: all ten inside one transaction,
+   which is then rolled back. If any statement fails there, the job names the
+   file and the database's error code and applies nothing;
+4. reads, inside that transaction, every privilege `anon` and `authenticated`
+   would hold in `public`, and the defaults for the next object, and compares
+   them line by line with the database the suites run on (built in the job
+   from `supabase/tests/harness.sql` and the 352 files). Any difference is
+   listed by name and nothing is applied;
+5. checks nothing of the rehearsal is left;
+6. runs the CLI's own dry-run, which must name exactly the ten.
+
+Then the CLI applies them, and the job reads the history (352, in order) and
+repeats the comparison in step 4 on what is really there.
+
+What made step 4 worth trusting: before this was written, the hosted database
+at 342 and the tested database built to the same 342 were compared through the
+read-only connector. They agree hash for hash on every function, table, view,
+sequence and column name in `public` (2,761), on every privilege the two roles
+hold (3,067) and on the defaults for new objects (24). So the harness's copy
+of the platform's defaults is the platform's, as of that reading.
+
+What the job cannot do:
+
+- It cannot undo a migration the CLI has committed. The CLI commits file by
+  file; a failure at the seventh leaves six applied. The job says how many are
+  recorded and refuses to run again. Reconcile by hand.
+- The rehearsal runs the ten in one transaction and the CLI runs them in ten.
+  Something that only works one way would not be seen. None of the ten has a
+  statement that ends or escapes a transaction; the job checks that too.
+- Its checks and the CLI use separate sessions. Nothing stops another writer
+  between them. Nothing else should be writing.
+- It proves the history and the two roles' privileges. It proves nothing about
+  Auth, PostgREST, the application, or `supabase_admin`'s own defaults, which
+  still grant to the API roles for anything that role creates. No migration
+  runs as that role.
+- The application that matches 1360–1450 has **not** been deployed. Any older
+  build pointed at this project will be refused by the database when it saves
+  a resume position or writes an answer row directly. That is the intended
+  order for a project nobody uses and the wrong order for one somebody does;
+  `resume-rollout.md` is still the plan for the second kind.
 
 A local PostgreSQL 17.11 test with the test-only Auth harness exercised the
 actual orchestration, CLI dry run, application and matching history for the full

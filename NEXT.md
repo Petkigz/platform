@@ -2618,6 +2618,34 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The ten migrations after the first 342, for the test project, 2026-11-17
+
+The owner said to apply 1440 and 1450 to the hosted test project now, and then
+chose all ten (1360–1450) when told the two cannot go without the eight before
+them. **Prepared; not yet run.**
+
+- *The job.* `.github/workflows/supabase-test-advance.yml` and
+  `scripts/hosted-migration-advance.mjs`. One-time, pinned to the reviewed
+  bytes, in the environment that needs the owner's approval. It rehearses the
+  ten on the hosted database inside a transaction it rolls back, compares what
+  `anon` and `authenticated` would hold with the tested database line by line,
+  and only then lets the CLI apply. Afterwards it compares again.
+- *Measured first, read-only.* The hosted database at 342 and the tested
+  database built to 342 agree hash for hash: 2,761 names in `public`, 3,067
+  privileges for the two roles, 24 defaults. The harness's copy of the
+  platform's defaults was the platform's on that reading. Everything in
+  `public` on hosted is owned by `postgres`; PostgreSQL 17.11.
+- *Shared.* The privilege list moved to `scripts/api-role-privileges.mjs`, used
+  by the grants check and the hosted comparison. It now also looks for
+  MAINTAIN on PostgreSQL 17; nobody holds it.
+- *Tests.* Seven, against PGlite holding the real 342 and the real ten, with a
+  stand-in for the CLI: the happy path; a failing statement; privileges that
+  would differ; a dry-run naming other files; a project with a user; a history
+  of 345; a failure partway; a second run.
+- *Not proven by any of this.* The real CLI against the real pooler for these
+  ten (it did the first 342). Auth, PostgREST, the application. The
+  application matching these migrations is not deployed.
+
 ### The dated classes on the course page, 2026-11-17
 
 The list of classes a learner is in, with the way out of each, was the third
