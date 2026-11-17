@@ -108,7 +108,7 @@ async function prepare() {
     await db.query(`insert into public.assessment_questions (id, assessment_id, type, content, answer_key, points, position) values
       ($1, $3, 'true_false', '{"prompt":"Contract statement"}'::jsonb, '"true"'::jsonb, 1, 1),
       ($2, $3, 'single_choice', '{"prompt":"Contract choice","choices":[{"id":"a","text":"Contract first"},{"id":"b","text":"Contract second"}]}'::jsonb, '"b"'::jsonb, 1, 2)`, [id.question, id.secondQuestion, id.assessment]);
-    await db.query("insert into public.course_assignments (id, course_id, course_version_id, title, status, created_by) values ($1, $2, $3, 'Contract assignment', 'open', $4)", [id.assignment, id.course, id.version, id.teacher]);
+    await db.query("insert into public.course_assignments (id, course_id, course_version_id, title, status, points_possible, created_by) values ($1, $2, $3, 'Contract assignment', 'open', 10, $4)", [id.assignment, id.course, id.version, id.teacher]);
     for (const [who, role] of [['teacher', 'instructor'], ['owner', 'platform_admin']]) {
       await db.query('insert into public.user_role_assignments (user_id, role_id, assigned_by) select $1, id, $1 from public.roles where code = $2', [id[who], role]);
     }
@@ -437,6 +437,86 @@ async function run() {
           expect(late.status === 409 && late.json?.code === 'already_submitted', `changing an answer after handing in should be refused as "already_submitted"; got ${said(late)}`);
           const kept = await db.query('select response_content from public.assessment_responses where assessment_attempt_id = $1 and question_id = $2', [attemptId, id.question]);
           expect(kept.rows[0]?.response_content === 'true', 'an answer was changed after the attempt was handed in');
+        }
+
+        // The assignment, handed in, marked and revised. The same reason as the
+        // quiz: a page that loads says nothing about what its buttons do.
+        current = { pass: 'the assignment, handed in and marked', route: 'refusals here are provoked on purpose' };
+        const workRoute = `/learn/${id.enrolment}/assignment/${id.assignment}`;
+        const work = async (who, payload) => {
+          const reply = await fetch(`http://127.0.0.1:${port}/api/assignments`, { method: 'POST', headers: { cookie: people[who].cookie, 'content-type': 'application/json' }, body: JSON.stringify(payload), signal: AbortSignal.timeout(120000) });
+          return { status: reply.status, json: await reply.json().catch(() => null) };
+        };
+        const told = (reply) => `${reply.status} ${JSON.stringify(reply.json).slice(0, 240)}`;
+        // React puts a comment between a sentence and a value it prints.
+        const plain = async (route, who = 'learner') => (await (await fetch(`http://127.0.0.1:${port}${route}`, { headers: { cookie: people[who].cookie } })).text()).replace(/<script[\s\S]*?<\/script>/g, '').replace(/<!-- -->/g, '');
+        const handIns = async () => (await db.query('select id, status, body_text, score_earned, feedback, revision_number from public.assignment_submissions where assignment_id = $1', [id.assignment])).rows;
+        expect((await handIns()).length === 0, 'opening the assignment page wrote a submission');
+
+        const first = await work('learner', { action: 'save_draft', assignmentId: id.assignment, learnerProfileId: id.learnerProfile, bodyText: 'Contract first draft' });
+        expect(first.status === 200 && first.json?.ok === true && typeof first.json?.id === 'string', `saving a draft was refused: ${told(first)}`);
+        const second = await work('learner', { action: 'save_draft', assignmentId: id.assignment, learnerProfileId: id.learnerProfile, bodyText: 'Contract answer' });
+        expect(second.status === 200 && second.json?.id === first.json?.id, `saving a draft twice should keep one draft: ${told(second)}`);
+        let handed = await handIns();
+        expect(handed.length === 1 && handed[0].status === 'draft' && handed[0].body_text === 'Contract answer', `a changed draft was not kept: ${JSON.stringify(handed)}`);
+        if (handed.length === 1) {
+          const submissionId = handed[0].id;
+          const drafted = await plain(workRoute);
+          expect(drafted.includes('Contract answer') && drafted.includes('Draft saved'), 'a reload does not show the saved draft');
+
+          // Somebody who is not the learner or their guardian, and the learner
+          // marking their own work.
+          const meddled = await work('teacher', { action: 'save_draft', assignmentId: id.assignment, learnerProfileId: id.learnerProfile, bodyText: 'Written by somebody else' });
+          expect(meddled.status === 403, `a teacher wrote a learner's draft for them: ${told(meddled)}`);
+          const selfMarked = await work('learner', { action: 'mark', submissionId, score: 10, feedback: 'Full marks.' });
+          expect(selfMarked.status === 403, `a learner marked their own work: ${told(selfMarked)}`);
+          // Straight to the request server, as the learner: a mark written onto
+          // their own row, and a second row already marked.
+          const direct = async (method, path, row) => {
+            const reply = await fetch(`${upstream}${path}`, { method, headers: { authorization: `Bearer ${people.learner.access}`, 'content-type': 'application/json', prefer: 'return=representation' }, body: JSON.stringify(row) });
+            return { status: reply.status, json: await reply.json().catch(() => null) };
+          };
+          const patched = await direct('PATCH', `/assignment_submissions?id=eq.${submissionId}`, { status: 'graded', score_earned: 10 });
+          expect(patched.json?.code === '42501', `a learner's direct edit of their hand-in was not refused for lack of permission: ${told(patched)}`);
+          const planted = await direct('POST', '/assignment_submissions', { assignment_id: id.assignment, learner_profile_id: id.learnerProfile, status: 'graded', score_earned: 10, body_text: 'Planted' });
+          expect(planted.json?.code === '42501', `a learner inserted a hand-in directly: ${told(planted)}`);
+          handed = await handIns();
+          expect(handed.length === 1 && handed[0].status === 'draft' && handed[0].score_earned === null && handed[0].body_text === 'Contract answer', `the hand-in was changed by somebody who must not: ${JSON.stringify(handed)}`);
+
+          const early = await work('teacher', { action: 'mark', submissionId, score: 8, feedback: 'Too soon.' });
+          expect(early.status >= 400 && early.status < 500, `a draft was marked before it was handed in: ${told(early)}`);
+          const submitted = await work('learner', { action: 'submit', submissionId });
+          expect(submitted.status === 200 && submitted.json?.ok === true, `handing in was refused: ${told(submitted)}`);
+          expect((await handIns())[0]?.status === 'submitted', 'handing in did not change the status');
+          expect((await plain(workRoute)).includes('Submitted and waiting for marking.'), 'after handing in, the page does not say it is waiting for marking');
+          const late = await work('learner', { action: 'save_draft', assignmentId: id.assignment, learnerProfileId: id.learnerProfile, bodyText: 'Changed after handing in' });
+          expect(late.status === 409, `a hand-in was rewritten after it was submitted: ${told(late)}`);
+          expect((await handIns())[0]?.body_text === 'Contract answer', 'the text of a hand-in changed after it was submitted');
+
+          const marked = await work('teacher', { action: 'mark', submissionId, score: 8, feedback: 'Contract feedback' });
+          expect(marked.status === 200 && marked.json?.ok === true, `the teacher could not mark the work: ${told(marked)}`);
+          handed = await handIns();
+          expect(handed[0]?.status === 'graded' && Number(handed[0]?.score_earned) === 8, `marking did not record the mark: ${JSON.stringify(handed)}`);
+          const seen = await plain(workRoute);
+          expect(seen.includes('Score: 8 / 10') && seen.includes('Contract feedback') && seen.includes('Revise this work'), 'the learner is not shown the mark, the comment and the way to revise');
+          // The teacher's side shows it too.
+          expect((await plain(`/teach/${id.course}/assignments`, 'teacher')).includes('Contract assignment'), 'the teacher’s assignment list does not show the assignment');
+
+          const reopened = await work('learner', { action: 'reopen', submissionId });
+          expect(reopened.status === 200 && reopened.json?.revisionNumber === 2, `revising marked work was refused: ${told(reopened)}`);
+          handed = await handIns();
+          expect(handed[0]?.status === 'draft' && handed[0]?.revision_number === 2 && handed[0]?.score_earned === null, `revising did not reopen the work as version 2: ${JSON.stringify(handed)}`);
+          const revising = await plain(workRoute);
+          expect(revising.includes('Earlier version') && revising.includes('Version 1') && revising.includes('Contract feedback') && revising.includes('Score: 8 / 10'), 'the version that was marked is not kept on the page with its mark');
+          const again = await work('learner', { action: 'reopen', submissionId });
+          expect(again.status === 409, `a draft was reopened a second time: ${told(again)}`);
+          const revised = await work('learner', { action: 'save_draft', assignmentId: id.assignment, learnerProfileId: id.learnerProfile, bodyText: 'Contract revised' });
+          const resubmitted = revised.status === 200 ? await work('learner', { action: 'submit', submissionId }) : revised;
+          expect(resubmitted.status === 200, `the revised work could not be handed in: ${told(resubmitted)}`);
+          handed = await handIns();
+          expect(handed.length === 1 && handed[0].status === 'submitted' && handed[0].body_text === 'Contract revised' && handed[0].revision_number === 2, `the revision was not handed in as version 2: ${JSON.stringify(handed)}`);
+          const kept = await db.query('select revision_number, body_text, score_earned, feedback from public.assignment_submission_revisions where submission_id = $1', [submissionId]);
+          expect(kept.rowCount === 1 && kept.rows[0].body_text === 'Contract answer' && Number(kept.rows[0].score_earned) === 8 && kept.rows[0].feedback === 'Contract feedback', `the marked version was not kept as it was marked: ${JSON.stringify(kept.rows)}`);
         }
       }
       publish('Contract walk', [
