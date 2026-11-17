@@ -447,6 +447,50 @@ feature on this list, and nobody does it well at scale.
 makharij feedback on short surahs, not full tajweed grading. A wrong correction
 on religious content is worse than no correction.
 
+> **The owner's own description of this feature, 2026-11-16 — `TO ADD LATER`,
+> nothing built.** Said in passing so it would not be forgotten; recorded as
+> said.
+>
+> *A private place to recite.* The learner reads an ayah aloud. As they read,
+> it flags their pronunciation mistakes and corrects them. It also shows the
+> ayah's translation in the language the device is set to. It is for people
+> who cannot recite in front of others because they are afraid their
+> pronunciation is not right: a completely private space to recite, make
+> mistakes and improve, without judgement.
+>
+> What that description fixes, beyond the paragraph above:
+>
+> - **Privacy is the feature, not a setting.** Nobody else hears it or sees
+>   the mistakes: not a teacher, not a guardian, not a marker, not the
+>   operator. That points at listening on the learner's own device, with no
+>   recording kept and none sent anywhere. Whether any trace is kept at all
+>   (a count, a streak, "practised today") is the owner's to decide, and the
+>   default implied here is none.
+> - **Correction happens while reading**, not as a report afterwards.
+> - **The translation follows the device language**, like the rest of the
+>   interface.
+>
+> What has to be true before it can be switched on, none of it done:
+>
+> - *A way to listen that fits the standing rules:* no paid AI service, and
+>   no voice — least of all a child's — sent to a third party without the
+>   owner approving it. Whether a model small enough to run in a browser or
+>   on a phone is accurate enough for Qur'anic Arabic is not known and has
+>   not been tested.
+> - *Somebody qualified to say the corrections are right.* A confident wrong
+>   correction teaches a mistake to exactly the person who had nobody to
+>   check with. Who that reviewer is, is the owner's decision, as with every
+>   scholarly question here.
+> - *The Qur'an text and each translation cleared for use*, one by one. None
+>   is yet (see the licensing notes for the companion tools). A translation
+>   of an ayah is never produced by machine or by the builder; a language
+>   with no cleared translation shows none and says so.
+> - *An honest answer to "it did not understand me".* Accents, children's
+>   voices, a noisy room and a cheap microphone will all fail sometimes, and
+>   the screen must say it could not hear rather than mark the reading wrong.
+>
+> Flag: `learning.recitation` (`FLAGS.md`), off, no code behind it.
+
 **2. Hifz tracker with spaced repetition.** Which ayahs are memorised, which
 are decaying, what to revise today. A genuine unmet need — most hafiz plan
 revision on paper. Algorithmically simple (a schedule table + a decay curve),
