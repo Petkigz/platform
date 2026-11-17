@@ -12,6 +12,13 @@
  * There are no links here. In this state the router itself may be the thing that
  * is broken, so the honest action is a full reload of the home page, and the
  * only reference worth quoting is the digest.
+ *
+ * **It is English, on purpose.** `error.tsx` is in the reader's language
+ * because the layout that hands every page its words is still standing. Here
+ * the layout is the thing that fell, and the reader's language was one of the
+ * things it knew. Reading the language cookie in the browser instead would
+ * need every language's sentences inside the script every page loads, for a
+ * page almost nobody sees. So it is English, and `lang="en"` says so.
  */
 export default function GlobalError({
   error,

@@ -69,6 +69,10 @@ const COMPANION_PREFIX = 'companion.';
  * for one of these keys it gets English — the sentence is not in what it was
  * sent — so a test forbids it; the other fix is to take the prefix out of this
  * list.
+ *
+ * `broke.` is not in the list, and that is the second fix used on purpose:
+ * the page for a page that broke (`app/error.tsx`) is drawn in the browser,
+ * so its ten sentences have to be in what every page carries.
  */
 const SERVER_ONLY_PREFIXES: readonly string[] = ['learn.', 'course.', 'lesson.', 'assess.', 'assign.', 'missing.'];
 

@@ -460,6 +460,75 @@ try {
       console.log(`Synthetic lesson ${code}: 320, 390 and 1440 wide, no overflow, no clipped label, English parts left to right, arrows ${dir === 'rtl' ? 'turned round' : 'as typed'}; practice questions and study tools answer a refusal and a lost reply in ${code}; the sources card fits`);
     }
     extras = false;
+    // A page that breaks says so in the reader's language. The account page
+    // throws when its first read fails, and this stand-in server has no such
+    // table. Arabic has the sentences; Hausa and Pashto are held for review
+    // and read the page in English as a whole, the borrowed button included,
+    // laid out left to right inside Pashto's right-to-left frame.
+    const brokenEnglish = ['Something broke', 'This page stopped working', 'Try this page again', 'Browse the catalogue', 'Ask for help', 'Check before you pay again.', 'Your orders'];
+    for (const [code, frame, whole] of [['ar', 'rtl', false], ['ha', 'ltr', true], ['ps', 'rtl', true], ['en', 'ltr', true]]) {
+      for (const width of [320, 1440]) {
+        const context = await browser.newContext({ viewport: { width, height: 900 }, locale: 'en' });
+        await context.addCookies([{ name: 'sb-127-auth-token', value: `base64-${encode(session)}`, url: `http://localhost:${port}` }, { name: 'ayahspring_locale', value: code, url: `http://localhost:${port}` }]);
+        const page = await context.newPage();
+        await page.goto(`http://localhost:${port}/account`, { waitUntil: 'networkidle' });
+        await page.locator('#main .container.section h1').waitFor();
+        const read = () => page.evaluate(() => {
+          const box = document.querySelector('#main .container.section');
+          const text = (el) => el.textContent.trim();
+          return { page: document.documentElement.lang, frame: getComputedStyle(document.body).direction, lang: box.getAttribute('lang'), dir: getComputedStyle(box).direction,
+            said: [text(box.querySelector('.eyebrow')), text(box.querySelector('h1')), ...[...box.querySelectorAll('.btn')].map(text), text(box.querySelector('.notice strong')), text(box.querySelector('.notice a'))],
+            orders: box.querySelector('.notice a').getAttribute('href'), reference: box.querySelector('code')?.getAttribute('dir') ?? null,
+            scroll: document.documentElement.scrollWidth,
+            rows: new Set([...box.querySelectorAll('.page-actions .btn')].map((el) => Math.round(el.getBoundingClientRect().top))).size,
+            widest: Math.max(...[...box.querySelectorAll('.page-actions .btn')].map((el) => el.getBoundingClientRect().width)) / box.getBoundingClientRect().width,
+            clipped: [...box.querySelectorAll('.btn')].filter((el) => el.scrollWidth > el.clientWidth + 1).map(text) };
+        });
+        const m = await read();
+        assert.equal(m.page, code, `${code} ${width}: the broken page's frame is in ${m.page}`);
+        assert.equal(m.frame, frame, `${code} ${width}: the frame is laid out ${m.frame}`);
+        assert.equal(m.said.length, 7, `${code} ${width}: the broken page shows ${JSON.stringify(m.said)}`);
+        if (whole) {
+          assert.deepEqual(m.said, brokenEnglish, `${code} ${width}: a page read in English is not English as a whole`);
+          assert.equal(m.dir, 'ltr', `${code} ${width}: English is laid out ${m.dir}`);
+          assert.equal(m.lang, code === 'en' ? null : 'en', `${code} ${width}: the English page is marked ${m.lang}`);
+        } else {
+          for (const english of brokenEnglish) assert.equal(m.said.includes(english), false, `${code} ${width}: the broken page says "${english}"`);
+          assert.ok(m.said.every((words) => words.length > 0), `${code} ${width}: a sentence of the broken page is empty`);
+          assert.equal(m.dir, frame, `${code} ${width}: the broken page is laid out ${m.dir}`);
+          assert.equal(m.lang, null, `${code} ${width}: a translated page is marked ${m.lang}`);
+        }
+        assert.equal(m.orders, '/orders');
+        if (m.reference !== null) assert.equal(m.reference, 'ltr', `${code} ${width}: the reference is laid out ${m.reference}`);
+        assert.ok(m.scroll <= width + 1, `${code} ${width}: the broken page overflows to ${m.scroll}`);
+        assert.deepEqual(m.clipped, [], `${code} ${width}: a button of the broken page is cut off`);
+        // The three ways out are stacked for a thumb and side by side on a
+        // desk: they were three bars across the whole page at any width.
+        if (width >= 640) {
+          assert.equal(m.rows, 1, `${code} ${width}: the ways out of the broken page are on ${m.rows} rows`);
+          assert.ok(m.widest < 0.4, `${code} ${width}: a way out fills ${Math.round(m.widest * 100)}% of the page`);
+        } else assert.equal(m.rows, 3, `${code} ${width}: the ways out of the broken page are on ${m.rows} rows`);
+        // Trying again asks for the page again, and a page that is still
+        // broken says the same thing rather than nothing.
+        await page.locator('#main .container.section button.btn').click();
+        await page.locator('#main .container.section h1').waitFor();
+        assert.deepEqual((await read()).said, m.said, `${code} ${width}: trying again changed what the page says`);
+        if (process.env.RESPONSIVE_SCREENSHOTS) await page.screenshot({ path: resolve(process.env.RESPONSIVE_SCREENSHOTS, `broke-${code}-${width}.png`), fullPage: true });
+        // The page for a wrong address has the same three ways out.
+        await page.goto(`http://localhost:${port}/no-such-address`, { waitUntil: 'networkidle' });
+        const lost = await page.evaluate(() => {
+          const buttons = [...document.querySelectorAll('#main .page-actions .btn')];
+          return { count: buttons.length, rows: new Set(buttons.map((el) => Math.round(el.getBoundingClientRect().top))).size, scroll: document.documentElement.scrollWidth,
+            clipped: buttons.filter((el) => el.scrollWidth > el.clientWidth + 1).length };
+        });
+        assert.equal(lost.count, 3, `${code} ${width}: the wrong-address page has ${lost.count} ways out`);
+        assert.equal(lost.rows, width >= 640 ? 1 : 3, `${code} ${width}: the ways out of the wrong-address page are on ${lost.rows} rows`);
+        assert.ok(lost.scroll <= width + 1 && lost.clipped === 0, `${code} ${width}: the wrong-address page overflows or cuts a button off`);
+        if (process.env.RESPONSIVE_SCREENSHOTS) await page.screenshot({ path: resolve(process.env.RESPONSIVE_SCREENSHOTS, `missing-${code}-${width}.png`), fullPage: true });
+        await context.close();
+      }
+    }
+    console.log('A page that broke: Arabic reads it in Arabic, right to left; Hausa and Pashto read it in English as a whole, marked English and left to right; no overflow at 320 or 1440; the ways out are stacked on a phone and side by side on a desk, there and on the page for a wrong address; trying again keeps the page');
   }
 } catch (e) { console.error(logs); throw e; }
 finally {

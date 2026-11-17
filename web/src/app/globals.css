@@ -1954,6 +1954,20 @@ html[data-motion='reduce'] *::after {
    a box alone in the middle of a row above its own label. */
 .lesson-page input[type="checkbox"] { width: auto; margin: 0; }
 
+/* The ways out of a page with nothing else on it: a wrong address, a page
+   that broke. A button is as wide as its line, which is right for a thumb
+   and wrong on a desk, where three of them were three bars across the whole
+   page. On a phone they stay stacked; from 640px they sit side by side, each
+   as wide as its words. */
+.page-actions { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1.5rem; }
+/* A button and a link do not inherit the same line height, so side by side
+   one was a pixel taller than the other. */
+.page-actions .btn { margin-top: 0; line-height: 1.4; }
+@media (min-width: 640px) {
+  .page-actions { flex-direction: row; flex-wrap: wrap; align-items: stretch; }
+  .page-actions .btn { width: auto; padding-inline: 1.3rem; }
+}
+
 /* Enrolled course: wide enough for lesson lists on larger displays, while
    long teacher-written titles and the progress control can wrap on a phone. */
 .course-workspace { max-width: none; padding-block: clamp(2rem, 4vw, 4rem); }

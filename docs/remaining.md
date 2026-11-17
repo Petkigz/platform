@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 33% there (192 of 581 sentences; it was 71% of 272, then
+  the nineteen reads 32% there (192 of 591 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -537,7 +537,8 @@ still unreviewed and still saying so.
   list of dated classes, 36% of 527 with the report form on the lesson, 36%
   of 534 with the page for a wrong address, 35% of 544 with the notes about a
   recording that cannot play, 34% of 567 with the practice questions and the
-  study tools, then this with the sources card),
+  study tools, 33% of 581 with the sources card, then this with the page for
+  a page that broke),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -564,7 +565,7 @@ still unreviewed and still saying so.
   Burmese sentence on the page, and the tool still calculates six rows. It does
   the direction check in Pashto, opens the correction sheet on the Hausa
   companion part (eighty boxes, each with the draft, and the notice; no notice
-  on the Hausa navigation or on Swahili), and reads 33% on `/language` in Hausa.
+  on the Hausa navigation or on Swahili), and reads 32% on `/language` in Hausa.
 
 **Four languages withheld whole (owner's second answer, 2026-11-16).** Asked
 whether the rest of the interface in Wolof, Fulfulde, Bambara and Dhivehi should
@@ -674,6 +675,17 @@ written: not a held draft, nothing.
   HTTP in six languages and in Chromium in Arabic and Tamil at three widths,
   on a synthetic backend; no button pressed, no real recording, and only a
   lesson with one video.
+- *The page for a page that broke (2026-11-17).* `app/error.tsx`, ten
+  sentences in the same twenty-seven languages; a held language reads it in
+  English as a whole. It is drawn in the browser, so these ten are the only
+  learner sentences sent with every page. Its sentence about a lesson now
+  says a place is saved "about every ten seconds", which is what the player
+  does; it said "at most a few seconds". **Still English for every reader:**
+  `app/global-error.tsx`, shown when the frame around every page fails,
+  because the frame is what knows the language. Checked in Chromium in
+  Arabic, Hausa, Pashto and English at 320 and 1440 wide by making the
+  account page fail on a synthetic backend; **not checked** in a production
+  build, where the reference shown is the server's digest.
 - *What it did to the nineteen.* They read 59% on `/language` after the course
   page and **55% after the lesson page**. The test
   that stops a mostly-English language being offered had its floor at 60 and

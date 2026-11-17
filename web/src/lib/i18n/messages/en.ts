@@ -772,6 +772,23 @@ export const en = {
     'If you followed a link from inside AyahSpring and landed here, that is a fault on our side, and we will fix the link.',
   // A link, on its own after the sentence above.
   'missing.tell': 'Tell us where the link was',
+
+  // The page for a page that broke (`app/error.tsx`). Drawn in the browser,
+  // so unlike the parts above these are in what every page carries. `{code}`
+  // is the server's id for the failure and comes last. The buttons beside
+  // "try again" are `nav.catalogue` and `broke.help`.
+  'broke.eyebrow': 'Something broke',
+  'broke.heading': 'This page stopped working',
+  'broke.lede': 'That is a fault on our side, not a mistake you made. Trying again often works.',
+  'broke.reference': 'If it keeps happening, quote this reference when you ask for help: {code}',
+  'broke.retry': 'Try this page again',
+  'broke.help': 'Ask for help',
+  'broke.payHead': 'Check before you pay again.',
+  'broke.pay':
+    'An order that did not finish is listed on your orders page with its real status. That page is the record, not this one.',
+  'broke.orders': 'Your orders',
+  'broke.lesson':
+    'If you were watching a lesson, it resumes from the place it last saved. Your place is saved about every ten seconds while a recording plays.',
 } as const;
 
 export type MessageKey = keyof typeof en;

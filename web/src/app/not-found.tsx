@@ -67,17 +67,17 @@ export default async function NotFound() {
         {after}
       </p>
 
-      <p style={{ marginTop: '1.5rem' }}>
+      <div className="page-actions">
         <Link className="btn" href="/catalogue">
           {t('home.browse')}
-        </Link>{' '}
+        </Link>
         <Link className="btn secondary" href="/">
           {t('missing.home')}
-        </Link>{' '}
+        </Link>
         <Link className="btn ghost" href="/support">
           {t('missing.help')}
         </Link>
-      </p>
+      </div>
 
       <p className="muted" style={{ marginTop: '2rem' }}>
         {t('missing.fault')} <Link href="/support">{t('missing.tell')}</Link>

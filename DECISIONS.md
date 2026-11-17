@@ -7955,14 +7955,14 @@ owner chose the first.
   form on the lesson page (and still 36%, rounded, with the page for a wrong
   address), 35% since the notes about a recording that cannot play, 34% since
   the practice questions and the study tools on the lesson page, 33% since
-  its sources card.
+  its sources card, 32% since the page for a page that broke.
 - **The test that refused a language under half is removed.** Nothing in the
   tests now limits how much English one of these languages shows. That is the
   cost of this choice and it was put to the owner in those words.
 - What the tests still require of every offered language: every sentence that
   is neither held nor deliberately unwritten is present, and the sentence
   that gives the percentage is in that language rather than English. The
-  count (192 of 581; it was 192 of 347 when this was decided) is pinned in
+  count (192 of 591; it was 192 of 347 when this was decided) is pinned in
   `held-translations.test.ts`, so it changes only on purpose.
 - The four withheld languages are unaffected. So is the rule that a new screen
   is not written for a language with anything held.
@@ -8056,9 +8056,15 @@ about a recording that cannot be played followed: ten sentences in
 `lesson.ts`, 35% for the nineteen. The practice questions and the learner's
 own note and bookmark followed: twenty-three sentences in `lesson.ts`, 34%
 for the nineteen. The sources card followed: fourteen sentences in
-`lesson.ts`, ten of them the kinds of source, 33% for the nineteen.
+`lesson.ts`, ten of them the kinds of source, 33% for the nineteen. The page
+for a page that broke followed: ten sentences in a new part, `broke.ts`, 32%
+for the nineteen. **It is the one part of these that every page carries**:
+that page is drawn in the browser after a failure and cannot ask a server
+for its words, so `broke.` is deliberately not in `SERVER_ONLY_PREFIXES`.
+The page for a failure above every page (`global-error.tsx`) stays English:
+the layout that knows the reader's language is the thing that fell.
 `UNWRITTEN_WHILE_HELD` is now `learn`, `course`, `lesson`, `assess`,
-`assign` and `missing`.
+`assign`, `missing` and `broke`.
 
 **The rule going forward.** A part named in `UNWRITTEN_WHILE_HELD`
 (`web/src/lib/i18n/messages/held.ts`) may be absent from a language that has

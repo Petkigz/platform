@@ -2,6 +2,10 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
+import { useLocaleCode, useT } from '@/lib/i18n/client';
+import { fill } from '@/lib/i18n/format';
+import { en, type MessageKey } from '@/lib/i18n/messages/en';
+import { isUnwritten } from '@/lib/i18n/messages/held';
 
 /**
  * When a page breaks, the site says so in its own voice.
@@ -20,6 +24,19 @@ import Link from 'next/link';
  *      decision about money: the order's status lives on `/orders`, and the
  *      person is sent there before they pay again. A lesson that broke is not
  *      lost progress: the resume position is written as they watch.
+ *
+ * **In the reader's language.** It was English for everybody. This page is
+ * drawn in the browser after something has already failed, so it cannot ask a
+ * server for its words: they come from what the layout handed every page
+ * (`broke.ts` says what that costs). Twenty-seven languages have them. A
+ * language held for review reads the page in English, whole, with the two
+ * borrowed button names in English too and `lang="en"` on the wrapper, like
+ * every screen written since the owner's decision of 2026-11-16.
+ *
+ * **What it says about a lesson is what the player does.** A place is saved
+ * when playback has moved ten seconds on from the last one saved, so the
+ * sentence says "about every ten seconds". It used to say "at most a few
+ * seconds", which was kinder than true.
  */
 export default function ErrorPage({
   error,
@@ -35,41 +52,55 @@ export default function ErrorPage({
     console.error('Unhandled error on a page:', error);
   }, [error]);
 
+  const shell = useT();
+  const locale = useLocaleCode();
+  // A held language has no sentence of this part, so the page is English as a
+  // whole rather than English sentences between two translated buttons.
+  const english = isUnwritten(locale, 'broke.heading');
+  const t = english
+    ? (key: MessageKey, vars?: Record<string, string | number>) => fill(en[key], vars)
+    : shell;
+  const wrapper = english ? ({ lang: 'en', dir: 'ltr' } as const) : {};
+  // The reference comes last in every language; the id itself is not a word.
+  const [quote = ''] = t('broke.reference').split('{code}');
+
   return (
-    <div className="container section">
-      <p className="eyebrow">Something broke</p>
-      <h1>This page stopped working</h1>
-      <p className="lede">
-        That is a fault on our side, not a mistake you made. Trying again often
-        works; if it does not, the reference below is what to quote when you ask
-        for help.
-      </p>
+    <div className="container section" {...wrapper}>
+      <p className="eyebrow">{t('broke.eyebrow')}</p>
+      <h1>{t('broke.heading')}</h1>
+      <p className="lede">{t('broke.lede')}</p>
 
       {error.digest && (
         <p className="muted">
-          Reference: <code>{error.digest}</code>
+          {quote}
+          <code dir="ltr">{error.digest}</code>
         </p>
       )}
 
-      <p style={{ marginTop: '1.5rem' }}>
+      <div className="page-actions">
         <button type="button" className="btn" onClick={reset}>
-          Try this page again
-        </button>{' '}
+          {t('broke.retry')}
+        </button>
         <Link className="btn secondary" href="/catalogue">
-          Catalogue
-        </Link>{' '}
-        <Link className="btn ghost" href="/support">
-          Ask for help
+          {t('home.browse')}
         </Link>
-      </p>
+        <Link className="btn ghost" href="/support">
+          {t('broke.help')}
+        </Link>
+      </div>
 
       <div className="notice" style={{ marginTop: '1.5rem' }}>
-        <strong>Check before you pay again.</strong> An order that did not finish
-        is listed on <Link href="/orders">your orders</Link> with its real status
-        — that page is the record, not this one. If you were watching a lesson,
-        it resumes from where it last saved, which is at most a few seconds
-        before the page broke.
+        <p style={{ margin: 0 }}>
+          <strong>{t('broke.payHead')}</strong> {t('broke.pay')}
+        </p>
+        <p style={{ margin: '0.5rem 0 0' }}>
+          <Link href="/orders">{t('broke.orders')}</Link>
+        </p>
       </div>
+
+      <p className="muted" style={{ marginTop: '1rem' }}>
+        {t('broke.lesson')}
+      </p>
     </div>
   );
 }

@@ -121,6 +121,9 @@ test('no other page pays for the companion sentences', () => {
       ['learn.', 'course.', 'lesson.', 'assess.', 'assign.', 'missing.'].some((prefix) => k.startsWith(prefix));
     const serverOnly = Object.fromEntries(Object.entries(whole).filter(([k]) => onServer(k)));
     assert.equal(Object.keys(serverOnly).length, 309);
+    // The page for a page that broke is drawn in the browser, so its ten
+    // sentences are the one learner part the shell does carry.
+    assert.equal(Object.keys(shell).filter((k) => k.startsWith('broke.')).length, 10, locale.code);
     assert.equal(Object.keys(shell).some(onServer), false, `${locale.code} shell carries dashboard, course, lesson or assessment sentences`);
     assert.deepEqual({ ...shell, ...companion, ...serverOnly }, whole);
   }

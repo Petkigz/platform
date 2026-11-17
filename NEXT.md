@@ -2618,6 +2618,49 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The page for a page that broke, in the reader's language, 2026-11-17
+
+`app/error.tsx` is what a learner sees when a page throws: possibly in the
+middle of paying, or of a lesson. It was English for every reader.
+
+- *Translated.* Ten sentences (`broke.*`, new file `messages/broke.ts`) in
+  the twenty-seven languages with nothing held. **Unreviewed.** A held
+  language reads the page in English as a whole, with the borrowed catalogue
+  button in English too and the wrapper marked `lang="en"`, left to right
+  inside Pashto's right-to-left frame.
+- *These ten are sent with every page.* The page is drawn in the browser
+  after something has failed and cannot ask a server for its words, so
+  `broke.` is not in `SERVER_ONLY_PREFIXES`. Every other learner part is.
+- *One sentence was untrue and is corrected, in English too.* The page said
+  a lesson resumes from a place saved "at most a few seconds before the page
+  broke". The player saves when playback has moved ten seconds on from the
+  last place it saved (`versioned-position-writer.ts`), so the page now says
+  "about every ten seconds while a recording plays". A test ties the
+  sentence to that number.
+- *Two changes every reader gets.* The link to the orders page is a line of
+  its own ("Your orders") rather than two words inside a sentence, which no
+  translation could keep in the right place. The reference is in the
+  sentence that says what it is for, and the id is never mirrored.
+- *Layout, found in the browser.* The three ways out were three bars across
+  the whole page at every width, here and on the page for a wrong address.
+  `.page-actions`: stacked on a phone, side by side from 640 pixels, each as
+  wide as its words. **The same three-bars pattern is still on nine other
+  pages** (`about`, `account/accessibility`, `account/sponsorship`,
+  `courses/[slug]/buy`, `hifz`, `teach`, `teach/apply`, `teach/promotions`,
+  `admin/incidents`); not touched here.
+- *Left English on purpose:* `app/global-error.tsx`, for a failure in the
+  frame around every page. The frame is what knows the reader's language;
+  doing without it would put every language's sentences in the script every
+  page loads. It says `lang="en"`.
+- *What it did to the nineteen.* `/language` tells each of them **32%** (192
+  of 591).
+- *Checked in Chromium* by making the account page fail against a synthetic
+  backend: Arabic, Hausa, Pashto and English at 320 and 1440 wide; language,
+  direction, no overflow, no clipped button, and "try again" on a page that
+  is still broken shows the same page. **Not checked:** a production build
+  (the smoke runs the development server), a real failure on the hosted
+  project, and the page as a signed-out visitor.
+
 ### The sources card, in the reader's language, 2026-11-17
 
 The card that lists what a lesson rests on (`learning.provenance`, shipped
