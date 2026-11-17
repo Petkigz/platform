@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { SAVED_MAX, SAVED_NOTE_MAX } from '@/lib/wishlist';
+import { SAVED_MAX, SAVED_NOTE_MAX } from '@/lib/wishlist-shared';
 
 /**
  * Save this course for later.

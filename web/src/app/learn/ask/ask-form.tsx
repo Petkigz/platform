@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { type AiSupportAnswer, describeAiSupportStatus } from '@/lib/ai-support';
-import { snippetParts } from '@/lib/lesson-search';
+import { snippetParts } from '@/lib/snippet';
 
 /**
  * The question box.

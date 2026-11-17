@@ -26,9 +26,11 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { ownLearnerProfileId } from './enrolment.ts';
 import { one, type Embedded } from './embed.ts';
 
-export const SAVED_NOTE_MAX = 500;
-/** Mirrors the ceiling in `guard_course_wishlist()`. */
-export const SAVED_MAX = 100;
+// The limits and the one-line label live in `wishlist-shared.ts`, which imports
+// nothing: the save button is a client component, and importing them from this
+// file sent every language's catalogue to the browser behind them.
+import { SAVED_MAX, SAVED_NOTE_MAX, availabilityLabel } from './wishlist-shared.ts';
+export { SAVED_MAX, SAVED_NOTE_MAX, availabilityLabel };
 
 export type SavedCourse = {
   id: string;
@@ -292,12 +294,4 @@ export async function fetchSavedCourses(
       enrolledAs: enrolled.get(r.course_id) ?? null,
     };
   });
-}
-
-/** What the learner can do about a saved course, in one short sentence. */
-export function availabilityLabel(c: SavedCourse): string {
-  if (c.enrolledAs) return c.enrolledAs === 'you' ? 'You are enrolled' : `Enrolled for ${c.enrolledAs}`;
-  if (c.availability === 'retired') return 'No longer offered';
-  if (c.availability === 'unpublished') return 'Not published yet';
-  return 'Available now';
 }

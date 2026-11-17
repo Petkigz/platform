@@ -2618,6 +2618,49 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### Every page was sending every language to the browser, 2026-11-17
+
+Found while starting to translate the quiz, which needs to fill `{count}` in a
+sentence from a client component.
+
+- *What was wrong.* The root layout wraps every page in the translation
+  provider (`lib/i18n/client.tsx`), a client component. It took one eight-line
+  function, `fill`, from `lib/i18n/index.ts`, and that file imports every
+  language's catalogue. The bundler kept them. **Measured on a production
+  build of the commit before this one:** one script of 1 432 001 bytes
+  (375 162 compressed) holding all fifty-one languages, named in the client
+  manifest of 132 of 133 pages; the one without it is the global error page.
+  A reader of the front page downloaded every sentence in Amharic, Thai and
+  Kyrgyz in order to read it in one of them, and was then handed their own
+  language a second time as data, which is the copy the page actually used.
+- *A second way in, which would have survived fixing the first.* The save
+  button on the public course page, the saved-course card and the ask form
+  took two numbers and a small function from `wishlist.ts` and
+  `lesson-search.ts`, which reach the same file through `enrolment.ts`. So did
+  the translation console, for one lookup.
+- *Repair.* `lib/i18n/format.ts` holds `fill`, `pluralForm`, `formatNumber` and
+  a new `formatPercent`, and imports nothing; `index.ts` re-exports them, so
+  no server code changed. `lib/wishlist-shared.ts` and `lib/snippet.ts` hold
+  what those client components needed, the same way. The console imports
+  `locales.ts` directly.
+- *After.* No script contains a catalogue sentence. All scripts together went
+  from 3 187 995 bytes to 1 783 895. The sign-in page, in Arabic, fetches
+  eleven scripts totalling 262 901 bytes compressed, measured over HTTP from
+  `next start`; the same page before carried the 375 162 on top. `/`,
+  `/sign-in` and `/language` still answer in Arabic, right to left.
+- *So that it does not return.* `client-bundle.test.ts` follows the run-time
+  imports of all 165 client components and fails, naming the chain, if one
+  reaches the catalogues, the server Supabase client or the service-key
+  client. `scripts/client-bundle-check.mjs` runs after the production build in
+  CI, takes sentences out of the catalogue source and searches every script
+  for them, and fails on any single script above 700 kB. It was checked both
+  ways: it passes on the build and fails when one sentence is planted.
+- *Not measured.* No browser was timed. The saving is in bytes downloaded and
+  JavaScript parsed on first visit; how many milliseconds that is on a phone
+  on a slow connection was not measured, and nothing here says it was. The
+  English catalogue (347 sentences) is still in the browser as the fallback
+  behind a missing provider.
+
 ### What the hosted platform grants on its own, 2026-11-17
 
 Found while reading why the first run against a real request server refused

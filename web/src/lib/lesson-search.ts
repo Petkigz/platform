@@ -45,35 +45,9 @@ export function lessonDestination(hit: Pick<LessonHit, 'courseSlug' | 'lessonId'
     : `/courses/${hit.courseSlug}`;
 }
 
-/** One piece of a snippet: text, or text that matched. */
-export type SnippetPart = { text: string; mark: boolean };
-
-/**
- * `<mark>…</mark>` split into parts.
- *
- * Only the two tags the function itself emits are recognised. Any other angle
- * bracket stays as text, which is the safe direction to be wrong in: a title
- * containing `<b>` renders the characters rather than bold.
- */
-export function snippetParts(snippet: string): SnippetPart[] {
-  const parts: SnippetPart[] = [];
-  const pattern = /<mark>([\s\S]*?)<\/mark>/g;
-  let last = 0;
-  let match: RegExpExecArray | null;
-
-  while ((match = pattern.exec(snippet)) !== null) {
-    if (match.index > last) {
-      parts.push({ text: snippet.slice(last, match.index), mark: false });
-    }
-    parts.push({ text: match[1] ?? '', mark: true });
-    last = match.index + match[0].length;
-  }
-
-  if (last < snippet.length) parts.push({ text: snippet.slice(last), mark: false });
-
-  // Empty pieces are noise in a keyed list and can only come from an empty tag.
-  return parts.filter((part) => part.text !== '');
-}
+// `snippetParts` lives in `snippet.ts`, which imports nothing, so the client
+// components that draw a snippet do not bring the catalogues with them.
+export { snippetParts, type SnippetPart } from './snippet.ts';
 
 /**
  * Where the match was, said in the reader's terms.

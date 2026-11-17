@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { availabilityLabel, SAVED_NOTE_MAX, type SavedCourse } from '@/lib/wishlist';
+import { availabilityLabel, SAVED_NOTE_MAX } from '@/lib/wishlist-shared';
+import type { SavedCourse } from '@/lib/wishlist';
 
 /**
  * One row of the saved list.

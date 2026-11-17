@@ -17,6 +17,7 @@ import { safeNextPath as safeLocalPath } from '../auth.ts';
 import { CATALOGUES, WRITTEN } from './messages/catalogues.ts';
 import { HELD_FOR_REVIEW, isHeld, isUnwritten, isWithheld } from './messages/held.ts';
 import { en, type MessageKey, type Messages } from './messages/en.ts';
+import { fill, formatNumber, formatPercent, pluralForm } from './format.ts';
 
 export {
   DEFAULT_LOCALE,
@@ -29,23 +30,11 @@ export {
   localeByCode,
   matchLocale,
 };
+// No catalogue behind these: see `format.ts` for why they live apart.
+export { fill, formatNumber, formatPercent, pluralForm };
 export type { Direction, Locale, LocaleCode, LocaleSource, MessageKey };
 
 export type Translate = (key: MessageKey, vars?: Record<string, string | number>) => string;
-
-/**
- * Fill `{name}` placeholders.
- *
- * A placeholder with no value is left as it is, deliberately: `{year}` appearing
- * on a page is an obvious bug somebody fixes, where a silently empty string is a
- * sentence that reads strangely and is never reported.
- */
-export function fill(template: string, vars?: Record<string, string | number>): string {
-  if (!vars) return template;
-  return template.replace(/\{([a-zA-Z][a-zA-Z0-9]*)\}/g, (whole, name: string) =>
-    Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name]) : whole,
-  );
-}
 
 /** The catalogue for one language, with English behind every gap. */
 export function messagesFor(code: LocaleCode): Messages {
@@ -273,40 +262,6 @@ export function writtenLocales(): Locale[] {
 /** The languages that are written, withheld whole, and waiting for a speaker. */
 export function withheldLocales(): Locale[] {
   return LOCALES.filter((locale) => WRITTEN[locale.code] && isWithheld(locale.code));
-}
-
-/**
- * Which plural form a language wants for a count.
- *
- * `Intl.PluralRules` knows the rules; what this platform ships is **two forms**,
- * singular and plural. For English and most of the register that is the whole
- * system. For a language with a dual — Arabic says a different word for two
- * than for three — the count of two lands on the plural, which is why the shelf
- * also prints the number and never relies on the noun alone to say how many.
- * The limitation is written down in DECISIONS rather than discovered by an
- * Arabic reader counting two courses.
- */
-export function pluralForm(code: LocaleCode, count: number): 'one' | 'other' {
-  try {
-    return new Intl.PluralRules(code).select(count) === 'one' ? 'one' : 'other';
-  } catch {
-    return count === 1 ? 'one' : 'other';
-  }
-}
-
-/**
- * A number as this language writes it.
- *
- * Arabic writes ٢٤, Hindi २४, and a page that prints 24 in either is in English
- * with translated words around it. `Intl` is in the runtime, so there is no
- * table to maintain and no font that has to carry the digits.
- */
-export function formatNumber(code: LocaleCode, value: number): string {
-  try {
-    return new Intl.NumberFormat(code).format(value);
-  } catch {
-    return String(value);
-  }
 }
 
 /**

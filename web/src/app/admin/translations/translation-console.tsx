@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/client';
-import { localeByCode, type LocaleCode } from '@/lib/i18n';
+import { localeByCode, type LocaleCode } from '@/lib/i18n/locales';
 import {
   acceptedBlock,
   acceptedPayload,

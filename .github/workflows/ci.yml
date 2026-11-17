@@ -127,3 +127,6 @@ jobs:
         run: npm run build
         env:
           NEXT_TELEMETRY_DISABLED: '1'
+
+      - name: No translation catalogue in what the browser downloads
+        run: node scripts/client-bundle-check.mjs

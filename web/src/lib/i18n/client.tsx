@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 
-import { fill } from './index';
+import { fill } from './format';
 import { en, type MessageKey, type Messages } from './messages/en';
 import type { LocaleCode } from './locales';
 
