@@ -163,8 +163,15 @@ function classify(status, body) {
   const code = String(body?.code ?? '');
   if (code === 'PGRST116') return 'no row';
   if (code === '42501' || code === 'PGRST301' || code === 'PGRST302' || status === 401 || status === 403) return 'not allowed';
-  if (/^PGRST[12]\d\d$/.test(code) || /^(22|42)/.test(code) || code === '08P01' || status === 400 || status === 404) return 'malformed';
+  if (/^PGRST[12]\d\d$/.test(code) || /^(22|42)/.test(code) || code === '08P01') return 'malformed';
+  // By its code before by its status. The request server answers 400 to a
+  // check violation (23514) and to a plain `raise exception` (P0001), which
+  // are the database refusing a well-formed request because of what is in it:
+  // an attempt with a question unanswered, an attempt already handed in. Read
+  // by status alone those were counted as the page's fault, and nothing had
+  // provoked one until the walk sat a quiz.
   if (/^(23|P0|AS|[A-Z]{2}\d{3})/.test(code) || status === 409) return 'refused by a rule';
+  if (status === 400 || status === 404) return 'malformed';
   return status >= 500 ? 'server error' : 'other';
 }
 
