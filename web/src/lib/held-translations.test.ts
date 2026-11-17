@@ -451,8 +451,10 @@ test('the learner dashboard is written for the languages with nothing held, and 
     }
   }
   // What that costs the nineteen that are still in the picker, said out loud:
-  // 192 of 347 sentences. `i18n.test.ts` holds the floor under it, at half;
-  // the count that would cross it is 385, thirty-eight sentences from here.
+  // 192 of 347 sentences. Nothing holds a floor under it any more: the owner
+  // chose on 2026-11-17 to keep these languages in the picker and show the
+  // number. The count is pinned here so that it moves only when somebody
+  // means it to, and is seen when it does.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
     assert.equal(coverageOf(code).total, 347);

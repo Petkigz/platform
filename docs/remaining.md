@@ -644,9 +644,10 @@ written: not a held draft, nothing.
   pages will very probably cross it. A second check (80% of a language
   *written*) failed at 78% with the lesson page and was changed by the builder
   to leave out the screens deliberately not written for a held language; see
-  `DECISIONS.md`. Before the next screen, the owner has to choose between
-  leaving them in the picker with a falling number, taking them out as the
-  four were, counting only the public pages, or finding speakers.
+  `DECISIONS.md`. **The owner chose on 2026-11-17 to leave them in the picker
+  with the falling number**; the half floor is removed and nothing in the
+  tests caps how much English these nineteen show. The language page is what
+  tells their readers.
 - *Checked by request and in a browser* against a synthetic backend: English,
   Arabic, French, Hausa, Pashto, Wolof; Arabic and Tamil at three widths. See
   `scripts/learner-dashboard-route-smoke.mjs`.

@@ -7932,7 +7932,42 @@ device lists; a device that lists another offered language *ahead* of it still
 gets that language. The cost, stated when the choice was put: a reader who told
 their device they also read French is shown English rather than French.
 
-## How much English a held language may show and still be offered — **OPEN, the owner's**
+## How much English a held language may show and still be offered — **DECIDED 2026-11-17**
+
+**The owner's answer: keep them, and show the number.** Asked what should
+happen to the nineteen languages once the newer screens put them under half,
+with four choices (keep them in the picker with the falling number; withdraw
+them whole like the four; count only the public pages; pause translating), the
+owner chose the first.
+
+**What that means, exactly.**
+
+- The nineteen stay in the picker. Their navigation, sign-in, catalogue, front
+  page and language page stay in their own language. Every screen added since
+  (the learner dashboard, the course page, the lesson page, and what follows)
+  is English for them, marked as English, until a first-language speaker has
+  written it.
+- The language page tells each reader the percentage, in their own language,
+  with the sentence that the rest is in English. That number will keep
+  falling: 55% today.
+- **The test that refused a language under half is removed.** Nothing in the
+  tests now limits how much English one of these languages shows. That is the
+  cost of this choice and it was put to the owner in those words.
+- What the tests still require of every offered language: every sentence that
+  is neither held nor deliberately unwritten is present, and the sentence
+  that gives the percentage is in that language rather than English. The
+  count (192 of 347) is pinned in `held-translations.test.ts`, so it changes
+  only on purpose.
+- The four withheld languages are unaffected. So is the rule that a new screen
+  is not written for a language with anything held.
+
+**What it does not settle.** Whether a reader who chose Hausa and finds their
+lessons framed in English is well served. The honest number on the language
+page is the only thing telling them. Finding speakers is still what ends the
+question for any one language.
+
+The history of how the question arose is kept below as it was written.
+
 
 The rule below (a new screen is not written for a language with a part held)
 has a cost that grows with every screen. Nineteen languages are in the picker

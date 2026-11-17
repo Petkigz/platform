@@ -2669,10 +2669,12 @@ nineteen, and nothing a first-language speaker has read.
   this check can no longer be what stops a held language being offered; the
   half floor (below) is the only one that can. Not the owner's decision;
   recorded in `DECISIONS.md`.
-- *The half floor was not touched.* It fails when the nineteen show under 50%:
-  at 388 sentences, forty-one more than today. The assessment and assignment
-  pages, written the same way, will very probably cross it. That screen is not
-  started; the question in `DECISIONS.md` comes first.
+- *The half floor was not touched* in this unit. **The owner then removed it
+  (2026-11-17): "keep them, show the number".** The nineteen stay in the
+  picker however far the percentage falls, and the language page tells each
+  reader the number in their own language. Nothing in the tests caps it now;
+  `DECISIONS.md` has the entry. The assessment and assignment pages can
+  therefore be written the same way and are the next screen.
 - *Checked:* `scripts/lesson-route-smoke.mjs` requests the lesson in English,
   Arabic (frame translated, players and report form marked English, length in
   Arabic), French by cookie over an Arabic device, Hausa and Pashto (own frame,

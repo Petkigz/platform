@@ -9,6 +9,7 @@ import {
   coverageOf,
   directionOf,
   fill,
+  isHeld,
   isUnwritten,
   localeByCode,
   localeGroups,
@@ -173,9 +174,8 @@ test('every offered language actually translates something', () => {
     // speaker has read it lowers what a reader is shown, on purpose, and must
     // not be what gets a language taken out of the picker; nor must a screen
     // that, by the owner's rule, is not written at all for a language with
-    // anything held (`UNWRITTEN_WHILE_HELD`). Both are decisions, and the
-    // check for how much English those decisions may add up to is the next
-    // one, not this.
+    // anything held (`UNWRITTEN_WHILE_HELD`). Both are decisions, and how
+    // much English they add up to is no longer capped (see below).
     //
     // Before the lesson page this counted the unwritten screens as gaps and
     // still passed (84%); the lesson page took it to 78%. Leaving them out of
@@ -187,20 +187,28 @@ test('every offered language actually translates something', () => {
       written >= 80,
       `${locale.code} is offered with ${written}% written — too little to be useful`,
     );
-    // And a hold has a limit of its own: a language most of whose screens are
-    // English is not being offered honestly, however good the reason.
+    // There was a second limit here: a language showing a reader less than
+    // half was refused. The owner removed it on 2026-11-17 ("keep them, show
+    // the number"): a language with a part held stays in the picker however
+    // many of the newer screens are English, and the language page tells its
+    // reader how much, in that language. Nothing below caps the English.
     //
-    // "Most" is the line: half. It was 60 while the held languages stood at 64%.
-    // The course page was then written for the languages that can be written
-    // and, by the owner's rule, for no held one, which put nineteen languages
-    // at 59%; the lesson page's frame put them at 55%. Forty-one more
-    // sentences written the same way (388 in all, where 192 of them round to
-    // 49%) take them under half, and at that point this fails on purpose: it is the owner's decision whether such a
-    // language stays in the picker, not something to tune again here.
-    assert(
-      coverage.percent >= 50,
-      `${locale.code} shows a reader ${coverage.percent}% — too much of it is held back`,
+    // What replaces the cap is the promise that choice was made on. A reader
+    // who picks such a language gets every sentence that is neither held nor
+    // deliberately unwritten — the navigation, sign-in, the catalogue, the
+    // front page — and is told the number in their own words, not in English.
+    const keys = Object.keys(en) as (keyof typeof en)[];
+    const withheldFromThem = keys.filter((key) => isHeld(locale.code, key) || isUnwritten(locale.code, key));
+    assert.equal(
+      coverage.translated,
+      keys.length - withheldFromThem.length,
+      `${locale.code} is missing a sentence outside the parts held or left unwritten on purpose`,
     );
+    assert.ok(coverage.percent > 0, `${locale.code} is offered and shows a reader nothing`);
+    for (const key of locale.code === 'en' ? [] : (['language.coverage', 'language.coverageAll'] as const)) {
+      const said = CATALOGUES[locale.code]?.[key];
+      assert.ok(said && said !== en[key], `${locale.code} tells its reader how much is translated in English`);
+    }
   }
 });
 
