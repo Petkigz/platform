@@ -17,6 +17,7 @@ import { HOME_AFRICA_WEST } from './home-africa-west.ts';
 import { HOME_WORLD } from './home-world.ts';
 import { COMPANION } from './companion.ts';
 import { LEARN } from './learn.ts';
+import { COURSE } from './course.ts';
 import { isHeld } from './held.ts';
 import { ASIA_AZ } from './asia-az.ts';
 import { ASIA_CENTRAL } from './asia-uz.ts';
@@ -791,6 +792,8 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   // The learner dashboard, in the twenty-seven languages with nothing held.
   // The first file that is deliberately not written for everybody.
   LEARN,
+  // The course page and the learner-profile prompt, on the same rule.
+  COURSE,
 );
 
 /**

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { cookies, headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
@@ -8,7 +9,8 @@ import { carryOnHeading, continuePoint } from '@/lib/continue-point';
 import { CarryOn } from '@/app/_shared/carry-on';
 import { fetchAssessmentsForVersion } from '@/lib/assessment';
 import { isFlagEnabled } from '@/lib/flags';
-import { MarkComplete } from './mark-complete';
+import { LOCALE_COOKIE, chooseLocale, formatNumber, languageShownFor, translator } from '@/lib/i18n';
+import { MarkComplete, type MarkCompleteWords } from './mark-complete';
 import { CohortMemberships } from './cohort-memberships';
 import type { CourseCohort } from '@/lib/cohorts';
 import {
@@ -55,6 +57,15 @@ type EnrolmentRow = {
  * the database uses. A learner who enrolled into v1 keeps seeing v1 even after
  * v2 is published (D5), and `enforce_progress_version_match` refuses progress
  * recorded against any other version.
+ *
+ * **Language.** The page's own words — the heading line, the carry-on card, the
+ * progress bar and its notices, the outline and the mark-complete control — are
+ * in the reader's language where that language has this screen (`course.ts`),
+ * and in English, marked as English, where it does not. Three things are
+ * English for everybody and are marked so: the reasons a course is not yet
+ * complete, which the database writes; and the assessment, assignment and
+ * cohort lists, which are not translated yet. What a teacher wrote — titles of
+ * the course, its sections and lessons — is shown as written.
  */
 export default async function CourseViewPage({
   params,
@@ -70,6 +81,29 @@ export default async function CourseViewPage({
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect(`/sign-in?next=/learn/${enrolmentId}`);
+
+  // The same choice the dashboard makes: the reader's cookie, then the device.
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code: locale } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  const shown = languageShownFor(locale, 'course');
+  const t = translator(shown.code);
+  const num = (value: number) => formatNumber(shown.code, value);
+  const mismatch = shown.code !== locale;
+  // For the parts of this page that are English whatever the reader chose.
+  const english = shown.code === 'en' ? {} : ({ lang: 'en', dir: 'ltr' } as const);
+  // Handed to the client control as props, so these sentences are not in the
+  // catalogue every page carries.
+  const markWords: MarkCompleteWords = {
+    mark: t('course.markComplete'),
+    undo: t('course.undo'),
+    saving: t('course.saving'),
+    unconfirmed: t('course.unconfirmed'),
+    reload: t('course.reload'),
+  };
 
   const { data, error } = await supabase
     .from('course_enrolments')
@@ -176,26 +210,30 @@ export default async function CourseViewPage({
   const outline = flattenOutline(sections);
   const progressRows = [...progress.values()];
   const carryOn = continuePoint(outline, progressRows);
-  const carryCopy = carryOn ? carryOnHeading(carryOn, progressRows.length > 0) : null;
+  const carryCopy = carryOn
+    ? carryOnHeading(carryOn, progressRows.length > 0, { t, number: num })
+    : null;
 
   return (
-    <div className="container section course-workspace">
+    <div
+      className="container section course-workspace"
+      lang={mismatch ? shown.code : undefined}
+      dir={mismatch ? shown.dir : undefined}
+    >
       <header className="course-workspace-head">
         <p className="eyebrow">
-          <Link href="/learn">My learning</Link>
+          <Link href="/learn">{t('nav.learn')}</Link>
         </p>
-        <h1>{course?.title ?? 'Course'}</h1>
+        <h1>{course?.title ?? t('course.fallbackTitle')}</h1>
         <p className="muted">
-          Version {version?.version_number ?? '?'} · {(version?.language ?? '?').toUpperCase()}
+          {t('course.version', {
+            number: version ? num(version.version_number) : '?',
+            language: (version?.language ?? '?').toUpperCase(),
+          })}
         </p>
       </header>
 
-      {!progressOn && (
-        <div className="notice warn">
-          Progress tracking is not enabled yet. You can still read the course
-          and play its lessons; nothing is being recorded.
-        </div>
-      )}
+      {!progressOn && <div className="notice warn">{t('course.progressOff')}</div>}
 
       {/* The question a returning learner arrives with is "where was I?", and
           the page answered it with a percentage and a list they had to scan.
@@ -212,25 +250,29 @@ export default async function CourseViewPage({
           aria-valuenow={pct}
           aria-valuemin={0}
           aria-valuemax={100}
-          aria-label="Course progress"
+          aria-label={t('course.progressLabel')}
         >
           <span style={{ width: `${Math.min(100, Math.max(0, summary.percentComplete))}%` }} />
         </div>
         <div className="meta" style={{ marginTop: '0.6rem' }}>
-          {summary.lessonsDone} of {summary.lessonsTotal} lessons complete · {pct}%
+          {t('course.lessonsComplete', {
+            done: num(summary.lessonsDone),
+            total: num(summary.lessonsTotal),
+            percent: num(pct),
+          })}
         </div>
 
         {completion && completion.isComplete && (
           <div className="notice" style={{ marginTop: '1rem' }}>
-            <strong>Course complete.</strong> Certificates are issued by the
-            platform once your completion has been reviewed.
+            <strong>{t('course.completeHeading')}</strong> {t('course.completeBody')}
           </div>
         )}
 
         {completion && !completion.isComplete && completion.blocking.length > 0 && (
           <div className="notice warn" style={{ marginTop: '1rem' }}>
-            <strong>Still to do:</strong>
-            <ul style={{ margin: '0.4rem 0 0', paddingInlineStart: '1.1rem' }}>
+            <strong>{t('course.stillToDo')}</strong>
+            {/* The database writes these reasons, in English, for everyone. */}
+            <ul style={{ margin: '0.4rem 0 0', paddingInlineStart: '1.1rem' }} {...english}>
               {completion.blocking.map((b) => (
                 <li key={b}>{b}</li>
               ))}
@@ -241,21 +283,23 @@ export default async function CourseViewPage({
       )}
 
       {learnerCohorts.length > 0 && (
-        <CohortMemberships
-          enabled={cohortsEnabled}
-          cohorts={learnerCohorts}
-          learnerProfileId={enrolment.learner_profile_id}
-        />
+        <div {...english}>
+          <CohortMemberships
+            enabled={cohortsEnabled}
+            cohorts={learnerCohorts}
+            learnerProfileId={enrolment.learner_profile_id}
+          />
+        </div>
       )}
 
       {sections.length === 0 ? (
-        <p className="empty">This course has no published outline yet.</p>
+        <p className="empty">{t('course.noOutline')}</p>
       ) : (
         sections.map((s, i) => (
           <div key={s.id}>
             <div className="outline-h">
               <h3>
-                {i + 1}. {s.title}
+                {num(i + 1)}. {s.title}
               </h3>
             </div>
             <div className="card">
@@ -268,14 +312,14 @@ export default async function CourseViewPage({
                     const done = row?.status === 'completed';
                     return (
                       <li key={l.id}>
-                        <span className="n">{j + 1}</span>
+                        <span className="n">{num(j + 1)}</span>
                         <span className={`t ${done ? 'done' : ''}`}>
                           <Link href={`/learn/${enrolment.id}/lesson/${l.id}`}>
                             {l.title}
                           </Link>
                           {l.is_preview && previewsOn && (
                             <span className="badge neutral" style={{ marginInlineStart: '0.5rem' }}>
-                              Preview
+                              {t('course.preview')}
                             </span>
                           )}
                         </span>
@@ -284,6 +328,7 @@ export default async function CourseViewPage({
                             enrolmentId={enrolment.id}
                             lessonId={l.id}
                             initiallyDone={done}
+                            words={markWords}
                           />
                         )}
                       </li>
@@ -296,7 +341,7 @@ export default async function CourseViewPage({
       )}
 
       {assessmentsOn && assessments.length > 0 && (
-        <div>
+        <div {...english}>
           <div className="outline-h">
             <h3>Assessments</h3>
           </div>
@@ -320,7 +365,7 @@ export default async function CourseViewPage({
       )}
 
       {visibleAssignments.length > 0 && (
-        <div>
+        <div {...english}>
           <div className="outline-h">
             <h3>Assignments</h3>
           </div>
@@ -358,7 +403,7 @@ export default async function CourseViewPage({
       )}
 
       <p style={{ marginTop: '1.5rem' }}>
-        <Link href="/learn">Back to my learning</Link>
+        <Link href="/learn">{t('course.back')}</Link>
       </p>
     </div>
   );

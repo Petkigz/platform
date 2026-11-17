@@ -114,7 +114,7 @@ export default async function LearnPage() {
   const num = (value: number) => formatNumber(shown.code, value);
   const mismatch = shown.code !== locale;
   // The parts below that are not translated yet: live classes, the streak
-  // strip, memorisation and the learner-profile prompt. Marked as English so a
+  // strip and memorisation, all behind switches. Marked as English so a
   // right-to-left page lays them out, and a screen reader says them, as English.
   const english = shown.code === 'en' ? {} : ({ lang: 'en', dir: 'ltr' } as const);
 
@@ -309,12 +309,19 @@ export default async function LearnPage() {
         <div className="card learner-empty">
           <p className="empty">{t('learn.empty')}</p>
           {!myProfileId && (
-            <div {...english}>
-              <p className="muted">
-                Enrolling needs a learner profile, and this account does not have one yet.
-              </p>
-              <ClaimLearner note="A course is always for a named learner. This makes you one on this account." />
-            </div>
+            <>
+              <p className="muted">{t('learn.needProfile')}</p>
+              <ClaimLearner
+                label={t('learn.claim')}
+                note={t('learn.claimNote')}
+                words={{
+                  busy: t('learn.claimBusy'),
+                  done: t('learn.claimDone'),
+                  ready: t('learn.claimReady'),
+                  failed: t('learn.claimFailed'),
+                }}
+              />
+            </>
           )}
           <Link href="/catalogue" className="btn">{t('home.browse')}</Link>
         </div>

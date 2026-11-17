@@ -508,9 +508,10 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 64% there (192 of 302 sentences; it was 71% of 272 until
-  the learner dashboard was added in twenty-seven languages only, below), in
-  the reader's own language,
+  the nineteen reads 59% there (192 of 325 sentences; it was 71% of 272, then
+  64% of 302 when the learner dashboard was added in twenty-seven languages
+  only, then this when the course page was, below), in the reader's own
+  language,
   with the existing sentence that the rest is in English. No new sentence was
   written for this, because it would have had to be written in the same
   twenty-three languages.
@@ -535,7 +536,7 @@ still unreviewed and still saying so.
   Burmese sentence on the page, and the tool still calculates six rows. It does
   the direction check in Pashto, opens the correction sheet on the Hausa
   companion part (eighty boxes, each with the draft, and the notice; no notice
-  on the Hausa navigation or on Swahili), and reads 64% on `/language` in Hausa.
+  on the Hausa navigation or on Swahili), and reads 59% on `/language` in Hausa.
 
 **Four languages withheld whole (owner's second answer, 2026-11-16).** Asked
 whether the rest of the interface in Wolof, Fulfulde, Bambara and Dhivehi should
@@ -599,16 +600,36 @@ written: not a held draft, nothing.
   parts a held language may lack. The test that required every African language
   to be written whole now allows exactly those parts for exactly those
   languages; an unheld language must still have every sentence. The owner's
-  audit panel does not list the 690 absent lines as findings and says, in its
+  audit panel does not list the 1,219 absent lines (53 for each of 23) as findings and says, in its
   list of what it does not check, that it leaves them out.
 - *The correction sheet offers the part.* "The learner dashboard" is a part on
   `/contribute` for all fifty languages; for a held language each box opens on
   the English sentence, since there is no draft.
 - *Still English on `/learn` in every language:* live classes, the streak
-  strip, memorisation (all three behind switches that are off) and the
-  learner-profile prompt shown to an account with no learner yet, which is a
-  component three other pages share. They are marked as English. The course
-  page and the lesson page are not translated at all.
+  strip and memorisation, all three behind switches that are off. They are
+  marked as English. The learner-profile prompt shown to a new account is now
+  translated on this page (seven more `learn.*` sentences); on the three other
+  pages that show it (`/account`, `/family`, the buy page) it is English,
+  because those pages are.
+- *The course page (`/learn/[enrolmentId]`) followed, on the same rule.*
+  Sixteen `course.*` sentences in the same twenty-seven languages
+  (`messages/course.ts`): the heading line, the carry-on card (the dashboard's
+  words), the progress bar and the sentence under it, the two completion
+  notices, the outline and the mark-complete control with its "could not
+  confirm" message. Still English on it for every reader, and marked as
+  English: the reasons a course is not yet complete (the database writes them
+  in `evaluate_completion`), and the assessment, assignment and cohort lists.
+  Titles a teacher wrote are shown as written. **The lesson page is not
+  translated**, nor are the assessment and assignment pages; the 404 page is
+  English too.
+- *What it did to the nineteen.* They now read 59% on `/language`. The test
+  that stops a mostly-English language being offered had its floor at 60 and
+  is now at 50, which is what its own sentence ("most of whose screens are
+  English") says. That was the builder's change, not the owner's, and it is
+  not a place to keep moving: the lesson page written the same way would put
+  them near 53%, and the assessment and assignment pages after it under half.
+  Before that, the owner has to choose between leaving them in the picker with
+  a falling number, taking them out as the four were, or finding speakers.
 - *Checked by request and in a browser* against a synthetic backend: English,
   Arabic, French, Hausa, Pashto, Wolof; Arabic and Tamil at three widths. See
   `scripts/learner-dashboard-route-smoke.mjs`.

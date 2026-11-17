@@ -9,16 +9,41 @@ import { useRouter } from 'next/navigation';
  * Optimistic, because a progress tick that waits on a round trip feels broken
  * on a slow connection. A lost or ambiguous response is not proof that the
  * write failed: show the last confirmed state and require a fresh page read.
+ *
+ * The words can be handed in by a page written in the reader's language (the
+ * course page does); without them it is the English it always was, which is
+ * what the lesson page still gets.
  */
+export type MarkCompleteWords = {
+  mark: string;
+  undo: string;
+  saving: string;
+  /** The response was lost: the write may or may not have happened. */
+  unconfirmed: string;
+  reload: string;
+};
+
+const ENGLISH: MarkCompleteWords = {
+  mark: 'Mark complete',
+  undo: 'Undo',
+  saving: 'Saving…',
+  unconfirmed:
+    'Could not confirm whether progress was saved. Reload this page to check before trying again.',
+  reload: 'Reload page',
+};
+
 export function MarkComplete({
   enrolmentId,
   lessonId,
   initiallyDone,
+  words,
 }: {
   enrolmentId: string;
   lessonId: string;
   initiallyDone: boolean;
+  words?: MarkCompleteWords;
 }) {
+  const say = words ?? ENGLISH;
   const router = useRouter();
   const [done, setDone] = useState(initiallyDone);
   const [uncertain, setUncertain] = useState(false);
@@ -65,7 +90,7 @@ export function MarkComplete({
           onClick={() => send('in_progress')}
           disabled={saving || pending || uncertain}
         >
-          {saving ? 'Saving…' : 'Undo'}
+          {saving ? say.saving : say.undo}
         </button>
       ) : (
         <button
@@ -74,14 +99,14 @@ export function MarkComplete({
           onClick={() => send('completed')}
           disabled={saving || pending || uncertain}
         >
-          {saving || pending ? 'Saving…' : 'Mark complete'}
+          {saving || pending ? say.saving : say.mark}
         </button>
       )}
       {uncertain && (
         <span className="danger" style={{ fontSize: '0.8rem' }} role="alert">
-          Could not confirm whether progress was saved. Reload this page to check before trying again.{' '}
+          {say.unconfirmed}{' '}
           <button type="button" className="btn ghost tiny" onClick={() => window.location.reload()}>
-            Reload page
+            {say.reload}
           </button>
         </span>
       )}

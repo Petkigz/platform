@@ -1936,6 +1936,11 @@ html[data-motion='reduce'] *::after {
 .course-workspace .lessons .t { min-width: 0; overflow-wrap: anywhere; }
 @media (max-width: 40rem) {
   .course-workspace .lessons li { flex-wrap: wrap; }
+  /* Wrapping needs something to wrap around. With a basis of nothing the title
+     gave way first: an assignment with a status badge and a "View submission"
+     button was left a column one letter wide on a phone. Seven rem is the least
+     a title is given before the badge or the button takes the next line. */
+  .course-workspace .lessons .t { flex: 1 1 7rem; }
 }
 
 /* --------------------------------------------------------------------------

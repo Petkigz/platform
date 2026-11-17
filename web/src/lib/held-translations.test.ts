@@ -29,6 +29,7 @@ import { CATALOGUES, WRITTEN } from './i18n/messages/catalogues.ts';
 import { en } from './i18n/messages/en.ts';
 import { HELD_FOR_REVIEW, UNWRITTEN_WHILE_HELD, WHOLE_LANGUAGE, isUnwritten } from './i18n/messages/held.ts';
 import { LEARN } from './i18n/messages/learn.ts';
+import { COURSE } from './i18n/messages/course.ts';
 import { auditAll } from './translation-audit.ts';
 import { SECTIONS } from './translations.ts';
 
@@ -398,11 +399,16 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // Owner's decision, 2026-11-16: a language the builder cannot write properly
   // falls back to English until a speaker has reviewed it. For a new screen
   // that means not writing it — a held draft would be the same guess, kept.
-  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn']);
-  assert.equal(unwrittenKeys.length, 30);
-  assert.ok(unwrittenKeys.every((key) => key.startsWith('learn.')));
+  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course']);
+  // Thirty-seven for the dashboard (the learner-profile prompt is seven of
+  // them) and sixteen for the course page.
+  assert.equal(unwrittenKeys.length, 53);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('learn.')).length, 37);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('course.')).length, 16);
 
+  // Two files, one rule: the same languages in both.
   const written = Object.keys(LEARN).sort();
+  assert.deepEqual(Object.keys(COURSE).sort(), written);
   const expected = LOCALES.map((l) => l.code)
     .filter((code) => code !== 'en' && !Object.hasOwn(HELD_FOR_REVIEW, code))
     .sort();
@@ -410,8 +416,8 @@ test('the learner dashboard is written for the languages with nothing held, and 
   assert.equal(written.length, 27);
 
   for (const code of expected) {
-    const own = LEARN[code] ?? {};
-    assert.deepEqual(Object.keys(own).sort(), [...unwrittenKeys].sort(), `${code} is short a dashboard sentence`);
+    const own: Partial<Record<string, string>> = { ...LEARN[code], ...COURSE[code] };
+    assert.deepEqual(Object.keys(own).sort(), [...unwrittenKeys].sort(), `${code} is short a dashboard or course sentence`);
     for (const key of unwrittenKeys) {
       const value = own[key] ?? '';
       assert.ok(value.trim() !== '' && value === value.trim(), `${code}.${key}`);
@@ -423,6 +429,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
       assert.deepEqual(names(value), names(en[key]), `${code}.${key} changed its placeholders`);
     }
     assert.equal(languageShownFor(code, 'learn').code, code);
+    assert.equal(languageShownFor(code, 'course').code, code);
     assert.equal(coverageOf(code).percent, 100);
   }
 
@@ -434,8 +441,17 @@ test('the learner dashboard is written for the languages with nothing held, and 
       assert.equal(isUnwritten(code, key), true);
       if (!isWithheld(code)) assert.equal(translator(code)(key), en[key]);
     }
-    assert.equal(languageShownFor(code, 'learn').code, 'en');
-    assert.equal(languageShownFor(code, 'learn').dir, 'ltr');
+    for (const part of UNWRITTEN_WHILE_HELD) {
+      assert.equal(languageShownFor(code, part).code, 'en');
+      assert.equal(languageShownFor(code, part).dir, 'ltr');
+    }
+  }
+  // What that costs the nineteen that are still in the picker, said out loud:
+  // 192 of 325 sentences. `i18n.test.ts` holds the floor under it.
+  for (const [code] of partly) {
+    assert.equal(coverageOf(code).translated, 192, code);
+    assert.equal(coverageOf(code).total, 325);
+    assert.equal(coverageOf(code).percent, 59, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');
   assert.equal(languageShownFor('en', 'learn').code, 'en');
@@ -456,7 +472,7 @@ test('the dashboard page reads its words from the catalogue, in one language', (
   // Every sentence the file holds is used by the page or by the card it leads
   // with: a key nobody reads is a translation somebody wrote for nothing.
   const sources = page + read('./continue-point.ts');
-  for (const key of unwrittenKeys) {
+  for (const key of unwrittenKeys.filter((k) => k.startsWith('learn.'))) {
     assert.ok(sources.includes(`'${key}'`), `${key} is translated and never shown`);
   }
 
@@ -470,10 +486,28 @@ test('the dashboard page reads its words from the catalogue, in one language', (
   }
 
   // What is still English is marked as English rather than left to inherit a
-  // right-to-left frame: live classes, the streak strip, memorisation and the
-  // learner-profile prompt.
+  // right-to-left frame: live classes, the streak strip and memorisation.
   assert.match(page, /const english = shown\.code === 'en' \? \{\} : \(\{ lang: 'en', dir: 'ltr' \} as const\);/u);
-  assert.equal(page.match(/\{\.\.\.english\}/gu)?.length, 4);
+  assert.equal(page.match(/\{\.\.\.english\}/gu)?.length, 3);
+
+  // The learner-profile prompt is no longer one of them. Its words go to the
+  // client button as props, every one of them, so a French page cannot show
+  // "Setting up…" for the second the request takes.
+  assert.ok(!page.includes('Enrolling needs a learner profile'));
+  assert.match(
+    page,
+    /<ClaimLearner\s+label=\{t\('learn\.claim'\)\}\s+note=\{t\('learn\.claimNote'\)\}\s+words=\{\{\s+busy: t\('learn\.claimBusy'\),\s+done: t\('learn\.claimDone'\),\s+ready: t\('learn\.claimReady'\),\s+failed: t\('learn\.claimFailed'\),\s+\}\}\s+\/>/u,
+  );
+  const claim = read('../components/claim-learner.tsx');
+  assert.doesNotMatch(claim, /useT\(/u);
+  assert.match(claim, /const say = words \?\? ENGLISH;/u);
+  // The server's reason is English; a translated page says its own sentence.
+  assert.match(claim, /setError\(words \? words\.failed : \(json\?\.message \?\? say\.failed\)\);/u);
+  // The other three screens that show the prompt are not translated and pass
+  // no words, so they read exactly as before.
+  for (const caller of ['../app/account/page.tsx', '../app/courses/[slug]/buy/page.tsx', '../app/family/page.tsx']) {
+    assert.doesNotMatch(read(caller), /<ClaimLearner[^>]*words=/u, caller);
+  }
 
   // The dashboard's sentences are left out of the catalogue every page
   // carries, which is only safe while no client component asks for one.
@@ -485,11 +519,63 @@ test('the dashboard page reads its words from the catalogue, in one language', (
     );
   const clients = files('').filter((file) => {
     const text = readFileSync(new URL(file, src), 'utf8');
-    return /^\s*'use client'/u.test(text) && /'learn\.[a-zA-Z]+'/u.test(text);
+    return /^\s*'use client'/u.test(text) && /'(?:learn|course)\.[a-zA-Z]+'/u.test(text);
   });
-  assert.deepEqual(clients, [], 'a client component asks for a dashboard sentence the shell does not carry');
+  assert.deepEqual(clients, [], 'a client component asks for a dashboard or course sentence the shell does not carry');
 
   // The carry-on card is given the same words and digits.
   assert.match(page, /fetchCarryOn\(supabase, enrolments, \{ t, number: num \}\)/u);
   assert.match(read('../app/_shared/carry-on.tsx'), /copy\.meta \?\? `Lesson \$\{point\.index\} of \$\{point\.total\}`/u);
+});
+
+test('the course page reads its words from the catalogue, and marks what it cannot', () => {
+  const page = read('../app/learn/[enrolmentId]/page.tsx');
+
+  assert.match(page, /const shown = languageShownFor\(locale, 'course'\);/u);
+  assert.match(page, /const t = translator\(shown\.code\);/u);
+  assert.match(page, /formatNumber\(shown\.code, value\)/u);
+  assert.match(page, /lang=\{mismatch \? shown\.code : undefined\}\s+dir=\{mismatch \? shown\.dir : undefined\}/u);
+  assert.doesNotMatch(page, /^'use client'/u);
+
+  // Every course sentence is on the page.
+  for (const key of unwrittenKeys.filter((k) => k.startsWith('course.'))) {
+    assert.ok(page.includes(`'${key}'`), `${key} is translated and never shown`);
+  }
+  // The carry-on card gets the dashboard's words and digits rather than the
+  // English it had here before.
+  assert.match(page, /carryOnHeading\(carryOn, progressRows\.length > 0, \{ t, number: num \}\)/u);
+
+  // The English that was typed into the translated part is gone.
+  for (const sentence of [
+    'My learning', 'Progress tracking is not enabled', 'Course progress', 'lessons complete',
+    'Course complete.', 'Certificates are issued', 'Still to do:', 'no published outline',
+    'Back to my learning', 'Version {',
+  ]) {
+    assert.ok(!page.includes(sentence), `"${sentence}" is still typed into the course page`);
+  }
+
+  // Four things on it are English for every reader, and say so: the reasons
+  // the database gives for a course not being complete, and the cohort,
+  // assessment and assignment lists. A fifth unmarked one would put English
+  // sentences into a right-to-left page with their full stops on the left.
+  assert.match(page, /const english = shown\.code === 'en' \? \{\} : \(\{ lang: 'en', dir: 'ltr' \} as const\);/u);
+  assert.equal(page.match(/\{\.\.\.english\}/gu)?.length, 4);
+  assert.match(page, /<ul style=\{\{[^}]+\}\} \{\.\.\.english\}>\s+\{completion\.blocking\.map/u);
+  assert.match(page, /<div \{\.\.\.english\}>\s+<CohortMemberships/u);
+  assert.match(page, /assessments\.length > 0 && \(\s+<div \{\.\.\.english\}>/u);
+  assert.match(page, /visibleAssignments\.length > 0 && \(\s+<div \{\.\.\.english\}>/u);
+
+  // The mark-complete control is a client component. It is handed its five
+  // strings; it does not go looking for them in a catalogue it was not sent.
+  assert.match(
+    page,
+    /const markWords: MarkCompleteWords = \{\s+mark: t\('course\.markComplete'\),\s+undo: t\('course\.undo'\),\s+saving: t\('course\.saving'\),\s+unconfirmed: t\('course\.unconfirmed'\),\s+reload: t\('course\.reload'\),\s+\};/u,
+  );
+  assert.match(page, /initiallyDone=\{done\}\s+words=\{markWords\}/u);
+  const control = read('../app/learn/[enrolmentId]/mark-complete.tsx');
+  assert.doesNotMatch(control, /useT\(/u);
+  assert.match(control, /const say = words \?\? ENGLISH;/u);
+  // The lesson page uses the same control and is not translated: no words, so
+  // the English it always had.
+  assert.doesNotMatch(read('../app/learn/[enrolmentId]/lesson/[lessonId]/page.tsx'), /<MarkComplete[^>]*words=/u);
 });

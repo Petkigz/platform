@@ -414,6 +414,34 @@ export const en = {
   'learn.carryContinue': 'Continue lesson {number}',
   'learn.carryOpen': 'Open lesson {number}',
   'learn.carryMeta': 'Lesson {index} of {total}',
+  // The prompt shown on the dashboard to an account with no learner profile.
+  'learn.needProfile': 'Enrolling needs a learner profile, and this account does not have one yet.',
+  'learn.claimNote': 'A course is always for a named learner. This makes you one on this account.',
+  'learn.claim': 'Learn on this account',
+  'learn.claimBusy': 'Setting up…',
+  'learn.claimDone': 'You are ready',
+  'learn.claimReady': 'You can now enrol in a course, buy one, or share your own progress.',
+  'learn.claimFailed': 'Your learner profile could not be set up.',
+
+  // The course page. Written in the same twenty-seven languages (`course.ts`).
+  'course.fallbackTitle': 'Course',
+  'course.version': 'Version {number} · {language}',
+  'course.progressOff':
+    'Progress tracking is not enabled yet. You can still read the course and play its lessons; nothing is being recorded.',
+  'course.progressLabel': 'Course progress',
+  'course.lessonsComplete': '{done} of {total} lessons complete · {percent}%',
+  'course.completeHeading': 'Course complete.',
+  'course.completeBody': 'Certificates are issued by the platform once your completion has been reviewed.',
+  'course.stillToDo': 'Still to do:',
+  'course.noOutline': 'This course has no published outline yet.',
+  'course.preview': 'Preview',
+  'course.markComplete': 'Mark complete',
+  'course.undo': 'Undo',
+  'course.saving': 'Saving…',
+  'course.unconfirmed':
+    'Could not confirm whether progress was saved. Reload this page to check before trying again.',
+  'course.reload': 'Reload page',
+  'course.back': 'Back to my learning',
 } as const;
 
 export type MessageKey = keyof typeof en;

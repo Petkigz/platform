@@ -69,14 +69,17 @@ const COMPANION_PREFIX = 'companion.';
 /**
  * Sentences only a server-rendered page reads.
  *
- * The learner dashboard is a Server Component: its words are in the HTML by the
- * time a browser sees it, and no client component asks for one. Thirty
- * sentences in the catalogue every page carries would be paid for by every
- * reader of the front page and used by none of them. If a client component
- * ever needs one, it will render the key instead of the sentence — which is
- * loud — and the fix is to take its prefix out of this list.
+ * The learner dashboard and the course page are Server Components: their words
+ * are in the HTML by the time a browser sees it, and no client component asks
+ * for one. Fifty-three sentences in the catalogue every page carries would be
+ * paid for by every reader of the front page and used by none of them. The two
+ * client controls on those pages (mark complete, the learner-profile prompt)
+ * are handed their strings as props instead. If a client component ever asks
+ * for one of these keys it gets English — the sentence is not in what it was
+ * sent — so a test forbids it; the other fix is to take the prefix out of this
+ * list.
  */
-const SERVER_ONLY_PREFIXES: readonly string[] = ['learn.'];
+const SERVER_ONLY_PREFIXES: readonly string[] = ['learn.', 'course.'];
 
 /** Everything a client component outside the companion pages can ask for. */
 export function shellMessagesFor(code: LocaleCode): Partial<Messages> {

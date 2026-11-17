@@ -17,7 +17,7 @@ const rows = [
   { id: 'own-enrolment', status: 'active', enrolled_at: '2026-01-01T00:00:00Z', learner_profile_id: 'own', course_version_id: 'v1', learner_profiles: [{ display_name: 'Adult', learner_type: 'adult' }], courses: [{ title: 'Synthetic adult course', slug: 'adult-course' }], course_versions: [{ version_number: 1, language: 'en' }] },
   { id: 'child-enrolment', status: 'active', enrolled_at: '2026-01-01T00:00:00Z', learner_profile_id: 'child', course_version_id: 'v2', learner_profiles: [{ display_name: 'Synthetic child', learner_type: 'child' }], courses: [{ title: 'Synthetic child course', slug: 'child-course' }], course_versions: [{ version_number: 2, language: 'en' }] },
 ];
-let enabled = false; let flagOutage = false; let profileOutage = false;
+let enabled = false; let flagOutage = false; let profileOutage = false; let newcomer = false;
 // Off for the original three states, which pin that an empty outline makes no
 // carry-on card; on for the language checks, which need the card to read.
 let outline = false;
@@ -48,8 +48,8 @@ const fake = createServer(async (req, res) => {
   } else if (path === '/rest/v1/user_profiles') {
     if (profileOutage) { res.writeHead(503); res.end('{"message":"simulated profile failure"}'); }
     else res.end(JSON.stringify([{ display_name: 'Synthetic learner' }]));
-  } else if (path === '/rest/v1/learner_profiles') res.end(JSON.stringify([{ id: 'own' }]));
-  else if (path === '/rest/v1/course_enrolments') res.end(JSON.stringify(rows));
+  } else if (path === '/rest/v1/learner_profiles') res.end(JSON.stringify(newcomer ? [] : [{ id: 'own' }]));
+  else if (path === '/rest/v1/course_enrolments') res.end(JSON.stringify(newcomer ? [] : rows));
   else if (path === '/rest/v1/course_wishlist') { res.setHeader('content-range', '*/0'); res.end(); }
   else if (path === '/rest/v1/rpc/enrolment_progress_summary') {
     res.end(JSON.stringify({ lessons_total: 4, lessons_done: payload.p_enrolment_id === 'own-enrolment' ? 1 : 0, percent_complete: payload.p_enrolment_id === 'own-enrolment' ? 25 : 0 }));
@@ -148,6 +148,24 @@ try {
   const pashto = await page({ 'accept-language': 'ps' });
   assert.match(root(pashto), /lang="ps"/); assert.match(root(pashto), /dir="rtl"/);
   assert.equal(wrapper(pashto), ' lang="en" dir="ltr"');
+
+  // A new account: no learner profile and nothing enrolled. The prompt that
+  // makes one is in the reader's language, button included, and in English for
+  // a language that has no dashboard of its own.
+  newcomer = true;
+  {
+    const inner = (html) => html.slice(html.indexOf('learner-empty'), html.indexOf('</main>')).replace(/<script[\s\S]*?<\/script>/g, '');
+    const en = inner(await page({ 'accept-language': 'en' }));
+    for (const sentence of ['Enrolling needs a learner profile, and this account does not have one yet.', 'Learn on this account', 'A course is always for a named learner. This makes you one on this account.']) assert.ok(en.includes(sentence), `English prompt lost "${sentence}"`);
+    assert.equal(en.includes('lang="en"'), false);
+    const ar = inner(await page({ 'accept-language': 'ar' }));
+    for (const sentence of ['التسجيل في دورة يتطلب ملف متعلّم', 'التعلّم على هذا الحساب', 'كل دورة تكون لمتعلّم واحد باسمه.']) assert.ok(ar.includes(sentence), `Arabic prompt lacks "${sentence}"`);
+    for (const sentence of ['Enrolling needs', 'Learn on this account', 'A course is always']) assert.equal(ar.includes(sentence), false, `Arabic prompt still says "${sentence}"`);
+    assert.equal(ar.includes('lang="en"'), false, 'the Arabic prompt is still marked as English');
+    const ha = await page({ 'accept-language': 'ha' });
+    assert.equal(wrapper(ha), ' lang="en" dir="ltr"'); assert.ok(inner(ha).includes('Learn on this account'));
+  }
+  newcomer = false;
 
   // Wolof is withheld whole: English everywhere, so nothing to mark.
   const wolof = await page({ 'accept-language': 'wo, fr' });

@@ -7897,7 +7897,7 @@ Somali, Igbo, Yoruba, Hausa, Kinyarwanda, Luganda, Lingala, Malagasy, Chichewa,
 Shona, Sesotho, Zulu, Xhosa, Pashto, Sinhala and Burmese. Readers of those
 languages see those screens in English and the rest of the interface in their
 own language; the language page shows 71% for each (64% once the learner
-dashboard was added, below). The drafts are kept for a
+dashboard was added, 59% once the course page was; both below). The drafts are kept for a
 reviewer and are not shown to learners. A language is released by removing its
 line from `web/src/lib/i18n/messages/held.ts` once a first-language speaker's
 review of that part has been applied.
@@ -7931,6 +7931,36 @@ device lists; a device that lists another offered language *ahead* of it still
 gets that language. The cost, stated when the choice was put: a reader who told
 their device they also read French is shown English rather than French.
 
+## How much English a held language may show and still be offered — **OPEN, the owner's**
+
+The rule below (a new screen is not written for a language with a part held)
+has a cost that grows with every screen. Nineteen languages are in the picker
+with their navigation, sign-in, catalogue and front page translated and
+everything since in English: 71% on the language page when the companion tools
+were held, 64% after the learner dashboard, **59% after the course page**.
+
+A test refuses to offer a language "most of whose screens are English". Its
+floor was 60. The course page crossed it, and **the builder moved the floor to
+50** — the number the test's own sentence describes — rather than leave the
+course page untranslated for the twenty-seven languages that can have it. That
+was not the owner's decision and is recorded here as such.
+
+It should not be moved again without one. The lesson page, written the same
+way, puts the nineteen near 53%; the assessment and assignment pages after it
+put them under half, and the test will fail on purpose. The choices then:
+
+1. **Keep them in the picker with the falling number.** The language page
+   already tells each reader the percentage, in their own language. The floor
+   goes, or drops to the public pages only.
+2. **Withhold them whole, like the four.** Their readers get English
+   everywhere, and nineteen languages leave the picker until a speaker reviews
+   them. Consistent with the first two answers of 2026-11-16; a large visible
+   step backwards for readers who can use the public pages today.
+3. **Count differently.** Measure the floor on the screens a visitor meets
+   before signing in, where these languages are complete, and say so on the
+   language page. Honest only if the sentence there changes with it.
+4. **Find speakers**, which is what ends the question for a language.
+
 ## New screens are not written in a language that has anything held — **DECIDED 2026-11-16**
 
 Offered as the plan for the learner dashboard — translate it in the twenty-seven
@@ -7949,6 +7979,11 @@ Azerbaijani, Tajik, Kyrgyz, Turkmen, Tamil and Nepali. The twenty-three
 languages with a part held have no entry; their readers see the dashboard in
 English, marked as English, and the language page counts it against them (64%
 for each of the nineteen, from 71%).
+
+The course page and the new-account prompt followed on the same rule the same
+day: twenty-three more sentences (`course.ts`), the same twenty-seven
+languages, 59% for the nineteen. `UNWRITTEN_WHILE_HELD` is now `learn` and
+`course`.
 
 **The rule going forward.** A part named in `UNWRITTEN_WHILE_HELD`
 (`web/src/lib/i18n/messages/held.ts`) may be absent from a language that has
