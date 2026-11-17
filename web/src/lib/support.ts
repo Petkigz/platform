@@ -17,6 +17,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { one, type Embedded } from './embed.ts';
 
 export const SUPPORT_CATEGORIES = [
   { value: 'account', label: 'My account' },
@@ -121,8 +122,8 @@ type CaseRow = {
   close_reason: string | null;
   created_at: string;
   updated_at: string;
-  requester?: { display_name: string | null }[] | null;
-  assignee?: { display_name: string | null }[] | null;
+  requester?: Embedded<{ display_name: string | null }>;
+  assignee?: Embedded<{ display_name: string | null }>;
 };
 
 type MessageRow = {
@@ -133,7 +134,7 @@ type MessageRow = {
   body: string;
   is_internal: boolean;
   created_at: string;
-  author?: { display_name: string | null }[] | null;
+  author?: Embedded<{ display_name: string | null }>;
 };
 
 const CASE_COLUMNS =
@@ -151,11 +152,11 @@ function toCase(r: CaseRow): SupportCase {
     status: r.status as SupportStatus,
     priority: r.priority as SupportPriority,
     requestedBy: r.requested_by,
-    requesterName: r.requester?.[0]?.display_name ?? null,
+    requesterName: one(r.requester)?.display_name ?? null,
     learnerProfileId: r.learner_profile_id,
     orderId: r.order_id,
     assignedTo: r.assigned_to,
-    assigneeName: r.assignee?.[0]?.display_name ?? null,
+    assigneeName: one(r.assignee)?.display_name ?? null,
     resolvedAt: r.resolved_at,
     resolutionNote: r.resolution_note,
     closedAt: r.closed_at,
@@ -427,7 +428,7 @@ export async function fetchCaseMessages(
   return ((data ?? []) as unknown as MessageRow[]).map((r) => ({
     id: r.id,
     caseId: r.case_id,
-    authorName: r.author?.[0]?.display_name ?? null,
+    authorName: one(r.author)?.display_name ?? null,
     authorIsStaff: r.author_kind === 'staff',
     authorIsMe: r.author_user_id === args.myUserId,
     body: r.body,

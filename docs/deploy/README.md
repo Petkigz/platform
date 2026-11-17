@@ -195,7 +195,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-350 files in `supabase/migrations/`, applied in filename order — the 14-digit
+351 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -220,10 +220,55 @@ ownership, privileges, extensions or network failure behavior. The subsequent
 hosted apply succeeded, but does not verify real Auth requests or runtime
 behaviour. Do not assume that a dry run verifies trigger permissions.
 After a successful application, verify that the history contains every expected
-version, through `20261281143000_search_lessons_materialize_candidates.sql`, as well as running
+version, through `20261281144000_platform_default_grants.sql`, as well as running
 the checks in section 2. The initial hosted apply stopped at 1350; 1360–1430
-are pending and require a reviewed, coordinated app/database rollout. Resource resume requires app/database coordination, stale-worker draining and verification. Do not apply these changes alone. A history entry
+are pending and require a reviewed, coordinated app/database rollout. 1440
+(`platform_default_grants`) is also pending and is the one that matters most
+before any person is given an account: see "What the platform grants on its
+own" below. Resource resume requires app/database coordination, stale-worker draining and verification. Do not apply these changes alone. A history entry
 alone does not prove the schema works.
+
+#### What the platform grants on its own
+
+A hosted project is created with default privileges that grant everything the
+migrating role makes in `public` to `anon`, `authenticated` and `service_role`
+by name. `revoke … from public` in a migration does not take those back, so on
+a hosted project functions the migrations closed stayed open to `anon`,
+including some that do not check their caller (`notify_user`, the teacher
+ledger functions). `20261281144000_platform_default_grants.sql` removes the
+platform's grants and makes again, by name, the ones the migrations meant.
+
+- **Any project that has run migrations up to 1430 and not 1440 must not hold
+  real accounts.** The existing test project stopped at 1350 and is in that
+  state; it has no users.
+- After applying, check from the SQL editor. Both must return no rows:
+
+  ```sql
+  -- server-only functions a browser role can still call
+  select p.oid::regprocedure
+    from pg_proc p
+   where p.pronamespace = 'public'::regnamespace
+     and p.proname in ('notify_user', 'reverse_earnings_for_refund',
+                       'accrue_instructor_earnings', 'recompute_order_totals',
+                       'grant_subscription_plan_entitlements',
+                       'instructor_payout_totals')
+     and (has_function_privilege('anon', p.oid, 'execute')
+          or has_function_privilege('authenticated', p.oid, 'execute'));
+
+  -- anything a visitor who is not signed in may change
+  select c.relname
+    from pg_class c
+   where c.relnamespace = 'public'::regnamespace and c.relkind in ('r', 'p')
+     and (has_table_privilege('anon', c.oid, 'update')
+          or has_table_privilege('anon', c.oid, 'delete')
+          or has_table_privilege('anon', c.oid, 'truncate'));
+  ```
+
+- The migration fixes default privileges for objects made by the role that
+  runs it. Run every later migration as that same role (`postgres` on a hosted
+  project), or the platform's defaults for another role apply again.
+  `scripts/platform-grants-check.mjs` guards the repository; it does not look
+  at a project.
 
 #### Optional GitHub Actions preview for the existing test project
 

@@ -19,6 +19,7 @@ import {
   fetchCourseAssignments,
   SUBMISSION_STATUS_LABEL,
 } from '@/lib/course-assignments';
+import { one, type Embedded } from '@/lib/embed';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,12 +42,13 @@ type EnrolmentRow = {
   course_version_id: string;
   learner_profile_id: string;
   enrolled_at: string;
-  courses: { title: string; slug: string }[] | null;
-  course_versions: {
+  // One course and one version per enrolment; read with one().
+  courses: Embedded<{ title: string; slug: string }>;
+  course_versions: Embedded<{
     version_number: number;
     language: string;
     course_sections: Section[] | null;
-  }[] | null;
+  }>;
 };
 
 /**
@@ -126,8 +128,9 @@ export default async function CourseViewPage({
   // notFound rather than a permission error.
   if (!enrolment) notFound();
 
-  const course = enrolment.courses?.[0];
-  const version = enrolment.course_versions?.[0];
+  // One course and one version per enrolment: an object from PostgREST.
+  const course = one(enrolment.courses);
+  const version = one(enrolment.course_versions);
 
   const sections = (version?.course_sections ?? [])
     .slice()

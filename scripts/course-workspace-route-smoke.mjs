@@ -33,7 +33,7 @@ const fake = createServer(async (req, res) => {
   }
   let body = ''; for await (const part of req) body += part;
   const payload = body ? JSON.parse(body) : null; calls.push({ path, params: request.searchParams, payload });
-  if (path === '/rest/v1/course_enrolments') res.end(JSON.stringify(available ? [{ id: 'enrolment', status: 'active', course_id: 'course', course_version_id: 'version', learner_profile_id: 'learner', enrolled_at: '2026-01-01T00:00:00Z', courses: [{ title: 'Synthetic course', slug: 'synthetic-course' }], course_versions: [{ version_number: 2, language: 'en', course_sections: [{ id: 'section', title: 'Synthetic section', position: 1, lessons: [{ id: 'lesson', title: 'Synthetic lesson', position: 1, is_preview: false }] }] }] }] : []));
+  if (path === '/rest/v1/course_enrolments') res.end(JSON.stringify(available ? [{ id: 'enrolment', status: 'active', course_id: 'course', course_version_id: 'version', learner_profile_id: 'learner', enrolled_at: '2026-01-01T00:00:00Z', courses: { title: 'Synthetic course', slug: 'synthetic-course' }, course_versions: { version_number: 2, language: 'en', course_sections: [{ id: 'section', title: 'Synthetic section', position: 1, lessons: [{ id: 'lesson', title: 'Synthetic lesson', position: 1, is_preview: false }] }] } }] : []));
   else if (path === '/rest/v1/rpc/setting_bool') res.end(JSON.stringify(payload.p_key === 'learning.progress' && progressOn));
   else if (path === '/rest/v1/lesson_progress') res.end('[]');
   else if (path === '/rest/v1/rpc/enrolment_progress_summary') res.end(JSON.stringify({ lessons_total: 1, lessons_done: 0, percent_complete: 0 }));

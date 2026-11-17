@@ -20,6 +20,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { one, type Embedded } from './embed.ts';
 
 export type QuestionType =
   | 'single_choice'
@@ -336,11 +337,11 @@ type ResponseRow = {
   score: string | number | null;
   is_correct: boolean | null;
   grading_feedback: string | null;
-  assessment_questions?: {
+  assessment_questions?: Embedded<{
     content: unknown;
     points: string | number | null;
     grading_method: string | null;
-  }[] | null;
+  }>;
 };
 
 const num = (v: string | number | null): number | null =>
@@ -393,7 +394,8 @@ export async function fetchAttemptResults(
       const comments: MarkedAnswer[] = ((data ?? []) as unknown as ResponseRow[])
         .filter((r) => r.grading_feedback !== null)
         .map((r) => {
-          const question = r.assessment_questions?.[0];
+          // One question per answer: an object from PostgREST.
+          const question = one(r.assessment_questions);
           return {
             prompt: question
               ? promptOf({

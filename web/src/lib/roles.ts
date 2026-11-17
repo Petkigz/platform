@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { one, type Embedded } from './embed.ts';
 
 export type RoleRow = {
   code: string;
@@ -47,12 +48,13 @@ export async function fetchRoleRoster(
     assignments: ((assignRows ?? []) as unknown as {
       user_id: string;
       assigned_at: string;
-      role: { code: string }[] | null;
-      assigner: { display_name: string | null }[] | null;
+      role: Embedded<{ code: string }>;
+      assigner: Embedded<{ display_name: string | null }>;
     }[]).map(({ role, assigner, ...row }) => ({
       ...row,
-      role_code: role?.[0]?.code ?? '',
-      assigner: assigner?.[0] ?? null,
+      // One role and one assigner per assignment: objects from PostgREST.
+      role_code: one(role)?.code ?? '',
+      assigner: one(assigner),
     })),
   };
 }

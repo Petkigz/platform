@@ -15,6 +15,7 @@ import {
 } from '@/lib/guardian-consent';
 import { ConsentForm } from './consent-form';
 import { ConsentActions } from './consent-actions';
+import { one, type Embedded } from '@/lib/embed';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,10 +54,10 @@ export default async function FamilyGuardiansPage() {
 
   type ChildRow = { id: string; display_name: string; learner_type: string };
   const children: ChildRow[] = ((memberships ?? []) as {
-    families: { id: string; learner_profiles: ChildRow[] | null }[] | null;
+    families: Embedded<{ id: string; learner_profiles: ChildRow[] | null }>;
   }[])
-    .flatMap((m) => m.families ?? [])
-    .flatMap((f) => f.learner_profiles ?? [])
+    // A membership has one family (an object); a family has many learners.
+    .flatMap((m) => one(m.families)?.learner_profiles ?? [])
     .filter((c) => c.learner_type === 'child');
 
   const stateFor = new Map(

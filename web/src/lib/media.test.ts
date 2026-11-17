@@ -590,7 +590,9 @@ test('the rows behind a bucket listing are read for the ids asked about, once', 
   assert.equal(rows[1]?.uploader, null);
   assert.deepEqual(calls, [
     'from:media_assets',
-    'select:id, display_name, mime_type, byte_size, status, user_profiles ( display_name )',
+    // The uploader, named by its constraint: an asset points at user_profiles
+    // twice (uploaded_by, purged_by) and PostgREST refuses to guess.
+    'select:id, display_name, mime_type, byte_size, status, user_profiles!media_assets_uploaded_by_fkey ( display_name )',
     `in:id=${assetId}`,
     'then',
   ]);

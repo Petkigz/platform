@@ -11,13 +11,14 @@ import {
 } from '@/lib/assessment';
 import { isFlagEnabled } from '@/lib/flags';
 import { Quiz } from './quiz';
+import { one } from '@/lib/embed';
 
 export const dynamic = 'force-dynamic';
 
 type EnrolmentRow = {
   id: string;
   learner_profile_id: string;
-  courses: { title: string }[] | null;
+  courses: { title: string } | { title: string }[] | null;
 };
 
 type AssessmentRow = {
@@ -102,7 +103,7 @@ export default async function AssessmentPage({
     <div className="container section">
       <p className="eyebrow">
         <Link href={`/learn/${enrolment.id}`}>
-          {enrolment.courses?.[0]?.title ?? 'Course'}
+          {one(enrolment.courses)?.title ?? 'Course'}
         </Link>
         {' · Assessment'}
       </p>

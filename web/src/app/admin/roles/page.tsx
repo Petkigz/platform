@@ -50,14 +50,13 @@ export default async function AdminRolesPage() {
   const holderIds = Array.from(new Set(assignments.map((a) => a.user_id)));
   const { data: profileRows } = await supabase
     .from('user_profiles')
-    .select('user_id, display_name, email')
+    .select('user_id, display_name')
     .in('user_id', holderIds.length > 0 ? holderIds : [user.id]);
 
   const profiles = new Map(
     ((profileRows ?? []) as unknown as {
       user_id: string;
       display_name: string | null;
-      email: string | null;
     }[]).map((p) => [p.user_id, p]),
   );
 
@@ -66,7 +65,10 @@ export default async function AdminRolesPage() {
 
   const nameOf = (id: string) => {
     const p = profiles.get(id);
-    return p?.display_name ?? p?.email ?? 'someone';
+    // The profile carries no address (that lives with the sign-in service and
+    // is not readable from here). Asking for one made the whole read fail on a
+    // real database, and every holder was then listed as "someone".
+    return p?.display_name ?? 'someone';
   };
 
   return (

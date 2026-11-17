@@ -40,6 +40,7 @@ import { recordEvent } from '@/lib/analytics-server';
 import { fetchOutline } from '@/lib/outline-query';
 import { lessonNeighbours } from '@/lib/outline';
 import { LessonNav } from '@/app/_shared/lesson-nav';
+import { one } from '@/lib/embed';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,7 +50,7 @@ type EnrolmentRow = {
   status: string;
   source: string;
   course_version_id: string;
-  courses: { id: string; title: string }[] | null;
+  courses: { id: string; title: string } | { id: string; title: string }[] | null;
 };
 
 /** Why a lesson can or cannot be saved, as `lesson_download_standing()` says it. */
@@ -322,7 +323,7 @@ export default async function LessonPage({
     canDownload = saveStanding?.allowed === true;
   }
 
-  const namedCourse = enrolment.courses?.[0]?.title ?? null;
+  const namedCourse = one(enrolment.courses)?.title ?? null;
   // The players are English and are handed an English name for a course whose
   // title could not be read, as before.
   const courseTitle = namedCourse ?? 'the course';

@@ -39,9 +39,9 @@ const fake = createServer(async (req, res) => {
     await new Promise((r) => setTimeout(r, 60));
     active.delete(path);
   }
-  if (path === '/rest/v1/course_enrolments') res.end(JSON.stringify([{ id: 'enrolment', learner_profile_id: 'learner', status: 'active', source: 'free', course_version_id: 'version', courses: [{ id: 'course', title: 'Synthetic course' }] }]));
+  if (path === '/rest/v1/course_enrolments') res.end(JSON.stringify([{ id: 'enrolment', learner_profile_id: 'learner', status: 'active', source: 'free', course_version_id: 'version', courses: { id: 'course', title: 'Synthetic course' } }]));
   else if (path === '/rest/v1/learner_profiles') res.end(JSON.stringify([{ id: 'learner' }]));
-  else if (path === '/rest/v1/lessons') res.end(JSON.stringify({ id: 'lesson', section_id: 'section', title: 'Synthetic lesson', description: 'Synthetic reading text.', type: 'video', position: 1, duration_seconds: 120, is_preview: false, course_sections: [{ title: 'Synthetic section', course_version_id: mismatch ? 'other-version' : 'version' }] }));
+  else if (path === '/rest/v1/lessons') res.end(JSON.stringify({ id: 'lesson', section_id: 'section', title: 'Synthetic lesson', description: 'Synthetic reading text.', type: 'video', position: 1, duration_seconds: 120, is_preview: false, course_sections: { title: 'Synthetic section', course_version_id: mismatch ? 'other-version' : 'version' } }));
   else if (path === '/rest/v1/lesson_resources') res.end(JSON.stringify([
     { id: 'resource', lesson_id: 'lesson', resource_type: 'video', display_name: 'Synthetic video', position: 1, external_url: 'https://example.invalid/demo.mp4', media_asset_id: null, access_classification: 'public_preview' },
     ...(multipleMedia ? [{ id: 'resource-two', lesson_id: 'lesson', resource_type: 'audio', display_name: 'Synthetic audio', position: 2, external_url: 'https://example.invalid/demo.mp3', media_asset_id: null, access_classification: 'public_preview' }] : []),

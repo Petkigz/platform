@@ -20,6 +20,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { one, type Embedded } from './embed.ts';
 
 export type AssignmentStatus =
   | 'offered'
@@ -106,7 +107,8 @@ type AssignmentRow = {
   assigned_at: string | null;
   due_at: string | null;
   course_versions:
-    | { course_id: string | null; courses: { title: string; slug: string }[] | null }[]
+    | { course_id: string | null; courses: Embedded<{ title: string; slug: string }> }
+    | { course_id: string | null; courses: Embedded<{ title: string; slug: string }> }[]
     | null;
   content_review_decisions: {
     id: string;
@@ -151,9 +153,9 @@ export async function fetchMyAssignments(
   return ((data ?? []) as unknown as AssignmentRow[]).map((r) => ({
     id: r.id,
     courseVersionId: r.course_version_id,
-    courseId: r.course_versions?.[0]?.course_id ?? '',
-    courseTitle: r.course_versions?.[0]?.courses?.[0]?.title ?? 'Untitled course',
-    courseSlug: r.course_versions?.[0]?.courses?.[0]?.slug ?? '',
+    courseId: one(r.course_versions)?.course_id ?? '',
+    courseTitle: one(one(r.course_versions)?.courses)?.title ?? 'Untitled course',
+    courseSlug: one(one(r.course_versions)?.courses)?.slug ?? '',
     scope: r.review_scope as ReviewScope,
     status: r.assignment_status as AssignmentStatus,
     assignedAt: r.assigned_at,
@@ -185,9 +187,9 @@ export async function fetchAssignment(
   return {
     id: r.id,
     courseVersionId: r.course_version_id,
-    courseId: r.course_versions?.[0]?.course_id ?? '',
-    courseTitle: r.course_versions?.[0]?.courses?.[0]?.title ?? 'Untitled course',
-    courseSlug: r.course_versions?.[0]?.courses?.[0]?.slug ?? '',
+    courseId: one(r.course_versions)?.course_id ?? '',
+    courseTitle: one(one(r.course_versions)?.courses)?.title ?? 'Untitled course',
+    courseSlug: one(one(r.course_versions)?.courses)?.slug ?? '',
     scope: r.review_scope as ReviewScope,
     status: r.assignment_status as AssignmentStatus,
     assignedAt: r.assigned_at,
@@ -356,7 +358,7 @@ export async function fetchAssignableReviewers(
 ): Promise<Reviewer[]> {
   const { data, error } = await supabase
     .from('reviewer_profiles')
-    .select('id, user_id, reviewer_status, user_profiles ( display_name )')
+    .select('id, user_id, reviewer_status, user_profiles!reviewer_profiles_user_id_fkey ( display_name )')
     .eq('reviewer_status', 'active')
     .is('deleted_at', null)
     .order('created_at', { ascending: true });
@@ -367,13 +369,13 @@ export async function fetchAssignableReviewers(
     id: string;
     user_id: string;
     reviewer_status: string;
-    user_profiles: { display_name: string | null }[] | null;
+    user_profiles: Embedded<{ display_name: string | null }>;
   };
 
   return ((data ?? []) as unknown as Row[]).map((r) => ({
     reviewerProfileId: r.id,
     userId: r.user_id,
-    displayName: r.user_profiles?.[0]?.display_name ?? null,
+    displayName: one(r.user_profiles)?.display_name ?? null,
     status: r.reviewer_status,
   }));
 }
@@ -400,14 +402,14 @@ export async function fetchPendingVersions(
     id: string;
     version_number: number;
     created_by: string | null;
-    courses: { title: string; slug: string }[] | null;
+    courses: Embedded<{ title: string; slug: string }>;
   };
 
   return ((data ?? []) as unknown as Row[]).map((r) => ({
     id: r.id,
     versionNumber: r.version_number,
-    courseTitle: r.courses?.[0]?.title ?? 'Untitled course',
-    courseSlug: r.courses?.[0]?.slug ?? '',
+    courseTitle: one(r.courses)?.title ?? 'Untitled course',
+    courseSlug: one(r.courses)?.slug ?? '',
     submittedBy: r.created_by,
   }));
 }
@@ -654,9 +656,11 @@ export type ReviewerRegisterEntry = {
 };
 
 /** Written out, not `*`: two columns on these tables are not granted to clients. */
+// The profile is named by its constraint: the table points at user_profiles
+// twice (the reviewer and whoever verified them) and PostgREST refuses to guess.
 const REVIEWER_COLUMNS =
   'id, user_id, reviewer_status, public_bio, verified_at, verified_by, created_at, ' +
-  'user_profiles ( display_name )';
+  'user_profiles!reviewer_profiles_user_id_fkey ( display_name )';
 
 type ReviewerRow = {
   id: string;
@@ -666,7 +670,7 @@ type ReviewerRow = {
   verified_at: string | null;
   verified_by: string | null;
   created_at: string | null;
-  user_profiles: { display_name: string | null }[] | null;
+  user_profiles: Embedded<{ display_name: string | null }>;
 };
 
 type QualificationRow = {
@@ -828,7 +832,7 @@ export async function fetchReviewerRegister(
     reviewer: {
       reviewerProfileId: row.id,
       userId: row.user_id,
-      displayName: row.user_profiles?.[0]?.display_name ?? null,
+      displayName: one(row.user_profiles)?.display_name ?? null,
       status: isReviewerStatus(row.reviewer_status) ? row.reviewer_status : 'applicant',
       publicBio: row.public_bio,
       verifiedAt: row.verified_at,

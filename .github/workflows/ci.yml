@@ -49,6 +49,10 @@ jobs:
           node-version: '22.22.3'
           cache: npm
       - run: npm ci
+      - name: Same privileges with and without the hosted platform's defaults
+        run: node scripts/platform-grants-check.mjs
+      - name: Schema snapshot the web select check reads is current
+        run: node scripts/postgrest-schema-snapshot.mjs --check
       - name: Run all registered database suites together
         run: node scripts/db-suite-watchdog.mjs
 

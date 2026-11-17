@@ -38,3 +38,18 @@ begin
     create role service_role nologin;
   end if;
 end $$;
+
+-- platform-defaults:begin
+-- What a hosted Supabase project is created with, read from the hosted test
+-- project's pg_default_acl on 2026-11-17: everything the migrating role makes
+-- in `public` is granted to the three API roles unless a migration says
+-- otherwise. A database without this is stricter than the hosted one, and
+-- for 350 migrations the suites ran on the stricter one: functions closed with
+-- `revoke … from public` stayed open to `anon` on the hosted database and no
+-- test could see it. Migration 20261281144000 takes these defaults back;
+-- scripts/platform-grants-check.mjs builds the database with and without this
+-- block and fails if the two differ in what `anon` or `authenticated` may do.
+alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
+alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
+alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
+-- platform-defaults:end

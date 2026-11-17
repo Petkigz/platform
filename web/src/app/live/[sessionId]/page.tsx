@@ -5,6 +5,7 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { describeLength, describeReason, describeWhen } from '@/lib/live';
 import { JoinButton } from './join-button';
 import { MarkLeft } from './attendance';
+import { one, type Embedded } from '@/lib/embed';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,7 +52,7 @@ export default async function LiveSessionPage({
         status: string;
         cancelled_reason: string | null;
         host_user_id: string;
-        courses: { title: string; slug: string }[] | null;
+        courses: Embedded<{ title: string; slug: string }>;
       }
     | null;
   if (!session) notFound();
@@ -86,7 +87,7 @@ export default async function LiveSessionPage({
 
   type Seat = {
     learner_profile_id: string;
-    learner_profiles: { display_name: string; learner_type: string }[] | null;
+    learner_profiles: { display_name: string; learner_type: string } | null;
   };
   const seats = (mine ?? []) as unknown as Seat[];
 
@@ -110,7 +111,7 @@ export default async function LiveSessionPage({
   return (
     <div className="container section">
       <p className="eyebrow">
-        <Link href="/learn">My learning</Link> · {session.courses?.[0]?.title ?? 'Course'}
+        <Link href="/learn">My learning</Link> · {one(session.courses)?.title ?? 'Course'}
       </p>
       <h1>{session.title}</h1>
       <p className="muted">
@@ -189,7 +190,7 @@ export default async function LiveSessionPage({
       )}
 
       <p style={{ marginTop: '1.5rem' }}>
-        <Link href={`/courses/${session.courses?.[0]?.slug ?? ''}`}>Back to the course</Link>
+        <Link href={`/courses/${one(session.courses)?.slug ?? ''}`}>Back to the course</Link>
       </p>
     </div>
   );

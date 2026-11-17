@@ -16,6 +16,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { fromMinor, format, type Money } from './money.ts';
 import { isLocaleCode, translator } from './i18n/index.ts';
+import { one, type Embedded } from './embed.ts';
 
 export type OfferingCountrySource = 'account' | 'request' | 'none';
 
@@ -322,10 +323,10 @@ export async function enrollableLearners(
     linked_user_id: string | null;
   };
   const children = ((memberships ?? []) as {
-    families: { learner_profiles: ChildRow[] | null }[] | null;
+    families: Embedded<{ learner_profiles: ChildRow[] | null }>;
   }[])
-    .flatMap((m) => m.families ?? [])
-    .flatMap((f) => f.learner_profiles ?? [])
+    // A membership has one family (an object); a family has many learners.
+    .flatMap((m) => one(m.families)?.learner_profiles ?? [])
     // A child only. An adult profile in the family enrols for themselves; doing
     // it for them would put one adult's decisions on another's record.
     .filter((c) => c.learner_type === 'child' && !c.linked_user_id);

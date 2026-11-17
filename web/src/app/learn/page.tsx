@@ -21,11 +21,14 @@ import {
   type Translate,
 } from '@/lib/i18n';
 import { loadLearnerDashboardExtras } from '@/lib/learner-dashboard-work';
+import { one, type Embedded } from '@/lib/embed';
 
 export const dynamic = 'force-dynamic';
 
-// PostgREST returns a nested relation as an array even when it is a to-one
-// join, so both are typed as arrays.
+// An enrolment has one learner, one course and one version, and PostgREST
+// sends each as an object. The client library types them as arrays; one()
+// reads either. (Until 2026-11-17 this page indexed [0] into the object and
+// every course here would have been "untitled" on a real database.)
 type Enrolment = {
   id: string;
   status: string;
@@ -33,13 +36,13 @@ type Enrolment = {
   learner_profile_id: string;
   /** The pinned version — what the carry-on card reads the outline from. */
   course_version_id: string;
-  learner_profiles: { display_name: string; learner_type: string }[] | null;
-  courses: { title: string; slug: string }[] | null;
-  course_versions: { version_number: number; language: string }[] | null;
+  learner_profiles: Embedded<{ display_name: string; learner_type: string }>;
+  courses: Embedded<{ title: string; slug: string }>;
+  course_versions: Embedded<{ version_number: number; language: string }>;
 };
 
 const courseTitle = (e: Enrolment, t: Translate): string =>
-  e.courses?.[0]?.title ?? t('learn.untitled');
+  one(e.courses)?.title ?? t('learn.untitled');
 
 /**
  * Whose enrolment this is.
@@ -51,11 +54,13 @@ const courseTitle = (e: Enrolment, t: Translate): string =>
  */
 const learnerName = (e: Enrolment, myProfileId: string | null, t: Translate): string => {
   if (!myProfileId || e.learner_profile_id === myProfileId) return t('learn.me');
-  return e.learner_profiles?.[0]?.display_name ?? t('learn.someoneElse');
+  return one(e.learner_profiles)?.display_name ?? t('learn.someoneElse');
 };
-const versionNumber = (e: Enrolment): string =>
-  e.course_versions?.[0] ? `v${e.course_versions[0].version_number}` : 'v?';
-const language = (e: Enrolment): string => e.course_versions?.[0]?.language ?? '?';
+const versionNumber = (e: Enrolment): string => {
+  const version = one(e.course_versions);
+  return version ? `v${version.version_number}` : 'v?';
+};
+const language = (e: Enrolment): string => one(e.course_versions)?.language ?? '?';
 
 // A status this list does not know is printed as the database wrote it: a new
 // status with no label is a bug somebody should see, not a blank badge.

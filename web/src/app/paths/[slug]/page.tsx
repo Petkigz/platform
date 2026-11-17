@@ -6,6 +6,7 @@ import { isFlagEnabled } from '@/lib/flags';
 import { ownLearnerProfileId } from '@/lib/enrolment';
 import { fetchSummary } from '@/lib/progress';
 import { summarizeLearningPathProgress } from '@/lib/learning-paths';
+import { one } from '@/lib/embed';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +14,8 @@ type PathItem = {
   id: string;
   position: number;
   required: boolean;
-  courses: { id: string; title: string; slug: string; status: string }[] | null;
+  // One course per item: PostgREST sends an object. Read through one().
+  courses: { id: string; title: string; slug: string; status: string } | { id: string; title: string; slug: string; status: string }[] | null;
 };
 
 type Enrolment = { id: string; course_id: string; status: string };
@@ -55,9 +57,9 @@ export default async function LearningPathPage({
     learning_path_items: PathItem[] | null;
   };
   const items = (path.learning_path_items ?? [])
-    .filter((item) => item.courses?.[0]?.status === 'active')
+    .filter((item) => one(item.courses)?.status === 'active')
     .sort((a, b) => a.position - b.position);
-  const courseIds = items.map((item) => item.courses![0]!.id);
+  const courseIds = items.map((item) => one(item.courses)!.id);
 
   const { data: { user } } = await supabase.auth.getUser();
   const learnerId = user ? await ownLearnerProfileId(supabase, user.id) : null;
@@ -90,7 +92,7 @@ export default async function LearningPathPage({
   }));
 
   const pathProgress = summarizeLearningPathProgress(
-    items.map((item) => ({ courseId: item.courses![0]!.id, required: item.required })),
+    items.map((item) => ({ courseId: one(item.courses)!.id, required: item.required })),
     courseProgress,
   );
 
@@ -127,7 +129,7 @@ export default async function LearningPathPage({
       {items.length === 0 ? <p className="empty">There are no published courses in this path yet.</p> : (
         <ol className="grid" style={{ paddingInlineStart: '1.5rem' }}>
           {items.map((item) => {
-            const course = item.courses![0]!;
+            const course = one(item.courses)!;
             const enrolment = enrolmentByCourse.get(course.id);
             const progress = courseProgress.get(course.id);
             const href = enrolment && ['active', 'completed'].includes(enrolment.status)

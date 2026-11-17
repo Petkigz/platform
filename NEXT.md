@@ -702,7 +702,7 @@ moves; `platform.search` blamed a missing index when no transcript text existed.
 Optional author-provided transcripts now exist and are searchable only when the caller may read them. Both rows
 have since been updated; their switches did not move.
 
-Verification: **The current tree has 350 migrations. An earlier tree passed 2 653 database assertions in
+Verification: **The current tree has 351 migrations. An earlier tree passed 2 653 database assertions in
 170 suites across eight separate PGlite databases. An earlier web tree passed 2 175 tests. Lint, TypeScript,
 `check:repo` and build passed. Hosted deployment and real concurrent PostgreSQL
 and storage behavior remain unverified.**
@@ -2617,6 +2617,126 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### What the hosted platform grants on its own, 2026-11-17
+
+Found while reading why the first run against a real request server refused
+some requests the hosted project accepts. **The most serious finding so far.
+Nothing was exposed: the hosted test project has no users, no orders and no
+rows. It is repaired in the repository and NOT yet applied to the hosted
+project, which needs the owner's approval.**
+
+- *What was wrong.* A hosted Supabase project is created with default
+  privileges that grant every new function, table and sequence in `public` to
+  the two roles a browser can act as: `anon` (nobody signed in) and
+  `authenticated`. The migrations close a function with `revoke all … from
+  public` and then grant it to whoever is meant to call it. On a plain
+  PostgreSQL, which is what every test here ran on, that closes it. On the
+  hosted database it does not: revoking from PUBLIC does not take back a grant
+  made to `anon` by name.
+- *How large.* Measured on the hosted project (read-only) and reproduced on a
+  local PostgreSQL given the same defaults: `anon` could execute 143 functions
+  it cannot execute in the tested database, 131 of them running with the
+  owner's rights and callable through the API; `authenticated` could execute 16
+  meant for the server only; `anon` held SELECT on 93 more tables and write
+  privileges on about 113 more.
+- *What that would have meant with real people in it.* Of the 131, 115
+  mention the caller's identity somewhere in their body and probably refuse a
+  visitor who is not signed in. Sixteen do not, because they were only ever
+  meant to be called by other functions: `notify_user` puts any title, text
+  and link in front of any user; `reverse_earnings_for_refund` and
+  `accrue_instructor_earnings` write the teacher ledger;
+  `recompute_order_totals` rewrites an order's totals;
+  `instructor_payout_totals` reads a teacher's money; `setting_text` and
+  `setting_int` read any platform setting. Anybody on the internet, not signed
+  in, could have called them. The table privileges are a lesser matter:
+  row-level security is on for every table and the policies name their roles,
+  so no row was readable or writable that way.
+- *What was read and what was not.* `notify_user`,
+  `reverse_earnings_for_refund` and `instructor_payout_totals` were read in
+  full and have no caller check. The 115 and the 16 are counts from a text
+  search of the function bodies, not a reading of each: "mentions the caller"
+  is not the same as "checks the caller"
+  (`grant_subscription_plan_entitlements` names the caller only to write the
+  audit row). The repair closes all of them whether or not they check.
+- *The repair.* Migration `20261281144000_platform_default_grants.sql`: new
+  objects stop receiving the platform's grants; every function grant to the
+  two roles is removed and the ones the migrations made on purpose (26 for
+  `anon`, 503 for `authenticated`) are made again by name; `anon` keeps only
+  the tables it was given on purpose; `authenticated` loses TRUNCATE,
+  REFERENCES, TRIGGER and MAINTAIN; neither role keeps anything on a sequence.
+  On a database without the platform's defaults it changes one thing: six
+  tables whose read policy names `anon` (languages, policy documents and
+  versions in force, preview renditions, discussion under a readable lesson,
+  review requirements) become readable to `anon`, as they already were on the
+  hosted project by the platform's default. That is why the public policy
+  pages were refused on the plain database.
+- *So that it cannot come back.* `supabase/tests/harness.sql` now sets the
+  platform's defaults, so every database suite runs as the hosted database
+  would. `scripts/platform-grants-check.mjs` builds the schema with and without
+  them and fails if the two differ in anything `anon` or `authenticated` may
+  do, or in what the next table, sequence or function would receive. With the
+  new migration taken away it fails with 1 378 differences, the same number
+  measured by hand. CI runs it before the database suites. The run against a
+  real request server now calls five of those functions as nobody and as a
+  signed-in learner and requires `42501 permission denied`.
+- *What is not proven.* That the hosted project's defaults are still the ones
+  read on 2026-11-17 (the check copies them, it does not fetch them). That
+  nothing was called on the hosted project before today: it has no rows to
+  show for it, and its logs were not read. Anything about schemas other than
+  `public`. And `service_role`, the server's own key, is untouched.
+- *What the owner has to decide.* Applying this migration to the hosted test
+  project. It is safe to apply on its own (it changes privileges, no data and
+  no function bodies), but migrations 1360–1430 sit before it in the order and
+  were being held for a coordinated rollout, so it is either applied out of
+  order by hand or the whole pending set goes together. Until it is applied,
+  **nobody should be given an account on the hosted project.**
+
+### Relations read as lists, and reads the server refuses, 2026-11-17
+
+Found by writing a check that reads every `.from(…).select(…)` in the
+application against the schema, after the first real-server run refused one.
+
+- *The belief that was wrong.* Comments in the code say "PostgREST nests
+  to-one relations as arrays too". It does not: an enrolment has one course,
+  and `select('id, courses ( title )')` returns `courses` as one object. The
+  client library, without generated database types, types it as an array, so
+  code written to satisfy the compiler read `row.courses?.[0]?.title`, which
+  is `undefined` on an object. Nothing fails; the name is just missing.
+- *Where, and what it would have done on a real database.* About thirty reads.
+  The ones that matter most: the lesson (its section, and through the section
+  the course version the page compares with the enrolment, so **every lesson
+  would still have been "not found"** after the earlier repair); the learner
+  dashboard (every course "untitled"); the course page; whether a reviewer is
+  active (never, so no review requirement could be met); who holds which role
+  on the roles page (nobody); subject names on catalogue cards; a path's
+  courses (none); a child's courses; the names on reviews, discussion posts,
+  support cases, refunds and appeals.
+- *Three more kinds, same cause.* Two reads asked for a column that does not
+  exist (`user_profiles.email` on the roles page, `course_versions.language_code`
+  on the public teacher page): the whole request is refused. Seven reads
+  embedded `user_profiles` from a table that points at it twice (family
+  members, media uploader ×2, reviewers ×2, discussion ×2): the server refuses
+  to guess, so **the lesson discussion would not have loaded at all**. Each now
+  names its foreign key.
+- *Why nothing caught it.* The stand-in servers in the browser checks returned
+  arrays for these relations, because the pages expected arrays. Two tests
+  pinned the wrong code as text. The stand-ins now return objects, as the real
+  server does; with the old pages those checks fail.
+- *The repair.* `web/src/lib/embed.ts` has `one()`, which takes either shape,
+  and every to-one relation is read through it.
+  `web/src/lib/postgrest-select-contract.test.ts` reads every select (269 of
+  them, including ones kept in constants or joined with `+`) against
+  `postgrest-schema.snapshot.json`, which `scripts/postgrest-schema-snapshot.mjs`
+  writes from the migrations and CI checks is current. It fails on a column
+  that does not exist, a relation no foreign key joins, a relation two foreign
+  keys could mean, `[0]` on a relation that is one object, and a filter or
+  ordering on a column that does not exist.
+- *What that test cannot see.* What is written by `insert` and `update`; keys
+  read from a row afterwards; anything a policy or grant refuses. And its idea
+  of how the server joins tables is a model. The real-server run now asks the
+  server the four questions the model answers (object, list, ambiguous,
+  missing column) so that if the model is wrong it is wrong there first.
 
 ### Eight reads that would have failed on the real database, 2026-11-17
 

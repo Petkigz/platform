@@ -1,6 +1,7 @@
 import { fetchDiscussionContexts, type DiscussionContext } from './discussion-context.ts';
 import { encodeDiscussionCursor, type DiscussionCursor } from './discussion-queue-cursor.ts';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { one, type Embedded } from './embed.ts';
 
 export type ReportCategory =
   | 'doctrinal_error'
@@ -319,12 +320,12 @@ export async function fetchAppealQueue(
     appeal_reason: string;
     status: string;
     created_at: string;
-    appellant: { display_name: string | null }[] | null;
-    decision: { course_version_id: string | null }[] | null;
+    appellant: Embedded<{ display_name: string | null }>;
+    decision: Embedded<{ course_version_id: string | null }>;
   }[]).map(({ appellant, decision, ...row }) => ({
     ...row,
-    appellant: appellant?.[0] ?? null,
-    course_version_id: decision?.[0]?.course_version_id ?? null,
+    appellant: one(appellant),
+    course_version_id: one(decision)?.course_version_id ?? null,
   }));
 }
 

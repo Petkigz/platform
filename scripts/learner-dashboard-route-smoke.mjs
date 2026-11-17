@@ -14,8 +14,8 @@ const token = `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode({ sub: user.id, 
 const session = { access_token: token, refresh_token: 'fake-refresh', token_type: 'bearer', expires_in: 3600, expires_at: exp, user };
 const cookie = `sb-127-auth-token=base64-${encode(session)}`;
 const rows = [
-  { id: 'own-enrolment', status: 'active', enrolled_at: '2026-01-01T00:00:00Z', learner_profile_id: 'own', course_version_id: 'v1', learner_profiles: [{ display_name: 'Adult', learner_type: 'adult' }], courses: [{ title: 'Synthetic adult course', slug: 'adult-course' }], course_versions: [{ version_number: 1, language: 'en' }] },
-  { id: 'child-enrolment', status: 'active', enrolled_at: '2026-01-01T00:00:00Z', learner_profile_id: 'child', course_version_id: 'v2', learner_profiles: [{ display_name: 'Synthetic child', learner_type: 'child' }], courses: [{ title: 'Synthetic child course', slug: 'child-course' }], course_versions: [{ version_number: 2, language: 'en' }] },
+  { id: 'own-enrolment', status: 'active', enrolled_at: '2026-01-01T00:00:00Z', learner_profile_id: 'own', course_version_id: 'v1', learner_profiles: { display_name: 'Adult', learner_type: 'adult' }, courses: { title: 'Synthetic adult course', slug: 'adult-course' }, course_versions: { version_number: 1, language: 'en' } },
+  { id: 'child-enrolment', status: 'active', enrolled_at: '2026-01-01T00:00:00Z', learner_profile_id: 'child', course_version_id: 'v2', learner_profiles: { display_name: 'Synthetic child', learner_type: 'child' }, courses: { title: 'Synthetic child course', slug: 'child-course' }, course_versions: { version_number: 2, language: 'en' } },
 ];
 let enabled = false; let flagOutage = false; let profileOutage = false; let newcomer = false;
 // Off for the original three states, which pin that an empty outline makes no

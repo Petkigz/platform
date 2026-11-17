@@ -369,7 +369,7 @@ export async function fetchMediaModerationQueue(
   const { data, error } = await client
     .from('media_assets')
     .select(`id, display_name, mime_type, byte_size, duration_seconds, status, created_at,
-             user_profiles ( display_name ),
+             user_profiles!media_assets_uploaded_by_fkey ( display_name ),
              media_renditions ( id, profile, status, failure_reason )`)
     .order('created_at', { ascending: false });
 
@@ -562,7 +562,7 @@ export async function fetchMediaAssetsByIds(
 
   const { data, error } = await client
     .from('media_assets')
-    .select('id, display_name, mime_type, byte_size, status, user_profiles ( display_name )')
+    .select('id, display_name, mime_type, byte_size, status, user_profiles!media_assets_uploaded_by_fkey ( display_name )')
     .in('id', wanted);
 
   if (error) throw new Error(error.message);

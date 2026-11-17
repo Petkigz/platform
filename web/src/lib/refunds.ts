@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { MoneyError, fromMajor, fromMinor, format, isCurrency } from './money.ts';
+import { one, type Embedded } from './embed.ts';
 
 export type RefundRequest = {
   id: string;
@@ -159,10 +160,10 @@ export async function fetchRefundQueue(
     status: string;
     requested_by: string;
     created_at: string;
-    requested_by_profile: { display_name: string | null }[] | null;
+    requested_by_profile: Embedded<{ display_name: string | null }>;
   }[]).map(({ requested_by_profile, ...row }) => ({
     ...row,
-    requester: requested_by_profile?.[0] ?? null,
+    requester: one(requested_by_profile),
   }));
 }
 

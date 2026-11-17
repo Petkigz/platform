@@ -56,9 +56,16 @@ function publish(title, lines, level = 'notice') {
   parts.slice(0, 8).forEach((part, i) => console.log(`::${level} title=${title} (${i + 1}/${parts.length})::${escapeNote(part)}`));
 }
 
-if (mode === 'prepare') await prepare();
-else if (mode === 'run') await run();
-else throw new Error('Say "prepare" or "run".');
+try {
+  if (mode === 'prepare') await prepare();
+  else if (mode === 'run') await run();
+  else throw new Error('Say "prepare" or "run".');
+} catch (error) {
+  // The log of a failed step cannot be read from where this is developed, so
+  // the reason has to leave as a note.
+  publish('Contract check stopped', [String(error?.stack ?? error).slice(0, 6000)], 'error');
+  process.exitCode = 1;
+}
 
 async function prepare() {
   const { default: pg } = await import('pg');
@@ -190,6 +197,57 @@ async function run() {
   assert.equal(spelling.status, 400, `eq.null was not refused: ${spelling.status}`);
   assert.equal(spellingBody.code, '22007', `eq.null was refused for another reason: ${JSON.stringify(spellingBody)}`);
 
+  // What web/src/lib/postgrest-select-contract.test.ts assumes about this
+  // server, asked of the server. That test reads source text against a model
+  // of PostgREST; if the model is wrong, it is wrong here first.
+  const shape = [];
+  const one = await (await reads('learner', `/course_enrolments?select=id,courses(title)&id=eq.${id.enrolment}`)).json();
+  assert.ok(one[0]?.courses && !Array.isArray(one[0].courses) && one[0].courses.title === 'Contract course', `an enrolment's one course did not come back as an object: ${JSON.stringify(one)}`);
+  shape.push('a relation the row holds the key to (enrolment -> course) comes back as one object');
+  const many = await (await reads('learner', `/course_sections?select=id,lessons(id)&id=eq.${id.section}`)).json();
+  assert.ok(Array.isArray(many[0]?.lessons) && many[0].lessons.length === 2, `a section's lessons did not come back as a list of two: ${JSON.stringify(many)}`);
+  shape.push('a relation the other table holds the key to (section -> lessons) comes back as a list');
+  const twoKeys = await reads('learner', '/family_memberships?select=id,user_profiles(display_name)');
+  const twoKeysBody = await twoKeys.json();
+  assert.equal(twoKeysBody.code, 'PGRST201', `a relation two foreign keys could mean was not refused as ambiguous: ${twoKeys.status} ${JSON.stringify(twoKeysBody).slice(0, 300)}`);
+  const named = await reads('learner', '/family_memberships?select=id,user_profiles!family_memberships_user_id_fkey(display_name)');
+  assert.equal(named.status, 200, `naming the foreign key did not settle it: ${named.status} ${(await named.text()).slice(0, 300)}`);
+  shape.push(`a relation two foreign keys could mean is refused (${twoKeys.status} PGRST201) until one is named`);
+  const missing = await reads('learner', '/user_profiles?select=user_id,email');
+  const missingBody = await missing.json();
+  assert.equal(missingBody.code, '42703', `a column that does not exist was not refused: ${missing.status} ${JSON.stringify(missingBody).slice(0, 300)}`);
+  shape.push(`a column that does not exist is refused (${missing.status} 42703)`);
+
+  // What migration 20261281144000 is for. The database was prepared with the
+  // hosted platform's default privileges, under which these were callable by
+  // anybody before that migration. Asked of the real server as nobody and as a
+  // signed-in learner.
+  const call = async (who, fn, args) => {
+    const reply = await fetch(`${upstream}/rpc/${fn}`, { method: 'POST', headers: { authorization: `Bearer ${who ? people[who].access : anonKey}`, 'content-type': 'application/json' }, body: JSON.stringify(args) });
+    return { status: reply.status, body: await reply.json().catch(() => null) };
+  };
+  const closed = [
+    ['notify_user', { p_user: id.stranger, p_kind: 'contract', p_title: 'Contract', p_body: 'This must never arrive.' }],
+    ['reverse_earnings_for_refund', { p_order_id: id.course, p_actor_id: id.learner, p_reason: 'contract' }],
+    ['accrue_instructor_earnings', { p_order_id: id.course, p_transaction_id: id.course, p_actor_id: id.learner }],
+    ['instructor_payout_totals', { p_instructor: id.teacher, p_hold_days: 0 }],
+    ['recompute_order_totals', { p_order_id: id.course }],
+  ];
+  for (const [fn, args] of closed) {
+    for (const who of [null, 'learner']) {
+      const got = await call(who, fn, args);
+      // 42501 is "permission denied"; PGRST202 would mean the arguments here
+      // are wrong and nothing was tested.
+      assert.equal(got.body?.code, '42501', `${fn} was not refused to ${who ?? 'an anonymous visitor'} for lack of permission: ${got.status} ${JSON.stringify(got.body).slice(0, 300)}`);
+    }
+  }
+  const delivered = await reads('learner', '/notifications?select=id&kind=eq.contract');
+  assert.equal(delivered.status === 200 ? (await delivered.json()).length : 0, 0, 'a notification was written by a caller who must not be able to');
+  const truncate = await fetch(`${upstream}/course_wishlist`, { method: 'DELETE', headers: { authorization: `Bearer ${anonKey}` } });
+  assert.ok(truncate.status === 401 || truncate.status === 403, `an anonymous DELETE on a table was not refused for lack of permission: ${truncate.status}`);
+  shape.push(`${closed.length} server-only functions refuse an anonymous visitor and a signed-in learner (42501), on a database given the hosted platform's default privileges`);
+  publish('What the request server does', shape);
+
   let current = { pass: 'start', route: '-' }; const refusals = []; let forwarded = 0;
   const gateway = createServer(async (req, res) => {
     const bearer = req.headers.authorization?.replace(/^Bearer /, '');
@@ -277,10 +335,21 @@ async function run() {
       // only proved that empty pages are well formed.
       const body = async (route) => (await (await fetch(`http://127.0.0.1:${port}${route}`, { headers: { cookie: people.learner.cookie } })).text()).replace(/<script[\s\S]*?<\/script>/g, '');
       if (!only) {
-        assert.ok((await body('/learn')).includes('Contract course'), 'the learner’s dashboard does not show their course');
-        assert.ok((await body(`/learn/${id.enrolment}`)).includes('Contract lesson'), 'the course page does not show its lessons');
+        current = { pass: 'the learner’s own rows', route: '/learn and below' };
+        const expect = (found, what) => { if (!found) failures.push(what); };
+        expect((await body('/learn')).includes('Contract course'), 'the learner’s dashboard does not show their course');
+        expect((await body(`/learn/${id.enrolment}`)).includes('Contract lesson'), 'the course page does not show its lessons');
         const lesson = await body(`/learn/${id.enrolment}/lesson/${id.lesson}`);
-        assert.ok(lesson.includes('Fabricated reading text.') && lesson.includes('Contract video'), 'the lesson page does not show the lesson and its video');
+        expect(lesson.includes('Fabricated reading text.') && lesson.includes('Contract video'), 'the lesson page does not show the lesson and its video');
+        // Names that arrive through a to-one relation. Each of these was
+        // silently missing while the pages indexed [0] into one object.
+        expect(lesson.includes('Contract course'), 'the lesson page does not name its course');
+        expect(lesson.includes('Contract section'), 'the lesson page does not name its section');
+        expect((await body(`/learn/${id.enrolment}`)).includes('Contract course'), 'the course page does not name the course');
+        const quiz = await body(`/learn/${id.enrolment}/assessment/${id.assessment}`);
+        expect(quiz.includes('Contract quiz') && quiz.includes('Contract course'), 'the quiz page does not show the quiz and its course');
+        const assignment = await body(`/learn/${id.enrolment}/assignment/${id.assignment}`);
+        expect(assignment.includes('Contract assignment') && assignment.includes('Contract course'), 'the assignment page does not show the assignment and its course');
       }
       publish('Contract walk', [
         `${server}; ${pages.length} page loads, ${forwarded} requests forwarded to the request server, ${refusals.length} refused; ${switched.rowCount} switches turned on for the later passes.`,
@@ -310,8 +379,10 @@ async function run() {
     const broken = pages.filter((p) => p.status === 0 || p.status >= 500);
     if (broken.length) publish('Pages that failed', broken.map((p) => `${p.pass} ${p.route} -> ${p.status} (${p.refused} refused requests)`), 'error');
     if (failures.length) {
-      publish('Next log, last lines', logs.split('\n').filter((line) => /⨯|Error|error/.test(line)).slice(-40));
-      throw new Error(`PostgREST contract failed:\n${failures.join('\n')}`);
+      publish('Next log, last lines', logs.split('\n').filter((line) => /⨯|Error|error/.test(line)).slice(-40).map((line) => line.slice(0, 300)));
+      publish('Contract failed', failures, 'error');
+      process.exitCode = 1;
+      return;
     }
     console.log(`PostgREST contract passed: ${pages.length} page loads as an anonymous visitor, a learner, a teacher and an owner against ${server} and a migrated PostgreSQL, no request refused as malformed and no page failing. The sign-in server was a stand-in; not hosted Supabase, not Supabase's default grants, fabricated rows.`);
   } finally {

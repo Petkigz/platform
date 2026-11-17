@@ -18,6 +18,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { fetchDiscussionContexts, type DiscussionContext } from './discussion-context.ts';
 import { encodeDiscussionCursor, type DiscussionCursor } from './discussion-queue-cursor.ts';
+import { one, type Embedded } from './embed.ts';
 
 export type VisibilityState = 'pending' | 'visible' | 'hidden' | 'removed';
 
@@ -44,7 +45,9 @@ type PostRow = {
   visibility_state: string;
   author_kind: string;
   created_at: string;
-  user_profiles: { display_name: string }[] | null;
+  // The author. Named by its constraint in the select: a post points at
+  // user_profiles twice (author and moderator) and PostgREST refuses to guess.
+  user_profiles: Embedded<{ display_name: string }>;
 };
 
 /**
@@ -63,7 +66,7 @@ export async function fetchThread(
     .from('discussion_posts')
     .select(
       'id, lesson_id, parent_id, author_user_id, body, visibility_state, ' +
-        'author_kind, created_at, user_profiles ( display_name )',
+        'author_kind, created_at, user_profiles!discussion_posts_author_user_id_fkey ( display_name )',
     )
     .eq('lesson_id', args.lessonId)
     .is('deleted_at', null)
@@ -77,7 +80,7 @@ export async function fetchThread(
     id: r.id,
     lessonId: r.lesson_id,
     parentId: r.parent_id,
-    authorName: r.user_profiles?.[0]?.display_name ?? 'Someone',
+    authorName: one(r.user_profiles)?.display_name ?? 'Someone',
     authorIsMe: r.author_user_id === args.myUserId,
     isAuthority: r.author_kind === 'teacher',
     body: r.body,
@@ -178,7 +181,7 @@ export async function fetchModerationQueue(
     .from('discussion_posts')
     .select(
       'id, lesson_id, body, parent_id, created_at, author_user_id, visibility_state, ' +
-        'user_profiles ( display_name ), lessons ( title )',
+        'user_profiles!discussion_posts_author_user_id_fkey ( display_name ), lessons ( title )',
     )
     .eq('visibility_state', 'pending')
     .is('deleted_at', null)
@@ -201,8 +204,8 @@ export async function fetchModerationQueue(
     parent_id: string | null;
     created_at: string;
     visibility_state: string;
-    user_profiles: { display_name: string }[] | null;
-    lessons: { title: string }[] | null;
+    user_profiles: Embedded<{ display_name: string }>;
+    lessons: Embedded<{ title: string }>;
   };
 
   const fetched=(data ?? []) as unknown as Row[];
@@ -213,8 +216,8 @@ export async function fetchModerationQueue(
   const items=rows.map((r) => ({
     id: r.id,
     body: r.body,
-    authorName: r.user_profiles?.[0]?.display_name ?? 'Someone',
-    lessonTitle: r.lessons?.[0]?.title ?? 'Unknown lesson',
+    authorName: one(r.user_profiles)?.display_name ?? 'Someone',
+    lessonTitle: one(r.lessons)?.title ?? 'Unknown lesson',
     createdAt: r.created_at,
     isReply: r.parent_id !== null,
     visibilityState: r.visibility_state,

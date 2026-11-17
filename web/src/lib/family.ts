@@ -18,6 +18,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { one, type Embedded } from './embed.ts';
 
 export type Child = {
   id: string;
@@ -114,21 +115,23 @@ export async function fetchFamilyMembers(
 ): Promise<FamilyMember[]> {
   const { data, error } = await supabase
     .from('family_memberships')
-    .select('id, family_id, user_id, membership_type, status, user_profiles ( display_name )')
+    .select('id, family_id, user_id, membership_type, status, user_profiles!family_memberships_user_id_fkey ( display_name )')
     .eq('family_id', familyId)
     .order('status', { ascending: true });
 
   if (error) throw new Error(error.message);
 
-  // A raw PostgREST row: snake_case columns plus the joined profile as an
-  // array, because PostgREST nests to-one relations as arrays too.
+  // A raw PostgREST row: snake_case columns plus the member's profile, which
+  // is one object (a membership has one member). The relation is named by its
+  // constraint because the table points at user_profiles twice, for the member
+  // and for whoever created the row, and PostgREST refuses to guess.
   type Row = {
     id: string;
     family_id: string;
     user_id: string;
     membership_type: 'owner' | 'guardian' | 'billing_manager';
     status: 'invited' | 'active' | 'revoked';
-    user_profiles: { display_name: string | null }[] | null;
+    user_profiles: Embedded<{ display_name: string | null }>;
   };
   return ((data ?? []) as unknown as Row[]).map((r) => ({
     id: r.id,
@@ -136,7 +139,7 @@ export async function fetchFamilyMembers(
     userId: r.user_id,
     membershipType: r.membership_type,
     status: r.status,
-    displayName: r.user_profiles?.[0]?.display_name ?? null,
+    displayName: one(r.user_profiles)?.display_name ?? null,
   }));
 }
 
@@ -182,7 +185,7 @@ export async function fetchChildCourses(
   type Row = {
     id: string;
     status: string;
-    courses: { title: string; slug: string }[] | null;
+    courses: Embedded<{ title: string; slug: string }>;
   };
   const rows = (data ?? []) as unknown as Row[];
 
@@ -199,8 +202,8 @@ export async function fetchChildCourses(
         | null;
       return {
         enrolmentId: r.id,
-        courseTitle: r.courses?.[0]?.title ?? 'Untitled course',
-        courseSlug: r.courses?.[0]?.slug ?? '',
+        courseTitle: one(r.courses)?.title ?? 'Untitled course',
+        courseSlug: one(r.courses)?.slug ?? '',
         status: r.status,
         lessonsDone: Number(s?.lessons_done ?? 0),
         lessonsTotal: Number(s?.lessons_total ?? 0),

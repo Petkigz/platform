@@ -16,6 +16,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { one, type Embedded } from './embed.ts';
 
 export const REVIEW_BODY_MAX = 2000;
 export const RATING_MIN = 1;
@@ -63,8 +64,8 @@ type ReviewRow = {
   written_by: string;
   withdrawn_reason: string | null;
   created_at: string;
-  reviewer?: { display_name: string | null }[] | null;
-  courses?: { title: string; slug: string | null }[] | null;
+  reviewer?: Embedded<{ display_name: string | null }>;
+  courses?: Embedded<{ title: string; slug: string | null }>;
 };
 
 /**
@@ -175,7 +176,7 @@ export async function fetchCourseReviews(
     visibility: r.visibility_state as ReviewVisibility,
     // The learner profile's name, not the account's: a review is written by the
     // learner who studied the course.
-    reviewerName: r.reviewer?.[0]?.display_name ?? null,
+    reviewerName: one(r.reviewer)?.display_name ?? null,
     isMine: Boolean(args.myUserId) && r.written_by === args.myUserId,
     withdrawnReason: r.withdrawn_reason,
     createdAt: r.created_at,
@@ -308,11 +309,11 @@ export async function fetchReviewQueue(
     rating: r.rating,
     body: r.body,
     visibility: r.visibility_state as ReviewVisibility,
-    reviewerName: r.reviewer?.[0]?.display_name ?? null,
+    reviewerName: one(r.reviewer)?.display_name ?? null,
     isMine: false,
     withdrawnReason: r.withdrawn_reason,
     createdAt: r.created_at,
-    courseTitle: r.courses?.[0]?.title ?? 'Unknown course',
-    courseSlug: r.courses?.[0]?.slug ?? null,
+    courseTitle: one(r.courses)?.title ?? 'Unknown course',
+    courseSlug: one(r.courses)?.slug ?? null,
   }));
 }

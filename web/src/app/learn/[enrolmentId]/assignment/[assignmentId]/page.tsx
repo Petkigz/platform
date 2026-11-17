@@ -9,6 +9,7 @@ import {
   fetchCourseAssignment,
 } from '@/lib/course-assignments';
 import { AssignmentWork } from './assignment-work';
+import { one } from '@/lib/embed';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,7 +37,7 @@ export default async function AssignmentPage({
     course_version_id: string;
     learner_profile_id: string;
     enrolled_at: string;
-    courses: { title: string }[] | null;
+    courses: { title: string } | { title: string }[] | null;
   } | null;
   if (!enrolment) notFound();
 
@@ -79,7 +80,7 @@ export default async function AssignmentPage({
     ? await fetchAssignmentRevisions(supabase, [submission.id])
     : [];
   const deadline = assignmentDeadline(assignment, enrolment.enrolled_at);
-  const courseTitle = enrolment.courses?.[0]?.title ?? 'Course';
+  const courseTitle = one(enrolment.courses)?.title ?? 'Course';
 
   return (
     <div className="container section" style={{ display: 'grid', gap: '1rem' }}>

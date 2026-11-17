@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { SubjectRow } from '@/lib/subjects';
+import { one } from '@/lib/embed';
 
 /**
  * Every subject, with how much of the catalogue is filed under it.
@@ -36,7 +37,7 @@ export async function fetchSubjects(supabase: SupabaseClient): Promise<SubjectRo
   const live = new Map<string, number>();
 
   for (const tag of (tags.data ?? []) as unknown as TagRow[]) {
-    const version = Array.isArray(tag.course_versions) ? tag.course_versions[0] : tag.course_versions;
+    const version = one(tag.course_versions);
     const status = version?.version_status ?? '';
 
     uses.set(tag.subject_area_id, (uses.get(tag.subject_area_id) ?? 0) + 1);

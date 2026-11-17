@@ -10,6 +10,19 @@ session spends a day building something nobody asked for. So:
 - **An account** — not a decision and not code. A credential, a licence or a
   provider that has to exist before something can be switched on.
 
+> **Before anything else, 2026-11-17.** Two findings from the first run of the
+> pages against a real request server change what "works" means here, and one
+> needs the owner. (1) The hosted platform grants every function to visitors
+> who are not signed in unless a migration takes it back by name; the
+> migrations did not, and some server-only functions were callable by anybody.
+> Repaired in migration `20261281144000`, **not yet applied to the hosted
+> project: do not give anyone an account there until it is.** (2) About thirty
+> reads treated a single related row as a list and came back empty, two asked
+> for columns that do not exist and seven named a relation the server refuses
+> to guess; on a real database every lesson was "not found". Repaired, with a
+> test that reads every select against the schema. Both are written up in
+> `NEXT.md` under "Implementation history".
+
 Measured at `84df989`, 2026-11-02: **231 migrations**, **2 517 database
 assertions in 166 suites**, **2 026 web tests**, **142 tables**, 109 rows in
 `platform_settings` — 93 boolean feature flags and 16 controls. **Two flags are

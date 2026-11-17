@@ -29,6 +29,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { ReviewOutcome, ReviewScope } from './review.ts';
+import { one, type Embedded } from './embed.ts';
 
 export type RequirementStatus = 'open' | 'satisfied' | 'waived';
 
@@ -244,12 +245,12 @@ export async function countAuthorisedReviewers(
   type Row = {
     reviewer_profile_id: string;
     effective_until: string | null;
-    reviewer_profiles: { reviewer_status: string }[] | null;
+    reviewer_profiles: Embedded<{ reviewer_status: string }>;
   };
 
   const now = Date.now();
   const live = ((data ?? []) as unknown as Row[]).filter((row) => {
-    if (row.reviewer_profiles?.[0]?.reviewer_status !== 'active') return false;
+    if (one(row.reviewer_profiles)?.reviewer_status !== 'active') return false;
     if (!row.effective_until) return true;
     const until = new Date(row.effective_until).getTime();
     return !Number.isNaN(until) && until > now;

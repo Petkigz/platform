@@ -20,6 +20,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { one, type Embedded } from './embed.ts';
 
 export type VersionStatus =
   | 'draft'
@@ -792,8 +793,8 @@ export async function fetchVersionSubjects(
 
   if (error) throw new Error(error.message);
 
-  return ((data ?? []) as unknown as { subject: { code: string }[] | null }[])
-    .map((r) => r.subject?.[0]?.code ?? '')
+  return ((data ?? []) as unknown as { subject: Embedded<{ code: string }> }[])
+    .map((r) => one(r.subject)?.code ?? '')
     .filter((c) => c.length > 0);
 }
 

@@ -16,6 +16,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { one, type Embedded } from './embed.ts';
 
 export type ResourceType =
   | 'video'
@@ -94,10 +95,10 @@ type LessonRow = {
   position: number;
   duration_seconds: number | null;
   is_preview: boolean;
-  course_sections: {
+  course_sections: Embedded<{
     title: string;
     course_version_id: string;
-  }[] | null;
+  }>;
 };
 
 type ResourceRow = {
@@ -135,7 +136,7 @@ export async function fetchLesson(
   if (error || !data) return null;
 
   const row = data as unknown as LessonRow;
-  const section = row.course_sections?.[0];
+  const section = one(row.course_sections);
 
   // No error handling that swallows the distinction: a failed resource query
   // is different from an empty one, and only the second means "you may not

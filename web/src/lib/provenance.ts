@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { one } from './embed.ts';
 
 export const SOURCE_TYPES = [
   'quran', 'hadith', 'tafsir', 'fiqh_reference', 'book', 'article',
@@ -43,9 +44,7 @@ export async function fetchVersionSources(
     anchor: string | null;
     content_sources: SourceRow | SourceRow[] | null;
   }[])) {
-    const source = Array.isArray(link.content_sources)
-      ? link.content_sources[0]
-      : link.content_sources;
+    const source = one(link.content_sources);
     if (!source) continue;
     (result[link.lesson_id] ??= []).push({
       id: source.id,
@@ -76,9 +75,7 @@ export async function fetchLessonSources(
     anchor: string | null;
     content_sources: SourceRow | SourceRow[] | null;
   }[]).flatMap((link) => {
-    const source = Array.isArray(link.content_sources)
-      ? link.content_sources[0]
-      : link.content_sources;
+    const source = one(link.content_sources);
     if (!source) return [];
     return [{
       id: source.id,

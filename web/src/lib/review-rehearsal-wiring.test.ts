@@ -127,5 +127,8 @@ test('the reviewer can open the lesson they are told to open', () => {
   // a draft course is not readable to a reviewer through `courses_read`, so the
   // relation would be null and the link would be empty.
   assert.match(reviewLib, /course_versions \( course_id, courses \( title, slug \) \)/);
-  assert.match(reviewLib, /courseId: r\.course_versions\?\.\[0\]\?\.course_id \?\? ''/);
+  // Read with one(): an assignment has ONE version, which PostgREST sends as
+  // an object. This line used to pin `r.course_versions?.[0]?.course_id`,
+  // which reads nothing from an object, so the link was empty on a real server.
+  assert.match(reviewLib, /courseId: one\(r\.course_versions\)\?\.course_id \?\? ''/);
 });

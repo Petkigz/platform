@@ -24,6 +24,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { ownLearnerProfileId } from './enrolment.ts';
+import { one, type Embedded } from './embed.ts';
 
 export const SAVED_NOTE_MAX = 500;
 /** Mirrors the ceiling in `guard_course_wishlist()`. */
@@ -51,19 +52,19 @@ type SavedRow = {
   course_id: string;
   note: string | null;
   created_at: string;
-  courses?: {
+  courses?: Embedded<{
     title: string;
     slug: string | null;
     status: string | null;
     deleted_at: string | null;
     course_versions?: { version_status: string | null }[] | null;
-  }[] | null;
+  }>;
 };
 
 type EnrolmentRow = {
   course_id: string;
   learner_profile_id: string;
-  learner_profiles?: { display_name: string | null }[] | null;
+  learner_profiles?: Embedded<{ display_name: string | null }>;
 };
 
 /**
@@ -263,13 +264,13 @@ export async function fetchSavedCourses(
     const name =
       e.learner_profile_id === myProfileId
         ? 'you'
-        : (e.learner_profiles?.[0]?.display_name ?? 'someone in your family');
+        : (one(e.learner_profiles)?.display_name ?? 'someone in your family');
     // First enrolment wins; a course taken by two children still reads as taken.
     if (!enrolled.has(e.course_id)) enrolled.set(e.course_id, name);
   }
 
   return rows.map((r) => {
-    const course = r.courses?.[0];
+    const course = one(r.courses);
     const published = (course?.course_versions ?? []).some(
       (v) => v.version_status === 'published',
     );

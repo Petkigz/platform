@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
 import { fetchInstructorProfile } from '@/lib/instructor-profiles';
+import { one, type Embedded } from '@/lib/embed';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,7 +18,7 @@ export default async function PublicTeacherPage({ params }: { params: Promise<{ 
   if (!profile) notFound();
 
   const { data, error } = await supabase.from('course_versions')
-    .select('id,version_number,language_code,courses!inner(id,slug,title,description)')
+    .select('id,version_number,language,courses!inner(id,slug,title,description)')
     .eq('version_status', 'published')
     .eq('courses.created_by', profile.userId)
     .eq('courses.status', 'active')
@@ -26,11 +27,12 @@ export default async function PublicTeacherPage({ params }: { params: Promise<{ 
     .order('published_at', { ascending: false });
   if (error) throw new Error(error.message);
   const courses = ((data ?? []) as unknown as {
-    id: string; version_number: number; language_code: string;
-    courses: { id: string; slug: string; title: string; description: string | null }[] | null;
+    id: string; version_number: number; language: string;
+    // One course per version: PostgREST sends an object.
+    courses: Embedded<{ id: string; slug: string; title: string; description: string | null }>;
   }[]).flatMap((version) => {
-    const course = version.courses?.[0];
-    return course ? [{ ...course, versionId: version.id, language: version.language_code }] : [];
+    const course = one(version.courses);
+    return course ? [{ ...course, versionId: version.id, language: version.language }] : [];
   });
 
   const socials = [

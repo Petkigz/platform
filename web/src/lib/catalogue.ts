@@ -14,6 +14,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { PAGE_SIZE } from './paging.ts';
+import { one, type Embedded } from './embed.ts';
 
 export type CatalogueCourse = {
   id: string;
@@ -40,7 +41,7 @@ export type CatalogueVersion = {
   language: string;
   version_status: string;
   course_version_subjects:
-    | { subject_areas: { code: string; name: string }[] | null }[]
+    | { subject_areas: Embedded<{ code: string; name: string }> }[]
     | null;
 };
 
@@ -68,7 +69,7 @@ export function displayVersion(c: CatalogueCourse): CatalogueVersion | null {
 export function subjectNames(v: CatalogueVersion | null): string[] {
   if (!v) return [];
   const names = (v.course_version_subjects ?? [])
-    .map((s) => s.subject_areas?.[0]?.name)
+    .map((s) => one(s.subject_areas)?.name)
     .filter((n): n is string => Boolean(n));
   return [...new Set(names)];
 }
