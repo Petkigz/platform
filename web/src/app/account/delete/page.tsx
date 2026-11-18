@@ -1,13 +1,34 @@
 import Link from 'next/link';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
+import { Say } from '@/components/say';
+import { PRIVACY_CONTACT } from '@/lib/erase-outcome';
+import { LOCALE_COOKIE, chooseLocale, languageShownFor, translator } from '@/lib/i18n';
 import { EraseAccount } from './erase-form';
 
 export const dynamic = 'force-dynamic';
 
+/** The address, kept left to right inside a sentence that may run the other way. */
+const contact = <bdi dir="ltr">{PRIVACY_CONTACT}</bdi>;
+
 /**
- * Closing an account.
+ * What a closed learner's certificate says in place of the name.
+ *
+ * It is the string `erase_my_account()` writes, so it is printed as it will be
+ * seen, in English, whatever language is around it.
+ */
+const holderLabel = (
+  <bdi lang="en" dir="ltr">
+    “Deleted learner”
+  </bdi>
+);
+
+const LIST = { paddingInlineStart: '1.1rem' } as const;
+
+/**
+ * Closing an account, in the reader's language.
  *
  * The page exists so the decision is made with the facts in front of it: what
  * goes, what stays, and why the two lists are not the same. A person who reads
@@ -15,6 +36,16 @@ export const dynamic = 'force-dynamic';
  *
  * Some records are changed immediately while others remain, and neither a
  * scheduled job nor a manual storage step is proof of physical deletion.
+ *
+ * **Twenty-seven languages have it** (`messages/close.ts`); a language held
+ * for review reads it in English, whole, under `lang="en"` — the same rule as
+ * the account page. Nobody who speaks any of the twenty-seven has read them,
+ * and this is the page where a wrong sentence promises a deletion that does
+ * not happen. Every hedge in the English ("can remain", "is not proof") has a
+ * counterpart in each language; `lib/account.test.ts` holds the English ones.
+ *
+ * The form is drawn in the browser and is handed its words, so none of this
+ * is in the script every page carries.
  */
 export default async function DeleteAccountPage() {
   if (!isSupabaseConfigured()) redirect('/');
@@ -33,104 +64,119 @@ export default async function DeleteAccountPage() {
 
   if (!data) redirect('/learn');
   const profile = data as unknown as {
-    display_name: string;
+    display_name: string | null;
     account_status: string;
     deleted_at: string | null;
   };
   const closed = profile.deleted_at !== null || profile.account_status === 'closed';
 
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code: locale } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  const shown = languageShownFor(locale, 'close');
+  const t = translator(shown.code);
+  const frame = shown.code !== locale ? { lang: shown.code, dir: shown.dir } : {};
+
+  // An address or a number, never a word: an account with neither is not
+  // "unknown", it is simply not named in the sentence.
+  const who = user.email ?? user.phone ?? null;
+
   return (
-    <div className="container section" style={{ maxWidth: '46rem' }}>
+    <div className="container section" style={{ maxWidth: '46rem' }} {...frame}>
       <p className="eyebrow">
-        <Link href="/account">Account settings</Link>
+        <Link href="/account">{t('auth.accountSettings')}</Link>
       </p>
-      <h1>Close this account</h1>
+      <h1>{t('close.title')}</h1>
 
       {closed ? (
         <div className="card">
           <p className="empty" style={{ marginBottom: '0.5rem' }}>
-            This account is already closed.
+            {t('close.already')}
           </p>
           <p className="muted" style={{ margin: 0 }}>
-            The profile has been changed, but some records and files may remain. The sign-in
-            lives with the provider; if still present it needs a separate removal step.
-            The queue is not proof the sign-in has been removed.
+            {t('close.alreadyNote')}
           </p>
         </div>
       ) : (
         <>
-          <p className="lede">
-            Signed in as <strong>{user.email ?? user.phone ?? 'unknown'}</strong>. This
-            closes the account, changes your profile and removes some personal information.
-            Some records and stored files remain, as explained below.
+          <p className="lede" style={{ maxWidth: 'none' }}>
+            {who ? (
+              <Say
+                text={t('close.lede')}
+                parts={{ who: <strong><bdi dir="ltr">{who}</bdi></strong> }}
+              />
+            ) : (
+              t('close.ledeUnnamed')
+            )}
           </p>
 
           <div className="grid cols-2" style={{ marginTop: '1rem' }}>
             <section className="card">
-              <h2 style={{ marginTop: 0 }}>Removed or changed at closure</h2>
-              <ul className="muted" style={{ paddingInlineStart: '1.1rem' }}>
-                <li>Your name, photo, time zone and country</li>
-                <li>Lesson notes and bookmarks</li>
-                <li>Saved courses and the notes on them</li>
-                <li>Your course-review rows are removed. Discussion posts remain as threads with their body replaced.</li>
-                <li>The current answer text on your own linked learner profile is cleared. Earlier revision snapshots and attached files can remain under separate retention rules.</li>
-                <li>Live sharing links, invitations and guardian access</li>
-                <li>Platform notification and outbound-message records associated with you. Email already delivered cannot be recalled.</li>
-                <li>If this account has a named safeguarding or refund-approval appointment, closing it needs individual review. Contact privacy@ayahspring.com.</li>
+              <h2 style={{ marginTop: 0 }}>{t('close.goesHeading')}</h2>
+              <ul className="muted" style={LIST}>
+                <li>{t('close.goesProfile')}</li>
+                <li>{t('close.goesNotes')}</li>
+                <li>{t('close.goesSaved')}</li>
+                <li>{t('close.goesReviews')}</li>
+                <li>{t('close.goesAnswers')}</li>
+                <li>{t('close.goesSharing')}</li>
+                <li>{t('close.goesMessages')}</li>
                 <li>
-                  A child profile in a family with no other active member may be closed.
-                  If it has a separate login or coursework under a safeguarding hold, self-service closure is
-                  paused for individual review: contact privacy@ayahspring.com. Other eligible
-                  child learning records, including coursework, are scheduled for removal after thirty days. Stored files require a separate deletion step.
+                  <Say text={t('close.goesAppointment')} parts={{ contact }} />
+                </li>
+                <li>
+                  <Say text={t('close.goesChildren')} parts={{ contact }} />
                 </li>
               </ul>
             </section>
             <section className="card">
-              <h2 style={{ marginTop: 0 }}>Records that remain</h2>
-              <ul className="muted" style={{ paddingInlineStart: '1.1rem' }}>
-                <li>Orders, payments and refunds — the ledger a refund depends on</li>
-                <li>
-                  Your own enrolments and lesson progress. Eligible child records are
-                  scheduled for removal thirty days after closure.
-                </li>
-                <li>Certificates, under the number they were issued with</li>
-                <li>
-                  Support cases — text in cases you requested is replaced, and messages you wrote are removed, including messages in other people’s cases. If a case is under a safeguarding pause, its content is kept until the pause is released; it may identify you.
-                  The platform attempts to replace your profile display name in staff replies and
-                  resolution notes, but other names or identifiers may remain. The case is due for
-                  deletion three years after it closes.
-                </li>
-                <li>The audit record that the account was closed</li>
-                <li>
-                  A fingerprint of your sign-in address — not the address — so that support
-                  can answer &ldquo;was my account erased?&rdquo; once the sign-in itself is gone
-                </li>
+              <h2 style={{ marginTop: 0 }}>{t('close.staysHeading')}</h2>
+              <ul className="muted" style={LIST}>
+                <li>{t('close.staysMoney')}</li>
+                <li>{t('close.staysProgress')}</li>
+                <li>{t('close.staysCertificates')}</li>
+                <li>{t('close.staysSupport')}</li>
+                <li>{t('close.staysAudit')}</li>
+                <li>{t('close.staysFingerprint')}</li>
               </ul>
               <p className="muted" style={{ marginBottom: 0 }}>
-                A certificate&rsquo;s holder field is replaced with &ldquo;Deleted learner&rdquo;,
-                and its number and other snapshot details remain. A child&rsquo;s certificate
-                also keeps its number after the learning record is removed.
+                <Say text={t('close.staysHolder')} parts={{ label: holderLabel }} />
               </p>
             </section>
           </div>
 
           <section className="card" style={{ marginTop: '1rem' }}>
-            <h2 style={{ marginTop: 0 }}>This cannot be undone</h2>
+            <h2 style={{ marginTop: 0 }}>{t('close.undoHeading')}</h2>
+            <p className="muted">{t('close.undoSessions')}</p>
             <p className="muted">
-              The app attempts to sign you out, but other sessions and the provider sign-in
-              may remain until separately revoked or removed. If you are a teacher with a
-              course in review or published, the
-              platform owner has to close the teaching account first — the page will say
-              so if that applies to you.
+              <strong>{t('close.undoSignInLead')}</strong> {t('close.undoSignIn')}
             </p>
-            <p className="muted">
-              <strong>The sign-in is not deleted by this.</strong> It is held by the
-              sign-in provider rather than by AyahSpring, so closing the account puts it on
-              the platform owner&rsquo;s list for a separate removal step if it is still
-              present. Before recording removal, the database checks that the identity is
-              absent from its authentication table; that is not proof about all provider copies.
-            </p>
-            <EraseAccount displayName={profile.display_name} />
+            <EraseAccount
+              displayName={profile.display_name ?? ''}
+              words={{
+                confirmLabel: t('close.confirmLabel'),
+                confirmNote: t('close.confirmNote'),
+                nameless: t('close.nameless'),
+                button: t('close.button'),
+                closing: t('close.closing'),
+                keep: t('close.keep'),
+                reasons: {
+                  signed_out: t('close.signedOut'),
+                  no_account: t('close.noAccount'),
+                  name_missing: t('close.nameMissing'),
+                  name_mismatch: t('close.nameMismatch'),
+                  teaching: t('close.teaching'),
+                  board: t('close.board'),
+                  held: t('close.held'),
+                  appointment: t('close.appointment'),
+                  refused: t('close.refused'),
+                  unconfirmed: t('close.unconfirmed'),
+                },
+              }}
+            />
           </section>
         </>
       )}

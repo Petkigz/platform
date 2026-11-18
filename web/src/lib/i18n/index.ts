@@ -68,14 +68,16 @@ const PLAYER_PREFIX = 'player.';
  *
  * The learner dashboard, the course page, the lesson page's frame, the
  * assessment page, the assignment page, the page for a wrong address, the
- * account page, the family pages and the buy page are Server Components:
+ * account page, the family pages, the buy page and the page for closing an
+ * account are Server Components:
  * their words are in the HTML by the time a browser sees it, and no client
  * component asks for one. Several hundred sentences in the catalogue every
  * page carries would be paid for by every reader of the front page and used
  * by none of them (the number is pinned in `companion-i18n.test.ts`, where it
  * cannot go stale the way it did here). The client controls on those pages
  * (mark complete, the learner-profile prompt, the quiz, the written answer,
- * the profile form, the family forms, the buy form) are handed their strings
+ * the profile form, the family forms, the buy form, the closing form) are
+ * handed their strings
  * as props instead. If a client component ever asks
  * for one of these keys it gets English — the sentence is not in what it was
  * sent — so a test forbids it; the other fix is to take the prefix out of this
@@ -87,7 +89,7 @@ const PLAYER_PREFIX = 'player.';
  */
 const SERVER_ONLY_PREFIXES: readonly string[] = [
   'learn.', 'course.', 'lesson.', 'assess.', 'assign.', 'missing.', 'account.',
-  'family.', 'buy.',
+  'family.', 'buy.', 'close.',
 ];
 
 /** Everything a client component outside the companion pages can ask for. */

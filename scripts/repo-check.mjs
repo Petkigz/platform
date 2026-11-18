@@ -489,6 +489,7 @@ function appRoutes() {
     ['white', 'green-600'],
     ['white', 'green-800'],
     ['danger', 'danger-bg'],
+    ['white', 'danger'],
   ];
 
   // White is written as a literal throughout the stylesheet rather than as a

@@ -1,8 +1,9 @@
 'use client';
 
-import { Fragment, useState, useTransition, type ReactNode } from 'react';
+import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Say } from '@/components/say';
 import { format, fromMinor } from '@/lib/money';
 import type { WithdrawalOffer } from '@/lib/withdrawal';
 import {
@@ -76,20 +77,6 @@ export type BuyWords = {
   /** What the form says for each reason a checkout or a price check can be refused. */
   reasons: Record<CheckoutReason, string>;
 };
-
-/** A sentence with something other than text in its gaps. */
-function Say({ text, parts }: { text: string; parts: Record<string, ReactNode> }) {
-  return (
-    <>
-      {text.split(/(\{[a-zA-Z]+\})/u).map((piece, index) => {
-        const name = /^\{([a-zA-Z]+)\}$/u.exec(piece)?.[1];
-        return (
-          <Fragment key={index}>{name && Object.hasOwn(parts, name) ? parts[name] : piece}</Fragment>
-        );
-      })}
-    </>
-  );
-}
 
 /** An amount is a currency code and Latin digits whatever the page is. */
 const Amount = ({ value }: { value: string }) => (

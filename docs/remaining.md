@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 20% there (192 of 977 sentences; it was 71% of 272, then
+  the nineteen reads 19% there (192 of 1020 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -541,7 +541,8 @@ still unreviewed and still saying so.
   a page that broke, 28% of 677 with the lesson players and their saved-place
   messages, 27% of 700 with the discussion on the lesson page, 24% of 798
   with the account page and its profile form, 21% of 898 with the family
-  pages and their forms, then this with the buy page and its form),
+  pages and their forms, 20% of 977 with the buy page and its form, then
+  this with the page for closing an account),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -759,7 +760,7 @@ written: not a held draft, nothing.
   of a document waiting for agreement. **Still English, every one of them:**
   the pages it links to: `/account/merge`, `/account/sharing`,
   `/account/accessibility`, `/account/export` and its print page,
-  `/account/restore`, `/account/delete`, `/account/referrals`,
+  `/account/restore`, `/account/referrals`,
   `/account/sponsorship`, `/account/password`, `/billing`,
   `/institution`, `/notifications`, `/policies`, `/teach/apply`, `/sponsor`
   and `/forgot-password`. A reader is taken from a page in their language to
@@ -862,6 +863,42 @@ written: not a held draft, nothing.
   other twenty-four languages in a browser; and Tamil letters themselves,
   which the test browser on the builder's machine draws as boxes for want of
   a font (the layout was measured, the glyphs were not seen).
+- *Closing an account (2026-11-18).* `/account/delete` and its form,
+  forty-three sentences in the same twenty-seven languages
+  (`messages/close.ts`); a held language reads it in English, whole, marked
+  as English. **Unreviewed, and this is the page where a wrong sentence
+  promises a deletion that does not happen.** Every hedge in the English
+  ("can remain", "may identify you", "tries to", "is not proof") was written
+  into each language on purpose, and nobody who speaks any of them has
+  confirmed that it survived. A reviewer of any language should be shown
+  `close.goesAnswers`, `close.staysSupport`, `close.undoSignIn`,
+  `close.alreadyNote` and `close.unconfirmed` first, then
+  `account.closeBody` on the account page, which was rewritten in all
+  twenty-seven because the old one said closing "removes your name from
+  everything it touched", and it does not.
+  **Still English on it for every reader, and marked:** "Deleted learner",
+  the string the database writes on a certificate in place of the holder's
+  name, printed as it will be seen.
+  **The address it tells people to write to is privacy@ayahspring.com, six
+  times, and that address does not work**: the domain is not the owner's.
+  The page said so before this change and still does; it is the owner's
+  disclosure to change, and it is the one a person refused closure is sent
+  to.
+  Checked by `scripts/close-route-smoke.mjs` on a synthetic backend: HTTP in
+  English, Arabic, French, Hausa, Pashto and Wolof; an account with no name;
+  an account already closed; and the route's answer to every refusal the
+  migrations raise, word for word as they raise it, plus an unnamed one, a
+  reply that says nothing, a reply that says "not closed" and a gateway's
+  page. Chromium in English, Arabic and Tamil at 320, 390 and 1440 wide; the
+  button's colour measured; the form pressed in Arabic through three
+  refusals, an unreadable answer, a lost connection and a closure.
+  **Not checked:** a real database, so nothing here shows what
+  `erase_my_account()` removes or keeps, or that the two lists on the page
+  are true of it (the database suite tests the function; no test compares it
+  with these sentences); real Auth, so whether the session really ends is
+  not shown, only that the cookie is cleared; the other twenty-four
+  languages in a browser; Tamil letters, which the builder's test browser
+  draws as boxes.
 - *What it did to the nineteen.* They read 59% on `/language` after the course
   page and **55% after the lesson page**. The test
   that stops a mostly-English language being offered had its floor at 60 and

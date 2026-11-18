@@ -157,7 +157,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.dataRestoreLink': 'أعِده',
     'account.closeHeading': 'إغلاق هذا الحساب',
     'account.closeBody':
-      'الإغلاق يزيل اسمك من كل ما ارتبط به ويسجّل خروجك نهائيًا. تُحفظ الطلبات والمدفوعات والتسجيلات والشهادات من دون اسمك، لأن الاسترداد أو التحقّق من شهادة ما زال يحتاج إليها. تعرض الصفحة الجانبين قبل أن يحدث أي شيء.',
+      'الإغلاق يغيّر ملفك الشخصي ويزيل بعض المعلومات الشخصية ويحاول تسجيل خروجك. تُحفظ الطلبات والمدفوعات والتسجيلات والشهادات، لأن الاسترداد أو التحقّق من شهادة ما زال يحتاج إليها، وتبقى سجلات أخرى أيضًا. تعرض الصفحة الجانبين قبل أن يحدث أي شيء.',
     'account.closeLink': 'إغلاق هذا الحساب',
   },
   ur: {
@@ -284,7 +284,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.dataRestoreLink': 'واپس رکھیں',
     'account.closeHeading': 'اس اکاؤنٹ کو بند کرنا',
     'account.closeBody':
-      'بند کرنے سے آپ کا نام ہر اس چیز سے ہٹ جاتا ہے جس سے وہ جڑا تھا اور آپ ہمیشہ کے لیے سائن آؤٹ ہو جاتے ہیں۔ آرڈر، ادائیگیاں، اندراجات اور اسناد آپ کے نام کے بغیر رکھی جاتی ہیں، کیونکہ رقم واپسی یا سند کی جانچ کو اب بھی ان کی ضرورت ہے۔ کچھ ہونے سے پہلے صفحہ دونوں پہلو دکھاتا ہے۔',
+      'بند کرنے سے آپ کا پروفائل بدل جاتا ہے، کچھ ذاتی معلومات ہٹ جاتی ہیں اور آپ کو سائن آؤٹ کرنے کی کوشش کی جاتی ہے۔ آرڈر، ادائیگیاں، اندراجات اور اسناد رکھی جاتی ہیں، کیونکہ رقم واپسی یا سند کی جانچ کو اب بھی ان کی ضرورت ہے، اور کچھ دوسرے ریکارڈ بھی باقی رہتے ہیں۔ کچھ ہونے سے پہلے صفحہ دونوں پہلو دکھاتا ہے۔',
     'account.closeLink': 'یہ اکاؤنٹ بند کریں',
   },
   fa: {
@@ -409,7 +409,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.dataRestoreLink': 'برگرداندن',
     'account.closeHeading': 'بستن این حساب',
     'account.closeBody':
-      'بستن حساب نام شما را از هر چیزی که به آن مربوط بوده برمی‌دارد و برای همیشه شما را خارج می‌کند. سفارش‌ها، پرداخت‌ها، ثبت‌نام‌ها و گواهی‌نامه‌ها بدون نام شما نگه داشته می‌شوند، چون بازپرداخت یا بررسی گواهی‌نامه هنوز به آن‌ها نیاز دارد. صفحه پیش از هر اتفاقی هر دو سو را فهرست می‌کند.',
+      'بستن حساب نمایهٔ شما را تغییر می‌دهد، برخی اطلاعات شخصی را برمی‌دارد و می‌کوشد شما را خارج کند. سفارش‌ها، پرداخت‌ها، ثبت‌نام‌ها و گواهی‌نامه‌ها نگه داشته می‌شوند، چون بازپرداخت یا بررسی گواهی‌نامه هنوز به آن‌ها نیاز دارد، و برخی سوابق دیگر نیز باقی می‌مانند. صفحه پیش از هر اتفاقی هر دو سو را فهرست می‌کند.',
     'account.closeLink': 'بستن این حساب',
   },
   'fa-af': {
@@ -535,7 +535,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.dataRestoreLink': 'برگرداندن',
     'account.closeHeading': 'بستن این حساب',
     'account.closeBody':
-      'بستن حساب نام شما را از هر چیزی که به آن ربط داشته برمی‌دارد و برای همیشه شما را بیرون می‌کند. فرمایش‌ها، پرداخت‌ها، ثبت‌نام‌ها و اسناد بدون نام شما نگه‌داری می‌شوند، زیرا بازپرداخت یا بررسی یک سند هنوز به آن‌ها نیاز دارد. صفحه پیش از هر رویدادی هر دو طرف را فهرست می‌کند.',
+      'بستن حساب پروفایل شما را تغییر می‌دهد، برخی معلومات شخصی را برمی‌دارد و می‌کوشد شما را بیرون کند. فرمایش‌ها، پرداخت‌ها، ثبت‌نام‌ها و اسناد نگه‌داری می‌شوند، زیرا بازپرداخت یا بررسی یک سند هنوز به آن‌ها نیاز دارد، و برخی سوابق دیگر نیز باقی می‌مانند. صفحه پیش از هر رویدادی هر دو طرف را فهرست می‌کند.',
     'account.closeLink': 'بستن این حساب',
   },
   tr: {
@@ -663,7 +663,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.dataRestoreLink': 'Geri koy',
     'account.closeHeading': 'Bu hesabı kapatmak',
     'account.closeBody':
-      'Kapatmak, adınızı dokunduğu her şeyden kaldırır ve oturumunuzu kalıcı olarak kapatır. Siparişler, ödemeler, kayıtlar ve sertifikalar adınız olmadan saklanır, çünkü bir iade veya bir sertifikanın doğrulanması hâlâ onlara ihtiyaç duyar. Sayfa, herhangi bir şey olmadan önce iki tarafı da listeler.',
+      'Kapatmak profilinizi değiştirir, bazı kişisel bilgileri kaldırır ve oturumunuzu kapatmaya çalışır. Siparişler, ödemeler, kayıtlar ve sertifikalar saklanır, çünkü bir iade veya bir sertifikanın doğrulanması hâlâ onlara ihtiyaç duyar; başka bazı kayıtlar da kalır. Sayfa, herhangi bir şey olmadan önce iki tarafı da listeler.',
     'account.closeLink': 'Bu hesabı kapat',
   },
   id: {
@@ -792,7 +792,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.dataRestoreLink': 'Kembalikan',
     'account.closeHeading': 'Menutup akun ini',
     'account.closeBody':
-      'Menutup akun menghapus nama Anda dari semua yang pernah disentuhnya dan mengeluarkan Anda untuk selamanya. Pesanan, pembayaran, pendaftaran, dan sertifikat disimpan tanpa nama Anda, karena pengembalian dana atau pemeriksaan sertifikat masih memerlukannya. Halaman itu mencantumkan kedua sisi sebelum apa pun terjadi.',
+      'Menutup akun mengubah profil Anda, menghapus sebagian informasi pribadi, dan berusaha mengeluarkan Anda. Pesanan, pembayaran, pendaftaran, dan sertifikat disimpan, karena pengembalian dana atau pemeriksaan sertifikat masih memerlukannya, dan sebagian catatan lain juga tetap ada. Halaman itu mencantumkan kedua sisi sebelum apa pun terjadi.',
     'account.closeLink': 'Tutup akun ini',
   },
   ms: {
@@ -920,7 +920,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.dataRestoreLink': 'Kembalikan',
     'account.closeHeading': 'Menutup akaun ini',
     'account.closeBody':
-      'Menutup akaun membuang nama anda daripada semua yang pernah disentuhnya dan melog keluar anda buat selama-lamanya. Pesanan, bayaran, pendaftaran dan sijil disimpan tanpa nama anda, kerana bayaran balik atau semakan sijil masih memerlukannya. Halaman itu menyenaraikan kedua-dua bahagian sebelum apa-apa berlaku.',
+      'Menutup akaun mengubah profil anda, membuang sesetengah maklumat peribadi dan cuba melog keluar anda. Pesanan, bayaran, pendaftaran dan sijil disimpan, kerana bayaran balik atau semakan sijil masih memerlukannya, dan sesetengah rekod lain juga kekal. Halaman itu menyenaraikan kedua-dua bahagian sebelum apa-apa berlaku.',
     'account.closeLink': 'Tutup akaun ini',
   },
   bn: {
@@ -1049,7 +1049,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.dataRestoreLink': 'ফিরিয়ে রাখুন',
     'account.closeHeading': 'এই অ্যাকাউন্ট বন্ধ করা',
     'account.closeBody':
-      'বন্ধ করলে আপনার নাম যেখানে যেখানে ছিল সব জায়গা থেকে সরে যায় এবং আপনি স্থায়ীভাবে সাইন আউট হয়ে যান। অর্ডার, পেমেন্ট, ভর্তি ও সনদ আপনার নাম ছাড়া রাখা হয়, কারণ কোনো ফেরত বা সনদ যাচাইয়ে এখনো সেগুলো লাগে। কিছু ঘটার আগে পাতাটি দুই দিকই তালিকা করে দেখায়।',
+      'বন্ধ করলে আপনার প্রোফাইল বদলায়, কিছু ব্যক্তিগত তথ্য সরে যায় এবং আপনাকে সাইন আউট করার চেষ্টা করা হয়। অর্ডার, পেমেন্ট, ভর্তি ও সনদ রাখা হয়, কারণ কোনো ফেরত বা সনদ যাচাইয়ে এখনো সেগুলো লাগে, আর কিছু অন্য রেকর্ডও থেকে যায়। কিছু ঘটার আগে পাতাটি দুই দিকই তালিকা করে দেখায়।',
     'account.closeLink': 'এই অ্যাকাউন্ট বন্ধ করুন',
   },
   hi: {
@@ -1177,7 +1177,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.dataRestoreLink': 'वापस रखें',
     'account.closeHeading': 'यह खाता बंद करना',
     'account.closeBody':
-      'बंद करने से आपका नाम हर उस चीज़ से हट जाता है जिससे वह जुड़ा था और आप हमेशा के लिए साइन आउट हो जाते हैं। ऑर्डर, भुगतान, नामांकन और प्रमाणपत्र आपके नाम के बिना रखे जाते हैं, क्योंकि किसी रिफ़ंड या प्रमाणपत्र की जाँच को अब भी उनकी ज़रूरत है। कुछ भी होने से पहले पृष्ठ दोनों पक्ष सूचीबद्ध करता है।',
+      'बंद करने से आपकी प्रोफ़ाइल बदल जाती है, कुछ निजी जानकारी हट जाती है और आपको साइन आउट करने की कोशिश की जाती है। ऑर्डर, भुगतान, नामांकन और प्रमाणपत्र रखे जाते हैं, क्योंकि किसी रिफ़ंड या प्रमाणपत्र की जाँच को अब भी उनकी ज़रूरत है, और कुछ दूसरे रिकॉर्ड भी बचे रहते हैं। कुछ भी होने से पहले पृष्ठ दोनों पक्ष सूचीबद्ध करता है।',
     'account.closeLink': 'यह खाता बंद करें',
   },
   fr: {
@@ -1306,7 +1306,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.dataRestoreLink': 'Le remettre',
     'account.closeHeading': 'Fermer ce compte',
     'account.closeBody':
-      'La fermeture retire votre nom de tout ce qu’il a touché et vous déconnecte définitivement. Les commandes, paiements, inscriptions et certificats sont conservés sans votre nom, car un remboursement ou la vérification d’un certificat en a encore besoin. La page présente les deux côtés avant que quoi que ce soit ne se produise.',
+      'La fermeture modifie votre profil, supprime certaines informations personnelles et tente de vous déconnecter. Les commandes, paiements, inscriptions et certificats sont conservés, car un remboursement ou la vérification d’un certificat en a encore besoin, et d’autres enregistrements subsistent aussi. La page présente les deux côtés avant que quoi que ce soit ne se produise.',
     'account.closeLink': 'Fermer ce compte',
   },
   es: {
@@ -1433,7 +1433,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.dataRestoreLink': 'Volver a ponerlo',
     'account.closeHeading': 'Cerrar esta cuenta',
     'account.closeBody':
-      'Cerrar la cuenta quita su nombre de todo lo que tocó y cierra su sesión de forma definitiva. Los pedidos, pagos, inscripciones y certificados se conservan sin su nombre, porque un reembolso o la comprobación de un certificado todavía los necesita. La página enumera ambas partes antes de que ocurra nada.',
+      'Cerrar la cuenta modifica su perfil, elimina parte de la información personal e intenta cerrar su sesión. Los pedidos, pagos, inscripciones y certificados se conservan, porque un reembolso o la comprobación de un certificado todavía los necesita, y también quedan algunos otros registros. La página enumera ambas partes antes de que ocurra nada.',
     'account.closeLink': 'Cerrar esta cuenta',
   },
   pt: {
@@ -1561,7 +1561,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.dataRestoreLink': 'Repô-lo',
     'account.closeHeading': 'Encerrar esta conta',
     'account.closeBody':
-      'Encerrar a conta retira o seu nome de tudo aquilo em que tocou e termina a sua sessão de vez. As encomendas, os pagamentos, as inscrições e os certificados são mantidos sem o seu nome, porque um reembolso ou a verificação de um certificado ainda precisa deles. A página enumera os dois lados antes de acontecer seja o que for.',
+      'Encerrar a conta altera o seu perfil, remove algumas informações pessoais e tenta terminar a sua sessão. As encomendas, os pagamentos, as inscrições e os certificados são mantidos, porque um reembolso ou a verificação de um certificado ainda precisa deles, e alguns outros registos também permanecem. A página enumera os dois lados antes de acontecer seja o que for.',
     'account.closeLink': 'Encerrar esta conta',
   },
   sw: {
@@ -1689,7 +1689,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.dataRestoreLink': 'Irudishe',
     'account.closeHeading': 'Kufunga akaunti hii',
     'account.closeBody':
-      'Kufunga huondoa jina lako kwenye kila kitu lilichogusa na hukutoa kabisa. Maagizo, malipo, usajili na vyeti huhifadhiwa bila jina lako, kwa sababu urejeshaji wa pesa au ukaguzi wa cheti bado unavihitaji. Ukurasa huorodhesha pande zote mbili kabla ya chochote kutokea.',
+      'Kufunga hubadilisha wasifu wako, huondoa baadhi ya taarifa binafsi na hujaribu kukutoa. Maagizo, malipo, usajili na vyeti huhifadhiwa, kwa sababu urejeshaji wa pesa au ukaguzi wa cheti bado unavihitaji, na kumbukumbu nyingine pia hubaki. Ukurasa huorodhesha pande zote mbili kabla ya chochote kutokea.',
     'account.closeLink': 'Funga akaunti hii',
   },
   af: {
@@ -1819,7 +1819,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.dataRestoreLink': 'Sit dit terug',
     'account.closeHeading': 'Sluit hierdie rekening',
     'account.closeBody':
-      'Sluiting verwyder jou naam van alles waaraan dit geraak het en teken jou vir goed af. Bestellings, betalings, inskrywings en sertifikate word sonder jou naam gehou, want ’n terugbetaling of die nagaan van ’n sertifikaat het hulle steeds nodig. Die bladsy lys albei kante voordat enigiets gebeur.',
+      'Sluiting verander jou profiel, verwyder sommige persoonlike inligting en probeer jou afmeld. Bestellings, betalings, inskrywings en sertifikate word gehou, want ’n terugbetaling of die nagaan van ’n sertifikaat het hulle steeds nodig, en sommige ander rekords bly ook oor. Die bladsy lys albei kante voordat enigiets gebeur.',
     'account.closeLink': 'Sluit hierdie rekening',
   },
   'zh-hans': {
@@ -1922,7 +1922,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.dataRestoreLink': '恢复数据',
     'account.closeHeading': '关闭此账户',
     'account.closeBody':
-      '关闭账户会把你的姓名从它涉及的所有内容中移除，并让你永久退出登录。订单、付款、报名记录和证书会在去除你的姓名后保留，因为退款或证书核验仍然需要它们。在任何事情发生之前，页面会列出这两方面。',
+      '关闭账户会更改你的个人资料、移除部分个人信息，并尝试让你退出登录。订单、付款、报名记录和证书会保留，因为退款或证书核验仍然需要它们，另有一些记录也会保留。在任何事情发生之前，页面会列出这两方面。',
     'account.closeLink': '关闭此账户',
   },
   'zh-hant': {
@@ -2025,7 +2025,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.dataRestoreLink': '還原資料',
     'account.closeHeading': '關閉此帳號',
     'account.closeBody':
-      '關閉帳號會把你的姓名從它涉及的所有內容中移除，並讓你永久登出。訂單、付款、報名紀錄和證書會在去除你的姓名後保留，因為退款或證書查驗仍然需要它們。在任何事情發生之前，頁面會列出這兩方面。',
+      '關閉帳號會變更你的個人資料、移除部分個人資訊，並嘗試讓你登出。訂單、付款、報名紀錄和證書會保留，因為退款或證書查驗仍然需要它們，另有一些紀錄也會保留。在任何事情發生之前，頁面會列出這兩方面。',
     'account.closeLink': '關閉此帳號',
   },
   vi: {
@@ -2153,7 +2153,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.dataRestoreLink': 'Đưa trở lại',
     'account.closeHeading': 'Đóng tài khoản này',
     'account.closeBody':
-      'Việc đóng sẽ gỡ tên bạn khỏi mọi thứ nó từng gắn với và đăng xuất bạn vĩnh viễn. Đơn hàng, thanh toán, ghi danh và chứng chỉ được giữ lại mà không có tên bạn, vì việc hoàn tiền hay kiểm tra chứng chỉ vẫn cần đến chúng. Trang đó liệt kê cả hai phía trước khi bất cứ điều gì xảy ra.',
+      'Việc đóng sẽ thay đổi hồ sơ của bạn, gỡ bỏ một số thông tin cá nhân và cố gắng đăng xuất bạn. Đơn hàng, thanh toán, ghi danh và chứng chỉ được giữ lại, vì việc hoàn tiền hay kiểm tra chứng chỉ vẫn cần đến chúng, và một số bản ghi khác cũng vẫn còn. Trang đó liệt kê cả hai phía trước khi bất cứ điều gì xảy ra.',
     'account.closeLink': 'Đóng tài khoản này',
   },
   th: {
@@ -2277,7 +2277,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.dataRestoreLink': 'นำกลับมาใส่',
     'account.closeHeading': 'การปิดบัญชีนี้',
     'account.closeBody':
-      'การปิดบัญชีจะลบชื่อของคุณออกจากทุกสิ่งที่เคยเกี่ยวข้อง และออกจากระบบให้คุณอย่างถาวร คำสั่งซื้อ การชำระเงิน การลงทะเบียน และประกาศนียบัตรจะเก็บไว้โดยไม่มีชื่อของคุณ เพราะการคืนเงินหรือการตรวจสอบประกาศนียบัตรยังต้องใช้ หน้านั้นแสดงทั้งสองด้านก่อนที่จะเกิดอะไรขึ้น',
+      'การปิดบัญชีจะเปลี่ยนโปรไฟล์ของคุณ นำข้อมูลส่วนบุคคลบางส่วนออก และพยายามออกจากระบบให้คุณ คำสั่งซื้อ การชำระเงิน การลงทะเบียน และประกาศนียบัตรจะเก็บไว้ เพราะการคืนเงินหรือการตรวจสอบประกาศนียบัตรยังต้องใช้ และบันทึกอื่นบางส่วนก็ยังคงอยู่ หน้านั้นแสดงทั้งสองด้านก่อนที่จะเกิดอะไรขึ้น',
     'account.closeLink': 'ปิดบัญชีนี้',
   },
   fil: {
@@ -2406,7 +2406,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.dataRestoreLink': 'Ibalik ito',
     'account.closeHeading': 'Pagsasara ng account na ito',
     'account.closeBody':
-      'Inaalis ng pagsasara ang pangalan mo sa lahat ng nahawakan nito at sina-sign out ka nang tuluyan. Itinatago ang mga order, bayad, enrolment at sertipiko nang wala ang pangalan mo, dahil kailangan pa ang mga ito sa refund o sa pagsusuri ng sertipiko. Inililista ng pahina ang dalawang panig bago may mangyari.',
+      'Binabago ng pagsasara ang profile mo, inaalis ang ilang personal na impormasyon at sinisikap kang i-sign out. Itinatago ang mga order, bayad, enrolment at sertipiko, dahil kailangan pa ang mga ito sa refund o sa pagsusuri ng sertipiko, at may ilan pang rekord na nananatili. Inililista ng pahina ang dalawang panig bago may mangyari.',
     'account.closeLink': 'Isara ang account na ito',
   },
   uz: {
@@ -2535,7 +2535,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.dataRestoreLink': 'Qaytarib qoʻyish',
     'account.closeHeading': 'Bu hisobni yopish',
     'account.closeBody':
-      'Yopish ismingizni u tegishli boʻlgan hamma narsadan olib tashlaydi va sizni hisobdan butunlay chiqaradi. Buyurtmalar, toʻlovlar, yozilishlar va sertifikatlar ismingizsiz saqlanadi, chunki pulni qaytarish yoki sertifikatni tekshirish uchun ular hali ham kerak. Biror narsa sodir boʻlishidan oldin sahifa ikkala tomonni ham koʻrsatadi.',
+      'Yopish profilingizni oʻzgartiradi, ayrim shaxsiy maʼlumotlarni olib tashlaydi va sizni hisobdan chiqarishga harakat qiladi. Buyurtmalar, toʻlovlar, yozilishlar va sertifikatlar saqlanadi, chunki pulni qaytarish yoki sertifikatni tekshirish uchun ular hali ham kerak, ayrim boshqa yozuvlar ham qoladi. Biror narsa sodir boʻlishidan oldin sahifa ikkala tomonni ham koʻrsatadi.',
     'account.closeLink': 'Bu hisobni yopish',
   },
   kk: {
@@ -2663,7 +2663,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.dataRestoreLink': 'Қайта қою',
     'account.closeHeading': 'Осы тіркелгіні жабу',
     'account.closeBody':
-      'Жабу атыңызды ол қатысты болған барлық нәрседен алып тастайды және сізді жүйеден біржола шығарады. Тапсырыстар, төлемдер, тіркелулер мен сертификаттар атыңызсыз сақталады, өйткені ақшаны қайтару немесе сертификатты тексеру үшін олар әлі де қажет. Бірдеңе болмас бұрын бет екі жағын да тізіп көрсетеді.',
+      'Жабу профиліңізді өзгертеді, кейбір жеке деректерді жояды және сізді жүйеден шығаруға тырысады. Тапсырыстар, төлемдер, тіркелулер мен сертификаттар сақталады, өйткені ақшаны қайтару немесе сертификатты тексеру үшін олар әлі де қажет, кейбір басқа жазбалар да қалады. Бірдеңе болмас бұрын бет екі жағын да тізіп көрсетеді.',
     'account.closeLink': 'Осы тіркелгіні жабу',
   },
   az: {
@@ -2790,7 +2790,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.dataRestoreLink': 'Geri qoy',
     'account.closeHeading': 'Bu hesabı bağlamaq',
     'account.closeBody':
-      'Bağlamaq adınızı onun toxunduğu hər şeydən silir və sizi hesabdan həmişəlik çıxarır. Sifarişlər, ödənişlər, yazılışlar və sertifikatlar adınız olmadan saxlanılır, çünki geri qaytarma və ya sertifikatın yoxlanması hələ də onlara ehtiyac duyur. Nəsə baş verməzdən əvvəl səhifə hər iki tərəfi sadalayır.',
+      'Bağlamaq profilinizi dəyişdirir, bəzi şəxsi məlumatları silir və sizi hesabdan çıxarmağa çalışır. Sifarişlər, ödənişlər, yazılışlar və sertifikatlar saxlanılır, çünki geri qaytarma və ya sertifikatın yoxlanması hələ də onlara ehtiyac duyur, bəzi başqa qeydlər də qalır. Nəsə baş verməzdən əvvəl səhifə hər iki tərəfi sadalayır.',
     'account.closeLink': 'Bu hesabı bağla',
   },
   tg: {
@@ -2919,7 +2919,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.dataRestoreLink': 'Баргардондан',
     'account.closeHeading': 'Бастани ин ҳисоб',
     'account.closeBody':
-      'Бастан номи шуморо аз ҳар чизе, ки ба он дахл дошт, мебардорад ва шуморо барои ҳамеша аз ҳисоб мебарорад. Фармоишҳо, пардохтҳо, номнависиҳо ва шаҳодатномаҳо бе номи шумо нигоҳ дошта мешаванд, зеро баргардонидани маблағ ё санҷиши шаҳодатнома ҳанӯз ба онҳо ниёз дорад. Саҳифа пеш аз рух додани ягон чиз ҳар ду тарафро номбар мекунад.',
+      'Бастан профили шуморо тағйир медиҳад, баъзе маълумоти шахсиро мебардорад ва мекӯшад шуморо аз ҳисоб барорад. Фармоишҳо, пардохтҳо, номнависиҳо ва шаҳодатномаҳо нигоҳ дошта мешаванд, зеро баргардонидани маблағ ё санҷиши шаҳодатнома ҳанӯз ба онҳо ниёз дорад, баъзе сабтҳои дигар низ боқӣ мемонанд. Саҳифа пеш аз рух додани ягон чиз ҳар ду тарафро номбар мекунад.',
     'account.closeLink': 'Бастани ин ҳисоб',
   },
   ky: {
@@ -3048,7 +3048,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.dataRestoreLink': 'Кайра коюу',
     'account.closeHeading': 'Бул аккаунтту жабуу',
     'account.closeBody':
-      'Жабуу атыңызды ал тиешелүү болгон бардык нерседен алып салат жана сизди аккаунттан биротоло чыгарат. Буйрутмалар, төлөмдөр, катталуулар жана сертификаттар атыңызсыз сакталат, анткени акчаны кайтаруу же сертификатты текшерүү үчүн алар дагы эле керек. Бир нерсе болордон мурун барак эки тарабын тең тизмелеп көрсөтөт.',
+      'Жабуу профилиңизди өзгөртөт, айрым жеке маалыматтарды алып салат жана сизди аккаунттан чыгарууга аракет кылат. Буйрутмалар, төлөмдөр, катталуулар жана сертификаттар сакталат, анткени акчаны кайтаруу же сертификатты текшерүү үчүн алар дагы эле керек, айрым башка жазуулар да калат. Бир нерсе болордон мурун барак эки тарабын тең тизмелеп көрсөтөт.',
     'account.closeLink': 'Бул аккаунтту жабуу',
   },
   tk: {
@@ -3176,7 +3176,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.dataRestoreLink': 'Yzyna goý',
     'account.closeHeading': 'Bu hasaby ýapmak',
     'account.closeBody':
-      'Ýapmak adyňyzy onuň degişli bolan ähli zadyndan aýyrýar we sizi hasapdan hemişelik çykarýar. Sargytlar, tölegler, ýazylyşlar we şahadatnamalar adyňyzsyz saklanýar, sebäbi pul gaýtarmak ýa-da şahadatnamany barlamak üçin olar entek hem gerek. Bir zat bolmazdan öň sahypa iki tarapy hem sanap görkezýär.',
+      'Ýapmak profiliňizi üýtgedýär, käbir şahsy maglumatlary aýyrýar we sizi hasapdan çykarmaga çalyşýar. Sargytlar, tölegler, ýazylyşlar we şahadatnamalar saklanýar, sebäbi pul gaýtarmak ýa-da şahadatnamany barlamak üçin olar entek hem gerek, käbir beýleki ýazgylar hem galýar. Bir zat bolmazdan öň sahypa iki tarapy hem sanap görkezýär.',
     'account.closeLink': 'Bu hasaby ýap',
   },
   ta: {
@@ -3310,7 +3310,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.dataRestoreLink': 'மீண்டும் வைக்க',
     'account.closeHeading': 'இந்தக் கணக்கை மூடுதல்',
     'account.closeBody':
-      'மூடுவது உங்கள் பெயரை அது தொடர்புடைய அனைத்திலிருந்தும் நீக்கி, உங்களை நிரந்தரமாக வெளியேற்றுகிறது. ஆர்டர்கள், கட்டணங்கள், பதிவுகள் மற்றும் சான்றிதழ்கள் உங்கள் பெயர் இல்லாமல் வைக்கப்படும்; ஏனெனில் பணம் திரும்பப்பெறுதலுக்கோ சான்றிதழ் சரிபார்ப்புக்கோ அவை இன்னும் தேவை. எதுவும் நடப்பதற்கு முன் பக்கம் இரு பக்கங்களையும் பட்டியலிடுகிறது.',
+      'மூடுவது உங்கள் சுயவிவரத்தை மாற்றுகிறது, சில தனிப்பட்ட தகவல்களை நீக்குகிறது, உங்களை வெளியேற்ற முயல்கிறது. ஆர்டர்கள், கட்டணங்கள், பதிவுகள் மற்றும் சான்றிதழ்கள் வைக்கப்படும்; ஏனெனில் பணம் திரும்பப்பெறுதலுக்கோ சான்றிதழ் சரிபார்ப்புக்கோ அவை இன்னும் தேவை; வேறு சில பதிவுகளும் எஞ்சியிருக்கும். எதுவும் நடப்பதற்கு முன் பக்கம் இரு பக்கங்களையும் பட்டியலிடுகிறது.',
     'account.closeLink': 'இந்தக் கணக்கை மூடு',
   },
   ne: {
@@ -3438,7 +3438,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.dataRestoreLink': 'फेरि राख्नुहोस्',
     'account.closeHeading': 'यो खाता बन्द गर्ने',
     'account.closeBody':
-      'बन्द गर्दा तपाईंको नाम त्यससँग जोडिएका सबै कुराबाट हट्छ र तपाईं सधैँका लागि साइन आउट हुनुहुन्छ। अर्डर, भुक्तानी, भर्ना र प्रमाणपत्रहरू तपाईंको नामबिना राखिन्छन्, किनभने रकम फिर्ता वा प्रमाणपत्र जाँचलाई ती अझै चाहिन्छ। केही हुनुअघि पृष्ठले दुवै पक्ष सूचीबद्ध गर्छ।',
+      'बन्द गर्दा तपाईंको प्रोफाइल परिवर्तन हुन्छ, केही व्यक्तिगत जानकारी हट्छ र तपाईंलाई साइन आउट गर्ने प्रयास गरिन्छ। अर्डर, भुक्तानी, भर्ना र प्रमाणपत्रहरू राखिन्छन्, किनभने रकम फिर्ता वा प्रमाणपत्र जाँचलाई ती अझै चाहिन्छ, र केही अन्य अभिलेख पनि बाँकी रहन्छन्। केही हुनुअघि पृष्ठले दुवै पक्ष सूचीबद्ध गर्छ।',
     'account.closeLink': 'यो खाता बन्द गर्नुहोस्',
   },
 };

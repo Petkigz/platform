@@ -225,9 +225,15 @@ p  { margin: 0 0 1rem; }
   border-radius: var(--radius);
   padding: 1.5rem;
   box-shadow: var(--shadow-sm);
+  /* A word longer than the card is broken rather than pushed out of it. It
+     takes a long word and a narrow phone: a Tamil heading at 320px did it. */
+  overflow-wrap: break-word;
 }
 
-.grid { display: grid; gap: 1rem; }
+/* One column that may be narrower than its longest word. Without a template
+   the single column is `auto`, which is never narrower than its contents, so
+   a long word widened the card and the whole page scrolled sideways. */
+.grid { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 46rem) {
   .grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -452,6 +458,13 @@ p  { margin: 0 0 1rem; }
 
 .btn.ghost { background: transparent; border-color: transparent; color: var(--green-700); }
 .btn.ghost:hover { background: var(--green-50); color: var(--green-700); }
+
+/* A button that cannot be taken back. `.danger` alone only colours text, and
+   `.btn` is declared after it, so `btn danger` used to draw an ordinary green
+   button: closing an account looked the same as saving a profile. White on
+   --danger is 5.8:1 (`check:repo` measures it). */
+.btn.danger { background: var(--danger); border-color: var(--danger); color: #ffffff; }
+.btn.danger:hover { background: #8f2f2f; border-color: #8f2f2f; color: #ffffff; }
 
 /* --------------------------------------------------------------------------
    Forms

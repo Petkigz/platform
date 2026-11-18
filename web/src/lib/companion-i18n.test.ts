@@ -115,13 +115,14 @@ test('no other page pays for the companion sentences', () => {
     // Nothing is lost between the halves. The third is the learner dashboard,
     // the course page, the lesson page's frame, the assessment page, the
     // assignment page, the page for a wrong address, the account page, the
-    // family page and the buy page, which are rendered on the server and so are in neither (see
+    // family page, the buy page and the page for closing an account, which are
+    // rendered on the server and so are in neither (see
     // `SERVER_ONLY_PREFIXES`).
     const whole = messagesFor(locale.code);
     const onServer = (k: string) =>
-      ['learn.', 'course.', 'lesson.', 'assess.', 'assign.', 'missing.', 'account.', 'family.', 'buy.'].some((prefix) => k.startsWith(prefix));
+      ['learn.', 'course.', 'lesson.', 'assess.', 'assign.', 'missing.', 'account.', 'family.', 'buy.', 'close.'].some((prefix) => k.startsWith(prefix));
     const serverOnly = Object.fromEntries(Object.entries(whole).filter(([k]) => onServer(k)));
-    assert.equal(Object.keys(serverOnly).length, 609);
+    assert.equal(Object.keys(serverOnly).length, 652);
     // The page for a page that broke is drawn in the browser, so its ten
     // sentences are the one learner part the shell does carry.
     assert.equal(Object.keys(shell).filter((k) => k.startsWith('broke.')).length, 10, locale.code);

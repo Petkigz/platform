@@ -286,6 +286,7 @@ const SECTION_LABELS: Record<string, string> = {
   account: 'The account page',
   family: 'The family page',
   buy: 'The buy page',
+  close: 'Closing an account',
 };
 
 export const SECTIONS: Section[] = (() => {

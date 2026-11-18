@@ -1049,7 +1049,7 @@ export const en = {
   'account.dataRestoreLink': 'Put it back',
   'account.closeHeading': 'Closing this account',
   'account.closeBody':
-    'Closing removes your name from everything it touched and signs you out for good. Orders, payments, enrolments and certificates are kept without your name on them, because a refund or a checked certificate still needs them. The page lists both sides before anything happens.',
+    'Closing changes your profile, removes some personal information and tries to sign you out. Orders, payments, enrolments and certificates are kept, because a refund or a certificate check still needs them, and some other records remain too. The page lists both sides before anything happens.',
   'account.closeLink': 'Close this account',
 
   // The family page, its forms, and one learner's page. Written for the same
@@ -1270,6 +1270,74 @@ export const en = {
   'buy.refused': 'The order could not be placed. Nothing has been charged.',
   'buy.unconfirmed':
     'We could not confirm whether your order was placed. Look at your orders before trying again.',
+
+  // Closing an account and its form (`close.ts`), for the same twenty-seven
+  // languages as the dashboard. Every hedge here is deliberate: the page
+  // must not promise a deletion that does not happen.
+  'close.title': 'Close this account',
+  'close.already': 'This account is already closed.',
+  'close.alreadyNote':
+    'The profile has been changed, but some records and files may remain. The sign-in is held by the sign-in provider; if it is still there, removing it is a separate step. Being on the list for removal is not proof that it has been removed.',
+  'close.lede':
+    'You are signed in as {who}. This closes the account, changes your profile and removes some personal information. Some records and stored files remain, as explained below.',
+  'close.ledeUnnamed':
+    'This closes the account you are signed in to, changes your profile and removes some personal information. Some records and stored files remain, as explained below.',
+  'close.goesHeading': 'Removed or changed when the account closes',
+  'close.goesProfile': 'Your name, photo, time zone and country',
+  'close.goesNotes': 'Lesson notes and bookmarks',
+  'close.goesSaved': 'Saved courses and the notes on them',
+  'close.goesReviews':
+    'Your course reviews are removed. Discussion posts stay as threads, with what you wrote replaced.',
+  'close.goesAnswers':
+    'The current answer text on your own learner profile is cleared. Earlier revision snapshots and attached files can remain under separate retention rules.',
+  'close.goesSharing': 'Live sharing links, invitations and guardian access',
+  'close.goesMessages':
+    'Platform notifications and outgoing-message records about you. Email that has already been delivered cannot be recalled.',
+  'close.goesAppointment':
+    'If this account holds a safeguarding or refund-approval appointment, closing it needs individual review. Contact {contact}.',
+  'close.goesChildren':
+    'A child profile in a family with no other active member may be closed. If it has a separate login, or coursework under a safeguarding hold, closing the account yourself is paused for individual review: contact {contact}. Other eligible child learning records, including coursework, are scheduled for removal after thirty days. Stored files need a separate deletion step.',
+  'close.staysHeading': 'Records that remain',
+  'close.staysMoney': 'Orders, payments and refunds: the ledger a refund depends on',
+  'close.staysProgress':
+    'Your own enrolments and lesson progress. Eligible child records are scheduled for removal thirty days after closure.',
+  'close.staysCertificates': 'Certificates, under the number they were issued with',
+  'close.staysSupport':
+    'Support cases. The text of cases you opened is replaced, and messages you wrote are removed, including messages in other people’s cases. If a case is under a safeguarding pause, its content is kept until the pause is released, and it may identify you. The platform tries to replace your display name in staff replies and resolution notes, but other names or identifiers may remain. A case is due for deletion three years after it closes.',
+  'close.staysAudit': 'The audit record that the account was closed',
+  'close.staysFingerprint':
+    'A fingerprint of your sign-in address, not the address itself, so that support can answer “was my account erased?” once the sign-in is gone',
+  'close.staysHolder':
+    'On a certificate, the holder’s name is replaced with {label}; its number and the other details recorded on it remain. A child’s certificate also keeps its number after the learning record is removed.',
+  'close.undoHeading': 'This cannot be undone',
+  'close.undoSessions':
+    'The app tries to sign you out, but other sessions and the provider sign-in may remain until they are separately revoked or removed. If you are a teacher with a course in review or published, the platform owner has to close the teaching account first; this page will say so if that applies to you.',
+  'close.undoSignInLead': 'Closing the account does not delete the sign-in.',
+  'close.undoSignIn':
+    'It is held by the sign-in provider rather than by AyahSpring, so closing the account puts it on the platform owner’s list for a separate removal step if it is still there. Before removal is recorded, the database checks that the identity is absent from its authentication table; that is not proof about all provider copies.',
+  'close.confirmLabel': 'Type {name} to confirm',
+  'close.confirmNote':
+    'The button becomes available when the name matches exactly. This cannot be undone, and there is no cooling-off period.',
+  'close.nameless': 'This account has no name to type. Add one in account settings first.',
+  'close.button': 'Close my account for good',
+  'close.closing': 'Closing…',
+  'close.keep': 'Keep my account',
+  'close.signedOut': 'You are signed out. Sign in again to close this account.',
+  'close.noAccount': 'There is no account here to close.',
+  'close.nameMissing': 'Type your name to confirm.',
+  'close.nameMismatch': 'The name does not match. Type it exactly as it appears above.',
+  'close.teaching':
+    'You still have a course in review or published. Ask the platform owner to close the teaching account first. Nothing was changed.',
+  'close.board':
+    'You sit on a scholarly board. Ask the platform owner to remove you from it first. Nothing was changed.',
+  'close.held':
+    'This account is linked to a separate child login, or to coursework that is being held, so closing it needs individual review. Nothing was changed. Contact {contact}.',
+  'close.appointment':
+    'This account holds a safeguarding or refund-approval appointment, so closing it needs individual review. Nothing was changed. Contact {contact}.',
+  'close.refused':
+    'This account could not be closed, and nothing was changed. If this keeps happening, contact {contact}.',
+  'close.unconfirmed':
+    'We could not confirm whether your account closed. Before trying again, reload this page to see, or contact {contact}.',
 } as const;
 
 export type MessageKey = keyof typeof en;

@@ -126,18 +126,32 @@ test('eraseMyAccount sends the typed name and reports what the database closed',
   ]);
 });
 
-test('eraseMyAccount passes a refusal through in the database’s own words', async () => {
-  const client = {
-    rpc: () =>
-      Promise.resolve({
-        data: null,
-        error: { message: 'you still have a course in review or published' },
-      }),
-  } as unknown as SupabaseClient;
+test('eraseMyAccount names a refusal and never passes the database’s sentence through', async () => {
+  const answer = (error: { code?: string; message: string }) =>
+    ({ rpc: () => Promise.resolve({ data: null, error }) }) as unknown as SupabaseClient;
 
-  const result = await eraseMyAccount(client, 'Amina Yusuf');
-  assert.equal(result.ok, false);
-  assert.match(result.ok === false ? result.message : '', /course in review/);
+  const teaching = await eraseMyAccount(
+    answer({ code: '23514', message: 'you still have a course in review or published; ask the platform owner to close the teacher account first' }),
+    'Amina Yusuf',
+  );
+  assert.deepEqual(teaching, {
+    ok: false,
+    code: 'teaching',
+    message: 'You still have a course in review or published. Ask the platform owner to close the teaching account first.',
+  });
+
+  // A constraint's own text used to be shown to the person closing their account.
+  const unnamed = await eraseMyAccount(
+    answer({ code: '23503', message: 'update or delete on table "user_profiles" violates foreign key constraint "x_fkey"' }),
+    'Amina Yusuf',
+  );
+  assert.equal(unnamed.ok, false);
+  assert.equal(unnamed.ok === false ? unnamed.code : '', 'refused');
+  assert.doesNotMatch(unnamed.ok === false ? unnamed.message : '', /constraint|user_profiles/);
+
+  // No state: the request may have gone through, so it is not called a refusal.
+  const lost = await eraseMyAccount(answer({ message: 'fetch failed' }), 'Amina Yusuf');
+  assert.equal(lost.ok === false ? lost.code : '', 'unconfirmed');
 });
 
 test('eraseMyAccount does not claim an ambiguous reply left the account unchanged', async () => {
@@ -147,26 +161,45 @@ test('eraseMyAccount does not claim an ambiguous reply left the account unchange
     } as unknown as SupabaseClient;
     const result = await eraseMyAccount(client, 'Amina Yusuf');
     assert.equal(result.ok, false, `accepted ${JSON.stringify(data)} as a closure`);
-    assert.match(result.message, /could not confirm whether your account closed/);
-    assert.doesNotMatch(result.message, /nothing was changed|was not closed/i);
+    assert.equal(result.ok === false ? result.code : '', 'unconfirmed');
+    assert.match(result.ok === false ? result.message : '', /could not confirm whether your account closed/);
+    assert.doesNotMatch(result.ok === false ? result.message : '', /nothing was changed|was not closed/i);
   }
 
   const blank = await eraseMyAccount({} as unknown as SupabaseClient, '   ');
-  assert.equal(blank.ok, false);
+  assert.equal(blank.ok === false ? blank.code : '', 'name_missing');
 });
 
 test('the closure page distinguishes profile changes, snapshots and unverified removal', () => {
+  // The page says these through the catalogue now; the English is what a
+  // held language reads and what every translation was written from.
   const page = readFileSync(new URL('../app/account/delete/page.tsx', import.meta.url), 'utf8');
-  assert.match(page, /Earlier revision snapshots and attached files can remain/);
-  assert.match(page, /other names or identifiers may remain/);
-  assert.match(page, /other sessions and the provider sign-in/);
-  assert.match(page, /not proof about all provider copies/);
+  const words = readFileSync(new URL('./i18n/messages/en.ts', import.meta.url), 'utf8');
+  const said = (key: string) => {
+    assert.ok(page.includes(`t('${key}')`), `the closure page never says ${key}`);
+    const match = new RegExp(`'${key.replace('.', '\\.')}':\\s+'([^']*)'`, 'u').exec(words);
+    assert.ok(match, `${key} has no English`);
+    return match[1]!;
+  };
+  assert.match(said('close.goesAnswers'), /Earlier revision snapshots and attached files can remain/);
+  assert.match(said('close.staysSupport'), /other names or identifiers may remain/);
+  assert.match(said('close.undoSessions'), /other sessions and the provider sign-in/);
+  assert.match(said('close.undoSignIn'), /not proof about all provider copies/);
+  assert.match(said('close.alreadyNote'), /is not proof that it has been removed/);
   assert.doesNotMatch(page, /removes your name from everything it touched/);
+  // The account page links here, and used to promise exactly that.
+  assert.doesNotMatch(words, /removes your name from everything it touched/);
+  assert.match(words, /'account\.closeBody':\s+'Closing changes your profile, removes some personal information and tries to sign you out\./u);
 });
 
 test('closure form reports network or unreadable responses as uncertain', () => {
   const form = readFileSync(new URL('../app/account/delete/erase-form.tsx', import.meta.url), 'utf8');
-  assert.match(form, /json\?\.message \?\? UNCERTAIN_CLOSURE/);
-  assert.match(form, /catch \{\s*setError\(UNCERTAIN_CLOSURE\)/);
+  // Not the reply's own sentence, whatever it says: the reason, if the
+  // route named one and answered with a four hundred, and otherwise "we
+  // could not confirm".
+  assert.doesNotMatch(form, /json\?\.message|UNCERTAIN_CLOSURE/);
+  assert.match(form, /setOutcome\(eraseOutcomeOf\(res\.status, json\?\.code\)\);/);
+  assert.match(form, /catch \{\s*setOutcome\('unconfirmed'\)/);
+  assert.match(form, /if \(res\.ok && json\?\.ok === true\) \{/);
   assert.doesNotMatch(form, /The account was not closed/);
 });

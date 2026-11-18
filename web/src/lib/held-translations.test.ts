@@ -40,6 +40,7 @@ import { BROKE } from './i18n/messages/broke.ts';
 import { PLAYER } from './i18n/messages/player.ts';
 import { FAMILY } from './i18n/messages/family.ts';
 import { BUY } from './i18n/messages/buy.ts';
+import { CLOSE } from './i18n/messages/close.ts';
 import { countryNameIn } from './geo.ts';
 import { ACCOUNT } from './i18n/messages/account.ts';
 import { LESSON } from './i18n/messages/lesson.ts';
@@ -412,7 +413,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // Owner's decision, 2026-11-16: a language the builder cannot write properly
   // falls back to English until a speaker has reviewed it. For a new screen
   // that means not writing it — a held draft would be the same guess, kept.
-  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign', 'missing', 'broke', 'player', 'account', 'family', 'buy']);
+  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign', 'missing', 'broke', 'player', 'account', 'family', 'buy', 'close']);
   // Thirty-seven for the dashboard (the learner-profile prompt is seven of
   // them), twenty-eight for the course page (twelve are the list of dated
   // classes), a hundred and thirteen for the lesson page (its frame, the
@@ -425,9 +426,10 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // page that broke, eighty-six for the players on the lesson page and
   // what they say about a saved place, ninety-eight for the account
   // page and its profile form, a hundred for the family page, its
-  // three forms and one learner's page, and seventy-nine for the buy page
-  // and its form.
-  assert.equal(unwrittenKeys.length, 705);
+  // three forms and one learner's page, seventy-nine for the buy page
+  // and its form, and forty-three for closing an account.
+  assert.equal(unwrittenKeys.length, 748);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('close.')).length, 43);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('buy.')).length, 79);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('family.')).length, 100);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('account.')).length, 98);
@@ -440,7 +442,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('lesson.')).length, 113);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('assess.')).length, 40);
 
-  // Eleven files, one rule: the same languages in each.
+  // Twelve files, one rule: the same languages in each.
   const written = Object.keys(LEARN).sort();
   assert.deepEqual(Object.keys(COURSE).sort(), written);
   assert.deepEqual(Object.keys(LESSON).sort(), written);
@@ -452,6 +454,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   assert.deepEqual(Object.keys(ACCOUNT).sort(), written);
   assert.deepEqual(Object.keys(FAMILY).sort(), written);
   assert.deepEqual(Object.keys(BUY).sort(), written);
+  assert.deepEqual(Object.keys(CLOSE).sort(), written);
   const expected = LOCALES.map((l) => l.code)
     .filter((code) => code !== 'en' && !Object.hasOwn(HELD_FOR_REVIEW, code))
     .sort();
@@ -461,7 +464,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   for (const code of expected) {
     const own: Partial<Record<string, string>> = {
       ...LEARN[code], ...COURSE[code], ...LESSON[code], ...ASSESS[code], ...ASSIGN[code], ...MISSING[code], ...BROKE[code],
-      ...PLAYER[code], ...ACCOUNT[code], ...FAMILY[code], ...BUY[code],
+      ...PLAYER[code], ...ACCOUNT[code], ...FAMILY[code], ...BUY[code], ...CLOSE[code],
     };
     assert.deepEqual(Object.keys(own).sort(), [...unwrittenKeys].sort(), `${code} is short a dashboard, course, lesson, assessment or assignment sentence`);
     for (const key of unwrittenKeys) {
@@ -499,7 +502,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     }
   }
   // What that costs the nineteen that are still in the picker, said out loud:
-  // 192 of 977 sentences, which is 20%. Nothing holds a floor under
+  // 192 of 1020 sentences, which is 19%. Nothing holds a floor under
   // it any more: the owner chose on 2026-11-17 to keep these languages in the
   // picker and show the number. The count is pinned here so that it moves only
   // when somebody means it to, and is seen when it does. It moved from 55% to
@@ -520,11 +523,11 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // 27%; the account page and its profile form added ninety-eight and it is
   // 24%; the family page, its forms and one learner's page added a hundred
   // and it is 21%; the buy page and its form added seventy-nine and it is
-  // 20%. What they are shown did not get smaller; what is counted got bigger.
+  // 20%; closing an account added forty-three and it is 19%. What they are shown did not get smaller; what is counted got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 977);
-    assert.equal(coverageOf(code).percent, 20, code);
+    assert.equal(coverageOf(code).total, 1020);
+    assert.equal(coverageOf(code).percent, 19, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');
   assert.equal(languageShownFor('en', 'learn').code, 'en');
@@ -1601,4 +1604,95 @@ test('the buy page is in the reader’s language, and its form says a refusal by
   // A held language reads the page in English, whole.
   assert.equal(languageShownFor('so', 'buy').code, 'en');
   assert.equal(translator('so')('buy.unconfirmed'), en['buy.unconfirmed']);
+});
+
+test('closing an account is in the reader’s language, and its form says a refusal by name', () => {
+  const page = read('../app/account/delete/page.tsx');
+  const form = read('../app/account/delete/erase-form.tsx');
+  const outcome = read('./erase-outcome.ts');
+
+  assert.match(page, /const shown = languageShownFor\(locale, 'close'\);/u);
+  assert.match(page, /const frame = shown\.code !== locale \? \{ lang: shown\.code, dir: shown\.dir \} : \{\};/u);
+  assert.match(page, /<div className="container section" style=\{\{ maxWidth: '46rem' \}\} \{\.\.\.frame\}>/u);
+  for (const phrase of ['Close this account', 'already closed', 'Removed or changed', 'Records that remain', 'cannot be undone', 'Signed in as', 'Lesson notes', 'Account settings']) {
+    assert.ok(!page.includes(phrase), `the closing page still says "${phrase}" itself`);
+  }
+
+  // Every sentence is said by the page: its own, or one it hands the form.
+  for (const key of unwrittenKeys.filter((k) => k.startsWith('close.'))) {
+    assert.ok(page.includes(`'${key}'`), `${key} is translated and never shown`);
+  }
+
+  // The form is handed its words and has no English of its own.
+  assert.match(form, /^'use client';/u);
+  assert.doesNotMatch(form, /useT\(|@\/lib\/i18n/u);
+  assert.match(form, /words: EraseWords \}/u);
+  for (const phrase of ['to confirm', 'Close my account', 'Closing…', 'Keep my account', 'becomes available', 'cooling-off']) {
+    assert.ok(!form.includes(phrase), `the form still says "${phrase}" itself`);
+  }
+  const src = new URL('../', import.meta.url);
+  const files = (dir: string): string[] =>
+    readdirSync(new URL(dir, src), { withFileTypes: true }).flatMap((entry) =>
+      entry.isDirectory() ? files(`${dir}${entry.name}/`) : /\.tsx?$/u.test(entry.name) ? [`${dir}${entry.name}`] : [],
+    );
+  const clients = files('').filter((file) => {
+    const text = readFileSync(new URL(file, src), 'utf8');
+    return /^\s*'use client'/u.test(text) && /'close\.[a-zA-Z]+'/u.test(text);
+  });
+  assert.deepEqual(clients, [], 'a client component asks for a closing sentence the shell does not carry');
+
+  // One sentence for every answer the route can give; the type makes a
+  // missing one a compile error, and this checks the page names them all.
+  const codes = [...outcome.matchAll(/^ {2}\| '([a-z_]+)'/gmu)].map((m) => m[1]);
+  assert.equal(codes.length, 10);
+  for (const code of codes) {
+    assert.match(page, new RegExp(`^\\s+${code}: t\\('close\\.`, 'mu'), `${code} has no sentence on the closing page`);
+  }
+  assert.match(form, /reasons: Record<EraseCode, string>;/u);
+
+  // What is said afterwards is announced, and the button cannot be pressed twice.
+  assert.match(form, /<p className="notice error" role="alert">/u);
+  assert.match(form, /if \(busy\) return;/u);
+  assert.match(form, /disabled=\{!matches \|\| busy\}/u);
+  // A profile with no name can never match, so the form says that instead of
+  // showing a button no typing will enable.
+  assert.match(form, /if \(name\.length === 0\) \{/u);
+
+  // The address signed in with, the name to type and the address to write to
+  // keep their own direction; the certificate label is the database's English.
+  assert.match(page, /parts=\{\{ who: <strong><bdi dir="ltr">\{who\}<\/bdi><\/strong> \}\}/u);
+  assert.match(form, /parts=\{\{ name: <strong><bdi>\{name\}<\/bdi><\/strong> \}\}/u);
+  assert.match(page, /const contact = <bdi dir="ltr">\{PRIVACY_CONTACT\}<\/bdi>;/u);
+  assert.match(form, /const contact = <bdi dir="ltr">\{PRIVACY_CONTACT\}<\/bdi>;/u);
+  assert.match(page, /<bdi lang="en" dir="ltr">\s+“Deleted learner”\s+<\/bdi>/u);
+  // Nobody is "signed in as unknown".
+  assert.match(page, /const who = user\.email \?\? user\.phone \?\? null;/u);
+
+  const gaps = (text: string) => [...text.matchAll(/\{[a-zA-Z]+\}/gu)].map((m) => m[0]).sort();
+  for (const code of ['ar', 'fr', 'tr', 'kk', 'zh-hans', 'uz', 'ta', 'th'] as const) {
+    const t = translator(code);
+    assert.equal(languageShownFor(code, 'close').code, code);
+    assert.notEqual(t('close.unconfirmed'), en['close.unconfirmed'], code);
+    // Each thing put into a sentence sits after a colon, so no language has
+    // to inflect an address or a name.
+    assert.match(t('close.lede'), /[:：][\s\u00a0]*\{who\}/u, `${code} close.lede`);
+    assert.match(t('close.confirmLabel'), /[:：][\s\u00a0]*\{name\}$/u, `${code} close.confirmLabel`);
+    for (const key of ['close.goesAppointment', 'close.goesChildren', 'close.held', 'close.appointment', 'close.refused', 'close.unconfirmed'] as const) {
+      assert.match(t(key), /[:：][\s\u00a0]*\{contact\}/u, `${code} ${key}`);
+    }
+    assert.match(t('close.staysHolder'), /[:：][\s\u00a0]*\{label\}/u, `${code} close.staysHolder`);
+  }
+  // Every gap the English has, every language has, and no other.
+  for (const key of unwrittenKeys.filter((k) => k.startsWith('close.')) as (keyof typeof en)[]) {
+    for (const code of ['ar', 'ur', 'fa', 'tr', 'bn', 'fr', 'sw', 'zh-hant', 'vi', 'fil', 'az', 'tg', 'ky', 'tk', 'ne'] as const) {
+      assert.deepEqual(gaps(translator(code)(key)), gaps(en[key]), `${code} ${key}`);
+    }
+  }
+  // "Nothing was changed" is never said about an answer nobody could read.
+  assert.doesNotMatch(en['close.unconfirmed'], /nothing was changed|was not closed|still open/iu);
+  assert.match(en['close.refused'], /nothing was changed/u);
+
+  // A held language reads the page in English, whole.
+  assert.equal(languageShownFor('so', 'close').code, 'en');
+  assert.equal(translator('so')('close.unconfirmed'), en['close.unconfirmed']);
 });

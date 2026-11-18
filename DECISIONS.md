@@ -7959,14 +7959,14 @@ owner chose the first.
   lesson players and their saved-place messages, 27% since the discussion on
   the lesson page, 24% since the account page and its profile form, 21%
   since the family pages and their forms, 20% since the buy page and its
-  form.
+  form, 19% since the page for closing an account.
 - **The test that refused a language under half is removed.** Nothing in the
   tests now limits how much English one of these languages shows. That is the
   cost of this choice and it was put to the owner in those words.
 - What the tests still require of every offered language: every sentence that
   is neither held nor deliberately unwritten is present, and the sentence
   that gives the percentage is in that language rather than English. The
-  count (192 of 977; it was 192 of 347 when this was decided) is pinned in
+  count (192 of 1020; it was 192 of 347 when this was decided) is pinned in
   `held-translations.test.ts`, so it changes only on purpose.
 - The four withheld languages are unaffected. So is the rule that a new screen
   is not written for a language with anything held.

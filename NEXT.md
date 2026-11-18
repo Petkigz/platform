@@ -2618,6 +2618,84 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### Closing an account in the reader's language, 2026-11-18
+
+`/account/delete` was English for every reader. It is the one page on the
+site whose button cannot be taken back.
+
+- *Translated.* Forty-three sentences (`close.*`, new file
+  `messages/close.ts`) in the twenty-seven languages with nothing held.
+  **Unreviewed.** One more is reused from sign-in. A held language reads the
+  page in English, whole, marked `lang="en" dir="ltr"`.
+- *What the account page promised was not true, in twenty-eight languages.*
+  `account.closeBody` said closing "removes your name from everything it
+  touched". The page it links to says otherwise in two lists, and a test of
+  that page forbids the phrase. It was written in slice one and translated
+  twenty-seven times. It now says closing changes the profile, removes some
+  personal information and tries to sign the reader out, and that some
+  other records remain.
+- *A refusal has a name.* `lib/erase-outcome.ts`: ten answers, each with its
+  own status. The route used to send the database's sentence, whatever it
+  was, with 409: "you still have a course in review" was written for a
+  person, and a constraint's name was not, and both went to the reader in
+  English. The six refusals `erase_my_account()` and its wrapper raise are
+  matched by their own words and their state; a test reads those words out
+  of the migrations, so rewording one there fails here rather than quietly
+  becoming "could not be closed".
+- *"Nothing was changed" is said only when it is known.* The database
+  answered and rolled back: teaching, the board, held coursework, the owner's
+  appointment, and an unnamed refusal. An answer nobody can read, a reply
+  that does not say `closed: true`, a lost connection: "We could not confirm
+  whether your account closed", and the page to reload. Never both.
+- *Defects fixed on the way.*
+  - **The button that closes an account was green.** `btn danger` had no
+    rule: `.danger` colours text, and `.btn`, declared later, set it back to
+    white on green. It looked exactly like "Save profile". It is red now
+    (white on it is 5.8:1, measured by `check:repo` and again in a browser).
+    The same class is on four other buttons, all of which remove something:
+    removing a child's sign-in, withdrawing a media file from use, retiring a
+    tax rule, withdrawing a guardian's consent. They are red too.
+  - **A long word pushed a page sideways on a phone.** A `.grid` with no
+    column template has one `auto` column, which is never narrower than its
+    longest word; a Tamil heading at 320px widened the card and the whole
+    page scrolled. `.grid` now has one column that may shrink and `.card`
+    breaks a word that will not fit. Both rules are site-wide. Every browser
+    check was run again after the change and passed.
+  - A profile with no name was shown a box and a button no typing could
+    enable. It is told to add a name first.
+  - An account with neither an address nor a number was "Signed in as
+    unknown".
+  - The refusal was not announced: it had no `role="alert"`.
+  - "Keep my account" was a bare link beside a full-width button. It is a
+    button beside it.
+- *What changed for an English reader.*
+  - A teaching refusal ends "Nothing was changed."
+  - A name that does not match: "The name does not match. Type it exactly as
+    it appears above." rather than the database's "type your name exactly as
+    it appears to close this account".
+  - An unreadable answer: "Before trying again, reload this page to see, or
+    contact…" rather than "Check your account status or contact… before
+    trying again."
+- *What it did to the nineteen.* `/language` tells each of them **19%** (192
+  of 1020).
+- *Checks.* 2358 web tests (new `erase-outcome.test.ts`, five; one new in
+  `held-translations.test.ts`; three rewritten in `account.test.ts`, which
+  used to require the database's own words to be passed through). The
+  bundle check looks for the "could not confirm" sentence and the
+  revision-snapshots sentence in every script and finds neither (315
+  sentences looked for; 1784 kB). New `scripts/close-route-smoke.mjs`, in CI
+  and in the browser workflow.
+- *Left as it was:* **privacy@ayahspring.com is where every refusal sends
+  the reader, and it is not a working address**; that is the owner's to
+  change. `/account/export` and its print page, `/account/accessibility`,
+  `/account/merge`, `/account/sharing`, `/account/restore`,
+  `/account/referrals` and `/account/sponsorship` are English.
+- *Found and not fixed, for the next piece:* the two download links on
+  `/account/export` are plain links, so a refusal shows the reader raw JSON
+  with the database's sentence in it; the print page throws on a refusal, so
+  the tenth view in an hour lands on the error page; each print view counts
+  as an export; its headings are raw key names.
+
 ### The buy page in the reader's language, 2026-11-18
 
 `/courses/<slug>/buy` was English for every reader, and it is where a course

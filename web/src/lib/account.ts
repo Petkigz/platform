@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { eraseCodeOf, eraseRefusal, type EraseCode } from './erase-outcome.ts';
 
 export type AccountProfileInput = {
   displayName: string;
@@ -113,31 +114,40 @@ export function exportFileName(now: Date): string {
 
 export type EraseOutcome =
   | { ok: true; alreadyClosed: boolean; learnersErased: number }
-  | { ok: false; message: string };
+  | { ok: false; code: EraseCode; message: string };
 
 /**
  * Close the signed-in person's account.
  *
  * The decision about what survives is in `erase_my_account()` and nowhere else:
- * this function sends the confirmation and reports what happened. The database
- * writes its refusals for a person to read ("you still have a course in review"),
- * so they are passed through rather than replaced with a code.
+ * this function sends the confirmation and reports what happened.
  *
- * A reply that does not say `closed: true` is treated as a failure. An erasure is
- * the one operation where believing an ambiguous answer would be worse than
- * doing nothing.
+ * A refusal comes back as a name (`lib/erase-outcome.ts`) and this module's
+ * sentence for it. The database's own sentence used to be passed through, on
+ * the reasoning that it was written for a person; it was written in English,
+ * in the database's voice, and for an error nobody anticipated it was a
+ * constraint's text. The closing page says its own sentence for each name
+ * now, in the reader's language.
+ *
+ * A reply that does not say `closed: true` is `unconfirmed`. An erasure is the
+ * one operation where believing an ambiguous answer would be worse than doing
+ * nothing, and where saying "nothing happened" could be false.
  */
-export const UNCERTAIN_CLOSURE = 'We could not confirm whether your account closed. Check your account status or contact privacy@ayahspring.com before trying again.';
-
 export async function eraseMyAccount(
   supabase: SupabaseClient,
   confirm: string,
 ): Promise<EraseOutcome> {
   const typed = confirm.trim();
-  if (!typed) return { ok: false, message: 'Type your name to confirm.' };
+  if (!typed) return eraseRefusal('name_missing');
 
   const { data, error } = await supabase.rpc('erase_my_account', { p_confirm: typed });
-  if (error) return { ok: false, message: error.message };
+  if (error) {
+    const code = eraseCodeOf(error);
+    // Kept for whoever runs the site: it was the only copy, and it used to be
+    // shown to the person closing their account.
+    if (code === 'refused') console.error('erase: a refusal with no name:', error.message);
+    return eraseRefusal(code);
+  }
 
   const reply = data as {
     closed?: unknown;
@@ -145,9 +155,7 @@ export async function eraseMyAccount(
     learnersErased?: unknown;
   } | null;
 
-  if (!reply || reply.closed !== true) {
-    return { ok: false, message: UNCERTAIN_CLOSURE };
-  }
+  if (!reply || reply.closed !== true) return eraseRefusal('unconfirmed');
 
   return {
     ok: true,

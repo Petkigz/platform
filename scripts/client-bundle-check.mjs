@@ -66,6 +66,12 @@ for (const [file, key] of [
   // closed, must be in that page and in no script.
   ['buy.ts', 'buy.unconfirmed'],
   ['buy.ts', 'buy.closedBody'],
+  // The form that closes an account is a client component handed its words.
+  // What a reader is told when nobody can say whether the account closed,
+  // and what the page says can remain afterwards, must be in that page and
+  // in no script.
+  ['close.ts', 'close.unconfirmed'],
+  ['close.ts', 'close.goesAnswers'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);
