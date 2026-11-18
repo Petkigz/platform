@@ -175,7 +175,7 @@ export const AFRICA_SOUTH: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.coverageAll':
       'Elke skerm wat tot dusver vir vertaling voorberei is, is in hierdie taal geskryf. Sommige skerms is nog nie voorberei nie en is vir almal in Engels.',
     'language.browser':
-      'Die keuse word in hierdie blaaier gehou, nie op jou rekening nie, so ’n ander toestel vra sy eie toestel.',
+      'Die keuse word in hierdie blaaier gehou, nie op jou rekening nie, dus gebruik ’n ander toestel die taal waarvoor daardie toestel self vra.',
     'language.reviewed': '’n Moedertaalspreker het hierdie vertaling gelees.',
     'language.partial':
       'Eerstetaalsprekers het {read} van die {total} dele van hierdie vertaling gelees.',

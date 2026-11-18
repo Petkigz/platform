@@ -1882,3 +1882,17 @@ test('the reading settings are in the reader’s language, and the controls have
   assert.equal(languageShownFor('so', 'reading').code, 'en');
   assert.equal(translator('so')('reading.lede'), en['reading.lede']);
 });
+
+test('two sentences on the language page say what the English says', () => {
+  // Found while writing the reading settings, corrected on the owner's word
+  // (2026-11-18). Afrikaans said another device "asks its own device", with
+  // the language left out; Swahili said a word that looks "small" where the
+  // English says "wrong". Neither was caught by anything automatic: both
+  // were fluent. A speaker's review is still what these need.
+  const af = translator('af')('language.browser');
+  assert.doesNotMatch(af, /vra sy eie toestel/u);
+  assert.match(af, /\btaal\b/u);
+  const sw = translator('sw')('language.unreviewed');
+  assert.doesNotMatch(sw, /\bdogo\b/u);
+  assert.match(sw, /si sahihi/u);
+});

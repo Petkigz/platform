@@ -752,7 +752,7 @@ const BASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.partial':
       'Wazungumzaji wa lugha ya kwanza wamesoma sehemu {read} kati ya {total} za tafsiri hii.',
     'language.unreviewed':
-      'Hakuna mzungumzaji wa asili aliyesoma tafsiri hii bado. Iliandikwa na waliojenga jukwaa — neno likionekana dogo kwako, kosa hilo ni letu.',
+      'Hakuna mzungumzaji wa asili aliyesoma tafsiri hii bado. Iliandikwa na waliojenga jukwaa — neno likionekana si sahihi kwako, kosa hilo ni letu.',
     'language.notTranslated':
       'Ni kiolesura pekee kinatafsiriwa. Majina ya kozi, masomo, kurasa za walimu na sera zilizochapishwa huonekana katika lugha zilizyoandikwa.',
   },
