@@ -126,6 +126,9 @@ jobs:
       - name: Restore page and restore route synthetic HTTP regression
         run: node scripts/restore-route-smoke.mjs
 
+      - name: Phone number card and phone route synthetic HTTP regression
+        run: node scripts/phone-route-smoke.mjs
+
       - name: Catalogue synthetic HTTP regression
         run: node scripts/catalogue-route-smoke.mjs
 

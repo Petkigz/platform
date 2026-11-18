@@ -7968,7 +7968,7 @@ owner chose the first.
 - What the tests still require of every offered language: every sentence that
   is neither held nor deliberately unwritten is present, and the sentence
   that gives the percentage is in that language rather than English. The
-  count (192 of 1199; it was 192 of 347 when this was decided) is pinned in
+  count (192 of 1228; it was 192 of 347 when this was decided) is pinned in
   `held-translations.test.ts`, so it changes only on purpose.
 - The four withheld languages are unaffected. So is the rule that a new screen
   is not written for a language with anything held.
@@ -8388,12 +8388,33 @@ writing it:
 - *The verb is "put back", and "everything" is not said.* The button reads
   "Put back what can be put back".
 
+The phone number card on `/account` followed, twenty-nine sentences in a
+new part, `phone.ts`; the nineteen still read 16%. Four things were settled
+in writing it:
+
+- *A reason is a name and digits.* What a number begins with, a dial code
+  and three counts may travel beside a name, each checked to be digits. The
+  country is not sent back: the reader chose it.
+- *Digits are digits in any script.* What is typed in Persian, Arabic,
+  Bengali, Devanagari, Thai or full-width digits is written as ASCII before
+  it is checked or sent. This is the only thing the route does to what was
+  typed; the database still decides whether it is a number.
+- *What is stored can always be seen and removed by its owner.* The switch
+  being off hides the form, not the number.
+- *The card says who may read the number, not what it is for.* Nothing on
+  the platform sends to it or shows it to staff, so it says that, and that
+  staff are allowed to read it.
+
+**Open, and it blocks the switch:** closing an account leaves the number in
+`user_contact_details`, and a data export leaves it out. `platform.phone_format`
+stays off until a migration fixes both.
+
 `/account/merge`, `/account/sharing`, `/account/referrals` and
 `/account/sponsorship` are still English.
 
 `UNWRITTEN_WHILE_HELD` is now `learn`, `course`, `lesson`, `assess`,
 `assign`, `missing`, `broke`, `player`, `account`, `family`, `buy`, `close`,
-`export`, `reading` and `restore`.
+`export`, `reading`, `restore` and `phone`.
 
 **The rule going forward.** A part named in `UNWRITTEN_WHILE_HELD`
 (`web/src/lib/i18n/messages/held.ts`) may be absent from a language that has

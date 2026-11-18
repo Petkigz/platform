@@ -2619,6 +2619,78 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The phone number card in the reader's language, 2026-11-18
+
+The card on `/account` behind `platform.phone_format` (off) was the one part
+of that page left in English for every reader, and it printed whatever
+sentence the database raised.
+
+- *Translated.* Twenty-nine sentences (`phone.*`, new file
+  `messages/phone.ts`) in the twenty-seven languages with nothing held. A
+  held language reads the card in English with the rest of the page.
+  **Unreviewed.** The picker's 245 country names come from the runtime
+  (`Intl.DisplayNames`) in the reader's language and in that language's
+  order, made on the server and handed to the form.
+- *Every reason has a name.* New `lib/phone-outcome.ts`. `parsePhone()`
+  returned English sentences and the route passed on the database's. Now
+  seven reasons a number cannot be kept, six more names for the route
+  (`no_dial`, `signed_out`, `off`, `malformed`, `refused`, `failed`), one
+  status each. Beside a name travel only digits (how a number begins, a
+  dial code, three counts), each checked. A test reads every `raise` out of
+  the migration and requires each to be read as a name.
+- *Defects found and fixed on the way.*
+  - **A number typed in the reader's own digits was refused as "only
+    punctuation".** `۰۹۱۲…`, `٠٧٧٢…`, `০৭৭২…` are what a Persian, Arabic or
+    Bengali keyboard types; the browser check and the database both strip
+    them. `asciiDigits()` writes them as the ten ASCII digits in the form
+    and in the route before the database is asked. Nothing else about what
+    was typed is changed, and what is stored is ASCII as before.
+  - **A number stored before the switch went off could be neither seen nor
+    removed**: the page drew no card. The database always allowed the
+    removal. The card is now drawn for a stored number with the switch off:
+    the number, one button, and a sentence saying numbers are not being
+    collected.
+  - **The count looked wrong.** "077212345" is nine digits typed and eight
+    counted, because the zero in front is not dialled. A second sentence
+    says which digit is not counted, for the 139 countries that have one.
+  - "+2" on the way to "+256" was called another country's number. It is
+    answered with how many digits are wanted.
+  - Arabic-Indic digits typed in groups were drawn with the last group
+    first. The field lays out what is typed strictly in order.
+  - The route had no `catch`, could be cached, and believed any reply: a
+    save answered with no number, or a removal answered with one, is now
+    `failed`.
+  - The card said the number "is how staff reach you". No staff screen
+    shows it. It now says staff are allowed to read it (the table's read
+    policy) and that no staff screen shows it.
+- **Found and not fixed: do not switch `platform.phone_format` on.**
+  `erase_my_account()` does not touch `user_contact_details`, and the row
+  goes only when the sign-in itself is deleted, which closing an account
+  does not do. `export_my_data()` does not include the number. Both need a
+  migration; none was added here (the hosted test project is at 352 and
+  each migration has to be applied there with the owner's approval). With
+  the switch off and no accounts, no number is stored anywhere today.
+- *What it did to the nineteen.* `/language` still tells each of them 16%
+  (192 of 1228; 15.64%).
+- *Checks.* 2402 web tests. New `scripts/phone-route-smoke.mjs`, in CI and
+  in the browser workflow, whose stand-in answers as if the switch were on:
+  the card over HTTP in English, Arabic, French, Persian and Hausa, absent
+  when off and empty, reduced when off with a number; six requests the route
+  refuses itself; the eleven things the database raises each under its
+  name and status, and seven replies nobody planned for (a trigger's
+  refusal, unknown words, an unknown state, a gateway page, an empty reply,
+  a bare word, a reply that contradicts the request), with no sentence of
+  the database in any answer; in Chromium, four languages at 320, 390 and
+  1440px; in Arabic seven mistakes named before a request, nine answers of
+  the database said in Arabic, a request that never arrived, a save and a
+  removal; counts in Persian digits; in Swahili the card with the switch
+  off and a number stored.
+- *Not proven.* **Nothing here ran against a database or real sign-in**:
+  the stand-in normalises and stores nothing. The switch is off, so no
+  reader sees the card. Country names depend on the runtime's own data; the
+  twenty-seven were checked in Node 22 only, and a runtime without a
+  language's names shows English ones. No real phone keyboard was used.
+
 ### Putting a copy back in the reader's language, 2026-11-18
 
 `/account/restore` was English for every reader, and so was everything the
@@ -2684,7 +2756,7 @@ database said through it.
   on such a name before anything is pushed.
 - *Left as it was:* `/account/merge`, `/account/sharing`,
   `/account/referrals`, `/account/sponsorship` and the phone card are
-  English.
+  English. (The phone card followed; see above.)
 
 ### The reading settings in the reader's language, and open to everybody, 2026-11-18
 

@@ -1606,6 +1606,49 @@ export const en = {
   'restore.whyNoAccess':
     'An active enrolment in this course, and access to this lesson, are needed.',
   'restore.whyOther': 'This entry could not be put back.',
+
+  // The phone number card on the account page (`phone.ts`), for the same
+  // twenty-seven languages as the dashboard. Each reason a number cannot be
+  // kept is the card's own sentence; none is the database's. It says the
+  // number is kept and who may read it, and that nothing is sent to it.
+  'phone.heading': 'Your phone number',
+  'phone.lede':
+    'It is kept in one form, the country code and then the number, so that a call from any country reaches the same phone. You see it here, and platform staff are allowed to read it.',
+  'phone.storedAs': 'Kept as: {number}',
+  'phone.country': 'Country',
+  'phone.number': 'Phone number',
+  'phone.help':
+    'Write it any way you like: with spaces, with brackets, with a zero in front or with a plus sign. It is read the same way.',
+  'phone.willStore': 'It will be kept as: {number}',
+  'phone.whyCountry': 'Choose the country this number belongs to.',
+  'phone.whyEmpty': 'Type a phone number.',
+  'phone.whyLetters': 'A phone number cannot have letters in it.',
+  'phone.whyPunctuation': 'Type the digits of the number. So far there are only signs.',
+  'phone.whyPlus': 'A number has one plus sign at most, and only at the beginning.',
+  'phone.whyOtherCountry':
+    'This number begins with {begins}, and a number from the country chosen begins with {dial}. Choose the country the number belongs to.',
+  'phone.whyLength':
+    'Digits a number from this country has after the country code: {digits}. Digits this number has: {count}',
+  'phone.whyLengthRange':
+    'In this country the number of digits after the country code has two limits. Fewest: {min}. Most: {max}. In this number: {count}',
+  'phone.whyTrunk': 'The digit {digit} written in front of the number is not counted.',
+  'phone.whyNoDial':
+    'No code is on record here for that country, so a number from there cannot be kept yet.',
+  'phone.save': 'Save my number',
+  'phone.update': 'Change my number',
+  'phone.saving': 'Saving…',
+  'phone.remove': 'Remove my number',
+  'phone.saved': 'Your phone number has been saved.',
+  'phone.removed': 'Your phone number has been removed.',
+  'phone.signedOut': 'You are signed out. Sign in again, then try once more. Nothing was changed.',
+  'phone.off': 'Phone numbers are not being collected at the moment. Nothing was changed.',
+  'phone.refused': 'The platform did not accept this number. Nothing was changed.',
+  'phone.unconfirmed':
+    'No answer came back, so it is not known whether your number changed. Reload this page to see what is kept.',
+  'phone.paused':
+    'Phone numbers are not being collected at the moment. Your number is kept until you remove it.',
+  'phone.foot':
+    'Nothing is sent to this number: no messaging service is connected to this platform. No staff screen shows it yet.',
 } as const;
 
 export type MessageKey = keyof typeof en;

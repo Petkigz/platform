@@ -12,7 +12,7 @@ concurrency:
 jobs:
   responsive:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
@@ -152,6 +152,19 @@ jobs:
           else
             cat "$RUNNER_TEMP/restore-responsive.log"
             node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Restore responsive test::${s}`)' "$RUNNER_TEMP/restore-responsive.log"
+            exit 1
+          fi
+      - name: Check the phone number card, mistakes named before a request, digits of another script and a change nobody answered
+        env:
+          RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs
+        run: |
+          set -euo pipefail
+          export RESPONSIVE_CHROME="$(command -v google-chrome || command -v chromium)"
+          if node scripts/phone-route-smoke.mjs > "$RUNNER_TEMP/phone-responsive.log" 2>&1; then
+            cat "$RUNNER_TEMP/phone-responsive.log"
+          else
+            cat "$RUNNER_TEMP/phone-responsive.log"
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Phone card responsive test::${s}`)' "$RUNNER_TEMP/phone-responsive.log"
             exit 1
           fi
       - name: Check lesson and video layout with synthetic data

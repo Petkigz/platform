@@ -30,6 +30,7 @@ import { CLOSE } from './close.ts';
 import { EXPORT } from './export.ts';
 import { READING } from './reading.ts';
 import { RESTORE } from './restore.ts';
+import { PHONE } from './phone.ts';
 import { LESSON } from './lesson.ts';
 import { isHeld } from './held.ts';
 import { ASIA_AZ } from './asia-az.ts';
@@ -847,6 +848,8 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   READING,
   // Putting a copy of your data back, on the same rule.
   RESTORE,
+  // The phone number card on the account page, on the same rule.
+  PHONE,
 );
 
 /**

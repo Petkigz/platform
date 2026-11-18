@@ -7,6 +7,7 @@ import { isFlagEnabled } from '@/lib/flags';
 import { ClaimLearner } from '@/components/claim-learner';
 import { ProfileForm } from './profile-form';
 import { PhoneForm } from './phone-form';
+import { phoneCountryNames } from '@/lib/phone';
 import { DownloadCopy, type CopyWords } from './export/download-copy';
 import type { PolicyStanding } from '@/lib/policies';
 import { ACCOUNT_NAME_MAX, ACCOUNT_ZONE_MAX } from '@/lib/account';
@@ -31,10 +32,15 @@ export const dynamic = 'force-dynamic';
  * forms, and the profile form is handed its words, so the page's sentences are
  * left out of the script every page carries.
  *
- * **What is still English on a translated page**, each marked as English so it
- * is laid out and read aloud as English: the phone card (behind
- * `platform.phone_format`, which is off), and the title of a document waiting
- * for agreement, which is the owner's own text.
+ * **What is still English on a translated page**, marked as English so it is
+ * laid out and read aloud as English: the title of a document waiting for
+ * agreement, which is the owner's own text.
+ *
+ * **The phone card** (behind `platform.phone_format`, which is off) is handed
+ * its words and the name of every country in the reader's language
+ * (`messages/phone.ts`). It is drawn while numbers are being collected, and
+ * also while they are not if one is stored, so a number can always be seen and
+ * removed by the person it belongs to.
  *
  * **How this account signs in is said from the list of methods**, not from the
  * sentence the database writes beside it: that sentence is English.
@@ -109,8 +115,8 @@ export default async function AccountPage() {
     // A failure here must not take the settings page down with it.
     supabase.rpc('notification_badge'),
     // Whether the platform collects phone numbers at all, and the one it has.
-    // A flag that is off means no card: an empty field for a feature nobody
-    // switched on is an invitation to type into a dead form.
+    // A flag that is off and no number means no card: an empty field for a
+    // feature nobody switched on is an invitation to type into a dead form.
     supabase.rpc('my_phone'),
     // A merge request waiting on this account is the one thing on this page
     // somebody has to act on, so the count comes with it.
@@ -147,6 +153,8 @@ export default async function AccountPage() {
     phoneE164?: string | null;
     phoneCountry?: string | null;
   } | null;
+  // A number is a number only as a string that has something in it.
+  const storedPhone = typeof phone?.phoneE164 === 'string' && phone.phoneE164 !== '' ? phone.phoneE164 : null;
   const methods = (methodsData ?? null) as {
     providers?: unknown;
     hasPassword?: unknown;
@@ -286,13 +294,47 @@ export default async function AccountPage() {
           },
         }}
       />
-      {phone?.enabled === true && (
-        <div {...english}>
-          <PhoneForm
-            initialPhone={phone.phoneE164 ?? null}
-            initialCountry={phone.phoneCountry ?? null}
-          />
-        </div>
+      {(phone?.enabled === true || storedPhone) && (
+        <PhoneForm
+          collecting={phone?.enabled === true}
+          initialPhone={storedPhone}
+          initialCountry={storedPhone ? (phone?.phoneCountry ?? null) : null}
+          countries={phoneCountryNames(shown.code)}
+          words={{
+            locale: shown.code,
+            heading: t('phone.heading'),
+            lede: t('phone.lede'),
+            storedAs: t('phone.storedAs'),
+            country: t('phone.country'),
+            number: t('phone.number'),
+            help: t('phone.help'),
+            willStore: t('phone.willStore'),
+            why: {
+              country: t('phone.whyCountry'),
+              empty: t('phone.whyEmpty'),
+              letters: t('phone.whyLetters'),
+              punctuation: t('phone.whyPunctuation'),
+              plus: t('phone.whyPlus'),
+              other_country: t('phone.whyOtherCountry'),
+              length_one: t('phone.whyLength'),
+              length_range: t('phone.whyLengthRange'),
+            },
+            whyTrunk: t('phone.whyTrunk'),
+            noDial: t('phone.whyNoDial'),
+            save: t('phone.save'),
+            update: t('phone.update'),
+            saving: t('phone.saving'),
+            remove: t('phone.remove'),
+            saved: t('phone.saved'),
+            removed: t('phone.removed'),
+            signedOut: t('phone.signedOut'),
+            off: t('phone.off'),
+            refused: t('phone.refused'),
+            unconfirmed: t('phone.unconfirmed'),
+            paused: t('phone.paused'),
+            foot: t('phone.foot'),
+          }}
+        />
       )}
 
       <section className="card" style={CARD}>

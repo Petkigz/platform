@@ -101,6 +101,7 @@ export const UNWRITTEN_WHILE_HELD: readonly string[] = [
   'export',
   'reading',
   'restore',
+  'phone',
 ];
 
 /** Whether this sentence is deliberately absent from this language's file. */

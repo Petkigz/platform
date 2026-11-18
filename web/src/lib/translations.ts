@@ -290,6 +290,7 @@ const SECTION_LABELS: Record<string, string> = {
   export: 'A copy of your data',
   reading: 'The reading settings',
   restore: 'Putting a copy of your data back',
+  phone: 'The phone number card',
 };
 
 export const SECTIONS: Section[] = (() => {

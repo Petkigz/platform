@@ -90,6 +90,11 @@ for (const [file, key] of [
   // in no script.
   ['restore.ts', 'restore.unconfirmed'],
   ['restore.ts', 'restore.cannotCertNote'],
+  // The phone number card is a client component handed its words. What a
+  // reader is told when a change got no answer, and the sentence about who
+  // may read the number, must be in the account page and in no script.
+  ['phone.ts', 'phone.unconfirmed'],
+  ['phone.ts', 'phone.lede'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

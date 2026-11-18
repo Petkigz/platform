@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
 import {
+  asciiDigits,
   describeCountry,
   findCountry,
   formatPhone,
@@ -12,20 +13,23 @@ import {
   isStoredPhone,
   parsePhone,
   phoneCountries,
+  phoneCountryNames,
   stripFormatting,
   toE164,
 } from './phone.ts';
 
 function ok(input: string, country: string) {
   const parsed = parsePhone(input, country);
-  assert(parsed.ok, `expected ${input} to parse: ${parsed.ok ? '' : parsed.message}`);
+  assert(parsed.ok, `expected ${input} to parse: ${parsed.ok ? '' : parsed.why}`);
   return parsed;
 }
 
-function refused(input: string, country: string): string {
+/** Why a number was refused: the name, and what goes in its sentence's gaps. No sentence. */
+function refused(input: string, country: string) {
   const parsed = parsePhone(input, country);
   assert(!parsed.ok, `expected ${input} to be refused, and it was accepted`);
-  return parsed.message;
+  const { ok: _ok, ...reason } = parsed;
+  return reason;
 }
 
 // ---------------------------------------------------------------------------
@@ -47,27 +51,78 @@ test('the trunk prefix is dropped, and only where the country has one', () => {
 });
 
 test('a number whose dial code belongs to another country is refused, both named', () => {
-  const message = refused('+447400123456', 'UG');
-  assert.match(message, /not a UG number/);
-  assert.match(message, /\+256/);
+  assert.deepEqual(refused('+447400123456', 'UG'), { why: 'other_country', begins: '+4474', dial: '+256' });
+  assert.deepEqual(refused('00447400123456', 'UG'), { why: 'other_country', begins: '+4474', dial: '+256' });
 });
 
 test('a number the wrong length is refused with the length it should be', () => {
-  assert.match(refused('077212345', 'UG'), /9 digits, and this one has 8/);
-  assert.match(refused('07721234567', 'UG'), /9 digits, and this one has 10/);
+  assert.deepEqual(refused('077212345', 'UG'), { why: 'length', min: 9, max: 9, count: 8 });
+  assert.deepEqual(refused('07721234567', 'UG'), { why: 'length', min: 9, max: 9, count: 10 });
+});
+
+test('a country code still being typed is not called another country', () => {
+  // "+2" on the way to "+256" is nobody's number yet. What helps is how many
+  // digits are wanted, not being told the number belongs somewhere else.
+  for (const typed of ['00', '+2', '+25', '0025']) {
+    assert.deepEqual(refused(typed, 'UG'), { why: 'length', min: 9, max: 9, count: 0 }, typed);
+  }
+  assert.deepEqual(refused('+256', 'UG'), { why: 'length', min: 9, max: 9, count: 0 });
+  assert.equal(refused('+3', 'UG').why, 'other_country');
 });
 
 test('letters, stray pluses and punctuation alone are refused before any request', () => {
-  assert.match(refused('call me', 'UG'), /cannot contain letters/);
-  assert.match(refused('++256772123456', 'UG'), /at most one \+/);
-  assert.match(refused('256+772123456', 'UG'), /at most one \+/);
-  assert.match(refused('+', 'UG'), /not just punctuation/);
-  assert.match(refused('   ', 'UG'), /Type a phone number/);
+  assert.deepEqual(refused('call me', 'UG'), { why: 'letters' });
+  assert.deepEqual(refused('++256772123456', 'UG'), { why: 'plus' });
+  assert.deepEqual(refused('256+772123456', 'UG'), { why: 'plus' });
+  assert.deepEqual(refused('+', 'UG'), { why: 'punctuation' });
+  assert.deepEqual(refused('   ', 'UG'), { why: 'empty' });
 });
 
 test('a country with no dial code is refused, not guessed at', () => {
-  assert.match(refused('0772123456', 'XX'), /Choose the country/);
-  assert.match(refused('0772123456', ''), /Choose the country/);
+  assert.deepEqual(refused('0772123456', 'XX'), { why: 'country' });
+  assert.deepEqual(refused('0772123456', ''), { why: 'country' });
+});
+
+test('a refusal is a name and digits, never a sentence', () => {
+  const source = readFileSync(new URL('./phone.ts', import.meta.url), 'utf8');
+  assert.doesNotMatch(source, /message:/u, 'phone.ts builds a sentence again');
+  for (const [typed, country] of [['abc', 'UG'], ['+447400123456', 'UG'], ['07', 'UG'], ['', 'UG'], ['1', 'XX']]) {
+    for (const value of Object.values(refused(typed as string, country as string))) {
+      assert.match(String(value), /^(?:[a-z_]+|\+?[0-9]+)$/u, `${typed}: ${String(value)}`);
+    }
+  }
+});
+
+test('digits of another script are the same number', () => {
+  // What a Persian, Arabic, Bengali, Nepali/Hindi or Thai keyboard types.
+  assert.equal(asciiDigits('۰۱۲۳۴۵۶۷۸۹'), '0123456789');
+  assert.equal(asciiDigits('٠١٢٣٤٥٦٧٨٩'), '0123456789');
+  assert.equal(asciiDigits('০১২৩৪৫৬৭৮৯'), '0123456789');
+  assert.equal(asciiDigits('०१२३४५६७८९'), '0123456789');
+  assert.equal(asciiDigits('๐๑๒๓๔๕๖๗๘๙'), '0123456789');
+  assert.equal(asciiDigits('௦௧௨௩௪௫௬௭௮௯'), '0123456789');
+  assert.equal(asciiDigits('０１２３４５６７８９'), '0123456789');
+  assert.equal(asciiDigits('＋２５６ 772'), '+256 772');
+  // Nothing else is touched.
+  assert.equal(asciiDigits('+256 (0) 772-123.456 abc ؟'), '+256 (0) 772-123.456 abc ؟');
+  assert.equal(ok('۰۷۷۲ ۱۲۳ ۴۵۶', 'UG').e164, '+256772123456');
+  assert.equal(ok('+٢٥٦٧٧٢١٢٣٤٥٦', 'UG').e164, '+256772123456');
+  assert.equal(ok('০৭৭২১২৩৪৫৬', 'UG').e164, '+256772123456');
+  // What is stored is always the ten ASCII digits.
+  assert.match(ok('۰۷۷۲۱۲۳۴۵۶', 'UG').e164, /^\+[0-9]+$/);
+});
+
+test('every run of decimal digits in Unicode is tens, counted from zero', () => {
+  // The rule `asciiDigits` rests on. If a future Unicode broke it, this says so.
+  let run = 0;
+  for (let point = 0; point <= 0x1ffff; point += 1) {
+    if (point >= 0xd800 && point <= 0xdfff) continue;
+    if (/\p{Nd}/u.test(String.fromCodePoint(point))) run += 1;
+    else {
+      assert.equal(run % 10, 0, `a run of ${run} digits ends at U+${point.toString(16)}`);
+      run = 0;
+    }
+  }
 });
 
 test('a stored value is recognised as already canonical', () => {
@@ -115,6 +170,33 @@ test('a country is named in words, and falls back to its code', () => {
   assert.equal(describeCountry('gb'), 'United Kingdom');
   assert.equal(describeCountry('ZZ'), 'ZZ');
   assert.equal(describeCountry(null), '');
+});
+
+test('a country is named in the language asked for, and in English where there is none', () => {
+  assert.equal(describeCountry('UG', 'fr'), 'Ouganda');
+  assert.equal(describeCountry('DE', 'tr'), 'Almanya');
+  assert.equal(describeCountry('UG', 'ar'), 'أوغندا');
+  // Not a language at all: English, not the language of the machine.
+  assert.equal(describeCountry('UG', 'not a language'), 'Uganda');
+  assert.equal(describeCountry('ZZ', 'fr'), 'ZZ');
+});
+
+test('the list is in the order of the language it is read in', () => {
+  const english = phoneCountryNames('en');
+  const french = phoneCountryNames('fr');
+  assert.equal(english.length, french.length);
+  assert.deepEqual(new Set(english.map((row) => row.code)), new Set(french.map((row) => row.code)));
+  // Germany: under G in English, under A (Allemagne) in French.
+  const place = (rows: { code: string }[], code: string) => rows.findIndex((row) => row.code === code);
+  assert(place(english, 'DE') > place(english, 'FR'), 'English: Germany before France');
+  assert(place(french, 'DE') < place(french, 'FR'), 'French: Allemagne after France');
+  const collator = new Intl.Collator(['fr', 'en']);
+  for (let i = 1; i < french.length; i += 1) {
+    assert(collator.compare(french[i - 1]!.name, french[i]!.name) <= 0, `${french[i - 1]!.name} > ${french[i]!.name}`);
+  }
+  // Asking twice gives the same list, and one language does not reorder another.
+  assert.deepEqual(phoneCountryNames('en'), english);
+  assert.equal(phoneCountries('en')[0]?.code, english[0]?.code);
 });
 
 test('the list a person picks from is complete and has no duplicates', () => {
