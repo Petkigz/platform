@@ -1006,6 +1006,35 @@ function appRoutes() {
 }
 
 // ---------------------------------------------------------------------------
+// 16. A workflow's names do not end the file early
+// ---------------------------------------------------------------------------
+//
+// A step was named "Check putting a copy back: a wrong file, …". In YAML an
+// unquoted value with a colon and a space in it is not a value, the whole file
+// is refused, and GitHub then runs none of its jobs and reports a failure
+// with no step to look at. This has no YAML parser (builtins only), so it
+// checks the one line that went wrong: a `name:` whose unquoted value holds
+// `: `, ends in a colon, or holds ` #`, which would cut it off as a comment.
+{
+  const dir = join(root, '.github', 'workflows');
+  let names = 0;
+  for (const file of readdirSync(dir).filter((name) => /\.ya?ml$/.test(name)).sort()) {
+    readFileSync(join(dir, file), 'utf8').split('\n').forEach((line, index) => {
+      const match = /^\s*(?:- )?name:\s+(.*)$/.exec(line);
+      if (!match) return;
+      names += 1;
+      const value = match[1].trim();
+      if (/^['"]/.test(value)) return;
+      if (/: |:$| #/.test(value)) {
+        fail('workflows', `.github/workflows/${file}:${index + 1} names something "${value}"; `
+          + 'an unquoted colon or " #" there breaks or cuts the file. Reword it or quote it');
+      }
+    });
+  }
+  process.stdout.write(`workflows: ${names} names, none ends its file early\n`);
+}
+
+// ---------------------------------------------------------------------------
 if (problems.length > 0) {
   process.stderr.write(`\n${problems.length} structural problem(s):\n`);
   for (const problem of problems) process.stderr.write(`  - ${problem}\n`);

@@ -2677,6 +2677,11 @@ database said through it.
   reader announces the result was not heard by anybody: the result is a
   `role="status"` region that arrives with its text already in it, which
   some screen readers do not announce.
+- *A mistake made in this change, and what now catches it.* The step added
+  to the browser workflow was named with a colon in it, which is not valid
+  YAML: GitHub refused the whole file and ran none of its browser checks
+  for that push. Renamed, and `scripts/repo-check.mjs` (check 16) now fails
+  on such a name before anything is pushed.
 - *Left as it was:* `/account/merge`, `/account/sharing`,
   `/account/referrals`, `/account/sponsorship` and the phone card are
   English.

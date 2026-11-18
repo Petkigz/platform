@@ -141,7 +141,7 @@ jobs:
             node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Reading settings responsive test::${s}`)' "$RUNNER_TEMP/reading-responsive.log"
             exit 1
           fi
-      - name: Check putting a copy back: a wrong file, the check before the write, and a write nobody answered
+      - name: Check putting a copy back, a wrong file, the check before the write and a write nobody answered
         env:
           RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs
         run: |
