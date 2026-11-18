@@ -289,6 +289,7 @@ const SECTION_LABELS: Record<string, string> = {
   close: 'Closing an account',
   export: 'A copy of your data',
   reading: 'The reading settings',
+  restore: 'Putting a copy of your data back',
 };
 
 export const SECTIONS: Section[] = (() => {

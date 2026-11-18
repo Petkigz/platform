@@ -129,7 +129,8 @@ sentence in the reply saying why. It previews by default and writes nothing unti
 the preview has been read; running the same file twice converges rather than
 duplicating, and an entry already on a lesson is never overwritten. The restore
 does not restate the entitlement rule — every insert meets the same trigger an
-ordinary note meets, and the refusal is reported in the trigger's own words. The
+ordinary note meets, and the database's report carries the trigger's own words;
+the screen says only that the entry could not be put back. The
 export moved to format 2 (notes and bookmarks now name their course and section)
 because a lesson title is not an identity; a format 1 file is still read, and an
 ambiguous match is reported rather than guessed.
@@ -2617,6 +2618,68 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### Putting a copy back in the reader's language, 2026-11-18
+
+`/account/restore` was English for every reader, and so was everything the
+database said through it.
+
+- *Translated.* Sixty-nine sentences (`restore.*`, new file
+  `messages/restore.ts`) in the twenty-seven languages with nothing held. A
+  held language reads the page in English, whole, marked as English.
+  **Unreviewed**, like everything else.
+- *Every refusal and every reason has a name.* New `lib/restore-outcome.ts`.
+  The route answered every refusal 409 with the sentence `restore_my_data()`
+  raised, and the report carried the database's English reason for each
+  entry it left in the file. Now: seven names for a refusal, each with one
+  status (401, 413, 400, 409, 502), and sixteen names for why an entry
+  stayed in the file, the last of them `other` for a sentence nobody
+  recognises, an insert trigger's included. A test reads the seven
+  exceptions and the nineteen reasons out of the migration, so the two
+  cannot drift apart unseen.
+- *Defects fixed on the way.*
+  - **A write that got no answer was said as "Nothing was changed".**
+    Nobody knew that. It is now said as unknown: the result is taken off
+    the screen and the reader is asked to check the file again, which is
+    safe because an entry already here is skipped. The same is said when
+    the reply to a write claims it did not write.
+  - **The page listed five things a file never puts back; the database
+    names nine.** The activity history, roles, and the sign-in address and
+    password were said only afterwards, in English, from the report. The
+    page now says seven before a file is chosen, a test fails if one of the
+    database's nine has no place among them, and the report's English list
+    is no longer sent to the browser.
+  - The name of the chosen file travelled in the address of the request and
+    came back inside English sentences. It is not sent.
+  - The route had no `catch`, and its refusals could be kept by a cache.
+  - A reason with a gap and nothing to put in it (a limit the report did not
+    bring) would have shown the braces; it says the general sentence.
+  - Two buttons that wrapped were each as wide as their own words.
+- *What it did to the nineteen.* `/language` tells each of them **16%** (192
+  of 1199).
+- *Checks.* 2384 web tests. The bundle check looks for the "not known
+  whether it was put back" sentence and the note about certificates in
+  every script (452 sentences, 118 scripts, 1808 kB). New
+  `scripts/restore-route-smoke.mjs`, in CI and in the browser workflow: the
+  page over HTTP in five languages; eleven wrong files and a signed-out
+  request refused by name without the database being asked; fourteen
+  things the stand-in database can answer, each under its name and status,
+  as a check and as a write; only `apply=1` in the address writes, and a
+  file cannot ask for itself. In a browser, in Arabic: four wrong files
+  refused with nothing sent, a check with four lines and six entries left
+  in the file, the write as one request, three ways a write goes
+  unanswered; the counts in Persian digits; the page at 320, 390 and 1440px
+  in three languages.
+- *Not proven.* **Nothing here ran against a database.** The stand-in
+  writes nothing and replies with reports typed into the script; what
+  `restore_my_data()` writes is covered by its own suite, which this change
+  did not touch. No file picker on a real phone was used. That a screen
+  reader announces the result was not heard by anybody: the result is a
+  `role="status"` region that arrives with its text already in it, which
+  some screen readers do not announce.
+- *Left as it was:* `/account/merge`, `/account/sharing`,
+  `/account/referrals`, `/account/sponsorship` and the phone card are
+  English.
 
 ### The reading settings in the reader's language, and open to everybody, 2026-11-18
 

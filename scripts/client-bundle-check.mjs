@@ -84,6 +84,12 @@ for (const [file, key] of [
   // the page says nobody has tested, must be in that page and in no script.
   ['reading.ts', 'reading.notKept'],
   ['reading.ts', 'reading.noSpeechNote'],
+  // The form that puts a copy back is a client component handed its words.
+  // What a reader is told when nobody can say whether the file was put back,
+  // and what the page says no file ever puts back, must be in that page and
+  // in no script.
+  ['restore.ts', 'restore.unconfirmed'],
+  ['restore.ts', 'restore.cannotCertNote'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

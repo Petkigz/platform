@@ -69,8 +69,8 @@ const PLAYER_PREFIX = 'player.';
  * The learner dashboard, the course page, the lesson page's frame, the
  * assessment page, the assignment page, the page for a wrong address, the
  * account page, the family pages, the buy page, the page for closing an
- * account, the two pages for a copy of your data and the reading settings
- * are Server Components:
+ * account, the two pages for a copy of your data, the reading settings and
+ * the page that puts a copy back are Server Components:
  * their words are in the HTML by the time a browser sees it, and no client
  * component asks for one. Several hundred sentences in the catalogue every
  * page carries would be paid for by every reader of the front page and used
@@ -78,9 +78,8 @@ const PLAYER_PREFIX = 'player.';
  * cannot go stale the way it did here). The client controls on those pages
  * (mark complete, the learner-profile prompt, the quiz, the written answer,
  * the profile form, the family forms, the buy form, the closing form, the
- * download link, the three reading settings) are
- * handed their strings
- * as props instead. If a client component ever asks
+ * download link, the three reading settings, the form that puts a copy
+ * back) are handed their strings as props instead. If a client component ever asks
  * for one of these keys it gets English — the sentence is not in what it was
  * sent — so a test forbids it; the other fix is to take the prefix out of this
  * list.
@@ -91,7 +90,7 @@ const PLAYER_PREFIX = 'player.';
  */
 const SERVER_ONLY_PREFIXES: readonly string[] = [
   'learn.', 'course.', 'lesson.', 'assess.', 'assign.', 'missing.', 'account.',
-  'family.', 'buy.', 'close.', 'export.', 'reading.',
+  'family.', 'buy.', 'close.', 'export.', 'reading.', 'restore.',
 ];
 
 /** Everything a client component outside the companion pages can ask for. */

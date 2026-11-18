@@ -7960,14 +7960,15 @@ owner chose the first.
   the lesson page, 24% since the account page and its profile form, 21%
   since the family pages and their forms, 20% since the buy page and its
   form, 19% since the page for closing an account, 18% since the pages for
-  getting a copy of your data, 17% since the reading settings.
+  getting a copy of your data, 17% since the reading settings, 16% since
+  the page for putting a copy back.
 - **The test that refused a language under half is removed.** Nothing in the
   tests now limits how much English one of these languages shows. That is the
   cost of this choice and it was put to the owner in those words.
 - What the tests still require of every offered language: every sentence that
   is neither held nor deliberately unwritten is present, and the sentence
   that gives the percentage is in that language rather than English. The
-  count (192 of 1130; it was 192 of 347 when this was decided) is pinned in
+  count (192 of 1199; it was 192 of 347 when this was decided) is pinned in
   `held-translations.test.ts`, so it changes only on purpose.
 - The four withheld languages are unaffected. So is the rule that a new screen
   is not written for a language with anything held.
@@ -8360,12 +8361,39 @@ screens are English for everyone. It was rewritten in all twenty-eight
 languages: every screen prepared for translation so far is written in this
 language, and some screens have not been prepared yet.
 
-`/account/merge`, `/account/sharing`, `/account/restore`,
-`/account/referrals` and `/account/sponsorship` are still English.
+Putting a copy back followed (`/account/restore`), sixty-nine sentences in
+a new part, `restore.ts`, 16% for the nineteen. Five things were settled in
+writing it:
+
+- *A write that was not answered is unknown, and is said as that.* The
+  screen used to say "Nothing was changed" when the request failed, which
+  nobody knew after the button that writes had been pressed. It now takes
+  the result away and asks the reader to check the file again. That is a
+  safe thing to ask because an entry that is already here is skipped. A
+  reply to a write that says it did not write is treated the same way.
+- *What a file never puts back is said before a file is chosen.* The
+  database's report lists nine such things in English, and the page showed
+  that list after the write. The page says seven, in the reader's language,
+  first; `lib/restore-outcome.ts` maps the nine onto the seven and a test
+  reads the nine out of the migration. The report's list stays on the
+  server.
+- *The reason for each entry is a name.* Sixteen of them. A sentence nobody
+  recognises, including whatever an insert trigger raised, is `other`, with
+  one sentence: the entry could not be put back. The reader is told less
+  than the database knows there, on purpose.
+- *What the reader's own file said may be shown; nothing else from outside
+  the catalogue.* A lesson's name, a language, a time zone, a country: cut
+  to 120 characters, stripped of the marks that turn text around, set in a
+  `<bdi>`. The name of the file is not sent at all.
+- *The verb is "put back", and "everything" is not said.* The button reads
+  "Put back what can be put back".
+
+`/account/merge`, `/account/sharing`, `/account/referrals` and
+`/account/sponsorship` are still English.
 
 `UNWRITTEN_WHILE_HELD` is now `learn`, `course`, `lesson`, `assess`,
 `assign`, `missing`, `broke`, `player`, `account`, `family`, `buy`, `close`,
-`export` and `reading`.
+`export`, `reading` and `restore`.
 
 **The rule going forward.** A part named in `UNWRITTEN_WHILE_HELD`
 (`web/src/lib/i18n/messages/held.ts`) may be absent from a language that has

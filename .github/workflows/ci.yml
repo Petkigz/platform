@@ -123,6 +123,9 @@ jobs:
       - name: Reading settings page synthetic HTTP regression
         run: node scripts/reading-route-smoke.mjs
 
+      - name: Restore page and restore route synthetic HTTP regression
+        run: node scripts/restore-route-smoke.mjs
+
       - name: Catalogue synthetic HTTP regression
         run: node scripts/catalogue-route-smoke.mjs
 

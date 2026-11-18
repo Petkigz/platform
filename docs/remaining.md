@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 17% there (192 of 1130 sentences; it was 71% of 272, then
+  the nineteen reads 16% there (192 of 1199 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -543,7 +543,8 @@ still unreviewed and still saying so.
   with the account page and its profile form, 21% of 898 with the family
   pages and their forms, 20% of 977 with the buy page and its form, 19% of
   1020 with the page for closing an account, 18% of 1078 with the pages for
-  a copy of your data, then this with the reading settings),
+  a copy of your data, 17% of 1130 with the reading settings, then this
+  with the page for putting a copy back),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -760,7 +761,7 @@ written: not a held draft, nothing.
   for every reader, and marked:** the phone card (switched off) and the title
   of a document waiting for agreement. **Still English, every one of them:**
   the pages it links to: `/account/merge`, `/account/sharing`,
-  `/account/restore`, `/account/referrals`,
+  `/account/referrals`,
   `/account/sponsorship`, `/account/password`, `/billing`,
   `/institution`, `/notifications`, `/policies`, `/teach/apply`, `/sponsor`
   and `/forgot-password`. A reader is taken from a page in their language to

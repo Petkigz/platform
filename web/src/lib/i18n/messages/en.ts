@@ -1502,6 +1502,110 @@ export const en = {
   'reading.noFontNote':
     'None is included. The text size and contrast settings are the substitutes for now.',
   'reading.back': 'Back to my account',
+
+  // Putting a copy of your data back, and the words its form says
+  // (`restore.ts`), for the same twenty-seven languages as the dashboard.
+  // "Put back", never "restore everything": a file brings back what the
+  // reader wrote and nothing the platform wrote about them. The refusals
+  // and reasons are this page's own sentences; none is the database's.
+  'restore.title': 'Put your data back',
+  'restore.crumb': 'Restore',
+  'restore.lede':
+    'If you downloaded a copy of your data and want it back, on this account after a break or on a new account, this page reads that file and puts back the part of it that you wrote.',
+  'restore.canHeading': 'What can come back',
+  'restore.canProfile': 'Your profile',
+  'restore.canProfileNote':
+    'Name, language, time zone and country. Only where the file differs from what is here now, and only values this platform can hold.',
+  'restore.canNotes': 'Your notes and bookmarks',
+  'restore.canNotesNote':
+    'Put back on the lessons they were written on, but only in courses you are enrolled in now. A note belongs to an enrolment, so a course you have left has nowhere to put it.',
+  'restore.cannotHeading': 'What cannot, and why',
+  'restore.cannotEnrol': 'Enrolments',
+  'restore.cannotEnrolNote':
+    'An enrolment is an entitlement, and sometimes a paid one. A file that could grant one would be a file that gives courses away. Enrol again, then use the file a second time: your notes will find their lessons.',
+  'restore.cannotCert': 'Certificates',
+  'restore.cannotCertNote':
+    'A certificate is issued by the platform. One written from a file would be a forgery that passes the check. The numbers in your file are still real, and the certificate check still confirms them.',
+  'restore.cannotMoney': 'Orders, refunds and progress',
+  'restore.cannotMoneyNote':
+    'These are records of what happened here, kept by the platform. Putting one back from a file would be a claim, not a copy. Your receipts stay in the file for your own records.',
+  'restore.cannotPublished': 'What you published, and what you were marked on',
+  'restore.cannotPublishedNote':
+    'Reviews, discussion posts and assignment submissions were each published here and, where it was needed, moderated. Posting them again from a file would publish words nobody has read again.',
+  'restore.cannotPeople': 'Children, roles and permissions',
+  'restore.cannotPeopleNote':
+    'A child’s profile records who its guardian is, and a staff role is given by a person, not carried in a file. Both are added through the screens that record who did it.',
+  'restore.cannotHistory': 'Your activity history',
+  'restore.cannotHistoryNote':
+    'It is a record of what happened here and can only be added to. A history brought in from a file would be an invented one.',
+  'restore.cannotSignIn': 'Your sign-in address and password',
+  'restore.cannotSignInNote':
+    'Both are kept by the sign-in service, apart from this record. Sign in with the address you want to use; a file cannot set it.',
+  'restore.foot':
+    'Nothing is written until you have seen what would be written. Putting a file back is recorded in the audit trail, with what it put back.',
+  'restore.fileLabel': 'The JSON file the export page downloaded',
+  'restore.fileHint':
+    'The spreadsheet and the printable copy are for reading; this page needs the JSON file. Its name begins with: {name}',
+  'restore.check': 'Check this file',
+  'restore.checking': 'Checking…',
+  'restore.another': 'Choose another file',
+  'restore.apply': 'Put back what can be put back',
+  'restore.applying': 'Putting back…',
+  'restore.different': 'Put back a different file',
+  'restore.errLarge':
+    'This file is larger than a copy of your data can be. Choose the JSON file that the export page downloaded.',
+  'restore.errNotJson':
+    'This file is empty or is not JSON. Choose the JSON file that the export page downloaded; the spreadsheet and the printable copy cannot be put back.',
+  'restore.errNotExport':
+    'This file holds JSON, but it is not a copy of your data made by this platform.',
+  'restore.errNewer':
+    'This copy was made by a newer version of the platform than this one reads, so it cannot be put back here.',
+  'restore.errSignedOut':
+    'You are signed out. Sign in again, then choose the file again. Nothing was changed.',
+  'restore.errCheckFailed':
+    'The file could not be checked, and nothing was changed. Check your connection and try again.',
+  'restore.errRefused': 'The platform refused this file. Nothing was changed.',
+  'restore.unconfirmed':
+    'We could not confirm whether the file was put back. Check the file again: an entry that is already here is skipped, so nothing is written twice.',
+  'restore.resultCheck': 'What this file would put back',
+  'restore.resultApplied': 'What this file put back',
+  'restore.resultNothing': 'Nothing in this file can be put back as things stand.',
+  'restore.resultAllHere': 'What this file can put back is already here.',
+  'restore.lineNotes': 'Notes: {count}',
+  'restore.lineMarks': 'Bookmarks: {count}',
+  'restore.lineProfile': 'Profile details: {fields}',
+  'restore.lineHere': 'Already here and left as they are: {count}',
+  'restore.skippedHeading': 'Left in the file, and why',
+  'restore.nothingWritten': 'Nothing has been written yet. Checking a file changes nothing.',
+  'restore.afterApplied':
+    'Your file has not changed, so it can be used again: an entry that is already here is skipped, not written twice. What a file never puts back is listed further down this page.',
+  'restore.fieldCountry': 'Country',
+  'restore.whereEntry': 'A saved entry',
+  'restore.whyNameBlank': 'The name in the file is blank, and a profile cannot have a blank name.',
+  'restore.whyNameLong':
+    'The name in the file is too long. The most characters a name may have: {count}',
+  'restore.whyLanguage':
+    'The language in the file is not written in a form the profile can hold. In the file: {value}',
+  'restore.whyTimezone':
+    'The time zone in the file is not one this platform knows. In the file: {value}',
+  'restore.whyCountry':
+    'The country in the file is not a two-letter country code. In the file: {value}',
+  'restore.whyNotList': 'A part of this file is not a list, so it could not be read.',
+  'restore.whyCapped':
+    'This list is longer than is read at one time, so only its beginning is read. Entries read: {read}. Entries in the file: {held}',
+  'restore.whyOff':
+    'Notes and bookmarks are switched off on this platform, so there is nowhere to put them. They are still in your file.',
+  'restore.whyNoteEmpty': 'This note has no text.',
+  'restore.whyNoteLong': 'This note is too long. The most characters a note may have: {count}',
+  'restore.whyNoLesson': 'This entry names no lesson, so there is nothing to attach it to.',
+  'restore.whyNotEnrolled': 'You are not enrolled now in a course that has a lesson of this name.',
+  'restore.whyAmbiguous':
+    'More than one of your courses has a lesson of this name, and the file cannot say which.',
+  'restore.whyDiffers':
+    'You have since written a different note on this lesson, and it was not replaced.',
+  'restore.whyNoAccess':
+    'An active enrolment in this course, and access to this lesson, are needed.',
+  'restore.whyOther': 'This entry could not be put back.',
 } as const;
 
 export type MessageKey = keyof typeof en;

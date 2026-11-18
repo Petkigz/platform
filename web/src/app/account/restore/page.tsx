@@ -1,24 +1,56 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import { RestoreForm } from './restore-form';
+import { LOCALE_COOKIE, chooseLocale, languageShownFor, translator } from '@/lib/i18n';
+import { RESTORE_NEVER } from '@/lib/restore-outcome';
+import { RestoreForm, type RestoreWords } from './restore-form';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Restore your data' };
+
+/** The language this page is written in for this reader, and whether that is the one they chose. */
+async function readerLanguage() {
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code: locale } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  const shown = languageShownFor(locale, 'restore');
+  return { locale, shown };
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { shown } = await readerLanguage();
+  return { title: translator(shown.code)('restore.title') };
+}
+
+const DETAIL = { display: 'block', fontSize: '0.9rem' } as const;
+const HEADING = { fontSize: '1.15rem', margin: '2rem 0 0.5rem' } as const;
+
+/** How the name of the file the export page downloads begins, whichever name it was given. */
+const FILE_START = 'ayahspring-';
 
 /**
- * Putting an export back.
+ * Putting an export back, in the reader's language.
  *
  * The page is written for somebody holding a file and hoping: they left, or
  * they are on a new account, and the question is what of it can come back. The
- * honest answer is on the page before the button — their own words come back,
- * and the platform's record of them does not — because a person who finds that
+ * honest answer is on the page before the button (their own words come back,
+ * and the platform's record of them does not), because a person who finds that
  * out afterwards has been misled by a screen that stayed silent.
  *
- * The list below is the same list `restore_my_data()` returns, said here so it
- * can be read before a file is chosen. The function is still the authority; if
- * the two ever disagree, the file is right and this paragraph is the bug.
+ * **Twenty-seven languages have it** (`messages/restore.ts`); a language held
+ * for review reads it in English, whole, under `lang="en"`. Nobody who speaks
+ * any of the twenty-seven has read them.
+ *
+ * **The second list is this page's own.** `restore_my_data()` returns nine
+ * things it never puts back, in English, inside its report. They are said
+ * here as seven, before a file is chosen, and the report's copy is not shown.
+ * The function is still the authority: `lib/restore-outcome.test.ts` reads
+ * the nine out of the migration and fails if one has no sentence here.
  */
 export default async function RestorePage() {
   if (!isSupabaseConfigured()) redirect('/');
@@ -29,99 +61,126 @@ export default async function RestorePage() {
   } = await supabase.auth.getUser();
   if (!user) redirect('/sign-in?next=/account/restore');
 
+  const { locale, shown } = await readerLanguage();
+  const t = translator(shown.code);
+  const frame = shown.code !== locale ? { lang: shown.code, dir: shown.dir } : {};
+
+  const words: RestoreWords = {
+    locale: shown.code,
+    fileLabel: t('restore.fileLabel'),
+    fileHint: t('restore.fileHint'),
+    fileStart: FILE_START,
+    check: t('restore.check'),
+    checking: t('restore.checking'),
+    another: t('restore.another'),
+    apply: t('restore.apply'),
+    applying: t('restore.applying'),
+    different: t('restore.different'),
+    errors: {
+      signed_out: t('restore.errSignedOut'),
+      too_large: t('restore.errLarge'),
+      not_json: t('restore.errNotJson'),
+      not_export: t('restore.errNotExport'),
+      newer: t('restore.errNewer'),
+      refused: t('restore.errRefused'),
+      failed: t('restore.errCheckFailed'),
+    },
+    unconfirmed: t('restore.unconfirmed'),
+    headings: {
+      check: t('restore.resultCheck'),
+      applied: t('restore.resultApplied'),
+      all_here: t('restore.resultAllHere'),
+      nothing: t('restore.resultNothing'),
+    },
+    lineNotes: t('restore.lineNotes'),
+    lineMarks: t('restore.lineMarks'),
+    lineHere: t('restore.lineHere'),
+    lineProfile: t('restore.lineProfile'),
+    profile: t('restore.canProfile'),
+    fields: {
+      displayName: t('account.formName'),
+      preferredLanguage: t('account.formLanguage'),
+      timezone: t('account.formZone'),
+      countryCode: t('restore.fieldCountry'),
+    },
+    skippedHeading: t('restore.skippedHeading'),
+    whereEntry: t('restore.whereEntry'),
+    why: {
+      name_blank: t('restore.whyNameBlank'),
+      name_long: t('restore.whyNameLong'),
+      language: t('restore.whyLanguage'),
+      timezone: t('restore.whyTimezone'),
+      country: t('restore.whyCountry'),
+      not_list: t('restore.whyNotList'),
+      capped: t('restore.whyCapped'),
+      off: t('restore.whyOff'),
+      note_empty: t('restore.whyNoteEmpty'),
+      note_long: t('restore.whyNoteLong'),
+      no_lesson: t('restore.whyNoLesson'),
+      not_enrolled: t('restore.whyNotEnrolled'),
+      ambiguous: t('restore.whyAmbiguous'),
+      differs: t('restore.whyDiffers'),
+      no_access: t('restore.whyNoAccess'),
+      other: t('restore.whyOther'),
+    },
+    nothingWritten: t('restore.nothingWritten'),
+    afterApplied: t('restore.afterApplied'),
+  };
+
+  const can = [
+    ['restore.canProfile', 'restore.canProfileNote'],
+    ['restore.canNotes', 'restore.canNotesNote'],
+  ] as const;
+  const never = RESTORE_NEVER.map(
+    (name) => [`restore.cannot${name}`, `restore.cannot${name}Note`] as const,
+  );
+
   return (
-    <div className="page narrow">
+    <div className="page narrow" {...frame}>
       <nav className="crumbs">
-        <Link href="/account">Account</Link>
+        <Link href="/account">{t('auth.accountSettings')}</Link>
         <span aria-hidden>›</span>
-        <span>Restore</span>
+        <span>{t('restore.crumb')}</span>
       </nav>
 
       <div className="page-head">
-        <p className="eyebrow">Your account</p>
-        <h1>Put your data back</h1>
-        <p className="muted">
-          If you downloaded your data and want it back — on this account after a break, or on a new
-          account — this reads that file and puts back the part of it you wrote.
-        </p>
+        <h1>{t('restore.title')}</h1>
+        <p className="muted">{t('restore.lede')}</p>
       </div>
 
       <div className="card" style={{ padding: '1.25rem' }}>
-        <RestoreForm />
+        <RestoreForm words={words} />
+        <p className="muted" style={{ fontSize: '0.85rem', margin: '1.25rem 0 0' }}>{t('restore.foot')}</p>
       </div>
 
-      <div className="outline-h" style={{ marginTop: '2rem' }}>
-        <h3>What can come back</h3>
-      </div>
+      <h2 style={HEADING}>{t('restore.canHeading')}</h2>
       <div className="card">
-        <ul className="lessons">
-          <li>
-            <strong>Your profile</strong>
-            <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
-              Name, language, time zone and country. Only the fields that differ from what is here
-              now, and only values this platform can actually hold.
-            </span>
-          </li>
-          <li>
-            <strong>Your notes and bookmarks</strong>
-            <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
-              Put back on the lessons they were written on — but only where you are enrolled now.
-              A note belongs to an enrolment, so a course you have left has nowhere to put it.
-            </span>
-          </li>
+        <ul className="lessons stacked">
+          {can.map(([name, note]) => (
+            <li key={name}>
+              <strong>{t(name)}</strong>
+              <span className="muted" style={DETAIL}>{t(note)}</span>
+            </li>
+          ))}
         </ul>
       </div>
 
-      <div className="outline-h" style={{ marginTop: '2rem' }}>
-        <h3>What cannot, and why</h3>
-      </div>
+      <h2 style={HEADING}>{t('restore.cannotHeading')}</h2>
       <div className="card">
-        <ul className="lessons">
-          <li>
-            <strong>Enrolments</strong>
-            <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
-              An enrolment is an entitlement, and sometimes a paid one. A file that could grant one
-              would be a file that gives courses away. Enrol again, then run the file a second time:
-              your notes will find their lessons.
-            </span>
-          </li>
-          <li>
-            <strong>Certificates</strong>
-            <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
-              Issued by the platform and signed by a person. One written from a file would be a
-              forgery that verifies. The numbers in your file are still real, and{' '}
-              <Link href="/verify">certificate verification</Link> still confirms them.
-            </span>
-          </li>
-          <li>
-            <strong>Orders, refunds and progress</strong>
-            <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
-              A ledger and a record of what happened here. Restoring either would be a claim rather
-              than a copy. Your receipts stay in the file for your own records.
-            </span>
-          </li>
-          <li>
-            <strong>What you published, and what you were marked on</strong>
-            <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
-              Reviews, discussion posts and assignment submissions were each published and, where it
-              was needed, moderated. Re-posting them would republish words nobody has re-read.
-            </span>
-          </li>
-          <li>
-            <strong>Children, roles and privileges</strong>
-            <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
-              A child&rsquo;s profile carries a guardian relationship somebody verified, and a staff
-              role is granted by a person rather than carried in a file. Both are added through the
-              screens that record who did it.
-            </span>
-          </li>
+        <ul className="lessons stacked">
+          {never.map(([name, note]) => (
+            <li key={name}>
+              <strong>{t(name)}</strong>
+              <span className="muted" style={DETAIL}>{t(note)}</span>
+            </li>
+          ))}
         </ul>
       </div>
 
-      <p className="muted" style={{ marginTop: '1.5rem', fontSize: '0.9rem' }}>
-        Nothing is written until you have seen what would be written, and the restore is recorded in
-        the audit trail with what it put back. Receipts for the file itself:{' '}
-        <Link href="/account/export">download your data</Link>.
+      <p style={{ marginTop: '1.5rem', fontSize: '0.9rem' }}>
+        <Link href="/account/export">{t('export.title')}</Link>
+        {' · '}
+        <Link href="/verify">{t('footer.verify')}</Link>
       </p>
     </div>
   );
