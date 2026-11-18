@@ -7956,14 +7956,15 @@ owner chose the first.
   address), 35% since the notes about a recording that cannot play, 34% since
   the practice questions and the study tools on the lesson page, 33% since
   its sources card, 32% since the page for a page that broke, 28% since the
-  lesson players and their saved-place messages.
+  lesson players and their saved-place messages, 27% since the discussion on
+  the lesson page.
 - **The test that refused a language under half is removed.** Nothing in the
   tests now limits how much English one of these languages shows. That is the
   cost of this choice and it was put to the owner in those words.
 - What the tests still require of every offered language: every sentence that
   is neither held nor deliberately unwritten is present, and the sentence
   that gives the percentage is in that language rather than English. The
-  count (192 of 677; it was 192 of 347 when this was decided) is pinned in
+  count (192 of 700; it was 192 of 347 when this was decided) is pinned in
   `held-translations.test.ts`, so it changes only on purpose.
 - The four withheld languages are unaffected. So is the rule that a new screen
   is not written for a language with anything held.
@@ -8084,6 +8085,32 @@ who turns the choice on in one of those languages has agreed to the
 builder's wording; and it is the first thing a reviewer of any language
 should be shown. The choice is still off by default on every device, and
 the English sentence is unchanged.
+
+The discussion on the lesson page followed the same day: twenty-three
+sentences in `lesson.ts`, 27% for the nineteen. It ships switched off
+(`learning.discussion`), so what a learner meets today is still the closed
+card; with it written, no part of a translated lesson is English. Two rules
+were settled in writing it and hold for any form that posts something a
+second copy of which would matter:
+
+- *A refusal has to be known to be one.* `/api/discussion` sends a code with
+  every refusal. The form calls a reply a refusal only when it is in the four
+  hundreds and names a code it knows; a server error, a reply that never came
+  and an error that is not the database's own answer (no SQLSTATE, or a
+  dropped connection) are "could not confirm".
+- *"Could not confirm" does not say "send it again" here.* The report form
+  says that, because a second report of the same kind is refused as a
+  duplicate. Nothing stops the same question being held for review twice, so
+  the discussion says to reload the page and look first; a learner is shown
+  their own held posts, so looking answers it.
+
+The database's own sentence is no longer passed to the reader in any
+language. Four refusals that all arrive as a check violation (the switch is
+off, the post is too long, the question being answered was withdrawn or is on
+another lesson, and anything else) were all answered "discussion is not open
+on this lesson right now", which was untrue for three of them; they are told
+apart by the sentence the migration raises, and a test reads those sentences
+out of the migrations so that rewording one is noticed.
 
 `UNWRITTEN_WHILE_HELD` is now `learn`, `course`, `lesson`, `assess`,
 `assign`, `missing`, `broke` and `player`.

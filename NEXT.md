@@ -2618,6 +2618,63 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The lesson discussion in the reader's language, 2026-11-18
+
+An open discussion was the last part of a translated lesson that was English
+for every reader, marked `lang="en"`, with the report form inside it.
+
+- *Translated.* Twenty-three sentences (`lesson.discussion*`) in the
+  twenty-seven languages with nothing held. **Unreviewed.** "Sending…" and
+  the too-long sentence are the report form's. A held language reads the
+  discussion in English with the rest of its English lesson. The switch
+  (`learning.discussion`) is still off, so this is not what ships today.
+- *How the words reach it.* `Discussion` takes `words`, `reportWords` and
+  `locale` from the lesson page, like the report form and the practice
+  questions; with none it says the English it always said. The page no
+  longer has an "English whatever the reader chose" wrapper at all.
+- *Codes.* New `lib/discussion-outcome.ts`: the codes `/api/discussion`
+  sends, the status for each, what the form makes of a status and a code,
+  and how a database error becomes a code. The route's sentences are
+  unchanged for an English reader except the two below.
+- *What was wrong and is fixed for everybody.*
+  - One draft was shared by the question box and the reply box. A question
+    half written appeared in the reply box when a reply was opened and was
+    sent as a reply. They are two drafts; cancelling a reply leaves the
+    question as it was; a refused post stays in its box.
+  - A learner's own reply that a moderator had taken down carried no badge
+    (only a question did), and a removed post carried none either. Its
+    writer can still read it, so it looked published. Both now say "Not
+    shown after review" (the question's badge used to read "Withdrawn").
+  - Every check violation was answered "Discussion is not open on this lesson
+    right now": true when the switch is off, untrue for a post over 4,000
+    characters and for a reply to a question that has been withdrawn. Any
+    other database error printed the database's sentence. Now: closed, too
+    long, "That question is no longer open for replies.", or "That could not
+    be posted."
+  - An error that is not the database's answer was a 409 like a refusal. It
+    is a 502 with `unconfirmed`, and the form says "We could not confirm that
+    this was posted. Reload the page to check before sending it again." So
+    does a reply that never arrives, which used to leave the form silent
+    with an unhandled rejection.
+  - Posts were laid out with a class that fixes the width of its first
+    child, which cut a long name; the report link under a reply was
+    stretched across the row; line breaks in a question were collapsed.
+- *What it did to the nineteen.* `/language` tells each of them **27%** (192
+  of 700).
+- *Checks.* 2330 web tests (seven new in `discussion-outcome.test.ts`, one in
+  `held-translations.test.ts`); the bundle check also looks for the
+  "could not confirm" sentence in every script and finds it in none (139
+  sentences looked for). `lesson-route-smoke.mjs` switches the discussion on
+  against its stand-in database: HTTP in English, Arabic, French and Hausa;
+  Chromium in Arabic and French at 320 and 1440, pressing the buttons through
+  an empty question, a reply to a withdrawn question, a post while switched
+  off, a post that cannot be confirmed, no reply at all, and a post held for
+  review. **Not exercised:** a real database, row-level security, a real
+  moderator, the report form being sent from inside the discussion, any
+  other language in a browser.
+- *Left as it was:* a learner cannot edit a held post from the page; posts
+  carry no date; the moderation queue is English (staff).
+
 ### The lesson players and saved-place messages, in the reader's language, 2026-11-18
 
 The players on the lesson page were the largest English island left on a
@@ -2655,7 +2712,8 @@ recovery message inside them.
   with no code, so another language gets the player's own sentence, which
   says that it failed and not why. Giving those routes codes is not done.
 - *Left English:* "1080p — full HD" and "720p — HD" (`PROFILE_LABEL`), the
-  list of lessons saved on a device, an open discussion.
+  list of lessons saved on a device, an open discussion (translated later
+  the same day; see the entry above).
 - *What it did to the nineteen.* `/language` tells each of them **28%** (192
   of 677). Eighty-six is the largest single step since the assignment page.
 - *Checks.* 2322 web tests; the bundle check now also looks for the consent

@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 28% there (192 of 677 sentences; it was 71% of 272, then
+  the nineteen reads 27% there (192 of 700 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -538,8 +538,8 @@ still unreviewed and still saying so.
   of 534 with the page for a wrong address, 35% of 544 with the notes about a
   recording that cannot play, 34% of 567 with the practice questions and the
   study tools, 33% of 581 with the sources card, 32% of 591 with the page for
-  a page that broke, then this with the lesson players and their saved-place
-  messages),
+  a page that broke, 28% of 677 with the lesson players and their saved-place
+  messages, then this with the discussion on the lesson page),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -566,7 +566,7 @@ still unreviewed and still saying so.
   Burmese sentence on the page, and the tool still calculates six rows. It does
   the direction check in Pashto, opens the correction sheet on the Hausa
   companion part (eighty boxes, each with the draft, and the notice; no notice
-  on the Hausa navigation or on Swahili), and reads 28% on `/language` in Hausa.
+  on the Hausa navigation or on Swahili), and reads 27% on `/language` in Hausa.
 
 **Four languages withheld whole (owner's second answer, 2026-11-16).** Asked
 whether the rest of the interface in Wolof, Fulfulde, Bambara and Dhivehi should
@@ -676,7 +676,34 @@ written: not a held draft, nothing.
   HTTP in six languages and in Chromium in Arabic and Tamil at three widths,
   on a synthetic backend; no button pressed, no real recording, and only a
   lesson with one video. *(Since 2026-11-18 the players are the reader's as
-  well: see the next entry. An open discussion is the one part left.)*
+  well, and so is an open discussion, with the report form under each post:
+  see the next two entries. No part of a translated lesson is English now.)*
+- *The discussion on the lesson page (2026-11-18).* Twenty-three sentences in
+  the same twenty-seven languages, **read by no speaker**; a held language
+  reads it in English inside its English lesson. It ships switched off
+  (`learning.discussion`), so today a learner still meets only the closed
+  card. Written: the introduction that says learner posts are reviewed first,
+  the badges on a learner's own held or withdrawn post, reply, report, ask,
+  and a sentence for each way a post can fail (nothing written, too long,
+  switched off meanwhile, the question no longer open for replies, signed
+  out, refused, and not confirmed). A name the profile does not have is
+  "Someone" in the reader's language. What people wrote keeps its own
+  direction and its line breaks. **Fixed with it, in every language:** a
+  half-written question was sent as a reply when a reply was opened; the
+  writer of a reply that a moderator took down saw no mark on it and took it
+  for published; the database's own sentence was printed to the learner; a
+  post too long, or a reply to a withdrawn question, was answered "discussion
+  is not open". **Not done:** a learner cannot edit or delete their own held
+  post from this page (the database allows editing the wording while it is
+  held); a post is not dated on the page; the moderator's reason for
+  withdrawing a post is not shown to its writer; the teacher's and staff's
+  moderation queue (`/admin/discussion`) is English. **Checked** over HTTP in
+  English, Arabic, French and Hausa, and in Chromium in Arabic and French at
+  320 and 1440 wide, where each failure is produced by a stand-in database
+  answering with the migrations' own codes and sentences through the real
+  route. **Not checked:** the real database refusing a post, row-level
+  security on a real thread, a real moderator's decision arriving, or any
+  language but those four in a browser.
 - *The lesson players and what they say about a saved place (2026-11-18).*
   Eighty-six sentences in the same twenty-seven languages (`messages/
   player.ts`): what a browser that cannot play says, speed and repeat, every

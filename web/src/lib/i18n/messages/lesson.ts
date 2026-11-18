@@ -41,10 +41,18 @@ import type { Messages } from './en.ts';
  * spelling each language's front page already uses. `{place}` is the
  * teacher's own words and comes last in every language.
  *
- * **What is not here**, and is still English on that page for everybody:
- * the players and their saved-place messages, and the discussion.
- * The players have a great many sentences, several of which tell a learner
- * what to do when something has gone wrong; they are a unit of their own.
+ * **The open discussion** (`lesson.discussion*`) was added on 2026-11-18:
+ * twenty-three sentences beside the heading and the closed card. `{name}` is
+ * a person's own name and is never inflected: where a language would put a
+ * case ending on it, the sentence is built so that it needs none ("an answer
+ * for {name}"). The sentence for a post nobody can confirm says to reload
+ * and look before sending again, and must keep saying that: nothing stops
+ * the same question being held twice. "Sending…" and the too-long sentence
+ * are the report form's.
+ *
+ * **What is not here:** the players and their saved-place messages, which
+ * are a part of their own (`player.ts`). With those and the discussion
+ * written, nothing on this page is English for these languages.
  *
  * **Unreviewed.** No speaker has read any of these.
  *
