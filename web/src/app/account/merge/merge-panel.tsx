@@ -2,65 +2,160 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  confirmsMerge,
-  describeBlocks,
-  describeExpiry,
-  describeMergeStatus,
-  describeMoves,
-  leftBehind,
-  type MergeBoard,
-  type MergeRequest,
-} from '@/lib/merge';
+
+import { Say } from '@/components/say';
+import { fill, formatNumber } from '@/lib/i18n/format';
+import type { LocaleCode } from '@/lib/i18n/locales';
+import { confirmsMerge, type MergeMove, type MergeMoved, type MergeState } from '@/lib/merge';
+import { mergeDoneOf, mergeOutcomeOf, type MergeCode, type MergeDid, type MergeDone } from '@/lib/merge-outcome';
+
+/** Everything this screen says, in the language of the page that draws it. */
+export type MergeWords = {
+  /** The language the words are in: counts are written its way. */
+  locale: LocaleCode;
+  inHeading: string;
+  inLede: string;
+  noName: string;
+  inMerged: string;
+  inExpired: string;
+  whatMoves: string;
+  whatGoes: string;
+  /** Holds `{name}`. */
+  confirmLabel: string;
+  needName: string;
+  accept: string;
+  accepting: string;
+  decline: string;
+  cannotUndo: string;
+  outHeading: string;
+  outLede: string;
+  emailLabel: string;
+  emailHelp: string;
+  ask: string;
+  asking: string;
+  listHeading: string;
+  listInto: string;
+  nothingMoved: string;
+  withdraw: string;
+  movedHeading: string;
+  /** One line for each thing a merge counts. All but the first hold `{count}`. */
+  moves: Record<MergeMove, string>;
+  /** Holds `{count}`. */
+  stayed: string;
+  /** What is said when something was done. */
+  done: Record<MergeDid, string>;
+  /** What is said for each refusal the route names. */
+  errors: Record<Exclude<MergeCode, 'failed' | 'malformed' | 'off'>, string>;
+  off: string;
+  /** Something was asked for and no answer came back. */
+  unconfirmed: string;
+};
+
+/** A request waiting on this account, with everything about it already in words. */
+export type IncomingView = {
+  id: string;
+  state: MergeState;
+  stateLabel: string;
+  /** The name the other account gave itself, or nothing. */
+  name: string | null;
+  /** Why it cannot run, one sentence each. Empty when it can. */
+  blocks: string[];
+  notes: string[];
+};
+
+/** A request this account made. */
+export type OutgoingView = {
+  id: string;
+  state: MergeState;
+  stateLabel: string;
+  /** "Waiting until …", for one still waiting. */
+  until: string | null;
+  /** What moved, one line each, for one that was completed. */
+  moved: string[];
+};
+
+/** What a merge counted, said line by line. */
+function movedLines(words: MergeWords, moved: MergeMoved[]): string[] {
+  return moved.map((line) => fill(words.moves[line.kind], { count: formatNumber(words.locale, line.count) }));
+}
 
 /**
  * The two sides of a merge, on one screen.
  *
  * The person who wants to leave an account fills in the email of the account
  * they want to keep; the person who owns that account sees the request waiting
- * and either agrees or does not. Both sides are the same person in practice —
- * that is the point — but the platform still asks both, because "I control both
- * of these" is the only claim a merge rests on.
+ * and either agrees or does not. Both sides are the same person in practice
+ * (that is the point), but the platform still asks both, because "I control
+ * both of these" is the only claim a merge rests on.
  *
  * What the screen refuses to do: make it look easy. The confirmation is typing
  * the surviving account's own name, the wording says it cannot be undone, and
- * the list of what will move is shown before the button rather than after it.
+ * what moves, what stays and what is deleted is said before the button.
+ *
+ * **It has no words of its own.** Every sentence is handed to it by the page,
+ * already in the reader's language, and so is every reason a merge cannot run.
+ * What the route answers is read as a name (`lib/merge-outcome.ts`); nothing
+ * the database wrote is shown.
+ *
+ * **A merge with no answer is unknown.** It cannot be undone, so a request
+ * that never arrived, or a reply nobody can read, is not said as "nothing was
+ * changed": the reader is asked to reload and see.
+ *
+ * **With the switch off it is only the list.** A request made while merging
+ * was on is still there, and withdrawing it is the one thing the database
+ * still allows; nothing can be asked for or agreed to, so neither is offered.
  */
 export function MergePanel({
-  board,
+  words,
+  enabled,
+  incoming,
+  outgoing,
   displayName,
 }: {
-  board: MergeBoard;
+  words: MergeWords;
+  /** Whether merging is switched on. Off: the list and its withdraw buttons, nothing else. */
+  enabled: boolean;
+  incoming: IncomingView[];
+  outgoing: OutgoingView[];
   displayName: string;
 }) {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
+  const [done, setDone] = useState<MergeDone | null>(null);
   const [, startTransition] = useTransition();
 
-  async function send(url: string, body: Record<string, unknown>, key: string) {
+  const said = (code: MergeCode): string => {
+    if (code === 'failed') return words.unconfirmed;
+    if (code === 'off') return words.off;
+    if (code === 'malformed') return words.errors.refused;
+    return words.errors[code];
+  };
+
+  async function send(body: Record<string, unknown>, key: string): Promise<MergeDone | null> {
     setBusy(key);
     setError(null);
-    setMessage(null);
+    setDone(null);
     try {
-      const response = await fetch(url, {
+      const response = await fetch('/api/account/merge', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(body),
       });
-      const result = (await response.json().catch(() => null)) as
-        | { ok?: boolean; message?: string }
-        | null;
-      if (!response.ok || result?.ok !== true) {
-        setError(result?.message ?? 'That did not work. Nothing was changed.');
+      const result: unknown = await response.json().catch(() => null);
+      const finished = response.ok ? mergeDoneOf(result) : null;
+      // Whatever was answered, the page is read again: a refusal usually means
+      // the list on it is out of date.
+      startTransition(() => router.refresh());
+      if (!finished) {
+        setError(said(response.ok ? 'failed' : mergeOutcomeOf(response.status, result)));
         return null;
       }
-      startTransition(() => router.refresh());
-      return result;
+      setDone(finished);
+      return finished;
     } catch {
-      setError('Could not reach the server. Nothing was changed.');
+      setError(words.unconfirmed);
       return null;
     } finally {
       setBusy(null);
@@ -69,119 +164,120 @@ export function MergePanel({
 
   async function ask(event: React.FormEvent) {
     event.preventDefault();
-    const result = await send('/api/account/merge', { action: 'request', email }, 'request');
-    if (result) {
-      setEmail('');
-      setMessage('The request is waiting on the other account. Sign in there to agree to it.');
+    if (email.trim() === '') {
+      setDone(null);
+      setError(words.errors.email);
+      return;
     }
+    const result = await send({ action: 'request', email }, 'request');
+    if (result) setEmail('');
   }
 
   return (
     <>
-      {error && <p className="notice error" role="alert">{error}</p>}
-      {message && <p className="notice" role="status">{message}</p>}
+      {error && (
+        <p className="notice error" role="alert">
+          {error}
+        </p>
+      )}
+      {done && (
+        <div className="notice" role="status">
+          <p style={{ margin: 0 }}>{words.done[done.did]}</p>
+          {done.did === 'merged' && done.moved && done.moved.length > 0 && (
+            <>
+              <p style={{ margin: '0.5rem 0 0' }}>{words.movedHeading}</p>
+              <ul style={{ margin: '0.25rem 0 0' }}>
+                {movedLines(words, done.moved).map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            </>
+          )}
+          {done.did === 'merged' && done.stayed !== undefined && (
+            <p style={{ margin: '0.5rem 0 0' }}>
+              {fill(words.stayed, { count: formatNumber(words.locale, done.stayed) })}
+            </p>
+          )}
+        </div>
+      )}
 
-      {board.incoming.length > 0 && (
-        <section className="section">
-          <h2>Another account is asking to be merged into this one</h2>
-          <p className="muted">
-            If this is you on a second account, agreeing moves that account&rsquo;s
-            learning, roles and details into this one and closes it. It cannot be
-            undone. If it is not you, decline — nothing happens either way until
-            you answer.
-          </p>
-          {board.incoming.map((request) => (
+      {enabled && incoming.length > 0 && (
+        <section className="section-sm">
+          <h2>{words.inHeading}</h2>
+          <p className="muted">{words.inLede}</p>
+          {incoming.map((request) => (
             <IncomingRequest
               key={request.id}
+              words={words}
               request={request}
               displayName={displayName}
               busy={busy === request.id}
-              onDecide={async (accept, confirm) => {
-                const result = await send(
-                  '/api/account/merge',
-                  { action: 'decide', requestId: request.id, accept, confirm },
-                  request.id,
-                );
-                if (result) {
-                  setMessage(accept
-                    ? 'The accounts are merged. The other one is closed.'
-                    : 'Declined. Both accounts are exactly as they were.');
-                }
-              }}
+              idle={busy === null}
+              onDecide={(accept, confirm) =>
+                send({ action: 'decide', requestId: request.id, accept, confirm }, request.id)
+              }
             />
           ))}
         </section>
       )}
 
-      <section className="section">
-        <h2>Move this account into another one</h2>
-        <p className="muted">
-          If you have two accounts and this is the one you no longer want, type the
-          email address of the account you want to keep. The request waits there
-          until somebody signs in to it and agrees — which is also how the platform
-          knows you control both.
-        </p>
-        <form onSubmit={ask} className="card" style={{ padding: '1.25rem', maxWidth: '32rem' }}>
-          <label htmlFor="merge-target">The account to keep</label>
-          <input
-            id="merge-target"
-            type="email"
-            autoComplete="email"
-            required
-            placeholder="you@example.com"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            disabled={busy !== null}
-          />
-          <p className="muted" style={{ marginTop: '0.4rem' }}>
-            That account has to agree before anything moves. This account is closed
-            afterwards, and closing it cannot be undone.
-          </p>
-          <button className="btn" type="submit" disabled={busy !== null || email.trim() === ''}>
-            {busy === 'request' ? 'Asking…' : 'Ask to be merged'}
-          </button>
-        </form>
-      </section>
+      {enabled && (
+        <section className="section-sm">
+          <h2>{words.outHeading}</h2>
+          <p className="muted">{words.outLede}</p>
+          <form onSubmit={ask} noValidate className="card" style={{ padding: '1.25rem', maxWidth: '32rem' }}>
+            <label htmlFor="merge-target">{words.emailLabel}</label>
+            <input
+              id="merge-target"
+              type="email"
+              dir="ltr"
+              autoComplete="email"
+              aria-describedby="merge-target-help"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              disabled={busy !== null}
+            />
+            <p id="merge-target-help" className="muted" style={{ marginTop: '0.4rem' }}>
+              {words.emailHelp}
+            </p>
+            <button className="btn" type="submit" disabled={busy !== null}>
+              {busy === 'request' ? words.asking : words.ask}
+            </button>
+          </form>
+        </section>
+      )}
 
-      {board.outgoing.length > 0 && (
-        <section className="section">
-          <h2>Requests made from this account</h2>
-          <ul className="lessons">
-            {board.outgoing.map((request) => (
+      {outgoing.length > 0 && (
+        <section className="section-sm">
+          <h2>{words.listHeading}</h2>
+          <ul className="lessons stacked">
+            {outgoing.map((request) => (
               <li key={request.id}>
-                <span className="n">{describeMergeStatus(request.status, request.expired)}</span>
-                <span className="t">
-                  Into {request.otherName ?? 'another account'}
-                  {request.expiresAt && request.status === 'pending' && !request.expired && (
-                    <span className="muted">
-                      {' '}· waiting until {describeExpiry(request.expiresAt)}
+                <span className="badge neutral">{request.stateLabel}</span>
+                <span className="t" style={{ display: 'block', marginTop: '0.35rem' }}>
+                  {words.listInto}
+                  {request.until && (
+                    <span className="muted" style={{ display: 'block' }}>
+                      {request.until}
                     </span>
                   )}
-                  {request.status === 'completed' && (
-                    <>
-                      <br />
-                      <span className="muted">
-                        {describeMoves(request.summary).join(' · ') || 'Nothing needed moving'}
-                      </span>
-                    </>
+                  {request.state === 'completed' && (
+                    <span className="muted" style={{ display: 'block' }}>
+                      {request.moved.length > 0 ? request.moved.join(' · ') : words.nothingMoved}
+                    </span>
                   )}
                 </span>
-                {request.status === 'pending' && !request.expired && (
-                  <button
-                    className="btn secondary"
-                    type="button"
-                    disabled={busy !== null}
-                    onClick={async () => {
-                      const result = await send(
-                        '/api/account/merge',
-                        { action: 'cancel', requestId: request.id },
-                        request.id,
-                      );
-                      if (result) setMessage('Request withdrawn. Nothing moved.');
-                    }}
-                  >
-                    Withdraw
-                  </button>
+                {request.state === 'pending' && (
+                  <div className="page-actions" style={{ marginTop: '0.6rem' }}>
+                    <button
+                      className="btn secondary"
+                      type="button"
+                      disabled={busy !== null}
+                      onClick={() => send({ action: 'cancel', requestId: request.id }, request.id)}
+                    >
+                      {words.withdraw}
+                    </button>
+                  </div>
                 )}
               </li>
             ))}
@@ -193,99 +289,103 @@ export function MergePanel({
 }
 
 function IncomingRequest({
+  words,
   request,
   displayName,
   busy,
+  idle,
   onDecide,
 }: {
-  request: MergeRequest;
+  words: MergeWords;
+  request: IncomingView;
   displayName: string;
   busy: boolean;
-  onDecide: (accept: boolean, confirm: string) => Promise<void>;
+  idle: boolean;
+  onDecide: (accept: boolean, confirm: string) => Promise<unknown>;
 }) {
   const [typed, setTyped] = useState('');
-  const blocked = describeBlocks(request.preview);
-  const moves = describeMoves(request.summary);
-  const stayed = leftBehind(request.summary);
+  const named = displayName.trim() !== '';
 
   return (
     <article className="card" style={{ padding: '1.25rem', marginTop: '1rem' }}>
-      <div className="outline-h">
-        <h3>{request.otherName ?? 'An account with no name yet'}</h3>
-        <span className="badge neutral">
-          {describeMergeStatus(request.status, request.expired)}
-        </span>
+      {/* A long name and a long state do not fit one line on a phone: the state goes under. */}
+      <div className="outline-h" style={{ flexWrap: 'wrap', marginTop: 0 }}>
+        {/* A merged account has no name left: the database wrote an English placeholder over it. */}
+        {request.state !== 'completed' && (
+          <h3 style={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+            {request.name ? <bdi>{request.name}</bdi> : words.noName}
+          </h3>
+        )}
+        <span className="badge neutral">{request.stateLabel}</span>
       </div>
 
-      {request.status === 'completed' ? (
+      {request.state === 'completed' ? (
+        <p className="muted">{words.inMerged}</p>
+      ) : request.state === 'expired' ? (
+        <p className="muted">{words.inExpired}</p>
+      ) : request.state !== 'pending' ? null : request.blocks.length > 0 ? (
         <>
-          <p className="muted">Merged. The other account is closed.</p>
-          <ul className="lessons">
-            {moves.map((line) => (
-              <li key={line}><span className="t">{line} moved here</span></li>
+          <div className="notice error">
+            {request.blocks.map((line, index) => (
+              <p key={line} style={{ margin: index === 0 ? 0 : '0.5rem 0 0' }}>
+                {line}
+              </p>
             ))}
-          </ul>
-          {stayed !== null && (
-            <p className="notice warn">
-              {stayed} record{stayed === 1 ? '' : 's'} stayed with the archived account,
-              because this one already held the same thing. Nothing was deleted.
-            </p>
-          )}
+          </div>
+          <div className="page-actions">
+            <button className="btn secondary" type="button" disabled={!idle} onClick={() => onDecide(false, '')}>
+              {words.decline}
+            </button>
+          </div>
         </>
-      ) : blocked ? (
-        <div className="notice error" role="alert">{blocked}</div>
-      ) : request.expired ? (
-        <p className="muted">
-          This request expired before it was answered. Ask again from the other account.
-        </p>
       ) : (
         <>
-          {request.preview && request.preview.notes.length > 0 && (
+          {request.notes.length > 0 && (
             <ul className="lessons">
-              {request.preview.notes.map((note) => (
-                <li key={note}><span className="t">{note}</span></li>
+              {request.notes.map((note) => (
+                <li key={note}>
+                  <span className="t">{note}</span>
+                </li>
               ))}
             </ul>
           )}
-          <p className="muted">
-            What moves: everything that account holds — its learning record with
-            progress and certificates, its roles, its messages, its number, and
-            anything it has published. What stays: the record of what it did, such as
-            orders it placed, because that is history and rewriting it would destroy
-            the only account of what happened.
-          </p>
+          <p className="muted">{words.whatMoves}</p>
+          <p className="muted">{words.whatGoes}</p>
 
-          <label htmlFor={`merge-confirm-${request.id}`}>
-            Type your own name ({displayName}) to confirm
-          </label>
-          <input
-            id={`merge-confirm-${request.id}`}
-            value={typed}
-            onChange={(event) => setTyped(event.target.value)}
-            disabled={busy}
-            autoComplete="off"
-          />
-          <div className="row" style={{ gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
-            <button
-              className="btn"
-              type="button"
-              disabled={busy || !confirmsMerge(typed, displayName)}
-              onClick={() => onDecide(true, typed)}
-            >
-              {busy ? 'Merging…' : 'Merge it into this account'}
-            </button>
-            <button
-              className="btn secondary"
-              type="button"
-              disabled={busy}
-              onClick={() => onDecide(false, typed)}
-            >
-              Decline
+          {named ? (
+            <>
+              <label htmlFor={`merge-confirm-${request.id}`}>
+                <Say text={words.confirmLabel} parts={{ name: <bdi>{displayName.trim()}</bdi> }} />
+              </label>
+              <input
+                id={`merge-confirm-${request.id}`}
+                value={typed}
+                onChange={(event) => setTyped(event.target.value)}
+                disabled={!idle}
+                autoComplete="off"
+                aria-describedby={`merge-undo-${request.id}`}
+              />
+            </>
+          ) : (
+            <p className="notice warn">{words.needName}</p>
+          )}
+          <div className="page-actions">
+            {named && (
+              <button
+                className="btn"
+                type="button"
+                disabled={!idle || !confirmsMerge(typed, displayName)}
+                onClick={() => onDecide(true, typed)}
+              >
+                {busy ? words.accepting : words.accept}
+              </button>
+            )}
+            <button className="btn secondary" type="button" disabled={!idle} onClick={() => onDecide(false, '')}>
+              {words.decline}
             </button>
           </div>
-          <p className="muted" style={{ marginTop: '0.5rem' }}>
-            This cannot be undone. The other account is closed and anonymised, and
-            its sign-in remains at the sign-in provider until it is deleted there.
+          <p id={`merge-undo-${request.id}`} className="muted" style={{ marginTop: '0.5rem' }}>
+            {words.cannotUndo}
           </p>
         </>
       )}

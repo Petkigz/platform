@@ -95,6 +95,11 @@ for (const [file, key] of [
   // may read the number, must be in the account page and in no script.
   ['phone.ts', 'phone.unconfirmed'],
   ['phone.ts', 'phone.lede'],
+  // The merge panel is a client component handed its words. What a reader
+  // is told when a merge got no answer, and what is deleted by one, must be
+  // in the merge page and in no script.
+  ['merge.ts', 'merge.unconfirmed'],
+  ['merge.ts', 'merge.whatGoes'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

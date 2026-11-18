@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 16% there (192 of 1228 sentences; it was 71% of 272, then
+  the nineteen reads 15% there (192 of 1312 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -543,8 +543,9 @@ still unreviewed and still saying so.
   with the account page and its profile form, 21% of 898 with the family
   pages and their forms, 20% of 977 with the buy page and its form, 19% of
   1020 with the page for closing an account, 18% of 1078 with the pages for
-  a copy of your data, 17% of 1130 with the reading settings, then this
-  with the page for putting a copy back),
+  a copy of your data, 17% of 1130 with the reading settings, 16% of 1199
+  with the page for putting a copy back and of 1228 with the phone card,
+  then this with the merge screen),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -765,8 +766,18 @@ written: not a held draft, nothing.
   switch were on). **`platform.phone_format` must stay off:** closing an
   account does not remove a stored number (`erase_my_account()` never
   touches `user_contact_details`) and `export_my_data()` does not include
-  it. Both need a migration that has not been written. **Still English, every one of them:**
-  the pages it links to: `/account/merge`, `/account/sharing`,
+  it. Both need a migration that has not been written. The merge screen
+  (`/account/merge`, switched off) is in the reader's language since
+  2026-11-18 (`messages/merge.ts`, eighty-four sentences, unreviewed;
+  checked by `scripts/merge-route-smoke.mjs` on a stand-in that answers as
+  if the switch were on and merges nothing). **`platform.account_merge`
+  must stay off until the owner decides two things:** asking for a merge
+  tells any signed-in account whether an address has an account, without
+  limit, and the database returns that account's display name to whoever
+  asked (the screen does not show it; the function still returns it). A
+  merge has never been run through the route against a real database.
+  **Still English, every one of them:**
+  the pages it links to: `/account/sharing`,
   `/account/referrals`,
   `/account/sponsorship`, `/account/password`, `/billing`,
   `/institution`, `/notifications`, `/policies`, `/teach/apply`, `/sponsor`

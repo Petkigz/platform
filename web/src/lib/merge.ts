@@ -2,14 +2,14 @@
  * Merging two accounts, as a screen sees it.
  *
  * The database decides everything that matters: whether a merge may run, what
- * would move, and what happened. This file does the two things a server cannot —
- * it reads the reply defensively, and it turns a summary of counts into a
- * sentence a person can check against what they expected.
+ * would move, and what happened. This file reads the reply defensively and
+ * turns it into names and counts. It holds no sentence: the words are the
+ * catalogue's (`merge.*`), and what the database says in English is told
+ * apart in `merge-outcome.ts`.
  *
  * The rule that shapes all of it: **a merge is irreversible**, so nothing here
- * may make it look more available or more complete than it is. A refusal is
- * shown with its reason, not hidden; a count that came back missing is said to
- * be missing rather than printed as zero.
+ * may make it look more available or more complete than it is. A count that
+ * came back missing is not a line; it is not printed as zero.
  */
 
 export type MergePreview = {
@@ -38,9 +38,14 @@ export type MergeSummary = {
   [key: string]: number | undefined;
 };
 
+/** The five states a request can be in. The table allows no other. */
+export const MERGE_STATES = ['pending', 'completed', 'declined', 'cancelled', 'expired'] as const;
+
+export type MergeState = (typeof MERGE_STATES)[number];
+
 export type MergeRequest = {
   id: string;
-  status: 'pending' | 'completed' | 'declined' | 'cancelled' | 'expired' | string;
+  status: MergeState;
   requestedAt: string | null;
   expiresAt: string | null;
   expired: boolean;
@@ -103,10 +108,11 @@ function parseRequest(value: unknown): MergeRequest | null {
   if (!row) return null;
   const id = text(row.id);
   const status = text(row.status);
-  if (!id || !status) return null;
+  // A state this file does not know cannot be said, so the row is not drawn.
+  if (!id || !status || !(MERGE_STATES as readonly string[]).includes(status)) return null;
   return {
     id,
-    status,
+    status: status as MergeState,
     requestedAt: text(row.requestedAt),
     expiresAt: text(row.expiresAt),
     expired: row.expired === true,
@@ -134,54 +140,48 @@ export function parseMergeBoard(value: unknown): MergeBoard | null {
   };
 }
 
-/** The label to print for a request's state. */
-export function describeMergeStatus(status: string, expired = false): string {
-  if (expired || status === 'expired') return 'Expired';
-  switch (status) {
-    case 'pending':
-      return 'Waiting';
-    case 'completed':
-      return 'Merged';
-    case 'declined':
-      return 'Declined';
-    case 'cancelled':
-      return 'Withdrawn';
-    default:
-      return status;
-  }
+/** The state to say for a request: one that ran out while waiting is said as that. */
+export function mergeStateOf(request: Pick<MergeRequest, 'status' | 'expired'>): MergeState {
+  return request.expired ? 'expired' : request.status;
 }
 
-const MOVE_LABELS: Record<string, (n: number) => string> = {
-  enrolments: (n) => (n === 1 ? '1 enrolment' : `${n} enrolments`),
-  certificates: (n) => (n === 1 ? '1 certificate' : `${n} certificates`),
-  entitlementGrants: (n) => (n === 1 ? '1 access grant' : `${n} access grants`),
-  reviews: (n) => (n === 1 ? '1 review' : `${n} reviews`),
-  assessmentAttempts: (n) => (n === 1 ? '1 assessment attempt' : `${n} assessment attempts`),
-  assignmentSubmissions: (n) => (n === 1 ? '1 assignment' : `${n} assignments`),
-  cohortMemberships: (n) => (n === 1 ? '1 cohort' : `${n} cohorts`),
-  liveAttendances: (n) => (n === 1 ? '1 live class attended' : `${n} live classes attended`),
-  supportCases: (n) => (n === 1 ? '1 support case' : `${n} support cases`),
-  notifications: (n) => (n === 1 ? '1 message' : `${n} messages`),
-  roles: (n) => (n === 1 ? '1 role' : `${n} roles`),
-  notes: (n) => (n === 1 ? '1 lesson note' : `${n} lesson notes`),
-  bookmarks: (n) => (n === 1 ? '1 bookmark' : `${n} bookmarks`),
-  guardianships: (n) => (n === 1 ? '1 guardianship' : `${n} guardianships`),
-  learnerRelinked: (n) => (n === 1 ? 'the learning record' : `${n} learning records`),
-};
-
 /**
- * What moved, in words.
+ * What a merge counts as moved, in the order it is said.
  *
- * `leftBehind` is deliberately not in that list: it is reported separately, as
- * what stayed, because a merge that quietly dropped somebody's review is a merge
- * nobody can trust.
+ * The names are the database's (`merge_duplicate_account()`); the words for
+ * each are the catalogue's (`merge.mv*`). `leftBehind` is deliberately not in
+ * the list: it is reported separately, as what stayed, because a merge that
+ * quietly dropped somebody's review is a merge nobody can trust.
  */
-export function describeMoves(summary: MergeSummary | null): string[] {
+export const MERGE_MOVES = [
+  'learnerRelinked',
+  'enrolments',
+  'certificates',
+  'entitlementGrants',
+  'reviews',
+  'assessmentAttempts',
+  'assignmentSubmissions',
+  'cohortMemberships',
+  'liveAttendances',
+  'supportCases',
+  'notifications',
+  'roles',
+  'notes',
+  'bookmarks',
+  'guardianships',
+] as const;
+
+export type MergeMove = (typeof MERGE_MOVES)[number];
+
+export type MergeMoved = { kind: MergeMove; count: number };
+
+/** What moved, as names and counts. A count of nothing is not a line. */
+export function movesOf(summary: MergeSummary | null): MergeMoved[] {
   if (!summary) return [];
-  const lines: string[] = [];
-  for (const [key, label] of Object.entries(MOVE_LABELS)) {
-    const n = summary[key];
-    if (typeof n === 'number' && n > 0) lines.push(label(n));
+  const lines: MergeMoved[] = [];
+  for (const kind of MERGE_MOVES) {
+    const n = summary[kind];
+    if (typeof n === 'number' && Number.isSafeInteger(n) && n > 0) lines.push({ kind, count: n });
   }
   return lines;
 }
@@ -189,34 +189,19 @@ export function describeMoves(summary: MergeSummary | null): string[] {
 /** The rows that stayed with the archived record, or null when none did. */
 export function leftBehind(summary: MergeSummary | null): number | null {
   const n = summary?.leftBehind;
-  return typeof n === 'number' && n > 0 ? n : null;
+  return typeof n === 'number' && Number.isSafeInteger(n) && n > 0 ? n : null;
 }
 
-/** Why the merge cannot run, as one sentence a person can act on. */
-export function describeBlocks(preview: MergePreview | null): string | null {
-  if (!preview || preview.ok) return null;
-  if (preview.blocks.length === 0) {
-    return 'This merge cannot run, and the platform did not say why. Ask us before trying again.';
-  }
-  return preview.blocks.join(' ');
-}
-
-/** The date a request stops waiting, in words. */
-export function describeExpiry(expiresAt: string | null): string | null {
-  if (!expiresAt) return null;
-  const date = new Date(expiresAt);
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  });
-}
-
-/** Whether the confirmation the person typed matches, ignoring case and spacing. */
+/**
+ * Whether what was typed is the name, as the database will compare it.
+ *
+ * `decide_account_merge()` trims both and compares them exactly, capitals
+ * included. This used to ignore capitals and spacing, so the button lit for
+ * "ama owusu" and the database then refused it. An account with no name
+ * confirms nothing: the database would accept an empty box for it, and the
+ * screen asks for a name first instead.
+ */
 export function confirmsMerge(typed: string, displayName: string | null): boolean {
-  const a = typed.trim().replace(/\s+/g, ' ').toLowerCase();
-  const b = (displayName ?? '').trim().replace(/\s+/g, ' ').toLowerCase();
-  return a.length > 0 && a === b;
+  const name = (displayName ?? '').trim();
+  return name.length > 0 && typed.trim() === name;
 }

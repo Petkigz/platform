@@ -1649,6 +1649,123 @@ export const en = {
     'Phone numbers are not being collected at the moment. Your number is kept until you remove it.',
   'phone.foot':
     'Nothing is sent to this number: no messaging service is connected to this platform. No staff screen shows it yet.',
+
+  // The merge screen (`merge.ts`), for the same twenty-seven languages as
+  // the dashboard. Each reason a merge cannot run and each refusal is the
+  // screen's own sentence; none is the database's. It lists what moves, what
+  // is deleted and what stays, and never says that everything moves.
+  'merge.title': 'Merging accounts',
+  'merge.back': 'Account settings',
+  'merge.heading': 'Merging accounts',
+  'merge.lede':
+    'If you signed up twice, one account can be moved into the other, so that your courses and certificates are in one place. Both accounts have to agree, and the account that is moved is closed afterwards.',
+  'merge.unread': 'The merge requests could not be read just now. Nothing was changed.',
+  'merge.off':
+    'Merging accounts is switched off on this platform. Nothing on this page can be done until the owner switches it on.',
+  'merge.foot': 'Each merge is written into the platform’s record of changes, with what was moved.',
+  'merge.closeInstead':
+    'To close a second account instead of merging it, sign in to that account and close it there.',
+  'merge.closeLink': 'Closing an account',
+  'merge.inHeading': 'Another account is asking to be merged into this one',
+  'merge.inLede':
+    'If this is you on a second account, agreeing moves that account’s learning, roles and details into this one and closes that account. It cannot be undone. If it is not you, decline. Nothing happens until you answer.',
+  'merge.noName': 'An account with no name',
+  'merge.inMerged': 'Merged. The other account is closed.',
+  'merge.inExpired':
+    'This request ran out before it was answered. Ask again from the other account.',
+  'merge.whatMoves':
+    'What moves: that account’s learning record with its progress and certificates, its roles, its notifications, its phone number and the courses it made. What stays: the record of what that account did, such as the orders it placed.',
+  'merge.whatGoes':
+    'What is deleted: where both accounts have a note or a bookmark on the same lesson, or the same notification, the one on this account is kept and the other is deleted. So is the other account’s phone number, if this account already has one.',
+  'merge.confirmLabel': 'Type the name of this account to confirm: {name}',
+  'merge.needName':
+    'This account has no name yet. Add one in the account settings first: a merge is confirmed by typing it.',
+  'merge.accept': 'Merge it into this account',
+  'merge.accepting': 'Merging…',
+  'merge.decline': 'Decline',
+  'merge.cannotUndo':
+    'This cannot be undone. The other account is closed and its name and details are removed. Its sign-in stays with the sign-in service until it is deleted there.',
+  'merge.blockSame': 'Both sides of this request are the same account.',
+  'merge.blockAbsorbedClosed': 'The account that would be moved is closed.',
+  'merge.blockTargetClosed': 'The account it would be moved into is closed.',
+  'merge.blockPayouts':
+    'The account that would be moved has payouts on their way: {count}. Wait until they are finished.',
+  'merge.blockBilling':
+    'The account that would be moved shares billing accounts with other people: {count}. A merge cannot move another person’s payment arrangements.',
+  'merge.blockReviewers':
+    'Both accounts are on the reviewer register. The owner decides which entry stays.',
+  'merge.blockHouseholds':
+    'Each account is a learner in a different family. A merge cannot move one person’s learning into another family.',
+  'merge.blockSameCourse':
+    'Both accounts have started the same course: {title}. The platform cannot choose which progress is the real one. Finish the course on one account, or leave it, before merging.',
+  'merge.blockOwner':
+    'The account that would be moved holds an owner’s appointment on this platform. It has to be looked at individually before it can be merged.',
+  'merge.blockOther':
+    'This merge cannot run now, and this page has no sentence for the reason. Ask the platform’s staff before trying again.',
+  'merge.noteJoin':
+    'The two learning records become one. What the record on this account already has stays as it is.',
+  'merge.noteMoves': 'The learning record moves across whole, with its progress and certificates.',
+  'merge.outHeading': 'Move this account into another one',
+  'merge.outLede':
+    'If you have two accounts and this is the one you no longer want, type the email address of the account you want to keep. The request waits there until somebody signs in to that account and agrees. That is how the platform knows you control both.',
+  'merge.emailLabel': 'Email address of the account to keep',
+  'merge.emailHelp':
+    'That account has to agree before anything moves. This account is closed afterwards, and closing it cannot be undone.',
+  'merge.ask': 'Ask to be merged',
+  'merge.asking': 'Asking…',
+  'merge.listHeading': 'Requests made from this account',
+  'merge.listInto': 'Into the account whose address you typed',
+  'merge.waitingUntil': 'Waiting until {date}',
+  'merge.nothingMoved': 'Nothing needed moving.',
+  'merge.withdraw': 'Withdraw',
+  'merge.stPending': 'Waiting',
+  'merge.stCompleted': 'Merged',
+  'merge.stDeclined': 'Declined',
+  'merge.stCancelled': 'Withdrawn',
+  'merge.stExpired': 'Ran out',
+  'merge.movedHeading': 'What was moved',
+  'merge.mvLearner': 'The learning record',
+  'merge.mvEnrolments': 'Enrolments: {count}',
+  'merge.mvCertificates': 'Certificates: {count}',
+  'merge.mvGrants': 'Access grants: {count}',
+  'merge.mvReviews': 'Reviews: {count}',
+  'merge.mvAttempts': 'Assessment attempts: {count}',
+  'merge.mvSubmissions': 'Assignments: {count}',
+  'merge.mvCohorts': 'Dated classes: {count}',
+  'merge.mvAttendance': 'Live classes attended: {count}',
+  'merge.mvCases': 'Support cases: {count}',
+  'merge.mvNotifications': 'Notifications: {count}',
+  'merge.mvRoles': 'Roles: {count}',
+  'merge.mvNotes': 'Lesson notes: {count}',
+  'merge.mvBookmarks': 'Bookmarks: {count}',
+  'merge.mvGuardianships': 'Guardian links: {count}',
+  'merge.stayed':
+    'Records that stayed with the closed account, because this account already held the same thing: {count}.',
+  'merge.asked': 'The request is waiting on the other account. Sign in there to agree to it.',
+  'merge.withdrawn': 'The request is withdrawn. Nothing was moved.',
+  'merge.merged': 'The accounts are merged. The other account is closed.',
+  'merge.declined': 'Declined. Both accounts are as they were.',
+  'merge.errSignedOut':
+    'You are signed out. Sign in again, then try once more. Nothing was changed.',
+  'merge.errEmail': 'Type the email address of the account you want to keep.',
+  'merge.errNoAccount': 'No account has that email address. Nothing was changed.',
+  'merge.errSameAccount':
+    'That is the address of this account. Type the address of the other one, the account you want to keep.',
+  'merge.errPending':
+    'A request from this account is already waiting. Withdraw it before you ask another account.',
+  'merge.errNoRequest': 'That request is no longer there. Nothing was changed.',
+  'merge.errNotYours': 'This account cannot answer that request. Nothing was changed.',
+  'merge.errName':
+    'The name typed is not the name of this account, letter for letter. Nothing was changed.',
+  'merge.errBlocked':
+    'This merge cannot run now. Nothing was moved. Reload this page to see the reason beside the request.',
+  'merge.errExpired':
+    'This request ran out before it was answered. Nothing was moved. Ask again from the other account.',
+  'merge.errAnswered':
+    'This request had already been answered. Nothing was changed now. Reload this page to see what happened.',
+  'merge.errRefused': 'The platform did not accept this. Nothing was changed.',
+  'merge.unconfirmed':
+    'No answer came back, so it is not known whether this was done. Reload this page to see how things stand before you try again.',
 } as const;
 
 export type MessageKey = keyof typeof en;

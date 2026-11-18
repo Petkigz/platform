@@ -31,6 +31,7 @@ import { EXPORT } from './export.ts';
 import { READING } from './reading.ts';
 import { RESTORE } from './restore.ts';
 import { PHONE } from './phone.ts';
+import { MERGE } from './merge.ts';
 import { LESSON } from './lesson.ts';
 import { isHeld } from './held.ts';
 import { ASIA_AZ } from './asia-az.ts';
@@ -850,6 +851,8 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   RESTORE,
   // The phone number card on the account page, on the same rule.
   PHONE,
+  // The merge screen, on the same rule.
+  MERGE,
 );
 
 /**

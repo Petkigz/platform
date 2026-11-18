@@ -45,6 +45,7 @@ import { EXPORT } from './i18n/messages/export.ts';
 import { READING } from './i18n/messages/reading.ts';
 import { RESTORE } from './i18n/messages/restore.ts';
 import { PHONE } from './i18n/messages/phone.ts';
+import { MERGE } from './i18n/messages/merge.ts';
 import { countryNameIn } from './geo.ts';
 import { ACCOUNT } from './i18n/messages/account.ts';
 import { LESSON } from './i18n/messages/lesson.ts';
@@ -417,7 +418,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // Owner's decision, 2026-11-16: a language the builder cannot write properly
   // falls back to English until a speaker has reviewed it. For a new screen
   // that means not writing it — a held draft would be the same guess, kept.
-  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign', 'missing', 'broke', 'player', 'account', 'family', 'buy', 'close', 'export', 'reading', 'restore', 'phone']);
+  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign', 'missing', 'broke', 'player', 'account', 'family', 'buy', 'close', 'export', 'reading', 'restore', 'phone', 'merge']);
   // Thirty-seven for the dashboard (the learner-profile prompt is seven of
   // them), twenty-eight for the course page (twelve are the list of dated
   // classes), a hundred and thirteen for the lesson page (its frame, the
@@ -433,9 +434,10 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // three forms and one learner's page, seventy-nine for the buy page
   // and its form, forty-three for closing an account, fifty-eight for
   // a copy of your data and the page that prints it, fifty-two for the
-  // reading settings, sixty-nine for putting a copy back, and twenty-nine
-  // for the phone number card.
-  assert.equal(unwrittenKeys.length, 956);
+  // reading settings, sixty-nine for putting a copy back, twenty-nine
+  // for the phone number card, and eighty-four for the merge screen.
+  assert.equal(unwrittenKeys.length, 1040);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('merge.')).length, 84);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('phone.')).length, 29);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('restore.')).length, 69);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('reading.')).length, 52);
@@ -470,6 +472,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   assert.deepEqual(Object.keys(READING).sort(), written);
   assert.deepEqual(Object.keys(RESTORE).sort(), written);
   assert.deepEqual(Object.keys(PHONE).sort(), written);
+  assert.deepEqual(Object.keys(MERGE).sort(), written);
   const expected = LOCALES.map((l) => l.code)
     .filter((code) => code !== 'en' && !Object.hasOwn(HELD_FOR_REVIEW, code))
     .sort();
@@ -480,7 +483,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     const own: Partial<Record<string, string>> = {
       ...LEARN[code], ...COURSE[code], ...LESSON[code], ...ASSESS[code], ...ASSIGN[code], ...MISSING[code], ...BROKE[code],
       ...PLAYER[code], ...ACCOUNT[code], ...FAMILY[code], ...BUY[code], ...CLOSE[code],
-      ...EXPORT[code], ...READING[code], ...RESTORE[code], ...PHONE[code],
+      ...EXPORT[code], ...READING[code], ...RESTORE[code], ...PHONE[code], ...MERGE[code],
     };
     assert.deepEqual(Object.keys(own).sort(), [...unwrittenKeys].sort(), `${code} is short a dashboard, course, lesson, assessment or assignment sentence`);
     for (const key of unwrittenKeys) {
@@ -518,7 +521,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     }
   }
   // What that costs the nineteen that are still in the picker, said out loud:
-  // 192 of 1228 sentences, which is 16%. Nothing holds a floor under
+  // 192 of 1312 sentences, which is 15%. Nothing holds a floor under
   // it any more: the owner chose on 2026-11-17 to keep these languages in the
   // picker and show the number. The count is pinned here so that it moves only
   // when somebody means it to, and is seen when it does. It moved from 55% to
@@ -543,12 +546,13 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // your data and the page that prints it added fifty-eight and it is 18%;
   // the reading settings added fifty-two and it is 17%; putting a copy
   // back added sixty-nine and it is 16%; the phone number card added
-  // twenty-nine and the rounded number did not move (15.64%).
+  // twenty-nine and the rounded number did not move (15.64%); the merge
+  // screen added eighty-four and it is 15%.
   // What they are shown did not get smaller; what is counted got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 1228);
-    assert.equal(coverageOf(code).percent, 16, code);
+    assert.equal(coverageOf(code).total, 1312);
+    assert.equal(coverageOf(code).percent, 15, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');
   assert.equal(languageShownFor('en', 'learn').code, 'en');

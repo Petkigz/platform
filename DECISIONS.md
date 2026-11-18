@@ -7961,14 +7961,14 @@ owner chose the first.
   since the family pages and their forms, 20% since the buy page and its
   form, 19% since the page for closing an account, 18% since the pages for
   getting a copy of your data, 17% since the reading settings, 16% since
-  the page for putting a copy back.
+  the page for putting a copy back, 15% since the merge screen.
 - **The test that refused a language under half is removed.** Nothing in the
   tests now limits how much English one of these languages shows. That is the
   cost of this choice and it was put to the owner in those words.
 - What the tests still require of every offered language: every sentence that
   is neither held nor deliberately unwritten is present, and the sentence
   that gives the percentage is in that language rather than English. The
-  count (192 of 1228; it was 192 of 347 when this was decided) is pinned in
+  count (192 of 1312; it was 192 of 347 when this was decided) is pinned in
   `held-translations.test.ts`, so it changes only on purpose.
 - The four withheld languages are unaffected. So is the rule that a new screen
   is not written for a language with anything held.
@@ -8409,12 +8409,46 @@ in writing it:
 `user_contact_details`, and a data export leaves it out. `platform.phone_format`
 stays off until a migration fixes both.
 
-`/account/merge`, `/account/sharing`, `/account/referrals` and
-`/account/sponsorship` are still English.
+`/account/merge` followed, eighty-four sentences in a new part, `merge.ts`;
+the nineteen read 15%. Six things were settled in writing it:
+
+- *What stops a merge is said from the catalogue, never forwarded.*
+  `merge_blocks()` gives its reasons as English sentences. Each is read as
+  a name; a count or a course's name may travel with it. A reason nobody
+  recognises is said as "this page has no sentence for the reason", once,
+  and still stops the merge.
+- *A merge nobody answered is unknown.* It cannot be undone, so a lost
+  reply, a reply that cannot be read and a reply that says the opposite of
+  what was asked are all said as "not known whether this was done; reload",
+  never as "nothing was changed".
+- *A reply is read for what it says happened.* The functions answer some
+  things without raising (already waiting, answered already, ran out).
+  Each has a name and a 409; none is shown as success.
+- *An empty box never confirms a merge.* The database compares the typed
+  name with the account's and would accept nothing for an account that has
+  no name. The route refuses that, and the screen offers no button to agree
+  until the account has a name.
+- *The asking side is not shown the other account's name*, and a merged
+  account's name ("Merged account", the database's placeholder) is not
+  shown to anybody.
+- *"Everything" is not said.* The screen lists what moves, what is deleted
+  where both accounts hold the same thing, and what stays with the closed
+  account. The database's sentence about an owner's appointment names an
+  address to write to; the screen's does not, because nobody controls it.
+
+**Open, and it blocks the switch:** `request_account_merge()` answers
+whether an address has an account, to any signed-in account, as often as
+it is asked; and `my_merge_requests()` returns the display name of the
+account at that address to the account that asked. The screen no longer
+shows the name, but the database still returns it. `platform.account_merge`
+stays off until the owner has decided what to do about both.
+
+`/account/sharing`, `/account/referrals` and `/account/sponsorship` are
+still English.
 
 `UNWRITTEN_WHILE_HELD` is now `learn`, `course`, `lesson`, `assess`,
 `assign`, `missing`, `broke`, `player`, `account`, `family`, `buy`, `close`,
-`export`, `reading`, `restore` and `phone`.
+`export`, `reading`, `restore`, `phone` and `merge`.
 
 **The rule going forward.** A part named in `UNWRITTEN_WHILE_HELD`
 (`web/src/lib/i18n/messages/held.ts`) may be absent from a language that has

@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
 import {
+  MERGE_MOVES,
   confirmsMerge,
-  describeBlocks,
-  describeExpiry,
-  describeMergeStatus,
-  describeMoves,
   leftBehind,
+  mergeStateOf,
+  movesOf,
   parseMergeBoard,
   parsePreview,
   parseSummary,
@@ -78,32 +78,46 @@ test('only counts are read out of a summary', () => {
   assert.equal(summary.roles, undefined);
 });
 
+test('a request in a state the table does not have is not drawn', () => {
+  const parsed = parseMergeBoard(board({ outgoing: [{ id: 'r9', status: 'approved' }, { id: 'r8', status: 'declined' }] }));
+  assert.deepEqual(parsed?.outgoing.map((request) => request.id), ['r8']);
+});
+
 // ---------------------------------------------------------------------------
-// Saying it
+// Naming it
 // ---------------------------------------------------------------------------
 
-test('a status is said in words a person uses', () => {
-  assert.equal(describeMergeStatus('pending'), 'Waiting');
-  assert.equal(describeMergeStatus('completed'), 'Merged');
-  assert.equal(describeMergeStatus('declined'), 'Declined');
-  assert.equal(describeMergeStatus('cancelled'), 'Withdrawn');
-  assert.equal(describeMergeStatus('pending', true), 'Expired');
-  assert.equal(describeMergeStatus('expired'), 'Expired');
+test('a request that ran out while waiting is said as that, whatever its row says', () => {
+  assert.equal(mergeStateOf({ status: 'pending', expired: false }), 'pending');
+  assert.equal(mergeStateOf({ status: 'pending', expired: true }), 'expired');
+  assert.equal(mergeStateOf({ status: 'expired', expired: false }), 'expired');
+  assert.equal(mergeStateOf({ status: 'completed', expired: false }), 'completed');
 });
 
-test('what moved is listed in words, and nothing that did not move is listed', () => {
-  const lines = describeMoves({ enrolments: 2, certificates: 1, notifications: 0 });
-  assert.deepEqual(lines, ['2 enrolments', '1 certificate']);
+test('what moved is names and counts in a fixed order, and nothing that did not move', () => {
+  assert.deepEqual(movesOf({ certificates: 1, enrolments: 2, notifications: 0, somethingNew: 4 }), [
+    { kind: 'enrolments', count: 2 },
+    { kind: 'certificates', count: 1 },
+  ]);
+  assert.deepEqual(movesOf(null), []);
+  assert.deepEqual(movesOf({}), []);
 });
 
-test('a single item is singular, because "1 enrolments" reads as a bug', () => {
-  assert.deepEqual(describeMoves({ enrolments: 1 }), ['1 enrolment']);
-  assert.deepEqual(describeMoves({ assessmentAttempts: 1 }), ['1 assessment attempt']);
+test('every count the merge reports has a name here, and what stayed is not among them', () => {
+  const sql = readFileSync(
+    new URL('../../../supabase/migrations/20261281000800_account_merge.sql', import.meta.url),
+    'utf8',
+  );
+  const reported = [...sql.matchAll(/v_moved \|\| jsonb_build_object\('([A-Za-z]+)'/gu)].map((m) => m[1]);
+  assert.equal(reported.length, 16);
+  assert.deepEqual([...new Set(reported)].filter((name) => name !== 'leftBehind').sort(), [...MERGE_MOVES].sort());
+  assert.equal((MERGE_MOVES as readonly string[]).includes('leftBehind'), false);
 });
 
-test('nothing to report is an empty list rather than a zero', () => {
-  assert.deepEqual(describeMoves(null), []);
-  assert.deepEqual(describeMoves({}), []);
+test('this file holds no sentence', () => {
+  const source = readFileSync(new URL('./merge.ts', import.meta.url), 'utf8').replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gmu, '');
+  assert.equal(/'[A-Z][a-z]+ [a-z]/u.test(source), false);
+  assert.equal(source.includes('toLocale'), false);
 });
 
 test('what stayed behind is reported separately, and only when there is some', () => {
@@ -112,36 +126,23 @@ test('what stayed behind is reported separately, and only when there is some', (
   assert.equal(leftBehind({}), null);
 });
 
-test('the refusal is shown as the sentences the database gave', () => {
-  const message = describeBlocks({
-    ok: false,
-    blocks: ['this account has 1 payout(s) in flight', 'both accounts have started "Fiqh"'],
-    notes: [],
-  });
-  assert.match(message ?? '', /payout/);
-  assert.match(message ?? '', /Fiqh/);
-});
-
-test('a refusal with no reason says so rather than inventing one', () => {
-  const message = describeBlocks({ ok: false, blocks: [], notes: [] });
-  assert.match(message ?? '', /did not say why/);
-});
-
-test('a preview that passed has nothing to refuse', () => {
-  assert.equal(describeBlocks({ ok: true, blocks: [], notes: [] }), null);
-  assert.equal(describeBlocks(null), null);
-});
-
-test('the expiry date is written as a date, in UTC like the window it came from', () => {
-  assert.equal(describeExpiry('2026-11-03T23:30:00Z'), '3 November 2026');
-  assert.equal(describeExpiry(null), null);
-  assert.equal(describeExpiry('not a date'), null);
-});
-
-test('the confirmation ignores case and spacing, and nothing else', () => {
-  assert.equal(confirmsMerge('ama  osei', 'Ama Osei'), true);
-  assert.equal(confirmsMerge(' AMA OSEI ', 'Ama Osei'), true);
+test('the confirmation is the name as the database compares it: trimmed, and otherwise exact', () => {
+  assert.equal(confirmsMerge(' Ama Osei ', 'Ama Osei'), true);
+  assert.equal(confirmsMerge('Ama Osei', ' Ama Osei '), true);
+  // The database refuses these two, so the button does not light for them.
+  assert.equal(confirmsMerge('ama osei', 'Ama Osei'), false);
+  assert.equal(confirmsMerge('Ama  Osei', 'Ama Osei'), false);
   assert.equal(confirmsMerge('Ama', 'Ama Osei'), false);
   assert.equal(confirmsMerge('', 'Ama Osei'), false);
+});
+
+test('an account with no name confirms nothing, though the database would take an empty box', () => {
+  assert.equal(confirmsMerge('', ''), false);
+  assert.equal(confirmsMerge('', null), false);
   assert.equal(confirmsMerge('Ama Osei', ''), false);
+  const sql = readFileSync(
+    new URL('../../../supabase/migrations/20261281000800_account_merge.sql', import.meta.url),
+    'utf8',
+  );
+  assert.match(sql, /if btrim\(coalesce\(p_confirm, ''\)\) <> btrim\(coalesce\(v_name, ''\)\) then/u);
 });

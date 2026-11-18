@@ -291,6 +291,7 @@ const SECTION_LABELS: Record<string, string> = {
   reading: 'The reading settings',
   restore: 'Putting a copy of your data back',
   phone: 'The phone number card',
+  merge: 'Merging two accounts',
 };
 
 export const SECTIONS: Section[] = (() => {

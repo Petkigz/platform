@@ -2619,6 +2619,91 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The merge screen in the reader's language, 2026-11-18
+
+`/account/merge` behind `platform.account_merge` (off) was English for every
+reader, printed the database's own list of what stops a merge, and showed
+any reply as success.
+
+- *Translated.* Eighty-four sentences (`merge.*`, new file
+  `messages/merge.ts`) in the twenty-seven languages with nothing held. A
+  held language reads the screen in English, whole, marked as English.
+  **Unreviewed**, and this screen describes something that cannot be
+  undone: a reviewer of any language should be shown `merge.inLede`,
+  `merge.whatMoves`, `merge.whatGoes` and `merge.cannotUndo` first.
+- *Every refusal has a name.* New `lib/merge-outcome.ts`: ten names for
+  what stops a merge, two for the notes about the learning record, fifteen
+  for what the route answers, one status each (401, 403, 404, 409, 400,
+  and 502 for "not known"). A test reads every `raise` and every sentence
+  `merge_blocks()` lists out of the two migrations and requires each to be
+  read as a name.
+- *Defects found and fixed on the way.*
+  - **A withdrawal that came too late was shown as "Request withdrawn.
+    Nothing moved."** The function answers `{cancelled: false, status:
+    'completed'}` without raising, and the screen believed any 200. The
+    same for agreeing to a request that had run out or been answered. Each
+    is now a 409 with a name.
+  - **A merge with no answer was shown as a failure that changed
+    nothing.** A merge cannot be undone; a lost reply is now said as
+    unknown, with a request to reload.
+  - **An empty box confirmed a merge for an account with no name.** The
+    database compares the typed text with the name and accepts nothing for
+    nothing. The route refuses an empty confirmation and the screen offers
+    no button until the account has a name.
+  - **The asking side was shown the display name of the account at any
+    address it typed.** The page no longer draws it. *The database still
+    returns it; see below.*
+  - A merged account was listed under the name "Merged account", the
+    database's English placeholder, in every language. It is listed with
+    no name.
+  - A reason the database gave was printed as it came, in English,
+    including an address to write to that nobody controls. Reasons are now
+    sentences of the catalogue, and none names an address.
+  - A course's name inside a reason could turn the line around or close
+    the isolate it is set in; those marks are removed and the name is cut
+    at 120 characters.
+  - The route answered every refusal 400 with the database's sentence, had
+    no `catch` and could be cached.
+  - With the switch off, a request made earlier could not be withdrawn
+    from the screen, though the database allows it. The page now lists it
+    with its one button.
+  - In Tamil at 320px the state badge pushed the page sideways; the name
+    and the state now wrap.
+- **Found and not fixed: do not switch `platform.account_merge` on.**
+  - `request_account_merge()` tells any signed-in account whether an email
+    address has an account ("there is no account with that email address"
+    or a request made), with no limit, and before it checks whether a
+    request is already waiting. That is a list of who is registered, for
+    anybody who signs up.
+  - `my_merge_requests()` returns `otherName`, the display name of the
+    account at that address, to the account that asked.
+  - Both need a migration and a decision by the owner (answer every
+    address the same way and lose the "no such account" message, or limit
+    how often an account may ask, or both). None was written here: the
+    hosted test project is at 352 and each migration is applied there with
+    the owner's approval.
+  - An order placed by the absorbed account keeps that account as its
+    buyer (the screen says so: "what stays"). Whether the surviving
+    account can still open that receipt was not checked.
+- *What it did to the nineteen.* `/language` tells each of them **15%**
+  (192 of 1312).
+- *Checks.* 2423 web tests. New `scripts/merge-route-smoke.mjs`, in CI and
+  in the browser workflow, whose stand-in answers as if the switch were on
+  and merges nothing: the page over HTTP signed out, off, off with a
+  request waiting, three boards nobody can read, English, an account with
+  no name, Arabic, Persian, French and Hausa; sixteen requests the route
+  refuses itself; thirty-two answers of the database each under its name
+  and status with no sentence of the database in any; in Chromium four
+  languages at 320, 390 and 1440px, and in Arabic nine answers to asking,
+  twelve to agreeing, a request that never arrived, the name typed letter
+  for letter, a merge, a decline and a withdrawal; a merge counted in
+  Persian digits; Swahili with the switch off.
+- *Not proven.* **No merge was run through this screen against a database
+  or real sign-in.** What a merge moves is tested by
+  `supabase/tests/account_merge.test.mjs`, which does not go through the
+  route. Twenty-three of the twenty-seven languages were not opened in a
+  browser.
+
 ### The phone number card in the reader's language, 2026-11-18
 
 The card on `/account` behind `platform.phone_format` (off) was the one part
