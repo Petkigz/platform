@@ -73,7 +73,7 @@ export const ASIA_ZH_HANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.saved': '已保存。界面现在使用{language}。',
     'language.coverage':
       '本界面有 {percent}% 的文字已翻译成{language}。尚未翻译的部分以英语显示。',
-    'language.coverageAll': '此语言已全部翻译完成。',
+    'language.coverageAll': '到目前为止已做好翻译准备的每个界面都已用这种语言写出。有些界面尚未准备，对所有人都是英语。',
     'language.browser':
       '这个选择只保存在本浏览器上，不保存在你的账户里，所以另一台设备会询问它自己的语言。',
 

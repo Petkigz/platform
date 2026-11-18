@@ -4,7 +4,8 @@ import { cookies, headers } from 'next/headers';
 
 import { A11Y_BOOT } from '@/lib/a11y';
 import {
-  LOCALE_COOKIE, chooseLocale, directionOf, localeByCode, shellMessagesFor, translator,
+  LOCALE_COOKIE, chooseLocale, directionOf, languageShownFor, localeByCode, shellMessagesFor,
+  translator,
 } from '@/lib/i18n';
 import { I18nProvider } from '@/lib/i18n/client';
 import Link from 'next/link';
@@ -110,6 +111,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
 
   const t = translator(code);
   const locale = localeByCode(code);
+  const readingLabel = languageShownFor(code, 'account');
 
   return (
     <html lang={code} dir={directionOf(code)}>
@@ -121,7 +123,11 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           account page writes, from the same list — see lib/a11y.ts.
         */}
         <script dangerouslySetInnerHTML={{ __html: A11Y_BOOT }} />
-        <a href="#main" className="sr-only" style={srOnly}>{t('skip.toContent')}</a>
+        {/* Off the page until the keyboard reaches it, then drawn over the
+            masthead. It used to be hidden at every moment, focus included: a
+            reader using a keyboard and their eyes pressed Tab and saw nothing
+            move. */}
+        <a href="#main" className="skip-link">{t('skip.toContent')}</a>
 
         <header className="masthead">
           <div className="container masthead-inner">
@@ -198,6 +204,14 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             <Link href="/language" lang={code} dir={locale.dir}>
               {t('language.title')}
             </Link>
+            {/* Text size, contrast and motion belong to the browser, not to an
+                account, so the way to them is on every page and needs no
+                sign-in: somebody who cannot read the sign-in form at this
+                size has to be able to change it first. The label is the one
+                the account page uses, which a held language reads in English. */}
+            <Link href="/account/accessibility" lang={readingLabel.code} dir={readingLabel.dir}>
+              {translator(readingLabel.code)('account.readLink')}
+            </Link>
           </div>
         </footer>
 
@@ -212,15 +226,3 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     </html>
   );
 }
-
-const srOnly: React.CSSProperties = {
-  position: 'absolute',
-  width: 1,
-  height: 1,
-  padding: 0,
-  margin: -1,
-  overflow: 'hidden',
-  clip: 'rect(0 0 0 0)',
-  whiteSpace: 'nowrap',
-  border: 0,
-};

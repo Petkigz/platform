@@ -78,6 +78,12 @@ for (const [file, key] of [
   // script.
   ['export.ts', 'export.limit'],
   ['export.ts', 'export.outTokensNote'],
+  // The three reading settings are a client component handed its words; the
+  // file it shares with the server used to carry the name of every choice in
+  // English. What a reader is told when the browser keeps nothing, and what
+  // the page says nobody has tested, must be in that page and in no script.
+  ['reading.ts', 'reading.notKept'],
+  ['reading.ts', 'reading.noSpeechNote'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

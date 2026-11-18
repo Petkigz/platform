@@ -288,6 +288,7 @@ const SECTION_LABELS: Record<string, string> = {
   buy: 'The buy page',
   close: 'Closing an account',
   export: 'A copy of your data',
+  reading: 'The reading settings',
 };
 
 export const SECTIONS: Section[] = (() => {

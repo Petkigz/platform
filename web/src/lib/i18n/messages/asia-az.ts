@@ -67,7 +67,8 @@ export const ASIA_AZ: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.saved': 'Yadda saxlanıldı. İnterfeys artıq {language} dilindədir.',
     'language.coverage':
       'Bu interfeys mətnlərinin {percent}%-i {language} dilinə tərcümə olunub. Tərcümə olunmayanlar ingilis dilində göstərilir.',
-    'language.coverageAll': 'Bu dil tam tərcümə olunub.',
+    'language.coverageAll':
+      'İndiyə qədər tərcüməyə hazırlanmış hər ekran bu dildə yazılıb. Bəzi ekranlar hələ hazırlanmayıb və hamı üçün ingiliscədir.',
     'language.browser':
       'Seçim bu brauzerdə saxlanılır, hesabınızda deyil, ona görə başqa cihaz öz dilini özü soruşacaq.',
 

@@ -128,6 +128,19 @@ jobs:
             node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Export responsive test::${s}`)' "$RUNNER_TEMP/export-responsive.log"
             exit 1
           fi
+      - name: Check the reading settings, the skip link and a browser that keeps no cookie
+        env:
+          RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs
+        run: |
+          set -euo pipefail
+          export RESPONSIVE_CHROME="$(command -v google-chrome || command -v chromium)"
+          if node scripts/reading-route-smoke.mjs > "$RUNNER_TEMP/reading-responsive.log" 2>&1; then
+            cat "$RUNNER_TEMP/reading-responsive.log"
+          else
+            cat "$RUNNER_TEMP/reading-responsive.log"
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Reading settings responsive test::${s}`)' "$RUNNER_TEMP/reading-responsive.log"
+            exit 1
+          fi
       - name: Check lesson and video layout with synthetic data
         env:
           RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs

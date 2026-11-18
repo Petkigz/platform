@@ -172,7 +172,8 @@ export const AFRICA_SOUTH: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.saved': 'Gestoor. Die koppelvlak is nou in {language}.',
     'language.coverage':
       '{percent}% van hierdie koppelvlak se woorde is in {language} vertaal. Wat nog nie vertaal is nie, word in Engels gewys.',
-    'language.coverageAll': 'Hierdie taal is volledig vertaal.',
+    'language.coverageAll':
+      'Elke skerm wat tot dusver vir vertaling voorberei is, is in hierdie taal geskryf. Sommige skerms is nog nie voorberei nie en is vir almal in Engels.',
     'language.browser':
       'Die keuse word in hierdie blaaier gehou, nie op jou rekening nie, so ’n ander toestel vra sy eie toestel.',
     'language.reviewed': '’n Moedertaalspreker het hierdie vertaling gelees.',

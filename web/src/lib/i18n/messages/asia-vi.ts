@@ -69,7 +69,8 @@ export const ASIA_VI: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.saved': 'Đã lưu. Giao diện giờ hiển thị bằng {language}.',
     'language.coverage':
       '{percent}% các câu giao diện này đã được dịch sang {language}. Phần chưa dịch sẽ hiển thị bằng tiếng Anh.',
-    'language.coverageAll': 'Ngôn ngữ này đã được dịch đầy đủ.',
+    'language.coverageAll':
+      'Mọi màn hình đã được chuẩn bị để dịch cho đến nay đều được viết bằng ngôn ngữ này. Một số màn hình chưa được chuẩn bị và hiển thị bằng tiếng Anh cho mọi người.',
     'language.browser':
       'Lựa chọn được lưu trên trình duyệt này, không phải trên tài khoản của bạn, nên thiết bị khác sẽ hỏi ngôn ngữ của chính nó.',
 

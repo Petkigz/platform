@@ -75,7 +75,8 @@ export const ASIA_FIL: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.saved': 'Na-save na. Ang interface ay nasa {language} na.',
     'language.coverage':
       '{percent}% ng mga pahayag sa interface na ito ay naisalin sa {language}. Ang hindi pa naisalin ay ipinapakita sa Ingles.',
-    'language.coverageAll': 'Ganap nang naisalin ang wikang ito.',
+    'language.coverageAll':
+      'Bawat screen na naihanda para sa pagsasalin hanggang ngayon ay nakasulat sa wikang ito. May ilang screen na hindi pa naihahanda at nasa Ingles para sa lahat.',
     'language.browser':
       'Naka-save ang pinili sa browser na ito, hindi sa iyong akawnt, kaya ang ibang device ay magtatanong ng sarili nitong wika.',
 

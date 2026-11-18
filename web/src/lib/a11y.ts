@@ -1,8 +1,8 @@
 /**
  * Reading preferences, as the browser applies them.
  *
- * Three settings, and no more: text size, contrast and motion. They are cookie
- * and local-storage values rather than database rows because they describe a
+ * Three settings, and no more: text size, contrast and motion. They are a
+ * cookie rather than database rows because they describe a
  * *screen*, not a person — a phone and a desktop want different sizes, and a
  * shared machine should not inherit somebody else's choice. The page says that
  * in as many words so nobody expects it to follow them to another device.
@@ -25,41 +25,17 @@ export type A11yPreferences = {
 
 export const DEFAULTS: A11yPreferences = { text: 'normal', contrast: 'normal', motion: 'system' };
 
-export const TEXT_CHOICES: { value: TextSize; label: string; note: string }[] = [
-  { value: 'normal', label: 'Normal', note: 'The size everything else on the platform uses.' },
-  { value: 'large', label: 'Larger', note: 'About one step up — headings and body text together.' },
-  {
-    value: 'larger',
-    label: 'Largest',
-    note: 'Two steps up. Layouts stay one column, so nothing is pushed off the screen.',
-  },
-];
-
-export const CONTRAST_CHOICES: { value: Contrast; label: string; note: string }[] = [
-  {
-    value: 'normal',
-    label: 'Normal',
-    note: 'White and green, at the contrast this platform was designed for.',
-  },
-  {
-    value: 'high',
-    label: 'Stronger outlines',
-    note: 'Darker text, heavier borders and no pale grey. Useful in bright light and on cheap screens.',
-  },
-];
-
-export const MOTION_CHOICES: { value: Motion; label: string; note: string }[] = [
-  {
-    value: 'system',
-    label: 'Follow my device',
-    note: 'If your device asks for less motion, the platform already listens to it.',
-  },
-  {
-    value: 'reduce',
-    label: 'Always reduce motion',
-    note: 'Turns off transitions and smooth scrolling even when the device does not ask.',
-  },
-];
+/**
+ * The choices, in the order the page lists them.
+ *
+ * Only the values live here. What each one is called, and the sentence under
+ * it, come from the catalogue in the reader's language and are handed to the
+ * control by the page: this file is imported by a client component, which
+ * must not carry sentences of its own.
+ */
+export const TEXT_SIZES: readonly TextSize[] = ['normal', 'large', 'larger'];
+export const CONTRASTS: readonly Contrast[] = ['normal', 'high'];
+export const MOTIONS: readonly Motion[] = ['system', 'reduce'];
 
 function textSize(value: unknown): TextSize {
   return value === 'large' || value === 'larger' ? value : 'normal';
@@ -109,19 +85,6 @@ export function isDefault(prefs: A11yPreferences): boolean {
     && prefs.motion === DEFAULTS.motion;
 }
 
-/** A sentence for the account page: what is on right now. */
-export function describePreferences(prefs: A11yPreferences): string {
-  const bits: string[] = [];
-  bits.push(prefs.text === 'normal' ? 'Normal text size' : prefs.text === 'large' ? 'Larger text' : 'Largest text');
-  bits.push(prefs.contrast === 'high' ? 'stronger outlines' : 'normal contrast');
-  bits.push(
-    prefs.motion === 'reduce'
-      ? 'motion always reduced'
-      : 'motion follows your device',
-  );
-  return bits.join(', ');
-}
-
 /**
  * The boot script, as a string for an inline `<script>`.
  *
@@ -130,6 +93,44 @@ export function describePreferences(prefs: A11yPreferences): string {
  * Nothing here trusts the value: each one is checked against its own list.
  */
 export const A11Y_BOOT = `(function(){try{var m=document.cookie.match(/(?:^|; )${A11Y_COOKIE}=([^;]*)/);if(!m)return;var p=decodeURIComponent(m[1]).split('.');if(p[0]!=='v1')return;var h=document.documentElement;if(p[1]==='large'||p[1]==='larger')h.setAttribute('data-text',p[1]);if(p[2]==='high')h.setAttribute('data-contrast','high');if(p[3]==='reduce')h.setAttribute('data-motion','reduce');}catch(e){}})();`;
+
+/**
+ * What a browser's cookie string says the settings are, or `null` when the
+ * cookie is not there.
+ *
+ * `null` matters: a browser that refuses cookies accepts the assignment and
+ * keeps nothing, and the page must not say "saved" to a reader whose choice
+ * will be gone on the next page.
+ */
+export function preferencesInCookie(cookie: string | null | undefined): A11yPreferences | null {
+  const raw = new RegExp(`(?:^|; )${A11Y_COOKIE}=([^;]*)`).exec(cookie ?? '')?.[1];
+  if (raw === undefined) return null;
+  try {
+    return parsePreferences(decodeURIComponent(raw));
+  } catch {
+    return null;
+  }
+}
+
+/** Whether two sets of settings are the same three choices. */
+export function samePreferences(a: A11yPreferences, b: A11yPreferences): boolean {
+  return a.text === b.text && a.contrast === b.contrast && a.motion === b.motion;
+}
+
+/**
+ * Whether this reader asked for less motion: on the reading page, or through
+ * their device.
+ *
+ * The stylesheet turns transitions off for both. A script that scrolls
+ * (`scrollIntoView({ behavior: 'smooth' })`) is not reached by a stylesheet,
+ * so it asks here first.
+ */
+export function wantsLessMotion(): boolean {
+  if (typeof document === 'undefined') return false;
+  if (document.documentElement.getAttribute('data-motion') === 'reduce') return true;
+  return typeof window.matchMedia === 'function'
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
 
 /** Writing the cookie from the browser: a year, path-wide, same site. */
 export function preferenceCookie(prefs: A11yPreferences): string {

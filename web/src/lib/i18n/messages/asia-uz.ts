@@ -75,7 +75,8 @@ export const ASIA_CENTRAL: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.saved': 'Saqlandi. Interfeys endi {language} tilida.',
     'language.coverage':
       'Ushbu interfeys matnlarining {percent}% {language} tiliga tarjima qilingan. Tarjima qilinmaganlari ingliz tilida koʻrsatiladi.',
-    'language.coverageAll': 'Bu til toʻliq tarjima qilingan.',
+    'language.coverageAll':
+      'Hozirgacha tarjimaga tayyorlangan har bir ekran shu tilda yozilgan. Ayrim ekranlar hali tayyorlanmagan va hamma uchun ingliz tilida.',
     'language.browser':
       'Tanlov shu brauzerda saqlanadi, hisobingizda emas, shuning uchun boshqa qurilma oʻz tilini oʻzi soʻraydi.',
 

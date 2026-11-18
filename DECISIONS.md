@@ -7960,14 +7960,14 @@ owner chose the first.
   the lesson page, 24% since the account page and its profile form, 21%
   since the family pages and their forms, 20% since the buy page and its
   form, 19% since the page for closing an account, 18% since the pages for
-  getting a copy of your data.
+  getting a copy of your data, 17% since the reading settings.
 - **The test that refused a language under half is removed.** Nothing in the
   tests now limits how much English one of these languages shows. That is the
   cost of this choice and it was put to the owner in those words.
 - What the tests still require of every offered language: every sentence that
   is neither held nor deliberately unwritten is present, and the sentence
   that gives the percentage is in that language rather than English. The
-  count (192 of 1078; it was 192 of 347 when this was decided) is pinned in
+  count (192 of 1130; it was 192 of 347 when this was decided) is pinned in
   `held-translations.test.ts`, so it changes only on purpose.
 - The four withheld languages are unaffected. So is the rule that a new screen
   is not written for a language with anything held.
@@ -8320,13 +8320,52 @@ counted each as an untranslated English word in the fourteen languages that
 do not use Latin letters, which took it past its limit of two hundred; the
 names were added to what it lets through and the limit was not raised (191).
 
-`/account/accessibility`, `/account/merge`, `/account/sharing`,
-`/account/restore`, `/account/referrals` and `/account/sponsorship` are
-still English.
+The reading settings followed (`/account/accessibility`), fifty-two
+sentences in a new part, `reading.ts`, 17% for the nineteen. Six things were
+settled in writing them:
+
+- *The page is open to a reader who is not signed in.* The three settings
+  are a cookie on the browser and have nothing to do with an account. The
+  page used to send that reader to sign in, so somebody who needed larger
+  text to read the sign-in form could not get it. Being signed in changes
+  only whether a way back to the account is shown. The way to the page is in
+  the footer of every page.
+- *It says only what was built or measured, and says what was not tested.*
+  "Every input has a label", "no control is reachable only by a mouse" and
+  "thirty-three languages, all of them complete" were on it; the first two
+  nobody had measured and the third was false. The count of languages and
+  the list of right-to-left ones are now counted from the register when the
+  page is drawn. The page says that nobody who relies on a screen reader has
+  tested the platform. That stays until somebody has.
+- *"Saved" is said after the cookie is read back.* A browser that refuses
+  cookies accepts the assignment and keeps nothing. The page still changes,
+  because the reader asked, and an alert says the setting will be gone on
+  the next page.
+- *The file both sides share has no sentences.* `lib/a11y.ts` is imported by
+  the client control and carried the name and note of every choice in
+  English. It now carries the values only; the page hands the words over.
+- *The skip link can be seen.* It was the first stop on every page and was
+  hidden at every moment, focus included, so a reader using a keyboard and
+  their eyes pressed Tab and saw nothing. It is moved off the page and comes
+  back on focus.
+- *A sentence about the code is matched by the code.* "Always reduce motion"
+  says it stops animated scrolling, and one script scrolled smoothly
+  whatever was chosen; it now asks first (`wantsLessMotion()`). "A thicker
+  outline around whatever the keyboard is on" was not true of the links in
+  the top bar; it is now.
+
+`language.coverageAll`, the sentence the language page shows for a language
+with nothing missing, said "This language is fully translated" while whole
+screens are English for everyone. It was rewritten in all twenty-eight
+languages: every screen prepared for translation so far is written in this
+language, and some screens have not been prepared yet.
+
+`/account/merge`, `/account/sharing`, `/account/restore`,
+`/account/referrals` and `/account/sponsorship` are still English.
 
 `UNWRITTEN_WHILE_HELD` is now `learn`, `course`, `lesson`, `assess`,
-`assign`, `missing`, `broke`, `player`, `account`, `family`, `buy`, `close`
-and `export`.
+`assign`, `missing`, `broke`, `player`, `account`, `family`, `buy`, `close`,
+`export` and `reading`.
 
 **The rule going forward.** A part named in `UNWRITTEN_WHILE_HELD`
 (`web/src/lib/i18n/messages/held.ts`) may be absent from a language that has

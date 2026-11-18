@@ -120,6 +120,9 @@ jobs:
       - name: Export pages and export route synthetic HTTP regression
         run: node scripts/export-route-smoke.mjs
 
+      - name: Reading settings page synthetic HTTP regression
+        run: node scripts/reading-route-smoke.mjs
+
       - name: Catalogue synthetic HTTP regression
         run: node scripts/catalogue-route-smoke.mjs
 

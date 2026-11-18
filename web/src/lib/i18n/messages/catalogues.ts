@@ -28,6 +28,7 @@ import { FAMILY } from './family.ts';
 import { BUY } from './buy.ts';
 import { CLOSE } from './close.ts';
 import { EXPORT } from './export.ts';
+import { READING } from './reading.ts';
 import { LESSON } from './lesson.ts';
 import { isHeld } from './held.ts';
 import { ASIA_AZ } from './asia-az.ts';
@@ -136,7 +137,8 @@ const BASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.saved': 'تم الحفظ. الواجهة الآن باللغة {language}.',
     'language.coverage':
       'تُرجمت {percent}% من نصوص الواجهة إلى {language}. ما لم يُترجم بعد يظهر بالإنجليزية.',
-    'language.coverageAll': 'هذه اللغة مترجمة بالكامل.',
+    'language.coverageAll':
+      'كل شاشة هُيّئت للترجمة حتى الآن مكتوبة بهذه اللغة. وبعض الشاشات لم تُهيَّأ بعد، وهي بالإنجليزية للجميع.',
     'language.browser':
       'يُحفظ الاختيار على هذا المتصفح لا في حسابك، لذا سيسأل جهاز آخر لغته الخاصة.',
     'language.reviewed': 'قرأ هذه الترجمة متحدث أصلي للغة.',
@@ -190,7 +192,8 @@ const BASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.saved': 'محفوظ ہو گیا۔ انٹرفیس اب {language} میں ہے۔',
     'language.coverage':
       'انٹرفیس کے {percent}% متن {language} میں ترجمہ شدہ ہیں۔ جو باقی ہے وہ انگریزی میں دکھایا جاتا ہے۔',
-    'language.coverageAll': 'یہ زبان مکمل ترجمہ شدہ ہے۔',
+    'language.coverageAll':
+      'اب تک ترجمے کے لیے تیار کی گئی ہر اسکرین اس زبان میں لکھی ہوئی ہے۔ کچھ اسکرینیں ابھی تیار نہیں کی گئیں اور سب کے لیے انگریزی میں ہیں۔',
     'language.browser':
       'یہ انتخاب اِس براؤزر پر محفوظ ہوتا ہے، آپ کے اکاؤنٹ میں نہیں، اس لیے دوسرا ڈیوائس اپنی زبان پوچھے گا۔',
     'language.reviewed': 'اس ترجمے کو مادری زبان بولنے والے نے پڑھا ہے۔',
@@ -244,7 +247,8 @@ const BASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.saved': 'ذخیره شد. رابط اکنون به {language} است.',
     'language.coverage':
       '{percent}٪ از متن‌های رابط به {language} ترجمه شده‌اند. آنچه ترجمه نشده باشد به انگلیسی نمایش داده می‌شود.',
-    'language.coverageAll': 'این زبان کامل ترجمه شده است.',
+    'language.coverageAll':
+      'هر صفحه‌ای که تاکنون برای ترجمه آماده شده به این زبان نوشته شده است. برخی صفحه‌ها هنوز آماده نشده‌اند و برای همه به انگلیسی‌اند.',
     'language.browser':
       'این انتخاب در همین مرورگر نگه داشته می‌شود، نه در حساب شما؛ بنابراین دستگاهی دیگر زبان خودش را می‌پرسد.',
     'language.reviewed': 'یک گویشور بومی این ترجمه را خوانده است.',
@@ -298,7 +302,8 @@ const BASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.saved': 'Kaydedildi. Arayüz artık {language}.',
     'language.coverage':
       'Arayüz metinlerinin %{percent} kadarı {language} diline çevrildi. Henüz çevrilmeyenler İngilizce gösterilir.',
-    'language.coverageAll': 'Bu dil tamamen çevrildi.',
+    'language.coverageAll':
+      'Şimdiye kadar çeviriye hazırlanan her ekran bu dilde yazılmıştır. Bazı ekranlar henüz hazırlanmadı ve herkes için İngilizcedir.',
     'language.browser':
       'Seçim hesabınızda değil bu tarayıcıda saklanır; başka bir cihaz kendi dilini sorar.',
     'language.reviewed': 'Bu çeviriyi bir ana dili konuşuru okudu.',
@@ -352,7 +357,8 @@ const BASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.saved': 'Tersimpan. Antarmuka kini dalam {language}.',
     'language.coverage':
       '{percent}% teks antarmuka telah diterjemahkan ke {language}. Yang belum diterjemahkan ditampilkan dalam bahasa Inggris.',
-    'language.coverageAll': 'Bahasa ini diterjemahkan sepenuhnya.',
+    'language.coverageAll':
+      'Setiap layar yang sejauh ini disiapkan untuk penerjemahan sudah ditulis dalam bahasa ini. Sebagian layar belum disiapkan dan berbahasa Inggris bagi semua orang.',
     'language.browser':
       'Pilihan disimpan di peramban ini, bukan di akun Anda, jadi perangkat lain akan menanyakan bahasanya sendiri.',
     'language.reviewed': 'Seorang penutur asli telah membaca terjemahan ini.',
@@ -406,7 +412,8 @@ const BASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.saved': 'Disimpan. Antara muka kini dalam {language}.',
     'language.coverage':
       '{percent}% teks antara muka telah diterjemah ke {language}. Yang belum diterjemah dipaparkan dalam bahasa Inggeris.',
-    'language.coverageAll': 'Bahasa ini diterjemah sepenuhnya.',
+    'language.coverageAll':
+      'Setiap skrin yang setakat ini disediakan untuk terjemahan sudah ditulis dalam bahasa ini. Sebahagian skrin belum disediakan dan berbahasa Inggeris untuk semua orang.',
     'language.browser':
       'Pilihan disimpan pada pelayar ini, bukan pada akaun anda, jadi peranti lain akan menanyakan bahasanya sendiri.',
     'language.reviewed': 'Seorang penutur jati telah membaca terjemahan ini.',
@@ -460,7 +467,8 @@ const BASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.saved': 'সংরক্ষিত হয়েছে। ইন্টারফেস এখন {language}-এ।',
     'language.coverage':
       'ইন্টারফেসের {percent}% লেখা {language}-এ অনূদিত। যা এখনও অনূদিত নয় তা ইংরেজিতে দেখানো হয়।',
-    'language.coverageAll': 'এই ভাষা সম্পূর্ণ অনূদিত।',
+    'language.coverageAll':
+      'এ পর্যন্ত অনুবাদের জন্য প্রস্তুত করা প্রতিটি পর্দা এই ভাষায় লেখা আছে। কিছু পর্দা এখনও প্রস্তুত করা হয়নি এবং সবার জন্য ইংরেজিতে আছে।',
     'language.browser':
       'পছন্দটি এই ব্রাউজারে রাখা হয়, আপনার অ্যাকাউন্টে নয়; তাই অন্য ডিভাইস নিজের ভাষা জিজ্ঞাসা করবে।',
     'language.reviewed': 'একজন মাতৃভাষী এই অনুবাদটি পড়েছেন।',
@@ -514,7 +522,8 @@ const BASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.saved': 'सहेजा गया। इंटरफ़ेस अब {language} में है।',
     'language.coverage':
       'इंटरफ़ेस के {percent}% पाठ का {language} में अनुवाद हुआ है। जो बाकी है वह अंग्रेज़ी में दिखाया जाता है।',
-    'language.coverageAll': 'यह भाषा पूरी तरह अनूदित है।',
+    'language.coverageAll':
+      'अब तक अनुवाद के लिए तैयार की गई हर स्क्रीन इस भाषा में लिखी हुई है। कुछ स्क्रीन अभी तैयार नहीं की गई हैं और सबके लिए अंग्रेज़ी में हैं।',
     'language.browser':
       'चुनाव इस ब्राउज़र पर रखा जाता है, आपके खाते में नहीं; इसलिए दूसरा डिवाइस अपनी भाषा पूछेगा।',
     'language.reviewed': 'एक मातृभाषी ने इस अनुवाद को पढ़ा है।',
@@ -569,7 +578,8 @@ const BASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.saved': 'Enregistré. L’interface est maintenant en {language}.',
     'language.coverage':
       '{percent} % des textes de l’interface sont traduits en {language}. Ce qui n’est pas encore traduit s’affiche en anglais.',
-    'language.coverageAll': 'Cette langue est entièrement traduite.',
+    'language.coverageAll':
+      'Tous les écrans préparés pour la traduction jusqu’ici sont rédigés dans cette langue. Certains écrans n’ont pas encore été préparés et sont en anglais pour tout le monde.',
     'language.browser':
       'Le choix est conservé sur ce navigateur, pas sur votre compte : un autre appareil demandera sa propre langue.',
     'language.reviewed': 'Un locuteur natif a relu cette traduction.',
@@ -623,7 +633,8 @@ const BASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.saved': 'Guardado. La interfaz está ahora en {language}.',
     'language.coverage':
       'El {percent}% de los textos de la interfaz está traducido al {language}. Lo que falta se muestra en inglés.',
-    'language.coverageAll': 'Este idioma está totalmente traducido.',
+    'language.coverageAll':
+      'Todas las pantallas preparadas para la traducción hasta ahora están escritas en este idioma. Algunas pantallas aún no se han preparado y están en inglés para todos.',
     'language.browser':
       'La elección se guarda en este navegador, no en tu cuenta, así que otro dispositivo preguntará por su propio idioma.',
     'language.reviewed': 'Un hablante nativo ha revisado esta traducción.',
@@ -677,7 +688,8 @@ const BASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.saved': 'Guardado. A interface está agora em {language}.',
     'language.coverage':
       '{percent}% dos textos da interface estão traduzidos para {language}. O que falta é mostrado em inglês.',
-    'language.coverageAll': 'Este idioma está totalmente traduzido.',
+    'language.coverageAll':
+      'Todos os ecrãs preparados para tradução até agora estão escritos neste idioma. Alguns ecrãs ainda não foram preparados e estão em inglês para todos.',
     'language.browser':
       'A escolha é guardada neste navegador, não na sua conta, por isso outro dispositivo perguntará pelo seu próprio idioma.',
     'language.reviewed': 'Um falante nativo revisou esta tradução.',
@@ -732,7 +744,8 @@ const BASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.saved': 'Imehifadhiwa. Kiolesura sasa kiko kwa {language}.',
     'language.coverage':
       'Asilimia {percent} ya maandishi ya kiolesura yametafsiriwa kwa {language}. Yasiyotafsiriwa yanaonyeshwa kwa Kiingereza.',
-    'language.coverageAll': 'Lugha hii imetafsiriwa kikamilifu.',
+    'language.coverageAll':
+      'Kila skrini iliyoandaliwa kwa tafsiri hadi sasa imeandikwa kwa lugha hii. Baadhi ya skrini bado hazijaandaliwa na ziko kwa Kiingereza kwa kila mtu.',
     'language.browser':
       'Chaguo huhifadhiwa kwenye kivinjari hiki, si kwenye akaunti yako, kwa hiyo kifaa kingine kitauliza lugha yake yenyewe.',
     'language.reviewed': 'Mzungumzaji wa asili amesoma tafsiri hii.',
@@ -829,6 +842,8 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   CLOSE,
   // A copy of your data and the page that prints it, on the same rule.
   EXPORT,
+  // The reading settings, on the same rule.
+  READING,
 );
 
 /**

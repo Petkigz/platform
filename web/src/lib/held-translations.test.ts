@@ -42,6 +42,7 @@ import { FAMILY } from './i18n/messages/family.ts';
 import { BUY } from './i18n/messages/buy.ts';
 import { CLOSE } from './i18n/messages/close.ts';
 import { EXPORT } from './i18n/messages/export.ts';
+import { READING } from './i18n/messages/reading.ts';
 import { countryNameIn } from './geo.ts';
 import { ACCOUNT } from './i18n/messages/account.ts';
 import { LESSON } from './i18n/messages/lesson.ts';
@@ -414,7 +415,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // Owner's decision, 2026-11-16: a language the builder cannot write properly
   // falls back to English until a speaker has reviewed it. For a new screen
   // that means not writing it — a held draft would be the same guess, kept.
-  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign', 'missing', 'broke', 'player', 'account', 'family', 'buy', 'close', 'export']);
+  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign', 'missing', 'broke', 'player', 'account', 'family', 'buy', 'close', 'export', 'reading']);
   // Thirty-seven for the dashboard (the learner-profile prompt is seven of
   // them), twenty-eight for the course page (twelve are the list of dated
   // classes), a hundred and thirteen for the lesson page (its frame, the
@@ -428,9 +429,11 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // what they say about a saved place, ninety-eight for the account
   // page and its profile form, a hundred for the family page, its
   // three forms and one learner's page, seventy-nine for the buy page
-  // and its form, forty-three for closing an account, and fifty-eight for
-  // a copy of your data and the page that prints it.
-  assert.equal(unwrittenKeys.length, 806);
+  // and its form, forty-three for closing an account, fifty-eight for
+  // a copy of your data and the page that prints it, and fifty-two for the
+  // reading settings.
+  assert.equal(unwrittenKeys.length, 858);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('reading.')).length, 52);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('export.')).length, 58);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('close.')).length, 43);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('buy.')).length, 79);
@@ -445,7 +448,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('lesson.')).length, 113);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('assess.')).length, 40);
 
-  // Thirteen files, one rule: the same languages in each.
+  // Fourteen files, one rule: the same languages in each.
   const written = Object.keys(LEARN).sort();
   assert.deepEqual(Object.keys(COURSE).sort(), written);
   assert.deepEqual(Object.keys(LESSON).sort(), written);
@@ -459,6 +462,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   assert.deepEqual(Object.keys(BUY).sort(), written);
   assert.deepEqual(Object.keys(CLOSE).sort(), written);
   assert.deepEqual(Object.keys(EXPORT).sort(), written);
+  assert.deepEqual(Object.keys(READING).sort(), written);
   const expected = LOCALES.map((l) => l.code)
     .filter((code) => code !== 'en' && !Object.hasOwn(HELD_FOR_REVIEW, code))
     .sort();
@@ -469,7 +473,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     const own: Partial<Record<string, string>> = {
       ...LEARN[code], ...COURSE[code], ...LESSON[code], ...ASSESS[code], ...ASSIGN[code], ...MISSING[code], ...BROKE[code],
       ...PLAYER[code], ...ACCOUNT[code], ...FAMILY[code], ...BUY[code], ...CLOSE[code],
-      ...EXPORT[code],
+      ...EXPORT[code], ...READING[code],
     };
     assert.deepEqual(Object.keys(own).sort(), [...unwrittenKeys].sort(), `${code} is short a dashboard, course, lesson, assessment or assignment sentence`);
     for (const key of unwrittenKeys) {
@@ -507,7 +511,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     }
   }
   // What that costs the nineteen that are still in the picker, said out loud:
-  // 192 of 1078 sentences, which is 18%. Nothing holds a floor under
+  // 192 of 1130 sentences, which is 17%. Nothing holds a floor under
   // it any more: the owner chose on 2026-11-17 to keep these languages in the
   // picker and show the number. The count is pinned here so that it moves only
   // when somebody means it to, and is seen when it does. It moved from 55% to
@@ -529,12 +533,13 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // 24%; the family page, its forms and one learner's page added a hundred
   // and it is 21%; the buy page and its form added seventy-nine and it is
   // 20%; closing an account added forty-three and it is 19%; a copy of
-  // your data and the page that prints it added fifty-eight and it is 18%.
+  // your data and the page that prints it added fifty-eight and it is 18%;
+  // the reading settings added fifty-two and it is 17%.
   // What they are shown did not get smaller; what is counted got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 1078);
-    assert.equal(coverageOf(code).percent, 18, code);
+    assert.equal(coverageOf(code).total, 1130);
+    assert.equal(coverageOf(code).percent, 17, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');
   assert.equal(languageShownFor('en', 'learn').code, 'en');
@@ -1820,4 +1825,60 @@ test('a copy of your data is in the reader’s language, and a refusal is said w
   // A held language reads both pages in English, whole.
   assert.equal(languageShownFor('so', 'export').code, 'en');
   assert.equal(translator('so')('export.limit'), en['export.limit']);
+});
+
+test('the reading settings are in the reader’s language, and the controls have no words of their own', () => {
+  const page = read('../app/account/accessibility/page.tsx');
+  const controls = read('../app/account/accessibility/preferences.tsx');
+  const layout = read('../app/layout.tsx');
+
+  assert.match(page, /const shown = languageShownFor\(locale, 'reading'\);/u);
+  assert.match(page, /const frame = shown\.code !== locale \? \{ lang: shown\.code, dir: shown\.dir \} : \{\};/u);
+  assert.match(page, /<div className="page narrow" \{\.\.\.frame\}>/u);
+  assert.match(page, /export async function generateMetadata\(\): Promise<Metadata>/u);
+  assert.doesNotMatch(page, /export const metadata/u);
+  assert.match(page, /<ReadingPreferences initial=\{prefs\} words=\{words\} \/>/u);
+  for (const phrase of ['How this reads', 'Three settings', 'Text size', 'Stronger outlines', 'Follow my device', 'Back to the defaults', 'What is already true', 'The keyboard works', 'What is not here yet', 'Back to my account', 'Saved for this browser']) {
+    assert.ok(!page.includes(phrase), `the reading page still says "${phrase}" itself`);
+    assert.ok(!controls.includes(phrase), `the reading controls still say "${phrase}" themselves`);
+  }
+  // The file the controls import carries no sentence either: it used to hold
+  // the name and the note of every choice, in English, for every reader.
+  const shared = read('./a11y.ts');
+  for (const phrase of ['Stronger outlines', 'Follow my device', 'Always reduce motion', 'One step up']) {
+    assert.ok(!shared.includes(phrase), `lib/a11y.ts still says "${phrase}"`);
+  }
+
+  // The link in the footer is a shell sentence, so a held language keeps the
+  // English it would see on the account page, marked as English.
+  assert.match(layout, /const readingLabel = languageShownFor\(code, 'account'\);/u);
+  assert.match(layout, /translator\(readingLabel\.code\)\('account\.readLink'\)/u);
+
+  const gaps = (text: string) => [...text.matchAll(/\{[a-zA-Z]+\}/gu)].map((m) => m[0]).sort();
+  for (const code of ['ar', 'fr', 'tr', 'kk', 'zh-hans', 'uz', 'ta', 'th'] as const) {
+    const t = translator(code);
+    assert.equal(languageShownFor(code, 'reading').code, code);
+    assert.notEqual(t('reading.lede'), en['reading.lede'], code);
+    // What is put in sits after a colon, so no language inflects it.
+    assert.match(t('reading.rtlNote'), /[:：][\s\u00a0]*\{languages\}[.。]?$/u, `${code} reading.rtlNote`);
+    assert.match(t('reading.offeredNote'), /[:：][\s\u00a0]*\{count\}[.。 ]/u, `${code} reading.offeredNote`);
+  }
+  for (const key of unwrittenKeys.filter((k) => k.startsWith('reading.')) as (keyof typeof en)[]) {
+    for (const code of ['ar', 'ur', 'fa', 'tr', 'bn', 'fr', 'sw', 'zh-hant', 'vi', 'fil', 'az', 'tg', 'ky', 'tk', 'ne'] as const) {
+      assert.deepEqual(gaps(translator(code)(key)), gaps(en[key]), `${code} ${key}`);
+    }
+  }
+
+  // The name of each choice is short and is not the English: a reader chooses
+  // by it. (French, Indonesian and Filipino once kept "Normal" and "Contrast".)
+  for (const code of ['fr', 'es', 'pt', 'tr', 'id', 'fil', 'ms', 'sw', 'vi', 'az'] as const) {
+    const t = translator(code);
+    for (const key of ['reading.textNormal', 'reading.contrastNormal', 'reading.contrastLegend', 'reading.motionSystem'] as const) {
+      assert.notEqual(t(key), en[key], `${code} ${key}`);
+    }
+  }
+
+  // A held language reads the page in English, whole.
+  assert.equal(languageShownFor('so', 'reading').code, 'en');
+  assert.equal(translator('so')('reading.lede'), en['reading.lede']);
 });

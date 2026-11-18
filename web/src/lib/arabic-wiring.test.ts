@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 import { LOCALES, isOfferedLocale } from './i18n/locales.ts';
+import { en } from './i18n/messages/en.ts';
 
 /**
  * The wiring, not the logic.
@@ -79,60 +80,107 @@ test('the shell says out loud which language it is in', () => {
   assert.match(layout, /href="\/language"/u);
 });
 
-test('every right-to-left language in the register is named as one', () => {
+test('every right-to-left language a reader can choose is named, from the register', () => {
   const page = read('../app/account/accessibility/page.tsx');
-  const sentence = page.match(/Right-to-left is for ([^.]+)\./u)?.[1] ?? '';
-  assert.notEqual(sentence, '', 'the accessibility page no longer lists the RTL languages');
 
-  // The languages a reader can choose, not every row in the register: the page
-  // says "choosing one of those turns the whole page around", and a language
-  // withheld until a speaker has read it cannot be chosen.
+  // The list used to be typed: "Right-to-left is for Arabic, Urdu, Persian,
+  // Pashto and Dari. Choosing one of those five…", and this test compared the
+  // sentence with the register. The page is now in the reader's language, so
+  // there is no English sentence to compare. The list is counted from the
+  // register when the page is drawn, which is the stronger form of the same
+  // promise: it cannot name a language that is not there, or miss one.
+  assert.doesNotMatch(page, /Right-to-left is for/u);
+  assert.match(page, /entry\.code !== DEFAULT_LOCALE && isOfferedLocale\(entry\.code\)/u);
+  assert.match(page, /offered\.filter\(\(entry\) => entry\.dir === 'rtl'\)/u);
+  // Each name in its own script and marked as that language, so a screen
+  // reader says "العربية" in Arabic whatever the page is in.
+  assert.match(page, /<bdi key=\{entry\.code\} lang=\{entry\.code\}>\s*\{entry\.nativeName\}/u);
+  // And the sentence has a place for them, and for the count of languages.
+  assert.match(en['reading.rtlNote'], /\{languages\}/u);
+  assert.match(en['reading.offeredNote'], /\{count\}/u);
+  assert.match(page, /count: formatNumber\(shown\.code, offered\.length\)/u);
+
+  // What the register gives the page today: something to list, and Dhivehi,
+  // which is right-to-left and withheld, not in it. Promising it would send a
+  // reader to a picker that does not have it.
   const rtl = LOCALES.filter((locale) => locale.dir === 'rtl' && isOfferedLocale(locale.code));
   assert.ok(rtl.length > 0);
-  for (const locale of rtl) {
-    assert.ok(
-      sentence.includes(locale.englishName),
-      `${locale.code} is right-to-left but the page does not say so`,
-    );
-  }
-  // And the count in the next sentence is the count of that list.
-  const words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'];
-  assert.match(page, new RegExp(`Choosing one of those ${words[rtl.length]} turns`, 'u'));
-  // Dhivehi is right-to-left and withheld: promising it here would send a
-  // reader to a picker that does not have it.
-  for (const locale of LOCALES.filter((l) => l.dir === 'rtl' && !isOfferedLocale(l.code))) {
-    assert.ok(
-      !sentence.includes(locale.englishName),
-      `the page offers ${locale.code}, which a reader cannot choose yet`,
-    );
-  }
-  // The other direction matters too: a left-to-right language claimed as RTL
-  // would be the same defect seen from the other side.
-  for (const locale of LOCALES.filter((l) => l.dir === 'ltr' && l.code !== 'en')) {
-    assert.ok(
-      !sentence.includes(locale.englishName),
-      `the page calls ${locale.code} right-to-left`,
-    );
+  assert.ok(LOCALES.some((locale) => locale.dir === 'rtl' && !isOfferedLocale(locale.code)));
+
+  // No number of languages is typed anywhere in the sentences: "thirty-three
+  // languages, all complete" was true once and stayed on the page for a month
+  // after it stopped being true.
+  for (const [key, sentence] of Object.entries(en)) {
+    if (!key.startsWith('reading.')) continue;
+    assert.doesNotMatch(sentence, /\b(?:thirty|forty|fifty)[- ]/iu, `${key} types a count of languages`);
   }
 });
 
 test('the accessibility page tells the truth about the translation', () => {
   const page = read('../app/account/accessibility/page.tsx');
+  const said = (key: keyof typeof en) => en[key];
 
-  // The sentence that had to go: "the interface itself is in English".
-  assert.doesNotMatch(page, /interface itself is in English/iu);
+  // The sentences that had to go: "the interface itself is in English", and
+  // then "all of them are complete today".
+  for (const text of [page, ...Object.values(en)]) {
+    assert.doesNotMatch(text, /interface itself is in English/iu);
+    assert.doesNotMatch(text, /All of them are complete/iu);
+  }
 
-  // What replaced it has to admit that a translation can be partial rather than
-  // imply that many languages means many finished ones — and it has to point at
-  // the page that prints the number instead of asserting it here.
-  assert.match(page, /actually\s+translated/iu);
+  // What replaced them has to admit that a translation can be partial rather
+  // than imply that many languages means many finished ones — and it has to
+  // point at the page that prints the number instead of asserting it here.
+  assert.match(said('reading.offeredNote'), /actually\s+translated/iu);
+  assert.match(said('reading.offeredNote'), /in English for everyone/u);
   assert.match(page, /href="\/language"/u);
-  // And the claim a coverage number cannot make: that a native speaker read it.
-  assert.match(page, /native\s+speaker/iu);
+  // And the claim a coverage number cannot make: that a speaker read it.
+  assert.match(said('reading.unreviewed'), /first-language\s+speaker/iu);
+
+  // The sentence a fully written language shows on the language page said
+  // "This language is fully translated" while whole screens were English.
+  assert.doesNotMatch(said('language.coverageAll'), /fully translated/iu);
+  assert.match(said('language.coverageAll'), /in English for everyone/u);
 
   // And it must still admit what it has not got, rather than listing only what
   // works.
-  assert.match(page, /No text-to-speech/u);
-  assert.match(page, /No dyslexia-friendly font/u);
+  assert.equal(said('reading.noSpeech'), 'No text-to-speech.');
+  assert.equal(said('reading.noFont'), 'No dyslexia-friendly font.');
+  assert.match(page, /'reading\.noSpeech', 'reading\.noSpeechNote'/u);
+  assert.match(page, /'reading\.noFont', 'reading\.noFontNote'/u);
+});
+
+test('the accessibility page claims only what was built or measured', () => {
+  // Universal claims nobody measured were on this page: "every input has a
+  // label", "no control is reachable only by a mouse", "every image that is
+  // decoration is marked". They are not said in any sentence now.
+  for (const [key, sentence] of Object.entries(en)) {
+    if (!key.startsWith('reading.')) continue;
+    assert.doesNotMatch(sentence, /\bEvery (?:input|button|table|image|colour)\b/iu, key);
+    assert.doesNotMatch(sentence, /no control is reachable/iu, key);
+  }
+  // What is not known is said: nobody who relies on a screen reader tested it.
+  assert.match(en['reading.noSpeechNote'], /nobody who relies on one has tested it yet/u);
+  // The contrast check is of the normal design, and says so.
+  assert.match(en['reading.coloursNote'], /of the normal design/u);
+
+  // The page is open to everybody: the settings are a cookie on this browser.
+  const page = read('../app/account/accessibility/page.tsx');
+  assert.doesNotMatch(page, /redirect\(/u);
+  assert.match(en['reading.lede'], /You do not need to be signed in/u);
+  // And the way to it is on every page, signed in or not.
+  const layout = read('../app/layout.tsx');
+  assert.match(layout, /<Link href="\/account\/accessibility" lang=\{readingLabel\.code\}/u);
+});
+
+test('the first stop on every page can be seen when the keyboard reaches it', () => {
+  const layout = read('../app/layout.tsx');
+  // It was `className="sr-only"` with the same rules inline, so it was hidden
+  // at every moment, focus included.
+  assert.match(layout, /<a href="#main" className="skip-link">/u);
+  assert.doesNotMatch(layout, /srOnly/u);
+  const rule = globals.match(/\.skip-link \{[^}]*\}/u)?.[0] ?? '';
+  assert.match(rule, /transform: translateY\(-300%\)/u);
+  assert.doesNotMatch(rule, /clip:|width: 1px/u);
+  assert.match(globals, /\.skip-link:focus \{ transform: none; \}/u);
 });
 

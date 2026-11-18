@@ -1,16 +1,52 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { cookies, headers } from 'next/headers';
 
+import { SaidList } from '@/app/family/said-list';
+import { Say } from '@/components/say';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { A11Y_COOKIE, parsePreferences } from '@/lib/a11y';
-import { ReadingPreferences } from './preferences';
+import { LOCALE_COOKIE, chooseLocale, languageShownFor, translator } from '@/lib/i18n';
+import { formatNumber } from '@/lib/i18n/format';
+import { DEFAULT_LOCALE, LOCALES, isOfferedLocale } from '@/lib/i18n/locales';
+import { ReadingPreferences, type ReadingWords } from './preferences';
 
 export const dynamic = 'force-dynamic';
 
+/** The language this page is written in for this reader, and whether that is the one they chose. */
+async function readerLanguage() {
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code: locale } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  const shown = languageShownFor(locale, 'reading');
+  return { locale, shown };
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { shown } = await readerLanguage();
+  return { title: translator(shown.code)('reading.title') };
+}
+
+/** Whether somebody is signed in. Never a reason to turn a reader away from this page. */
+async function signedIn(): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    return Boolean(user);
+  } catch {
+    return false;
+  }
+}
+
 /**
- * Reading preferences.
+ * Reading settings.
  *
  * One page with three settings and no save button. It exists because the
  * platform is for young children and adults worldwide, and "readable" is not one
@@ -18,132 +54,174 @@ export const dynamic = 'force-dynamic';
  * light, and somebody who has asked their operating system for less motion all
  * get the same pages today.
  *
+ * **Open to everybody.** The settings are a cookie on this browser and have
+ * nothing to do with an account, and the page used to send a signed-out reader
+ * to sign in: somebody who needed larger text to read the sign-in form could
+ * not get it. Being signed in changes only the way back.
+ *
+ * **Every sentence is one somebody can check.** It used to say that every
+ * input has a label and that no control is reachable only by a mouse, which
+ * nobody had measured, and that thirty-three languages were "all complete",
+ * which was false. It now says what is built, what an automatic test
+ * measures, and what nobody has tested. The number of languages and the list
+ * of right-to-left ones are counted from the register when the page is drawn,
+ * so neither can go stale.
+ *
  * What this page does not pretend: it does not change the language, it does not
  * read the page aloud, and it is stored per browser rather than per account —
  * each of those is said here rather than left to be discovered.
  */
 export default async function AccessibilityPage() {
-  if (!isSupabaseConfigured()) redirect('/');
-
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect('/sign-in?next=/account/accessibility');
-
   const jar = await cookies();
   const prefs = parsePreferences(jar.get(A11Y_COOKIE)?.value ?? null);
+  const member = await signedIn();
+
+  const { locale, shown } = await readerLanguage();
+  const t = translator(shown.code);
+  const frame = shown.code !== locale ? { lang: shown.code, dir: shown.dir } : {};
+
+  const words: ReadingWords = {
+    now: t('reading.now'),
+    saved: t('reading.saved'),
+    notKept: t('reading.notKept'),
+    reset: t('reading.reset'),
+    text: {
+      legend: t('reading.textLegend'),
+      choices: {
+        normal: { label: t('reading.textNormal'), note: t('reading.textNormalNote') },
+        large: { label: t('reading.textLarge'), note: t('reading.textLargeNote') },
+        larger: { label: t('reading.textLargest'), note: t('reading.textLargestNote') },
+      },
+    },
+    contrast: {
+      legend: t('reading.contrastLegend'),
+      choices: {
+        normal: { label: t('reading.contrastNormal'), note: t('reading.contrastNormalNote') },
+        high: { label: t('reading.contrastHigh'), note: t('reading.contrastHighNote') },
+      },
+    },
+    motion: {
+      legend: t('reading.motionLegend'),
+      choices: {
+        system: { label: t('reading.motionSystem'), note: t('reading.motionSystemNote') },
+        reduce: { label: t('reading.motionReduce'), note: t('reading.motionReduceNote') },
+      },
+    },
+  };
+
+  // Counted from the register, not typed: a language a reader can choose,
+  // English aside. A withheld language is in the register and in no picker.
+  const offered = LOCALES.filter((entry) => entry.code !== DEFAULT_LOCALE && isOfferedLocale(entry.code));
+  const rightToLeft = offered.filter((entry) => entry.dir === 'rtl');
+
+  const already = [
+    ['reading.keyboard', 'reading.keyboardNote'],
+    ['reading.device', 'reading.deviceNote'],
+    ['reading.colours', 'reading.coloursNote'],
+    ['reading.names', 'reading.namesNote'],
+    ['reading.arabic', 'reading.arabicNote'],
+    ['reading.mixed', 'reading.mixedNote'],
+  ] as const;
+  const missing = [
+    ['reading.noSpeech', 'reading.noSpeechNote'],
+    ['reading.noFont', 'reading.noFontNote'],
+  ] as const;
 
   return (
-    <div className="page">
+    <div className="page narrow" {...frame}>
       <nav className="crumbs">
-        <Link href="/account">Account</Link>
-        <span aria-hidden>›</span>
-        <span>Reading</span>
+        {member && (
+          <>
+            <Link href="/account">{t('auth.accountSettings')}</Link>
+            <span aria-hidden>›</span>
+          </>
+        )}
+        <span>{t('reading.crumb')}</span>
       </nav>
 
       <div className="page-head">
-        <p className="eyebrow">Accessibility</p>
-        <h1>How this reads</h1>
-        <p className="muted">
-          Three settings, applied the moment you choose them. They belong to this browser, not to
-          your account — a phone and a laptop want different sizes, and a shared machine should not
-          inherit somebody else’s choice.
-        </p>
+        <h1>{t('reading.title')}</h1>
+        <p className="muted">{t('reading.lede')}</p>
       </div>
 
-      <ReadingPreferences initial={prefs} />
+      <ReadingPreferences initial={prefs} words={words} />
 
-      <section className="card" style={{ marginTop: '1.5rem' }}>
-        <h2 style={{ marginTop: 0 }}>What is already true without setting anything</h2>
-        <ul>
-          <li>
-            <strong>The keyboard works everywhere.</strong> Every button and link has a visible
-            focus outline, the first thing on each page is a “Skip to content” link, and no control
-            is reachable only by a mouse.
-          </li>
-          <li>
-            <strong>Your device’s own settings are honoured.</strong> If your system asks for less
-            motion, the platform already reduces it; the setting above is for a device that does
-            not ask. The same is true of language: the interface opens in the language this device
-            asks for, and <Link href="/language">the language page</Link> is where it is changed.
-          </li>
-          <li>
-            <strong>Text and background colours are measured, not eyeballed.</strong> Every colour
-            pair in the stylesheet is checked against the WCAG AA ratio in the repository’s own
-            check, and a pair that fails stops the build.
-          </li>
-          <li>
-            <strong>Tables and forms carry names.</strong> Every input has a label, every table is
-            inside a scroll container rather than pushing the page sideways, and every image that
-            is decoration is marked as such.
-          </li>
-          <li>
-            <strong>Arabic is set as Arabic.</strong> A course title, a lesson name, a teacher’s
-            name and the name printed on a certificate are read in the script they were written
-            in: the right letter shapes, the right spacing between joined letters, and the reading
-            direction the words themselves ask for. A page that is mostly Arabic runs from right to
-            left. Screen readers are told which passages are Arabic, so they switch voice instead
-            of spelling the letters out one by one.
-          </li>
-          <li>
-            <strong>A mixed name is still one name.</strong> “Surah Al-Fatihah (الفاتحة)” is not
-            forced into one direction: each part is set in its own script and the browser joins
-            them in the order a reader would say them.
-          </li>
+      <h2 style={{ marginTop: '2rem' }}>{t('reading.trueHeading')}</h2>
+      <section className="card">
+        <ul className="lessons stacked">
+          {already.map(([name, note]) => (
+            <li key={name}>
+              <strong>{t(name)}</strong>
+              <div className="muted">{t(note)}</div>
+            </li>
+          ))}
         </ul>
       </section>
 
-      <section className="card" style={{ marginTop: '1rem' }}>
-        <h2 style={{ marginTop: 0 }}>What is not here yet</h2>
-        <ul>
+      <h2 style={{ marginTop: '2rem' }}>{t('reading.langHeading')}</h2>
+      <section className="card">
+        <ul className="lessons stacked">
           <li>
-            <strong>The interface is translated, and it says how completely.</strong> Thirty-three
-            languages are offered, twenty-one of them African, and each one states how much of it is
-            actually translated. All of them are complete today; the number is on{' '}
-            <Link href="/language">the language page</Link> so that a language which falls behind
-            shows it, rather than serving one English sentence among translated ones. Course titles,
-            lessons and comments stay in the language their author wrote them in, whatever language
-            the buttons are in.
+            <strong>{t('reading.offered')}</strong>
+            <div className="muted">
+              {t('reading.offeredNote', { count: formatNumber(shown.code, offered.length) })}
+            </div>
           </li>
           <li>
-            <strong>
-              Right-to-left is for Arabic, Urdu, Persian, Pashto and Dari.
-            </strong>{' '}
-            Choosing one of those five turns the whole page around: the masthead, the nav, the notices and
-            the footer mirror, because the rules that place them are written in logical properties
-            rather than left and right. A right-to-left course shown to a reader whose interface is
-            left-to-right is handled separately, and is what the paragraphs above describe.
+            <strong>{t('reading.rtl')}</strong>
+            <div className="muted">
+              <Say
+                text={t('reading.rtlNote')}
+                parts={{
+                  languages: (
+                    <SaidList
+                      code={shown.code}
+                      items={rightToLeft.map((entry) => (
+                        <bdi key={entry.code} lang={entry.code}>
+                          {entry.nativeName}
+                        </bdi>
+                      ))}
+                    />
+                  ),
+                }}
+              />
+            </div>
           </li>
           <li>
-            <strong>The choice is kept on this browser, not on your account.</strong> Language is
-            read before anybody signs in, so it is stored in a cookie; the same person on a
-            different device gets that device's language until they change it there too.
+            <strong>{t('reading.browser')}</strong>
+            <div className="muted">{t('reading.browserNote')}</div>
           </li>
           <li>
-            <strong>Most translations have not been read by a native speaker.</strong> They were
-            written by the people who built the platform, and a wrong word in a language we do not
-            speak is a mistake we owe the reader. The language page says so for every language it
-            offers — including, today, all thirty-two that are not English — and the sentence is a
-            flag in the language register rather than a paragraph somebody has to remember to edit.
+            <strong>{t('reading.unreviewed')}</strong>
+            <div className="muted">{t('reading.unreviewedNote')}</div>
           </li>
-          <li>
-            <strong>No text-to-speech.</strong> Reading a lesson aloud needs a speech provider
-            nobody has connected.
-          </li>
-          <li>
-            <strong>No dyslexia-friendly font.</strong> A font that is actually designed for it is
-            licensed, and none is embedded here. The size and contrast settings are the honest
-            substitutes until somebody buys one.
-          </li>
+        </ul>
+        {/* The link is in the reader's own language even when the page around
+            it is not: the name of the language page is part of the frame. */}
+        <p style={{ marginBottom: 0 }} lang={locale} dir={LOCALES.find((entry) => entry.code === locale)?.dir}>
+          <Link href="/language">{translator(locale)('language.title')}</Link>
+        </p>
+      </section>
+
+      <h2 style={{ marginTop: '2rem' }}>{t('reading.missingHeading')}</h2>
+      <section className="card">
+        <ul className="lessons stacked">
+          {missing.map(([name, note]) => (
+            <li key={name}>
+              <strong>{t(name)}</strong>
+              <div className="muted">{t(note)}</div>
+            </li>
+          ))}
         </ul>
       </section>
 
-      <p style={{ marginTop: '1.5rem' }}>
-        <Link href="/account" className="btn secondary">
-          Back to my account
-        </Link>
-      </p>
+      {member && (
+        <div className="page-actions">
+          <Link href="/account" className="btn secondary">
+            {t('reading.back')}
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

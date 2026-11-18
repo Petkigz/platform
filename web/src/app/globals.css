@@ -717,9 +717,8 @@ input:focus, select:focus, textarea:focus {
    and untranslated and a reader's language must not turn them around. */
 [dir='rtl'] { text-align: start; }
 
-/* Screen-reader-only, for when an inline style is not available — the skip
-   link in the layout uses both, and a `.sr-only` that does not hide anything
-   is worse than no class at all, because the text becomes visible. */
+/* Screen-reader-only. A `.sr-only` that does not hide anything is worse than
+   no class at all, because the text becomes visible. */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -731,6 +730,25 @@ input:focus, select:focus, textarea:focus {
   white-space: nowrap;
   border: 0;
 }
+
+/* The first stop on every page. Off the top of the page until the keyboard
+   reaches it, then over the masthead, where a reader who is looking can see
+   what they are about to press. It is moved rather than clipped so that a
+   screen reader finds it either way. */
+.skip-link {
+  position: absolute;
+  inset-block-start: 0.5rem;
+  inset-inline-start: 0.75rem;
+  z-index: 200;
+  padding: 0.6rem 1rem;
+  border: 2px solid var(--green-700);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--green-700);
+  font-weight: 600;
+  transform: translateY(-300%);
+}
+.skip-link:focus { transform: none; }
 
 .course {
   border-top: 1px solid var(--border-soft);
@@ -1561,6 +1579,12 @@ textarea { resize: vertical; min-height: 4rem; }
    honest admission that some tables need more room than a phone has.
    -------------------------------------------------------------------------- */
 
+/* The reading page: what is on now, as three short pairs, and the choices
+   of each setting one under the other. */
+.reading-now { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.35rem 1.5rem; }
+.reading-choices { margin: 0; display: grid; gap: 0.5rem; min-width: 0; }
+.reading-choices legend { font-weight: 700; padding-inline: 0.35rem; }
+
 html[data-text='large'] { font-size: 112.5%; }
 html[data-text='larger'] { font-size: 125%; }
 
@@ -1570,7 +1594,7 @@ html[data-text='larger'] .row,
 html[data-text='larger'] .stats { flex-wrap: wrap; }
 html[data-text='larger'] .stats > div { min-width: 100%; }
 
-/* Stronger outlines: darker secondary text, heavier borders, no pale grey. */
+/* Stronger outlines: darker secondary text, darker borders, no pale grey. */
 html[data-contrast='high'] {
   --muted:       #33473c;
   --border:      #9db3a6;
@@ -1583,6 +1607,10 @@ html[data-contrast='high'] .notice,
 html[data-contrast='high'] table th,
 html[data-contrast='high'] table td { border-color: var(--border); }
 html[data-contrast='high'] :focus-visible { outline-width: 3px; outline-color: var(--green-800); }
+/* The links in the top bar draw their own outline, with a selector that
+   outranks the line above; without this they were the one place the outline
+   stayed thin. */
+html[data-contrast='high'] .masthead-inner .nav:focus-visible { outline-width: 3px; outline-color: var(--green-800); }
 
 /* Motion: the device's own setting is honoured above; this is the person's
    override for a device that does not ask. */

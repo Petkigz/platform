@@ -3,19 +3,35 @@
 import { useEffect, useState } from 'react';
 
 import {
-  CONTRAST_CHOICES,
+  CONTRASTS,
   DEFAULTS,
-  MOTION_CHOICES,
-  TEXT_CHOICES,
-  describePreferences,
+  MOTIONS,
+  TEXT_SIZES,
   htmlAttributes,
-  parsePreferences,
   preferenceCookie,
+  preferencesInCookie,
+  samePreferences,
   type A11yPreferences,
   type Contrast,
   type Motion,
   type TextSize,
 } from '@/lib/a11y';
+
+type Choice = { label: string; note: string };
+
+/** The words the three controls say, in the language of the page that draws them. */
+export type ReadingWords = {
+  /** Under the summary before anything was changed on this visit. */
+  now: string;
+  /** Under the summary once a change was written and read back. */
+  saved: string;
+  /** The browser took the change and kept nothing. */
+  notKept: string;
+  reset: string;
+  text: { legend: string; choices: Record<TextSize, Choice> };
+  contrast: { legend: string; choices: Record<Contrast, Choice> };
+  motion: { legend: string; choices: Record<Motion, Choice> };
+};
 
 /**
  * The control itself.
@@ -25,107 +41,132 @@ import {
  * written at the same time so the next page renders at the same size, and the
  * boot script reads the same cookie before the first paint.
  *
- * It says, in the page's own words, that this is this browser and not the
- * account: size is a property of the screen a person is sitting at.
+ * **"Saved" is said only after the cookie is read back.** A browser that
+ * refuses cookies accepts the assignment and keeps nothing. The page still
+ * changes, because the reader asked for it, and says in place of "saved" that
+ * the change will be gone on the next page.
+ *
+ * It has no words of its own: the page hands them over.
  */
-export function ReadingPreferences({ initial }: { initial: A11yPreferences }) {
+export function ReadingPreferences({ initial, words }: { initial: A11yPreferences; words: ReadingWords }) {
   const [prefs, setPrefs] = useState<A11yPreferences>(initial);
-  const [saved, setSaved] = useState(false);
+  const [said, setSaid] = useState<'now' | 'saved' | 'notKept'>('now');
 
   // The server rendered the page from the cookie; the boot script set the
   // attributes. Reading the cookie again here means a change made in another tab
   // is not silently overwritten by this component's first render.
   useEffect(() => {
-    setPrefs(parsePreferences(document.cookie.match(/ayahspring_a11y=([^;]*)/)?.[1] ?? null));
+    setPrefs(preferencesInCookie(document.cookie) ?? DEFAULTS);
   }, []);
 
   function apply(next: A11yPreferences) {
     setPrefs(next);
-    document.cookie = preferenceCookie(next);
+    let kept = false;
+    try {
+      document.cookie = preferenceCookie(next);
+      const back = preferencesInCookie(document.cookie);
+      kept = back !== null && samePreferences(back, next);
+    } catch {
+      kept = false;
+    }
     const root = document.documentElement;
     for (const key of ['data-text', 'data-contrast', 'data-motion']) root.removeAttribute(key);
     for (const [key, value] of Object.entries(htmlAttributes(next))) root.setAttribute(key, value);
-    setSaved(true);
+    setSaid(kept ? 'saved' : 'notKept');
   }
 
   return (
-    <div className="stack">
+    <div className="stack" style={{ gap: '1rem' }}>
       <div className="notice" role="status">
-        <strong>{describePreferences(prefs)}.</strong>{' '}
-        {saved ? 'Saved for this browser.' : 'These are your settings in this browser.'}
+        <ul className="reading-now">
+          <li>
+            <span className="muted">{words.text.legend}</span>{' '}
+            <strong>{words.text.choices[prefs.text].label}</strong>
+          </li>
+          <li>
+            <span className="muted">{words.contrast.legend}</span>{' '}
+            <strong>{words.contrast.choices[prefs.contrast].label}</strong>
+          </li>
+          <li>
+            <span className="muted">{words.motion.legend}</span>{' '}
+            <strong>{words.motion.choices[prefs.motion].label}</strong>
+          </li>
+        </ul>
+        {said !== 'notKept' && (
+          <p style={{ margin: '0.5rem 0 0' }}>{said === 'saved' ? words.saved : words.now}</p>
+        )}
       </div>
+      {said === 'notKept' && (
+        <p className="notice error" role="alert" style={{ margin: 0 }}>
+          {words.notKept}
+        </p>
+      )}
 
-      <fieldset className="card" style={{ margin: 0 }}>
-        <legend>
-          <strong>Text size</strong>
-        </legend>
-        {TEXT_CHOICES.map((choice) => (
-          <label key={choice.value} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+      <fieldset className="card reading-choices">
+        <legend>{words.text.legend}</legend>
+        {TEXT_SIZES.map((value) => (
+          <label key={value} className="radio">
             <input
               type="radio"
               name="text"
-              value={choice.value}
-              checked={prefs.text === choice.value}
-              onChange={() => apply({ ...prefs, text: choice.value as TextSize })}
+              value={value}
+              checked={prefs.text === value}
+              onChange={() => apply({ ...prefs, text: value })}
             />
             <span>
-              <strong>{choice.label}</strong>
+              <strong>{words.text.choices[value].label}</strong>
               <br />
-              <span className="muted">{choice.note}</span>
+              <span className="muted">{words.text.choices[value].note}</span>
             </span>
           </label>
         ))}
       </fieldset>
 
-      <fieldset className="card" style={{ margin: 0 }}>
-        <legend>
-          <strong>Contrast</strong>
-        </legend>
-        {CONTRAST_CHOICES.map((choice) => (
-          <label key={choice.value} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+      <fieldset className="card reading-choices">
+        <legend>{words.contrast.legend}</legend>
+        {CONTRASTS.map((value) => (
+          <label key={value} className="radio">
             <input
               type="radio"
               name="contrast"
-              value={choice.value}
-              checked={prefs.contrast === choice.value}
-              onChange={() => apply({ ...prefs, contrast: choice.value as Contrast })}
+              value={value}
+              checked={prefs.contrast === value}
+              onChange={() => apply({ ...prefs, contrast: value })}
             />
             <span>
-              <strong>{choice.label}</strong>
+              <strong>{words.contrast.choices[value].label}</strong>
               <br />
-              <span className="muted">{choice.note}</span>
+              <span className="muted">{words.contrast.choices[value].note}</span>
             </span>
           </label>
         ))}
       </fieldset>
 
-      <fieldset className="card" style={{ margin: 0 }}>
-        <legend>
-          <strong>Motion</strong>
-        </legend>
-        {MOTION_CHOICES.map((choice) => (
-          <label key={choice.value} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+      <fieldset className="card reading-choices">
+        <legend>{words.motion.legend}</legend>
+        {MOTIONS.map((value) => (
+          <label key={value} className="radio">
             <input
               type="radio"
               name="motion"
-              value={choice.value}
-              checked={prefs.motion === choice.value}
-              onChange={() => apply({ ...prefs, motion: choice.value as Motion })}
+              value={value}
+              checked={prefs.motion === value}
+              onChange={() => apply({ ...prefs, motion: value })}
             />
             <span>
-              <strong>{choice.label}</strong>
+              <strong>{words.motion.choices[value].label}</strong>
               <br />
-              <span className="muted">{choice.note}</span>
+              <span className="muted">{words.motion.choices[value].note}</span>
             </span>
           </label>
         ))}
       </fieldset>
 
-      <p>
+      <div className="page-actions">
         <button type="button" className="btn secondary" onClick={() => apply(DEFAULTS)}>
-          Back to the defaults
+          {words.reset}
         </button>
-      </p>
+      </div>
     </div>
   );
 }

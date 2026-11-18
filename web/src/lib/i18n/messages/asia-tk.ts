@@ -70,7 +70,8 @@ export const ASIA_TK: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.saved': 'Saklandy. Interfeýs indi {language} dilinde.',
     'language.coverage':
       'Bu interfeýs setirleriniň {percent}% {language} diline terjime edildi. Heniz terjime edilmedikleri iňlis dilinde görkezilýär.',
-    'language.coverageAll': 'Bu dil doly terjime edildi.',
+    'language.coverageAll':
+      'Şu wagta çenli terjimä taýýarlanan her ekran şu dilde ýazyldy. Käbir ekranlar entek taýýarlanmady we hemmeler üçin iňlis dilindedir.',
     'language.browser':
       'Saýlaw şu brauzerde saklanýar, hasabyňyzda däl, şonuň üçin başga enjam öz dilini soraýar.',
 

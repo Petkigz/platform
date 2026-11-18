@@ -70,7 +70,7 @@ export const ASIA_ZH_HANT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'language.saved': '已儲存。介面目前使用{language}。',
     'language.coverage':
       '本介面有 {percent}% 的文字已翻譯成{language}。尚未翻譯的部分以英文顯示。',
-    'language.coverageAll': '此語言已全部翻譯完成。',
+    'language.coverageAll': '到目前為止已做好翻譯準備的每個畫面都已用這種語言寫出。有些畫面尚未準備，對所有人都是英語。',
     'language.browser':
       '這個選擇只保存在本瀏覽器上，不會存到你的帳號，所以另一台裝置會詢問它自己的語言。',
 

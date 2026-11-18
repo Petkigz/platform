@@ -2618,6 +2618,72 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The reading settings in the reader's language, and open to everybody, 2026-11-18
+
+`/account/accessibility` was English for every reader, was closed to anybody
+not signed in, and said three things that were not so.
+
+- *Translated.* Fifty-two sentences (`reading.*`, new file
+  `messages/reading.ts`) in the twenty-seven languages with nothing held. A
+  held language reads the page in English, whole, marked as English, with
+  the link to the language page left in its own language. **Unreviewed**,
+  like everything else.
+- *Open to a reader who is not signed in.* The settings are a cookie. The
+  page no longer redirects; signed in, it adds the crumb and the way back to
+  the account. Every page's footer now links to it.
+- *What it claimed and no longer does.* "Every input has a label" and "no
+  control is reachable only by a mouse" (never measured); "thirty-three
+  languages, all of them complete" (the picker has forty-six besides
+  English, nineteen of them held, and whole screens are English for
+  everyone). The count and the right-to-left list come from the register
+  when the page is drawn. The page now says that nobody who relies on a
+  screen reader has tested the platform.
+- *Defects fixed on the way.*
+  - **The skip link could not be seen.** First stop on every page, hidden at
+    every moment including focus. It now comes into view when the keyboard
+    reaches it.
+  - **"Saved" was said whatever happened.** It is said after the cookie is
+    read back; a browser that keeps none gets an alert that the setting
+    will be gone on the next page.
+  - **"Always reduce motion" did not stop the one scripted smooth scroll**
+    (the assignment editor, on "Edit"). It asks `wantsLessMotion()` first.
+  - **With stronger outlines on, the links in the top bar kept the thin
+    outline**: their own rule outranked the setting's.
+  - **The language page told a fully written language "This language is
+    fully translated".** `language.coverageAll` was rewritten in
+    twenty-eight languages to say what is true.
+  - The names and notes of the choices lived in `lib/a11y.ts`, which the
+    browser downloads, in English. They are catalogue sentences handed over
+    by the page.
+  - The summary of what is on was an English sentence built from parts
+    ("Larger text, stronger outlines"); it is three pairs, a name and its
+    choice, and is announced as a status.
+  - "Normal" was left as the English word in Spanish, Portuguese, Turkish
+    and Indonesian, and "Contrast" in Filipino; the audit caught them at 201
+    and they were written (191 again).
+- *What it did to the nineteen.* `/language` tells each of them **17%** (192
+  of 1130).
+- *Checks.* 2372 web tests. The bundle check looks for the "not kept"
+  sentence and the note about text-to-speech in every script. New
+  `scripts/reading-route-smoke.mjs`, in CI and in the browser workflow: the
+  page over HTTP signed out and signed in, in seven languages; in a browser
+  the first Tab shows the skip link, each setting changes the document at
+  once (root text 16px to 20px, white background, outline 3px on a control
+  and on the top bar, nothing left with a transition or smooth scrolling),
+  the next page starts the same way, a browser refusing cookies is told so
+  in Arabic, and the page fits at 320, 390 and 1440px in four languages, and
+  at 320 and 390px with the largest text.
+- *Not proven.* **No person who uses a screen reader, a switch, a magnifier
+  or voice control has used any of it.** "Every input has a name" was
+  measured on three public pages (reading, language, sign-in), not on the
+  site. That side-by-side rows stack at the largest size is a stylesheet
+  rule that was read, not exercised in a browser. The contrast check covers
+  the normal design's colour pairs, not the stronger-outlines palette. Urdu
+  and Arabic were seen in a fallback font.
+- *Left as it was:* `/account/merge`, `/account/sharing`,
+  `/account/restore`, `/account/referrals` and `/account/sponsorship` are
+  English.
+
 ### A copy of your data in the reader's language, 2026-11-18
 
 `/account/export` and `/account/export/print` were English for every reader,

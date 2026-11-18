@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { wantsLessMotion } from '@/lib/a11y';
 import {
   type AssignmentRevision,
   type AssignmentSubmission,
@@ -139,7 +140,11 @@ export function AssignmentManager({
     setDueAt(toLocalInput(assignment.dueAt));
     setPointsPossible(assignment.pointsPossible?.toString() ?? '');
     setAcceptLate(assignment.acceptLate);
-    document.getElementById('assignment-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // A stylesheet cannot stop a scroll a script asked for, so the reading
+    // setting and the device are asked here.
+    document
+      .getElementById('assignment-form')
+      ?.scrollIntoView({ behavior: wantsLessMotion() ? 'auto' : 'smooth', block: 'start' });
   }
 
   async function setStatus(assignment: CourseAssignment, status: 'open' | 'closed' | 'cancelled') {

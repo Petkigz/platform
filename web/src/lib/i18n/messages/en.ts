@@ -60,7 +60,8 @@ export const en = {
   'language.change': 'Change language',
   'language.saved': 'Saved. The interface is now in {language}.',
   'language.coverage': '{percent}% of these interface strings are translated into {language}. Anything not yet translated is shown in English.',
-  'language.coverageAll': 'This language is fully translated.',
+  'language.coverageAll':
+    'Every screen prepared for translation so far is written in this language. Some screens have not been prepared yet and are in English for everyone.',
   'language.browser': 'The choice is kept on this browser, not on your account, so another device will ask its own device which language to use.',
   // The shelf. A catalogue that says "Find a course" in Yoruba and
   // "Showing 25-48 of 137" in English has translated the decoration and left
@@ -1426,6 +1427,81 @@ export const en = {
   'export.printSame':
     'This is the same record the two downloads contain. What is left out on purpose, and why, is on the export page.',
   'export.printBack': 'Back to the export page',
+
+  // The reading settings and the words their three controls say
+  // (`reading.ts`), for the same twenty-seven languages as the dashboard.
+  // What is built and what was tested, said apart: nothing here is a claim
+  // nobody measured.
+  'reading.title': 'How this reads',
+  'reading.crumb': 'Reading',
+  'reading.lede':
+    'Three settings, applied the moment you choose them. They belong to this browser, not to your account: a phone and a laptop want different sizes, and a shared device should not inherit somebody else’s choice. You do not need to be signed in to use them.',
+  'reading.now': 'These are the settings in this browser.',
+  'reading.saved': 'Saved for this browser.',
+  'reading.notKept':
+    'This browser would not keep the setting. It applies to this page only and will be gone on the next one.',
+  'reading.textLegend': 'Text size',
+  'reading.textNormal': 'Normal',
+  'reading.textNormalNote': 'The size the rest of the platform uses.',
+  'reading.textLarge': 'Larger',
+  'reading.textLargeNote': 'One step up, for headings and body text together.',
+  'reading.textLargest': 'Largest',
+  'reading.textLargestNote':
+    'Two steps up. Rows that sit side by side stack, so words are not squeezed.',
+  'reading.contrastLegend': 'Contrast',
+  'reading.contrastNormal': 'Normal',
+  'reading.contrastNormalNote': 'White and green, as the platform was designed.',
+  'reading.contrastHigh': 'Stronger outlines',
+  'reading.contrastHighNote':
+    'Darker secondary text, darker borders, a plain white background and a thicker outline around whatever the keyboard is on. Useful in bright light and on a dim screen.',
+  'reading.motionLegend': 'Motion',
+  'reading.motionSystem': 'Follow my device',
+  'reading.motionSystemNote':
+    'If your device asks for less motion, the platform already listens to it.',
+  'reading.motionReduce': 'Always reduce motion',
+  'reading.motionReduceNote':
+    'Turns off transitions and animated scrolling even when the device does not ask.',
+  'reading.reset': 'Back to the defaults',
+  'reading.trueHeading': 'What is already true without setting anything',
+  'reading.keyboard': 'The keyboard works.',
+  'reading.keyboardNote':
+    'Whatever the keyboard is on has a visible outline, and the first stop on every page is a link that skips to the content. A control that can be reached only with a mouse or a finger is a fault, and we want to hear about it.',
+  'reading.device': 'Your device’s own settings are honoured.',
+  'reading.deviceNote':
+    'If your device asks for less motion, the platform reduces it; the setting above is for a device that does not ask. The interface also opens in the language your device asks for, when that language is offered.',
+  'reading.colours': 'Text colours are measured.',
+  'reading.coloursNote':
+    'The main text and background colours of the normal design are checked, by an automatic test every time the platform changes, against the contrast that international accessibility guidelines ask of ordinary text.',
+  'reading.names': 'Forms carry names.',
+  'reading.namesNote':
+    'Inputs are built with a label a screen reader can announce, and a wide table scrolls inside its own frame rather than pushing the page sideways.',
+  'reading.arabic': 'Arabic is set as Arabic.',
+  'reading.arabicNote':
+    'A course title, a lesson name, a teacher’s name and the name on a certificate are set in the script they were written in, with the reading direction the words themselves ask for. Screen readers are told which passages are Arabic, so they can change voice.',
+  'reading.mixed': 'A mixed name is still one name.',
+  'reading.mixedNote':
+    'A title in two scripts is not forced into one direction: each part is set in its own script, and the browser joins them in the order a reader would say them.',
+  'reading.langHeading': 'Language',
+  'reading.offered': 'The interface is translated, and it says how completely.',
+  'reading.offeredNote':
+    'Languages offered besides English: {count}. The language page states for each one how much of it is actually translated. Where a screen has not been written in your language it is shown in English, whole, rather than as English sentences among translated ones. The teaching and staff screens and some account, family and payment pages have not been prepared for translation yet and are in English for everyone. Course titles, lessons and comments stay in the language their author wrote them in.',
+  'reading.rtl': 'Right-to-left languages turn the whole page around.',
+  'reading.rtlNote':
+    'A right-to-left course shown inside a left-to-right interface keeps its own direction. Choosing one of these languages mirrors the top bar, the navigation, the notices and the footer: {languages}.',
+  'reading.browser': 'The choice of language is kept on this browser, not on your account.',
+  'reading.browserNote':
+    'Language is read before anybody signs in, so the same person on another device gets that device’s language until they change it there too.',
+  'reading.unreviewed': 'No translation has been read by a first-language speaker yet.',
+  'reading.unreviewedNote':
+    'They were written by the people who built the platform. If a word looks wrong to you, that is our mistake, and the language page says so for every language it offers.',
+  'reading.missingHeading': 'What is not here yet',
+  'reading.noSpeech': 'No text-to-speech.',
+  'reading.noSpeechNote':
+    'The platform does not read a lesson aloud. It is built to work with a screen reader, but nobody who relies on one has tested it yet.',
+  'reading.noFont': 'No dyslexia-friendly font.',
+  'reading.noFontNote':
+    'None is included. The text size and contrast settings are the substitutes for now.',
+  'reading.back': 'Back to my account',
 } as const;
 
 export type MessageKey = keyof typeof en;
