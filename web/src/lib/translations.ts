@@ -282,6 +282,7 @@ const SECTION_LABELS: Record<string, string> = {
   assign: 'Assignments',
   missing: 'The page for a wrong address',
   broke: 'The page for a page that broke',
+  player: 'The players and the saved place',
 };
 
 export const SECTIONS: Section[] = (() => {

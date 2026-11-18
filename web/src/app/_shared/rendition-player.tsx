@@ -1,12 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useState, type RefObject } from 'react';
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 
 import { createClient } from '@/lib/supabase/client';
 import { deviceKey, storeLesson } from '@/lib/offline';
 import { track } from '@/lib/analytics';
 import { LatestRequest } from '@/lib/latest-request';
+import { useLocaleCode, useT } from '@/lib/i18n/client';
+import type { MessageKey } from '@/lib/i18n/messages/en';
 import { useMediaPosition } from './use-media-position';
 import { PositionStatus } from './position-status';
 
@@ -41,6 +43,30 @@ type PlaybackResponse = {
  * watched slowly outlives a URL minted at page load, so the player has to be
  * able to ask again.
  */
+/**
+ * The three choices of quality that have a word in them. "1080p — full HD"
+ * and "720p — HD" are the same in every language and are left as they are.
+ */
+/**
+ * A failure this player has already put into words. Anything else that is
+ * thrown (a dropped connection, a storage error) carries the browser's own
+ * English and is answered with the player's sentence instead.
+ */
+class Refusal extends Error {}
+
+type Words = { t: (key: MessageKey) => string; speaksEnglish: boolean };
+
+/** The server's sentence on an English page; the player's own otherwise. */
+function refusal(words: Words, server: string | null | undefined, key: MessageKey): string {
+  return words.speaksEnglish && server ? server : words.t(key);
+}
+
+const QUALITY_KEY: Partial<Record<RenditionProfile, MessageKey>> = {
+  '480p': 'player.qualityStandard',
+  '360p': 'player.qualitySmall',
+  audio: 'player.qualityAudio',
+};
+
 /** What the learner would call this device, guessed from what it reports. */
 function deviceLabel(): string {
   const agent = typeof navigator === 'undefined' ? '' : navigator.userAgent;
@@ -88,6 +114,14 @@ export function RenditionPlayer({
 }) {
   const position = useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActorId, resumeAt });
   const { ref: mediaRef, ready, handlers } = position;
+  const t = useT();
+  // A refusal comes from the server as an English sentence. An English page
+  // prints it, because it says more than ours; a page in another language
+  // says its own sentence instead of English in the middle of it. Through a
+  // ref, so asking for a word is never a reason to fetch a recording again.
+  const speaksEnglish = useLocaleCode() === 'en';
+  const words = useRef({ t, speaksEnglish });
+  words.current = { t, speaksEnglish };
 
   const choices = renditionChoices(renditions);
   const initial = pickStreamRendition(renditions, null);
@@ -122,13 +156,13 @@ export function RenditionPlayer({
         const result = (await response.json().catch(() => ({}))) as PlaybackResponse;
         if (!request.isCurrent()) return;
         if (!response.ok || !result.data?.url) {
-          throw new Error(result.message ?? 'That lesson could not be played.');
+          throw new Refusal(refusal(words.current, result.message, 'player.playFailed'));
         }
         setPlayback({ id: renditionId, url: result.data.url });
       } catch (cause) {
         if (!request.isCurrent()) return;
         setPlayback(null);
-        setError(cause instanceof Error ? cause.message : 'That lesson could not be played.');
+        setError(cause instanceof Refusal ? cause.message : words.current.t('player.playFailed'));
       } finally {
         if (request.isCurrent()) setLoading(false);
       }
@@ -172,7 +206,9 @@ export function RenditionPlayer({
   if (!chosen) {
     return (
       <p className="muted">
-        {displayName} has no delivery copy that can be played yet.
+        <bdi>{displayName}</bdi>
+        <br />
+        {t('player.noCopy')}
       </p>
     );
   }
@@ -194,7 +230,7 @@ export function RenditionPlayer({
         p_device_label: deviceLabel(),
       });
 
-      if (booking.error) throw new Error(booking.error.message);
+      if (booking.error) throw new Refusal(refusal(words.current, booking.error.message, 'player.saveFailed'));
 
       const saved = booking.data as
         | {
@@ -206,7 +242,7 @@ export function RenditionPlayer({
         | null;
 
       if (saved?.saved !== true) {
-        throw new Error(saved?.message ?? 'This lesson cannot be saved on this plan.');
+        throw new Refusal(refusal(words.current, saved?.message, 'player.saveRefused'));
       }
 
       const query = new URLSearchParams({ lesson: lessonId, resource: resourceId, save: String(saved.downloadId ?? '') });
@@ -218,11 +254,11 @@ export function RenditionPlayer({
         message?: string;
       };
       if (!response.ok || !result.data?.url) {
-        throw new Error(result.message ?? 'That lesson could not be fetched to save.');
+        throw new Refusal(refusal(words.current, result.message, 'player.fetchFailed'));
       }
 
       const bytes = await fetch(result.data.url);
-      if (!bytes.ok) throw new Error('That lesson could not be fetched to save.');
+      if (!bytes.ok) throw new Refusal(words.current.t('player.fetchFailed'));
       const blob = await bytes.blob();
 
       await storeLesson(
@@ -242,7 +278,7 @@ export function RenditionPlayer({
       setSavedHere(true);
       void track({ code: 'download.saved', subjectId: lessonId, learnerProfileId });
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'That lesson could not be saved.');
+      setError(cause instanceof Refusal ? cause.message : words.current.t('player.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -252,7 +288,7 @@ export function RenditionPlayer({
 
   return (
     <div style={{ display: 'grid', gap: '0.5rem' }}>
-      <strong>{displayName}</strong>
+      <strong dir="auto">{displayName}</strong>
 
       {video ? (
         <video
@@ -271,7 +307,7 @@ export function RenditionPlayer({
           }}
           {...handlers}
         >
-          Your browser cannot play this video.
+          {t('player.videoUnsupported')}
         </video>
       ) : (
         <audio
@@ -283,13 +319,13 @@ export function RenditionPlayer({
           style={{ width: '100%' }}
           {...handlers}
         >
-          Your browser cannot play this audio.
+          {t('player.audioUnsupported')}
         </audio>
       )}
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
         <label className="muted" htmlFor={`quality-${chosen.id}`}>
-          Quality
+          {t('player.quality')}
         </label>
         <select
           id={`quality-${chosen.id}`}
@@ -299,40 +335,38 @@ export function RenditionPlayer({
         >
           {choices.map((option) => (
             <option key={option.id} value={option.profile}>
-              {PROFILE_LABEL[option.profile]} · {formatByteSize(option.byteSize)}
+              {QUALITY_KEY[option.profile] ? t(QUALITY_KEY[option.profile] as MessageKey) : PROFILE_LABEL[option.profile]} · {formatByteSize(option.byteSize)}
             </option>
           ))}
         </select>
 
         {canDownload && !savedHere && (
           <button type="button" className="secondary" onClick={() => void save()} disabled={saving}>
-            {saving ? 'Saving…' : 'Save on this device'}
+            {saving ? t('player.saving') : t('player.saveDevice')}
           </button>
         )}
-        {savedHere && <a className="secondary" href="/downloads">On this device</a>}
+        {savedHere && <a className="secondary" href="/downloads">{t('player.onDevice')}</a>}
 
         {saveNote && (
           <p className="muted" style={{ fontSize: '0.9rem', margin: 0 }}>
             {saveNote}{' '}
-            <Link href="/plans">See what Plus includes</Link>
+            <Link href="/plans">{t('player.seePlus')}</Link>
           </p>
         )}
 
         {error && (
           <button type="button" className="secondary" onClick={() => void load(chosen.id)}>
-            Try again
+            {t('player.tryAgain')}
           </button>
         )}
       </div>
 
       <PositionStatus position={position} />
-      {loading && <p className="muted">Preparing the player…</p>}
+      {loading && <p className="muted">{t('player.preparing')}</p>}
       {error && <p className="muted">{error}</p>}
       <p className="muted" style={{ fontSize: '0.85rem' }}>
-        Playback links are short-lived and are tied to your access to this lesson.
-        {canDownload
-          ? ' A saved lesson stays inside the app, but currently needs a connection to check access each time you open it.'
-          : ''}
+        {t('player.linksNote')}
+        {canDownload ? ` ${t('player.savedNote')}` : ''}
       </p>
     </div>
   );

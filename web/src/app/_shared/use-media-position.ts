@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { clampPosition, resumeLabel, shouldResume } from '@/lib/resume';
+import { useT } from '@/lib/i18n/client';
 import { createVersionedPositionWriter, type PositionSnapshot } from '@/lib/versioned-position-writer';
 import { positionRecovery, type RecoveryRecord } from '@/lib/position-recovery';
 import { resourcePositionRecovery } from '@/lib/resource-position-recovery';
@@ -33,6 +34,13 @@ function validSnapshot(value: unknown): value is PositionSnapshot {
  * a failed initialization or an ambiguous write disables saving until reload. */
 export function useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActorId, resumeAt }: Options) {
   const ref = useRef<HTMLMediaElement | null>(null);
+  // The sentences this hook sets are asked for in the language of the page the
+  // player is on. Through a ref, never as a dependency: outside a provider
+  // `useT()` is a new function on every render, and an effect that reran for
+  // it would read the saved place again in the middle of a lesson.
+  const t = useT();
+  const say = useRef(t);
+  say.current = t;
   const writerRef = useRef<Writer | null>(null);
   const initial = useRef<number | null>(null);
   const metadata = useRef(false);
@@ -63,7 +71,7 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActo
   const forget = useCallback((record: RecoveryRecord | null) => {
     if (!record || !recovery.current) return;
     try { recovery.current.store.remove(record); }
-    catch { setRecoveryError('Device storage could not be cleared. Check your browser storage settings.'); }
+    catch { setRecoveryError(say.current('player.storeClearFailed')); }
   }, []);
 
   const persist = useCallback((seconds: number) => {
@@ -76,7 +84,7 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActo
       const record: RecoveryRecord = { actorId: context.actorId, enrolmentId: context.enrolmentId,
         lessonId: context.lessonId, sessionId: context.sessionId, seconds: whole, updatedAt: Date.now() };
       if (context.store.save(record)) ownRecord.current = record;
-    } catch { setRecoveryError('Could not save a recovery place on this device.'); }
+    } catch { setRecoveryError(say.current('player.storeSaveFailed')); }
   }, []);
 
   const applyResume = useCallback(() => {
@@ -87,7 +95,7 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActo
     const duration = Number.isFinite(element.duration) ? element.duration : null;
     if (position !== null && shouldResume(position, duration)) {
       element.currentTime = clampPosition(position);
-      setNotice(resumeLabel(position));
+      setNotice(resumeLabel(position, say.current));
     }
   }, []);
 
@@ -115,7 +123,7 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActo
       const enabled = store.enabled();
       storageRef.current = store;
       setRecoveryEnabled(enabled); setRecoveryAvailable(true);
-    } catch { setRecoveryError('Recovery storage is unavailable in this browser.'); }
+    } catch { setRecoveryError(say.current('player.storeUnavailable')); }
     // A stalled connection must not leave native playback controls hidden.
     const timeout = window.setTimeout(() => controller.abort(), 10000);
     void (async () => {
@@ -152,13 +160,13 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActo
                 setLegacyRecoveries(enabled ? oldStore.list(scope) : []);
               } catch {
                 legacyRecoveryStore.current = null;
-                setRecoveryError('Could not read earlier device places. Check your browser storage settings.');
+                setRecoveryError(say.current('player.storeReadFailed'));
               }
             }
           }
         } catch {
           recovery.current = null;
-          setRecoveryError('Recovery storage is unavailable in this browser.');
+          setRecoveryError(say.current('player.storeUnavailable'));
         }
         initial.current = server.seconds;
         snapshotReady.current = true;
@@ -191,14 +199,14 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActo
                 legacyRecoveryStore.current.remove(selectedLegacyRecovery.current);
                 setLegacyRecoveries(legacyRecoveryStore.current.list({ actorId, enrolmentId, lessonId }));
                 selectedLegacyRecovery.current = null;
-              } catch { setRecoveryError('Could not clear the earlier device place. Check your browser storage settings.'); }
+              } catch { setRecoveryError(say.current('player.earlierClearFailed')); }
             }
             if (queued === null && ownRecord.current?.seconds === seconds) {
               forget(ownRecord.current); ownRecord.current = null;
             }
           },
           onConflict: (snapshot, local) => { serverSnapshot.current = snapshot; setConflict({ server: snapshot, local }); },
-          onUnconfirmed: () => setSaveError('Could not confirm your saved place. Reload the lesson to check before continuing to save.'),
+          onUnconfirmed: () => setSaveError(say.current('player.unconfirmed')),
         });
         writerRef.current = writer;
         if (touched.current && ref.current) {
@@ -210,7 +218,7 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActo
         setReady(true);
       } catch {
         if (!cancelled) {
-          setSaveError('Could not load your saved place. You can play this lesson, but saving is unavailable until you reload.');
+          setSaveError(say.current('player.loadFailed'));
           setReady(true);
         }
       } finally {
@@ -253,9 +261,9 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActo
           setLegacyRecoveries([]); setRecoveries([]); recoveryGate.current = false;
           if (pendingPlayback.current !== null) writerRef.current?.enqueue(pendingPlayback.current, true);
           pendingPlayback.current = null;
-          setRecoveryError('Recovery was turned off or cleared elsewhere in this browser.');
+          setRecoveryError(say.current('player.turnedOff'));
         }
-      } catch { setRecoveryError('Could not check recovery storage in this browser.'); }
+      } catch { setRecoveryError(say.current('player.storeCheckFailed')); }
     };
     const storageChanged = (event: StorageEvent) => {
       if (event.key === null || event.key === 'ayahspring:resume-recovery:v1:enabled') syncConsent();
@@ -289,13 +297,13 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActo
   const reviewLegacyPlace = () => {
     const writer = writerRef.current; const element = ref.current; const server = serverSnapshot.current;
     if (legacyPlace === null || !writer || !element || !server || recoveryGate.current || !writer.canChallenge()) {
-      setLegacyError('Finish the current save or recovery choice before reviewing the old place.');
+      setLegacyError(say.current('player.legacyBusy'));
       return;
     }
-    if (!metadata.current) { setLegacyError('Wait for the recording to load before reviewing the old place.'); return; }
+    if (!metadata.current) { setLegacyError(say.current('player.legacyWait')); return; }
     const target = clampPosition(legacyPlace);
     if (Number.isFinite(element.duration) && element.duration > 0 && target >= element.duration) {
-      setLegacyError('The old place is beyond this recording. It may belong to another recording.');
+      setLegacyError(say.current('player.legacyBeyond'));
       return;
     }
     // Install the conflict gate before seeking: a timeupdate cannot silently
@@ -306,7 +314,7 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActo
       setLegacyPlace(null); setLegacyError(null);
     } catch {
       writer.useServer(); setConflict(null);
-      setLegacyError('Could not seek to the old place. Try again when the recording is ready.');
+      setLegacyError(say.current('player.legacySeekFailed'));
     }
   };
   const dismissLegacyPlace = () => { setLegacyPlace(null); setLegacyError(null); };
@@ -319,29 +327,29 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActo
     const store = legacyRecoveryStore.current;
     if (!store) return;
     try { store.remove(record); refreshLegacyRecoveries(); }
-    catch { setRecoveryError('Could not remove the earlier device place.'); }
+    catch { setRecoveryError(say.current('player.earlierRemoveFailed')); }
   };
   const reviewLegacyRecovery = (record: RecoveryRecord) => {
     const store = legacyRecoveryStore.current; const context = recovery.current;
     const writer = writerRef.current; const element = ref.current; const server = serverSnapshot.current;
     if (!store || !context || !writer || !element || !server || recoveryGate.current || !writer.canChallenge()) {
-      setRecoveryError('Finish the current save or recovery choice before reviewing an earlier device place.'); return;
+      setRecoveryError(say.current('player.earlierBusy')); return;
     }
-    if (!metadata.current) { setRecoveryError('Wait for the recording to load before reviewing the earlier device place.'); return; }
+    if (!metadata.current) { setRecoveryError(say.current('player.earlierWait')); return; }
     try {
       const current = store.list(context).find((item) => item.sessionId === record.sessionId);
       if (!current || JSON.stringify(current) !== JSON.stringify(record)) {
-        refreshLegacyRecoveries(); setRecoveryError('The earlier device place changed. Review the updated list.'); return;
+        refreshLegacyRecoveries(); setRecoveryError(say.current('player.earlierChanged')); return;
       }
       if (Number.isFinite(element.duration) && element.duration > 0 && record.seconds >= element.duration) {
-        setRecoveryError('The earlier device place is beyond this recording. It may belong to another recording.'); return;
+        setRecoveryError(say.current('player.earlierBeyond')); return;
       }
       writer.challenge(server, record.seconds);
       try { element.currentTime = record.seconds; }
-      catch { writer.useServer(); setConflict(null); setRecoveryError('Could not seek to the earlier device place.'); return; }
+      catch { writer.useServer(); setConflict(null); setRecoveryError(say.current('player.earlierSeekFailed')); return; }
       selectedLegacyRecovery.current = record;
       setRecoveryError(null);
-    } catch { setRecoveryError('Could not read the earlier device place.'); }
+    } catch { setRecoveryError(say.current('player.earlierReadFailed')); }
   };
 
   const toggleRecovery = (enabled: boolean) => {
@@ -352,7 +360,7 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActo
         store.enable();
         window.dispatchEvent(new Event('ayahspring-resume-consent'));
         setRecoveryEnabled(true);
-        setRecoveryError(recovery.current ? null : 'Recovery cannot record a place until your account is confirmed. Reload when connected.');
+        setRecoveryError(recovery.current ? null : say.current('player.needConfirmed'));
         if (ref.current && ref.current.currentTime > 0) persist(ref.current.currentTime);
       } else {
         store.disable();
@@ -367,7 +375,7 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActo
       // A failed cleanup may already have removed consent. Synchronize other
       // players, but warn that some records may still need manual deletion.
       window.dispatchEvent(new Event('ayahspring-resume-consent'));
-      setRecoveryError('Device storage could not be changed or cleared completely. Check your browser storage settings.');
+      setRecoveryError(say.current('player.storeChangeFailed'));
     }
   };
 
@@ -383,7 +391,7 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActo
         if (pendingPlayback.current !== null) writerRef.current?.enqueue(pendingPlayback.current, true);
         pendingPlayback.current = null;
       }
-    } catch { setRecoveryError('Could not remove this recovery place from the device.'); }
+    } catch { setRecoveryError(say.current('player.deviceRemoveFailed')); }
   };
 
   const useRecovery = (record: RecoveryRecord) => {
@@ -400,7 +408,7 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActo
           if (pendingPlayback.current !== null) writer.enqueue(pendingPlayback.current, true);
           pendingPlayback.current = null;
         }
-        setRecoveryError('The device place changed. Review the updated list.');
+        setRecoveryError(say.current('player.deviceChanged'));
         return;
       }
       element.currentTime = clampPosition(record.seconds);
@@ -410,9 +418,9 @@ export function useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActo
       selectedRecord.current = record;
       recoveryGate.current = false; pendingPlayback.current = null;
       setRecoveries([]); setRecoveryError(null);
-      setNotice('Other device recovery places, if any, remain available when you reopen this lesson.');
+      setNotice(say.current('player.othersRemain'));
       writer.challenge(server, element.currentTime);
-    } catch { setRecoveryError('Could not use this device place. Try again after the media loads.'); }
+    } catch { setRecoveryError(say.current('player.deviceUseFailed')); }
   };
 
   const handlers = {

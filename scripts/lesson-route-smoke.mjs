@@ -149,9 +149,13 @@ try {
     for (const text of ['Breadcrumb', 'My learning', 'Not started', 'Transcript', 'Materials', '>Video<', 'Mark complete', 'Back to course', 'Lesson navigation', 'Course contents', 'Lesson 1 of', 'Discussion']) assert.equal(body.includes(text), false, `Arabic lesson still says "${text}"`);
     // The length of the lesson is said by the language's own locale data.
     assert.ok(body.includes('2 د'), 'the length of the lesson is not in Arabic'); assert.equal(body.includes('2 min'), false);
-    // The player is English, and says so. The report form at the foot is the
-    // reader's: its link is Arabic and nothing marks it as English.
-    assert.match(body, /<span class="t"[^>]*lang="en" dir="ltr"[^>]*>/);
+    // The player is the reader's too, in the page as it is sent: what a
+    // browser that cannot play says, the way round it, and the first thing
+    // said about the saved place. Nothing in the lesson is marked English.
+    for (const text of ['متصفحك لا يستطيع تشغيل هذا الفيديو.', '>افتح الفيديو مباشرة</a>', '<p class="meta" role="status">جارٍ التحقق من موضعك المحفوظ…</p>']) assert.ok(body.includes(text), `Arabic player: ${text}`);
+    for (const text of ['Your browser cannot play', 'Open the video directly', 'Checking your saved place']) assert.equal(body.includes(text), false, `Arabic player still says "${text}"`);
+    assert.equal(body.includes('lang="en"'), false, 'an Arabic lesson with a translated player marks part of itself as English');
+    // The report form at the foot is the reader's: its link is Arabic.
     assert.doesNotMatch(body, /<section class="section"[^>]*lang="en"/);
     assert.match(body, /<section class="section"[^>]*>\s*<button type="button" class="linklike"[^>]*>الإبلاغ عن مشكلة<\/button>/);
     assert.equal(body.includes('Report a problem'), false, 'Arabic lesson still says "Report a problem"');
@@ -166,6 +170,7 @@ try {
     const html = await (await request({ cookie: `${cookie}; ayahspring_locale=fr`, 'accept-language': 'ar' })).text(); const body = visible(html);
     assert.match(html, /<html[^>]*lang="fr"/);
     assert.ok(body.includes('>Signaler un problème<'), 'French: the report link');
+    for (const text of ['Votre navigateur ne peut pas lire cette vidéo.', '>Ouvrir la vidéo directement</a>', 'Vérification de votre position enregistrée…']) assert.ok(body.includes(text), `French player: ${text}`);
     for (const text of ['Fil d’Ariane', 'Non commencée', '>Supports<', '>Vidéo<', 'Marquer comme terminée', 'Retour au cours', 'Leçon 1 sur 2', 'La discussion n’est pas ouverte pour cette leçon.']) assert.ok(body.includes(text) || body.includes(text.replace('’', '&#x27;')), `French: ${text}`);
   }
   for (const [code, dir] of [['ha', 'ltr'], ['ps', 'rtl']]) {
@@ -174,6 +179,8 @@ try {
     assert.equal(wrapper(html), '<div class="page lesson-page" lang="en" dir="ltr">');
     assert.ok(body.includes('2 min'), `${code}: an English lesson gives its length in another language`);
     for (const text of ['aria-label="Breadcrumb"', '>Materials<', 'Mark complete', 'Lesson 1 of 2', 'Discussion is not open on this lesson.', '>Report a problem<']) assert.ok(body.includes(text), `${code}: ${text}`);
+    // The player inside an English lesson is English, as the lesson is.
+    for (const text of ['Your browser cannot play this video.', '>Open the video directly</a>', 'Checking your saved place…']) assert.ok(body.includes(text), `${code} player: ${text}`);
   }
   // A recording that cannot be played is explained in the reader's language,
   // and the way to tell a person about it is too. It was English, marked as
@@ -192,10 +199,10 @@ try {
     assert.equal(body.split('>أخبرنا عن هذا التسجيل<').length - 1, 2);
     for (const text of ['cannot be played', 'Not ready yet', 'Not available', 'Tell us about this recording', 'being prepared']) assert.equal(body.includes(text), false, `Arabic lesson still says "${text}"`);
     // The notice above the materials is not marked as English, and neither is
-    // a row that holds a note; the row that holds a player still is.
+    // a row that holds a note, and neither is the row that holds a player.
     assert.doesNotMatch(body, /<div class="notice"[^>]*lang="en"/);
     assert.match(body, /<span class="t"><span class="muted"><strong><bdi>Synthetic broken upload<\/bdi><\/strong>/);
-    assert.equal(body.split('<span class="t" lang="en" dir="ltr">').length - 1, 1);
+    assert.equal(body.includes('lang="en"'), false);
     // Still being prepared: nobody is sent to a queue about it.
     const waiting = body.slice(body.indexOf('Synthetic waiting upload'), body.indexOf('Synthetic broken upload'));
     assert.equal(waiting.includes('أخبرنا عن هذا التسجيل'), false);
@@ -248,8 +255,8 @@ try {
     assert.ok(body.includes(`${new Intl.NumberFormat('ar').format(3)}<!-- -->. `), 'Arabic: the third question is not numbered the reader\u2019s way');
     for (const text of ['<h2>المصادر والمراجع</h2>', 'موضع استخدامه: <bdi>Synthetic paragraph two</bdi>', '>افتح المصدر</a>', '<span class="badge neutral">مرجع فقهي</span>', '<span class="badge neutral">القرآن</span>', '<bdi>Synthetic fiqh title</bdi>']) assert.ok(body.includes(text), `Arabic: ${text}`);
     for (const text of ['Sources and references', 'Used at', 'Open the source', 'Fiqh reference', 'Qur’an', 'Qur&#x27;an', 'fiqh reference', 'fiqh_reference', 'quran<']) assert.equal(body.includes(text), false, `Arabic sources card says "${text}"`);
-    // None of these parts is marked as English any more: the player's row is the only one.
-    assert.equal(body.split('lang="en" dir="ltr"').length - 1, 1);
+    // None of these parts is marked as English any more, the player's row included.
+    assert.equal(body.split('lang="en" dir="ltr"').length - 1, 0);
   }
   {
     const body = visible(await (await request({ cookie: `${cookie}; ayahspring_locale=fr`, 'accept-language': 'ar' })).text());
@@ -268,7 +275,7 @@ try {
     const html = await (await request({ cookie, 'accept-language': 'wo, fr' })).text();
     assert.match(html, /<html[^>]*lang="en"/); assert.ok(visible(html).includes('>Materials<')); assert.equal(visible(html).includes('Supports'), false);
   }
-  console.log('Lesson languages passed: English, Arabic (frame, report link, the notes about a recording that cannot play, practice questions, study tools and the sources card translated, player marked English), French by cookie, Hausa and Pashto frames with an English lesson, Wolof to English. No translation here has been read by a speaker.');
+  console.log('Lesson languages passed: English, Arabic (frame, report link, the notes about a recording that cannot play, practice questions, study tools, the sources card and the player translated, nothing marked English), French by cookie with its player, Hausa and Pashto frames with an English lesson, Wolof to English. No translation here has been read by a speaker.');
   if (process.env.RESPONSIVE_PLAYWRIGHT && process.env.RESPONSIVE_CHROME) {
     const { chromium } = await import(pathToFileURL(process.env.RESPONSIVE_PLAYWRIGHT).href);
     browser = await chromium.launch({ executablePath: process.env.RESPONSIVE_CHROME, headless: true, args: ['--no-sandbox'] });
@@ -309,6 +316,12 @@ try {
     // The translated frame in the other direction and with the longest words,
     // with practice questions and the study tools on the page.
     extras = true;
+    // What the player says in each, copied from the catalogue file.
+    const PLAYER_SAYS = {
+      ar: { open: 'افتح الفيديو مباشرة', keep: 'احتفظ بموضع استرداد مؤقت على هذا المتصفح' },
+      ta: { open: 'காணொளியை நேரடியாகத் திறக்கவும்', keep: 'இந்த உலாவியில் தற்காலிக மீட்பு இடத்தை வைத்திரு' },
+    };
+    const seenPlayers = [];
     for (const [code, dir] of [['ar', 'rtl'], ['ta', 'ltr']]) {
       for (const width of [320, 390, 1440]) {
         const context = await browser.newContext({ viewport: { width, height: 900 }, locale: 'en' });
@@ -328,7 +341,29 @@ try {
         });
         assert.ok(m.scroll <= width + 1, `${code} ${width}: page overflow ${m.scroll}`);
         assert.equal(m.dir, dir, `${code} ${width}: lesson direction`);
-        assert.ok(m.english.length >= 1 && m.english.every((d) => d === 'ltr'), `${code} ${width}: an English part is laid out ${m.english}`);
+        assert.deepEqual(m.english, [], `${code} ${width}: part of a translated lesson is still marked English`);
+        // The player is the reader's once the browser has it: what it says
+        // about the saved place after asking the server, its buttons, and the
+        // choice about this browser, which is off until it is made.
+        const player = await page.evaluate(() => {
+          const row = document.querySelector('.lesson-page .lessons li:has(video) .t');
+          const words = (row.innerText || '').replace('Synthetic video', '');
+          const box = row.querySelector('input[type="checkbox"]');
+          return { words, dir: getComputedStyle(row).direction, status: [...row.querySelectorAll('[role="status"], [role="alert"]')].map((el) => el.textContent.trim()).filter(Boolean),
+            buttons: [...row.querySelectorAll('button')].map((b) => b.textContent.trim()), box: box ? { checked: box.checked, label: box.closest('label')?.textContent.trim() ?? '' } : null,
+            clipped: [...row.querySelectorAll('button, label')].filter((el) => el.scrollWidth > el.clientWidth + 1).length,
+            outside: [...row.querySelectorAll('button, label, p, video')].filter((el) => { const r = el.getBoundingClientRect(); return r.width > 0 && (r.left < -1 || r.right > innerWidth + 1); }).length };
+        });
+        assert.equal(player.dir, dir, `${code} ${width}: the player is laid out ${player.dir}`);
+        assert.doesNotMatch(player.words, /[A-Za-z]{4,}\s[A-Za-z]{3,}\s[A-Za-z]{3,}/u, `${code} ${width}: the player says an English sentence: ${JSON.stringify(player.words)}`);
+        assert.ok(player.words.includes(PLAYER_SAYS[code].open), `${code} ${width}: the player does not offer the video in ${code}`);
+        assert.ok(player.status.length >= 1, `${code} ${width}: the player says nothing about the saved place`);
+        assert.equal(player.buttons.filter((text) => /^[A-Za-z ]{4,}$/u.test(text)).length, 0, `${code} ${width}: a player button is English: ${JSON.stringify(player.buttons)}`);
+        if (player.box) assert.deepEqual(player.box, { checked: false, label: PLAYER_SAYS[code].keep }, `${code} ${width}: the choice about this browser`);
+        assert.equal(player.clipped, 0, `${code} ${width}: a player control is cut off`);
+        assert.equal(player.outside, 0, `${code} ${width}: part of the player is outside the page`);
+        if (process.env.RESPONSIVE_SCREENSHOTS) await page.locator('.lesson-page .lessons li:has(video)').screenshot({ path: resolve(process.env.RESPONSIVE_SCREENSHOTS, `lesson-player-${code}-${width}.png`) });
+        seenPlayers.push(`${code} ${width}: ${player.status.join(' / ')}${player.box ? ' [choice shown, off]' : ' [choice not shown]'}`);
         assert.deepEqual(m.clipped, [], `${code} ${width}: a label is cut off`);
         assert.equal(m.overlap, false, `${code} ${width}: the kind of a material runs into the material`);
         // Arrows are turned round right-to-left and left alone otherwise.
@@ -457,7 +492,8 @@ try {
         if (process.env.RESPONSIVE_SCREENSHOTS) await page.screenshot({ path: resolve(process.env.RESPONSIVE_SCREENSHOTS, `lesson-${code}-${width}.png`), fullPage: true });
         await context.close();
       }
-      console.log(`Synthetic lesson ${code}: 320, 390 and 1440 wide, no overflow, no clipped label, English parts left to right, arrows ${dir === 'rtl' ? 'turned round' : 'as typed'}; practice questions and study tools answer a refusal and a lost reply in ${code}; the sources card fits`);
+      console.log(`Synthetic lesson ${code}: 320, 390 and 1440 wide, no overflow, no clipped label, nothing marked English, arrows ${dir === 'rtl' ? 'turned round' : 'as typed'}; practice questions and study tools answer a refusal and a lost reply in ${code}; the sources card fits; the player says its sentences in ${code} and fits`);
+      for (const line of seenPlayers.filter((seen) => seen.startsWith(`${code} `))) console.log(`  player ${line}`);
     }
     extras = false;
     // A page that breaks says so in the reader's language. The account page

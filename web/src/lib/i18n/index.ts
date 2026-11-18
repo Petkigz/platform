@@ -56,6 +56,14 @@ export function messagesFor(code: LocaleCode): Messages {
 const COMPANION_PREFIX = 'companion.';
 
 /**
+ * The players on the lesson page are client components with eighty-six
+ * sentences of their own, most of them about a saved place. Like the
+ * companion tools they are left out of what every page carries and handed
+ * over by the one page that shows them (`playerMessagesFor`).
+ */
+const PLAYER_PREFIX = 'player.';
+
+/**
  * Sentences only a server-rendered page reads.
  *
  * The learner dashboard, the course page, the lesson page's frame, the
@@ -82,6 +90,7 @@ export function shellMessagesFor(code: LocaleCode): Partial<Messages> {
     Object.entries(messagesFor(code)).filter(
       ([key]) =>
         !key.startsWith(COMPANION_PREFIX) &&
+        !key.startsWith(PLAYER_PREFIX) &&
         !SERVER_ONLY_PREFIXES.some((prefix) => key.startsWith(prefix)),
     ),
   ) as Partial<Messages>;
@@ -91,6 +100,13 @@ export function shellMessagesFor(code: LocaleCode): Partial<Messages> {
 export function companionMessagesFor(code: LocaleCode): Partial<Messages> {
   return Object.fromEntries(
     Object.entries(messagesFor(code)).filter(([key]) => key.startsWith(COMPANION_PREFIX)),
+  ) as Partial<Messages>;
+}
+
+/** The players' sentences alone, for the provider round a lesson's players. */
+export function playerMessagesFor(code: LocaleCode): Partial<Messages> {
+  return Object.fromEntries(
+    Object.entries(messagesFor(code)).filter(([key]) => key.startsWith(PLAYER_PREFIX)),
   ) as Partial<Messages>;
 }
 

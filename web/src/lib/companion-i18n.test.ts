@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { en } from './i18n/messages/en.ts';
 import { COMPANION } from './i18n/messages/companion.ts';
 import { CATALOGUES } from './i18n/messages/catalogues.ts';
-import { LOCALES, companionMessagesFor, messagesFor, shellMessagesFor } from './i18n/index.ts';
+import { LOCALES, companionMessagesFor, messagesFor, playerMessagesFor, shellMessagesFor } from './i18n/index.ts';
 
 // The companion tools were the last English-only screens. These tests pin the
 // two halves of the fix: the catalogue carries every sentence, and the
@@ -125,7 +125,14 @@ test('no other page pays for the companion sentences', () => {
     // sentences are the one learner part the shell does carry.
     assert.equal(Object.keys(shell).filter((k) => k.startsWith('broke.')).length, 10, locale.code);
     assert.equal(Object.keys(shell).some(onServer), false, `${locale.code} shell carries dashboard, course, lesson or assessment sentences`);
-    assert.deepEqual({ ...shell, ...companion, ...serverOnly }, whole);
+    // The players' sentences are the fourth part: for the browser, so not
+    // server-only, and too many for every page, so not in the shell either.
+    // The lesson page hands them to a provider of its own.
+    const player = playerMessagesFor(locale.code);
+    assert.equal(Object.keys(player).length, 86, locale.code);
+    assert.equal(Object.keys(player).every((k) => k.startsWith('player.')), true);
+    assert.equal(Object.keys(shell).some((k) => k.startsWith('player.')), false, `${locale.code} shell carries the players' sentences`);
+    assert.deepEqual({ ...shell, ...companion, ...serverOnly, ...player }, whole);
   }
   for (const [page, component] of [[prayerPage, 'PrayerTimesTool'], [hijriPage, 'HijriDate'], [counterPage, 'Counter']] as const) {
     assert.ok(

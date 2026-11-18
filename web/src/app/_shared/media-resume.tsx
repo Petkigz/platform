@@ -10,6 +10,8 @@ import {
   type Loop,
 } from '@/lib/resume';
 
+import { useT } from '@/lib/i18n/client';
+
 import { useMediaPosition } from './use-media-position';
 import { PositionStatus } from './position-status';
 
@@ -28,14 +30,19 @@ type PlayerProps = {
  *
  * The plain `<video>` this replaces started at zero every time. Nothing else
  * about it was wrong, so nothing else about it changed.
+ *
+ * Its words are the page's: the lesson page hands them to its players in the
+ * reader's language, and anywhere else they are English. The name is the
+ * teacher's and finds its own direction.
  */
 export function VideoWithResume({ name, src, enrolmentId, lessonId, resourceId, legacyActorId, resumeAt }: PlayerProps) {
   const position = useMediaPosition({ enrolmentId, lessonId, resourceId, legacyActorId, resumeAt });
   const { ref, ready, handlers } = position;
+  const t = useT();
 
   return (
     <div style={{ display: 'grid', gap: '0.4rem' }}>
-      <strong>{name}</strong>
+      <strong dir="auto">{name}</strong>
       <video
         ref={ref as RefObject<HTMLVideoElement>}
         controls={ready}
@@ -46,12 +53,12 @@ export function VideoWithResume({ name, src, enrolmentId, lessonId, resourceId, 
         style={{ width: '100%', maxHeight: '70vh', borderRadius: '0.75rem', background: '#101510' }}
         {...handlers}
       >
-        Your browser cannot play this video.
+        {t('player.videoUnsupported')}
       </video>
       {src && (
         <p className="meta" style={{ margin: 0 }}>
           <a href={src} target="_blank" rel="noreferrer">
-            Open the video directly
+            {t('player.openVideo')}
           </a>
         </p>
       )}
@@ -84,17 +91,18 @@ export function AudioPlayer({ name, src, enrolmentId, lessonId, resourceId, lega
   const { ref, ready, handlers } = position;
   const [speed, setSpeed] = useState(1);
   const [loop, setLoop] = useState<Loop>({ from: null, to: null });
+  const t = useT();
 
   useEffect(() => {
     if (ref.current) ref.current.playbackRate = speed;
   }, [ref, speed]);
 
-  const label = loopLabel(loop);
+  const label = loopLabel(loop, t);
   const at = () => ref.current?.currentTime ?? 0;
 
   return (
     <div style={{ display: 'grid', gap: '0.5rem' }}>
-      <strong>{name}</strong>
+      <strong dir="auto">{name}</strong>
 
       <audio
         ref={ref as RefObject<HTMLAudioElement>}
@@ -114,29 +122,29 @@ export function AudioPlayer({ name, src, enrolmentId, lessonId, resourceId, lega
         onEnded={handlers.onEnded}
         onLoadedMetadata={handlers.onLoadedMetadata}
       >
-        Your browser cannot play this audio.
+        {t('player.audioUnsupported')}
       </audio>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
         <span className="muted" style={{ fontSize: '0.85rem' }}>
-          Speed
+          {t('player.speed')}
         </span>
         <button
           type="button"
           className="btn ghost"
           onClick={() => setSpeed(stepSpeed(speed, -1))}
           disabled={speed === PLAYBACK_SPEEDS[0]}
-          aria-label="Slower"
+          aria-label={t('player.slower')}
         >
           −
         </button>
-        <strong style={{ minWidth: '3rem', textAlign: 'center' }}>{speed}×</strong>
+        <strong dir="ltr" style={{ minWidth: '3rem', textAlign: 'center' }}>{speed}×</strong>
         <button
           type="button"
           className="btn ghost"
           onClick={() => setSpeed(stepSpeed(speed, 1))}
           disabled={speed === PLAYBACK_SPEEDS[PLAYBACK_SPEEDS.length - 1]}
-          aria-label="Faster"
+          aria-label={t('player.faster')}
         >
           +
         </button>
@@ -148,18 +156,18 @@ export function AudioPlayer({ name, src, enrolmentId, lessonId, resourceId, lega
           className="btn secondary"
           onClick={() => setLoop((current) => ({ ...current, from: Math.floor(at()) }))}
         >
-          Repeat from here
+          {t('player.loopFrom')}
         </button>
         <button
           type="button"
           className="btn secondary"
           onClick={() => setLoop((current) => ({ ...current, to: Math.ceil(at()) }))}
         >
-          to here
+          {t('player.loopTo')}
         </button>
         {label && (
           <button type="button" className="btn ghost" onClick={() => setLoop({ from: null, to: null })}>
-            Stop repeating
+            {t('player.loopStop')}
           </button>
         )}
       </div>
@@ -173,7 +181,7 @@ export function AudioPlayer({ name, src, enrolmentId, lessonId, resourceId, lega
       {src && (
         <p className="meta" style={{ margin: 0 }}>
           <a href={src} target="_blank" rel="noreferrer">
-            Open the audio directly
+            {t('player.openAudio')}
           </a>
         </p>
       )}

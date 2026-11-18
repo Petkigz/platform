@@ -22,6 +22,7 @@ import { ASSESS } from './assess.ts';
 import { ASSIGN } from './assign.ts';
 import { MISSING } from './missing.ts';
 import { BROKE } from './broke.ts';
+import { PLAYER } from './player.ts';
 import { LESSON } from './lesson.ts';
 import { isHeld } from './held.ts';
 import { ASIA_AZ } from './asia-az.ts';
@@ -810,6 +811,9 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   // The page for a page that broke, on the same rule. Sent with every page:
   // see the head of `broke.ts`.
   BROKE,
+  // The lesson page's players and saved-place messages, on the same rule.
+  // Sent only to a lesson page with something to play: see `player.ts`.
+  PLAYER,
 );
 
 /**

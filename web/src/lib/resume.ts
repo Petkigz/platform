@@ -10,6 +10,9 @@
  * Pure, so each of those can be tested without a browser or a video file.
  */
 
+import { fill } from './i18n/format.ts';
+import { en, type MessageKey } from './i18n/messages/en.ts';
+
 const DAY_SECONDS = 86400;
 
 /** A player reports -0.4 seconds and a broken one reports Infinity. Both exist. */
@@ -47,10 +50,15 @@ export function formatPosition(seconds: number | null | undefined): string {
   return hours > 0 ? `${hours}:${two(minutes)}:${two(rest)}` : `${minutes}:${two(rest)}`;
 }
 
+/** How a sentence is asked for: English here, the reader's language in a player. */
+export type Say = (key: MessageKey, vars?: Record<string, string | number>) => string;
+
+const english: Say = (key, vars) => fill(en[key], vars);
+
 /** The sentence a player shows for one moment before it starts. */
-export function resumeLabel(position: number | null | undefined): string | null {
+export function resumeLabel(position: number | null | undefined, say: Say = english): string | null {
   if (position === null || position === undefined || !shouldResume(position)) return null;
-  return `Resuming at ${formatPosition(position)}.`;
+  return say('player.resuming', { at: formatPosition(position) });
 }
 
 /**
@@ -80,13 +88,13 @@ export type Loop = { from: number | null; to: number | null };
  * passage begins and is still listening for where it ends — so it says so
  * instead of looking broken.
  */
-export function loopLabel(loop: Loop): string | null {
+export function loopLabel(loop: Loop, say: Say = english): string | null {
   const { from, to } = loop;
   if (from === null && to === null) return null;
-  if (from !== null && to === null) return `Repeating from ${formatPosition(from)} — mark where it ends.`;
-  if (from === null && to !== null) return `Repeating up to ${formatPosition(to)} — mark where it starts.`;
-  if (from! >= to!) return 'That passage ends before it starts. Mark it again.';
-  return `Repeating ${formatPosition(from!)} – ${formatPosition(to!)}.`;
+  if (from !== null && to === null) return say('player.loopOpenEnd', { from: formatPosition(from) });
+  if (from === null && to !== null) return say('player.loopOpenStart', { to: formatPosition(to) });
+  if (from! >= to!) return say('player.loopBackwards');
+  return say('player.loopBoth', { from: formatPosition(from!), to: formatPosition(to!) });
 }
 
 /** Whether a player should jump back to the start of the marked passage. */

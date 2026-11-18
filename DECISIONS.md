@@ -7955,14 +7955,15 @@ owner chose the first.
   form on the lesson page (and still 36%, rounded, with the page for a wrong
   address), 35% since the notes about a recording that cannot play, 34% since
   the practice questions and the study tools on the lesson page, 33% since
-  its sources card, 32% since the page for a page that broke.
+  its sources card, 32% since the page for a page that broke, 28% since the
+  lesson players and their saved-place messages.
 - **The test that refused a language under half is removed.** Nothing in the
   tests now limits how much English one of these languages shows. That is the
   cost of this choice and it was put to the owner in those words.
 - What the tests still require of every offered language: every sentence that
   is neither held nor deliberately unwritten is present, and the sentence
   that gives the percentage is in that language rather than English. The
-  count (192 of 591; it was 192 of 347 when this was decided) is pinned in
+  count (192 of 677; it was 192 of 347 when this was decided) is pinned in
   `held-translations.test.ts`, so it changes only on purpose.
 - The four withheld languages are unaffected. So is the rule that a new screen
   is not written for a language with anything held.
@@ -8063,8 +8064,29 @@ that page is drawn in the browser after a failure and cannot ask a server
 for its words, so `broke.` is deliberately not in `SERVER_ONLY_PREFIXES`.
 The page for a failure above every page (`global-error.tsx`) stays English:
 the layout that knows the reader's language is the thing that fell.
+The players on the lesson page followed on 2026-11-18: eighty-six sentences
+in a new part, `player.ts`, 28% for the nineteen. They are the browser's, so
+they cannot be server-only, and too many for every page, so the shell leaves
+`player.` out and the lesson page hands them to a provider round its
+materials, only when the lesson has something to play.
+
+**The notice consent rests on is translated without review (owner's
+decision, 2026-11-18).** One of the eighty-six is the paragraph a learner
+reads before allowing a browser to keep a temporary place: who can see what
+is kept, what turning it off removes, that the account is confirmed online
+first, and when records are cleared. The builder put two options to the
+owner and recommended keeping that paragraph English, marked as English,
+until a first-language speaker had read it, because a wrong word there is a
+wrong description of what a person agreed to. The owner answered "Translate
+it". It is written in the twenty-seven languages with the rest. What follows
+from that and is not softened anywhere: no speaker has read it; a learner
+who turns the choice on in one of those languages has agreed to the
+builder's wording; and it is the first thing a reviewer of any language
+should be shown. The choice is still off by default on every device, and
+the English sentence is unchanged.
+
 `UNWRITTEN_WHILE_HELD` is now `learn`, `course`, `lesson`, `assess`,
-`assign`, `missing` and `broke`.
+`assign`, `missing`, `broke` and `player`.
 
 **The rule going forward.** A part named in `UNWRITTEN_WHILE_HELD`
 (`web/src/lib/i18n/messages/held.ts`) may be absent from a language that has

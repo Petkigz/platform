@@ -17,6 +17,7 @@ import {
   localeGroups,
   matchLocale,
   messagesFor,
+  playerMessagesFor,
   shellMessagesFor,
   translatedLocales,
   translator,
@@ -35,6 +36,7 @@ import { ASSESS } from './i18n/messages/assess.ts';
 import { ASSIGN } from './i18n/messages/assign.ts';
 import { MISSING } from './i18n/messages/missing.ts';
 import { BROKE } from './i18n/messages/broke.ts';
+import { PLAYER } from './i18n/messages/player.ts';
 import { LESSON } from './i18n/messages/lesson.ts';
 import { auditAll } from './translation-audit.ts';
 import { SECTIONS } from './translations.ts';
@@ -405,7 +407,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // Owner's decision, 2026-11-16: a language the builder cannot write properly
   // falls back to English until a speaker has reviewed it. For a new screen
   // that means not writing it — a held draft would be the same guess, kept.
-  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign', 'missing', 'broke']);
+  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign', 'missing', 'broke', 'player']);
   // Thirty-seven for the dashboard (the learner-profile prompt is seven of
   // them), twenty-eight for the course page (twelve are the list of dated
   // classes), ninety for the lesson page (its frame, the report form, the
@@ -414,9 +416,11 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // forty for the assessment page, its quiz and the assessment list on the
   // course page, and a hundred and seven for the assignment page and the
   // assignment list, of which forty-seven are the files part, seven for
-  // the page for an address with nothing at it, and ten for the page for a
-  // page that broke.
-  assert.equal(unwrittenKeys.length, 319);
+  // the page for an address with nothing at it, ten for the page for a
+  // page that broke, and eighty-six for the players on the lesson page and
+  // what they say about a saved place.
+  assert.equal(unwrittenKeys.length, 405);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('player.')).length, 86);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('broke.')).length, 10);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('missing.')).length, 7);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('assign.')).length, 107);
@@ -425,7 +429,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('lesson.')).length, 90);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('assess.')).length, 40);
 
-  // Seven files, one rule: the same languages in each.
+  // Eight files, one rule: the same languages in each.
   const written = Object.keys(LEARN).sort();
   assert.deepEqual(Object.keys(COURSE).sort(), written);
   assert.deepEqual(Object.keys(LESSON).sort(), written);
@@ -433,6 +437,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   assert.deepEqual(Object.keys(ASSIGN).sort(), written);
   assert.deepEqual(Object.keys(MISSING).sort(), written);
   assert.deepEqual(Object.keys(BROKE).sort(), written);
+  assert.deepEqual(Object.keys(PLAYER).sort(), written);
   const expected = LOCALES.map((l) => l.code)
     .filter((code) => code !== 'en' && !Object.hasOwn(HELD_FOR_REVIEW, code))
     .sort();
@@ -442,6 +447,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   for (const code of expected) {
     const own: Partial<Record<string, string>> = {
       ...LEARN[code], ...COURSE[code], ...LESSON[code], ...ASSESS[code], ...ASSIGN[code], ...MISSING[code], ...BROKE[code],
+      ...PLAYER[code],
     };
     assert.deepEqual(Object.keys(own).sort(), [...unwrittenKeys].sort(), `${code} is short a dashboard, course, lesson, assessment or assignment sentence`);
     for (const key of unwrittenKeys) {
@@ -461,6 +467,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     assert.equal(languageShownFor(code, 'assign').code, code);
     assert.equal(languageShownFor(code, 'missing').code, code);
     assert.equal(languageShownFor(code, 'broke').code, code);
+    assert.equal(languageShownFor(code, 'player').code, code);
     assert.equal(coverageOf(code).percent, 100);
   }
 
@@ -478,7 +485,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     }
   }
   // What that costs the nineteen that are still in the picker, said out loud:
-  // 192 of 591 sentences, which is 32%. Nothing holds a floor under
+  // 192 of 677 sentences, which is 28%. Nothing holds a floor under
   // it any more: the owner chose on 2026-11-17 to keep these languages in the
   // picker and show the number. The count is pinned here so that it moves only
   // when somebody means it to, and is seen when it does. It moved from 55% to
@@ -492,12 +499,14 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // notes about a recording that cannot play added ten and it is 35%; the
   // practice questions and the notes and bookmark on the lesson page added
   // twenty-three and it is 34%; the sources card added fourteen and it is
-  // 33%; the page for a page that broke added ten and it is 32%. What they
-  // are shown did not get smaller; what is counted got bigger.
+  // 33%; the page for a page that broke added ten and it is 32%; the
+  // players on the lesson page and their saved-place messages added
+  // eighty-six, the largest single step since the assignment page, and it is
+  // 28%. What they are shown did not get smaller; what is counted got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 591);
-    assert.equal(coverageOf(code).percent, 32, code);
+    assert.equal(coverageOf(code).total, 677);
+    assert.equal(coverageOf(code).percent, 28, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');
   assert.equal(languageShownFor('en', 'learn').code, 'en');
@@ -686,14 +695,14 @@ test('the lesson page translates its frame and marks every English part inside i
     assert.ok(!page.includes(sentence), `"${sentence}" is still typed into the lesson page`);
   }
 
-  // Two places hold a client component that is English for every reader.
-  // Each says so: a material that is a player, and the open discussion. The
-  // note about a recording that cannot play was one more and is the reader's
-  // now, above the materials and in its row; so are the practice questions,
+  // One place holds a client component that is English for every reader,
+  // and says so: the open discussion. A material that is a player was the
+  // other and is the reader's now (see the test of the players below); so
+  // are the note about a recording that cannot play, the practice questions,
   // the notes and bookmark, and the sources card.
   assert.match(page, /const english = shown\.code === 'en' \? \{\} : \(\{ lang: 'en', dir: 'ltr' \} as const\);/u);
   assert.equal(page.match(/\{\.\.\.english\}/gu)?.length, 1);
-  assert.match(page, /\{\.\.\.\(speaksEnglish \? english : \{\}\)\}/u);
+  assert.doesNotMatch(page, /speaksEnglish|englishMaterials/u);
   assert.match(page, /<div className="notice" style=\{\{ marginBottom: '1rem' \}\}>\s+<strong style=\{\{ display: 'block' \}\}>\{t\(summary\.headingKey\)\}/u);
   assert.doesNotMatch(page, /noteFor\(standing\.get\(r\.id\) \?\? null\) !== null/u);
   assert.match(page, /<PracticeCheck items=\{practiceItems\} words=\{practiceWords\} locale=\{shown\.code\} \/>/u);
@@ -1010,6 +1019,95 @@ test('Uzbek writes oʻ and gʻ with the letter, not with a quotation mark', () =
   const marked = Object.entries(uz).filter(([, value]) => /[\u2018\u2019`']/u.test(value));
   assert.deepEqual(marked.map(([key]) => key), []);
   assert.ok(Object.values(uz).some((value) => value.includes('\u02bb')));
+});
+
+test('the players on the lesson page say their sentences in the reader’s language', () => {
+  const page = read('../app/learn/[enrolmentId]/lesson/[lessonId]/page.tsx');
+  const sources = {
+    resume: read('../app/_shared/media-resume.tsx'),
+    status: read('../app/_shared/position-status.tsx'),
+    rendition: read('../app/_shared/rendition-player.tsx'),
+    hook: read('../app/_shared/use-media-position.ts'),
+    labels: read('./resume.ts'),
+  };
+  const keys = allKeys.filter((key) => key.startsWith('player.'));
+  assert.equal(keys.length, 86);
+
+  // Every sentence is asked for by a player, the hook under it, or the page.
+  const everything = [page, ...Object.values(sources)].join('\n');
+  for (const key of keys) assert.ok(everything.includes(`'${key}'`), `${key} is translated and never shown`);
+
+  // The sentences reach the players through a provider of the page's own,
+  // around the materials and nothing else, in the language the frame is in,
+  // and only when the lesson has something to play. An English page hands
+  // over nothing.
+  assert.match(page, /const playerWords = hasPlayer && shown\.code !== 'en' \? playerMessagesFor\(shown\.code\) : \{\};/u);
+  assert.match(page, /<I18nProvider locale=\{shown\.code\} messages=\{playerWords\}>\s+<ul className="lessons">/u);
+  assert.match(page, /<\/ul>\s+<\/I18nProvider>/u);
+  assert.equal(page.match(/<I18nProvider/gu)?.length, 1);
+  // They are not in what every page carries, and not kept from the browser.
+  const index = read('./i18n/index.ts');
+  assert.match(index, /!key\.startsWith\(PLAYER_PREFIX\) &&/u);
+  const serverOnly = index.split('const SERVER_ONLY_PREFIXES')[1]?.split('];')[0] ?? '';
+  assert.ok(serverOnly.includes("'lesson.'") && !serverOnly.includes("'player.'"));
+  for (const code of ['ar', 'ta', 'sw'] as const) {
+    assert.equal(Object.keys(shellMessagesFor(code)).some((key) => key.startsWith('player.')), false, code);
+    assert.equal(Object.keys(playerMessagesFor(code)).length, 86, code);
+  }
+  // A held language's lesson page is English as a whole, players included.
+  assert.equal(languageShownFor('ha', 'player').code, 'en');
+  assert.equal(playerMessagesFor('ha')['player.recoveryNotice'], en['player.recoveryNotice']);
+
+  // The players are browser code: they take the small client entry, never
+  // the index that holds every catalogue.
+  for (const [name, source] of Object.entries(sources)) {
+    if (name === 'labels') continue;
+    assert.match(source, /^'use client';/u, name);
+    assert.doesNotMatch(source, /from '@\/lib\/i18n'/u, name);
+    assert.match(source, /useT\(\)/u, name);
+  }
+  // Sentences that were typed into them are gone from what they draw.
+  for (const sentence of [
+    'Your browser cannot play', 'Repeat from here', 'Stop repeating', 'Checking your saved place',
+    'Keep a temporary recovery place', 'Anyone with access to this browser profile', 'Not now',
+    'Choose your saved place', 'Keep this player', 'Device recovery places', 'Save on this device', 'has no delivery copy',
+    'On this device', 'Preparing the player', 'Playback links are short-lived', 'toLocaleString(',
+  ]) {
+    for (const [name, source] of Object.entries(sources)) {
+      assert.ok(!source.includes(sentence), `"${sentence}" is still typed into ${name}`);
+    }
+  }
+  // The server's own sentence is English. Only an English page prints it.
+  assert.match(sources.rendition, /const speaksEnglish = useLocaleCode\(\) === 'en';/u);
+  assert.match(page, /shown\.code === 'en'\s+\? saveStanding\.message\s+: t\('player\.plusNote'\)/u);
+
+  for (const code of Object.keys(PLAYER) as (keyof typeof PLAYER)[]) {
+    const own = PLAYER[code] ?? {};
+    assert.equal(Object.keys(own).length, 86, code);
+    // The notice consent rests on is its own sentence in every language, is
+    // not shorter than a notice can honestly be, and still has five things to
+    // say: who can see, what turning it off removes, the confirmation, the
+    // expiry, and that storage can fail.
+    const notice = own['player.recoveryNotice'] ?? '';
+    assert.notEqual(notice, en['player.recoveryNotice'], code);
+    // Thai closes a sentence with a space and no mark.
+    const stops = notice.match(code === 'th' ? /\s/gu : /[.。।۔]/gu)?.length ?? 0;
+    assert.ok(stops >= 5, `${code}: the recovery notice lost a sentence`);
+    assert.doesNotMatch(notice, /[A-Za-z]{3,}\s\([A-Za-z]+\)|\(enrolment\)/u, `${code}: English in brackets`);
+    // Names that are not translated.
+    assert.ok((own['player.qualityStandard'] ?? '').startsWith('480p'), code);
+    assert.ok((own['player.qualitySmall'] ?? '').startsWith('360p'), code);
+    assert.ok((own['player.plusNote'] ?? '').includes('Plus'), code);
+    assert.ok((own['player.seePlus'] ?? '').includes('Plus'), code);
+    // The limit is said with a number a reader can find on the player.
+    assert.match(own['player.limit'] ?? '', /24|۲۴|२४|২৪/u, code);
+    // No sentence promises more than a save every ten seconds can keep.
+    for (const key of keys) {
+      const value = own[key] ?? '';
+      assert.doesNotMatch(value, /[\u0027\u0060]/u, `${code}.${key} has a typewriter mark`);
+      assert.equal(value.endsWith('…'), en[key].endsWith('…'), `${code}.${key}`);
+    }
+  }
 });
 
 test('the page for a page that broke is in the reader’s language, and English as a whole otherwise', () => {

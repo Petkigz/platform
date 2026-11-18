@@ -18,9 +18,11 @@ import {
   durationLabel,
   formatNumber,
   languageShownFor,
+  playerMessagesFor,
   translator,
   type MessageKey,
 } from '@/lib/i18n';
+import { I18nProvider } from '@/lib/i18n/client';
 import { MarkComplete, type MarkCompleteWords } from '../../mark-complete';
 import { fetchThread } from '@/lib/discussion';
 import { isFlagEnabled } from '@/lib/flags';
@@ -118,11 +120,13 @@ const SOURCE_KEY: Record<SourceType, MessageKey> = {
  * **Language.** The page's own frame — breadcrumb, badges, headings, the kind of
  * each material, the empty-list sentences and the row of buttons at the foot —
  * is in the reader's language where that language has it (`lesson.ts`), and in
- * English, marked as English, where it does not. Everything a client component
- * says is still English for everybody and is marked so here: the players and
- * their saved-place messages, the note for a recording that will not play, the
- * report form, practice questions, notes, sources and the discussion. What a
- * teacher wrote is shown as written.
+ * English, marked as English, where it does not. The client components on it
+ * are the reader's too: the report form, practice questions and notes are
+ * handed their words, and the players ask for theirs through a provider put
+ * round the materials (`player.ts`), saved-place messages and the notice
+ * about keeping a place on this browser included. One is still English for
+ * everybody and is marked so here: the open discussion. What a teacher wrote
+ * is shown as written.
  */
 export default async function LessonPage({
   params,
@@ -367,18 +371,16 @@ export default async function LessonPage({
   const renditionsByAsset = groupByAsset(renditions);
   const standing = parseStanding(standingData);
 
-  // A player speaks English and is marked as English on a page in another
-  // language. A plain name or link is the teacher's and is left alone, and the
-  // note that stands in for a recording that cannot play is the reader's.
-  const englishMaterials = new Set(
-    lesson.resources
-      .filter((r) =>
-        r.externalUrl
-          ? nativeMediaKind(r) !== null
-          : Boolean(r.mediaAssetId) &&
-            (renditionsByAsset.get(r.mediaAssetId ?? '')?.length ?? 0) > 0)
-      .map((r) => r.id),
-  );
+  // The players are client components with their own sentences, most of them
+  // about the saved place. They are handed over here, in the language this
+  // page is written in, and only when the lesson has a player to say them.
+  // An English page hands over nothing: English is what a player says when
+  // nobody tells it otherwise.
+  const hasPlayer = lesson.resources.some((r) =>
+    r.externalUrl
+      ? nativeMediaKind(r) !== null
+      : Boolean(r.mediaAssetId) && (renditionsByAsset.get(r.mediaAssetId ?? '')?.length ?? 0) > 0);
+  const playerWords = hasPlayer && shown.code !== 'en' ? playerMessagesFor(shown.code) : {};
 
   // Said above the materials, and only when something in the lesson is not
   // playable: a learner who reads the first line and stops is the one who most
@@ -406,7 +408,8 @@ export default async function LessonPage({
   }
 
   const namedCourse = one(enrolment.courses)?.title ?? null;
-  // The players are English and are handed an English name for a course whose
+  // A player keeps this name with a lesson saved on the device, where the
+  // list of saved lessons is English: an English name for a course whose
   // title could not be read, as before.
   const courseTitle = namedCourse ?? 'the course';
   const duration = durationLabel(shown.code, lesson.durationSeconds);
@@ -497,14 +500,14 @@ export default async function LessonPage({
             </p>
           )
         ) : (
+          <I18nProvider locale={shown.code} messages={playerWords}>
           <ul className="lessons">
             {lesson.resources.map((r) => {
               const nativeKind = nativeMediaKind(r);
-              const speaksEnglish = englishMaterials.has(r.id);
               return (
                 <li key={r.id}>
                   <span className="n">{t(RESOURCE_KEY[r.resourceType])}</span>
-                  <span className="t" {...(speaksEnglish ? english : {})}>
+                  <span className="t">
                     {r.externalUrl && nativeKind === 'video' ? (
                       <VideoWithResume
                         name={r.displayName}
@@ -546,7 +549,11 @@ export default async function LessonPage({
                         resumeAt={resumeAt}
                         saveNote={
                           saveStanding && !saveStanding.allowed && saveStanding.needsPlus
-                            ? saveStanding.message
+                            ? // The database's sentence is English and says
+                              // more; another language gets its own.
+                              shown.code === 'en'
+                              ? saveStanding.message
+                              : t('player.plusNote')
                             : null
                         }
                       />
@@ -598,6 +605,7 @@ export default async function LessonPage({
               );
             })}
           </ul>
+          </I18nProvider>
         )}
       </section>
 

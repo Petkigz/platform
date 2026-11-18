@@ -41,6 +41,10 @@ for (const [file, key] of [
   // is unknown must not be in any script either.
   ['assign.ts', 'assign.fileErrUncertain'],
   ['assess.ts', 'assess.heading'],
+  // The players are client components that ask for their sentences; the
+  // lesson page hands those over in the page itself. The notice a learner
+  // agrees to must be in the one page that shows it and in no script.
+  ['player.ts', 'player.recoveryNotice'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

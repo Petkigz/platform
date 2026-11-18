@@ -789,6 +789,111 @@ export const en = {
   'broke.orders': 'Your orders',
   'broke.lesson':
     'If you were watching a lesson, it resumes from the place it last saved. Your place is saved about every ten seconds while a recording plays.',
+
+  // The players on the lesson page, with every saved-place and recovery
+  // message (`messages/player.ts`). Client components ask for these through
+  // a provider the lesson page puts round its players, so no other page
+  // carries them. `{at}`, `{from}` and `{to}` are places in a recording
+  // ("12:34"); `{when}` is a date and time.
+  'player.videoUnsupported': 'Your browser cannot play this video.',
+  'player.audioUnsupported': 'Your browser cannot play this audio.',
+  'player.openVideo': 'Open the video directly',
+  'player.openAudio': 'Open the audio directly',
+  'player.speed': 'Speed',
+  'player.slower': 'Slower',
+  'player.faster': 'Faster',
+  'player.loopFrom': 'Repeat from here',
+  'player.loopTo': 'to here',
+  'player.loopStop': 'Stop repeating',
+  'player.loopOpenEnd': 'Repeating from {from} — mark where it ends.',
+  'player.loopOpenStart': 'Repeating up to {to} — mark where it starts.',
+  'player.loopBackwards': 'That passage ends before it starts. Mark it again.',
+  'player.loopBoth': 'Repeating {from} – {to}.',
+  'player.resuming': 'Resuming at {at}.',
+  'player.checking': 'Checking your saved place…',
+  'player.legacyGroup': 'Earlier lesson-wide place',
+  'player.legacyPlace':
+    'An earlier lesson-wide place is {at}. It might belong to a different recording. You can review it here; it will not replace this recording’s saved place without your choice.',
+  'player.limit': 'The player cannot go past 24 hours.',
+  'player.legacyReview': 'Review earlier place',
+  'player.notNow': 'Not now',
+  'player.recoveryToggle': 'Keep a temporary recovery place on this browser',
+  'player.recoveryNotice':
+    'Optional. Anyone with access to this browser profile may see account, enrolment, lesson and recording identifiers, session identifiers, positions and timestamps, including for other accounts using it. Turning this off removes recovery places for all accounts on this browser. Your account must be confirmed online before a place can be stored. Records expire after seven days and are cleared on a later visit; storage may be unavailable or cleared sooner.',
+  'player.earlierGroup': 'Earlier lesson-wide device places',
+  'player.earlierIntro':
+    'These older device places were saved for the whole lesson, not a specific recording. They may belong to another recording. Review one here or discard it; reviewing does not replace the account place without another choice.',
+  'player.earlierReview': 'Review earlier device place',
+  'player.earlierReviewLabel': 'Review earlier device place {at} from {when}',
+  'player.earlierDiscard': 'Discard earlier place',
+  'player.earlierDiscardLabel': 'Discard earlier device place {at} from {when}',
+  'player.deviceGroup': 'Device recovery places',
+  'player.deviceIntro':
+    'A place from this browser may not have reached your account. Review or discard each place before automatic saving continues. Choosing one leaves other places for a later visit.',
+  'player.deviceReview': 'Review this place',
+  'player.deviceReviewLabel': 'Review device place {at} from {when}',
+  'player.deviceDiscard': 'Discard',
+  'player.deviceDiscardLabel': 'Discard device place {at} from {when}',
+  'player.conflictGroup': 'Choose your saved place',
+  'player.conflictIntro': 'The account’s saved place may differ from this player.',
+  'player.conflictNone': 'No saved place.',
+  'player.conflictSaved': 'Saved place: {at}.',
+  'player.conflictLocal': 'This player: {at}. Which should be kept?',
+  'player.useSaved': 'Use saved place',
+  'player.keepLocal': 'Keep this player’s place',
+  'player.storeClearFailed': 'Device storage could not be cleared. Check your browser storage settings.',
+  'player.storeSaveFailed': 'Could not save a recovery place on this device.',
+  'player.storeUnavailable': 'Recovery storage is unavailable in this browser.',
+  'player.storeReadFailed': 'Could not read earlier device places. Check your browser storage settings.',
+  'player.earlierClearFailed':
+    'Could not clear the earlier device place. Check your browser storage settings.',
+  'player.unconfirmed':
+    'Could not confirm your saved place. Reload the lesson to check before continuing to save.',
+  'player.loadFailed':
+    'Could not load your saved place. You can play this lesson, but saving is unavailable until you reload.',
+  'player.turnedOff': 'Recovery was turned off or cleared elsewhere in this browser.',
+  'player.storeCheckFailed': 'Could not check recovery storage in this browser.',
+  'player.legacyBusy': 'Finish the current save or recovery choice before reviewing the old place.',
+  'player.legacyWait': 'Wait for the recording to load before reviewing the old place.',
+  'player.legacyBeyond': 'The old place is beyond this recording. It may belong to another recording.',
+  'player.legacySeekFailed': 'Could not seek to the old place. Try again when the recording is ready.',
+  'player.earlierRemoveFailed': 'Could not remove the earlier device place.',
+  'player.earlierBusy':
+    'Finish the current save or recovery choice before reviewing an earlier device place.',
+  'player.earlierWait': 'Wait for the recording to load before reviewing the earlier device place.',
+  'player.earlierChanged': 'The earlier device place changed. Review the updated list.',
+  'player.earlierBeyond':
+    'The earlier device place is beyond this recording. It may belong to another recording.',
+  'player.earlierSeekFailed': 'Could not seek to the earlier device place.',
+  'player.earlierReadFailed': 'Could not read the earlier device place.',
+  'player.needConfirmed':
+    'Recovery cannot record a place until your account is confirmed. Reload when connected.',
+  'player.storeChangeFailed':
+    'Device storage could not be changed or cleared completely. Check your browser storage settings.',
+  'player.deviceRemoveFailed': 'Could not remove this recovery place from the device.',
+  'player.deviceChanged': 'The device place changed. Review the updated list.',
+  'player.othersRemain':
+    'Other device recovery places, if any, remain available when you reopen this lesson.',
+  'player.deviceUseFailed': 'Could not use this device place. Try again after the media loads.',
+  'player.quality': 'Quality',
+  'player.qualityStandard': '480p — standard',
+  'player.qualitySmall': '360p — small',
+  'player.qualityAudio': 'Audio only',
+  'player.saving': 'Saving…',
+  'player.saveDevice': 'Save on this device',
+  'player.onDevice': 'On this device',
+  'player.seePlus': 'See what Plus includes',
+  'player.plusNote': 'Saving a lesson on a device is part of the Plus plan.',
+  'player.tryAgain': 'Try again',
+  'player.preparing': 'Preparing the player…',
+  'player.linksNote': 'Playback links are short-lived and are tied to your access to this lesson.',
+  'player.savedNote':
+    'A saved lesson stays inside the app, but currently needs a connection to check access each time you open it.',
+  'player.playFailed': 'That lesson could not be played.',
+  'player.saveRefused': 'This lesson cannot be saved on this plan.',
+  'player.fetchFailed': 'That lesson could not be fetched to save.',
+  'player.saveFailed': 'That lesson could not be saved.',
+  'player.noCopy': 'This recording has no copy that can be played yet.',
 } as const;
 
 export type MessageKey = keyof typeof en;

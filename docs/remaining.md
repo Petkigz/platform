@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 32% there (192 of 591 sentences; it was 71% of 272, then
+  the nineteen reads 28% there (192 of 677 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -537,8 +537,9 @@ still unreviewed and still saying so.
   list of dated classes, 36% of 527 with the report form on the lesson, 36%
   of 534 with the page for a wrong address, 35% of 544 with the notes about a
   recording that cannot play, 34% of 567 with the practice questions and the
-  study tools, 33% of 581 with the sources card, then this with the page for
-  a page that broke),
+  study tools, 33% of 581 with the sources card, 32% of 591 with the page for
+  a page that broke, then this with the lesson players and their saved-place
+  messages),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -565,7 +566,7 @@ still unreviewed and still saying so.
   Burmese sentence on the page, and the tool still calculates six rows. It does
   the direction check in Pashto, opens the correction sheet on the Hausa
   companion part (eighty boxes, each with the draft, and the notice; no notice
-  on the Hausa navigation or on Swahili), and reads 32% on `/language` in Hausa.
+  on the Hausa navigation or on Swahili), and reads 28% on `/language` in Hausa.
 
 **Four languages withheld whole (owner's second answer, 2026-11-16).** Asked
 whether the rest of the interface in Wolof, Fulfulde, Bambara and Dhivehi should
@@ -674,7 +675,39 @@ written: not a held draft, nothing.
   Checked over
   HTTP in six languages and in Chromium in Arabic and Tamil at three widths,
   on a synthetic backend; no button pressed, no real recording, and only a
-  lesson with one video.
+  lesson with one video. *(Since 2026-11-18 the players are the reader's as
+  well: see the next entry. An open discussion is the one part left.)*
+- *The lesson players and what they say about a saved place (2026-11-18).*
+  Eighty-six sentences in the same twenty-seven languages (`messages/
+  player.ts`): what a browser that cannot play says, speed and repeat, every
+  saved-place, conflict and recovery message, quality names, saving a lesson
+  to the device, and each way those can fail. A held language reads all of it
+  in English with the rest of its lesson. **This includes the notice a
+  learner reads before letting this browser keep a temporary place** — who
+  can see what is kept, what turning it off removes, that the account must be
+  confirmed online first, and that the seven-day limit is cleared on a later
+  visit. The builder recommended leaving that one notice English until a
+  speaker had read it; the owner chose to translate it. **No speaker has read
+  any of the twenty-seven, and consent given in those languages rests on the
+  builder's wording until one has.** It is the first thing to put in front of
+  a reviewer. The sentences are sent only to a lesson page that has something
+  to play, not with every page, and are in no script. Dates in the saved-place
+  panel are now written in the page's language with the time zone named;
+  they were in the browser's own language with none. **Still English there:**
+  "1080p — full HD" and "720p — HD", the list of lessons saved on a device,
+  the player on the marker's review page and the staff's master player.
+  Where the server answers with an English sentence and no code
+  (`/api/media/playback`, `/api/media/download`, `lesson_download_standing`),
+  another language gets the player's own shorter sentence, which says less
+  about why. Checked over HTTP in Arabic, French, Hausa and Pashto, and in
+  Chromium in Arabic and Tamil at 320, 390 and 1440 wide on a synthetic
+  backend, where the player reaches only its "could not load your saved
+  place" state and the choice about this browser is shown and off. **Not
+  checked in any language but English:** a place being saved, the choice
+  between two places, recovery after a reload, the audio player's speed and
+  repeat controls, and saving to a device; the English of those is exercised
+  by the four component tests and `media-resume-browser-smoke.mjs`, which the
+  wording change did not break.
 - *The page for a page that broke (2026-11-17).* `app/error.tsx`, ten
   sentences in the same twenty-seven languages; a held language reads it in
   English as a whole. It is drawn in the browser, so these ten are the only

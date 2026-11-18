@@ -2618,6 +2618,56 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The lesson players and saved-place messages, in the reader's language, 2026-11-18
+
+The players on the lesson page were the largest English island left on a
+translated lesson: marked `lang="en"`, with every saved-place, conflict and
+recovery message inside them.
+
+- *Translated.* Eighty-six sentences (`player.*`, new file
+  `messages/player.ts`) in the twenty-seven languages with nothing held.
+  **Unreviewed.** A held language reads the players in English with the rest
+  of its English lesson.
+- *The consent notice is one of them, by the owner's decision.* Offered the
+  choice of keeping the notice for the on-device recovery place English until
+  a speaker had read it (the builder's recommendation), the owner answered
+  "Translate it". See `DECISIONS.md`. Nothing about the choice itself
+  changed: off by default, asked on each device.
+- *How the words reach a player.* The four files (`media-resume.tsx`,
+  `position-status.tsx`, `rendition-player.tsx`, `use-media-position.ts`) ask
+  `useT()`. The lesson page puts a provider round its materials list holding
+  `playerMessagesFor(code)`, and only when the lesson has a player. The
+  shell that every page carries leaves `player.` out. Outside that provider
+  a player says English: the marker's review page, the staff's master
+  player, and the component tests, which is why those tests did not change.
+- *English wording changed in two places,* where a translation could not
+  keep the shape: "(player limit: 24 hours)", a bracket hung on the end of
+  another sentence, is now a sentence of its own, "The player cannot go past
+  24 hours."; and "<name> has no delivery copy that can be played yet." is
+  "This recording has no copy that can be played yet.", under the name. The
+  button names the tests press are unchanged.
+- *Dates.* The saved-place panel printed `toLocaleString()`: the browser's
+  own language whatever the page was in, and no time zone named. It now
+  writes the date in the page's language through `formatDateTime`, in the
+  reader's zone, with the zone said.
+- *Failures.* Only an English page prints the server's sentence. The
+  playback and download routes and `lesson_download_standing` send English
+  with no code, so another language gets the player's own sentence, which
+  says that it failed and not why. Giving those routes codes is not done.
+- *Left English:* "1080p — full HD" and "720p — HD" (`PROFILE_LABEL`), the
+  list of lessons saved on a device, an open discussion.
+- *What it did to the nineteen.* `/language` tells each of them **28%** (192
+  of 677). Eighty-six is the largest single step since the assignment page.
+- *Checks.* 2322 web tests; the bundle check now also looks for the consent
+  notice in every script and finds it in none (118 sentences looked for, 117
+  scripts, 1756 kB). `lesson-route-smoke.mjs`: HTTP in Arabic, French, Hausa
+  and Pashto; Chromium in Arabic and Tamil at 320, 390 and 1440. **What the
+  browser check reaches is small:** the synthetic backend has no saved place,
+  so the player shows "could not load your saved place" and the unticked
+  choice with its notice. **Not exercised in a translated language:** saving,
+  the choice between two places, recovery after reload, the audio controls,
+  saving to a device. No real recording, no hosted project.
+
 ### The page for a page that broke, in the reader's language, 2026-11-17
 
 `app/error.tsx` is what a learner sees when a page throws: possibly in the
