@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { joinFamilyAsLearner, leaveFamilyAsLearner } from '@/lib/family';
+import { familyRefusal, familyStatusOf, type FamilyCode } from '@/lib/family-outcome';
 
 /**
  * An adult becoming (or ceasing to be) a learner inside a family.
@@ -13,80 +14,66 @@ import { joinFamilyAsLearner, leaveFamilyAsLearner } from '@/lib/family';
  * Neither takes a learner id, so there is nothing here to tamper with — the most
  * a forged request can do is ask to join a family it does not belong to, which
  * the writer refuses.
+ *
+ * **A refusal names its reason** (`lib/family-outcome.ts`), and the card says
+ * the sentence in the reader's language. The database's own sentence is not
+ * sent.
  */
 const UUID = /^[0-9a-f-]{36}$/i;
 
 async function familyIdFrom(request: Request): Promise<string | null> {
   try {
-    const body = (await request.json()) as { familyId?: unknown };
-    return typeof body.familyId === 'string' && UUID.test(body.familyId) ? body.familyId : null;
+    const body = (await request.json()) as { familyId?: unknown } | null;
+    return typeof body?.familyId === 'string' && UUID.test(body.familyId) ? body.familyId : null;
   } catch {
     return null;
   }
 }
 
-function unauth() {
-  return NextResponse.json(
-    { ok: false, code: 'rejected', message: 'Sign in first.' },
-    { status: 401 },
+const refuse = (code: FamilyCode) =>
+  NextResponse.json(familyRefusal(code), { status: familyStatusOf(code) });
+
+const unconfigured = () =>
+  NextResponse.json(
+    { ok: false, message: 'Accounts are not configured on this deployment.' },
+    { status: 503 },
   );
-}
 
 export async function POST(request: Request) {
-  if (!isSupabaseConfigured()) {
-    return NextResponse.json(
-      { ok: false, code: 'rejected', message: 'Accounts are not configured on this deployment.' },
-      { status: 503 },
-    );
-  }
+  if (!isSupabaseConfigured()) return unconfigured();
 
   const familyId = await familyIdFrom(request);
-  if (!familyId) {
-    return NextResponse.json(
-      { ok: false, code: 'rejected', message: 'A family id is required.' },
-      { status: 400 },
-    );
-  }
+  if (!familyId) return refuse('malformed');
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return unauth();
+  if (!user) return refuse('signed_out');
 
   const outcome = await joinFamilyAsLearner(supabase, familyId);
   if (!outcome.ok) {
-    return NextResponse.json(outcome, { status: outcome.code === 'no_family' ? 404 : 409 });
+    return NextResponse.json(outcome, { status: familyStatusOf(outcome.code) });
   }
 
   return NextResponse.json(outcome, { status: outcome.created ? 201 : 200 });
 }
 
 export async function DELETE(request: Request) {
-  if (!isSupabaseConfigured()) {
-    return NextResponse.json(
-      { ok: false, code: 'rejected', message: 'Accounts are not configured on this deployment.' },
-      { status: 503 },
-    );
-  }
+  if (!isSupabaseConfigured()) return unconfigured();
 
   const familyId = await familyIdFrom(request);
-  if (!familyId) {
-    return NextResponse.json(
-      { ok: false, code: 'rejected', message: 'A family id is required.' },
-      { status: 400 },
-    );
-  }
+  if (!familyId) return refuse('malformed');
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return unauth();
+  if (!user) return refuse('signed_out');
 
   const outcome = await leaveFamilyAsLearner(supabase, familyId);
   if (!outcome.ok) {
-    return NextResponse.json(outcome, { status: 409 });
+    return NextResponse.json(outcome, { status: familyStatusOf(outcome.code) });
   }
 
   return NextResponse.json({ ok: true, released: true }, { status: 200 });

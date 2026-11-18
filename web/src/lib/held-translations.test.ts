@@ -38,6 +38,7 @@ import { ASSIGN } from './i18n/messages/assign.ts';
 import { MISSING } from './i18n/messages/missing.ts';
 import { BROKE } from './i18n/messages/broke.ts';
 import { PLAYER } from './i18n/messages/player.ts';
+import { FAMILY } from './i18n/messages/family.ts';
 import { ACCOUNT } from './i18n/messages/account.ts';
 import { LESSON } from './i18n/messages/lesson.ts';
 import { auditAll } from './translation-audit.ts';
@@ -409,7 +410,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // Owner's decision, 2026-11-16: a language the builder cannot write properly
   // falls back to English until a speaker has reviewed it. For a new screen
   // that means not writing it — a held draft would be the same guess, kept.
-  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign', 'missing', 'broke', 'player', 'account']);
+  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign', 'missing', 'broke', 'player', 'account', 'family']);
   // Thirty-seven for the dashboard (the learner-profile prompt is seven of
   // them), twenty-eight for the course page (twelve are the list of dated
   // classes), a hundred and thirteen for the lesson page (its frame, the
@@ -420,9 +421,11 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // assignment list, of which forty-seven are the files part, seven for
   // the page for an address with nothing at it, ten for the page for a
   // page that broke, eighty-six for the players on the lesson page and
-  // what they say about a saved place, and ninety-eight for the account
-  // page and its profile form.
-  assert.equal(unwrittenKeys.length, 526);
+  // what they say about a saved place, ninety-eight for the account
+  // page and its profile form, and a hundred for the family page, its
+  // three forms and one learner's page.
+  assert.equal(unwrittenKeys.length, 626);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('family.')).length, 100);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('account.')).length, 98);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('player.')).length, 86);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('broke.')).length, 10);
@@ -433,7 +436,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('lesson.')).length, 113);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('assess.')).length, 40);
 
-  // Nine files, one rule: the same languages in each.
+  // Ten files, one rule: the same languages in each.
   const written = Object.keys(LEARN).sort();
   assert.deepEqual(Object.keys(COURSE).sort(), written);
   assert.deepEqual(Object.keys(LESSON).sort(), written);
@@ -443,6 +446,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   assert.deepEqual(Object.keys(BROKE).sort(), written);
   assert.deepEqual(Object.keys(PLAYER).sort(), written);
   assert.deepEqual(Object.keys(ACCOUNT).sort(), written);
+  assert.deepEqual(Object.keys(FAMILY).sort(), written);
   const expected = LOCALES.map((l) => l.code)
     .filter((code) => code !== 'en' && !Object.hasOwn(HELD_FOR_REVIEW, code))
     .sort();
@@ -452,7 +456,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   for (const code of expected) {
     const own: Partial<Record<string, string>> = {
       ...LEARN[code], ...COURSE[code], ...LESSON[code], ...ASSESS[code], ...ASSIGN[code], ...MISSING[code], ...BROKE[code],
-      ...PLAYER[code], ...ACCOUNT[code],
+      ...PLAYER[code], ...ACCOUNT[code], ...FAMILY[code],
     };
     assert.deepEqual(Object.keys(own).sort(), [...unwrittenKeys].sort(), `${code} is short a dashboard, course, lesson, assessment or assignment sentence`);
     for (const key of unwrittenKeys) {
@@ -490,7 +494,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     }
   }
   // What that costs the nineteen that are still in the picker, said out loud:
-  // 192 of 798 sentences, which is 24%. Nothing holds a floor under
+  // 192 of 898 sentences, which is 21%. Nothing holds a floor under
   // it any more: the owner chose on 2026-11-17 to keep these languages in the
   // picker and show the number. The count is pinned here so that it moves only
   // when somebody means it to, and is seen when it does. It moved from 55% to
@@ -509,11 +513,13 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // eighty-six, the largest single step since the assignment page, and it is
   // 28%; the discussion on the lesson page added twenty-three and it is
   // 27%; the account page and its profile form added ninety-eight and it is
-  // 24%. What they are shown did not get smaller; what is counted got bigger.
+  // 24%; the family page, its forms and one learner's page added a hundred
+  // and it is 21%. What they are shown did not get smaller; what is counted
+  // got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 798);
-    assert.equal(coverageOf(code).percent, 24, code);
+    assert.equal(coverageOf(code).total, 898);
+    assert.equal(coverageOf(code).percent, 21, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');
   assert.equal(languageShownFor('en', 'learn').code, 'en');
@@ -565,11 +571,13 @@ test('the dashboard page reads its words from the catalogue, in one language', (
   assert.match(claim, /const say = words \?\? ENGLISH;/u);
   // The server's reason is English; a translated page says its own sentence.
   assert.match(claim, /setError\(words \? words\.failed : \(json\?\.message \?\? say\.failed\)\);/u);
-  // The other two screens that show the prompt are not translated and pass
-  // no words, so they read exactly as before. The account page is translated
-  // and passes the dashboard's.
-  assert.match(read('../app/account/page.tsx'), /<ClaimLearner[^>]*words=/u);
-  for (const caller of ['../app/courses/[slug]/buy/page.tsx', '../app/family/page.tsx']) {
+  // The one other screen that shows the prompt is not translated and passes
+  // no words, so it reads exactly as before. The account page and the family
+  // page are translated and pass the dashboard's.
+  for (const caller of ['../app/account/page.tsx', '../app/family/page.tsx']) {
+    assert.match(read(caller), /<ClaimLearner[^>]*words=/u, caller);
+  }
+  for (const caller of ['../app/courses/[slug]/buy/page.tsx']) {
     assert.doesNotMatch(read(caller), /<ClaimLearner[^>]*words=/u, caller);
   }
 
@@ -1336,4 +1344,150 @@ test('the account page is in the reader’s language, and its form says a refusa
   // A held language reads the page in English, whole.
   assert.equal(languageShownFor('so', 'account').code, 'en');
   assert.equal(translator('so')('account.closeBody'), en['account.closeBody']);
+});
+
+test('the family pages are in the reader’s language, and their forms say a refusal by name', () => {
+  const page = read('../app/family/page.tsx');
+  const child = read('../app/family/[childId]/page.tsx');
+  const create = read('../app/family/create-family.tsx');
+  const add = read('../app/family/add-child.tsx');
+  const adult = read('../app/family/family-adult.tsx');
+  const declaration = read('../app/family/age-declaration.tsx');
+  const lib = read('./family.ts');
+  const names = read('./family-adult.ts');
+  const courses = read('./learner-courses.ts');
+
+  // One language under one `lang`, on the rule the dashboard set, on both pages.
+  for (const [name, source] of [['family', page], ['child', child]] as const) {
+    assert.match(source, /const shown = languageShownFor\(locale, 'family'\);/u, name);
+    assert.match(source, /const t = translator\(shown\.code\);/u, name);
+    assert.match(source, /const frame = shown\.code !== locale \? \{ lang: shown\.code, dir: shown\.dir \} : \{\};/u, name);
+    assert.match(source, /<div className="container section" \{\.\.\.frame\}>/u, name);
+    assert.doesNotMatch(source, /^'use client'/u, name);
+    // No English sentence is left written into either page.
+    const sentences = [...source.matchAll(/>\s*([A-Z][a-z]+(?: [a-z’']+){2,}[^<{]*)</gu)].map((m) => m[1]);
+    assert.deepEqual(sentences, [], `the ${name} page still writes English inline: ${sentences.join(' | ')}`);
+  }
+  for (const phrase of ['No family yet', 'Children and progress', 'Also learning here', 'Not enrolled', 'Back to my learning']) {
+    assert.equal(page.includes(phrase), false, phrase);
+  }
+  for (const phrase of ['Nothing here yet', 'in progress', 'Look again', 'Carry on', 'Back to your family', 'No age band']) {
+    assert.equal(child.includes(phrase), false, phrase);
+  }
+
+  // Every family sentence is said somewhere: on a page, or by the module that
+  // chooses between sentences for a page.
+  const said = page + child + names + courses;
+  for (const key of unwrittenKeys.filter((k) => k.startsWith('family.'))) {
+    assert.ok(said.includes(`'${key}'`), `${key} is translated and never shown`);
+  }
+
+  // The three forms are handed their words and have no English of their own:
+  // nothing to fall back to, so nothing to drift from the catalogue.
+  for (const [name, source] of [['create', create], ['add', add], ['adult', adult]] as const) {
+    assert.match(source, /^'use client';/u, name);
+    assert.doesNotMatch(source, /useT\(|@\/lib\/i18n/u, name);
+    assert.doesNotMatch(source, /const ENGLISH/u, name);
+    assert.match(source, /words: [A-Za-z]+Words/u, name);
+    // A refusal reaches the form as a name, and the server's sentence is not shown.
+    assert.match(source, /setError\(sentenceFor\(familyOutcomeOf\((?:res|response)\.status, (?:json|result)\?\.code\)\)\);/u, name);
+    assert.doesNotMatch(source, /\.message\b/u, name);
+    // A request that could not be made is caught and said. Two of these three
+    // had no catch: the button stayed on "Adding…" for good.
+    assert.match(source, /\} catch \{[\s\S]*?setError\(words\.unreachable\);/u, name);
+    // An error is announced as one.
+    assert.match(source, /role="alert"/u, name);
+  }
+  assert.match(page, /<CreateFamily\s+words=\{\{/u);
+  assert.match(page, /<AddChild familyId=\{family\.id\} words=\{childWords\} \/>/u);
+  assert.match(page, /<FamilyAdultCard familyId=\{family\.id\} state=\{state\} words=\{adultWords\} \/>/u);
+  const src = new URL('../', import.meta.url);
+  const files = (dir: string): string[] =>
+    readdirSync(new URL(dir, src), { withFileTypes: true }).flatMap((entry) =>
+      entry.isDirectory() ? files(`${dir}${entry.name}/`) : /\.tsx?$/u.test(entry.name) ? [`${dir}${entry.name}`] : [],
+    );
+  const clients = files('').filter((file) => {
+    const text = readFileSync(new URL(file, src), 'utf8');
+    return /^\s*'use client'/u.test(text) && /'family\.[a-zA-Z]+'/u.test(text);
+  });
+  assert.deepEqual(clients, [], 'a client component asks for a family sentence the shell does not carry');
+
+  // The database's own sentence never leaves the four writers.
+  const writers = lib.slice(lib.indexOf('export type AddChildOutcome'));
+  for (const fn of ['addChildCodeOf', 'createFamilyCodeOf', 'joinFamilyCodeOf', 'leaveFamilyCodeOf']) {
+    assert.match(writers, new RegExp(`if \\(error\\) return familyRefusal\\(${fn}\\(error\\)\\);`, 'u'), fn);
+  }
+  for (const fn of ['addChild', 'createFamily', 'joinFamilyAsLearner', 'leaveFamilyAsLearner']) {
+    const start = lib.indexOf(`export async function ${fn}(`);
+    const body = lib.slice(start, lib.indexOf('\n}\n', start));
+    assert.ok(start > 0, fn);
+    assert.doesNotMatch(body, /error\.message/u, `${fn} passes the database's sentence on`);
+  }
+  for (const route of ['create', 'children', 'learner']) {
+    const source = read(`../app/api/family/${route}/route.ts`);
+    assert.match(source, /NextResponse\.json\(familyRefusal\(code\), \{ status: familyStatusOf\(code\) \}\)/u, route);
+    assert.doesNotMatch(source, /code: 'rejected'/u, route);
+  }
+
+  // Counts take the form their language wants, and its digits.
+  assert.match(page, /countLabel\(shown\.code, active\.length, \{ one: 'family\.adultsOne', other: 'family\.adultsOther' \}\)/u);
+  assert.match(child, /countLabel\(shown\.code, active\.length, \{ one: 'family\.goingOne', other: 'family\.goingOther' \}\)/u);
+  const adults = { one: 'family.adultsOne', other: 'family.adultsOther' } as const;
+  assert.equal(countLabel('en', 1, adults), '1 adult');
+  assert.equal(countLabel('en', 3, adults), '3 adults');
+  assert.equal(countLabel('fr', 0, adults), '0 adulte');
+  assert.equal(countLabel('fr', 3, adults), '3 adultes');
+  assert.equal(countLabel('fa', 3, { one: 'family.childrenOne', other: 'family.childrenOther' }), '۳ کودک');
+  // The limits and the age are the library's, written in the reader's digits.
+  assert.match(page, /t\('family\.createNameLong', \{ count: num\(FAMILY_NAME_MAX\) \}\)/u);
+  assert.match(page, /t\('family\.childDeclaration', \{ age: num\(DECLARATION_AGE\) \}\)/u);
+
+  // A name keeps its own direction wherever it is put.
+  assert.match(page, /<h3><bdi>\{family\.name \?\? t\('nav\.family'\)\}<\/bdi><\/h3>/u);
+  assert.match(page, /<h3 style=\{\{ marginTop: 0 \}\}><bdi>\{child\.displayName\}<\/bdi><\/h3>/u);
+  assert.match(page, /<bdi>\{m\.displayName \?\? t\('family\.unnamed'\)\}<\/bdi>/u);
+  assert.match(child, /<h1 style=\{\{ fontSize: '2\.2rem' \}\}><bdi>\{learner\.display_name\}<\/bdi><\/h1>/u);
+  // A list is joined by the reader's language, not by a comma in the page.
+  assert.equal((page.match(/<SaidList/gu) ?? []).length, 2);
+  assert.doesNotMatch(page, /\.join\(', '\)/u);
+  // A membership that is not active, and a profile that is not, are said in
+  // words; the database's own word used to be printed.
+  assert.match(page, /t\(MEMBER_KEYS\[m\.status\] \?\? 'family\.member'/u);
+  assert.match(page, /<span className="badge neutral">\{t\('family\.archived'\)\}<\/span>/u);
+  assert.doesNotMatch(page, /\{child\.status\}/u);
+
+  // What is still English is marked as English: the streak strip and the
+  // child's sign-in card by the page, the declaration by itself.
+  assert.match(page, /const english = shown\.code === 'en' \? \{\} : \(\{ lang: 'en', dir: 'ltr' \} as const\);/u);
+  assert.equal(page.match(/\{\.\.\.english\}/gu)?.length, 2);
+  assert.match(page, /<div \{\.\.\.english\}>\s*<ChildLoginCard/u);
+  assert.match(declaration, /const ENGLISH = \{ lang: 'en', dir: 'ltr' \} as const;/u);
+  assert.equal(declaration.match(/\{\.\.\.ENGLISH\}/gu)?.length, 2);
+  // Its date is said with a zone, the same on the server and in the browser.
+  assert.match(declaration, /formatDateTime\('en', declaration\.declaredAt, 'UTC'\)/u);
+  assert.doesNotMatch(declaration, /toLocaleDateString/u);
+  assert.match(declaration, /\} catch \{[\s\S]*?setBusy\(false\);/u);
+
+  // The declaration and the form under it are offered once per family. A
+  // family with no children used to be given both twice.
+  assert.equal((page.match(/<AgeDeclarationCard /gu) ?? []).length, 1);
+  assert.equal((page.match(/<AddChild /gu) ?? []).length, 1);
+
+  // The learner-profile button is the dashboard's, with the dashboard's words.
+  assert.match(page, /<ClaimLearner\s+label=\{t\('learn\.claim'\)\}\s+words=\{\{/u);
+  // One course's sentences are chosen by the library and said with the page's words.
+  assert.match(child, /const copy: LearnerCourseCopy = \{/u);
+  assert.match(child, /plural: \(count\) => pluralForm\(shown\.code, count\)/u);
+  assert.match(child, /dateStyle: 'medium', timeZone: 'UTC'/u);
+  assert.doesNotMatch(child + page, /AGE_BAND_LABEL/u);
+
+  for (const code of ['ar', 'fr', 'zh-hans', 'uz'] as const) {
+    const t = translator(code);
+    assert.notEqual(t('family.leaveNote'), en['family.leaveNote'], code);
+    assert.match(t('family.childDeclaration'), /\{age\}/u, code);
+    assert.equal(languageShownFor(code, 'family').code, code);
+  }
+  // A held language reads both pages in English, whole.
+  assert.equal(languageShownFor('so', 'family').code, 'en');
+  assert.equal(translator('so')('family.leaveNote'), en['family.leaveNote']);
 });

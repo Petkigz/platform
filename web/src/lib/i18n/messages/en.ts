@@ -1051,6 +1051,128 @@ export const en = {
   'account.closeBody':
     'Closing removes your name from everything it touched and signs you out for good. Orders, payments, enrolments and certificates are kept without your name on them, because a refund or a checked certificate still needs them. The page lists both sides before anything happens.',
   'account.closeLink': 'Close this account',
+
+  // The family page, its forms, and one learner's page. Written for the same
+  // twenty-seven languages as the dashboard (`family.ts`). The family link,
+  // the learner-profile button, the progress line and "Cancel" are keys that
+  // already existed.
+  'family.noneTitle': 'No family yet',
+  'family.noneLede':
+    'A family lets one adult account hold several children. Each child learns under your account — they do not need an email address or a password.',
+  'family.noneAlso':
+    'A family holds children, and it can hold you as well — the adult who runs it can learn here too, beside them, so one plan covers everybody. Until you have a family you do not need one to learn: your own account is enough.',
+  'family.title': 'Children and progress',
+  'family.sameCatalogue':
+    'The separate young-learner and adult experiences are not enabled yet, so children and adults currently see the same catalogue.',
+  'family.handoverBody':
+    'When a learner turns eighteen, their record can become their own account, or be deleted.',
+  'family.handoverLink': 'A learner has turned eighteen',
+  'family.adultsOne': '{count} adult',
+  'family.adultsOther': '{count} adults',
+  'family.childrenOne': '{count} child',
+  'family.childrenOther': '{count} children',
+  'family.alsoHere': 'Also learning here: {names}.',
+  'family.noChildren': 'No children yet.',
+  'family.ages': 'Ages {from}–{to}',
+  'family.bandAdult': 'Adult',
+  'family.archived': 'Archived',
+  'family.notEnrolled': 'Not enrolled in anything yet.',
+  'family.progressLabel': '{name}: {course} progress',
+  'family.openLearning': 'Open {name}’s learning',
+  'family.progressBadges': 'Progress and badges',
+  'family.adultsLine': 'Adults: {list}',
+  'family.roleOwner': 'Owner',
+  'family.roleGuardian': 'Guardian',
+  'family.roleBilling': 'Billing',
+  'family.unnamed': 'Unnamed',
+  'family.member': '{name} ({role})',
+  'family.memberInvited': '{name} ({role}, invited)',
+  'family.memberRevoked': '{name} ({role}, removed)',
+  'family.createHeading': 'Create your family space',
+  'family.createBody':
+    'Add children under your adult account. They do not need an email address, password or separate sign-in.',
+  'family.createName': 'Family name',
+  'family.optional': '(optional)',
+  'family.createPlaceholder': 'For example, our family',
+  'family.creating': 'Creating…',
+  'family.create': 'Create family',
+  'family.createNameLong': 'Keep the family name to {count} characters or fewer.',
+  'family.createRefused': 'Your family could not be created.',
+  'family.createUnconfirmed':
+    'We could not confirm that your family was created. Reload the page to check before trying again.',
+  'family.addOpen': 'Add a child',
+  'family.childName': 'Name',
+  'family.childPlaceholder': 'What should we call them?',
+  'family.bandLabel': 'Age band',
+  'family.childNote':
+    'No date of birth and no email address. A child learns under your account, not their own.',
+  'family.adding': 'Adding…',
+  'family.add': 'Add child',
+  'family.childNameMissing': 'Add the child’s name.',
+  'family.childBandBad': 'Choose an age band.',
+  'family.childNotOwner': 'Only the family owner can add a child.',
+  'family.childDeclaration': 'Declare that you are {age} or older before adding a child.',
+  'family.childRefused': 'That child could not be added.',
+  'family.childUnconfirmed':
+    'We could not confirm that the child was added. Reload the page to check before adding them again.',
+  'family.signedOut': 'You are signed out. Sign in again, then try once more.',
+  'family.noFamily': 'That family does not exist.',
+  'family.adultHeadIn': 'You learn here too',
+  'family.adultHeadInNamed': 'You learn here too — {name}',
+  'family.adultHeadAlone': 'Your learning is separate from this family',
+  'family.adultHeadOther': 'Your learning is in another family',
+  'family.adultHeadNone': 'You are not a learner yet',
+  'family.adultWhyIn':
+    'Your courses, progress and certificates sit beside the children’s, so one plan can cover everybody.',
+  'family.adultWhyAlone':
+    'Joining this family moves your existing learning into it — the same profile, the same courses, the same progress. Nothing is copied and nothing is lost.',
+  'family.adultWhyOther':
+    'A learner profile belongs to one family at a time. To learn here, take your learning out of the other family first; it keeps its progress either way.',
+  'family.adultWhyNone':
+    'Adding yourself makes this account a learner inside this family. You keep your own progress, and other adults in the family will be able to see it.',
+  'family.joinMove': 'Move my learning into this family',
+  'family.joinNew': 'Learn here as myself',
+  'family.joining': 'Adding you…',
+  'family.leave': 'Take my learning out of this family',
+  'family.leaving': 'Taking your learning out…',
+  'family.leaveNote':
+    'Leaving keeps every course and all of your progress; it only takes your learning out of this family. If you hold a seat on the family plan, whoever manages the plan has to release that seat first.',
+  'family.outMoved': 'Your learning moved into this family. Everything you had came with it.',
+  'family.outCreated': 'This account is now a learner in this family.',
+  'family.outAlready': 'This account already learns in this family.',
+  'family.outLeft':
+    'Your learning is out of this family. Every course and all of your progress is still there.',
+  'family.notMember': 'You are not a member of that family.',
+  'family.seatHeld':
+    'This learning holds a seat on the family plan. Whoever manages the plan has to release that seat first.',
+  'family.notHere': 'This account does not learn inside that family.',
+  'family.adultRefused': 'That did not work. Nothing was changed.',
+  'family.adultUnconfirmed':
+    'We could not confirm that. Reload the page to see where your learning is.',
+  'family.backFamily': 'Back to your family',
+  'family.noBand': 'No age band',
+  'family.goingNone': 'nothing in progress',
+  'family.goingOne': '{count} course in progress',
+  'family.goingOther': '{count} courses in progress',
+  'family.finishedCount': '{count} finished',
+  'family.stoppedCount': '{count} stopped',
+  'family.nothing': 'Nothing here yet.',
+  'family.guardianAdd':
+    'A guardian can add a course from the catalogue, choosing this learner when it asks who is learning.',
+  'family.stFinished': 'Finished',
+  'family.stPaused': 'Paused by the teacher',
+  'family.stExpired': 'No longer available',
+  'family.noLessons': 'No lessons in this course yet',
+  'family.actNever': 'Not started yet',
+  'family.actToday': 'Active today',
+  'family.actYesterday': 'Active yesterday',
+  'family.actDays': 'Active {count} days ago',
+  'family.actWeeksOne': 'Active {count} week ago',
+  'family.actWeeksOther': 'Active {count} weeks ago',
+  'family.actOn': 'Last active {date}',
+  'family.cert': 'Certificate {number}',
+  'family.certRevoked': 'Certificate {number} — revoked',
+  'family.again': 'Look again',
 } as const;
 
 export type MessageKey = keyof typeof en;

@@ -4,12 +4,15 @@ import test from 'node:test';
 import {
   addChild,
   createFamily,
+  joinFamilyAsLearner,
+  leaveFamilyAsLearner,
   inviteFamilyMember,
   acceptFamilyMembership,
   revokeFamilyMembership,
   MEMBERSHIP_TYPES,
   learnerCoursesInOrder,
 } from './family.ts';
+import { FAMILY_SENTENCE } from './family-outcome.ts';
 
 // ---------------------------------------------------------------------------
 // Creating and managing the family itself.
@@ -32,7 +35,7 @@ import {
 type RpcCall = { fn: string; args: Record<string, unknown> };
 
 function stubRpc(
-  result: { data?: unknown; error?: { message: string } } = { data: 'id-1' },
+  result: { data?: unknown; error?: { message: string; code?: string } } = { data: 'id-1' },
 ) {
   const calls: RpcCall[] = [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -93,13 +96,53 @@ test('an over-long family name is refused before the request', async () => {
   assert.equal(calls.length, 0, 'the request should not have been sent');
 });
 
-test('being told to sign in is reported as such', async () => {
-  const { client } = stubRpc({ error: { message: 'sign in to create a family' } });
+test('being told to sign in is reported as such, by name', async () => {
+  const { client } = stubRpc({ error: { message: 'sign in to create a family', code: '42501' } });
 
   const r = await createFamily(client, 'X');
   assert.equal(r.ok, false);
-  assert.ok(!r.ok);
-  if (!r.ok) assert.equal(r.message, 'Sign in first.');
+  if (!r.ok) {
+    assert.equal(r.code, 'signed_out');
+    assert.equal(r.message, FAMILY_SENTENCE.signed_out);
+  }
+});
+
+test('a family the database refused for a reason of its own is refused, in our words', async () => {
+  const { client } = stubRpc({
+    error: { message: 'new row for relation "families" violates check constraint "families_name_check"', code: '23514' },
+  });
+
+  const r = await createFamily(client, 'X');
+  assert.equal(r.ok, false);
+  if (!r.ok) {
+    assert.equal(r.code, 'refused');
+    assert.doesNotMatch(r.message, /relation|constraint/u, 'the database\u2019s sentence reached the reader');
+  }
+});
+
+test('an error that is not the database\u2019s answer is not called a refusal', async () => {
+  // No SQLSTATE: the request died between the site and the database. A
+  // dropped connection (class 08) is the same. Either way the family may
+  // exist, and "could not be created" would be a guess.
+  for (const error of [
+    { message: 'fetch failed' },
+    { message: 'TypeError: terminated', code: '' },
+    { message: 'connection failure', code: '08006' },
+    { message: 'sign in to create a family' },
+  ]) {
+    const { client } = stubRpc({ error });
+    const r = await createFamily(client, 'X');
+    assert.equal(r.ok, false);
+    if (!r.ok) assert.equal(r.code, 'unconfirmed', JSON.stringify(error));
+  }
+});
+
+test('an over-long family name has a name of its own', async () => {
+  const { client } = stubRpc();
+  const r = await createFamily(client, 'x'.repeat(121));
+  assert.equal(r.ok, false);
+  if (!r.ok) assert.equal(r.code, 'name_long');
+  assert.equal((await createFamily(client, 'x'.repeat(120))).ok, true);
 });
 
 // ---------------------------------------------------------------------------
@@ -308,21 +351,107 @@ test('adding a child goes through the writer, with no actor and no id from the c
 });
 
 test('a refusal from the writer becomes a code the screen can act on', async () => {
-  const cases: Array<[string, string]> = [
-    ['only the owner may add a child to this family', 'not_owner'],
-    ['sign in to add a child', 'not_owner'],
-    ['family 00000000-0000-4000-8000-000000000000 not found', 'no_family'],
-    ['unsupported age band for a child: 21-30', 'rejected'],
+  // The message and the SQLSTATE `add_child_to_family()` raises it with.
+  const cases: Array<[string, string, string]> = [
+    ['only the owner may add a child to this family', '42501', 'not_owner'],
+    // This one used to travel as `not_owner` beside a sentence about signing
+    // in. A form that says its own sentence for each name would have told a
+    // person whose session had ended that they did not own their family.
+    ['sign in to add a child', '42501', 'signed_out'],
+    ['family 00000000-0000-4000-8000-000000000000 not found', 'P0002', 'no_family'],
+    ['age:declare_before_adding_a_child', '42501', 'declaration_required'],
+    ['a child needs a name', '22023', 'name_missing'],
+    ['unsupported age band for a child: 21-30', '22023', 'band_invalid'],
+    ['null value in column "family_id" violates not-null constraint', '23502', 'refused'],
   ];
 
-  for (const [message, code] of cases) {
-    const { client } = stubRpc({ data: null, error: { message } });
+  for (const [message, state, code] of cases) {
+    const { client } = stubRpc({ data: null, error: { message, code: state } });
     const result = await addChild(client, {
       familyId: 'fam-1', displayName: 'Aisha', ageBand: '8-10',
     });
     assert.equal(result.ok, false, `${message} was accepted`);
-    if (!result.ok) assert.equal(result.code, code, `${message} mapped to ${result.code}`);
+    if (!result.ok) {
+      assert.equal(result.code, code, `${message} mapped to ${result.code}`);
+      // The sentence beside the name is this module's, never the database's.
+      assert.equal(result.message, FAMILY_SENTENCE[result.code]);
+    }
   }
+});
+
+test('a child who may have been added is not reported as refused', async () => {
+  for (const reply of [
+    { data: null, error: { message: 'fetch failed' } },
+    { data: null, error: { message: 'only the owner may add a child to this family' } },
+    { data: null, error: { message: 'connection failure', code: '08006' } },
+    // Answered, and without an id: something happened, and nobody can say what.
+    { data: null },
+    { data: 42 },
+  ]) {
+    const { client } = stubRpc(reply);
+    const result = await addChild(client, { familyId: 'fam-1', displayName: 'Aisha', ageBand: '8-10' });
+    assert.equal(result.ok, false);
+    if (!result.ok) assert.equal(result.code, 'unconfirmed', JSON.stringify(reply));
+  }
+});
+
+test('an adult joining or leaving is refused by name, and never in the database\u2019s words', async () => {
+  const joins: Array<[string, string, string]> = [
+    ['sign in to learn as yourself in a family', '42501', 'signed_out'],
+    ['family 00000000-0000-4000-8000-000000000000 not found', 'P0002', 'no_family'],
+    ['you are not a member of this family', '42501', 'not_member'],
+    ['you may only move your own learning into a family you are a member of', '42501', 'not_member'],
+    ['your learning already belongs to another family; leave that family first', '23514', 'other_family'],
+    ['this account already has a child profile, which cannot learn as the account', '23514', 'refused'],
+  ];
+  for (const [message, state, code] of joins) {
+    const { client, calls } = stubRpc({ data: null, error: { message, code: state } });
+    const result = await joinFamilyAsLearner(client, 'fam-1');
+    assert.equal(result.ok, false);
+    if (!result.ok) {
+      assert.equal(result.code, code, message);
+      assert.equal(result.message, FAMILY_SENTENCE[result.code]);
+    }
+    // The caller names a family and nothing else: no learner, no actor.
+    assert.deepEqual(calls, [{ fn: 'claim_family_adult_learner', args: { p_family_id: 'fam-1' } }]);
+  }
+
+  const leaves: Array<[string, string, string]> = [
+    ['sign in first', '42501', 'signed_out'],
+    ['this account does not learn inside that family', 'P0002', 'not_here'],
+    ['this learning holds a seat on the family plan. Ask whoever manages the plan to release the seat first.', '42501', 'seat_held'],
+    // The guard underneath says it slightly differently, and means the same.
+    ['this learning holds a seat on a family plan, so it cannot leave the family until that seat is released', '42501', 'seat_held'],
+    ['a learner profile cannot change how it is linked: a profile becoming a different person is not an edit', '42501', 'refused'],
+  ];
+  for (const [message, state, code] of leaves) {
+    const { client, calls } = stubRpc({ data: null, error: { message, code: state } });
+    const result = await leaveFamilyAsLearner(client, 'fam-1');
+    assert.equal(result.ok, false);
+    if (!result.ok) {
+      assert.equal(result.code, code, message);
+      assert.equal(result.message, FAMILY_SENTENCE[result.code]);
+    }
+    assert.deepEqual(calls, [{ fn: 'release_family_adult_learner', args: { p_family_id: 'fam-1' } }]);
+  }
+
+  // Neither is called a refusal when the database did not answer, or answered
+  // a join without a learner.
+  for (const reply of [{ data: null, error: { message: 'fetch failed' } }, { data: null }, { data: [{}] }]) {
+    const { client } = stubRpc(reply);
+    const joined = await joinFamilyAsLearner(client, 'fam-1');
+    assert.equal(joined.ok, false);
+    if (!joined.ok) assert.equal(joined.code, 'unconfirmed', JSON.stringify(reply));
+  }
+  const dropped = await leaveFamilyAsLearner(stubRpc({ error: { message: 'fetch failed' } }).client, 'fam-1');
+  assert.equal(dropped.ok, false);
+  if (!dropped.ok) assert.equal(dropped.code, 'unconfirmed');
+
+  const moved = await joinFamilyAsLearner(
+    stubRpc({ data: [{ learnerProfileId: 'lp-1', created: false, joined: true, displayName: 'Me' }] }).client,
+    'fam-1',
+  );
+  assert.deepEqual(moved, { ok: true, learnerProfileId: 'lp-1', created: false, joined: true, displayName: 'Me' });
 });
 
 test('a child\u2019s home shows what is in progress, then what is finished', () => {

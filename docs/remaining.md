@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 24% there (192 of 798 sentences; it was 71% of 272, then
+  the nineteen reads 21% there (192 of 898 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -539,8 +539,9 @@ still unreviewed and still saying so.
   recording that cannot play, 34% of 567 with the practice questions and the
   study tools, 33% of 581 with the sources card, 32% of 591 with the page for
   a page that broke, 28% of 677 with the lesson players and their saved-place
-  messages, 27% of 700 with the discussion on the lesson page, then this
-  with the account page and its profile form),
+  messages, 27% of 700 with the discussion on the lesson page, 24% of 798
+  with the account page and its profile form, then this with the family
+  pages and their forms),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -567,7 +568,7 @@ still unreviewed and still saying so.
   Burmese sentence on the page, and the tool still calculates six rows. It does
   the direction check in Pashto, opens the correction sheet on the Hausa
   companion part (eighty boxes, each with the draft, and the notice; no notice
-  on the Hausa navigation or on Swahili), and reads 24% on `/language` in Hausa.
+  on the Hausa navigation or on Swahili), and reads 21% on `/language` in Hausa.
 
 **Four languages withheld whole (owner's second answer, 2026-11-16).** Asked
 whether the rest of the interface in Wolof, Fulfulde, Bambara and Dhivehi should
@@ -640,8 +641,8 @@ written: not a held draft, nothing.
   strip and memorisation, all three behind switches that are off. They are
   marked as English. The learner-profile prompt shown to a new account is now
   translated on this page (seven more `learn.*` sentences) and, since
-  2026-11-18, on `/account`; on the two other pages that show it (`/family`,
-  the buy page) it is English, because those pages are.
+  2026-11-18, on `/account` and `/family`; on the one other page that shows
+  it (the buy page) it is English, because that page is.
 - *The course page (`/learn/[enrolmentId]`) followed, on the same rule.*
   Sixteen `course.*` sentences in the same twenty-seven languages
   (`messages/course.ts`): the heading line, the carry-on card (the dashboard's
@@ -759,7 +760,7 @@ written: not a held draft, nothing.
   the pages it links to: `/account/merge`, `/account/sharing`,
   `/account/accessibility`, `/account/export` and its print page,
   `/account/restore`, `/account/delete`, `/account/referrals`,
-  `/account/sponsorship`, `/account/password`, `/family`, `/billing`,
+  `/account/sponsorship`, `/account/password`, `/billing`,
   `/institution`, `/notifications`, `/policies`, `/teach/apply`, `/sponsor`
   and `/forgot-password`. A reader is taken from a page in their language to
   an English one by every link on it but "Language" and "Go to my learning".
@@ -778,6 +779,42 @@ written: not a held draft, nothing.
   inviting, applying to teach, the phone card), an account that signs in by
   phone code, a closed or suspended account in a language other than
   English, and any of the other twenty-four languages in a browser.
+- *The family pages (2026-11-18).* `/family`, its three forms (create a
+  family, add a child, the adult's own card) and `/family/[childId]`, a
+  hundred sentences in the same twenty-seven languages
+  (`messages/family.ts`); a held language reads both pages in English, whole,
+  marked as English. **Unreviewed**, and these pages tell a parent what
+  happens to a child's record and to their own learning: a reviewer of any
+  language should be shown `family.leaveNote`, `family.adultWhyAlone`,
+  `family.adultWhyNone`, `family.childNote` and the three "could not confirm"
+  sentences early. Words a reviewer should look at for sense as well as
+  grammar: "guardian" (`family.roleGuardian`), "removed" for a membership
+  that was revoked, and the counts in Arabic, Urdu and others, which are
+  written "label: number" so that one sentence serves every plural form.
+  **Still English on them for every reader, and marked:** the declaration
+  card (see `DECISIONS.md` for why it is not simply translated), a child's
+  sign-in card and the streak strip; all three are behind switches that are
+  off. A course with no title reads "Untitled course", which is English.
+  **Still English, every one of them:** `/family/guardians`, `/handover`,
+  `/progress`, a certificate's page and the buy page, each linked from here.
+  Checked by `scripts/family-route-smoke.mjs` on a synthetic backend: HTTP in
+  English, Arabic, French, Hausa, Pashto and Wolof; the first visit with no
+  family; the four states of the adult's card; the declaration card asked
+  and made; one learner's page with four courses in three groups and an
+  empty one; and every refusal of the three routes with its name and status.
+  Chromium in English, Arabic and Tamil at 320, 390 and 1440 wide on both
+  pages, the add-a-child form and the adult's card pressed in Arabic and the
+  create form in French, each through refusals, "could not confirm", and a
+  good write; a lost connection on the add-a-child form. **Not checked:** a
+  real database or row-level security (the stand-in enforces nothing; that a
+  billing-only member sees no children is the database's rule and was not
+  exercised here); the streak strip and the child's sign-in card, which the
+  stand-in never returns; a family with more than one household on the
+  account; the declaration button pressed; the other twenty-four languages
+  in a browser; and whether the database really raises the sentences the
+  codes are chosen from in every case — that is read from the migrations by
+  hand, and a reworded `raise exception` would turn a named refusal into
+  "That did not work" without failing a test.
 - *What it did to the nineteen.* They read 59% on `/language` after the course
   page and **55% after the lesson page**. The test
   that stops a mostly-English language being offered had its floor at 60 and

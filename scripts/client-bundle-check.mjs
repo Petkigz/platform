@@ -54,6 +54,12 @@ for (const [file, key] of [
   // the form says when a save fails, must be in that page and in no script.
   ['account.ts', 'account.closeBody'],
   ['account.ts', 'account.formFailed'],
+  // The three forms on the family page are client components handed their
+  // words, with no English of their own. What a reader is told about leaving
+  // a family, and about a child nobody can confirm was added, must be in
+  // that page and in no script.
+  ['family.ts', 'family.leaveNote'],
+  ['family.ts', 'family.childUnconfirmed'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

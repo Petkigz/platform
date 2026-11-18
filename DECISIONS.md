@@ -7957,14 +7957,15 @@ owner chose the first.
   the practice questions and the study tools on the lesson page, 33% since
   its sources card, 32% since the page for a page that broke, 28% since the
   lesson players and their saved-place messages, 27% since the discussion on
-  the lesson page, 24% since the account page and its profile form.
+  the lesson page, 24% since the account page and its profile form, 21%
+  since the family pages and their forms.
 - **The test that refused a language under half is removed.** Nothing in the
   tests now limits how much English one of these languages shows. That is the
   cost of this choice and it was put to the owner in those words.
 - What the tests still require of every offered language: every sentence that
   is neither held nor deliberately unwritten is present, and the sentence
   that gives the percentage is in that language rather than English. The
-  count (192 of 798; it was 192 of 347 when this was decided) is pinned in
+  count (192 of 898; it was 192 of 347 when this was decided) is pinned in
   `held-translations.test.ts`, so it changes only on purpose.
 - The four withheld languages are unaffected. So is the rule that a new screen
   is not written for a language with anything held.
@@ -8144,8 +8145,54 @@ phone card (behind `platform.phone_format`, off) and the title of a document
 waiting for agreement, which is the owner's own text. Every page the account
 page links to is still English.
 
+The family pages followed on the same day: `/family`, its three forms and
+`/family/[childId]`, a hundred sentences in a new part, `family.ts`, 21% for
+the nineteen. Both pages are drawn on the server, so `family.` is in
+`SERVER_ONLY_PREFIXES`. Five things were settled in writing them:
+
+- *A form with words handed to it has no English of its own.* The profile
+  form keeps an English set to fall back on; these three take `words` as a
+  required prop. One page draws each of them, so a fallback would be a second
+  copy of every sentence that nothing reads and nothing keeps in step.
+- *The four family writers name every refusal* (`lib/family-outcome.ts`):
+  `signed_out` (401), `not_owner` and `not_member` (403), `no_family` (404),
+  `malformed`, `name_long`, `name_missing` and `band_invalid` (400),
+  `declaration_required`, `other_family`, `seat_held`, `not_here` and
+  `refused` (409), and `unconfirmed` (502). They used to answer `rejected`
+  with a sentence that was sometimes the database's. The names are chosen
+  from the SQLSTATE and the sentence the migration raises; the English beside
+  a name is this module's and is the sentence the English page says.
+- *An error without a SQLSTATE is not a refusal.* A reply that never came, a
+  dropped connection (class 08) and an answer with no row in it are
+  `unconfirmed`, and so is anything the browser receives that is not a 4xx
+  naming a known reason. A second family and a second child of the same name
+  are both accepted, so that sentence sends the reader to reload and look,
+  and never says "try again". An ended session used to travel under the
+  name `not_owner` with a sentence about signing in; a form that says its own
+  sentence for each name would have told that person they did not own their
+  family, so it is `signed_out` now.
+- *The declaration stays English, and says so.* The sentence an adult agrees
+  to is stored with its version and has one wording. A translated button
+  under an English statement would be agreeing to words the reader was not
+  shown in the language of the button, and a translated statement would be a
+  second wording nobody has approved. So the whole card is English, marked
+  `lang="en" dir="ltr"`, on every page. Translating it means the owner
+  approving a wording per language and the record saying which was shown. It
+  is behind `platform.age_assurance`, which is off.
+- *A name inside a sentence is isolated.* Where a sentence is a string (a
+  heading handed to a form, an `aria-label`) the name is wrapped in U+2068
+  and U+2069; where it is markup it is a `<bdi>`. Lists of names are joined
+  by `Intl.ListFormat` in the reader's language, not by a comma in the page.
+
+Still English on a translated family page, each marked: the declaration
+card, a child's sign-in card (behind `family.child_login`) and the streak
+strip (behind `learning.streaks` and `family.engagement`), all three off.
+`/family/guardians`, `/handover`, `/progress` and `/certificates/…` are
+still English. `/api/family/declaration`, `/guardians` and `/child-login`
+still answer with sentences and no code.
+
 `UNWRITTEN_WHILE_HELD` is now `learn`, `course`, `lesson`, `assess`,
-`assign`, `missing`, `broke`, `player` and `account`.
+`assign`, `missing`, `broke`, `player`, `account` and `family`.
 
 **The rule going forward.** A part named in `UNWRITTEN_WHILE_HELD`
 (`web/src/lib/i18n/messages/held.ts`) may be absent from a language that has

@@ -2,6 +2,17 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { createFamily } from '@/lib/family';
+import { FAMILY_NAME_MAX, familyRefusal, familyStatusOf, type FamilyCode } from '@/lib/family-outcome';
+
+/**
+ * Create a family.
+ *
+ * A refusal names its reason (`lib/family-outcome.ts`); the form on `/family`
+ * says the sentence in the reader's language. The English beside the code is
+ * for a caller with no words of its own, and it is never the database's.
+ */
+const refuse = (code: FamilyCode) =>
+  NextResponse.json(familyRefusal(code), { status: familyStatusOf(code) });
 
 export async function POST(request: Request) {
   if (!isSupabaseConfigured()) {
@@ -9,20 +20,16 @@ export async function POST(request: Request) {
   }
   let raw: unknown;
   try { raw = await request.json(); }
-  catch { return NextResponse.json({ ok: false, message: 'Malformed request.' }, { status: 400 }); }
+  catch { return refuse('malformed'); }
   const body = (raw && typeof raw === 'object' ? raw : {}) as { name?: unknown };
-  if (body.name !== undefined && typeof body.name !== 'string') {
-    return NextResponse.json({ ok: false, message: 'Use a text family name.' }, { status: 400 });
-  }
-  if (typeof body.name === 'string' && body.name.trim().length > 120) {
-    return NextResponse.json({ ok: false, message: 'Keep the family name under 120 characters.' }, { status: 400 });
-  }
+  if (body.name !== undefined && typeof body.name !== 'string') return refuse('malformed');
+  if (typeof body.name === 'string' && body.name.trim().length > FAMILY_NAME_MAX) return refuse('name_long');
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ ok: false, message: 'Sign in first.' }, { status: 401 });
+  if (!user) return refuse('signed_out');
 
   const result = await createFamily(supabase, typeof body.name === 'string' ? body.name : undefined);
-  if (!result.ok) return NextResponse.json(result, { status: 400 });
+  if (!result.ok) return NextResponse.json(result, { status: familyStatusOf(result.code) });
   return NextResponse.json(result, { status: 201 });
 }

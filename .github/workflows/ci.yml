@@ -108,6 +108,9 @@ jobs:
       - name: Account page and profile route synthetic HTTP regression
         run: node scripts/account-route-smoke.mjs
 
+      - name: Family pages and family routes synthetic HTTP regression
+        run: node scripts/family-route-smoke.mjs
+
       - name: Catalogue synthetic HTTP regression
         run: node scripts/catalogue-route-smoke.mjs
 

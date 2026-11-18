@@ -2618,6 +2618,80 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The family pages in the reader's language, 2026-11-18
+
+`/family` and `/family/[childId]` were English for every reader, and the
+account page in the reader's language linked to them.
+
+- *Translated.* A hundred sentences (`family.*`, new file
+  `messages/family.ts`) in the twenty-seven languages with nothing held.
+  **Unreviewed.** Fourteen more are reused from the navigation, the
+  dashboard, the account page and the report form. A held language reads both pages in
+  English, whole, marked `lang="en" dir="ltr"`.
+- *How the words reach them.* Both pages are drawn on the server (`family.`
+  is server-only and in no script). `CreateFamily`, `AddChild` and
+  `FamilyAdultCard` take `words`, required, and have no English of their
+  own. `lib/family-adult.ts` and `lib/learner-courses.ts` choose which
+  sentence and return its name; the page says it. `lib/age-band.ts` writes
+  an age band from its two numbers in the reader's digits.
+- *Codes.* New `lib/family-outcome.ts`. `createFamily`, `addChild`,
+  `joinFamilyAsLearner` and `leaveFamilyAsLearner` return a named refusal;
+  `/api/family/create`, `/children` and `/learner` send the name with a
+  status (400, 401, 403, 404, 409, 502). The browser treats a reply as a
+  refusal only when it is a 4xx naming a known reason.
+- *Defects fixed on the way.*
+  - Two of the three forms had no `catch`: with the connection gone the
+    button stayed on "Adding…" or stayed disabled for good. The declaration
+    card had the same fault.
+  - A family with no children was shown the declaration card and the
+    add-a-child button twice, one above the other.
+  - Every refusal the code did not recognise printed the database's own
+    sentence: the held seat on leaving, a membership that was missing, and
+    whatever a constraint said. "sign in to add a child" travelled under the
+    name `not_owner`.
+  - A membership that was not active printed the database's word
+    ("revoked"), and so did a child profile that was not active
+    ("archived").
+  - The date on a made declaration was formatted in the browser's zone
+    after being drawn in the server's, so the two could disagree by a day.
+    It is said in UTC, with the zone named.
+- *What changed for an English reader.*
+  - Refusals are the page's own sentences. An answer that is not plainly a
+    refusal is "We could not confirm that the child was added. Reload the
+    page to check before adding them again." rather than "Could not add
+    that child."
+  - "Joining {family name} moves your existing learning into it" is "Joining
+    this family…"; the same for "Adding yourself…". The family's name is in
+    the heading above the card.
+  - The member line reads "Aisha (Owner), Unnamed (Guardian, invited), and
+    Yusuf (Billing, removed)", joined as English joins a list.
+  - On one learner's page, progress is the dashboard's sentence, "1 of 1
+    lessons · 100%", where it was "1 of 1 lesson · 100%". A date more than a
+    month old is "Last active Jan 5, 2026", where it was "Last active
+    2026-01-05".
+  - "Keep the family name under 120 characters." is "Keep the family name to
+    120 characters or fewer.", which is the rule that was always applied.
+  - The tab title of one learner's page is "My family". It never carried the
+    child's name and still does not.
+  - The browser's own "fill in this field" bubble is off (`noValidate`); the
+    add-a-child form says "Add the child’s name." itself.
+- *What it did to the nineteen.* `/language` tells each of them **21%** (192
+  of 898).
+- *Checks.* 2346 web tests (new `family-outcome.test.ts` and
+  `age-band.test.ts`; one new in `held-translations.test.ts`, which reads
+  both pages and the three forms and requires every `family.*` sentence to
+  be used; `family.test.ts` stubs now carry the SQLSTATE the migration
+  raises, and pin join and leave for the first time). The bundle check looks
+  for the leaving note and the "could not confirm" sentence about a child in
+  every script and finds neither (227 sentences looked for; 1771 kB, seven
+  more than before, which is the three forms' own checks). New
+  `scripts/family-route-smoke.mjs`, in CI and in the browser workflow: see
+  `docs/remaining.md` for what it reaches and what it does not.
+- *Left as it was:* the declaration card, the child's sign-in card and the
+  streak strip are English and marked; `/family/guardians`, `/handover` and
+  `/progress` are English; `/api/family/declaration`, `/guardians` and
+  `/child-login` answer with sentences and no code; "Untitled course".
+
 ### The account page in the reader's language, 2026-11-18
 
 The first screen outside the learning screens. `/account` was English for

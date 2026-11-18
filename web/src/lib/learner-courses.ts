@@ -115,33 +115,70 @@ export function groupLearnerCourses(courses: LearnerCourse[]): {
   return { active, finished, stopped };
 }
 
-/** `3 of 10 lessons · 30%` — the same sentence every screen uses for progress. */
-export function progressSentence(course: LearnerCourse): string {
-  const percent = Math.round(course.percentComplete);
-  const lessons = `${course.lessonsDone} of ${course.lessonsTotal} lesson${
-    course.lessonsTotal === 1 ? '' : 's'
-  }`;
-  return course.lessonsTotal === 0 ? 'No lessons in this course yet' : `${lessons} · ${percent}%`;
+/**
+ * The words, handed in.
+ *
+ * The four functions below used to return English. The page that calls them
+ * is written in the reader's language now, so each takes the page's own way of
+ * saying a named sentence, of writing a number, and of writing a day. The
+ * decisions (which sentence, which boundary) are still made here, where a
+ * test can pin them without a browser.
+ */
+export type LearnerCourseKey =
+  | 'learn.lessonsDone'
+  | 'family.noLessons'
+  | 'family.stFinished'
+  | 'family.stPaused'
+  | 'family.stExpired'
+  | 'family.cert'
+  | 'family.certRevoked'
+  | 'family.actNever'
+  | 'family.actToday'
+  | 'family.actYesterday'
+  | 'family.actDays'
+  | 'family.actWeeksOne'
+  | 'family.actWeeksOther'
+  | 'family.actOn';
+
+export type LearnerCourseCopy = {
+  /** The sentence with this name, with its places filled. */
+  say: (key: LearnerCourseKey, vars?: Record<string, string | number>) => string;
+  /** A number in the reader's digits. */
+  number: (value: number) => string;
+  /** A day and nothing finer: no time of day is ever passed through here. */
+  day: (when: Date) => string;
+  /** Which of the two forms this count takes in the reader's language. */
+  plural: (count: number) => 'one' | 'other';
+};
+
+/** `3 of 10 lessons · 30%` — the same sentence the dashboard uses for progress. */
+export function progressSentence(course: LearnerCourse, copy: LearnerCourseCopy): string {
+  if (course.lessonsTotal === 0) return copy.say('family.noLessons');
+  return copy.say('learn.lessonsDone', {
+    done: copy.number(course.lessonsDone),
+    total: copy.number(course.lessonsTotal),
+    percent: copy.number(Math.round(course.percentComplete)),
+  });
 }
 
 /** What the badge says, and why it is a word rather than a colour. */
-export function statusLabel(course: LearnerCourse): string | null {
-  if (course.status === 'completed') return 'Finished';
-  if (course.status === 'suspended') return 'Paused by the teacher';
-  if (course.status === 'expired') return 'No longer available';
+export function statusLabel(course: LearnerCourse, copy: LearnerCourseCopy): string | null {
+  if (course.status === 'completed') return copy.say('family.stFinished');
+  if (course.status === 'suspended') return copy.say('family.stPaused');
+  if (course.status === 'expired') return copy.say('family.stExpired');
   return null;
 }
 
 /**
  * What the certificate line says. A revoked certificate stays on the card — it was
  * issued, and "what happened to mine?" is a question the page answers rather than
- * hides.
+ * hides. The number is the certificate's own and is not rewritten in other digits.
  */
-export function certificateLine(course: LearnerCourse): string | null {
+export function certificateLine(course: LearnerCourse, copy: LearnerCourseCopy): string | null {
   if (!course.certificateNumber) return null;
-  return course.certificateStatus === 'revoked'
-    ? `Certificate ${course.certificateNumber} — revoked`
-    : `Certificate ${course.certificateNumber}`;
+  return copy.say(course.certificateStatus === 'revoked' ? 'family.certRevoked' : 'family.cert', {
+    number: course.certificateNumber,
+  });
 }
 
 /**
@@ -151,15 +188,24 @@ export function certificateLine(course: LearnerCourse): string | null {
  * a page should broadcast, and "this week" answers the question a guardian has.
  * `now` is a parameter so the test can pin the boundaries.
  */
-export function lastActivityLabel(lastActivityAt: string | null, now: Date = new Date()): string {
-  if (!lastActivityAt) return 'Not started yet';
+export function lastActivityLabel(
+  lastActivityAt: string | null,
+  copy: LearnerCourseCopy,
+  now: Date = new Date(),
+): string {
+  if (!lastActivityAt) return copy.say('family.actNever');
   const then = new Date(lastActivityAt);
-  if (Number.isNaN(then.getTime())) return 'Not started yet';
+  if (Number.isNaN(then.getTime())) return copy.say('family.actNever');
 
   const days = Math.floor((now.getTime() - then.getTime()) / 86_400_000);
-  if (days <= 0) return 'Active today';
-  if (days === 1) return 'Active yesterday';
-  if (days < 7) return `Active ${days} days ago`;
-  if (days < 30) return `Active ${Math.floor(days / 7)} week${days < 14 ? '' : 's'} ago`;
-  return `Last active ${then.toISOString().slice(0, 10)}`;
+  if (days <= 0) return copy.say('family.actToday');
+  if (days === 1) return copy.say('family.actYesterday');
+  if (days < 7) return copy.say('family.actDays', { count: copy.number(days) });
+  if (days < 30) {
+    const weeks = Math.floor(days / 7);
+    return copy.say(copy.plural(weeks) === 'one' ? 'family.actWeeksOne' : 'family.actWeeksOther', {
+      count: copy.number(weeks),
+    });
+  }
+  return copy.say('family.actOn', { date: copy.day(then) });
 }

@@ -24,6 +24,7 @@ import { MISSING } from './missing.ts';
 import { BROKE } from './broke.ts';
 import { PLAYER } from './player.ts';
 import { ACCOUNT } from './account.ts';
+import { FAMILY } from './family.ts';
 import { LESSON } from './lesson.ts';
 import { isHeld } from './held.ts';
 import { ASIA_AZ } from './asia-az.ts';
@@ -817,6 +818,8 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   PLAYER,
   // The account page and its profile form, on the same rule.
   ACCOUNT,
+  // The family page, its forms and one learner's page, on the same rule.
+  FAMILY,
 );
 
 /**

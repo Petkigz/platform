@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import type { AdultDeclaration } from '@/lib/adult-declaration';
+import { formatDateTime } from '@/lib/i18n/format';
 
 /**
  * The declaration card.
@@ -22,7 +23,18 @@ import type { AdultDeclaration } from '@/lib/adult-declaration';
  * The note under the button says we do not check it. That sentence is the whole
  * honesty of this screen: a declaration that looked like a verification would be
  * the exact overclaim `platform.age_assurance` sat in the register to avoid.
+ *
+ * **This card is English on every page, and says so to the browser.** The
+ * statement is one a person agrees to, kept in the database in the version
+ * they agreed to, and it has one wording. A button in another language under
+ * an English statement would ask somebody to agree to words chosen for them,
+ * so the whole card stays in the language of the statement and is marked
+ * `lang="en"`, which is how a right-to-left page lays it out correctly and a
+ * screen reader says it. Translating it is the owner's decision, with the
+ * statement, not a string to fill in.
  */
+const ENGLISH = { lang: 'en', dir: 'ltr' } as const;
+
 export function AgeDeclarationCard({
   declaration,
 }: {
@@ -38,11 +50,20 @@ export function AgeDeclarationCard({
   async function send(action: 'declare' | 'withdraw') {
     setBusy(true);
     setError(null);
-    const res = await fetch('/api/family/declaration', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ action }),
-    });
+    let res: Response;
+    try {
+      res = await fetch('/api/family/declaration', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ action }),
+      });
+    } catch {
+      // The button used to stay on "Saving…" for good when the request could
+      // not be made: nothing caught this.
+      setError('Could not reach the server. Check your connection and try again.');
+      setBusy(false);
+      return;
+    }
     const json = (await res.json().catch(() => null)) as
       | { ok: boolean; message?: string }
       | null;
@@ -54,17 +75,15 @@ export function AgeDeclarationCard({
     startTransition(() => router.refresh());
   }
 
+  // Said with its zone. The browser's own date for this instant can be a day
+  // away from the server's, and the two used to print different days.
   const when = declaration.declaredAt
-    ? new Date(declaration.declaredAt).toLocaleDateString(undefined, {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      })
+    ? formatDateTime('en', declaration.declaredAt, 'UTC') || null
     : null;
 
   if (declaration.declared) {
     return (
-      <div className="notice" role="status" style={{ marginTop: '1rem' }}>
+      <div className="notice" role="status" style={{ marginTop: '1rem' }} {...ENGLISH}>
         <strong>You declared this on {when}.</strong>{' '}
         {declaration.statement}
         <div style={{ marginTop: '0.6rem' }}>
@@ -87,7 +106,7 @@ export function AgeDeclarationCard({
   }
 
   return (
-    <div className="card" style={{ marginTop: '1rem' }}>
+    <div className="card" style={{ marginTop: '1rem' }} {...ENGLISH}>
       <h3 style={{ marginTop: 0 }}>Before you add a child</h3>
       {declaration.withdrawn && when && (
         <p className="muted" style={{ fontSize: '0.9rem' }}>

@@ -84,6 +84,7 @@ const PLAYER_PREFIX = 'player.';
  */
 const SERVER_ONLY_PREFIXES: readonly string[] = [
   'learn.', 'course.', 'lesson.', 'assess.', 'assign.', 'missing.', 'account.',
+  'family.',
 ];
 
 /** Everything a client component outside the companion pages can ask for. */

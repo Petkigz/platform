@@ -42,22 +42,49 @@ export function canJoinFamily(state: AdultFamilyState): boolean {
 }
 
 /**
+ * The sentences are named here and written in the catalogue.
+ *
+ * Each function below used to return English. The family page is written in
+ * the reader's language now, so each returns the *name* of its sentence
+ * (`family.…` in `lib/i18n/messages/en.ts`) and the page says it. The
+ * decision of which sentence is still made here, where it can be asserted
+ * without a browser, and the English is in one place only.
+ */
+export type FamilyAdultKey =
+  | 'family.adultHeadIn'
+  | 'family.adultHeadInNamed'
+  | 'family.adultHeadAlone'
+  | 'family.adultHeadOther'
+  | 'family.adultHeadNone'
+  | 'family.adultWhyIn'
+  | 'family.adultWhyAlone'
+  | 'family.adultWhyOther'
+  | 'family.adultWhyNone'
+  | 'family.joinMove'
+  | 'family.joinNew'
+  | 'family.leaveNote'
+  | 'family.outMoved'
+  | 'family.outCreated'
+  | 'family.outAlready';
+
+/**
  * The heading over the signed-in adult's own card.
  *
- * "Your learning" rather than their name: the profile name is on the card
- * underneath, and the heading is about the *relationship* — this is where you
- * learn, in this family, not a child's card with an adult's name on it.
+ * "Your learning" rather than their name: the heading is about the
+ * *relationship* — this is where you learn, in this family, not a child's
+ * card with an adult's name on it. Somebody who learns here and has a name on
+ * their profile gets the sentence with a place for it (`{name}`).
  */
-export function adultCardHeading(state: AdultFamilyState): string {
+export function adultCardHeadingKey(state: AdultFamilyState, named = false): FamilyAdultKey {
   switch (state) {
     case 'in-family':
-      return 'You learn here too';
+      return named ? 'family.adultHeadInNamed' : 'family.adultHeadIn';
     case 'alone':
-      return 'Your learning is separate from this family';
+      return 'family.adultHeadAlone';
     case 'other-family':
-      return 'Your learning is in another family';
+      return 'family.adultHeadOther';
     default:
-      return 'You are not a learner yet';
+      return 'family.adultHeadNone';
   }
 }
 
@@ -65,22 +92,26 @@ export function adultCardHeading(state: AdultFamilyState): string {
  * One sentence of explanation, and it always says what happens to what exists
  * already. That is the question an adult with progress has: does joining cost
  * me the courses I am part way through?
+ *
+ * The sentences say "this family" rather than the family's name. The name is
+ * the heading directly above the card, and a name put inside a sentence has
+ * to be declined in most of the languages this is written in.
  */
-export function adultCardExplanation(state: AdultFamilyState, familyName: string): string {
+export function adultCardExplanationKey(state: AdultFamilyState): FamilyAdultKey {
   switch (state) {
     case 'in-family':
-      return `Your courses, progress and certificates sit beside the children's, so one plan can cover everybody.`;
+      return 'family.adultWhyIn';
     case 'alone':
-      return `Joining ${familyName} moves your existing learning into it — the same profile, the same courses, the same progress. Nothing is copied and nothing is lost.`;
+      return 'family.adultWhyAlone';
     case 'other-family':
-      return `A learner profile belongs to one family at a time. To learn here, take your learning out of the other family first; it keeps its progress either way.`;
+      return 'family.adultWhyOther';
     default:
-      return `Adding yourself makes this account a learner inside ${familyName}. You keep your own progress, and other adults in the family will be able to see it.`;
+      return 'family.adultWhyNone';
   }
 }
 
-export function joinButtonLabel(state: AdultFamilyState): string {
-  return state === 'alone' ? 'Move my learning into this family' : 'Learn here as myself';
+export function joinButtonKey(state: AdultFamilyState): FamilyAdultKey {
+  return state === 'alone' ? 'family.joinMove' : 'family.joinNew';
 }
 
 /**
@@ -92,8 +123,7 @@ export function joinButtonLabel(state: AdultFamilyState): string {
  * rather than after it — a refusal a person could have been told about is not a
  * safeguard, it is a surprise.
  */
-export const LEAVE_NOTE =
-  'Leaving keeps every course and all of your progress; it only takes your learning out of this family. If you hold a seat on the family plan, whoever manages the plan has to release that seat first.';
+export const LEAVE_NOTE_KEY: FamilyAdultKey = 'family.leaveNote';
 
 /**
  * The result line after an attempt, in the words of somebody who did it rather
@@ -102,12 +132,17 @@ export const LEAVE_NOTE =
  * `joined` is true when an existing profile was moved in, which is worth saying
  * because the alternative — a second profile — is what people fear.
  */
-export function joinOutcomeMessage(result: {
-  created: boolean;
-  joined: boolean;
-  displayName?: string | null;
-}): string {
-  if (result.joined) return 'Your learning moved into this family. Everything you had came with it.';
-  if (result.created) return 'This account is now a learner in this family.';
-  return 'This account already learns in this family.';
+export type JoinOutcome = 'moved' | 'created' | 'already';
+
+export function joinOutcomeOf(result: { created: boolean; joined: boolean }): JoinOutcome {
+  if (result.joined) return 'moved';
+  if (result.created) return 'created';
+  return 'already';
+}
+
+export function joinOutcomeKey(result: { created: boolean; joined: boolean }): FamilyAdultKey {
+  const outcome = joinOutcomeOf(result);
+  return outcome === 'moved' ? 'family.outMoved'
+    : outcome === 'created' ? 'family.outCreated'
+    : 'family.outAlready';
 }

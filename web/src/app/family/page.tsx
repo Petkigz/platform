@@ -1,11 +1,12 @@
 import Link from 'next/link';
+import { cookies, headers } from 'next/headers';
 import { ClaimLearner } from '@/components/claim-learner';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
 import {
-  AGE_BAND_LABEL,
+  AGE_BANDS,
   fetchChildCourses,
   fetchFamilies,
   fetchFamilyAdults,
@@ -13,26 +14,56 @@ import {
   fetchOwnLearner,
   type Family,
 } from '@/lib/family';
-import { adultFamilyState } from '@/lib/family-adult';
-import { FamilyAdultCard } from './family-adult';
+import {
+  LEAVE_NOTE_KEY,
+  adultCardExplanationKey,
+  adultCardHeadingKey,
+  adultFamilyState,
+  joinButtonKey,
+} from '@/lib/family-adult';
+import { CHILD_NAME_MAX, DECLARATION_AGE, FAMILY_NAME_MAX } from '@/lib/family-outcome';
+import { ageBandLabel } from '@/lib/age-band';
+import { FamilyAdultCard, type FamilyAdultWords } from './family-adult';
 import { fetchEngagement } from '@/lib/engagement';
 import { EngagementStrip } from '@/components/engagement-strip';
-import { AddChild } from './add-child';
+import { AddChild, type AddChildWords } from './add-child';
 import { AgeDeclarationCard } from './age-declaration';
 import { fetchDeclaration, type AdultDeclaration } from '@/lib/adult-declaration';
 import { CreateFamily } from './create-family';
 import { ChildLoginCard, type ChildLoginState } from './child-login-card';
+import { SaidList } from './said-list';
+import {
+  LOCALE_COOKIE,
+  chooseLocale,
+  countLabel,
+  formatNumber,
+  languageShownFor,
+  translator,
+  type Locale,
+  type MessageKey,
+  type Translate,
+} from '@/lib/i18n';
 
 export const dynamic = 'force-dynamic';
 
-const MEMBER_LABEL: Record<string, string> = {
-  owner: 'Owner',
-  guardian: 'Guardian',
-  billing_manager: 'Billing',
+const ROLE_KEYS: Record<string, MessageKey> = {
+  owner: 'family.roleOwner',
+  guardian: 'family.roleGuardian',
+  billing_manager: 'family.roleBilling',
 };
 
+// A membership that is not active is said, not printed as the database's word.
+const MEMBER_KEYS: Record<string, MessageKey> = {
+  active: 'family.member',
+  invited: 'family.memberInvited',
+  revoked: 'family.memberRevoked',
+};
+
+/** A name inside a sentence that is handed over as plain text: isolated, so it keeps its own direction. */
+const isolate = (value: string) => `\u2068${value}\u2069`;
+
 /**
- * The family dashboard.
+ * The family dashboard, in the reader's language.
  *
  * A child here is a `learner_profile`, not a `user` (D2): no login, no email,
  * no password. That is why this page can show a child's progress without the
@@ -42,6 +73,18 @@ const MEMBER_LABEL: Record<string, string> = {
  * Nothing below filters by the signed-in user. RLS decides what comes back —
  * including the case that used to be a defect: a billing-only family member
  * sees the family and none of its children.
+ *
+ * **Twenty-seven languages have it** (`messages/family.ts`); a language held
+ * for review reads it in English, whole, under `lang="en"` — the same rule as
+ * the learner dashboard and the account page. The three forms are drawn in the
+ * browser and are handed their words, so the page's sentences are left out of
+ * the script every page carries.
+ *
+ * **What is still English on a translated page**, each marked as English so it
+ * is laid out and read aloud as English: the declaration card (it marks
+ * itself; see `age-declaration.tsx` for why it is not simply translated), a
+ * child's sign-in card, and the streak strip. All three are behind switches
+ * that are off.
  */
 export default async function FamilyPage() {
   if (!isSupabaseConfigured()) redirect('/');
@@ -52,6 +95,17 @@ export default async function FamilyPage() {
   } = await supabase.auth.getUser();
 
   if (!user) redirect('/sign-in?next=/family');
+
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code: locale } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  const shown = languageShownFor(locale, 'family');
+  const t = translator(shown.code);
+  const num = (value: number) => formatNumber(shown.code, value);
+  const frame = shown.code !== locale ? { lang: shown.code, dir: shown.dir } : {};
 
   const [families, audienceSections, ownLearner, declaration] = await Promise.all([
     fetchFamilies(supabase),
@@ -67,50 +121,57 @@ export default async function FamilyPage() {
 
   if (families.length === 0) {
     return (
-      <div className="container section">
-        <p className="eyebrow">My family</p>
-        <h1>No family yet</h1>
-        <p className="lede">
-          A family lets one adult account hold several children. Each child
-          learns under your account — they do not need an email address or a
-          password.
-        </p>
-        <CreateFamily />
-        <p className="muted" style={{ marginTop: '1rem' }}>
-          A family holds children, and it can hold you as well — the adult who runs it can
-          learn here too, beside them, so one plan covers everybody. Until you have a family
-          you do not need one to learn: your own account is enough.
-        </p>
-        <ClaimLearner label="Learn on this account" />
+      <div className="container section" {...frame}>
+        <p className="eyebrow">{t('nav.family')}</p>
+        <h1>{t('family.noneTitle')}</h1>
+        <p className="lede">{t('family.noneLede')}</p>
+        <CreateFamily
+          words={{
+            heading: t('family.createHeading'),
+            body: t('family.createBody'),
+            name: t('family.createName'),
+            optional: t('family.optional'),
+            placeholder: t('family.createPlaceholder'),
+            create: t('family.create'),
+            creating: t('family.creating'),
+            unreachable: t('auth.offline'),
+            nameLong: t('family.createNameLong', { count: num(FAMILY_NAME_MAX) }),
+            signedOut: t('family.signedOut'),
+            refused: t('family.createRefused'),
+            unconfirmed: t('family.createUnconfirmed'),
+          }}
+        />
+        <p className="muted" style={{ marginTop: '1rem' }}>{t('family.noneAlso')}</p>
+        <ClaimLearner
+          label={t('learn.claim')}
+          words={{
+            busy: t('learn.claimBusy'),
+            done: t('learn.claimDone'),
+            ready: t('learn.claimReady'),
+            failed: t('learn.claimFailed'),
+          }}
+        />
         <p style={{ marginTop: '1.5rem' }}>
-          <Link href="/learn">Back to my learning</Link>
+          <Link href="/learn">{t('account.selfGo')}</Link>
         </p>
       </div>
     );
   }
 
-  // A record that becomes theirs: the page where a learner who has turned eighteen
-  // takes their learning out of this account. It is linked from here because the
-  // adult holding the record is the one who most often has to ask the question.
-  const handoverLink = (
-    <p className="muted" style={{ marginTop: '1.25rem' }}>
-      <Link href="/handover">A learner has turned eighteen</Link> — their record can
-      become their own account, or be deleted.
-    </p>
-  );
-
   return (
-    <div className="container section">
-      <p className="eyebrow">My family</p>
-      <h1>Children and progress</h1>
-      {!audienceSections && (
-        <p className="lede">
-          The separate young-learner and adult experiences are not enabled yet,
-          so children and adults currently see the same catalogue.
-        </p>
-      )}
+    <div className="container section" {...frame}>
+      <p className="eyebrow">{t('nav.family')}</p>
+      <h1>{t('family.title')}</h1>
+      {!audienceSections && <p className="lede">{t('family.sameCatalogue')}</p>}
 
-      {handoverLink}
+      {/* A record that becomes theirs: the page where a learner who has turned
+          eighteen takes their learning out of this account. It is linked from
+          here because the adult holding the record is the one who most often
+          has to ask the question. */}
+      <p className="muted" style={{ marginTop: '1.25rem' }}>
+        {t('family.handoverBody')}{' '}
+        <Link href="/handover">{t('family.handoverLink')}</Link>
+      </p>
 
       {families.map((f: Family) => (
         <FamilyBlock
@@ -119,11 +180,13 @@ export default async function FamilyPage() {
           supabase={supabase}
           ownLearner={ownLearner}
           declaration={declaration}
+          shown={shown}
+          t={t}
         />
       ))}
 
       <p style={{ marginTop: '1.5rem' }}>
-        <Link href="/learn">Back to my learning</Link>
+        <Link href="/learn">{t('account.selfGo')}</Link>
       </p>
     </div>
   );
@@ -139,6 +202,8 @@ async function FamilyBlock({
   supabase,
   ownLearner,
   declaration,
+  shown,
+  t,
 }: {
   family: Family;
   declaration: AdultDeclaration;
@@ -146,7 +211,20 @@ async function FamilyBlock({
   // every query on the same session.
   supabase: Awaited<ReturnType<typeof createClient>>;
   ownLearner: Awaited<ReturnType<typeof fetchOwnLearner>>;
+  /** The language this page is written in for this reader. */
+  shown: Locale;
+  t: Translate;
 }) {
+  const num = (value: number) => formatNumber(shown.code, value);
+  // What is not translated here, marked so a right-to-left page lays it out,
+  // and a screen reader says it, as English.
+  const english = shown.code === 'en' ? {} : ({ lang: 'en', dir: 'ltr' } as const);
+  const band = (code: string) =>
+    ageBandLabel(code, {
+      ages: (from, to) => t('family.ages', { from: num(from), to: num(to) }),
+      adult: t('family.bandAdult'),
+    });
+
   // A streak is derived from progress that already exists, so a failure to read it is
   // silence rather than an error: the child's card is still worth showing without it.
   // Both switches are checked once, not once per child.
@@ -188,64 +266,114 @@ async function FamilyBlock({
   const active = members.filter((m) => m.status === 'active');
   const state = adultFamilyState(ownLearner, family.id);
   const others = adults.filter((a) => !a.isMe);
+  const myName = state === 'in-family' ? (ownLearner?.displayName ?? '') : '';
+
+  const adultWords: FamilyAdultWords = {
+    heading: t(adultCardHeadingKey(state, myName !== ''), { name: isolate(myName) }),
+    why: t(adultCardExplanationKey(state)),
+    join: t(joinButtonKey(state)),
+    joining: t('family.joining'),
+    leave: t('family.leave'),
+    leaving: t('family.leaving'),
+    leaveNote: t(LEAVE_NOTE_KEY),
+    outcomes: {
+      moved: t('family.outMoved'),
+      created: t('family.outCreated'),
+      already: t('family.outAlready'),
+    },
+    left: t('family.outLeft'),
+    unreachable: t('auth.offline'),
+    notMember: t('family.notMember'),
+    otherFamily: t('family.adultHeadOther'),
+    seatHeld: t('family.seatHeld'),
+    notHere: t('family.notHere'),
+    signedOut: t('family.signedOut'),
+    noFamily: t('family.noFamily'),
+    refused: t('family.adultRefused'),
+    unconfirmed: t('family.adultUnconfirmed'),
+  };
+
+  const childWords: AddChildWords = {
+    open: t('family.addOpen'),
+    name: t('family.childName'),
+    placeholder: t('family.childPlaceholder'),
+    band: t('family.bandLabel'),
+    bands: Object.fromEntries(AGE_BANDS.map((code) => [code, band(code)])),
+    note: t('family.childNote'),
+    add: t('family.add'),
+    adding: t('family.adding'),
+    cancel: t('lesson.reportCancel'),
+    unreachable: t('auth.offline'),
+    nameMissing: t('family.childNameMissing'),
+    bandInvalid: t('family.childBandBad'),
+    notOwner: t('family.childNotOwner'),
+    declaration: t('family.childDeclaration', { age: num(DECLARATION_AGE) }),
+    signedOut: t('family.signedOut'),
+    noFamily: t('family.noFamily'),
+    refused: t('family.childRefused'),
+    unconfirmed: t('family.childUnconfirmed'),
+  };
+
+  const [alsoBefore = '', alsoAfter = ''] = t('family.alsoHere').split('{names}');
+  const [adultsBefore = '', adultsAfter = ''] = t('family.adultsLine').split('{list}');
+  const [openBefore = '', openAfter = ''] = t('family.openLearning').split('{name}');
 
   return (
     <div style={{ marginTop: '1.75rem' }}>
       <div className="outline-h">
-        <h3>{family.name ?? 'My family'}</h3>
+        <h3><bdi>{family.name ?? t('nav.family')}</bdi></h3>
         <span className="muted" style={{ fontSize: '0.85rem' }}>
-          {active.length} adult{active.length === 1 ? '' : 's'} ·{' '}
-          {family.children.length} child{family.children.length === 1 ? '' : 'ren'}
+          {countLabel(shown.code, active.length, { one: 'family.adultsOne', other: 'family.adultsOther' })}
+          {' · '}
+          {countLabel(shown.code, family.children.length, {
+            one: 'family.childrenOne',
+            other: 'family.childrenOther',
+          })}
         </span>
       </div>
 
-      <FamilyAdultCard
-        familyId={family.id}
-        familyName={family.name ?? 'this family'}
-        state={state}
-        displayName={ownLearner?.displayName ?? null}
-      />
+      <FamilyAdultCard familyId={family.id} state={state} words={adultWords} />
 
       {others.length > 0 && (
         <p className="muted" style={{ fontSize: '0.85rem', marginTop: '-0.5rem' }}>
-          Also learning here: {others.map((a) => a.displayName).join(', ')}.
+          {alsoBefore}
+          <SaidList
+            code={shown.code}
+            items={others.map((a) => <bdi key={a.learnerProfileId}>{a.displayName}</bdi>)}
+          />
+          {alsoAfter}
         </p>
       )}
 
       {family.children.length === 0 ? (
         <div className="card">
-          <p className="empty">No children yet.</p>
-          <AgeDeclarationCard declaration={declaration} />
-          <AddChild familyId={family.id} />
+          <p className="empty" style={{ margin: 0 }}>{t('family.noChildren')}</p>
         </div>
       ) : (
         <div className="grid cols-2">
           {childCourses.map(({ child, courses, engagement, login }) => (
             <div className="card" key={child.id}>
-              <h3 style={{ marginTop: 0 }}>{child.displayName}</h3>
+              <h3 style={{ marginTop: 0 }}><bdi>{child.displayName}</bdi></h3>
               <div className="badges">
-                {child.ageBand && (
-                  <span className="badge">{AGE_BAND_LABEL[child.ageBand] ?? child.ageBand}</span>
-                )}
+                {child.ageBand && <span className="badge">{band(child.ageBand)}</span>}
+                {/* A profile is active or archived, and nothing else. */}
                 {child.status !== 'active' && (
-                  <span className="badge neutral">{child.status}</span>
+                  <span className="badge neutral">{t('family.archived')}</span>
                 )}
               </div>
 
               {engagement && (
-                <div style={{ marginTop: '0.6rem', marginBottom: '0.6rem' }}>
+                <div style={{ marginTop: '0.6rem', marginBottom: '0.6rem' }} {...english}>
                   <EngagementStrip engagement={engagement} subject={child.displayName} />
                 </div>
               )}
 
               {courses.length === 0 ? (
-                <p className="empty" style={{ marginBottom: 0 }}>
-                  Not enrolled in anything yet.
-                </p>
+                <p className="empty" style={{ marginBottom: 0 }}>{t('family.notEnrolled')}</p>
               ) : (
                 courses.map((c) => (
                   <div className="course" key={c.enrolmentId}>
-                    <div className="title">{c.courseTitle}</div>
+                    <div className="title" dir="auto">{c.courseTitle}</div>
                     <div
                       className="progress"
                       style={{ marginTop: '0.5rem' }}
@@ -253,7 +381,10 @@ async function FamilyBlock({
                       aria-valuenow={Math.round(c.percentComplete)}
                       aria-valuemin={0}
                       aria-valuemax={100}
-                      aria-label={`${child.displayName}: ${c.courseTitle} progress`}
+                      aria-label={t('family.progressLabel', {
+                        name: isolate(child.displayName),
+                        course: isolate(c.courseTitle),
+                      })}
                     >
                       <span
                         style={{
@@ -262,8 +393,11 @@ async function FamilyBlock({
                       />
                     </div>
                     <div className="muted" style={{ marginTop: '0.4rem' }}>
-                      {c.lessonsDone} of {c.lessonsTotal} lessons ·{' '}
-                      {Math.round(c.percentComplete)}%
+                      {t('learn.lessonsDone', {
+                        done: num(c.lessonsDone),
+                        total: num(c.lessonsTotal),
+                        percent: num(Math.round(c.percentComplete)),
+                      })}
                     </div>
                   </div>
                 ))
@@ -271,41 +405,59 @@ async function FamilyBlock({
 
               <p style={{ marginTop: '0.75rem', marginBottom: 0 }}>
                 <Link href={`/family/${child.id}`}>
-                  Open {child.displayName}&rsquo;s learning
+                  {openBefore}
+                  <bdi>{child.displayName}</bdi>
+                  {openAfter}
                 </Link>
                 {engagement && (
                   <>
                     {' · '}
-                    <Link href={`/progress?learner=${child.id}`}>
-                      Progress and badges
-                    </Link>
+                    <Link href={`/progress?learner=${child.id}`}>{t('family.progressBadges')}</Link>
                   </>
                 )}
               </p>
 
               {login && (
-                <ChildLoginCard
-                  learnerId={child.id}
-                  childName={child.displayName}
-                  state={login}
-                />
+                <div {...english}>
+                  <ChildLoginCard
+                    learnerId={child.id}
+                    childName={child.displayName}
+                    state={login}
+                  />
+                </div>
               )}
             </div>
           ))}
         </div>
       )}
 
+      {/* Once per family. A family with no children used to be given these
+          twice, one above the other. */}
       <div style={{ marginTop: '0.75rem' }}>
         <AgeDeclarationCard declaration={declaration} />
-        <AddChild familyId={family.id} />
+        <AddChild familyId={family.id} words={childWords} />
       </div>
 
       {members.length > 0 && (
         <p className="muted" style={{ fontSize: '0.85rem', marginTop: '0.75rem' }}>
-          Adults:{' '}
-          {members
-            .map((m) => `${m.displayName ?? 'Unnamed'} (${MEMBER_LABEL[m.membershipType] ?? m.membershipType}${m.status === 'active' ? '' : `, ${m.status}`})`)
-            .join(', ')}
+          {adultsBefore}
+          <SaidList
+            code={shown.code}
+            items={members.map((m) => {
+              const role = ROLE_KEYS[m.membershipType];
+              const [before = '', after = ''] = t(MEMBER_KEYS[m.status] ?? 'family.member', {
+                role: role ? t(role) : m.membershipType,
+              }).split('{name}');
+              return (
+                <span key={m.id}>
+                  {before}
+                  <bdi>{m.displayName ?? t('family.unnamed')}</bdi>
+                  {after}
+                </span>
+              );
+            })}
+          />
+          {adultsAfter}
         </p>
       )}
     </div>

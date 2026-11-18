@@ -18,6 +18,15 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import {
+  FAMILY_NAME_MAX,
+  addChildCodeOf,
+  createFamilyCodeOf,
+  familyRefusal,
+  joinFamilyCodeOf,
+  leaveFamilyCodeOf,
+  type FamilyCode,
+} from './family-outcome.ts';
 import { one, type Embedded } from './embed.ts';
 
 export type Child = {
@@ -231,23 +240,20 @@ export async function fetchChildCourses(
  */
 export type AddChildOutcome =
   | { ok: true; childId: string }
-  | {
-      ok: false;
-      code: 'no_family' | 'not_owner' | 'declaration_required' | 'rejected';
-      message: string;
-    };
+  | { ok: false; code: FamilyCode; message: string };
 
+/**
+ * A refusal is a name (`family-outcome.ts`), and the sentence beside it is
+ * this module's English, never the database's. An error that is not the
+ * database's own answer is `unconfirmed`: the child may have been added.
+ */
 export async function addChild(
   supabase: SupabaseClient,
   args: { familyId: string; displayName: string; ageBand: string },
 ): Promise<AddChildOutcome> {
   const name = args.displayName.trim();
-  if (name.length === 0) {
-    return { ok: false, code: 'rejected', message: 'A name is required.' };
-  }
-  if (!args.familyId) {
-    return { ok: false, code: 'no_family', message: 'That family is missing.' };
-  }
+  if (name.length === 0) return familyRefusal('name_missing');
+  if (!args.familyId) return familyRefusal('no_family');
 
   const { data, error } = await supabase.rpc('add_child_to_family', {
     p_family_id: args.familyId,
@@ -255,38 +261,12 @@ export async function addChild(
     p_age_band: args.ageBand,
   });
 
-  if (error) {
-    if (/only the owner/i.test(error.message)) {
-      return {
-        ok: false,
-        code: 'not_owner',
-        message: 'Only the family owner can add a child.',
-      };
-    }
-    if (/sign in/i.test(error.message)) {
-      return { ok: false, code: 'not_owner', message: 'Sign in to add a child.' };
-    }
-    if (/family .* not found/i.test(error.message)) {
-      return { ok: false, code: 'no_family', message: 'That family does not exist.' };
-    }
-    // The owner's age-assurance decision, surfaced where it can be acted on:
-    // the page shows the declaration card above this form, so the sentence points
-    // at it rather than saying "not allowed".
-    if (/age:declare_before_adding_a_child/i.test(error.message)) {
-      return {
-        ok: false,
-        code: 'declaration_required',
-        message: 'Declare that you are 18 or older before adding a child.',
-      };
-    }
-    return { ok: false, code: 'rejected', message: error.message };
-  }
+  if (error) return familyRefusal(addChildCodeOf(error));
 
-  // The writer returns the new profile's id directly.
+  // The writer returns the new profile's id directly. A reply without one is
+  // not a refusal: something was answered, and it may have been a child.
   const childId = typeof data === 'string' ? data : '';
-  if (!childId) {
-    return { ok: false, code: 'rejected', message: 'The child was added without an id.' };
-  }
+  if (!childId) return familyRefusal('unconfirmed');
 
   return { ok: true, childId };
 }
@@ -334,7 +314,7 @@ export const MEMBERSHIP_TYPE_LABEL: Record<
 
 export type CreateFamilyOutcome =
   | { ok: true; familyId: string }
-  | { ok: false; message: string };
+  | { ok: false; code: FamilyCode; message: string };
 
 /**
  * Create a family.
@@ -349,20 +329,15 @@ export async function createFamily(
   name?: string,
 ): Promise<CreateFamilyOutcome> {
   const trimmed = name?.trim() ?? '';
-  if (trimmed.length > 120) {
-    return { ok: false, message: 'Keep the family name under 120 characters.' };
-  }
+  if (trimmed.length > FAMILY_NAME_MAX) return familyRefusal('name_long');
 
   const { data, error } = await supabase.rpc('create_family', {
     p_name: trimmed === '' ? null : trimmed,
   });
 
-  if (error) {
-    if (/sign in to create a family/i.test(error.message)) {
-      return { ok: false, message: 'Sign in first.' };
-    }
-    return { ok: false, message: error.message };
-  }
+  // Named, never passed on: the database's sentence is not written for a
+  // reader, and an error that is not its answer may be a family that exists.
+  if (error) return familyRefusal(createFamilyCodeOf(error));
 
   return { ok: true, familyId: data === null ? '' : String(data) };
 }
@@ -567,7 +542,7 @@ export async function fetchFamilyAdults(
 
 export type AdultFamilyOutcome =
   | { ok: true; learnerProfileId: string; created: boolean; joined: boolean; displayName: string | null }
-  | { ok: false; code: 'rejected' | 'no_family' | 'seat_held'; message: string };
+  | { ok: false; code: FamilyCode; message: string };
 
 export async function joinFamilyAsLearner(
   supabase: SupabaseClient,
@@ -577,23 +552,15 @@ export async function joinFamilyAsLearner(
     p_family_id: familyId,
   });
 
-  if (error) {
-    if (/not a member of this family/i.test(error.message)) {
-      return { ok: false, code: 'rejected', message: 'You are not a member of that family.' };
-    }
-    if (/not found/i.test(error.message)) {
-      return { ok: false, code: 'no_family', message: 'That family does not exist.' };
-    }
-    return { ok: false, code: 'rejected', message: error.message };
-  }
+  if (error) return familyRefusal(joinFamilyCodeOf(error));
 
   const row = (Array.isArray(data) ? data[0] : data) as
     | { learnerProfileId?: string; created?: boolean; joined?: boolean; displayName?: string | null }
     | null;
 
-  if (!row?.learnerProfileId) {
-    return { ok: false, code: 'rejected', message: 'The family answered without a learner.' };
-  }
+  // Answered, but not with a learner: not a refusal, and not a success the
+  // page can describe.
+  if (!row?.learnerProfileId) return familyRefusal('unconfirmed');
 
   return {
     ok: true,
@@ -612,20 +579,7 @@ export async function leaveFamilyAsLearner(
     p_family_id: familyId,
   });
 
-  if (error) {
-    if (/seat on the family plan/i.test(error.message)) {
-      return {
-        ok: false,
-        code: 'seat_held',
-        message:
-          'This learning holds a seat on the family plan. Whoever manages the plan has to release that seat first.',
-      };
-    }
-    if (/does not learn inside that family/i.test(error.message)) {
-      return { ok: false, code: 'rejected', message: 'This account does not learn inside that family.' };
-    }
-    return { ok: false, code: 'rejected', message: error.message };
-  }
+  if (error) return familyRefusal(leaveFamilyCodeOf(error));
 
   return { ok: true, learnerProfileId: '', created: false, joined: false, displayName: null };
 }
