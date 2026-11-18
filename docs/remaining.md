@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 27% there (192 of 700 sentences; it was 71% of 272, then
+  the nineteen reads 24% there (192 of 798 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -539,7 +539,8 @@ still unreviewed and still saying so.
   recording that cannot play, 34% of 567 with the practice questions and the
   study tools, 33% of 581 with the sources card, 32% of 591 with the page for
   a page that broke, 28% of 677 with the lesson players and their saved-place
-  messages, then this with the discussion on the lesson page),
+  messages, 27% of 700 with the discussion on the lesson page, then this
+  with the account page and its profile form),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -566,7 +567,7 @@ still unreviewed and still saying so.
   Burmese sentence on the page, and the tool still calculates six rows. It does
   the direction check in Pashto, opens the correction sheet on the Hausa
   companion part (eighty boxes, each with the draft, and the notice; no notice
-  on the Hausa navigation or on Swahili), and reads 27% on `/language` in Hausa.
+  on the Hausa navigation or on Swahili), and reads 24% on `/language` in Hausa.
 
 **Four languages withheld whole (owner's second answer, 2026-11-16).** Asked
 whether the rest of the interface in Wolof, Fulfulde, Bambara and Dhivehi should
@@ -638,9 +639,9 @@ written: not a held draft, nothing.
 - *Still English on `/learn` in every language:* live classes, the streak
   strip and memorisation, all three behind switches that are off. They are
   marked as English. The learner-profile prompt shown to a new account is now
-  translated on this page (seven more `learn.*` sentences); on the three other
-  pages that show it (`/account`, `/family`, the buy page) it is English,
-  because those pages are.
+  translated on this page (seven more `learn.*` sentences) and, since
+  2026-11-18, on `/account`; on the two other pages that show it (`/family`,
+  the buy page) it is English, because those pages are.
 - *The course page (`/learn/[enrolmentId]`) followed, on the same rule.*
   Sixteen `course.*` sentences in the same twenty-seven languages
   (`messages/course.ts`): the heading line, the carry-on card (the dashboard's
@@ -746,6 +747,37 @@ written: not a held draft, nothing.
   Arabic, Hausa, Pashto and English at 320 and 1440 wide by making the
   account page fail on a synthetic backend; **not checked** in a production
   build, where the reference shown is the server's digest.
+- *The account page (2026-11-18).* `/account` and its profile form,
+  ninety-eight sentences in the same twenty-seven languages
+  (`messages/account.ts`); a held language reads the page in English, whole,
+  marked as English. **Unreviewed**, and this page describes what closing an
+  account removes and keeps, what a download contains and who is told what:
+  a reviewer of any language should be shown `account.closeBody`,
+  `account.dataBody` and `account.dataRestore` early. **Still English on it
+  for every reader, and marked:** the phone card (switched off) and the title
+  of a document waiting for agreement. **Still English, every one of them:**
+  the pages it links to: `/account/merge`, `/account/sharing`,
+  `/account/accessibility`, `/account/export` and its print page,
+  `/account/restore`, `/account/delete`, `/account/referrals`,
+  `/account/sponsorship`, `/account/password`, `/family`, `/billing`,
+  `/institution`, `/notifications`, `/policies`, `/teach/apply`, `/sponsor`
+  and `/forgot-password`. A reader is taken from a page in their language to
+  an English one by every link on it but "Language" and "Go to my learning".
+  The preferred-language field is stored and read by nothing; the page now
+  says so under the field, and whether to wire it or remove it is undecided.
+  On a wide screen the page is one 42rem column at the start of the line with
+  the rest of the width empty; that was not changed here. Checked by
+  `scripts/account-route-smoke.mjs` on a synthetic backend: HTTP in English,
+  Arabic, French, Hausa, Pashto and Wolof, five ways of signing in, and every
+  refusal of the profile route; Chromium in English, Arabic and Tamil at 320,
+  390 and 1440 wide, and the form pressed in Arabic through two typing
+  mistakes, a database refusal, a good save and a lost connection. **Not
+  checked:** a real database or row-level security (the stand-in enforces
+  nothing, so "limited to the signed-in account" is the request the page
+  makes, not a rule that was tested), the cards behind switches (sponsoring,
+  inviting, applying to teach, the phone card), an account that signs in by
+  phone code, a closed or suspended account in a language other than
+  English, and any of the other twenty-four languages in a browser.
 - *What it did to the nineteen.* They read 59% on `/language` after the course
   page and **55% after the lesson page**. The test
   that stops a mostly-English language being offered had its floor at 60 and

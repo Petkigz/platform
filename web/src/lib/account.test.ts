@@ -4,6 +4,10 @@ import test from 'node:test';
 import {
   eraseMyAccount,
   exportFileName,
+  ACCOUNT_NAME_MAX,
+  ACCOUNT_PROFILE_SENTENCES,
+  ACCOUNT_ZONE_MAX,
+  accountProfileProblem,
   saveAccountProfile,
   validateAccountProfile,
 } from './account.ts';
@@ -17,7 +21,7 @@ test('account profile accepts a trimmed name, supported language code and IANA t
 
 test('account profile refuses blank or overlong display names', () => {
   assert.match(validateAccountProfile({ ...valid, displayName: '   ' }) ?? '', /name/i);
-  assert.match(validateAccountProfile({ ...valid, displayName: 'x'.repeat(81) }) ?? '', /under 80/i);
+  assert.match(validateAccountProfile({ ...valid, displayName: 'x'.repeat(81) }) ?? '', /80 characters or fewer/i);
 });
 
 test('account profile validates language format and time zone', () => {
@@ -51,6 +55,38 @@ test('invalid or signed-out profile updates never reach the database', async () 
   assert.equal((await saveAccountProfile(client, '', valid)).ok, false);
   assert.equal((await saveAccountProfile(client, 'user-1', { ...valid, displayName: '' })).ok, false);
   assert.equal(touched, false);
+});
+
+test('every refusal carries a name, and the database’s own sentence stays behind', async () => {
+  assert.equal(accountProfileProblem(valid), null);
+  assert.equal(accountProfileProblem({ ...valid, displayName: ' ' }), 'name_missing');
+  assert.equal(accountProfileProblem({ ...valid, displayName: 'x'.repeat(ACCOUNT_NAME_MAX) }), null);
+  assert.equal(accountProfileProblem({ ...valid, displayName: 'x'.repeat(ACCOUNT_NAME_MAX + 1) }), 'name_long');
+  assert.equal(accountProfileProblem({ ...valid, preferredLanguage: 'EN' }), 'language_code');
+  assert.equal(accountProfileProblem({ ...valid, timezone: 'x'.repeat(ACCOUNT_ZONE_MAX + 1) }), 'zone_long');
+  assert.equal(accountProfileProblem({ ...valid, timezone: 'Mars/Olympus' }), 'zone_invalid');
+  assert.equal(accountProfileProblem({ ...valid, timezone: '' }), null);
+
+  const answering = (result: unknown) => ({
+    from: () => ({
+      update() { return this; }, eq() { return this; }, select() { return this; },
+      async maybeSingle() { return result; },
+    }),
+  }) as unknown as SupabaseClient;
+
+  const signedOut = await saveAccountProfile(answering(null), '', valid);
+  assert.deepEqual(signedOut, { ok: false, code: 'signed_out', message: ACCOUNT_PROFILE_SENTENCES.signed_out });
+
+  // The database's sentence names a table and a policy; a reader gets neither.
+  const failed = await saveAccountProfile(
+    answering({ data: null, error: { message: 'new row violates row-level security policy for table "user_profiles"' } }),
+    'user-1', valid,
+  );
+  assert.deepEqual(failed, { ok: false, code: 'failed', message: ACCOUNT_PROFILE_SENTENCES.failed });
+  assert.doesNotMatch(JSON.stringify(failed), /row-level|user_profiles/u);
+
+  const gone = await saveAccountProfile(answering({ data: null, error: null }), 'user-1', valid);
+  assert.equal(gone.ok === false ? gone.code : '', 'not_found');
 });
 
 // ---------------------------------------------------------------------------

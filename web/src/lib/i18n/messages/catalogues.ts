@@ -23,6 +23,7 @@ import { ASSIGN } from './assign.ts';
 import { MISSING } from './missing.ts';
 import { BROKE } from './broke.ts';
 import { PLAYER } from './player.ts';
+import { ACCOUNT } from './account.ts';
 import { LESSON } from './lesson.ts';
 import { isHeld } from './held.ts';
 import { ASIA_AZ } from './asia-az.ts';
@@ -814,6 +815,8 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   // The lesson page's players and saved-place messages, on the same rule.
   // Sent only to a lesson page with something to play: see `player.ts`.
   PLAYER,
+  // The account page and its profile form, on the same rule.
+  ACCOUNT,
 );
 
 /**

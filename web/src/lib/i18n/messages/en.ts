@@ -923,6 +923,134 @@ export const en = {
   'player.fetchFailed': 'That lesson could not be fetched to save.',
   'player.saveFailed': 'That lesson could not be saved.',
   'player.noCopy': 'This recording has no copy that can be played yet.',
+
+  // The account page and its profile form. Written for the same twenty-seven
+  // languages as the dashboard (`account.ts`); the page's title, "Signed in
+  // as" and the learner-profile button are the dashboard's own keys.
+  'account.lede':
+    'Manage how your account appears. Your sign-in address is shown for reference and is not changed here.',
+  'account.status': 'Account status: {status}',
+  'account.statusActive': 'active',
+  'account.statusSuspended': 'suspended',
+  'account.statusClosed': 'closed',
+  'account.owedHeading': 'Before you carry on',
+  'account.owedOne': '{count} document is waiting for your agreement.',
+  'account.owedOther': '{count} documents are waiting for your agreement.',
+  'account.owedBody':
+    'Read and agree, and the time you did is kept against your account. Nothing else on this page is held back meanwhile.',
+  'account.owedVersion': '{title} — version {number}',
+  'account.selfHeading': 'Learning as yourself',
+  'account.selfLearnsAs':
+    'This account learns as {name}. Courses you enrol in or buy belong to that learner, and nobody else’s progress is mixed into it.',
+  'account.selfInFamily':
+    'Your learning is inside a family account, so one family plan can cover you alongside its children. You manage that on the family page.',
+  'account.selfOnOwn':
+    'Your learning sits on its own. If you run a family account, you can move it in beside the children so one plan covers everybody — same profile, same progress.',
+  'account.selfGo': 'Go to my learning',
+  'account.selfJoinFamily': 'Learn inside my family',
+  'account.selfWhoSees': 'Who can see my progress',
+  'account.selfNone':
+    'You do not have a learner profile yet. One is needed before you can enrol in a course, buy one, or share your progress — a course is always for a named learner, and this is how you become one.',
+  'account.selfFamilyInstead':
+    'If you run a family account, you can become a learner there instead, and be part of the family from the start.',
+  'account.selfClaimNote':
+    'This does not create a second account. It adds you as a learner to this one.',
+  'account.formName': 'Display name',
+  'account.formLanguage': 'Preferred language code',
+  'account.formLanguageNote':
+    'This is kept with your profile, and nothing reads it yet. The language of these pages is chosen on the Language page and is kept on this browser.',
+  'account.formZone': 'Time zone',
+  'account.formSave': 'Save profile',
+  'account.formSaved': 'Your profile has been updated.',
+  'account.formFailed': 'Your profile could not be saved. Try again.',
+  'account.formNameMissing': 'Add the name you want people to see.',
+  'account.formNameLong': 'Keep your display name to {count} characters or fewer.',
+  'account.formLanguageBad': 'Use a language code such as en or en-GB.',
+  'account.formZoneLong': 'Keep the time zone to {count} characters or fewer.',
+  'account.formZoneBad': 'Use a valid IANA time zone, such as Africa/Kampala.',
+  'account.formSignedOut': 'You are signed out. Sign in again, then save.',
+  'account.formNotFound': 'Your profile could not be found. Sign out and back in, then try again.',
+  'account.signInHeading': 'How you sign in',
+  'account.signInBoth': 'You can sign in with a password or with Google.',
+  'account.signInPassword': 'You sign in with your email address and a password.',
+  'account.signInGoogle': 'You sign in with Google. There is no password on this account.',
+  'account.signInPhone': 'You sign in with a code sent to your phone.',
+  'account.signInOther': 'You sign in with: {methods}.',
+  'account.signInNone': 'No sign-in method is recorded for this account.',
+  'account.signInUnread': 'Your sign-in methods could not be read just now.',
+  'account.resetBody':
+    'Send a secure password reset link to your sign-in email. The link expires according to your authentication provider’s settings.',
+  'account.resetLink': 'Send reset link',
+  'account.noPasswordGoogle':
+    'There is no password on this account, so there is nothing to reset — keep using Google to sign in.',
+  'account.noPasswordPhone':
+    'This account signs in with a phone code, so there is no password to reset.',
+  'account.mergeHeading': 'Two accounts, one person',
+  'account.mergeBody':
+    'If you signed up twice, the accounts can be folded together. The one you keep survives; the other is closed, and both have to agree before anything moves.',
+  'account.mergeWaiting': 'Someone is asking to merge an account into this one.',
+  'account.mergeNone': 'Nothing is waiting on this account.',
+  'account.mergeLink': 'Merging accounts',
+  'account.mergeLinkWaiting': 'Merging accounts ({count} waiting)',
+  'account.sponsorHeading': 'Sponsored seats',
+  'account.sponsorBody':
+    'A course can be paid for by somebody else. Ask for one if it is out of reach, or pay for a seat that is waiting — the two sides never learn who the other is.',
+  'account.sponsorMine': 'What I have asked for and sponsored',
+  'account.sponsorWaiting': 'Seats waiting',
+  'account.teachHeading': 'Teaching here',
+  'account.teachBody':
+    'Teaching is by appointment — nobody becomes a teacher by signing up. If you would like to teach, you can send your qualifications and a link to a lesson you have given, and the owner reads it.',
+  'account.teachLink': 'Apply to teach',
+  'account.inviteHeading': 'Invite a friend',
+  'account.inviteBody':
+    'A friend who is new here gets a discount on their first course, and you get one on your next once their payment has stayed past the refund window. Both are discounts, not money, so there is nothing to pay out.',
+  'account.inviteLink': 'Your invitation code',
+  'account.shareHeading': 'Sharing my learning',
+  'account.shareBody':
+    'Your progress and certificates are private, including to your family. Invite somebody by email and they accept it themselves; you choose what they see and how long it lasts, and you can end it whenever you like.',
+  'account.shareLink': 'Who can see my learning',
+  'account.readHeading': 'How this reads',
+  'account.readBody':
+    'Text size, contrast and motion — applied the moment you choose one, for this browser. Nothing here needs saving, and nothing else changes about the page.',
+  'account.readLink': 'Reading preferences',
+  'account.termsBody': 'The terms, the privacy notice and the terms for teachers, each versioned.',
+  'account.termsAgreed': 'The versions you have agreed to are listed with the time you agreed.',
+  'account.termsNone': 'Nothing is waiting for your agreement.',
+  'account.termsLink': 'Read them',
+  'account.instHeading': 'My institution',
+  'account.instBody':
+    'A madrasah, school or organisation you belong to. If your email address is at a domain one of them has verified, you can join it; once you are in, it sees counts of its people and never your name or what you studied.',
+  'account.instLink': 'Where I belong',
+  'account.paidHeading': 'What I have paid',
+  'account.paidBody':
+    'Every payment that has moved on your billing account, and every refund that has come back, with a running total per currency. A refund you have asked for is listed separately until it actually moves, because asking is not receiving.',
+  'account.paidLink': 'See what I have paid',
+  'account.toldHeading': 'What I am told',
+  'account.toldBody':
+    'Messages from the platform appear in your notification centre, not in an inbox or a text message — no delivery provider is configured yet.',
+  'account.toldUnreadOne': 'You have {count} unread message.',
+  'account.toldUnreadOther': 'You have {count} unread messages.',
+  'account.toldNone': 'Nothing is waiting for you.',
+  'account.toldChoice':
+    'You choose which kinds you want, except for notices that money owed to you did not arrive: those always come.',
+  'account.toldLinkUnread': 'Notifications ({count} unread)',
+  'account.toldPrefs': 'Choose what you are told',
+  'account.dataHeading': 'My data',
+  'account.dataBody':
+    'Download everything we hold about this account as one file: your profile, the learners you are responsible for, what they have studied and finished, your certificates, orders and receipts, your notes, and who you have shared your learning with.',
+  'account.dataDownload': 'Download my data',
+  'account.dataSheet': 'As a spreadsheet',
+  'account.dataPrint': 'Read or print it',
+  'account.dataMore':
+    'It now carries more than it did: the discussion posts, reviews and marked work, the support cases, the messages sent to you, and — if you teach — your earnings and payouts.',
+  'account.dataWhat': 'What is in it, and what is left out',
+  'account.dataRestore':
+    'Have a file already? Your profile, notes and bookmarks can be put back on the lessons you are enrolled in; enrolments, certificates and orders cannot, and that page says why.',
+  'account.dataRestoreLink': 'Put it back',
+  'account.closeHeading': 'Closing this account',
+  'account.closeBody':
+    'Closing removes your name from everything it touched and signs you out for good. Orders, payments, enrolments and certificates are kept without your name on them, because a refund or a checked certificate still needs them. The page lists both sides before anything happens.',
+  'account.closeLink': 'Close this account',
 } as const;
 
 export type MessageKey = keyof typeof en;

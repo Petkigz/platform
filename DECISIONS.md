@@ -7957,14 +7957,14 @@ owner chose the first.
   the practice questions and the study tools on the lesson page, 33% since
   its sources card, 32% since the page for a page that broke, 28% since the
   lesson players and their saved-place messages, 27% since the discussion on
-  the lesson page.
+  the lesson page, 24% since the account page and its profile form.
 - **The test that refused a language under half is removed.** Nothing in the
   tests now limits how much English one of these languages shows. That is the
   cost of this choice and it was put to the owner in those words.
 - What the tests still require of every offered language: every sentence that
   is neither held nor deliberately unwritten is present, and the sentence
   that gives the percentage is in that language rather than English. The
-  count (192 of 700; it was 192 of 347 when this was decided) is pinned in
+  count (192 of 798; it was 192 of 347 when this was decided) is pinned in
   `held-translations.test.ts`, so it changes only on purpose.
 - The four withheld languages are unaffected. So is the rule that a new screen
   is not written for a language with anything held.
@@ -8112,8 +8112,40 @@ on this lesson right now", which was untrue for three of them; they are told
 apart by the sentence the migration raises, and a test reads those sentences
 out of the migrations so that rewording one is noticed.
 
+The account page followed on 2026-11-18, the first screen outside the
+learning screens to be written: ninety-eight sentences in a new part,
+`account.ts`, 24% for the nineteen. It is drawn on the server, so `account.`
+is in `SERVER_ONLY_PREFIXES`; its profile form is the browser's and is handed
+its words. Three things were settled in writing it:
+
+- *A sentence the database writes is not shown, even when it is not an
+  error.* `my_sign_in_methods()` returns a list of methods and an English
+  sentence about them. The page says its own sentence from the list, in the
+  reader's language, for every reader including an English one, and does not
+  read the database's. So a way of signing in the page has no sentence for is
+  named as the provider names it, inside "You sign in with: …".
+- *The profile route sends a code with every refusal*, as `/api/discussion`
+  does: `name_missing`, `name_long`, `language_code`, `zone_long`,
+  `zone_invalid` (400, the reader's to fix), `signed_out` (401), `not_found`
+  (409, a session that has outlived its profile), `malformed` (400) and
+  `failed` (502). A database error on save used to be printed as the database
+  wrote it; it is `failed`, and its sentence stays on the server. Saving is
+  three fields set to what was typed, so the form may honestly say "try
+  again" after a reply that never came. That is why this form does not need
+  the "could not confirm" sentence the discussion has.
+- *A field that does nothing says so.* The preferred-language code is stored
+  and nothing reads it to choose a page's language (only export, erasure and
+  restore touch it). Rather than leave a reader to think it does, the field
+  carries a note saying where the language is really chosen. Wiring it to the
+  language choice, or removing it, is a decision that has not been made.
+
+Still English on a translated account page, each marked `lang="en"`: the
+phone card (behind `platform.phone_format`, off) and the title of a document
+waiting for agreement, which is the owner's own text. Every page the account
+page links to is still English.
+
 `UNWRITTEN_WHILE_HELD` is now `learn`, `course`, `lesson`, `assess`,
-`assign`, `missing`, `broke` and `player`.
+`assign`, `missing`, `broke`, `player` and `account`.
 
 **The rule going forward.** A part named in `UNWRITTEN_WHILE_HELD`
 (`web/src/lib/i18n/messages/held.ts`) may be absent from a language that has

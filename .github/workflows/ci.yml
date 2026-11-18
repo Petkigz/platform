@@ -105,6 +105,9 @@ jobs:
       - name: Learner dashboard synthetic HTTP regression
         run: node scripts/learner-dashboard-route-smoke.mjs
 
+      - name: Account page and profile route synthetic HTTP regression
+        run: node scripts/account-route-smoke.mjs
+
       - name: Catalogue synthetic HTTP regression
         run: node scripts/catalogue-route-smoke.mjs
 

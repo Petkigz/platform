@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   confirmsMerge,
@@ -291,14 +290,5 @@ function IncomingRequest({
         </>
       )}
     </article>
-  );
-}
-
-/** The link the account page carries, so the screen is reachable from where it belongs. */
-export function MergeLink({ waiting }: { waiting: number }) {
-  return (
-    <Link href="/account/merge">
-      {waiting > 0 ? `Merging accounts (${waiting} waiting)` : 'Merging accounts'}
-    </Link>
   );
 }

@@ -478,15 +478,15 @@ try {
     await reader.page.goto(`${origin}/language`, { waitUntil: 'networkidle' });
     assert.equal(await reader.page.evaluate(() => document.documentElement.lang), 'ha');
     const settings = await reader.page.locator('body').textContent();
-    // 192 of 700: the 80 companion lines are held, and the 428 dashboard,
-    // course, lesson, assessment, assignment, wrong-address, broken-page and
-    // player lines were never written for a held language
+    // 192 of 798: the 80 companion lines are held, and the 526 dashboard,
+    // course, lesson, assessment, assignment, wrong-address, broken-page,
+    // player and account lines were never written for a held language
     // (`UNWRITTEN_WHILE_HELD`).
-    assert.ok(settings.includes('27%'), 'the language page does not show the lower number');
-    assert.ok(!settings.includes('27% of these interface strings'), 'the coverage sentence is in English for a Hausa reader');
+    assert.ok(settings.includes('24%'), 'the language page does not show the lower number');
+    assert.ok(!settings.includes('24% of these interface strings'), 'the coverage sentence is in English for a Hausa reader');
     assert.deepEqual(reader.pageErrors, []);
     await reader.context.close();
-    console.log(`Held for review (ha): the correction sheet opens the ${boxes} companion lines with the draft ("${draft}") and a notice that readers cannot see it; served parts carry no notice; /language shows a Hausa reader 27% in Hausa.`);
+    console.log(`Held for review (ha): the correction sheet opens the ${boxes} companion lines with the draft ("${draft}") and a notice that readers cannot see it; served parts carry no notice; /language shows a Hausa reader 24% in Hausa.`);
   }
 
   // ------------------------------------------------------ 6. withheld whole

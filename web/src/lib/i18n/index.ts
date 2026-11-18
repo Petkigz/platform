@@ -82,7 +82,9 @@ const PLAYER_PREFIX = 'player.';
  * the page for a page that broke (`app/error.tsx`) is drawn in the browser,
  * so its ten sentences have to be in what every page carries.
  */
-const SERVER_ONLY_PREFIXES: readonly string[] = ['learn.', 'course.', 'lesson.', 'assess.', 'assign.', 'missing.'];
+const SERVER_ONLY_PREFIXES: readonly string[] = [
+  'learn.', 'course.', 'lesson.', 'assess.', 'assign.', 'missing.', 'account.',
+];
 
 /** Everything a client component outside the companion pages can ask for. */
 export function shellMessagesFor(code: LocaleCode): Partial<Messages> {

@@ -6,6 +6,7 @@ import {
   LOCALES,
   chooseLocale,
   companionMessagesFor,
+  countLabel,
   coverageOf,
   heldSections,
   isHeld,
@@ -37,6 +38,7 @@ import { ASSIGN } from './i18n/messages/assign.ts';
 import { MISSING } from './i18n/messages/missing.ts';
 import { BROKE } from './i18n/messages/broke.ts';
 import { PLAYER } from './i18n/messages/player.ts';
+import { ACCOUNT } from './i18n/messages/account.ts';
 import { LESSON } from './i18n/messages/lesson.ts';
 import { auditAll } from './translation-audit.ts';
 import { SECTIONS } from './translations.ts';
@@ -407,7 +409,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // Owner's decision, 2026-11-16: a language the builder cannot write properly
   // falls back to English until a speaker has reviewed it. For a new screen
   // that means not writing it — a held draft would be the same guess, kept.
-  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign', 'missing', 'broke', 'player']);
+  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign', 'missing', 'broke', 'player', 'account']);
   // Thirty-seven for the dashboard (the learner-profile prompt is seven of
   // them), twenty-eight for the course page (twelve are the list of dated
   // classes), a hundred and thirteen for the lesson page (its frame, the
@@ -417,9 +419,11 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // course page, and a hundred and seven for the assignment page and the
   // assignment list, of which forty-seven are the files part, seven for
   // the page for an address with nothing at it, ten for the page for a
-  // page that broke, and eighty-six for the players on the lesson page and
-  // what they say about a saved place.
-  assert.equal(unwrittenKeys.length, 428);
+  // page that broke, eighty-six for the players on the lesson page and
+  // what they say about a saved place, and ninety-eight for the account
+  // page and its profile form.
+  assert.equal(unwrittenKeys.length, 526);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('account.')).length, 98);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('player.')).length, 86);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('broke.')).length, 10);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('missing.')).length, 7);
@@ -429,7 +433,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('lesson.')).length, 113);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('assess.')).length, 40);
 
-  // Eight files, one rule: the same languages in each.
+  // Nine files, one rule: the same languages in each.
   const written = Object.keys(LEARN).sort();
   assert.deepEqual(Object.keys(COURSE).sort(), written);
   assert.deepEqual(Object.keys(LESSON).sort(), written);
@@ -438,6 +442,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   assert.deepEqual(Object.keys(MISSING).sort(), written);
   assert.deepEqual(Object.keys(BROKE).sort(), written);
   assert.deepEqual(Object.keys(PLAYER).sort(), written);
+  assert.deepEqual(Object.keys(ACCOUNT).sort(), written);
   const expected = LOCALES.map((l) => l.code)
     .filter((code) => code !== 'en' && !Object.hasOwn(HELD_FOR_REVIEW, code))
     .sort();
@@ -447,7 +452,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   for (const code of expected) {
     const own: Partial<Record<string, string>> = {
       ...LEARN[code], ...COURSE[code], ...LESSON[code], ...ASSESS[code], ...ASSIGN[code], ...MISSING[code], ...BROKE[code],
-      ...PLAYER[code],
+      ...PLAYER[code], ...ACCOUNT[code],
     };
     assert.deepEqual(Object.keys(own).sort(), [...unwrittenKeys].sort(), `${code} is short a dashboard, course, lesson, assessment or assignment sentence`);
     for (const key of unwrittenKeys) {
@@ -485,7 +490,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     }
   }
   // What that costs the nineteen that are still in the picker, said out loud:
-  // 192 of 700 sentences, which is 27%. Nothing holds a floor under
+  // 192 of 798 sentences, which is 24%. Nothing holds a floor under
   // it any more: the owner chose on 2026-11-17 to keep these languages in the
   // picker and show the number. The count is pinned here so that it moves only
   // when somebody means it to, and is seen when it does. It moved from 55% to
@@ -503,11 +508,12 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // players on the lesson page and their saved-place messages added
   // eighty-six, the largest single step since the assignment page, and it is
   // 28%; the discussion on the lesson page added twenty-three and it is
-  // 27%. What they are shown did not get smaller; what is counted got bigger.
+  // 27%; the account page and its profile form added ninety-eight and it is
+  // 24%. What they are shown did not get smaller; what is counted got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 700);
-    assert.equal(coverageOf(code).percent, 27, code);
+    assert.equal(coverageOf(code).total, 798);
+    assert.equal(coverageOf(code).percent, 24, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');
   assert.equal(languageShownFor('en', 'learn').code, 'en');
@@ -559,9 +565,11 @@ test('the dashboard page reads its words from the catalogue, in one language', (
   assert.match(claim, /const say = words \?\? ENGLISH;/u);
   // The server's reason is English; a translated page says its own sentence.
   assert.match(claim, /setError\(words \? words\.failed : \(json\?\.message \?\? say\.failed\)\);/u);
-  // The other three screens that show the prompt are not translated and pass
-  // no words, so they read exactly as before.
-  for (const caller of ['../app/account/page.tsx', '../app/courses/[slug]/buy/page.tsx', '../app/family/page.tsx']) {
+  // The other two screens that show the prompt are not translated and pass
+  // no words, so they read exactly as before. The account page is translated
+  // and passes the dashboard's.
+  assert.match(read('../app/account/page.tsx'), /<ClaimLearner[^>]*words=/u);
+  for (const caller of ['../app/courses/[slug]/buy/page.tsx', '../app/family/page.tsx']) {
     assert.doesNotMatch(read(caller), /<ClaimLearner[^>]*words=/u, caller);
   }
 
@@ -1230,4 +1238,102 @@ test('the page for a page that broke is in the reader’s language, and English 
   const last = read('../app/global-error.tsx');
   assert.match(last, /<html lang="en">/u);
   assert.doesNotMatch(last, /useT\(/u);
+});
+
+test('the account page is in the reader’s language, and its form says a refusal by name', () => {
+  const page = read('../app/account/page.tsx');
+  const form = read('../app/account/profile-form.tsx');
+  const route = read('../app/api/account/route.ts');
+  const lib = read('./account.ts');
+
+  // One language under one `lang`, on the rule the dashboard set.
+  assert.match(page, /const shown = languageShownFor\(locale, 'account'\);/u);
+  assert.match(page, /const t = translator\(shown\.code\);/u);
+  assert.match(page, /\{\.\.\.\(mismatch \? \{ lang: shown\.code, dir: shown\.dir \} : \{\}\)\}/u);
+  assert.doesNotMatch(page, /^'use client'/u);
+
+  // Every account sentence is on the page: none is translated and never shown.
+  for (const key of unwrittenKeys.filter((k) => k.startsWith('account.'))) {
+    assert.ok(page.includes(`'${key}'`), `${key} is translated and never shown`);
+  }
+
+  // No English sentence is left written into the page. What remains in
+  // quotes is an address, a class name, a key or a provider's name.
+  const sentences = [...page.matchAll(/>\s*([A-Z][a-z]+(?: [a-z’']+){2,}[^<{]*)</gu)].map((m) => m[1]);
+  assert.deepEqual(sentences, [], `the account page still writes English inline: ${sentences.join(' | ')}`);
+  for (const phrase of ['Account settings', 'Signed in as', 'How you sign in', 'Download my data', 'Close this account']) {
+    assert.equal(page.includes(phrase), false, phrase);
+  }
+
+  // How the account signs in is said from the list of methods. The sentence
+  // the database writes beside it is English and is not read.
+  assert.doesNotMatch(page, /methods\?*\.summary/u);
+  // A name, an address and a provider's name keep their own direction.
+  assert.match(page, /<strong><bdi dir="ltr">\{identity\}<\/bdi><\/strong>/u);
+  assert.match(page, /<strong><bdi>\{ownLearner\.display_name\}<\/bdi><\/strong>/u);
+  assert.match(page, /<bdi dir="ltr">\{otherMethods\.join\(', '\)\}<\/bdi>/u);
+  // The owner's document title is English, and marked.
+  assert.match(page, /<bdi \{\.\.\.english\}>\{row\.title\}<\/bdi>/u);
+  // Counts take the form their language wants, and its digits.
+  assert.match(page, /countLabel\(shown\.code, outstanding, \{ one: 'account\.owedOne', other: 'account\.owedOther' \}\)/u);
+  assert.match(page, /countLabel\(shown\.code, unread, \{ one: 'account\.toldUnreadOne', other: 'account\.toldUnreadOther' \}\)/u);
+  // The phone card is not translated, is behind a switch that is off, and is
+  // marked as English where it stands.
+  assert.match(page, /<div \{\.\.\.english\}>\s*<PhoneForm/u);
+  // Three downloads are three buttons side by side on a desk, not three bars.
+  assert.match(page, /<div className="page-actions" style=\{\{ marginTop: 0 \}\}>/u);
+
+  // The form is handed its words, and asks the catalogue for none: the
+  // account sentences are not in what every page carries.
+  assert.match(form, /^'use client';/u);
+  assert.doesNotMatch(form, /useT\(|@\/lib\/i18n/u);
+  assert.match(form, /const say = words \?\? ENGLISH;/u);
+  assert.match(page, /<ProfileForm[\s\S]*?words=\{\{/u);
+  const src = new URL('../', import.meta.url);
+  const files = (dir: string): string[] =>
+    readdirSync(new URL(dir, src), { withFileTypes: true }).flatMap((entry) =>
+      entry.isDirectory() ? files(`${dir}${entry.name}/`) : /\.tsx?$/u.test(entry.name) ? [`${dir}${entry.name}`] : [],
+    );
+  const clients = files('').filter((file) => {
+    const text = readFileSync(new URL(file, src), 'utf8');
+    return /^\s*'use client'/u.test(text) && /'account\.[a-zA-Z]+'/u.test(text);
+  });
+  assert.deepEqual(clients, [], 'a client component asks for an account sentence the shell does not carry');
+
+  // A refusal reaches the form as a name. The form says its own sentence for
+  // it and never prints the server's; the database's sentence never leaves.
+  assert.match(form, /setError\(sentenceFor\(isProblem\(result\?\.code\) \? result\.code : 'failed'\)\);/u);
+  assert.doesNotMatch(form, /result\?*\.message/u);
+  assert.doesNotMatch(lib.slice(0, lib.indexOf('export function exportFileName')), /error\.message/u);
+  assert.match(lib, /if \(error\) return refused\('failed'\);/u);
+  assert.match(route, /result\.code === 'failed' \? 502 : result\.code === 'not_found' \? 409 : 400/u);
+  // The same check runs in the browser before anything is sent.
+  assert.match(form, /const problem = accountProfileProblem\(\{ displayName, preferredLanguage, timezone \}\);/u);
+  // A code and a zone name are Latin whatever the page is; a name is not.
+  assert.equal((form.match(/dir="ltr"/gu) ?? []).length, 2);
+  assert.match(form, /id="account-display-name"\s+autoComplete="name"\s+dir="auto"/u);
+
+  // Every problem the library can name has a sentence on the page.
+  for (const code of ['name_missing', 'name_long', 'language_code', 'zone_long', 'zone_invalid', 'signed_out', 'not_found', 'malformed', 'failed']) {
+    assert.match(page, new RegExp(`${code}: t\\('account\\.form[A-Za-z]+'\\)`, 'u'), code);
+    assert.ok(lib.includes(`| '${code}'`), code);
+  }
+  // The two limits are the library's, written in the reader's digits.
+  assert.match(page, /maxima=\{\{ name: num\(ACCOUNT_NAME_MAX\), zone: num\(ACCOUNT_ZONE_MAX\) \}\}/u);
+  for (const code of ['ar', 'fr', 'zh-hans'] as const) {
+    const t = translator(code);
+    assert.match(t('account.formNameLong'), /\{count\}/u);
+    assert.notEqual(t('account.closeBody'), en['account.closeBody']);
+  }
+  // The count of documents owed, which used to be a sentence of its own in
+  // `lib/policies.ts`: one and many in English, the reader's form elsewhere.
+  const owed = { one: 'account.owedOne', other: 'account.owedOther' } as const;
+  assert.equal(countLabel('en', 1, owed), '1 document is waiting for your agreement.');
+  assert.equal(countLabel('en', 4, owed), '4 documents are waiting for your agreement.');
+  assert.equal(countLabel('fr', 1, owed), '1 document attend votre accord.');
+  assert.equal(countLabel('fr', 4, owed), '4 documents attendent votre accord.');
+  assert.equal(en['account.termsNone'], 'Nothing is waiting for your agreement.');
+  // A held language reads the page in English, whole.
+  assert.equal(languageShownFor('so', 'account').code, 'en');
+  assert.equal(translator('so')('account.closeBody'), en['account.closeBody']);
 });

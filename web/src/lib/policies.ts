@@ -96,13 +96,6 @@ export function liveLine(live: { versionNumber: number; effectiveAt: string | nu
     : `Version ${live.versionNumber}, in force`;
 }
 
-/** The sentence over the account page prompt. Silent when nothing is owed. */
-export function outstandingSentence(outstanding: number): string {
-  if (outstanding <= 0) return 'Nothing is waiting for your agreement.';
-  if (outstanding === 1) return 'One document is waiting for your agreement.';
-  return `${outstanding} documents are waiting for your agreement.`;
-}
-
 /** What the button on a document page says. */
 export function acceptanceLabel(acceptedAt: string | null | undefined): string {
   if (!acceptedAt) return 'Agree to this version';

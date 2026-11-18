@@ -13,7 +13,6 @@ import {
   draftNote,
   isInForce,
   liveLine,
-  outstandingSentence,
   publishRefusal,
   readableBlocks,
   readyToPublish,
@@ -46,12 +45,6 @@ test('a document with no live version says so, rather than showing a version', (
   assert.equal(statusNote({ versionNumber: 1, effectiveAt: '2026-11-01T00:00:00' }),
     'Version 1, in force from 2026-11-01');
   assert.equal(liveLine({ versionNumber: 3, effectiveAt: null }), 'Version 3, in force');
-});
-
-test('the prompt counts documents, and says nothing when nothing is owed', () => {
-  assert.equal(outstandingSentence(0), 'Nothing is waiting for your agreement.');
-  assert.equal(outstandingSentence(1), 'One document is waiting for your agreement.');
-  assert.equal(outstandingSentence(4), '4 documents are waiting for your agreement.');
 });
 
 test('an accepted document shows when it was agreed, not a button', () => {

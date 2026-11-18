@@ -12,25 +12,67 @@ export type AccountProfile = {
   timezone: string | null;
 };
 
+/**
+ * Why a profile was not saved, as a name rather than a sentence.
+ *
+ * The form on `/account` is written in the reader's language and says its own
+ * sentence for each of these; the English beside the code is for a caller that
+ * has no words of its own. The database's own sentence is never passed on: a
+ * failed update answers `failed`, and saving again is safe because the save
+ * sets three fields to what was typed.
+ */
+export type AccountProfileProblem =
+  | 'name_missing'
+  | 'name_long'
+  | 'language_code'
+  | 'zone_long'
+  | 'zone_invalid'
+  | 'signed_out'
+  | 'not_found'
+  | 'malformed'
+  | 'failed';
+
+export const ACCOUNT_NAME_MAX = 80;
+export const ACCOUNT_ZONE_MAX = 100;
+
+export const ACCOUNT_PROFILE_SENTENCES: Record<AccountProfileProblem, string> = {
+  name_missing: 'Add the name you want people to see.',
+  name_long: `Keep your display name to ${ACCOUNT_NAME_MAX} characters or fewer.`,
+  language_code: 'Use a language code such as en or en-GB.',
+  zone_long: `Keep the time zone to ${ACCOUNT_ZONE_MAX} characters or fewer.`,
+  zone_invalid: 'Use a valid IANA time zone, such as Africa/Kampala.',
+  signed_out: 'You are signed out. Sign in again, then save.',
+  not_found: 'Your profile could not be found. Sign out and back in, then try again.',
+  malformed: 'Check the profile fields and try again.',
+  failed: 'Your profile could not be saved. Try again.',
+};
+
 export type AccountProfileOutcome =
   | { ok: true; profile: AccountProfile }
-  | { ok: false; message: string };
+  | { ok: false; code: AccountProfileProblem; message: string };
 
-export function validateAccountProfile(input: AccountProfileInput): string | null {
+const refused = (code: AccountProfileProblem): AccountProfileOutcome =>
+  ({ ok: false, code, message: ACCOUNT_PROFILE_SENTENCES[code] });
+
+/** What is wrong with what was typed, or null. Runs in the browser and on the server. */
+export function accountProfileProblem(input: AccountProfileInput): AccountProfileProblem | null {
   const name = input.displayName.trim();
-  if (!name) return 'Add the name you want people to see.';
-  if (name.length > 80) return 'Keep your display name under 80 characters.';
+  if (!name) return 'name_missing';
+  if (name.length > ACCOUNT_NAME_MAX) return 'name_long';
   const language = input.preferredLanguage.trim();
-  if (!/^[a-z]{2}(-[A-Z]{2})?$/.test(language)) {
-    return 'Use a language code such as en or en-GB.';
-  }
+  if (!/^[a-z]{2}(-[A-Z]{2})?$/.test(language)) return 'language_code';
   const timezone = input.timezone.trim();
-  if (timezone.length > 100) return 'Keep the time zone under 100 characters.';
+  if (timezone.length > ACCOUNT_ZONE_MAX) return 'zone_long';
   if (timezone) {
     try { new Intl.DateTimeFormat('en', { timeZone: timezone }); }
-    catch { return 'Use a valid IANA time zone, such as Africa/Kampala.'; }
+    catch { return 'zone_invalid'; }
   }
   return null;
+}
+
+export function validateAccountProfile(input: AccountProfileInput): string | null {
+  const problem = accountProfileProblem(input);
+  return problem ? ACCOUNT_PROFILE_SENTENCES[problem] : null;
 }
 
 /** Update only self-service profile fields; RLS remains the authority. */
@@ -39,9 +81,9 @@ export async function saveAccountProfile(
   userId: string,
   input: AccountProfileInput,
 ): Promise<AccountProfileOutcome> {
-  if (!userId) return { ok: false, message: 'Sign in first.' };
-  const invalid = validateAccountProfile(input);
-  if (invalid) return { ok: false, message: invalid };
+  if (!userId) return refused('signed_out');
+  const problem = accountProfileProblem(input);
+  if (problem) return refused(problem);
 
   const { data, error } = await supabase
     .from('user_profiles')
@@ -54,8 +96,8 @@ export async function saveAccountProfile(
     .select('display_name, preferred_language, timezone')
     .maybeSingle();
 
-  if (error) return { ok: false, message: error.message };
-  if (!data) return { ok: false, message: 'Your profile could not be found. Sign out and back in, then try again.' };
+  if (error) return refused('failed');
+  if (!data) return refused('not_found');
   return { ok: true, profile: data as AccountProfile };
 }
 

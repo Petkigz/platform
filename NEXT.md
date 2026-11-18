@@ -2618,6 +2618,57 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The account page in the reader's language, 2026-11-18
+
+The first screen outside the learning screens. `/account` was English for
+every reader; a reader came to it from a dashboard in their own language.
+
+- *Translated.* Ninety-eight sentences (`account.*`, new file
+  `messages/account.ts`) in the twenty-seven languages with nothing held.
+  **Unreviewed.** Fifteen more are reused from the dashboard, the navigation
+  and the footer. A held language reads the page in English, whole, marked
+  `lang="en" dir="ltr"`.
+- *How the words reach it.* The page is drawn on the server (`account.` is
+  server-only and in no script). `ProfileForm` takes `words` and `maxima`;
+  `ClaimLearner` takes the dashboard's words. With none, both say English.
+- *Codes.* `lib/account.ts` names every refusal of the profile save and
+  `/api/account` sends the name with a status (400, 401, 409, 502). The form
+  runs the same check before sending, so a typing mistake costs no request.
+- *What changed for an English reader.*
+  - How the account signs in is said by the page from the list of methods;
+    the sentence the database writes beside the list is no longer shown. New
+    sentences for a phone code, for a provider the page does not know ("You
+    sign in with: apple.") and for no method recorded.
+  - "One document is waiting for your agreement." is "1 document is waiting
+    for your agreement."; the unread line is "You have 3 unread messages."
+    Both take the form and the digits of the reader's language.
+  - "Account status: active" with the status as a word of its own.
+  - A database error on save printed the database's sentence. It is "Your
+    profile could not be saved. Try again." "Sign in first." is "You are
+    signed out. Sign in again, then save." The name limit is said with its
+    number.
+  - A note under the preferred-language field: it is stored, nothing reads
+    it, and the language of the pages is chosen on the Language page.
+  - Two sentences that wrapped a link in the middle end with the link.
+  - The three downloads are laid out by `.page-actions`: three buttons on
+    one line on a desk, checked at 1440 wide in three languages.
+  - The browser's own "fill in this field" bubble is off (`noValidate`): it
+    is in the browser's language, not the page's. The form says it instead.
+- *Removed.* `outstandingSentence` (`lib/policies.ts`) and `MergeLink`
+  (`merge-panel.tsx`): the account page was the only caller of each.
+- *What it did to the nineteen.* `/language` tells each of them **24%** (192
+  of 798).
+- *Checks.* 2331 web tests (one new in `held-translations.test.ts`, which
+  reads the page and requires every `account.*` sentence to be used on it;
+  one new in `account.test.ts`; one removed with `outstandingSentence`). The
+  bundle check looks for the closing-an-account paragraph and the "could not
+  be saved" sentence in every script and finds neither (183 sentences looked
+  for; 1764 kB, three more than before, which is the form's own check). New
+  `scripts/account-route-smoke.mjs`, in CI and in the browser workflow: see
+  `docs/remaining.md` for what it reaches and what it does not.
+- *Left as it was:* every page `/account` links to is English; the phone
+  card is English; the page is a single narrow column on a wide screen.
+
 ### The lesson discussion in the reader's language, 2026-11-18
 
 An open discussion was the last part of a translated lesson that was English

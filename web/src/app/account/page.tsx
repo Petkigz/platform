@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
@@ -6,16 +7,64 @@ import { isFlagEnabled } from '@/lib/flags';
 import { ClaimLearner } from '@/components/claim-learner';
 import { ProfileForm } from './profile-form';
 import { PhoneForm } from './phone-form';
-import { MergeLink } from './merge/merge-panel';
-import { outstandingSentence, type PolicyStanding } from '@/lib/policies';
+import type { PolicyStanding } from '@/lib/policies';
+import { ACCOUNT_NAME_MAX, ACCOUNT_ZONE_MAX } from '@/lib/account';
+import {
+  LOCALE_COOKIE,
+  chooseLocale,
+  countLabel,
+  formatNumber,
+  languageShownFor,
+  translator,
+  type MessageKey,
+} from '@/lib/i18n';
 
 export const dynamic = 'force-dynamic';
+
+/**
+ * The account page, in the reader's language.
+ *
+ * **Twenty-seven languages have it** (`messages/account.ts`); a language held
+ * for review reads it in English, whole, under `lang="en"` — the same rule as
+ * the learner dashboard. Nothing here is drawn in the browser except the two
+ * forms, and the profile form is handed its words, so the page's sentences are
+ * left out of the script every page carries.
+ *
+ * **What is still English on a translated page**, each marked as English so it
+ * is laid out and read aloud as English: the phone card (behind
+ * `platform.phone_format`, which is off), and the title of a document waiting
+ * for agreement, which is the owner's own text.
+ *
+ * **How this account signs in is said from the list of methods**, not from the
+ * sentence the database writes beside it: that sentence is English.
+ */
+const STATUS_KEYS: Record<string, MessageKey> = {
+  active: 'account.statusActive',
+  suspended: 'account.statusSuspended',
+  closed: 'account.statusClosed',
+};
+
+const CARD = { maxWidth: '42rem', marginTop: '1rem' } as const;
 
 export default async function AccountPage() {
   if (!isSupabaseConfigured()) redirect('/');
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/sign-in?next=/account');
+
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code: locale } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  const shown = languageShownFor(locale, 'account');
+  const t = translator(shown.code);
+  const num = (value: number) => formatNumber(shown.code, value);
+  const mismatch = shown.code !== locale;
+  // What is not translated on this page, marked so a right-to-left page lays
+  // it out, and a screen reader says it, as English.
+  const english = shown.code === 'en' ? {} : ({ lang: 'en', dir: 'ltr' } as const);
 
   const [referralsOn, sponsorshipOn, { data, error }, { data: learnerRows }, { data: methodsData },
          { data: badgeData }, { data: phoneData }, { data: mergeData },
@@ -85,280 +134,328 @@ export default async function AccountPage() {
     phoneCountry?: string | null;
   } | null;
   const methods = (methodsData ?? null) as {
-    providers: string[];
-    hasPassword: boolean;
-    summary: string;
+    providers?: unknown;
+    hasPassword?: unknown;
   } | null;
+  const providers = Array.isArray(methods?.providers)
+    ? methods.providers.filter((p): p is string => typeof p === 'string')
+    : [];
+  const hasPassword = methods?.hasPassword === true;
+  const withGoogle = providers.includes('google');
+  // Anything that is not a password, Google or a phone code is named as the
+  // provider names it — a word such as "apple" has no translation to give.
+  const otherMethods = providers.filter((p) => p !== 'email' && p !== 'google' && p !== 'phone');
+  const [otherBefore = '', otherAfter = ''] = t('account.signInOther').split('{methods}');
+
+  // Sentences split around what is put into them, so a name or an address
+  // keeps its own direction inside a right-to-left sentence.
+  const identity = user.email ?? user.phone ?? null;
+  const [signedBefore = '', signedAfter = ''] = t('learn.signedInAs').split('{identity}');
+  const [learnsBefore = '', learnsAfter = ''] = t('account.selfLearnsAs').split('{name}');
+  const statusKey = STATUS_KEYS[profile.account_status];
 
   return (
-    <div className="container section">
-      <p className="eyebrow"><Link href="/learn">My learning</Link></p>
-      <h1>Account settings</h1>
-      <p className="lede">Manage how your account appears. Your sign-in address is shown for reference and is not changed here.</p>
+    <div
+      className="container section"
+      {...(mismatch ? { lang: shown.code, dir: shown.dir } : {})}
+    >
+      <p className="eyebrow"><Link href="/learn">{t('nav.learn')}</Link></p>
+      <h1>{t('learn.account')}</h1>
+      <p className="lede">{t('account.lede')}</p>
       <div className="notice" style={{ maxWidth: '42rem', marginBottom: '1rem' }}>
-        Signed in as <strong>{user.email ?? user.phone ?? 'unknown'}</strong>
-        {' · '}account status: {profile.account_status}
+        {identity ? (
+          <>
+            {signedBefore}
+            <strong><bdi dir="ltr">{identity}</bdi></strong>
+            {signedAfter}{' '}
+          </>
+        ) : null}
+        {t('account.status', {
+          status: statusKey ? t(statusKey) : profile.account_status,
+        })}
       </div>
       {outstanding > 0 && (
-        <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem', borderColor: 'var(--accent)' }}>
-          <h2 style={{ marginTop: 0 }}>Before you carry on</h2>
+        <section className="card" style={{ ...CARD, borderColor: 'var(--accent)' }}>
+          <h2 style={{ marginTop: 0 }}>{t('account.owedHeading')}</h2>
           <p className="muted">
-            {outstandingSentence(outstanding)} Read and agree, and the time you did is kept
-            against your account. Nothing else on this page is held back meanwhile.
+            {countLabel(shown.code, outstanding, { one: 'account.owedOne', other: 'account.owedOther' })}{' '}
+            {t('account.owedBody')}
           </p>
           <ul className="stack" style={{ margin: '0.5rem 0' }}>
-            {owed.map((row) => (
-              <li key={row.slug}>
-                <Link href={`/policies/${row.slug}`}>
-                  {row.title} — version {row.versionNumber}
-                </Link>
-              </li>
-            ))}
+            {owed.map((row) => {
+              const [before = '', after = ''] = t('account.owedVersion', {
+                number: num(row.versionNumber),
+              }).split('{title}');
+              return (
+                <li key={row.slug}>
+                  <Link href={`/policies/${row.slug}`}>
+                    {before}
+                    <bdi {...english}>{row.title}</bdi>
+                    {after}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </section>
       )}
 
-      <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
-        <h2 style={{ marginTop: 0 }}>Learning as yourself</h2>
+      <section className="card" style={CARD}>
+        <h2 style={{ marginTop: 0 }}>{t('account.selfHeading')}</h2>
         {ownLearner ? (
           <>
             <p className="muted">
-              This account learns as <strong>{ownLearner.display_name}</strong>. Courses you
-              enrol in or buy belong to that learner, and nobody else&apos;s progress is
-              mixed into it.
+              {learnsBefore}
+              <strong><bdi>{ownLearner.display_name}</bdi></strong>
+              {learnsAfter}
             </p>
             <p className="muted">
-              {ownLearner.family_id
-                ? 'Your learning is inside a family account, so one family plan can cover you alongside its children. You manage that on the family page.'
-                : 'Your learning sits on its own. If you run a family account, you can move it in beside the children so one plan covers everybody — same profile, same progress.'}
+              {t(ownLearner.family_id ? 'account.selfInFamily' : 'account.selfOnOwn')}
             </p>
             <p>
-              <Link href="/learn">Go to my learning</Link>
+              <Link href="/learn">{t('account.selfGo')}</Link>
               {' · '}
               <Link href="/family">
-                {ownLearner.family_id ? 'My family' : 'Learn inside my family'}
+                {t(ownLearner.family_id ? 'nav.family' : 'account.selfJoinFamily')}
               </Link>
               {' · '}
-              <Link href="/account/sharing">Who can see my progress</Link>
+              <Link href="/account/sharing">{t('account.selfWhoSees')}</Link>
             </p>
           </>
         ) : (
           <>
+            <p className="muted">{t('account.selfNone')}</p>
             <p className="muted">
-              You do not have a learner profile yet. One is needed before you can enrol in
-              a course, buy one, or share your progress — a course is always for a named
-              learner, and this is how you become one.
+              {t('account.selfFamilyInstead')}{' '}
+              <Link href="/family">{t('nav.family')}</Link>
             </p>
-            <p className="muted">
-              If you run a family account, you can become a learner there instead, and be part
-              of the family from the start — <Link href="/family">My family</Link>.
-            </p>
-            <ClaimLearner note="This does not create a second account. It adds you as a learner to this one." />
+            <ClaimLearner
+              label={t('learn.claim')}
+              note={t('account.selfClaimNote')}
+              words={{
+                busy: t('learn.claimBusy'),
+                done: t('learn.claimDone'),
+                ready: t('learn.claimReady'),
+                failed: t('learn.claimFailed'),
+              }}
+            />
           </>
         )}
       </section>
 
-      <ProfileForm initial={{
-        displayName: profile.display_name,
-        preferredLanguage: profile.preferred_language,
-        timezone: profile.timezone,
-      }} />
+      <ProfileForm
+        initial={{
+          displayName: profile.display_name,
+          preferredLanguage: profile.preferred_language,
+          timezone: profile.timezone,
+        }}
+        maxima={{ name: num(ACCOUNT_NAME_MAX), zone: num(ACCOUNT_ZONE_MAX) }}
+        words={{
+          name: t('account.formName'),
+          language: t('account.formLanguage'),
+          languageNote: t('account.formLanguageNote'),
+          zone: t('account.formZone'),
+          save: t('account.formSave'),
+          saving: t('course.saving'),
+          saved: t('account.formSaved'),
+          unreachable: t('auth.offline'),
+          problems: {
+            name_missing: t('account.formNameMissing'),
+            name_long: t('account.formNameLong'),
+            language_code: t('account.formLanguageBad'),
+            zone_long: t('account.formZoneLong'),
+            zone_invalid: t('account.formZoneBad'),
+            signed_out: t('account.formSignedOut'),
+            not_found: t('account.formNotFound'),
+            malformed: t('account.formFailed'),
+            failed: t('account.formFailed'),
+          },
+        }}
+      />
       {phone?.enabled === true && (
-        <PhoneForm
-          initialPhone={phone.phoneE164 ?? null}
-          initialCountry={phone.phoneCountry ?? null}
-        />
+        <div {...english}>
+          <PhoneForm
+            initialPhone={phone.phoneE164 ?? null}
+            initialCountry={phone.phoneCountry ?? null}
+          />
+        </div>
       )}
 
-      <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
-        <h2 style={{ marginTop: 0 }}>How you sign in</h2>
+      <section className="card" style={CARD}>
+        <h2 style={{ marginTop: 0 }}>{t('account.signInHeading')}</h2>
         <p className="muted">
-          {methods?.summary ?? 'Your sign-in methods could not be read just now.'}
+          {!methods ? t('account.signInUnread')
+            : hasPassword && withGoogle ? t('account.signInBoth')
+            : hasPassword ? t('account.signInPassword')
+            : withGoogle ? t('account.signInGoogle')
+            : otherMethods.length > 0 ? (
+              <>
+                {otherBefore}
+                <bdi dir="ltr">{otherMethods.join(', ')}</bdi>
+                {otherAfter}
+              </>
+            )
+            : providers.includes('phone') ? t('account.signInPhone')
+            : t('account.signInNone')}
         </p>
-        {methods?.hasPassword ? (
+        {hasPassword ? (
           <p className="muted">
-            Send a secure password reset link to your sign-in email. The link expires according to your
-            authentication provider&rsquo;s settings.{' '}
-            <Link href="/forgot-password">Send reset link</Link>
+            {t('account.resetBody')}{' '}
+            <Link href="/forgot-password">{t('account.resetLink')}</Link>
           </p>
-        ) : (
-          <p className="muted">
-            {methods && methods.providers.includes('google')
-              ? 'There is no password on this account, so there is nothing to reset — keep using Google to sign in.'
-              : 'This account signs in with a phone code, so there is no password to reset.'}
-          </p>
-        )}
+        ) : withGoogle ? (
+          <p className="muted">{t('account.noPasswordGoogle')}</p>
+        ) : providers.includes('phone') ? (
+          <p className="muted">{t('account.noPasswordPhone')}</p>
+        ) : null}
       </section>
       {merge?.enabled === true && (
-        <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
-          <h2 style={{ marginTop: 0 }}>Two accounts, one person</h2>
+        <section className="card" style={CARD}>
+          <h2 style={{ marginTop: 0 }}>{t('account.mergeHeading')}</h2>
           <p className="muted">
-            If you signed up twice, the accounts can be folded together. The one you
-            keep survives; the other is closed, and both have to agree before
-            anything moves.{' '}
-            {mergeWaiting > 0
-              ? `Someone is asking to merge an account into this one.`
-              : 'Nothing is waiting on this account.'}
+            {t('account.mergeBody')}{' '}
+            {t(mergeWaiting > 0 ? 'account.mergeWaiting' : 'account.mergeNone')}
           </p>
           <p>
-            <MergeLink waiting={mergeWaiting} />
+            <Link href="/account/merge">
+              {mergeWaiting > 0
+                ? t('account.mergeLinkWaiting', { count: num(mergeWaiting) })
+                : t('account.mergeLink')}
+            </Link>
           </p>
         </section>
       )}
 
       {sponsorshipOn && (
-        <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
-          <h2 style={{ marginTop: 0 }}>Sponsored seats</h2>
-          <p className="muted">
-            A course can be paid for by somebody else. Ask for one if it is out of reach, or pay
-            for a seat that is waiting — the two sides never learn who the other is.{' '}
-            <Link href="/account/sponsorship">What I have asked for and sponsored</Link>{' '}
-            · <Link href="/sponsor">Seats waiting</Link>
+        <section className="card" style={CARD}>
+          <h2 style={{ marginTop: 0 }}>{t('account.sponsorHeading')}</h2>
+          <p className="muted">{t('account.sponsorBody')}</p>
+          <p>
+            <Link href="/account/sponsorship">{t('account.sponsorMine')}</Link>
+            {' · '}
+            <Link href="/sponsor">{t('account.sponsorWaiting')}</Link>
           </p>
         </section>
       )}
 
       {applicationsOn && teachesHere !== true && (
-        <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
-          <h2 style={{ marginTop: 0 }}>Teaching here</h2>
+        <section className="card" style={CARD}>
+          <h2 style={{ marginTop: 0 }}>{t('account.teachHeading')}</h2>
           <p className="muted">
-            Teaching is by appointment — nobody becomes a teacher by signing up. If you would like
-            to teach, you can send your qualifications and a link to a lesson you have given, and
-            the owner reads it. <Link href="/teach/apply">Apply to teach</Link>.
+            {t('account.teachBody')}{' '}
+            <Link href="/teach/apply">{t('account.teachLink')}</Link>
           </p>
         </section>
       )}
 
       {referralsOn && (
-        <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
-          <h2 style={{ marginTop: 0 }}>Invite a friend</h2>
+        <section className="card" style={CARD}>
+          <h2 style={{ marginTop: 0 }}>{t('account.inviteHeading')}</h2>
           <p className="muted">
-            A friend who is new here gets a discount on their first course, and you get one
-            on your next once their payment has stayed past the refund window. Both are
-            discounts, not money, so there is nothing to pay out.{' '}
-            <Link href="/account/referrals">Your invitation code</Link>
+            {t('account.inviteBody')}{' '}
+            <Link href="/account/referrals">{t('account.inviteLink')}</Link>
           </p>
         </section>
       )}
 
-      <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
-        <h2 style={{ marginTop: 0 }}>Sharing my learning</h2>
+      <section className="card" style={CARD}>
+        <h2 style={{ marginTop: 0 }}>{t('account.shareHeading')}</h2>
         <p className="muted">
-          Your progress and certificates are private, including to your family. Invite
-          somebody by email and they accept it themselves; you choose what they see and
-          how long it lasts, and you can end it whenever you like.{' '}
-          <Link href="/account/sharing">Who can see my learning</Link>
+          {t('account.shareBody')}{' '}
+          <Link href="/account/sharing">{t('account.shareLink')}</Link>
         </p>
       </section>
 
-      <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
-        <h2 style={{ marginTop: 0 }}>How this reads</h2>
-        <p className="muted">
-          Text size, contrast and motion — applied the moment you choose one, for this browser.
-          Nothing here needs saving, and nothing else changes about the page.{' '}
-          <Link href="/account/accessibility">Reading preferences</Link>
+      <section className="card" style={CARD}>
+        <h2 style={{ marginTop: 0 }}>{t('account.readHeading')}</h2>
+        <p className="muted">{t('account.readBody')}</p>
+        <p>
+          <Link href="/account/accessibility">{t('account.readLink')}</Link>
           {' · '}
-          <Link href="/language">Language</Link>
+          <Link href="/language">{t('language.title')}</Link>
         </p>
       </section>
 
       {outstanding === 0 && (
-        <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
-          <h2 style={{ marginTop: 0 }}>Terms and privacy</h2>
+        <section className="card" style={CARD}>
+          <h2 style={{ marginTop: 0 }}>{t('footer.terms')}</h2>
           <p className="muted">
-            The terms, the privacy notice and the terms for teachers, each versioned.
-            {standing && standing.history.length > 0
-              ? ' The versions you have agreed to are listed with the time you agreed.'
-              : ' Nothing is waiting for your agreement.'}{' '}
-            <Link href="/policies">Read them</Link>
+            {t('account.termsBody')}{' '}
+            {t(standing && standing.history.length > 0 ? 'account.termsAgreed' : 'account.termsNone')}{' '}
+            <Link href="/policies">{t('account.termsLink')}</Link>
           </p>
         </section>
       )}
 
-      <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
-        <h2 style={{ marginTop: 0 }}>My institution</h2>
+      <section className="card" style={CARD}>
+        <h2 style={{ marginTop: 0 }}>{t('account.instHeading')}</h2>
         <p className="muted">
-          A madrasah, school or organisation you belong to. If your email address is at a domain
-          one of them has verified, you can join it; once you are in, it sees counts of its people
-          and never your name or what you studied.{' '}
-          <Link href="/institution">Where I belong</Link>
+          {t('account.instBody')}{' '}
+          <Link href="/institution">{t('account.instLink')}</Link>
         </p>
       </section>
 
-      <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
-        <h2 style={{ marginTop: 0 }}>What I have paid</h2>
-        <p className="muted">
-          Every payment that has moved on your billing account, and every refund that
-          has come back, with a running total per currency. A refund you have asked for
-          is listed separately until it actually moves, because asking is not receiving.
-        </p>
+      <section className="card" style={CARD}>
+        <h2 style={{ marginTop: 0 }}>{t('account.paidHeading')}</h2>
+        <p className="muted">{t('account.paidBody')}</p>
         <p>
-          <Link href="/billing">See what I have paid</Link>
+          <Link href="/billing">{t('account.paidLink')}</Link>
         </p>
       </section>
 
-      <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
-        <h2 style={{ marginTop: 0 }}>What I am told</h2>
+      <section className="card" style={CARD}>
+        <h2 style={{ marginTop: 0 }}>{t('account.toldHeading')}</h2>
         <p className="muted">
-          Messages from the platform appear in your notification centre, not in an inbox or
-          a text message — no delivery provider is configured yet. {unread > 0
-            ? `You have ${unread} unread.`
-            : 'Nothing is waiting for you.'}{' '}
-          You choose which kinds you want, except for notices that money owed to you did not
-          arrive: those always come.
+          {t('account.toldBody')}{' '}
+          {unread > 0
+            ? countLabel(shown.code, unread, { one: 'account.toldUnreadOne', other: 'account.toldUnreadOther' })
+            : t('account.toldNone')}{' '}
+          {t('account.toldChoice')}
         </p>
         <p>
           <Link href="/notifications">
-            {unread > 0 ? `Notifications (${unread} unread)` : 'Notifications'}
+            {unread > 0
+              ? t('account.toldLinkUnread', { count: num(unread) })
+              : t('footer.notifications')}
           </Link>
           {' · '}
-          <Link href="/notifications#preferences">Choose what you are told</Link>
+          <Link href="/notifications#preferences">{t('account.toldPrefs')}</Link>
         </p>
       </section>
 
-      <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
-        <h2 style={{ marginTop: 0 }}>My data</h2>
-        <p className="muted">
-          Download everything we hold about this account as one file: your profile, the
-          learners you are responsible for, what they have studied and finished, your
-          certificates, orders and receipts, your notes, and who you have shared your
-          learning with.
-        </p>
-        <p>
+      <section className="card" style={CARD}>
+        <h2 style={{ marginTop: 0 }}>{t('account.dataHeading')}</h2>
+        <p className="muted">{t('account.dataBody')}</p>
+        <div className="page-actions" style={{ marginTop: 0 }}>
           <a className="btn secondary" href="/api/account/export" download>
-            Download my data
-          </a>{' '}
+            {t('account.dataDownload')}
+          </a>
           <a className="btn secondary" href="/api/account/export?format=csv" download>
-            As a spreadsheet
-          </a>{' '}
+            {t('account.dataSheet')}
+          </a>
           <Link className="btn secondary" href="/account/export/print">
-            Read or print it
+            {t('account.dataPrint')}
           </Link>
-        </p>
+        </div>
         <p className="muted" style={{ fontSize: '0.9rem' }}>
-          It now carries more than it did: the discussion posts, reviews and marked work, the
-          support cases, the messages sent to you, and — if you teach — your earnings and payouts.
-          {' '}<Link href="/account/export">What is in it, and what is left out</Link>
+          {t('account.dataMore')}{' '}
+          <Link href="/account/export">{t('account.dataWhat')}</Link>
         </p>
         <p className="muted" style={{ fontSize: '0.9rem', marginBottom: 0 }}>
-          Have a file already? <Link href="/account/restore">Put it back</Link> — your profile,
-          notes and bookmarks return to the lessons you are enrolled in; enrolments, certificates and
-          orders do not, and that page says why.
+          {t('account.dataRestore')}{' '}
+          <Link href="/account/restore">{t('account.dataRestoreLink')}</Link>
         </p>
       </section>
 
-      <section className="card" style={{ maxWidth: '42rem', marginTop: '1rem' }}>
-        <h2 style={{ marginTop: 0 }}>Closing this account</h2>
+      <section className="card" style={CARD}>
+        <h2 style={{ marginTop: 0 }}>{t('account.closeHeading')}</h2>
         <p className="muted">
-          Closing removes your name from everything it touched and signs you out for
-          good. Orders, payments, enrolments and certificates are kept without your
-          name on them, because a refund or a checked certificate still needs them. The
-          page lists both sides before anything happens.{' '}
-          <Link href="/account/delete">Close this account</Link>
+          {t('account.closeBody')}{' '}
+          <Link href="/account/delete">{t('account.closeLink')}</Link>
         </p>
       </section>
 
-      <p style={{ marginTop: '1.5rem' }}><Link href="/learn">Back to my learning</Link></p>
+      <p style={{ marginTop: '1.5rem' }}><Link href="/learn">{t('course.back')}</Link></p>
     </div>
   );
 }

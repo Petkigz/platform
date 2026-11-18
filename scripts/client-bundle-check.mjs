@@ -49,6 +49,11 @@ for (const [file, key] of [
   // page. The sentence for a post nobody can confirm must be in that page
   // and in no script.
   ['lesson.ts', 'lesson.discussionUncertain'],
+  // The profile form on the account page is a client component handed its
+  // words. What the account page promises about closing an account, and what
+  // the form says when a save fails, must be in that page and in no script.
+  ['account.ts', 'account.closeBody'],
+  ['account.ts', 'account.formFailed'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);
