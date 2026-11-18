@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
 import { postToDiscussion } from '@/lib/discussion';
+import { DISCUSSION_BODY_MAX, DISCUSSION_SENTENCE, discussionStatusOf } from '@/lib/discussion-outcome';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,6 +21,9 @@ type Body = {
  * route could not publish a learner's post even if it tried. What it does is
  * check the flag first, so the caller gets a plain sentence rather than a
  * check-violation error.
+ *
+ * Every refusal carries a `code` beside its English sentence. The form on a
+ * page in another language reads the code and says its own sentence.
  */
 export async function POST(request: Request) {
   if (!isSupabaseConfigured()) {
@@ -31,7 +35,7 @@ export async function POST(request: Request) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ error: 'Sign in to join the discussion.' }, { status: 401 });
+    return NextResponse.json({ error: DISCUSSION_SENTENCE.signed_out, code: 'signed_out' }, { status: 401 });
   }
 
   const enabled = await isFlagEnabled(supabase, 'learning.discussion');
@@ -46,7 +50,7 @@ export async function POST(request: Request) {
   try {
     payload = (await request.json()) as Body;
   } catch {
-    return NextResponse.json({ error: 'Malformed request body.' }, { status: 400 });
+    return NextResponse.json({ error: DISCUSSION_SENTENCE.malformed, code: 'malformed' }, { status: 400 });
   }
 
   const lessonId = typeof payload.lessonId === 'string' ? payload.lessonId.trim() : '';
@@ -54,20 +58,20 @@ export async function POST(request: Request) {
   const parentId = typeof payload.parentId === 'string' ? payload.parentId : null;
 
   if (!lessonId) {
-    return NextResponse.json({ error: 'lessonId is required.' }, { status: 400 });
+    return NextResponse.json({ error: DISCUSSION_SENTENCE.no_lesson, code: 'no_lesson' }, { status: 400 });
   }
   // A hard ceiling. The table only requires non-blank, but an unbounded post on
   // a lesson thread is how a discussion becomes unreadable.
-  if (body.length > 4000) {
+  if (body.length > DISCUSSION_BODY_MAX) {
     return NextResponse.json(
-      { error: 'That is too long. Keep it under 4000 characters.' },
+      { error: DISCUSSION_SENTENCE.too_long, code: 'too_long' },
       { status: 400 },
     );
   }
 
   const result = await postToDiscussion(supabase, { lessonId, body, parentId });
   if (!result.ok) {
-    return NextResponse.json({ error: result.message }, { status: 409 });
+    return NextResponse.json({ error: result.message, code: result.code }, { status: discussionStatusOf(result.code) });
   }
 
   // `held` is read back from the row, not assumed. Telling someone "posted!"

@@ -19,6 +19,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { fetchDiscussionContexts, type DiscussionContext } from './discussion-context.ts';
 import { encodeDiscussionCursor, type DiscussionCursor } from './discussion-queue-cursor.ts';
 import { one, type Embedded } from './embed.ts';
+import { DISCUSSION_SENTENCE, discussionCodeOfDatabaseError, type DiscussionCode } from './discussion-outcome.ts';
 
 export type VisibilityState = 'pending' | 'visible' | 'hidden' | 'removed';
 
@@ -27,6 +28,8 @@ export type DiscussionPost = {
   lessonId: string;
   parentId: string | null;
   authorName: string;
+  /** False when the profile has no name and `authorName` is the stand-in. */
+  authorIsNamed: boolean;
   authorIsMe: boolean;
   /** True when the author is the course author or staff. */
   isAuthority: boolean;
@@ -80,7 +83,8 @@ export async function fetchThread(
     id: r.id,
     lessonId: r.lesson_id,
     parentId: r.parent_id,
-    authorName: one(r.user_profiles)?.display_name ?? 'Someone',
+    authorName: one(r.user_profiles)?.display_name?.trim() || 'Someone',
+    authorIsNamed: Boolean(one(r.user_profiles)?.display_name?.trim()),
     authorIsMe: r.author_user_id === args.myUserId,
     isAuthority: r.author_kind === 'teacher',
     body: r.body,
@@ -110,7 +114,7 @@ export async function fetchThread(
 
 export type PostOutcome =
   | { ok: true; id: string; held: boolean }
-  | { ok: false; message: string };
+  | { ok: false; message: string; code: DiscussionCode };
 
 /**
  * Post a question or a reply.
@@ -126,7 +130,7 @@ export async function postToDiscussion(
 ): Promise<PostOutcome> {
   const body = args.body.trim();
   if (body.length === 0) {
-    return { ok: false, message: 'Write something first.' };
+    return { ok: false, message: DISCUSSION_SENTENCE.empty, code: 'empty' };
   }
 
   const { data, error } = await supabase
@@ -140,21 +144,16 @@ export async function postToDiscussion(
     .single();
 
   if (error) {
-    // The flag gate and the moderation trigger both surface as check
-    // violations. Neither is the caller's fault, and neither should read like
-    // a validation error.
-    if (error.code === '23514') {
-      return {
-        ok: false,
-        message:
-          'Discussion is not open on this lesson right now.',
-      };
-    }
-    return { ok: false, message: error.message };
+    // The flag gate, the length limit and a question that has been withdrawn
+    // all surface as check violations. Each is named, so the form can say
+    // which it was, and the database's own sentence is never passed on.
+    const code = discussionCodeOfDatabaseError(error);
+    return { ok: false, message: DISCUSSION_SENTENCE[code], code };
   }
 
   const row = data as { id: string; visibility_state: string } | null;
-  if (!row) return { ok: false, message: 'The post was not saved.' };
+  // No error and no row: nothing says whether it was saved.
+  if (!row) return { ok: false, message: DISCUSSION_SENTENCE.unconfirmed, code: 'unconfirmed' };
 
   return { ok: true, id: row.id, held: row.visibility_state === 'pending' };
 }

@@ -14,6 +14,10 @@ const token = `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode({ sub: user.id, 
 const session = { access_token: token, refresh_token: 'fake-refresh', token_type: 'bearer', expires_in: 3600, expires_at: exp, user };
 const cookie = `sb-127-auth-token=base64-${encode(session)}`;
 let entitled = false; let mismatch = false; let multipleMedia = false; let uploads = null; let extras = false; let sourcesListed = true; const calls = [];
+// `discussion` switches the lesson discussion on (it ships off) and gives it a
+// thread; `postAnswer` is what the database says to the next post, and
+// `posted` is every post it was sent.
+let discussion = false; let postAnswer = 'held'; const posted = [];
 const active = new Set(); const overlaps = [];
 const fake = createServer(async (req, res) => {
   res.setHeader('content-type', 'application/json');
@@ -63,7 +67,25 @@ const fake = createServer(async (req, res) => {
   // `extras` switches on three parts of a lesson that ship switched off and
   // gives each something to show: practice questions, a note with no bookmark,
   // and two sources, one with every field and a link and one with a title only.
-  else if (path === '/rest/v1/rpc/setting_bool') res.end(JSON.stringify(extras && ['learning.assessments', 'learning.notes_bookmarks', 'learning.provenance'].includes(JSON.parse(body || '{}').p_key)));
+  else if (path === '/rest/v1/rpc/setting_bool') res.end(JSON.stringify((extras && ['learning.assessments', 'learning.notes_bookmarks', 'learning.provenance'].includes(JSON.parse(body || '{}').p_key)) || (discussion && JSON.parse(body || '{}').p_key === 'learning.discussion')));
+  // A question from a teacher with a reply from somebody with no name and a
+  // reply of the reader's own that a moderator took down; and a question of
+  // the reader's own, in Arabic, still waiting for review.
+  else if (discussion && path === '/rest/v1/discussion_posts' && req.method === 'GET') res.end(JSON.stringify([
+    { id: 'root-one', lesson_id: 'lesson', parent_id: null, author_user_id: 'teacher', body: 'Synthetic teacher post', visibility_state: 'visible', author_kind: 'teacher', created_at: '2026-01-01T00:00:00Z', user_profiles: { display_name: 'Synthetic teacher' } },
+    { id: 'reply-one', lesson_id: 'lesson', parent_id: 'root-one', author_user_id: 'other', body: 'Synthetic nameless reply', visibility_state: 'visible', author_kind: 'learner', created_at: '2026-01-01T00:01:00Z', user_profiles: null },
+    { id: 'reply-two', lesson_id: 'lesson', parent_id: 'root-one', author_user_id: user.id, body: 'Synthetic withdrawn reply', visibility_state: 'hidden', author_kind: 'learner', created_at: '2026-01-01T00:02:00Z', user_profiles: { display_name: 'Synthetic learner' } },
+    { id: 'root-two', lesson_id: 'lesson', parent_id: null, author_user_id: user.id, body: 'سؤال تجريبي\nعلى سطرين', visibility_state: 'pending', author_kind: 'learner', created_at: '2026-01-01T00:03:00Z', user_profiles: { display_name: 'Synthetic learner' } },
+  ]));
+  else if (discussion && path === '/rest/v1/discussion_posts' && req.method === 'POST') {
+    posted.push(JSON.parse(body || '{}'));
+    // The sentences and codes are the database's own (the migrations raise them).
+    if (postAnswer === 'held') { res.writeHead(201); res.end(JSON.stringify({ id: 'new-post', visibility_state: 'pending' })); }
+    else if (postAnswer === 'gone') { res.writeHead(400); res.end(JSON.stringify({ code: '23514', message: 'reply target unavailable', details: null, hint: null })); }
+    else if (postAnswer === 'off') { res.writeHead(400); res.end(JSON.stringify({ code: '23514', message: 'per-lesson discussion is not enabled (learning.discussion is off)', details: null, hint: null })); }
+    // Something between the site and the database: not the database's answer.
+    else { res.writeHead(502); res.end(JSON.stringify({ message: 'DATABASE ENGLISH SENTENCE' })); }
+  }
   else if (extras && path === '/rest/v1/content_source_links') res.end(JSON.stringify(sourcesListed ? [
     { anchor: 'Synthetic paragraph two', content_sources: { id: 'source-full', source_type: 'fiqh_reference', title: 'Synthetic fiqh title', author_or_compiler: 'Synthetic compiler', edition_or_version: 'Synthetic edition', reference_locator: 'Synthetic page 12', url: 'https://example.invalid/source' } },
     { anchor: null, content_sources: { id: 'source-bare', source_type: 'quran', title: 'Synthetic bare title', author_or_compiler: null, edition_or_version: null, reference_locator: null, url: null } },
@@ -271,11 +293,52 @@ try {
     assert.ok(body.includes(counter('en')));
   }
   extras = false;
+  // The discussion, switched on. It was the last part of this page that was
+  // English, marked as English, for every reader.
+  discussion = true;
+  const englishDiscussion = ['<h2>Discussion</h2>', 'Ask about this lesson, or answer someone else.', '<bdi>Synthetic teacher</bdi> · teacher', '<bdi>Someone</bdi>', '>Awaiting review<', '>Not shown after review<', '>Reply<', '>Report this post<', '>Report this reply<', 'placeholder="Ask a question about this lesson"', '>Ask a question<'];
+  const written = ['Synthetic teacher post', 'Synthetic nameless reply', 'Synthetic withdrawn reply', 'سؤال تجريبي\nعلى سطرين', '<bdi>Synthetic learner</bdi>'];
+  {
+    const body = visible(await (await request({ cookie })).text());
+    for (const text of [...englishDiscussion, ...written]) assert.ok(body.includes(text), `English discussion: ${text}`);
+    assert.equal(body.includes('lang="en"'), false);
+    assert.equal(body.includes('Discussion is not open'), false);
+    // The reader's own held question and withdrawn reply each say what they are, once.
+    assert.equal(body.split('>Awaiting review<').length - 1, 1); assert.equal(body.split('>Not shown after review<').length - 1, 1);
+    // Only what everybody can see can be answered or reported.
+    assert.equal(body.split('>Reply<').length - 1, 1); assert.equal(body.split('>Report this post<').length - 1, 1); assert.equal(body.split('>Report this reply<').length - 1, 1);
+  }
+  {
+    const body = visible(await (await request({ cookie, 'accept-language': 'ar' })).text());
+    for (const text of ['<h2>النقاش</h2>', 'اسأل عن هذا الدرس، أو أجب عن سؤال غيرك.', '<bdi>Synthetic teacher</bdi> · معلّم', '<bdi>شخص ما</bdi>', '>بانتظار المراجعة<', '>غير معروض بعد المراجعة<', '>رد<', '>أبلغ عن هذه المشاركة<', '>أبلغ عن هذا الرد<', 'placeholder="اطرح سؤالًا عن هذا الدرس"', '>اطرح سؤالًا<', ...written]) assert.ok(body.includes(text), `Arabic discussion: ${text}`);
+    for (const text of ['Discussion', 'Ask about this lesson', '· teacher', 'Someone', 'Awaiting review', 'Not shown after review', '>Reply<', 'Report this', 'Ask a question']) assert.equal(body.includes(text), false, `Arabic discussion still says "${text}"`);
+    // Nothing on a translated lesson is marked English any more, and what
+    // people wrote finds its own direction.
+    assert.equal(body.includes('lang="en"'), false, 'an Arabic lesson with an open discussion marks part of itself as English');
+    assert.equal(body.split('<span class="t" dir="auto"').length - 1, 4, 'each of four posts is given its own direction');
+    // Somebody who may not post is not offered a box, a reply or a report.
+    entitled = false;
+    const denied = visible(await (await request({ cookie, 'accept-language': 'ar' })).text());
+    assert.ok(denied.includes('<h2>النقاش</h2>') && denied.includes('Synthetic teacher post'));
+    for (const text of ['<textarea', '>رد<', 'أبلغ عن هذه المشاركة', 'أبلغ عن هذا الرد']) assert.equal(denied.includes(text), false, `a reader who may not post is shown ${text}`);
+    entitled = true;
+  }
+  {
+    const body = visible(await (await request({ cookie: `${cookie}; ayahspring_locale=fr`, 'accept-language': 'ar' })).text());
+    for (const text of ['<h2>Discussion</h2>', 'Posez une question sur cette leçon, ou répondez à quelqu’un.', '<bdi>Synthetic teacher</bdi> · enseignant', '<bdi>Quelqu’un</bdi>', '>En attente de relecture<', '>Non affiché après relecture<', '>Répondre<', '>Signaler ce message<', '>Poser une question<']) assert.ok(body.includes(text) || body.includes(text.replace('’', '&#x27;')), `French discussion: ${text}`);
+  }
+  {
+    // A held language reads it in English, inside its English lesson.
+    const html = await (await request({ cookie, 'accept-language': 'ha' })).text(); const body = visible(html);
+    assert.equal(wrapper(html), '<div class="page lesson-page" lang="en" dir="ltr">');
+    for (const text of englishDiscussion) assert.ok(body.includes(text), `ha discussion: ${text}`);
+  }
+  discussion = false;
   {
     const html = await (await request({ cookie, 'accept-language': 'wo, fr' })).text();
     assert.match(html, /<html[^>]*lang="en"/); assert.ok(visible(html).includes('>Materials<')); assert.equal(visible(html).includes('Supports'), false);
   }
-  console.log('Lesson languages passed: English, Arabic (frame, report link, the notes about a recording that cannot play, practice questions, study tools, the sources card and the player translated, nothing marked English), French by cookie with its player, Hausa and Pashto frames with an English lesson, Wolof to English. No translation here has been read by a speaker.');
+  console.log('Lesson languages passed: English, Arabic (frame, report link, the notes about a recording that cannot play, practice questions, study tools, the sources card, the player and an open discussion translated, nothing marked English), French by cookie with its player, Hausa and Pashto frames with an English lesson, Wolof to English. No translation here has been read by a speaker.');
   if (process.env.RESPONSIVE_PLAYWRIGHT && process.env.RESPONSIVE_CHROME) {
     const { chromium } = await import(pathToFileURL(process.env.RESPONSIVE_PLAYWRIGHT).href);
     browser = await chromium.launch({ executablePath: process.env.RESPONSIVE_CHROME, headless: true, args: ['--no-sandbox'] });
@@ -496,6 +559,98 @@ try {
       for (const line of seenPlayers.filter((seen) => seen.startsWith(`${code} `))) console.log(`  player ${line}`);
     }
     extras = false;
+    // The discussion, switched on, in two languages and at two widths: what it
+    // says when a post is refused, when nothing says whether it arrived, and
+    // when it is held for review. The answers come from the stand-in database
+    // through the real route, so the code on each is the route's own.
+    discussion = true;
+    const DISCUSSION_SAYS = {
+      ar: { reply: 'رد', replyTo: 'رد على Synthetic teacher', send: 'إرسال', cancel: 'إلغاء الرد', ask: 'اطرح سؤالًا', write: 'اكتب شيئًا أولًا.', gone: 'لم يعد هذا السؤال مفتوحًا للردود.', off: 'النقاش غير مفتوح في هذا الدرس حاليًا.', uncertain: 'لم نتمكن من التأكد من نشر ذلك. أعد تحميل الصفحة للتحقق قبل إرساله مرة أخرى.', held: 'أُرسل. سيظهر بعد أن يراجعه شخص.' },
+      fr: { reply: 'Répondre', replyTo: 'Réponse à Synthetic teacher', send: 'Envoyer', cancel: 'Annuler la réponse', ask: 'Poser une question', write: 'Écrivez d’abord quelque chose.', gone: 'Cette question n’accepte plus de réponses.', off: 'La discussion n’est pas ouverte pour cette leçon en ce moment.', uncertain: 'Nous n’avons pas pu confirmer que ce message a été publié. Rechargez la page pour vérifier avant de l’envoyer à nouveau.', held: 'Envoyé. Votre message apparaîtra après relecture par une personne.' },
+    };
+    for (const [code, says] of Object.entries(DISCUSSION_SAYS)) {
+      for (const width of [320, 1440]) {
+        const context = await browser.newContext({ viewport: { width, height: 900 }, locale: 'en' });
+        await context.addCookies([{ name: 'sb-127-auth-token', value: `base64-${encode(session)}`, url: `http://localhost:${port}` }, { name: 'ayahspring_locale', value: code, url: `http://localhost:${port}` }]);
+        const page = await context.newPage();
+        await page.route('https://example.invalid/**', (route) => route.abort());
+        await page.goto(url, { waitUntil: 'networkidle' });
+        const card = page.locator('.lesson-page section.card:has(textarea[dir="auto"]):not(:has(#lesson-note))');
+        assert.equal(await card.count(), 1, `${code} ${width}: the discussion card is not on the page`);
+        const said = async () => { await card.locator('.notice[role="status"]').waitFor(); return (await card.locator('.notice[role="status"]').textContent()).trim(); };
+        const send = async (button, answer) => { postAnswer = answer; const answered = page.waitForResponse('**/api/discussion'); await button.click(); const response = await answered; return { status: response.status(), json: await response.json() }; };
+        const laid = await card.evaluate((el) => ({
+          english: el.querySelectorAll('[lang="en"]').length,
+          // The question in Arabic starts at the right whatever the page is; the Latin ones at the left.
+          sides: [...el.querySelectorAll('span.t[dir="auto"]')].map((post) => getComputedStyle(post).direction),
+          lines: (() => { const range = document.createRange(); range.selectNodeContents([...el.querySelectorAll('span.t[dir="auto"]')].at(-1)); return new Set([...range.getClientRects()].map((r) => Math.round(r.top))).size; })(),
+          clipped: [...el.querySelectorAll('.badge, .btn')].filter((b) => b.scrollWidth > b.clientWidth + 1).map((b) => b.textContent),
+          // How far each post is from the edge the page starts at.
+          postGaps: [...el.querySelectorAll('span.t[dir="auto"]')].map((post) => { const row = post.closest('li'); const a = post.getBoundingClientRect(); const b = row.getBoundingClientRect(); return Math.round(getComputedStyle(row).direction === 'rtl' ? b.right - a.right : a.left - b.left); }),
+          reportGap: (() => { const row = el.querySelector('ul ul li'); const link = row.querySelector('button.linklike'); const range = document.createRange(); range.selectNodeContents(link); const words = range.getBoundingClientRect(); const box = row.getBoundingClientRect(); return getComputedStyle(row).direction === 'rtl' ? box.right - words.right : words.left - box.left; })(),
+        }));
+        assert.equal(laid.english, 0, `${code} ${width}: part of the discussion is marked English`);
+        assert.deepEqual(laid.sides, ['ltr', 'ltr', 'ltr', 'rtl'], `${code} ${width}: what people wrote is laid out ${laid.sides}`);
+        assert.equal(laid.lines, 2, `${code} ${width}: a question written on two lines is shown on ${laid.lines}`);
+        // ... and sits where the page starts, beside its writer's name: an
+        // English question on an Arabic page was across the card from it.
+        assert.ok(laid.postGaps.every((gap) => Math.abs(gap) < 2), `${code} ${width}: posts start ${laid.postGaps}px from the edge the page starts at`);
+        assert.deepEqual(laid.clipped, [], `${code} ${width}: a discussion label is cut off`);
+        // The link under a reply starts where the reply does: as an item of
+        // the reply's grid it was stretched across the row, its words in the middle.
+        assert.ok(laid.reportGap < 2, `${code} ${width}: the report link under a reply starts ${laid.reportGap}px from the reply's edge`);
+        assert.ok(await page.evaluate(() => document.documentElement.scrollWidth) <= width + 1, `${code} ${width}: the page overflows with an open discussion`);
+        // An empty question is refused without asking anybody.
+        posted.length = 0;
+        const ask = card.getByRole('button', { name: says.ask, exact: true });
+        await ask.click();
+        assert.equal(await said(), says.write, `${code} ${width}: an empty question`);
+        assert.equal(posted.length, 0, `${code} ${width}: an empty question was sent`);
+        // A question half written is not what the reply box holds, and is still there afterwards.
+        await card.locator('textarea').fill('Synthetic half question');
+        await card.getByRole('button', { name: says.reply, exact: true }).click();
+        const box = card.locator('input[dir="auto"]');
+        assert.equal(await box.inputValue(), '', `${code} ${width}: the reply box opens holding the question`);
+        assert.equal(await box.getAttribute('placeholder'), says.replyTo); assert.equal(await box.getAttribute('aria-label'), says.replyTo);
+        await box.fill('Synthetic reply text');
+        // The question being answered has been withdrawn: said as that.
+        const gone = await send(card.getByRole('button', { name: says.send, exact: true }), 'gone');
+        assert.equal(gone.status, 409); assert.equal(gone.json.code, 'reply_unavailable');
+        assert.equal(await said(), says.gone, `${code} ${width}: a reply to a withdrawn question`);
+        assert.deepEqual(posted.at(-1), { lesson_id: 'lesson', parent_id: 'root-one', body: 'Synthetic reply text' });
+        assert.equal(await box.inputValue(), 'Synthetic reply text', `${code} ${width}: a refused reply was thrown away`);
+        await card.getByRole('button', { name: says.cancel, exact: true }).click();
+        assert.equal(await card.locator('textarea').inputValue(), 'Synthetic half question', `${code} ${width}: the question was lost while replying`);
+        // The switch was turned off while the page was open.
+        const off = await send(ask, 'off');
+        assert.equal(off.status, 409); assert.equal(off.json.code, 'flag_disabled');
+        assert.equal(await said(), says.off, `${code} ${width}: a post while discussion is off`);
+        // Nothing says whether it arrived: not "try again", and not the database's words.
+        const lost = await send(ask, 'lost');
+        assert.equal(lost.status, 502); assert.equal(lost.json.code, 'unconfirmed');
+        assert.equal(JSON.stringify(lost.json).includes('DATABASE ENGLISH'), false, `${code} ${width}: the database's sentence left the server`);
+        assert.equal(await said(), says.uncertain, `${code} ${width}: a post that could not be confirmed`);
+        assert.equal(await card.locator('textarea').inputValue(), 'Synthetic half question');
+        // No reply at all says the same.
+        await page.route('**/api/discussion', (route) => route.abort());
+        await ask.click(); await page.waitForTimeout(150);
+        assert.equal(await said(), says.uncertain, `${code} ${width}: a post with no reply at all`);
+        await page.unroute('**/api/discussion');
+        // Held for review: said as held, and the box is emptied.
+        const held = await send(ask, 'held');
+        assert.equal(held.status, 200); assert.equal(held.json.held, true);
+        assert.equal(await said(), says.held, `${code} ${width}: a post held for review`);
+        assert.equal(await card.locator('textarea').inputValue(), '', `${code} ${width}: a sent question is still in the box`);
+        assert.deepEqual(posted.at(-1), { lesson_id: 'lesson', parent_id: null, body: 'Synthetic half question' });
+        // The page is read again and the button comes back: it is not left saying "Sending…".
+        await ask.waitFor({ timeout: 15000 }); assert.equal(await ask.isEnabled(), true, `${code} ${width}: the ask button is left busy after a post`);
+        assert.ok(await page.evaluate(() => document.documentElement.scrollWidth) <= width + 1, `${code} ${width}: the page overflows after the discussion answered`);
+        if (process.env.RESPONSIVE_SCREENSHOTS) await page.screenshot({ path: resolve(process.env.RESPONSIVE_SCREENSHOTS, `discussion-${code}-${width}.png`), fullPage: true });
+        await context.close();
+      }
+    }
+    discussion = false; postAnswer = 'held';
+    console.log('Open discussion (ar, fr; 320 and 1440): nothing marked English, what people wrote keeps its own direction and its line breaks; an empty question, a reply to a withdrawn question, a post while switched off, a post that could not be confirmed, no reply at all and a post held for review are each said in the reader\u2019s language; a half-written question is not sent as a reply. Synthetic database answers through the real route.');
     // A page that breaks says so in the reader's language. The account page
     // throws when its first read fails, and this stand-in server has no such
     // table. Arabic has the sentences; Hausa and Pashto are held for review

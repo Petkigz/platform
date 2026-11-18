@@ -26,7 +26,7 @@ import { I18nProvider } from '@/lib/i18n/client';
 import { MarkComplete, type MarkCompleteWords } from '../../mark-complete';
 import { fetchThread } from '@/lib/discussion';
 import { isFlagEnabled } from '@/lib/flags';
-import { Discussion } from './discussion';
+import { Discussion, type DiscussionWords } from './discussion';
 import { ReportForm, type ReportFormWords } from './report-form';
 import { fetchLessonSources, type SourceType } from '@/lib/provenance';
 import { fetchLessonStudyTools } from '@/lib/lesson-study-tools';
@@ -154,8 +154,6 @@ export default async function LessonPage({
   const t = translator(shown.code);
   const num = (value: number) => formatNumber(shown.code, value);
   const mismatch = shown.code !== locale;
-  // For the parts of this page that are English whatever the reader chose.
-  const english = shown.code === 'en' ? {} : ({ lang: 'en', dir: 'ltr' } as const);
   const markWords: MarkCompleteWords = {
     mark: t('course.markComplete'),
     undo: t('course.undo'),
@@ -163,9 +161,8 @@ export default async function LessonPage({
     unconfirmed: t('course.unconfirmed'),
     reload: t('course.reload'),
   };
-  // The report form: at the foot of the lesson, and beside a recording that
-  // cannot be played. The same form inside a part of the page that is still
-  // English (the discussion) is given no words and stays English.
+  // The report form: at the foot of the lesson, beside a recording that
+  // cannot be played, and under each post in the discussion.
   const reportWords: ReportFormWords = {
     open: t('lesson.reportOpen'),
     intro: t('lesson.reportIntro'),
@@ -190,6 +187,37 @@ export default async function LessonPage({
     duplicate: t('lesson.reportDuplicate'),
     refused: t('lesson.reportRefused'),
     uncertain: t('lesson.reportUncertain'),
+  };
+  // The discussion, when its switch is on. "Sending…" and the sentence for a
+  // post that is too long are the report form's.
+  const discussionWords: DiscussionWords = {
+    heading: t('lesson.discussion'),
+    closed: t('lesson.discussionClosed'),
+    intro: t('lesson.discussionIntro'),
+    empty: t('lesson.discussionEmpty'),
+    emptyAsk: t('lesson.discussionEmptyAsk'),
+    teacher: t('lesson.discussionTeacher'),
+    someone: t('lesson.discussionSomeone'),
+    awaiting: t('lesson.discussionAwaiting'),
+    withdrawn: t('lesson.discussionWithdrawn'),
+    reply: t('lesson.discussionReply'),
+    reportPost: t('lesson.discussionReportPost'),
+    reportReply: t('lesson.discussionReportReply'),
+    replyTo: t('lesson.discussionReplyTo'),
+    send: t('lesson.discussionSend'),
+    sending: t('lesson.reportSending'),
+    ask: t('lesson.discussionAsk'),
+    askPlaceholder: t('lesson.discussionAskPlaceholder'),
+    cancelReply: t('lesson.discussionCancelReply'),
+    held: t('lesson.discussionHeld'),
+    posted: t('lesson.discussionPosted'),
+    writeFirst: t('lesson.discussionWriteFirst'),
+    tooLong: t('lesson.reportTooLong'),
+    closedNow: t('lesson.discussionClosedNow'),
+    replyGone: t('lesson.discussionReplyGone'),
+    signIn: t('lesson.discussionSignIn'),
+    refused: t('lesson.discussionRefused'),
+    uncertain: t('lesson.discussionUncertain'),
   };
   // The questions at the foot of the lesson that are not the quiz. Four of
   // its words are the quiz's own.
@@ -723,14 +751,15 @@ export default async function LessonPage({
       )}
 
       {discussionOn ? (
-        <div {...english}>
-          <Discussion
-            lessonId={lesson.id}
-            posts={thread}
-            enabled={discussionOn}
-            canPost={entitled}
-          />
-        </div>
+        <Discussion
+          lessonId={lesson.id}
+          posts={thread}
+          enabled={discussionOn}
+          canPost={entitled}
+          words={discussionWords}
+          reportWords={reportWords}
+          locale={shown.code}
+        />
       ) : (
         // What ships, since the switch is off: the same card the component
         // draws when it is closed, said in the reader's language.

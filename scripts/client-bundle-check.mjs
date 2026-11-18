@@ -45,6 +45,10 @@ for (const [file, key] of [
   // lesson page hands those over in the page itself. The notice a learner
   // agrees to must be in the one page that shows it and in no script.
   ['player.ts', 'player.recoveryNotice'],
+  // The discussion is a client component handed its words by the lesson
+  // page. The sentence for a post nobody can confirm must be in that page
+  // and in no script.
+  ['lesson.ts', 'lesson.discussionUncertain'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

@@ -410,23 +410,23 @@ test('the learner dashboard is written for the languages with nothing held, and 
   assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign', 'missing', 'broke', 'player']);
   // Thirty-seven for the dashboard (the learner-profile prompt is seven of
   // them), twenty-eight for the course page (twelve are the list of dated
-  // classes), ninety for the lesson page (its frame, the report form, the
-  // notes about a recording, the practice questions, the study tools, the
-  // sources card),
+  // classes), a hundred and thirteen for the lesson page (its frame, the
+  // report form, the notes about a recording, the practice questions, the
+  // study tools, the sources card, the discussion),
   // forty for the assessment page, its quiz and the assessment list on the
   // course page, and a hundred and seven for the assignment page and the
   // assignment list, of which forty-seven are the files part, seven for
   // the page for an address with nothing at it, ten for the page for a
   // page that broke, and eighty-six for the players on the lesson page and
   // what they say about a saved place.
-  assert.equal(unwrittenKeys.length, 405);
+  assert.equal(unwrittenKeys.length, 428);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('player.')).length, 86);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('broke.')).length, 10);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('missing.')).length, 7);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('assign.')).length, 107);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('learn.')).length, 37);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('course.')).length, 28);
-  assert.equal(unwrittenKeys.filter((key) => key.startsWith('lesson.')).length, 90);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('lesson.')).length, 113);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('assess.')).length, 40);
 
   // Eight files, one rule: the same languages in each.
@@ -485,7 +485,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     }
   }
   // What that costs the nineteen that are still in the picker, said out loud:
-  // 192 of 677 sentences, which is 28%. Nothing holds a floor under
+  // 192 of 700 sentences, which is 27%. Nothing holds a floor under
   // it any more: the owner chose on 2026-11-17 to keep these languages in the
   // picker and show the number. The count is pinned here so that it moves only
   // when somebody means it to, and is seen when it does. It moved from 55% to
@@ -502,11 +502,12 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // 33%; the page for a page that broke added ten and it is 32%; the
   // players on the lesson page and their saved-place messages added
   // eighty-six, the largest single step since the assignment page, and it is
-  // 28%. What they are shown did not get smaller; what is counted got bigger.
+  // 28%; the discussion on the lesson page added twenty-three and it is
+  // 27%. What they are shown did not get smaller; what is counted got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 677);
-    assert.equal(coverageOf(code).percent, 28, code);
+    assert.equal(coverageOf(code).total, 700);
+    assert.equal(coverageOf(code).percent, 27, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');
   assert.equal(languageShownFor('en', 'learn').code, 'en');
@@ -695,13 +696,11 @@ test('the lesson page translates its frame and marks every English part inside i
     assert.ok(!page.includes(sentence), `"${sentence}" is still typed into the lesson page`);
   }
 
-  // One place holds a client component that is English for every reader,
-  // and says so: the open discussion. A material that is a player was the
-  // other and is the reader's now (see the test of the players below); so
-  // are the note about a recording that cannot play, the practice questions,
-  // the notes and bookmark, and the sources card.
-  assert.match(page, /const english = shown\.code === 'en' \? \{\} : \(\{ lang: 'en', dir: 'ltr' \} as const\);/u);
-  assert.equal(page.match(/\{\.\.\.english\}/gu)?.length, 1);
+  // No part of this page is English for a reader whose language is written.
+  // The open discussion was the last (see its own test below); before it the
+  // players, the note about a recording that cannot play, the practice
+  // questions, the notes and bookmark, and the sources card.
+  assert.doesNotMatch(page, /const english =|\{\.\.\.english\}|lang: 'en'/u);
   assert.doesNotMatch(page, /speaksEnglish|englishMaterials/u);
   assert.match(page, /<div className="notice" style=\{\{ marginBottom: '1rem' \}\}>\s+<strong style=\{\{ display: 'block' \}\}>\{t\(summary\.headingKey\)\}/u);
   assert.doesNotMatch(page, /noteFor\(standing\.get\(r\.id\) \?\? null\) !== null/u);
@@ -782,7 +781,7 @@ test('the lesson page translates its frame and marks every English part inside i
   for (const sentence of ['>Report a problem<', '>Send report<', '>Cancel<', "'Sending…' :", 'What kind of problem?\n', "setMessage('Sent."]) {
     assert.ok(!form.split('const ENGLISH')[1]?.split('export function ReportForm')[1]?.includes(sentence), `"${sentence}" is still typed into the report form`);
   }
-  assert.match(page, /<div \{\.\.\.english\}>\s+<Discussion/u);
+  assert.match(page, /\{discussionOn \? \(\s+<Discussion\s+lessonId=\{lesson\.id\}/u);
 
   // Discussion ships switched off. The card that says so is the page's own,
   // in the reader's language, not the client component's English one.
@@ -1107,6 +1106,68 @@ test('the players on the lesson page say their sentences in the reader’s langu
       assert.doesNotMatch(value, /[\u0027\u0060]/u, `${code}.${key} has a typewriter mark`);
       assert.equal(value.endsWith('…'), en[key].endsWith('…'), `${code}.${key}`);
     }
+  }
+});
+
+test('the open discussion on the lesson page is in the reader’s language', () => {
+  const page = read('../app/learn/[enrolmentId]/lesson/[lessonId]/page.tsx');
+  const source = read('../app/learn/[enrolmentId]/lesson/[lessonId]/discussion.tsx');
+  // The heading and the closed card were there already; twenty-three more.
+  const keys = allKeys.filter((key) => key.startsWith('lesson.discussion'));
+  assert.equal(keys.length, 25);
+  for (const key of keys) assert.ok(page.includes(`t('${key}')`), `${key} is translated and never shown`);
+
+  // The page hands the component its words, the report form's words for the
+  // forms under each post, and the language they are in.
+  assert.match(page, /words=\{discussionWords\}\s+reportWords=\{reportWords\}\s+locale=\{shown\.code\}/u);
+  assert.match(source, /const say = words \?\? ENGLISH;/u);
+  assert.equal(source.match(/words=\{reportWords\} locale=\{locale\}/gu)?.length, 2);
+  // Its own English is the catalogue's English, word for word, so a caller
+  // that hands it nothing reads what an English page reads.
+  const english = source.split('const ENGLISH')[1]?.split('export function Discussion')[0] ?? '';
+  for (const key of keys) assert.ok(english.includes(`'${en[key]}'`), `${key} differs from the component's English`);
+  // Nothing is typed into what it draws.
+  const drawn = source.split('export function Discussion')[1] ?? '';
+  for (const sentence of [
+    'Discussion<', 'Awaiting review', 'Withdrawn', '>Reply<', 'Report this', 'Reply to', 'Cancel reply', 'Ask a question',
+    'No questions yet', "'Posted.'", "'Sent.", 'Could not post', '· teacher', "'Send'", 'Sending…',
+  ]) {
+    assert.ok(!drawn.includes(sentence), `"${sentence}" is still typed into the discussion`);
+  }
+
+  // A post that did not go through. The server's sentence is English and is
+  // printed only by a caller with no words; no reply at all is "could not
+  // confirm", never "try again"; and what was sent is read back, not assumed.
+  assert.match(source, /refuse\(words \|\| typeof json\.error !== 'string' \? ours : json\.error\);/u);
+  assert.match(source, /\} catch \{\s+\/\/ No reply at all: it may have arrived\.\s+refuse\(say\.uncertain\);/u);
+  assert.match(source, /setMessage\(json\.held \? say\.held : say\.posted\);/u);
+  assert.match(source, /const outcome = discussionOutcomeOf\(status, code\);/u);
+  // The sentence for that tells the learner to look before sending again, in
+  // English at least: nothing stops the same question being held twice.
+  assert.match(en['lesson.discussionUncertain'], /Reload the page to check before sending it again\.$/u);
+
+  // A question in one box is not sent as a reply from the other.
+  assert.match(source, /const body = parentId === null \? question : reply;/u);
+  // The writer of a post a moderator took down is told, on a reply as well.
+  assert.match(source, /post\.visibilityState === 'hidden' \|\| post\.visibilityState === 'removed'/u);
+  assert.equal(source.match(/\{standing\((?:p|r)\)\}/gu)?.length, 2);
+
+  // What people wrote, and their names, keep their own direction; a name the
+  // profile does not have is said in the reader's language.
+  assert.equal(source.match(/<span className="t" dir="auto" style=\{written\}>/gu)?.length, 2);
+  assert.match(source, /<bdi>\{nameOf\(post\)\}<\/bdi>/u);
+  assert.match(source, /post\.authorIsNamed \? post\.authorName : say\.someone/u);
+  assert.equal(source.match(/dir="auto"\s+maxLength=\{DISCUSSION_BODY_MAX\}/gu)?.length, 2);
+
+  // In every language: the name stays in the sentence that carries it, and
+  // the sentence for a held post is not the sentence for a published one.
+  for (const [code, messages] of Object.entries(LESSON)) {
+    assert.ok(messages?.['lesson.discussionReplyTo']?.includes('{name}'), `${code}: the reply sentence lost its name`);
+    assert.notEqual(messages?.['lesson.discussionHeld'], messages?.['lesson.discussionPosted'], code);
+    assert.notEqual(messages?.['lesson.discussionRefused'], messages?.['lesson.discussionUncertain'], code);
+    assert.notEqual(messages?.['lesson.discussionEmpty'], messages?.['lesson.discussionEmptyAsk'], code);
+    assert.notEqual(messages?.['lesson.discussionAwaiting'], messages?.['lesson.discussionWithdrawn'], code);
+    assert.notEqual(messages?.['lesson.discussionClosed'], messages?.['lesson.discussionClosedNow'], code);
   }
 });
 

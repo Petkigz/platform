@@ -480,6 +480,35 @@ export const en = {
   'lesson.contents': 'Course contents',
   'lesson.discussion': 'Discussion',
   'lesson.discussionClosed': 'Discussion is not open on this lesson.',
+  // The open discussion (the switch `learning.discussion` is off, so what
+  // ships is the closed card above). `{name}` is a person's own name, or
+  // `lesson.discussionSomeone`. The too-long sentence and "Sending…" are the
+  // report form's (`lesson.reportTooLong`, `lesson.reportSending`).
+  'lesson.discussionIntro':
+    'Ask about this lesson, or answer someone else. Learner questions and replies are reviewed before they appear. Course author and staff posts appear immediately.',
+  'lesson.discussionEmpty': 'No questions yet.',
+  'lesson.discussionEmptyAsk': 'No questions yet. Ask the first one.',
+  'lesson.discussionTeacher': 'teacher',
+  'lesson.discussionSomeone': 'Someone',
+  'lesson.discussionAwaiting': 'Awaiting review',
+  'lesson.discussionWithdrawn': 'Not shown after review',
+  'lesson.discussionReply': 'Reply',
+  'lesson.discussionReportPost': 'Report this post',
+  'lesson.discussionReportReply': 'Report this reply',
+  'lesson.discussionReplyTo': 'Reply to {name}',
+  'lesson.discussionSend': 'Send',
+  'lesson.discussionAsk': 'Ask a question',
+  'lesson.discussionAskPlaceholder': 'Ask a question about this lesson',
+  'lesson.discussionCancelReply': 'Cancel reply',
+  'lesson.discussionHeld': 'Sent. It will appear once a person has reviewed it.',
+  'lesson.discussionPosted': 'Posted.',
+  'lesson.discussionWriteFirst': 'Write something first.',
+  'lesson.discussionClosedNow': 'Discussion is not open on this lesson right now.',
+  'lesson.discussionReplyGone': 'That question is no longer open for replies.',
+  'lesson.discussionSignIn': 'Sign in to join the discussion.',
+  'lesson.discussionRefused': 'That could not be posted. Reload the page and try again.',
+  'lesson.discussionUncertain':
+    'We could not confirm that this was posted. Reload the page to check before sending it again.',
   'lesson.reportOpen': 'Report a problem',
   'lesson.reportIntro': 'A person reviews every report. Please say what is wrong, not only that you disagree.',
   'lesson.reportKind': 'What kind of problem?',
