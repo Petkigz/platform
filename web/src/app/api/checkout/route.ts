@@ -11,7 +11,7 @@ import {
 } from '@/lib/checkout';
 import { getPaymentProvider } from '@/lib/payments/registry';
 import { PaymentProviderUnavailableError } from '@/lib/payments/provider';
-import { toE164 } from '@/lib/phone';
+import { parsePhone, toE164 } from '@/lib/phone';
 import { countryFromHeaders } from '@/lib/geo';
 import { recordWithdrawalChoice, type WithdrawalChoice } from '@/lib/withdrawal';
 import {
@@ -75,9 +75,6 @@ type Body = {
  * with that status. The database's own sentence is not sent for a course.
  * (For a plan it still can be: `createPlanOrder` has no keys to match.)
  */
-/** How a number typed without a country is read: as Uganda's. */
-const LOCAL_DIAL_CODE = '+256';
-
 const NO_PROVIDER_SENTENCE =
   'No payment provider is configured yet, so this order cannot be paid. ' +
   'It has been saved and will appear in your orders.';
@@ -134,27 +131,47 @@ export async function POST(request: Request) {
     return refuse('learner_required', 'Choose the learner this course is for.');
   }
 
+  // Which provider, before anything else: it decides how the number is read.
+  const requestedProvider =
+    typeof body.provider === 'string' && body.provider.trim()
+      ? body.provider.trim()
+      : undefined;
+  const provider = getPaymentProvider(requestedProvider);
+
   // Normalise the handset number before anything is written, so the attempt
   // below records the method that was actually implied rather than whatever
-  // the caller typed. toE164 reports an unusable number by returning null, not
-  // by throwing.
+  // the caller typed, and so a mistyped number leaves no pending order behind.
   //
-  // This used to be checked after the order was written, so each mistyped
-  // number left another pending order behind and the reply said "your order
-  // was saved" about an order nobody could pay. A mistyped code already left
-  // nothing; now a mistyped number does not either.
+  // **A number written without a country code is a number of the country the
+  // chosen service collects in.** A mobile-money account is one operator in
+  // one country (`lib/payments/markets.ts`): MTN in Ghana prompts Ghanaian
+  // handsets and nobody else's. This route used to read every such number as
+  // Ugandan, whoever was paying and whichever service they had chosen, so
+  // "024 123 4567" typed by somebody in Accra was either refused or became a
+  // number in Uganda. Now it is read the way that country writes its numbers
+  // (its code, the digit it writes in front and does not dial, how many
+  // digits it has), by the same function the phone card uses.
   //
-  // `toE164` takes a dial code, not a country's letters. This passed 'UG',
-  // which is no dial code, so the function gave up on every number that did
-  // not already start with a plus: "0772 123456", the very shape the form's
-  // placeholder shows, was refused as invalid. Both providers here are
-  // Uganda's, so a local number is read as a Ugandan one; a number from
-  // anywhere else is typed in full, with its plus.
+  // A number typed in full, with its plus, has to be one of that country's
+  // too: a service cannot prompt a handset on another country's network.
+  // With no provider configured there is nobody to send a number to, so it is
+  // not read at all.
   let msisdn: string | undefined;
-  if (typeof body.msisdn === 'string' && body.msisdn.trim()) {
-    const normalised = toE164(body.msisdn, LOCAL_DIAL_CODE);
-    if (!normalised) return refuse('phone_invalid', 'That phone number is not valid.');
-    msisdn = normalised;
+  if (provider.available && provider.requiresMsisdn) {
+    const typed = typeof body.msisdn === 'string' ? body.msisdn : '';
+    if (provider.market) {
+      const parsed = parsePhone(typed, provider.market.country);
+      if (!parsed.ok) {
+        const { ok: _ok, ...why } = parsed;
+        return refuse('phone_invalid', 'That phone number is not valid.', { phone: why });
+      }
+      msisdn = parsed.e164;
+    } else {
+      // A provider tied to no country cannot say whose a local number is.
+      const normalised = toE164(typed);
+      if (!normalised) return refuse('phone_invalid', 'That phone number is not valid.');
+      msisdn = normalised;
+    }
   }
 
   const isPlanCheckout = Boolean(planVersionId);
@@ -263,12 +280,17 @@ export async function POST(request: Request) {
   // configured the order is left pending on purpose: it is a real record of an
   // attempt, it is harmless because it confers nothing, and the payer sees a
   // clear sentence instead of a broken redirect.
-  const requestedProvider =
-    typeof body.provider === 'string' && body.provider.trim()
-      ? body.provider.trim()
-      : undefined;
-  const provider = getPaymentProvider(requestedProvider);
   if (!provider.available) {
+    return refuse('provider_unavailable', NO_PROVIDER_SENTENCE, {
+      code: 'provider_unavailable',
+      orderId: result.orderId,
+    });
+  }
+  // A mobile-money account collects one currency. The buy page offers a
+  // service only for an order priced in it, so this is a page that was open
+  // while something changed, or a request made by hand. Nobody is prompted
+  // for an amount in a currency their account does not hold.
+  if (provider.market && provider.market.currency !== result.currencyCode) {
     return refuse('provider_unavailable', NO_PROVIDER_SENTENCE, {
       code: 'provider_unavailable',
       orderId: result.orderId,

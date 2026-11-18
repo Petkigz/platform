@@ -83,17 +83,94 @@ export async function run(ctx) {
     assert(b, 'fixture');
   });
 
-  await test('a request names the account it would go into, or is refused', async () => {
+  await test('asking says nothing about who is registered', async () => {
     await flag(true);
     const a = await account('merge-target-a@example.com', 'Ask A');
-    await account('merge-target-b@example.com', 'Ask B');
+    const b = await account('merge-target-b@example.com', 'Ask B');
+    const c = await account('merge-target-c@example.com', 'Ask C');
+
+    // The account's own address is the one thing it may be told about.
+    await rejects(() => request(a, 'merge-target-a@example.com'), /that is this account/);
+    await rejects(() => request(a, '   '), /type the email address/);
 
     // The suites share one database, so "an address that does not exist" has to
     // be one that really does not exist rather than a plausible-looking one.
-    await rejects(() => request(a, `missing-${crypto.randomUUID()}@example.com`),
-      /no account with that email/);
-    await rejects(() => request(a, 'merge-target-a@example.com'), /that is this account/);
-    await rejects(() => request(a, '   '), /type the email address/);
+    const nobody = await request(a, `missing-${crypto.randomUUID()}@example.com`);
+    const somebody = await request(c, 'merge-target-b@example.com');
+    // The same reply, key for key: a request, an id, an expiry.
+    eq(JSON.stringify(Object.keys(nobody).sort()), JSON.stringify(Object.keys(somebody).sort()), 'the two replies');
+    eq(nobody.requested, true, 'an address nobody has');
+    eq(somebody.requested, true, 'an address somebody has');
+    assert(/^[0-9a-f-]{36}$/.test(nobody.requestId) && typeof nobody.expiresAt === 'string', 'the reply for nobody');
+
+    // The same list, key for key, and nothing in it about the other account.
+    const listed = async (actor) => (await mine(actor)).outgoing[0];
+    const toNobody = await listed(a);
+    const toSomebody = await listed(c);
+    eq(JSON.stringify(Object.keys(toNobody).sort()), JSON.stringify(Object.keys(toSomebody).sort()), 'the two listings');
+    eq(JSON.stringify(Object.keys(toSomebody).sort()),
+      JSON.stringify(['expired', 'expiresAt', 'id', 'requestedAt', 'status', 'summary']), 'what the asking side is told');
+    assert(!JSON.stringify(await mine(c)).includes('Ask B'), 'the asking account is shown the other account’s name');
+    assert(!JSON.stringify(await mine(c)).includes(b), 'the asking account is shown the other account’s id');
+    eq(toNobody.status, 'pending', 'a request to nobody waits like any other');
+
+    // Nor by reading the table: the asking account selects none of its rows.
+    for (const actor of [a, c]) {
+      const rows = await call(actor, `select coalesce(jsonb_agg(r), '[]'::jsonb) as r from public.account_merge_requests r`);
+      eq(rows.length, 0, 'rows the asking account can read');
+    }
+    // The account that has to answer still reads the one addressed to it.
+    const answerable = await call(b, `select coalesce(jsonb_agg(r), '[]'::jsonb) as r from public.account_merge_requests r`);
+    eq(answerable.length, 1, 'rows the account asked can read');
+    eq((await mine(b)).incoming[0].otherName, 'Ask C', 'the account asked is shown who is asking');
+
+    // A second ask while one waits says nothing about the second address:
+    // it used to look the address up first and refuse an unknown one by name.
+    const again = await request(a, `missing-${crypto.randomUUID()}@example.com`);
+    eq(again.alreadyPending, true, 'a second ask while one waits');
+    eq(again.requestId, nobody.requestId, 'the request already waiting');
+
+    // Nobody can answer a request addressed to nobody: not the account that
+    // made it, not a stranger, and in the words anybody else would get.
+    for (const actor of [a, b]) {
+      for (const accept of [true, false]) {
+        await rejects(() => decide(actor, nobody.requestId, accept, 'Ask A'), /only the account that would survive can decide/);
+      }
+    }
+    eq((await listed(a)).status, 'pending', 'the request to nobody after four attempts to answer it');
+    // The same sentence the asking account gets about a request somebody can answer.
+    await rejects(() => decide(c, somebody.requestId, true, 'Ask C'), /only the account that would survive can decide/);
+
+    // It is withdrawn like any other.
+    const gone = await call(a, 'select public.cancel_account_merge($1) as r', [nobody.requestId]);
+    eq(gone.cancelled, true, 'withdrawing a request to nobody');
+    await call(c, 'select public.cancel_account_merge($1) as r', [somebody.requestId]);
+  });
+
+  await test('an account may ask five times in twenty-four hours, withdrawn or not', async () => {
+    await flag(true);
+    const a = await account('merge-limit-a@example.com', 'Limit A');
+    await account('merge-limit-b@example.com', 'Limit B');
+    const other = await account('merge-limit-c@example.com', 'Limit C');
+
+    // Ask and withdraw, to an address somebody has and to ones nobody has.
+    for (let i = 0; i < 5; i += 1) {
+      const email = i === 0 ? 'merge-limit-b@example.com' : `missing-${crypto.randomUUID()}@example.com`;
+      const asked = await request(a, email);
+      eq(asked.requested, true, `ask ${i + 1}`);
+      await call(a, 'select public.cancel_account_merge($1) as r', [asked.requestId]);
+    }
+    await rejects(() => request(a, 'merge-limit-b@example.com'), /too many times today/);
+    await rejects(() => request(a, `missing-${crypto.randomUUID()}@example.com`), /too many times today/);
+    // Its own address is still only its own address, and counts for nothing.
+    await rejects(() => request(a, 'merge-limit-a@example.com'), /that is this account/);
+    // The limit is the account's, not the platform's.
+    eq((await request(other, 'merge-limit-b@example.com')).requested, true, 'another account asking');
+
+    // A day later it may ask again.
+    await q(`update public.account_merge_requests set requested_at = requested_at - interval '25 hours'
+              where duplicate_user_id = $1`, [a]);
+    eq((await request(a, 'merge-limit-b@example.com')).requested, true, 'asking the next day');
   });
 
   await test('asking twice answers with the request already waiting', async () => {

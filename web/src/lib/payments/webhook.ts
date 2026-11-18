@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { resolveOpenAttempts } from '@/lib/checkout.ts';
 import { getPaymentProvider } from '@/lib/payments/registry';
 import type { PaymentProvider, WebhookEvent } from '@/lib/payments/provider';
+import { bindPayment, failureIsFor } from '@/lib/payments/binding';
 
 /**
  * The webhook handler, shared by the generic route and the per-provider routes.
@@ -29,6 +30,13 @@ import type { PaymentProvider, WebhookEvent } from '@/lib/payments/provider';
  * provider could produce". For a signed provider that is the signature; for a
  * requery provider it is the authenticated status response. The payload
  * records which, so the audit trail does not have to be guessed at later.
+ *
+ * **The order is confirmed too, not only the outcome** (`binding.ts`). The
+ * order id in an unsigned notification is a claim like the rest of it. A
+ * payment settles the order it names only when the provider's own answer
+ * says it was started for that order and, where the answer has an amount,
+ * that the amount is the order's total. Otherwise one real payment for a
+ * cheap order could be presented as the payment for an expensive one.
  */
 export async function handleProviderWebhook(
   request: Request,
@@ -93,7 +101,7 @@ export async function handleProviderWebhook(
   let evidence: unknown = payload;
 
   if (!signatureOk && provider.webhookTrust === 'requery') {
-    const checked = await confirmByQuery(provider, event);
+    const checked = await confirmByQuery(admin, provider, event);
     if (checked.kind === 'defer') {
       return NextResponse.json({ status: checked.status, reason: checked.reason });
     }
@@ -103,6 +111,9 @@ export async function handleProviderWebhook(
       notification: payload,
       status_query: checked.statusResponse,
       confirmed_by: 'authenticated status query',
+      // Where the recorded amount came from: the provider's answer, or the
+      // order's own total when the answer carries none.
+      ...(checked.amountFrom ? { amount_from: checked.amountFrom } : {}),
     };
   }
 
@@ -175,8 +186,37 @@ export async function handleProviderWebhook(
 type ActionableEvent = Exclude<WebhookEvent, { kind: 'ignored' }>;
 
 type Confirmed =
-  | { kind: 'confirmed'; event: ActionableEvent; statusResponse: unknown }
+  | { kind: 'confirmed'; event: ActionableEvent; statusResponse: unknown; amountFrom?: 'provider' | 'order' }
   | { kind: 'defer'; status: string; reason: string };
+
+/**
+ * A status as it can be stored. An amount is a bigint, which cannot be
+ * written as JSON: storing the status as it came threw on every confirmed
+ * payment, before anything was recorded.
+ */
+const printable = (status: unknown): unknown =>
+  JSON.parse(JSON.stringify(status, (_key, value) => (typeof value === 'bigint' ? value.toString() : value)));
+
+/** The order a notification names, as this platform holds it. */
+async function orderNamed(
+  admin: ReturnType<typeof createAdminClient>,
+  orderId: string,
+): Promise<{ totalMinor: bigint; currency: string } | null> {
+  // An id that is not an id is not looked up: it is whatever a stranger sent.
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu.test(orderId)) return null;
+  const { data, error } = await admin
+    .from('orders')
+    .select('total_minor, currency_code')
+    .eq('id', orderId)
+    .maybeSingle();
+  const row = data as { total_minor?: string | number | null; currency_code?: string | null } | null;
+  if (error || !row || row.total_minor === null || row.total_minor === undefined || !row.currency_code) return null;
+  try {
+    return { totalMinor: BigInt(row.total_minor), currency: row.currency_code };
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Ask the provider what actually happened, and translate the answer.
@@ -189,6 +229,7 @@ type Confirmed =
  * paid gets told they did not, and then charged again when they retry.
  */
 async function confirmByQuery(
+  admin: ReturnType<typeof createAdminClient>,
   provider: PaymentProvider,
   event: ActionableEvent,
 ): Promise<Confirmed> {
@@ -209,23 +250,54 @@ async function confirmByQuery(
   const status = await provider.fetchPaymentStatus(event.providerReference);
 
   if (status.state === 'succeeded') {
+    // The payment is real. Whether it is the payment for the order this
+    // notification names is a separate question, and the notification cannot
+    // answer it.
+    const bound = bindPayment({
+      claimedOrderId: event.orderId,
+      confirmedOrderId: status.orderId,
+      confirmedAmount: status.amount,
+      order: await orderNamed(admin, event.orderId),
+    });
+    if (!bound.ok) {
+      // Kept for whoever runs the site: either a provider answering in a shape
+      // nobody expected, or somebody presenting one order's payment as another's.
+      console.error(
+        `payment webhook (${provider.id}): reference ${event.providerReference} succeeded but does not settle order ${event.orderId}: ${bound.why}`,
+      );
+      return {
+        kind: 'defer',
+        status: 'not_applied',
+        reason: 'the payment the provider confirms is not a payment of this order',
+      };
+    }
     return {
       kind: 'confirmed',
       // The amount is the one the provider reported over an authenticated
-      // call, not the one in the unsigned notification body.
+      // call, or the order's own total when it reported none. Never the one
+      // in the unsigned notification body.
       event: {
         kind: 'payment.succeeded',
         eventId: event.eventId,
         providerReference: event.providerReference,
         orderId: event.orderId,
-        amount: status.amount,
+        amount: bound.amount,
         raw: { notification: event.raw, financialTransactionId: status.financialTransactionId },
       },
-      statusResponse: status,
+      statusResponse: printable(status),
+      amountFrom: bound.amountFrom,
     };
   }
 
   if (status.state === 'failed') {
+    // A failure closes an order's open attempts, so it has to be this order's.
+    if (!failureIsFor(event.orderId, status.orderId)) {
+      return {
+        kind: 'defer',
+        status: 'not_applied',
+        reason: 'the failure the provider confirms is not a failure of this order',
+      };
+    }
     return {
       kind: 'confirmed',
       event: {
@@ -236,7 +308,7 @@ async function confirmByQuery(
         reason: status.reason,
         raw: event.raw,
       },
-      statusResponse: status,
+      statusResponse: printable(status),
     };
   }
 

@@ -195,7 +195,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-352 files in `supabase/migrations/`, applied in filename order — the 14-digit
+353 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -401,9 +401,18 @@ project. Review the exact commit before approving it.
 `44131878224` (commit `9996437`). The job is spent: run again it would apply
 nothing and only repeat the comparison.
 
+**One migration is in the tree and not on the hosted project (2026-11-18):**
+`20261281146000_merge_request_privacy.sql`. It was written after the owner's
+decision about merge requests and has passed the database suites; nothing
+has applied it to the hosted test project, and the job above cannot (it
+applies exactly the ten it was reviewed for and refuses a tree with more).
+Applying it needs the owner's approval and a job reviewed for exactly this
+one file. Until then the hosted database answers a merge request the old
+way; the switch for merging is off there and it has no accounts.
+
 Read back afterwards through the read-only connector, separately from the job:
 
-- the history records 352 migrations, the last ten being 1360–1450 in order;
+- the history records 352 entries, the last ten being 1360–1450 in order;
 - there is still no Auth user and no learner;
 - the hosted database and the tested database built from all 352 agree hash
   for hash on every function, table, view, sequence and column name in
@@ -809,9 +818,9 @@ Then, in the order you get to them:
 | `CRON_SECRET`, `EMAIL_WORKER_EMAIL`, `EMAIL_WORKER_PASSWORD` | the unattended mail run | 7 |
 | `RETENTION_WORKER_EMAIL`, `RETENTION_WORKER_PASSWORD` | the unattended retention cleanup — the job that makes the privacy notice's three and seven years true. Must be an account holding `platform_admin`, because only the owner may delete a record; unset means the route refuses and `/admin/retention` still works by hand | 4 |
 | `PAYMENT_PROVIDER` | how a provider is named; unset means checkout says payments are not configured rather than pretending | — |
-| `MTN_MOMO_SUBSCRIPTION_KEY`, `MTN_MOMO_API_USER`, `MTN_MOMO_API_KEY`, `MTN_MOMO_BASE_URL`, `MTN_MOMO_TARGET_ENVIRONMENT`, `MTN_MOMO_CALLBACK_URL` | MTN collections | — |
+| `MTN_MOMO_SUBSCRIPTION_KEY`, `MTN_MOMO_API_USER`, `MTN_MOMO_API_KEY`, `MTN_MOMO_BASE_URL`, `MTN_MOMO_TARGET_ENVIRONMENT`, `MTN_MOMO_CALLBACK_URL`, `MTN_MOMO_COUNTRY`, `MTN_MOMO_CURRENCY` | MTN collections, one account: the country is `MTN_MOMO_COUNTRY` (Uganda when unset) and the currency that country's unless `MTN_MOMO_CURRENCY` says otherwise (MTN's sandbox takes only EUR). **Each further country has its own names with its two letters in them**, `MTN_MOMO_GH_SUBSCRIPTION_KEY` and so on, for the eleven countries MTN's Open API serves (UG GH CI ZM CM BJ CG SZ GN ZA LR); its provider id is `mtn_momo_gh` and its callback `/api/payments/webhook/mtn_momo_gh` | — |
 | `MTN_MOMO_DISBURSEMENT_SUBSCRIPTION_KEY`, `MTN_MOMO_DISBURSEMENT_API_USER`, `MTN_MOMO_DISBURSEMENT_API_KEY` | refunds going back out through MTN | — |
-| `AIRTEL_CLIENT_ID`, `AIRTEL_CLIENT_SECRET`, `AIRTEL_BASE_URL`, `AIRTEL_COUNTRY`, `AIRTEL_CURRENCY`, `AIRTEL_REFUND_PATH` | Airtel Money | — |
+| `AIRTEL_CLIENT_ID`, `AIRTEL_CLIENT_SECRET`, `AIRTEL_BASE_URL`, `AIRTEL_COUNTRY`, `AIRTEL_CURRENCY`, `AIRTEL_REFUND_PATH` | Airtel Money, one account: the country is `AIRTEL_COUNTRY` (Uganda when unset) and the currency that country's. **Each further country has its own names**, `AIRTEL_KE_CLIENT_ID` and `AIRTEL_KE_CLIENT_SECRET` and so on, for thirteen countries (UG KE TZ RW ZM MW CD CG GA TD NE MG SC); its provider id is `airtel_money_ke` | — |
 
 **`NEXT_PUBLIC_ALLOW_MISSING_SUPABASE` must not be set in production.** It exists
 so `next build` can run in CI without a live project; it makes the app pretend a

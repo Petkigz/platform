@@ -115,7 +115,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.mvBookmarks': 'الإشارات المرجعية: {count}',
     'merge.mvGuardianships': 'روابط أولياء الأمور: {count}',
     'merge.stayed': 'سجلات بقيت مع الحساب المغلق لأن هذا الحساب كان لديه الشيء نفسه: {count}.',
-    'merge.asked': 'الطلب ينتظر في الحساب الآخر. سجّل الدخول هناك لتوافق عليه.',
+    'merge.asked':
+      'سُجّل الطلب. إن كان ذلك العنوان لحساب، فالطلب ينتظر هناك: سجّل الدخول إلى ذلك الحساب لتوافق عليه. لا يُقال لك هل للعنوان حساب أم لا.',
     'merge.withdrawn': 'سُحب الطلب. لم يُنقل شيء.',
     'merge.merged': 'دُمج الحسابان. الحساب الآخر مغلق.',
     'merge.declined': 'رُفض الطلب. الحسابان كما كانا.',
@@ -126,6 +127,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.errSameAccount':
       'هذا عنوان هذا الحساب نفسه. اكتب عنوان الحساب الآخر، الذي تريد الاحتفاظ به.',
     'merge.errPending': 'هناك طلب من هذا الحساب ينتظر من قبل. اسحبه قبل أن تطلب من حساب آخر.',
+    'merge.errTooMany':
+      'طلب هذا الحساب الدمج مرات كثيرة جدًا في يوم واحد. حاول غدًا. لم يتغيّر شيء.',
     'merge.errNoRequest': 'لم يعد ذلك الطلب موجودًا. لم يتغيّر شيء.',
     'merge.errNotYours': 'لا يستطيع هذا الحساب الرد على ذلك الطلب. لم يتغيّر شيء.',
     'merge.errName': 'الاسم المكتوب ليس اسم هذا الحساب حرفًا بحرف. لم يتغيّر شيء.',
@@ -229,7 +232,7 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.stayed':
       'وہ ریکارڈ جو بند اکاؤنٹ کے ساتھ رہ گئے، کیونکہ اس اکاؤنٹ کے پاس وہی چیز پہلے سے تھی: {count}۔',
     'merge.asked':
-      'درخواست دوسرے اکاؤنٹ پر انتظار میں ہے۔ اس سے متفق ہونے کے لیے وہاں سائن اِن کریں۔',
+      'درخواست درج ہو گئی۔ اگر وہ پتا کسی اکاؤنٹ کا ہے تو درخواست وہاں انتظار میں ہے: اس سے متفق ہونے کے لیے اس اکاؤنٹ میں سائن اِن کریں۔ آپ کو یہ نہیں بتایا جاتا کہ اس پتے کا کوئی اکاؤنٹ ہے یا نہیں۔',
     'merge.withdrawn': 'درخواست واپس لے لی گئی۔ کچھ منتقل نہیں ہوا۔',
     'merge.merged': 'اکاؤنٹ ضم ہو گئے۔ دوسرا اکاؤنٹ بند ہے۔',
     'merge.declined': 'انکار کر دیا گیا۔ دونوں اکاؤنٹ ویسے ہی ہیں جیسے تھے۔',
@@ -241,6 +244,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'یہ اسی اکاؤنٹ کا پتا ہے۔ دوسرے اکاؤنٹ کا پتا لکھیں، جسے آپ رکھنا چاہتے ہیں۔',
     'merge.errPending':
       'اس اکاؤنٹ کی ایک درخواست پہلے سے انتظار میں ہے۔ کسی اور اکاؤنٹ سے درخواست کرنے سے پہلے اسے واپس لیں۔',
+    'merge.errTooMany':
+      'اس اکاؤنٹ نے ایک دن میں بہت زیادہ بار ضم کی درخواست کی ہے۔ کل دوبارہ کوشش کریں۔ کچھ تبدیل نہیں ہوا۔',
     'merge.errNoRequest': 'وہ درخواست اب موجود نہیں۔ کچھ تبدیل نہیں ہوا۔',
     'merge.errNotYours': 'یہ اکاؤنٹ اس درخواست کا جواب نہیں دے سکتا۔ کچھ تبدیل نہیں ہوا۔',
     'merge.errName': 'لکھا ہوا نام حرف بہ حرف اس اکاؤنٹ کا نام نہیں ہے۔ کچھ تبدیل نہیں ہوا۔',
@@ -341,7 +346,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.mvGuardianships': 'پیوندهای سرپرستی: {count}',
     'merge.stayed':
       'سابقه‌هایی که نزد حساب بسته‌شده ماندند، چون این حساب همان را از پیش داشت: {count}.',
-    'merge.asked': 'درخواست در حساب دیگر منتظر است. برای موافقت با آن، آنجا وارد شوید.',
+    'merge.asked':
+      'درخواست ثبت شد. اگر آن نشانی از آنِ حسابی باشد، درخواست آنجا منتظر است: برای موافقت با آن، به آن حساب وارد شوید. به شما گفته نمی‌شود که آن نشانی حسابی دارد یا نه.',
     'merge.withdrawn': 'درخواست پس گرفته شد. چیزی منتقل نشد.',
     'merge.merged': 'حساب‌ها ادغام شدند. حساب دیگر بسته است.',
     'merge.declined': 'رد شد. هر دو حساب همان‌اند که بودند.',
@@ -353,6 +359,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'این نشانی همین حساب است. نشانی حساب دیگر را بنویسید، همان که می‌خواهید نگه دارید.',
     'merge.errPending':
       'یک درخواست از این حساب از پیش منتظر است. پیش از درخواست از حساب دیگر، آن را پس بگیرید.',
+    'merge.errTooMany':
+      'این حساب در یک روز بیش از اندازه درخواست ادغام داده است. فردا دوباره تلاش کنید. چیزی تغییر نکرد.',
     'merge.errNoRequest': 'آن درخواست دیگر وجود ندارد. چیزی تغییر نکرد.',
     'merge.errNotYours': 'این حساب نمی‌تواند به آن درخواست پاسخ دهد. چیزی تغییر نکرد.',
     'merge.errName': 'نامی که نوشته شد، حرف به حرف، نام این حساب نیست. چیزی تغییر نکرد.',
@@ -453,7 +461,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.mvGuardianships': 'پیوندهای سرپرستی: {count}',
     'merge.stayed':
       'سابقه‌هایی که نزد حساب بسته‌شده ماندند، چون این حساب همان را از پیش داشت: {count}.',
-    'merge.asked': 'درخواست در حساب دیگر منتظر است. برای موافقه با آن، آنجا وارد شوید.',
+    'merge.asked':
+      'درخواست ثبت شد. اگر آن نشانی از کدام حساب باشد، درخواست آنجا منتظر است: برای موافقت با آن، به آن حساب داخل شوید. به شما گفته نمی‌شود که آن نشانی حساب دارد یا نه.',
     'merge.withdrawn': 'درخواست پس گرفته شد. چیزی انتقال نیافت.',
     'merge.merged': 'حساب‌ها یکجا شدند. حساب دیگر بسته است.',
     'merge.declined': 'رد شد. هر دو حساب همان‌اند که بودند.',
@@ -465,6 +474,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'این نشانی همین حساب است. نشانی حساب دیگر را بنویسید، همان که می‌خواهید نگه دارید.',
     'merge.errPending':
       'یک درخواست از این حساب از پیش منتظر است. پیش از درخواست از حساب دیگر، آن را پس بگیرید.',
+    'merge.errTooMany':
+      'این حساب در یک روز بیش از حد درخواست ادغام داده است. فردا دوباره کوشش کنید. چیزی تغییر نکرد.',
     'merge.errNoRequest': 'آن درخواست دیگر وجود ندارد. چیزی تغییر نکرد.',
     'merge.errNotYours': 'این حساب نمی‌تواند به آن درخواست پاسخ دهد. چیزی تغییر نکرد.',
     'merge.errName': 'نامی که نوشته شد، حرف به حرف، نام این حساب نیست. چیزی تغییر نکرد.',
@@ -567,7 +578,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.mvGuardianships': 'Veli bağlantıları: {count}',
     'merge.stayed':
       'Bu hesapta aynısı zaten bulunduğu için kapatılan hesapta kalan kayıtlar: {count}.',
-    'merge.asked': 'İstek diğer hesapta bekliyor. Kabul etmek için orada giriş yapın.',
+    'merge.asked':
+      'İstek kaydedildi. O adres bir hesaba aitse istek orada bekliyor: kabul etmek için o hesaba giriş yapın. Adresin bir hesabı olup olmadığı size söylenmez.',
     'merge.withdrawn': 'İstek geri çekildi. Hiçbir şey taşınmadı.',
     'merge.merged': 'Hesaplar birleştirildi. Diğer hesap kapalı.',
     'merge.declined': 'Reddedildi. İki hesap da olduğu gibi duruyor.',
@@ -579,6 +591,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Bu, bu hesabın adresi. Diğer hesabın, yani tutmak istediğiniz hesabın adresini yazın.',
     'merge.errPending':
       'Bu hesaptan yapılmış bir istek zaten bekliyor. Başka bir hesaptan istemeden önce onu geri çekin.',
+    'merge.errTooMany':
+      'Bu hesap bir günde çok fazla kez birleştirme istedi. Yarın yeniden deneyin. Hiçbir şey değişmedi.',
     'merge.errNoRequest': 'O istek artık yok. Hiçbir şey değişmedi.',
     'merge.errNotYours': 'Bu hesap o isteği yanıtlayamaz. Hiçbir şey değişmedi.',
     'merge.errName': 'Yazılan ad, harfi harfine bu hesabın adı değil. Hiçbir şey değişmedi.',
@@ -681,7 +695,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.mvGuardianships': 'Hubungan wali: {count}',
     'merge.stayed':
       'Catatan yang tetap di akun yang ditutup, karena akun ini sudah punya hal yang sama: {count}.',
-    'merge.asked': 'Permintaan menunggu di akun lainnya. Masuklah di sana untuk menyetujuinya.',
+    'merge.asked':
+      'Permintaan dicatat. Jika alamat itu milik sebuah akun, permintaan menunggu di sana: masuk ke akun itu untuk menyetujuinya. Anda tidak diberi tahu apakah alamat itu memiliki akun.',
     'merge.withdrawn': 'Permintaan ditarik. Tidak ada yang dipindahkan.',
     'merge.merged': 'Akun sudah digabungkan. Akun lainnya ditutup.',
     'merge.declined': 'Ditolak. Kedua akun tetap seperti semula.',
@@ -693,6 +708,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Itu alamat akun ini. Ketik alamat akun yang satunya, yaitu akun yang ingin Anda pertahankan.',
     'merge.errPending':
       'Sebuah permintaan dari akun ini sudah menunggu. Tarik dulu sebelum meminta ke akun lain.',
+    'merge.errTooMany':
+      'Akun ini sudah terlalu sering meminta penggabungan dalam satu hari. Coba lagi besok. Tidak ada yang diubah.',
     'merge.errNoRequest': 'Permintaan itu sudah tidak ada. Tidak ada yang diubah.',
     'merge.errNotYours': 'Akun ini tidak dapat menjawab permintaan itu. Tidak ada yang diubah.',
     'merge.errName':
@@ -797,7 +814,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.mvGuardianships': 'Pautan penjaga: {count}',
     'merge.stayed':
       'Rekod yang kekal dengan akaun yang ditutup, kerana akaun ini sudah mempunyai perkara yang sama: {count}.',
-    'merge.asked': 'Permintaan menunggu di akaun yang satu lagi. Masuk di sana untuk bersetuju.',
+    'merge.asked':
+      'Permintaan direkodkan. Jika alamat itu milik sebuah akaun, permintaan menunggu di sana: log masuk ke akaun itu untuk bersetuju dengannya. Anda tidak diberitahu sama ada alamat itu mempunyai akaun.',
     'merge.withdrawn': 'Permintaan ditarik balik. Tiada apa-apa yang dipindahkan.',
     'merge.merged': 'Akaun sudah digabungkan. Akaun yang satu lagi ditutup.',
     'merge.declined': 'Ditolak. Kedua-dua akaun kekal seperti sebelumnya.',
@@ -809,6 +827,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Itu alamat akaun ini. Taip alamat akaun yang satu lagi, iaitu akaun yang anda mahu simpan.',
     'merge.errPending':
       'Satu permintaan dari akaun ini sudah menunggu. Tarik balik dahulu sebelum meminta daripada akaun lain.',
+    'merge.errTooMany':
+      'Akaun ini telah terlalu kerap meminta penggabungan dalam satu hari. Cuba lagi esok. Tiada apa-apa diubah.',
     'merge.errNoRequest': 'Permintaan itu sudah tiada. Tiada apa-apa yang diubah.',
     'merge.errNotYours':
       'Akaun ini tidak boleh menjawab permintaan itu. Tiada apa-apa yang diubah.',
@@ -912,7 +932,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.mvGuardianships': 'অভিভাবক সংযোগ: {count}',
     'merge.stayed':
       'যেসব নথি বন্ধ অ্যাকাউন্টের কাছে থেকে গেছে, কারণ এই অ্যাকাউন্টে একই জিনিস আগে থেকেই ছিল: {count}।',
-    'merge.asked': 'অনুরোধটি অন্য অ্যাকাউন্টে অপেক্ষা করছে। তাতে সম্মত হতে সেখানে সাইন ইন করুন।',
+    'merge.asked':
+      'অনুরোধটি নথিভুক্ত হয়েছে। ওই ঠিকানা যদি কোনো অ্যাকাউন্টের হয়, অনুরোধটি সেখানে অপেক্ষা করছে: তাতে সম্মত হতে সেই অ্যাকাউন্টে সাইন ইন করুন। ঠিকানাটির কোনো অ্যাকাউন্ট আছে কি না তা আপনাকে জানানো হয় না।',
     'merge.withdrawn': 'অনুরোধ প্রত্যাহার করা হয়েছে। কিছুই সরানো হয়নি।',
     'merge.merged': 'অ্যাকাউন্ট দুটি একত্র করা হয়েছে। অন্য অ্যাকাউন্টটি বন্ধ।',
     'merge.declined': 'প্রত্যাখ্যান করা হয়েছে। দুটি অ্যাকাউন্টই আগের মতো আছে।',
@@ -924,6 +945,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'ওটি এই অ্যাকাউন্টেরই ঠিকানা। অন্য অ্যাকাউন্টটির ঠিকানা লিখুন, যেটি আপনি রাখতে চান।',
     'merge.errPending':
       'এই অ্যাকাউন্টের একটি অনুরোধ আগে থেকেই অপেক্ষায় আছে। অন্য অ্যাকাউন্টকে অনুরোধ করার আগে সেটি প্রত্যাহার করুন।',
+    'merge.errTooMany':
+      'এই অ্যাকাউন্ট এক দিনে অনেক বেশি বার একত্র করার অনুরোধ করেছে। আগামীকাল আবার চেষ্টা করুন। কিছুই বদলানো হয়নি।',
     'merge.errNoRequest': 'ওই অনুরোধটি আর নেই। কিছুই বদলানো হয়নি।',
     'merge.errNotYours': 'এই অ্যাকাউন্ট ওই অনুরোধের উত্তর দিতে পারে না। কিছুই বদলানো হয়নি।',
     'merge.errName': 'লেখা নামটি অক্ষরে অক্ষরে এই অ্যাকাউন্টের নাম নয়। কিছুই বদলানো হয়নি।',
@@ -1027,7 +1050,7 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.stayed':
       'वे अभिलेख जो बंद किए गए खाते के पास रह गए, क्योंकि इस खाते के पास वही चीज़ पहले से थी: {count}।',
     'merge.asked':
-      'अनुरोध दूसरे खाते पर प्रतीक्षा में है। उस पर सहमति देने के लिए वहाँ साइन इन करें।',
+      'अनुरोध दर्ज हो गया। अगर वह पता किसी खाते का है, तो अनुरोध वहाँ प्रतीक्षा में है: उससे सहमत होने के लिए उस खाते में साइन इन करें। आपको यह नहीं बताया जाता कि उस पते का कोई खाता है या नहीं।',
     'merge.withdrawn': 'अनुरोध वापस ले लिया गया। कुछ नहीं ले जाया गया।',
     'merge.merged': 'खाते मिला दिए गए। दूसरा खाता बंद है।',
     'merge.declined': 'अस्वीकार कर दिया गया। दोनों खाते वैसे ही हैं जैसे थे।',
@@ -1039,6 +1062,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'यह इसी खाते का पता है। दूसरे खाते का पता लिखें, जिसे आप रखना चाहते हैं।',
     'merge.errPending':
       'इस खाते का एक अनुरोध पहले से प्रतीक्षा में है। किसी और खाते से अनुरोध करने से पहले उसे वापस लें।',
+    'merge.errTooMany':
+      'इस खाते ने एक दिन में बहुत अधिक बार विलय का अनुरोध किया है। कल फिर कोशिश करें। कुछ नहीं बदला।',
     'merge.errNoRequest': 'वह अनुरोध अब नहीं है। कुछ नहीं बदला।',
     'merge.errNotYours': 'यह खाता उस अनुरोध का उत्तर नहीं दे सकता। कुछ नहीं बदला।',
     'merge.errName': 'लिखा गया नाम अक्षर-दर-अक्षर इस खाते का नाम नहीं है। कुछ नहीं बदला।',
@@ -1143,7 +1168,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.mvGuardianships': 'Liens de tutelle : {count}',
     'merge.stayed':
       'Éléments restés avec le compte fermé, parce que ce compte avait déjà la même chose : {count}.',
-    'merge.asked': 'La demande attend sur l’autre compte. Connectez-vous-y pour l’accepter.',
+    'merge.asked':
+      'La demande est enregistrée. Si cette adresse est celle d’un compte, la demande y attend : connectez-vous à ce compte pour l’accepter. On ne vous dit pas si l’adresse a un compte.',
     'merge.withdrawn': 'La demande est retirée. Rien n’a été transféré.',
     'merge.merged': 'Les comptes sont fusionnés. L’autre compte est fermé.',
     'merge.declined': 'Refusé. Les deux comptes sont tels qu’ils étaient.',
@@ -1155,6 +1181,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'C’est l’adresse de ce compte-ci. Saisissez l’adresse de l’autre, le compte que vous voulez garder.',
     'merge.errPending':
       'Une demande faite depuis ce compte attend déjà. Retirez-la avant de vous adresser à un autre compte.',
+    'merge.errTooMany':
+      'Ce compte a demandé une fusion trop de fois en une journée. Réessayez demain. Rien n’a été modifié.',
     'merge.errNoRequest': 'Cette demande n’existe plus. Rien n’a été modifié.',
     'merge.errNotYours': 'Ce compte ne peut pas répondre à cette demande. Rien n’a été modifié.',
     'merge.errName':
@@ -1260,7 +1288,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.mvGuardianships': 'Vínculos de tutela: {count}',
     'merge.stayed':
       'Registros que se quedaron con la cuenta cerrada, porque esta cuenta ya tenía lo mismo: {count}.',
-    'merge.asked': 'La solicitud espera en la otra cuenta. Inicie sesión allí para aceptarla.',
+    'merge.asked':
+      'La solicitud queda registrada. Si esa dirección es de una cuenta, la solicitud espera allí: inicie sesión en esa cuenta para aceptarla. No se le dice si la dirección tiene una cuenta.',
     'merge.withdrawn': 'La solicitud se ha retirado. No se trasladó nada.',
     'merge.merged': 'Las cuentas se han fusionado. La otra cuenta está cerrada.',
     'merge.declined': 'Rechazada. Las dos cuentas están como estaban.',
@@ -1273,6 +1302,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Esa es la dirección de esta misma cuenta. Escriba la de la otra, la cuenta que quiere conservar.',
     'merge.errPending':
       'Ya hay una solicitud de esta cuenta en espera. Retírela antes de pedirlo a otra cuenta.',
+    'merge.errTooMany':
+      'Esta cuenta ha pedido una fusión demasiadas veces en un día. Vuelva a intentarlo mañana. No se cambió nada.',
     'merge.errNoRequest': 'Esa solicitud ya no existe. No se cambió nada.',
     'merge.errNotYours': 'Esta cuenta no puede responder a esa solicitud. No se cambió nada.',
     'merge.errName':
@@ -1377,7 +1408,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.mvGuardianships': 'Ligações de tutela: {count}',
     'merge.stayed':
       'Registos que ficaram com a conta fechada, porque esta conta já tinha a mesma coisa: {count}.',
-    'merge.asked': 'O pedido está à espera na outra conta. Entre lá para concordar com ele.',
+    'merge.asked':
+      'O pedido fica registado. Se esse endereço for de uma conta, o pedido está à espera lá: entre nessa conta para concordar com ele. Não lhe é dito se o endereço tem uma conta.',
     'merge.withdrawn': 'O pedido foi retirado. Nada foi transferido.',
     'merge.merged': 'As contas foram fundidas. A outra conta está fechada.',
     'merge.declined': 'Recusado. As duas contas estão como estavam.',
@@ -1389,6 +1421,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Esse é o endereço desta mesma conta. Escreva o da outra, a conta que quer manter.',
     'merge.errPending':
       'Já há um pedido desta conta à espera. Retire-o antes de pedir a outra conta.',
+    'merge.errTooMany':
+      'Esta conta pediu uma fusão demasiadas vezes num dia. Tente de novo amanhã. Nada foi alterado.',
     'merge.errNoRequest': 'Esse pedido já não existe. Nada foi alterado.',
     'merge.errNotYours': 'Esta conta não pode responder a esse pedido. Nada foi alterado.',
     'merge.errName':
@@ -1492,7 +1526,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.mvGuardianships': 'Viungo vya walezi: {count}',
     'merge.stayed':
       'Rekodi zilizobaki kwenye akaunti iliyofungwa, kwa sababu akaunti hii tayari ilikuwa na kitu kilekile: {count}.',
-    'merge.asked': 'Ombi linasubiri kwenye akaunti nyingine. Ingia huko ili ulikubali.',
+    'merge.asked':
+      'Ombi limerekodiwa. Ikiwa anwani hiyo ni ya akaunti, ombi linasubiri huko: ingia kwenye akaunti hiyo ili ulikubali. Hutaambiwa kama anwani hiyo ina akaunti.',
     'merge.withdrawn': 'Ombi limeondolewa. Hakuna kilichohamishwa.',
     'merge.merged': 'Akaunti zimeunganishwa. Akaunti nyingine imefungwa.',
     'merge.declined': 'Limekataliwa. Akaunti zote mbili ziko kama zilivyokuwa.',
@@ -1505,6 +1540,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Hiyo ni anwani ya akaunti hii. Andika anwani ya ile nyingine, akaunti unayotaka kubaki nayo.',
     'merge.errPending':
       'Ombi kutoka akaunti hii tayari linasubiri. Liondoe kabla ya kuomba akaunti nyingine.',
+    'merge.errTooMany':
+      'Akaunti hii imeomba kuunganishwa mara nyingi mno kwa siku moja. Jaribu tena kesho. Hakuna kilichobadilishwa.',
     'merge.errNoRequest': 'Ombi hilo halipo tena. Hakuna kilichobadilishwa.',
     'merge.errNotYours': 'Akaunti hii haiwezi kujibu ombi hilo. Hakuna kilichobadilishwa.',
     'merge.errName':
@@ -1608,7 +1645,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.mvGuardianships': 'Voogskakels: {count}',
     'merge.stayed':
       'Rekords wat by die geslote rekening gebly het, omdat hierdie rekening reeds dieselfde gehad het: {count}.',
-    'merge.asked': 'Die versoek wag op die ander rekening. Meld daar aan om daartoe in te stem.',
+    'merge.asked':
+      'Die versoek is aangeteken. As daardie adres aan ’n rekening behoort, wag die versoek daar: meld by daardie rekening aan om daartoe in te stem. Jy word nie vertel of die adres ’n rekening het nie.',
     'merge.withdrawn': 'Die versoek is teruggetrek. Niks is geskuif nie.',
     'merge.merged': 'Die rekeninge is saamgevoeg. Die ander rekening is gesluit.',
     'merge.declined': 'Geweier. Albei rekeninge is soos hulle was.',
@@ -1620,6 +1658,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Dit is die adres van hierdie rekening. Tik die adres van die ander een, die rekening wat jy wil behou.',
     'merge.errPending':
       '’n Versoek van hierdie rekening af wag reeds. Trek dit terug voordat jy ’n ander rekening vra.',
+    'merge.errTooMany':
+      'Hierdie rekening het in een dag te veel keer ’n samevoeging aangevra. Probeer môre weer. Niks is verander nie.',
     'merge.errNoRequest': 'Daardie versoek is nie meer daar nie. Niks is verander nie.',
     'merge.errNotYours':
       'Hierdie rekening kan nie daardie versoek beantwoord nie. Niks is verander nie.',
@@ -1705,7 +1745,7 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.mvBookmarks': '书签：{count}',
     'merge.mvGuardianships': '监护关系：{count}',
     'merge.stayed': '因为此账户已有相同内容而留在已关闭账户中的记录：{count}。',
-    'merge.asked': '请求正在另一个账户上等待。请在那里登录以同意。',
+    'merge.asked': '请求已记录。如果那个地址属于某个账户，请求就在那里等待：请登录那个账户以同意。不会告诉你那个地址是否有账户。',
     'merge.withdrawn': '请求已撤回。没有转移任何内容。',
     'merge.merged': '账户已合并。另一个账户已关闭。',
     'merge.declined': '已拒绝。两个账户都保持原样。',
@@ -1714,6 +1754,7 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.errNoAccount': '没有使用该电子邮箱地址的账户。没有任何更改。',
     'merge.errSameAccount': '那是此账户自己的地址。请输入另一个账户的地址，也就是你想保留的那个账户。',
     'merge.errPending': '此账户已有一个请求在等待。请先撤回它，再向其他账户请求。',
+    'merge.errTooMany': '此账户在一天内请求合并的次数过多。请明天再试。没有任何更改。',
     'merge.errNoRequest': '那个请求已不存在。没有任何更改。',
     'merge.errNotYours': '此账户无法答复那个请求。没有任何更改。',
     'merge.errName': '输入的名称与此账户的名称并非逐字相同。没有任何更改。',
@@ -1793,7 +1834,7 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.mvBookmarks': '書籤：{count}',
     'merge.mvGuardianships': '監護關係：{count}',
     'merge.stayed': '因為此帳號已有相同內容而留在已關閉帳號中的紀錄：{count}。',
-    'merge.asked': '請求正在另一個帳號上等待。請在那裡登入以同意。',
+    'merge.asked': '請求已記錄。如果那個地址屬於某個帳號，請求就在那裡等待：請登入那個帳號以同意。不會告訴你那個地址是否有帳號。',
     'merge.withdrawn': '請求已撤回。沒有轉移任何內容。',
     'merge.merged': '帳號已合併。另一個帳號已關閉。',
     'merge.declined': '已拒絕。兩個帳號都維持原狀。',
@@ -1802,6 +1843,7 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.errNoAccount': '沒有使用該電子郵件地址的帳號。沒有任何變更。',
     'merge.errSameAccount': '那是此帳號自己的地址。請輸入另一個帳號的地址，也就是你想保留的那個帳號。',
     'merge.errPending': '此帳號已有一個請求在等待。請先撤回它，再向其他帳號請求。',
+    'merge.errTooMany': '此帳號在一天內請求合併的次數過多。請明天再試。沒有任何變更。',
     'merge.errNoRequest': '那個請求已不存在。沒有任何變更。',
     'merge.errNotYours': '此帳號無法答覆那個請求。沒有任何變更。',
     'merge.errName': '輸入的名稱與此帳號的名稱並非逐字相同。沒有任何變更。',
@@ -1900,7 +1942,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.mvGuardianships': 'Liên kết giám hộ: {count}',
     'merge.stayed':
       'Các bản ghi ở lại với tài khoản đã đóng, vì tài khoản này đã có thứ tương tự: {count}.',
-    'merge.asked': 'Yêu cầu đang chờ ở tài khoản kia. Hãy đăng nhập ở đó để đồng ý.',
+    'merge.asked':
+      'Yêu cầu đã được ghi lại. Nếu địa chỉ đó thuộc về một tài khoản, yêu cầu đang chờ ở đó: hãy đăng nhập vào tài khoản đó để đồng ý. Bạn không được cho biết địa chỉ đó có tài khoản hay không.',
     'merge.withdrawn': 'Yêu cầu đã được rút. Không có gì được chuyển.',
     'merge.merged': 'Các tài khoản đã được gộp. Tài khoản kia đã đóng.',
     'merge.declined': 'Đã từ chối. Cả hai tài khoản vẫn như cũ.',
@@ -1913,6 +1956,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Đó là địa chỉ của chính tài khoản này. Hãy nhập địa chỉ của tài khoản kia, tài khoản bạn muốn giữ.',
     'merge.errPending':
       'Một yêu cầu từ tài khoản này đang chờ sẵn. Hãy rút nó trước khi yêu cầu một tài khoản khác.',
+    'merge.errTooMany':
+      'Tài khoản này đã yêu cầu gộp quá nhiều lần trong một ngày. Hãy thử lại vào ngày mai. Không có gì thay đổi.',
     'merge.errNoRequest': 'Yêu cầu đó không còn nữa. Không có gì thay đổi.',
     'merge.errNotYours': 'Tài khoản này không thể trả lời yêu cầu đó. Không có gì thay đổi.',
     'merge.errName':
@@ -2014,7 +2059,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.mvGuardianships': 'ความเชื่อมโยงกับผู้ปกครอง: {count}',
     'merge.stayed':
       'รายการที่ยังอยู่กับบัญชีที่ถูกปิด เพราะบัญชีนี้มีสิ่งเดียวกันอยู่แล้ว: {count}',
-    'merge.asked': 'คำขอกำลังรออยู่ที่อีกบัญชีหนึ่ง โปรดเข้าสู่ระบบที่นั่นเพื่อเห็นชอบ',
+    'merge.asked':
+      'บันทึกคำขอแล้ว หากที่อยู่นั้นเป็นของบัญชีใดบัญชีหนึ่ง คำขอกำลังรออยู่ที่นั่น: โปรดเข้าสู่ระบบด้วยบัญชีนั้นเพื่อเห็นชอบ คุณจะไม่ได้รับแจ้งว่าที่อยู่นั้นมีบัญชีหรือไม่',
     'merge.withdrawn': 'ถอนคำขอแล้ว ไม่มีสิ่งใดถูกย้าย',
     'merge.merged': 'รวมบัญชีแล้ว อีกบัญชีหนึ่งถูกปิดแล้ว',
     'merge.declined': 'ปฏิเสธแล้ว ทั้งสองบัญชียังเป็นเหมือนเดิม',
@@ -2025,6 +2071,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.errSameAccount':
       'นั่นคือที่อยู่ของบัญชีนี้เอง โปรดพิมพ์ที่อยู่ของอีกบัญชีหนึ่ง ซึ่งเป็นบัญชีที่คุณต้องการเก็บไว้',
     'merge.errPending': 'มีคำขอจากบัญชีนี้รออยู่แล้ว โปรดถอนคำขอนั้นก่อนจะขอกับบัญชีอื่น',
+    'merge.errTooMany':
+      'บัญชีนี้ขอรวมบัญชีบ่อยเกินไปในหนึ่งวัน โปรดลองอีกครั้งพรุ่งนี้ ไม่มีสิ่งใดถูกเปลี่ยนแปลง',
     'merge.errNoRequest': 'คำขอนั้นไม่มีอยู่แล้ว ไม่มีสิ่งใดถูกเปลี่ยนแปลง',
     'merge.errNotYours': 'บัญชีนี้ตอบคำขอนั้นไม่ได้ ไม่มีสิ่งใดถูกเปลี่ยนแปลง',
     'merge.errName': 'ชื่อที่พิมพ์ไม่ตรงกับชื่อของบัญชีนี้ทุกตัวอักษร ไม่มีสิ่งใดถูกเปลี่ยนแปลง',
@@ -2129,7 +2177,7 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.stayed':
       'Mga talaang naiwan sa isinarang account, dahil mayroon na ring ganoon ang account na ito: {count}.',
     'merge.asked':
-      'Naghihintay ang hiling sa kabilang account. Mag-sign in doon para pumayag dito.',
+      'Naitala na ang hiling. Kung sa isang account ang address na iyon, naghihintay roon ang hiling: mag-sign in sa account na iyon para pumayag dito. Hindi sinasabi sa iyo kung may account ang address.',
     'merge.withdrawn': 'Binawi na ang hiling. Walang nailipat.',
     'merge.merged': 'Naisama na ang mga account. Sarado na ang kabilang account.',
     'merge.declined': 'Tinanggihan. Ganoon pa rin ang dalawang account gaya ng dati.',
@@ -2141,6 +2189,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Iyan ang address ng account na ito. I-type ang address ng isa pa, ang account na gusto mong panatilihin.',
     'merge.errPending':
       'May naghihintay nang hiling mula sa account na ito. Bawiin muna iyon bago humiling sa ibang account.',
+    'merge.errTooMany':
+      'Masyado nang maraming beses humiling ng pagsasama ang account na ito sa isang araw. Subukan muli bukas. Walang binago.',
     'merge.errNoRequest': 'Wala na ang hiling na iyon. Walang binago.',
     'merge.errNotYours': 'Hindi masasagot ng account na ito ang hiling na iyon. Walang binago.',
     'merge.errName':
@@ -2244,7 +2294,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.mvGuardianships': 'Vasiylik aloqalari: {count}',
     'merge.stayed':
       'Shu hisobda xuddi shu narsa allaqachon boʻlgani uchun yopilgan hisobda qolgan yozuvlar: {count}.',
-    'merge.asked': 'Soʻrov boshqa hisobda kutmoqda. Unga rozi boʻlish uchun oʻsha yerda kiring.',
+    'merge.asked':
+      'Soʻrov qayd etildi. Agar oʻsha manzil biror hisobniki boʻlsa, soʻrov oʻsha yerda kutmoqda: unga rozi boʻlish uchun oʻsha hisobga kiring. Manzilning hisobi bor-yoʻqligi sizga aytilmaydi.',
     'merge.withdrawn': 'Soʻrov qaytarib olindi. Hech narsa koʻchirilmadi.',
     'merge.merged': 'Hisoblar birlashtirildi. Boshqa hisob yopilgan.',
     'merge.declined': 'Rad etildi. Ikkala hisob ham avvalgidek.',
@@ -2256,6 +2307,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Bu shu hisobning oʻz manzili. Boshqasining, yaʼni saqlab qolmoqchi boʻlgan hisobingizning manzilini yozing.',
     'merge.errPending':
       'Shu hisobdan bitta soʻrov allaqachon kutmoqda. Boshqa hisobdan soʻrashdan oldin uni qaytarib oling.',
+    'merge.errTooMany':
+      'Bu hisob bir kunda juda koʻp marta birlashtirishni soʻradi. Ertaga qayta urinib koʻring. Hech narsa oʻzgarmadi.',
     'merge.errNoRequest': 'Oʻsha soʻrov endi yoʻq. Hech narsa oʻzgarmadi.',
     'merge.errNotYours': 'Bu hisob oʻsha soʻrovga javob bera olmaydi. Hech narsa oʻzgarmadi.',
     'merge.errName': 'Yozilgan nom harfma-harf shu hisobning nomi emas. Hech narsa oʻzgarmadi.',
@@ -2358,7 +2411,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.mvGuardianships': 'Қамқоршылық байланыстары: {count}',
     'merge.stayed':
       'Осы тіркелгіде дәл сондай нәрсе бұрыннан болғандықтан, жабылған тіркелгіде қалған жазбалар: {count}.',
-    'merge.asked': 'Сұрау екінші тіркелгіде күтіп тұр. Оған келісу үшін сол жерде кіріңіз.',
+    'merge.asked':
+      'Сұрау тіркелді. Егер сол мекенжай бір тіркелгінікі болса, сұрау сол жерде күтіп тұр: оған келісу үшін сол тіркелгіге кіріңіз. Мекенжайдың тіркелгісі бар-жоғы сізге айтылмайды.',
     'merge.withdrawn': 'Сұрау қайтарып алынды. Ештеңе көшірілген жоқ.',
     'merge.merged': 'Тіркелгілер біріктірілді. Екінші тіркелгі жабылған.',
     'merge.declined': 'Бас тартылды. Екі тіркелгі де бұрынғыдай.',
@@ -2371,6 +2425,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Бұл осы тіркелгінің өз мекенжайы. Екіншісінің, яғни сақтағыңыз келетін тіркелгінің мекенжайын жазыңыз.',
     'merge.errPending':
       'Осы тіркелгіден бір сұрау бұрыннан күтіп тұр. Басқа тіркелгіден сұрамас бұрын оны қайтарып алыңыз.',
+    'merge.errTooMany':
+      'Бұл тіркелгі бір күнде біріктіруді тым көп рет сұрады. Ертең қайта көріңіз. Ештеңе өзгерген жоқ.',
     'merge.errNoRequest': 'Ол сұрау енді жоқ. Ештеңе өзгерген жоқ.',
     'merge.errNotYours': 'Бұл тіркелгі ол сұрауға жауап бере алмайды. Ештеңе өзгерген жоқ.',
     'merge.errName': 'Жазылған ат әріпке әріп осы тіркелгінің аты емес. Ештеңе өзгерген жоқ.',
@@ -2472,7 +2528,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.mvBookmarks': 'Əlfəcinlər: {count}',
     'merge.mvGuardianships': 'Qəyyumluq əlaqələri: {count}',
     'merge.stayed': 'Bu hesabda eynisi artıq olduğu üçün bağlanmış hesabda qalan qeydlər: {count}.',
-    'merge.asked': 'Sorğu digər hesabda gözləyir. Onunla razılaşmaq üçün orada daxil olun.',
+    'merge.asked':
+      'Sorğu qeydə alındı. Həmin ünvan bir hesaba məxsusdursa, sorğu orada gözləyir: onunla razılaşmaq üçün həmin hesaba daxil olun. Ünvanın hesabı olub-olmadığı sizə deyilmir.',
     'merge.withdrawn': 'Sorğu geri götürüldü. Heç nə köçürülmədi.',
     'merge.merged': 'Hesablar birləşdirildi. Digər hesab bağlıdır.',
     'merge.declined': 'İmtina edildi. Hər iki hesab olduğu kimidir.',
@@ -2484,6 +2541,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Bu, elə bu hesabın ünvanıdır. Digərinin, yəni saxlamaq istədiyiniz hesabın ünvanını yazın.',
     'merge.errPending':
       'Bu hesabdan bir sorğu artıq gözləyir. Başqa hesabdan xahiş etməzdən əvvəl onu geri götürün.',
+    'merge.errTooMany':
+      'Bu hesab bir gündə həddən çox dəfə birləşdirmə xahiş edib. Sabah yenidən cəhd edin. Heç nə dəyişmədi.',
     'merge.errNoRequest': 'Həmin sorğu artıq yoxdur. Heç nə dəyişmədi.',
     'merge.errNotYours': 'Bu hesab həmin sorğuya cavab verə bilməz. Heç nə dəyişmədi.',
     'merge.errName': 'Yazılan ad hərfbəhərf bu hesabın adı deyil. Heç nə dəyişmədi.',
@@ -2586,7 +2645,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.mvGuardianships': 'Пайвандҳои сарпарастӣ: {count}',
     'merge.stayed':
       'Сабтҳое, ки бо ҳисоби басташуда монданд, зеро ин ҳисоб аллакай ҳамон чизро дошт: {count}.',
-    'merge.asked': 'Дархост дар ҳисоби дигар мунтазир аст. Барои розӣ шудан ба он, он ҷо дароед.',
+    'merge.asked':
+      'Дархост сабт шуд. Агар он нишонӣ аз они ягон ҳисоб бошад, дархост он ҷо мунтазир аст: барои розӣ шудан ба он, ба ҳамон ҳисоб дароед. Ба шумо гуфта намешавад, ки он нишонӣ ҳисоб дорад ё не.',
     'merge.withdrawn': 'Дархост бозпас гирифта шуд. Ҳеҷ чиз гузаронида нашуд.',
     'merge.merged': 'Ҳисобҳо якҷоя шуданд. Ҳисоби дигар баста аст.',
     'merge.declined': 'Рад карда шуд. Ҳар ду ҳисоб ҳамон тавранд, ки буданд.',
@@ -2598,6 +2658,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Ин нишонии худи ҳамин ҳисоб аст. Нишонии ҳисоби дигарро нависед, яъне ҳисоберо, ки нигоҳ доштан мехоҳед.',
     'merge.errPending':
       'Як дархост аз ин ҳисоб аллакай мунтазир аст. Пеш аз дархост аз ҳисоби дигар онро бозпас гиред.',
+    'merge.errTooMany':
+      'Ин ҳисоб дар як рӯз аз ҳад зиёд якҷоякуниро дархост кард. Пагоҳ дубора кӯшиш кунед. Ҳеҷ чиз тағйир наёфт.',
     'merge.errNoRequest': 'Он дархост дигар нест. Ҳеҷ чиз тағйир наёфт.',
     'merge.errNotYours': 'Ин ҳисоб ба он дархост ҷавоб дода наметавонад. Ҳеҷ чиз тағйир наёфт.',
     'merge.errName': 'Номи навишташуда ҳарф ба ҳарф номи ин ҳисоб нест. Ҳеҷ чиз тағйир наёфт.',
@@ -2702,7 +2764,7 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.stayed':
       'Ушул аккаунтта дал ошондой нерсе мурунтан болгондуктан, жабылган аккаунтта калган жазуулар: {count}.',
     'merge.asked':
-      'Суроо-талап экинчи аккаунтта күтүп турат. Ага макул болуу үчүн ошол жерде кириңиз.',
+      'Суроо-талап катталды. Эгер ал дарек бир аккаунттуку болсо, суроо-талап ошол жерде күтүп турат: ага макул болуу үчүн ошол аккаунтка кириңиз. Даректин аккаунту бар-жогу сизге айтылбайт.',
     'merge.withdrawn': 'Суроо-талап кайтарып алынды. Эч нерсе көчүрүлгөн жок.',
     'merge.merged': 'Аккаунттар бириктирилди. Экинчи аккаунт жабылган.',
     'merge.declined': 'Баш тартылды. Эки аккаунт тең мурдагыдай.',
@@ -2714,6 +2776,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Бул ушул эле аккаунттун дареги. Экинчисинин, башкача айтканда сактап калгыңыз келген аккаунттун дарегин жазыңыз.',
     'merge.errPending':
       'Ушул аккаунттан бир суроо-талап мурунтан күтүп турат. Башка аккаунттан суроодон мурун аны кайтарып алыңыз.',
+    'merge.errTooMany':
+      'Бул аккаунт бир күндө бириктирүүнү өтө көп жолу сурады. Эртең кайра аракет кылыңыз. Эч нерсе өзгөргөн жок.',
     'merge.errNoRequest': 'Ал суроо-талап эми жок. Эч нерсе өзгөргөн жок.',
     'merge.errNotYours': 'Бул аккаунт ал суроо-талапка жооп бере албайт. Эч нерсе өзгөргөн жок.',
     'merge.errName': 'Жазылган ат тамгама-тамга ушул аккаунттун аты эмес. Эч нерсе өзгөргөн жок.',
@@ -2817,7 +2881,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.mvGuardianships': 'Hossarlyk baglanyşyklary: {count}',
     'merge.stayed':
       'Şu hasapda şonuň ýaly zat eýýäm bolany üçin ýapylan hasapda galan ýazgylar: {count}.',
-    'merge.asked': 'Haýyş beýleki hasapda garaşýar. Oňa razy bolmak üçin şol ýerde giriň.',
+    'merge.asked':
+      'Haýyş hasaba alyndy. Eger şol salgy bir hasabyňky bolsa, haýyş şol ýerde garaşýar: oňa razy bolmak üçin şol hasaba giriň. Salgynyň hasabynyň bardygy ýa-da ýokdugy size aýdylmaýar.',
     'merge.withdrawn': 'Haýyş yzyna alyndy. Hiç zat geçirilmedi.',
     'merge.merged': 'Hasaplar birleşdirildi. Beýleki hasap ýapyk.',
     'merge.declined': 'Ret edildi. Iki hasap hem öňküsi ýaly.',
@@ -2829,6 +2894,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Bu şu hasabyň öz salgysy. Beýlekisiniň, ýagny saklamak isleýän hasabyňyzyň salgysyny ýazyň.',
     'merge.errPending':
       'Şu hasapdan bir haýyş eýýäm garaşýar. Başga hasapdan soramazdan öň ony yzyna alyň.',
+    'merge.errTooMany':
+      'Bu hasap bir günde birleşdirmegi aşa köp gezek sorady. Ertir täzeden synanyşyň. Hiç zat üýtgemedi.',
     'merge.errNoRequest': 'Ol haýyş indi ýok. Hiç zat üýtgemedi.',
     'merge.errNotYours': 'Bu hasap ol haýyşa jogap berip bilmeýär. Hiç zat üýtgemedi.',
     'merge.errName': 'Ýazylan at harpma-harp şu hasabyň ady däl. Hiç zat üýtgemedi.',
@@ -2932,7 +2999,7 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.stayed':
       'இந்தக் கணக்கில் அதே விஷயம் ஏற்கெனவே இருந்ததால், மூடப்பட்ட கணக்கிடமே தங்கிய பதிவுகள்: {count}.',
     'merge.asked':
-      'கோரிக்கை மற்றக் கணக்கில் காத்திருக்கிறது. அதை ஒப்புக்கொள்ள அங்கே உள்நுழையுங்கள்.',
+      'கோரிக்கை பதிவு செய்யப்பட்டது. அந்த முகவரி ஒரு கணக்குடையதாக இருந்தால், கோரிக்கை அங்கே காத்திருக்கிறது: அதை ஒப்புக்கொள்ள அந்தக் கணக்கில் உள்நுழையுங்கள். அந்த முகவரிக்குக் கணக்கு உள்ளதா என்பது உங்களுக்குச் சொல்லப்படாது.',
     'merge.withdrawn': 'கோரிக்கை திரும்பப் பெறப்பட்டது. எதுவும் நகர்த்தப்படவில்லை.',
     'merge.merged': 'கணக்குகள் இணைக்கப்பட்டன. மற்றக் கணக்கு மூடப்பட்டுள்ளது.',
     'merge.declined': 'மறுக்கப்பட்டது. இரண்டு கணக்குகளும் இருந்தபடியே உள்ளன.',
@@ -2946,6 +3013,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'அது இந்தக் கணக்கின் முகவரி. மற்றக் கணக்கின், அதாவது நீங்கள் வைத்திருக்க விரும்பும் கணக்கின் முகவரியைத் தட்டச்சு செய்யுங்கள்.',
     'merge.errPending':
       'இந்தக் கணக்கிலிருந்து ஒரு கோரிக்கை ஏற்கெனவே காத்திருக்கிறது. வேறொரு கணக்கிடம் கேட்கும் முன் அதைத் திரும்பப் பெறுங்கள்.',
+    'merge.errTooMany':
+      'இந்தக் கணக்கு ஒரே நாளில் மிக அதிக முறை இணைப்பைக் கோரியுள்ளது. நாளை மீண்டும் முயலுங்கள். எதுவும் மாற்றப்படவில்லை.',
     'merge.errNoRequest': 'அந்தக் கோரிக்கை இனி இல்லை. எதுவும் மாற்றப்படவில்லை.',
     'merge.errNotYours':
       'இந்தக் கணக்கால் அந்தக் கோரிக்கைக்குப் பதில் அளிக்க முடியாது. எதுவும் மாற்றப்படவில்லை.',
@@ -3048,7 +3117,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'merge.mvGuardianships': 'अभिभावक सम्बन्धहरू: {count}',
     'merge.stayed':
       'बन्द गरिएको खातासँगै रहेका अभिलेखहरू, किनभने यो खातासँग त्यही कुरा पहिल्यै थियो: {count}।',
-    'merge.asked': 'अनुरोध अर्को खातामा पर्खिरहेको छ। त्यसमा सहमति दिन त्यहाँ साइन इन गर्नुहोस्।',
+    'merge.asked':
+      'अनुरोध दर्ता भयो। त्यो ठेगाना कुनै खाताको हो भने अनुरोध त्यहाँ पर्खिरहेको छ: त्यसमा सहमत हुन त्यस खातामा साइन इन गर्नुहोस्। त्यो ठेगानाको खाता छ कि छैन भनेर तपाईंलाई भनिँदैन।',
     'merge.withdrawn': 'अनुरोध फिर्ता लिइयो। केही पनि सारिएन।',
     'merge.merged': 'खाताहरू गाभिए। अर्को खाता बन्द छ।',
     'merge.declined': 'अस्वीकार गरियो। दुवै खाता पहिले जस्तै छन्।',
@@ -3060,6 +3130,8 @@ export const MERGE: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'त्यो यही खाताको ठेगाना हो। अर्को खाताको ठेगाना लेख्नुहोस्, जुन तपाईं राख्न चाहनुहुन्छ।',
     'merge.errPending':
       'यो खाताको एउटा अनुरोध पहिल्यै पर्खिरहेको छ। अर्को खातालाई अनुरोध गर्नुअघि त्यसलाई फिर्ता लिनुहोस्।',
+    'merge.errTooMany':
+      'यस खाताले एकै दिनमा धेरै पटक मर्जको अनुरोध गरेको छ। भोलि फेरि प्रयास गर्नुहोस्। केही परिवर्तन भएन।',
     'merge.errNoRequest': 'त्यो अनुरोध अब छैन। केही पनि परिवर्तन भएन।',
     'merge.errNotYours': 'यो खाताले त्यो अनुरोधको जवाफ दिन सक्दैन। केही पनि परिवर्तन भएन।',
     'merge.errName': 'लेखिएको नाम अक्षर-अक्षर यो खाताको नाम होइन। केही पनि परिवर्तन भएन।',

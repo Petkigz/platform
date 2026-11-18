@@ -1201,6 +1201,8 @@ export const en = {
   'buy.noProviderLead': 'No payment provider is connected yet.',
   'buy.noProviderBody':
     'You can place this order and it will be saved, but it cannot be paid until a provider is connected. Nothing is charged, and the course does not open until payment is confirmed.',
+  'buy.noProviderHere':
+    'No payment service connected to this platform collects the currency this course is priced in here: {currency}.',
   'buy.closedLead': 'Checkout is not open yet.',
   'buy.closedBody':
     'This platform is not taking payment for courses at the moment, so no order can be placed and nothing has been charged. Free courses can still be joined from the course page.',
@@ -1234,6 +1236,8 @@ export const en = {
   'buy.payWith': 'Pay with',
   'buy.phoneLabel': 'Mobile money number',
   'buy.phoneNote': 'The number that will be asked to approve the payment.',
+  'buy.phoneCountry':
+    'A number written without a country code is read as a number of this country: {country}. Its code: {dial}.',
   'buy.continue': 'Continue to payment',
   'buy.starting': 'Starting…',
   'buy.noProviderNote': 'This order will be recorded but cannot be paid yet.',
@@ -1741,7 +1745,8 @@ export const en = {
   'merge.mvGuardianships': 'Guardian links: {count}',
   'merge.stayed':
     'Records that stayed with the closed account, because this account already held the same thing: {count}.',
-  'merge.asked': 'The request is waiting on the other account. Sign in there to agree to it.',
+  'merge.asked':
+    'The request is recorded. If that address belongs to an account, the request is waiting there: sign in to that account to agree to it. You are not told whether the address has an account.',
   'merge.withdrawn': 'The request is withdrawn. Nothing was moved.',
   'merge.merged': 'The accounts are merged. The other account is closed.',
   'merge.declined': 'Declined. Both accounts are as they were.',
@@ -1753,6 +1758,8 @@ export const en = {
     'That is the address of this account. Type the address of the other one, the account you want to keep.',
   'merge.errPending':
     'A request from this account is already waiting. Withdraw it before you ask another account.',
+  'merge.errTooMany':
+    'This account has asked for a merge too many times in one day. Try again tomorrow. Nothing was changed.',
   'merge.errNoRequest': 'That request is no longer there. Nothing was changed.',
   'merge.errNotYours': 'This account cannot answer that request. Nothing was changed.',
   'merge.errName':

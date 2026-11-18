@@ -65,6 +65,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.noProviderLead': 'لم تُربط أي جهة دفع بعد.',
     'buy.noProviderBody':
       'يمكنك تقديم هذا الطلب وسيُحفظ، لكن لا يمكن دفعه حتى تُربط جهة دفع. لا يُخصم أي مبلغ، ولا تُفتح الدورة حتى يتأكّد الدفع.',
+    'buy.noProviderHere':
+      'لا توجد جهة دفع مربوطة بهذه المنصة تحصّل العملة التي سُعّرت بها هذه الدورة هنا: {currency}.',
     'buy.closedLead': 'الشراء غير مفتوح بعد.',
     'buy.closedBody':
       'هذه المنصّة لا تستقبل حاليًا مدفوعات للدورات، فلا يمكن تقديم أي طلب ولم يُخصم أي مبلغ. ما زال الانضمام إلى الدورات المجانية ممكنًا من صفحة الدورة.',
@@ -98,6 +100,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.payWith': 'ادفع عبر',
     'buy.phoneLabel': 'رقم محفظة الهاتف المحمول',
     'buy.phoneNote': 'الرقم الذي سيُطلب منه الموافقة على الدفع.',
+    'buy.phoneCountry':
+      'الرقم المكتوب بلا رمز بلد يُقرأ على أنه رقم من هذا البلد: {country}. رمزه: {dial}.',
     'buy.continue': 'المتابعة إلى الدفع',
     'buy.starting': 'جارٍ البدء…',
     'buy.noProviderNote': 'سيُسجَّل هذا الطلب، لكن لا يمكن دفعه بعد.',
@@ -156,6 +160,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.noProviderLead': 'ابھی کوئی ادائیگی فراہم کنندہ منسلک نہیں ہے۔',
     'buy.noProviderBody':
       'آپ یہ آرڈر دے سکتے ہیں اور یہ محفوظ ہو جائے گا، لیکن جب تک کوئی فراہم کنندہ منسلک نہ ہو اس کی ادائیگی نہیں ہو سکتی۔ کوئی رقم نہیں لی جاتی، اور ادائیگی کی تصدیق تک کورس نہیں کھلتا۔',
+    'buy.noProviderHere':
+      'اس پلیٹ فارم سے منسلک کوئی ادائیگی سروس وہ کرنسی وصول نہیں کرتی جس میں یہاں اس کورس کی قیمت رکھی گئی ہے: {currency}۔',
     'buy.closedLead': 'چیک آؤٹ ابھی کھلا نہیں ہے۔',
     'buy.closedBody':
       'یہ پلیٹ فارم فی الحال کورسز کی ادائیگی نہیں لے رہا، اس لیے کوئی آرڈر نہیں دیا جا سکتا اور کوئی رقم نہیں لی گئی۔ مفت کورسز میں کورس کے صفحے سے اب بھی شامل ہوا جا سکتا ہے۔',
@@ -190,6 +196,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.payWith': 'ادائیگی کا ذریعہ',
     'buy.phoneLabel': 'موبائل منی نمبر',
     'buy.phoneNote': 'وہ نمبر جس سے ادائیگی کی منظوری مانگی جائے گی۔',
+    'buy.phoneCountry':
+      'ملک کے کوڈ کے بغیر لکھا گیا نمبر اس ملک کا نمبر سمجھا جاتا ہے: {country}۔ اس کا کوڈ: {dial}۔',
     'buy.continue': 'ادائیگی کی طرف بڑھیں',
     'buy.starting': 'شروع ہو رہا ہے…',
     'buy.noProviderNote': 'یہ آرڈر درج ہو جائے گا لیکن ابھی اس کی ادائیگی نہیں ہو سکتی۔',
@@ -254,6 +262,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.noProviderLead': 'هنوز هیچ ارائه‌دهندهٔ پرداختی متصل نشده است.',
     'buy.noProviderBody':
       'می‌توانید این سفارش را ثبت کنید و ذخیره می‌شود، اما تا وقتی ارائه‌دهنده‌ای متصل نشود قابل پرداخت نیست. هیچ مبلغی برداشت نمی‌شود و دوره تا تأیید پرداخت باز نمی‌شود.',
+    'buy.noProviderHere':
+      'هیچ سرویس پرداختی که به این سکو متصل است ارزی را که این دوره در اینجا با آن قیمت‌گذاری شده دریافت نمی‌کند: {currency}.',
     'buy.closedLead': 'تسویه‌حساب هنوز باز نیست.',
     'buy.closedBody':
       'این سکو در حال حاضر برای دوره‌ها پرداخت نمی‌پذیرد، پس هیچ سفارشی نمی‌توان ثبت کرد و هیچ مبلغی برداشت نشده است. همچنان می‌توان از صفحهٔ دوره به دوره‌های رایگان پیوست.',
@@ -287,6 +297,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.payWith': 'پرداخت با',
     'buy.phoneLabel': 'شمارهٔ پول همراه',
     'buy.phoneNote': 'شماره‌ای که از آن خواسته می‌شود پرداخت را تأیید کند.',
+    'buy.phoneCountry':
+      'شماره‌ای که بدون کد کشور نوشته شود، شماره‌ای از این کشور خوانده می‌شود: {country}. کد آن: {dial}.',
     'buy.continue': 'ادامه به پرداخت',
     'buy.starting': 'در حال شروع…',
     'buy.noProviderNote': 'این سفارش ثبت می‌شود اما هنوز قابل پرداخت نیست.',
@@ -350,6 +362,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.noProviderLead': 'هنوز هیچ ارائه‌کنندهٔ پرداخت وصل نشده است.',
     'buy.noProviderBody':
       'می‌توانید این فرمایش را بدهید و ذخیره می‌شود، اما تا وقتی ارائه‌کننده‌ای وصل نشود قابل پرداخت نیست. هیچ مبلغی گرفته نمی‌شود و کورس تا تأیید پرداخت باز نمی‌شود.',
+    'buy.noProviderHere':
+      'هیچ خدمت پرداختی که به این پلتفرم وصل است اسعاری را که این دوره در اینجا با آن قیمت‌گذاری شده نمی‌گیرد: {currency}.',
     'buy.closedLead': 'خرید هنوز باز نیست.',
     'buy.closedBody':
       'این پلتفرم فعلاً برای کورس‌ها پرداخت نمی‌پذیرد، پس هیچ فرمایشی داده نمی‌شود و هیچ مبلغی گرفته نشده است. هنوز هم می‌توان از صفحهٔ کورس به کورس‌های رایگان یکجا شد.',
@@ -383,6 +397,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.payWith': 'پرداخت با',
     'buy.phoneLabel': 'شمارهٔ پول موبایل',
     'buy.phoneNote': 'شماره‌ای که از آن خواسته می‌شود پرداخت را تأیید کند.',
+    'buy.phoneCountry':
+      'شماره‌ای که بدون کود کشور نوشته شود، شماره‌ای از این کشور خوانده می‌شود: {country}. کود آن: {dial}.',
     'buy.continue': 'ادامه به پرداخت',
     'buy.starting': 'در حال شروع…',
     'buy.noProviderNote': 'این فرمایش ثبت می‌شود اما هنوز قابل پرداخت نیست.',
@@ -446,6 +462,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.noProviderLead': 'Henüz bağlı bir ödeme sağlayıcısı yok.',
     'buy.noProviderBody':
       'Bu siparişi verebilirsiniz ve kaydedilir, ancak bir sağlayıcı bağlanana kadar ödenemez. Hiçbir ücret alınmaz ve ödeme onaylanana kadar kurs açılmaz.',
+    'buy.noProviderHere':
+      'Bu platforma bağlı hiçbir ödeme hizmeti, bu kursun burada fiyatlandırıldığı para birimini tahsil etmiyor: {currency}.',
     'buy.closedLead': 'Ödeme sayfası henüz açık değil.',
     'buy.closedBody':
       'Bu platform şu anda kurslar için ödeme almıyor; bu yüzden sipariş verilemez ve hiçbir ücret alınmadı. Ücretsiz kurslara kurs sayfasından yine katılabilirsiniz.',
@@ -480,6 +498,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.payWith': 'Ödeme yöntemi',
     'buy.phoneLabel': 'Mobil para numarası',
     'buy.phoneNote': 'Ödemeyi onaylaması istenecek numara.',
+    'buy.phoneCountry':
+      'Ülke kodu olmadan yazılan bir numara şu ülkenin numarası olarak okunur: {country}. Kodu: {dial}.',
     'buy.continue': 'Ödemeye devam et',
     'buy.starting': 'Başlatılıyor…',
     'buy.noProviderNote': 'Bu sipariş kaydedilecek ama henüz ödenemez.',
@@ -542,6 +562,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.noProviderLead': 'Belum ada penyedia pembayaran yang terhubung.',
     'buy.noProviderBody':
       'Anda dapat membuat pesanan ini dan pesanan akan disimpan, tetapi belum dapat dibayar sampai ada penyedia yang terhubung. Tidak ada yang ditagih, dan kursus tidak terbuka sampai pembayaran dikonfirmasi.',
+    'buy.noProviderHere':
+      'Tidak ada layanan pembayaran yang terhubung ke platform ini yang menerima mata uang harga kursus ini di sini: {currency}.',
     'buy.closedLead': 'Pembayaran belum dibuka.',
     'buy.closedBody':
       'Platform ini sedang tidak menerima pembayaran untuk kursus, jadi pesanan tidak dapat dibuat dan tidak ada yang ditagih. Kursus gratis tetap dapat diikuti dari halaman kursus.',
@@ -577,6 +599,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.payWith': 'Bayar dengan',
     'buy.phoneLabel': 'Nomor uang seluler',
     'buy.phoneNote': 'Nomor yang akan diminta menyetujui pembayaran.',
+    'buy.phoneCountry':
+      'Nomor yang ditulis tanpa kode negara dibaca sebagai nomor dari negara ini: {country}. Kodenya: {dial}.',
     'buy.continue': 'Lanjutkan ke pembayaran',
     'buy.starting': 'Memulai…',
     'buy.noProviderNote': 'Pesanan ini akan dicatat tetapi belum dapat dibayar.',
@@ -643,6 +667,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.noProviderLead': 'Belum ada penyedia pembayaran yang disambungkan.',
     'buy.noProviderBody':
       'Anda boleh membuat pesanan ini dan ia akan disimpan, tetapi ia tidak boleh dibayar sehingga penyedia disambungkan. Tiada apa-apa yang dicaj, dan kursus tidak dibuka sehingga pembayaran disahkan.',
+    'buy.noProviderHere':
+      'Tiada perkhidmatan pembayaran yang disambungkan ke platform ini menerima mata wang harga kursus ini di sini: {currency}.',
     'buy.closedLead': 'Pembayaran belum dibuka.',
     'buy.closedBody':
       'Platform ini tidak menerima bayaran untuk kursus buat masa ini, jadi pesanan tidak boleh dibuat dan tiada apa-apa yang dicaj. Kursus percuma masih boleh disertai dari halaman kursus.',
@@ -678,6 +704,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.payWith': 'Bayar dengan',
     'buy.phoneLabel': 'Nombor wang mudah alih',
     'buy.phoneNote': 'Nombor yang akan diminta meluluskan pembayaran.',
+    'buy.phoneCountry':
+      'Nombor yang ditulis tanpa kod negara dibaca sebagai nombor dari negara ini: {country}. Kodnya: {dial}.',
     'buy.continue': 'Teruskan ke pembayaran',
     'buy.starting': 'Sedang bermula…',
     'buy.noProviderNote': 'Pesanan ini akan direkodkan tetapi belum boleh dibayar.',
@@ -744,6 +772,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.noProviderLead': 'এখনও কোনো পেমেন্ট প্রদানকারী সংযুক্ত হয়নি।',
     'buy.noProviderBody':
       'আপনি এই অর্ডারটি দিতে পারেন এবং এটি সংরক্ষিত হবে, কিন্তু কোনো প্রদানকারী সংযুক্ত না হওয়া পর্যন্ত এর মূল্য পরিশোধ করা যাবে না। কোনো টাকা নেওয়া হয় না, এবং পেমেন্ট নিশ্চিত না হওয়া পর্যন্ত কোর্স খোলে না।',
+    'buy.noProviderHere':
+      'এই প্ল্যাটফর্মে সংযুক্ত কোনো পেমেন্ট সেবা সেই মুদ্রা গ্রহণ করে না যে মুদ্রায় এখানে এই কোর্সের মূল্য ধরা হয়েছে: {currency}।',
     'buy.closedLead': 'চেকআউট এখনও খোলা হয়নি।',
     'buy.closedBody':
       'এই প্ল্যাটফর্ম এই মুহূর্তে কোর্সের জন্য পেমেন্ট নিচ্ছে না, তাই কোনো অর্ডার দেওয়া যাবে না এবং কোনো টাকা নেওয়া হয়নি। বিনামূল্যের কোর্সে এখনও কোর্সের পৃষ্ঠা থেকে যোগ দেওয়া যায়।',
@@ -778,6 +808,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.payWith': 'যা দিয়ে পরিশোধ করবেন',
     'buy.phoneLabel': 'মোবাইল মানি নম্বর',
     'buy.phoneNote': 'যে নম্বরে পেমেন্ট অনুমোদন করতে বলা হবে।',
+    'buy.phoneCountry':
+      'দেশের কোড ছাড়া লেখা নম্বরকে এই দেশের নম্বর হিসেবে পড়া হয়: {country}। এর কোড: {dial}।',
     'buy.continue': 'পেমেন্টে এগিয়ে যান',
     'buy.starting': 'শুরু হচ্ছে…',
     'buy.noProviderNote': 'এই অর্ডারটি নথিভুক্ত হবে, কিন্তু এখনও এর মূল্য পরিশোধ করা যাবে না।',
@@ -844,6 +876,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.noProviderLead': 'अभी कोई भुगतान प्रदाता जुड़ा नहीं है।',
     'buy.noProviderBody':
       'आप यह ऑर्डर दे सकते हैं और यह सहेज लिया जाएगा, लेकिन जब तक कोई प्रदाता नहीं जुड़ता, इसका भुगतान नहीं हो सकता। कोई राशि नहीं ली जाती, और भुगतान की पुष्टि होने तक कोर्स नहीं खुलता।',
+    'buy.noProviderHere':
+      'इस प्लेटफ़ॉर्म से जुड़ी कोई भुगतान सेवा वह मुद्रा नहीं लेती जिसमें यहाँ इस कोर्स की क़ीमत रखी गई है: {currency}।',
     'buy.closedLead': 'चेकआउट अभी खुला नहीं है।',
     'buy.closedBody':
       'यह प्लैटफ़ॉर्म फ़िलहाल कोर्सों के लिए भुगतान नहीं ले रहा है, इसलिए कोई ऑर्डर नहीं दिया जा सकता और कोई राशि नहीं ली गई है। निःशुल्क कोर्सों में कोर्स के पृष्ठ से अब भी शामिल हुआ जा सकता है।',
@@ -878,6 +912,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.payWith': 'भुगतान का तरीक़ा',
     'buy.phoneLabel': 'मोबाइल मनी नंबर',
     'buy.phoneNote': 'वह नंबर जिससे भुगतान स्वीकृत करने को कहा जाएगा।',
+    'buy.phoneCountry':
+      'देश के कोड के बिना लिखा गया नंबर इस देश का नंबर माना जाता है: {country}। इसका कोड: {dial}।',
     'buy.continue': 'भुगतान की ओर बढ़ें',
     'buy.starting': 'शुरू हो रहा है…',
     'buy.noProviderNote': 'यह ऑर्डर दर्ज हो जाएगा, लेकिन अभी इसका भुगतान नहीं हो सकता।',
@@ -944,6 +980,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.noProviderLead': 'Aucun prestataire de paiement n’est encore connecté.',
     'buy.noProviderBody':
       'Vous pouvez passer cette commande et elle sera enregistrée, mais elle ne pourra pas être payée tant qu’aucun prestataire n’est connecté. Rien n’est débité, et le cours ne s’ouvre pas avant la confirmation du paiement.',
+    'buy.noProviderHere':
+      'Aucun service de paiement connecté à cette plateforme n’encaisse la devise dans laquelle ce cours est tarifé ici : {currency}.',
     'buy.closedLead': 'Le paiement n’est pas encore ouvert.',
     'buy.closedBody':
       'Cette plateforme n’accepte pas de paiement pour les cours en ce moment ; aucune commande ne peut donc être passée et rien n’a été débité. Il reste possible de rejoindre les cours gratuits depuis la page du cours.',
@@ -979,6 +1017,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.payWith': 'Payer avec',
     'buy.phoneLabel': 'Numéro de paiement mobile',
     'buy.phoneNote': 'Le numéro auquel il sera demandé d’approuver le paiement.',
+    'buy.phoneCountry':
+      'Un numéro écrit sans indicatif de pays est lu comme un numéro de ce pays : {country}. Son indicatif : {dial}.',
     'buy.continue': 'Continuer vers le paiement',
     'buy.starting': 'Démarrage…',
     'buy.noProviderNote': 'Cette commande sera enregistrée, mais ne peut pas encore être payée.',
@@ -1047,6 +1087,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.noProviderLead': 'Todavía no hay ningún proveedor de pagos conectado.',
     'buy.noProviderBody':
       'Puede hacer este pedido y quedará guardado, pero no podrá pagarse hasta que se conecte un proveedor. No se cobra nada, y el curso no se abre hasta que se confirme el pago.',
+    'buy.noProviderHere':
+      'Ningún servicio de pagos conectado a esta plataforma cobra en la moneda en la que este curso tiene precio aquí: {currency}.',
     'buy.closedLead': 'El pago todavía no está abierto.',
     'buy.closedBody':
       'Esta plataforma no acepta pagos por cursos en este momento, así que no se puede hacer ningún pedido y no se ha cobrado nada. Sigue siendo posible unirse a los cursos gratuitos desde la página del curso.',
@@ -1083,6 +1125,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.payWith': 'Pagar con',
     'buy.phoneLabel': 'Número de dinero móvil',
     'buy.phoneNote': 'El número al que se pedirá que apruebe el pago.',
+    'buy.phoneCountry':
+      'Un número escrito sin el código del país se lee como un número de este país: {country}. Su código: {dial}.',
     'buy.continue': 'Continuar al pago',
     'buy.starting': 'Iniciando…',
     'buy.noProviderNote': 'Este pedido quedará registrado, pero todavía no puede pagarse.',
@@ -1151,6 +1195,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.noProviderLead': 'Ainda não está ligado nenhum prestador de pagamentos.',
     'buy.noProviderBody':
       'Pode fazer esta encomenda e ela ficará guardada, mas não poderá ser paga enquanto não estiver ligado um prestador. Nada é cobrado, e o curso não abre até o pagamento ser confirmado.',
+    'buy.noProviderHere':
+      'Nenhum serviço de pagamentos ligado a esta plataforma cobra na moeda em que este curso tem preço aqui: {currency}.',
     'buy.closedLead': 'O pagamento ainda não está aberto.',
     'buy.closedBody':
       'Esta plataforma não está a aceitar pagamentos de cursos neste momento, por isso não é possível fazer nenhuma encomenda e nada foi cobrado. Continua a ser possível aderir aos cursos gratuitos a partir da página do curso.',
@@ -1187,6 +1233,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.payWith': 'Pagar com',
     'buy.phoneLabel': 'Número de dinheiro móvel',
     'buy.phoneNote': 'O número ao qual será pedido que aprove o pagamento.',
+    'buy.phoneCountry':
+      'Um número escrito sem o indicativo do país é lido como um número deste país: {country}. O seu indicativo: {dial}.',
     'buy.continue': 'Continuar para o pagamento',
     'buy.starting': 'A iniciar…',
     'buy.noProviderNote': 'Esta encomenda ficará registada, mas ainda não pode ser paga.',
@@ -1254,6 +1302,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.noProviderLead': 'Bado hakuna mtoa huduma wa malipo aliyeunganishwa.',
     'buy.noProviderBody':
       'Unaweza kuweka agizo hili nalo litahifadhiwa, lakini haliwezi kulipiwa hadi mtoa huduma aunganishwe. Hakuna kiasi kinachotozwa, na kozi haifunguki hadi malipo yathibitishwe.',
+    'buy.noProviderHere':
+      'Hakuna huduma ya malipo iliyounganishwa na jukwaa hili inayopokea sarafu ambayo kozi hii imewekewa bei hapa: {currency}.',
     'buy.closedLead': 'Malipo bado hayajafunguliwa.',
     'buy.closedBody':
       'Jukwaa hili halipokei malipo ya kozi kwa sasa, kwa hiyo hakuna agizo linaloweza kuwekwa na hakuna kiasi kilichotozwa. Bado unaweza kujiunga na kozi za bure kutoka kwenye ukurasa wa kozi.',
@@ -1288,6 +1338,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.payWith': 'Lipa kwa',
     'buy.phoneLabel': 'Namba ya pesa za simu',
     'buy.phoneNote': 'Namba itakayoombwa kuidhinisha malipo.',
+    'buy.phoneCountry':
+      'Namba iliyoandikwa bila msimbo wa nchi husomwa kama namba ya nchi hii: {country}. Msimbo wake: {dial}.',
     'buy.continue': 'Endelea kwenye malipo',
     'buy.starting': 'Inaanza…',
     'buy.noProviderNote': 'Agizo hili litarekodiwa lakini bado haliwezi kulipiwa.',
@@ -1355,6 +1407,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.noProviderLead': 'Geen betalingsverskaffer is nog gekoppel nie.',
     'buy.noProviderBody':
       'Jy kan hierdie bestelling plaas en dit sal gestoor word, maar dit kan nie betaal word voordat ’n verskaffer gekoppel is nie. Niks word gehef nie, en die kursus gaan nie oop voordat betaling bevestig is nie.',
+    'buy.noProviderHere':
+      'Geen betalingsdiens wat aan hierdie platform gekoppel is, vorder die geldeenheid in waarin hierdie kursus hier geprys is nie: {currency}.',
     'buy.closedLead': 'Betaling is nog nie oop nie.',
     'buy.closedBody':
       'Hierdie platform neem tans nie betaling vir kursusse nie, dus kan geen bestelling geplaas word nie en niks is gehef nie. Daar kan steeds vanaf die kursusblad by gratis kursusse aangesluit word.',
@@ -1389,6 +1443,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.payWith': 'Betaal met',
     'buy.phoneLabel': 'Mobielegeldnommer',
     'buy.phoneNote': 'Die nommer wat gevra sal word om die betaling goed te keur.',
+    'buy.phoneCountry':
+      '’n Nommer wat sonder ’n landkode geskryf is, word gelees as ’n nommer van hierdie land: {country}. Sy kode: {dial}.',
     'buy.continue': 'Gaan voort na betaling',
     'buy.starting': 'Begin tans…',
     'buy.noProviderNote':
@@ -1455,6 +1511,7 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.hasAlready': '{name} 已拥有此课程。本次购买是为另一位学习者。',
     'buy.noProviderLead': '尚未接入任何支付服务商。',
     'buy.noProviderBody': '您可以下此订单，订单会被保存，但在接入支付服务商之前无法付款。不会收取任何费用，在付款确认之前课程不会开放。',
+    'buy.noProviderHere': '接入本平台的支付服务中，没有一个收取此课程在这里定价所用的货币：{currency}。',
     'buy.closedLead': '结账尚未开放。',
     'buy.closedBody': '本平台目前不接受课程付款，因此无法下单，也未收取任何费用。免费课程仍可从课程页面加入。',
     'buy.notOnSale': '此课程目前不向您出售，因此无需付款。',
@@ -1485,6 +1542,7 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.payWith': '支付方式',
     'buy.phoneLabel': '移动支付号码',
     'buy.phoneNote': '将被要求批准付款的号码。',
+    'buy.phoneCountry': '未写国家代码的号码会被当作这个国家的号码：{country}。它的代码：{dial}。',
     'buy.continue': '继续付款',
     'buy.starting': '正在开始…',
     'buy.noProviderNote': '此订单会被记录，但目前还无法付款。',
@@ -1536,6 +1594,7 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.hasAlready': '{name} 已擁有此課程。本次購買是為另一位學習者。',
     'buy.noProviderLead': '尚未串接任何付款服務商。',
     'buy.noProviderBody': '您可以下此訂單，訂單會被儲存，但在串接付款服務商之前無法付款。不會收取任何費用，在付款確認之前課程不會開放。',
+    'buy.noProviderHere': '串接本平台的付款服務中，沒有一個收取此課程在這裡定價所用的貨幣：{currency}。',
     'buy.closedLead': '結帳尚未開放。',
     'buy.closedBody': '本平台目前不接受課程付款，因此無法下單，也未收取任何費用。免費課程仍可從課程頁面加入。',
     'buy.notOnSale': '此課程目前不向您販售，因此無需付款。',
@@ -1566,6 +1625,7 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.payWith': '付款方式',
     'buy.phoneLabel': '行動支付號碼',
     'buy.phoneNote': '將被要求核准付款的號碼。',
+    'buy.phoneCountry': '未寫國碼的號碼會被當作這個國家的號碼：{country}。它的國碼：{dial}。',
     'buy.continue': '繼續付款',
     'buy.starting': '正在開始…',
     'buy.noProviderNote': '此訂單會被記錄，但目前還無法付款。',
@@ -1622,6 +1682,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.noProviderLead': 'Chưa có nhà cung cấp thanh toán nào được kết nối.',
     'buy.noProviderBody':
       'Bạn có thể đặt đơn hàng này và đơn sẽ được lưu, nhưng chưa thể thanh toán cho đến khi có nhà cung cấp được kết nối. Không có khoản nào bị thu, và khoá học không mở cho đến khi khoản thanh toán được xác nhận.',
+    'buy.noProviderHere':
+      'Không có dịch vụ thanh toán nào kết nối với nền tảng này thu loại tiền mà khóa học này được định giá ở đây: {currency}.',
     'buy.closedLead': 'Trang thanh toán chưa mở.',
     'buy.closedBody':
       'Nền tảng này hiện không nhận thanh toán cho khoá học, vì vậy không thể đặt đơn hàng và chưa có khoản nào bị thu. Bạn vẫn có thể tham gia các khoá học miễn phí từ trang khoá học.',
@@ -1655,6 +1717,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.payWith': 'Thanh toán bằng',
     'buy.phoneLabel': 'Số ví tiền di động',
     'buy.phoneNote': 'Số điện thoại sẽ được yêu cầu chấp thuận khoản thanh toán.',
+    'buy.phoneCountry':
+      'Số được viết không có mã quốc gia sẽ được đọc là số của quốc gia này: {country}. Mã của quốc gia đó: {dial}.',
     'buy.continue': 'Tiếp tục đến thanh toán',
     'buy.starting': 'Đang bắt đầu…',
     'buy.noProviderNote': 'Đơn hàng này sẽ được ghi lại nhưng chưa thể thanh toán.',
@@ -1719,6 +1783,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.noProviderLead': 'ยังไม่มีผู้ให้บริการชำระเงินที่เชื่อมต่อไว้',
     'buy.noProviderBody':
       'คุณสั่งซื้อรายการนี้ได้และรายการจะถูกบันทึกไว้ แต่จะชำระเงินไม่ได้จนกว่าจะมีผู้ให้บริการเชื่อมต่อ ไม่มีการเรียกเก็บเงินใด ๆ และหลักสูตรจะไม่เปิดจนกว่าจะยืนยันการชำระเงิน',
+    'buy.noProviderHere':
+      'ไม่มีบริการชำระเงินที่เชื่อมต่อกับแพลตฟอร์มนี้รับสกุลเงินที่ใช้ตั้งราคาหลักสูตรนี้ที่นี่: {currency}',
     'buy.closedLead': 'การชำระเงินยังไม่เปิด',
     'buy.closedBody':
       'ขณะนี้แพลตฟอร์มนี้ยังไม่รับชำระเงินค่าหลักสูตร จึงสั่งซื้อไม่ได้และยังไม่มีการเรียกเก็บเงินใด ๆ คุณยังเข้าร่วมหลักสูตรฟรีได้จากหน้าหลักสูตร',
@@ -1752,6 +1818,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.payWith': 'ชำระด้วย',
     'buy.phoneLabel': 'หมายเลขโมบายมันนี่',
     'buy.phoneNote': 'หมายเลขที่จะได้รับคำขอให้อนุมัติการชำระเงิน',
+    'buy.phoneCountry':
+      'หมายเลขที่เขียนโดยไม่มีรหัสประเทศจะถูกอ่านเป็นหมายเลขของประเทศนี้: {country} รหัสของประเทศนี้: {dial}',
     'buy.continue': 'ไปยังการชำระเงิน',
     'buy.starting': 'กำลังเริ่ม…',
     'buy.noProviderNote': 'คำสั่งซื้อนี้จะถูกบันทึกไว้ แต่ยังชำระเงินไม่ได้',
@@ -1817,6 +1885,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.noProviderLead': 'Wala pang nakakonektang tagapagbigay ng pagbabayad.',
     'buy.noProviderBody':
       'Maaari mong ilagay ang order na ito at mase-save ito, pero hindi ito mababayaran hangga’t walang nakakonektang tagapagbigay. Walang sinisingil, at hindi magbubukas ang kurso hangga’t hindi nakukumpirma ang bayad.',
+    'buy.noProviderHere':
+      'Walang serbisyo sa pagbabayad na nakakonekta sa platapormang ito ang tumatanggap ng salaping ginamit sa presyo ng kursong ito rito: {currency}.',
     'buy.closedLead': 'Hindi pa bukas ang pagbabayad.',
     'buy.closedBody':
       'Hindi tumatanggap ng bayad para sa mga kurso ang platapormang ito sa ngayon, kaya walang order na mailalagay at walang siningil. Maaari pa ring sumali sa mga libreng kurso mula sa pahina ng kurso.',
@@ -1852,6 +1922,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.payWith': 'Magbayad gamit ang',
     'buy.phoneLabel': 'Numero ng mobile money',
     'buy.phoneNote': 'Ang numerong hihilingang aprubahan ang bayad.',
+    'buy.phoneCountry':
+      'Ang numerong isinulat nang walang code ng bansa ay binabasa bilang numero ng bansang ito: {country}. Ang code nito: {dial}.',
     'buy.continue': 'Magpatuloy sa pagbabayad',
     'buy.starting': 'Nagsisimula…',
     'buy.noProviderNote': 'Itatala ang order na ito pero hindi pa ito mababayaran.',
@@ -1923,6 +1995,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.noProviderLead': 'Hali hech qanday toʻlov provayderi ulanmagan.',
     'buy.noProviderBody':
       'Bu buyurtmani berishingiz mumkin va u saqlanadi, lekin provayder ulanmaguncha uni toʻlab boʻlmaydi. Hech qanday pul yechilmaydi va toʻlov tasdiqlanmaguncha kurs ochilmaydi.',
+    'buy.noProviderHere':
+      'Bu platformaga ulangan hech bir toʻlov xizmati ushbu kurs bu yerda narxlangan valyutani qabul qilmaydi: {currency}.',
     'buy.closedLead': 'Toʻlov hali ochilmagan.',
     'buy.closedBody':
       'Bu platforma hozircha kurslar uchun toʻlov qabul qilmayapti, shuning uchun buyurtma berib boʻlmaydi va hech qanday pul yechilmadi. Bepul kurslarga kurs sahifasidan hali ham qoʻshilish mumkin.',
@@ -1957,6 +2031,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.payWith': 'Toʻlov usuli',
     'buy.phoneLabel': 'Mobil pul raqami',
     'buy.phoneNote': 'Toʻlovni tasdiqlash soʻraladigan raqam.',
+    'buy.phoneCountry':
+      'Mamlakat kodisiz yozilgan raqam shu mamlakatning raqami deb oʻqiladi: {country}. Uning kodi: {dial}.',
     'buy.continue': 'Toʻlovga oʻtish',
     'buy.starting': 'Boshlanmoqda…',
     'buy.noProviderNote': 'Bu buyurtma qayd etiladi, lekin uni hali toʻlab boʻlmaydi.',
@@ -2023,6 +2099,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.noProviderLead': 'Әзірге ешқандай төлем провайдері қосылмаған.',
     'buy.noProviderBody':
       'Бұл тапсырысты бере аласыз және ол сақталады, бірақ провайдер қосылғанша оны төлеу мүмкін емес. Ешқандай ақы алынбайды және төлем расталғанша курс ашылмайды.',
+    'buy.noProviderHere':
+      'Осы платформаға қосылған ешбір төлем қызметі бұл курстың мұндағы бағасы қойылған валютаны қабылдамайды: {currency}.',
     'buy.closedLead': 'Төлем әзірге ашылмаған.',
     'buy.closedBody':
       'Бұл платформа қазір курстар үшін төлем қабылдамайды, сондықтан тапсырыс беру мүмкін емес және ешқандай ақы алынған жоқ. Тегін курстарға курс бетінен әлі де қосылуға болады.',
@@ -2057,6 +2135,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.payWith': 'Төлем тәсілі',
     'buy.phoneLabel': 'Мобильді ақша нөмірі',
     'buy.phoneNote': 'Төлемді мақұлдау сұралатын нөмір.',
+    'buy.phoneCountry':
+      'Ел кодынсыз жазылған нөмір осы елдің нөмірі ретінде оқылады: {country}. Оның коды: {dial}.',
     'buy.continue': 'Төлемге өту',
     'buy.starting': 'Басталуда…',
     'buy.noProviderNote': 'Бұл тапсырыс тіркеледі, бірақ оны әзірге төлеу мүмкін емес.',
@@ -2122,6 +2202,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.noProviderLead': 'Hələ heç bir ödəniş provayderi qoşulmayıb.',
     'buy.noProviderBody':
       'Bu sifarişi verə bilərsiniz və o, yadda saxlanılacaq, lakin provayder qoşulana qədər ödənilə bilməz. Heç bir məbləğ tutulmur və ödəniş təsdiqlənənə qədər kurs açılmır.',
+    'buy.noProviderHere':
+      'Bu platformaya qoşulmuş heç bir ödəniş xidməti bu kursun burada qiymətləndirildiyi valyutanı qəbul etmir: {currency}.',
     'buy.closedLead': 'Ödəniş hələ açıq deyil.',
     'buy.closedBody':
       'Bu platforma hazırda kurslar üçün ödəniş qəbul etmir, ona görə sifariş vermək mümkün deyil və heç bir məbləğ tutulmayıb. Pulsuz kurslara kurs səhifəsindən yenə də qoşulmaq olar.',
@@ -2156,6 +2238,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.payWith': 'Ödəniş üsulu',
     'buy.phoneLabel': 'Mobil pul nömrəsi',
     'buy.phoneNote': 'Ödənişi təsdiqləməsi istəniləcək nömrə.',
+    'buy.phoneCountry':
+      'Ölkə kodu olmadan yazılan nömrə bu ölkənin nömrəsi kimi oxunur: {country}. Onun kodu: {dial}.',
     'buy.continue': 'Ödənişə davam et',
     'buy.starting': 'Başlanır…',
     'buy.noProviderNote': 'Bu sifariş qeydə alınacaq, lakin hələ ödənilə bilməz.',
@@ -2223,6 +2307,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.noProviderLead': 'Ҳанӯз ягон провайдери пардохт пайваст нашудааст.',
     'buy.noProviderBody':
       'Шумо метавонед ин фармоишро диҳед ва он нигоҳ дошта мешавад, вале то пайваст шудани провайдер онро пардохт кардан мумкин нест. Ҳеҷ маблағе гирифта намешавад ва то тасдиқи пардохт курс кушода намешавад.',
+    'buy.noProviderHere':
+      'Ягон хидмати пардохте, ки ба ин платформа пайваст аст, асъореро, ки ин курс дар ин ҷо бо он нархгузорӣ шудааст, қабул намекунад: {currency}.',
     'buy.closedLead': 'Пардохт ҳанӯз кушода нест.',
     'buy.closedBody':
       'Ин платформа ҳоло барои курсҳо пардохт қабул намекунад, бинобар ин фармоиш додан мумкин нест ва ҳеҷ маблағе гирифта нашудааст. Ба курсҳои ройгон аз саҳифаи курс ҳамоно пайвастан мумкин аст.',
@@ -2256,6 +2342,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.payWith': 'Тарзи пардохт',
     'buy.phoneLabel': 'Рақами пули мобилӣ',
     'buy.phoneNote': 'Рақаме, ки аз он тасдиқи пардохт пурсида мешавад.',
+    'buy.phoneCountry':
+      'Рақаме, ки бе рамзи кишвар навишта шудааст, чун рақами ҳамин кишвар хонда мешавад: {country}. Рамзи он: {dial}.',
     'buy.continue': 'Гузаштан ба пардохт',
     'buy.starting': 'Оғоз мешавад…',
     'buy.noProviderNote': 'Ин фармоиш сабт мешавад, вале онро ҳанӯз пардохт кардан мумкин нест.',
@@ -2325,6 +2413,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.noProviderLead': 'Азырынча эч бир төлөм провайдери туташтырылган эмес.',
     'buy.noProviderBody':
       'Бул буйрутманы бере аласыз жана ал сакталат, бирок провайдер туташтырылмайынча аны төлөө мүмкүн эмес. Эч кандай акча алынбайт жана төлөм ырасталмайынча курс ачылбайт.',
+    'buy.noProviderHere':
+      'Бул платформага туташтырылган эч бир төлөм кызматы бул курстун бул жердеги баасы коюлган валютаны кабыл албайт: {currency}.',
     'buy.closedLead': 'Төлөм азырынча ачыла элек.',
     'buy.closedBody':
       'Бул платформа азыр курстар үчүн төлөм кабыл албайт, ошондуктан буйрутма берүү мүмкүн эмес жана эч кандай акча алынган жок. Акысыз курстарга курстун барагынан дагы эле кошулууга болот.',
@@ -2359,6 +2449,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.payWith': 'Төлөм ыкмасы',
     'buy.phoneLabel': 'Мобилдик акча номери',
     'buy.phoneNote': 'Төлөмдү жактыруу суралган номер.',
+    'buy.phoneCountry':
+      'Өлкөнүн кодусуз жазылган номер ушул өлкөнүн номери катары окулат: {country}. Анын коду: {dial}.',
     'buy.continue': 'Төлөмгө өтүү',
     'buy.starting': 'Башталууда…',
     'buy.noProviderNote': 'Бул буйрутма катталат, бирок аны азырынча төлөө мүмкүн эмес.',
@@ -2425,6 +2517,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.noProviderLead': 'Entek hiç bir töleg üpjün edijisi birikdirilmedi.',
     'buy.noProviderBody':
       'Bu sargydy edip bilersiňiz we ol saklanar, ýöne üpjün ediji birikdirilýänçä ony töläp bolmaýar. Hiç hili pul alynmaýar we töleg tassyklanýança kurs açylmaýar.',
+    'buy.noProviderHere':
+      'Bu platforma birikdirilen hiç bir töleg hyzmaty bu kursuň şu ýerdäki bahasynyň goýlan pul birligini kabul etmeýär: {currency}.',
     'buy.closedLead': 'Töleg entek açyk däl.',
     'buy.closedBody':
       'Bu platforma häzir kurslar üçin töleg kabul etmeýär, şonuň üçin sargyt edip bolmaýar we hiç hili pul alynmady. Mugt kurslara kurs sahypasyndan henizem goşulyp bolýar.',
@@ -2459,6 +2553,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.payWith': 'Töleg usuly',
     'buy.phoneLabel': 'Mobil pul belgisi',
     'buy.phoneNote': 'Tölegi tassyklamagy soraljak belgi.',
+    'buy.phoneCountry':
+      'Ýurt kody bolmazdan ýazylan belgi şu ýurduň belgisi hökmünde okalýar: {country}. Onuň kody: {dial}.',
     'buy.continue': 'Tölege geçmek',
     'buy.starting': 'Başlanýar…',
     'buy.noProviderNote': 'Bu sargyt hasaba alnar, ýöne ony entek töläp bolmaýar.',
@@ -2525,6 +2621,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.noProviderLead': 'இன்னும் எந்தக் கட்டணச் சேவை வழங்குநரும் இணைக்கப்படவில்லை.',
     'buy.noProviderBody':
       'இந்த ஆர்டரை நீங்கள் செய்யலாம், அது சேமிக்கப்படும்; ஆனால் ஒரு வழங்குநர் இணைக்கப்படும் வரை அதற்குக் கட்டணம் செலுத்த முடியாது. எந்தத் தொகையும் வசூலிக்கப்படாது, கட்டணம் உறுதிப்படுத்தப்படும் வரை பாடநெறி திறக்காது.',
+    'buy.noProviderHere':
+      'இந்தத் தளத்துடன் இணைக்கப்பட்ட எந்தக் கட்டணச் சேவையும், இந்தப் பாடநெறிக்கு இங்கே விலை குறிக்கப்பட்டுள்ள நாணயத்தைப் பெறுவதில்லை: {currency}.',
     'buy.closedLead': 'கட்டணம் செலுத்தல் இன்னும் திறக்கப்படவில்லை.',
     'buy.closedBody':
       'இந்தத் தளம் தற்போது பாடநெறிகளுக்குக் கட்டணம் பெறுவதில்லை; ஆகவே ஆர்டர் எதுவும் செய்ய முடியாது, எந்தத் தொகையும் வசூலிக்கப்படவில்லை. இலவசப் பாடநெறிகளில் பாடநெறிப் பக்கத்திலிருந்து இப்போதும் சேரலாம்.',
@@ -2561,6 +2659,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.payWith': 'செலுத்தும் முறை',
     'buy.phoneLabel': 'மொபைல் பண எண்',
     'buy.phoneNote': 'கட்டணத்தை அங்கீகரிக்குமாறு கேட்கப்படும் எண்.',
+    'buy.phoneCountry':
+      'நாட்டுக் குறியீடு இல்லாமல் எழுதப்பட்ட எண், இந்த நாட்டின் எண்ணாகப் படிக்கப்படும்: {country}. அதன் குறியீடு: {dial}.',
     'buy.continue': 'கட்டணம் செலுத்தத் தொடரவும்',
     'buy.starting': 'தொடங்குகிறது…',
     'buy.noProviderNote':
@@ -2632,6 +2732,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.noProviderLead': 'अझै कुनै भुक्तानी प्रदायक जोडिएको छैन।',
     'buy.noProviderBody':
       'तपाईं यो अर्डर गर्न सक्नुहुन्छ र यो सुरक्षित हुनेछ, तर प्रदायक नजोडिएसम्म यसको भुक्तानी गर्न सकिँदैन। कुनै रकम लिइँदैन, र भुक्तानी पुष्टि नभएसम्म कोर्स खुल्दैन।',
+    'buy.noProviderHere':
+      'यस प्लेटफर्ममा जोडिएको कुनै पनि भुक्तानी सेवाले यहाँ यस कोर्सको मूल्य राखिएको मुद्रा लिँदैन: {currency}।',
     'buy.closedLead': 'भुक्तानी अझै खुलेको छैन।',
     'buy.closedBody':
       'यो प्लेटफर्मले अहिले कोर्सका लागि भुक्तानी लिइरहेको छैन, त्यसैले कुनै अर्डर गर्न सकिँदैन र कुनै रकम लिइएको छैन। निःशुल्क कोर्सहरूमा कोर्सको पृष्ठबाट अझै सहभागी हुन सकिन्छ।',
@@ -2666,6 +2768,8 @@ export const BUY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'buy.payWith': 'भुक्तानी गर्ने माध्यम',
     'buy.phoneLabel': 'मोबाइल मनी नम्बर',
     'buy.phoneNote': 'भुक्तानी स्वीकृत गर्न भनिने नम्बर।',
+    'buy.phoneCountry':
+      'देशको कोड बिना लेखिएको नम्बरलाई यस देशको नम्बरका रूपमा पढिन्छ: {country}। यसको कोड: {dial}।',
     'buy.continue': 'भुक्तानीतर्फ अघि बढ्नुहोस्',
     'buy.starting': 'सुरु हुँदै छ…',
     'buy.noProviderNote': 'यो अर्डर दर्ता हुनेछ तर अहिले यसको भुक्तानी गर्न सकिँदैन।',

@@ -436,14 +436,17 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // a copy of your data and the page that prints it, fifty-two for the
   // reading settings, sixty-nine for putting a copy back, twenty-nine
   // for the phone number card, and eighty-four for the merge screen.
-  assert.equal(unwrittenKeys.length, 1040);
-  assert.equal(unwrittenKeys.filter((key) => key.startsWith('merge.')).length, 84);
+  // (Eighty-five and eighty-one since 2026-11-18: one sentence for asking
+  // too often, and two on the buy page about which country a number is read
+  // as one of and which currency a service collects.)
+  assert.equal(unwrittenKeys.length, 1043);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('merge.')).length, 85);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('phone.')).length, 29);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('restore.')).length, 69);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('reading.')).length, 52);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('export.')).length, 58);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('close.')).length, 43);
-  assert.equal(unwrittenKeys.filter((key) => key.startsWith('buy.')).length, 79);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('buy.')).length, 81);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('family.')).length, 100);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('account.')).length, 98);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('player.')).length, 86);
@@ -521,7 +524,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     }
   }
   // What that costs the nineteen that are still in the picker, said out loud:
-  // 192 of 1312 sentences, which is 15%. Nothing holds a floor under
+  // 192 of 1315 sentences, which is 15%. Nothing holds a floor under
   // it any more: the owner chose on 2026-11-17 to keep these languages in the
   // picker and show the number. The count is pinned here so that it moves only
   // when somebody means it to, and is seen when it does. It moved from 55% to
@@ -551,7 +554,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // What they are shown did not get smaller; what is counted got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 1312);
+    assert.equal(coverageOf(code).total, 1315);
     assert.equal(coverageOf(code).percent, 15, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');

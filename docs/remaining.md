@@ -770,12 +770,13 @@ written: not a held draft, nothing.
   (`/account/merge`, switched off) is in the reader's language since
   2026-11-18 (`messages/merge.ts`, eighty-four sentences, unreviewed;
   checked by `scripts/merge-route-smoke.mjs` on a stand-in that answers as
-  if the switch were on and merges nothing). **`platform.account_merge`
-  must stay off until the owner decides two things:** asking for a merge
-  tells any signed-in account whether an address has an account, without
-  limit, and the database returns that account's display name to whoever
-  asked (the screen does not show it; the function still returns it). A
-  merge has never been run through the route against a real database.
+  if the switch were on and merges nothing). The owner decided on
+  2026-11-18 that asking is answered the same way for every address **and**
+  limited to five asks in twenty-four hours; migration
+  `20261281146000_merge_request_privacy.sql` does both and stops telling the
+  asking account anything about the other one. **`platform.account_merge`
+  stays off on the hosted project until that migration is applied there.**
+  A merge has never been run through the route against a real database.
   **Still English, every one of them:**
   the pages it links to: `/account/sharing`,
   `/account/referrals`,
@@ -960,7 +961,9 @@ make the twenty-seven served languages reviewed. And no speaker has been found
 for any language: until one is, the four stay unavailable and the nineteen stay
 in English on the companion screens, indefinitely.
 
-The existing Supabase test project has all 352 migrations applied: the initial
+The existing Supabase test project has 352 of the tree's 353 migrations applied
+(the 353rd, `20261281146000_merge_request_privacy.sql`, was written on
+2026-11-18 and waits for the owner's approval and a job of its own): the initial
 342 via the owner-approved GitHub run `43611493767`, and 1360–1450 via the
 owner-approved run `44131878224` on 2026-11-17. A read-only check after the
 first found 185 public base tables and zero Auth users; after the second, zero

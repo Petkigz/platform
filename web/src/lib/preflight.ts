@@ -500,7 +500,14 @@ export function runPreflight(env: Record<string, string | undefined>): Preflight
     'AIRTEL_CLIENT_ID',
     'AIRTEL_CLIENT_SECRET',
   ];
-  if (paymentCredentials.every((key) => !has(key))) {
+  // A service is configured country by country (`MTN_MOMO_GH_API_KEY`,
+  // `AIRTEL_KE_CLIENT_ID`): one of those is a provider too, and with only the
+  // names without a country looked at, a site configured for Ghana was told
+  // it had no provider.
+  const perCountry = Object.keys(env).some(
+    (key) => /^(?:MTN_MOMO|AIRTEL)_[A-Z]{2}_(?:SUBSCRIPTION_KEY|API_KEY|CLIENT_ID|CLIENT_SECRET)$/u.test(key) && has(key),
+  );
+  if (!perCountry && paymentCredentials.every((key) => !has(key))) {
     findings.push({
       level: 'note',
       subsystem: 'payments',

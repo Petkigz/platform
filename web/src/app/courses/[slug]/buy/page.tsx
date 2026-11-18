@@ -8,7 +8,8 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { ownLearnerProfileId, resolveOffering } from '@/lib/enrolment';
 import { countryFromHeaders, countryNameIn } from '@/lib/geo';
 import { format } from '@/lib/money';
-import { availableProviders, configuredProviderId } from '@/lib/payments/registry';
+import { availableProviders, providersForCurrency } from '@/lib/payments/registry';
+import { findCountry } from '@/lib/phone';
 import { isFlagEnabled } from '@/lib/flags';
 import { REFERRAL_COOKIE, cleanReferralCode } from '@/lib/referrals';
 import { fetchWithdrawalOffer } from '@/lib/withdrawal';
@@ -248,14 +249,24 @@ export default async function BuyPage({
   // offer is read rather than assumed from the country.
   const withdrawal = await fetchWithdrawalOffer(supabase, country);
 
-  const providerId = configuredProviderId();
-  // Every provider that is configured and usable, not just the first. A learner
+  // Every provider that can take this order, not just the first. A learner
   // in Kampala may well have both MTN and Airtel, and being made to use one
   // specific network is an unnecessary reason to abandon a purchase.
-  const providers = availableProviders().map((p) => ({
+  //
+  // "Can take this order" is a question of currency. A mobile-money account
+  // is one service in one country and collects that country's currency
+  // (`lib/payments/markets.ts`), so a course priced in Kenyan shillings is
+  // offered Kenya's accounts and no other. Each is shown with its country,
+  // because that is also how a number typed without a country code is read.
+  const priceCurrency = offering.kind === 'paid' ? offering.price.amount.currency : null;
+  const anyProvider = availableProviders().length > 0;
+  const providers = providersForCurrency(priceCurrency).map((p) => ({
     id: p.id,
     label: p.label,
     requiresMsisdn: p.requiresMsisdn,
+    country: p.market?.country ?? null,
+    countryName: p.market ? (countryNameIn(p.market.country, shown.code) ?? p.market.country) : null,
+    dial: p.market ? (findCountry(p.market.country)?.dial ?? null) : null,
   }));
 
   const noPrice = `${t('buy.noPriceAny')} ${t('buy.noPriceBody')}`;
@@ -283,6 +294,22 @@ export default async function BuyPage({
     payWith: t('buy.payWith'),
     phoneLabel: t('buy.phoneLabel'),
     phoneNote: t('buy.phoneNote'),
+    phoneCountry: t('buy.phoneCountry'),
+    // The phone card's own sentences for a number that cannot be read.
+    phoneWhy: {
+      locale: shown.code,
+      why: {
+        country: t('phone.whyCountry'),
+        empty: t('phone.whyEmpty'),
+        letters: t('phone.whyLetters'),
+        punctuation: t('phone.whyPunctuation'),
+        plus: t('phone.whyPlus'),
+        other_country: t('phone.whyOtherCountry'),
+        length_one: t('phone.whyLength'),
+        length_range: t('phone.whyLengthRange'),
+      },
+      whyTrunk: t('phone.whyTrunk'),
+    },
     continue: t('buy.continue'),
     starting: t('buy.starting'),
     noProviderNote: t('buy.noProviderNote'),
@@ -342,9 +369,15 @@ export default async function BuyPage({
         </div>
       )}
 
-      {checkoutOpen && providerId === null && (
+      {checkoutOpen && providers.length === 0 && (
         <div className="notice warn">
-          <strong>{t('buy.noProviderLead')}</strong> {t('buy.noProviderBody')}
+          {/* None connected at all, or none that collects this course's currency. */}
+          <strong>
+            {anyProvider && priceCurrency
+              ? t('buy.noProviderHere', { currency: priceCurrency })
+              : t('buy.noProviderLead')}
+          </strong>{' '}
+          {t('buy.noProviderBody')}
         </div>
       )}
 
@@ -379,7 +412,7 @@ export default async function BuyPage({
             // purchase that cannot be moved.
             defaultLearnerId={owner ? (buyable.length === 1 ? buyable[0]!.id : '') : defaultLearnerId}
             providers={providers}
-            providerConfigured={providerId !== null}
+            providerConfigured={providers.length > 0}
             defaultCode={referralCode}
             withdrawal={withdrawal}
             words={words}

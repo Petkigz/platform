@@ -23,6 +23,7 @@
  */
 
 import type { Money } from '../money';
+import type { Market } from './markets';
 
 export type ProviderId = string;
 
@@ -37,6 +38,11 @@ export type CheckoutRequest = {
   /**
    * The payer's phone number in E.164, for mobile-money providers. Absent for
    * card providers. Never a locally-formatted number: see lib/phone.ts.
+   *
+   * Always E.164 here, whatever the provider wants on the wire. Each adapter
+   * writes it its provider's way (MTN: the digits without the plus; Airtel:
+   * the number without the country's code), and each refuses a number that
+   * is not one of its market's country.
    */
   msisdn?: string;
 };
@@ -73,12 +79,34 @@ export type ProviderPaymentStatus =
   | {
       state: 'succeeded';
       providerReference: string;
-      amount: Money;
+      /**
+       * What the provider says was paid, or null when its answer carries no
+       * amount (Airtel's does not). Never a guess and never the callback's.
+       */
+      amount: Money | null;
       /** The provider's own transaction id, for the ledger and for refunds. */
       financialTransactionId: string | null;
+      /**
+       * The order this payment was started for, **as the authenticated answer
+       * says it**, or null when the answer does not say.
+       *
+       * A callback is unsigned, so the order id in it is whatever its sender
+       * wrote. Without this, somebody who had paid for a cheap order could
+       * post a callback naming an expensive one with the cheap payment's
+       * reference: the status query would truthfully answer "succeeded", and
+       * the expensive order would be marked paid. The webhook settles an
+       * order only when this names it.
+       */
+      orderId: string | null;
     }
   | { state: 'pending'; providerReference: string }
-  | { state: 'failed'; providerReference: string; reason: string }
+  | {
+      state: 'failed';
+      providerReference: string;
+      reason: string;
+      /** As above, when the provider says. A failure for another order closes nothing. */
+      orderId?: string | null;
+    }
   | { state: 'unknown'; providerReference: string; reason: string };
 
 export type WebhookEvent =
@@ -144,6 +172,17 @@ export interface PaymentProvider {
    * costs completions.
    */
   readonly requiresMsisdn: boolean;
+
+  /**
+   * The country this provider takes payments in and the one currency it
+   * collects there, or null for a provider that is not tied to a country.
+   *
+   * A mobile-money account is one operator in one country (`markets.ts`). The
+   * checkout reads a number typed without a country code as a number of this
+   * country, offers this provider only for an order priced in this currency,
+   * and refuses a number from anywhere else before anything is written.
+   */
+  readonly market: Market | null;
 
   createCheckout(request: CheckoutRequest): Promise<CheckoutResult>;
 
@@ -214,6 +253,7 @@ export class UnconfiguredPaymentProvider implements PaymentProvider {
   // unconfigured deployment must refuse every callback, signed or not.
   readonly webhookTrust = 'signature' as const;
   readonly requiresMsisdn = false;
+  readonly market = null;
 
   async createCheckout(): Promise<CheckoutResult> {
     throw new PaymentProviderUnavailableError(this.id);

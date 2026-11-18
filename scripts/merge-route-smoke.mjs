@@ -46,7 +46,9 @@ const RAISED = {
   signed_out: ['42501', 403, 'sign in to answer a merge request'],
   off: ['0A000', 400, 'merging accounts is not enabled on this platform yet'],
   email: ['22023', 400, 'type the email address of the account you want to keep'],
+  // A database that has not had `20261281146000` yet still says this; one that has, never does.
   no_account: ['P0002', 404, 'there is no account with that email address'],
+  too_many: ['54000', 413, 'this account has asked for a merge too many times today; try again tomorrow'],
   same_account: ['22023', 400, 'that is this account; sign in to the other one to merge it'],
   no_request: ['P0002', 404, 'there is no such merge request'],
   not_asker: ['42501', 403, 'only the account asking to be merged can withdraw the request'],
@@ -60,7 +62,7 @@ const RAISED = {
   timeout: ['57014', 500, 'canceling statement due to statement timeout'],
 };
 // Parts of the database's sentences that must reach no reader, in a page or an answer.
-const DATABASE_WORDS = ['sign in to answer', 'not enabled on this platform yet', 'there is no account', 'that is this account', 'no such merge request', 'only the account', 'exactly as it appears', 'this merge cannot run:', 'payout(s) in flight', 'Finish or drop one', 'owner appointment', 'privacy@', 'that is the same account', 'learner records become one', 'SYNTHETIC', 'canceling statement', 'SECRET-TARGET'];
+const DATABASE_WORDS = ['sign in to answer', 'not enabled on this platform yet', 'there is no account', 'too many times today', 'that is this account', 'no such merge request', 'only the account', 'exactly as it appears', 'this merge cannot run:', 'payout(s) in flight', 'Finish or drop one', 'owner appointment', 'privacy@', 'that is the same account', 'learner records become one', 'SYNTHETIC', 'canceling statement', 'SECRET-TARGET'];
 
 const BOARD = {
   enabled: true,
@@ -77,7 +79,7 @@ const BOARD = {
     { id: R4, status: 'pending', requestedAt: '2026-09-01T10:00:00Z', expiresAt: '2026-09-15T10:00:00Z', expired: true, otherName: 'Late account', otherUserId: 'w', preview: { ok: true, blocks: [], notes: [] } },
   ],
   outgoing: [
-    { id: O1, status: 'pending', requestedAt: '2026-11-17T10:00:00Z', expiresAt: '2026-12-01T10:00:00Z', expired: false, otherName: 'SECRET-TARGET-NAME', otherUserId: 'q', summary: null },
+    { id: O1, status: 'pending', requestedAt: '2026-11-17T10:00:00Z', expiresAt: '2026-12-01T10:00:00Z', expired: false, summary: null },
     { id: O2, status: 'completed', requestedAt: '2026-10-01T10:00:00Z', expiresAt: '2026-10-15T10:00:00Z', expired: false, otherName: 'SECRET-TARGET-NAME', otherUserId: 'q', summary: { learnerRelinked: 1, enrolments: 2, certificates: 1, notifications: 0, leftBehind: 3, somethingNew: 7 } },
     { id: O3, status: 'declined', requestedAt: '2026-09-01T10:00:00Z', expiresAt: '2026-09-15T10:00:00Z', expired: false, otherName: 'SECRET-TARGET-NAME', otherUserId: 'q', summary: null },
     { id: O4, status: 'completed', requestedAt: '2026-08-01T10:00:00Z', expiresAt: '2026-08-15T10:00:00Z', expired: false, otherName: null, otherUserId: 'q', summary: {} },
@@ -322,7 +324,7 @@ try {
   const NAMED = [
     // [the stand-in's answer, what is sent, status, name]
     ['signed_out', AGREE, 401, 'signed_out'], ['off', AGREE, 409, 'off'], ['off', ASK, 409, 'off'],
-    ['email', ASK, 400, 'email'], ['no_account', ASK, 404, 'no_account'], ['same_account', ASK, 400, 'same_account'], ['already', ASK, 409, 'pending'],
+    ['email', ASK, 400, 'email'], ['no_account', ASK, 404, 'no_account'], ['same_account', ASK, 400, 'same_account'], ['already', ASK, 409, 'pending'], ['too_many', ASK, 429, 'too_many'],
     ['no_request', WITHDRAW, 404, 'no_request'], ['no_request', AGREE, 404, 'no_request'], ['not_asker', WITHDRAW, 403, 'not_yours'], ['not_target', AGREE, 403, 'not_yours'],
     ['late', WITHDRAW, 409, 'answered'], ['late', AGREE, 409, 'answered'], ['late', DECLINE, 409, 'answered'],
     ['name', AGREE, 400, 'name'], ['blocked', AGREE, 409, 'blocked'], ['owner', AGREE, 409, 'blocked'],
@@ -430,6 +432,7 @@ try {
         ['no_account', 'لا يوجد حساب بهذا العنوان. لم يتغيّر شيء.'],
         ['same_account', 'هذا عنوان هذا الحساب نفسه. اكتب عنوان الحساب الآخر، الذي تريد الاحتفاظ به.'],
         ['already', 'هناك طلب من هذا الحساب ينتظر من قبل. اسحبه قبل أن تطلب من حساب آخر.'],
+        ['too_many', 'طلب هذا الحساب الدمج مرات كثيرة جدًا في يوم واحد. حاول غدًا. لم يتغيّر شيء.'],
         ['off', 'دمج الحسابات موقوف في هذه المنصة. لا يمكن فعل شيء في هذه الصفحة حتى يشغّله المالك.'],
         ['signed_out', 'لقد خرجت من الحساب. سجّل الدخول مرة أخرى ثم حاول من جديد. لم يتغيّر شيء.'],
         ['unknown_words', 'لم تقبل المنصة هذا. لم يتغيّر شيء.'],
@@ -450,7 +453,8 @@ try {
       state.answer = 'ok';
       await ask.click();
       await status.waitFor();
-      assert.equal(await status.innerText(), 'الطلب ينتظر في الحساب الآخر. سجّل الدخول هناك لتوافق عليه.');
+      // Said the same way whether or not the address has an account.
+      assert.equal(await status.innerText(), 'سُجّل الطلب. إن كان ذلك العنوان لحساب، فالطلب ينتظر هناك: سجّل الدخول إلى ذلك الحساب لتوافق عليه. لا يُقال لك هل للعنوان حساب أم لا.');
       assert.equal(await alerts.count(), 0);
       assert.equal(await tab.locator('#merge-target').inputValue(), '');
       assert.deepEqual(JSON.parse(posts.at(-1)), { action: 'request', email: 'other@example.invalid' });
@@ -515,7 +519,7 @@ try {
       assert.deepEqual(JSON.parse(posts.at(-1)), { action: 'cancel', requestId: O1 });
       assert.deepEqual(errors, [], errors.join(' | '));
       await context.close();
-      console.log('Synthetic merge page in Arabic at 390px: an empty address named before a request; nine answers to asking and twelve to agreeing each said in Arabic, an unknown one never as "nothing changed"; a request that never arrived said as unknown; the button to agree off until the name is typed letter for letter; merged said as a status with what moved and what stayed; declined and withdrawn said as a status');
+      console.log('Synthetic merge page in Arabic at 390px: an empty address named before a request; ten answers to asking and twelve to agreeing each said in Arabic, an unknown one never as "nothing changed"; a request that never arrived said as unknown; the button to agree off until the name is typed letter for letter; merged said as a status with what moved and what stayed; declined and withdrawn said as a status');
     }
 
     {

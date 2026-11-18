@@ -160,6 +160,7 @@ export type MergeCode =
   | 'no_account'
   | 'same_account'
   | 'pending'
+  | 'too_many'
   | 'no_request'
   | 'not_yours'
   | 'name'
@@ -182,6 +183,7 @@ export const MERGE_SENTENCE: Record<MergeCode, string> = {
   no_account: 'No account has that address. Nothing was changed.',
   same_account: 'That address belongs to the account asking. Nothing was changed.',
   pending: 'A request from this account is already waiting. Nothing was changed.',
+  too_many: 'This account has asked too often for one day. Nothing was changed.',
   no_request: 'That request is no longer there. Nothing was changed.',
   not_yours: 'This account cannot answer that request. Nothing was changed.',
   name: 'The name typed is not the name of this account. Nothing was changed.',
@@ -205,6 +207,8 @@ export function mergeStatusOf(code: MergeCode): number {
     case 'no_account':
     case 'no_request':
       return 404;
+    case 'too_many':
+      return 429;
     case 'off':
     case 'pending':
     case 'blocked':
@@ -241,9 +245,13 @@ export function mergeOutcomeOf(status: number, body: unknown): MergeCode {
 type DatabaseError = { code?: string | null; message?: string | null };
 
 /**
- * What the three functions raise (`20261281000800_account_merge.sql`, and the
- * owner's guard in `20261281058000_named_owner_account_boundary.sql`), told
- * apart by their words.
+ * What the three functions raise (`20261281000800_account_merge.sql`, the
+ * owner's guard in `20261281058000_named_owner_account_boundary.sql`, and
+ * `20261281146000_merge_request_privacy.sql`), told apart by their words.
+ *
+ * Since the third of those, asking no longer says that an address has no
+ * account: every address is answered the same way. `no_account` stays a
+ * name here for a database that has not had that migration yet.
  *
  * Every one is raised before the merge writes or undoes all of it, so each
  * is a refusal. An error under a state none of them uses is not known to be
@@ -281,6 +289,8 @@ export function mergeCodeOf(error: DatabaseError): MergeCode {
   if (state === '23514') {
     return /this merge cannot run:|has an owner appointment/iu.test(message) ? 'blocked' : 'refused';
   }
+  // Five asks in twenty-four hours (`20261281146000_merge_request_privacy.sql`).
+  if (state === '54000') return /asked for a merge too many times/iu.test(message) ? 'too_many' : 'refused';
   return 'failed';
 }
 

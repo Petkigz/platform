@@ -40,6 +40,7 @@ import {
   PaymentProviderUnavailableError,
 } from './provider.ts';
 import { accessToken, invalidateToken, readJson } from './oauth.ts';
+import { AIRTEL_MARKETS, nationalDigits, type Market } from './markets.ts';
 
 export type AirtelConfig = {
   baseUrl: string;
@@ -53,39 +54,92 @@ export type AirtelConfig = {
   refundPath: string;
 };
 
-export function airtelConfigFromEnv(): AirtelConfig | null {
-  const clientId = process.env.AIRTEL_CLIENT_ID?.trim();
-  const clientSecret = process.env.AIRTEL_CLIENT_SECRET?.trim();
+/**
+ * One Airtel market's account, from the environment, or null when it has none.
+ *
+ * **One country, one set of names.** Kenya's account is `AIRTEL_KE_CLIENT_ID`
+ * and `AIRTEL_KE_CLIENT_SECRET`; it calls Airtel's production host with
+ * `X-Country: KE` and collects shillings. Only a country in `AIRTEL_MARKETS`
+ * can be named.
+ *
+ * **The names without a country** (`AIRTEL_CLIENT_ID` and the rest) are the
+ * first account this platform was written for. They stay, and they are one
+ * market like any other: the country is `AIRTEL_COUNTRY`, Uganda when it is
+ * not set, and they default to Airtel's test host as they always did.
+ */
+export function airtelConfigFromEnv(country?: string): AirtelConfig | null {
+  const scoped = country !== undefined;
+  const read = (name: string) =>
+    process.env[scoped ? `AIRTEL_${country}_${name}` : `AIRTEL_${name}`]?.trim();
+
+  const clientId = read('CLIENT_ID');
+  const clientSecret = read('CLIENT_SECRET');
   if (!clientId || !clientSecret) return null;
 
-  const country = process.env.AIRTEL_COUNTRY?.trim() || 'UG';
+  const where = (scoped ? country : process.env.AIRTEL_COUNTRY?.trim() || 'UG').toUpperCase();
+  const market = AIRTEL_MARKETS[where];
+  // A country Airtel Money does not operate in cannot be configured into one.
+  if (!market) return null;
+
   return {
     baseUrl:
-      process.env.AIRTEL_BASE_URL?.trim() || 'https://openapiuat.airtel.africa',
+      read('BASE_URL') ||
+      (scoped ? 'https://openapi.airtel.africa' : 'https://openapiuat.airtel.africa'),
     clientId,
     clientSecret,
-    country,
-    currency: process.env.AIRTEL_CURRENCY?.trim() || 'UGX',
-    refundPath:
-      process.env.AIRTEL_REFUND_PATH?.trim() || '/merchant/v1/payments/refund/',
+    country: where,
+    currency: read('CURRENCY')?.toUpperCase() || market.currency,
+    refundPath: read('REFUND_PATH') || '/merchant/v1/payments/refund/',
   };
 }
 
+/**
+ * The id a collection is started under, with the order inside it.
+ *
+ * Airtel's answer to a status query names the transaction and says nothing
+ * about the order it was for, and its notification is unsigned. So the order
+ * is written into the id itself: the order's thirty-two hex digits, then four
+ * random ones so a second attempt at the same order is a different
+ * transaction. A status that is asked for by this id is therefore a status
+ * of this order, and a payment made for one order cannot be presented as the
+ * payment for another.
+ *
+ * Thirty-six characters, the length of the UUID this used to be. Whether
+ * Airtel accepts it in every market is one more thing to confirm in sandbox.
+ */
+export function airtelTransactionId(orderId: string): string {
+  const hex = orderId.replace(/-/gu, '').toLowerCase();
+  if (!/^[0-9a-f]{32}$/u.test(hex)) {
+    throw new Error('Airtel Money needs an order id that is a UUID.');
+  }
+  return `${hex}${randomUUID().replace(/-/gu, '').slice(0, 4)}`;
+}
+
+/** The order a transaction id was made for, or null for an id this file did not make. */
+export function orderOfAirtelTransaction(transactionId: string): string | null {
+  if (!/^[0-9a-f]{36}$/u.test(transactionId)) return null;
+  const h = transactionId.slice(0, 32);
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+
 export class AirtelMoneyProvider implements PaymentProvider {
-  readonly id = 'airtel_money';
+  readonly id: string;
   readonly label = 'Airtel Money';
   readonly webhookTrust = 'requery' as const;
   readonly requiresMsisdn = true;
   readonly available: boolean;
+  readonly market: Market | null;
 
   // Declared as a field rather than a constructor parameter property: Node's
   // --experimental-strip-types, which the unit tests run under, does not
   // support parameter properties.
   private readonly config: AirtelConfig | null;
 
-  constructor(config: AirtelConfig | null) {
+  constructor(config: AirtelConfig | null, id = 'airtel_money') {
     this.config = config;
+    this.id = id;
     this.available = config !== null;
+    this.market = config ? { country: config.country, currency: config.currency } : null;
   }
 
   private get cfg(): AirtelConfig {
@@ -145,9 +199,19 @@ export class AirtelMoneyProvider implements PaymentProvider {
       );
     }
 
+    // Airtel takes the subscriber's number without the country's code: the
+    // country travels in `X-Country`. This sent every digit of the stored
+    // number, `256752123456`, which is not a number in Uganda. A number from
+    // another country has no national form here and is refused.
+    const national = nationalDigits(request.msisdn, cfg.country);
+    if (!national) {
+      throw new Error(`Airtel Money in ${cfg.country} cannot prompt a number from another country.`);
+    }
+
     // Our transaction id. Airtel echoes it back, and it is what the status
     // query is keyed on, so it has to be stable for the life of the attempt.
-    const transactionId = randomUUID();
+    // It carries the order: see `airtelTransactionId`.
+    const transactionId = airtelTransactionId(request.orderId);
 
     const res = await fetch(`${cfg.baseUrl}/merchant/v1/payments/`, {
       method: 'POST',
@@ -163,9 +227,7 @@ export class AirtelMoneyProvider implements PaymentProvider {
         subscriber: {
           country: cfg.country,
           currency: cfg.currency,
-          // Digits only. E.164 is what we store; the leading '+' is not part of
-          // what Airtel accepts.
-          msisdn: request.msisdn.replace(/\D/g, ''),
+          msisdn: national,
         },
         transaction: {
           amount: toMajorString(request.amount),
@@ -215,7 +277,9 @@ export class AirtelMoneyProvider implements PaymentProvider {
         kind: 'payment.succeeded',
         eventId: transactionId || `airtel:${reference}`,
         providerReference: transactionId,
-        orderId: reference,
+        // The order is in the id (`airtelTransactionId`); Airtel's own
+        // notification carries no reference of ours.
+        orderId: orderOfAirtelTransaction(transactionId) ?? reference,
         // Untrusted. The recorded amount comes from fetchPaymentStatus.
         amount: safeAmount(txn),
         raw: payload,
@@ -227,7 +291,9 @@ export class AirtelMoneyProvider implements PaymentProvider {
         kind: 'payment.failed',
         eventId: transactionId || `airtel:${reference}`,
         providerReference: transactionId,
-        orderId: reference,
+        // The order is in the id (`airtelTransactionId`); Airtel's own
+        // notification carries no reference of ours.
+        orderId: orderOfAirtelTransaction(transactionId) ?? reference,
         reason: typeof txn.message === 'string' ? txn.message : 'payment failed',
         raw: payload,
       };
@@ -267,48 +333,49 @@ export class AirtelMoneyProvider implements PaymentProvider {
       };
     }
 
+    type Transaction = {
+      status?: string;
+      status_code?: string;
+      message?: string;
+      airtel_money_id?: string;
+      amount?: string | number;
+      currency?: string;
+    };
+    // Airtel wraps its answer: `{ data: { transaction }, status }`. This read
+    // `transaction` at the top, where it is not, so every answer was
+    // "unknown". The unwrapped shape is still read, for a market that sends it.
     const body = (await readJson(res)) as {
-      transaction?: {
-        status?: string;
-        status_code?: string;
-        message?: string;
-        airtel_money_id?: string;
-        amount?: string | number;
-        currency?: string;
-      };
+      data?: { transaction?: Transaction };
+      transaction?: Transaction;
     } | null;
+    const t = body?.data?.transaction ?? body?.transaction;
 
-    if (!res.ok || !body?.transaction) {
+    if (!res.ok || !t) {
       return {
         state: 'unknown',
         providerReference,
         reason: `Airtel status query returned ${res.status}: ${describe(body)}`,
       };
     }
-
-    const t = body.transaction;
     const status = (t.status_code ?? t.status ?? '').toUpperCase();
 
     if (status === 'TS') {
-      const amount = parseAmount(t.amount, t.currency) ?? {
-        amountMinor: 0n,
-        currency: cfg.currency,
-      };
-      // An amount the provider did not report is not a reason to reject a
-      // successful payment; the order total is authoritative anyway. But a zero
-      // placeholder must never reach the ledger as if it were the amount paid.
-      if (amount.amountMinor === 0n) {
-        return {
-          state: 'unknown',
-          providerReference,
-          reason: `Airtel reported success without a usable amount: ${describe(t)}`,
-        };
-      }
+      // Airtel's answer names the transaction and its state and, as
+      // documented, no amount. This used to call a success with no amount
+      // "unknown", so no Airtel payment could ever have settled. The amount
+      // is reported when it is there and is null when it is not; what binds
+      // the payment to an order is the id (below), and the webhook settles
+      // the order's own total.
+      const amount = parseAmount(t.amount, t.currency ?? cfg.currency);
       return {
         state: 'succeeded',
         providerReference,
-        amount,
+        amount: amount && amount.amountMinor > 0n ? amount : null,
         financialTransactionId: t.airtel_money_id ?? null,
+        // The id this status was asked for by was made from an order's id, and
+        // Airtel has just said it knows that id. Null for an id made any
+        // other way, which settles nothing.
+        orderId: orderOfAirtelTransaction(providerReference),
       };
     }
 
@@ -317,6 +384,7 @@ export class AirtelMoneyProvider implements PaymentProvider {
         state: 'failed',
         providerReference,
         reason: t.message ?? 'payment failed',
+        orderId: orderOfAirtelTransaction(providerReference),
       };
     }
 

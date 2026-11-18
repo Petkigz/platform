@@ -8436,12 +8436,62 @@ the nineteen read 15%. Six things were settled in writing it:
   account. The database's sentence about an owner's appointment names an
   address to write to; the screen's does not, because nobody controls it.
 
-**Open, and it blocks the switch:** `request_account_merge()` answers
-whether an address has an account, to any signed-in account, as often as
-it is asked; and `my_merge_requests()` returns the display name of the
-account at that address to the account that asked. The screen no longer
-shows the name, but the database still returns it. `platform.account_merge`
-stays off until the owner has decided what to do about both.
+**Decided by the owner, 2026-11-18: both.** `request_account_merge()`
+answered whether an address has an account, to any signed-in account, as
+often as it was asked, and `my_merge_requests()` returned the name of the
+account at that address. Offered "answer every address the same way",
+"limit how often an account may ask" or both, the owner chose both.
+`20261281146000_merge_request_privacy.sql`:
+
+- *A request is recorded whether or not the address has an account.* One
+  addressed to nobody has no target; it waits fourteen days, can be
+  withdrawn, and nobody can answer it. The reply, the listing and what the
+  asking account can select from the table are the same in both cases.
+  A second ask while one waits is answered before the address is looked at.
+- *Five asks in twenty-four hours*, counted from the table's own rows,
+  withdrawn or not. Asking about the account's own address is still
+  refused by name and counts for nothing: it already knows that address.
+- *The asking account is told nothing about the other one*: no name, no
+  id, and it no longer reads its own rows directly.
+- *The cost, accepted:* an address typed wrongly is not reported. The
+  screen says a request reaches an account only if the address is one's.
+
+The inner function compared a request's target with the caller using `<>`,
+which is null for a request with no target, so such a request would have
+been answerable by anybody who knew its id. The public function refuses it
+first, in the words any other caller who is not the account asked gets.
+
+`platform.account_merge` stays off on the hosted project until that
+migration is applied there, which needs the owner's approval.
+
+**Mobile money is a service in a country (2026-11-18).** The owner asked
+for a number typed without a country code to stop being read as Ugandan,
+and for MTN, Airtel and the other mobile-money services to work in each
+country they operate in. Settled in doing it:
+
+- *A provider is a brand in a country.* An MTN or Airtel account prompts
+  one country's numbers and collects one currency, with its own
+  credentials. Its id carries the country (`mtn_momo_gh`,
+  `airtel_money_ke`); eleven MTN countries and thirteen Airtel countries
+  can be configured (`lib/payments/markets.ts`).
+- *A number without a country code is a number of the chosen service's
+  country*, read the way that country writes numbers, and the buy page
+  says which country that is. A number in full has to be that country's.
+- *An order is offered the services that collect its currency.* A course
+  priced in Kenyan shillings is offered Kenya's accounts and no other.
+- *Each service is sent the number its own way*: MTN the digits without
+  the plus, Airtel the number without the country's code. Both were
+  wrong before; neither has been checked against a live account.
+- *A confirmed payment settles only the order the provider says it was
+  for* (`lib/payments/binding.ts`). See the defect in `NEXT.md`.
+- *A service with no adapter is not named anywhere a payer can see.*
+  M-Pesa, Orange Money, Wave, telebirr, Tigo and the rest are not built.
+  Each is its own API and its own merchant agreement, country by country;
+  one payment aggregator would reach most of them through one agreement.
+  Which of the two routes to take is the owner's decision and is open.
+
+**Nothing here has taken a payment.** No merchant account exists for any
+service in any country.
 
 `/account/sharing`, `/account/referrals` and `/account/sponsorship` are
 still English.

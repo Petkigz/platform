@@ -3,7 +3,7 @@
  *
  * One place decides which providers are live, so no component ever imports an
  * adapter directly. Adding a provider means writing one file and adding it to
- * `BUILTIN` below; nothing else changes, which is the point of P11.
+ * `SERVICES` below; nothing else changes, which is the point of P11.
  *
  * TWO THINGS THIS MODULE DECIDES
  *
@@ -21,9 +21,14 @@
  * turned on later: write the adapter, register it, set the credentials.
  *
  * More than one provider can be live at once. That is not an accident of the
- * design — a learner in Kampala wants MTN or Airtel, and a learner outside East
- * Africa will eventually want a card provider. A registry that can only hold one
+ * design — a learner in Kampala wants MTN or Airtel, a learner in Nairobi wants
+ * the Kenyan account of whichever service they use, and a learner elsewhere
+ * will eventually want a card provider. A registry that can only hold one
  * would force a choice the product does not need to make.
+ *
+ * **Which countries.** Each service is configured country by country
+ * (`markets.ts`): one set of credentials, one currency, one country's
+ * numbers. Nothing here is live: no merchant account exists for any of them.
  */
 
 import {
@@ -34,16 +39,38 @@ import {
 } from './provider.ts';
 import { MtnMomoProvider, mtnMomoConfigFromEnv } from './mtn-momo.ts';
 import { AirtelMoneyProvider, airtelConfigFromEnv } from './airtel.ts';
+import { AIRTEL_MARKETS, MTN_MOMO_MARKETS } from './markets.ts';
 
 type Factory = () => PaymentProvider;
 
 /**
- * Every adapter that exists, in the order they should be offered when the
- * caller has no preference. Order matters: it is the order a learner sees.
+ * A service, the countries it can be configured for, and how to make its
+ * provider for one of them (or, with no country, for the account named
+ * without one).
+ *
+ * **A provider is a service in a country.** Its id is the service's, with the
+ * country after it: `mtn_momo_gh`, `airtel_money_ke`. That id is what an
+ * attempt is recorded under and what the service's callbacks are pointed at
+ * (`/api/payments/webhook/mtn_momo_gh`), so a callback is always answered
+ * with the credentials of the account it is about. The ids without a country,
+ * `mtn_momo` and `airtel_money`, are the accounts named without one in the
+ * environment; they are older than this and keep working.
  */
-const BUILTIN: Record<ProviderId, Factory> = {
-  mtn_momo: () => new MtnMomoProvider(mtnMomoConfigFromEnv()),
-  airtel_money: () => new AirtelMoneyProvider(airtelConfigFromEnv()),
+type Service = {
+  countries: readonly string[];
+  make: (country: string | undefined, id: ProviderId) => PaymentProvider;
+};
+
+/** Every service with an adapter, in the order a payer is offered them. */
+const SERVICES: Record<string, Service> = {
+  mtn_momo: {
+    countries: Object.keys(MTN_MOMO_MARKETS),
+    make: (country, id) => new MtnMomoProvider(mtnMomoConfigFromEnv(country), id),
+  },
+  airtel_money: {
+    countries: Object.keys(AIRTEL_MARKETS),
+    make: (country, id) => new AirtelMoneyProvider(airtelConfigFromEnv(country), id),
+  },
 };
 
 /** Extra adapters registered at runtime, e.g. by a plugin or a test. */
@@ -53,12 +80,35 @@ export function registerPaymentProvider(id: ProviderId, factory: Factory): void 
   ADAPTERS.set(id, factory);
 }
 
-function factoryFor(id: ProviderId): Factory | null {
-  return ADAPTERS.get(id) ?? BUILTIN[id] ?? null;
+/** The service and country an id names, or null for an id nobody could have issued. */
+function builtin(id: ProviderId): { service: Service; country: string | undefined } | null {
+  const whole = SERVICES[id];
+  if (whole) return { service: whole, country: undefined };
+  const match = /^(.+)_([a-z]{2})$/u.exec(id);
+  const service = match ? SERVICES[match[1]!] : undefined;
+  const country = match?.[2]?.toUpperCase();
+  if (!service || !country || !service.countries.includes(country)) return null;
+  return { service, country };
 }
 
+function factoryFor(id: ProviderId): Factory | null {
+  const registered = ADAPTERS.get(id);
+  if (registered) return registered;
+  const found = builtin(id);
+  return found ? () => found.service.make(found.country, id) : null;
+}
+
+/**
+ * Every id that names a provider: each service on its own, and each service
+ * in each country it can be configured for. Most of them have no credentials.
+ */
 export function knownProviderIds(): ProviderId[] {
-  return [...new Set([...Object.keys(BUILTIN), ...ADAPTERS.keys()])];
+  const ids: ProviderId[] = [];
+  for (const [name, service] of Object.entries(SERVICES)) {
+    ids.push(name);
+    for (const country of service.countries) ids.push(`${name}_${country.toLowerCase()}`);
+  }
+  return [...new Set([...ids, ...ADAPTERS.keys()])];
 }
 
 /**
@@ -67,11 +117,36 @@ export function knownProviderIds(): ProviderId[] {
  * This is what the checkout page should render. It is not the same as
  * `knownProviderIds()`, which includes providers that exist in code but have no
  * credentials — offering those would be offering a dead end.
+ *
+ * One provider for each service in each country. Where a country's account is
+ * configured both ways, under its own names and under the names without a
+ * country, the one under its own names is the one offered: two buttons for
+ * one account would be a choice with nothing to choose.
  */
 export function availableProviders(): PaymentProvider[] {
-  return knownProviderIds()
+  const all = knownProviderIds()
     .map((id) => factoryFor(id)?.())
     .filter((p): p is PaymentProvider => Boolean(p) && (p as PaymentProvider).available);
+  return all.filter((provider) => {
+    if (!(provider.id in SERVICES) || !provider.market) return true;
+    const scoped = `${provider.id}_${provider.market.country.toLowerCase()}`;
+    return !all.some((other) => other.id === scoped);
+  });
+}
+
+/**
+ * The providers that can take an order priced in this currency.
+ *
+ * A mobile-money account collects one currency. An order in another cannot be
+ * paid through it, so it is not offered: a button that fails after the number
+ * is typed is worse than no button. A provider tied to no country (none
+ * exists yet; a card provider would be one) takes any currency.
+ */
+export function providersForCurrency(currency: string | null | undefined): PaymentProvider[] {
+  const wanted = (currency ?? '').toUpperCase();
+  return availableProviders().filter(
+    (provider) => provider.market === null || provider.market.currency === wanted,
+  );
 }
 
 /**

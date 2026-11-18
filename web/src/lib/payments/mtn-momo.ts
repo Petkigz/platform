@@ -40,8 +40,16 @@ import {
   PaymentProviderUnavailableError,
 } from './provider.ts';
 import { accessToken, invalidateToken, readJson } from './oauth.ts';
+import { MTN_MOMO_MARKETS, internationalDigits, isNumberOf, type Market } from './markets.ts';
 
 export type MtnMomoConfig = {
+  /** The country this account collects in. ISO 3166-1 alpha-2. */
+  country: string;
+  /**
+   * The currency this account collects. The market's own, except in MTN's
+   * sandbox, which takes only EUR.
+   */
+  currency: string;
   /** Sandbox defaults to MTN's developer host; production is market-specific. */
   baseUrl: string;
   /** X-Target-Environment, e.g. `sandbox` or `mtnuganda`. */
@@ -55,24 +63,51 @@ export type MtnMomoConfig = {
   disbursement?: { subscriptionKey: string; apiUser: string; apiKey: string };
 };
 
-export function mtnMomoConfigFromEnv(): MtnMomoConfig | null {
-  const subscriptionKey = process.env.MTN_MOMO_SUBSCRIPTION_KEY?.trim();
-  const apiUser = process.env.MTN_MOMO_API_USER?.trim();
-  const apiKey = process.env.MTN_MOMO_API_KEY?.trim();
+/**
+ * One MTN market's account, from the environment, or null when it has none.
+ *
+ * **One country, one set of names.** Ghana's account is
+ * `MTN_MOMO_GH_SUBSCRIPTION_KEY`, `MTN_MOMO_GH_API_USER` and
+ * `MTN_MOMO_GH_API_KEY`; it calls MTN's production host with Ghana's
+ * `X-Target-Environment` and collects cedis. Only a country in
+ * `MTN_MOMO_MARKETS` can be named.
+ *
+ * **The names without a country** (`MTN_MOMO_SUBSCRIPTION_KEY` and the rest)
+ * are the first account this platform was written for. They stay, and they
+ * are one market like any other: the country is `MTN_MOMO_COUNTRY`, Uganda
+ * when it is not set, and they default to MTN's sandbox as they always did.
+ */
+export function mtnMomoConfigFromEnv(country?: string): MtnMomoConfig | null {
+  const scoped = country !== undefined;
+  const read = (name: string) =>
+    process.env[scoped ? `MTN_MOMO_${country}_${name}` : `MTN_MOMO_${name}`]?.trim();
+
+  const subscriptionKey = read('SUBSCRIPTION_KEY');
+  const apiUser = read('API_USER');
+  const apiKey = read('API_KEY');
   if (!subscriptionKey || !apiUser || !apiKey) return null;
 
-  const disbursementKey = process.env.MTN_MOMO_DISBURSEMENT_SUBSCRIPTION_KEY?.trim();
-  const disbursementUser = process.env.MTN_MOMO_DISBURSEMENT_API_USER?.trim();
-  const disbursementApiKey = process.env.MTN_MOMO_DISBURSEMENT_API_KEY?.trim();
+  const where = (scoped ? country : process.env.MTN_MOMO_COUNTRY?.trim() || 'UG').toUpperCase();
+  const market = MTN_MOMO_MARKETS[where];
+  // A country MTN's Open API does not serve cannot be configured into one.
+  if (!market) return null;
+
+  const disbursementKey = read('DISBURSEMENT_SUBSCRIPTION_KEY');
+  const disbursementUser = read('DISBURSEMENT_API_USER');
+  const disbursementApiKey = read('DISBURSEMENT_API_KEY');
 
   return {
+    country: where,
+    currency: read('CURRENCY')?.toUpperCase() || market.currency,
     baseUrl:
-      process.env.MTN_MOMO_BASE_URL?.trim() || 'https://sandbox.momodeveloper.mtn.com',
-    targetEnvironment: process.env.MTN_MOMO_TARGET_ENVIRONMENT?.trim() || 'sandbox',
+      read('BASE_URL') ||
+      (scoped ? 'https://proxy.momoapi.mtn.com' : 'https://sandbox.momodeveloper.mtn.com'),
+    targetEnvironment:
+      read('TARGET_ENVIRONMENT') || (scoped ? market.targetEnvironment : 'sandbox'),
     subscriptionKey,
     apiUser,
     apiKey,
-    callbackUrl: process.env.MTN_MOMO_CALLBACK_URL?.trim() || undefined,
+    callbackUrl: read('CALLBACK_URL') || undefined,
     disbursement:
       disbursementKey && disbursementUser && disbursementApiKey
         ? {
@@ -85,20 +120,23 @@ export function mtnMomoConfigFromEnv(): MtnMomoConfig | null {
 }
 
 export class MtnMomoProvider implements PaymentProvider {
-  readonly id = 'mtn_momo';
+  readonly id: string;
   readonly label = 'MTN MoMo';
   readonly webhookTrust = 'requery' as const;
   readonly requiresMsisdn = true;
   readonly available: boolean;
+  readonly market: Market | null;
 
   // Declared as a field rather than a constructor parameter property: Node's
   // --experimental-strip-types, which the unit tests run under, does not
   // support parameter properties.
   private readonly config: MtnMomoConfig | null;
 
-  constructor(config: MtnMomoConfig | null) {
+  constructor(config: MtnMomoConfig | null, id = 'mtn_momo') {
     this.config = config;
+    this.id = id;
     this.available = config !== null;
+    this.market = config ? { country: config.country, currency: config.currency } : null;
   }
 
   private get cfg(): MtnMomoConfig {
@@ -157,6 +195,21 @@ export class MtnMomoProvider implements PaymentProvider {
     if (!request.msisdn) {
       throw new Error('MTN MoMo needs the payer\'s mobile money number.');
     }
+    // An MTN account prompts handsets of its own country and nobody else's.
+    // The checkout refuses this before an order is written; it is refused
+    // again here because a number sent to the wrong country's account is a
+    // prompt on a stranger's phone.
+    if (!isNumberOf(request.msisdn, cfg.country)) {
+      throw new Error(`MTN MoMo in ${cfg.country} cannot prompt a number from another country.`);
+    }
+    // And it collects one currency. A UGX amount sent to Ghana's account
+    // would be refused at best and charged in cedis at worst.
+    if (request.amount.currency !== cfg.currency) {
+      throw new Error(
+        `MTN MoMo in ${cfg.country} collects ${cfg.currency} and this order is in ` +
+          `${request.amount.currency}.`,
+      );
+    }
 
     // MTN's idempotency key. Generated here, returned as the provider
     // reference, and used for every later status query — so it must be stable
@@ -179,7 +232,9 @@ export class MtnMomoProvider implements PaymentProvider {
         currency: request.amount.currency,
         // Our order id, echoed back in the status response.
         externalId: request.orderId,
-        payer: { partyIdType: 'MSISDN', partyId: request.msisdn },
+        // The digits as dialled from abroad, without the plus: `256772123456`.
+        // This sent `+256772123456`, which is not an MSISDN as MTN writes one.
+        payer: { partyIdType: 'MSISDN', partyId: internationalDigits(request.msisdn) },
         payerMessage: request.description.slice(0, 100),
         payeeNote: 'AyahSpring',
       }),
@@ -288,6 +343,8 @@ export class MtnMomoProvider implements PaymentProvider {
       amount?: string | number;
       currency?: string;
       financialTransactionId?: string;
+      /** The order id this request to pay was created with, echoed back. */
+      externalId?: string;
       reason?: { code?: string; message?: string };
     } | null;
 
@@ -317,6 +374,8 @@ export class MtnMomoProvider implements PaymentProvider {
         providerReference,
         amount,
         financialTransactionId: body.financialTransactionId ?? null,
+        // From the authenticated answer, never from the callback.
+        orderId: typeof body.externalId === 'string' && body.externalId !== '' ? body.externalId : null,
       };
     }
 
@@ -325,6 +384,7 @@ export class MtnMomoProvider implements PaymentProvider {
         state: 'failed',
         providerReference,
         reason: body.reason?.message ?? body.reason?.code ?? 'payment failed',
+        orderId: typeof body.externalId === 'string' && body.externalId !== '' ? body.externalId : null,
       };
     }
 

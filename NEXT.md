@@ -703,7 +703,7 @@ moves; `platform.search` blamed a missing index when no transcript text existed.
 Optional author-provided transcripts now exist and are searchable only when the caller may read them. Both rows
 have since been updated; their switches did not move.
 
-Verification: **The current tree has 352 migrations. An earlier tree passed 2 653 database assertions in
+Verification: **The current tree has 353 migrations. An earlier tree passed 2 653 database assertions in
 170 suites across eight separate PGlite databases. An earlier web tree passed 2 175 tests. Lint, TypeScript,
 `check:repo` and build passed. Hosted deployment and real concurrent PostgreSQL
 and storage behavior remain unverified.**
@@ -2618,6 +2618,84 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### Mobile money by country, a payment bound to its order, and merge requests that say nothing, 2026-11-18
+
+Three things the owner asked for after the merge screen: a number typed
+without a country code must not be read as Ugandan; MTN and Airtel must
+work country by country; merge requests get both protections on offer.
+
+- *A provider is a service in a country.* New `lib/payments/markets.ts`:
+  the eleven countries MTN's Open API serves and the thirteen Airtel Money
+  operates in, each with its currency (and MTN's header value). The
+  registry makes one provider for each configured country, `mtn_momo_gh`,
+  `airtel_money_ke`, from that country's own variables
+  (`MTN_MOMO_GH_API_KEY`, `AIRTEL_KE_CLIENT_ID`). The variables without a
+  country stay and are one account like any other (`mtn_momo`,
+  `airtel_money`; Uganda unless `MTN_MOMO_COUNTRY` / `AIRTEL_COUNTRY` says
+  otherwise).
+- *The number.* `/api/checkout` read every number without a country code
+  as Ugandan. It now reads it as a number of the country the chosen
+  service collects in, with the function the phone card uses, and refuses
+  a number from another country before an order is written. The buy page
+  says which country that is, names a mistake as it is typed in the phone
+  card's own sentences, and no longer shows a Ugandan number as its
+  example. Two new sentences in twenty-seven languages (`buy.phoneCountry`,
+  `buy.noProviderHere`), unreviewed.
+- *The currency.* A course is offered only the services that collect the
+  currency it is priced in here. With services connected and none for that
+  currency the page says so; a request made anyway leaves the order saved
+  and prompts nobody.
+- **Defects found in the payment code and fixed.** None had been seen
+  because no provider has ever been connected.
+  - **One order's payment could settle another order.** The callbacks are
+    unsigned, so the webhook asked the provider about the reference in a
+    callback and then settled the order id written beside it. Nothing
+    checked that the payment was for that order or for that amount. A
+    person who had really paid for a cheap order could post a callback
+    naming a dear one. Now (`lib/payments/binding.ts`) an order is settled
+    only when the provider's own answer says the payment was started for
+    it, the order exists, and an amount in the answer is the order's total
+    exactly. MTN echoes the order id it was given; an Airtel transaction
+    id is now made from the order's id.
+  - **No Airtel payment could have settled.** Airtel's answer is wrapped
+    in `data` and carries no amount; the adapter read the top level and
+    called a success with no amount "unknown".
+  - **No confirmed payment could have been recorded.** The provider's
+    answer was stored with a bigint in it, which cannot be written as
+    JSON; the insert threw.
+  - MTN was sent `+256772123456` as an MSISDN; it writes one without the
+    plus. Airtel was sent `256772123456`; it takes the number without the
+    country's code.
+  - An order was written before a missing number was noticed, leaving an
+    order nobody could pay.
+  - The deployment preflight said "no payment provider" to a site
+    configured for another country.
+- *Merge requests* (`20261281146000_merge_request_privacy.sql`, the 353rd
+  migration; decisions in `DECISIONS.md`). Every address is answered the
+  same way, five asks in twenty-four hours, nothing about the other
+  account for the asking side. One new sentence (`merge.errTooMany`) and a
+  rewritten one (`merge.asked`) in twenty-seven languages, unreviewed.
+- *Checks.* 2434 web tests. `account_merge` database suite 24/24 on its
+  own; the full database suite runs in CI. `buy-route-smoke` now starts
+  with two MTN accounts (Uganda's and Ghana's) and checks five numbers
+  refused by name, the same digits read as Ghana's for Ghana's service, a
+  service not asked for a currency it does not hold, and the number as MTN
+  writes it; in Chromium the Arabic form names a short number and a Kenyan
+  one before anything is sent and reads Arabic-Indic digits.
+- *Not proven, and it is most of it.* **No request has ever been made to
+  MTN, Airtel or any other provider**: there is no merchant account, test
+  or live, for any country. Both tables of countries, both number formats,
+  Airtel's answer shape and whether Airtel accepts a 36-character hex
+  transaction id are from published documentation and other people's
+  integrations. The webhook's new check has unit tests for its decision
+  and none that drive the whole handler. The migration is not on the
+  hosted project.
+- *Not built.* M-Pesa (Safaricom's API in Kenya, Vodacom's elsewhere),
+  Orange Money, Wave, telebirr, Tigo/Mixx, MTN in the countries outside
+  its Open API, Airtel's SmartCash in Nigeria. MTN refunds still send an
+  empty payee and cannot work. Nothing polls a provider when a callback
+  never arrives.
 
 ### The merge screen in the reader's language, 2026-11-18
 

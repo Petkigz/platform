@@ -28,6 +28,8 @@ const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf
 
 const MERGE_SQL = read('../../../supabase/migrations/20261281000800_account_merge.sql');
 const OWNER_SQL = read('../../../supabase/migrations/20261281058000_named_owner_account_boundary.sql');
+/** Asking answers every address the same way, at most five times a day. */
+const PRIVACY_SQL = read('../../../supabase/migrations/20261281146000_merge_request_privacy.sql');
 
 /** A database sentence as it is once `''` is one quote and its gaps are filled. */
 const said = (sentence: string, with_: string) => sentence.replaceAll("''", "'").replace(/%s|%/gu, with_);
@@ -46,6 +48,7 @@ const SQLSTATE: Record<string, string> = {
   no_data_found: 'P0002',
   invalid_parameter_value: '22023',
   check_violation: '23514',
+  program_limit_exceeded: '54000',
 };
 
 /** Every sentence `merge_blocks()` adds to one of its two lists. */
@@ -69,6 +72,7 @@ test('every refusal has one status, and only "failed" is not a refusal', () => {
     'no_account',
     'same_account',
     'pending',
+    'too_many',
     'no_request',
     'not_yours',
     'name',
@@ -88,6 +92,7 @@ test('every refusal has one status, and only "failed" is not a refusal', () => {
   assert.equal(mergeStatusOf('not_yours'), 403);
   assert.equal(mergeStatusOf('no_account'), 404);
   assert.equal(mergeStatusOf('no_request'), 404);
+  assert.equal(mergeStatusOf('too_many'), 429);
   for (const code of ['off', 'pending', 'blocked', 'expired', 'answered', 'refused'] as const) {
     assert.equal(mergeStatusOf(code), 409);
   }
@@ -111,7 +116,7 @@ test('the screen believes a refusal only when the route named it and answered wi
 });
 
 test('no sentence the route sends repeats one the database raises', () => {
-  const raised = [...raisesOf(MERGE_SQL), ...raisesOf(OWNER_SQL)].map((r) => said(r.message, '').toLowerCase());
+  const raised = [...raisesOf(MERGE_SQL), ...raisesOf(OWNER_SQL), ...raisesOf(PRIVACY_SQL)].map((r) => said(r.message, '').toLowerCase());
   assert.ok(raised.length >= 12);
   for (const code of CODES) {
     const sentence = MERGE_SENTENCE[code].toLowerCase();
@@ -151,6 +156,50 @@ test('every sentence the merge functions raise is a named refusal, never "failed
     assert.ok(code, `no SQLSTATE is known for ${state}`);
     assert.equal(mergeCodeOf({ code, message: said(message, 'that is the same account') }), expected[message], message);
   }
+});
+
+test('asking no longer says an address has no account, and the limit has a name', () => {
+  const raised = raisesOf(PRIVACY_SQL);
+  const expected: Record<string, MergeCode> = {
+    'sign in to merge an account': 'signed_out',
+    'sign in to see merge requests': 'signed_out',
+    'merging accounts is not enabled on this platform yet': 'off',
+    'type the email address of the account you want to keep': 'email',
+    'that is this account; sign in to the other one to merge it': 'same_account',
+    'this account has asked for a merge too many times today; try again tomorrow': 'too_many',
+    'only the account that would survive can decide': 'not_yours',
+    'this account has an owner appointment; contact privacy@ayahspring.com for individual review before merging it': 'blocked',
+  };
+  assert.deepEqual([...new Set(raised.map((r) => r.message))].sort(), Object.keys(expected).sort());
+  for (const { message, state } of raised) {
+    const code = SQLSTATE[state];
+    assert.ok(code, `no SQLSTATE is known for ${state}`);
+    assert.equal(mergeCodeOf({ code, message }), expected[message], message);
+  }
+  // The sentence that named an address as nobody's is gone from the function
+  // that asks, and the name for it stays for a database not yet migrated.
+  const asks = PRIVACY_SQL.slice(
+    PRIVACY_SQL.indexOf('create or replace function public.request_account_merge('),
+    PRIVACY_SQL.indexOf('create or replace function public.my_merge_requests('),
+  );
+  assert.ok(asks.length > 500);
+  assert.ok(!/no account with that email/u.test(asks));
+  assert.equal(mergeCodeOf({ code: 'P0002', message: 'there is no account with that email address' }), 'no_account');
+  // A request already waiting is answered before the address is looked at.
+  assert.ok(asks.indexOf("where duplicate_user_id = v_actor and status = 'pending'") < asks.indexOf('from auth.users where lower(email) = v_email'));
+  // The limit is counted before a row is written, and unknown words under its state are a refusal.
+  assert.ok(asks.indexOf('if v_recent >= 5 then') < asks.indexOf('insert into public.account_merge_requests'));
+  assert.equal(mergeCodeOf({ code: '54000', message: 'stack depth limit exceeded' }), 'refused');
+
+  // The asking side is told nothing about the other account.
+  const reads = PRIVACY_SQL.slice(PRIVACY_SQL.indexOf('create or replace function public.my_merge_requests('));
+  const outgoing = reads.slice(reads.indexOf("'outgoing'"), reads.indexOf('$$;'));
+  assert.ok(outgoing.length > 200);
+  assert.ok(!/otherName|otherUserId|target_user_id|display_name/u.test(outgoing), 'the asking side is handed something about the other account');
+  // And cannot read it out of the table.
+  assert.match(PRIVACY_SQL, /drop policy account_merge_requests_read on public\.account_merge_requests;/u);
+  const policy = PRIVACY_SQL.slice(PRIVACY_SQL.indexOf('create policy account_merge_requests_read'), PRIVACY_SQL.indexOf('-- Asking'));
+  assert.ok(!policy.includes('duplicate_user_id'), 'the asking account can still select its own rows');
 });
 
 test('the owner appointment the later migration raises is said as blocked', () => {
@@ -370,7 +419,7 @@ const KEY_OF_BLOCK: Record<string, string> = {
 
 test('everything with a name has a sentence, in English and in every language that has the screen', () => {
   const keys = Object.keys(en).filter((key) => key.startsWith('merge.'));
-  assert.equal(keys.length, 84);
+  assert.equal(keys.length, 85);
   const needed = [
     ...MERGE_BLOCKS.map((why) => `merge.${KEY_OF_BLOCK[why]}`),
     'merge.noteJoin',

@@ -103,9 +103,11 @@ const MOVE: Record<MergeMove, MessageKey> = {
  * (`lib/merge-outcome.ts`) and said from the catalogue; one nobody recognises
  * is said as "something stops it", never printed.
  *
- * **The other account's name is not shown to the account that asked.** The
- * database returns it, to anybody who typed an address. The account that has
- * to answer does see who is asking, because it has to decide.
+ * **The other account's name is not shown to the account that asked**, and
+ * since `20261281146000_merge_request_privacy.sql` the database does not
+ * return it either, nor whether the address typed has an account at all. A
+ * request is listed the same way whoever it was addressed to. The account
+ * that has to answer does see who is asking, because it has to decide.
  */
 export default async function AccountMergePage() {
   if (!isSupabaseConfigured()) redirect('/');
@@ -219,6 +221,7 @@ export default async function AccountMergePage() {
       no_account: t('merge.errNoAccount'),
       same_account: t('merge.errSameAccount'),
       pending: t('merge.errPending'),
+      too_many: t('merge.errTooMany'),
       no_request: t('merge.errNoRequest'),
       not_yours: t('merge.errNotYours'),
       name: t('merge.errName'),

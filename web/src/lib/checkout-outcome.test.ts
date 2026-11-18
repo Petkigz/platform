@@ -9,7 +9,7 @@ import {
   writerReasonOf,
 } from './checkout-outcome.ts';
 import { createOrder, quoteCourseOrder } from './checkout.ts';
-import { toE164 } from './phone.ts';
+import { parsePhone } from './phone.ts';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 
@@ -140,7 +140,10 @@ test('the two routes send the reason with its own status and keep the database�
   // The provider's "not configured" error names an environment variable and a
   // section of DECISIONS.md. It was sent to the payer.
   assert.doesNotMatch(checkout, /err\.message/u);
-  assert.equal(checkout.match(/refuse\('provider_unavailable', NO_PROVIDER_SENTENCE, \{\s+code: 'provider_unavailable',\s+orderId: result\.orderId,\s+\}\)/gu)?.length, 2);
+  // Three now: none configured, one that collects another currency, and one
+  // whose adapter says it has no credentials.
+  assert.equal(checkout.match(/refuse\('provider_unavailable', NO_PROVIDER_SENTENCE, \{\s+code: 'provider_unavailable',\s+orderId: result\.orderId,\s+\}\)/gu)?.length, 3);
+  assert.match(checkout, /if \(provider\.market && provider\.market\.currency !== result\.currencyCode\) \{/u);
 
   // A mistyped number is refused before the order is written, so it no
   // longer leaves a pending order behind each time.
@@ -149,15 +152,36 @@ test('the two routes send the reason with its own status and keep the database�
   assert.ok(phone > 0 && written > phone, 'the phone number is checked after the order is written');
   assert.doesNotMatch(checkout, /refuse\('phone_invalid'[^)]*orderId/u);
 
-  // The number is read with a dial code. It was read with 'UG', which
-  // `toE164` does not take, so a number typed the way the form's placeholder
-  // shows it was always refused.
-  assert.match(checkout, /const LOCAL_DIAL_CODE = '\+256';/u);
-  assert.match(checkout, /toE164\(body\.msisdn, LOCAL_DIAL_CODE\)/u);
-  assert.equal(toE164('0772 123456', '+256'), '+256772123456');
-  assert.equal(toE164('0772 123456', 'UG'), null);
-  assert.equal(toE164('12', '+256'), null);
-  assert.equal(toE164('+254712345678', '+256'), '+254712345678');
+  // A number written without a country code is read as a number of the
+  // country the chosen service collects in. It was read as Ugandan whoever
+  // was paying: first with 'UG', which `toE164` does not take, so every local
+  // number was refused; then with '+256', so every local number was Uganda's.
+  assert.doesNotMatch(checkout, /LOCAL_DIAL_CODE|'\+256'/u);
+  assert.match(checkout, /const parsed = parsePhone\(typed, provider\.market\.country\);/u);
+  // The provider is chosen before the number is read, and both before the order.
+  const chosen = checkout.indexOf('const provider = getPaymentProvider(requestedProvider);');
+  assert.ok(chosen > 0 && chosen < phone, 'the number is read before the service is known');
+  // With nobody to send it to, a number is not read at all.
+  assert.match(checkout, /if \(provider\.available && provider\.requiresMsisdn\) \{/u);
+  // The same typed digits are a different number in each country, and the
+  // country's own way of writing a number is what reads them.
+  const number = (typed: string, country: string) => {
+    const parsed = parsePhone(typed, country);
+    return parsed.ok ? parsed.e164 : parsed.why;
+  };
+  assert.equal(number('0772 123456', 'UG'), '+256772123456');
+  assert.equal(number('0712 345678', 'KE'), '+254712345678');
+  assert.equal(number('024 123 4567', 'GH'), '+233241234567');
+  assert.equal(number('0961 234567', 'ZM'), '+260961234567');
+  // Typed in full, with or without its plus.
+  assert.equal(number('+233 24 123 4567', 'GH'), '+233241234567');
+  assert.equal(number('233241234567', 'GH'), '+233241234567');
+  // Another country's number is not this service's to prompt.
+  assert.equal(number('+254712345678', 'UG'), 'other_country');
+  assert.equal(number('12', 'UG'), 'length');
+  assert.equal(number('', 'UG'), 'empty');
+  // The reader's own digits are digits.
+  assert.equal(number('٠٧٧٢ ١٢٣ ٤٥٦', 'UG'), '+256772123456');
 
   // Every refusal in the checkout route goes through `refuse`, except the
   // plan checkout's, which has no keys to match and keeps its old shape.

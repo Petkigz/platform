@@ -4,6 +4,8 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Say } from '@/components/say';
+import { PhoneReasonSaid, type PhoneReasonWords } from '@/components/phone-reason';
+import { parsePhone } from '@/lib/phone';
 import { format, fromMinor } from '@/lib/money';
 import type { WithdrawalOffer } from '@/lib/withdrawal';
 import {
@@ -68,6 +70,10 @@ export type BuyWords = {
   payWith: string;
   phoneLabel: string;
   phoneNote: string;
+  /** How a number written without a country code is read. Holds `{country}` and `{dial}`. */
+  phoneCountry: string;
+  /** Why a number cannot be read as one of that country's: the phone card's sentences. */
+  phoneWhy: PhoneReasonWords;
   continue: string;
   starting: string;
   noProviderNote: string;
@@ -114,8 +120,20 @@ export function BuyForm({
   /** The profiles this purchase may cover: the buyer and their family. */
   learners: { id: string; name: string; type: string }[];
   defaultLearnerId: string;
-  /** Providers that are configured and usable right now. */
-  providers: { id: string; label: string; requiresMsisdn: boolean }[];
+  /**
+   * Providers that are configured, usable right now and collect the currency
+   * this course is priced in. A mobile-money provider is one service in one
+   * country: `country` is that country, its name is in the reader's language,
+   * and `dial` is the code its numbers begin with.
+   */
+  providers: {
+    id: string;
+    label: string;
+    requiresMsisdn: boolean;
+    country: string | null;
+    countryName: string | null;
+    dial: string | null;
+  }[];
   providerConfigured: boolean;
   /**
    * A referral code this browser arrived with. Pre-filled so a friend's link
@@ -147,6 +165,12 @@ export function BuyForm({
   const [learnerId, setLearnerId] = useState(defaultLearnerId);
   const chosen = providers.find((p) => p.id === providerId);
   const needsNumber = chosen?.requiresMsisdn ?? false;
+  // The number as the chosen service's country writes its numbers. A number
+  // typed without a country code used to be read as Ugandan whoever was
+  // paying; it is one of the country the service collects in, and the form
+  // says which country that is before anything is sent.
+  const number = needsNumber && chosen?.country ? parsePhone(msisdn, chosen.country) : null;
+  const typed = msisdn.trim() !== '';
   // Optional, and deliberately not required: a family with no code should not
   // have to dismiss a field to buy a course.
   const [promotionCode, setPromotionCode] = useState(defaultCode?.trim() ?? '');
@@ -249,6 +273,13 @@ export function BuyForm({
     if (learnerId === '') {
       setTone('error');
       setMessage(words.reasons.learner_required);
+      return;
+    }
+    // A number that is not one of the service's country is said here, without
+    // a request: the route would refuse it, and before that nothing is written.
+    if (number && !number.ok) {
+      setTone('error');
+      setMessage(words.reasons.phone_invalid);
       return;
     }
     setBusy(true);
@@ -466,8 +497,16 @@ export function BuyForm({
                 checked={providerId === p.id}
                 onChange={() => setProviderId(p.id)}
               />
-              {/* A provider's name is its own. */}
-              <span><bdi dir="ltr">{p.label}</bdi></span>
+              {/* A provider's name is its own; the country it collects in is the reader's word for it. */}
+              <span>
+                <bdi dir="ltr">{p.label}</bdi>
+                {p.countryName && (
+                  <>
+                    {' · '}
+                    <bdi>{p.countryName}</bdi>
+                  </>
+                )}
+              </span>
             </label>
           ))}
         </fieldset>
@@ -483,12 +522,38 @@ export function BuyForm({
           dir="ltr"
           inputMode="tel"
           autoComplete="tel"
-          placeholder="0772 123456"
+          aria-describedby="msisdn-help"
+          aria-invalid={typed && number !== null && !number.ok ? true : undefined}
           value={msisdn}
           onChange={(e) => setMsisdn(e.target.value)}
           disabled={busy}
         />
-        <p className="muted">{words.phoneNote}</p>
+        <p id="msisdn-help" className="muted">
+          {typed && number && !number.ok && chosen?.country ? (
+            <PhoneReasonSaid
+              words={words.phoneWhy}
+              reason={number}
+              country={chosen.country}
+              fallback={words.reasons.phone_invalid}
+            />
+          ) : (
+            <>
+              {words.phoneNote}
+              {chosen?.countryName && chosen.dial && (
+                <>
+                  {' '}
+                  <Say
+                    text={words.phoneCountry}
+                    parts={{
+                      country: <bdi>{chosen.countryName}</bdi>,
+                      dial: <bdi dir="ltr">{chosen.dial}</bdi>,
+                    }}
+                  />
+                </>
+              )}
+            </>
+          )}
+        </p>
       </div>
       )}
 

@@ -368,12 +368,16 @@ try {
     expect(await send('/api/checkout', '{not json'), 400, 'malformed', 'order, not JSON');
     expect(await send('/api/checkout', { courseId: COURSE, planVersionId: PLAN, learnerProfileId: OWN }), 400, 'malformed', 'order, a course and a plan at once');
     expect(await send('/api/checkout', { courseId: COURSE }), 400, 'learner_required', 'order, nobody named');
-    // A mistyped number is refused before anything is written, and the reply
-    // names no order because there is none.
+    // With no provider there is nobody to send a number to, so one is not
+    // read at all, whatever was typed: a number is a number of the country the
+    // chosen service collects in, and no service has been chosen. (It used to
+    // be read as Ugandan and refused here.) The request goes on to be told
+    // there is no provider. With a provider, a mistyped number is refused
+    // before anything is written: that is checked in the second half.
     let answer = await send('/api/checkout', { ...order, msisdn: '12' });
-    expect(answer, 400, 'phone_invalid', 'order, a number that is not one');
-    assert.equal('orderId' in answer.json, false, 'a refused number is answered with an order');
-    assert.equal(rpcs('create_course_order').length, 0, 'a refused request still wrote an order');
+    expect(answer, 503, 'provider_unavailable', 'order, no provider and a number nobody will read');
+    state = fresh();
+    calls.length = 0;
 
     state.entitled = new Set([OWN]);
     expect(await send('/api/checkout', order), 409, 'already_owned', 'order, the learner has it');
@@ -471,7 +475,7 @@ try {
     assert.deepEqual(rpcs('quote_course_order').map((c) => c.payload), [{ p_course_id: COURSE, p_learner_profile_id: OWN, p_buyer_country: 'UG', p_promotion_code: 'eid24' }]);
     assert.equal(rpcs('create_course_order').length, 0, 'asking the price wrote an order');
     state = fresh();
-    console.log('Checkout routes, no provider connected: signed out 401, malformed 400, nobody named 400, a mistyped number 400 with no order written, 23 writer refusals each under its own name and status with no order in the reply, an unnamed refusal 500 in the route’s words, no answer from the database 502 "unconfirmed", a choice that could not be recorded and a missing provider each naming the order that exists; the writer is sent a course, a learner, a country and a code and nothing else; a plan keeps its old reply; the price check answers the same names and writes nothing. The stand-in enforces nothing: not real Auth, RLS or the writer’s own rules.');
+    console.log('Checkout routes, no provider connected: signed out 401, malformed 400, nobody named 400, a number typed with no service to read it for left unread, 23 writer refusals each under its own name and status with no order in the reply, an unnamed refusal 500 in the route’s words, no answer from the database 502 "unconfirmed", a choice that could not be recorded and a missing provider each naming the order that exists; the writer is sent a course, a learner, a country and a code and nothing else; a plan keeps its old reply; the price check answers the same names and writes nothing. The stand-in enforces nothing: not real Auth, RLS or the writer’s own rules.');
 
     if (process.env.RESPONSIVE_PLAYWRIGHT && process.env.RESPONSIVE_CHROME) {
       const { chromium } = await import(pathToFileURL(process.env.RESPONSIVE_PLAYWRIGHT).href);
@@ -498,7 +502,9 @@ try {
 
   // ======================================================= a provider connected
   // The provider's address is this script. Nothing here is MTN.
-  await withNext({ MTN_MOMO_SUBSCRIPTION_KEY: 'synthetic', MTN_MOMO_API_USER: 'synthetic', MTN_MOMO_API_KEY: 'synthetic', MTN_MOMO_BASE_URL: `http://127.0.0.1:${fake.address().port}` }, async (origin, seen) => {
+  // Two accounts: Uganda's, under the names without a country, and Ghana's,
+  // under its own. The course is priced in Ugandan shillings.
+  await withNext({ MTN_MOMO_SUBSCRIPTION_KEY: 'synthetic', MTN_MOMO_API_USER: 'synthetic', MTN_MOMO_API_KEY: 'synthetic', MTN_MOMO_BASE_URL: `http://127.0.0.1:${fake.address().port}`, MTN_MOMO_GH_SUBSCRIPTION_KEY: 'synthetic-gh', MTN_MOMO_GH_API_USER: 'synthetic-gh', MTN_MOMO_GH_API_KEY: 'synthetic-gh', MTN_MOMO_GH_BASE_URL: `http://127.0.0.1:${fake.address().port}` }, async (origin, seen) => {
     state = fresh();
     const request = (path, headers = {}) => fetch(`${origin}${path}`, { headers, redirect: 'manual', signal: AbortSignal.timeout(90000) });
     const page = async (path, headers) => { const response = await request(path, { cookie, ...uganda, ...headers }); assert.equal(response.status, 200, `${path}\n${seen.logs.slice(-2000)}`); return response.text(); };
@@ -511,14 +517,45 @@ try {
 
     const english = inner(await page(BUY, { 'accept-language': 'en' }));
     has(english, ['<label for="msisdn" class="eyebrow">Mobile money number</label>', 'The number that will be asked to approve the payment.', 'Continue to payment'], 'the English page with a provider');
-    hasNot(english, ['No payment provider', 'This order will be recorded but cannot be paid yet.', 'Pay with'], 'the English page with a provider');
+    // The page says which country a number without a country code is read as one of.
+    assert.match(english, /A number written without a country code is read as a number of this country: (?:<!-- -->)?<bdi>Uganda<\/bdi>(?:<!-- -->)?\. Its code: (?:<!-- -->)?<bdi dir="ltr">\+256<\/bdi>(?:<!-- -->)?\./);
+    // Ghana's account collects cedis, so a course in shillings is not offered it: one service, nothing to choose.
+    hasNot(english, ['No payment provider', 'No payment service', 'This order will be recorded but cannot be paid yet.', 'Pay with', 'Ghana', '+233', 'placeholder="0772'], 'the English page with a provider');
     const ar = inner(await page(BUY, { 'accept-language': 'ar' }));
     has(ar, ['<label for="msisdn" class="eyebrow">رقم محفظة الهاتف المحمول</label>', 'الرقم الذي سيُطلب منه الموافقة على الدفع.'], 'the Arabic page with a provider');
+    assert.match(ar, /الرقم المكتوب بلا رمز بلد يُقرأ على أنه رقم من هذا البلد: (?:<!-- -->)?<bdi>أوغندا<\/bdi>(?:<!-- -->)?\. رمزه: (?:<!-- -->)?<bdi dir="ltr">\+256<\/bdi>(?:<!-- -->)?\./);
     hasNot(ar, [...ENGLISH_ONLY, 'lang="en"'], 'the Arabic page with a provider');
 
-    // A number typed the way the placeholder shows it. It used to be refused.
+    // A number that is not one of the service's country is refused before
+    // anything is written, and the reply names no order because there is none.
     calls.length = 0; provider.length = 0;
-    let answer = await send('/api/checkout', { courseId: COURSE, learnerProfileId: OWN, msisdn: '0772 123456' });
+    for (const [typed, why] of [['12', 'length'], ['', 'empty'], ['call me', 'letters'], ['+254712345678', 'other_country'], ['+233 24 123 4567', 'other_country']]) {
+      const refused = await send('/api/checkout', { courseId: COURSE, learnerProfileId: OWN, msisdn: typed });
+      assert.equal(refused.status, 400, `"${typed}"`); assert.equal(refused.json.reason, 'phone_invalid', `"${typed}"`);
+      assert.equal(refused.json.phone.why, why, `"${typed}" is refused as ${refused.json.phone.why}`);
+      assert.equal('orderId' in refused.json, false, 'a refused number is answered with an order');
+    }
+    assert.equal(calls.filter((c) => c.path === '/rest/v1/rpc/create_course_order').length, 0, 'a refused number still wrote an order');
+    assert.equal(provider.length, 0, 'a refused number reached the provider');
+
+    // The same digits are Ghana's number when Ghana's service is the one
+    // chosen: read as +233, not refused and not turned into a Ugandan number.
+    // Ghana's account collects cedis and this order is in shillings, so the
+    // order is saved and nobody is prompted.
+    let answer = await send('/api/checkout', { courseId: COURSE, learnerProfileId: OWN, provider: 'mtn_momo_gh', msisdn: '024 123 4567' });
+    assert.equal(answer.status, 503, JSON.stringify(answer.json)); assert.equal(answer.json.reason, 'provider_unavailable'); assert.equal(answer.json.orderId, ORDER);
+    assert.equal(provider.length, 0, 'a service was asked to collect a currency it does not hold');
+    // A Ugandan number written in full is not Ghana's to prompt. (Written
+    // without its code it cannot be told from a Ghanaian one: both countries
+    // write nine digits after a zero. That is why the page says which country
+    // a number without a code is read as one of.)
+    answer = await send('/api/checkout', { courseId: COURSE, learnerProfileId: OWN, provider: 'mtn_momo_gh', msisdn: '+256772123456' });
+    assert.equal(answer.status, 400); assert.equal(answer.json.reason, 'phone_invalid'); assert.equal(answer.json.phone.why, 'other_country');
+    state = fresh();
+
+    // A number typed the way Uganda writes one. It used to be refused.
+    calls.length = 0; provider.length = 0;
+    answer = await send('/api/checkout', { courseId: COURSE, learnerProfileId: OWN, msisdn: '0772 123456' });
     assert.equal(answer.status, 200, JSON.stringify(answer));
     assert.deepEqual(Object.keys(answer.json).sort(), ['kind', 'orderId', 'providerReference']);
     assert.equal(answer.json.kind, 'pending'); assert.equal(answer.json.orderId, ORDER);
@@ -528,7 +565,8 @@ try {
     assert.equal(provider[0].reference, answer.json.providerReference);
     assert.equal(provider[0].payload.amount, '50000'); assert.equal(provider[0].payload.currency, 'UGX');
     assert.equal(provider[0].payload.externalId, ORDER);
-    assert.deepEqual(provider[0].payload.payer, { partyIdType: 'MSISDN', partyId: '+256772123456' });
+    // The digits as dialled from abroad, without the plus: that is an MSISDN as MTN writes one.
+    assert.deepEqual(provider[0].payload.payer, { partyIdType: 'MSISDN', partyId: '256772123456' });
     const attempts = calls.filter((c) => c.path === '/rest/v1/payment_attempts' && c.method === 'POST');
     assert.equal(attempts.length, 1);
     assert.deepEqual(attempts[0].payload, { order_id: ORDER, amount_minor: '50000', currency_code: 'UGX', provider: 'mtn_momo', method: 'mobile_money', status: 'pending', idempotency_key: `${ORDER}:1` });
@@ -538,13 +576,17 @@ try {
     assert.equal(answer.status, 502); assert.equal(answer.json.reason, 'provider_failed'); assert.equal(answer.json.orderId, ORDER);
     // A provider that needs a number and is given none.
     state.provider = 202; provider.length = 0;
+    // It used to write the order first and let the provider's adapter throw:
+    // an order nobody could pay, and "the payment could not be started".
+    calls.length = 0;
     answer = await send('/api/checkout', { courseId: COURSE, learnerProfileId: OWN });
-    assert.equal(answer.status, 502); assert.equal(answer.json.reason, 'provider_failed');
+    assert.equal(answer.status, 400); assert.equal(answer.json.reason, 'phone_invalid'); assert.equal(answer.json.phone.why, 'empty');
+    assert.equal(calls.filter((c) => c.path === '/rest/v1/rpc/create_course_order').length, 0, 'an order was written with no number to prompt');
     assert.equal(provider.length, 0);
     // One that is named and not connected.
     answer = await send('/api/checkout', { courseId: COURSE, learnerProfileId: OWN, provider: 'airtel_money', msisdn: '0772 123456' });
     assert.equal(answer.status, 503); assert.equal(answer.json.reason, 'provider_unavailable'); assert.equal(answer.json.orderId, ORDER);
-    console.log('Checkout route with a synthetic provider: a number typed as the placeholder shows it is accepted and sent in full; the provider is asked for the order’s own amount and the buyer is given the provider’s reference; an attempt is recorded before the provider is called; a provider that fails is answered 502 without its sentence and with the order named. Not MTN, and no money.');
+    console.log('Checkout route with a synthetic provider: five numbers that are not one of the service’s country refused by name with no order written; the same digits read as Ghana’s when Ghana’s service is chosen, and that service not asked for shillings; a number typed the way Uganda writes one accepted and sent as MTN writes it; the provider is asked for the order’s own amount and the buyer is given the provider’s reference; an attempt is recorded before the provider is called; a provider that fails is answered 502 without its sentence and with the order named. Not MTN, and no money.');
 
     if (browser) {
       const open = async (code, width) => {
@@ -643,10 +685,26 @@ try {
         const number = tab.locator('#msisdn');
         assert.equal(await number.getAttribute('dir'), 'ltr');
         calls.length = 0;
+        // Before anything is typed, the field says whose a number without a country code is.
+        const help = tab.locator('#msisdn-help');
+        assert.equal((await help.innerText()).replace(/[\u2066-\u2069]/g, ''), 'الرقم الذي سيُطلب منه الموافقة على الدفع. الرقم المكتوب بلا رمز بلد يُقرأ على أنه رقم من هذا البلد: أوغندا. رمزه: +256.');
+        assert.equal(await number.getAttribute('placeholder'), null, 'the field still shows one country’s way of writing a number');
         await number.fill('12');
+        // The mistake is named as it is typed, in the phone card's own words, and nothing is sent.
+        assert.ok((await help.innerText()).startsWith('عدد الخانات في رقم من هذا البلد بعد رمز البلد: 9.'), await help.innerText());
+        assert.equal(await number.getAttribute('aria-invalid'), 'true');
+        const before = calls.length;
         await buy.click();
         await alert('رقم الهاتف هذا غير صحيح. تحقّق منه وحاول مرة أخرى.');
         assert.equal(rpcs('create_course_order').length, 0, 'a mistyped number wrote an order');
+        assert.equal(calls.length, before, 'a number the form could name was sent');
+        // A Kenyan number is not this service's to prompt.
+        await number.fill('+254712345678');
+        assert.ok((await help.innerText()).replace(/[\u2066-\u2069]/g, '').startsWith('بداية هذا الرقم: +2547.'), await help.innerText());
+        // The reader's own digits are a number, and the note comes back.
+        await number.fill('٠٧٧٢ ١٢٣ ٤٥٦');
+        assert.ok((await help.innerText()).startsWith('الرقم الذي سيُطلب منه الموافقة على الدفع.'));
+        assert.equal(await number.getAttribute('aria-invalid'), null);
         await number.fill('0772 123456');
         state.order = refusal(400, 'P0001', 'checkout:already_owned');
         await buy.click();
@@ -690,7 +748,7 @@ try {
         assert.equal(rpcs('create_course_order').length, 1);
         assert.deepEqual(rpcs('create_course_order')[0].payload, { p_course_id: COURSE, p_learner_profile_id: AISHA, p_buyer_country: 'UG', p_promotion_code: 'eid24' });
         assert.deepEqual(rpcs('record_withdrawal_choice').map((c) => c.payload.p_accepted), [true], 'a ticked box was not recorded as one');
-        assert.equal(provider.length, 1); assert.equal(provider[0].payload.payer.partyId, '+256772123456');
+        assert.equal(provider.length, 1); assert.equal(provider[0].payload.payer.partyId, '256772123456');
         assert.equal(await alerts.count(), 0, 'an earlier refusal is still shown beside the confirmation');
         state.delay = 0;
         assert.deepEqual(errors, []);
