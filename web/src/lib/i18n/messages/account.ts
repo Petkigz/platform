@@ -145,7 +145,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.toldPrefs': 'اختر ما تُبلَّغ به',
     'account.dataHeading': 'بياناتي',
     'account.dataBody':
-      'نزّل كل ما نحتفظ به عن هذا الحساب في ملف واحد: ملفك الشخصي، والمتعلّمون الذين أنت مسؤول عنهم، وما درسوه وأتمّوه، وشهاداتك، وطلباتك وإيصالاتك، وملاحظاتك، ومن شاركت تعلّمك معهم.',
+      'نزّل نسخة مما نحتفظ به عن هذا الحساب في ملف واحد: ملفك الشخصي، والمتعلّمون الذين أنت مسؤول عنهم، وما درسوه وأتمّوه، وشهاداتك، وطلباتك وإيصالاتك، وملاحظاتك، ومن شاركت تعلّمك معهم.',
     'account.dataDownload': 'تنزيل بياناتي',
     'account.dataSheet': 'كجدول بيانات',
     'account.dataPrint': 'قراءتها أو طباعتها',
@@ -272,7 +272,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.toldPrefs': 'چنیں کہ آپ کو کیا بتایا جائے',
     'account.dataHeading': 'میرا ڈیٹا',
     'account.dataBody':
-      'اس اکاؤنٹ کے بارے میں ہمارے پاس جو کچھ ہے اسے ایک فائل میں ڈاؤن لوڈ کریں: آپ کا پروفائل، وہ سیکھنے والے جن کے آپ ذمہ دار ہیں، انہوں نے کیا پڑھا اور مکمل کیا، آپ کی اسناد، آرڈر اور رسیدیں، آپ کے نوٹس، اور وہ لوگ جن سے آپ نے اپنی تعلیم شیئر کی ہے۔',
+      'اس اکاؤنٹ کے بارے میں ہمارے پاس جو کچھ ہے اس کی ایک نقل ایک فائل میں ڈاؤن لوڈ کریں: آپ کا پروفائل، وہ سیکھنے والے جن کے آپ ذمہ دار ہیں، انہوں نے کیا پڑھا اور مکمل کیا، آپ کی اسناد، آرڈر اور رسیدیں، آپ کے نوٹس، اور وہ لوگ جن سے آپ نے اپنی تعلیم شیئر کی ہے۔',
     'account.dataDownload': 'میرا ڈیٹا ڈاؤن لوڈ کریں',
     'account.dataSheet': 'اسپریڈ شیٹ کے طور پر',
     'account.dataPrint': 'پڑھیں یا پرنٹ کریں',
@@ -397,7 +397,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.toldPrefs': 'انتخاب کنید چه چیزی به شما گفته شود',
     'account.dataHeading': 'داده‌های من',
     'account.dataBody':
-      'هر آنچه دربارهٔ این حساب نگه می‌داریم را در یک پرونده بارگیری کنید: نمایهٔ شما، یادگیرندگانی که مسئولشان هستید، آنچه خوانده و تمام کرده‌اند، گواهی‌نامه‌ها، سفارش‌ها و رسیدهایتان، یادداشت‌هایتان و کسانی که یادگیری خود را با آن‌ها به اشتراک گذاشته‌اید.',
+      'نسخه‌ای از آنچه دربارهٔ این حساب نگه می‌داریم را در یک پرونده بارگیری کنید: نمایهٔ شما، یادگیرندگانی که مسئولشان هستید، آنچه خوانده و تمام کرده‌اند، گواهی‌نامه‌ها، سفارش‌ها و رسیدهایتان، یادداشت‌هایتان و کسانی که یادگیری خود را با آن‌ها به اشتراک گذاشته‌اید.',
     'account.dataDownload': 'بارگیری داده‌های من',
     'account.dataSheet': 'به‌صورت صفحه‌گسترده',
     'account.dataPrint': 'خواندن یا چاپ',
@@ -523,7 +523,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.toldPrefs': 'انتخاب کنید چه به شما گفته شود',
     'account.dataHeading': 'معلومات من',
     'account.dataBody':
-      'هر آنچه دربارهٔ این حساب نگه می‌داریم را در یک فایل داونلود کنید: پروفایل شما، شاگردانی که مسئول‌شان هستید، آنچه خوانده و تمام کرده‌اند، اسناد، فرمایش‌ها و رسیدهای‌تان، یادداشت‌های‌تان و کسانی که آموزش خود را با آن‌ها شریک ساخته‌اید.',
+      'یک نسخه از آنچه دربارهٔ این حساب نگه می‌داریم را در یک فایل داونلود کنید: پروفایل شما، شاگردانی که مسئول‌شان هستید، آنچه خوانده و تمام کرده‌اند، اسناد، فرمایش‌ها و رسیدهای‌تان، یادداشت‌های‌تان و کسانی که آموزش خود را با آن‌ها شریک ساخته‌اید.',
     'account.dataDownload': 'داونلود معلومات من',
     'account.dataSheet': 'به شکل صفحهٔ جدولی',
     'account.dataPrint': 'خواندن یا چاپ',
@@ -651,7 +651,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.toldPrefs': 'Size ne bildirileceğini seçin',
     'account.dataHeading': 'Verilerim',
     'account.dataBody':
-      'Bu hesap hakkında tuttuğumuz her şeyi tek dosya olarak indirin: profiliniz, sorumlu olduğunuz öğrenciler, onların çalıştıkları ve bitirdikleri, sertifikalarınız, siparişleriniz ve makbuzlarınız, notlarınız ve öğreniminizi paylaştığınız kişiler.',
+      'Bu hesap hakkında tuttuklarımızın bir kopyasını tek dosya olarak indirin: profiliniz, sorumlu olduğunuz öğrenciler, onların çalıştıkları ve bitirdikleri, sertifikalarınız, siparişleriniz ve makbuzlarınız, notlarınız ve öğreniminizi paylaştığınız kişiler.',
     'account.dataDownload': 'Verilerimi indir',
     'account.dataSheet': 'Elektronik tablo olarak',
     'account.dataPrint': 'Oku veya yazdır',
@@ -780,7 +780,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.toldPrefs': 'Pilih apa yang diberitahukan kepada Anda',
     'account.dataHeading': 'Data saya',
     'account.dataBody':
-      'Unduh semua yang kami simpan tentang akun ini dalam satu berkas: profil Anda, peserta didik yang menjadi tanggung jawab Anda, apa yang telah mereka pelajari dan selesaikan, sertifikat, pesanan dan tanda terima Anda, catatan Anda, dan dengan siapa Anda membagikan pembelajaran Anda.',
+      'Unduh salinan dari apa yang kami simpan tentang akun ini dalam satu berkas: profil Anda, peserta didik yang menjadi tanggung jawab Anda, apa yang telah mereka pelajari dan selesaikan, sertifikat, pesanan dan tanda terima Anda, catatan Anda, dan dengan siapa Anda membagikan pembelajaran Anda.',
     'account.dataDownload': 'Unduh data saya',
     'account.dataSheet': 'Sebagai lembar kerja',
     'account.dataPrint': 'Baca atau cetak',
@@ -908,7 +908,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.toldPrefs': 'Pilih apa yang dimaklumkan kepada anda',
     'account.dataHeading': 'Data saya',
     'account.dataBody':
-      'Muat turun semua yang kami simpan tentang akaun ini sebagai satu fail: profil anda, pelajar di bawah tanggungjawab anda, apa yang telah mereka pelajari dan selesaikan, sijil, pesanan dan resit anda, nota anda, dan dengan siapa anda berkongsi pembelajaran anda.',
+      'Muat turun salinan daripada apa yang kami simpan tentang akaun ini sebagai satu fail: profil anda, pelajar di bawah tanggungjawab anda, apa yang telah mereka pelajari dan selesaikan, sijil, pesanan dan resit anda, nota anda, dan dengan siapa anda berkongsi pembelajaran anda.',
     'account.dataDownload': 'Muat turun data saya',
     'account.dataSheet': 'Sebagai hamparan',
     'account.dataPrint': 'Baca atau cetak',
@@ -1037,7 +1037,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.toldPrefs': 'আপনাকে কী জানানো হবে তা বেছে নিন',
     'account.dataHeading': 'আমার তথ্য',
     'account.dataBody':
-      'এই অ্যাকাউন্ট সম্পর্কে আমাদের কাছে যা আছে সব একটি ফাইলে ডাউনলোড করুন: আপনার প্রোফাইল, যেসব শিক্ষার্থীর দায়িত্ব আপনার, তারা যা পড়েছে ও শেষ করেছে, আপনার সনদ, অর্ডার ও রসিদ, আপনার নোট, এবং যাদের সঙ্গে আপনি আপনার শেখা শেয়ার করেছেন।',
+      'এই অ্যাকাউন্ট সম্পর্কে আমাদের কাছে যা আছে তার একটি কপি একটি ফাইলে ডাউনলোড করুন: আপনার প্রোফাইল, যেসব শিক্ষার্থীর দায়িত্ব আপনার, তারা যা পড়েছে ও শেষ করেছে, আপনার সনদ, অর্ডার ও রসিদ, আপনার নোট, এবং যাদের সঙ্গে আপনি আপনার শেখা শেয়ার করেছেন।',
     'account.dataDownload': 'আমার তথ্য ডাউনলোড করুন',
     'account.dataSheet': 'স্প্রেডশিট হিসেবে',
     'account.dataPrint': 'পড়ুন বা প্রিন্ট করুন',
@@ -1165,7 +1165,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.toldPrefs': 'चुनें कि आपको क्या बताया जाए',
     'account.dataHeading': 'मेरा डेटा',
     'account.dataBody':
-      'इस खाते के बारे में हमारे पास जो कुछ है उसे एक फ़ाइल में डाउनलोड करें: आपकी प्रोफ़ाइल, वे शिक्षार्थी जिनके आप ज़िम्मेदार हैं, उन्होंने क्या पढ़ा और पूरा किया, आपके प्रमाणपत्र, ऑर्डर और रसीदें, आपके नोट्स, और वे लोग जिनसे आपने अपनी पढ़ाई साझा की है।',
+      'इस खाते के बारे में हमारे पास जो कुछ है उसकी एक प्रति एक फ़ाइल में डाउनलोड करें: आपकी प्रोफ़ाइल, वे शिक्षार्थी जिनके आप ज़िम्मेदार हैं, उन्होंने क्या पढ़ा और पूरा किया, आपके प्रमाणपत्र, ऑर्डर और रसीदें, आपके नोट्स, और वे लोग जिनसे आपने अपनी पढ़ाई साझा की है।',
     'account.dataDownload': 'मेरा डेटा डाउनलोड करें',
     'account.dataSheet': 'स्प्रेडशीट के रूप में',
     'account.dataPrint': 'पढ़ें या प्रिंट करें',
@@ -1294,7 +1294,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.toldPrefs': 'Choisir ce dont on vous informe',
     'account.dataHeading': 'Mes données',
     'account.dataBody':
-      'Téléchargez en un seul fichier tout ce que nous conservons sur ce compte : votre profil, les apprenants dont vous êtes responsable, ce qu’ils ont étudié et terminé, vos certificats, commandes et reçus, vos notes, et les personnes avec qui vous avez partagé votre apprentissage.',
+      'Téléchargez en un seul fichier une copie de ce que nous conservons sur ce compte : votre profil, les apprenants dont vous êtes responsable, ce qu’ils ont étudié et terminé, vos certificats, commandes et reçus, vos notes, et les personnes avec qui vous avez partagé votre apprentissage.',
     'account.dataDownload': 'Télécharger mes données',
     'account.dataSheet': 'Sous forme de tableur',
     'account.dataPrint': 'Les lire ou les imprimer',
@@ -1421,7 +1421,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.toldPrefs': 'Elegir qué se le comunica',
     'account.dataHeading': 'Mis datos',
     'account.dataBody':
-      'Descargue en un solo archivo todo lo que conservamos sobre esta cuenta: su perfil, los alumnos de los que es responsable, lo que han estudiado y terminado, sus certificados, pedidos y recibos, sus notas y las personas con quienes ha compartido su aprendizaje.',
+      'Descargue en un solo archivo una copia de lo que conservamos sobre esta cuenta: su perfil, los alumnos de los que es responsable, lo que han estudiado y terminado, sus certificados, pedidos y recibos, sus notas y las personas con quienes ha compartido su aprendizaje.',
     'account.dataDownload': 'Descargar mis datos',
     'account.dataSheet': 'Como hoja de cálculo',
     'account.dataPrint': 'Leerlos o imprimirlos',
@@ -1549,7 +1549,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.toldPrefs': 'Escolher o que lhe é comunicado',
     'account.dataHeading': 'Os meus dados',
     'account.dataBody':
-      'Descarregue num único ficheiro tudo o que guardamos sobre esta conta: o seu perfil, os alunos por quem é responsável, o que estudaram e concluíram, os seus certificados, encomendas e recibos, as suas notas e as pessoas com quem partilhou a sua aprendizagem.',
+      'Descarregue num único ficheiro uma cópia do que guardamos sobre esta conta: o seu perfil, os alunos por quem é responsável, o que estudaram e concluíram, os seus certificados, encomendas e recibos, as suas notas e as pessoas com quem partilhou a sua aprendizagem.',
     'account.dataDownload': 'Descarregar os meus dados',
     'account.dataSheet': 'Como folha de cálculo',
     'account.dataPrint': 'Ler ou imprimir',
@@ -1677,7 +1677,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.toldPrefs': 'Chagua unachoarifiwa',
     'account.dataHeading': 'Data yangu',
     'account.dataBody':
-      'Pakua kila kitu tunachohifadhi kuhusu akaunti hii kama faili moja: wasifu wako, wanafunzi unaowajibika kwao, walichosoma na kumaliza, vyeti vyako, maagizo na risiti, madokezo yako, na watu ulioshiriki nao masomo yako.',
+      'Pakua nakala ya kile tunachohifadhi kuhusu akaunti hii kama faili moja: wasifu wako, wanafunzi unaowajibika kwao, walichosoma na kumaliza, vyeti vyako, maagizo na risiti, madokezo yako, na watu ulioshiriki nao masomo yako.',
     'account.dataDownload': 'Pakua data yangu',
     'account.dataSheet': 'Kama jedwali',
     'account.dataPrint': 'Isome au ichapishe',
@@ -1807,7 +1807,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.toldPrefs': 'Kies wat jy vertel word',
     'account.dataHeading': 'My data',
     'account.dataBody':
-      'Laai alles wat ons oor hierdie rekening hou as een lêer af: jou profiel, die leerders vir wie jy verantwoordelik is, wat hulle bestudeer en voltooi het, jou sertifikate, bestellings en kwitansies, jou notas, en met wie jy jou leer gedeel het.',
+      'Laai ’n kopie van wat ons oor hierdie rekening hou as een lêer af: jou profiel, die leerders vir wie jy verantwoordelik is, wat hulle bestudeer en voltooi het, jou sertifikate, bestellings en kwitansies, jou notas, en met wie jy jou leer gedeel het.',
     'account.dataDownload': 'Laai my data af',
     'account.dataSheet': 'As ’n sigblad',
     'account.dataPrint': 'Lees of druk dit',
@@ -1912,7 +1912,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.toldPrefs': '选择接收哪些通知',
     'account.dataHeading': '我的数据',
     'account.dataBody':
-      '把我们保存的有关此账户的全部内容下载为一个文件：你的资料、你负责的学习者、他们学过和完成的内容、你的证书、订单和收据、你的笔记，以及你与谁分享了学习情况。',
+      '把我们保存的有关此账户的内容的一份副本下载为一个文件：你的资料、你负责的学习者、他们学过和完成的内容、你的证书、订单和收据、你的笔记，以及你与谁分享了学习情况。',
     'account.dataDownload': '下载我的数据',
     'account.dataSheet': '电子表格格式',
     'account.dataPrint': '阅读或打印',
@@ -2015,7 +2015,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.toldPrefs': '選擇接收哪些通知',
     'account.dataHeading': '我的資料',
     'account.dataBody':
-      '把我們保存的有關此帳號的全部內容下載為一個檔案：你的個人資料、你負責的學習者、他們學過和完成的內容、你的證書、訂單和收據、你的筆記，以及你與誰分享了學習情況。',
+      '把我們保存的有關此帳號的內容的一份副本下載為一個檔案：你的個人資料、你負責的學習者、他們學過和完成的內容、你的證書、訂單和收據、你的筆記，以及你與誰分享了學習情況。',
     'account.dataDownload': '下載我的資料',
     'account.dataSheet': '試算表格式',
     'account.dataPrint': '閱讀或列印',
@@ -2141,7 +2141,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.toldPrefs': 'Chọn những gì bạn được thông báo',
     'account.dataHeading': 'Dữ liệu của tôi',
     'account.dataBody':
-      'Tải xuống mọi thứ chúng tôi lưu về tài khoản này trong một tệp: hồ sơ của bạn, các học viên bạn chịu trách nhiệm, những gì họ đã học và hoàn thành, chứng chỉ, đơn hàng và biên nhận của bạn, ghi chú của bạn, và những người bạn đã chia sẻ việc học.',
+      'Tải xuống trong một tệp một bản sao những gì chúng tôi lưu về tài khoản này: hồ sơ của bạn, các học viên bạn chịu trách nhiệm, những gì họ đã học và hoàn thành, chứng chỉ, đơn hàng và biên nhận của bạn, ghi chú của bạn, và những người bạn đã chia sẻ việc học.',
     'account.dataDownload': 'Tải xuống dữ liệu của tôi',
     'account.dataSheet': 'Dưới dạng bảng tính',
     'account.dataPrint': 'Đọc hoặc in',
@@ -2265,7 +2265,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.toldPrefs': 'เลือกสิ่งที่คุณจะได้รับแจ้ง',
     'account.dataHeading': 'ข้อมูลของฉัน',
     'account.dataBody':
-      'ดาวน์โหลดทุกอย่างที่เราเก็บไว้เกี่ยวกับบัญชีนี้เป็นไฟล์เดียว: โปรไฟล์ของคุณ ผู้เรียนที่คุณรับผิดชอบ สิ่งที่พวกเขาเรียนและเรียนจบ ประกาศนียบัตร คำสั่งซื้อและใบเสร็จของคุณ บันทึกของคุณ และผู้ที่คุณแชร์การเรียนด้วย',
+      'ดาวน์โหลดสำเนาของสิ่งที่เราเก็บไว้เกี่ยวกับบัญชีนี้เป็นไฟล์เดียว: โปรไฟล์ของคุณ ผู้เรียนที่คุณรับผิดชอบ สิ่งที่พวกเขาเรียนและเรียนจบ ประกาศนียบัตร คำสั่งซื้อและใบเสร็จของคุณ บันทึกของคุณ และผู้ที่คุณแชร์การเรียนด้วย',
     'account.dataDownload': 'ดาวน์โหลดข้อมูลของฉัน',
     'account.dataSheet': 'เป็นสเปรดชีต',
     'account.dataPrint': 'อ่านหรือพิมพ์',
@@ -2394,7 +2394,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.toldPrefs': 'Piliin kung ano ang ipaaalam sa iyo',
     'account.dataHeading': 'Aking data',
     'account.dataBody':
-      'I-download bilang isang file ang lahat ng hawak namin tungkol sa account na ito: ang iyong profile, ang mga mag-aaral na pananagutan mo, ang napag-aralan at natapos nila, ang iyong mga sertipiko, order at resibo, ang iyong mga tala, at kung kanino mo ibinahagi ang iyong pag-aaral.',
+      'I-download bilang isang file ang kopya ng hawak namin tungkol sa account na ito: ang iyong profile, ang mga mag-aaral na pananagutan mo, ang napag-aralan at natapos nila, ang iyong mga sertipiko, order at resibo, ang iyong mga tala, at kung kanino mo ibinahagi ang iyong pag-aaral.',
     'account.dataDownload': 'I-download ang aking data',
     'account.dataSheet': 'Bilang spreadsheet',
     'account.dataPrint': 'Basahin o i-print',
@@ -2523,7 +2523,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.toldPrefs': 'Sizga nima xabar qilinishini tanlang',
     'account.dataHeading': 'Mening maʼlumotlarim',
     'account.dataBody':
-      'Bu hisob haqida bizda saqlanayotgan hamma narsani bitta fayl qilib yuklab oling: profilingiz, siz masʼul boʻlgan oʻquvchilar, ular oʻqigan va tugatgan narsalar, sertifikatlaringiz, buyurtma va kvitansiyalaringiz, qaydlaringiz hamda taʼlimingizni kimlar bilan ulashganingiz.',
+      'Bu hisob haqida bizda saqlanayotgan narsalarning nusxasini bitta fayl qilib yuklab oling: profilingiz, siz masʼul boʻlgan oʻquvchilar, ular oʻqigan va tugatgan narsalar, sertifikatlaringiz, buyurtma va kvitansiyalaringiz, qaydlaringiz hamda taʼlimingizni kimlar bilan ulashganingiz.',
     'account.dataDownload': 'Maʼlumotlarimni yuklab olish',
     'account.dataSheet': 'Elektron jadval sifatida',
     'account.dataPrint': 'Oʻqish yoki chop etish',
@@ -2651,7 +2651,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.toldPrefs': 'Сізге не хабарланатынын таңдаңыз',
     'account.dataHeading': 'Менің деректерім',
     'account.dataBody':
-      'Осы тіркелгі туралы бізде сақталғанның бәрін бір файл етіп жүктеп алыңыз: профиліңіз, сіз жауапты оқушылар, олардың оқығаны мен аяқтағаны, сертификаттарыңыз, тапсырыстарыңыз бен түбіртектеріңіз, жазбаларыңыз және оқуыңызбен кіммен бөліскеніңіз.',
+      'Осы тіркелгі туралы бізде сақталған нәрселердің көшірмесін бір файл етіп жүктеп алыңыз: профиліңіз, сіз жауапты оқушылар, олардың оқығаны мен аяқтағаны, сертификаттарыңыз, тапсырыстарыңыз бен түбіртектеріңіз, жазбаларыңыз және оқуыңызбен кіммен бөліскеніңіз.',
     'account.dataDownload': 'Деректерімді жүктеп алу',
     'account.dataSheet': 'Электрондық кесте ретінде',
     'account.dataPrint': 'Оқу немесе басып шығару',
@@ -2778,7 +2778,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.toldPrefs': 'Sizə nə bildiriləcəyini seçin',
     'account.dataHeading': 'Məlumatlarım',
     'account.dataBody':
-      'Bu hesab haqqında saxladığımız hər şeyi bir fayl kimi endirin: profiliniz, cavabdeh olduğunuz öyrənənlər, onların oxuduqları və bitirdikləri, sertifikatlarınız, sifarişləriniz və qəbzləriniz, qeydləriniz və təhsilinizi kimlərlə paylaşdığınız.',
+      'Bu hesab haqqında saxladıqlarımızın surətini bir fayl kimi endirin: profiliniz, cavabdeh olduğunuz öyrənənlər, onların oxuduqları və bitirdikləri, sertifikatlarınız, sifarişləriniz və qəbzləriniz, qeydləriniz və təhsilinizi kimlərlə paylaşdığınız.',
     'account.dataDownload': 'Məlumatlarımı endir',
     'account.dataSheet': 'Cədvəl kimi',
     'account.dataPrint': 'Oxu və ya çap et',
@@ -2907,7 +2907,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.toldPrefs': 'Интихоб кунед, ки ба шумо чӣ хабар дода шавад',
     'account.dataHeading': 'Маълумоти ман',
     'account.dataBody':
-      'Ҳама чизеро, ки мо дар бораи ин ҳисоб нигоҳ медорем, ҳамчун як файл боргирӣ кунед: профили шумо, хонандагоне, ки шумо барояшон масъул ҳастед, он чи онҳо омӯхтаанд ва ба анҷом расонидаанд, шаҳодатномаҳо, фармоишҳо ва расидҳои шумо, қайдҳои шумо ва онҳое, ки таълими худро бо онҳо мубодила кардаед.',
+      'Нусхаи он чиро, ки мо дар бораи ин ҳисоб нигоҳ медорем, ҳамчун як файл боргирӣ кунед: профили шумо, хонандагоне, ки шумо барояшон масъул ҳастед, он чи онҳо омӯхтаанд ва ба анҷом расонидаанд, шаҳодатномаҳо, фармоишҳо ва расидҳои шумо, қайдҳои шумо ва онҳое, ки таълими худро бо онҳо мубодила кардаед.',
     'account.dataDownload': 'Боргирии маълумоти ман',
     'account.dataSheet': 'Ҳамчун ҷадвали электронӣ',
     'account.dataPrint': 'Хондан ё чоп кардан',
@@ -3036,7 +3036,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.toldPrefs': 'Сизге эмне кабарланарын тандаңыз',
     'account.dataHeading': 'Менин маалыматтарым',
     'account.dataBody':
-      'Бул аккаунт тууралуу бизде сакталгандын баарын бир файл кылып жүктөп алыңыз: профилиңиз, сиз жооптуу болгон окуучулар, алардын окугандары жана бүтүргөндөрү, сертификаттарыңыз, буйрутмаларыңыз жана дүмүрчөктөрүңүз, жазууларыңыз жана окууңуз менен ким менен бөлүшкөнүңүз.',
+      'Бул аккаунт тууралуу бизде сакталган нерселердин көчүрмөсүн бир файл кылып жүктөп алыңыз: профилиңиз, сиз жооптуу болгон окуучулар, алардын окугандары жана бүтүргөндөрү, сертификаттарыңыз, буйрутмаларыңыз жана дүмүрчөктөрүңүз, жазууларыңыз жана окууңуз менен ким менен бөлүшкөнүңүз.',
     'account.dataDownload': 'Маалыматтарымды жүктөп алуу',
     'account.dataSheet': 'Электрондук жадыбал катары',
     'account.dataPrint': 'Окуу же басып чыгаруу',
@@ -3164,7 +3164,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.toldPrefs': 'Size näme habar beriljekdigini saýlaň',
     'account.dataHeading': 'Meniň maglumatlarym',
     'account.dataBody':
-      'Bu hasap barada bizde saklanýan ähli zady bir faýl hökmünde göçürip alyň: profiliňiz, jogapkär bolan okuwçylaryňyz, olaryň okan we tamamlan zatlary, şahadatnamalaryňyz, sargytlaryňyz we kwitansiýalaryňyz, bellikleriňiz we okuwyňyzy kimler bilen paýlaşandygyňyz.',
+      'Bu hasap barada bizde saklanýan zatlaryň nusgasyny bir faýl hökmünde göçürip alyň: profiliňiz, jogapkär bolan okuwçylaryňyz, olaryň okan we tamamlan zatlary, şahadatnamalaryňyz, sargytlaryňyz we kwitansiýalaryňyz, bellikleriňiz we okuwyňyzy kimler bilen paýlaşandygyňyz.',
     'account.dataDownload': 'Maglumatlarymy göçürip al',
     'account.dataSheet': 'Elektron tablisa hökmünde',
     'account.dataPrint': 'Oka ýa-da çap et',
@@ -3298,7 +3298,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.toldPrefs': 'உங்களுக்கு என்ன தெரிவிக்கப்பட வேண்டும் என்பதைத் தேர்ந்தெடுக்க',
     'account.dataHeading': 'என் தரவு',
     'account.dataBody':
-      'இந்தக் கணக்கைப் பற்றி நாங்கள் வைத்திருக்கும் அனைத்தையும் ஒரே கோப்பாகப் பதிவிறக்குங்கள்: உங்கள் சுயவிவரம், நீங்கள் பொறுப்பேற்றுள்ள கற்பவர்கள், அவர்கள் படித்தவையும் முடித்தவையும், உங்கள் சான்றிதழ்கள், ஆர்டர்கள் மற்றும் ரசீதுகள், உங்கள் குறிப்புகள், மேலும் உங்கள் கற்றலை யாருடன் பகிர்ந்துள்ளீர்கள் என்பது.',
+      'இந்தக் கணக்கைப் பற்றி நாங்கள் வைத்திருப்பவற்றின் நகலை ஒரே கோப்பாகப் பதிவிறக்குங்கள்: உங்கள் சுயவிவரம், நீங்கள் பொறுப்பேற்றுள்ள கற்பவர்கள், அவர்கள் படித்தவையும் முடித்தவையும், உங்கள் சான்றிதழ்கள், ஆர்டர்கள் மற்றும் ரசீதுகள், உங்கள் குறிப்புகள், மேலும் உங்கள் கற்றலை யாருடன் பகிர்ந்துள்ளீர்கள் என்பது.',
     'account.dataDownload': 'என் தரவைப் பதிவிறக்கு',
     'account.dataSheet': 'விரிதாளாக',
     'account.dataPrint': 'படிக்க அல்லது அச்சிட',
@@ -3426,7 +3426,7 @@ export const ACCOUNT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'account.toldPrefs': 'तपाईंलाई के जानकारी दिइने छान्नुहोस्',
     'account.dataHeading': 'मेरो डेटा',
     'account.dataBody':
-      'यो खाताबारे हामीसँग भएको सबै कुरा एउटै फाइलमा डाउनलोड गर्नुहोस्: तपाईंको प्रोफाइल, तपाईं जिम्मेवार भएका सिकारुहरू, उनीहरूले पढेका र पूरा गरेका कुरा, तपाईंका प्रमाणपत्र, अर्डर र रसिदहरू, तपाईंका नोटहरू, र तपाईंले आफ्नो सिकाइ कोसँग साझा गर्नुभएको छ।',
+      'यो खाताबारे हामीसँग भएका कुराको प्रतिलिपि एउटै फाइलमा डाउनलोड गर्नुहोस्: तपाईंको प्रोफाइल, तपाईं जिम्मेवार भएका सिकारुहरू, उनीहरूले पढेका र पूरा गरेका कुरा, तपाईंका प्रमाणपत्र, अर्डर र रसिदहरू, तपाईंका नोटहरू, र तपाईंले आफ्नो सिकाइ कोसँग साझा गर्नुभएको छ।',
     'account.dataDownload': 'मेरो डेटा डाउनलोड गर्नुहोस्',
     'account.dataSheet': 'स्प्रेडसिटका रूपमा',
     'account.dataPrint': 'पढ्नुहोस् वा छाप्नुहोस्',

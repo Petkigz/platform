@@ -129,9 +129,23 @@ const BRANDS: readonly string[] = [
   'Email',
   'email',
   'Auth',
+  // The export page says what the two files are and what opens them. JSON is
+  // a format's own name, like PDF; the other two are programs.
+  'JSON',
+  'Excel',
+  'LibreOffice',
 ];
 
 const BRAND_SET = new Set(BRANDS.map((word) => word.toLowerCase()));
+
+/**
+ * Product names that are also ordinary English words.
+ *
+ * Apple's Numbers and Google's Sheets, on the export page. They are matched
+ * with their capital only: `numbers` or `sheets` left in the middle of a
+ * Bengali sentence is still a finding, which is what the check is for.
+ */
+const PRODUCT_NAMES: ReadonlySet<string> = new Set(['Numbers', 'Sheets']);
 
 /** Characters that join or format rather than say something: never findings. */
 const INVISIBLE = /[\u0640\u200c\u200d\u00ad\ufeff]/gu;
@@ -148,7 +162,9 @@ export function placeholdersIn(value: string): string[] {
 function latinWords(value: string): string[] {
   const body = value.replace(/\{[a-zA-Z][a-zA-Z0-9]*\}/g, ' ');
   const runs = body.match(/\p{Script=Latin}{4,}/gu) ?? [];
-  return [...new Set(runs)].filter((word) => !BRAND_SET.has(word.toLowerCase()));
+  return [...new Set(runs)].filter(
+    (word) => !BRAND_SET.has(word.toLowerCase()) && !PRODUCT_NAMES.has(word),
+  );
 }
 
 /**

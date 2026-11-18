@@ -41,6 +41,7 @@ import { PLAYER } from './i18n/messages/player.ts';
 import { FAMILY } from './i18n/messages/family.ts';
 import { BUY } from './i18n/messages/buy.ts';
 import { CLOSE } from './i18n/messages/close.ts';
+import { EXPORT } from './i18n/messages/export.ts';
 import { countryNameIn } from './geo.ts';
 import { ACCOUNT } from './i18n/messages/account.ts';
 import { LESSON } from './i18n/messages/lesson.ts';
@@ -413,7 +414,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // Owner's decision, 2026-11-16: a language the builder cannot write properly
   // falls back to English until a speaker has reviewed it. For a new screen
   // that means not writing it — a held draft would be the same guess, kept.
-  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign', 'missing', 'broke', 'player', 'account', 'family', 'buy', 'close']);
+  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign', 'missing', 'broke', 'player', 'account', 'family', 'buy', 'close', 'export']);
   // Thirty-seven for the dashboard (the learner-profile prompt is seven of
   // them), twenty-eight for the course page (twelve are the list of dated
   // classes), a hundred and thirteen for the lesson page (its frame, the
@@ -427,8 +428,10 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // what they say about a saved place, ninety-eight for the account
   // page and its profile form, a hundred for the family page, its
   // three forms and one learner's page, seventy-nine for the buy page
-  // and its form, and forty-three for closing an account.
-  assert.equal(unwrittenKeys.length, 748);
+  // and its form, forty-three for closing an account, and fifty-eight for
+  // a copy of your data and the page that prints it.
+  assert.equal(unwrittenKeys.length, 806);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('export.')).length, 58);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('close.')).length, 43);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('buy.')).length, 79);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('family.')).length, 100);
@@ -442,7 +445,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('lesson.')).length, 113);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('assess.')).length, 40);
 
-  // Twelve files, one rule: the same languages in each.
+  // Thirteen files, one rule: the same languages in each.
   const written = Object.keys(LEARN).sort();
   assert.deepEqual(Object.keys(COURSE).sort(), written);
   assert.deepEqual(Object.keys(LESSON).sort(), written);
@@ -455,6 +458,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   assert.deepEqual(Object.keys(FAMILY).sort(), written);
   assert.deepEqual(Object.keys(BUY).sort(), written);
   assert.deepEqual(Object.keys(CLOSE).sort(), written);
+  assert.deepEqual(Object.keys(EXPORT).sort(), written);
   const expected = LOCALES.map((l) => l.code)
     .filter((code) => code !== 'en' && !Object.hasOwn(HELD_FOR_REVIEW, code))
     .sort();
@@ -465,6 +469,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     const own: Partial<Record<string, string>> = {
       ...LEARN[code], ...COURSE[code], ...LESSON[code], ...ASSESS[code], ...ASSIGN[code], ...MISSING[code], ...BROKE[code],
       ...PLAYER[code], ...ACCOUNT[code], ...FAMILY[code], ...BUY[code], ...CLOSE[code],
+      ...EXPORT[code],
     };
     assert.deepEqual(Object.keys(own).sort(), [...unwrittenKeys].sort(), `${code} is short a dashboard, course, lesson, assessment or assignment sentence`);
     for (const key of unwrittenKeys) {
@@ -502,7 +507,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     }
   }
   // What that costs the nineteen that are still in the picker, said out loud:
-  // 192 of 1020 sentences, which is 19%. Nothing holds a floor under
+  // 192 of 1078 sentences, which is 18%. Nothing holds a floor under
   // it any more: the owner chose on 2026-11-17 to keep these languages in the
   // picker and show the number. The count is pinned here so that it moves only
   // when somebody means it to, and is seen when it does. It moved from 55% to
@@ -523,11 +528,13 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // 27%; the account page and its profile form added ninety-eight and it is
   // 24%; the family page, its forms and one learner's page added a hundred
   // and it is 21%; the buy page and its form added seventy-nine and it is
-  // 20%; closing an account added forty-three and it is 19%. What they are shown did not get smaller; what is counted got bigger.
+  // 20%; closing an account added forty-three and it is 19%; a copy of
+  // your data and the page that prints it added fifty-eight and it is 18%.
+  // What they are shown did not get smaller; what is counted got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 1020);
-    assert.equal(coverageOf(code).percent, 19, code);
+    assert.equal(coverageOf(code).total, 1078);
+    assert.equal(coverageOf(code).percent, 18, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');
   assert.equal(languageShownFor('en', 'learn').code, 'en');
@@ -1695,4 +1702,122 @@ test('closing an account is in the reader’s language, and its form says a refu
   // A held language reads the page in English, whole.
   assert.equal(languageShownFor('so', 'close').code, 'en');
   assert.equal(translator('so')('close.unconfirmed'), en['close.unconfirmed']);
+});
+
+test('a copy of your data is in the reader’s language, and a refusal is said where the button is', () => {
+  const page = read('../app/account/export/page.tsx');
+  const print = read('../app/account/export/print/page.tsx');
+  const link = read('../app/account/export/download-copy.tsx');
+  const account = read('../app/account/page.tsx');
+  const route = read('../app/api/account/export/route.ts');
+
+  for (const [name, text] of [['the export page', page], ['the print page', print]] as const) {
+    assert.match(text, /const shown = languageShownFor\(locale, 'export'\);/u, name);
+    assert.match(text, /const frame = shown\.code !== locale \? \{ lang: shown\.code, dir: shown\.dir \} : \{\};/u, name);
+    assert.match(text, /export async function generateMetadata\(\): Promise<Metadata>/u, name);
+    assert.doesNotMatch(text, /export const metadata/u, name);
+  }
+  assert.match(page, /<div className="page narrow" \{\.\.\.frame\}>/u);
+  assert.match(print, /<div className="page narrow export-print-page" \{\.\.\.frame\}>/u);
+  for (const phrase of ['Get a copy', 'Download my data', 'Read it here', 'What is in it', 'What is not', 'Other people', 'To print', 'Print this page', 'Nothing is recorded', 'Back to the export']) {
+    assert.ok(!page.includes(phrase), `the export page still says "${phrase}" itself`);
+    assert.ok(!print.includes(phrase), `the print page still says "${phrase}" itself`);
+  }
+
+  // Every sentence is said by one of the two pages.
+  for (const key of unwrittenKeys.filter((k) => k.startsWith('export.'))) {
+    assert.ok(page.includes(`'${key}'`) || print.includes(`'${key}'`), `${key} is translated and never shown`);
+  }
+
+  // The link is handed its words and has no English of its own.
+  assert.match(link, /^'use client';/u);
+  assert.doesNotMatch(link, /useT\(|@\/lib\/i18n/u);
+  assert.match(link, /words: CopyWords;/u);
+  assert.match(link, /reasons: Record<ExportCode, string>;/u);
+  // With no script it is still a link to the file.
+  assert.match(link, /<a className=\{className\} href=\{href\} download onClick=\{ask\}/u);
+  // A press that asks for a new tab is the browser's, and a second press waits.
+  assert.match(link, /if \(event\.button !== 0 \|\| event\.metaKey \|\| event\.ctrlKey \|\| event\.shiftKey \|\| event\.altKey\) return;/u);
+  assert.match(link, /if \(busy\) return;/u);
+  // Only a reply that says it is a file is saved as one.
+  assert.match(link, /if \(res\.ok && disposition\?\.startsWith\('attachment'\)\) \{/u);
+  const src = new URL('../', import.meta.url);
+  const files = (dir: string): string[] =>
+    readdirSync(new URL(dir, src), { withFileTypes: true }).flatMap((entry) =>
+      entry.isDirectory() ? files(`${dir}${entry.name}/`) : /\.tsx?$/u.test(entry.name) ? [`${dir}${entry.name}`] : [],
+    );
+  const clients = files('').filter((file) => {
+    const text = readFileSync(new URL(file, src), 'utf8');
+    return /^\s*'use client'/u.test(text) && /'export\.[a-zA-Z]+'/u.test(text);
+  });
+  assert.deepEqual(clients, [], 'a client component asks for an export sentence the shell does not carry');
+
+  // One sentence for every answer the route can give, on each page that
+  // draws the link: the two export pages and the account page.
+  for (const [name, text] of [['the export page', page], ['the print page', print], ['the account page', account]] as const) {
+    for (const code of ['signed_out', 'limit', 'format', 'failed']) {
+      assert.match(text, new RegExp(`^\\s+${code}: t\\('export\\.`, 'mu'), `${code} has no sentence on ${name}`);
+    }
+    assert.match(text, /unreachable: t\('auth\.offline'\),/u, name);
+  }
+  // The account page's two downloads are the same link, so the eleventh press
+  // there is answered in place too.
+  assert.equal(account.match(/<DownloadCopy\b/gu)?.length, 2);
+  assert.doesNotMatch(account, /href="\/api\/account\/export[^"]*"\s+download\b/u);
+
+  // Opening the page that prints a copy makes one, so nothing fetches it
+  // ahead of a press.
+  assert.match(page, /<Link className="btn secondary" href="\/account\/export\/print" prefetch=\{false\}>/u);
+  assert.match(account, /href="\/account\/export\/print" prefetch=\{false\}/u);
+  assert.doesNotMatch(page, /\.rpc\(/u);
+
+  // The print page says a refusal in place of the tables and never throws
+  // the database's sentence.
+  assert.match(print, /if \(answer\.error\) refused = exportCodeOf\(answer\.error\);/u);
+  assert.match(print, /<p className="notice error" role="alert">\s+\{t\(refused === 'limit' \? 'export\.limit' : 'export\.failed'\)\}/u);
+  assert.doesNotMatch(print, /throw /u);
+  assert.match(route, /return refuse\(exportCodeOf\(answer\.error\)\);/u);
+  assert.doesNotMatch(route, /error\.message/u);
+
+  // The names inside the copy are the stored ones: English, marked as such
+  // on a page that is not, and a cell reads in its own direction.
+  assert.match(print, /const english = shown\.code !== 'en' \? \(\{ lang: 'en' \} as const\) : \{\};/u);
+  assert.match(print, /<bdi \{\.\.\.english\}>\{section\.title\}<\/bdi>/u);
+  assert.match(print, /<bdi \{\.\.\.english\}>\{column\}<\/bdi>/u);
+  assert.match(print, /<bdi>\{cell\}<\/bdi>/u);
+  assert.match(print, /parts=\{\{ lists: <bdi \{\.\.\.english\}>\{cut\.join\(', '\)\}<\/bdi> \}\}/u);
+  // The moment the copy was made is printed with its zone: the server does
+  // not know the reader's clock.
+  assert.match(print, /formatDateTime\(shown\.code, stamp, 'UTC'\)/u);
+  // The limit is the database's number in the reader's digits.
+  assert.match(page, /t\('export\.cap', \{ count: formatNumber\(shown\.code, EXPORT_ROW_LIMIT\) \}\)/u);
+
+  const gaps = (text: string) => [...text.matchAll(/\{[a-zA-Z]+\}/gu)].map((m) => m[0]).sort();
+  for (const code of ['ar', 'fr', 'tr', 'kk', 'zh-hans', 'uz', 'ta', 'th'] as const) {
+    const t = translator(code);
+    assert.equal(languageShownFor(code, 'export').code, code);
+    assert.notEqual(t('export.limit'), en['export.limit'], code);
+    // What is put in sits after a colon, so no language inflects it.
+    assert.match(t('export.printMade'), /[:：][\s\u00a0]*\{when\}$/u, `${code} export.printMade`);
+    assert.match(t('export.printCut'), /[:：][\s\u00a0]*\{lists\}$/u, `${code} export.printCut`);
+  }
+  for (const key of unwrittenKeys.filter((k) => k.startsWith('export.')) as (keyof typeof en)[]) {
+    for (const code of ['ar', 'ur', 'fa', 'tr', 'bn', 'fr', 'sw', 'zh-hant', 'vi', 'fil', 'az', 'tg', 'ky', 'tk', 'ne'] as const) {
+      assert.deepEqual(gaps(translator(code)(key)), gaps(en[key]), `${code} ${key}`);
+    }
+  }
+
+  // "A copy", never "everything": the export leaves things out on purpose.
+  assert.doesNotMatch(en['account.dataBody'], /everything/iu);
+  assert.match(en['account.dataBody'], /^Download a copy of what we hold/u);
+  for (const key of unwrittenKeys.filter((k) => k.startsWith('export.')) as (keyof typeof en)[]) {
+    assert.doesNotMatch(en[key], /\beverything\b/iu, key);
+  }
+  // The sentence for a failure never says a copy was made.
+  assert.doesNotMatch(en['export.failed'], /was made|saved/iu);
+  assert.match(en['export.failed'], /ask again/iu);
+
+  // A held language reads both pages in English, whole.
+  assert.equal(languageShownFor('so', 'export').code, 'en');
+  assert.equal(translator('so')('export.limit'), en['export.limit']);
 });

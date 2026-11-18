@@ -1249,6 +1249,9 @@ footer a { color: var(--text-soft); }
   border-bottom: 1px solid var(--border-soft);
 }
 .lessons li:last-child { border-bottom: 0; }
+/* A name and a sentence about it, one under the other. A `.lessons` row is a
+   flex row, which set the sentence beside its name in a second column. */
+.lessons.stacked li { display: block; }
 .lessons .n {
   color: var(--muted);
   font-variant-numeric: tabular-nums;
@@ -1503,6 +1506,25 @@ textarea { resize: vertical; min-height: 4rem; }
   body:has(.receipt-page) main { margin: 0; padding: 0; }
   .receipt-page { width: 100%; max-width: none; margin: 0; padding: 0; }
   .receipt-sheet { page: receipt; max-width: none; border: 0; border-radius: 0; box-shadow: none; padding: 0; }
+}
+
+/* The copy of your data, on paper. The page exists to be printed, and used to
+   print the site's header, its footer and its own buttons, and to cut a wide
+   table off at the edge of the sheet (`.scroll-x` scrolls on a screen and
+   clips on paper). */
+@media print {
+  body:has(.export-print-page) { background: #fff; }
+  body:has(.export-print-page) .masthead,
+  body:has(.export-print-page) footer,
+  body:has(.export-print-page) .no-print { display: none !important; }
+  body:has(.export-print-page) main { margin: 0; padding: 0; }
+  .export-print-page { width: 100%; max-width: none; margin: 0; padding: 0; }
+  .export-print-page .card { border: 0; box-shadow: none; padding: 0; break-inside: auto; }
+  .export-print-page .scroll-x { overflow: visible; }
+  .export-print-page table { table-layout: fixed; font-size: 8pt; }
+  .export-print-page th, .export-print-page td { overflow-wrap: anywhere; }
+  .export-print-page tr { break-inside: avoid; }
+  .export-print-page h2 { break-after: avoid; }
 }
 
 @page certificate { size: A4 landscape; margin: 12mm; }

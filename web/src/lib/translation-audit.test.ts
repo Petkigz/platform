@@ -69,6 +69,14 @@ test('a Latin word inside a language that does not use Latin letters is flagged'
     const line = `စကားဝှက် ${brand} ပို့ပြီး`;
     assert.deepEqual(auditLine('my', 'auth.resetSent', line, 'x'), [], `${brand} was flagged`);
   }
+  // A format and the programs that open it, on the export page. Numbers and
+  // Sheets are also English words, so only the capitalised name is let through.
+  const opens = 'Excel, Numbers, LibreOffice বা Google Sheets-এ খোলে। JSON';
+  assert.deepEqual(auditLine('bn', 'export.sheetNote', opens, 'x'), []);
+  assert.deepEqual(
+    auditLine('bn', 'export.sheetNote', 'প্রতিটি sheets এবং numbers', 'x').flatMap((f) => f.detail),
+    ['sheets', 'numbers'],
+  );
   // A Latin-script language is not asked the question at all: French writing
   // "spam" is French, and flagging it would be flagging the alphabet.
   assert.deepEqual(auditLine('fr', 'auth.resetSent', 'Un mot spam ici', 'x'), []);

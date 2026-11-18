@@ -1037,7 +1037,7 @@ export const en = {
   'account.toldPrefs': 'Choose what you are told',
   'account.dataHeading': 'My data',
   'account.dataBody':
-    'Download everything we hold about this account as one file: your profile, the learners you are responsible for, what they have studied and finished, your certificates, orders and receipts, your notes, and who you have shared your learning with.',
+    'Download a copy of what we hold about this account as one file: your profile, the learners you are responsible for, what they have studied and finished, your certificates, orders and receipts, your notes, and who you have shared your learning with.',
   'account.dataDownload': 'Download my data',
   'account.dataSheet': 'As a spreadsheet',
   'account.dataPrint': 'Read or print it',
@@ -1338,6 +1338,94 @@ export const en = {
     'This account could not be closed, and nothing was changed. If this keeps happening, contact {contact}.',
   'close.unconfirmed':
     'We could not confirm whether your account closed. Before trying again, reload this page to see, or contact {contact}.',
+
+  // A copy of your data, the page that prints it and the words the download
+  // link says (`export.ts`), for the same twenty-seven languages as the
+  // dashboard. "A copy", never "everything": the export leaves things out
+  // on purpose and the page lists them.
+  'export.crumb': 'Export',
+  'export.title': 'Get a copy of your data',
+  'export.lede':
+    'One copy of what this platform holds about you, with the exceptions listed below: your account, the courses you are enrolled in, what you have written, what you have been marked on, what you have bought, and the messages you have been sent.',
+  'export.how':
+    'Each copy is made when you ask for it, so it is current at that moment. You can make ten copies an hour; the limit protects the platform and is not meant to restrict you.',
+  'export.cap':
+    'A list longer than {count} rows is cut at that number, and the copy names every list that was cut.',
+  'export.json': 'Download the copy (JSON)',
+  'export.jsonNote':
+    'The whole copy as one JSON file: every field, including the ones no screen shows. It opens in any text editor. For a developer, or for keeping a copy you can check later.',
+  'export.sheet': 'Download the copy (spreadsheet)',
+  'export.sheetNote':
+    'A spreadsheet with one section for each part of your account and a blank line between sections. It opens in Excel, Numbers, LibreOffice or Google Sheets.',
+  'export.read': 'Read it here, or save it as a PDF',
+  'export.readNote':
+    'A page you can read in the browser and print, or save as a PDF from your own print dialog. Your browser makes the PDF itself. Opening the page counts as one of your ten copies.',
+  'export.english':
+    'The names of the sections and fields inside the copy are in English, because those are the names the records are stored under.',
+  'export.audit':
+    'Every copy is recorded in the audit trail, with the date and how many rows each section held. That record is what makes an unexpected copy of somebody’s data traceable.',
+  'export.preparing': 'Making your copy…',
+  'export.done': 'Your copy was made and handed to your browser to save.',
+  'export.limit':
+    'Ten copies have been made in the last hour, which is the limit. Wait a little, then ask again.',
+  'export.failed': 'The copy could not be made just now. Ask again in a moment.',
+  'export.signedOut': 'You are signed out. Sign in again to get a copy.',
+  'export.inHeading': 'What is in it',
+  'export.inAccount': 'Your account',
+  'export.inAccountNote':
+    'Display name, language, time zone, country, status, and the roles you hold (teacher, reviewer, staff), if any.',
+  'export.inLearners': 'Learner profiles',
+  'export.inLearnersNote':
+    'Your own, and those of learners for whom you are a currently verified guardian with permission to see progress. Their enrolments, progress, attempts and certificates come with them.',
+  'export.inWrote': 'What you wrote',
+  'export.inWroteNote':
+    'Lesson notes, bookmarks, saved courses and the private note you put beside one, reviews, discussion posts, assignment submissions and quiz answers.',
+  'export.inGuardians': 'Who you are responsible for, and who may see you',
+  'export.inGuardiansNote':
+    'Every child you are a guardian of, what you are allowed to see and manage, and when that was verified; and, the other way round, whoever the platform has verified as a guardian of you.',
+  'export.inInvited': 'People you invited',
+  'export.inInvitedNote':
+    'The address you sent a share to, what you shared, and whether it was accepted. Not the link itself: the link is what lets its holder in.',
+  'export.inMoney': 'Money',
+  'export.inMoneyNote':
+    'Orders on any account you belong to, what was bought, and, if you teach, your earnings and payouts. Amounts appear exactly as recorded, in their own currency.',
+  'export.inSupport': 'Support and messages',
+  'export.inSupportNote':
+    'Cases you opened, the replies you can already see, every notification sent to you, and the email the platform has sent or queued on your behalf, with any invitation link blanked out.',
+  'export.inActivity': 'Activity and devices',
+  'export.inActivityNote':
+    'The events recorded about your use of the product, and the devices registered for offline lessons. Reports for teachers and staff are counted from the same events.',
+  'export.outHeading': 'What is not in it, and why',
+  'export.outOthers': 'Other people’s words',
+  'export.outOthersNote':
+    'A reply under your post, a classmate’s message, a teacher’s note about a different learner: that is their data, not yours, even where it concerns you.',
+  'export.outSignIn': 'Your sign-in address and password',
+  'export.outSignInNote': 'Both are held by the sign-in provider, outside this database.',
+  'export.outStaff': 'Internal staff notes',
+  'export.outStaffNote':
+    'How the team talks to itself about a support case or a review. Publishing those notes would make them useless, and they are not a record about you.',
+  'export.outFiles': 'Uploaded files themselves',
+  'export.outFilesNote':
+    'Attachments are listed by reference. Copying every stored video into one document is a different feature, with its own size limits.',
+  'export.outTokens': 'Credential tokens',
+  'export.outTokensNote':
+    'Certificate verification tokens and sharing links are what let other people in. Printing them in a copy is how they stop being secret.',
+  'export.after':
+    'Downloading is one direction and restoring is the other: part of a copy can be put back on this account or on a new one. Closing your account is separate and cannot be undone; what happens to each kind of record is written on that page.',
+  'export.printCrumb': 'To print',
+  'export.printTitle': 'A copy of your data',
+  'export.printLede':
+    'Print this page, or use your browser’s print dialog to save it as a PDF. Your browser makes the PDF itself.',
+  'export.printCounts':
+    'Opening this page made a copy: it counts as one of the ten an hour and is recorded like a download. Reloading the page makes another.',
+  'export.printMade': 'Made: {when}',
+  'export.printCut': 'These lists were longer than the limit and were cut: {lists}',
+  'export.printSheet': 'Download as a spreadsheet',
+  'export.printJson': 'Download as JSON',
+  'export.printEmpty': 'There is nothing recorded against this account yet.',
+  'export.printSame':
+    'This is the same record the two downloads contain. What is left out on purpose, and why, is on the export page.',
+  'export.printBack': 'Back to the export page',
 } as const;
 
 export type MessageKey = keyof typeof en;

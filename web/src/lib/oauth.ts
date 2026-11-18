@@ -55,20 +55,6 @@ export function describeOAuthFailure(raw: string | null | undefined): string {
   return 'Google sign-in did not complete. Try again, or use your email and password.';
 }
 
-/** A provider name as a sentence a person reads. */
-export function describeProvider(provider: string): string {
-  switch (provider) {
-    case 'google':
-      return 'Google';
-    case 'email':
-      return 'Email and password';
-    case 'phone':
-      return 'Phone code';
-    default:
-      return provider;
-  }
-}
-
 export type SignInMethods = {
   providers: string[];
   hasPassword: boolean;

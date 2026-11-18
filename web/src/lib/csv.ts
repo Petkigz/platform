@@ -149,15 +149,3 @@ export function csvFileName(now: Date = new Date()): string {
   const stamp = now.toISOString().slice(0, 10);
   return `ayahspring-my-data-${stamp}.csv`;
 }
-
-/** What the account page says about the two formats. */
-export function exportFormatSentence(format: 'json' | 'csv' | 'print'): string {
-  switch (format) {
-    case 'csv':
-      return 'A spreadsheet, one section per part of your account, with a blank line between sections. Opens in Excel, Numbers, LibreOffice or Google Sheets.';
-    case 'print':
-      return 'A page you can read in the browser and print or save as a PDF from your own print dialog — nothing is sent anywhere to make it.';
-    default:
-      return 'The complete record as one JSON file — every field, including the ones no screen shows. For a developer or for keeping a copy you can check later.';
-  }
-}

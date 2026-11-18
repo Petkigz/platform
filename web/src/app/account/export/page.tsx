@@ -1,19 +1,54 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import { describeProvider, type SignInMethods } from '@/lib/oauth';
-import { exportFormatSentence } from '@/lib/csv';
+import { EXPORT_ROW_LIMIT } from '@/lib/export-outcome';
+import { LOCALE_COOKIE, chooseLocale, languageShownFor, translator } from '@/lib/i18n';
+import { formatNumber } from '@/lib/i18n/format';
+import { DownloadCopy, type CopyWords } from './download-copy';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Export your data' };
+
+/** The language this page is written in for this reader, and whether that is the one they chose. */
+async function readerLanguage() {
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code: locale } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  const shown = languageShownFor(locale, 'export');
+  return { locale, shown };
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { shown } = await readerLanguage();
+  return { title: translator(shown.code)('export.title') };
+}
+
+const NOTE = { fontSize: '0.85rem', margin: '0.35rem 0 0' } as const;
+const DETAIL = { display: 'block', fontSize: '0.9rem' } as const;
+const HEADING = { fontSize: '1.15rem', margin: '2rem 0 0.5rem' } as const;
 
 /**
- * Getting your own data out.
+ * Getting your own data out, in the reader's language.
  *
  * The page is written for the person who is about to download it, which means
  * it says what is inside, what is deliberately outside, and why — before the
  * button, not in a FAQ nobody opens.
+ *
+ * **Twenty-seven languages have it** (`messages/export.ts`); a language held
+ * for review reads it in English, whole, under `lang="en"`. Nobody who speaks
+ * any of the twenty-seven has read them.
+ *
+ * **It asks for no copy itself.** A copy is made when a button is pressed,
+ * and the link to the page that prints one is not fetched ahead of a press
+ * (`prefetch={false}`): opening that page is a copy, counted and recorded.
+ *
+ * The two lists are sentences about `export_my_data()`. What the copy leaves
+ * out is also written inside the copy, in English, by the database.
  */
 export default async function ExportPage() {
   if (!isSupabaseConfigured()) redirect('/');
@@ -24,183 +59,119 @@ export default async function ExportPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect('/sign-in?next=/account/export');
 
-  const { data: methodsData } = await supabase.rpc('my_sign_in_methods');
-  const methods = (methodsData ?? null) as SignInMethods | null;
+  const { locale, shown } = await readerLanguage();
+  const t = translator(shown.code);
+  const frame = shown.code !== locale ? { lang: shown.code, dir: shown.dir } : {};
+
+  const words: CopyWords = {
+    preparing: t('export.preparing'),
+    done: t('export.done'),
+    unreachable: t('auth.offline'),
+    reasons: {
+      signed_out: t('export.signedOut'),
+      limit: t('export.limit'),
+      // The buttons cannot ask for another format; if one ever did, it failed.
+      format: t('export.failed'),
+      failed: t('export.failed'),
+    },
+  };
+
+  const inside = [
+    ['export.inAccount', 'export.inAccountNote'],
+    ['export.inLearners', 'export.inLearnersNote'],
+    ['export.inWrote', 'export.inWroteNote'],
+    ['export.inGuardians', 'export.inGuardiansNote'],
+    ['export.inInvited', 'export.inInvitedNote'],
+    ['export.inMoney', 'export.inMoneyNote'],
+    ['export.inSupport', 'export.inSupportNote'],
+    ['export.inActivity', 'export.inActivityNote'],
+  ] as const;
+  const outside = [
+    ['export.outOthers', 'export.outOthersNote'],
+    ['export.outSignIn', 'export.outSignInNote'],
+    ['export.outStaff', 'export.outStaffNote'],
+    ['export.outFiles', 'export.outFilesNote'],
+    ['export.outTokens', 'export.outTokensNote'],
+  ] as const;
 
   return (
-    <div className="page narrow">
+    <div className="page narrow" {...frame}>
       <nav className="crumbs">
-        <Link href="/account">Account</Link>
+        <Link href="/account">{t('auth.accountSettings')}</Link>
         <span aria-hidden>›</span>
-        <span>Export</span>
+        <span>{t('export.crumb')}</span>
       </nav>
 
       <div className="page-head">
-        <p className="eyebrow">Your account</p>
-        <h1>Get a copy of your data</h1>
-        <p className="muted">
-          One file containing what this platform holds about you: your account, the courses you are
-          enrolled in, what you have written, what you have been marked on, what you have bought, and
-          the messages you have been sent.
-        </p>
+        <h1>{t('export.title')}</h1>
+        <p className="muted">{t('export.lede')}</p>
       </div>
 
       <div className="card" style={{ padding: '1.25rem' }}>
         <p className="muted" style={{ marginTop: 0 }}>
-          The file is JSON — readable in any text editor, and importable by anything that reads JSON.
-          It is generated when you ask for it, so it is current at that moment. Ten copies an hour is
-          the limit, which protects the platform rather than restricting you.
+          {t('export.how')} {t('export.cap', { count: formatNumber(shown.code, EXPORT_ROW_LIMIT) })}
         </p>
         <div style={{ marginTop: '1rem', display: 'grid', gap: '0.75rem' }}>
           <div>
-            <a className="btn" href="/api/account/export" download>
-              Download everything (JSON)
-            </a>
-            <p className="muted" style={{ fontSize: '0.85rem', margin: '0.35rem 0 0' }}>
-              {exportFormatSentence('json')}
-            </p>
+            <DownloadCopy
+              href="/api/account/export"
+              fallbackName="ayahspring-my-data.json"
+              className="btn"
+              label={t('export.json')}
+              words={words}
+            />
+            <p className="muted" style={NOTE}>{t('export.jsonNote')}</p>
           </div>
           <div>
-            <a className="btn secondary" href="/api/account/export?format=csv" download>
-              Download everything (spreadsheet)
-            </a>
-            <p className="muted" style={{ fontSize: '0.85rem', margin: '0.35rem 0 0' }}>
-              {exportFormatSentence('csv')}
-            </p>
+            <DownloadCopy
+              href="/api/account/export?format=csv"
+              fallbackName="ayahspring-my-data.csv"
+              className="btn secondary"
+              label={t('export.sheet')}
+              words={words}
+            />
+            <p className="muted" style={NOTE}>{t('export.sheetNote')}</p>
           </div>
           <div>
-            <Link className="btn secondary" href="/account/export/print">
-              Read it here, or save it as a PDF
+            <Link className="btn secondary" href="/account/export/print" prefetch={false}>
+              {t('export.read')}
             </Link>
-            <p className="muted" style={{ fontSize: '0.85rem', margin: '0.35rem 0 0' }}>
-              {exportFormatSentence('print')}
-            </p>
+            <p className="muted" style={NOTE}>{t('export.readNote')}</p>
           </div>
         </div>
-        <p className="muted" style={{ fontSize: '0.85rem', marginBottom: 0 }}>
-          Every download is recorded in the audit trail, with the date and how many rows each section
-          held. That record is how a surprise copy of somebody&rsquo;s data becomes traceable.
-        </p>
+        <p className="muted" style={{ fontSize: '0.85rem', marginTop: '1.25rem' }}>{t('export.english')}</p>
+        <p className="muted" style={{ fontSize: '0.85rem', marginBottom: 0 }}>{t('export.audit')}</p>
       </div>
 
-      <div className="outline-h" style={{ marginTop: '2rem' }}>
-        <h3>What is in it</h3>
-      </div>
+      <h2 style={HEADING}>{t('export.inHeading')}</h2>
       <div className="card">
-        <ul className="lessons">
-          <li>
-            <strong>Your account</strong>
-            <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
-              Display name, language, time zone, country, status, and the roles you hold (teacher,
-              reviewer, staff — if any).
-            </span>
-          </li>
-          <li>
-            <strong>Learner profiles</strong>
-            <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
-              Your own, and learners for whom you are a currently verified guardian with progress permission. It also carries their
-              enrolments, progress, attempts and certificates.
-            </span>
-          </li>
-          <li>
-            <strong>What you wrote</strong>
-            <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
-              Lesson notes, bookmarks, saved courses and the private note you put beside one,
-              reviews, discussion posts, assignment submissions and quiz answers.
-            </span>
-          </li>
-          <li>
-            <strong>Who you are responsible for, and who may see you</strong>
-            <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
-              Every child you are a guardian of, what you are allowed to see and manage, and when
-              that was verified — and, the other way round, whoever the platform has verified as a
-              guardian of you.
-            </span>
-          </li>
-          <li>
-            <strong>People you invited</strong>
-            <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
-              The address you sent a share to, what you shared, and whether it was accepted. Not the
-              link itself: it is what lets its holder in.
-            </span>
-          </li>
-          <li>
-            <strong>Money</strong>
-            <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
-              Orders on any account you belong to, what was bought, and — if you teach — your earnings
-              and payouts. Amounts appear exactly as recorded, in their own currency.
-            </span>
-          </li>
-          <li>
-            <strong>Support and messages</strong>
-            <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
-              Cases you opened, the replies you can already see, every notification sent to you, and
-              the mail the platform has sent or queued on your behalf — with any invitation link
-              blanked out.
-            </span>
-          </li>
-          <li>
-            <strong>Activity the platform recorded</strong>
-            <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
-              The operational events about your use of the product. Nobody but you can read these
-              today.
-            </span>
-          </li>
+        <ul className="lessons stacked">
+          {inside.map(([name, note]) => (
+            <li key={name}>
+              <strong>{t(name)}</strong>
+              <span className="muted" style={DETAIL}>{t(note)}</span>
+            </li>
+          ))}
         </ul>
       </div>
 
-      <div className="outline-h" style={{ marginTop: '2rem' }}>
-        <h3>What is not in it, and why</h3>
-      </div>
+      <h2 style={HEADING}>{t('export.outHeading')}</h2>
       <div className="card">
-        <ul className="lessons">
-          <li>
-            <strong>Other people&rsquo;s words</strong>
-            <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
-              A reply under your post, a classmate&rsquo;s message, a teacher&rsquo;s note about a
-              different learner — that is their data, not yours, even where it concerns you.
-            </span>
-          </li>
-          <li>
-            <strong>Your sign-in address and password</strong>
-            <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
-              Both live with the authentication provider, outside this database. You sign in with{' '}
-              {(methods?.providers ?? []).map(describeProvider).join(' and ') || 'a method this page could not read'}.
-            </span>
-          </li>
-          <li>
-            <strong>Internal staff notes</strong>
-            <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
-              How the team talks to itself about a support case or a review. Publishing it would make
-              those notes useless, and they are not a record about you.
-            </span>
-          </li>
-          <li>
-            <strong>Uploaded files themselves</strong>
-            <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
-              Attachments are listed by reference. Copying every stored video into one document is a
-              different feature with its own size limits.
-            </span>
-          </li>
-          <li>
-            <strong>Credential tokens</strong>
-            <span className="muted" style={{ display: 'block', fontSize: '0.9rem' }}>
-              Certificate verification tokens and sharing links are what let other people in. Printing
-              them in an export is how they stop being secret.
-            </span>
-          </li>
+        <ul className="lessons stacked">
+          {outside.map(([name, note]) => (
+            <li key={name}>
+              <strong>{t(name)}</strong>
+              <span className="muted" style={DETAIL}>{t(note)}</span>
+            </li>
+          ))}
         </ul>
       </div>
 
-      <p className="muted" style={{ marginTop: '1.5rem', fontSize: '0.9rem' }}>
-        Downloading is one direction and restoring is the other: <Link href="/account/restore">put an
-        export back</Link> on this account or a new one. Closing your account is separate and
-        irreversible: <Link href="/account/delete">close my account</Link>.
-        {' '}What happens to each kind of record is written on that page.
-      </p>
-
-      <p style={{ marginTop: '1rem' }}>
-        <Link href="/account">Back to account settings</Link>
+      <p className="muted" style={{ marginTop: '1.5rem', fontSize: '0.9rem' }}>{t('export.after')}</p>
+      <p style={{ fontSize: '0.9rem' }}>
+        <Link href="/account/restore">{t('account.dataRestoreLink')}</Link>
+        {' · '}
+        <Link href="/account/delete">{t('account.closeLink')}</Link>
       </p>
     </div>
   );

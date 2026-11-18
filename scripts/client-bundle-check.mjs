@@ -72,6 +72,12 @@ for (const [file, key] of [
   // in no script.
   ['close.ts', 'close.unconfirmed'],
   ['close.ts', 'close.goesAnswers'],
+  // The link that downloads a copy of your data is a client component handed
+  // its words. What a reader is told at the eleventh copy in an hour, and
+  // what the page says the copy leaves out, must be in that page and in no
+  // script.
+  ['export.ts', 'export.limit'],
+  ['export.ts', 'export.outTokensNote'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

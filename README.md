@@ -228,7 +228,7 @@ server's HTML, not applied after hydration — and every form control has an
 accessible name (`check:repo` #8): the count is 316 named, 0 unnamed.
 
 Text colour is measured, not eyeballed: `check:repo` #9 reads the design tokens
-and computes WCAG contrast over the twenty pairs the stylesheet composes. It
+and computes WCAG contrast over the twenty-one pairs the stylesheet composes. It
 found `--muted` at 3.98:1 on the page background — the whole muted voice of the
 site, under the 4.5 AA asks of normal text. It is 5.00:1 now.
 

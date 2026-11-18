@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
 
@@ -5,7 +6,6 @@ import {
   csvCell,
   csvDocument,
   csvFileName,
-  exportFormatSentence,
   exportSections,
 } from './csv.ts';
 
@@ -106,7 +106,15 @@ test('the filename is dated and carries the platform name', () => {
 });
 
 test('every format says what it is for, and none of them pretends to be the others', () => {
-  assert.match(exportFormatSentence('csv'), /spreadsheet/i);
-  assert.match(exportFormatSentence('print'), /print or save as a PDF/i);
-  assert.match(exportFormatSentence('json'), /JSON/i);
+  // The page says these through the catalogue now; the English is what a
+  // held language reads and what every translation was written from.
+  const words = readFileSync(new URL('./i18n/messages/en.ts', import.meta.url), 'utf8');
+  const said = (key: string) => {
+    const match = new RegExp(`'${key.replace('.', '\\.')}':\\s+'([^']*)'`, 'u').exec(words);
+    assert.ok(match, `${key} has no English`);
+    return match[1]!;
+  };
+  assert.match(said('export.sheetNote'), /spreadsheet/i);
+  assert.match(said('export.readNote'), /print, or save as a PDF/i);
+  assert.match(said('export.jsonNote'), /JSON/i);
 });

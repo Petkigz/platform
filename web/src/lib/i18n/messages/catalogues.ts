@@ -27,6 +27,7 @@ import { ACCOUNT } from './account.ts';
 import { FAMILY } from './family.ts';
 import { BUY } from './buy.ts';
 import { CLOSE } from './close.ts';
+import { EXPORT } from './export.ts';
 import { LESSON } from './lesson.ts';
 import { isHeld } from './held.ts';
 import { ASIA_AZ } from './asia-az.ts';
@@ -826,6 +827,8 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   BUY,
   // Closing an account and its form, on the same rule.
   CLOSE,
+  // A copy of your data and the page that prints it, on the same rule.
+  EXPORT,
 );
 
 /**

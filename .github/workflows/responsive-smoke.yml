@@ -115,6 +115,19 @@ jobs:
             node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Closing-account responsive test::${s}`)' "$RUNNER_TEMP/close-responsive.log"
             exit 1
           fi
+      - name: Check the export pages, their buttons and the print stylesheet with synthetic data
+        env:
+          RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs
+        run: |
+          set -euo pipefail
+          export RESPONSIVE_CHROME="$(command -v google-chrome || command -v chromium)"
+          if node scripts/export-route-smoke.mjs > "$RUNNER_TEMP/export-responsive.log" 2>&1; then
+            cat "$RUNNER_TEMP/export-responsive.log"
+          else
+            cat "$RUNNER_TEMP/export-responsive.log"
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Export responsive test::${s}`)' "$RUNNER_TEMP/export-responsive.log"
+            exit 1
+          fi
       - name: Check lesson and video layout with synthetic data
         env:
           RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs

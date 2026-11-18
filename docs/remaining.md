@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 19% there (192 of 1020 sentences; it was 71% of 272, then
+  the nineteen reads 18% there (192 of 1078 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -759,7 +759,7 @@ written: not a held draft, nothing.
   for every reader, and marked:** the phone card (switched off) and the title
   of a document waiting for agreement. **Still English, every one of them:**
   the pages it links to: `/account/merge`, `/account/sharing`,
-  `/account/accessibility`, `/account/export` and its print page,
+  `/account/accessibility`,
   `/account/restore`, `/account/referrals`,
   `/account/sponsorship`, `/account/password`, `/billing`,
   `/institution`, `/notifications`, `/policies`, `/teach/apply`, `/sponsor`
@@ -863,6 +863,18 @@ written: not a held draft, nothing.
   other twenty-four languages in a browser; and Tamil letters themselves,
   which the test browser on the builder's machine draws as boxes for want of
   a font (the layout was measured, the glyphs were not seen).
+- *A copy of your data (2026-11-18).* `/account/export`, its print page and
+  the download buttons, fifty-eight sentences in the same twenty-seven
+  languages (`messages/export.ts`); a held language reads them in English,
+  whole, marked as English. **Unreviewed.** A reviewer of any language
+  should be shown `export.lede`, `export.printCounts`, `export.outTokensNote`
+  and `export.limit` first, then `account.dataBody` on the account page,
+  rewritten in all twenty-seven because the old one said "everything".
+  **Still English on the print page for every reader, and marked:** the
+  section and column names, which are the stored names.
+  **Not exercised:** the real hourly limit and audit line, a real copy
+  through Auth and RLS, a print dialog or a printer, and Excel opening the
+  spreadsheet.
 - *Closing an account (2026-11-18).* `/account/delete` and its form,
   forty-three sentences in the same twenty-seven languages
   (`messages/close.ts`); a held language reads it in English, whole, marked

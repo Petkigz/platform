@@ -2618,6 +2618,81 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### A copy of your data in the reader's language, 2026-11-18
+
+`/account/export` and `/account/export/print` were English for every reader,
+and a refusal from either download was shown as raw JSON.
+
+- *Translated.* Fifty-eight sentences (`export.*`, new file
+  `messages/export.ts`) in the twenty-seven languages with nothing held.
+  **Unreviewed.** A held language reads both pages in English, whole, marked
+  `lang="en" dir="ltr"`.
+- *A refusal has a name.* `lib/export-outcome.ts`: `signed_out` 401, `limit`
+  429, `format` 400, `failed` 502. The route used to send whatever sentence
+  the database raised. The two it raises itself are matched by their words
+  and their state, and a test reads them out of the migrations. Anything
+  else (a missing profile, a gateway page, an empty answer, a bare word) is
+  `failed`, and its sentence says to ask again: a lost copy costs one of ten
+  an hour, nothing more, so there is no "could not confirm" here.
+- *The buttons ask for the file themselves.* `DownloadCopy`, a small client
+  island with no words of its own, used on `/account/export` and for the two
+  downloads on `/account`. Still a link without script. With script: a file
+  is saved under the name the server gave it; a refusal, or a reply that is
+  not offered as a file, is said under the button in the reader's language
+  and the page stays where it is.
+- *Defects fixed on the way.*
+  - **The eleventh press in an hour replaced the page with
+    `{"error":"ten exports in the last hour is the limit; …"}`.**
+  - **The eleventh view of the print page landed on "this page broke".** The
+    page threw the database's sentence. It now says the limit in place of
+    the tables, with a link back.
+  - **The export page did not say that opening the print page counts as a
+    copy.** It does now, under that button. The link has no prefetch, and a
+    test pins that the export page itself makes no copy.
+  - **"Download everything" sat above a list of what is left out.** Now
+    "Download the copy", and the first paragraph says "with the exceptions
+    listed below". `account.dataBody` on `/account` said "Download
+    everything we hold" in twenty-eight languages and was rewritten in each.
+  - The export page asked the database which sign-in methods the reader has
+    in order to print one sentence; the sentence is now general and the
+    question is gone.
+  - On paper the print page carried the masthead, the footer, the
+    breadcrumbs and its own buttons. A print stylesheet removes them and
+    lets a wide table wrap rather than be cut at the paper's edge.
+  - The spreadsheet had no byte-order mark, without which Excel is known to
+    read a UTF-8 file in a legacy code page and garble Arabic. It starts
+    with one now. Excel itself was not opened to see it.
+  - The list of what is in the copy was a flex row, which put each note
+    beside its name and squeezed both on a phone. `.lessons.stacked`.
+- *What stays English, and says so.* The section and column names inside the
+  copy (`profile`, `display_name`, `written_at`): they are the stored names
+  and the two files carry the same ones. Marked `lang="en"` on the print
+  page; both pages tell the reader why, in their language.
+- *The audit.* JSON, Excel, LibreOffice, Numbers and Sheets are let through
+  as names in every script (the last two only capitalised). Without that the
+  four sentences naming them counted fifty-seven times against the limit of
+  two hundred. The limit is unchanged; the total is 191.
+- *What it did to the nineteen.* `/language` tells each of them **18%** (192
+  of 1078).
+- *Checks.* 2365 web tests (new `export-outcome.test.ts`, seven). The bundle
+  check looks for the limit sentence and the tokens note in every script and
+  finds neither (361 sentences looked for; 1793 kB). New
+  `scripts/export-route-smoke.mjs`, in CI and in the browser workflow: both
+  pages over HTTP in six languages, every refusal on the route and on the
+  print page, and in a browser the buttons in Arabic (a refusal, a gateway
+  page, signed out, a saved file, a lost connection) and the print page on
+  screen and with print media.
+- *Not proven.* The stand-in counts nothing: the real hourly limit, the real
+  audit line and a real copy through Auth and RLS were not exercised. No
+  printer or print dialog was used; "on paper" means the print stylesheet in
+  a browser. Excel itself was not opened. Tamil was measured and not seen
+  (no font on the builder's machine).
+- *Left as it was:* `/account/accessibility`, `/account/merge`,
+  `/account/sharing`, `/account/restore`, `/account/referrals` and
+  `/account/sponsorship` are English. The accessibility page says the
+  product is in thirty-three languages, "all complete"; the picker has
+  forty-seven and nineteen of them are held. That is next.
+
 ### Closing an account in the reader's language, 2026-11-18
 
 `/account/delete` was English for every reader. It is the one page on the

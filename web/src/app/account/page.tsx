@@ -7,6 +7,7 @@ import { isFlagEnabled } from '@/lib/flags';
 import { ClaimLearner } from '@/components/claim-learner';
 import { ProfileForm } from './profile-form';
 import { PhoneForm } from './phone-form';
+import { DownloadCopy, type CopyWords } from './export/download-copy';
 import type { PolicyStanding } from '@/lib/policies';
 import { ACCOUNT_NAME_MAX, ACCOUNT_ZONE_MAX } from '@/lib/account';
 import {
@@ -61,6 +62,19 @@ export default async function AccountPage() {
   const shown = languageShownFor(locale, 'account');
   const t = translator(shown.code);
   const num = (value: number) => formatNumber(shown.code, value);
+  // What the two download buttons say. They are the export page's words: the
+  // same twenty-seven languages have both parts.
+  const copyWords: CopyWords = {
+    preparing: t('export.preparing'),
+    done: t('export.done'),
+    unreachable: t('auth.offline'),
+    reasons: {
+      signed_out: t('export.signedOut'),
+      limit: t('export.limit'),
+      format: t('export.failed'),
+      failed: t('export.failed'),
+    },
+  };
   const mismatch = shown.code !== locale;
   // What is not translated on this page, marked so a right-to-left page lays
   // it out, and a screen reader says it, as English.
@@ -427,13 +441,22 @@ export default async function AccountPage() {
         <h2 style={{ marginTop: 0 }}>{t('account.dataHeading')}</h2>
         <p className="muted">{t('account.dataBody')}</p>
         <div className="page-actions" style={{ marginTop: 0 }}>
-          <a className="btn secondary" href="/api/account/export" download>
-            {t('account.dataDownload')}
-          </a>
-          <a className="btn secondary" href="/api/account/export?format=csv" download>
-            {t('account.dataSheet')}
-          </a>
-          <Link className="btn secondary" href="/account/export/print">
+          <DownloadCopy
+            href="/api/account/export"
+            fallbackName="ayahspring-my-data.json"
+            className="btn secondary"
+            label={t('account.dataDownload')}
+            words={copyWords}
+          />
+          <DownloadCopy
+            href="/api/account/export?format=csv"
+            fallbackName="ayahspring-my-data.csv"
+            className="btn secondary"
+            label={t('account.dataSheet')}
+            words={copyWords}
+          />
+          {/* Opening that page makes a copy, so it is not fetched ahead of a press. */}
+          <Link className="btn secondary" href="/account/export/print" prefetch={false}>
             {t('account.dataPrint')}
           </Link>
         </div>

@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   describeOAuthFailure,
-  describeProvider,
   oauthRedirectUrl,
   safeNextPath,
 } from './oauth.ts';
@@ -42,10 +41,4 @@ test('a refusal says what the person should do next', () => {
   assert.match(describeOAuthFailure(''), /did not complete/i);
   // An unknown failure is still reported rather than swallowed.
   assert.match(describeOAuthFailure('boom'), /boom/);
-});
-
-test('a provider reads as a sentence', () => {
-  assert.equal(describeProvider('google'), 'Google');
-  assert.equal(describeProvider('phone'), 'Phone code');
-  assert.equal(describeProvider('saml'), 'saml');
 });

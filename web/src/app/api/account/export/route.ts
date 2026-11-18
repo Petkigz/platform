@@ -3,8 +3,16 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { exportFileName } from '@/lib/account';
 import { csvDocument, csvFileName, exportSections } from '@/lib/csv';
+import { exportCodeOf, exportRefusal, exportStatusOf, type ExportCode } from '@/lib/export-outcome';
 
 export const dynamic = 'force-dynamic';
+
+const NO_STORE = { 'cache-control': 'no-store' };
+
+/** A refusal, by name, with the status that name is always answered with. */
+function refuse(code: ExportCode) {
+  return NextResponse.json(exportRefusal(code), { status: exportStatusOf(code), headers: NO_STORE });
+}
 
 /**
  * Download my data.
@@ -17,29 +25,35 @@ export const dynamic = 'force-dynamic';
  * `?format=csv` is the same document, shaped for a spreadsheet by `lib/csv`. It
  * is derived here rather than asked for in SQL, so there is exactly one answer to
  * "what does the platform hold about me" and the two formats cannot disagree.
+ *
+ * Every refusal has a name (`lib/export-outcome.ts`) and its own status. The
+ * database's sentence is not forwarded: the buttons that ask for the file say
+ * the reason in the reader's language.
  */
 export async function GET(request: Request) {
   if (!isSupabaseConfigured()) {
-    return NextResponse.json({ error: 'not configured' }, { status: 503 });
+    return NextResponse.json({ ok: false, message: 'not configured' }, { status: 503 });
   }
 
   const format = new URL(request.url).searchParams.get('format');
-  if (format !== null && format !== 'json' && format !== 'csv') {
-    return NextResponse.json({ error: 'format must be json or csv' }, { status: 400 });
-  }
+  if (format !== null && format !== 'json' && format !== 'csv') return refuse('format');
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'sign in to download your data' }, { status: 401 });
-  }
+  let data: unknown;
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return refuse('signed_out');
 
-  const { data, error } = await supabase.rpc('export_my_data');
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 409 });
+    const answer = await supabase.rpc('export_my_data');
+    if (answer.error) return refuse(exportCodeOf(answer.error));
+    data = answer.data;
+  } catch {
+    return refuse('failed');
   }
+  // A reply with no document in it is not a copy of anything.
+  if (typeof data !== 'object' || data === null) return refuse('failed');
 
   if (format === 'csv') {
     const text = `\uFEFF${csvDocument(exportSections(data))}`;
@@ -51,7 +65,7 @@ export async function GET(request: Request) {
         // local code page — otherwise every Arabic name in the file is mojibake
         // and the export is worse than useless to the person who asked for it.
         'content-disposition': `attachment; filename="${csvFileName(new Date())}"`,
-        'cache-control': 'no-store',
+        ...NO_STORE,
       },
     });
   }
@@ -61,7 +75,7 @@ export async function GET(request: Request) {
     headers: {
       'content-type': 'application/json; charset=utf-8',
       'content-disposition': `attachment; filename="${exportFileName(new Date())}"`,
-      'cache-control': 'no-store',
+      ...NO_STORE,
     },
   });
 }

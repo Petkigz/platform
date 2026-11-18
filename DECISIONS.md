@@ -7959,14 +7959,15 @@ owner chose the first.
   lesson players and their saved-place messages, 27% since the discussion on
   the lesson page, 24% since the account page and its profile form, 21%
   since the family pages and their forms, 20% since the buy page and its
-  form, 19% since the page for closing an account.
+  form, 19% since the page for closing an account, 18% since the pages for
+  getting a copy of your data.
 - **The test that refused a language under half is removed.** Nothing in the
   tests now limits how much English one of these languages shows. That is the
   cost of this choice and it was put to the owner in those words.
 - What the tests still require of every offered language: every sentence that
   is neither held nor deliberately unwritten is present, and the sentence
   that gives the percentage is in that language rather than English. The
-  count (192 of 1020; it was 192 of 347 when this was decided) is pinned in
+  count (192 of 1078; it was 192 of 347 when this was decided) is pinned in
   `held-translations.test.ts`, so it changes only on purpose.
 - The four withheld languages are unaffected. So is the rule that a new screen
   is not written for a language with anything held.
@@ -8257,8 +8258,75 @@ the buyer's behalf unless exactly one learner is left.
 `/orders`, `/plans` and `/policies/refunds`, which this page links to, are
 still English.
 
+The page for closing an account followed (`/account/delete` and its form),
+forty-three sentences in a new part, `close.ts`, 19% for the nineteen. Four
+things were settled in writing it:
+
+- *The erase route names every refusal* (`lib/erase-outcome.ts`, ten answers,
+  each with its own status), matched by the database's own words and state,
+  which a test reads out of the migrations.
+- *"Nothing was changed" is said only when the database answered and rolled
+  back.* Anything else is "we could not confirm whether your account closed",
+  with the page to reload. Never both.
+- *Every `btn danger` is red.* The class had no rule of its own and the
+  button that closes an account was the same green as "Save profile". It is
+  on four other buttons, each of which removes something, and they are red
+  too. White on that red is one of the pairs `check:repo` measures
+  (twenty-one now).
+- *A grid column may shrink, and a card breaks a word that will not fit.*
+  `.grid` with no template had one `auto` column, never narrower than its
+  longest word; a Tamil heading widened the page at 320px. Both rules are
+  site-wide.
+
+"Deleted learner", the string the database writes on a certificate in place
+of the holder's name, stays English on that page and is marked.
+
+The pages for a copy of your data followed (`/account/export`, its print
+page and the two download buttons on `/account`), fifty-eight sentences in a
+new part, `export.ts`, 18% for the nineteen. Six things were settled in
+writing them:
+
+- *The export route names every refusal* (`lib/export-outcome.ts`):
+  `signed_out` 401, `limit` 429, `format` 400, `failed` 502. Only the
+  database's two own sentences are believed, by their words and their state;
+  a test reads them out of the migrations. Every answer is `no-store`.
+- *There is no "could not confirm" for a copy.* A copy that was made and lost
+  on the way costs one of ten an hour and a line in the audit trail, so the
+  one sentence for an unreadable answer says to ask again. That is the
+  opposite of an order and of a closure, on purpose.
+- *A download is a link that asks for the file itself.* A link cannot tell a
+  refusal from a file, and the eleventh press in an hour used to replace the
+  page with a line of JSON carrying the database's sentence. `DownloadCopy`
+  is still a link (it works with no script), asks with script, saves only a
+  reply the server offers as a file, and says anything else under the button.
+- *Opening the print page is a copy, and the page that links to it says so.*
+  It counts as one of the ten and is written to the audit trail. Nothing
+  links to it with a prefetch, and the export page itself asks the database
+  for nothing. A refusal is said in place of the tables; it used to be
+  thrown, which sent the eleventh view to the page for a page that broke.
+- *The names inside a copy are not translated.* Section and column names are
+  the names the records are stored under and the same ones the two files
+  carry, so the print page shows them as they are, marked `lang="en"`, and
+  both pages say so in the reader's language. A cell is whatever was written,
+  in a `<bdi>`.
+- *"Everything" is not said.* The buttons read "Download everything" above a
+  list of five things the copy leaves out. Every sentence now says "a copy",
+  "with the exceptions listed below"; `account.dataBody` on the account page
+  was rewritten in all twenty-eight languages for the same reason.
+
+Format and program names stay in Latin letters in every script: JSON, Excel,
+LibreOffice, and Numbers and Sheets when capitalised. The translation audit
+counted each as an untranslated English word in the fourteen languages that
+do not use Latin letters, which took it past its limit of two hundred; the
+names were added to what it lets through and the limit was not raised (191).
+
+`/account/accessibility`, `/account/merge`, `/account/sharing`,
+`/account/restore`, `/account/referrals` and `/account/sponsorship` are
+still English.
+
 `UNWRITTEN_WHILE_HELD` is now `learn`, `course`, `lesson`, `assess`,
-`assign`, `missing`, `broke`, `player`, `account`, `family` and `buy`.
+`assign`, `missing`, `broke`, `player`, `account`, `family`, `buy`, `close`
+and `export`.
 
 **The rule going forward.** A part named in `UNWRITTEN_WHILE_HELD`
 (`web/src/lib/i18n/messages/held.ts`) may be absent from a language that has

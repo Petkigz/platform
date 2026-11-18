@@ -117,6 +117,9 @@ jobs:
       - name: Closing-account page and erase route synthetic HTTP regression
         run: node scripts/close-route-smoke.mjs
 
+      - name: Export pages and export route synthetic HTTP regression
+        run: node scripts/export-route-smoke.mjs
+
       - name: Catalogue synthetic HTTP regression
         run: node scripts/catalogue-route-smoke.mjs
 
