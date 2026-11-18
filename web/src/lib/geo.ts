@@ -103,3 +103,26 @@ export function countryName(code: string | null | undefined): string | null {
   if (!/^[A-Z]{2}$/.test(upper)) return null;
   return COUNTRY_NAMES[upper] ?? upper;
 }
+
+/**
+ * A country's name in the language a page is written in.
+ *
+ * English keeps the short list above, because its sentences are written
+ * around it ("Priced for the United States"). Every other language asks the
+ * runtime's own tables, which know the name in the nominative and nothing
+ * else: the sentences that take it put it after a colon for that reason. A
+ * language the runtime has no names for gets the two letters, which is what
+ * `countryName()` already does for a country it has not heard of.
+ */
+export function countryNameIn(code: string | null | undefined, locale: string): string | null {
+  const english = countryName(code);
+  if (english === null || !code) return null;
+  if (locale === 'en') return english;
+  const upper = code.trim().toUpperCase();
+  try {
+    const name = new Intl.DisplayNames([locale], { type: 'region', fallback: 'none' }).of(upper);
+    return name && name.trim() !== '' ? name : upper;
+  } catch {
+    return upper;
+  }
+}

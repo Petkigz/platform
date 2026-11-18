@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { quoteCourseOrder } from '@/lib/checkout';
 import { countryFromHeaders } from '@/lib/geo';
+import { QUOTE_FAILED_SENTENCE, checkoutStatusOf, type CheckoutReason } from '@/lib/checkout-outcome';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,13 +18,16 @@ export const dynamic = 'force-dynamic';
  * The body carries a course, a learner and a code — never an amount, never a price.
  * The country is read from the request headers here because it is the only layer that
  * can see them, exactly as the checkout does.
+ *
+ * **A refusal names its reason** (`lib/checkout-outcome.ts`), with the same
+ * names and statuses as the checkout. `code` is the older, coarser name.
  */
+const refuse = (reason: CheckoutReason, code: string, message: string) =>
+  NextResponse.json({ ok: false, code, reason, message }, { status: checkoutStatusOf(reason) });
+
 export async function POST(request: Request) {
   if (!isSupabaseConfigured()) {
-    return NextResponse.json(
-      { ok: false, code: 'checkout_disabled', message: 'Payments are not configured on this deployment.' },
-      { status: 503 },
-    );
+    return refuse('disabled', 'checkout_disabled', 'Payments are not configured on this deployment.');
   }
 
   const supabase = await createClient();
@@ -31,20 +35,14 @@ export async function POST(request: Request) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json(
-      { ok: false, code: 'not_signed_in', message: 'Sign in to see the price.' },
-      { status: 401 },
-    );
+    return refuse('not_signed_in', 'not_signed_in', 'Sign in to see the price.');
   }
 
   let raw: unknown;
   try {
     raw = await request.json();
   } catch {
-    return NextResponse.json(
-      { ok: false, code: 'bad_request', message: 'Malformed request body.' },
-      { status: 400 },
-    );
+    return refuse('malformed', 'bad_request', 'Malformed request body.');
   }
   const body = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
 
@@ -59,10 +57,7 @@ export async function POST(request: Request) {
     : '';
 
   if (!courseId || !learnerProfileId) {
-    return NextResponse.json(
-      { ok: false, code: 'bad_request', message: 'Choose the course and who it is for.' },
-      { status: 400 },
-    );
+    return refuse(courseId ? 'learner_required' : 'malformed', 'bad_request', 'Choose the course and who it is for.');
   }
 
   const result = await quoteCourseOrder(supabase, {
@@ -73,31 +68,14 @@ export async function POST(request: Request) {
   });
 
   if (!result.ok) {
-    // The same status convention as the checkout route, so a payer meets the same
-    // answer whichever of the two they hit: 503 for a closed platform, 403 for "not
-    // yours", 404 for "nothing to buy", 500 for anything nobody anticipated, 409 for
-    // the expected conflicts, and 400 for a request that is wrong.
-    const status =
-      result.code === 'checkout_disabled'
-        ? 503
-        : result.code === 'forbidden'
-          ? 403
-          : result.code === 'not_found'
-            ? 404
-            : result.code === 'error'
-              ? 500
-              : result.code === 'price_not_available' ||
-                  result.code === 'not_paid_course' ||
-                  result.code === 'not_sold_here' ||
-                  result.code === 'already_entitled' ||
-                  result.code === 'promotion_refused' ||
-                  result.code === 'conflict'
-                ? 409
-                : 400;
-    return NextResponse.json(
-      { ok: false, code: result.code, message: result.message },
-      { status },
-    );
+    // The same names and statuses as the checkout route, so a payer meets the
+    // same answer whichever of the two they hit. Asking for a price writes
+    // nothing, so an answer nobody can read is simply "could not be worked
+    // out": trying again costs nothing. The database's own sentence stays here.
+    const reason = result.reason ?? 'refused';
+    if (reason === 'refused') console.error('checkout quote: a refusal with no name:', result.message);
+    const message = reason === 'refused' || reason === 'unconfirmed' ? QUOTE_FAILED_SENTENCE : result.message;
+    return refuse(reason, result.code, message);
   }
 
   const { quote } = result;

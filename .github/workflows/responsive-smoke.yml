@@ -88,6 +88,20 @@ jobs:
             node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Family responsive test::${s}`)' "$RUNNER_TEMP/family-responsive.log"
             exit 1
           fi
+
+      - name: Check the buy page and its form with synthetic data and a synthetic provider
+        env:
+          RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs
+        run: |
+          set -euo pipefail
+          export RESPONSIVE_CHROME="$(command -v google-chrome || command -v chromium)"
+          if node scripts/buy-route-smoke.mjs > "$RUNNER_TEMP/buy-responsive.log" 2>&1; then
+            cat "$RUNNER_TEMP/buy-responsive.log"
+          else
+            cat "$RUNNER_TEMP/buy-responsive.log"
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Buy responsive test::${s}`)' "$RUNNER_TEMP/buy-responsive.log"
+            exit 1
+          fi
       - name: Check lesson and video layout with synthetic data
         env:
           RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs

@@ -14,6 +14,12 @@ import { PaymentProviderUnavailableError } from '@/lib/payments/provider';
 import { toE164 } from '@/lib/phone';
 import { countryFromHeaders } from '@/lib/geo';
 import { recordWithdrawalChoice, type WithdrawalChoice } from '@/lib/withdrawal';
+import {
+  CHECKOUT_REFUSED_SENTENCE,
+  CHECKOUT_UNCONFIRMED_SENTENCE,
+  checkoutStatusOf,
+  type CheckoutReason,
+} from '@/lib/checkout-outcome';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,13 +66,28 @@ type Body = {
  *   - It does not treat a provider redirect as payment. The payer comes back to
  *     `returnUrl` with nothing settled, and the entitlement arrives when the
  *     webhook lands. The UI has to be built to wait rather than to assume.
+ *
+ * **A refusal names its reason** (`lib/checkout-outcome.ts`). `error` is still
+ * an English sentence, for the plan checkout and for any caller with no words
+ * of its own; the buy page's form reads `reason` and says its own sentence in
+ * the reader's language. A course refusal is answered with the status that
+ * belongs to its reason, and the form trusts a reason only when it arrives
+ * with that status. The database's own sentence is not sent for a course.
+ * (For a plan it still can be: `createPlanOrder` has no keys to match.)
  */
+/** How a number typed without a country is read: as Uganda's. */
+const LOCAL_DIAL_CODE = '+256';
+
+const NO_PROVIDER_SENTENCE =
+  'No payment provider is configured yet, so this order cannot be paid. ' +
+  'It has been saved and will appear in your orders.';
+
+const refuse = (reason: CheckoutReason, error: string, extra: Record<string, unknown> = {}) =>
+  NextResponse.json({ error, reason, ...extra }, { status: checkoutStatusOf(reason) });
+
 export async function POST(request: Request) {
   if (!isSupabaseConfigured()) {
-    return NextResponse.json(
-      { error: 'Payments are not configured on this deployment.' },
-      { status: 503 },
-    );
+    return refuse('disabled', 'Payments are not configured on this deployment.');
   }
 
   const supabase = await createClient();
@@ -75,14 +96,14 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: 'Sign in to check out.' }, { status: 401 });
+    return refuse('not_signed_in', 'Sign in to check out.');
   }
 
   let body: Body;
   try {
     body = (await request.json()) as Body;
   } catch {
-    return NextResponse.json({ error: 'Malformed request body.' }, { status: 400 });
+    return refuse('malformed', 'Malformed request body.');
   }
 
   const courseId = typeof body.courseId === 'string' ? body.courseId.trim() : '';
@@ -98,31 +119,42 @@ export async function POST(request: Request) {
       : null;
 
   if (Boolean(courseId) === Boolean(planVersionId)) {
-    return NextResponse.json(
-      { error: 'Choose exactly one course or plan version.' },
-      { status: 400 },
-    );
+    return refuse('malformed', 'Choose exactly one course or plan version.');
   }
   // A price is still part of a plan checkout. A course has no price to post:
   // which one applies is decided by the buyer's country, in the writer.
   if (planVersionId && !priceId) {
-    return NextResponse.json(
-      { error: 'Choose a price for the plan.' },
-      { status: 400 },
-    );
+    return refuse('malformed', 'Choose a price for the plan.');
   }
   if (planVersionId && !learnerProfileId) {
-    return NextResponse.json(
-      { error: 'Choose the learner who will use this subscription.' },
-      { status: 400 },
-    );
+    return refuse('learner_required', 'Choose the learner who will use this subscription.');
   }
   // One purchase covers one learner, so a course order names them too.
   if (!planVersionId && !learnerProfileId) {
-    return NextResponse.json(
-      { error: 'Choose the learner this course is for.' },
-      { status: 400 },
-    );
+    return refuse('learner_required', 'Choose the learner this course is for.');
+  }
+
+  // Normalise the handset number before anything is written, so the attempt
+  // below records the method that was actually implied rather than whatever
+  // the caller typed. toE164 reports an unusable number by returning null, not
+  // by throwing.
+  //
+  // This used to be checked after the order was written, so each mistyped
+  // number left another pending order behind and the reply said "your order
+  // was saved" about an order nobody could pay. A mistyped code already left
+  // nothing; now a mistyped number does not either.
+  //
+  // `toE164` takes a dial code, not a country's letters. This passed 'UG',
+  // which is no dial code, so the function gave up on every number that did
+  // not already start with a plus: "0772 123456", the very shape the form's
+  // placeholder shows, was refused as invalid. Both providers here are
+  // Uganda's, so a local number is read as a Ugandan one; a number from
+  // anywhere else is typed in full, with its plus.
+  let msisdn: string | undefined;
+  if (typeof body.msisdn === 'string' && body.msisdn.trim()) {
+    const normalised = toE164(body.msisdn, LOCAL_DIAL_CODE);
+    if (!normalised) return refuse('phone_invalid', 'That phone number is not valid.');
+    msisdn = normalised;
   }
 
   const isPlanCheckout = Boolean(planVersionId);
@@ -148,13 +180,12 @@ export async function POST(request: Request) {
       country,
     });
     if (offering.kind === 'entitled') {
-      return NextResponse.json({ error: 'You already have access to this course.' }, { status: 409 });
+      return refuse('already_owned', 'That learner already has this course, so buying it again would add nothing.');
     }
     if (offering.kind === 'free') {
-      return NextResponse.json({
-        error: 'This course is free. Use enrolment rather than checkout.',
+      return refuse('free_course', 'This course is free. Use enrolment rather than checkout.', {
         redirect: '/api/enrol',
-      }, { status: 409 });
+      });
     }
     if (offering.kind === 'not_sold_here') {
       // Let the writer say why: it holds the reason and the country, and it is
@@ -167,8 +198,22 @@ export async function POST(request: Request) {
       result = await createOrder(supabase, { courseId, learnerProfileId, country, promotionCode });
     }
   }
+  if (!result.ok && result.reason) {
+    // A course. The reason has its own status, and a refusal nobody wrote a
+    // sentence for is answered in this route's words: the database's stay here.
+    // Kept for whoever runs the site: it was the only copy, and it used to be
+    // sent to the payer.
+    if (result.reason === 'refused') console.error('checkout: a refusal with no name:', result.message);
+    const error =
+      result.reason === 'refused'
+        ? CHECKOUT_REFUSED_SENTENCE
+        : result.reason === 'unconfirmed'
+          ? CHECKOUT_UNCONFIRMED_SENTENCE
+          : result.message;
+    return refuse(result.reason, error, { code: result.code });
+  }
   if (!result.ok) {
-    // 409 for the expected conflicts, 404 when there is nothing to buy, and 503
+    // A plan. 409 for the expected conflicts, 404 when there is nothing to buy, and 503
     // when the platform itself is closed: `commerce.checkout` ships off and the
     // order writer refuses while it is. A payer who meets that deserves "not
     // open yet" rather than "your request was wrong" (400) or "something broke"
@@ -207,10 +252,10 @@ export async function POST(request: Request) {
       country,
     });
     if (!recorded.ok) {
-      return NextResponse.json(
-        { error: recorded.message, code: 'withdrawal_not_recorded', orderId: result.orderId },
-        { status: 409 },
-      );
+      return refuse('withdrawal_not_recorded', recorded.message, {
+        code: 'withdrawal_not_recorded',
+        orderId: result.orderId,
+      });
     }
   }
 
@@ -224,39 +269,13 @@ export async function POST(request: Request) {
       : undefined;
   const provider = getPaymentProvider(requestedProvider);
   if (!provider.available) {
-    return NextResponse.json(
-      {
-        error:
-          'No payment provider is configured yet, so this order cannot be paid. ' +
-          'It has been saved and will appear in your orders.',
-        code: 'provider_unavailable',
-        orderId: result.orderId,
-      },
-      { status: 503 },
-    );
+    return refuse('provider_unavailable', NO_PROVIDER_SENTENCE, {
+      code: 'provider_unavailable',
+      orderId: result.orderId,
+    });
   }
 
   const origin = new URL(request.url).origin;
-
-  // Normalise the handset number first, so the attempt below records the
-  // method that was actually implied rather than whatever the caller typed.
-  // toE164 reports an unusable number by returning null, not by throwing. The
-  // order already exists at this point, so this is a 400 on the request rather
-  // than a rollback — the payer can retry with a correct number.
-  let msisdn: string | undefined;
-  if (typeof body.msisdn === 'string' && body.msisdn.trim()) {
-    const normalised = toE164(body.msisdn, 'UG');
-    if (!normalised) {
-      return NextResponse.json(
-        {
-          error: 'That phone number is not valid.',
-          orderId: result.orderId,
-        },
-        { status: 400 },
-      );
-    }
-    msisdn = normalised;
-  }
 
   // The method is recorded honestly: we know it is mobile money only because a
   // handset number was supplied. Until a provider is chosen there is no way to
@@ -293,16 +312,19 @@ export async function POST(request: Request) {
     });
   } catch (err) {
     if (err instanceof PaymentProviderUnavailableError) {
-      return NextResponse.json({ error: err.message }, { status: 503 });
+      // The error's own sentence is written for whoever runs the site: it
+      // names an environment variable and a section of DECISIONS.md, and it
+      // used to be sent to the payer. The order exists here too, and the
+      // reply used to leave it out.
+      return refuse('provider_unavailable', NO_PROVIDER_SENTENCE, {
+        code: 'provider_unavailable',
+        orderId: result.orderId,
+      });
     }
     // Never leak a provider's internal error to the payer, and never pretend
     // the order failed: it exists, it is pending, and it can be retried.
-    return NextResponse.json(
-      {
-        error: 'The payment provider could not start this payment. Try again.',
-        orderId: result.orderId,
-      },
-      { status: 502 },
-    );
+    return refuse('provider_failed', 'The payment provider could not start this payment. Try again.', {
+      orderId: result.orderId,
+    });
   }
 }

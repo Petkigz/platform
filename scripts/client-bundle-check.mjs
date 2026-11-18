@@ -60,6 +60,12 @@ for (const [file, key] of [
   // that page and in no script.
   ['family.ts', 'family.leaveNote'],
   ['family.ts', 'family.childUnconfirmed'],
+  // The buy form is a client component handed its words: a sentence for each
+  // of thirty-one reasons, and it has no English of its own. What a buyer is
+  // told when nobody can say whether an order exists, and when checkout is
+  // closed, must be in that page and in no script.
+  ['buy.ts', 'buy.unconfirmed'],
+  ['buy.ts', 'buy.closedBody'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

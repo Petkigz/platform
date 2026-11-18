@@ -7958,14 +7958,15 @@ owner chose the first.
   its sources card, 32% since the page for a page that broke, 28% since the
   lesson players and their saved-place messages, 27% since the discussion on
   the lesson page, 24% since the account page and its profile form, 21%
-  since the family pages and their forms.
+  since the family pages and their forms, 20% since the buy page and its
+  form.
 - **The test that refused a language under half is removed.** Nothing in the
   tests now limits how much English one of these languages shows. That is the
   cost of this choice and it was put to the owner in those words.
 - What the tests still require of every offered language: every sentence that
   is neither held nor deliberately unwritten is present, and the sentence
   that gives the percentage is in that language rather than English. The
-  count (192 of 898; it was 192 of 347 when this was decided) is pinned in
+  count (192 of 977; it was 192 of 347 when this was decided) is pinned in
   `held-translations.test.ts`, so it changes only on purpose.
 - The four withheld languages are unaffected. So is the rule that a new screen
   is not written for a language with anything held.
@@ -8191,8 +8192,73 @@ strip (behind `learning.streaks` and `family.engagement`), all three off.
 still English. `/api/family/declaration`, `/guardians` and `/child-login`
 still answer with sentences and no code.
 
+The buy page followed (`/courses/<slug>/buy` and its form), seventy-nine
+sentences in a new part, `buy.ts`, 20% for the nineteen. It is drawn on the
+server, so `buy.` is in `SERVER_ONLY_PREFIXES`. Seven things were settled in
+writing it:
+
+- *The two checkout routes name every refusal* (`lib/checkout-outcome.ts`,
+  thirty-one reasons). `create_course_order()` already raised a key for each
+  of its twenty-three refusals; `lib/checkout.ts` turned the key into an
+  English sentence and threw the key away, and the form showed whatever
+  sentence arrived. The key is kept now and travels as `reason`. The coarse
+  `code` the plan page and the orders page read is unchanged.
+- *A refusal here is a reason and its own status together, not "a 4xx".*
+  The route answers 503 for a closed checkout and 502 for a provider that
+  would not start, on purpose, so the rule the family forms use cannot tell
+  this route's answer from a page sent by something in front of the site.
+  `checkoutOutcomeOf(status, reason)` believes a reason only when the status
+  is the one that reason is always sent with; everything else is
+  `unconfirmed`.
+- *"Could not confirm" does not say the order was saved.* An order is written
+  before the provider is called, so a reply that never came may have left
+  one. The sentence sends the buyer to their orders and never says "try
+  again". "Your order was saved" is added only when the reply names an order
+  and the reply itself can be believed.
+- *A refusal nobody wrote a sentence for is answered in the route's words.*
+  The database's sentence, and the provider's "not configured" error (which
+  names an environment variable and a section of this file), were sent to the
+  payer. Both stay on the server now; the database's is written to the log,
+  because it was the only copy. **A plan order is not covered**: the plan
+  checkout has no keys to match, and its unnamed refusals still carry the
+  database's sentence to `/plans`.
+- *A mistyped phone number writes no order.* The number was checked after
+  the order was written, so each mistake left another pending order and a
+  reply saying it had been saved. It is checked first now. In checking that,
+  the check itself turned out never to have worked: the route passed `'UG'`
+  to a function that takes a dial code, so every number without a plus was
+  refused, including the one the form's placeholder shows. It passes `+256`.
+- *The withdrawal box stays English, and says so.* The paragraph a buyer
+  agrees to comes from the database with the policy version it belongs to,
+  and has one wording. For the reason the age declaration is English, the
+  whole box (the paragraph, the two sentences under it and the link to the
+  policy) is English on every page and marked `lang="en" dir="ltr"` where the
+  page is not. Translating it means the owner approving a wording per
+  language and the record saying which was shown.
+- *A country's name comes from the runtime, after a colon.* `countryNameIn()`
+  asks `Intl.DisplayNames` for the name in the reader's language, which gives
+  the dictionary form. Outside English the sentence ends "…: Uganda" so the
+  name needs no case ending. English keeps its own table, which has "the
+  United States". Nobody has checked the runtime's names in any language.
+
+An amount is not translated: a currency code and Latin digits from the
+formatter the order uses, kept left to right. A charge the database names
+itself ("VAT", "Mobile money fee") is shown under that name, marked as
+English; only the two default labels, Tax and Fee, are translated. A
+provider's name is its own.
+
+One thing the page did wrongly whatever the language: when the buyer's own
+learner already had the course and a child did not, it said "choose another
+learner below" above no form at all, so a family could not buy a second
+learner a course the first one owned. The price is asked for again without a
+learner, the one who has it is left out of the list, and nobody is chosen on
+the buyer's behalf unless exactly one learner is left.
+
+`/orders`, `/plans` and `/policies/refunds`, which this page links to, are
+still English.
+
 `UNWRITTEN_WHILE_HELD` is now `learn`, `course`, `lesson`, `assess`,
-`assign`, `missing`, `broke`, `player`, `account` and `family`.
+`assign`, `missing`, `broke`, `player`, `account`, `family` and `buy`.
 
 **The rule going forward.** A part named in `UNWRITTEN_WHILE_HELD`
 (`web/src/lib/i18n/messages/held.ts`) may be absent from a language that has

@@ -111,6 +111,9 @@ jobs:
       - name: Family pages and family routes synthetic HTTP regression
         run: node scripts/family-route-smoke.mjs
 
+      - name: Buy page and checkout routes synthetic HTTP regression
+        run: node scripts/buy-route-smoke.mjs
+
       - name: Catalogue synthetic HTTP regression
         run: node scripts/catalogue-route-smoke.mjs
 

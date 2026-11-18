@@ -96,6 +96,7 @@ export const UNWRITTEN_WHILE_HELD: readonly string[] = [
   'player',
   'account',
   'family',
+  'buy',
 ];
 
 /** Whether this sentence is deliberately absent from this language's file. */

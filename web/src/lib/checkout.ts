@@ -30,6 +30,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { QUOTE_FEE_LABEL, QUOTE_TAX_LABEL, checkoutReasonOf, type CheckoutReason } from './checkout-outcome.ts';
 import { fromMinor, format, type Money } from './money.ts';
 
 export type CheckoutErrorCode =
@@ -44,9 +45,24 @@ export type CheckoutErrorCode =
   | 'promotion_refused'
   | 'error';
 
+/**
+ * `reason` is the writer's own key, kept (`lib/checkout-outcome.ts`): the buy
+ * page's form says its own sentence for each, in the reader's language. `code`
+ * is the coarser name the plan checkout and the orders page still read, and
+ * `message` is English for a caller with no words of its own. For a reason of
+ * `refused` the message is the database's sentence: it is for the server's
+ * log and must not be sent to a reader.
+ */
+export type CheckoutRefusal = {
+  ok: false;
+  code: CheckoutErrorCode;
+  message: string;
+  reason?: CheckoutReason;
+};
+
 export type CreateOrderResult =
   | { ok: true; orderId: string; amount: Money; currencyCode: string }
-  | { ok: false; code: CheckoutErrorCode; message: string };
+  | CheckoutRefusal;
 
 type MembershipRow = { billing_account_id: string }[] | null;
 
@@ -322,7 +338,7 @@ export async function createOrder(
   },
 ): Promise<CreateOrderResult> {
   if (!args.learnerProfileId) {
-    return { ok: false, code: 'error', message: 'Choose the learner this course is for.' };
+    return { ok: false, code: 'error', message: 'Choose the learner this course is for.', reason: 'learner_required' };
   }
 
   const { data, error } = await supabase.rpc('create_course_order', {
@@ -334,14 +350,16 @@ export async function createOrder(
     p_promotion_code: args.promotionCode?.trim() ? args.promotionCode.trim() : null,
   });
 
-  if (error) return { ok: false, ...mapCourseOrderRefusal(error.message) };
+  if (error) return { ok: false, ...mapCourseOrderRefusal(error.message), reason: checkoutReasonOf(error) };
 
   const row = data as CourseOrderRow | null;
   // A row without an amount must never become an order of zero. `fromMinor`
   // would happily make 0n out of undefined-ish input, and the provider handoff
   // would then charge nothing and fulfil everything.
   if (!row?.orderId || row.amountMinor === undefined || !row.currencyCode) {
-    return { ok: false, code: 'error', message: 'The order was not created.' };
+    // Answered, and without an order in the answer: nobody can say whether
+    // one was written.
+    return { ok: false, code: 'error', message: 'The order was not created.', reason: 'unconfirmed' };
   }
 
   return {
@@ -410,12 +428,9 @@ export async function quoteCourseOrder(
     country?: string | null;
     promotionCode?: string | null;
   },
-): Promise<
-  { ok: true; quote: CourseQuote }
-  | { ok: false; code: CheckoutErrorCode; message: string }
-> {
+): Promise<{ ok: true; quote: CourseQuote } | CheckoutRefusal> {
   if (!args.learnerProfileId) {
-    return { ok: false, code: 'error', message: 'Choose the learner this course is for.' };
+    return { ok: false, code: 'error', message: 'Choose the learner this course is for.', reason: 'learner_required' };
   }
 
   const { data, error } = await supabase.rpc('quote_course_order', {
@@ -425,7 +440,7 @@ export async function quoteCourseOrder(
     p_promotion_code: args.promotionCode?.trim() ? args.promotionCode.trim() : null,
   });
 
-  if (error) return { ok: false, ...mapCourseOrderRefusal(error.message) };
+  if (error) return { ok: false, ...mapCourseOrderRefusal(error.message), reason: checkoutReasonOf(error) };
 
   const row = data as CourseQuoteRow | null;
   if (!row || row.listMinor === undefined || row.totalMinor === undefined || !row.currencyCode) {
@@ -461,8 +476,8 @@ export async function quoteCourseOrder(
       discount,
       tax,
       fee,
-      taxLabel: row.chargeLabels?.tax ?? 'Tax',
-      feeLabel: row.chargeLabels?.fee ?? 'Fee',
+      taxLabel: row.chargeLabels?.tax ?? QUOTE_TAX_LABEL,
+      feeLabel: row.chargeLabels?.fee ?? QUOTE_FEE_LABEL,
       total,
       currencyCode: currency,
       promotionCode: typeof row.promotionCode === 'string' ? row.promotionCode : null,

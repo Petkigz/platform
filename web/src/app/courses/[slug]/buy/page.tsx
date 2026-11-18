@@ -1,19 +1,41 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { ClaimLearner } from '@/components/claim-learner';
 import { cookies, headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { ownLearnerProfileId, resolveOffering } from '@/lib/enrolment';
-import { countryFromHeaders, countryName } from '@/lib/geo';
+import { countryFromHeaders, countryNameIn } from '@/lib/geo';
 import { format } from '@/lib/money';
 import { availableProviders, configuredProviderId } from '@/lib/payments/registry';
 import { isFlagEnabled } from '@/lib/flags';
 import { REFERRAL_COOKIE, cleanReferralCode } from '@/lib/referrals';
 import { fetchWithdrawalOffer } from '@/lib/withdrawal';
-import { BuyForm } from './buy-form';
+import { LOCALE_COOKIE, chooseLocale, languageShownFor, translator } from '@/lib/i18n';
+import { BuyForm, type BuyWords } from './buy-form';
 
 export const dynamic = 'force-dynamic';
+
+/** The language this page is written in for this reader, and whether that is the one they chose. */
+async function readerLanguage() {
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code: locale } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  const shown = languageShownFor(locale, 'buy');
+  return { locale, shown };
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { shown } = await readerLanguage();
+  return { title: translator(shown.code)('buy.eyebrow') };
+}
+
+/** A name inside a sentence keeps its own direction. */
+const isolate = (text: string) => `\u2068${text}\u2069`;
 
 /**
  * Buy a course.
@@ -24,6 +46,15 @@ export const dynamic = 'force-dynamic';
  * amount. Before this, the page listed every market's price and posted a price
  * id, which made the cheapest market available to anybody who could edit a
  * request.
+ *
+ * **In the reader's language** (`messages/buy.ts`): twenty-seven languages
+ * have it, and a language held for review reads it in English, whole. The
+ * form is handed its words; so is the learner-profile button. The 14-day
+ * withdrawal box inside the form is English on every page and marked as
+ * English where the page is not: see the head of `buy-form.tsx`.
+ *
+ * **The amount is not translated.** It is a currency code and Latin digits
+ * from the same formatter the order uses, kept left to right.
  */
 export default async function BuyPage({
   params,
@@ -52,6 +83,10 @@ export default async function BuyPage({
     | null;
   if (!course || course.status !== 'active') notFound();
 
+  const { locale, shown } = await readerLanguage();
+  const t = translator(shown.code);
+  const frame = shown.code !== locale ? { lang: shown.code, dir: shown.dir } : {};
+
   const learnerProfileId = await ownLearnerProfileId(supabase, user.id);
 
   // One purchase covers one learner (decided 2026-10-22), so the form has to
@@ -71,36 +106,51 @@ export default async function BuyPage({
       type: row.learner_type,
     }));
 
+  // The top of every branch: where this is, and what is being bought. The
+  // title is the teacher's and is in whatever language they wrote it.
+  const head = (
+    <>
+      <nav className="crumbs">
+        <Link href="/catalogue">{t('nav.catalogue')}</Link>
+        <span aria-hidden>›</span>
+        <Link href={`/courses/${course.slug}`} dir="auto">{course.title}</Link>
+        <span aria-hidden>›</span>
+        <span>{t('buy.crumb')}</span>
+      </nav>
+
+      <div className="page-head">
+        <p className="eyebrow">{t('buy.eyebrow')}</p>
+        <h1 dir="auto">{course.title}</h1>
+      </div>
+    </>
+  );
+
   if (learners.length === 0) {
     return (
-      <div className="page narrow">
-        <nav className="crumbs">
-          <Link href="/catalogue">Catalogue</Link>
-          <span aria-hidden>›</span>
-          <Link href={`/courses/${course.slug}`}>{course.title}</Link>
-          <span aria-hidden>›</span>
-          <span>Buy</span>
-        </nav>
-
-        <div className="page-head">
-          <p className="eyebrow">Checkout</p>
-          <h1>{course.title}</h1>
-        </div>
+      <div className="page narrow" {...frame}>
+        {head}
 
         <div className="notice warn">
-          <strong>There is nobody to buy this for yet.</strong> A course purchase covers
-          one learner, so there has to be one to name — you on this account, or a
-          child&apos;s profile in your family.
+          <strong>{t('buy.nobodyLead')}</strong> {t('buy.nobodyBody')}
         </div>
 
         <div style={{ marginTop: '1rem' }}>
-          <ClaimLearner label="Buy it for myself" note="This makes you a learner on this account. It is not a second account." />
+          <ClaimLearner
+            label={t('buy.claim')}
+            note={t('buy.claimNote')}
+            words={{
+              busy: t('learn.claimBusy'),
+              done: t('learn.claimDone'),
+              ready: t('learn.claimReady'),
+              failed: t('learn.claimFailed'),
+            }}
+          />
         </div>
 
-        <p style={{ marginTop: '1rem' }}>
-          <Link href="/family" className="btn secondary">Add a child instead</Link>{' '}
+        <p className="page-actions" style={{ marginTop: '1rem' }}>
+          <Link href="/family" className="btn secondary">{t('buy.addChild')}</Link>{' '}
           <Link href={`/courses/${course.slug}`} className="btn ghost">
-            Back to the course
+            {t('buy.backCourse')}
           </Link>
         </p>
       </div>
@@ -120,7 +170,7 @@ export default async function BuyPage({
   // written, and a code that is wrong or stale is refused there with a sentence
   // rather than silently charged.
   const referralCode = cleanReferralCode((await cookies()).get(REFERRAL_COOKIE)?.value);
-  const offering = await resolveOffering(supabase, {
+  const first = await resolveOffering(supabase, {
     courseId: course.id,
     learnerProfileId: defaultLearnerId,
     country,
@@ -130,10 +180,23 @@ export default async function BuyPage({
   // answers this, and it is the same function the enrol button uses, so the two
   // cannot disagree about who is entitled.
   // With one learner there is nowhere else to buy for, so send them to their
-  // learning. With several, the picked learner may already have it while a
-  // sibling does not — the form says so and lets them choose, rather than
-  // sending the whole family away from a course one child still needs.
-  if (offering.kind === 'entitled' && learners.length === 1) redirect('/learn');
+  // learning.
+  if (first.kind === 'entitled' && learners.length === 1) redirect('/learn');
+
+  // With several, the first learner may already have it while a sibling does
+  // not. The page used to say "choose another learner below" and then draw no
+  // form at all, because the form was only drawn for a price and the answer
+  // for this learner was "already has it": a family could not buy a second
+  // child the course the first one owned. So the price is asked for again
+  // without a learner, which is the question for everybody else, and the
+  // learner who has it is left out of the list. Whether each of the others
+  // has it is the writer's to refuse; it does, by name.
+  const owner = first.kind === 'entitled' ? learners.find((l) => l.id === defaultLearnerId) : undefined;
+  const offering = owner
+    ? await resolveOffering(supabase, { courseId: course.id, learnerProfileId: null, country })
+    : first;
+  const buyable = owner ? learners.filter((l) => l.id !== owner.id) : learners;
+
   if (offering.kind === 'free') redirect(`/courses/${slug}`);
 
   // The course is sold, but not on terms this buyer can accept — no price for
@@ -141,40 +204,31 @@ export default async function BuyPage({
   // so is better than a form that fails after the phone number is typed, and
   // much better than showing the cheapest market to everybody.
   if (offering.kind === 'not_sold_here') {
-    const place = countryName(offering.country);
+    const place = countryNameIn(offering.country, shown.code);
     return (
-      <div className="page narrow">
-        <nav className="crumbs">
-          <Link href="/catalogue">Catalogue</Link>
-          <span aria-hidden>›</span>
-          <Link href={`/courses/${course.slug}`}>{course.title}</Link>
-          <span aria-hidden>›</span>
-          <span>Buy</span>
-        </nav>
-
-        <div className="page-head">
-          <p className="eyebrow">Checkout</p>
-          <h1>{course.title}</h1>
-        </div>
+      <div className="page narrow" {...frame}>
+        {head}
 
         <div className="notice warn">
           <strong>
             {offering.reason === 'not_one_time'
-              ? 'This course is sold as a subscription, not as a one-off purchase.'
+              ? t('buy.subLead')
               : offering.reason === 'price_ambiguous'
-                ? 'This course has more than one price for your country.'
-                : `This course is not priced for ${place ?? 'your country'} yet.`}
+                ? t('buy.ambiguousLead')
+                : place
+                  ? t('buy.noPriceLead', { country: isolate(place) })
+                  : t('buy.noPriceAny')}
           </strong>{' '}
           {offering.reason === 'price_ambiguous'
-            ? 'We will not choose a currency on your behalf. Contact us and we will set the right one, then you can buy it.'
+            ? t('buy.ambiguousBody')
             : offering.reason === 'not_one_time'
-              ? 'Subscriptions are not on sale through this checkout yet. Nothing has been charged.'
-              : 'Nothing has been charged. Contact us and we will open your market, then you can buy it.'}
+              ? t('buy.subBody')
+              : t('buy.noPriceBody')}
         </div>
 
-        <p style={{ marginTop: '1.5rem' }}>
+        <p className="page-actions" style={{ marginTop: '1.5rem' }}>
           <Link href={`/courses/${course.slug}`} className="btn secondary">
-            Back to the course
+            {t('buy.backCourse')}
           </Link>
         </p>
       </div>
@@ -204,84 +258,138 @@ export default async function BuyPage({
     requiresMsisdn: p.requiresMsisdn,
   }));
 
+  const noPrice = `${t('buy.noPriceAny')} ${t('buy.noPriceBody')}`;
+  const words: BuyWords = {
+    whoFor: t('buy.whoFor'),
+    choose: t('buy.choose'),
+    learnerChild: t('buy.learnerChild'),
+    whoNote: t('buy.whoNote'),
+    forOne: t('buy.forOne'),
+    codeLabel: t('buy.codeLabel'),
+    optional: t('family.optional'),
+    checkPrice: t('buy.checkPrice'),
+    checking: t('buy.checking'),
+    codeNote: t('buy.codeNote'),
+    quoteFailed: t('buy.quoteFailed'),
+    quoteSimple: t('buy.quoteSimple'),
+    quoteList: t('buy.quoteList'),
+    quoteOffCode: t('buy.quoteOffCode'),
+    quoteOff: t('buy.quoteOff'),
+    quoteTax: t('buy.quoteTax'),
+    quoteFee: t('buy.quoteFee'),
+    quotePay: t('buy.quotePay'),
+    quoteTaxNote: t('buy.quoteTaxNote'),
+    quoteHolds: t('buy.quoteHolds'),
+    payWith: t('buy.payWith'),
+    phoneLabel: t('buy.phoneLabel'),
+    phoneNote: t('buy.phoneNote'),
+    continue: t('buy.continue'),
+    starting: t('buy.starting'),
+    noProviderNote: t('buy.noProviderNote'),
+    approve: t('buy.approve'),
+    orderSaved: t('buy.orderSaved'),
+    unreachable: t('auth.offline'),
+    // One sentence for each reason in `lib/checkout-outcome.ts`. The record
+    // type makes a reason without a sentence a compile error.
+    reasons: {
+      not_signed_in: t('buy.signedOut'),
+      disabled: t('buy.whyClosed'),
+      course_not_available: t('buy.whyNoCourse'),
+      price_not_available: t('buy.whyNoPrice'),
+      not_one_time: `${t('buy.subLead')} ${t('buy.subBody')}`,
+      no_price_for_country: noPrice,
+      price_ambiguous: `${t('buy.ambiguousLead')} ${t('buy.ambiguousBody')}`,
+      already_owned: t('buy.whyOwned'),
+      learner_required: t('buy.whyChoose'),
+      learner_not_yours: t('buy.whyNotYours'),
+      unknown_code: t('buy.codeUnknown'),
+      // "Switched off" and "outside its dates" are one thing to a buyer.
+      not_active: t('buy.codeNotNow'),
+      not_running: t('buy.codeNotNow'),
+      not_in_market: t('buy.codeNotHere'),
+      not_for_this_course: t('buy.codeNotCourse'),
+      self_referral: t('buy.codeOwn'),
+      new_customers_only: t('buy.codeNewOnly'),
+      limit_reached_total: t('buy.codeUsedUp'),
+      limit_reached_person: t('buy.codeUsedYou'),
+      limit_reached_family: t('buy.codeUsedFamily'),
+      would_be_free: t('buy.codeFree'),
+      currency_mismatch: t('buy.codeCurrency'),
+      nothing_off: t('buy.codeNothing'),
+      // A request this form cannot have sent. Nothing was written.
+      malformed: t('buy.refused'),
+      free_course: t('buy.whyFree'),
+      withdrawal_not_recorded: t('buy.whyWithdrawal'),
+      provider_unavailable: t('buy.whyNoProvider'),
+      phone_invalid: t('buy.whyPhone'),
+      provider_failed: t('buy.whyProvider'),
+      refused: t('buy.refused'),
+      unconfirmed: t('buy.unconfirmed'),
+    },
+  };
+
+  const place = offering.kind === 'paid' && offering.match === 'country'
+    ? countryNameIn(offering.country, shown.code)
+    : null;
+
   return (
-    <div className="page narrow">
-      <nav className="crumbs">
-        <Link href="/catalogue">Catalogue</Link>
-        <span aria-hidden>›</span>
-        <Link href={`/courses/${course.slug}`}>{course.title}</Link>
-        <span aria-hidden>›</span>
-        <span>Buy</span>
-      </nav>
+    <div className="page narrow" {...frame}>
+      {head}
 
-      <div className="page-head">
-        <p className="eyebrow">Checkout</p>
-        <h1>{course.title}</h1>
-      </div>
-
-      {checkoutOpen && offering.kind === 'entitled' && learners.length > 1 && (
+      {checkoutOpen && owner && offering.kind === 'paid' && (
         <div className="notice warn">
-          The learner selected by default already has this course. Choose
-          another learner below if you are buying it for somebody else.
+          {t('buy.hasAlready', { name: isolate(owner.name) })}
         </div>
       )}
 
       {checkoutOpen && providerId === null && (
         <div className="notice warn">
-          <strong>No payment provider is connected yet.</strong> You can place
-          this order and it will be saved, but it cannot be paid until a provider
-          is configured. Nothing is charged and you keep no access until payment
-          is confirmed.
+          <strong>{t('buy.noProviderLead')}</strong> {t('buy.noProviderBody')}
         </div>
       )}
 
       {!checkoutOpen && (
         <div className="notice warn">
-          <strong>Checkout is not open yet.</strong> This platform is not taking
-          payment for courses at the moment, so no order can be placed and
-          nothing has been charged. Free courses can still be joined from the
-          course page.
+          <strong>{t('buy.closedLead')}</strong> {t('buy.closedBody')}
         </div>
       )}
 
       {checkoutOpen && offering.kind !== 'paid' && (
-        <div className="notice">
-          This course is not on sale to you at the moment, so there is nothing
-          to pay.
-        </div>
+        <div className="notice">{t('buy.notOnSale')}</div>
       )}
 
       {checkoutOpen && offering.kind === 'paid' && (
         <section className="card">
-          <h2>What you will pay</h2>
+          <h2 style={{ marginTop: 0 }}>{t('buy.payHeading')}</h2>
           {/* Rendered from Money, so what the payer reads is the same integer
               minor units the order will carry. */}
           <p style={{ fontSize: '1.5rem', margin: '0 0 0.25rem' }}>
-            {format(offering.price.amount)}
+            <bdi dir="ltr">{format(offering.price.amount)}</bdi>
           </p>
           <p className="meta">
-            {offering.match === 'country' && offering.country
-              ? `Priced for ${countryName(offering.country) ?? offering.country}.`
-              : 'The standard price.'}{' '}
-            One-off purchase, not a subscription.
+            {place ? t('buy.pricedFor', { country: isolate(place) }) : t('buy.standardPrice')}{' '}
+            {t('buy.oneOff')}
           </p>
 
           <BuyForm
             courseId={course.id}
-            learners={learners}
-            defaultLearnerId={defaultLearnerId}
+            learners={buyable}
+            // Somebody already has it and more than one other could be meant:
+            // nobody is chosen for the buyer, because the wrong child is a
+            // purchase that cannot be moved.
+            defaultLearnerId={owner ? (buyable.length === 1 ? buyable[0]!.id : '') : defaultLearnerId}
             providers={providers}
             providerConfigured={providerId !== null}
             defaultCode={referralCode}
             withdrawal={withdrawal}
+            words={words}
+            markEnglish={shown.code !== 'en'}
           />
         </section>
       )}
 
-      <p className="muted">
-        Access starts when payment is confirmed, not when you press the button.
-        You will see the order in{' '}
-        <Link href="/orders">your orders</Link> either way.
+      <p className="muted" style={{ marginTop: '1rem' }}>
+        {t('buy.accessNote')} <Link href="/orders">{t('broke.orders')}</Link>
       </p>
     </div>
   );

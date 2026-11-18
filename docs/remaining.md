@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 21% there (192 of 898 sentences; it was 71% of 272, then
+  the nineteen reads 20% there (192 of 977 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -540,8 +540,8 @@ still unreviewed and still saying so.
   study tools, 33% of 581 with the sources card, 32% of 591 with the page for
   a page that broke, 28% of 677 with the lesson players and their saved-place
   messages, 27% of 700 with the discussion on the lesson page, 24% of 798
-  with the account page and its profile form, then this with the family
-  pages and their forms),
+  with the account page and its profile form, 21% of 898 with the family
+  pages and their forms, then this with the buy page and its form),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -568,7 +568,7 @@ still unreviewed and still saying so.
   Burmese sentence on the page, and the tool still calculates six rows. It does
   the direction check in Pashto, opens the correction sheet on the Hausa
   companion part (eighty boxes, each with the draft, and the notice; no notice
-  on the Hausa navigation or on Swahili), and reads 21% on `/language` in Hausa.
+  on the Hausa navigation or on Swahili), and reads 20% on `/language` in Hausa.
 
 **Four languages withheld whole (owner's second answer, 2026-11-16).** Asked
 whether the rest of the interface in Wolof, Fulfulde, Bambara and Dhivehi should
@@ -641,8 +641,8 @@ written: not a held draft, nothing.
   strip and memorisation, all three behind switches that are off. They are
   marked as English. The learner-profile prompt shown to a new account is now
   translated on this page (seven more `learn.*` sentences) and, since
-  2026-11-18, on `/account` and `/family`; on the one other page that shows
-  it (the buy page) it is English, because that page is.
+  2026-11-18, on `/account`, `/family` and the buy page, which is every page
+  that shows it.
 - *The course page (`/learn/[enrolmentId]`) followed, on the same rule.*
   Sixteen `course.*` sentences in the same twenty-seven languages
   (`messages/course.ts`): the heading line, the carry-on card (the dashboard's
@@ -796,7 +796,7 @@ written: not a held draft, nothing.
   sign-in card and the streak strip; all three are behind switches that are
   off. A course with no title reads "Untitled course", which is English.
   **Still English, every one of them:** `/family/guardians`, `/handover`,
-  `/progress`, a certificate's page and the buy page, each linked from here.
+  `/progress` and a certificate's page, each linked from here.
   Checked by `scripts/family-route-smoke.mjs` on a synthetic backend: HTTP in
   English, Arabic, French, Hausa, Pashto and Wolof; the first visit with no
   family; the four states of the adult's card; the declaration card asked
@@ -815,6 +815,53 @@ written: not a held draft, nothing.
   codes are chosen from in every case — that is read from the migrations by
   hand, and a reworded `raise exception` would turn a named refusal into
   "That did not work" without failing a test.
+- *The buy page (2026-11-18).* `/courses/<slug>/buy` and its form,
+  seventy-nine sentences in the same twenty-seven languages
+  (`messages/buy.ts`); a held language reads it in English, whole, marked as
+  English. **Unreviewed, and this is the page that takes money**: a reviewer
+  of any language should be shown `buy.unconfirmed`, `buy.whyProvider`,
+  `buy.approve`, `buy.accessNote`, `buy.closedBody`, `buy.noProviderBody` and
+  `buy.whyWithdrawal` first, because each tells a buyer whether they have
+  been charged or should press again. Words to look at for sense: "checkout"
+  (`buy.eyebrow`), "one-off purchase", "mobile money", and the country
+  sentences, which end in a colon and a country name the runtime supplies
+  and nobody has read.
+  **Still English on it for every reader, and marked:** the 14-day
+  withdrawal box, with the two sentences under it and the link to the policy
+  (`DECISIONS.md` says why it is not simply translated), and a charge the
+  database names itself. A provider's name, an amount and the course's title
+  are as they are written. `/orders`, `/plans` and `/policies/refunds`, which
+  it links to, are English.
+  Checked by `scripts/buy-route-smoke.mjs`, which starts the site twice
+  against a synthetic backend: once with no payment provider, which is how
+  the site stands, and once with the MTN adapter pointed at the script
+  itself. HTTP in English, Arabic, French, Hausa, Pashto and Wolof; nobody
+  to buy for; four reasons a course is not sold to this buyer; checkout
+  closed; a family; a family whose first learner has the course; the
+  withdrawal box offered and not offered; and every refusal of both routes
+  with its name and status, including the twenty-three the order writer
+  raises. Chromium in English, Arabic and Tamil at 320, 390 and 1440 wide
+  with the fullest page and a worked-out price; the form pressed in Arabic
+  through nobody chosen, three answers about a code, a price with a
+  discount, tax and a fee, a mistyped number, three refusals, "could not
+  confirm", a lost connection, a provider that fails, two presses at once
+  and a confirmation; and in French with no provider.
+  **Not checked, and it matters more here than anywhere:** a real database
+  (the stand-in refuses only what the script tells it to, so that the writer
+  raises those twenty-three keys, prices by country, and refuses a learner
+  who is not the buyer's is read from the migration, not exercised); a real
+  provider (the adapter has never spoken to MTN or Airtel; no credentials
+  exist; no money has moved; **MTN is sent the number with its plus sign and
+  Airtel without, and which each accepts has not been verified**); what
+  happens after the hand-off (callbacks, the payment worker and the order
+  turning into access are not built); a redirecting provider, since both
+  adapters ask the handset instead; two providers at once, so the "Pay with"
+  choice was never drawn; a plan order, whose unnamed refusals still carry
+  the database's sentence to `/plans`; a number from outside Uganda typed
+  without its plus, which is read as Ugandan and refused or misread; the
+  other twenty-four languages in a browser; and Tamil letters themselves,
+  which the test browser on the builder's machine draws as boxes for want of
+  a font (the layout was measured, the glyphs were not seen).
 - *What it did to the nineteen.* They read 59% on `/language` after the course
   page and **55% after the lesson page**. The test
   that stops a mostly-English language being offered had its floor at 60 and

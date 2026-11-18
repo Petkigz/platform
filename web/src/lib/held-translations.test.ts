@@ -39,6 +39,8 @@ import { MISSING } from './i18n/messages/missing.ts';
 import { BROKE } from './i18n/messages/broke.ts';
 import { PLAYER } from './i18n/messages/player.ts';
 import { FAMILY } from './i18n/messages/family.ts';
+import { BUY } from './i18n/messages/buy.ts';
+import { countryNameIn } from './geo.ts';
 import { ACCOUNT } from './i18n/messages/account.ts';
 import { LESSON } from './i18n/messages/lesson.ts';
 import { auditAll } from './translation-audit.ts';
@@ -410,7 +412,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // Owner's decision, 2026-11-16: a language the builder cannot write properly
   // falls back to English until a speaker has reviewed it. For a new screen
   // that means not writing it — a held draft would be the same guess, kept.
-  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign', 'missing', 'broke', 'player', 'account', 'family']);
+  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign', 'missing', 'broke', 'player', 'account', 'family', 'buy']);
   // Thirty-seven for the dashboard (the learner-profile prompt is seven of
   // them), twenty-eight for the course page (twelve are the list of dated
   // classes), a hundred and thirteen for the lesson page (its frame, the
@@ -422,9 +424,11 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // the page for an address with nothing at it, ten for the page for a
   // page that broke, eighty-six for the players on the lesson page and
   // what they say about a saved place, ninety-eight for the account
-  // page and its profile form, and a hundred for the family page, its
-  // three forms and one learner's page.
-  assert.equal(unwrittenKeys.length, 626);
+  // page and its profile form, a hundred for the family page, its
+  // three forms and one learner's page, and seventy-nine for the buy page
+  // and its form.
+  assert.equal(unwrittenKeys.length, 705);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('buy.')).length, 79);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('family.')).length, 100);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('account.')).length, 98);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('player.')).length, 86);
@@ -436,7 +440,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('lesson.')).length, 113);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('assess.')).length, 40);
 
-  // Ten files, one rule: the same languages in each.
+  // Eleven files, one rule: the same languages in each.
   const written = Object.keys(LEARN).sort();
   assert.deepEqual(Object.keys(COURSE).sort(), written);
   assert.deepEqual(Object.keys(LESSON).sort(), written);
@@ -447,6 +451,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   assert.deepEqual(Object.keys(PLAYER).sort(), written);
   assert.deepEqual(Object.keys(ACCOUNT).sort(), written);
   assert.deepEqual(Object.keys(FAMILY).sort(), written);
+  assert.deepEqual(Object.keys(BUY).sort(), written);
   const expected = LOCALES.map((l) => l.code)
     .filter((code) => code !== 'en' && !Object.hasOwn(HELD_FOR_REVIEW, code))
     .sort();
@@ -456,7 +461,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   for (const code of expected) {
     const own: Partial<Record<string, string>> = {
       ...LEARN[code], ...COURSE[code], ...LESSON[code], ...ASSESS[code], ...ASSIGN[code], ...MISSING[code], ...BROKE[code],
-      ...PLAYER[code], ...ACCOUNT[code], ...FAMILY[code],
+      ...PLAYER[code], ...ACCOUNT[code], ...FAMILY[code], ...BUY[code],
     };
     assert.deepEqual(Object.keys(own).sort(), [...unwrittenKeys].sort(), `${code} is short a dashboard, course, lesson, assessment or assignment sentence`);
     for (const key of unwrittenKeys) {
@@ -494,7 +499,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     }
   }
   // What that costs the nineteen that are still in the picker, said out loud:
-  // 192 of 898 sentences, which is 21%. Nothing holds a floor under
+  // 192 of 977 sentences, which is 20%. Nothing holds a floor under
   // it any more: the owner chose on 2026-11-17 to keep these languages in the
   // picker and show the number. The count is pinned here so that it moves only
   // when somebody means it to, and is seen when it does. It moved from 55% to
@@ -514,12 +519,12 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // 28%; the discussion on the lesson page added twenty-three and it is
   // 27%; the account page and its profile form added ninety-eight and it is
   // 24%; the family page, its forms and one learner's page added a hundred
-  // and it is 21%. What they are shown did not get smaller; what is counted
-  // got bigger.
+  // and it is 21%; the buy page and its form added seventy-nine and it is
+  // 20%. What they are shown did not get smaller; what is counted got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 898);
-    assert.equal(coverageOf(code).percent, 21, code);
+    assert.equal(coverageOf(code).total, 977);
+    assert.equal(coverageOf(code).percent, 20, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');
   assert.equal(languageShownFor('en', 'learn').code, 'en');
@@ -571,14 +576,11 @@ test('the dashboard page reads its words from the catalogue, in one language', (
   assert.match(claim, /const say = words \?\? ENGLISH;/u);
   // The server's reason is English; a translated page says its own sentence.
   assert.match(claim, /setError\(words \? words\.failed : \(json\?\.message \?\? say\.failed\)\);/u);
-  // The one other screen that shows the prompt is not translated and passes
-  // no words, so it reads exactly as before. The account page and the family
-  // page are translated and pass the dashboard's.
-  for (const caller of ['../app/account/page.tsx', '../app/family/page.tsx']) {
+  // Every screen that shows the prompt is translated and passes the
+  // dashboard's words: the account page, the family page and, last, the buy
+  // page. Nothing calls it without words any more.
+  for (const caller of ['../app/account/page.tsx', '../app/family/page.tsx', '../app/courses/[slug]/buy/page.tsx']) {
     assert.match(read(caller), /<ClaimLearner[^>]*words=/u, caller);
-  }
-  for (const caller of ['../app/courses/[slug]/buy/page.tsx']) {
-    assert.doesNotMatch(read(caller), /<ClaimLearner[^>]*words=/u, caller);
   }
 
   // The dashboard's sentences are left out of the catalogue every page
@@ -1490,4 +1492,113 @@ test('the family pages are in the reader’s language, and their forms say a ref
   // A held language reads both pages in English, whole.
   assert.equal(languageShownFor('so', 'family').code, 'en');
   assert.equal(translator('so')('family.leaveNote'), en['family.leaveNote']);
+});
+
+test('the buy page is in the reader’s language, and its form says a refusal by its reason', () => {
+  const page = read('../app/courses/[slug]/buy/page.tsx');
+  const form = read('../app/courses/[slug]/buy/buy-form.tsx');
+  const outcome = read('./checkout-outcome.ts');
+
+  assert.match(page, /const shown = languageShownFor\(locale, 'buy'\);/u);
+  assert.match(page, /const frame = shown\.code !== locale \? \{ lang: shown\.code, dir: shown\.dir \} : \{\};/u);
+  assert.equal(page.match(/<div className="page narrow" \{\.\.\.frame\}>/gu)?.length, 3, 'a branch of the page has no frame');
+  for (const phrase of ['>Checkout<', '<strong>Checkout', 'What you will pay', 'Buy it for myself', 'Back to the course', 'Priced for', 'Nothing has been charged', 'One-off purchase']) {
+    assert.ok(!page.includes(phrase), `the buy page still says "${phrase}" itself`);
+  }
+
+  // Every buy sentence is said by the page: its own, or one it hands the form.
+  for (const key of unwrittenKeys.filter((k) => k.startsWith('buy.'))) {
+    assert.ok(page.includes(`'${key}'`), `${key} is translated and never shown`);
+  }
+
+  // The form is handed its words and has no English of its own, with one
+  // exception that is marked: the 14-day withdrawal box.
+  assert.match(form, /^'use client';/u);
+  assert.doesNotMatch(form, /useT\(|@\/lib\/i18n/u);
+  assert.match(form, /words: BuyWords;/u);
+  assert.match(page, /words=\{words\}\s+markEnglish=\{shown\.code !== 'en'\}/u);
+  assert.match(form, /const english = markEnglish \? \(\{ lang: 'en', dir: 'ltr' \} as const\) : \{\};/u);
+  assert.match(form, /\{withdrawal\?\.statutory && \(\s+\/\/ English, and marked as English on a page that is not\.[^\n]*\n[^\n]*\n\s+<div \{\.\.\.english\}>/u);
+  for (const phrase of ['Who is this for', 'Check the price', 'Continue to payment', 'Starting', 'Pay with', 'Mobile money number', 'Your order was saved', 'could not be started', 'takes off']) {
+    assert.ok(!form.includes(phrase), `the form still says "${phrase}" itself`);
+  }
+  const src = new URL('../', import.meta.url);
+  const files = (dir: string): string[] =>
+    readdirSync(new URL(dir, src), { withFileTypes: true }).flatMap((entry) =>
+      entry.isDirectory() ? files(`${dir}${entry.name}/`) : /\.tsx?$/u.test(entry.name) ? [`${dir}${entry.name}`] : [],
+    );
+  const clients = files('').filter((file) => {
+    const text = readFileSync(new URL(file, src), 'utf8');
+    return /^\s*'use client'/u.test(text) && /'buy\.[a-zA-Z]+'/u.test(text);
+  });
+  assert.deepEqual(clients, [], 'a client component asks for a buy sentence the shell does not carry');
+
+  // The server's sentence is never shown: not `error`, not `message`.
+  assert.doesNotMatch(form, /json\??\.error|json\??\.message|\.message \?\?/u);
+  assert.match(form, /const reason = checkoutOutcomeOf\(res\.status, json\?\.reason\);/u);
+  assert.equal(form.match(/checkoutOutcomeOf\(res\.status, json\?\.reason\)/gu)?.length, 2, 'the price check and the order do not both read the reason');
+  // One sentence for every reason, and the type makes a missing one a
+  // compile error; this checks the page names them all.
+  const reasons = [...outcome.matchAll(/^ {2}'([a-z_]+)',$/gmu)].map((m) => m[1]);
+  assert.equal(reasons.length, 31);
+  for (const reason of reasons) {
+    assert.match(page, new RegExp(`^\\s+${reason}: `, 'mu'), `${reason} has no sentence on the buy page`);
+  }
+  assert.match(form, /reasons: Record<CheckoutReason, string>;/u);
+
+  // Both requests used to fail silently when they could not be made.
+  assert.equal(form.match(/\} catch \{/gu)?.length, 2, 'a request that cannot be made is not caught');
+  // With no connection the request never left; otherwise an order may exist.
+  assert.match(form, /setMessage\(offline \? words\.unreachable : words\.reasons\.unconfirmed\);/u);
+  // Pressing twice sent two checkouts: the button was disabled only while the
+  // page was read again, not while the request was out.
+  assert.match(form, /if \(busy\) return;/u);
+  assert.match(form, /<button type="button" className="btn" onClick=\{buy\} disabled=\{busy\}>/u);
+  assert.doesNotMatch(form, /disabled=\{pending\}/u);
+  // "Your order was saved" is said only when the reply names an order and
+  // the reply itself can be believed.
+  assert.match(form, /const saved = typeof json\?\.orderId === 'string' && json\.orderId !== '' && reason !== 'unconfirmed';/u);
+
+  // An amount is a currency code and Latin digits whatever the page is.
+  assert.match(page, /<bdi dir="ltr">\{format\(offering\.price\.amount\)\}<\/bdi>/u);
+  assert.match(form, /<bdi dir="ltr">\{value\}<\/bdi>/u);
+  // A learner's name and a country's name keep their own direction.
+  assert.match(page, /t\('buy\.hasAlready', \{ name: isolate\(owner\.name\) \}\)/u);
+  assert.match(page, /t\('buy\.pricedFor', \{ country: isolate\(place\) \}\)/u);
+  assert.match(form, /<Say text=\{words\.forOne\} parts=\{\{ name: <bdi>\{only\}<\/bdi> \}\} \/>/u);
+  assert.match(page, /<h1 dir="auto">\{course\.title\}<\/h1>/u);
+
+  // A family whose first learner had the course was told to "choose another
+  // learner below" above a page with no form on it. The price is asked for
+  // again without a learner, and nobody is chosen on the buyer's behalf.
+  assert.match(page, /const owner = first\.kind === 'entitled' \? learners\.find\(\(l\) => l\.id === defaultLearnerId\) : undefined;/u);
+  assert.match(page, /resolveOffering\(supabase, \{ courseId: course\.id, learnerProfileId: null, country \}\)/u);
+  assert.match(page, /defaultLearnerId=\{owner \? \(buyable\.length === 1 \? buyable\[0\]!\.id : ''\) : defaultLearnerId\}/u);
+  assert.match(form, /\{defaultLearnerId === '' && <option value="">\{words\.choose\}<\/option>\}/u);
+  assert.match(form, /if \(learnerId === ''\) \{\s+setTone\('error'\);\s+setMessage\(words\.reasons\.learner_required\);\s+return;/u);
+
+  // The learner-profile button is handed the dashboard's words here too.
+  assert.match(page, /<ClaimLearner\s+label=\{t\('buy\.claim'\)\}\s+note=\{t\('buy\.claimNote'\)\}\s+words=\{\{/u);
+
+  // A country's name comes from the runtime's tables in the nominative, so
+  // outside English the sentence puts it after a colon rather than inside a
+  // phrase that would need another case.
+  for (const code of ['ar', 'fr', 'tr', 'kk', 'zh-hans', 'uz', 'ta'] as const) {
+    const t = translator(code);
+    assert.equal(languageShownFor(code, 'buy').code, code);
+    assert.notEqual(t('buy.unconfirmed'), en['buy.unconfirmed'], code);
+    for (const key of ['buy.pricedFor', 'buy.noPriceLead'] as const) {
+      assert.match(t(key), /[:：][\s\u00a0]*\{country\}[.。]?$/u, `${code} ${key}`);
+    }
+  }
+  assert.equal(countryNameIn('UG', 'en'), 'Uganda');
+  assert.equal(countryNameIn('US', 'en'), 'the United States');
+  assert.equal(countryNameIn('UG', 'fr'), 'Ouganda');
+  assert.equal(countryNameIn('UG', 'ar'), 'أوغندا');
+  assert.equal(countryNameIn('zz9', 'fr'), null);
+  assert.equal(countryNameIn(null, 'fr'), null);
+
+  // A held language reads the page in English, whole.
+  assert.equal(languageShownFor('so', 'buy').code, 'en');
+  assert.equal(translator('so')('buy.unconfirmed'), en['buy.unconfirmed']);
 });

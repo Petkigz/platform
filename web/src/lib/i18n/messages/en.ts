@@ -1173,6 +1173,103 @@ export const en = {
   'family.cert': 'Certificate {number}',
   'family.certRevoked': 'Certificate {number} — revoked',
   'family.again': 'Look again',
+
+  // The buy page and its form (`buy.ts`), for the same twenty-seven languages
+  // as the dashboard. The 14-day withdrawal box is not here: its paragraph is
+  // the database's, in the version the buyer's choice is recorded against.
+  'buy.crumb': 'Buy',
+  'buy.eyebrow': 'Checkout',
+  'buy.nobodyLead': 'There is nobody to buy this for yet.',
+  'buy.nobodyBody':
+    'A course purchase covers one learner, so there has to be one to name: you on this account, or a child’s profile in your family.',
+  'buy.claim': 'Buy it for myself',
+  'buy.claimNote': 'This makes you a learner on this account. It is not a second account.',
+  'buy.addChild': 'Add a child instead',
+  'buy.backCourse': 'Back to the course',
+  'buy.subLead': 'This course is sold as a subscription, not as a one-off purchase.',
+  'buy.subBody':
+    'Subscriptions are not on sale through this checkout yet. Nothing has been charged.',
+  'buy.ambiguousLead': 'This course has more than one price for your country.',
+  'buy.ambiguousBody':
+    'We will not choose a currency on your behalf. Contact us and we will set the right one, then you can buy it.',
+  'buy.noPriceLead': 'This course is not priced for {country} yet.',
+  'buy.noPriceAny': 'This course is not priced for your country yet.',
+  'buy.noPriceBody':
+    'Nothing has been charged. Contact us and we will open your market, then you can buy it.',
+  'buy.hasAlready': '{name} already has this course. This purchase is for another learner.',
+  'buy.noProviderLead': 'No payment provider is connected yet.',
+  'buy.noProviderBody':
+    'You can place this order and it will be saved, but it cannot be paid until a provider is connected. Nothing is charged, and the course does not open until payment is confirmed.',
+  'buy.closedLead': 'Checkout is not open yet.',
+  'buy.closedBody':
+    'This platform is not taking payment for courses at the moment, so no order can be placed and nothing has been charged. Free courses can still be joined from the course page.',
+  'buy.notOnSale': 'This course is not on sale to you at the moment, so there is nothing to pay.',
+  'buy.payHeading': 'What you will pay',
+  'buy.pricedFor': 'Priced for {country}.',
+  'buy.standardPrice': 'The standard price.',
+  'buy.oneOff': 'One-off purchase, not a subscription.',
+  'buy.accessNote':
+    'Access starts when payment is confirmed, not when you press the button. The order is listed on your orders page either way.',
+  'buy.whoFor': 'Who is this for?',
+  'buy.choose': 'Choose a learner',
+  'buy.learnerChild': '{name} (child)',
+  'buy.whoNote': 'One purchase covers one learner. To buy for two children, buy it twice.',
+  'buy.forOne': 'This purchase is for {name}.',
+  'buy.codeLabel': 'Discount code',
+  'buy.checkPrice': 'Check the price',
+  'buy.checking': 'Checking…',
+  'buy.codeNote':
+    'Have a code? Enter it here. If it does not apply to this course, you will be told before anything is charged.',
+  'buy.quoteFailed': 'That price could not be worked out. Try again.',
+  'buy.quoteSimple': 'You would pay {amount}.',
+  'buy.quoteList': 'List price {amount}',
+  'buy.quoteOffCode': '{code} takes off {amount}',
+  'buy.quoteOff': 'discount {amount}',
+  'buy.quoteTax': 'tax {amount}',
+  'buy.quoteFee': 'fee {amount}',
+  'buy.quotePay': 'you pay {amount}.',
+  'buy.quoteTaxNote': 'Tax and fees are worked out from the price after any discount.',
+  'buy.quoteHolds': 'Nothing is reserved until you place the order.',
+  'buy.payWith': 'Pay with',
+  'buy.phoneLabel': 'Mobile money number',
+  'buy.phoneNote': 'The number that will be asked to approve the payment.',
+  'buy.continue': 'Continue to payment',
+  'buy.starting': 'Starting…',
+  'buy.noProviderNote': 'This order will be recorded but cannot be paid yet.',
+  'buy.approve':
+    'Approve the payment on your phone. Your course unlocks once the payment is confirmed. This can take a moment.',
+  'buy.orderSaved': 'Your order was saved.',
+  'buy.signedOut': 'You are signed out. Sign in again, then try once more.',
+  'buy.whyClosed': 'Checkout is not open yet, so no order was placed. Nothing has been charged.',
+  'buy.whyNoCourse': 'This course cannot be bought at the moment.',
+  'buy.whyNoPrice': 'This course is not on sale at the moment. Reload the page to check.',
+  'buy.whyOwned': 'That learner already has this course, so buying it again would add nothing.',
+  'buy.whyChoose': 'Choose who this course is for.',
+  'buy.whyNotYours': 'That learner is not on your account. Reload the page and choose again.',
+  'buy.codeUnknown': 'That code is not one we recognise. Check it and try again.',
+  'buy.codeNotNow': 'That code is not running at the moment: it has ended, or has not started yet.',
+  'buy.codeNotHere': 'That code is not available in your country.',
+  'buy.codeNotCourse': 'That code is not for this course.',
+  'buy.codeOwn':
+    'That is your own invitation code, so it cannot be used on your own purchase. It is for the friend you send it to.',
+  'buy.codeNewOnly': 'That code is only for people who have not bought anything before.',
+  'buy.codeUsedUp': 'That code has been used up.',
+  'buy.codeUsedYou': 'You have already used that code as often as it allows.',
+  'buy.codeUsedFamily': 'Your family has already used that code as often as it allows.',
+  'buy.codeFree':
+    'That code would make the course entirely free, which this checkout cannot take. Contact us and we will enrol you directly.',
+  'buy.codeCurrency':
+    'That code is in a different currency from this course, so it cannot be used here.',
+  'buy.codeNothing': 'That code takes nothing off this order.',
+  'buy.whyFree': 'This course is free. Join it from the course page.',
+  'buy.whyWithdrawal':
+    'Your choice about the 14-day withdrawal right could not be recorded, so payment was not started. Nothing has been charged.',
+  'buy.whyNoProvider': 'No payment provider is connected yet, so this order cannot be paid.',
+  'buy.whyPhone': 'That phone number is not valid. Check it and try again.',
+  'buy.whyProvider': 'The payment could not be started. Look at your orders before trying again.',
+  'buy.refused': 'The order could not be placed. Nothing has been charged.',
+  'buy.unconfirmed':
+    'We could not confirm whether your order was placed. Look at your orders before trying again.',
 } as const;
 
 export type MessageKey = keyof typeof en;

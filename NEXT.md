@@ -2618,6 +2618,78 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The buy page in the reader's language, 2026-11-18
+
+`/courses/<slug>/buy` was English for every reader, and it is where a course
+page in the reader's language sends somebody who wants to pay.
+
+- *Translated.* Seventy-nine sentences (`buy.*`, new file `messages/buy.ts`)
+  in the twenty-seven languages with nothing held. **Unreviewed.** Eight more
+  are reused from the navigation, the dashboard, the family pages, the page
+  for a page that broke and sign-in. A held language reads the page in
+  English, whole, marked `lang="en" dir="ltr"`.
+- *Not translated, on purpose.* The 14-day withdrawal box and the two
+  sentences under it: the paragraph is the database's and is tied to a policy
+  version (`DECISIONS.md`). A charge the database names itself. An amount,
+  which is a currency code and Latin digits kept left to right. A provider's
+  name. The course's title.
+- *A refusal has a name.* `lib/checkout-outcome.ts`: thirty-one reasons, each
+  with its own status, sent by `/api/checkout` and `/api/checkout/quote` as
+  `reason`. The form says its own sentence for each and shows nothing the
+  server wrote. `code` is unchanged, so `/plans` and `/orders` read what they
+  read before.
+- *Defects fixed on the way.*
+  - **A phone number typed without a plus was always refused.** The route
+    passed `'UG'` to `toE164()`, which takes a dial code and gives up on
+    anything else. "0772 123456", the shape the field's own placeholder
+    shows, could not be used to pay. Nothing had run this path with a
+    provider configured, which is why nothing noticed.
+  - A mistyped number was refused *after* the order was written: each
+    mistake left another pending order, and the reply said it had been
+    saved. It is refused first now and writes nothing.
+  - A family whose first learner had the course was told to "choose another
+    learner below" above a page with no form on it. They can now buy for the
+    others.
+  - Neither request had a `catch`: with the connection gone, pressing the
+    button did nothing and said nothing.
+  - The button was disabled only while the page was being read again, not
+    while the order was being written, so two presses could send two orders.
+  - The database's sentence for a refusal nobody anticipated, and the
+    provider's "not configured" error with the name of an environment
+    variable in it, were shown to the payer.
+  - The writer's "nobody is signed in" and "no learner named" were answered
+    500, as though the site had broken. They are 401 and 400.
+  - A refusal about one learner stayed on the page after another was chosen.
+  - The withdrawal tickbox was drawn the full width of the card, centred on
+    a line of its own above its paragraph; the price button was a
+    full-width bar under a narrow code field. Both are beside what they
+    belong to.
+- *What changed for an English reader.*
+  - An answer that is not plainly a refusal is "We could not confirm whether
+    your order was placed. Look at your orders before trying again." rather
+    than "Checkout could not be started."
+  - "Your order was saved" is said only when the reply names an order.
+  - The already-has-it sentence is "That learner already has this course, so
+    buying it again would add nothing."
+  - Pressing the button with nobody chosen says "Choose who this course is
+    for." without a request.
+  - The tab title is "Checkout".
+- *What it did to the nineteen.* `/language` tells each of them **20%** (192
+  of 977).
+- *Checks.* 2352 web tests (new `checkout-outcome.test.ts`; one new in
+  `held-translations.test.ts`, which reads the page and the form and
+  requires every `buy.*` sentence to be used and every reason to have one).
+  The bundle check looks for "could not confirm" and the closed-checkout
+  paragraph in every script and finds neither (270 sentences looked for;
+  1778 kB, seven more than before). New `scripts/buy-route-smoke.mjs`, in CI
+  and in the browser workflow: see `docs/remaining.md` for what it reaches
+  and, at more length than usual, what it does not.
+- *Left as it was:* the withdrawal box is English and marked; `/orders`,
+  `/plans` and `/policies/refunds` are English; a plan order's unnamed
+  refusals still carry the database's sentence; **MTN is sent the number
+  with its plus sign and Airtel without, and nobody has checked which each
+  accepts**; a local number is read as Ugandan whatever the buyer's country.
+
 ### The family pages in the reader's language, 2026-11-18
 
 `/family` and `/family/[childId]` were English for every reader, and the

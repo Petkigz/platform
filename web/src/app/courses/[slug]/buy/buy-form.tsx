@@ -1,10 +1,16 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { Fragment, useState, useTransition, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { format, fromMinor } from '@/lib/money';
 import type { WithdrawalOffer } from '@/lib/withdrawal';
+import {
+  QUOTE_FEE_LABEL,
+  QUOTE_TAX_LABEL,
+  checkoutOutcomeOf,
+  type CheckoutReason,
+} from '@/lib/checkout-outcome';
 
 /**
  * The checkout form.
@@ -17,7 +23,95 @@ import type { WithdrawalOffer } from '@/lib/withdrawal';
  * payer leaves to pay, and the entitlement arrives later via the webhook — not
  * on the way back. A `pending` result is mobile money, where the prompt appears
  * on the handset. Neither is a confirmation, so neither says "you're in".
+ *
+ * **The words are handed in** by the buy page, in the reader's language. There
+ * is no English of its own in this file, with one exception that is marked as
+ * English wherever the page is not: the 14-day withdrawal box. Its paragraph
+ * comes from the database, is the same paragraph as the published refunds
+ * policy, and is what the buyer's choice is recorded against; the two
+ * sentences under it are kept in the language of the paragraph they explain.
+ *
+ * **A refusal is said by its reason** (`lib/checkout-outcome.ts`). The form
+ * used to print whatever sentence came back.
+ *
+ * **Pressing twice used to send two checkouts.** The button was disabled only
+ * while the page was being read again afterwards, not while the request was
+ * out. It is disabled for the whole of the request now.
  */
+export type BuyWords = {
+  whoFor: string;
+  /** The first line of the list when nobody has been chosen for the buyer. */
+  choose: string;
+  /** `{name}` and the word for a child's profile. */
+  learnerChild: string;
+  whoNote: string;
+  /** `{name}`: the one learner this account can buy for. */
+  forOne: string;
+  codeLabel: string;
+  optional: string;
+  checkPrice: string;
+  checking: string;
+  codeNote: string;
+  quoteFailed: string;
+  /** `{amount}`. */
+  quoteSimple: string;
+  quoteList: string;
+  /** `{code}` and `{amount}`. */
+  quoteOffCode: string;
+  quoteOff: string;
+  quoteTax: string;
+  quoteFee: string;
+  quotePay: string;
+  quoteTaxNote: string;
+  quoteHolds: string;
+  payWith: string;
+  phoneLabel: string;
+  phoneNote: string;
+  continue: string;
+  starting: string;
+  noProviderNote: string;
+  approve: string;
+  orderSaved: string;
+  unreachable: string;
+  /** What the form says for each reason a checkout or a price check can be refused. */
+  reasons: Record<CheckoutReason, string>;
+};
+
+/** A sentence with something other than text in its gaps. */
+function Say({ text, parts }: { text: string; parts: Record<string, ReactNode> }) {
+  return (
+    <>
+      {text.split(/(\{[a-zA-Z]+\})/u).map((piece, index) => {
+        const name = /^\{([a-zA-Z]+)\}$/u.exec(piece)?.[1];
+        return (
+          <Fragment key={index}>{name && Object.hasOwn(parts, name) ? parts[name] : piece}</Fragment>
+        );
+      })}
+    </>
+  );
+}
+
+/** An amount is a currency code and Latin digits whatever the page is. */
+const Amount = ({ value }: { value: string }) => (
+  <strong>
+    <bdi dir="ltr">{value}</bdi>
+  </strong>
+);
+
+type Quote = {
+  list: string;
+  discount: string;
+  tax: string;
+  fee: string;
+  taxLabel: string;
+  feeLabel: string;
+  total: string;
+  code: string | null;
+  hasDiscount: boolean;
+  hasTax: boolean;
+  hasFee: boolean;
+};
+
 export function BuyForm({
   courseId,
   learners,
@@ -26,6 +120,8 @@ export function BuyForm({
   providerConfigured,
   defaultCode,
   withdrawal = null,
+  words,
+  markEnglish,
 }: {
   courseId: string;
   /** The profiles this purchase may cover: the buyer and their family. */
@@ -47,9 +143,13 @@ export function BuyForm({
    * and the copy under the box has to answer the one that applies.
    */
   withdrawal?: WithdrawalOffer | null;
+  words: BuyWords;
+  /** The page is not English, so what is English on it says so. */
+  markEnglish: boolean;
 }) {
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
+  const [busy, setBusy] = useState(false);
   const [msisdn, setMsisdn] = useState('');
   // Default to the first live provider. With one provider this is the only
   // choice, so the selector renders as a single option rather than a decision
@@ -64,29 +164,18 @@ export function BuyForm({
   // have to dismiss a field to buy a course.
   const [promotionCode, setPromotionCode] = useState(defaultCode?.trim() ?? '');
   const [message, setMessage] = useState<string | null>(null);
-  const [tone, setTone] = useState<'info' | 'error'>('info');
+  const [tone, setTone] = useState<'info' | 'warn' | 'error'>('info');
   // Unticked, and it stays unticked until the buyer ticks it: a pre-ticked box is
   // not consent, and the whole point of this control is that leaving it alone is
   // a legitimate way to buy.
   const [waiverTicked, setWaiverTicked] = useState(false);
   const showWaiver = withdrawal?.canWaive === true;
+  const english = markEnglish ? ({ lang: 'en', dir: 'ltr' } as const) : {};
 
   // What the price checker found, and whether it is still about the box as it stands.
   // Any change to the learner or the code clears it: a total shown against a code
   // somebody has since edited is a wrong number that looks right.
-  const [quote, setQuote] = useState<{
-    list: string;
-    discount: string;
-    tax: string;
-    fee: string;
-    taxLabel: string;
-    feeLabel: string;
-    total: string;
-    code: string | null;
-    hasDiscount: boolean;
-    hasTax: boolean;
-    hasFee: boolean;
-  } | null>(null);
+  const [quote, setQuote] = useState<Quote | null>(null);
   const [quoteError, setQuoteError] = useState<string | null>(null);
   const [quoting, setQuoting] = useState(false);
 
@@ -104,164 +193,216 @@ export function BuyForm({
         }),
       });
 
-      const json = (await res.json().catch(() => ({}))) as {
-        ok?: boolean;
-        message?: string;
-        error?: string;
+      const json = (await res.json().catch(() => null)) as {
+        ok?: unknown;
+        reason?: unknown;
         quote?: {
-          listMinor: string;
-          discountMinor: string;
-          taxMinor: string;
-          feeMinor: string;
-          chargeLabels?: { tax?: string | null; fee?: string | null };
-          totalMinor: string;
-          currencyCode: string;
-          promotionCode: string | null;
+          listMinor?: unknown;
+          discountMinor?: unknown;
+          taxMinor?: unknown;
+          feeMinor?: unknown;
+          chargeLabels?: { tax?: unknown; fee?: unknown };
+          totalMinor?: unknown;
+          currencyCode?: unknown;
+          promotionCode?: unknown;
         };
-      };
+      } | null;
 
-      if (!res.ok || !json.ok || !json.quote) {
+      const found = res.ok && json?.ok === true ? json.quote : undefined;
+      if (!found) {
         setQuote(null);
+        // Asking for a price writes nothing, so an answer nobody can read is
+        // only "could not be worked out": asking again costs nothing.
+        const reason = checkoutOutcomeOf(res.status, json?.reason);
         setQuoteError(
-          json.message ?? json.error ?? 'That price could not be worked out. Try again.',
+          reason === 'unconfirmed' || reason === 'refused' || reason === 'malformed'
+            ? words.quoteFailed
+            : words.reasons[reason],
         );
         return;
       }
 
-      const { quote: found } = json;
-      const currency = found.currencyCode;
-      const nonZero = (minor: string | undefined) =>
-        minor !== undefined && minor !== '0' && minor !== '';
+      const minor = (value: unknown) => (typeof value === 'string' ? value : '');
+      const currency = minor(found.currencyCode);
+      const label = (value: unknown, fallback: string) =>
+        typeof value === 'string' && value.trim() !== '' ? value : fallback;
+      const nonZero = (value: string) => value !== '0' && value !== '';
+      const money = (value: string) => format(fromMinor(value === '' ? '0' : value, currency));
+      if (currency === '' || minor(found.listMinor) === '' || minor(found.totalMinor) === '') {
+        setQuote(null);
+        setQuoteError(words.quoteFailed);
+        return;
+      }
       setQuote({
-        list: format(fromMinor(found.listMinor, currency)),
-        discount: format(fromMinor(found.discountMinor, currency)),
-        tax: format(fromMinor(found.taxMinor, currency)),
-        fee: format(fromMinor(found.feeMinor, currency)),
-        taxLabel: found.chargeLabels?.tax ?? 'Tax',
-        feeLabel: found.chargeLabels?.fee ?? 'Fee',
-        total: format(fromMinor(found.totalMinor, currency)),
-        code: found.promotionCode,
-        hasDiscount: nonZero(found.discountMinor),
-        hasTax: nonZero(found.taxMinor),
-        hasFee: nonZero(found.feeMinor),
+        list: money(minor(found.listMinor)),
+        discount: money(minor(found.discountMinor)),
+        tax: money(minor(found.taxMinor)),
+        fee: money(minor(found.feeMinor)),
+        taxLabel: label(found.chargeLabels?.tax, QUOTE_TAX_LABEL),
+        feeLabel: label(found.chargeLabels?.fee, QUOTE_FEE_LABEL),
+        total: money(minor(found.totalMinor)),
+        code: typeof found.promotionCode === 'string' ? found.promotionCode : null,
+        hasDiscount: nonZero(minor(found.discountMinor)),
+        hasTax: nonZero(minor(found.taxMinor)),
+        hasFee: nonZero(minor(found.feeMinor)),
       });
+    } catch {
+      // The request could not be made, or the answer was not a price. Nothing
+      // was written either way.
+      setQuote(null);
+      setQuoteError(typeof navigator !== 'undefined' && navigator.onLine === false ? words.unreachable : words.quoteFailed);
     } finally {
       setQuoting(false);
     }
   }
 
   async function buy() {
+    if (busy) return;
+    // Nobody chosen yet: said here, without a request.
+    if (learnerId === '') {
+      setTone('error');
+      setMessage(words.reasons.learner_required);
+      return;
+    }
+    setBusy(true);
     setMessage(null);
 
-    const res = await fetch('/api/checkout', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        courseId,
-        learnerProfileId: learnerId || undefined,
-        promotionCode: promotionCode.trim() || undefined,
-        msisdn: msisdn || undefined,
-        provider: providerId || undefined,
-        // Only when the box was shown. An absent choice and an unticked one are
-        // different facts, and the route records only what was decided.
-        withdrawalChoice: showWaiver ? (waiverTicked ? 'waived' : 'retained') : undefined,
-      }),
-    });
+    let res: Response;
+    try {
+      res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          courseId,
+          learnerProfileId: learnerId || undefined,
+          promotionCode: promotionCode.trim() || undefined,
+          msisdn: msisdn || undefined,
+          provider: providerId || undefined,
+          // Only when the box was shown. An absent choice and an unticked one are
+          // different facts, and the route records only what was decided.
+          withdrawalChoice: showWaiver ? (waiverTicked ? 'waived' : 'retained') : undefined,
+        }),
+      });
+    } catch {
+      // Nothing caught this before: the press did nothing and said nothing.
+      // With no connection the request never left. Otherwise it may have: an
+      // order is written before the provider is called, so the buyer is sent
+      // to look rather than to press again.
+      const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
+      setTone(offline ? 'error' : 'warn');
+      setMessage(offline ? words.unreachable : words.reasons.unconfirmed);
+      setBusy(false);
+      return;
+    }
 
-    const json = (await res.json().catch(() => ({}))) as {
-      error?: string;
-      orderId?: string;
-      kind?: 'redirect' | 'pending';
-      url?: string;
-      code?: string;
-    };
+    const json = (await res.json().catch(() => null)) as {
+      reason?: unknown;
+      orderId?: unknown;
+      kind?: unknown;
+      url?: unknown;
+    } | null;
 
-    if (res.ok && json.kind === 'redirect' && json.url) {
+    if (res.ok && json?.kind === 'redirect' && typeof json.url === 'string' && json.url !== '') {
+      // Still busy: the page is leaving.
       window.location.href = json.url;
       return;
     }
 
-    if (res.ok && json.kind === 'pending') {
+    setBusy(false);
+
+    if (res.ok && json?.kind === 'pending') {
       setTone('info');
-      setMessage(
-        'Check your phone and approve the payment. Access opens once it is ' +
-          'confirmed — you can close this page and watch it in your orders.',
-      );
+      setMessage(words.approve);
       return;
     }
 
+    const reason = checkoutOutcomeOf(res.status, json?.reason);
+    // The platform being closed, a provider that is missing or would not
+    // start, and an answer nobody can read are not the buyer's mistake.
+    const platform =
+      reason === 'disabled' || reason === 'provider_unavailable' || reason === 'provider_failed' || reason === 'unconfirmed';
+    setTone(platform ? 'warn' : 'error');
     // An order can exist even when the request failed: the order is created
     // before the provider is called, and a provider outage is not a reason to
     // lose the record of the attempt.
-    setTone(res.status === 503 || res.status === 502 ? 'info' : 'error');
-    setMessage(
-      json.error ?? 'Checkout failed. Please try again.',
-    );
-    if (json.orderId) {
+    const saved = typeof json?.orderId === 'string' && json.orderId !== '' && reason !== 'unconfirmed';
+    setMessage(saved ? `${words.reasons[reason]} ${words.orderSaved}` : words.reasons[reason]);
+    if (saved) {
       startTransition(() => router.refresh());
     }
   }
+
+  const only = learners[0]?.name ?? '';
 
   return (
     <div style={{ display: 'grid', gap: '1rem' }}>
       {learners.length > 1 ? (
         <div>
           <label htmlFor="learner" className="eyebrow">
-            Who is this course for?
+            {words.whoFor}
           </label>
           <select
             id="learner"
             value={learnerId}
-            onChange={(e) => { setLearnerId(e.target.value); setQuote(null); }}
+            onChange={(e) => {
+              setLearnerId(e.target.value);
+              // A price, and a refusal, were about whoever was chosen before.
+              setQuote(null);
+              setQuoteError(null);
+              setMessage(null);
+            }}
+            disabled={busy}
           >
+            {defaultLearnerId === '' && <option value="">{words.choose}</option>}
             {learners.map((learner) => (
               <option key={learner.id} value={learner.id}>
-                {learner.name}
-                {learner.type === 'child' ? ' (child)' : ''}
+                {learner.type === 'child'
+                  ? words.learnerChild.replace('{name}', `\u2068${learner.name}\u2069`)
+                  : learner.name}
               </option>
             ))}
           </select>
-          <p className="muted">
-            The course is added to this learner&apos;s account, and it does not
-            cover anybody else.
-          </p>
+          <p className="muted">{words.whoNote}</p>
         </div>
       ) : (
         <p className="meta">
-          This purchase is for {learners[0]?.name ?? 'your learner'}. A course
-          covers one learner; a sibling needs their own purchase.
+          <Say text={words.forOne} parts={{ name: <bdi>{only}</bdi> }} />
         </p>
       )}
 
       <div>
         <label htmlFor="promotion" className="eyebrow">
-          Promotion code <span className="meta">(optional)</span>
+          {words.codeLabel} <span className="meta">{words.optional}</span>
         </label>
-        <div className="row" style={{ flexWrap: 'wrap' }}>
+        {/* Not `.row`: that is a form row which pins its first child to a
+            narrow column, and the button below it took the full width. */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
           <input
             id="promotion"
+            dir="ltr"
+            style={{ flex: '1 1 6rem' }}
             value={promotionCode}
             onChange={(e) => { setPromotionCode(e.target.value); setQuote(null); }}
             placeholder="EID24"
             autoCapitalize="characters"
             autoComplete="off"
             maxLength={32}
+            disabled={busy}
           />
           <button
             type="button"
             className="btn secondary"
+            style={{ width: 'auto', flex: '0 0 auto', marginTop: 0 }}
             onClick={checkPrice}
-            disabled={quoting}
+            disabled={quoting || busy}
           >
-            {quoting ? 'Checking…' : 'Check the price'}
+            {quoting ? words.checking : words.checkPrice}
           </button>
         </div>
-        <p className="muted">
-          The discount is applied to the order before you pay. One code per order.
-        </p>
+        <p className="muted">{words.codeNote}</p>
 
         {quoteError && (
-          <div className="notice warn" role="status" style={{ marginTop: '0.5rem' }}>
+          <div className="notice warn" role="alert" style={{ marginTop: '0.5rem' }}>
             {quoteError}
           </div>
         )}
@@ -270,48 +411,65 @@ export function BuyForm({
           <div className="notice" role="status" style={{ marginTop: '0.5rem' }}>
             {!quote.hasDiscount && !quote.hasTax && !quote.hasFee ? (
               <span>
-                The price is <strong>{quote.total}</strong>.
+                <Say text={words.quoteSimple} parts={{ amount: <Amount value={quote.total} /> }} />
               </span>
             ) : (
               <>
                 <span>
-                  Price <strong>{quote.list}</strong>
+                  <Say text={words.quoteList} parts={{ amount: <Amount value={quote.list} /> }} />
                   {quote.hasDiscount ? (
                     <>
-                      {quote.code ? ` · code ${quote.code}` : ''} takes off{' '}
-                      <strong>{quote.discount}</strong>
+                      {' · '}
+                      <Say
+                        text={quote.code ? words.quoteOffCode : words.quoteOff}
+                        parts={{
+                          code: <bdi dir="ltr">{quote.code}</bdi>,
+                          amount: <Amount value={quote.discount} />,
+                        }}
+                      />
                     </>
                   ) : null}
                   {quote.hasTax ? (
                     <>
-                      {' '}· {quote.taxLabel.toLowerCase()} <strong>{quote.tax}</strong>
+                      {' · '}
+                      {quote.taxLabel === QUOTE_TAX_LABEL ? (
+                        <Say text={words.quoteTax} parts={{ amount: <Amount value={quote.tax} /> }} />
+                      ) : (
+                        // The database's own name for a charge is English.
+                        <>
+                          <bdi {...english}>{quote.taxLabel}</bdi> <Amount value={quote.tax} />
+                        </>
+                      )}
                     </>
                   ) : null}
                   {quote.hasFee ? (
                     <>
-                      {' '}· {quote.feeLabel.toLowerCase()} <strong>{quote.fee}</strong>
+                      {' · '}
+                      {quote.feeLabel === QUOTE_FEE_LABEL ? (
+                        <Say text={words.quoteFee} parts={{ amount: <Amount value={quote.fee} /> }} />
+                      ) : (
+                        <>
+                          <bdi {...english}>{quote.feeLabel}</bdi> <Amount value={quote.fee} />
+                        </>
+                      )}
                     </>
                   ) : null}
-                  {' '}· you pay <strong>{quote.total}</strong>.
+                  {' · '}
+                  <Say text={words.quotePay} parts={{ amount: <Amount value={quote.total} /> }} />
                 </span>{' '}
                 {quote.hasTax || quote.hasFee ? (
-                  <span className="meta">
-                    The tax and the fee are set by where you are and are paid by you;
-                    neither is kept by the course.
-                  </span>
+                  <span className="meta">{words.quoteTaxNote}</span>
                 ) : null}
               </>
             )}{' '}
-            <span className="meta">
-              Nothing is held back by checking: pay now and exactly this is charged.
-            </span>
+            <span className="meta">{words.quoteHolds}</span>
           </div>
         )}
       </div>
 
       {providers.length > 1 && (
-        <fieldset>
-          <legend className="eyebrow">Pay with</legend>
+        <fieldset disabled={busy}>
+          <legend className="eyebrow">{words.payWith}</legend>
           {providers.map((p) => (
             <label key={p.id} className="radio">
               <input
@@ -321,7 +479,8 @@ export function BuyForm({
                 checked={providerId === p.id}
                 onChange={() => setProviderId(p.id)}
               />
-              <span>{p.label}</span>
+              {/* A provider's name is its own. */}
+              <span><bdi dir="ltr">{p.label}</bdi></span>
             </label>
           ))}
         </fieldset>
@@ -330,37 +489,38 @@ export function BuyForm({
       {needsNumber && (
       <div>
         <label htmlFor="msisdn" className="eyebrow">
-          Mobile money number
+          {words.phoneLabel}
         </label>
         <input
           id="msisdn"
+          dir="ltr"
           inputMode="tel"
           autoComplete="tel"
           placeholder="0772 123456"
           value={msisdn}
           onChange={(e) => setMsisdn(e.target.value)}
+          disabled={busy}
         />
-        <p className="muted">
-          Used to send the payment prompt to your handset. Normalised to E.164
-          before it is sent anywhere. Nothing is charged until you approve it on
-          the phone.
-        </p>
+        <p className="muted">{words.phoneNote}</p>
       </div>
       )}
 
       {withdrawal?.statutory && (
-        <div>
+        // English, and marked as English on a page that is not. See the note
+        // at the top of this file.
+        <div {...english}>
           {showWaiver ? (
             <>
-              <label
-                htmlFor="withdrawal-waiver"
-                style={{ alignItems: 'flex-start', gap: '0.6rem' }}
-              >
+              {/* `.radio` is the bordered row a choice sits in. Without it the
+                  box was drawn the full width of the card, centred on a line
+                  of its own above the paragraph it belongs to. */}
+              <label htmlFor="withdrawal-waiver" className="radio">
                 <input
                   id="withdrawal-waiver"
                   type="checkbox"
                   checked={waiverTicked}
                   onChange={(e) => setWaiverTicked(e.target.checked)}
+                  disabled={busy}
                 />
                 <span>{withdrawal.wording}</span>
               </label>
@@ -381,24 +541,20 @@ export function BuyForm({
         </div>
       )}
 
-      <button type="button" className="btn" onClick={buy} disabled={pending}>
-        {pending ? 'Starting…' : 'Continue to payment'}
+      <button type="button" className="btn" onClick={buy} disabled={busy}>
+        {busy ? words.starting : words.continue}
       </button>
 
       {message && (
         <div
-          className={`notice ${tone === 'error' ? 'error' : 'warn'}`}
-          role="status"
+          className={`notice ${tone === 'error' ? 'error' : tone === 'warn' ? 'warn' : ''}`}
+          role={tone === 'info' ? 'status' : 'alert'}
         >
           {message}
         </div>
       )}
 
-      {!providerConfigured && (
-        <p className="muted">
-          This will create the order but cannot take payment yet.
-        </p>
-      )}
+      {!providerConfigured && <p className="muted">{words.noProviderNote}</p>}
     </div>
   );
 }
