@@ -87,6 +87,8 @@ const problems = [];
 const said = [];
 // Operators the adapter knows and this account was not given.
 const notGiven = [];
+// Operators the account has, where its answer leaves out something the table states.
+const unconfirmed = [];
 const note = (line) => { said.push(line); console.log(line); };
 const wrong = (line) => { problems.push(line); console.log(`  DISAGREES: ${line}`); };
 
@@ -127,7 +129,8 @@ async function accountOperators() {
       for (const currency of provider.currencies ?? []) {
         const deposit = depositOf(currency?.operationTypes);
         if (typeof currency?.currency !== 'string' || !deposit) continue;
-        currencies[currency.currency] = { decimals: deposit.decimalsInAmount, authType: deposit.authType, status: deposit.status };
+        // The names of the settings, never their values: enough to see a shape this script does not expect.
+        currencies[currency.currency] = { decimals: deposit.decimalsInAmount, authType: deposit.authType, status: deposit.status, names: Object.keys(deposit).sort().join(',') };
       }
       if (Object.keys(currencies).length === 0) unread += 1;
       else found.set(provider.provider, { country: country.country, currencies });
@@ -200,7 +203,11 @@ if (account) {
     if (!settings) { wrong(`${code}: the table says it collects ${ours.currency}; the account lists ${Object.keys(theirs.currencies).join(', ')}`); continue; }
     const fraction = settings.decimals !== 'NONE';
     let fine = true;
-    if (typeof settings.decimals !== 'string') { fine = false; wrong(`${code}: the account does not say whether ${ours.currency} may have a fraction`); }
+    if (typeof settings.decimals !== 'string') {
+      // Not a contradiction: the account's answer is silent. Said apart, with what it does say.
+      fine = false;
+      unconfirmed.push(`${code}: the account does not say whether ${ours.currency} may have a fraction (the table says it ${ours.decimals ? 'may' : 'may not'}). Status: ${String(settings.status).slice(0, 30)}. Its deposit settings are named: ${settings.names.slice(0, 300) || 'none'}`);
+    }
     else if (fraction !== ours.decimals) { fine = false; wrong(`${code}: the table says an amount ${ours.decimals ? 'may' : 'may not'} have a fraction; the account says decimalsInAmount is ${settings.decimals}`); }
     if (settings.authType !== 'PROVIDER_AUTH') { fine = false; wrong(`${code}: the payer does not simply approve on their handset here (authType ${String(settings.authType).slice(0, 30)}), and the adapter does nothing else`); }
     if (fine) agreed += 1;
@@ -208,6 +215,7 @@ if (account) {
   const extra = [...account.keys()].filter((code) => !known.has(code));
   note(`  the account lists ${account.size} operator(s) for deposits; ${agreed} are in the adapter's table and agree with it on currency, fractions and how the payer approves.`);
   if (notGiven.length > 0) note(`  in the table and NOT on this account (${notGiven.length}): ${notGiven.join('; ')}`);
+  for (const line of unconfirmed) note(`  could not be confirmed: ${line}`);
   if (extra.length > 0) note(`  on this account and not in the table (${extra.length}): ${extra.map((code) => `${code} [${Object.entries(account.get(code).currencies).map(([c, v]) => `${c} ${v.authType}`).join(', ')}]`).join('; ')}`);
   const closed = [...account.entries()].flatMap(([code, v]) => Object.entries(v.currencies).filter(([, c]) => typeof c.status === 'string' && c.status !== 'OPERATIONAL').map(([c, x]) => `${code} ${c} ${x.status}`));
   if (closed.length > 0) note(`  not operational just now: ${closed.join('; ')}`);
