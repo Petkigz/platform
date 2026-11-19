@@ -1933,6 +1933,54 @@ export const en = {
     'Use the button and this browser remembers the code and fills it in on the payment page. Days it is remembered: {days}. You can also type it there yourself.',
   'refer.lnAbout':
     'AyahSpring teaches the Islamic faith to children and adults, at a pace that fits around a life. Courses are reviewed before they are published, and every teacher is appointed by the platform.',
+
+  // Sponsored seats, both sides on one page (`sponsor.ts`), for the same
+  // twenty-seven languages as the dashboard. A pledge is not a payment, and
+  // no sentence says this page takes one.
+  'sponsor.lede':
+    'Courses somebody else paid for, and courses you paid for somebody else to take. Neither side learns who the other is.',
+  'sponsor.off':
+    'Sponsoring a seat is switched off at the moment, so nothing new can be asked for or sponsored. What was asked for or sponsored earlier is still shown here.',
+  'sponsor.askedHeading': 'What I have asked for',
+  'sponsor.askedUnread':
+    'Your requests could not be read just now. Nothing has changed: this page only reads.',
+  'sponsor.askedNone': 'You have not asked for a sponsored seat.',
+  'sponsor.askedHow':
+    'If a course is out of reach, you can ask. It costs nothing and obliges nobody.',
+  'sponsor.askLink': 'Ask for a sponsored seat',
+  'sponsor.aCourse': 'A course',
+  'sponsor.forWhom': 'For: {name}',
+  'sponsor.apSubmitted': 'Waiting for somebody to read it',
+  'sponsor.apApproved': 'Approved, and waiting for a sponsor',
+  'sponsor.apFunded': 'Covered: somebody paid for this seat',
+  'sponsor.apDeclined': 'Not approved',
+  'sponsor.apWithdrawn': 'Taken back',
+  'sponsor.seat': 'Seat: {code}',
+  'sponsor.staffNote': 'What staff wrote, in their own words:',
+  'sponsor.askedOn': 'Asked on {date}',
+  'sponsor.decidedOn': 'Decided on {date}',
+  'sponsor.coveredLead': 'A seat you asked for has been covered.',
+  'sponsor.coveredBody':
+    'The course is open for the learner now. Whoever paid is not named here, and that is on purpose: who gave is between the giver and Allah.',
+  'sponsor.gaveHeading': 'What I have sponsored',
+  'sponsor.gaveUnread':
+    'Your sponsorships could not be read just now. Nothing has changed: this page only reads.',
+  'sponsor.gaveNone': 'You have not sponsored a seat.',
+  'sponsor.gaveHow': 'Each seat that is waiting is a course somebody asked for.',
+  'sponsor.spPledged': 'Pledged: waiting for the payment to be recorded',
+  'sponsor.spPaid': 'Paid, and the seat is open',
+  'sponsor.spWithdrawn': 'Called off',
+  'sponsor.amount': 'Amount: {amount}',
+  'sponsor.reference': 'Reference: {reference}',
+  'sponsor.nextPledged':
+    'Nothing is taken automatically: this page collects no payment. Staff record the payment here when it reaches the platform, and the seat opens when they do.',
+  'sponsor.nextPaid':
+    'Recorded. The seat is open for the learner, and they have not been told who paid.',
+  'sponsor.nextWithdrawn': 'This pledge was called off, so no money is expected for it.',
+  'sponsor.pledgedOn': 'Pledged on {date}',
+  'sponsor.recordedOn': 'Payment recorded on {date}',
+  'sponsor.zakat':
+    'Whether a sponsored seat counts as zakat, sadaqah or neither is a scholar’s ruling, and this platform does not make it. Ask somebody you trust before you give.',
 } as const;
 
 export type MessageKey = keyof typeof en;

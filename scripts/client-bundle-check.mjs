@@ -112,6 +112,11 @@ for (const [file, key] of [
   // no script.
   ['refer.ts', 'refer.honesty'],
   ['refer.ts', 'refer.onlyFirstName'],
+  // The page of sponsored seats has no script of its own. What it says
+  // about zakat, and that it collects no payment, must be in that page and
+  // in no script.
+  ['sponsor.ts', 'sponsor.zakat'],
+  ['sponsor.ts', 'sponsor.nextPledged'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

@@ -478,11 +478,12 @@ try {
     await reader.page.goto(`${origin}/language`, { waitUntil: 'networkidle' });
     assert.equal(await reader.page.evaluate(() => document.documentElement.lang), 'ha');
     const settings = await reader.page.locator('body').textContent();
-    // 192 of 1434: the 80 companion lines are held, and the 1162 lines of
+    // 192 of 1469: the 80 companion lines are held, and the 1197 lines of
     // the learner's own screens (dashboard, course, lesson, assessment,
     // assignment, wrong-address, broken-page, player, account, family, buy,
     // closing, a copy of your data, reading, putting a copy back, phone,
-    // merge, sharing and inviting a friend) were never written for a held
+    // merge, sharing, inviting a friend and sponsored seats) were never
+    // written for a held
     // language
     // (`UNWRITTEN_WHILE_HELD`).
     assert.ok(settings.includes('13%'), 'the language page does not show the lower number');

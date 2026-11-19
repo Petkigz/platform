@@ -294,6 +294,7 @@ const SECTION_LABELS: Record<string, string> = {
   merge: 'Merging two accounts',
   share: 'Sharing your own learning',
   refer: 'Inviting a friend',
+  sponsor: 'Sponsored seats',
 };
 
 export const SECTIONS: Section[] = (() => {

@@ -138,6 +138,9 @@ jobs:
       - name: Invitation pages and invitation routes synthetic HTTP regression
         run: node scripts/referral-route-smoke.mjs
 
+      - name: Sponsored seats page synthetic HTTP regression
+        run: node scripts/sponsorship-route-smoke.mjs
+
       - name: Catalogue synthetic HTTP regression
         run: node scripts/catalogue-route-smoke.mjs
 

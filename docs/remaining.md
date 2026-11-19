@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 13% there (192 of 1434 sentences; it was 71% of 272, then
+  the nineteen reads 13% there (192 of 1469 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -546,7 +546,8 @@ still unreviewed and still saying so.
   a copy of your data, 17% of 1130 with the reading settings, 16% of 1199
   with the page for putting a copy back and of 1228 with the phone card,
   15% of 1315 with the merge screen, 14% of 1383 with the two sharing
-  screens, then this with the two for inviting a friend),
+  screens, 13% of 1434 with the two for inviting a friend, then this
+  with the page of sponsored seats),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -803,12 +804,25 @@ written: not a held draft, nothing.
   "Bought a course" with no reward and no explanation beside it. No code
   has been minted, used or rewarded through these screens against a real
   database, and no discount has been taken off a real order.
+  The page of sponsored seats (`/account/sponsorship`; sponsoring is
+  switched off) is in the reader's language since 2026-11-19
+  (`messages/sponsor.ts`, thirty-five sentences, unreviewed; checked by
+  `scripts/sponsorship-route-smoke.mjs` on a stand-in that sponsors
+  nobody). It now prints an amount in major units; it printed minor units,
+  so 19.99 read as 1999. **The sentence about zakat is one of the
+  thirty-five and no speaker or scholar has read any translation of it.**
+  **Still English there:** the two pages its links go to, `/sponsor` and
+  `/sponsor/apply`, with every refusal they print (`lib/sponsorship.ts`),
+  and whatever staff wrote as a reason, which is printed as written.
+  **Known and not fixed:** nothing in the product tells a sponsor how to
+  pay a pledge; the page now says only that it collects no payment and
+  that staff record one when it arrives. No request, pledge or recorded
+  payment has been read through this page from a real database.
   **Still English, every one of them:**
-  the pages it links to:
-  `/account/sponsorship`, `/account/password`, `/billing`,
+  the pages it links to: `/account/password`, `/billing`,
   `/institution`, `/notifications`, `/policies`, `/teach/apply`, `/sponsor`
-  and `/forgot-password`. A reader is taken from a page in their language to
-  an English one by every link on it but "Language" and "Go to my learning".
+  (with `/sponsor/apply`) and `/forgot-password`. A reader is taken from a
+  page in their language to an English one by each of those links.
   The preferred-language field is stored and read by nothing; the page now
   says so under the field, and whether to wire it or remove it is undecided.
   On a wide screen the page is one 42rem column at the start of the line with

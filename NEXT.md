@@ -2619,6 +2619,36 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### Sponsored seats in the reader's language, 2026-11-19
+
+`/account/sponsorship` was the last of the three English pages the account
+page's cards link to. It printed an amount in minor units, dates in British
+English with no zone, states through an English table, a table that scrolled
+sideways on a phone, and "You have not asked for a sponsored seat" when the
+truth was that the list could not be read.
+
+- *The words.* A new part, `messages/sponsor.ts`: thirty-five sentences in
+  the twenty-seven languages with nothing held, **read by no speaker**, the
+  sentence about zakat among them. The title, two links, the way back and
+  "Recorded" are borrowed. A held language reads the page in English, whole;
+  `/language` still tells each of the nineteen 13% (192 of 1469).
+- *Names, not sentences.* `lib/sponsorship-outcome.ts`: a state the page has
+  a sentence for or `other`, an amount through `money.ts` or nothing, the
+  switch as a board reports it or unknown, what staff wrote trimmed.
+  `lib/sponsorship-outcome.test.ts` (11 tests) reads the states out of the
+  two tables' check constraints and what the two functions raise.
+- *Checked.* `scripts/sponsorship-route-smoke.mjs`, in `ci.yml` and with a
+  browser in `responsive-smoke.yml`: six requests and four pledges in every
+  state and two unknown ones; USD 19.99, UGX 50000, KWD 5.000 and an amount
+  that is not one; the switch off with rows and without; each board answered
+  five wrong ways, and both; English, Arabic, Persian, French, and Hausa in
+  English; in a browser en/ar/ta/fil at 320, 390 and 1440px, with what staff
+  wrote in Arabic reading right to left on an English page. The bundle check
+  looks for its sentences too (676 in all).
+- *Not shown by any of it.* A request, a decision, a pledge or a recorded
+  payment in a real database. `/sponsor` and `/sponsor/apply` are English.
+  Nothing tells a sponsor how to pay.
+
 ### Inviting a friend in the reader's language, 2026-11-19
 
 `/account/referrals` and `/referral/<code>` were two more of the English

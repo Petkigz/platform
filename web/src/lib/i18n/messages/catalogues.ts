@@ -34,6 +34,7 @@ import { PHONE } from './phone.ts';
 import { MERGE } from './merge.ts';
 import { SHARE } from './share.ts';
 import { REFER } from './refer.ts';
+import { SPONSOR } from './sponsor.ts';
 import { LESSON } from './lesson.ts';
 import { isHeld } from './held.ts';
 import { ASIA_AZ } from './asia-az.ts';
@@ -859,6 +860,8 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   SHARE,
   // Inviting a friend and the page a friend opens, on the same rule.
   REFER,
+  // Sponsored seats, both sides on one page, on the same rule.
+  SPONSOR,
 );
 
 /**

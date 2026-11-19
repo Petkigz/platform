@@ -8542,6 +8542,46 @@ the nineteen read 13%. Settled in writing them:
 - *With the switch off nothing is minted.* The page asks the switch first.
   It used to show a code that could be given to nobody.
 
+**Sponsored seats (2026-11-19).** `/account/sponsorship` followed,
+thirty-five sentences in a new part, `sponsor.ts`; the nineteen still read
+13%. Settled in writing it:
+
+- *An amount is said in major units or not at all.* The page printed the
+  currency code beside the stored number, which is minor units: a seat that
+  cost 19.99 read as 1999. `amountOf()` goes through `money.ts`, in whole
+  numbers, and anything that is not a whole positive number of minor units
+  in a three-letter currency is left out.
+- *No sentence says how to pay.* The English said "pay the amount by
+  whatever means the platform directs". Nothing in the product directs
+  anybody. The sentence now says the page collects no payment and that staff
+  record one when it reaches the platform. That a sponsor is told nothing
+  about how to pay is a gap in the product, written in `docs/remaining.md`,
+  and not something to paper over in twenty-eight languages.
+- *The sentence about zakat is translated, and marked.* It makes no ruling:
+  it says the ruling is a scholar's, that the platform does not make it, and
+  to ask somebody trusted. A reader who cannot read English is the one who
+  most needs to be told that, so it is not left in English. The catalogue's
+  comment says what a translation must keep ("or neither"; the platform not
+  answering), and `FLAGS.md` says to have the translations read before the
+  switch is turned on.
+- *What staff wrote is theirs.* A reason is printed apart, as text,
+  untranslated, in whatever direction it was written (`dir="auto"`), under a
+  line that says whose words they are. It is not labelled "Reason" or
+  "Note" by guessing from the state.
+- *Neither side is guessed at.* "Whoever paid", "the giver", "the learner":
+  no pronoun in any language where one can be avoided. "You took this back"
+  became "Taken back", because the reader may be the other parent.
+  "Somebody covered a seat for you" became "A seat you asked for has been
+  covered", because the seat may be a child's.
+- *Unread is not empty.* An error from either function was read as no rows
+  and the page said "You have not asked for a sponsored seat". Each board
+  now says it could not be read, aloud, and the other is still drawn.
+- *The switch off stops starting, not reading.* Both functions return rows
+  whatever the switch says. The page lists them, says the switch is off, and
+  does not draw the two links to pages where something new would be started.
+  When neither board could be read the switch is unknown, and nothing is
+  said about it.
+
 **Mobile money is a service in a country (2026-11-18).** The owner asked
 for a number typed without a country code to stop being read as Ugandan,
 and for MTN, Airtel and the other mobile-money services to work in each
