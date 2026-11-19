@@ -1,0 +1,27 @@
+name: pawaPay sandbox probe
+# The pawaPay adapter against pawaPay's own sandbox, by hand, when the owner
+# has made a sandbox account and saved its token as the repository secret
+# PAWAPAY_SANDBOX_TOKEN. The sandbox address is written in the script and
+# cannot be changed from here; the numbers are pawaPay's published test
+# numbers. No wallet, no money, nobody prompted, nothing deployed, and no
+# other secret is read. See scripts/pawapay-sandbox-probe.mjs.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pawapay-sandbox-probe
+  cancel-in-progress: false
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: '22.22.3'
+      - name: Ask the sandbox whether the adapter is right
+        env:
+          PAWAPAY_SANDBOX_TOKEN: ${{ secrets.PAWAPAY_SANDBOX_TOKEN }}
+        run: node --experimental-strip-types scripts/pawapay-sandbox-probe.mjs

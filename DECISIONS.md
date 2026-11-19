@@ -8693,6 +8693,14 @@ or down; hearing how a refund ended.
 live. Every request is the shape the documentation describes, and every
 answer in the tests was typed from it. `commerce.checkout` stays off.
 
+**What the owner does next**, since only the owner can: make a sandbox
+account, generate a token, save it as the repository secret
+`PAWAPAY_SANDBOX_TOKEN`, and run the workflow "pawaPay sandbox probe". It
+drives the adapter against pawaPay's sandbox with pawaPay's own test numbers
+and lists whatever disagrees. Then ask pawaPay whether an individual with no
+registered company can be verified for a live account: if not, this adapter
+cannot take a payment however right it is.
+
 ## The test project gets its database ahead of its application — **DECIDED 2026-11-17**
 
 Asked three times whether to apply the grants migration (1440) and the

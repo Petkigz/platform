@@ -2648,6 +2648,14 @@ no Orange Money, no MTN in Rwanda or Nigeria.
   The webhook had never been driven through its route before; it now is, for
   a forged success, a real one, a second delivery, six payments that are not
   the order's, five that are unfinished or unanswerable, and a failure.
+- *The one run that can say whether it is right.*
+  `scripts/pawapay-sandbox-probe.mjs`, and the workflow "pawaPay sandbox
+  probe" (by hand only): the adapter itself against pawaPay's sandbox, with
+  pawaPay's published test numbers, for six operators. It needs the
+  repository secret `PAWAPAY_SANDBOX_TOKEN`, which only the owner can make
+  (sign up at https://dashboard.sandbox.pawapay.io and generate a token).
+  **It has not been run: there is no token.** The sandbox address is written
+  in the script and cannot be changed from the environment.
 - *Not shown by any of it.* That pawaPay accepts these requests; that it
   answers as documented; that a handset is prompted; that money moves; that
   an order becomes access (the stand-in settles nothing); a refund's
