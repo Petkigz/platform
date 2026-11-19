@@ -8,8 +8,16 @@
 //
 //     PAWAPAY_SANDBOX_TOKEN=... node --experimental-strip-types scripts/pawapay-sandbox-probe.mjs
 //
-// or save it as the repository secret PAWAPAY_SANDBOX_TOKEN and run the
-// workflow "pawaPay sandbox probe" by hand.
+// or save it as the repository secret PAWAPAY_SANDBOX_TOKEN; the workflow
+// "pawaPay sandbox probe" then runs on a commit whose message begins
+// "test: pawapay sandbox probe".
+//
+// To generate a token pawaPay's dashboard first wants callback URLs. This
+// probe needs none: it asks for each status itself. In the dashboard's
+// callback settings, turn on the switch that says the final status will be
+// polled for, and leave the addresses empty. (When the application has an
+// address of its own, the deposit callback URL becomes
+// https://<that address>/api/payments/webhook/pawapay.)
 //
 // **Sandbox only, and it cannot be pointed anywhere else.** The address is
 // written here, not read from the environment. No real wallet, no real

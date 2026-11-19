@@ -5,7 +5,15 @@ name: pawaPay sandbox probe
 # cannot be changed from here; the numbers are pawaPay's published test
 # numbers. No wallet, no money, nobody prompted, nothing deployed, and no
 # other secret is read. See scripts/pawapay-sandbox-probe.mjs.
+#
+# Started by a commit on the working branch whose message begins
+# "test: pawapay sandbox probe". GitHub shows a "Run workflow" button only for
+# a workflow on the default branch, and this file is not there, so the button
+# cannot be relied on; it is kept for the day the file is.
 on:
+  push:
+    branches:
+      - arena/4f30fd1d-platform
   workflow_dispatch:
 permissions:
   contents: read
@@ -14,6 +22,8 @@ concurrency:
   cancel-in-progress: false
 jobs:
   probe:
+    if: >-
+      github.repository == 'Petkigz/platform' && (github.event_name == 'workflow_dispatch' || (github.ref == 'refs/heads/arena/4f30fd1d-platform' && startsWith(github.event.head_commit.message, 'test: pawapay sandbox probe')))
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
