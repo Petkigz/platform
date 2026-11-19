@@ -29,6 +29,11 @@
 //     pawaPay is tried only when the direct account is certain it started
 //     nothing. After an answer that leaves that in doubt, nobody is prompted
 //     a second time;
+//   - M-Pesa in Kenya has a road of its own, Safaricom's (a stand-in here
+//     too: nothing has ever been sent to Safaricom). Its status answer names
+//     no order and no amount, so the order travels in the address Safaricom
+//     is told to call, under a code only this server can make. A callback at
+//     any other address is ignored without Safaricom being asked anything;
 //   - the webhook believes no notification: it asks pawaPay with the token,
 //     and settles an order only when pawaPay's own record names that order
 //     and the amount is the order's total. A forged success, a real payment
@@ -79,6 +84,10 @@ const fresh = () => ({
   // The synthetic MTN, addressed the way MTN's API is: what it answers to a
   // sign-in and to a request to pay.
   mtnToken: 200, mtn: 202,
+  // The synthetic Safaricom: what it answers to a sign-in and to a request
+  // for a prompt, and how each prompt it issued ended ('paid', 'processing',
+  // or a result code).
+  darajaToken: 200, stk: 'accept', prompts: new Map(),
   // The attempts the database holds.
   attempts: [],
 });
@@ -95,6 +104,8 @@ const held = (depositId, over = {}) => ({
 const calls = [];
 const pawapay = [];
 const mtn = [];
+const daraja = [];
+let prompts = 0;
 const fake = createServer(async (req, res) => {
   res.setHeader('content-type', 'application/json');
   let body = ''; for await (const chunk of req) body += chunk;
@@ -109,6 +120,28 @@ const fake = createServer(async (req, res) => {
   if (req.url === '/collection/v1_0/requesttopay') {
     mtn.push({ path: 'requesttopay', reference: req.headers['x-reference-id'], payload: JSON.parse(body) });
     res.writeHead(state.mtn); res.end(state.mtn === 202 ? '' : JSON.stringify({ message: `SYNTHETIC-MTN fault for ${PHONE}` })); return;
+  }
+
+  // ----------------------------------------------- the synthetic Safaricom
+  if (req.url?.startsWith('/oauth/v1/generate')) {
+    daraja.push({ path: 'token', basic: req.headers.authorization });
+    if (state.darajaToken === 200) send({ access_token: 'synthetic-daraja-token', expires_in: '1' }); else send({ errorCode: '400.008.01', errorMessage: 'SYNTHETIC-DARAJA invalid credentials' }, state.darajaToken);
+    return;
+  }
+  if (req.url === '/mpesa/stkpush/v1/processrequest') {
+    daraja.push({ path: 'push', raw: body, payload: JSON.parse(body), bearer: req.headers.authorization });
+    if (state.stk === 'accept') { prompts += 1; const id = `ws_CO_SYNTHETIC_${prompts}`; state.prompts.set(id, 'processing'); send({ MerchantRequestID: `29115-${prompts}`, CheckoutRequestID: id, ResponseCode: '0', ResponseDescription: 'Success. Request accepted for processing', CustomerMessage: 'Success. Request accepted for processing' }); }
+    else send({ requestId: 'x', errorCode: `${state.stk}.002.02`, errorMessage: `SYNTHETIC-DARAJA fault for ${PHONE}` }, state.stk);
+    return;
+  }
+  if (req.url === '/mpesa/stkpushquery/v1/query') {
+    const asked = JSON.parse(body);
+    daraja.push({ path: 'query', payload: asked });
+    const ended = state.prompts.get(asked.CheckoutRequestID);
+    if (ended === undefined) send({ requestId: 'x', errorCode: '404.001.04', errorMessage: 'SYNTHETIC-DARAJA no such request' }, 404);
+    else if (ended === 'processing') send({ requestId: asked.CheckoutRequestID, errorCode: '500.001.1001', errorMessage: 'The transaction is being processed' }, 500);
+    else send({ ResponseCode: '0', ResponseDescription: 'The service request has been accepted successsfully', MerchantRequestID: '29115-1', CheckoutRequestID: asked.CheckoutRequestID, ResultCode: ended === 'paid' ? '0' : ended, ResultDesc: `SYNTHETIC-DARAJA ${PHONE}` });
+    return;
   }
 
   // ------------------------------------------------ the synthetic pawaPay
@@ -202,6 +235,9 @@ const next = spawn(process.execPath, [resolve(root, 'node_modules/next/dist/bin/
     PAWAPAY_API_TOKEN: PAWAPAY_TOKEN, PAWAPAY_BASE_URL: here, PAWAPAY_PROVIDERS: 'MPESA_KEN, MTN_MOMO_UGA, AIRTEL_OAPI_UGA',
     // And MTN has an account of its own in Uganda, whose address is this script too.
     MTN_MOMO_UG_SUBSCRIPTION_KEY: 'synthetic-mtn', MTN_MOMO_UG_API_USER: 'synthetic-mtn', MTN_MOMO_UG_API_KEY: 'synthetic-mtn', MTN_MOMO_UG_BASE_URL: here,
+    // And M-Pesa has a road of its own in Kenya, whose address is this script as well.
+    MPESA_KE_CONSUMER_KEY: 'synthetic-daraja-key', MPESA_KE_CONSUMER_SECRET: 'synthetic-daraja-secret', MPESA_KE_SHORTCODE: '174379', MPESA_KE_PASSKEY: 'synthetic-daraja-passkey',
+    MPESA_KE_BASE_URL: here, MPESA_KE_CALLBACK_URL: `http://127.0.0.1:${port}/api/payments/webhook/mpesa_ke`,
   },
   stdio: ['ignore', 'pipe', 'pipe'],
 });
@@ -222,7 +258,7 @@ try {
     return inner(await response.text());
   };
   // No reply may carry pawaPay's own words or the payer's number.
-  const clean = (text, label) => { for (const word of ['SYNTHETIC-PAWAPAY', 'SYNTHETIC-MTN', PHONE, 'seems to be invalid', PAWAPAY_TOKEN, SERVICE]) assert.ok(!text.includes(word), `${label} says "${word}"`); };
+  const clean = (text, label) => { for (const word of ['SYNTHETIC-PAWAPAY', 'SYNTHETIC-MTN', 'SYNTHETIC-DARAJA', 'synthetic-daraja', PHONE, 'seems to be invalid', PAWAPAY_TOKEN, SERVICE]) assert.ok(!text.includes(word), `${label} says "${word}"`); };
   const checkout = async (body, country = 'KE') => {
     const response = await fetch(`${origin}/api/checkout`, { method: 'POST', headers: { 'content-type': 'application/json', cookie, 'x-vercel-ip-country': country }, body: JSON.stringify(body), signal: AbortSignal.timeout(90000) });
     const text = await response.text();
@@ -230,7 +266,8 @@ try {
     return { status: response.status, json: JSON.parse(text) };
   };
   const hook = async (body, id = 'pawapay') => {
-    const response = await fetch(`${origin}/api/payments/webhook/${id}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: typeof body === 'string' ? body : JSON.stringify(body), signal: AbortSignal.timeout(90000) });
+    // `id` is a provider's id, or a whole path and query (M-Pesa's callbacks have one each).
+    const response = await fetch(id.startsWith('/') ? `${origin}${id}` : `${origin}/api/payments/webhook/${id}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: typeof body === 'string' ? body : JSON.stringify(body), signal: AbortSignal.timeout(90000) });
     const text = await response.text();
     clean(text, 'a webhook reply');
     return { status: response.status, json: JSON.parse(text), retry: response.headers.get('retry-after') };
@@ -407,6 +444,124 @@ try {
     state = fresh();
   }
   console.log('Both roads to one wallet, synthetic MTN and synthetic pawaPay: when MTN’s own account cannot be signed in to, or refuses outright, the same wallet is asked through pawaPay, both attempts are recorded in order, and pawaPay’s confirmation settles the order; after 500, 503 or 409 from MTN, which leave it in doubt whether the handset was prompted, nobody is prompted a second time; when MTN works pawaPay hears nothing; when both refuse the payer is told once; an operator reached through pawaPay alone has nothing behind it.');
+
+  // ======================================================== M-Pesa, direct
+  // Safaricom's own road to M-Pesa in Kenya. Nothing here is Safaricom.
+  {
+    const kenyan = () => { state = fresh(); calls.length = 0; pawapay.length = 0; daraja.length = 0; };
+    const pay = () => checkout({ courseId: COURSE, learnerProfileId: OWN, provider: 'mpesa_ke', msisdn: '0712 345678' });
+    const pushes = () => daraja.filter((c) => c.path === 'push');
+    const queries = () => daraja.filter((c) => c.path === 'query');
+    // The callback Safaricom sends, to the address it was given: the path and query, on this script's Next.
+    const callbackTo = (address, result = 0, id) => hook({ Body: { stkCallback: { MerchantRequestID: '29115-1', CheckoutRequestID: id, ResultCode: result, ResultDesc: 'SYNTHETIC-DARAJA', CallbackMetadata: { Item: [{ Name: 'Amount', Value: 1 }, { Name: 'MpesaReceiptNumber', Value: 'SLK4X9P2QA' }, { Name: 'PhoneNumber', Value: Number(PHONE) }] } } } }, address);
+    const pathOf = (address) => { const u = new URL(address); return `${u.pathname}${u.search}`; };
+
+    // The buy page offers M-Pesa once in Kenya, although it can now be reached two ways.
+    const ke = await page('KE');
+    assert.ok(ke.includes('id="msisdn"') && !ke.includes('pawapay') && !ke.includes('Pay with'), 'M-Pesa in Kenya is offered twice, or not at all');
+
+    // Starting: a prompt for whole shillings, to the number as 2547…, with an address of its own.
+    kenyan();
+    let answer = await pay();
+    assert.equal(answer.status, 200, JSON.stringify(answer.json)); assert.equal(answer.json.kind, 'pending');
+    assert.equal(pushes().length, 1);
+    const push = pushes()[0];
+    assert.equal(daraja[0].basic, `Basic ${Buffer.from('synthetic-daraja-key:synthetic-daraja-secret').toString('base64')}`);
+    assert.equal(push.bearer, 'Bearer synthetic-daraja-token');
+    assert.match(push.raw, /"Amount":1250,/);
+    assert.match(push.payload.Timestamp, /^\d{14}$/);
+    assert.equal(push.payload.Password, Buffer.from(`174379synthetic-daraja-passkey${push.payload.Timestamp}`).toString('base64'));
+    const { CallBackURL, Password: _password, Timestamp: _timestamp, ...asked } = push.payload;
+    assert.deepEqual(asked, { BusinessShortCode: '174379', TransactionType: 'CustomerPayBillOnline', Amount: 1250, PartyA: PHONE, PartyB: '174379', PhoneNumber: PHONE, AccountReference: 'AyahSpring', TransactionDesc: 'Course' });
+    assert.match(CallBackURL, new RegExp(`^http://127\\.0\\.0\\.1:${port}/api/payments/webhook/mpesa_ke\\?o=${ORDER}&n=[0-9a-f]{32}&s=[A-Za-z0-9_-]{43}$`));
+    // The payer is given Safaricom's id for the prompt, and nothing of the address.
+    const prompt = answer.json.providerReference;
+    assert.match(prompt, /^ws_CO_SYNTHETIC_\d+$/);
+    assert.ok(!JSON.stringify(answer.json).includes('&s='), 'the callback address was sent to the payer');
+    assert.deepEqual(state.attempts.map((a) => a.provider), ['mpesa_ke']);
+    assert.equal(pawapay.length, 0);
+
+    // A callback anywhere but the address Safaricom was given is ignored, and Safaricom is not asked.
+    daraja.length = 0;
+    const forged = new URL(CallBackURL); forged.searchParams.set('o', OTHER_ORDER);
+    const shortened = new URL(CallBackURL); shortened.searchParams.set('s', shortened.searchParams.get('s').slice(0, -2));
+    for (const [label, address] of [['the bare address', 'mpesa_ke'], ['the address with another order in it', pathOf(forged.toString())], ['a code cut short', pathOf(shortened.toString())], ['the pawaPay address', 'pawapay']]) {
+      answer = await callbackTo(address, 0, prompt);
+      assert.equal(answer.status, 200, label); assert.equal(answer.json.status, 'ignored', label);
+    }
+    assert.equal(daraja.length, 0, 'Safaricom was asked about a callback at an address this platform did not make');
+    assert.equal(state.events.length, 0); assert.equal(settled().length, 0);
+
+    // At the right address, and the payer has not answered yet: nothing is settled and nothing is closed.
+    answer = await callbackTo(pathOf(CallBackURL), 0, prompt);
+    assert.equal(answer.status, 503); assert.equal(answer.json.status, 'still_pending');
+    assert.deepEqual(queries().map((c) => c.payload.CheckoutRequestID), [prompt]);
+    assert.equal(state.events.length, 0); assert.equal(settled().length, 0);
+
+    // At the right address, saying "paid", for a prompt Safaricom never issued: nothing.
+    answer = await callbackTo(pathOf(CallBackURL), 0, 'ws_CO_NEVER_ISSUED');
+    assert.equal(answer.status, 503); assert.equal(answer.json.status, 'unverified');
+    assert.equal(settled().length, 0);
+
+    // Paid. The order is settled once, under Safaricom's own id, at the order's own total.
+    state.prompts.set(prompt, 'paid'); calls.length = 0;
+    answer = await callbackTo(pathOf(CallBackURL), 0, prompt);
+    assert.deepEqual(answer.json, { status: 'processed', orderId: ORDER });
+    assert.equal(state.events.length, 1);
+    const event = state.events[0];
+    assert.equal(event.provider, 'mpesa_ke'); assert.equal(event.provider_event_id, prompt); assert.equal(event.signature_verified, true);
+    assert.equal(event.payload.confirmed_by, 'authenticated status query');
+    // Safaricom's answer has no amount, and the record says the total came from the order.
+    assert.equal(event.payload.amount_from, 'order');
+    assert.deepEqual(event.payload.status_query, { state: 'succeeded', providerReference: prompt, amount: null, financialTransactionId: null, orderId: ORDER });
+    assert.deepEqual(settled().map((c) => c.payload), [{ p_actor_id: null, p_order_id: ORDER, p_provider: 'mpesa_ke', p_reference: prompt, p_event_id: event.id, p_evidence: null }]);
+    const closed = written('/rest/v1/payment_attempts', 'PATCH');
+    assert.equal(closed.length, 1); assert.equal(closed[0].payload.status, 'succeeded'); assert.equal(closed[0].payload.provider_reference, prompt);
+    // Sent again: applied once.
+    answer = await callbackTo(pathOf(CallBackURL), 0, prompt);
+    assert.deepEqual(answer.json, { status: 'duplicate' }); assert.equal(settled().length, 1);
+
+    // A callback that says "paid" for a prompt the payer cancelled is corrected by Safaricom's answer.
+    kenyan();
+    answer = await pay();
+    const second = pushes()[0].payload.CallBackURL; const cancelled = answer.json.providerReference;
+    state.prompts.set(cancelled, '1032'); calls.length = 0;
+    answer = await callbackTo(pathOf(second), 0, cancelled);
+    assert.deepEqual(answer.json, { status: 'recorded', kind: 'payment.failed' });
+    assert.equal(settled().length, 0, 'a cancelled prompt settled an order');
+    const failed = written('/rest/v1/payment_attempts', 'PATCH');
+    assert.equal(failed.length, 1); assert.equal(failed[0].payload.status, 'failed'); assert.equal(failed[0].payload.safe_error_code, 'mpesa_1032');
+    // A result code nobody here knows is not a failure: left alone.
+    kenyan();
+    answer = await pay();
+    const third = pushes()[0].payload.CallBackURL; const odd = answer.json.providerReference;
+    state.prompts.set(odd, '7777'); calls.length = 0;
+    answer = await callbackTo(pathOf(third), 7777, odd);
+    assert.equal(answer.status, 503); assert.equal(answer.json.status, 'unverified');
+    assert.equal(written('/rest/v1/payment_attempts', 'PATCH').length, 0); assert.equal(state.events.length, 0);
+
+    // Refused outright by Safaricom, or no sign-in: the same wallet is asked through pawaPay.
+    for (const [label, set] of [['Safaricom cannot be signed in to', () => { state.darajaToken = 401; }], ['Safaricom refuses the request', () => { state.stk = 400; }]]) {
+      kenyan(); set();
+      answer = await pay();
+      assert.equal(answer.status, 200, `${label}: ${JSON.stringify(answer.json)}`);
+      assert.equal(pawapay.length, 1, label); assert.equal(pawapay[0].payload.payer.accountDetails.provider, 'MPESA_KEN', label);
+      assert.equal(answer.json.providerReference, pawapay[0].payload.depositId, label);
+      assert.deepEqual(state.attempts.map((a) => a.provider), ['mpesa_ke', 'pawapay_mpesa_ke'], label);
+    }
+    // After 500 a prompt may be on the handset: nobody is prompted again through another road.
+    kenyan(); state.stk = 500;
+    answer = await pay();
+    assert.equal(answer.status, 502); assert.equal(answer.json.reason, 'provider_failed');
+    assert.equal(pawapay.length, 0, 'after 500 from Safaricom a second prompt was asked for');
+    // A total with cents is not asked for at all.
+    kenyan(); state.orderRow = { orderId: ORDER, amountMinor: '125050', currencyCode: 'KES' };
+    answer = await pay();
+    assert.equal(answer.status, 503); assert.equal(answer.json.reason, 'provider_unavailable');
+    assert.equal(pushes().length, 0); assert.equal(pawapay.length, 0);
+    state = fresh();
+  }
+  console.log('M-Pesa direct, with a synthetic Safaricom: offered once in Kenya; a prompt is asked for in whole shillings, to the number as 254…, with a callback address of its own that carries the order under a code and is never sent to the payer; four callbacks at addresses this platform did not make are ignored without Safaricom being asked; at the right address, "not answered yet" and a prompt Safaricom never issued settle nothing; a paid prompt settles the order once, under Safaricom’s id, at the order’s own total, recorded as such; a callback saying "paid" for a cancelled prompt is corrected to a failure; an unknown result code closes nothing; when Safaricom cannot be signed in to or refuses outright the same wallet is asked through pawaPay, and after 500 nobody is prompted again; a total with cents is not asked for.');
 
   // ============================================================ the webhook
   const DEPOSIT = 'f4401bd2-1568-4140-bf2d-eb77d2b2b639';

@@ -82,7 +82,7 @@ export async function handleProviderWebhook(
     return NextResponse.json({ error: 'malformed payload' }, { status: 400 });
   }
 
-  const event = provider.parseWebhookEvent(payload);
+  const event = provider.parseWebhookEvent(payload, { url: request.url });
   const admin = createAdminClient();
 
   // An unknown event type is a normal occurrence — providers add them. It must
@@ -303,7 +303,11 @@ async function confirmByQuery(
       event: {
         kind: 'payment.succeeded',
         eventId: event.eventId,
-        providerReference: event.providerReference,
+        // As the provider's answer names it. The same as the notification's
+        // for every provider but M-Pesa, whose notification is given a
+        // reference with the order beside it and whose answer gives back
+        // Safaricom's own id alone: that is what belongs in the ledger.
+        providerReference: status.providerReference,
         orderId: claimed,
         amount: bound.amount,
         raw: { notification: event.raw, financialTransactionId: status.financialTransactionId },
@@ -327,7 +331,7 @@ async function confirmByQuery(
       event: {
         kind: 'payment.failed',
         eventId: event.eventId,
-        providerReference: event.providerReference,
+        providerReference: status.providerReference,
         orderId: claimed,
         reason: status.reason,
         raw: event.raw,

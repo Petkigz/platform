@@ -190,10 +190,10 @@ test('every operator is one code in one country this platform can read a number 
   assert.deepEqual([...new Set(Object.values(PAWAPAY_BRANDS).flatMap((b) => Object.keys(b.countries)))].sort(), Object.keys(ALPHA3).sort());
   // The ones the adapter cannot carry out: a page of the operator's own, or a code typed first.
   for (const absent of ['WAVE_CIV', 'WAVE_SEN', 'ORANGE_BFA']) assert.ok(!codes.includes(absent), absent);
-  // The two with an adapter of their own say so, and nobody else does.
+  // The three with an adapter of their own say so, and nobody else does.
   assert.deepEqual(
     Object.entries(PAWAPAY_BRANDS).filter(([, b]) => b.direct).map(([name, b]) => [name, b.direct]),
-    [['mtn', 'mtn_momo'], ['airtel', 'airtel_money']],
+    [['mtn', 'mtn_momo'], ['airtel', 'airtel_money'], ['mpesa', 'mpesa']],
   );
   // A few read off the documentation by hand, so a slip in copying is seen.
   assert.deepEqual(PAWAPAY_BRANDS.mpesa!.countries.KE, { code: 'MPESA_KEN', currency: 'KES', decimals: false });

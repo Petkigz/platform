@@ -109,6 +109,16 @@ export type ProviderPaymentStatus =
     }
   | { state: 'unknown'; providerReference: string; reason: string };
 
+/**
+ * What a callback arrived with besides its body. Only the address: one
+ * provider (M-Pesa) is told a different address for each payment, and the
+ * order travels in it.
+ */
+export type WebhookRequest = {
+  /** The address the callback was sent to, query and all. */
+  url: string;
+};
+
 export type WebhookEvent =
   | {
       kind: 'payment.succeeded';
@@ -160,7 +170,8 @@ export interface PaymentProvider {
    * scheme for its collection callback, and MTN's own guidance is to use the
    * callback only to find the order and then re-query the transaction.
    * pawaPay is 'requery' too, though it can sign: its own guidance is that a
-   * signature shows who sent a callback and not whose payment it is.
+   * signature shows who sent a callback and not whose payment it is. M-Pesa
+   * is 'requery': Safaricom does not sign.
    */
   readonly webhookTrust: 'signature' | 'requery';
 
@@ -224,7 +235,7 @@ export interface PaymentProvider {
    */
   fetchPaymentStatus(providerReference: string): Promise<ProviderPaymentStatus>;
 
-  parseWebhookEvent(payload: unknown): WebhookEvent;
+  parseWebhookEvent(payload: unknown, request?: WebhookRequest): WebhookEvent;
 
   /**
    * A refund *request* is not a completed refund (D4). This initiates it with

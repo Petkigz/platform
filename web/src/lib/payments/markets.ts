@@ -28,8 +28,9 @@
  * **What is deliberately not in the two direct tables.** MTN in Rwanda,
  * Nigeria and the other countries that are not on MTN's Open API list, and
  * Airtel in Nigeria, where the wallet is SmartCash, a different product.
- * Those, and M-Pesa, Orange Money, Moov, telebirr and the rest, are reached
- * through the aggregator instead: see `PAWAPAY_BRANDS` below. Naming a
+ * Those, and Orange Money, Moov, telebirr and the rest, are reached through
+ * the aggregator instead: see `PAWAPAY_BRANDS` below. M-Pesa in Kenya has a
+ * table of its own (`MPESA_MARKETS`); M-Pesa elsewhere is the aggregator's. Naming a
  * service the platform cannot take money through would put a button on the
  * checkout page that cannot work.
  */
@@ -114,7 +115,7 @@ export type PawaPayBrand = {
    * choice with nothing to choose (the owner's decision of 2026-11-18: one
    * aggregator, and MTN or Airtel direct where an account exists).
    */
-  direct?: 'mtn_momo' | 'airtel_money';
+  direct?: 'mtn_momo' | 'airtel_money' | 'mpesa';
   /** By ISO 3166-1 alpha-2. */
   countries: Readonly<Record<string, PawaPayOperator>>;
 };
@@ -184,6 +185,8 @@ export const PAWAPAY_BRANDS: Readonly<Record<string, PawaPayBrand>> = {
   },
   mpesa: {
     label: 'M-Pesa',
+    // In Kenya only: `MPESA_MARKETS`. The other five are other companies.
+    direct: 'mpesa',
     countries: {
       KE: { code: 'MPESA_KEN', currency: 'KES', decimals: false },
       ET: { code: 'MPESA_ETH', currency: 'ETB', decimals: true },
@@ -226,6 +229,15 @@ export const PAWAPAY_BRANDS: Readonly<Record<string, PawaPayBrand>> = {
   halotel: { label: 'HaloPesa', countries: { TZ: { code: 'HALOTEL_TZA', currency: 'TZS', decimals: false } } },
   zamtel: { label: 'Zamtel Money', countries: { ZM: { code: 'ZAMTEL_ZMB', currency: 'ZMW', decimals: true } } },
   ecocash: { label: 'EcoCash', countries: { ZW: { code: 'ECOCASH_ZWE', currency: 'USD', decimals: true } } },
+};
+
+/**
+ * M-Pesa, direct: Safaricom's own API (`mpesa.ts`). Kenya only. M-Pesa
+ * elsewhere is Vodacom's or Safaricom Ethiopia's, each with an API of its
+ * own, and is reached through the aggregator or not at all.
+ */
+export const MPESA_MARKETS: Readonly<Record<string, { currency: string }>> = {
+  KE: { currency: 'KES' },
 };
 
 /** A stored number as the digits that are dialled from abroad: `256772123456`. */

@@ -8722,6 +8722,53 @@ individual with no registered company can be verified for a live account
 M-Pesa in Kenya is not on the sandbox account, and what a live account needs
 to be given it.
 
+## M-Pesa in Kenya has a road of its own — **DECIDED 2026-11-19**
+
+The aggregator's sandbox account was not given M-Pesa in Kenya, the service
+the owner named first. The owner: "mpesa direct without pawapay can be added
+to fix this". Also said, and recorded: **no real payment can be taken
+without business verification** (pawaPay's, and Safaricom's own for a
+paybill or till). Everything here is built to be ready for that day, and
+`commerce.checkout` stays off until it comes.
+
+`web/src/lib/payments/mpesa.ts` is Safaricom's Daraja API, "M-Pesa Express":
+a prompt on the payer's handset. Kenya only; M-Pesa in other countries is
+other companies' systems. Settled in writing it:
+
+- *The order travels in the callback's address.* Safaricom's answer to a
+  status query names the prompt and nothing of this platform's: no order,
+  no reference, no amount. And the prompt's id is Safaricom's, so the order
+  cannot be written into it as it is for Airtel. So each payment is started
+  with a callback address of its own, carrying the order under a code made
+  with a key only this server holds. A callback anywhere else is ignored
+  before Safaricom is asked anything.
+- *What that does not prove.* That the prompt Safaricom confirms is the one
+  started for that order. Somebody holding a good address for one order and
+  the id of another paid prompt on the same shortcode could settle the first
+  with the second. A payer holds neither address; Safaricom does, and so
+  does anybody who can read this server's outgoing requests. Closing it
+  needs a record of each prompt that only the server can write, which is a
+  table that does not exist. Written here so it is a known limit and not a
+  discovery.
+- *No amount is checked, because there is none to check.* The amount is the
+  one this server asked for and the payer cannot change it on the prompt.
+  The order's own total is recorded, and the record says so.
+- *Whole shillings.* A prompt takes no cents. A total with cents is not
+  offered M-Pesa and is not rounded.
+- *"Not answered yet" is not a failure.* Safaricom says it with HTTP 500 and
+  its own error code; that is read as pending. Only result codes known to
+  mean an ending close an attempt; one nobody here recognises closes nothing.
+- *Direct first, pawaPay behind it*, as for MTN and Airtel.
+- *Refunds are not built.* Safaricom's reversal needs an operator's
+  credential this platform does not hold. The adapter says so instead of
+  recording a refund that never left.
+
+**None of it has been sent to Safaricom.** Its documentation is behind a
+developer sign-in; the shapes are the ones public integrations agree on.
+There is no Daraja app, test or live. Safaricom does not send a callback
+twice and nothing here asks again, so a callback that is lost is a payment
+somebody has to confirm by hand.
+
 ## Both roads to one wallet, "in case one fails" — **DECIDED 2026-11-19**
 
 Asked whether MTN and Airtel should ever go through pawaPay in a country

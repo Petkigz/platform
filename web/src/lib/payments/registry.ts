@@ -40,7 +40,8 @@ import {
 import { MtnMomoProvider, mtnMomoConfigFromEnv } from './mtn-momo.ts';
 import { AirtelMoneyProvider, airtelConfigFromEnv } from './airtel.ts';
 import { PAWAPAY_CALLBACK_ID, PawaPayProvider, pawaPayConfigFromEnv } from './pawapay.ts';
-import { AIRTEL_MARKETS, MTN_MOMO_MARKETS, PAWAPAY_BRANDS } from './markets.ts';
+import { MpesaProvider, mpesaConfigFromEnv } from './mpesa.ts';
+import { AIRTEL_MARKETS, MPESA_MARKETS, MTN_MOMO_MARKETS, PAWAPAY_BRANDS } from './markets.ts';
 import type { Money } from '../money.ts';
 
 type Factory = () => PaymentProvider;
@@ -107,7 +108,13 @@ const SERVICES: Record<string, Service> = {
     countries: Object.keys(AIRTEL_MARKETS),
     make: (country, id) => new AirtelMoneyProvider(airtelConfigFromEnv(country), id),
   },
-  // After the two direct services, so an account of this platform's own comes
+  // Safaricom's own API, in Kenya. There is no account named without a
+  // country: `mpesa` alone is nobody's.
+  mpesa: {
+    countries: Object.keys(MPESA_MARKETS),
+    make: (country, id) => new MpesaProvider(country === undefined ? null : mpesaConfigFromEnv(country), id),
+  },
+  // After the direct services, so an account of this platform's own comes
   // first where both could take an order.
   ...PAWAPAY_SERVICES,
 };

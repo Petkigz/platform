@@ -920,8 +920,12 @@ written: not a held draft, nothing.
   for MTN and Airtel in Uganda and five other operators, with test numbers;
   no callback, no refund, no handset, no production). **M-Pesa in Kenya and
   in Lesotho were not on the sandbox account**, so the one service the owner
-  named first is confirmed by documentation alone. **Whether a solo builder
-  with no registered company can open a live account is not known**); what happens after the hand-off (the payment webhook is now
+  named first is confirmed by documentation alone. M-Pesa in Kenya now has
+  an adapter of its own as well (`mpesa.ts`, Safaricom's Daraja API,
+  2026-11-19), **which has been sent to Safaricom not once**. **No real
+  payment can be taken through any of them without business verification**
+  (the owner, 2026-11-19): pawaPay's for a live account, Safaricom's for a
+  paybill or till); what happens after the hand-off (the payment webhook is now
   driven through its route against a stand-in by
   `scripts/pawapay-route-smoke.mjs`; a payment worker that polls, and the
   order turning into access in a real database, are not); a redirecting provider, since both

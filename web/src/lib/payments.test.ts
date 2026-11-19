@@ -688,7 +688,7 @@ test('an unknown provider id falls back to unconfigured rather than throwing', (
   assert.equal(p.id, 'unconfigured');
   assert.equal(p.available, false);
   // A service in a country it does not operate in is not a provider either.
-  for (const id of ['mtn_momo_ke', 'airtel_money_gh', 'airtel_money_ng', 'mtn_momo_', 'mtn_momo_GH', 'mpesa_ke']) {
+  for (const id of ['mtn_momo_ke', 'airtel_money_gh', 'airtel_money_ng', 'mtn_momo_', 'mtn_momo_GH', 'mpesa_tz', 'mpesa_KE', 'orange_sn']) {
     assert.equal(getPaymentProvider(id).id, 'unconfigured', id);
   }
 });
@@ -699,7 +699,8 @@ test('a service is known in each country it can be configured for, and available
   const ids = knownProviderIds();
   // The two direct services, each with its countries; then pawaPay's callback
   // provider, its sixteen brands, and each brand's operators (`pawapay.test.ts`).
-  assert.equal(ids.length, 2 + 11 + 13 + 1 + 16 + 44);
+  // And Safaricom's M-Pesa: the service, and Kenya (`mpesa.test.ts`).
+  assert.equal(ids.length, 2 + 11 + 13 + 1 + 16 + 44 + 2);
   for (const id of ['mtn_momo', 'mtn_momo_gh', 'mtn_momo_ug', 'airtel_money', 'airtel_money_ke', 'airtel_money_ug']) {
     assert.ok(ids.includes(id), id);
     const provider = getPaymentProvider(id);

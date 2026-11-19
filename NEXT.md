@@ -2619,6 +2619,35 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### M-Pesa in Kenya, direct, 2026-11-19
+
+The owner asked for it after pawaPay's sandbox account turned out not to
+have M-Pesa in Kenya (`DECISIONS.md`).
+
+- *The adapter.* `lib/payments/mpesa.ts`, Safaricom's Daraja API: sign in,
+  ask for a prompt, ask what happened to it. Provider `mpesa_ke`. Switched
+  on by five `MPESA_KE_…` settings; the test host unless told otherwise.
+  **Written from public descriptions of Daraja and sent to Safaricom not
+  once.**
+- *For every provider.* An adapter is now handed the address a callback
+  arrived at (`parseWebhookEvent(payload, { url })`), and the webhook records
+  the reference the provider's answer gives, which for M-Pesa is Safaricom's
+  own id without the order this server put beside it.
+- *Checked.* `lib/mpesa.test.ts` (14 tests) and a new part of
+  `scripts/pawapay-route-smoke.mjs`: the real checkout and webhook routes
+  against a stand-in Safaricom. Callbacks at four addresses this platform
+  did not make, a payer who has not answered, a prompt never issued, a paid
+  one, the same one again, a cancelled one called paid, an unknown result
+  code, the fall-back to pawaPay and where it must not happen.
+- *Not shown.* That Safaricom accepts these requests or answers this way;
+  whether it takes the amount as written; a prompt; a callback from
+  Safaricom; a till. **Known limit:** the binding of a prompt to its order
+  rests on the callback address staying between this server and Safaricom
+  (`DECISIONS.md`). **Not built:** refunds; asking again when no callback
+  comes.
+- *Going live* needs what the owner said: business verification, for
+  pawaPay and for a Safaricom paybill or till alike.
+
 ### The 353rd migration, asked of the test project, 2026-11-19
 
 The owner answered the open question ("continue with the recommendation").
