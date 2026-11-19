@@ -296,6 +296,19 @@ export async function POST(request: Request) {
       orderId: result.orderId,
     });
   }
+  // Some operators collect whole amounts only. The buy page offers one only
+  // for a price it can take, so this is a discount that left a fraction, or a
+  // request made by hand. The total is never rounded to fit: nobody is
+  // prompted for an amount that is not the order's.
+  if (provider.accepts && !provider.accepts(result.amount)) {
+    console.error(
+      `checkout: ${provider.id} cannot collect the total of order ${result.orderId} (${result.currencyCode}, with a fraction it does not take)`,
+    );
+    return refuse('provider_unavailable', NO_PROVIDER_SENTENCE, {
+      code: 'provider_unavailable',
+      orderId: result.orderId,
+    });
+  }
 
   const origin = new URL(request.url).origin;
 

@@ -8,7 +8,7 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { ownLearnerProfileId, resolveOffering } from '@/lib/enrolment';
 import { countryFromHeaders, countryNameIn } from '@/lib/geo';
 import { format } from '@/lib/money';
-import { availableProviders, providersForCurrency } from '@/lib/payments/registry';
+import { availableProviders, providersForAmount } from '@/lib/payments/registry';
 import { findCountry } from '@/lib/phone';
 import { isFlagEnabled } from '@/lib/flags';
 import { REFERRAL_COOKIE, cleanReferralCode } from '@/lib/referrals';
@@ -260,7 +260,9 @@ export default async function BuyPage({
   // because that is also how a number typed without a country code is read.
   const priceCurrency = offering.kind === 'paid' ? offering.price.amount.currency : null;
   const anyProvider = availableProviders().length > 0;
-  const providers = providersForCurrency(priceCurrency).map((p) => ({
+  // And of amount: some operators collect whole amounts only, and a price
+  // with a fraction is not offered one it would have to be rounded for.
+  const providers = providersForAmount(offering.kind === 'paid' ? offering.price.amount : null).map((p) => ({
     id: p.id,
     label: p.label,
     requiresMsisdn: p.requiresMsisdn,

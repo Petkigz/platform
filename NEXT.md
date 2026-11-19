@@ -2619,6 +2619,48 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### pawaPay: one aggregator for the operators with no adapter, 2026-11-19
+
+The owner chose pawaPay (`DECISIONS.md`). Until now a payer could be offered
+MTN in eleven countries and Airtel in thirteen and nothing else: no M-Pesa,
+no Orange Money, no MTN in Rwanda or Nigeria.
+
+- *The adapter.* `lib/payments/pawapay.ts`, written from
+  https://docs.pawapay.io/v2 and **run against nothing: there is no pawaPay
+  account**. Deposits (`POST /v2/deposits`), status (`GET
+  /v2/deposits/{id}`) and starting a refund (`POST /v2/refunds`), with a
+  bearer token. Forty-four operators in twenty-one countries
+  (`PAWAPAY_BRANDS`), each a provider of its own: `pawapay_mpesa_ke`.
+- *Switched on by* `PAWAPAY_API_TOKEN` and `PAWAPAY_PROVIDERS` (pawaPay's
+  codes for the operators enabled on the account). The sandbox host unless
+  `PAWAPAY_BASE_URL` says otherwise. The dashboard's deposit callback URL is
+  `/api/payments/webhook/pawapay`.
+- *What changed for every provider.* `PaymentProvider.accepts(amount)`, so
+  an operator that collects whole amounts is not offered or sent a total
+  with a fraction; the webhook answers 503 for "not finished" and "could not
+  be asked", so a provider that redelivers does; a notification that names
+  no order takes the order from the provider's own answer; an adapter's
+  reason and the database's sentence are logged and no longer sent back to
+  whoever posted to the webhook.
+- *Checked.* `lib/pawapay.test.ts` (20 tests) and
+  `scripts/pawapay-route-smoke.mjs` in `ci.yml`: the real buy page, checkout
+  route and webhook route against a stand-in typed from the documentation.
+  The webhook had never been driven through its route before; it now is, for
+  a forged success, a real one, a second delivery, six payments that are not
+  the order's, five that are unfinished or unanswerable, and a failure.
+- *Not shown by any of it.* That pawaPay accepts these requests; that it
+  answers as documented; that a handset is prompted; that money moves; that
+  an order becomes access (the stand-in settles nothing); a refund's
+  outcome. The names on the buttons for AirtelTigo, Vodafone Ghana, Tigo
+  Tanzania, Free Senegal and Airtel Nigeria are a guess at what each is
+  called today.
+- *Known and not fixed.* A price with a fraction in a currency whose only
+  operator takes none reads "no payment service collects this currency",
+  which is not quite the reason. Nothing polls, so a payment whose eight
+  callbacks all fail is settled by nobody. The raw notification, with the
+  payer's number in it, is stored with the event, as it is for MTN and
+  Airtel.
+
 ### Sponsored seats in the reader's language, 2026-11-19
 
 `/account/sponsorship` was the last of the three English pages the account
@@ -2816,7 +2858,8 @@ work country by country; merge requests get both protections on offer.
   hosted project.
 - *Not built.* M-Pesa (Safaricom's API in Kenya, Vodacom's elsewhere),
   Orange Money, Wave, telebirr, Tigo/Mixx, MTN in the countries outside
-  its Open API, Airtel's SmartCash in Nigeria. MTN refunds still send an
+  its Open API, Airtel's SmartCash in Nigeria. (All but Wave are reached
+  through pawaPay since 2026-11-19: see above.) MTN refunds still send an
   empty payee and cannot work. Nothing polls a provider when a callback
   never arrives.
 

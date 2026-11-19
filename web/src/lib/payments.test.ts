@@ -697,7 +697,9 @@ test('a service is known in each country it can be configured for, and available
   assert.deepEqual(Object.keys(MTN_MOMO_MARKETS).sort(), ['BJ', 'CG', 'CI', 'CM', 'GH', 'GN', 'LR', 'SZ', 'UG', 'ZA', 'ZM']);
   assert.deepEqual(Object.keys(AIRTEL_MARKETS).sort(), ['CD', 'CG', 'GA', 'KE', 'MG', 'MW', 'NE', 'RW', 'SC', 'TD', 'TZ', 'UG', 'ZM']);
   const ids = knownProviderIds();
-  assert.equal(ids.length, 2 + 11 + 13);
+  // The two direct services, each with its countries; then pawaPay's callback
+  // provider, its sixteen brands, and each brand's operators (`pawapay.test.ts`).
+  assert.equal(ids.length, 2 + 11 + 13 + 1 + 16 + 44);
   for (const id of ['mtn_momo', 'mtn_momo_gh', 'mtn_momo_ug', 'airtel_money', 'airtel_money_ke', 'airtel_money_ug']) {
     assert.ok(ids.includes(id), id);
     const provider = getPaymentProvider(id);
@@ -881,7 +883,21 @@ test('the webhook asks whose payment it is before it records anything', () => {
   const bound = source.indexOf('bindPayment({');
   assert.ok(bound > 0, 'the webhook no longer binds a payment to its order');
   assert.ok(source.includes('confirmedOrderId: status.orderId'));
-  assert.ok(source.includes('if (!failureIsFor(event.orderId, status.orderId))'));
+  assert.ok(source.includes('if (!failureIsFor(claimed, status.orderId))'));
+  // What a notification says the order is, is compared and never believed;
+  // one that says nothing leaves the provider's answer as the only word.
+  assert.ok(source.includes("const claimed = event.orderId.trim() !== '' ? event.orderId : confirmedOrder ?? '';"));
+  assert.ok(source.includes('claimedOrderId: claimed,'));
+  assert.ok(source.includes('order: await orderNamed(admin, claimed),'));
+  assert.equal(source.split('orderId: event.orderId').length - 1, 0, 'an order is recorded as a notification named it');
+  // "Not yet" is answered so that a provider which redelivers does; "not this
+  // order's" is not. Nothing else would look again.
+  assert.ok(source.includes("const again = checked.status === 'still_pending' || checked.status === 'unverified';"));
+  assert.ok(source.includes("again ? { status: 503, headers: { 'Retry-After': '60' } } : undefined,"));
+  // What an adapter or the database said is logged, and not sent to whoever posted.
+  assert.ok(source.includes(": 'the provider could not confirm this payment just now',"));
+  assert.match(source, /could not be confirmed: \$\{status\.reason\}`\);/u);
+  assert.equal(source.split('reason: error.message').length - 1, 0, 'the database\'s sentence is sent to the caller');
   // The order is read with the claimed id only after the id is checked to be one.
   assert.match(source, /if \(!\/\^\[0-9a-f\]\{8\}-/u);
   // A status holds a bigint; it is made writable before it is stored.

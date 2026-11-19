@@ -39,7 +39,9 @@ import {
 } from './provider.ts';
 import { MtnMomoProvider, mtnMomoConfigFromEnv } from './mtn-momo.ts';
 import { AirtelMoneyProvider, airtelConfigFromEnv } from './airtel.ts';
-import { AIRTEL_MARKETS, MTN_MOMO_MARKETS } from './markets.ts';
+import { PAWAPAY_CALLBACK_ID, PawaPayProvider, pawaPayConfigFromEnv } from './pawapay.ts';
+import { AIRTEL_MARKETS, MTN_MOMO_MARKETS, PAWAPAY_BRANDS } from './markets.ts';
+import type { Money } from '../money.ts';
 
 type Factory = () => PaymentProvider;
 
@@ -59,6 +61,40 @@ type Factory = () => PaymentProvider;
 type Service = {
   countries: readonly string[];
   make: (country: string | undefined, id: ProviderId) => PaymentProvider;
+  /**
+   * The service that reaches the same operator with an account of its own.
+   * Where that one is configured for a country, this one is not offered
+   * there (`availableProviders`).
+   */
+  direct?: string;
+};
+
+/**
+ * The operators reached through pawaPay, each as a service of its own:
+ * `pawapay_mpesa` in `KE` is the provider `pawapay_mpesa_ke`. With no country
+ * there is no operator, so the id without one names a provider that is never
+ * available.
+ *
+ * `pawapay` itself, with no operator, is the provider pawaPay's one callback
+ * address is answered by. It can ask what happened to a deposit and can start
+ * nothing.
+ */
+const PAWAPAY_SERVICES: Record<string, Service> = {
+  ...Object.fromEntries(
+    Object.entries(PAWAPAY_BRANDS).map(([brand, known]): [string, Service] => [
+      `pawapay_${brand}`,
+      {
+        countries: Object.keys(known.countries),
+        make: (country, id) =>
+          new PawaPayProvider(country === undefined ? null : pawaPayConfigFromEnv(brand, country), id),
+        direct: known.direct,
+      },
+    ]),
+  ),
+  [PAWAPAY_CALLBACK_ID]: {
+    countries: [],
+    make: (_country, id) => new PawaPayProvider(pawaPayConfigFromEnv(), id),
+  },
 };
 
 /** Every service with an adapter, in the order a payer is offered them. */
@@ -71,6 +107,9 @@ const SERVICES: Record<string, Service> = {
     countries: Object.keys(AIRTEL_MARKETS),
     make: (country, id) => new AirtelMoneyProvider(airtelConfigFromEnv(country), id),
   },
+  // After the two direct services, so an account of this platform's own comes
+  // first where both could take an order.
+  ...PAWAPAY_SERVICES,
 };
 
 /** Extra adapters registered at runtime, e.g. by a plugin or a test. */
@@ -128,10 +167,22 @@ export function availableProviders(): PaymentProvider[] {
     .map((id) => factoryFor(id)?.())
     .filter((p): p is PaymentProvider => Boolean(p) && (p as PaymentProvider).available);
   return all.filter((provider) => {
-    if (!(provider.id in SERVICES) || !provider.market) return true;
-    const scoped = `${provider.id}_${provider.market.country.toLowerCase()}`;
+    if (!provider.market) return true;
+    const country = provider.market.country;
+    // An operator reached through the aggregator, where the same operator has
+    // an account of its own in that country: the direct one is offered.
+    const direct = builtin(provider.id)?.service.direct;
+    if (direct && all.some((other) => isDirect(other, direct, country))) return false;
+    if (!(provider.id in SERVICES)) return true;
+    const scoped = `${provider.id}_${country.toLowerCase()}`;
     return !all.some((other) => other.id === scoped);
   });
+}
+
+/** Whether a provider is this direct service's account in this country, under either of its names. */
+function isDirect(provider: PaymentProvider, service: string, country: string): boolean {
+  if (provider.market?.country !== country) return false;
+  return provider.id === service || provider.id === `${service}_${country.toLowerCase()}`;
 }
 
 /**
@@ -147,6 +198,15 @@ export function providersForCurrency(currency: string | null | undefined): Payme
   return availableProviders().filter(
     (provider) => provider.market === null || provider.market.currency === wanted,
   );
+}
+
+/**
+ * The providers that can take this amount: its currency, and, for an
+ * operator that collects whole amounts only, no fraction (`accepts`).
+ */
+export function providersForAmount(amount: Money | null | undefined): PaymentProvider[] {
+  if (!amount) return [];
+  return providersForCurrency(amount.currency).filter((provider) => provider.accepts?.(amount) !== false);
 }
 
 /**

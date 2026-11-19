@@ -140,9 +140,11 @@ test('the two routes send the reason with its own status and keep the databaseâ€
   // The provider's "not configured" error names an environment variable and a
   // section of DECISIONS.md. It was sent to the payer.
   assert.doesNotMatch(checkout, /err\.message/u);
-  // Three now: none configured, one that collects another currency, and one
-  // whose adapter says it has no credentials.
-  assert.equal(checkout.match(/refuse\('provider_unavailable', NO_PROVIDER_SENTENCE, \{\s+code: 'provider_unavailable',\s+orderId: result\.orderId,\s+\}\)/gu)?.length, 3);
+  // Four now: none configured, one that collects another currency, one that
+  // takes whole amounts and is asked for a fraction, and one whose adapter
+  // says it has no credentials.
+  assert.equal(checkout.match(/refuse\('provider_unavailable', NO_PROVIDER_SENTENCE, \{\s+code: 'provider_unavailable',\s+orderId: result\.orderId,\s+\}\)/gu)?.length, 4);
+  assert.match(checkout, /if \(provider\.accepts && !provider\.accepts\(result\.amount\)\) \{/u);
   assert.match(checkout, /if \(provider\.market && provider\.market\.currency !== result\.currencyCode\) \{/u);
 
   // A mistyped number is refused before the order is written, so it no

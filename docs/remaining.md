@@ -911,9 +911,15 @@ written: not a held draft, nothing.
   who is not the buyer's is read from the migration, not exercised); a real
   provider (the adapter has never spoken to MTN or Airtel; no credentials
   exist; no money has moved; **MTN is sent the number with its plus sign and
-  Airtel without, and which each accepts has not been verified**); what
-  happens after the hand-off (callbacks, the payment worker and the order
-  turning into access are not built); a redirecting provider, since both
+  Airtel without, and which each accepts has not been verified**; the
+  pawaPay adapter of 2026-11-19, which reaches M-Pesa, Orange Money and
+  forty-two other operators, is written from pawaPay's documentation and
+  **has been sent to pawaPay not once: no account exists, and whether a
+  solo builder with no registered company can open a live one is not
+  known**); what happens after the hand-off (the payment webhook is now
+  driven through its route against a stand-in by
+  `scripts/pawapay-route-smoke.mjs`; a payment worker that polls, and the
+  order turning into access in a real database, are not); a redirecting provider, since both
   adapters ask the handset instead; two providers at once, so the "Pay with"
   choice was never drawn; a plan order, whose unnamed refusals still carry
   the database's sentence to `/plans`; a number from outside Uganda typed

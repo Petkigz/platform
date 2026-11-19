@@ -18,7 +18,8 @@ import { bindPayment, failureIsFor } from '@/lib/payments/binding';
  * rejection.
  *
  * A provider that does not sign (`webhookTrust: 'requery'` — MTN MoMo and
- * Airtel Money) cannot be gated that way, and rejecting it would silently
+ * Airtel Money; and pawaPay, whose signature would not say whose payment it
+ * is) cannot be gated that way, and rejecting it would silently
  * discard every real payment notification. So the callback is used only to
  * find the order, and the outcome is then fetched from the provider over an
  * authenticated call. **The notification's own claim about success is never
@@ -103,7 +104,18 @@ export async function handleProviderWebhook(
   if (!signatureOk && provider.webhookTrust === 'requery') {
     const checked = await confirmByQuery(admin, provider, event);
     if (checked.kind === 'defer') {
-      return NextResponse.json({ status: checked.status, reason: checked.reason });
+      // Two kinds of "not now". A payment the provider has not finished, or
+      // could not be asked about, may well be confirmed in a minute: that is
+      // answered 503, because a provider that redelivers (pawaPay does, eight
+      // times over twenty-five minutes) stops as soon as it is told 200, and
+      // nothing else here would ever look again. A payment that is real and
+      // is not this order's will not become this order's by being sent
+      // twice: that is answered 200.
+      const again = checked.status === 'still_pending' || checked.status === 'unverified';
+      return NextResponse.json(
+        { status: checked.status, reason: checked.reason },
+        again ? { status: 503, headers: { 'Retry-After': '60' } } : undefined,
+      );
     }
     confirmed = checked.event;
     evidence = {
@@ -163,8 +175,11 @@ export async function handleProviderWebhook(
       providerReference: confirmed.providerReference,
       safeErrorCode: error.code ?? null,
     });
+    // The database's sentence is kept on the event (above) and in the log.
+    // It is not sent to whoever posted here.
+    console.error(`payment webhook (${provider.id}): order ${confirmed.orderId} was confirmed and could not be settled: ${error.message}`);
     return NextResponse.json(
-      { status: 'rejected', reason: error.message },
+      { status: 'rejected', reason: 'the payment was confirmed and could not be applied' },
       { status: 422 },
     );
   }
@@ -249,21 +264,30 @@ async function confirmByQuery(
 
   const status = await provider.fetchPaymentStatus(event.providerReference);
 
+  // The order this is about. What the notification says is a claim, and is
+  // only ever compared with the provider's own answer. A notification that
+  // names no order at all (pawaPay's need not) claims nothing, so the answer
+  // is the only word there is: the order is the one the provider says the
+  // payment was started for, which still has to exist and to cost what was
+  // paid. A notification never makes an order by being silent about it.
+  const confirmedOrder = status.state === 'succeeded' || status.state === 'failed' ? status.orderId ?? null : null;
+  const claimed = event.orderId.trim() !== '' ? event.orderId : confirmedOrder ?? '';
+
   if (status.state === 'succeeded') {
     // The payment is real. Whether it is the payment for the order this
     // notification names is a separate question, and the notification cannot
     // answer it.
     const bound = bindPayment({
-      claimedOrderId: event.orderId,
+      claimedOrderId: claimed,
       confirmedOrderId: status.orderId,
       confirmedAmount: status.amount,
-      order: await orderNamed(admin, event.orderId),
+      order: await orderNamed(admin, claimed),
     });
     if (!bound.ok) {
       // Kept for whoever runs the site: either a provider answering in a shape
       // nobody expected, or somebody presenting one order's payment as another's.
       console.error(
-        `payment webhook (${provider.id}): reference ${event.providerReference} succeeded but does not settle order ${event.orderId}: ${bound.why}`,
+        `payment webhook (${provider.id}): reference ${event.providerReference} succeeded but does not settle order ${claimed || '(none named)'}: ${bound.why}`,
       );
       return {
         kind: 'defer',
@@ -280,7 +304,7 @@ async function confirmByQuery(
         kind: 'payment.succeeded',
         eventId: event.eventId,
         providerReference: event.providerReference,
-        orderId: event.orderId,
+        orderId: claimed,
         amount: bound.amount,
         raw: { notification: event.raw, financialTransactionId: status.financialTransactionId },
       },
@@ -291,7 +315,7 @@ async function confirmByQuery(
 
   if (status.state === 'failed') {
     // A failure closes an order's open attempts, so it has to be this order's.
-    if (!failureIsFor(event.orderId, status.orderId)) {
+    if (!failureIsFor(claimed, status.orderId)) {
       return {
         kind: 'defer',
         status: 'not_applied',
@@ -304,7 +328,7 @@ async function confirmByQuery(
         kind: 'payment.failed',
         eventId: event.eventId,
         providerReference: event.providerReference,
-        orderId: event.orderId,
+        orderId: claimed,
         reason: status.reason,
         raw: event.raw,
       },
@@ -313,13 +337,19 @@ async function confirmByQuery(
   }
 
   // pending or unknown: leave it alone and let a later delivery settle it.
+  if (status.state === 'unknown') {
+    // Why, for whoever runs the site. This address is public, and whoever
+    // posted here is not told what a provider said about a reference they
+    // chose: an adapter's reason can quote the provider's own answer.
+    console.error(`payment webhook (${provider.id}): reference ${event.providerReference} could not be confirmed: ${status.reason}`);
+  }
   return {
     kind: 'defer',
     status: status.state === 'pending' ? 'still_pending' : 'unverified',
     reason:
       status.state === 'pending'
         ? 'the provider has not finished processing this payment'
-        : status.reason,
+        : 'the provider could not confirm this payment just now',
   };
 }
 

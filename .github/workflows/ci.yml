@@ -114,6 +114,9 @@ jobs:
       - name: Buy page and checkout routes synthetic HTTP regression
         run: node scripts/buy-route-smoke.mjs
 
+      - name: Checkout and payment webhook with a synthetic pawaPay HTTP regression
+        run: node scripts/pawapay-route-smoke.mjs
+
       - name: Closing-account page and erase route synthetic HTTP regression
         run: node scripts/close-route-smoke.mjs
 

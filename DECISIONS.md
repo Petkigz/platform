@@ -8606,7 +8606,8 @@ country they operate in. Settled in doing it:
   M-Pesa, Orange Money, Wave, telebirr, Tigo and the rest are not built.
   Each is its own API and its own merchant agreement, country by country;
   one payment aggregator would reach most of them through one agreement.
-  Which of the two routes to take is the owner's decision and is open.
+  Which of the two routes to take was the owner's decision: one
+  aggregator, pawaPay (2026-11-19, below).
 
 **Nothing here has taken a payment.** No merchant account exists for any
 service in any country.
@@ -8628,6 +8629,69 @@ list rather than written fifty times.
 before on the page they land on after signing in, inside navigation in their own
 language, and will until a first-language speaker writes it. None has been
 found. The twenty-seven that were written are unreviewed like everything else.
+
+## One payment aggregator, pawaPay; MTN and Airtel direct where they have an account — **DECIDED 2026-11-19**
+
+The owner asked for M-Pesa, Safaricom and "a lot of mobile money services in
+a lot of countries", was shown the two routes (a contract and an integration
+with each operator in each country, or one aggregator), and answered "go with
+your recommendation" twice: once for an aggregator over direct contracts
+(2026-11-18), once for pawaPay over Flutterwave and Pesapal (2026-11-19).
+
+**Why pawaPay.** One API and one agreement for the operators its
+documentation lists in twenty-one countries, among them every service the
+owner named; one percent on top of the operator's own fee and nothing
+monthly; a sandbox that needs no company. Flutterwave and Pesapal reach
+fewer mobile-money countries. **What it costs:** pawaPay takes no cards, so
+a card provider is still a separate decision; and going live needs business
+verification and a signed merchant agreement, which a solo builder with no
+registered company may not pass. That is not known and only pawaPay can
+answer it.
+
+**What was built** (`web/src/lib/payments/pawapay.ts`):
+
+- *A provider is still an operator in a country.* `pawapay_mpesa_ke` is
+  M-Pesa in Kenya; the payer sees "M-Pesa" and never the word pawaPay.
+  Forty-four operators are known (`PAWAPAY_BRANDS` in `markets.ts`), copied
+  from pawaPay's provider table.
+- *Nothing is offered that the account was not given.* pawaPay enables
+  operators account by account. `PAWAPAY_PROVIDERS` lists them by pawaPay's
+  codes, and an operator not listed has no provider.
+- *Direct wins where it exists.* Where MTN or Airtel has an account of its
+  own in a country, that one is offered there and pawaPay's is not.
+- *A callback is not proof, signed or not.* pawaPay can sign callbacks, and
+  its own documentation says a valid signature shows who sent one and not
+  whose payment it is. So the adapter asks pawaPay, with the token, what
+  happened to the deposit, and the order and the amount come from that
+  answer (`binding.ts`). Signature checking is not built.
+- *One callback address.* `/api/payments/webhook/pawapay`, answered by a
+  provider that can ask and can start nothing.
+- *"Not yet" is answered 503.* pawaPay redelivers until it is told 200, and
+  nothing in this platform polls. A payment that is unfinished or cannot be
+  asked about is therefore answered 503, for every provider; one that is
+  real and is not this order's is answered 200.
+- *A notification that names no order claims nothing.* pawaPay's need not
+  name one. The order is then the one pawaPay's own record names, which must
+  exist and cost what was paid.
+- *An amount is never rounded to fit.* Some operators collect whole amounts
+  only (M-Pesa in Kenya). An order whose total has a fraction is not offered
+  one and is not sent to one.
+- *No answer is not "try again".* When starting a payment gets no answer,
+  pawaPay is asked once whether it holds the deposit; if it does, the
+  payment is under way.
+- *pawaPay's sentences are not kept.* They quote the payer's number. Only
+  its codes are logged, stored or thrown.
+
+**Left out on purpose:** Wave (the payer is sent to Wave's own page) and
+Orange in Burkina Faso (a code is typed first); the dollar accounts of the
+three operators in the Democratic Republic of the Congo; Liberia, Mali and
+South Sudan, which pawaPay's site names and its provider table does not;
+signing this platform's requests; asking pawaPay which operators are enabled
+or down; hearing how a refund ended.
+
+**None of it has been sent to pawaPay.** There is no account, sandbox or
+live. Every request is the shape the documentation describes, and every
+answer in the tests was typed from it. `commerce.checkout` stays off.
 
 ## The test project gets its database ahead of its application — **DECIDED 2026-11-17**
 

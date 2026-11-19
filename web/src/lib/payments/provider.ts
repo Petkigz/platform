@@ -159,6 +159,8 @@ export interface PaymentProvider {
    * MTN MoMo and Airtel Money are both 'requery'. Neither publishes a signature
    * scheme for its collection callback, and MTN's own guidance is to use the
    * callback only to find the order and then re-query the transaction.
+   * pawaPay is 'requery' too, though it can sign: its own guidance is that a
+   * signature shows who sent a callback and not whose payment it is.
    */
   readonly webhookTrust: 'signature' | 'requery';
 
@@ -183,6 +185,16 @@ export interface PaymentProvider {
    * and refuses a number from anywhere else before anything is written.
    */
   readonly market: Market | null;
+
+  /**
+   * Whether this provider can be asked for this amount at all, where the
+   * answer is not simply "its currency". Absent means it can.
+   *
+   * Some operators collect whole amounts only. An order whose total has a
+   * fraction cannot be paid through one, and is never rounded to fit, so the
+   * buy page does not offer it and the checkout does not prompt anybody.
+   */
+  accepts?(amount: Money): boolean;
 
   createCheckout(request: CheckoutRequest): Promise<CheckoutResult>;
 
