@@ -8811,8 +8811,48 @@ instruction or waiting for the aggregator, the owner took the
 recommendation: a pledge is paid through the same checkout as a course, by
 the same providers, once the pawaPay sandbox probe has passed. No interim
 instruction is written, because any sentence naming a way to pay would name
-one that does not exist. **Not built.** Until it is, `/account/sponsorship`
-says only that it collects no payment, and `commerce.sponsorship` stays off.
+one that does not exist.
+
+**Built 2026-11-19**, after the probe passed
+(`20261281147000_sponsorship_checkout.sql`, `/account/sponsorship/pay/[id]`).
+Settled in building it:
+
+- *The order names no learner, and its one line no product.* A sponsor reads
+  their own orders and must not learn who they helped; and a line naming the
+  course's product would be fulfilled for the account that paid, which is
+  the sponsor's. An order cannot be paid with no line at all, so an order
+  line may now name neither a product nor a plan when, and only when, it
+  says it is a pledge. The check uses `coalesce`: without it a snapshot with
+  no `kind` made the condition NULL, and a CHECK that is NULL passes. The
+  test for the constraint found that.
+- *The seat opens from a trigger on the order becoming paid*, not from a
+  change to `record_payment_success()`, which five migrations have
+  re-created. Whoever makes the order paid, a provider's confirmed callback
+  or finance with written evidence, the same grant follows, and it is the
+  grant `record_sponsorship_payment()` makes.
+- *A pledge paid at checkout was recorded by nobody.* `recorded_by` is null,
+  the order stands in for it, and the row's own constraint now allows
+  exactly that.
+- *Money for a pledge that can no longer be honoured is not refused.* Called
+  off since, already recorded by hand, the request no longer approved, the
+  course withdrawn: the order is paid, the pledge is left as it was, and the
+  audit trail says why nothing was granted. Failing the payment would hide
+  money that has moved. **Nothing yet shows staff that line**; it is in the
+  audit trail only.
+- *The amount is the pledge's, exactly.* No tax and no transfer fee: the
+  sponsor was told one number.
+- *Asking twice is one order*, while it waits. A paid order whose pledge
+  was not settled is not charged again.
+- *One sentence for a pledge that cannot be paid*: paid, called off,
+  somebody else's and made up are the same page. Saying which would tell a
+  stranger that a pledge with that id exists.
+- *A link only where it works.* The page of pledges links to the pay page
+  when both switches are on and a payment service can collect exactly the
+  amount. Otherwise it says what it said before.
+
+Not done by it: a teacher's share of a sponsored seat (neither path writes
+earnings), and the migration is not on the hosted test project. Both
+switches ship off.
 
 ## The 353rd migration goes to the test project the same way as the ten — **DECIDED 2026-11-19**
 

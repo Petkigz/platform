@@ -30,7 +30,14 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { QUOTE_FEE_LABEL, QUOTE_TAX_LABEL, checkoutReasonOf, type CheckoutReason } from './checkout-outcome.ts';
+import {
+  QUOTE_FEE_LABEL,
+  QUOTE_TAX_LABEL,
+  checkoutReasonOf,
+  pledgeReasonOf,
+  type CheckoutReason,
+  type PledgeOutcome,
+} from './checkout-outcome.ts';
 import { fromMinor, format, type Money } from './money.ts';
 
 export type CheckoutErrorCode =
@@ -368,6 +375,45 @@ export async function createOrder(
     amount: fromMinor(row.amountMinor, row.currencyCode),
     currencyCode: row.currencyCode,
   };
+}
+
+export type SponsorshipOrderResult =
+  | { ok: true; orderId: string; amount: Money; currencyCode: string }
+  | { ok: false; reason: PledgeOutcome; message: string };
+
+/**
+ * Ask to pay a pledge at checkout.
+ *
+ * `create_sponsorship_order()` takes the sponsor from the session and the
+ * amount from the pledge: this contributes the pledge's id and nothing else.
+ * The order it writes names no learner and no product, and grants nothing;
+ * the seat opens when the order is paid (migration
+ * `20261281147000_sponsorship_checkout.sql`).
+ */
+export async function createSponsorshipOrder(
+  supabase: SupabaseClient,
+  args: { sponsorshipId: string },
+): Promise<SponsorshipOrderResult> {
+  const { data, error } = await supabase.rpc('create_sponsorship_order', {
+    p_sponsorship: args.sponsorshipId,
+  });
+  if (error) return { ok: false, reason: pledgeReasonOf(error), message: error.message };
+
+  const row = data as CourseOrderRow | null;
+  // As for a course: a reply without an amount never becomes an order of zero.
+  if (!row?.orderId || row.amountMinor === undefined || !row.currencyCode) {
+    return { ok: false, reason: 'unconfirmed', message: 'The order was not created.' };
+  }
+  try {
+    return {
+      ok: true,
+      orderId: String(row.orderId),
+      amount: fromMinor(row.amountMinor, row.currencyCode),
+      currencyCode: row.currencyCode,
+    };
+  } catch {
+    return { ok: false, reason: 'unconfirmed', message: 'The order was answered with an amount that cannot be read.' };
+  }
 }
 
 /** What `quote_course_order()` returns. Money is a decimal string throughout. */

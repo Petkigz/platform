@@ -703,8 +703,8 @@ moves; `platform.search` blamed a missing index when no transcript text existed.
 Optional author-provided transcripts now exist and are searchable only when the caller may read them. Both rows
 have since been updated; their switches did not move.
 
-Verification: **The current tree has 353 migrations. An earlier tree passed 2 653 database assertions in
-170 suites across eight separate PGlite databases. An earlier web tree passed 2 175 tests. Lint, TypeScript,
+Verification: **The current tree has 354 migrations and 171 suites. An earlier tree passed 2 653 database assertions in
+its 170 suites across eight separate PGlite databases. An earlier web tree passed 2 175 tests. Lint, TypeScript,
 `check:repo` and build passed. Hosted deployment and real concurrent PostgreSQL
 and storage behavior remain unverified.**
 
@@ -2618,6 +2618,37 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### A sponsor pays a pledge through checkout, 2026-11-19
+
+Decided earlier the same day; built once the pawaPay probe had passed
+(`DECISIONS.md`).
+
+- *The database.* Migration `20261281147000_sponsorship_checkout.sql` (the
+  354th): `create_sponsorship_order()`, an order for exactly the pledge with
+  no learner and one line that names no product; a trigger that grants the
+  seat when that order becomes paid; and the two constraints loosened for
+  it, each by one named case. `supabase/tests/sponsorship_checkout.test.mjs`
+  (12 tests, the 171st suite) pays such orders the way the webhook does.
+- *The route.* `/api/checkout` takes `sponsorshipId` as a third thing to pay
+  for. It sends the database the id and nothing else, asks for no learner
+  and records no withdrawal box. A pledge's refusals have their own names
+  (`pledge_not_payable`).
+- *The pages.* `/account/sponsorship` links to
+  `/account/sponsorship/pay/[id]` only for a pledge that can be paid for
+  exactly its amount. Five new sentences in twenty-seven languages
+  (`tmp-words/u22`, unreviewed); the form's other words are the buy page's.
+- *Checked.* The database suite; `lib/sponsorship-outcome.test.ts`; and a
+  new part of `scripts/pawapay-route-smoke.mjs` through the real pages and
+  route against stand-ins.
+- *Not shown.* A real provider or callback; the pay page in a browser in
+  more than five languages (English, Arabic, Tamil, Filipino, French); a
+  held language beyond Hausa; the migration on the hosted project, where it
+  is **not applied**.
+- *Known and not fixed.* Money that arrives for a pledge called off in the
+  meantime is in the audit trail and on no staff screen. A sponsored seat
+  pays the teacher no share. `/orders` shows the pledge's order by an
+  English line title.
 
 ### M-Pesa in Kenya, direct, 2026-11-19
 

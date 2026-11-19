@@ -12,10 +12,12 @@ import {
   STAFF_NOTE_MAX,
   amountOf,
   askStateOf,
+  pledgeMoneyOf,
   pledgeStateOf,
   staffNoteOf,
   switchOf,
 } from './sponsorship-outcome.ts';
+import { pledgeOutcomeOf, pledgeReasonOf, pledgeStatusOf } from './checkout-outcome.ts';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const MIGRATION = read('../../../supabase/migrations/20261281001000_sponsorship.sql');
@@ -128,8 +130,9 @@ test('the two boards raise one thing, and report the switch themselves', () => {
 const KEYS = Object.keys(en).filter((key) => key.startsWith('sponsor.')) as (keyof typeof en)[];
 const CODES = Object.keys(SPONSOR) as LocaleCode[];
 
-test('the page has its thirty-five sentences in twenty-seven languages', () => {
-  assert.equal(KEYS.length, 35);
+test('the pages have their forty sentences in twenty-seven languages', () => {
+  // Thirty-five for the page of both seats, five for paying a pledge.
+  assert.equal(KEYS.length, 40);
   assert.equal(CODES.length, 27);
   for (const code of CODES) {
     const own = SPONSOR[code]!;
@@ -166,9 +169,16 @@ test('whatever is put into a sentence closes it, so no language has to inflect i
   }
 });
 
-test('no sentence says a payment can be made here, and none rules on zakat', () => {
-  // A pledge is not a payment, and nothing in the product says how to pay one.
+test('no sentence says a payment can be made where it cannot, and none rules on zakat', () => {
+  // A pledge is not a payment. Where it cannot be paid on the site, the page says so and does not say how to pay.
   assert.match(en['sponsor.nextPledged'], /^Nothing is taken automatically: this page collects no payment\./u);
+  // Where it can, the sentence promises only what is true: nothing moves until the sponsor pays.
+  assert.equal(en['sponsor.nextPay'], 'Nothing is taken until you pay. The seat opens when the payment is confirmed.');
+  // After the press: the seat opens on confirmation, not on the press.
+  assert.match(en['sponsor.payApprove'], /The seat opens for the learner once the payment is confirmed\./u);
+  assert.match(en['sponsor.payLede'], /as soon as the payment is confirmed\. Neither side learns who the other is\.$/u);
+  // One sentence for paid, called off and somebody else's: it does not say which.
+  assert.equal(en['sponsor.payNot'], 'This pledge cannot be paid here: it has been paid or called off, or it is not one of yours.');
   assert.doesNotMatch(en['sponsor.nextPledged'], /\b(card|mobile|provider|pay the amount|transfer|bank)\b/iu);
   assert.match(en['sponsor.nextPaid'], /have not been told who paid/u);
   // The ruling is a scholar's, with "or neither" kept, and the platform does not make it.
@@ -216,6 +226,107 @@ test('the page says states, dates and amounts through the catalogue and nothing 
   for (const match of PAGE.matchAll(/'((?:sponsor|account|merge|refer)\.[A-Za-z0-9]+)'/gu)) {
     assert.ok(Object.hasOwn(en, match[1]!), `${match[1]} is not a sentence`);
   }
-  // And every sentence written for it is used.
-  for (const key of KEYS) assert.ok(PAGE.includes(`'${key}'`), `${key} is written and not used`);
+  // And every sentence written for it is used, on this page or on the one that pays a pledge.
+  for (const key of KEYS) assert.ok(PAGE.includes(`'${key}'`) || PAY.includes(`'${key}'`), `${key} is written and not used`);
+});
+
+const PAY = read('../app/account/sponsorship/pay/[id]/page.tsx');
+const PAY_FORM = read('../app/account/sponsorship/pay/[id]/pay-form.tsx');
+const CHECKOUT = read('../app/api/checkout/route.ts');
+const PAY_MIGRATION = read('../../../supabase/migrations/20261281147000_sponsorship_checkout.sql');
+
+test('a pledge is offered a way to pay only when it can be paid, and for exactly its amount', () => {
+  // The amount a payment service is asked about is the pledge's, read the way the page prints it.
+  assert.deepEqual(pledgeMoneyOf('50000', 'UGX'), { amountMinor: 50000n, currency: 'UGX' });
+  assert.deepEqual(pledgeMoneyOf(1999, 'USD'), { amountMinor: 1999n, currency: 'USD' });
+  for (const [amount, currency] of [['0', 'UGX'], ['-5', 'UGX'], ['19.99', 'USD'], ['', 'USD'], [null, 'USD'], ['1999', 'usd'], ['1999', null], [1.5, 'USD']] as [unknown, unknown][]) {
+    assert.equal(pledgeMoneyOf(amount, currency), null, `${String(amount)} ${String(currency)}`);
+  }
+  // The list: still pledged, both switches on, and a service that takes this amount; then the link and the other sentence.
+  assert.match(PAGE, /const canPay = enabled === true && \(await isFlagEnabled\(supabase, 'commerce\.checkout'\)\.catch\(\(\) => false\)\);/u);
+  assert.match(PAGE, /const money = state === 'pledged' && canPay \? pledgeMoneyOf\(row\.amountMinor, row\.currencyCode\) : null;/u);
+  assert.match(PAGE, /const payable = row\.id !== '' && money !== null && providersForAmount\(money\)\.length > 0;/u);
+  assert.match(PAGE, /const next = payable \? 'sponsor\.nextPay' : NEXT\[state\];/u);
+  assert.match(PAGE, /\{payable && \(\s*<p[^>]*>\s*<Link className="btn" href=\{`\/account\/sponsorship\/pay\/\$\{row\.id\}`\} data-pay>/u);
+});
+
+test('the pay page reads only the sponsor\'s own pledges and says one thing about any it cannot pay', () => {
+  assert.doesNotMatch(PAY, /'use client'/u);
+  // One read, of the sponsor's own board, which has no learner in it.
+  assert.deepEqual([...PAY.matchAll(/\.rpc\('([a-z_]+)'/gu)].map((m) => m[1]), ['my_sponsorships']);
+  assert.doesNotMatch(PAY, /my_sponsorship_applications|learnerName|learner_profile/u);
+  assert.match(PAY, /robots: \{ index: false, follow: false \}/u);
+  assert.match(PAY, /languageShownFor\(locale, 'sponsor'\)/u);
+  // Paid, called off, somebody else's, made up: the same notice.
+  assert.match(PAY, /if \(!pledged \|\| !money \|\| !amount\) \{/u);
+  assert.equal(PAY.match(/t\('sponsor\.payNot'\)/gu)?.length, 2);
+  // An unread board is said as unread.
+  assert.match(PAY, /if \(!board\) \{[\s\S]{0,260}<div className="notice error" role="alert">\s*\{t\('sponsor\.gaveUnread'\)\}/u);
+  // No form with either switch off, or with nobody to collect this amount.
+  assert.match(PAY, /const providers = money && open \? providersForAmount\(money\) : \[\];/u);
+  assert.match(PAY, /\{!open \? \(/u);
+  assert.match(PAY, /\) : providers\.length === 0 \? \(/u);
+  // The amount through money, left to right; never the raw fields.
+  assert.match(PAY, /parts=\{\{ amount: <bdi dir="ltr">\{amount\}<\/bdi> \}\}/u);
+  assert.doesNotMatch(PAY, /\{row\.currencyCode\}|\{row\.amountMinor\}|\{row\.status\}/u);
+  // Every key it asks for exists.
+  for (const match of PAY.matchAll(/'((?:sponsor|account|buy)\.[A-Za-z0-9]+)'/gu)) {
+    assert.ok(Object.hasOwn(en, match[1]!), `${match[1]} is not a sentence`);
+  }
+
+  // The form: a script, so it holds no catalogue key and never shows the server's sentence.
+  assert.match(PAY_FORM, /^'use client';/u);
+  assert.doesNotMatch(PAY_FORM, /'(?:sponsor|buy|account)\.[A-Za-z]+'|@\/lib\/i18n/u);
+  assert.doesNotMatch(PAY_FORM, /json\??\.error|json\??\.message/u);
+  assert.match(PAY_FORM, /const reason = pledgeOutcomeOf\(res\.status, json\?\.reason\);/u);
+  // It sends the pledge, the service and the number: no amount, and nobody's name.
+  assert.match(PAY_FORM, /body: JSON\.stringify\(\{ sponsorshipId, provider: providerId \|\| undefined, msisdn: msisdn \|\| undefined \}\),/u);
+  // Once a prompt is on its way the button is gone: a second press would be a second prompt.
+  assert.match(PAY_FORM, /if \(busy \|\| started\) return;/u);
+  assert.match(PAY_FORM, /\{!started && \(\s*<button/u);
+});
+
+test('a pledge\'s refusals have names, their own statuses, and the database\'s words stay behind', () => {
+  const refusal = (code: string | null, message: string) => pledgeReasonOf({ code, message });
+  // Somebody else's, unknown, paid and called off are one answer.
+  assert.equal(refusal('P0002', 'sponsorship:not_found'), 'pledge_not_payable');
+  assert.equal(refusal('23514', 'sponsorship:not_pledged'), 'pledge_not_payable');
+  assert.equal(refusal('0A000', 'sponsorship:disabled'), 'disabled');
+  assert.equal(refusal('42501', 'checkout:disabled'), 'disabled');
+  assert.equal(refusal('42501', 'sponsorship:not_signed_in'), 'not_signed_in');
+  assert.equal(refusal('23514', 'new row violates check constraint "sp_paid_agrees"'), 'refused');
+  // No SQLSTATE, or the connection's: nobody can say whether an order was written.
+  assert.equal(refusal(null, 'fetch failed'), 'unconfirmed');
+  assert.equal(refusal('08006', 'sponsorship:not_found'), 'unconfirmed');
+  assert.equal(refusal('', ''), 'unconfirmed');
+
+  assert.deepEqual(
+    (['pledge_not_payable', 'not_signed_in', 'disabled', 'malformed', 'phone_invalid', 'provider_unavailable', 'provider_failed', 'refused', 'unconfirmed'] as const).map((r) => pledgeStatusOf(r)),
+    [409, 401, 503, 400, 400, 503, 502, 500, 502],
+  );
+  // The form believes a reason only with that reason's own status.
+  assert.equal(pledgeOutcomeOf(409, 'pledge_not_payable'), 'pledge_not_payable');
+  assert.equal(pledgeOutcomeOf(404, 'pledge_not_payable'), 'unconfirmed');
+  assert.equal(pledgeOutcomeOf(503, 'provider_unavailable'), 'provider_unavailable');
+  assert.equal(pledgeOutcomeOf(400, 'phone_invalid'), 'phone_invalid');
+  assert.equal(pledgeOutcomeOf(502, 'bad gateway'), 'unconfirmed');
+  // A course's reasons are not a pledge's.
+  assert.equal(pledgeOutcomeOf(409, 'already_owned'), 'unconfirmed');
+  assert.equal(pledgeOutcomeOf(200, undefined), 'unconfirmed');
+
+  // Every name the function raises is one the reader of these raises knows about.
+  const raised = [...PAY_MIGRATION.matchAll(/raise exception '((?:sponsorship|checkout):[a-z_]+)'/gu)].map((m) => m[1]);
+  assert.deepEqual([...new Set(raised)].sort(), ['checkout:disabled', 'sponsorship:disabled', 'sponsorship:not_found', 'sponsorship:not_pledged', 'sponsorship:not_signed_in']);
+  for (const name of new Set(raised)) assert.notEqual(pledgeReasonOf({ code: 'P0001', message: name! }), 'refused', name);
+  // The order names no learner and the line no product; the constraint cannot be passed by leaving `kind` out.
+  assert.doesNotMatch(PAY_MIGRATION.slice(PAY_MIGRATION.indexOf('insert into public.orders'), PAY_MIGRATION.indexOf('update public.sponsorships set order_id')), /learner_profile_id|product_id/u);
+  assert.match(PAY_MIGRATION, /coalesce\(item_snapshot ->> 'kind', ''\) = 'sponsorship_pledge'/u);
+
+  // The route: a pledge is one of exactly three things to pay for, asks for no learner, and its refusal carries a reason.
+  assert.match(CHECKOUT, /if \(\[courseId, planVersionId, sponsorshipId\]\.filter\(Boolean\)\.length !== 1\) \{/u);
+  assert.match(CHECKOUT, /const made = await createSponsorshipOrder\(supabase, \{ sponsorshipId \}\);/u);
+  assert.match(CHECKOUT, /NextResponse\.json\(\{ reason, error: PLEDGE_SENTENCES\[reason\] \}, \{ status: pledgeStatusOf\(reason\) \}\);/u);
+  assert.match(CHECKOUT, /if \(courseId && !learnerProfileId\) \{/u);
+  // The database's sentence is logged and not sent.
+  assert.doesNotMatch(CHECKOUT, /refusePledge\([^)]*message/u);
 });

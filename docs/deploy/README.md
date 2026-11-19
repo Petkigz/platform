@@ -195,7 +195,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-353 files in `supabase/migrations/`, applied in filename order — the 14-digit
+354 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -493,6 +493,11 @@ one file. At 353 it only repeats the comparison. It does not switch
 `platform.account_merge` on. The two earlier jobs are spent and unchanged.
 **Done:** run `44505560049`, approved by the owner on 2026-11-19, succeeded;
 the test project records 353. This job is now spent too.
+
+**The 354th, `20261281147000_sponsorship_checkout.sql`** (a sponsor pays a
+pledge through checkout) is in the tree and **not on the test project**. It
+needs a job of its own, built the same way, and the owner's approval. Both
+switches it serves ship off.
 - The application that matches 1360–1450 has **not** been deployed. Any older
   build pointed at this project will be refused by the database when it saves
   a resume position or writes an answer row directly. That is the intended

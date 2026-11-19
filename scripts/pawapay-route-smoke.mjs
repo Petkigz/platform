@@ -34,6 +34,10 @@
 //     no order and no amount, so the order travels in the address Safaricom
 //     is told to call, under a code only this server can make. A callback at
 //     any other address is ignored without Safaricom being asked anything;
+//   - a sponsor's pledge is paid through the same route: the page of pledges
+//     links to a pay page only for a pledge that can be paid for exactly its
+//     amount, the pay page says one thing about any pledge it cannot pay, and
+//     the route sends the database the pledge's id and nothing else;
 //   - the webhook believes no notification: it asks pawaPay with the token,
 //     and settles an order only when pawaPay's own record names that order
 //     and the amount is the order's total. A forged success, a real payment
@@ -45,6 +49,8 @@ import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { randomUUID } from 'node:crypto';
 import { resolve } from 'node:path';
+import { mkdirSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 
 const encode = (value) => Buffer.from(JSON.stringify(value)).toString('base64url');
 const user = { id: '0ca318e2-8b44-4a64-9b58-2af31ab941c7', aud: 'authenticated', role: 'authenticated', email: 'probe@example.invalid', app_metadata: {}, user_metadata: {}, created_at: '2026-01-01T00:00:00Z' };
@@ -88,6 +94,9 @@ const fresh = () => ({
   // for a prompt, and how each prompt it issued ended ('paid', 'processing',
   // or a result code).
   darajaToken: 200, stk: 'accept', prompts: new Map(),
+  // Sponsoring: the two switches, what the sponsor's board holds, and what
+  // the database answers to "let me pay this pledge" ('ok' or [status, body]).
+  checkout: true, sponsoring: true, pledges: [], pledgeOrder: 'ok', boardBroken: false,
   // The attempts the database holds.
   attempts: [],
 });
@@ -188,7 +197,13 @@ const fake = createServer(async (req, res) => {
   const serviceOnly = ['/rest/v1/orders', '/rest/v1/payment_provider_events', '/rest/v1/rpc/record_payment_success'];
   if (serviceOnly.includes(path) && role !== 'service') { send({ code: '42501', message: 'permission denied' }, 403); return; }
 
-  if (path === '/rest/v1/rpc/setting_bool') send(payload.p_key === 'commerce.checkout');
+  if (path === '/rest/v1/rpc/setting_bool') send(payload.p_key === 'commerce.checkout' && state.checkout);
+  else if (path === '/rest/v1/rpc/my_sponsorships') { if (state.boardBroken) send({ code: '57014', message: 'SYNTHETIC-DATABASE canceling statement' }, 500); else send({ enabled: state.sponsoring, sponsorships: state.pledges }); }
+  else if (path === '/rest/v1/rpc/my_sponsorship_applications') send({ enabled: state.sponsoring, applications: [] });
+  else if (path === '/rest/v1/rpc/create_sponsorship_order') {
+    if (state.pledgeOrder === 'ok') { const pledge = state.pledges.find((x) => x.id === payload.p_sponsorship); send({ orderId: ORDER, amountMinor: pledge.amountMinor, currencyCode: pledge.currencyCode, changed: true }); }
+    else send(state.pledgeOrder[1], state.pledgeOrder[0]);
+  }
   else if (path === '/rest/v1/courses') send(q('slug') === 'eq.reading' ? [{ id: COURSE, slug: 'reading', title: 'Synthetic reading course', status: 'active', deleted_at: null }] : []);
   else if (path === '/rest/v1/course_versions') send([{ id: VERSION, version_number: 1 }]);
   else if (path === '/rest/v1/learner_profiles') send(q('linked_user_id') ? [{ id: OWN }] : [own]);
@@ -258,7 +273,7 @@ try {
     return inner(await response.text());
   };
   // No reply may carry pawaPay's own words or the payer's number.
-  const clean = (text, label) => { for (const word of ['SYNTHETIC-PAWAPAY', 'SYNTHETIC-MTN', 'SYNTHETIC-DARAJA', 'synthetic-daraja', PHONE, 'seems to be invalid', PAWAPAY_TOKEN, SERVICE]) assert.ok(!text.includes(word), `${label} says "${word}"`); };
+  const clean = (text, label) => { for (const word of ['SYNTHETIC-PAWAPAY', 'SYNTHETIC-MTN', 'SYNTHETIC-DARAJA', 'SYNTHETIC-DATABASE', 'synthetic-daraja', PHONE, 'seems to be invalid', PAWAPAY_TOKEN, SERVICE]) assert.ok(!text.includes(word), `${label} says "${word}"`); };
   const checkout = async (body, country = 'KE') => {
     const response = await fetch(`${origin}/api/checkout`, { method: 'POST', headers: { 'content-type': 'application/json', cookie, 'x-vercel-ip-country': country }, body: JSON.stringify(body), signal: AbortSignal.timeout(90000) });
     const text = await response.text();
@@ -562,6 +577,201 @@ try {
     state = fresh();
   }
   console.log('M-Pesa direct, with a synthetic Safaricom: offered once in Kenya; a prompt is asked for in whole shillings, to the number as 254…, with a callback address of its own that carries the order under a code and is never sent to the payer; four callbacks at addresses this platform did not make are ignored without Safaricom being asked; at the right address, "not answered yet" and a prompt Safaricom never issued settle nothing; a paid prompt settles the order once, under Safaricom’s id, at the order’s own total, recorded as such; a callback saying "paid" for a cancelled prompt is corrected to a failure; an unknown result code closes nothing; when Safaricom cannot be signed in to or refuses outright the same wallet is asked through pawaPay, and after 500 nobody is prompted again; a total with cents is not asked for.');
+
+  // ========================================================= paying a pledge
+  // A sponsor pays a pledge through the same checkout. The stand-in database
+  // holds the sponsor's board; it has no learner in it, as the real one has not.
+  {
+    const PLEDGE = 'aaaaaaaa-1111-4111-8111-aaaaaaaaaaaa';
+    const PAID = 'bbbbbbbb-2222-4222-8222-bbbbbbbbbbbb';
+    const CENTS = 'cccccccc-3333-4333-8333-cccccccccccc';
+    const NOBODYS = 'dddddddd-4444-4444-8444-dddddddddddd';
+    const board = () => [
+      { id: PLEDGE, seatCode: 'SPN-AB12CD', courseTitle: 'Synthetic <sponsored> course', courseSlug: 'reading', status: 'pledged', amountMinor: '50000', currencyCode: 'UGX', reference: null, recordedAt: null, pledgedAt: '2026-11-17T10:00:00Z' },
+      { id: PAID, seatCode: 'SPN-EF34GH', courseTitle: 'Paid course', courseSlug: null, status: 'paid', amountMinor: '50000', currencyCode: 'UGX', reference: 'pawapay:DEP-1', recordedAt: '2026-11-02T08:15:00Z', pledgedAt: '2026-11-01T10:00:00Z' },
+      // Kenyan shillings with cents: M-Pesa collects whole shillings, so nobody here can collect this.
+      { id: CENTS, seatCode: 'SPN-IJ56KL', courseTitle: 'Cents course', courseSlug: null, status: 'pledged', amountMinor: '125050', currencyCode: 'KES', reference: null, recordedAt: null, pledgedAt: '2026-11-18T10:00:00Z' },
+    ];
+    const sponsor = () => { state = fresh(); state.pledges = board(); calls.length = 0; pawapay.length = 0; mtn.length = 0; };
+    const get = async (path, language = 'en') => {
+      const response = await fetch(`${origin}${path}`, { headers: { cookie, 'accept-language': language, 'x-vercel-ip-country': 'UG' }, redirect: 'manual', signal: AbortSignal.timeout(90000) });
+      const html = await response.text();
+      return { status: response.status, html, main: response.status === 200 ? inner(html) : '', location: response.headers.get('location') };
+    };
+    const rowOf = (main, id) => { const at = main.indexOf(`/account/sponsorship/pay/${id}`); return at; };
+
+    // The page of pledges: a pay link only where the pledge can be paid for exactly its amount.
+    sponsor();
+    let seen = await get('/account/sponsorship');
+    assert.equal(seen.status, 200, logs.slice(-2000));
+    assert.equal(seen.main.split('data-pay').length - 1, 1, 'the number of pledges offered a way to pay');
+    assert.ok(seen.main.includes(`<a class="btn" data-pay="true" href="/account/sponsorship/pay/${PLEDGE}">Pay this pledge</a>`), 'the pledge that can be paid has no link');
+    assert.ok(seen.main.includes('Nothing is taken until you pay. The seat opens when the payment is confirmed.'));
+    // The pledge with cents, which nobody here can collect, says what the page always said, and has no link.
+    assert.equal(rowOf(seen.main, CENTS), -1); assert.equal(rowOf(seen.main, PAID), -1);
+    assert.equal(seen.main.split('Nothing is taken automatically: this page collects no payment.').length - 1, 1);
+    // Either switch off: no link at all, and the old sentence for both waiting pledges.
+    for (const off of ['checkout', 'sponsoring']) {
+      sponsor(); state[off] = false;
+      seen = await get('/account/sponsorship');
+      assert.equal(seen.main.includes('data-pay'), false, `${off} is off and a pledge is offered a way to pay`);
+      assert.equal(seen.main.split('Nothing is taken automatically: this page collects no payment.').length - 1, 2, off);
+    }
+
+    // The pay page: the pledge, its amount in major units, and the two services that collect Ugandan shillings.
+    sponsor();
+    seen = await get(`/account/sponsorship/pay/${PLEDGE}`);
+    assert.equal(seen.status, 200, logs.slice(-2000));
+    for (const piece of ['<h1>Pay this pledge</h1>', 'The seat opens for the learner as soon as the payment is confirmed. Neither side learns who the other is.', '<bdi>Synthetic &lt;sponsored&gt; course</bdi>', '<bdi dir="ltr">SPN-AB12CD</bdi>', '<bdi dir="ltr">UGX 50000</bdi>', 'value="mtn_momo_ug"', 'value="pawapay_airtel_ug"', '<label for="pledge-msisdn" class="eyebrow">Mobile money number</label>', 'Continue to payment', '<bdi>Uganda</bdi>', '<bdi dir="ltr">+256</bdi>', 'zakat, sadaqah or neither']) {
+      assert.ok(seen.main.includes(piece), `the pay page lacks ${piece}`);
+    }
+    for (const word of ['pawaPay', 'pawapay_mtn_ug', 'M-Pesa', '5000000', 'This pledge cannot be paid here', 'learner_profile']) assert.ok(!seen.main.includes(word), `the pay page says "${word}"`);
+    assert.match(seen.html, /<meta name="robots" content="noindex, nofollow"/);
+    // In Arabic, right to left, with the amount still left to right.
+    seen = await get(`/account/sponsorship/pay/${PLEDGE}`, 'ar');
+    for (const piece of ['<h1>ادفع هذا التعهّد</h1>', 'يُفتح المقعد للمتعلّم فور تأكّد الدفع.', '<bdi dir="ltr">UGX 50000</bdi>', 'رقم محفظة الهاتف المحمول']) assert.ok(seen.main.includes(piece), `the Arabic pay page lacks ${piece}`);
+    assert.ok(!seen.main.includes('Pay this pledge') && !seen.main.includes('Mobile money number'));
+    // A held language reads it in English, whole, marked.
+    seen = await get(`/account/sponsorship/pay/${PLEDGE}`, 'ha');
+    assert.ok(seen.main.includes('<h1>Pay this pledge</h1>') && /<div class="container section narrow" lang="en" dir="ltr">/.test(seen.main), 'Hausa is not given the English page, marked');
+
+    // Paid, somebody else's, made up, not an id: one sentence, no form, and nothing that says which.
+    const answers = [];
+    for (const id of [PAID, NOBODYS, '00000000-0000-4000-8000-000000000000', 'not-an-id', `${PLEDGE}x`]) {
+      sponsor();
+      seen = await get(`/account/sponsorship/pay/${id}`);
+      assert.equal(seen.status, 200, id);
+      assert.ok(seen.main.includes('<div class="notice warn" data-pay-state="not-payable">This pledge cannot be paid here: it has been paid or called off, or it is not one of yours.</div>'), id);
+      assert.ok(!seen.main.includes('pledge-msisdn') && !seen.main.includes('Paid course') && !seen.main.includes('UGX'), `${id}: something of the pledge is shown`);
+      answers.push(seen.main.replace(/pay\/[^"]*/g, ''));
+    }
+    assert.equal(new Set(answers).size, 1, 'the page answers differently for a pledge that is paid, somebody else’s or made up');
+    // Nobody here can collect Kenyan shillings with cents: said, with no form, and the amount not rounded.
+    sponsor();
+    seen = await get(`/account/sponsorship/pay/${CENTS}`);
+    assert.ok(seen.main.includes('data-pay-state="no-service"') && seen.main.includes('<bdi dir="ltr">KES 1250.50</bdi>') && !seen.main.includes('pledge-msisdn'), 'a pledge nobody can collect is offered a form');
+    // Checkout switched off: said, and no form.
+    sponsor(); state.checkout = false;
+    seen = await get(`/account/sponsorship/pay/${PLEDGE}`);
+    assert.ok(seen.main.includes('<div class="notice warn" data-pay-state="closed">Checkout is not open yet.</div>') && !seen.main.includes('pledge-msisdn'));
+    // The board cannot be read: said as that, aloud, and not as "no such pledge".
+    sponsor(); state.boardBroken = true;
+    seen = await get(`/account/sponsorship/pay/${PLEDGE}`);
+    assert.ok(seen.main.includes('<div class="notice error" role="alert">') && !seen.main.includes('This pledge cannot be paid here') && !seen.main.includes('SYNTHETIC-DATABASE'));
+    // Signed out: to sign in.
+    const out = await fetch(`${origin}/account/sponsorship/pay/${PLEDGE}`, { redirect: 'manual', signal: AbortSignal.timeout(90000) });
+    assert.equal(out.status, 307); assert.match(out.headers.get('location') ?? '', /\/sign-in\?next=/);
+
+    // Paying: the database is sent the pledge's id and nothing else, and MTN is asked for the pledge's amount.
+    sponsor();
+    let answer = await checkout({ sponsorshipId: PLEDGE, provider: 'mtn_momo_ug', msisdn: '0772 123456', amount: '1', amountMinor: '1', learnerProfileId: OWN, withdrawalChoice: 'waived' }, 'UG');
+    assert.equal(answer.status, 200, JSON.stringify(answer.json)); assert.equal(answer.json.kind, 'pending'); assert.equal(answer.json.orderId, ORDER);
+    assert.deepEqual(written('/rest/v1/rpc/create_sponsorship_order').map((c) => c.payload), [{ p_sponsorship: PLEDGE }]);
+    // No course order, and no withdrawal box recorded for money given away.
+    assert.equal(written('/rest/v1/rpc/create_course_order').length, 0); assert.equal(written('/rest/v1/rpc/record_withdrawal_choice').length, 0);
+    const asked = mtn.filter((c) => c.path === 'requesttopay');
+    assert.equal(asked.length, 1); assert.equal(asked[0].payload.amount, '50000'); assert.equal(asked[0].payload.currency, 'UGX'); assert.equal(asked[0].payload.externalId, ORDER);
+    assert.match(asked[0].payload.payerMessage, /^Sponsored seat /);
+    assert.deepEqual(state.attempts.map((a) => [a.provider, a.amount_minor, a.currency_code]), [['mtn_momo_ug', '50000', 'UGX']]);
+
+    // The database's refusals, each under its own name and status, in this platform's words.
+    const refusal = (status, code, message) => [status, { code, message, details: null, hint: null }];
+    for (const [label, body, status, reason] of [
+      ['somebody else’s, or none', refusal(400, 'P0002', 'sponsorship:not_found'), 409, 'pledge_not_payable'],
+      ['paid or called off', refusal(400, '23514', 'sponsorship:not_pledged'), 409, 'pledge_not_payable'],
+      ['sponsoring switched off', refusal(400, '0A000', 'sponsorship:disabled'), 503, 'disabled'],
+      ['checkout switched off', refusal(403, '42501', 'checkout:disabled'), 503, 'disabled'],
+      ['a refusal nobody named', refusal(400, '23514', 'SYNTHETIC-DATABASE new row violates check constraint "sp_paid_agrees"'), 500, 'refused'],
+      ['no answer', [503, { message: 'SYNTHETIC-DATABASE upstream connect error' }], 502, 'unconfirmed'],
+    ]) {
+      sponsor(); state.pledgeOrder = body;
+      answer = await checkout({ sponsorshipId: PLEDGE, provider: 'mtn_momo_ug', msisdn: '0772 123456' }, 'UG');
+      assert.equal(answer.status, status, label); assert.equal(answer.json.reason, reason, label);
+      assert.deepEqual(Object.keys(answer.json).sort(), ['error', 'reason'], label);
+      assert.equal(mtn.filter((c) => c.path === 'requesttopay').length, 0, `${label}: a payment was asked for`);
+    }
+    // An id that is not one is answered without the database; a pledge and a course together are malformed.
+    sponsor();
+    answer = await checkout({ sponsorshipId: 'not-an-id', provider: 'mtn_momo_ug', msisdn: '0772 123456' }, 'UG');
+    assert.equal(answer.status, 409); assert.equal(answer.json.reason, 'pledge_not_payable');
+    answer = await checkout({ sponsorshipId: PLEDGE, courseId: COURSE, learnerProfileId: OWN, provider: 'mtn_momo_ug', msisdn: '0772 123456' }, 'UG');
+    assert.equal(answer.status, 400); assert.equal(answer.json.reason, 'malformed');
+    assert.equal(written('/rest/v1/rpc/create_sponsorship_order').length, 0);
+    // A number that is not Uganda's is refused before the database is asked for an order.
+    answer = await checkout({ sponsorshipId: PLEDGE, provider: 'mtn_momo_ug', msisdn: '+254712345678' }, 'UG');
+    assert.equal(answer.status, 400); assert.equal(answer.json.reason, 'phone_invalid');
+    assert.equal(written('/rest/v1/rpc/create_sponsorship_order').length, 0);
+    // A pledge with cents, paid through an operator that takes none: the order is written and nobody is prompted.
+    sponsor();
+    answer = await checkout({ sponsorshipId: CENTS, provider: 'mpesa_ke', msisdn: '0712 345678' });
+    assert.equal(answer.status, 503); assert.equal(answer.json.reason, 'provider_unavailable');
+    assert.equal(daraja.filter((c) => c.path === 'push').length, 0, 'a prompt was asked for an amount with cents');
+
+    // In a browser, when one is given: the pay page fits a phone in four
+    // languages, and the form does what it says.
+    if (process.env.RESPONSIVE_PLAYWRIGHT && process.env.RESPONSIVE_CHROME) {
+      const { chromium } = await import(pathToFileURL(process.env.RESPONSIVE_PLAYWRIGHT).href);
+      const browser = await chromium.launch({ executablePath: process.env.RESPONSIVE_CHROME, headless: true, args: ['--no-sandbox'] });
+      const shots = process.env.RESPONSIVE_SCREENSHOTS;
+      if (shots) mkdirSync(shots, { recursive: true });
+      try {
+        for (const [code, width] of [['en', 320], ['en', 390], ['en', 1440], ['ar', 320], ['ar', 390], ['ta', 320], ['fil', 320], ['fr', 320]]) {
+          sponsor();
+          const context = await browser.newContext({ viewport: { width, height: 900 }, locale: 'en', extraHTTPHeaders: { 'x-vercel-ip-country': 'UG' } });
+          await context.addCookies([{ name: 'sb-127-auth-token', value: `base64-${encode(session)}`, url: origin }, { name: 'ayahspring_locale', value: code, url: origin }]);
+          const tab = await context.newPage();
+          const errors = []; tab.on('pageerror', (e) => errors.push(String(e)));
+          tab.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errors.push(m.text().slice(0, 400)); });
+          await tab.goto(`${origin}/account/sponsorship/pay/${PLEDGE}`, { waitUntil: 'networkidle' });
+          await tab.locator('#pledge-msisdn').waitFor();
+          const wide = await tab.evaluate(() => {
+            const limit = window.innerWidth;
+            const over = [...document.querySelectorAll('main *')].filter((el) => { const r = el.getBoundingClientRect(); return r.width > 0 && (r.right > limit + 0.5 || r.left < -0.5); });
+            return { page: document.documentElement.scrollWidth, limit, over: over.slice(0, 3).map((el) => `${el.tagName.toLowerCase()}.${el.className}`) };
+          });
+          assert.ok(wide.page <= wide.limit && wide.over.length === 0, `the pay page in ${code} at ${width}px is wider than the screen: ${JSON.stringify(wide)}`);
+          assert.equal(await tab.evaluate(() => document.documentElement.dir || 'ltr'), code === 'ar' ? 'rtl' : 'ltr', code);
+          // The number is typed left to right in every language, and the amount reads left to right.
+          assert.equal(await tab.locator('#pledge-msisdn').getAttribute('dir'), 'ltr');
+          if (shots) await tab.screenshot({ path: `${shots}/pledge-pay-${code}-${width}.png`, fullPage: true });
+
+          if (code === 'en' && width === 390) {
+            mtn.length = 0;
+            // A number that is not one: said, and the button stays.
+            await tab.locator('#pledge-msisdn').fill('12');
+            await tab.getByRole('button', { name: 'Continue to payment', exact: true }).click();
+            await tab.getByRole('alert').filter({ hasText: 'That phone number is not valid. Check it and try again.' }).waitFor();
+            assert.equal(await tab.getByRole('button', { name: 'Continue to payment', exact: true }).count(), 1);
+            assert.equal(mtn.filter((c) => c.path === 'requesttopay').length, 0);
+            // A good one: the prompt is asked for once, the page says what happens next, and the button is gone.
+            await tab.locator('#pledge-msisdn').fill('0772 123456');
+            await tab.getByRole('button', { name: 'Continue to payment', exact: true }).click();
+            await tab.getByRole('status').filter({ hasText: 'Approve the payment on your phone. The seat opens for the learner once the payment is confirmed. This can take a moment.' }).waitFor();
+            assert.equal(await tab.locator('main button').count(), 0, 'a second press is offered after a prompt is on its way');
+            assert.equal(await tab.locator('#pledge-msisdn').isDisabled(), true);
+            assert.equal(mtn.filter((c) => c.path === 'requesttopay').length, 1);
+            const text = await tab.locator('main').textContent();
+            for (const word of ['SYNTHETIC', 'pawaPay', 'Malformed', 'provider']) assert.equal(text.includes(word), false, `the page says "${word}"`);
+            if (shots) await tab.screenshot({ path: `${shots}/pledge-pay-en-390-started.png`, fullPage: true });
+          }
+          if (code === 'ar' && width === 390) {
+            // A refusal by the database, said in Arabic, with none of the server's English.
+            state.pledgeOrder = [400, { code: '23514', message: 'sponsorship:not_pledged', details: null, hint: null }];
+            await tab.locator('#pledge-msisdn').fill('0772 123456');
+            await tab.getByRole('button', { name: 'المتابعة إلى الدفع', exact: true }).click();
+            await tab.getByRole('alert').filter({ hasText: 'لا يمكن دفع هذا التعهّد هنا: إمّا أنه دُفع أو أُلغي، أو أنه ليس من تعهّداتك.' }).waitFor();
+            const text = await tab.locator('main').textContent();
+            assert.equal(text.includes('This pledge cannot be paid here'), false, 'the Arabic page says the refusal in the server’s English');
+          }
+          assert.deepEqual(errors, [], `${code} ${width}`);
+          await context.close();
+          console.log(`Synthetic pay page in ${code} at ${width}px: fits; the number is typed left to right; no page error`);
+        }
+      } finally { await browser.close(); }
+    }
+    state = fresh();
+  }
+  console.log('Paying a pledge, synthetic database, MTN and pawaPay: the page of pledges links to a pay page only for the pledge that can be paid for exactly its amount, and for none with either switch off; the pay page shows the pledge, its amount in major units and the services that collect it, in English, Arabic and (as English, marked) Hausa; a pledge that is paid, somebody else’s, made up or not an id is answered with one sentence and the same page; a pledge nobody can collect, checkout switched off and a board that cannot be read are each said as that with no form; signed out goes to sign in; paying sends the database the pledge’s id and nothing else, asks MTN for the pledge’s amount, and records no withdrawal box; six refusals by the database each under its own name and status with none of its words; a pledge and a course together are malformed.');
 
   // ============================================================ the webhook
   const DEPOSIT = 'f4401bd2-1568-4140-bf2d-eb77d2b2b639';

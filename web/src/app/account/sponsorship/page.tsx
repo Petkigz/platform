@@ -15,9 +15,12 @@ import {
   type MessageKey,
 } from '@/lib/i18n';
 import { parseApplicationBoard, parseSponsorBoard } from '@/lib/sponsorship';
+import { isFlagEnabled } from '@/lib/flags';
+import { providersForAmount } from '@/lib/payments/registry';
 import {
   amountOf,
   askStateOf,
+  pledgeMoneyOf,
   pledgeStateOf,
   staffNoteOf,
   switchOf,
@@ -80,6 +83,8 @@ const line = { margin: '0.25rem 0 0' } as const;
  * learner field.
  *
  * **This page only reads.** There is no button on it and no route behind it.
+ * A pledge that can be paid has a link to the page that does that
+ * (`pay/[id]/page.tsx`).
  *
  * **A state is said from the catalogue.** One this page has no word for is
  * "Recorded"; the database's word is never printed.
@@ -91,8 +96,11 @@ const line = { margin: '0.25rem 0 0' } as const;
  * **What staff wrote is theirs.** It is printed apart, untranslated, in
  * whatever direction it was written, under a line saying whose words it is.
  *
- * **A pledge is not a payment.** No sentence says this page can take one, and
- * none says how to pay: nothing in the product does yet.
+ * **A pledge is not a payment.** Where a pledge can be paid on the site
+ * (both switches on, and a payment service that can collect its amount), the
+ * line under it says nothing is taken until the sponsor pays, and links to
+ * the page that takes the payment. Where it cannot, the line says what it
+ * always said: this page collects nothing, and staff record what arrives.
  *
  * **Every time is said with its zone.** This is drawn on a server.
  *
@@ -125,6 +133,9 @@ export default async function AccountSponsorshipPage() {
   const applied = asked.error ? null : parseApplicationBoard(asked.data);
   const sponsored = gave.error ? null : parseSponsorBoard(gave.data);
   const enabled = switchOf(applied, sponsored);
+  // Whether a pledge may be paid on the site at all: both switches. A switch
+  // that cannot be read is treated as off, and the page says what it always said.
+  const canPay = enabled === true && (await isFlagEnabled(supabase, 'commerce.checkout').catch(() => false));
 
   const title = (name: string | null, slug: string | null) => {
     const words = name ? <bdi>{name}</bdi> : t('sponsor.aCourse');
@@ -248,7 +259,10 @@ export default async function AccountSponsorshipPage() {
               {sponsored.sponsorships.map((row, index) => {
                 const state = pledgeStateOf(row.status);
                 const amount = amountOf(row.amountMinor, row.currencyCode);
-                const next = NEXT[state];
+                // Payable here: still pledged, both switches on, and somebody who can collect exactly this amount.
+                const money = state === 'pledged' && canPay ? pledgeMoneyOf(row.amountMinor, row.currencyCode) : null;
+                const payable = row.id !== '' && money !== null && providersForAmount(money).length > 0;
+                const next = payable ? 'sponsor.nextPay' : NEXT[state];
                 const pledgedOn = when(row.pledgedAt);
                 const recordedOn = state === 'paid' ? when(row.recordedAt) : '';
                 return (
@@ -288,6 +302,13 @@ export default async function AccountSponsorshipPage() {
                     {next && (
                       <p className="muted" style={{ margin: '0.5rem 0 0' }}>
                         {t(next)}
+                      </p>
+                    )}
+                    {payable && (
+                      <p style={{ margin: '0.5rem 0 0' }}>
+                        <Link className="btn" href={`/account/sponsorship/pay/${row.id}`} data-pay>
+                          {t('sponsor.pay')}
+                        </Link>
                       </p>
                     )}
                   </li>

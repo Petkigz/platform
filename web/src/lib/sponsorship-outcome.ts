@@ -11,7 +11,7 @@
  * Kept apart from `sponsorship.ts`, whose English is still read by the pool,
  * the form for asking and the staff desk, so these can be tested on their own.
  */
-import { MoneyError, format, fromMinor } from './money.ts';
+import { MoneyError, format, fromMinor, type Money } from './money.ts';
 
 /** The states `sponsorship_applications.status` may hold. */
 export const ASK_STATES = ['submitted', 'approved', 'declined', 'withdrawn', 'funded'] as const;
@@ -51,6 +51,17 @@ export function amountOf(amountMinor: unknown, currencyCode: unknown): string | 
     if (error instanceof MoneyError) return null;
     throw error;
   }
+}
+
+/**
+ * A pledge's amount as money, or nothing, by the same rule as `amountOf`.
+ * What the pay page asks the payment services about: a pledge whose amount
+ * cannot be read is one nobody is offered a way to pay.
+ */
+export function pledgeMoneyOf(amountMinor: unknown, currencyCode: unknown): Money | null {
+  if (amountOf(amountMinor, currencyCode) === null) return null;
+  const money = fromMinor(String(amountMinor).trim(), currencyCode as string);
+  return money.amountMinor > 0n ? money : null;
 }
 
 /**

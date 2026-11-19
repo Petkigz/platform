@@ -1981,6 +1981,19 @@ export const en = {
   'sponsor.recordedOn': 'Payment recorded on {date}',
   'sponsor.zakat':
     'Whether a sponsored seat counts as zakat, sadaqah or neither is a scholar’s ruling, and this platform does not make it. Ask somebody you trust before you give.',
+  // Paying a pledge at checkout (2026-11-19). `nextPay` is said in place of
+  // `nextPledged` where the pledge can be paid on the site; `payNot` answers
+  // a pledge that is paid, called off or somebody else’s in one sentence, so
+  // that asking does not say which.
+  'sponsor.pay': 'Pay this pledge',
+  'sponsor.payLede':
+    'The seat opens for the learner as soon as the payment is confirmed. Neither side learns who the other is.',
+  'sponsor.payApprove':
+    'Approve the payment on your phone. The seat opens for the learner once the payment is confirmed. This can take a moment.',
+  'sponsor.payNot':
+    'This pledge cannot be paid here: it has been paid or called off, or it is not one of yours.',
+  'sponsor.nextPay':
+    'Nothing is taken until you pay. The seat opens when the payment is confirmed.',
 } as const;
 
 export type MessageKey = keyof typeof en;

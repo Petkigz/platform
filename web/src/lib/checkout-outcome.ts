@@ -153,3 +153,66 @@ export const QUOTE_FAILED_SENTENCE = 'That price could not be worked out. Try ag
  */
 export const QUOTE_TAX_LABEL = 'Tax';
 export const QUOTE_FEE_LABEL = 'Fee';
+
+// ---------------------------------------------------------------------------
+// Paying a pledge
+// ---------------------------------------------------------------------------
+
+/**
+ * What asking to pay a pledge can be refused with, beyond what a course
+ * order can. Kept out of `CheckoutReason`: the buy page has a sentence for
+ * every one of those, and has no pledge to speak of.
+ *
+ * `pledge_not_payable` is one name for three things, on purpose: the pledge
+ * is paid, or called off, or somebody else's (which the database answers
+ * exactly as it answers one that does not exist). A page that said which
+ * would be telling a stranger that a pledge with that id exists.
+ */
+export const PLEDGE_REASONS = ['pledge_not_payable'] as const;
+export type PledgeReason = (typeof PLEDGE_REASONS)[number];
+
+/** Every reason the route can answer a pledge with. */
+export type PledgeOutcome =
+  | PledgeReason
+  | 'not_signed_in'
+  | 'disabled'
+  | 'malformed'
+  | 'phone_invalid'
+  | 'provider_unavailable'
+  | 'provider_failed'
+  | 'refused'
+  | 'unconfirmed';
+
+// On one line on purpose: a test counts the buy page's reasons by the lines
+// above that hold one name each, and these are not the buy page's.
+const PLEDGE_OUTCOMES: readonly PledgeOutcome[] = [...PLEDGE_REASONS, 'not_signed_in', 'disabled', 'malformed', 'phone_invalid', 'provider_unavailable', 'provider_failed', 'refused', 'unconfirmed'];
+
+export function pledgeStatusOf(reason: PledgeOutcome): number {
+  return reason === 'pledge_not_payable' ? 409 : checkoutStatusOf(reason);
+}
+
+/**
+ * The reason behind a database error from `create_sponsorship_order()`.
+ *
+ * The same rule as for a course: a five-character SQLSTATE outside class 08
+ * is the database's answer; anything else is not, and an order may exist.
+ */
+export function pledgeReasonOf(error: DatabaseError): PledgeOutcome {
+  const state = error.code ?? '';
+  if (!/^[0-9A-Z]{5}$/u.test(state) || state.startsWith('08')) return 'unconfirmed';
+  const key = /(?:sponsorship|checkout):([a-z_]+)/iu.exec(error.message ?? '')?.[1]?.toLowerCase();
+  if (key === 'not_found' || key === 'not_pledged') return 'pledge_not_payable';
+  if (key === 'disabled') return 'disabled';
+  if (key === 'not_signed_in') return 'not_signed_in';
+  return 'refused';
+}
+
+/**
+ * What the pay form says about a reply that was not a success: a reason it
+ * knows, arriving with that reason's own status, or `unconfirmed`.
+ */
+export function pledgeOutcomeOf(status: number, reason: unknown): PledgeOutcome {
+  const known = typeof reason === 'string' && (PLEDGE_OUTCOMES as readonly string[]).includes(reason);
+  if (!known || pledgeStatusOf(reason as PledgeOutcome) !== status) return 'unconfirmed';
+  return reason as PledgeOutcome;
+}

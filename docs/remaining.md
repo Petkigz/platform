@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 13% there (192 of 1469 sentences; it was 71% of 272, then
+  the nineteen reads 13% there (192 of 1474 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -816,9 +816,21 @@ written: not a held draft, nothing.
   and whatever staff wrote as a reason, which is printed as written.
   **Known and not fixed:** nothing in the product tells a sponsor how to
   pay a pledge; the page now says only that it collects no payment and
-  that staff record one when it arrives. Decided 2026-11-19: a pledge will
-  be paid through the same checkout as a course, once the pawaPay sandbox
-  probe has passed; **not built**, and no interim instruction is written. No request, pledge or recorded
+  that staff record one when it arrives. **Since 2026-11-19 a pledge can be
+  paid through checkout** (`/account/sponsorship/pay/<id>`, migration
+  `20261281147000_sponsorship_checkout.sql`, five more sentences in the
+  same twenty-seven languages, unreviewed): where both switches are on and a
+  payment service can collect exactly the pledge's amount, the page links
+  there and says nothing is taken until the sponsor pays. **Not shown by any
+  test:** a real provider or a real callback. The pay page was opened in a
+  test browser in five of the twenty-seven languages. **Known:** a sponsored seat pays the
+  teacher no share, by hand or at checkout, because neither path writes
+  earnings; no tax or transfer fee is added to a pledge; the order a pledge
+  is paid through has one line and no product, and `/orders` (still
+  English) shows it by the line's own English title; money that arrives for
+  a pledge called off in the meantime is recorded in the audit trail and
+  nowhere a member of staff would be shown it. The migration is not on the
+  hosted test project. No request, pledge or recorded
   payment has been read through this page from a real database.
   **Still English, every one of them:**
   the pages it links to: `/account/password`, `/billing`,
@@ -1015,9 +1027,11 @@ make the twenty-seven served languages reviewed. And no speaker has been found
 for any language: until one is, the four stay unavailable and the nineteen stay
 in English on the companion screens, indefinitely.
 
-The existing Supabase test project has 352 of the tree's 353 migrations applied
-(the 353rd, `20261281146000_merge_request_privacy.sql`, was written on
-2026-11-18 and waits for the owner's approval and a job of its own): the initial
+The existing Supabase test project has 353 of the tree's 354 migrations applied
+(the 353rd, `20261281146000_merge_request_privacy.sql`, was applied on
+2026-11-19 by a job of its own; the 354th,
+`20261281147000_sponsorship_checkout.sql`, written the same day, waits for
+the owner's approval and a job of its own): the initial
 342 via the owner-approved GitHub run `43611493767`, and 1360–1450 via the
 owner-approved run `44131878224` on 2026-11-17. A read-only check after the
 first found 185 public base tables and zero Auth users; after the second, zero

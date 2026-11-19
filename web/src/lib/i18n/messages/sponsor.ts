@@ -16,9 +16,15 @@ import type { Messages } from './en.ts';
  * "the learner". No language below gives either of them a gender it could
  * avoid.
  *
- * **No sentence says a payment can be made on this page.** A pledge is not a
- * payment; staff record what arrived. `sponsor.nextPledged` says so and does
- * not say how to pay, because nothing in the product does yet.
+ * **No sentence says a payment can be made where it cannot.** A pledge is
+ * not a payment. Where a pledge cannot be paid on the site,
+ * `sponsor.nextPledged` says that staff record what arrives and does not say
+ * how to pay. Where it can (2026-11-19: both switches on, and a payment
+ * service that collects exactly its amount), `sponsor.nextPay` says nothing
+ * is taken until the sponsor pays, and `sponsor.pay`, `payLede`,
+ * `payApprove` and `payNot` are the page that takes the payment. `payNot` is
+ * one sentence for a pledge that is paid, called off or somebody else's, and
+ * must stay one: it must not say which.
  *
  * **`sponsor.zakat` makes no ruling and must not be made to.** It says that
  * whether a seat counts as zakat, sadaqah or neither is a scholar's ruling,
@@ -91,6 +97,14 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.recordedOn': 'تاريخ تسجيل الدفعة: {date}',
     'sponsor.zakat':
       'هل يُعدّ المقعد المكفول زكاة أو صدقة أو لا يُعدّ أيًّا منهما؟ هذا حكم يقوله أهل العلم، وهذه المنصة لا تحكم فيه. اسأل من تثق به قبل أن تعطي.',
+    'sponsor.pay': 'ادفع هذا التعهّد',
+    'sponsor.payLede':
+      'يُفتح المقعد للمتعلّم فور تأكّد الدفع. لا يعرف أيٌّ من الطرفين من هو الآخر.',
+    'sponsor.payApprove':
+      'وافق على الدفع من هاتفك. يُفتح المقعد للمتعلّم عند تأكّد الدفع. قد يستغرق ذلك لحظات.',
+    'sponsor.payNot':
+      'لا يمكن دفع هذا التعهّد هنا: إمّا أنه دُفع أو أُلغي، أو أنه ليس من تعهّداتك.',
+    'sponsor.nextPay': 'لا يُؤخذ شيء حتى تدفع. يُفتح المقعد عند تأكّد الدفع.',
   },
   ur: {
     'sponsor.lede':
@@ -137,6 +151,15 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.recordedOn': 'ادائیگی کے اندراج کی تاریخ: {date}',
     'sponsor.zakat':
       'کفالت والی نشست زکوٰۃ شمار ہوتی ہے، صدقہ، یا دونوں میں سے کچھ نہیں، یہ ایک عالم کا فیصلہ ہے، اور یہ پلیٹ فارم یہ فیصلہ نہیں کرتا۔ دینے سے پہلے کسی ایسے شخص سے پوچھیں جس پر آپ کو اعتماد ہو۔',
+    'sponsor.pay': 'یہ وعدہ ادا کریں',
+    'sponsor.payLede':
+      'ادائیگی کی تصدیق ہوتے ہی نشست سیکھنے والے کے لیے کھل جاتی ہے۔ دونوں فریق نہیں جانتے کہ دوسرا کون ہے۔',
+    'sponsor.payApprove':
+      'اپنے فون پر ادائیگی منظور کریں۔ ادائیگی کی تصدیق ہوتے ہی نشست سیکھنے والے کے لیے کھل جائے گی۔ اس میں کچھ وقت لگ سکتا ہے۔',
+    'sponsor.payNot':
+      'یہ وعدہ یہاں ادا نہیں کیا جا سکتا: یہ ادا ہو چکا ہے یا منسوخ کر دیا گیا ہے، یا یہ آپ کے وعدوں میں سے نہیں ہے۔',
+    'sponsor.nextPay':
+      'جب تک آپ ادائیگی نہ کریں کچھ نہیں لیا جاتا۔ ادائیگی کی تصدیق ہوتے ہی نشست کھل جاتی ہے۔',
   },
   fa: {
     'sponsor.lede':
@@ -183,6 +206,15 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.recordedOn': 'تاریخ ثبت پرداخت: {date}',
     'sponsor.zakat':
       'اینکه جایگاه حمایت‌شده زکات به شمار می‌آید، صدقه، یا هیچ‌کدام، حکمی است که عالِم دین می‌دهد، و این سکو چنین حکمی نمی‌دهد. پیش از بخشیدن از کسی که به او اعتماد دارید بپرسید.',
+    'sponsor.pay': 'پرداخت این تعهد',
+    'sponsor.payLede':
+      'جایگاه به‌محض تأیید پرداخت برای یادگیرنده باز می‌شود. هیچ‌یک از دو طرف نمی‌فهمد دیگری کیست.',
+    'sponsor.payApprove':
+      'پرداخت را در تلفن خود تأیید کنید. جایگاه با تأیید پرداخت برای یادگیرنده باز می‌شود. ممکن است کمی طول بکشد.',
+    'sponsor.payNot':
+      'این تعهد را نمی‌توان اینجا پرداخت: یا پرداخت شده یا لغو شده است، یا از تعهدهای شما نیست.',
+    'sponsor.nextPay':
+      'تا وقتی پرداخت نکنید چیزی برداشت نمی‌شود. جایگاه با تأیید پرداخت باز می‌شود.',
   },
   'fa-af': {
     'sponsor.lede':
@@ -228,6 +260,15 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.recordedOn': 'تاریخ ثبت پرداخت: {date}',
     'sponsor.zakat':
       'اینکه چوکی حمایت‌شده زکات شمرده می‌شود، صدقه، یا هیچ‌کدام، حکمی است که عالِم دین می‌دهد، و این پلتفرم چنین حکمی نمی‌دهد. پیش از بخشیدن از کسی که به او اعتماد دارید بپرسید.',
+    'sponsor.pay': 'پرداخت این تعهد',
+    'sponsor.payLede':
+      'چوکی به محض تأیید پرداخت برای شاگرد باز می‌شود. هیچ یک از دو طرف نمی‌داند دیگری کیست.',
+    'sponsor.payApprove':
+      'پرداخت را در تلفون خود تأیید کنید. چوکی با تأیید پرداخت برای شاگرد باز می‌شود. شاید کمی وقت بگیرد.',
+    'sponsor.payNot':
+      'این تعهد را نمی‌توان اینجا پرداخت: یا پرداخت شده یا لغو شده است، یا از تعهدهای شما نیست.',
+    'sponsor.nextPay':
+      'تا وقتی پرداخت نکنید چیزی گرفته نمی‌شود. چوکی با تأیید پرداخت باز می‌شود.',
   },
   tr: {
     'sponsor.lede':
@@ -273,6 +314,14 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.recordedOn': 'Ödemenin kaydedildiği tarih: {date}',
     'sponsor.zakat':
       'Destekli bir yerin zekât mı, sadaka mı sayılacağı yoksa hiçbiri mi olduğu bir âlimin vereceği hükümdür ve bu platform o hükmü vermez. Vermeden önce güvendiğiniz birine sorun.',
+    'sponsor.pay': 'Bu sözü ödeyin',
+    'sponsor.payLede':
+      'Ödeme onaylanır onaylanmaz yer öğrenciye açılır. İki taraf da diğerinin kim olduğunu öğrenmez.',
+    'sponsor.payApprove':
+      'Ödemeyi telefonunuzdan onaylayın. Ödeme onaylanınca yer öğrenciye açılır. Bu biraz zaman alabilir.',
+    'sponsor.payNot':
+      'Bu söz burada ödenemez: ya ödenmiş ya iptal edilmiştir ya da sizin sözlerinizden biri değildir.',
+    'sponsor.nextPay': 'Siz ödeyene kadar hiçbir şey alınmaz. Ödeme onaylanınca yer açılır.',
   },
   id: {
     'sponsor.lede':
@@ -319,6 +368,15 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.recordedOn': 'Pembayaran dicatat pada {date}',
     'sponsor.zakat':
       'Apakah kursi bersponsor terhitung zakat, sedekah, atau bukan keduanya adalah ketetapan seorang ulama, dan platform ini tidak menetapkannya. Tanyakan kepada orang yang Anda percaya sebelum memberi.',
+    'sponsor.pay': 'Bayar janji ini',
+    'sponsor.payLede':
+      'Kursi dibuka bagi peserta didik segera setelah pembayaran dikonfirmasi. Kedua pihak tidak tahu siapa pihak lainnya.',
+    'sponsor.payApprove':
+      'Setujui pembayaran di ponsel Anda. Kursi dibuka bagi peserta didik setelah pembayaran dikonfirmasi. Ini mungkin memerlukan waktu sebentar.',
+    'sponsor.payNot':
+      'Janji ini tidak dapat dibayar di sini: sudah dibayar atau dibatalkan, atau bukan salah satu janji Anda.',
+    'sponsor.nextPay':
+      'Tidak ada yang diambil sampai Anda membayar. Kursi dibuka saat pembayaran dikonfirmasi.',
   },
   ms: {
     'sponsor.lede':
@@ -365,6 +423,15 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.recordedOn': 'Bayaran direkodkan pada {date}',
     'sponsor.zakat':
       'Sama ada tempat tajaan dikira zakat, sedekah atau bukan kedua-duanya ialah hukum yang diputuskan oleh seorang alim, dan platform ini tidak memutuskannya. Tanyalah seseorang yang anda percayai sebelum memberi.',
+    'sponsor.pay': 'Bayar janji ini',
+    'sponsor.payLede':
+      'Tempat dibuka untuk pelajar sebaik sahaja pembayaran disahkan. Kedua-dua pihak tidak tahu siapa pihak yang satu lagi.',
+    'sponsor.payApprove':
+      'Luluskan pembayaran pada telefon anda. Tempat dibuka untuk pelajar sebaik sahaja pembayaran disahkan. Ini mungkin mengambil sedikit masa.',
+    'sponsor.payNot':
+      'Janji ini tidak boleh dibayar di sini: ia telah dibayar atau dibatalkan, atau bukan salah satu janji anda.',
+    'sponsor.nextPay':
+      'Tiada apa-apa diambil sehingga anda membayar. Tempat dibuka apabila pembayaran disahkan.',
   },
   bn: {
     'sponsor.lede':
@@ -411,6 +478,15 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.recordedOn': 'পেমেন্ট নথিভুক্তির তারিখ: {date}',
     'sponsor.zakat':
       'পৃষ্ঠপোষকতার আসন যাকাত, সদকা, নাকি কোনোটিই নয় বলে গণ্য হবে, তা একজন আলেমের রায়, এবং এই প্ল্যাটফর্ম সেই রায় দেয় না। দেওয়ার আগে আপনার আস্থাভাজন কাউকে জিজ্ঞাসা করুন।',
+    'sponsor.pay': 'এই প্রতিশ্রুতির পেমেন্ট করুন',
+    'sponsor.payLede':
+      'পেমেন্ট নিশ্চিত হওয়ামাত্র আসনটি শিক্ষার্থীর জন্য খুলে যায়। কোনো পক্ষই জানতে পারে না অপরজন কে।',
+    'sponsor.payApprove':
+      'আপনার ফোনে পেমেন্ট অনুমোদন করুন। পেমেন্ট নিশ্চিত হলেই আসনটি শিক্ষার্থীর জন্য খুলে যাবে। এতে কিছুটা সময় লাগতে পারে।',
+    'sponsor.payNot':
+      'এই প্রতিশ্রুতির পেমেন্ট এখানে করা যাবে না: এটি পরিশোধ করা হয়েছে বা বাতিল হয়েছে, অথবা এটি আপনার প্রতিশ্রুতি নয়।',
+    'sponsor.nextPay':
+      'আপনি পেমেন্ট না করা পর্যন্ত কিছুই নেওয়া হয় না। পেমেন্ট নিশ্চিত হলে আসনটি খুলে যায়।',
   },
   hi: {
     'sponsor.lede':
@@ -456,6 +532,15 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.recordedOn': 'भुगतान दर्ज होने की तारीख़: {date}',
     'sponsor.zakat':
       'प्रायोजित सीट ज़कात मानी जाएगी, सदक़ा, या दोनों में से कुछ नहीं, यह एक आलिम का फ़ैसला है, और यह प्लैटफ़ॉर्म यह फ़ैसला नहीं करता। देने से पहले किसी ऐसे व्यक्ति से पूछें जिस पर आपको भरोसा हो।',
+    'sponsor.pay': 'इस वचन का भुगतान करें',
+    'sponsor.payLede':
+      'भुगतान की पुष्टि होते ही सीट शिक्षार्थी के लिए खुल जाती है। कोई भी पक्ष नहीं जानता कि दूसरा कौन है।',
+    'sponsor.payApprove':
+      'अपने फ़ोन पर भुगतान स्वीकृत करें। भुगतान की पुष्टि होते ही सीट शिक्षार्थी के लिए खुल जाएगी। इसमें थोड़ा समय लग सकता है।',
+    'sponsor.payNot':
+      'इस वचन का भुगतान यहाँ नहीं किया जा सकता: इसका भुगतान हो चुका है या इसे रद्द कर दिया गया है, या यह आपके वचनों में से नहीं है।',
+    'sponsor.nextPay':
+      'जब तक आप भुगतान नहीं करते, कुछ नहीं लिया जाता। भुगतान की पुष्टि होते ही सीट खुल जाती है।',
   },
   fr: {
     'sponsor.lede':
@@ -503,6 +588,15 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.recordedOn': 'Paiement enregistré le {date}',
     'sponsor.zakat':
       'Savoir si une place parrainée compte comme zakat, comme sadaqa ou comme ni l’une ni l’autre relève de l’avis d’un savant, et cette plateforme ne le donne pas. Demandez à une personne de confiance avant de donner.',
+    'sponsor.pay': 'Payer cette promesse',
+    'sponsor.payLede':
+      'La place s’ouvre à l’apprenant dès que le paiement est confirmé. Aucune des deux parties n’apprend qui est l’autre.',
+    'sponsor.payApprove':
+      'Approuvez le paiement sur votre téléphone. La place s’ouvre à l’apprenant dès que le paiement est confirmé. Cela peut prendre un moment.',
+    'sponsor.payNot':
+      'Cette promesse ne peut pas être payée ici : elle a été payée ou annulée, ou elle ne fait pas partie des vôtres.',
+    'sponsor.nextPay':
+      'Rien n’est prélevé tant que vous n’avez pas payé. La place s’ouvre lorsque le paiement est confirmé.',
   },
   es: {
     'sponsor.lede':
@@ -549,6 +643,15 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.recordedOn': 'Pago registrado el {date}',
     'sponsor.zakat':
       'Si una plaza patrocinada cuenta como zakat, como sadaqa o como ninguna de las dos es un dictamen que corresponde a un sabio, y esta plataforma no lo emite. Pregunte a alguien de su confianza antes de dar.',
+    'sponsor.pay': 'Pagar este compromiso',
+    'sponsor.payLede':
+      'La plaza se abre para el alumno en cuanto se confirma el pago. Ninguna de las dos partes llega a saber quién es la otra.',
+    'sponsor.payApprove':
+      'Apruebe el pago en su teléfono. La plaza se abre para el alumno cuando se confirma el pago. Puede tardar un momento.',
+    'sponsor.payNot':
+      'Este compromiso no se puede pagar aquí: ya se pagó o se canceló, o no es uno de los suyos.',
+    'sponsor.nextPay':
+      'No se cobra nada hasta que usted pague. La plaza se abre cuando se confirma el pago.',
   },
   pt: {
     'sponsor.lede':
@@ -596,6 +699,15 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.recordedOn': 'Pagamento registado em {date}',
     'sponsor.zakat':
       'Se um lugar patrocinado conta como zakat, como sadaqa ou como nenhum dos dois é um parecer que cabe a um sábio, e esta plataforma não o emite. Pergunte a alguém em quem confia antes de dar.',
+    'sponsor.pay': 'Pagar esta promessa',
+    'sponsor.payLede':
+      'O lugar abre para o aluno assim que o pagamento for confirmado. Nenhuma das partes chega a saber quem é a outra.',
+    'sponsor.payApprove':
+      'Aprove o pagamento no seu telemóvel. O lugar abre para o aluno assim que o pagamento for confirmado. Pode demorar um momento.',
+    'sponsor.payNot':
+      'Esta promessa não pode ser paga aqui: já foi paga ou cancelada, ou não é uma das suas.',
+    'sponsor.nextPay':
+      'Nada é cobrado até pagar. O lugar abre quando o pagamento for confirmado.',
   },
   sw: {
     'sponsor.lede':
@@ -643,6 +755,15 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.recordedOn': 'Tarehe ya kurekodiwa kwa malipo: {date}',
     'sponsor.zakat':
       'Iwapo nafasi iliyofadhiliwa inahesabika kuwa zaka, sadaka au si mojawapo ni hukumu ya mwanazuoni, na jukwaa hili halitoi hukumu hiyo. Muulize mtu unayemwamini kabla ya kutoa.',
+    'sponsor.pay': 'Lipa ahadi hii',
+    'sponsor.payLede':
+      'Nafasi hufunguliwa kwa mwanafunzi mara malipo yanapothibitishwa. Hakuna upande unaojua upande mwingine ni nani.',
+    'sponsor.payApprove':
+      'Idhinisha malipo kwenye simu yako. Nafasi hufunguliwa kwa mwanafunzi malipo yanapothibitishwa. Hii inaweza kuchukua muda kidogo.',
+    'sponsor.payNot':
+      'Ahadi hii haiwezi kulipwa hapa: imeshalipwa au imesitishwa, au si mojawapo ya ahadi zako.',
+    'sponsor.nextPay':
+      'Hakuna kinachochukuliwa hadi ulipe. Nafasi hufunguliwa malipo yanapothibitishwa.',
   },
   af: {
     'sponsor.lede':
@@ -690,6 +811,15 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.recordedOn': 'Betaling aangeteken op {date}',
     'sponsor.zakat':
       'Of ’n geborgde plek as zakat, as sadaqah of as nie een van die twee tel nie, is ’n geleerde se uitspraak, en hierdie platform maak dit nie. Vra iemand wat jy vertrou voordat jy gee.',
+    'sponsor.pay': 'Betaal hierdie belofte',
+    'sponsor.payLede':
+      'Die plek gaan vir die leerder oop sodra die betaling bevestig is. Nie een van die twee kante kom agter wie die ander is nie.',
+    'sponsor.payApprove':
+      'Keur die betaling op jou foon goed. Die plek gaan vir die leerder oop sodra die betaling bevestig is. Dit kan ’n oomblik neem.',
+    'sponsor.payNot':
+      'Hierdie belofte kan nie hier betaal word nie: dit is reeds betaal of gekanselleer, of dit is nie een van joune nie.',
+    'sponsor.nextPay':
+      'Niks word geneem totdat jy betaal nie. Die plek gaan oop wanneer die betaling bevestig is.',
   },
   'zh-hans': {
     'sponsor.lede': '别人付费的课程，以及你为别人学习而付费的课程。双方都不会知道对方是谁。',
@@ -727,6 +857,11 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.pledgedOn': '承诺时间：{date}',
     'sponsor.recordedOn': '付款登记时间：{date}',
     'sponsor.zakat': '资助名额算作天课、施舍，还是两者都不算，应由学者裁定，本平台不作这一裁定。给予之前，请询问你信任的人。',
+    'sponsor.pay': '支付这项承诺',
+    'sponsor.payLede': '付款一经确认，名额即向学习者开放。双方都不会知道对方是谁。',
+    'sponsor.payApprove': '请在你的手机上批准付款。付款确认后，名额即向学习者开放。这可能需要一点时间。',
+    'sponsor.payNot': '这项承诺无法在这里支付：它已支付或已取消，或者不是你的承诺。',
+    'sponsor.nextPay': '在你付款之前不会扣取任何款项。付款确认后名额开放。',
   },
   'zh-hant': {
     'sponsor.lede': '別人付費的課程，以及你為別人學習而付費的課程。雙方都不會知道對方是誰。',
@@ -764,6 +899,11 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.pledgedOn': '承諾時間：{date}',
     'sponsor.recordedOn': '付款登記時間：{date}',
     'sponsor.zakat': '贊助名額算作天課、施捨，還是兩者都不算，應由學者裁定，本平台不作這一裁定。給予之前，請詢問你信任的人。',
+    'sponsor.pay': '支付這項承諾',
+    'sponsor.payLede': '付款一經確認，名額即向學習者開放。雙方都不會知道對方是誰。',
+    'sponsor.payApprove': '請在你的手機上核准付款。付款確認後，名額即向學習者開放。這可能需要一點時間。',
+    'sponsor.payNot': '這項承諾無法在這裡支付：它已支付或已取消，或者不是你的承諾。',
+    'sponsor.nextPay': '在你付款之前不會扣取任何款項。付款確認後名額開放。',
   },
   vi: {
     'sponsor.lede':
@@ -811,6 +951,15 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.recordedOn': 'Ngày ghi nhận thanh toán: {date}',
     'sponsor.zakat':
       'Một suất được tài trợ được tính là zakat, là sadaqah hay không là gì trong hai điều đó là phán quyết của một học giả, và nền tảng này không đưa ra phán quyết ấy. Hãy hỏi một người bạn tin tưởng trước khi cho.',
+    'sponsor.pay': 'Thanh toán cam kết này',
+    'sponsor.payLede':
+      'Suất được mở cho học viên ngay khi khoản thanh toán được xác nhận. Không bên nào biết bên kia là ai.',
+    'sponsor.payApprove':
+      'Hãy chấp thuận khoản thanh toán trên điện thoại của bạn. Suất sẽ mở cho học viên khi khoản thanh toán được xác nhận. Việc này có thể mất một lúc.',
+    'sponsor.payNot':
+      'Không thể thanh toán cam kết này tại đây: nó đã được thanh toán hoặc đã bị huỷ, hoặc không phải là cam kết của bạn.',
+    'sponsor.nextPay':
+      'Không có gì bị thu cho đến khi bạn thanh toán. Suất được mở khi khoản thanh toán được xác nhận.',
   },
   th: {
     'sponsor.lede':
@@ -856,6 +1005,15 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.recordedOn': 'วันที่บันทึกการชำระเงิน: {date}',
     'sponsor.zakat':
       'ที่นั่งที่มีผู้อุปถัมภ์จะนับเป็นซะกาต เป็นเศาะดะเกาะฮ์ หรือไม่เป็นทั้งสองอย่างนั้น เป็นคำวินิจฉัยของผู้รู้ศาสนา และแพลตฟอร์มนี้ไม่ได้วินิจฉัยเรื่องนี้ โปรดถามผู้ที่คุณไว้วางใจก่อนจะให้',
+    'sponsor.pay': 'ชำระเงินตามคำมั่นนี้',
+    'sponsor.payLede':
+      'ที่นั่งจะเปิดให้ผู้เรียนทันทีที่ยืนยันการชำระเงินแล้ว ทั้งสองฝ่ายจะไม่รู้ว่าอีกฝ่ายเป็นใคร',
+    'sponsor.payApprove':
+      'โปรดอนุมัติการชำระเงินบนโทรศัพท์ของคุณ ที่นั่งจะเปิดให้ผู้เรียนเมื่อยืนยันการชำระเงินแล้ว อาจใช้เวลาสักครู่',
+    'sponsor.payNot':
+      'ไม่สามารถชำระเงินตามคำมั่นนี้ที่นี่ได้: คำมั่นนี้ชำระแล้วหรือถูกยกเลิกแล้ว หรือไม่ใช่คำมั่นของคุณ',
+    'sponsor.nextPay':
+      'จะไม่มีการหักเงินจนกว่าคุณจะชำระ ที่นั่งจะเปิดเมื่อยืนยันการชำระเงินแล้ว',
   },
   fil: {
     'sponsor.lede':
@@ -902,6 +1060,15 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.recordedOn': 'Naitala ang bayad noong {date}',
     'sponsor.zakat':
       'Kung ang puwestong may sponsor ay ibinibilang na zakat, sadaqah, o wala sa dalawa ay pasya ng isang iskolar, at hindi ito pinagpapasyahan ng platapormang ito. Magtanong sa taong pinagkakatiwalaan mo bago ka magbigay.',
+    'sponsor.pay': 'Bayaran ang pangakong ito',
+    'sponsor.payLede':
+      'Nagbubukas ang puwesto para sa mag-aaral sa sandaling makumpirma ang bayad. Hindi nalalaman ng alinmang panig kung sino ang isa.',
+    'sponsor.payApprove':
+      'Aprubahan ang bayad sa iyong telepono. Magbubukas ang puwesto para sa mag-aaral kapag nakumpirma ang bayad. Maaaring tumagal ito nang sandali.',
+    'sponsor.payNot':
+      'Hindi mababayaran dito ang pangakong ito: nabayaran na ito o kinansela, o hindi ito isa sa iyong mga pangako.',
+    'sponsor.nextPay':
+      'Walang kinukuha hanggang sa magbayad ka. Nagbubukas ang puwesto kapag nakumpirma ang bayad.',
   },
   uz: {
     'sponsor.lede':
@@ -948,6 +1115,15 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.recordedOn': 'Toʻlov qayd etilgan sana: {date}',
     'sponsor.zakat':
       'Homiylik oʻrni zakot, sadaqa yoki ikkalasi ham emas deb hisoblanishi olimning hukmidir va bu platforma bunday hukm chiqarmaydi. Berishdan oldin ishongan kishingizdan soʻrang.',
+    'sponsor.pay': 'Bu vaʼdani toʻlash',
+    'sponsor.payLede':
+      'Toʻlov tasdiqlanishi bilanoq oʻrin oʻquvchi uchun ochiladi. Ikki tomondan hech biri narigi tomon kimligini bilmaydi.',
+    'sponsor.payApprove':
+      'Toʻlovni telefoningizda tasdiqlang. Toʻlov tasdiqlangach oʻrin oʻquvchi uchun ochiladi. Bu biroz vaqt olishi mumkin.',
+    'sponsor.payNot':
+      'Bu vaʼdani shu yerda toʻlab boʻlmaydi: u toʻlangan yoki bekor qilingan, yoki sizning vaʼdalaringizdan emas.',
+    'sponsor.nextPay':
+      'Siz toʻlamaguningizcha hech narsa olinmaydi. Toʻlov tasdiqlanganda oʻrin ochiladi.',
   },
   kk: {
     'sponsor.lede':
@@ -993,6 +1169,14 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.recordedOn': 'Төлем тіркелген күні: {date}',
     'sponsor.zakat':
       'Демеушілік орынның зекет, садақа немесе екеуінің ешқайсысы емес болып саналуы ғалымның үкімі, ал бұл платформа ондай үкім шығармайды. Бермес бұрын сенетін адамыңыздан сұраңыз.',
+    'sponsor.pay': 'Осы уәдені төлеу',
+    'sponsor.payLede':
+      'Төлем расталған бойда орын оқушыға ашылады. Екі тараптың ешқайсысы екіншісінің кім екенін білмейді.',
+    'sponsor.payApprove':
+      'Төлемді телефоныңызда мақұлдаңыз. Төлем расталғаннан кейін орын оқушыға ашылады. Бұл біраз уақыт алуы мүмкін.',
+    'sponsor.payNot':
+      'Бұл уәдені осы жерде төлеу мүмкін емес: ол төленген немесе күші жойылған, не болмаса сіздің уәделеріңіздің бірі емес.',
+    'sponsor.nextPay': 'Сіз төлемейінше ештеңе алынбайды. Төлем расталғанда орын ашылады.',
   },
   az: {
     'sponsor.lede':
@@ -1039,6 +1223,14 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.recordedOn': 'Ödənişin qeydə alındığı tarix: {date}',
     'sponsor.zakat':
       'Sponsorlu yerin zəkat, sədəqə və ya heç biri sayılması bir alimin hökmüdür və bu platforma həmin hökmü vermir. Verməzdən əvvəl etibar etdiyiniz birindən soruşun.',
+    'sponsor.pay': 'Bu sözü ödəyin',
+    'sponsor.payLede':
+      'Ödəniş təsdiqlənən kimi yer öyrənən üçün açılır. İki tərəfdən heç biri o birinin kim olduğunu bilmir.',
+    'sponsor.payApprove':
+      'Ödənişi telefonunuzda təsdiqləyin. Ödəniş təsdiqlənən kimi yer öyrənən üçün açılır. Bu, bir az vaxt apara bilər.',
+    'sponsor.payNot':
+      'Bu söz burada ödənilə bilməz: o ya ödənilib, ya ləğv edilib, ya da sizin sözlərinizdən biri deyil.',
+    'sponsor.nextPay': 'Siz ödəyənə qədər heç nə götürülmür. Ödəniş təsdiqlənəndə yer açılır.',
   },
   tg: {
     'sponsor.lede':
@@ -1085,6 +1277,15 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.recordedOn': 'Санаи сабти пардохт: {date}',
     'sponsor.zakat':
       'Ҷойи сарпарастӣ закот ҳисоб мешавад, садақа ё ҳеҷ кадоме аз ин ду, ҳукми олим аст ва ин платформа чунин ҳукм намебарорад. Пеш аз додан аз касе, ки ба ӯ боварӣ доред, бипурсед.',
+    'sponsor.pay': 'Пардохти ин ваъда',
+    'sponsor.payLede':
+      'Ҷой баробари тасдиқ шудани пардохт барои хонанда кушода мешавад. Ҳеҷ яке аз ду тараф намедонад, ки тарафи дигар кист.',
+    'sponsor.payApprove':
+      'Пардохтро дар телефони худ тасдиқ кунед. Ҷой пас аз тасдиқи пардохт барои хонанда кушода мешавад. Ин метавонад каме вақт гирад.',
+    'sponsor.payNot':
+      'Ин ваъдаро дар ин ҷо пардохтан мумкин нест: он пардохт ё бекор шудааст, ё аз ваъдаҳои шумо нест.',
+    'sponsor.nextPay':
+      'То шумо пардохт накунед, ҳеҷ чиз гирифта намешавад. Ҷой ҳангоми тасдиқи пардохт кушода мешавад.',
   },
   ky: {
     'sponsor.lede':
@@ -1130,6 +1331,14 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.recordedOn': 'Төлөм катталган күнү: {date}',
     'sponsor.zakat':
       'Демөөрчүлүк орундун зекет, садака же экөөнүн бири да эмес деп эсептелиши аалымдын өкүмү, ал эми бул платформа андай өкүм чыгарбайт. Берерден мурун ишенген адамыңыздан сураңыз.',
+    'sponsor.pay': 'Бул убаданы төлөө',
+    'sponsor.payLede':
+      'Төлөм ырасталары менен орун окуучуга ачылат. Эки тараптын бири да экинчисинин ким экенин билбейт.',
+    'sponsor.payApprove':
+      'Төлөмдү телефонуңузда жактырыңыз. Төлөм ырасталгандан кийин орун окуучуга ачылат. Бул бир аз убакыт алышы мүмкүн.',
+    'sponsor.payNot':
+      'Бул убаданы бул жерде төлөөгө болбойт: ал төлөнгөн же жокко чыгарылган, же сиздин убадаларыңыздын бири эмес.',
+    'sponsor.nextPay': 'Сиз төлөмөйүнчө эч нерсе алынбайт. Төлөм ырасталганда орун ачылат.',
   },
   tk: {
     'sponsor.lede':
@@ -1176,6 +1385,14 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.recordedOn': 'Tölegiň bellige alnan senesi: {date}',
     'sponsor.zakat':
       'Howandarlyk ornunyň zekat, sadaka ýa-da ikisiniň hiç biri hasaplanmagy alymyň hökümidir we bu platforma şeýle höküm çykarmaýar. Bermezden öň ynanýan adamyňyzdan soraň.',
+    'sponsor.pay': 'Bu sözi töläň',
+    'sponsor.payLede':
+      'Töleg tassyklanan badyna orun okuwçy üçin açylýar. Iki tarapyň hiç biri beýlekisiniň kimdigini bilmeýär.',
+    'sponsor.payApprove':
+      'Tölegi telefonyňyzda tassyklaň. Töleg tassyklanandan soň orun okuwçy üçin açylýar. Bu biraz wagt alyp biler.',
+    'sponsor.payNot':
+      'Bu sözi şu ýerde töläp bolmaýar: ol tölenen ýa-da ýatyrylan, ýa-da siziň sözleriňiziň biri däl.',
+    'sponsor.nextPay': 'Siz töleýänçäňiz hiç zat alynmaýar. Töleg tassyklananda orun açylýar.',
   },
   ta: {
     'sponsor.lede':
@@ -1223,6 +1440,15 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.recordedOn': 'கட்டணம் பதிவு செய்யப்பட்ட நாள்: {date}',
     'sponsor.zakat':
       'நிதியுதவி பெற்ற இடம் ஜகாத்தாக, சதகாவாக அல்லது இரண்டிலும் சேராததாகக் கணக்கிடப்படுமா என்பது ஒரு மார்க்க அறிஞரின் தீர்ப்பு; இந்தத் தளம் அந்தத் தீர்ப்பை வழங்குவதில்லை. கொடுப்பதற்கு முன் நீங்கள் நம்பும் ஒருவரிடம் கேளுங்கள்.',
+    'sponsor.pay': 'இந்த உறுதிமொழிக்குக் கட்டணம் செலுத்துங்கள்',
+    'sponsor.payLede':
+      'கட்டணம் உறுதிப்படுத்தப்பட்டவுடன் இடம் கற்பவருக்குத் திறக்கும். இரு தரப்பினருக்கும் மற்றவர் யார் என்று தெரியாது.',
+    'sponsor.payApprove':
+      'உங்கள் தொலைபேசியில் கட்டணத்தை அங்கீகரிக்கவும். கட்டணம் உறுதிப்படுத்தப்பட்டதும் இடம் கற்பவருக்குத் திறக்கும். இதற்குச் சிறிது நேரம் ஆகலாம்.',
+    'sponsor.payNot':
+      'இந்த உறுதிமொழிக்கு இங்கே கட்டணம் செலுத்த முடியாது: அது செலுத்தப்பட்டுவிட்டது அல்லது ரத்து செய்யப்பட்டது, அல்லது அது உங்களுடையது அல்ல.',
+    'sponsor.nextPay':
+      'நீங்கள் செலுத்தும் வரை எதுவும் எடுக்கப்படுவதில்லை. கட்டணம் உறுதிப்படுத்தப்பட்டதும் இடம் திறக்கும்.',
   },
   ne: {
     'sponsor.lede':
@@ -1269,5 +1495,14 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.recordedOn': 'भुक्तानी दर्ता भएको मिति: {date}',
     'sponsor.zakat':
       'प्रायोजित सिट जकात मानिन्छ, सदका मानिन्छ वा दुवै मानिँदैन भन्ने कुरा एक आलिमको फैसला हो, र यो प्लेटफर्मले त्यो फैसला गर्दैन। दिनुअघि आफूले विश्वास गर्ने कसैलाई सोध्नुहोस्।',
+    'sponsor.pay': 'यो वचनको भुक्तानी गर्नुहोस्',
+    'sponsor.payLede':
+      'भुक्तानी पुष्टि हुनेबित्तिकै सिट सिकारुका लागि खुल्छ। कुनै पनि पक्षले अर्को को हो भनेर थाहा पाउँदैन।',
+    'sponsor.payApprove':
+      'आफ्नो फोनमा भुक्तानी स्वीकृत गर्नुहोस्। भुक्तानी पुष्टि भएपछि सिट सिकारुका लागि खुल्छ। यसमा केही समय लाग्न सक्छ।',
+    'sponsor.payNot':
+      'यो वचनको भुक्तानी यहाँ गर्न सकिँदैन: यो तिरिसकिएको छ वा रद्द गरिएको छ, वा यो तपाईंको वचन होइन।',
+    'sponsor.nextPay':
+      'तपाईंले भुक्तानी नगरेसम्म केही पनि लिइँदैन। भुक्तानी पुष्टि भएपछि सिट खुल्छ।',
   },
 };

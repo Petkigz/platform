@@ -5,6 +5,7 @@ import { resolveOffering } from '@/lib/enrolment';
 import {
   createOrder,
   createPlanOrder,
+  createSponsorshipOrder,
   recordPaymentAttempt,
   resolveOpenAttempts,
   type AttemptMethod,
@@ -18,7 +19,9 @@ import {
   CHECKOUT_REFUSED_SENTENCE,
   CHECKOUT_UNCONFIRMED_SENTENCE,
   checkoutStatusOf,
+  pledgeStatusOf,
   type CheckoutReason,
+  type PledgeOutcome,
 } from '@/lib/checkout-outcome';
 
 export const dynamic = 'force-dynamic';
@@ -26,6 +29,11 @@ export const dynamic = 'force-dynamic';
 type Body = {
   courseId?: unknown;
   planVersionId?: unknown;
+  /**
+   * A pledge of the caller's own, to be paid. The amount is the pledge's and
+   * is read by the database; nothing else in the body describes it.
+   */
+  sponsorshipId?: unknown;
   learnerProfileId?: unknown;
   priceId?: unknown;
   /** E.164, for mobile-money providers. Optional; card providers ignore it. */
@@ -82,6 +90,21 @@ const NO_PROVIDER_SENTENCE =
 const refuse = (reason: CheckoutReason, error: string, extra: Record<string, unknown> = {}) =>
   NextResponse.json({ error, reason, ...extra }, { status: checkoutStatusOf(reason) });
 
+/** The same, for a pledge, whose refusals have a name of their own. */
+const PLEDGE_SENTENCES: Record<PledgeOutcome, string> = {
+  pledge_not_payable: 'This pledge cannot be paid here: it has been paid or called off, or it is not one of yours.',
+  not_signed_in: 'Sign in to check out.',
+  disabled: 'Payments are not open on this platform yet.',
+  malformed: 'Malformed request body.',
+  phone_invalid: 'That phone number is not valid.',
+  provider_unavailable: 'No payment provider can take this payment yet.',
+  provider_failed: 'The payment provider could not start this payment. Try again.',
+  refused: 'The order could not be placed. Nothing has been charged.',
+  unconfirmed: 'We could not confirm whether your order was placed. Look at your orders before trying again.',
+};
+const refusePledge = (reason: PledgeOutcome) =>
+  NextResponse.json({ reason, error: PLEDGE_SENTENCES[reason] }, { status: pledgeStatusOf(reason) });
+
 export async function POST(request: Request) {
   if (!isSupabaseConfigured()) {
     return refuse('disabled', 'Payments are not configured on this deployment.');
@@ -105,6 +128,7 @@ export async function POST(request: Request) {
 
   const courseId = typeof body.courseId === 'string' ? body.courseId.trim() : '';
   const planVersionId = typeof body.planVersionId === 'string' ? body.planVersionId.trim() : '';
+  const sponsorshipId = typeof body.sponsorshipId === 'string' ? body.sponsorshipId.trim() : '';
   const learnerProfileId = typeof body.learnerProfileId === 'string' ? body.learnerProfileId.trim() : '';
   const priceId = typeof body.priceId === 'string' ? body.priceId.trim() : '';
   const promotionCode = typeof body.promotionCode === 'string'
@@ -115,8 +139,12 @@ export async function POST(request: Request) {
       ? body.withdrawalChoice
       : null;
 
-  if (Boolean(courseId) === Boolean(planVersionId)) {
+  if ([courseId, planVersionId, sponsorshipId].filter(Boolean).length !== 1) {
     return refuse('malformed', 'Choose exactly one course or plan version.');
+  }
+  // An id that is not one is not sent to the database to be told so.
+  if (sponsorshipId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu.test(sponsorshipId)) {
+    return refusePledge('pledge_not_payable');
   }
   // A price is still part of a plan checkout. A course has no price to post:
   // which one applies is decided by the buyer's country, in the writer.
@@ -126,8 +154,9 @@ export async function POST(request: Request) {
   if (planVersionId && !learnerProfileId) {
     return refuse('learner_required', 'Choose the learner who will use this subscription.');
   }
-  // One purchase covers one learner, so a course order names them too.
-  if (!planVersionId && !learnerProfileId) {
+  // One purchase covers one learner, so a course order names them too. A
+  // pledge names nobody: the sponsor must not learn who they are helping.
+  if (courseId && !learnerProfileId) {
     return refuse('learner_required', 'Choose the learner this course is for.');
   }
 
@@ -180,7 +209,16 @@ export async function POST(request: Request) {
   // none. An account that has one is never re-priced by it.
   const country = countryFromHeaders(request.headers);
   let result;
-  if (isPlanCheckout) {
+  if (sponsorshipId) {
+    // A pledge. The database takes the sponsor from the session and the
+    // amount from the pledge, and writes an order with no learner on it.
+    const made = await createSponsorshipOrder(supabase, { sponsorshipId });
+    if (!made.ok) {
+      if (made.reason === 'refused') console.error('checkout: a pledge refused with no name:', made.message);
+      return refusePledge(made.reason);
+    }
+    result = made;
+  } else if (isPlanCheckout) {
     result = await createPlanOrder(supabase, {
       planVersionId,
       priceId,
@@ -262,7 +300,9 @@ export async function POST(request: Request) {
   // separate person-shaped decision. Recording it here also means a failure is
   // loud and the payment never starts, rather than a waiver that quietly did not
   // happen and a buyer who thinks it did.
-  if (withdrawalChoice) {
+  // (Not for a pledge: the box is about the buyer's own digital content, and a
+  // sponsor receives none.)
+  if (withdrawalChoice && !sponsorshipId) {
     const recorded = await recordWithdrawalChoice(supabase, {
       orderId: result.orderId,
       choice: withdrawalChoice,
@@ -335,7 +375,7 @@ export async function POST(request: Request) {
       orderId: result.orderId,
       amount: result.amount,
       returnUrl: `${origin}/orders?pending=${result.orderId}`,
-      description: `${isPlanCheckout ? 'Subscription' : 'Course purchase'} ${result.orderId}`,
+      description: `${sponsorshipId ? 'Sponsored seat' : isPlanCheckout ? 'Subscription' : 'Course purchase'} ${result.orderId}`,
       msisdn,
     });
     return NextResponse.json({
