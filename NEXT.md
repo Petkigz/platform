@@ -2628,8 +2628,17 @@ alone, and the run was started by the commit that added this paragraph.
 **It applies nothing until the owner approves it** in the environment
 `ayahspring-test-migration-apply`. Read through the connector just before:
 352 recorded, latest `20261281145000`, no Auth user, no learner, no merge
-request, and the migration's own change absent. The outcome is written here
-when there is one. It does not switch `platform.account_merge` on.
+request, and the migration's own change absent. It does not switch
+`platform.account_merge` on.
+
+**Outcome: applied.** The owner approved run `44505560049` and every step
+succeeded, the rehearsal and the comparison of the two roles' privileges
+among them. Read through the connector afterwards: 353 recorded, latest
+`20261281146000`, the migration's change present, still no Auth user and no
+learner, and `platform.account_merge` still off. The hosted test project and
+this tree are at the same 353. Not shown by it: Auth, a signed-in request
+through PostgREST, or the application, none of which has run against that
+database.
 
 ### pawaPay: one aggregator for the operators with no adapter, 2026-11-19
 

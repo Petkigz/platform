@@ -491,6 +491,8 @@ rolls it back, compares the two roles' privileges with the tested database
 built from all 353, and applies only if the CLI's dry-run names exactly that
 one file. At 353 it only repeats the comparison. It does not switch
 `platform.account_merge` on. The two earlier jobs are spent and unchanged.
+**Done:** run `44505560049`, approved by the owner on 2026-11-19, succeeded;
+the test project records 353. This job is now spent too.
 - The application that matches 1360–1450 has **not** been deployed. Any older
   build pointed at this project will be refused by the database when it saves
   a resume position or writes an answer row directly. That is the intended
