@@ -2619,6 +2619,18 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The 354th migration, asked of the test project, 2026-11-19
+
+`20261281147000_sponsorship_checkout.sql`, through
+`scripts/hosted-migration-354.mjs` and the workflow "Apply Supabase test
+migration 354", started by the commit that added this paragraph. **It
+applies nothing until the owner approves it** in the environment
+`ayahspring-test-migration-apply`. Read through the connector just before:
+353 recorded, latest `20261281146000`, no Auth user, no learner, no pledge,
+no order line, and the migration's own column absent. The outcome is written
+here when there is one. It turns neither `commerce.sponsorship` nor
+`commerce.checkout` on.
+
 ### A sponsor pays a pledge through checkout, 2026-11-19
 
 Decided earlier the same day; built once the pawaPay probe had passed
