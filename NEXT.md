@@ -2647,8 +2647,8 @@ MTN in eleven countries and Airtel in thirteen and nothing else: no M-Pesa,
 no Orange Money, no MTN in Rwanda or Nigeria.
 
 - *The adapter.* `lib/payments/pawapay.ts`, written from
-  https://docs.pawapay.io/v2 and **run against nothing: there is no pawaPay
-  account**. Deposits (`POST /v2/deposits`), status (`GET
+  https://docs.pawapay.io/v2 and **run against pawaPay's sandbox only**
+  (below). Deposits (`POST /v2/deposits`), status (`GET
   /v2/deposits/{id}`) and starting a refund (`POST /v2/refunds`), with a
   bearer token. Forty-four operators in twenty-one countries
   (`PAWAPAY_BRANDS`), each a provider of its own: `pawapay_mpesa_ke`.
@@ -2671,16 +2671,23 @@ no Orange Money, no MTN in Rwanda or Nigeria.
   the order's, five that are unfinished or unanswerable, and a failure.
 - *The one run that can say whether it is right.*
   `scripts/pawapay-sandbox-probe.mjs`, and the workflow "pawaPay sandbox
-  probe" (by hand only): the adapter itself against pawaPay's sandbox, with
-  pawaPay's published test numbers, for six operators. It needs the
-  repository secret `PAWAPAY_SANDBOX_TOKEN`, which only the owner can make
-  (sign up at https://dashboard.sandbox.pawapay.io and generate a token).
-  **It has not been run: there is no token.** The sandbox address is written
-  in the script and cannot be changed from the environment.
-- *Not shown by any of it.* That pawaPay accepts these requests; that it
-  answers as documented; that a handset is prompted; that money moves; that
+  probe" (started by a commit whose message begins `test: pawapay sandbox
+  probe`): the adapter itself against pawaPay's sandbox, with pawaPay's
+  published test numbers. It needs the repository secret
+  `PAWAPAY_SANDBOX_TOKEN`. The sandbox address is written in the script and
+  cannot be changed from the environment.
+  **Run on 2026-11-19, and it passed** (run `44556932579`; the owner made
+  the account and the token). pawaPay's own configuration for the account
+  agrees with thirty-nine of the table's forty-four operators; three it is
+  silent about on fractions; **M-Pesa in Kenya and in Lesotho are not on the
+  account**. Deposits for MTN and Airtel in Uganda and five other operators
+  were accepted, completed or failed with the documented code, named their
+  order and gave the amount back exactly. The first attempt found no token
+  (the secret was not yet saved) and the second found Kenya's refusal.
+- *Not shown by any of it.* A callback from pawaPay (none has ever been
+  received); that a handset is prompted; that money moves; production; that
   an order becomes access (the stand-in settles nothing); a refund's
-  outcome. The names on the buttons for AirtelTigo, Vodafone Ghana, Tigo
+  outcome; M-Pesa in Kenya. The names on the buttons for AirtelTigo, Vodafone Ghana, Tigo
   Tanzania, Free Senegal and Airtel Nigeria are a guess at what each is
   called today.
 - *Both roads, 2026-11-19.* The owner: "it ok to have both in case one

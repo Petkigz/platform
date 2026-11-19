@@ -916,9 +916,12 @@ written: not a held draft, nothing.
   Airtel without, and which each accepts has not been verified**; the
   pawaPay adapter of 2026-11-19, which reaches M-Pesa, Orange Money and
   forty-two other operators, is written from pawaPay's documentation and
-  **has been sent to pawaPay not once: no account exists, and whether a
-  solo builder with no registered company can open a live one is not
-  known**); what happens after the hand-off (the payment webhook is now
+  **has met pawaPay's sandbox only** (2026-11-19: deposits and their status
+  for MTN and Airtel in Uganda and five other operators, with test numbers;
+  no callback, no refund, no handset, no production). **M-Pesa in Kenya and
+  in Lesotho were not on the sandbox account**, so the one service the owner
+  named first is confirmed by documentation alone. **Whether a solo builder
+  with no registered company can open a live account is not known**); what happens after the hand-off (the payment webhook is now
   driven through its route against a stand-in by
   `scripts/pawapay-route-smoke.mjs`; a payment worker that polls, and the
   order turning into access in a real database, are not); a redirecting provider, since both

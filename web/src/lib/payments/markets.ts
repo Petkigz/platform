@@ -123,7 +123,15 @@ export type PawaPayBrand = {
  * Every operator pawaPay documents that asks the payer to approve on their
  * own handset (`PROVIDER_AUTH`), with its code, currency and whether it takes
  * a fraction: copied from https://docs.pawapay.io/v2/docs/providers on
- * 2026-11-19. **Not checked against an account**: this platform has none.
+ * 2026-11-19. **Checked against one sandbox account, the same day**
+ * (`scripts/pawapay-sandbox-probe.mjs`, which asks pawaPay for the
+ * account's own configuration): thirty-nine of the forty-four agree on code,
+ * currency, fractions and how the payer approves. For three the account
+ * does not state whether an amount may have a fraction (`MOOV_GAB`,
+ * `TELEBIRR_ETH`, `ECOCASH_ZWE`; the documentation says it may, and that is
+ * what is here). Two were not on that account at all, **M-Pesa in Kenya and
+ * in Lesotho** (`MPESA_KEN`, `MPESA_LSO`), and so are confirmed by nothing
+ * but the documentation. A live account may differ from a sandbox one.
  * Which of these an account may actually use is decided by pawaPay, operator
  * by operator, and is said in `PAWAPAY_PROVIDERS` (`pawapay.ts`); an operator
  * not named there is not offered whatever this table says.

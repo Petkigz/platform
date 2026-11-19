@@ -6,11 +6,17 @@
  * operator (2026-11-18), keeping MTN and Airtel direct where an account of
  * their own exists. pawaPay is that aggregator: see `DECISIONS.md`.
  *
- * **Written from pawaPay's published documentation and run against nothing.**
- * This platform has no pawaPay account, sandbox or live. Every request below
- * is the shape https://docs.pawapay.io/v2 describes (read 2026-11-19); none
- * has been sent to pawaPay. The first thing to do with a sandbox token is to
- * find out where this file is wrong.
+ * **Written from pawaPay's published documentation, and run against its
+ * sandbox only.** Every request below is the shape https://docs.pawapay.io/v2
+ * describes (read 2026-11-19). On 2026-11-19 the owner made a sandbox
+ * account and `scripts/pawapay-sandbox-probe.mjs` drove this file against it
+ * with pawaPay's published test numbers: for MTN and Airtel in Uganda and
+ * five other operators a deposit was accepted, completed or failed with the
+ * documented code, named its order and gave its amount back exactly; an id
+ * pawaPay had never seen was answered as not found. **That is all that has
+ * met pawaPay.** No callback has been received, no handset has been prompted
+ * (the sandbox has no prompt), no refund has been started, and nothing has
+ * run against production: there is no live account.
  *
  * The flow (API v2):
  *

@@ -8691,17 +8691,36 @@ South Sudan, which pawaPay's site names and its provider table does not;
 signing this platform's requests; asking pawaPay which operators are enabled
 or down; hearing how a refund ended.
 
-**None of it has been sent to pawaPay.** There is no account, sandbox or
-live. Every request is the shape the documentation describes, and every
-answer in the tests was typed from it. `commerce.checkout` stays off.
+**What has met pawaPay (2026-11-19).** The owner made a sandbox account and
+`scripts/pawapay-sandbox-probe.mjs` drove the adapter against it (run
+`44556932579`), with pawaPay's published test numbers:
 
-**What the owner does next**, since only the owner can: make a sandbox
-account, generate a token, save it as the repository secret
-`PAWAPAY_SANDBOX_TOKEN`, and run the workflow "pawaPay sandbox probe". It
-drives the adapter against pawaPay's sandbox with pawaPay's own test numbers
-and lists whatever disagrees. Then ask pawaPay whether an individual with no
-registered company can be verified for a live account: if not, this adapter
-cannot take a payment however right it is.
+- *The table.* pawaPay's own configuration for the account lists forty-four
+  operators for deposits. Thirty-nine of the adapter's forty-four agree
+  with it on code, currency, fractions and how the payer approves. For
+  three (`MOOV_GAB`, `TELEBIRR_ETH`, `ECOCASH_ZWE`) the account does not
+  state whether an amount may have a fraction. **`MPESA_KEN` and
+  `MPESA_LSO` are not on the account.** Wave is, in both its countries, and
+  is deliberately not in the table.
+- *Deposits.* MTN and Airtel in Uganda, MTN in Rwanda, Ghana and Zambia,
+  Orange in Senegal and Airtel in Tanzania: each accepted; a number
+  documented to complete completed, named its order and gave its amount
+  back exactly (a fraction among them); a number documented to fail failed
+  with the documented code. An id pawaPay had never seen was "not found".
+- *The first run found one thing*: M-Pesa in Kenya answered
+  `DEPOSITS_NOT_ALLOWED`. The adapter read that correctly, as a refusal; the
+  cause is the account, not the request.
+
+**What has not.** A callback (the sandbox would have to reach an address of
+this platform, and there is none); a PIN prompt (the sandbox has none); a
+refund; production. Everything else in the tests is typed from the
+documentation. `commerce.checkout` stays off.
+
+**What the owner asks pawaPay**, since only the owner can: whether an
+individual with no registered company can be verified for a live account
+(if not, this adapter cannot take a payment however right it is); and why
+M-Pesa in Kenya is not on the sandbox account, and what a live account needs
+to be given it.
 
 ## Both roads to one wallet, "in case one fails" — **DECIDED 2026-11-19**
 

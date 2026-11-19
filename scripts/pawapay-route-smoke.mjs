@@ -2,8 +2,9 @@
 // adapter switched on, against an entirely synthetic loopback server that
 // plays Auth, the database's REST API and pawaPay at once.
 //
-// **Nothing here is pawaPay.** This platform has no pawaPay account, sandbox
-// or live. The stand-in answers the way pawaPay's published documentation
+// **Nothing here is pawaPay.** (The adapter has met pawaPay's sandbox, through
+// scripts/pawapay-sandbox-probe.mjs; this script has not, and no callback
+// from pawaPay has ever been received.) The stand-in answers the way pawaPay's published documentation
 // (https://docs.pawapay.io/v2, read 2026-11-19) says pawaPay answers, typed
 // here by hand. So this shows that the routes do what that documentation
 // asks, and what they do when an answer is not what they expect. It does not
@@ -533,7 +534,7 @@ try {
     assert.equal(answer.json.status, 'not_applied'); nothingRecorded('a failure for another order');
   }
   console.log('Payment webhook with a synthetic pawaPay: three addresses that are nobody’s 404 and a body that is not JSON 400; a success pawaPay never heard of settles nothing; four notifications that are not an outcome ask pawaPay nothing; a completed deposit for this order at this order’s total is recorded with what confirmed it and settles the order once, however often it is delivered; a notification that names no order, or lies about the outcome, is corrected by pawaPay’s own record; six real payments that are not this order’s payment settle nothing and are answered 200; five that are unfinished or unanswerable are left alone, never called failed, and answered 503 so that they are sent again, and the next delivery settles the order; a confirmed failure closes the attempt with pawaPay’s code and leaves the order open.');
-  console.log('pawaPay HTTP smoke passed. Not pawaPay: every answer was typed from its documentation, and this platform has no account there. Not real Auth, RLS or order rules; no handset, no money.');
+  console.log('pawaPay HTTP smoke passed. Not pawaPay: every answer was typed from its documentation. Not real Auth, RLS or order rules; no handset, no money.');
 } catch (e) { console.error(logs.slice(-4000)); throw e; }
 finally {
   try { process.kill(-next.pid, 'SIGTERM'); } catch { /* already exited */ }

@@ -32,7 +32,8 @@ import { findCountry } from './phone.ts';
 //
 // Every answer "pawaPay" gives below is typed here from pawaPay's published
 // documentation (https://docs.pawapay.io/v2, read 2026-11-19). Nothing in
-// this file has been sent to pawaPay: this platform has no account there.
+// this file is sent to pawaPay. (The adapter has met pawaPay's sandbox, once,
+// through `scripts/pawapay-sandbox-probe.mjs`; that is not this file.)
 // They show that the adapter does what the documentation asks and fails in
 // the safe direction when an answer is not what it expects. They do not show
 // that the documentation is what pawaPay does.
@@ -879,7 +880,10 @@ test('the adapter keeps pawaPay\'s codes and none of its sentences, and says wha
   // Money is never a Number.
   assert.doesNotMatch(code, /Number\(|parseFloat|parseInt|toFixed/u);
   // And the file says, where a reader starts, that none of it has met pawaPay.
-  assert.match(source, /\*\*Written from pawaPay's published documentation and run against nothing\.\*\*/u);
+  // And the file says, where a reader starts, how little of it has met pawaPay.
+  assert.match(source, /\*\*Written from pawaPay's published documentation, and run against its\n \* sandbox only\.\*\*/u);
+  assert.match(source, /\*\*That is all that has\n \* met pawaPay\.\*\* No callback has been received, no handset has been prompted/u);
+  assert.match(source, /there is no live account\./u);
   assert.match(source, /verifyWebhookSignature\(_payload: string, _signature: string \| null\): boolean \{\n    return false;/u);
 
   const checkout = readFileSync(new URL('../app/api/checkout/route.ts', import.meta.url), 'utf8');
