@@ -2619,6 +2619,18 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The 353rd migration, asked of the test project, 2026-11-19
+
+The owner answered the open question ("continue with the recommendation").
+`scripts/hosted-migration-one-more.mjs` and the workflow "Apply Supabase test
+migration 353" were written for `20261281146000_merge_request_privacy.sql`
+alone, and the run was started by the commit that added this paragraph.
+**It applies nothing until the owner approves it** in the environment
+`ayahspring-test-migration-apply`. Read through the connector just before:
+352 recorded, latest `20261281145000`, no Auth user, no learner, no merge
+request, and the migration's own change absent. The outcome is written here
+when there is one. It does not switch `platform.account_merge` on.
+
 ### pawaPay: one aggregator for the operators with no adapter, 2026-11-19
 
 The owner chose pawaPay (`DECISIONS.md`). Until now a payer could be offered
