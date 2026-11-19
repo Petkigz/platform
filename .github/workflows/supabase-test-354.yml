@@ -11,8 +11,14 @@ on:
       - arena/4f30fd1d-platform
 permissions:
   contents: read
+# A group of its own. The three jobs before this one share a group, and every
+# push starts all of them (each then skips). GitHub keeps one run waiting in
+# a group and cancels the rest, and on 2026-11-19 the run it cancelled was
+# this one, before it could ask for approval. The earlier jobs are spent and
+# skip, so nothing else can be writing; and the script refuses unless the
+# hosted history is exactly the 353.
 concurrency:
-  group: ayahspring-supabase-test-migrations
+  group: ayahspring-supabase-test-migration-354
   cancel-in-progress: false
 jobs:
   apply-354:
