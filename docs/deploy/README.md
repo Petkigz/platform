@@ -495,9 +495,15 @@ one file. At 353 it only repeats the comparison. It does not switch
 the test project records 353. This job is now spent too.
 
 **The 354th, `20261281147000_sponsorship_checkout.sql`** (a sponsor pays a
-pledge through checkout) is in the tree and **not on the test project**. It
-needs a job of its own, built the same way, and the owner's approval. Both
-switches it serves ship off.
+pledge through checkout) is in the tree and **not on the test project**. Its
+job is `scripts/hosted-migration-354.mjs`, run by the workflow "Apply
+Supabase test migration 354" on a commit whose message starts
+`test: apply ayahspring test migration 354`, behind the same environment and
+the same approval. It starts only from exactly the 353 with the migration's
+own column absent, rehearses on the hosted database and rolls back, compares
+the two roles' privileges with the tested database built from all 354, and
+applies only if the CLI's dry-run names exactly that one file. Both switches
+the migration serves ship off, and the job turns neither on.
 - The application that matches 1360–1450 has **not** been deployed. Any older
   build pointed at this project will be refused by the database when it saves
   a resume position or writes an answer row directly. That is the intended

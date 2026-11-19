@@ -70,7 +70,7 @@ jobs:
       - run: npm ci
 
       - name: Migration preview and apply guard tests
-        run: node --test scripts/hosted-migration-dry-run.test.mjs scripts/hosted-migration-apply.test.mjs scripts/hosted-migration-advance.test.mjs scripts/hosted-migration-one-more.test.mjs
+        run: node --test scripts/hosted-migration-dry-run.test.mjs scripts/hosted-migration-apply.test.mjs scripts/hosted-migration-advance.test.mjs scripts/hosted-migration-one-more.test.mjs scripts/hosted-migration-354.test.mjs
 
       - name: Prayer component simulation
         run: npm run test:prayer-component
