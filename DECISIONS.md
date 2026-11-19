@@ -7962,7 +7962,7 @@ owner chose the first.
   form, 19% since the page for closing an account, 18% since the pages for
   getting a copy of your data, 17% since the reading settings, 16% since
   the page for putting a copy back, 15% since the merge screen, 14% since
-  the two sharing screens.
+  the two sharing screens, 13% since the two screens for inviting a friend.
 - **The test that refused a language under half is removed.** Nothing in the
   tests now limits how much English one of these languages shows. That is the
   cost of this choice and it was put to the owner in those words.
@@ -8497,6 +8497,50 @@ an invitation link opens followed, sixty-eight sentences in a new part,
   dates with no language and no zone.
 - *The invitation page is never indexed, and accepts only by its button.*
   Unchanged, and now pinned by a test.
+
+**Inviting a friend (2026-11-19).** `/account/referrals` and the page a
+friend's link opens followed, fifty-one sentences in a new part, `refer.ts`;
+the nineteen read 13%. Settled in writing them:
+
+- *What a friend is told is what the code says.* The page used to print
+  today's `commerce.referral_referee_percent`. A code is minted once and
+  keeps the percentage it was minted with, so after the setting changed the
+  page promised one number and the friend's page showed another. The page
+  now asks `resolve_referral_code()` about the reader's own code, which is
+  the same question the friend's page asks. When that cannot be answered
+  the sentence and the "copy a message" button are left out; the link stays.
+- *A link is an address on the host the reader is on.* The page built the
+  link from `NEXT_PUBLIC_SITE_URL` and, with none set, copied a bare path;
+  the route that keeps a code built its destination the same way and, with
+  none set, sent a visitor to `localhost`. A preview has no site address.
+  The route now answers 303 with the path `/catalogue`, and the page fills
+  in the browser's own origin when the server was given none.
+- *Three ways to fail are three pages.* A code nobody has, the programme
+  being switched off, and a database that did not answer were one page
+  saying the link was wrong. Somebody told their friend's link is wrong
+  will tell the friend. They are now said apart, and "could not be read
+  just now" never blames the link.
+- *Looking keeps nothing.* The cookie is set by the button's route, never by
+  opening the page: mail scanners and link previews open links. The page is
+  not indexed, and a code that is not shaped like one is refused without
+  asking the database, a stray percent sign included.
+- *A reward is said by its dates.* "Waiting" and "live" were worked out from
+  a state; a reward is now "usable from" a date or "use it by" one, each
+  with its zone, and only one that can be used today says where to type it.
+  A state this screen has no word for is "Recorded", never the database's
+  word.
+- *Nobody is given a gender, and nobody is given a surname.* The visitor
+  page cuts the name to its first word. Where a language marks a gender on
+  "invited" or "bought" the sentence is turned so that it does not (Arabic:
+  "an invitation from", "purchase of a course").
+- *Reaching the yearly limit is not said about the friend.* The friend did
+  buy; `capped` is shown as "Bought a course". That no reward came of it is
+  not explained on the page, which is written down in `docs/remaining.md`
+  as a gap.
+- *Nothing says money is paid.* Every language says both rewards are
+  discounts on a course, with nothing to withdraw and no bank details.
+- *With the switch off nothing is minted.* The page asks the switch first.
+  It used to show a code that could be given to nobody.
 
 **Mobile money is a service in a country (2026-11-18).** The owner asked
 for a number typed without a country code to stop being read as Ugandan,

@@ -106,6 +106,12 @@ for (const [file, key] of [
   // must be in those two pages and in no script.
   ['share.ts', 'share.sameAnswer'],
   ['share.ts', 'share.acErrOther'],
+  // The two copy buttons on the invitation page are a client component
+  // handed five sentences. What a reader is told about nothing being paid
+  // out, and that only a first name is shown, must be in that page and in
+  // no script.
+  ['refer.ts', 'refer.honesty'],
+  ['refer.ts', 'refer.onlyFirstName'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

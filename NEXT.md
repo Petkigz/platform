@@ -2619,6 +2619,51 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### Inviting a friend in the reader's language, 2026-11-19
+
+`/account/referrals` and `/referral/<code>` were two more of the English
+pages the account page links to. The first printed today's setting as what a
+friend would get, copied a bare path as the link wherever no site address was
+set, and showed a code with the programme off. The second said "this link
+does not work" when the database had not answered. The route between them
+sent a visitor to `localhost` wherever no site address was set.
+
+- *The words.* A new part, `messages/refer.ts`: fifty-one sentences in the
+  twenty-seven languages with nothing held, **read by no speaker**. The
+  title, the link from the account page and the way back are borrowed. A
+  language held for review reads both screens in English, whole, marked
+  `lang="en"`; `/language` tells each of the nineteen 13% (192 of 1434).
+- *Named refusals.* `lib/referral-outcome.ts` names what the two functions
+  raise (401 `signed_out`, 409 `off`, 502 `failed`), and holds how a code
+  is read from a path, how a name is cut to its first word, and which side
+  of its dates a reward is on. `lib/referral-outcome.test.ts` (13 tests)
+  reads the raises and the four states out of the migration.
+- *Routes.* `/api/account/referrals` answers by name, no-store, with a
+  `catch`. `/api/referral/<code>` checks the code, sets an HttpOnly, lax,
+  thirty-day cookie only when it was found, and answers 303 to the path
+  `/catalogue`.
+- *Checked.* `scripts/referral-route-smoke.mjs`, in `ci.yml` and with a
+  browser in `responsive-smoke.yml`: the real pages and routes against a
+  stand-in. English, Arabic, Persian (its own digits), French, and Hausa in
+  English; six wrong answers for the board; four ways the code's worth
+  cannot be read; three failures of the visitor page said apart; ten things
+  that leave no cookie; thirteen database answers each under its name; in a
+  browser, en/ar/ta/fil at 320, 390 and 1440px, what each button copies, a
+  clipboard that says no, and the button on the visitor page landing on the
+  same host's catalogue with the code kept. `client-bundle-check` looks for
+  two more sentences (632) and finds none in a script.
+- *Found by looking at the screenshots, not by the tests.* The lists were
+  laid out as one row and scrolled sideways at 320px (now stacked); the
+  Arabic lines "bought a course" and "started a purchase" were masculine
+  verbs about somebody whose gender nobody asked (now nouns); Dari wrote
+  "code" as it is not written anywhere else in the catalogue (fourteen
+  places).
+- *Not shown by any of it.* That a code is minted, that a discount comes off
+  an order, that a reward is made or withdrawn: the stand-in does none of
+  them and the switch is off. No language was read by a speaker; 23 of the
+  27 were not opened in a browser. `lib/referrals.ts` still serves English
+  to the buy page and the staff page.
+
 ### Sharing your own learning in the reader's language, 2026-11-19
 
 `/account/sharing` and the page an invitation link opens were two of the

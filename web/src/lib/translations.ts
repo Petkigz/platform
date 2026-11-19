@@ -293,6 +293,7 @@ const SECTION_LABELS: Record<string, string> = {
   phone: 'The phone number card',
   merge: 'Merging two accounts',
   share: 'Sharing your own learning',
+  refer: 'Inviting a friend',
 };
 
 export const SECTIONS: Section[] = (() => {

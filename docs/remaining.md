@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 14% there (192 of 1383 sentences; it was 71% of 272, then
+  the nineteen reads 13% there (192 of 1434 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -545,8 +545,8 @@ still unreviewed and still saying so.
   1020 with the page for closing an account, 18% of 1078 with the pages for
   a copy of your data, 17% of 1130 with the reading settings, 16% of 1199
   with the page for putting a copy back and of 1228 with the phone card,
-  15% of 1315 with the merge screen, then this with the two sharing
-  screens),
+  15% of 1315 with the merge screen, 14% of 1383 with the two sharing
+  screens, then this with the two for inviting a friend),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -789,9 +789,22 @@ written: not a held draft, nothing.
   every reader, and "A course" in place of a certificate's course title if
   the database ever returned none. No invitation has been sent, accepted
   or ended through these screens against a real database.
+  The two screens for inviting a friend (`/account/referrals` and
+  `/referral/<code>`; the programme is switched off) are in the reader's
+  language since 2026-11-19 (`messages/refer.ts`, fifty-one sentences,
+  unreviewed; checked by `scripts/referral-route-smoke.mjs` on a stand-in
+  that mints nothing and discounts nothing). **Still English there:** the
+  discount line on the buy page and the staff page, which read
+  `lib/referrals.ts`. **Known and not fixed:** `my_referrals()` returns the
+  letter "A" for somebody with no name (what is left of its own "A
+  friend"), which the page shows as "A friend" in the reader's language, so
+  a person whose whole name is the letter A is shown that way too; and a
+  reward stopped by the yearly limit is told to the person who invited as
+  "Bought a course" with no reward and no explanation beside it. No code
+  has been minted, used or rewarded through these screens against a real
+  database, and no discount has been taken off a real order.
   **Still English, every one of them:**
   the pages it links to:
-  `/account/referrals`,
   `/account/sponsorship`, `/account/password`, `/billing`,
   `/institution`, `/notifications`, `/policies`, `/teach/apply`, `/sponsor`
   and `/forgot-password`. A reader is taken from a page in their language to

@@ -1861,6 +1861,78 @@ export const en = {
   'share.acErrExpired': 'This invitation has run out. Ask the person who sent it for a new one.',
   'share.acErrOther': 'This invitation was sent to a different address. Nothing was shared.',
   'share.acErrHaveIt': 'This person already shares that with you.',
+
+  // Inviting a friend and the page a friend opens (`refer.ts`), for the same
+  // twenty-seven languages as the dashboard. Both sides get a discount code:
+  // no sentence says anything is paid.
+  'refer.lede':
+    'A friend who is new here gets a discount on their first course, and you get one on your next. Both are discounts on a course, not money, so there is nothing to withdraw and no bank details to give.',
+  'refer.off':
+    'Inviting a friend is switched off at the moment, so there is no code to give yet. When it is switched on, this page shows your code and what came of it.',
+  'refer.unread':
+    'The invitation details could not be read just now. Nothing was charged and no code was used. Reloading is safe.',
+  'refer.terms':
+    'Your friend gets {friend} off their first course. When their payment arrives you get a code for {you} off your next course, which starts to work once the refund window has passed.',
+  'refer.copyLink': 'Copy the invitation link',
+  'refer.linkCopied': 'Link copied',
+  'refer.copyMessage': 'Copy a message',
+  'refer.messageCopied': 'Message copied',
+  'refer.copyRefused':
+    'This browser did not allow copying. The link is written below and can be selected by hand.',
+  'refer.noCode':
+    'Your code is made the first time this page opens and stays the same for good. If it is still missing, reload the page once.',
+  'refer.msgNamed': '{name} invited you to AyahSpring. {percent} off your first course: {link}',
+  'refer.msgPlain': 'You are invited to AyahSpring. {percent} off your first course: {link}',
+  'refer.rewardsHeading': 'Rewards you have earned',
+  'refer.rewardCount': 'Rewards: {count}',
+  'refer.noRewards':
+    'Nothing yet. A reward appears here once somebody uses your code and their payment has arrived.',
+  'refer.rewardWorth': '{percent} off a course',
+  'refer.rwEarned': 'Earned',
+  'refer.rwReversed': 'Withdrawn: the purchase it came from was refunded',
+  'refer.rwOther': 'Recorded',
+  'refer.rwFrom': 'Usable from {date}',
+  'refer.rwBy': 'Use it by {date}',
+  'refer.rwUse': 'Type it in the code box on the payment page of any course you are buying.',
+  'refer.invitedHeading': 'Who you invited',
+  'refer.invitedCount': 'People: {count}',
+  'refer.nobodyInvited':
+    'Nobody yet. People appear here once they have used your code on a purchase.',
+  'refer.pnPending': 'Started a purchase',
+  'refer.pnBought': 'Bought a course',
+  'refer.pnRefunded': 'Their purchase was refunded',
+  'refer.friend': 'A friend',
+  'refer.onlyFirstName':
+    'Only a first name is shown. What somebody else learns, and with whom, is not yours to see because you invited them.',
+  'refer.howHeading': 'How it works',
+  'refer.how1':
+    'You send the link. They open it and see what the code is worth before they decide anything.',
+  'refer.how2':
+    'They type it while buying their first course, and the discount shows on the receipt they keep.',
+  'refer.how3':
+    'When their payment arrives, your reward code is made. It starts to work once the refund window has passed, and then works for this many days: {days}. If they are refunded, the reward is withdrawn.',
+  'refer.how4':
+    'Rewards you may earn in twelve months: {max}. Each one is an ordinary discount on an ordinary order, with an ordinary receipt.',
+  'refer.honesty':
+    'Both rewards are discounts on a course, not money. Nothing is paid out to anyone, which is why inviting a friend needs no bank details.',
+  'refer.lnEyebrow': 'An invitation',
+  'refer.lnBadTitle': 'This link does not work',
+  'refer.lnBadBody':
+    'The code in it is mistyped or was never real. Nothing was charged and nothing was signed up for. You are only a visitor on this page.',
+  'refer.lnOffTitle': 'Invitations are not open at the moment',
+  'refer.lnUnreadTitle': 'This invitation could not be read just now',
+  'refer.lnStill': 'Nothing was charged, and the courses are still here.',
+  'refer.lnBrowse': 'Browse the courses',
+  'refer.lnTitleNamed': '{name} invited you',
+  'refer.lnTitlePlain': 'You were invited',
+  'refer.lnWorth': 'Their code takes {percent} off your first course here.',
+  'refer.lnNotMoney': 'It is a discount on the course, not money, so there is nothing to withdraw.',
+  'refer.lnCardHeading': 'Your invitation',
+  'refer.lnKeep': 'Keep this code and browse',
+  'refer.lnKept':
+    'Use the button and this browser remembers the code and fills it in on the payment page. Days it is remembered: {days}. You can also type it there yourself.',
+  'refer.lnAbout':
+    'AyahSpring teaches the Islamic faith to children and adults, at a pace that fits around a life. Courses are reviewed before they are published, and every teacher is appointed by the platform.',
 } as const;
 
 export type MessageKey = keyof typeof en;

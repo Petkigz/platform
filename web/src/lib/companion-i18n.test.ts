@@ -118,14 +118,14 @@ test('no other page pays for the companion sentences', () => {
     // family page, the buy page, the page for closing an account, the two
     // pages for a copy of your data, the reading settings, the page that
     // puts a copy back, the phone number card, the merge screen and the two
-    // sharing screens, which are
+    // sharing screens and the two invitation screens, which are
     // rendered on the server and so are in neither (see
     // `SERVER_ONLY_PREFIXES`).
     const whole = messagesFor(locale.code);
     const onServer = (k: string) =>
-      ['learn.', 'course.', 'lesson.', 'assess.', 'assign.', 'missing.', 'account.', 'family.', 'buy.', 'close.', 'export.', 'reading.', 'restore.', 'phone.', 'merge.', 'share.'].some((prefix) => k.startsWith(prefix));
+      ['learn.', 'course.', 'lesson.', 'assess.', 'assign.', 'missing.', 'account.', 'family.', 'buy.', 'close.', 'export.', 'reading.', 'restore.', 'phone.', 'merge.', 'share.', 'refer.'].some((prefix) => k.startsWith(prefix));
     const serverOnly = Object.fromEntries(Object.entries(whole).filter(([k]) => onServer(k)));
-    assert.equal(Object.keys(serverOnly).length, 1015);
+    assert.equal(Object.keys(serverOnly).length, 1066);
     // The page for a page that broke is drawn in the browser, so its ten
     // sentences are the one learner part the shell does carry.
     assert.equal(Object.keys(shell).filter((k) => k.startsWith('broke.')).length, 10, locale.code);

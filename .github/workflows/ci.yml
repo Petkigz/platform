@@ -135,6 +135,9 @@ jobs:
       - name: Sharing pages and sharing route synthetic HTTP regression
         run: node scripts/sharing-route-smoke.mjs
 
+      - name: Invitation pages and invitation routes synthetic HTTP regression
+        run: node scripts/referral-route-smoke.mjs
+
       - name: Catalogue synthetic HTTP regression
         run: node scripts/catalogue-route-smoke.mjs
 
