@@ -1773,6 +1773,94 @@ export const en = {
   'merge.errRefused': 'The platform did not accept this. Nothing was changed.',
   'merge.unconfirmed':
     'No answer came back, so it is not known whether this was done. Reload this page to see how things stand before you try again.',
+
+  // Sharing an adult's own learning and opening an invitation (`share.ts`),
+  // for the same twenty-seven languages as the dashboard. Each refusal is the
+  // screen's own sentence; none is the database's. Nothing here says whether
+  // an address has an account.
+  'share.lede':
+    'Your learning is private, inside your family too. Nobody else sees any of it unless you invite them here, and anything you share can be ended here.',
+  'share.noProfile':
+    'You have no learning record yet, so there is nothing of your own to share. One is made when you enrol in your first course. What others share with you is listed below.',
+  'share.unreadMine':
+    'The list of who can see your learning could not be read just now. Nothing was changed.',
+  'share.unreadTheirs':
+    'What others share with you could not be read just now. Nothing was changed.',
+  'share.off':
+    'Sharing your learning is switched off at the moment, so nobody can be invited. A share made earlier can still be ended here.',
+  'share.liveCount': 'Can see it now: {count}',
+  'share.nobody': 'Nobody can see your learning.',
+  'share.noName': 'Somebody with no name',
+  'share.granted': 'Shared on {date}',
+  'share.until': 'Until {date}',
+  'share.noEnd': 'No end date',
+  'share.ended': 'Ended on {date}',
+  'share.stActive': 'Can see it',
+  'share.stRevoked': 'Ended',
+  'share.stExpired': 'Ran out',
+  'share.end': 'End it',
+  'share.ending': 'Ending…',
+  'share.scopeProgress': 'Progress',
+  'share.scopeCertificates': 'Certificates',
+  'share.scopeBoth': 'Progress and certificates',
+  'share.inviteHeading': 'Invite somebody',
+  'share.inviteLede':
+    'Type their email address and a link is sent to it. Nothing is shared until they open the link, sign in with that address and accept. Somebody who has no account yet can make one, and the same link works.',
+  'share.emailLabel': 'Their email address',
+  'share.scopeLabel': 'What they may see',
+  'share.lengthLabel': 'For how long',
+  'share.lenWeek': 'A week',
+  'share.lenMonth': 'A month',
+  'share.lenQuarter': 'Three months',
+  'share.lengthHelp':
+    'The link can be accepted until that day, and the share ends on that day too. To go on after it, invite them again.',
+  'share.invite': 'Send the invitation',
+  'share.inviting': 'Sending…',
+  'share.emailOff':
+    'Email is switched off at the moment. The invitation is kept and is sent once email is on.',
+  'share.sameAnswer':
+    'You are not told whether an address has an account here. Every address is answered the same way.',
+  'share.invited': 'An invitation has been recorded for this address: {email}',
+  'share.invitedUntil': 'It can be accepted until {date}.',
+  'share.endedDone': 'That share is ended. They can no longer see it.',
+  'share.errEmail': 'That is not an email address. Nothing was sent.',
+  'share.errOwnAddress': 'That is your own address. Nothing was sent.',
+  'share.errNoProfile':
+    'This account has no learning record of its own to share. Nothing was sent.',
+  'share.errNoShare': 'That share is no longer there. Nothing was changed.',
+  'share.errNotYours': 'Only the person who shared it can end it. Nothing was changed.',
+  'share.theirsHeading': 'Learning shared with me',
+  'share.theirsNone':
+    'Nobody has shared their learning with you. It cannot be asked for: a person invites you from their own sharing page, and you see it once you accept.',
+  'share.theirsUntil': 'Shared with you until {date}',
+  'share.theirsNoEnd': 'Shared with you with no end date',
+  'share.theirsCanEnd': 'They can end this at any time, and you stop seeing it as soon as they do.',
+  'share.courses': 'Courses',
+  'share.lessonsDone': 'Lessons completed',
+  'share.noCourses': 'No courses yet.',
+  'share.lessonsOf': 'Lessons completed: {done} / {total}',
+  'share.lastActive': 'Last active on {date}',
+  'share.showing': 'Shown here: {shown} / {total}',
+  'share.certNone': 'No certificates yet.',
+  'share.certIssued': 'Issued on {date}',
+  'share.acTitle': 'An invitation to see somebody’s learning',
+  'share.acLede':
+    'If you accept, you will see the progress or the certificates this person chose to share, until the share runs out or they end it. Only they can end it.',
+  'share.acSignedIn': 'You are signed in with this address: {address}',
+  'share.acAddressRule':
+    'An invitation works only for the address it was sent to. If it was sent to another address, sign out and sign in with that one.',
+  'share.acAccept': 'Accept the invitation',
+  'share.acAccepting': 'Accepting…',
+  'share.acBadLink':
+    'This invitation link is not complete. Ask the person who sent it for a new one.',
+  'share.acOff':
+    'Sharing is switched off at the moment, so this invitation cannot be accepted yet. Nothing has been shared with you.',
+  'share.acErrNone': 'There is no such invitation. Nothing was shared.',
+  'share.acErrUsed': 'This invitation has already been accepted.',
+  'share.acErrWithdrawn': 'This invitation was withdrawn. Nothing was shared.',
+  'share.acErrExpired': 'This invitation has run out. Ask the person who sent it for a new one.',
+  'share.acErrOther': 'This invitation was sent to a different address. Nothing was shared.',
+  'share.acErrHaveIt': 'This person already shares that with you.',
 } as const;
 
 export type MessageKey = keyof typeof en;

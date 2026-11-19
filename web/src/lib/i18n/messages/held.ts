@@ -103,6 +103,7 @@ export const UNWRITTEN_WHILE_HELD: readonly string[] = [
   'restore',
   'phone',
   'merge',
+  'share',
 ];
 
 /** Whether this sentence is deliberately absent from this language's file. */

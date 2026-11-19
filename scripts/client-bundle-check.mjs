@@ -100,6 +100,12 @@ for (const [file, key] of [
   // in the merge page and in no script.
   ['merge.ts', 'merge.unconfirmed'],
   ['merge.ts', 'merge.whatGoes'],
+  // The sharing panel and the button that accepts an invitation are client
+  // components handed their words. What a reader is told about an address
+  // being answered the same way, and that an invitation was sent elsewhere,
+  // must be in those two pages and in no script.
+  ['share.ts', 'share.sameAnswer'],
+  ['share.ts', 'share.acErrOther'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

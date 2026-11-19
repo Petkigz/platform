@@ -132,6 +132,9 @@ jobs:
       - name: Merge page and merge route synthetic HTTP regression
         run: node scripts/merge-route-smoke.mjs
 
+      - name: Sharing pages and sharing route synthetic HTTP regression
+        run: node scripts/sharing-route-smoke.mjs
+
       - name: Catalogue synthetic HTTP regression
         run: node scripts/catalogue-route-smoke.mjs
 

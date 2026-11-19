@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 15% there (192 of 1312 sentences; it was 71% of 272, then
+  the nineteen reads 14% there (192 of 1383 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -545,7 +545,8 @@ still unreviewed and still saying so.
   1020 with the page for closing an account, 18% of 1078 with the pages for
   a copy of your data, 17% of 1130 with the reading settings, 16% of 1199
   with the page for putting a copy back and of 1228 with the phone card,
-  then this with the merge screen),
+  15% of 1315 with the merge screen, then this with the two sharing
+  screens),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -777,8 +778,19 @@ written: not a held draft, nothing.
   asking account anything about the other one. **`platform.account_merge`
   stays off on the hosted project until that migration is applied there.**
   A merge has never been run through the route against a real database.
+  The two sharing screens (`/account/sharing` and `/share/invite/<token>`;
+  inviting and accepting are switched off) are in the reader's language
+  since 2026-11-19 (`messages/share.ts`, sixty-eight sentences, unreviewed;
+  checked by `scripts/sharing-route-smoke.mjs` on a stand-in that answers
+  as if the switch were on and shares nothing). Ending a share now works
+  with the switch off, which the route used to refuse although the
+  database allows it. **Still English there:** the invitation email itself,
+  which `invite_learning_share()` writes in English in the database for
+  every reader, and "A course" in place of a certificate's course title if
+  the database ever returned none. No invitation has been sent, accepted
+  or ended through these screens against a real database.
   **Still English, every one of them:**
-  the pages it links to: `/account/sharing`,
+  the pages it links to:
   `/account/referrals`,
   `/account/sponsorship`, `/account/password`, `/billing`,
   `/institution`, `/notifications`, `/policies`, `/teach/apply`, `/sponsor`

@@ -32,6 +32,7 @@ import { READING } from './reading.ts';
 import { RESTORE } from './restore.ts';
 import { PHONE } from './phone.ts';
 import { MERGE } from './merge.ts';
+import { SHARE } from './share.ts';
 import { LESSON } from './lesson.ts';
 import { isHeld } from './held.ts';
 import { ASIA_AZ } from './asia-az.ts';
@@ -853,6 +854,8 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   PHONE,
   // The merge screen, on the same rule.
   MERGE,
+  // Sharing your own learning and opening an invitation, on the same rule.
+  SHARE,
 );
 
 /**

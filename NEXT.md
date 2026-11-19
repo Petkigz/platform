@@ -2619,6 +2619,54 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### Sharing your own learning in the reader's language, 2026-11-19
+
+`/account/sharing` and the page an invitation link opens were two of the
+English pages the account page links to. Both printed whatever sentence the
+database raised, a share's state as the database wrote it, dates with no
+language and no zone, and the name of a switch in a `<code>`.
+
+- *The words.* A new part, `messages/share.ts`: sixty-eight sentences in
+  the twenty-seven languages with nothing held, **read by no speaker**. The
+  title, the heading over the list, the way back, three refusals, a
+  course's state and a certificate's line are borrowed from parts already
+  written for the same languages. A language held for review reads both
+  screens in English, whole, marked `lang="en"`.
+- *Named refusals.* `lib/sharing-outcome.ts` gives each thing the three
+  functions raise a name and one status (401, 403, 404, 409, 400; 502 for
+  "nothing is known"). `lib/sharing-outcome.test.ts` reads the nineteen
+  raises out of the two migrations, so the two cannot drift. The route
+  forwards no sentence and nothing from a reply but until when an
+  invitation can be accepted.
+- *A defect fixed on the way.* The route refused to end a share while
+  `family.adult_shares` was off. The database allows it, the page said it
+  was allowed, and a share made while the switch was on is still read
+  through after it is turned off. The route now asks the switch only for
+  inviting and accepting.
+- *A second.* Somebody's name beside "Progress and certificates" pushed a
+  320px screen sideways. The name is on its own line now.
+- *What it did to the nineteen.* `/language` tells each of them **14%**
+  (192 of 1383).
+- *Checks.* 2452 web tests. New `scripts/sharing-route-smoke.mjs`, in CI
+  and in the browser workflow, whose stand-in answers as if the switch
+  were on and shares nothing: both pages over HTTP signed out, in English,
+  with email off, with the switch off, with each list unreadable, for an
+  account with no learning record, in Arabic, Persian, French and Hausa;
+  twenty-seven requests the route refuses itself; thirty-five answers of
+  the database each under its name and status with no sentence of the
+  database in any; in Chromium four languages at 320, 390 and 1440px, and
+  in Arabic ten answers to inviting, six to ending and fourteen to
+  accepting, a request that never arrived on each screen, an invitation, an
+  ending and an acceptance; Swahili with the switch off.
+- *Not proven.* **No invitation was sent, accepted or ended through these
+  screens against a database or real sign-in**, and no email left anything.
+  Twenty-three of the twenty-seven languages were not opened in a browser.
+- *Left.* The invitation email is written in English inside
+  `invite_learning_share()`, for every reader; changing it is a migration.
+  `lib/sharing.ts` still carries English labels and sentences that no
+  screen shows any more (its tests pin them); "A course" stands in for a
+  certificate's missing course title.
+
 ### Mobile money by country, a payment bound to its order, and merge requests that say nothing, 2026-11-18
 
 Three things the owner asked for after the merge screen: a number typed

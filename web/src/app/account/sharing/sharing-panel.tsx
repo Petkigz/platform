@@ -2,226 +2,327 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+
+import { Say } from '@/components/say';
+import { fill, formatDateTime, formatNumber } from '@/lib/i18n/format';
+import type { LocaleCode } from '@/lib/i18n/locales';
 import {
   INVITE_EXPIRY_OPTIONS,
   SHARE_SCOPES,
-  SHARE_SCOPE_LABEL,
-  SHARE_STATUS_LABEL,
-  validateInviteInput,
-  type MyShare,
+  validateEmailInput,
+  type ShareScope,
+  type ShareStatus,
 } from '@/lib/sharing';
+import { shareDoneOf, shareOutcomeOf, type ShareCode } from '@/lib/sharing-outcome';
+
+/** Everything this panel says, in the language of the page that draws it. */
+export type ShareWords = {
+  /** The language the words are in: counts and dates are written its way. */
+  locale: LocaleCode;
+  whoHeading: string;
+  /** Holds `{count}`. */
+  liveCount: string;
+  nobody: string;
+  end: string;
+  ending: string;
+  inviteHeading: string;
+  inviteLede: string;
+  emailLabel: string;
+  scopeLabel: string;
+  lengthLabel: string;
+  scopes: Record<ShareScope, string>;
+  /** A length offered, by its number of days. */
+  lengths: Record<number, string>;
+  lengthHelp: string;
+  invite: string;
+  inviting: string;
+  emailOff: string;
+  sameAnswer: string;
+  /** Holds `{email}`. */
+  invited: string;
+  /** Holds `{date}`. */
+  invitedUntil: string;
+  endedDone: string;
+  /** What is said for each refusal this panel can be answered with. */
+  errors: Record<'signed_out' | 'email' | 'own_address' | 'no_profile' | 'no_share' | 'not_yours' | 'refused', string>;
+  off: string;
+  /** Something was asked for and no answer came back. */
+  unconfirmed: string;
+};
+
+/** One share this account granted, with everything about it already in words. */
+export type ShareView = {
+  id: string;
+  /** The name the other account gave itself, or the screen's words for none. */
+  name: string;
+  /** Whether `name` is a person's own, and so is set apart from the sentence. */
+  named: boolean;
+  scope: string;
+  status: ShareStatus;
+  statusLabel: string;
+  /** When it was shared, until when, and when it was ended: one line each. */
+  lines: string[];
+};
+
+type Done = { did: 'invited'; email: string; until: string | null } | { did: 'ended' };
 
 /**
  * Who can see this adult's learning.
  *
- * The form asks for an address and then invites it. It does not look the address up
- * first, because a lookup that says "no account found" tells whoever asked that the
- * address is not registered here — and that is a fact about a stranger, not a feature.
- * The invitation is created either way and the reply is the same either way, so there
- * is nothing on this screen to compare.
+ * The form asks for an address and then invites it. It does not look the
+ * address up first, because a lookup that says "no account found" tells
+ * whoever asked that the address is not registered here, and that is a fact
+ * about a stranger, not a feature. The invitation is created either way and
+ * the reply is the same either way, so there is nothing on this screen to
+ * compare.
  *
- * An invitation is a link in a mailbox, so it always has an end: a week, a month or
- * three months. The person who receives it signs in as that address, accepts once, and
- * from then on the share appears on both sides of this page — theirs to read, yours to
- * end. Ending it is the whole of the control afterwards, because changing the terms
- * means ending a share and granting a new one, and the record of who saw what and when
- * is never rewritten.
+ * An invitation is a link in a mailbox, so it always has an end: a week, a
+ * month or three months. Ending a share is the whole of the control
+ * afterwards: changing the terms means ending one and granting another.
+ *
+ * **It has no words of its own.** Every sentence is handed to it by the page,
+ * already in the reader's language. What the route answers is read as a name
+ * (`lib/sharing-outcome.ts`); nothing the database wrote is shown.
+ *
+ * **An invitation with no answer is unknown.** It may have been recorded and
+ * sent, so a request that never arrived, or a reply nobody can read, is not
+ * said as "nothing was sent": the reader is asked to reload and see.
+ *
+ * **With the switch off it is only the list.** A share granted while sharing
+ * was on is still read by the other account, so ending it is still offered;
+ * nobody can be invited, so the form is not drawn.
  */
 export function SharingPanel({
-  shares,
+  words,
   enabled,
   emailEnabled,
+  shares,
 }: {
-  shares: MyShare[];
+  words: ShareWords;
+  /** Whether sharing is switched on. Off: the list and its buttons, nothing else. */
   enabled: boolean;
   emailEnabled: boolean;
+  /** The shares this account granted, or `null` when the list could not be read. */
+  shares: ShareView[] | null;
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [done, setDone] = useState<Done | null>(null);
 
   const [email, setEmail] = useState('');
-  const [scope, setScope] = useState<string>(SHARE_SCOPES[0] ?? 'progress');
+  const [scope, setScope] = useState<ShareScope>(SHARE_SCOPES[0] ?? 'progress');
   const [days, setDays] = useState<number>(INVITE_EXPIRY_OPTIONS[0]?.days ?? 7);
 
-  async function post(payload: Record<string, unknown>, fallback: string) {
-    setBusy(true);
-    setError(null);
-    setNotice(null);
-    const res = await fetch('/api/account/sharing', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    const json = (await res.json().catch(() => null)) as
-      | { ok: boolean; message?: string; expiresAt?: string | null }
-      | null;
-    setBusy(false);
-
-    if (!json?.ok) {
-      setError(json?.message ?? fallback);
-      return null;
+  const said = (code: ShareCode): string => {
+    if (code === 'failed') return words.unconfirmed;
+    if (code === 'off') return words.off;
+    if (
+      code === 'signed_out' ||
+      code === 'email' ||
+      code === 'own_address' ||
+      code === 'no_profile' ||
+      code === 'no_share' ||
+      code === 'not_yours'
+    ) {
+      return words.errors[code];
     }
-    startTransition(() => router.refresh());
-    return json;
+    return words.errors.refused;
+  };
+
+  async function send(body: Record<string, unknown>, key: string) {
+    setBusy(key);
+    setError(null);
+    setDone(null);
+    try {
+      const response = await fetch('/api/account/sharing', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const result: unknown = await response.json().catch(() => null);
+      const finished = response.ok ? shareDoneOf(result) : null;
+      // Whatever was answered, the page is read again: a refusal usually
+      // means the list on it is out of date.
+      startTransition(() => router.refresh());
+      if (!finished) {
+        setError(said(response.ok ? 'failed' : shareOutcomeOf(response.status, result)));
+        return null;
+      }
+      return finished;
+    } catch {
+      setError(words.unconfirmed);
+      return null;
+    } finally {
+      setBusy(null);
+    }
   }
 
-  async function invite() {
-    const checked = validateInviteInput({ email, scope, days });
+  async function invite(event: React.FormEvent) {
+    event.preventDefault();
+    const checked = validateEmailInput({ email });
     if (!checked.ok) {
-      setError(checked.message);
+      setDone(null);
+      setError(words.errors.email);
       return;
     }
-    const reply = await post({
-      action: 'invite',
-      email: checked.value.email,
-      scope: checked.value.scope,
-      days: checked.value.days,
-    }, 'That invitation could not be sent.');
-    if (reply) {
-      // Never "we found them" or "we did not": the answer is the same for both.
-      setNotice(
-        `Invitation recorded for ${checked.value.email}`
-        + (reply.expiresAt
-          ? `, open until ${new Date(reply.expiresAt).toLocaleDateString()}.`
-          : '.')
-        + ' Whoever signs in as that address can accept it once.',
-      );
-      setEmail('');
+    const finished = await send({ action: 'invite', email: checked.value, scope, days }, 'invite');
+    if (!finished) return;
+    if (finished.did !== 'invited') {
+      setError(words.unconfirmed);
+      return;
     }
+    setDone({
+      did: 'invited',
+      email: checked.value,
+      until: finished.expiresAt ? formatDateTime(words.locale, finished.expiresAt) : null,
+    });
+    setEmail('');
   }
 
   async function end(shareId: string) {
-    await post({ action: 'revoke', shareId }, 'That share could not be ended.');
+    const finished = await send({ action: 'revoke', shareId }, shareId);
+    if (!finished) return;
+    if (finished.did !== 'ended') {
+      setError(words.unconfirmed);
+      return;
+    }
+    setDone({ did: 'ended' });
   }
 
-  if (!enabled) {
-    return (
-      <div className="notice warn">
-        Sharing your learning with somebody is not enabled on this platform yet. Nothing
-        here can be granted while <code>family.adult_shares</code> is off, and the
-        database refuses the attempt as well as the form.
-      </div>
-    );
-  }
-
-  const live = shares.filter((s) => s.status === 'active');
+  const live = (shares ?? []).filter((share) => share.status === 'active').length;
 
   return (
-    <div className="stack">
-      <div className="card">
-        <div className="outline-h" style={{ marginTop: 0 }}>
-          <h3 style={{ margin: 0 }}>Who can see my learning</h3>
-          <span className={`badge ${live.length > 0 ? 'warn' : 'ok'}`}>{live.length} live</span>
-        </div>
-
-        <p className="meta" style={{ marginTop: '0.25rem' }}>
-          Your learning is private by default, including to your family. A share is
-          something you grant to one account, for one of these scopes, and you can end
-          it at any time.
+    <>
+      {error && (
+        <p className="notice error" role="alert">
+          {error}
         </p>
-
-        {shares.length === 0 ? (
-          <p className="empty">Nobody can see your learning.</p>
-        ) : (
-          <ul className="lessons">
-            {shares.map((s) => (
-              <li key={s.shareId}>
-                <span>
-                  {s.granteeName ?? 'Somebody'} · {SHARE_SCOPE_LABEL[s.scope]}
-                  {s.grantedAt ? ` · granted ${new Date(s.grantedAt).toLocaleDateString()}` : ''}
-                  {s.expiresAt ? ` · until ${new Date(s.expiresAt).toLocaleDateString()}` : ' · no end date'}
-                  {s.revokedAt ? ` · ended ${new Date(s.revokedAt).toLocaleDateString()}` : ''}
-                </span>
-                <span className={`badge ${s.status === 'active' ? 'warn' : 'neutral'}`}>
-                  {SHARE_STATUS_LABEL[s.status]}
-                </span>
-                {s.status === 'active' && (
-                  <button type="button" className="btn tiny ghost" disabled={busy}
-                    onClick={() => end(s.shareId)}>
-                    End it
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      <div className="card">
-        <div className="outline-h" style={{ marginTop: 0 }}>
-          <h3 style={{ margin: 0 }}>Invite somebody</h3>
-        </div>
-
-        <p className="meta" style={{ marginTop: '0.25rem' }}>
-          Enter their email address and they get a link to accept. They do not have to
-          have an account already: if they do, they sign in; if they do not, they make
-          one and the same link works. Nothing is shared until they accept, and you can
-          end it here at any time.
+      )}
+      {done && (
+        <p className="notice" role="status">
+          {done.did === 'ended' ? (
+            words.endedDone
+          ) : (
+            <>
+              {/* Never "we found them" or "we did not": the answer is the same for both. */}
+              <Say text={words.invited} parts={{ email: <bdi dir="ltr">{done.email}</bdi> }} />
+              {done.until && <> {fill(words.invitedUntil, { date: done.until })}</>}
+            </>
+          )}
         </p>
+      )}
 
-        <div className="stack" style={{ marginTop: '0.5rem' }}>
-          <div className="row" style={{ flexWrap: 'wrap' }}>
+      {shares && (
+        <section className="section-sm">
+          <h2>{words.whoHeading}</h2>
+          {shares.length === 0 ? (
+            <p className="empty">{words.nobody}</p>
+          ) : (
+            <>
+              <p className="muted">{fill(words.liveCount, { count: formatNumber(words.locale, live) })}</p>
+              <ul className="lessons stacked">
+                {shares.map((share) => (
+                  <li key={share.id}>
+                    <span className={`badge ${share.status === 'active' ? 'warn' : 'neutral'}`}>
+                      {share.statusLabel}
+                    </span>
+                    <span className="t" style={{ display: 'block', marginTop: '0.35rem' }}>
+                      {share.named ? <bdi>{share.name}</bdi> : share.name}
+                      <span className="muted" style={{ display: 'block' }}>
+                        {share.scope}
+                      </span>
+                      {share.lines.map((line) => (
+                        <span key={line} className="muted" style={{ display: 'block' }}>
+                          {line}
+                        </span>
+                      ))}
+                    </span>
+                    {share.status === 'active' && (
+                      <div className="page-actions" style={{ marginTop: '0.6rem' }}>
+                        <button
+                          className="btn secondary"
+                          type="button"
+                          disabled={busy !== null}
+                          onClick={() => end(share.id)}
+                        >
+                          {busy === share.id ? words.ending : words.end}
+                        </button>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </section>
+      )}
+
+      {enabled && (
+        <section className="section-sm">
+          <h2>{words.inviteHeading}</h2>
+          <p className="muted">{words.inviteLede}</p>
+
+          <form onSubmit={invite} noValidate className="card" style={{ padding: '1.25rem', maxWidth: '32rem' }}>
+            <label htmlFor="share-email">{words.emailLabel}</label>
             <input
+              id="share-email"
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Their email address"
-              aria-label="Their email address"
+              dir="ltr"
+              autoComplete="off"
               maxLength={320}
+              aria-describedby="share-email-help"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              disabled={busy !== null}
             />
-            <button type="button" className="btn" disabled={busy} onClick={invite}>
-              {busy ? 'Inviting…' : 'Invite them'}
-            </button>
-          </div>
+            <p id="share-email-help" className="muted" style={{ marginTop: '0.4rem' }}>
+              {words.sameAnswer}
+            </p>
 
-          <div className="row" style={{ flexWrap: 'wrap' }}>
+            <label htmlFor="share-scope">{words.scopeLabel}</label>
             <select
+              id="share-scope"
               value={scope}
-              onChange={(e) => setScope(e.target.value)}
-              aria-label="What they may see"
+              onChange={(event) => setScope(event.target.value as ShareScope)}
+              disabled={busy !== null}
             >
-              {SHARE_SCOPES.map((s) => (
-                <option key={s} value={s}>{SHARE_SCOPE_LABEL[s]}</option>
+              {SHARE_SCOPES.map((value) => (
+                <option key={value} value={value}>
+                  {words.scopes[value]}
+                </option>
               ))}
             </select>
+
+            <label htmlFor="share-days" style={{ marginTop: '0.75rem' }}>
+              {words.lengthLabel}
+            </label>
             <select
+              id="share-days"
               value={String(days)}
-              onChange={(e) => setDays(Number(e.target.value))}
-              aria-label="How long the invitation stays open"
+              aria-describedby="share-days-help"
+              onChange={(event) => setDays(Number(event.target.value))}
+              disabled={busy !== null}
             >
               {INVITE_EXPIRY_OPTIONS.map((option) => (
-                <option key={option.days} value={String(option.days)}>{option.label}</option>
+                <option key={option.days} value={String(option.days)}>
+                  {words.lengths[option.days] ?? formatNumber(words.locale, option.days)}
+                </option>
               ))}
             </select>
-          </div>
-
-          <p className="meta">
-            The length above is how long the link stays open, and also how long the share
-            lasts once accepted — so a week is a cheaper mistake than three months. When
-            it runs out, invite them again.
-          </p>
-
-          {!emailEnabled && (
-            <p className="meta">
-              Email delivery is switched off, so nothing is emailed yet: the invitation is
-              recorded and waits in the outbox until it is on. The link works as soon as
-              it reaches them.
+            <p id="share-days-help" className="muted" style={{ marginTop: '0.4rem' }}>
+              {words.lengthHelp}
             </p>
-          )}
 
-          <p className="meta">
-            An invitation is never answered with whether that address has an account.
-            Every address gets the same reply, which is why nothing here says
-            &ldquo;found&rdquo; or &ldquo;not found&rdquo;.
-          </p>
-        </div>
-      </div>
+            {!emailEnabled && <p className="muted">{words.emailOff}</p>}
 
-      {error && <p className="danger" style={{ fontSize: '0.9rem' }} role="alert">{error}</p>}
-      {notice && <p className="muted" style={{ fontSize: '0.9rem' }}>{notice}</p>}
-    </div>
+            <button className="btn" type="submit" disabled={busy !== null}>
+              {busy === 'invite' ? words.inviting : words.invite}
+            </button>
+          </form>
+        </section>
+      )}
+    </>
   );
 }

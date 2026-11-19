@@ -79,7 +79,8 @@ const PLAYER_PREFIX = 'player.';
  * (mark complete, the learner-profile prompt, the quiz, the written answer,
  * the profile form, the family forms, the buy form, the closing form, the
  * download link, the three reading settings, the form that puts a copy
- * back, the phone number card, the merge panel) are handed their strings as props instead. If a client component ever asks
+ * back, the phone number card, the merge panel, the sharing panel and the
+ * button that accepts an invitation) are handed their strings as props instead. If a client component ever asks
  * for one of these keys it gets English — the sentence is not in what it was
  * sent — so a test forbids it; the other fix is to take the prefix out of this
  * list.
@@ -91,7 +92,7 @@ const PLAYER_PREFIX = 'player.';
 const SERVER_ONLY_PREFIXES: readonly string[] = [
   'learn.', 'course.', 'lesson.', 'assess.', 'assign.', 'missing.', 'account.',
   'family.', 'buy.', 'close.', 'export.', 'reading.', 'restore.', 'phone.',
-  'merge.',
+  'merge.', 'share.',
 ];
 
 /** Everything a client component outside the companion pages can ask for. */

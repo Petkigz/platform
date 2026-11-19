@@ -7961,7 +7961,8 @@ owner chose the first.
   since the family pages and their forms, 20% since the buy page and its
   form, 19% since the page for closing an account, 18% since the pages for
   getting a copy of your data, 17% since the reading settings, 16% since
-  the page for putting a copy back, 15% since the merge screen.
+  the page for putting a copy back, 15% since the merge screen, 14% since
+  the two sharing screens.
 - **The test that refused a language under half is removed.** Nothing in the
   tests now limits how much English one of these languages shows. That is the
   cost of this choice and it was put to the owner in those words.
@@ -8463,6 +8464,39 @@ first, in the words any other caller who is not the account asked gets.
 
 `platform.account_merge` stays off on the hosted project until that
 migration is applied there, which needs the owner's approval.
+
+**Sharing your own learning (2026-11-19).** `/account/sharing` and the page
+an invitation link opens followed, sixty-eight sentences in a new part,
+`share.ts`; the nineteen read 14%. Settled in writing them:
+
+- *The switch stops inviting and accepting, never ending.* A share granted
+  while `family.adult_shares` was on is still read by the other account
+  after it is turned off. The database lets the person who granted it end
+  it; the route refused, and the page said the opposite. The route now
+  agrees with the database, and with the switch off the page draws the list
+  and its buttons and no form.
+- *An invitation nobody answered is unknown.* It may be in somebody's
+  mailbox, so a lost reply, a reply that cannot be read and a reply with no
+  invitation in it are said as "not known whether this was done; reload",
+  never as "nothing was sent". The same for accepting and for ending.
+- *Ending a share that was already ended is ended.* The function answers
+  `changed: false`; that is what was asked for, and it is said as done.
+- *Every address is answered the same way, and the screen says so.* The
+  reply carries until when the invitation can be accepted and nothing
+  else; the invitation's id stays in the database. No sentence in any
+  language says somebody was found or was not. The lookup that did say so
+  (`resolve_share_grantee`) has been closed to signed-in callers since
+  `20261239000100`; a test now reads that out of the migration.
+- *A state is a name, never the database's word.* A share's state, what it
+  covers and a course's state are said from the catalogue. A course state
+  this screen has no word for has no badge; the word is not printed.
+- *A list that could not be read is said as that, without the reason.*
+  The page used to print the sentence the database raised after "could not
+  be read:".
+- *Every time carries its zone.* The page is drawn on a server and printed
+  dates with no language and no zone.
+- *The invitation page is never indexed, and accepts only by its button.*
+  Unchanged, and now pinned by a test.
 
 **Mobile money is a service in a country (2026-11-18).** The owner asked
 for a number typed without a country code to stop being read as Ugandan,
