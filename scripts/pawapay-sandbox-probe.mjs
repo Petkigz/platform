@@ -41,9 +41,19 @@
 import { randomUUID } from 'node:crypto';
 import { setTimeout as sleep } from 'node:timers/promises';
 
+// On a runner the log cannot always be fetched afterwards, so what was found
+// is also left as an annotation on the run. Nothing secret is in it: the
+// lines below name operators, outcomes and pawaPay's codes.
+const annotate = (level, title, text) => {
+  if (process.env.GITHUB_ACTIONS !== 'true') return;
+  const escaped = text.replaceAll('%', '%25').replaceAll('\r', '%0D').replaceAll('\n', '%0A');
+  console.log(`::${level} title=${title}::${escaped}`);
+};
+
 const token = process.env.PAWAPAY_SANDBOX_TOKEN?.trim();
 if (!token) {
   console.error('PAWAPAY_SANDBOX_TOKEN is not set. Nothing was sent. See the top of this file for how to make one.');
+  annotate('error', 'pawaPay sandbox probe', 'PAWAPAY_SANDBOX_TOKEN is not set (or is empty) in this run. Nothing was sent.');
   process.exit(2);
 }
 // The adapter's own default, written out so that nothing in the environment can move it.
@@ -64,7 +74,8 @@ const CASES = [
 ];
 
 const problems = [];
-const note = (line) => console.log(line);
+const said = [];
+const note = (line) => { said.push(line); console.log(line); };
 const wrong = (line) => { problems.push(line); console.log(`  DISAGREES: ${line}`); };
 
 function providerFor(brand, country) {
@@ -136,6 +147,9 @@ note('A deposit pawaPay has never seen:');
 if (problems.length > 0) {
   console.error(`\n${problems.length} thing(s) disagreed with what the adapter expects. The adapter, or the documentation it was written from, is wrong about each:`);
   for (const line of problems) console.error(`- ${line}`);
+  annotate('error', 'pawaPay sandbox probe: disagreements', problems.map((line) => `- ${line}`).join('\n'));
+  annotate('notice', 'pawaPay sandbox probe: what was seen', said.join('\n'));
   process.exit(1);
 }
 note('\nNothing disagreed: in the sandbox, pawaPay took every request the adapter made and answered in the shapes it reads. That is the sandbox, with test numbers. It is not production, a callback, a PIN prompt or a refund.');
+annotate('notice', 'pawaPay sandbox probe: what was seen', said.join('\n'));
