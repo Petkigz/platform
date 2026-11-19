@@ -18,8 +18,13 @@ import {
   knownProviderIds,
   providersForAmount,
   providersForCurrency,
+  standInFor,
 } from './payments/registry.ts';
 import { bindPayment } from './payments/binding.ts';
+import { MtnMomoProvider } from './payments/mtn-momo.ts';
+import { AirtelMoneyProvider } from './payments/airtel.ts';
+import { PaymentNotStartedError, refusedOutright } from './payments/provider.ts';
+import { clearTokenCache } from './payments/oauth.ts';
 import { findCountry } from './phone.ts';
 
 // ---------------------------------------------------------------------------
@@ -757,6 +762,109 @@ test('a refund names the deposit and the amount, and an unanswered one is said a
 });
 
 // ---------------------------------------------------------------------------
+// Both roads to one wallet
+// ---------------------------------------------------------------------------
+
+test('a direct account has the aggregator behind it only for the same operator, country and currency', () => {
+  const noDirect = {
+    MTN_MOMO_SUBSCRIPTION_KEY: undefined, MTN_MOMO_API_USER: undefined, MTN_MOMO_API_KEY: undefined, MTN_MOMO_COUNTRY: undefined, MTN_MOMO_CURRENCY: undefined,
+    MTN_MOMO_UG_SUBSCRIPTION_KEY: undefined, MTN_MOMO_UG_API_USER: undefined, MTN_MOMO_UG_API_KEY: undefined,
+    MTN_MOMO_GH_SUBSCRIPTION_KEY: undefined, MTN_MOMO_GH_API_USER: undefined, MTN_MOMO_GH_API_KEY: undefined,
+    AIRTEL_CLIENT_ID: undefined, AIRTEL_CLIENT_SECRET: undefined, AIRTEL_COUNTRY: undefined,
+    AIRTEL_UG_CLIENT_ID: undefined, AIRTEL_UG_CLIENT_SECRET: undefined, AIRTEL_KE_CLIENT_ID: undefined, AIRTEL_KE_CLIENT_SECRET: undefined,
+  };
+  const mtnUg = { MTN_MOMO_UG_SUBSCRIPTION_KEY: 's', MTN_MOMO_UG_API_USER: 'u', MTN_MOMO_UG_API_KEY: 'k' };
+  const mtnGh = { MTN_MOMO_GH_SUBSCRIPTION_KEY: 's', MTN_MOMO_GH_API_USER: 'u', MTN_MOMO_GH_API_KEY: 'k' };
+  const airtelUg = { AIRTEL_UG_CLIENT_ID: 'c', AIRTEL_UG_CLIENT_SECRET: 's' };
+  const airtelKe = { AIRTEL_KE_CLIENT_ID: 'c', AIRTEL_KE_CLIENT_SECRET: 's' };
+  const pawa = { ...NONE, PAWAPAY_API_TOKEN: 'synthetic', PAWAPAY_PROVIDERS: 'MTN_MOMO_UGA,AIRTEL_OAPI_UGA,MPESA_KEN' };
+  const behind = (id: string) => standInFor(getPaymentProvider(id))?.id ?? null;
+
+  withEnv({ ...noDirect, ...pawa, ...mtnUg, ...mtnGh, ...airtelUg, ...airtelKe }, () => {
+    // The payer is still shown one button for each wallet: the direct account's.
+    assert.deepEqual(availableProviders().map((p) => p.id), ['mtn_momo_ug', 'mtn_momo_gh', 'airtel_money_ug', 'airtel_money_ke', 'pawapay_mpesa_ke']);
+    assert.equal(behind('mtn_momo_ug'), 'pawapay_mtn_ug');
+    assert.equal(behind('airtel_money_ug'), 'pawapay_airtel_ug');
+    // Ghana's MTN is not in the account's list, so nothing stands behind it.
+    assert.equal(behind('mtn_momo_gh'), null);
+    // Airtel in Kenya: pawaPay has no Airtel there. M-Pesa is another wallet and is nobody's stand-in.
+    assert.equal(behind('airtel_money_ke'), null);
+    // One way only: an operator reached through the aggregator has nothing behind it.
+    assert.equal(behind('pawapay_mtn_ug'), null);
+    assert.equal(behind('pawapay_mpesa_ke'), null);
+    assert.equal(behind('pawapay'), null);
+    assert.equal(behind('not_a_provider'), null);
+    // The one behind collects the same currency from the same country.
+    const second = standInFor(getPaymentProvider('mtn_momo_ug'))!;
+    assert.deepEqual(second.market, { country: 'UG', currency: 'UGX' });
+    assert.equal(second.label, 'MTN MoMo');
+  });
+  // The account under the names without a country is Uganda's, and has the same one behind it.
+  withEnv({ ...noDirect, ...pawa, MTN_MOMO_SUBSCRIPTION_KEY: 's', MTN_MOMO_API_USER: 'u', MTN_MOMO_API_KEY: 'k' }, () => {
+    assert.equal(behind('mtn_momo'), 'pawapay_mtn_ug');
+  });
+  // MTN's sandbox collects euros: the aggregator's MTN Uganda collects shillings, and is not its stand-in.
+  withEnv({ ...noDirect, ...pawa, MTN_MOMO_SUBSCRIPTION_KEY: 's', MTN_MOMO_API_USER: 'u', MTN_MOMO_API_KEY: 'k', MTN_MOMO_CURRENCY: 'EUR' }, () => {
+    assert.equal(behind('mtn_momo'), null);
+  });
+  // No aggregator account: nothing behind anything.
+  withEnv({ ...noDirect, ...NONE, ...mtnUg }, () => assert.equal(behind('mtn_momo_ug'), null));
+});
+
+test('"started nothing" is said only when it is certain: never after a request that may have arrived', async () => {
+  for (const [status, outright] of [[400, true], [401, true], [403, true], [404, true], [422, true], [429, true], [408, false], [409, false], [500, false], [502, false], [503, false], [200, false], [202, false], [302, false]] as [number, boolean][]) {
+    assert.equal(refusedOutright(status), outright, String(status));
+  }
+
+  const mtn = () => new MtnMomoProvider({ country: 'UG', currency: 'UGX', baseUrl: 'https://mtn.invalid', targetEnvironment: 'mtnuganda', subscriptionKey: 's', apiUser: 'u', apiKey: 'k' }, 'mtn_momo_ug');
+  const airtel = () => new AirtelMoneyProvider({ baseUrl: 'https://airtel.invalid', clientId: 'c', clientSecret: 's', country: 'UG', currency: 'UGX', refundPath: '/merchant/v1/payments/refund/' }, 'airtel_money_ug');
+  const ask = { orderId: ORDER, amount: { amountMinor: 50000n, currency: 'UGX' }, returnUrl: 'https://x.invalid', description: 'x', msisdn: '+256772123456' };
+  const TOKEN: Reply = { body: { access_token: 'tok', expires_in: 3600 } };
+
+  for (const [name, make, tokenPath, payPath] of [
+    ['MTN', mtn, '/collection/token/', '/collection/v1_0/requesttopay'],
+    ['Airtel', airtel, '/auth/oauth2/token', '/merchant/v1/payments/'],
+  ] as [string, () => MtnMomoProvider | AirtelMoneyProvider, string, string][]) {
+    const attempt = async (token: Reply, pay: Reply) => {
+      clearTokenCache();
+      const stub = stubFetch([{ match: tokenPath, method: 'POST', reply: token }, { match: payPath, method: 'POST', reply: pay }]);
+      try {
+        const error = await make().createCheckout(ask).then(() => null, (e: unknown) => e);
+        return { error, sent: stub.calls.filter((c) => c.url.includes(payPath)).length };
+      } finally {
+        stub.restore();
+        clearTokenCache();
+      }
+    };
+    // It could not sign in: the payment request was never sent.
+    for (const token of [{ status: 401, body: {} }, { status: 500, text: '' }, 'network', { body: {} }] as Reply[]) {
+      const { error, sent } = await attempt(token, { status: 202, text: '' });
+      assert.ok(error instanceof PaymentNotStartedError, `${name}: sign-in failed`);
+      assert.equal((error as PaymentNotStartedError).code, 'signin', name);
+      assert.equal(sent, 0, `${name}: a payment was asked for without signing in`);
+    }
+    // Refused outright.
+    for (const status of [400, 401, 403, 404, 429]) {
+      const { error } = await attempt(TOKEN, { status, body: { message: 'SYNTHETIC refusal 256772123456' } });
+      assert.ok(error instanceof PaymentNotStartedError, `${name}: ${status}`);
+      assert.equal((error as PaymentNotStartedError).code, `http_${status}`, name);
+      // What it carries is safe to log: no sentence of the provider's and no number.
+      assert.ok(!(error as Error).message.includes('SYNTHETIC') && !(error as Error).message.includes('256772123456'), name);
+    }
+    // The request went out and the answer is not a refusal: the handset may have been prompted.
+    for (const pay of [{ status: 500, text: '' }, { status: 502, text: '' }, { status: 503, text: '' }, { status: 409, body: {} }, { status: 408, text: '' }, 'network'] as Reply[]) {
+      const { error, sent } = await attempt(TOKEN, pay);
+      assert.ok(error instanceof Error, name);
+      assert.ok(!(error instanceof PaymentNotStartedError), `${name}: "started nothing" was said after ${pay === 'network' ? 'a lost connection' : (pay as { status: number }).status}`);
+      assert.equal(sent, 1, name);
+    }
+    // And one that started is not an error at all.
+    const { error } = await attempt(TOKEN, name === 'MTN' ? { status: 202, text: '' } : { status: 200, body: { status: { success: true } } });
+    assert.equal(error, null, name);
+  }
+});
+
+// ---------------------------------------------------------------------------
 // The source
 // ---------------------------------------------------------------------------
 
@@ -776,6 +884,11 @@ test('the adapter keeps pawaPay\'s codes and none of its sentences, and says wha
 
   const checkout = readFileSync(new URL('../app/api/checkout/route.ts', import.meta.url), 'utf8');
   assert.match(checkout, /if \(provider\.accepts && !provider\.accepts\(result\.amount\)\) \{/u);
+  // The second road is taken only on "started nothing", and only one that can take the order's amount.
+  assert.match(checkout, /const second = first instanceof PaymentNotStartedError \? standInFor\(provider\) : null;/u);
+  assert.match(checkout, /second\.market\?\.currency !== result\.currencyCode \|\|\s+second\.accepts\?\.\(result\.amount\) === false/u);
+  assert.equal(checkout.split('standInFor(').length - 1, 1);
+  assert.equal(checkout.split('await startThrough(').length - 1, 2);
   const page = readFileSync(new URL('../app/courses/[slug]/buy/page.tsx', import.meta.url), 'utf8');
   assert.match(page, /providersForAmount\(offering\.kind === 'paid' \? offering\.price\.amount : null\)/u);
 });

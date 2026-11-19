@@ -2662,6 +2662,14 @@ no Orange Money, no MTN in Rwanda or Nigeria.
   outcome. The names on the buttons for AirtelTigo, Vodafone Ghana, Tigo
   Tanzania, Free Senegal and Airtel Nigeria are a guess at what each is
   called today.
+- *Both roads, 2026-11-19.* The owner: "it ok to have both in case one
+  fails". Where MTN or Airtel has its own account and pawaPay was given the
+  same operator in the same country, the payer still sees one button; if the
+  direct account is certain it started nothing (it could not be signed in
+  to, or refused outright), the same wallet is asked through pawaPay. After
+  a lost connection, 409 or 5xx nobody is prompted a second time
+  (`DECISIONS.md`). Checked through the real route by the smoke, against
+  stand-ins.
 - *Known and not fixed.* A price with a fraction in a currency whose only
   operator takes none reads "no payment service collects this currency",
   which is not quite the reason. Nothing polls, so a payment whose eight

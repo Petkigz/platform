@@ -179,6 +179,32 @@ export function availableProviders(): PaymentProvider[] {
   });
 }
 
+/**
+ * The second road to the same wallet, or null when there is only one.
+ *
+ * The owner's decision (2026-11-19): where MTN or Airtel has an account of
+ * its own in a country **and** the aggregator reaches that operator there
+ * too, keep both, "in case one fails". A payer still sees one button, the
+ * direct account's. This is the other one: the aggregator's provider for the
+ * same operator, in the same country and currency, if the account has been
+ * given it (`PAWAPAY_PROVIDERS`).
+ *
+ * The checkout turns to it only when the direct account says for certain
+ * that it started nothing (`PaymentNotStartedError`). One way only: an
+ * operator reached through the aggregator alone has nothing behind it.
+ */
+export function standInFor(provider: PaymentProvider): PaymentProvider | null {
+  const market = provider.market;
+  if (!market) return null;
+  for (const [brand, known] of Object.entries(PAWAPAY_BRANDS)) {
+    if (!known.direct || !known.countries[market.country]) continue;
+    if (!isDirect(provider, known.direct, market.country)) continue;
+    const second = factoryFor(`pawapay_${brand}_${market.country.toLowerCase()}`)?.();
+    if (second?.available && second.market?.currency === market.currency) return second;
+  }
+  return null;
+}
+
 /** Whether a provider is this direct service's account in this country, under either of its names. */
 function isDirect(provider: PaymentProvider, service: string, country: string): boolean {
   if (provider.market?.country !== country) return false;

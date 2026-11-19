@@ -23,6 +23,11 @@
 //     pawaPay's words and no phone number, and an answer that never came is
 //     asked about once instead of being called a failure;
 //   - a total with a fraction is not sent to an operator that takes none;
+//   - where an operator has an account of its own and pawaPay reaches it
+//     too, the payer sees one button, the direct account is tried first, and
+//     pawaPay is tried only when the direct account is certain it started
+//     nothing. After an answer that leaves that in doubt, nobody is prompted
+//     a second time;
 //   - the webhook believes no notification: it asks pawaPay with the token,
 //     and settles an order only when pawaPay's own record names that order
 //     and the amount is the order's total. A forged success, a real payment
@@ -70,6 +75,11 @@ const fresh = () => ({
   // What pawaPay holds, by deposit id; and whether it answers at all.
   deposits: new Map(),
   pawapayDown: false,
+  // The synthetic MTN, addressed the way MTN's API is: what it answers to a
+  // sign-in and to a request to pay.
+  mtnToken: 200, mtn: 202,
+  // The attempts the database holds.
+  attempts: [],
 });
 let state = fresh();
 
@@ -83,10 +93,22 @@ const held = (depositId, over = {}) => ({
 
 const calls = [];
 const pawapay = [];
+const mtn = [];
 const fake = createServer(async (req, res) => {
   res.setHeader('content-type', 'application/json');
   let body = ''; for await (const chunk of req) body += chunk;
   const send = (value, status = 200) => { res.writeHead(status); res.end(JSON.stringify(value)); };
+
+  // ---------------------------------------------------- the synthetic MTN
+  if (req.url === '/collection/token/') {
+    mtn.push({ path: 'token' });
+    if (state.mtnToken === 200) send({ access_token: 'synthetic-mtn-token', expires_in: 1 }); else send({ message: 'SYNTHETIC-MTN access denied' }, state.mtnToken);
+    return;
+  }
+  if (req.url === '/collection/v1_0/requesttopay') {
+    mtn.push({ path: 'requesttopay', reference: req.headers['x-reference-id'], payload: JSON.parse(body) });
+    res.writeHead(state.mtn); res.end(state.mtn === 202 ? '' : JSON.stringify({ message: `SYNTHETIC-MTN fault for ${PHONE}` })); return;
+  }
 
   // ------------------------------------------------ the synthetic pawaPay
   if (req.url?.startsWith('/v2/')) {
@@ -144,8 +166,8 @@ const fake = createServer(async (req, res) => {
   else if (path === '/rest/v1/rpc/notification_badge') send(0);
   else if (path === '/rest/v1/rpc/has_role') send(false);
   else if (path === '/rest/v1/payment_attempts') {
-    if (req.method === 'GET') send([]);
-    else if (req.method === 'POST') send(one ? { id: 'attempt-1' } : [{ id: 'attempt-1' }], 201);
+    if (req.method === 'GET') send(state.attempts.map((a) => ({ id: a.id })));
+    else if (req.method === 'POST') { const row = { id: `attempt-${state.attempts.length + 1}`, ...payload }; state.attempts.push(row); send(one ? { id: row.id } : [{ id: row.id }], 201); }
     else send([]);
   } else if (path === '/rest/v1/orders') {
     const row = state.orders.get((q('id') ?? '').replace(/^eq\./, ''));
@@ -177,6 +199,8 @@ const next = spawn(process.execPath, [resolve(root, 'node_modules/next/dist/bin/
     NEXT_PUBLIC_SUPABASE_URL: here, NEXT_PUBLIC_SUPABASE_ANON_KEY: 'fake-anon', SUPABASE_SERVICE_ROLE_KEY: SERVICE,
     // pawaPay's address is this script. Three operators are said to be enabled on the account.
     PAWAPAY_API_TOKEN: PAWAPAY_TOKEN, PAWAPAY_BASE_URL: here, PAWAPAY_PROVIDERS: 'MPESA_KEN, MTN_MOMO_UGA, AIRTEL_OAPI_UGA',
+    // And MTN has an account of its own in Uganda, whose address is this script too.
+    MTN_MOMO_UG_SUBSCRIPTION_KEY: 'synthetic-mtn', MTN_MOMO_UG_API_USER: 'synthetic-mtn', MTN_MOMO_UG_API_KEY: 'synthetic-mtn', MTN_MOMO_UG_BASE_URL: here,
   },
   stdio: ['ignore', 'pipe', 'pipe'],
 });
@@ -197,7 +221,7 @@ try {
     return inner(await response.text());
   };
   // No reply may carry pawaPay's own words or the payer's number.
-  const clean = (text, label) => { for (const word of ['SYNTHETIC-PAWAPAY', PHONE, 'seems to be invalid', PAWAPAY_TOKEN, SERVICE]) assert.ok(!text.includes(word), `${label} says "${word}"`); };
+  const clean = (text, label) => { for (const word of ['SYNTHETIC-PAWAPAY', 'SYNTHETIC-MTN', PHONE, 'seems to be invalid', PAWAPAY_TOKEN, SERVICE]) assert.ok(!text.includes(word), `${label} says "${word}"`); };
   const checkout = async (body, country = 'KE') => {
     const response = await fetch(`${origin}/api/checkout`, { method: 'POST', headers: { 'content-type': 'application/json', cookie, 'x-vercel-ip-country': country }, body: JSON.stringify(body), signal: AbortSignal.timeout(90000) });
     const text = await response.text();
@@ -221,11 +245,14 @@ try {
     assert.ok(ke.includes('<label for="msisdn" class="eyebrow">Mobile money number</label>'), 'the page asks for no number');
     assert.match(ke, /A number written without a country code is read as a number of this country: <bdi>Kenya<\/bdi>\. Its code: <bdi dir="ltr">\+254<\/bdi>\./);
     for (const word of ['pawaPay', 'pawapay', 'No payment provider', 'No payment service', 'Uganda', '+256']) assert.ok(!ke.includes(word), `the Kenyan page says "${word}"`);
-    // In Ugandan shillings: two operators to choose between, each by its own name.
+    // In Ugandan shillings: two operators to choose between, each by its own
+    // name. MTN has an account of its own in Uganda and pawaPay reaches MTN
+    // there too: one button, the direct account's.
     state.price = uganda;
     const ug = await page('UG');
-    for (const piece of ['value="pawapay_mtn_ug"', 'value="pawapay_airtel_ug"', 'MTN MoMo', 'Airtel Money', '<bdi>Uganda</bdi>']) assert.ok(ug.includes(piece), `the Ugandan page lacks ${piece}`);
-    for (const word of ['pawaPay', 'M-Pesa', 'Kenya']) assert.ok(!ug.includes(word), `the Ugandan page says "${word}"`);
+    for (const piece of ['value="mtn_momo_ug"', 'value="pawapay_airtel_ug"', 'MTN MoMo', 'Airtel Money', '<bdi>Uganda</bdi>']) assert.ok(ug.includes(piece), `the Ugandan page lacks ${piece}`);
+    for (const word of ['pawaPay', 'M-Pesa', 'Kenya', 'value="pawapay_mtn_ug"']) assert.ok(!ug.includes(word), `the Ugandan page says "${word}"`);
+    assert.equal(ug.split('MTN MoMo').length - 1, 1, 'MTN is offered twice');
     // A price with cents: M-Pesa in Kenya collects whole shillings, so it is not offered, and no number is asked for.
     state.price = { ...kenya, amountMinor: '125050' };
     const cents = await page('KE');
@@ -233,7 +260,7 @@ try {
     assert.ok(cents.includes('No payment service connected to this platform collects the currency this course is priced in here'), 'the page with nothing to pay through says nothing');
     state = fresh();
   }
-  console.log('Buy page with a synthetic pawaPay: M-Pesa is offered for a price in Kenyan shillings as Kenya’s (+254); MTN MoMo and Airtel Money for Ugandan shillings, to choose between; the word pawaPay is on neither; a price with cents is not offered an operator that collects whole shillings.');
+  console.log('Buy page with a synthetic pawaPay: M-Pesa is offered for a price in Kenyan shillings as Kenya’s (+254); MTN MoMo and Airtel Money for Ugandan shillings, to choose between, MTN once although it can be reached two ways; the word pawaPay is on neither; a price with cents is not offered an operator that collects whole shillings.');
 
   // =============================================================== checkout
   {
@@ -306,6 +333,79 @@ try {
     state = fresh();
   }
   console.log('Checkout with a synthetic pawaPay: a number typed Kenya’s way is sent as 254…, with the operator’s code, 1250 for 1,250.00 shillings and the order twice; the attempt is recorded under pawapay_mpesa_ke; three numbers that are not Kenya’s and three providers nobody can pay through refused with nothing sent; three refusals by pawaPay said in this platform’s words with none of pawaPay’s and no number; an answer that never came asked about once and, where pawaPay holds the deposit, treated as started; a total with a fraction and an order in another currency not sent at all.');
+
+  // ====================================================== both roads to MTN
+  // MTN in Uganda has an account of its own, and pawaPay reaches MTN in
+  // Uganda too. The owner keeps both, "in case one fails".
+  {
+    const ugandan = () => { state = fresh(); state.price = uganda; state.orderRow = { orderId: ORDER, amountMinor: '50000', currencyCode: 'UGX' }; state.orders.set(ORDER, { total_minor: '50000', currency_code: 'UGX' }); calls.length = 0; pawapay.length = 0; mtn.length = 0; };
+    const pay = () => checkout({ courseId: COURSE, learnerProfileId: OWN, provider: 'mtn_momo_ug', msisdn: '0772 123456' }, 'UG');
+    const attempted = () => state.attempts.map((a) => [a.provider, a.idempotency_key]);
+    const UG_PHONE = '256772123456';
+
+    // MTN's own account cannot be signed in to: nothing was asked of MTN about
+    // this payment, so pawaPay is asked instead, for the same wallet.
+    ugandan(); state.mtnToken = 401;
+    let answer = await pay();
+    assert.equal(answer.status, 200, JSON.stringify(answer.json)); assert.equal(answer.json.kind, 'pending');
+    assert.deepEqual(mtn.map((c) => c.path), ['token'], 'a payment was asked of MTN without signing in');
+    assert.equal(pawapay.length, 1);
+    assert.deepEqual(pawapay[0].payload.payer, { type: 'MMO', accountDetails: { phoneNumber: UG_PHONE, provider: 'MTN_MOMO_UGA' } });
+    assert.equal(pawapay[0].payload.amount, '50000'); assert.equal(pawapay[0].payload.currency, 'UGX'); assert.equal(pawapay[0].payload.clientReferenceId, ORDER);
+    // The payer is given the id pawaPay holds, and both attempts are on record, in order.
+    assert.equal(answer.json.providerReference, pawapay[0].payload.depositId);
+    assert.deepEqual(attempted(), [['mtn_momo_ug', `${ORDER}:1`], ['pawapay_mtn_ug', `${ORDER}:2`]]);
+    // ...and when pawaPay says that deposit completed, the order is settled by it.
+    const through = pawapay[0].payload.depositId;
+    state.deposits.set(through, { ...state.deposits.get(through), status: 'COMPLETED', amount: '50000.00', providerTransactionId: 'MTNUG1' });
+    const settledBy = await hook({ depositId: through, status: 'COMPLETED', amount: '50000', currency: 'UGX', metadata: { orderId: ORDER } });
+    assert.deepEqual(settledBy.json, { status: 'processed', orderId: ORDER });
+    assert.deepEqual(settled().map((c) => [c.payload.p_order_id, c.payload.p_provider, c.payload.p_reference]), [[ORDER, 'pawapay', through]]);
+
+    // MTN signs in and refuses the request outright: the same.
+    ugandan(); state.mtn = 403;
+    answer = await pay();
+    assert.equal(answer.status, 200, JSON.stringify(answer.json));
+    assert.deepEqual(mtn.map((c) => c.path).filter((path) => path === 'requesttopay').length, 1);
+    assert.equal(pawapay.length, 1); assert.equal(pawapay[0].payload.payer.accountDetails.provider, 'MTN_MOMO_UGA');
+    assert.deepEqual(attempted().map((a) => a[0]), ['mtn_momo_ug', 'pawapay_mtn_ug']);
+
+    // MTN took the request and answered 500, or says it already has one: the
+    // handset may have been prompted. Nobody is prompted a second time; the
+    // payer is told it could not be started and decides for themselves.
+    for (const status of [500, 503, 409]) {
+      ugandan(); state.mtn = status;
+      answer = await pay();
+      assert.equal(answer.status, 502, String(status)); assert.equal(answer.json.reason, 'provider_failed', String(status)); assert.equal(answer.json.orderId, ORDER);
+      assert.equal(pawapay.length, 0, `after ${status} from MTN a second prompt was asked for`);
+      assert.deepEqual(attempted().map((a) => a[0]), ['mtn_momo_ug'], String(status));
+    }
+
+    // MTN works: it is the one used, and pawaPay hears nothing.
+    ugandan();
+    answer = await pay();
+    assert.equal(answer.status, 200); assert.equal(answer.json.kind, 'pending');
+    const asked = mtn.filter((c) => c.path === 'requesttopay');
+    assert.equal(asked.length, 1); assert.equal(answer.json.providerReference, asked[0].reference);
+    assert.deepEqual(asked[0].payload.payer, { partyIdType: 'MSISDN', partyId: UG_PHONE });
+    assert.equal(pawapay.length, 0, 'pawaPay was asked although MTN started the payment');
+    assert.deepEqual(attempted().map((a) => a[0]), ['mtn_momo_ug']);
+
+    // Both say no: the payer is told once, in this platform's words.
+    ugandan(); state.mtn = 403; state.initiate = 'reject';
+    answer = await pay();
+    assert.equal(answer.status, 502); assert.equal(answer.json.reason, 'provider_failed'); assert.equal(answer.json.orderId, ORDER);
+    assert.equal(answer.json.error, 'The payment provider could not start this payment. Try again.');
+    assert.deepEqual(attempted().map((a) => a[0]), ['mtn_momo_ug', 'pawapay_mtn_ug']);
+
+    // Airtel in Uganda is reached through pawaPay alone here: it has nothing behind it.
+    ugandan(); state.initiate = 'forbid';
+    answer = await checkout({ courseId: COURSE, learnerProfileId: OWN, provider: 'pawapay_airtel_ug', msisdn: '0752 123456' }, 'UG');
+    assert.equal(answer.status, 502);
+    assert.equal(mtn.length, 0); assert.deepEqual(attempted().map((a) => a[0]), ['pawapay_airtel_ug']);
+    state = fresh();
+  }
+  console.log('Both roads to one wallet, synthetic MTN and synthetic pawaPay: when MTN’s own account cannot be signed in to, or refuses outright, the same wallet is asked through pawaPay, both attempts are recorded in order, and pawaPay’s confirmation settles the order; after 500, 503 or 409 from MTN, which leave it in doubt whether the handset was prompted, nobody is prompted a second time; when MTN works pawaPay hears nothing; when both refuse the payer is told once; an operator reached through pawaPay alone has nothing behind it.');
 
   // ============================================================ the webhook
   const DEPOSIT = 'f4401bd2-1568-4140-bf2d-eb77d2b2b639';

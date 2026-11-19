@@ -8657,8 +8657,10 @@ answer it.
 - *Nothing is offered that the account was not given.* pawaPay enables
   operators account by account. `PAWAPAY_PROVIDERS` lists them by pawaPay's
   codes, and an operator not listed has no provider.
-- *Direct wins where it exists.* Where MTN or Airtel has an account of its
-  own in a country, that one is offered there and pawaPay's is not.
+- *Direct first where it exists, and pawaPay behind it.* Where MTN or
+  Airtel has an account of its own in a country, that one is the button a
+  payer sees there and pawaPay's is not drawn. Since 2026-11-19 pawaPay's
+  stands behind it: see "Both roads to one wallet", below.
 - *A callback is not proof, signed or not.* pawaPay can sign callbacks, and
   its own documentation says a valid signature shows who sent one and not
   whose payment it is. So the adapter asks pawaPay, with the token, what
@@ -8700,6 +8702,62 @@ drives the adapter against pawaPay's sandbox with pawaPay's own test numbers
 and lists whatever disagrees. Then ask pawaPay whether an individual with no
 registered company can be verified for a live account: if not, this adapter
 cannot take a payment however right it is.
+
+## Both roads to one wallet, "in case one fails" — **DECIDED 2026-11-19**
+
+Asked whether MTN and Airtel should ever go through pawaPay in a country
+where they have an account of their own, the owner answered: "it ok to have
+both in case one fails".
+
+- *One button.* A payer is shown the operator once, as its own account. Two
+  buttons reading "MTN MoMo" would be a choice with nothing to choose.
+- *The second road is the same wallet through pawaPay*: the same operator,
+  country and currency, and only if the pawaPay account was given that
+  operator (`standInFor` in `lib/payments/registry.ts`).
+- *It is taken only when the first is certain it started nothing*
+  (`PaymentNotStartedError`): the direct account could not be signed in to,
+  so nothing was asked of it about the payment, or it refused the request
+  outright (a 4xx that is not 408 or 409).
+- *It is not taken after doubt.* A lost connection, a timeout, a 409 or a
+  5xx once the request has gone out may have prompted the handset. A second
+  prompt through another road would be a second payment of the same order.
+  That payer is told it could not be started and tries again themselves.
+  This is the reason "in case one fails" does not mean "whenever one
+  fails".
+- *One way.* An operator reached through pawaPay alone has nothing behind
+  it, and pawaPay failing does not turn to a direct account, because where a
+  direct account exists it was already tried first.
+- *Both attempts are recorded*, in order, each under the provider it went
+  through. The payer is given the reference of the one that started, and
+  that provider's own callback address settles the order.
+
+Checked by `lib/pawapay.test.ts` and, through the real checkout route,
+`scripts/pawapay-route-smoke.mjs`. **Against stand-ins only**: no MTN,
+Airtel or pawaPay account exists. Known and not fixed: when a later callback
+settles the order, every open attempt of it is closed as succeeded, the
+direct one that started nothing among them (only the webhook may close an
+attempt, and it closes by order).
+
+## A sponsor pays a pledge through checkout, not by instruction — **DECIDED 2026-11-19**
+
+No page tells a sponsor how to pay a pledge. Offered an interim sentence of
+instruction or waiting for the aggregator, the owner took the
+recommendation: a pledge is paid through the same checkout as a course, by
+the same providers, once the pawaPay sandbox probe has passed. No interim
+instruction is written, because any sentence naming a way to pay would name
+one that does not exist. **Not built.** Until it is, `/account/sponsorship`
+says only that it collects no payment, and `commerce.sponsorship` stays off.
+
+## The 353rd migration goes to the test project the same way as the ten — **DECIDED 2026-11-19**
+
+`20261281146000_merge_request_privacy.sql` is applied to the hosted test
+project by `scripts/hosted-migration-one-more.mjs`, through the workflow
+"Apply Supabase test migration 353": the same checks as the ten (history
+exactly as expected, no user and no learner, a rehearsal on the hosted
+database rolled back, the roles' privileges compared with the tested
+database's, the CLI's dry-run naming exactly the one), behind the same
+environment, which releases nothing until the owner approves the run. It
+does not switch `platform.account_merge` on and it deploys no application.
 
 ## The test project gets its database ahead of its application — **DECIDED 2026-11-17**
 

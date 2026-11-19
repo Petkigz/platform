@@ -37,7 +37,9 @@ import {
   type PaymentProvider,
   type ProviderPaymentStatus,
   type WebhookEvent,
+  PaymentNotStartedError,
   PaymentProviderUnavailableError,
+  refusedOutright,
 } from './provider.ts';
 import { accessToken, invalidateToken, readJson } from './oauth.ts';
 import { MTN_MOMO_MARKETS, internationalDigits, isNumberOf, type Market } from './markets.ts';
@@ -216,10 +218,21 @@ export class MtnMomoProvider implements PaymentProvider {
     // for the life of the attempt.
     const referenceId = randomUUID();
 
+    // Signed in first, apart from the request: if this fails, nothing was
+    // asked of MTN about this payment, and that is worth knowing for certain
+    // (`PaymentNotStartedError`).
+    let bearer: string;
+    try {
+      bearer = await this.token('collection');
+    } catch (e) {
+      if (e instanceof PaymentProviderUnavailableError) throw e;
+      throw new PaymentNotStartedError(this.id, 'signin');
+    }
+
     const res = await fetch(`${cfg.baseUrl}/collection/v1_0/requesttopay`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${await this.token('collection')}`,
+        Authorization: `Bearer ${bearer}`,
         'Ocp-Apim-Subscription-Key': cfg.subscriptionKey,
         'X-Reference-Id': referenceId,
         'X-Target-Environment': cfg.targetEnvironment,
@@ -244,6 +257,8 @@ export class MtnMomoProvider implements PaymentProvider {
     // failure and the payer should be told, not left waiting on a prompt that
     // was never sent.
     if (res.status !== 202 && res.status !== 200) {
+      // Refused outright: MTN took nothing, and says so.
+      if (refusedOutright(res.status)) throw new PaymentNotStartedError(this.id, `http_${res.status}`);
       const body = await readJson(res);
       throw new Error(
         `MTN MoMo could not start this payment (${res.status}): ${describe(body)}`,

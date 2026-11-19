@@ -9,8 +9,8 @@ import {
   resolveOpenAttempts,
   type AttemptMethod,
 } from '@/lib/checkout';
-import { getPaymentProvider } from '@/lib/payments/registry';
-import { PaymentProviderUnavailableError } from '@/lib/payments/provider';
+import { getPaymentProvider, standInFor } from '@/lib/payments/registry';
+import { PaymentNotStartedError, PaymentProviderUnavailableError, type PaymentProvider } from '@/lib/payments/provider';
 import { parsePhone, toE164 } from '@/lib/phone';
 import { countryFromHeaders } from '@/lib/geo';
 import { recordWithdrawalChoice, type WithdrawalChoice } from '@/lib/withdrawal';
@@ -318,26 +318,26 @@ export async function POST(request: Request) {
   // falsehood in a support-facing record.
   const method: AttemptMethod | null = msisdn ? 'mobile_money' : null;
 
+  // One attempt through one provider: recorded, then started.
+  //
   // Written before the provider is called, so an attempt that throws still
   // leaves a trace. Nothing recorded this before, so "never tried" and "tried
   // three times, provider failed every time" were indistinguishable.
-  await recordPaymentAttempt(supabase, {
-    orderId: result.orderId,
-    amountMinor: result.amount.amountMinor.toString(),
-    currencyCode: result.currencyCode,
-    providerId: provider.id,
-    method,
-  });
-
-  try {
-    const checkout = await provider.createCheckout({
+  const startThrough = async (through: PaymentProvider) => {
+    await recordPaymentAttempt(supabase, {
+      orderId: result.orderId,
+      amountMinor: result.amount.amountMinor.toString(),
+      currencyCode: result.currencyCode,
+      providerId: through.id,
+      method,
+    });
+    const checkout = await through.createCheckout({
       orderId: result.orderId,
       amount: result.amount,
       returnUrl: `${origin}/orders?pending=${result.orderId}`,
       description: `${isPlanCheckout ? 'Subscription' : 'Course purchase'} ${result.orderId}`,
       msisdn,
     });
-
     return NextResponse.json({
       orderId: result.orderId,
       kind: checkout.kind,
@@ -345,6 +345,32 @@ export async function POST(request: Request) {
         ? { url: checkout.url }
         : { providerReference: checkout.providerReference }),
     });
+  };
+
+  try {
+    try {
+      return await startThrough(provider);
+    } catch (first) {
+      // Both roads to one wallet are kept "in case one fails" (the owner,
+      // 2026-11-19): the operator's own account, and the aggregator behind
+      // it. The second is tried only when the first is **certain it started
+      // nothing**. After a lost connection or a 5xx the first may have
+      // prompted the handset, and a second prompt would be a second payment;
+      // that payer is told to try again and decides for themselves.
+      const second = first instanceof PaymentNotStartedError ? standInFor(provider) : null;
+      if (
+        !(first instanceof PaymentNotStartedError) ||
+        !second ||
+        second.market?.currency !== result.currencyCode ||
+        second.accepts?.(result.amount) === false
+      ) {
+        throw first;
+      }
+      console.error(
+        `checkout: ${provider.id} started nothing for order ${result.orderId} (${first.code}); trying ${second.id}`,
+      );
+      return await startThrough(second);
+    }
   } catch (err) {
     if (err instanceof PaymentProviderUnavailableError) {
       // The error's own sentence is written for whoever runs the site: it

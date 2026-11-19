@@ -816,7 +816,9 @@ written: not a held draft, nothing.
   and whatever staff wrote as a reason, which is printed as written.
   **Known and not fixed:** nothing in the product tells a sponsor how to
   pay a pledge; the page now says only that it collects no payment and
-  that staff record one when it arrives. No request, pledge or recorded
+  that staff record one when it arrives. Decided 2026-11-19: a pledge will
+  be paid through the same checkout as a course, once the pawaPay sandbox
+  probe has passed; **not built**, and no interim instruction is written. No request, pledge or recorded
   payment has been read through this page from a real database.
   **Still English, every one of them:**
   the pages it links to: `/account/password`, `/billing`,

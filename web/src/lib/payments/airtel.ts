@@ -37,7 +37,9 @@ import {
   type PaymentProvider,
   type ProviderPaymentStatus,
   type WebhookEvent,
+  PaymentNotStartedError,
   PaymentProviderUnavailableError,
+  refusedOutright,
 } from './provider.ts';
 import { accessToken, invalidateToken, readJson } from './oauth.ts';
 import { AIRTEL_MARKETS, nationalDigits, type Market } from './markets.ts';
@@ -213,10 +215,20 @@ export class AirtelMoneyProvider implements PaymentProvider {
     // It carries the order: see `airtelTransactionId`.
     const transactionId = airtelTransactionId(request.orderId);
 
+    // Signed in first, apart from the request: if this fails, nothing was
+    // asked of Airtel about this payment (`PaymentNotStartedError`).
+    let bearer: string;
+    try {
+      bearer = await this.token();
+    } catch (e) {
+      if (e instanceof PaymentProviderUnavailableError) throw e;
+      throw new PaymentNotStartedError(this.id, 'signin');
+    }
+
     const res = await fetch(`${cfg.baseUrl}/merchant/v1/payments/`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${await this.token()}`,
+        Authorization: `Bearer ${bearer}`,
         'Content-Type': 'application/json',
         Accept: '*/*',
         'X-Country': cfg.country,
@@ -239,6 +251,8 @@ export class AirtelMoneyProvider implements PaymentProvider {
     });
 
     if (!res.ok) {
+      // Refused outright: Airtel took nothing, and says so.
+      if (refusedOutright(res.status)) throw new PaymentNotStartedError(this.id, `http_${res.status}`);
       throw new Error(
         `Airtel Money could not start this payment (${res.status}): ${describe(await readJson(res))}`,
       );

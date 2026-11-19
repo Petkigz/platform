@@ -237,6 +237,42 @@ export interface PaymentProvider {
   }): Promise<{ providerRefundReference: string }>;
 }
 
+/**
+ * Thrown by `createCheckout` when it is **certain that nothing was started**:
+ * no handset was prompted and none will be.
+ *
+ * It exists for one decision. Where an operator can be reached two ways (its
+ * own account, and the aggregator), the checkout tries the second only when
+ * the first says this. Trying it after anything less certain could prompt
+ * the same person twice for the same order, and each prompt is a payment.
+ *
+ * So an adapter throws it only for: a request it never sent (it could not
+ * sign in to the provider), or one the provider refused outright (a 4xx that
+ * is not a timeout or a conflict). **Never** for a lost connection, a
+ * timeout or a 5xx after the request went out: the provider may have taken
+ * it. Those stay an ordinary `Error`, and the payer is told to try again
+ * themselves.
+ *
+ * `code` is short and safe to log: `signin`, or `http_403`.
+ */
+export class PaymentNotStartedError extends Error {
+  readonly code: string;
+  constructor(providerId: ProviderId, code: string) {
+    super(`Payment provider '${providerId}' did not start this payment (${code}).`);
+    this.name = 'PaymentNotStartedError';
+    this.code = code;
+  }
+}
+
+/**
+ * Whether an HTTP status from a provider's "start a payment" call means the
+ * provider refused it outright. 408 (it gave up waiting) and 409 (it says it
+ * already has one) are not that; nor is anything from 500 up.
+ */
+export function refusedOutright(status: number): boolean {
+  return status >= 400 && status < 500 && status !== 408 && status !== 409;
+}
+
 export class PaymentProviderUnavailableError extends Error {
   constructor(providerId: ProviderId) {
     super(

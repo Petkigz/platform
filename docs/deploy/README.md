@@ -480,6 +480,17 @@ What the job cannot do:
   Auth, PostgREST, the application, or `supabase_admin`'s own defaults, which
   still grant to the API roles for anything that role creates. No migration
   runs as that role.
+
+**The 353rd, `20261281146000_merge_request_privacy.sql`.** Its own job, built
+the same way: `scripts/hosted-migration-one-more.mjs`, run by the workflow
+"Apply Supabase test migration 353" on a commit whose message starts
+`test: apply ayahspring test migration 353`, behind the same environment and
+the same approval. It starts only from exactly the 352 with the migration's
+own change absent, rehearses the one migration on the hosted database and
+rolls it back, compares the two roles' privileges with the tested database
+built from all 353, and applies only if the CLI's dry-run names exactly that
+one file. At 353 it only repeats the comparison. It does not switch
+`platform.account_merge` on. The two earlier jobs are spent and unchanged.
 - The application that matches 1360–1450 has **not** been deployed. Any older
   build pointed at this project will be refused by the database when it saves
   a resume position or writes an answer row directly. That is the intended
