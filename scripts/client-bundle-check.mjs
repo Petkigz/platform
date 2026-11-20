@@ -121,6 +121,11 @@ for (const [file, key] of [
   // to it by the page, in the reader's language; it is in no script.
   ['sponsor.ts', 'sponsor.payApprove'],
   ['sponsor.ts', 'sponsor.payNot'],
+  // The pool and the asking page each have a form. Their words are handed to
+  // them by the page too.
+  ['sponsor.ts', 'sponsor.plWhyGone'],
+  ['sponsor.ts', 'sponsor.rqDone'],
+  ['sponsor.ts', 'sponsor.plPayBody'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

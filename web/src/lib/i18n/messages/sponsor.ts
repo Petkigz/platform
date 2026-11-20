@@ -105,6 +105,55 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.payNot':
       'لا يمكن دفع هذا التعهّد هنا: إمّا أنه دُفع أو أُلغي، أو أنه ليس من تعهّداتك.',
     'sponsor.nextPay': 'لا يُؤخذ شيء حتى تدفع. يُفتح المقعد عند تأكّد الدفع.',
+    'sponsor.plEyebrow': 'الكفالة',
+    'sponsor.plTitle': 'ادفع ثمن دورة لغيرك',
+    'sponsor.plLede':
+      'متعلّم لا يقدر على ثمن دورة يطلبها، وفريق العمل يقرّر. الطلب الموافَق عليه يظهر هنا مقعدًا له رمز وثمن الدورة، ولا يظهر معه اسم أبدًا. أنت تختار مقعدًا، والمتعلّم يحصل على الدورة.',
+    'sponsor.plSeeHeading': 'ما تراه وما لا تراه',
+    'sponsor.plSeeBody':
+      'رمز المقعد، والدورة، وهل هي لطفل أم لبالغ، والثمن في بلدك. لا اسم المتعلّم ولا عمره ولا عائلته، ولا كلمة ممّا كتبه. ما كتبه يقرؤه من يقرّر من فريق العمل، ولا يقرؤه غيرهم.',
+    'sponsor.plPayHeading': 'ما تدفعه ومتى',
+    'sponsor.plPayBody':
+      'ثمن الدورة في بلدك، محسوبًا كما يُحسب عند الشراء. أخذ المقعد تعهّد ولا يُؤخذ به مال. صفحة مقاعدك المكفولة تبيّن كيف يُدفع التعهّد، ويُفتح المقعد للمتعلّم عند تأكّد الدفع.',
+    'sponsor.plListHeading': 'مقاعد بانتظار كفيل',
+    'sponsor.plSignIn': 'المقاعد تُعرض لمن سجّل الدخول.',
+    'sponsor.plUnread': 'تعذّرت قراءة المقاعد. لم يُحصَّل شيء ولم يُؤخذ أي مقعد.',
+    'sponsor.plOff': 'كفالة المقاعد متوقفة حاليًا، فلا يمكن أخذ مقعد ولا طلب مقعد.',
+    'sponsor.plNone':
+      'لا يوجد مقعد بانتظار كفيل الآن. يظهر الطلب هنا بعد أن يوافق عليه فريق العمل.',
+    'sponsor.plForChild': 'لطفل',
+    'sponsor.plForAdult': 'لبالغ',
+    'sponsor.plPriceNote': 'ثمن هذه الدورة في بلدك. المكفول هو المقعد، وليس بطاقة هدية.',
+    'sponsor.plNoPrice': 'ليس لهذه الدورة ثمن في بلدك، فلا يمكن أخذ هذا المقعد من هنا.',
+    'sponsor.plPriceUnread': 'تعذّرت قراءة ثمن هذا المقعد، فلا يمكن أخذه الآن.',
+    'sponsor.plNoteLabel': 'ملاحظة لفريق العمل، إن أردت',
+    'sponsor.plTake': 'اكفل هذا المقعد',
+    'sponsor.plTaken': 'هذا المقعد لك لتدفع ثمنه: {amount}',
+    'sponsor.plTakenNext': 'لم يُؤخذ شيء. صفحة مقاعدك المكفولة تبيّن كيف تدفع.',
+    'sponsor.plWhyGone': 'أُخذ هذا المقعد للتوّ، أو لم يعد متاحًا. اختر مقعدًا آخر.',
+    'sponsor.plWhyOwn': 'هذا هو المقعد الذي طلبته أنت. لا يمكنك أن تكفل طلبك.',
+    'sponsor.tooLong': 'هذا أطول ممّا يتّسع له هذا الحقل.',
+    'sponsor.plWhyFailed': 'لم ينجح ذلك. لم يُحصَّل شيء ولم يتغيّر شيء.',
+    'sponsor.unconfirmed':
+      'لم نتمكّن من التأكّد من أن ذلك سُجّل. راجع مقاعدك المكفولة قبل أن تحاول مجددًا.',
+    'sponsor.plAskHeading': 'طلب مقعد',
+    'sponsor.rqLede':
+      'إن لم تكن دورة في متناولك فاكتب بضع جمل عن الحال. يقرؤها فريق العمل ويجيب في الحالين مع ذكر السبب. الطلب لا يكلّف شيئًا ولا يُلزم أحدًا.',
+    'sponsor.rqCourse': 'أي دورة؟',
+    'sponsor.rqChoose': 'اختر دورة',
+    'sponsor.rqReason': 'ما الحال؟',
+    'sponsor.rqReasonNote':
+      'يقرؤه من يقرّر من فريق العمل، ولا يقرؤه غيرهم. لا يُعرض على من يدفع ثمن المقعد.',
+    'sponsor.rqSubmit': 'اطلب هذا المقعد',
+    'sponsor.rqDone':
+      'تم الطلب. سيقرؤه فريق العمل، وسيكون الجواب مع سببه في صفحة مقاعدك المكفولة.',
+    'sponsor.rqNoLearner': 'لا يوجد متعلّم في هذا الحساب بعد، فليس هناك من يُطلب له.',
+    'sponsor.rqNoCourse': 'لا توجد دورة معروضة للبيع الآن، فليس هناك ما يُطلب.',
+    'sponsor.rqPrivacy':
+      'إذا وُوفق على الطلب رأى الكفيل رمز المقعد، والدورة، وهل هي لطفل أم لبالغ، والثمن. ولا يرى أبدًا اسمك ولا عائلتك ولا ما كتبته هنا.',
+    'sponsor.rqWhyReason': 'اكتب جملة عن الحال. هي ما يقرؤه من يقرّر.',
+    'sponsor.rqWhyHas': 'هذا المتعلّم لديه هذه الدورة بالفعل، فليس هناك ما يُطلب.',
+    'sponsor.rqWhyAsked': 'يوجد طلب مفتوح لهذه الدورة بالفعل.',
   },
   ur: {
     'sponsor.lede':
@@ -160,6 +209,62 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'یہ وعدہ یہاں ادا نہیں کیا جا سکتا: یہ ادا ہو چکا ہے یا منسوخ کر دیا گیا ہے، یا یہ آپ کے وعدوں میں سے نہیں ہے۔',
     'sponsor.nextPay':
       'جب تک آپ ادائیگی نہ کریں کچھ نہیں لیا جاتا۔ ادائیگی کی تصدیق ہوتے ہی نشست کھل جاتی ہے۔',
+    'sponsor.plEyebrow': 'کفالت',
+    'sponsor.plTitle': 'کسی اور کے کورس کی قیمت ادا کریں',
+    'sponsor.plLede':
+      'جو سیکھنے والا کسی کورس کی قیمت ادا نہیں کر سکتا وہ اسے مانگتا ہے، اور عملہ فیصلہ کرتا ہے۔ منظور شدہ درخواست یہاں ایک نشست کے طور پر آتی ہے جس کے ساتھ ایک کوڈ اور کورس کی قیمت ہوتی ہے، نام کبھی نہیں۔ آپ نشست چنتے ہیں؛ کورس سیکھنے والے کو ملتا ہے۔',
+    'sponsor.plSeeHeading': 'آپ کیا دیکھتے ہیں اور کیا نہیں',
+    'sponsor.plSeeBody':
+      'نشست کا کوڈ، کورس، یہ کہ وہ بچے کے لیے ہے یا بالغ کے لیے، اور آپ کے ملک میں قیمت۔ سیکھنے والے کا نام، عمر یا خاندان نہیں، اور ان کے لکھے ہوئے کا ایک لفظ بھی نہیں۔ وہ صرف فیصلہ کرنے والا عملہ پڑھتا ہے، کوئی اور نہیں۔',
+    'sponsor.plPayHeading': 'آپ کیا ادا کرتے ہیں اور کب',
+    'sponsor.plPayBody':
+      'آپ کے ملک میں کورس کی قیمت، اسی طرح نکالی گئی جیسے خریداری کے لیے۔ نشست لینا ایک وعدہ ہے اور اس سے کوئی رقم نہیں لی جاتی۔ آپ کا کفالت والی نشستوں کا صفحہ بتاتا ہے کہ وعدہ کیسے ادا ہوتا ہے، اور ادائیگی کی تصدیق ہوتے ہی نشست سیکھنے والے کے لیے کھل جاتی ہے۔',
+    'sponsor.plListHeading': 'کفیل کی منتظر نشستیں',
+    'sponsor.plSignIn': 'نشستیں انہیں دکھائی جاتی ہیں جو سائن اِن ہیں۔',
+    'sponsor.plUnread':
+      'نشستیں پڑھی نہیں جا سکیں۔ کچھ وصول نہیں کیا گیا اور کوئی نشست نہیں لی گئی۔',
+    'sponsor.plOff':
+      'نشست کی کفالت اس وقت بند ہے، اس لیے نہ کوئی نشست لی جا سکتی ہے نہ مانگی جا سکتی ہے۔',
+    'sponsor.plNone':
+      'اس وقت کوئی نشست کفیل کی منتظر نہیں۔ عملے کی منظوری کے بعد درخواست یہاں آتی ہے۔',
+    'sponsor.plForChild': 'بچے کے لیے',
+    'sponsor.plForAdult': 'بالغ کے لیے',
+    'sponsor.plPriceNote':
+      'آپ کے ملک میں اس کورس کی قیمت۔ کفالت نشست کی ہوتی ہے، یہ گفٹ کارڈ نہیں۔',
+    'sponsor.plNoPrice':
+      'آپ کے ملک میں اس کورس کی کوئی قیمت نہیں، اس لیے یہ نشست یہاں سے نہیں لی جا سکتی۔',
+    'sponsor.plPriceUnread': 'اس نشست کی قیمت پڑھی نہیں جا سکی، اس لیے ابھی یہ نہیں لی جا سکتی۔',
+    'sponsor.plNoteLabel': 'عملے کے لیے نوٹ، اگر آپ چاہیں',
+    'sponsor.plTake': 'اس نشست کی کفالت کریں',
+    'sponsor.plTaken': 'یہ نشست اب آپ کے ادا کرنے کے لیے ہے: {amount}',
+    'sponsor.plTakenNext':
+      'کچھ نہیں لیا گیا۔ آپ کا کفالت والی نشستوں کا صفحہ بتاتا ہے کہ ادائیگی کیسے کرنی ہے۔',
+    'sponsor.plWhyGone': 'یہ نشست ابھی ابھی لے لی گئی ہے، یا اب کھلی نہیں۔ کوئی اور چنیں۔',
+    'sponsor.plWhyOwn':
+      'یہ وہی نشست ہے جو آپ نے مانگی تھی۔ آپ اپنی درخواست کی کفالت نہیں کر سکتے۔',
+    'sponsor.tooLong': 'یہ اس خانے کی گنجائش سے زیادہ لمبا ہے۔',
+    'sponsor.plWhyFailed': 'یہ نہیں ہو سکا۔ نہ کچھ وصول کیا گیا اور نہ کچھ بدلا۔',
+    'sponsor.unconfirmed':
+      'ہم تصدیق نہیں کر سکے کہ یہ درج ہوا یا نہیں۔ دوبارہ کوشش سے پہلے اپنی کفالت والی نشستیں دیکھ لیں۔',
+    'sponsor.plAskHeading': 'نشست مانگنا',
+    'sponsor.rqLede':
+      'اگر کوئی کورس آپ کی پہنچ سے باہر ہے تو صورتِ حال کے بارے میں چند جملے لکھیں۔ عملہ اسے پڑھتا ہے اور ہر صورت میں وجہ کے ساتھ جواب دیتا ہے۔ مانگنے پر کچھ خرچ نہیں آتا اور کوئی کسی بات کا پابند نہیں ہوتا۔',
+    'sponsor.rqCourse': 'کون سا کورس؟',
+    'sponsor.rqChoose': 'کورس چنیں',
+    'sponsor.rqReason': 'صورتِ حال کیا ہے؟',
+    'sponsor.rqReasonNote':
+      'اسے صرف فیصلہ کرنے والا عملہ پڑھتا ہے، کوئی اور نہیں۔ نشست کی قیمت ادا کرنے والے کو نہیں دکھایا جاتا۔',
+    'sponsor.rqSubmit': 'یہ نشست مانگیں',
+    'sponsor.rqDone':
+      'مانگ لیا گیا۔ عملہ اسے پڑھے گا، اور جواب اپنی وجہ کے ساتھ آپ کے کفالت والی نشستوں کے صفحے پر ہوگا۔',
+    'sponsor.rqNoLearner':
+      'اس اکاؤنٹ پر ابھی کوئی سیکھنے والا نہیں، اس لیے کسی کے لیے مانگا نہیں جا سکتا۔',
+    'sponsor.rqNoCourse': 'اس وقت کوئی کورس فروخت پر نہیں، اس لیے مانگنے کو کچھ نہیں۔',
+    'sponsor.rqPrivacy':
+      'اگر درخواست منظور ہو جائے تو کفیل کو نشست کا کوڈ، کورس، یہ کہ وہ بچے کے لیے ہے یا بالغ کے لیے، اور قیمت دکھائی دیتی ہے۔ آپ کا نام، آپ کا خاندان یا جو آپ نے یہاں لکھا وہ کبھی نہیں۔',
+    'sponsor.rqWhyReason': 'صورتِ حال کے بارے میں ایک جملہ لکھیں۔ فیصلہ کرنے والا یہی پڑھتا ہے۔',
+    'sponsor.rqWhyHas': 'اس سیکھنے والے کے پاس یہ کورس پہلے سے ہے، اس لیے مانگنے کو کچھ نہیں۔',
+    'sponsor.rqWhyAsked': 'اس کورس کے لیے ایک درخواست پہلے سے کھلی ہے۔',
   },
   fa: {
     'sponsor.lede':
@@ -215,6 +320,63 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'این تعهد را نمی‌توان اینجا پرداخت: یا پرداخت شده یا لغو شده است، یا از تعهدهای شما نیست.',
     'sponsor.nextPay':
       'تا وقتی پرداخت نکنید چیزی برداشت نمی‌شود. جایگاه با تأیید پرداخت باز می‌شود.',
+    'sponsor.plEyebrow': 'حمایت',
+    'sponsor.plTitle': 'هزینهٔ دورهٔ کس دیگری را بپردازید',
+    'sponsor.plLede':
+      'یادگیرنده‌ای که توان پرداخت دوره‌ای را ندارد آن را درخواست می‌کند و کارکنان تصمیم می‌گیرند. درخواستِ پذیرفته‌شده اینجا به شکل جایگاهی با یک کد و قیمت دوره می‌آید و هرگز نامی همراهش نیست. شما جایگاهی را برمی‌گزینید؛ دوره به یادگیرنده می‌رسد.',
+    'sponsor.plSeeHeading': 'آنچه می‌بینید و آنچه نمی‌بینید',
+    'sponsor.plSeeBody':
+      'کد جایگاه، دوره، اینکه برای کودک است یا بزرگسال، و قیمت در کشور شما. نه نام یادگیرنده، نه سن و نه خانواده‌اش، و نه کلمه‌ای از آنچه نوشته است. آن را فقط کارکنانی که تصمیم می‌گیرند می‌خوانند و هیچ‌کس دیگر.',
+    'sponsor.plPayHeading': 'چه می‌پردازید و چه زمانی',
+    'sponsor.plPayBody':
+      'قیمت دوره در کشور شما، همان‌گونه که برای خرید حساب می‌شود. برداشتن جایگاه یک تعهد است و پولی با آن برداشت نمی‌شود. صفحهٔ جایگاه‌های حمایت‌شدهٔ شما می‌گوید تعهد چگونه پرداخت می‌شود، و جایگاه با تأیید پرداخت برای یادگیرنده باز می‌شود.',
+    'sponsor.plListHeading': 'جایگاه‌های در انتظار حامی',
+    'sponsor.plSignIn': 'جایگاه‌ها به کسانی نشان داده می‌شود که وارد شده‌اند.',
+    'sponsor.plUnread':
+      'جایگاه‌ها خوانده نشد. چیزی برداشت نشده و هیچ جایگاهی برداشته نشده است.',
+    'sponsor.plOff':
+      'حمایت از جایگاه در حال حاضر خاموش است؛ پس نه می‌توان جایگاهی برداشت و نه درخواست کرد.',
+    'sponsor.plNone':
+      'اکنون هیچ جایگاهی در انتظار حامی نیست. درخواست پس از پذیرش کارکنان اینجا می‌آید.',
+    'sponsor.plForChild': 'برای کودک',
+    'sponsor.plForAdult': 'برای بزرگسال',
+    'sponsor.plPriceNote':
+      'قیمت این دوره در کشور شما. آنچه حمایت می‌شود جایگاه است، نه کارت هدیه.',
+    'sponsor.plNoPrice':
+      'این دوره در کشور شما قیمتی ندارد، پس این جایگاه را از اینجا نمی‌توان برداشت.',
+    'sponsor.plPriceUnread': 'قیمت این جایگاه خوانده نشد، پس فعلاً نمی‌توان آن را برداشت.',
+    'sponsor.plNoteLabel': 'یادداشتی برای کارکنان، اگر بخواهید',
+    'sponsor.plTake': 'از این جایگاه حمایت کنید',
+    'sponsor.plTaken': 'این جایگاه اکنون برای پرداخت از آنِ شماست: {amount}',
+    'sponsor.plTakenNext':
+      'چیزی برداشت نشده است. صفحهٔ جایگاه‌های حمایت‌شدهٔ شما می‌گوید چگونه بپردازید.',
+    'sponsor.plWhyGone':
+      'این جایگاه همین حالا برداشته شد، یا دیگر باز نیست. جایگاه دیگری برگزینید.',
+    'sponsor.plWhyOwn':
+      'این همان جایگاهی است که خودتان درخواست کرده‌اید. نمی‌توانید از درخواست خودتان حمایت کنید.',
+    'sponsor.tooLong': 'این از گنجایش این کادر بلندتر است.',
+    'sponsor.plWhyFailed': 'انجام نشد. نه چیزی برداشت شد و نه چیزی تغییر کرد.',
+    'sponsor.unconfirmed':
+      'نتوانستیم تأیید کنیم که ثبت شده است یا نه. پیش از تلاش دوباره، جایگاه‌های حمایت‌شدهٔ خود را ببینید.',
+    'sponsor.plAskHeading': 'درخواست جایگاه',
+    'sponsor.rqLede':
+      'اگر دوره‌ای از توان شما بیرون است، چند جمله دربارهٔ وضعیت بنویسید. کارکنان آن را می‌خوانند و در هر دو حالت با ذکر دلیل پاسخ می‌دهند. درخواست هزینه‌ای ندارد و کسی را به چیزی ملزم نمی‌کند.',
+    'sponsor.rqCourse': 'کدام دوره؟',
+    'sponsor.rqChoose': 'دوره‌ای برگزینید',
+    'sponsor.rqReason': 'وضعیت چیست؟',
+    'sponsor.rqReasonNote':
+      'فقط کارکنانی که تصمیم می‌گیرند آن را می‌خوانند و هیچ‌کس دیگر. به کسی که هزینهٔ جایگاه را می‌پردازد نشان داده نمی‌شود.',
+    'sponsor.rqSubmit': 'این جایگاه را درخواست کنید',
+    'sponsor.rqDone':
+      'درخواست ثبت شد. کارکنان آن را می‌خوانند و پاسخ، همراه با دلیلش، در صفحهٔ جایگاه‌های حمایت‌شدهٔ شما خواهد بود.',
+    'sponsor.rqNoLearner': 'هنوز یادگیرنده‌ای در این حساب نیست، پس کسی نیست که برایش درخواست شود.',
+    'sponsor.rqNoCourse': 'در حال حاضر دوره‌ای برای فروش نیست، پس چیزی برای درخواست نیست.',
+    'sponsor.rqPrivacy':
+      'اگر درخواست پذیرفته شود، حامی کد جایگاه، دوره، اینکه برای کودک است یا بزرگسال، و قیمت را می‌بیند. هرگز نام شما، خانوادهٔ شما یا آنچه اینجا نوشته‌اید را نمی‌بیند.',
+    'sponsor.rqWhyReason':
+      'جمله‌ای دربارهٔ وضعیت بنویسید. این همان چیزی است که تصمیم‌گیرنده می‌خواند.',
+    'sponsor.rqWhyHas': 'این یادگیرنده از پیش این دوره را دارد، پس چیزی برای درخواست نیست.',
+    'sponsor.rqWhyAsked': 'برای این دوره از پیش یک درخواست باز هست.',
   },
   'fa-af': {
     'sponsor.lede':
@@ -269,6 +431,60 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'این تعهد را نمی‌توان اینجا پرداخت: یا پرداخت شده یا لغو شده است، یا از تعهدهای شما نیست.',
     'sponsor.nextPay':
       'تا وقتی پرداخت نکنید چیزی گرفته نمی‌شود. چوکی با تأیید پرداخت باز می‌شود.',
+    'sponsor.plEyebrow': 'حمایت',
+    'sponsor.plTitle': 'پول کورس کس دیگری را بپردازید',
+    'sponsor.plLede':
+      'شاگردی که توان پرداخت کورسی را ندارد آن را می‌خواهد و کارمندان تصمیم می‌گیرند. درخواستِ منظورشده اینجا به شکل چوکی‌ای با یک کد و قیمت کورس می‌آید و هرگز نامی همراهش نیست. شما چوکی را انتخاب می‌کنید؛ کورس به شاگرد می‌رسد.',
+    'sponsor.plSeeHeading': 'آنچه می‌بینید و آنچه نمی‌بینید',
+    'sponsor.plSeeBody':
+      'کد چوکی، کورس، اینکه برای طفل است یا بزرگسال، و قیمت در کشور شما. نه نام شاگرد، نه سن و نه فامیلش، و نه کلمه‌ای از آنچه نوشته است. آن را تنها کارمندانی که تصمیم می‌گیرند می‌خوانند و هیچ کس دیگر.',
+    'sponsor.plPayHeading': 'چه می‌پردازید و چه وقت',
+    'sponsor.plPayBody':
+      'قیمت کورس در کشور شما، همان طور که برای خرید حساب می‌شود. گرفتن چوکی یک تعهد است و پولی با آن گرفته نمی‌شود. صفحهٔ چوکی‌های حمایت‌شدهٔ شما می‌گوید تعهد چگونه پرداخت می‌شود، و چوکی با تأیید پرداخت برای شاگرد باز می‌شود.',
+    'sponsor.plListHeading': 'چوکی‌های در انتظار حامی',
+    'sponsor.plSignIn': 'چوکی‌ها به کسانی نشان داده می‌شود که داخل شده‌اند.',
+    'sponsor.plUnread': 'چوکی‌ها خوانده نشد. چیزی گرفته نشده و هیچ چوکی گرفته نشده است.',
+    'sponsor.plOff': 'حمایت از چوکی فعلاً خاموش است؛ پس نه می‌توان چوکی گرفت و نه خواست.',
+    'sponsor.plNone':
+      'حالا هیچ چوکی در انتظار حامی نیست. درخواست پس از منظوری کارمندان اینجا می‌آید.',
+    'sponsor.plForChild': 'برای طفل',
+    'sponsor.plForAdult': 'برای بزرگسال',
+    'sponsor.plPriceNote': 'قیمت این کورس در کشور شما. آنچه حمایت می‌شود چوکی است، نه کارت تحفه.',
+    'sponsor.plNoPrice':
+      'این کورس در کشور شما قیمتی ندارد، پس این چوکی را از اینجا نمی‌توان گرفت.',
+    'sponsor.plPriceUnread': 'قیمت این چوکی خوانده نشد، پس فعلاً نمی‌توان آن را گرفت.',
+    'sponsor.plNoteLabel': 'یادداشتی برای کارمندان، اگر بخواهید',
+    'sponsor.plTake': 'از این چوکی حمایت کنید',
+    'sponsor.plTaken': 'این چوکی حالا برای پرداخت از شماست: {amount}',
+    'sponsor.plTakenNext':
+      'چیزی گرفته نشده است. صفحهٔ چوکی‌های حمایت‌شدهٔ شما می‌گوید چگونه بپردازید.',
+    'sponsor.plWhyGone':
+      'این چوکی همین حالا گرفته شد، یا دیگر باز نیست. چوکی دیگری انتخاب کنید.',
+    'sponsor.plWhyOwn':
+      'این همان چوکی است که خودتان خواسته‌اید. نمی‌توانید از درخواست خودتان حمایت کنید.',
+    'sponsor.tooLong': 'این از گنجایش این خانه درازتر است.',
+    'sponsor.plWhyFailed': 'نشد. نه چیزی گرفته شد و نه چیزی تغییر کرد.',
+    'sponsor.unconfirmed':
+      'نتوانستیم تأیید کنیم که ثبت شده است یا نه. پیش از کوشش دوباره، چوکی‌های حمایت‌شدهٔ خود را ببینید.',
+    'sponsor.plAskHeading': 'خواستن چوکی',
+    'sponsor.rqLede':
+      'اگر کورسی از توان شما بیرون است، چند جمله دربارهٔ وضعیت بنویسید. کارمندان آن را می‌خوانند و در هر دو حالت با ذکر دلیل جواب می‌دهند. خواستن مصرفی ندارد و کسی را به چیزی مکلف نمی‌سازد.',
+    'sponsor.rqCourse': 'کدام کورس؟',
+    'sponsor.rqChoose': 'کورسی را انتخاب کنید',
+    'sponsor.rqReason': 'وضعیت چیست؟',
+    'sponsor.rqReasonNote':
+      'تنها کارمندانی که تصمیم می‌گیرند آن را می‌خوانند و هیچ کس دیگر. به کسی که پول چوکی را می‌پردازد نشان داده نمی‌شود.',
+    'sponsor.rqSubmit': 'این چوکی را بخواهید',
+    'sponsor.rqDone':
+      'درخواست ثبت شد. کارمندان آن را می‌خوانند و جواب، همراه با دلیلش، در صفحهٔ چوکی‌های حمایت‌شدهٔ شما خواهد بود.',
+    'sponsor.rqNoLearner': 'هنوز شاگردی در این حساب نیست، پس کسی نیست که برایش خواسته شود.',
+    'sponsor.rqNoCourse': 'فعلاً کورسی برای فروش نیست، پس چیزی برای خواستن نیست.',
+    'sponsor.rqPrivacy':
+      'اگر درخواست منظور شود، حامی کد چوکی، کورس، اینکه برای طفل است یا بزرگسال، و قیمت را می‌بیند. هرگز نام شما، فامیل شما یا آنچه اینجا نوشته‌اید را نمی‌بیند.',
+    'sponsor.rqWhyReason':
+      'جمله‌ای دربارهٔ وضعیت بنویسید. این همان چیزی است که تصمیم‌گیرنده می‌خواند.',
+    'sponsor.rqWhyHas': 'این شاگرد از پیش این کورس را دارد، پس چیزی برای خواستن نیست.',
+    'sponsor.rqWhyAsked': 'برای این کورس از پیش یک درخواست باز است.',
   },
   tr: {
     'sponsor.lede':
@@ -322,6 +538,60 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.payNot':
       'Bu söz burada ödenemez: ya ödenmiş ya iptal edilmiştir ya da sizin sözlerinizden biri değildir.',
     'sponsor.nextPay': 'Siz ödeyene kadar hiçbir şey alınmaz. Ödeme onaylanınca yer açılır.',
+    'sponsor.plEyebrow': 'Destek',
+    'sponsor.plTitle': 'Başka birinin kursunun ücretini ödeyin',
+    'sponsor.plLede':
+      'Bir kursun ücretini karşılayamayan öğrenci onu ister, görevliler de karar verir. Onaylanan istek burada bir kodu ve kursun fiyatı olan bir yer olarak görünür; yanında asla bir ad olmaz. Siz bir yer seçersiniz, kursu öğrenci alır.',
+    'sponsor.plSeeHeading': 'Ne görürsünüz, ne görmezsiniz',
+    'sponsor.plSeeBody':
+      'Yerin kodu, kurs, çocuk için mi yetişkin için mi olduğu ve bulunduğunuz ülkedeki fiyat. Öğrencinin adı, yaşı ya da ailesi yoktur; yazdıklarından tek kelime de yoktur. Onu yalnızca karar veren görevliler okur, başka kimse okumaz.',
+    'sponsor.plPayHeading': 'Ne ödersiniz ve ne zaman',
+    'sponsor.plPayBody':
+      'Kursun bulunduğunuz ülkedeki fiyatı; satın almada olduğu gibi hesaplanır. Yer almak bir sözdür ve para alınmaz. Destekli yerler sayfanız sözün nasıl ödeneceğini söyler; ödeme onaylanınca yer öğrenciye açılır.',
+    'sponsor.plListHeading': 'Destekleyen bekleyen yerler',
+    'sponsor.plSignIn': 'Yerler oturum açmış kişilere gösterilir.',
+    'sponsor.plUnread': 'Yerler okunamadı. Hiçbir ücret alınmadı ve hiçbir yer alınmadı.',
+    'sponsor.plOff':
+      'Yer destekleme şu anda kapalı; bu yüzden ne yer alınabilir ne de istenebilir.',
+    'sponsor.plNone':
+      'Şu anda destekleyen bekleyen yer yok. İstek, görevliler onaylayınca burada görünür.',
+    'sponsor.plForChild': 'Çocuk için',
+    'sponsor.plForAdult': 'Yetişkin için',
+    'sponsor.plPriceNote':
+      'Bu kursun bulunduğunuz ülkedeki fiyatı. Desteklenen şey yerdir, hediye kartı değildir.',
+    'sponsor.plNoPrice':
+      'Bu kursun bulunduğunuz ülkede fiyatı yok; bu yüzden bu yer buradan alınamaz.',
+    'sponsor.plPriceUnread': 'Bu yerin fiyatı okunamadı; bu yüzden şimdilik alınamaz.',
+    'sponsor.plNoteLabel': 'İsterseniz görevlilere bir not',
+    'sponsor.plTake': 'Bu yeri destekleyin',
+    'sponsor.plTaken': 'Bu yer artık ödemeniz için sizin: {amount}',
+    'sponsor.plTakenNext':
+      'Hiçbir şey alınmadı. Destekli yerler sayfanız nasıl ödeyeceğinizi söyler.',
+    'sponsor.plWhyGone': 'Bu yer az önce alındı ya da artık açık değil. Başka bir yer seçin.',
+    'sponsor.plWhyOwn': 'Bu, sizin istediğiniz yer. Kendi isteğinizi destekleyemezsiniz.',
+    'sponsor.tooLong': 'Bu, kutunun alabileceğinden uzun.',
+    'sponsor.plWhyFailed': 'Olmadı. Hiçbir ücret alınmadı ve hiçbir şey değişmedi.',
+    'sponsor.unconfirmed':
+      'Kaydedilip kaydedilmediğini doğrulayamadık. Yeniden denemeden önce destekli yerlerinize bakın.',
+    'sponsor.plAskHeading': 'Yer istemek',
+    'sponsor.rqLede':
+      'Bir kurs gücünüzü aşıyorsa durum hakkında birkaç cümle yazın. Görevliler okur ve her iki durumda da gerekçesiyle yanıt verir. İstemenin hiçbir ücreti yoktur ve kimseyi bir şeye mecbur etmez.',
+    'sponsor.rqCourse': 'Hangi kurs?',
+    'sponsor.rqChoose': 'Bir kurs seçin',
+    'sponsor.rqReason': 'Durum nedir?',
+    'sponsor.rqReasonNote':
+      'Yalnızca karar veren görevliler okur, başka kimse okumaz. Yerin ücretini ödeyen kişiye gösterilmez.',
+    'sponsor.rqSubmit': 'Bu yeri isteyin',
+    'sponsor.rqDone':
+      'İstendi. Görevliler okuyacak; yanıt, gerekçesiyle birlikte destekli yerler sayfanızda olacak.',
+    'sponsor.rqNoLearner':
+      'Bu hesapta henüz bir öğrenci yok; bu yüzden adına istenecek kimse yok.',
+    'sponsor.rqNoCourse': 'Şu anda satışta kurs yok; bu yüzden istenecek bir şey yok.',
+    'sponsor.rqPrivacy':
+      'İstek onaylanırsa destekleyen kişi yerin kodunu, kursu, çocuk için mi yetişkin için mi olduğunu ve fiyatı görür. Adınızı, ailenizi ya da burada yazdıklarınızı asla görmez.',
+    'sponsor.rqWhyReason': 'Durum hakkında bir cümle yazın. Karar veren kişi onu okur.',
+    'sponsor.rqWhyHas': 'Bu öğrencide bu kurs zaten var; bu yüzden istenecek bir şey yok.',
+    'sponsor.rqWhyAsked': 'Bu kurs için zaten açık bir istek var.',
   },
   id: {
     'sponsor.lede':
@@ -377,6 +647,68 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Janji ini tidak dapat dibayar di sini: sudah dibayar atau dibatalkan, atau bukan salah satu janji Anda.',
     'sponsor.nextPay':
       'Tidak ada yang diambil sampai Anda membayar. Kursi dibuka saat pembayaran dikonfirmasi.',
+    'sponsor.plEyebrow': 'Sponsor',
+    'sponsor.plTitle': 'Bayarkan kursus untuk orang lain',
+    'sponsor.plLede':
+      'Peserta didik yang tidak mampu membayar sebuah kursus memintanya, dan staf memutuskan. Permintaan yang disetujui muncul di sini sebagai kursi dengan kode dan harga kursus, dan tidak pernah dengan nama. Anda memilih kursi; peserta didik mendapat kursusnya.',
+    'sponsor.plSeeHeading': 'Yang Anda lihat, dan yang tidak',
+    'sponsor.plSeeBody':
+      'Kode kursi, kursus, apakah untuk anak atau orang dewasa, dan harga di negara Anda. Bukan nama, usia, atau keluarga peserta didik, dan tidak sepatah kata pun dari yang ditulisnya. Itu dibaca oleh staf yang memutuskan, dan tidak oleh orang lain.',
+    'sponsor.plPayHeading': 'Yang Anda bayar, dan kapan',
+    'sponsor.plPayBody':
+      'Harga kursus di negara Anda, dihitung seperti untuk pembelian. Mengambil kursi adalah janji dan tidak mengambil uang. Halaman kursi bersponsor Anda menjelaskan cara janji itu dibayar, dan kursi dibuka bagi peserta didik saat pembayaran dikonfirmasi.',
+    'sponsor.plListHeading': 'Kursi yang menunggu sponsor',
+    'sponsor.plSignIn': 'Kursi ditampilkan kepada orang yang sudah masuk.',
+    'sponsor.plUnread':
+      'Kursi tidak dapat dibaca. Tidak ada yang ditagih dan tidak ada kursi yang diambil.',
+    'sponsor.plOff':
+      'Sponsor kursi sedang dimatikan, jadi tidak ada kursi yang dapat diambil atau diminta.',
+    'sponsor.plNone':
+      'Saat ini tidak ada kursi yang menunggu sponsor. Permintaan muncul di sini setelah disetujui staf.',
+    'sponsor.plForChild': 'Untuk anak',
+    'sponsor.plForAdult': 'Untuk orang dewasa',
+    'sponsor.plPriceNote':
+      'Harga kursus ini di negara Anda. Yang disponsori adalah kursinya, bukan kartu hadiah.',
+    'sponsor.plNoPrice':
+      'Kursus ini tidak punya harga di negara Anda, jadi kursi ini tidak dapat diambil dari sini.',
+    'sponsor.plPriceUnread':
+      'Harga kursi ini tidak dapat dibaca, jadi belum dapat diambil sekarang.',
+    'sponsor.plNoteLabel': 'Catatan untuk staf, jika Anda mau',
+    'sponsor.plTake': 'Sponsori kursi ini',
+    'sponsor.plTaken': 'Kursi ini kini milik Anda untuk dibayar: {amount}',
+    'sponsor.plTakenNext':
+      'Tidak ada yang diambil. Halaman kursi bersponsor Anda menjelaskan cara membayar.',
+    'sponsor.plWhyGone':
+      'Kursi itu baru saja diambil, atau tidak lagi terbuka. Pilih yang lain.',
+    'sponsor.plWhyOwn':
+      'Itu kursi yang Anda minta sendiri. Anda tidak dapat mensponsori permintaan Anda sendiri.',
+    'sponsor.tooLong': 'Itu lebih panjang daripada yang dapat ditampung kotak ini.',
+    'sponsor.plWhyFailed':
+      'Itu tidak berhasil. Tidak ada yang ditagih dan tidak ada yang berubah.',
+    'sponsor.unconfirmed':
+      'Kami tidak dapat memastikan apakah itu tercatat. Lihat kursi bersponsor Anda sebelum mencoba lagi.',
+    'sponsor.plAskHeading': 'Meminta kursi',
+    'sponsor.rqLede':
+      'Jika sebuah kursus tidak terjangkau, tulis beberapa kalimat tentang keadaannya. Staf membacanya dan menjawab apa pun keputusannya, dengan alasan. Meminta tidak ada biayanya dan tidak mewajibkan siapa pun.',
+    'sponsor.rqCourse': 'Kursus yang mana?',
+    'sponsor.rqChoose': 'Pilih kursus',
+    'sponsor.rqReason': 'Bagaimana keadaannya?',
+    'sponsor.rqReasonNote':
+      'Dibaca oleh staf yang memutuskan, dan tidak oleh orang lain. Tidak ditampilkan kepada orang yang membayar kursi itu.',
+    'sponsor.rqSubmit': 'Minta kursi ini',
+    'sponsor.rqDone':
+      'Sudah diminta. Staf akan membacanya, dan jawabannya, beserta alasannya, akan ada di halaman kursi bersponsor Anda.',
+    'sponsor.rqNoLearner':
+      'Belum ada peserta didik di akun ini, jadi belum ada yang dapat dimintakan.',
+    'sponsor.rqNoCourse':
+      'Saat ini tidak ada kursus yang dijual, jadi tidak ada yang dapat diminta.',
+    'sponsor.rqPrivacy':
+      'Jika permintaan disetujui, sponsor melihat kode kursi, kursus, apakah untuk anak atau orang dewasa, dan harganya. Tidak pernah nama Anda, keluarga Anda, atau yang Anda tulis di sini.',
+    'sponsor.rqWhyReason':
+      'Tulis satu kalimat tentang keadaannya. Itulah yang dibaca orang yang memutuskan.',
+    'sponsor.rqWhyHas':
+      'Peserta didik itu sudah memiliki kursus ini, jadi tidak ada yang perlu diminta.',
+    'sponsor.rqWhyAsked': 'Sudah ada permintaan yang terbuka untuk kursus ini.',
   },
   ms: {
     'sponsor.lede':
@@ -432,6 +764,66 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Janji ini tidak boleh dibayar di sini: ia telah dibayar atau dibatalkan, atau bukan salah satu janji anda.',
     'sponsor.nextPay':
       'Tiada apa-apa diambil sehingga anda membayar. Tempat dibuka apabila pembayaran disahkan.',
+    'sponsor.plEyebrow': 'Tajaan',
+    'sponsor.plTitle': 'Bayar kursus untuk orang lain',
+    'sponsor.plLede':
+      'Pelajar yang tidak mampu membayar sesebuah kursus memohonnya, dan kakitangan memutuskan. Permohonan yang diluluskan muncul di sini sebagai tempat dengan kod dan harga kursus, dan tidak sekali-kali dengan nama. Anda memilih tempat; pelajar mendapat kursus itu.',
+    'sponsor.plSeeHeading': 'Apa yang anda lihat, dan apa yang tidak',
+    'sponsor.plSeeBody':
+      'Kod tempat, kursus, sama ada untuk kanak-kanak atau orang dewasa, dan harga di negara anda. Bukan nama, umur atau keluarga pelajar, dan tidak sepatah pun daripada apa yang ditulisnya. Itu dibaca oleh kakitangan yang memutuskan, dan tidak oleh sesiapa lagi.',
+    'sponsor.plPayHeading': 'Apa yang anda bayar, dan bila',
+    'sponsor.plPayBody':
+      'Harga kursus di negara anda, dikira seperti untuk pembelian. Mengambil tempat ialah satu janji dan tiada wang diambil. Halaman tempat tajaan anda menerangkan cara janji itu dibayar, dan tempat dibuka untuk pelajar apabila pembayaran disahkan.',
+    'sponsor.plListHeading': 'Tempat yang menunggu penaja',
+    'sponsor.plSignIn': 'Tempat ditunjukkan kepada orang yang sudah log masuk.',
+    'sponsor.plUnread':
+      'Tempat tidak dapat dibaca. Tiada apa-apa dicaj dan tiada tempat diambil.',
+    'sponsor.plOff':
+      'Tajaan tempat sedang dimatikan, jadi tiada tempat boleh diambil atau dimohon.',
+    'sponsor.plNone':
+      'Tiada tempat yang menunggu penaja sekarang. Permohonan muncul di sini selepas diluluskan oleh kakitangan.',
+    'sponsor.plForChild': 'Untuk kanak-kanak',
+    'sponsor.plForAdult': 'Untuk orang dewasa',
+    'sponsor.plPriceNote':
+      'Harga kursus ini di negara anda. Yang ditaja ialah tempat itu, bukan kad hadiah.',
+    'sponsor.plNoPrice':
+      'Kursus ini tiada harga di negara anda, jadi tempat ini tidak boleh diambil dari sini.',
+    'sponsor.plPriceUnread':
+      'Harga tempat ini tidak dapat dibaca, jadi ia belum boleh diambil sekarang.',
+    'sponsor.plNoteLabel': 'Nota untuk kakitangan, jika anda mahu',
+    'sponsor.plTake': 'Taja tempat ini',
+    'sponsor.plTaken': 'Tempat ini kini milik anda untuk dibayar: {amount}',
+    'sponsor.plTakenNext':
+      'Tiada apa-apa diambil. Halaman tempat tajaan anda menerangkan cara membayar.',
+    'sponsor.plWhyGone':
+      'Tempat itu baru sahaja diambil, atau tidak lagi dibuka. Pilih yang lain.',
+    'sponsor.plWhyOwn':
+      'Itu tempat yang anda sendiri mohon. Anda tidak boleh menaja permohonan anda sendiri.',
+    'sponsor.tooLong': 'Itu lebih panjang daripada yang boleh dimuatkan dalam kotak ini.',
+    'sponsor.plWhyFailed': 'Itu tidak berjaya. Tiada apa-apa dicaj dan tiada apa-apa berubah.',
+    'sponsor.unconfirmed':
+      'Kami tidak dapat mengesahkan sama ada ia direkodkan. Lihat tempat tajaan anda sebelum mencuba lagi.',
+    'sponsor.plAskHeading': 'Memohon tempat',
+    'sponsor.rqLede':
+      'Jika sesebuah kursus di luar kemampuan, tulis beberapa ayat tentang keadaannya. Kakitangan membacanya dan menjawab walau apa pun keputusannya, dengan sebab. Memohon adalah percuma dan tidak mewajibkan sesiapa.',
+    'sponsor.rqCourse': 'Kursus yang mana?',
+    'sponsor.rqChoose': 'Pilih kursus',
+    'sponsor.rqReason': 'Bagaimanakah keadaannya?',
+    'sponsor.rqReasonNote':
+      'Dibaca oleh kakitangan yang memutuskan, dan tidak oleh sesiapa lagi. Tidak ditunjukkan kepada orang yang membayar tempat itu.',
+    'sponsor.rqSubmit': 'Mohon tempat ini',
+    'sponsor.rqDone':
+      'Sudah dimohon. Kakitangan akan membacanya, dan jawapannya, bersama sebabnya, akan ada di halaman tempat tajaan anda.',
+    'sponsor.rqNoLearner':
+      'Belum ada pelajar dalam akaun ini, jadi tiada sesiapa untuk dimohonkan.',
+    'sponsor.rqNoCourse': 'Tiada kursus yang dijual sekarang, jadi tiada apa-apa untuk dimohon.',
+    'sponsor.rqPrivacy':
+      'Jika permohonan diluluskan, penaja melihat kod tempat, kursus, sama ada untuk kanak-kanak atau orang dewasa, dan harganya. Tidak sekali-kali nama anda, keluarga anda atau apa yang anda tulis di sini.',
+    'sponsor.rqWhyReason':
+      'Tulis satu ayat tentang keadaannya. Itulah yang dibaca oleh orang yang memutuskan.',
+    'sponsor.rqWhyHas':
+      'Pelajar itu sudah mempunyai kursus ini, jadi tiada apa-apa untuk dimohon.',
+    'sponsor.rqWhyAsked': 'Sudah ada permohonan yang terbuka untuk kursus ini.',
   },
   bn: {
     'sponsor.lede':
@@ -487,6 +879,61 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'এই প্রতিশ্রুতির পেমেন্ট এখানে করা যাবে না: এটি পরিশোধ করা হয়েছে বা বাতিল হয়েছে, অথবা এটি আপনার প্রতিশ্রুতি নয়।',
     'sponsor.nextPay':
       'আপনি পেমেন্ট না করা পর্যন্ত কিছুই নেওয়া হয় না। পেমেন্ট নিশ্চিত হলে আসনটি খুলে যায়।',
+    'sponsor.plEyebrow': 'পৃষ্ঠপোষকতা',
+    'sponsor.plTitle': 'অন্য কারও কোর্সের খরচ দিন',
+    'sponsor.plLede':
+      'যে শিক্ষার্থী কোনো কোর্সের খরচ দিতে পারেন না তিনি সেটি চান, আর কর্মীরা সিদ্ধান্ত নেন। অনুমোদিত অনুরোধ এখানে একটি আসন হিসেবে আসে, সঙ্গে একটি কোড ও কোর্সের দাম থাকে, কখনোই কোনো নাম থাকে না। আপনি একটি আসন বেছে নেন; কোর্সটি পান শিক্ষার্থী।',
+    'sponsor.plSeeHeading': 'আপনি কী দেখেন, আর কী দেখেন না',
+    'sponsor.plSeeBody':
+      'আসনের কোড, কোর্স, সেটি শিশুর জন্য না প্রাপ্তবয়স্কের জন্য, এবং আপনার দেশে দাম। শিক্ষার্থীর নাম, বয়স বা পরিবার নয়, এবং তিনি যা লিখেছেন তার একটি শব্দও নয়। সেটি শুধু সিদ্ধান্ত নেওয়া কর্মীরা পড়েন, আর কেউ নয়।',
+    'sponsor.plPayHeading': 'আপনি কী দেন, এবং কখন',
+    'sponsor.plPayBody':
+      'আপনার দেশে কোর্সের দাম, কেনার বেলায় যেভাবে হিসাব হয় সেভাবেই। আসন নেওয়া একটি প্রতিশ্রুতি, এতে কোনো টাকা নেওয়া হয় না। আপনার পৃষ্ঠপোষকতার আসনের পাতা বলে প্রতিশ্রুতির পেমেন্ট কীভাবে হবে, আর পেমেন্ট নিশ্চিত হলে আসনটি শিক্ষার্থীর জন্য খুলে যায়।',
+    'sponsor.plListHeading': 'পৃষ্ঠপোষকের অপেক্ষায় থাকা আসন',
+    'sponsor.plSignIn': 'আসনগুলো তাঁদের দেখানো হয় যাঁরা সাইন ইন করেছেন।',
+    'sponsor.plUnread': 'আসনগুলো পড়া যায়নি। কিছুই চার্জ করা হয়নি এবং কোনো আসন নেওয়া হয়নি।',
+    'sponsor.plOff':
+      'আসনের পৃষ্ঠপোষকতা এখন বন্ধ আছে, তাই কোনো আসন নেওয়া বা চাওয়া যাবে না।',
+    'sponsor.plNone':
+      'এখন কোনো আসন পৃষ্ঠপোষকের অপেক্ষায় নেই। কর্মীরা অনুমোদন করলে অনুরোধ এখানে আসে।',
+    'sponsor.plForChild': 'শিশুর জন্য',
+    'sponsor.plForAdult': 'প্রাপ্তবয়স্কের জন্য',
+    'sponsor.plPriceNote':
+      'আপনার দেশে এই কোর্সের দাম। পৃষ্ঠপোষকতা হয় আসনটির, এটি উপহার কার্ড নয়।',
+    'sponsor.plNoPrice':
+      'আপনার দেশে এই কোর্সের কোনো দাম নেই, তাই এই আসন এখান থেকে নেওয়া যাবে না।',
+    'sponsor.plPriceUnread': 'এই আসনের দাম পড়া যায়নি, তাই এখনই এটি নেওয়া যাবে না।',
+    'sponsor.plNoteLabel': 'কর্মীদের জন্য একটি নোট, চাইলে',
+    'sponsor.plTake': 'এই আসনের পৃষ্ঠপোষক হোন',
+    'sponsor.plTaken': 'এই আসনের পেমেন্ট এখন আপনার করার জন্য: {amount}',
+    'sponsor.plTakenNext':
+      'কিছুই নেওয়া হয়নি। আপনার পৃষ্ঠপোষকতার আসনের পাতা বলে কীভাবে পেমেন্ট করবেন।',
+    'sponsor.plWhyGone': 'আসনটি এইমাত্র নেওয়া হয়েছে, অথবা আর খোলা নেই। অন্য একটি বেছে নিন।',
+    'sponsor.plWhyOwn':
+      'এটি সেই আসন যা আপনি নিজেই চেয়েছেন। নিজের অনুরোধের পৃষ্ঠপোষক হওয়া যায় না।',
+    'sponsor.tooLong': 'এটি এই ঘরে যতটা ধরে তার চেয়ে লম্বা।',
+    'sponsor.plWhyFailed': 'এটি হয়নি। কিছুই চার্জ করা হয়নি এবং কিছুই বদলায়নি।',
+    'sponsor.unconfirmed':
+      'এটি নথিভুক্ত হয়েছে কি না আমরা নিশ্চিত করতে পারিনি। আবার চেষ্টা করার আগে আপনার পৃষ্ঠপোষকতার আসনগুলো দেখুন।',
+    'sponsor.plAskHeading': 'আসন চাওয়া',
+    'sponsor.rqLede':
+      'কোনো কোর্স নাগালের বাইরে হলে পরিস্থিতি নিয়ে কয়েকটি বাক্য লিখুন। কর্মীরা তা পড়েন এবং যা-ই সিদ্ধান্ত হোক, কারণসহ উত্তর দেন। চাইতে কোনো খরচ নেই এবং এতে কেউ বাধ্য হন না।',
+    'sponsor.rqCourse': 'কোন কোর্স?',
+    'sponsor.rqChoose': 'একটি কোর্স বেছে নিন',
+    'sponsor.rqReason': 'পরিস্থিতি কী?',
+    'sponsor.rqReasonNote':
+      'শুধু সিদ্ধান্ত নেওয়া কর্মীরা পড়েন, আর কেউ নয়। আসনের খরচ যিনি দেন তাঁকে দেখানো হয় না।',
+    'sponsor.rqSubmit': 'এই আসন চান',
+    'sponsor.rqDone':
+      'চাওয়া হয়েছে। কর্মীরা তা পড়বেন, এবং উত্তর, কারণসহ, আপনার পৃষ্ঠপোষকতার আসনের পাতায় থাকবে।',
+    'sponsor.rqNoLearner':
+      'এই অ্যাকাউন্টে এখনো কোনো শিক্ষার্থী নেই, তাই কারও জন্য চাওয়ার উপায় নেই।',
+    'sponsor.rqNoCourse': 'এখন কোনো কোর্স বিক্রিতে নেই, তাই চাওয়ার কিছু নেই।',
+    'sponsor.rqPrivacy':
+      'অনুরোধ অনুমোদিত হলে পৃষ্ঠপোষক আসনের কোড, কোর্স, সেটি শিশুর জন্য না প্রাপ্তবয়স্কের জন্য, এবং দাম দেখেন। আপনার নাম, আপনার পরিবার বা এখানে আপনি যা লিখেছেন তা কখনোই নয়।',
+    'sponsor.rqWhyReason': 'পরিস্থিতি নিয়ে একটি বাক্য লিখুন। সিদ্ধান্ত যিনি নেন তিনি এটিই পড়েন।',
+    'sponsor.rqWhyHas': 'সেই শিক্ষার্থীর কাছে এই কোর্স আগে থেকেই আছে, তাই চাওয়ার কিছু নেই।',
+    'sponsor.rqWhyAsked': 'এই কোর্সের জন্য আগে থেকেই একটি অনুরোধ খোলা আছে।',
   },
   hi: {
     'sponsor.lede':
@@ -541,6 +988,62 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'इस वचन का भुगतान यहाँ नहीं किया जा सकता: इसका भुगतान हो चुका है या इसे रद्द कर दिया गया है, या यह आपके वचनों में से नहीं है।',
     'sponsor.nextPay':
       'जब तक आप भुगतान नहीं करते, कुछ नहीं लिया जाता। भुगतान की पुष्टि होते ही सीट खुल जाती है।',
+    'sponsor.plEyebrow': 'प्रायोजन',
+    'sponsor.plTitle': 'किसी और के कोर्स का भुगतान करें',
+    'sponsor.plLede':
+      'जो शिक्षार्थी किसी कोर्स का ख़र्च नहीं उठा सकता, वह उसे माँगता है, और स्टाफ़ निर्णय लेता है। स्वीकृत अनुरोध यहाँ एक सीट के रूप में आता है, जिसके साथ एक कोड और कोर्स की क़ीमत होती है, नाम कभी नहीं। आप एक सीट चुनते हैं; कोर्स शिक्षार्थी को मिलता है।',
+    'sponsor.plSeeHeading': 'आप क्या देखते हैं, और क्या नहीं',
+    'sponsor.plSeeBody':
+      'सीट का कोड, कोर्स, वह बच्चे के लिए है या वयस्क के लिए, और आपके देश में क़ीमत। शिक्षार्थी का नाम, उम्र या परिवार नहीं, और उसके लिखे का एक शब्द भी नहीं। उसे केवल निर्णय लेने वाला स्टाफ़ पढ़ता है, और कोई नहीं।',
+    'sponsor.plPayHeading': 'आप क्या चुकाते हैं, और कब',
+    'sponsor.plPayBody':
+      'आपके देश में कोर्स की क़ीमत, वैसे ही निकाली गई जैसे ख़रीद के लिए। सीट लेना एक वचन है और इससे कोई पैसा नहीं लिया जाता। आपका प्रायोजित सीटों का पेज बताता है कि वचन का भुगतान कैसे होता है, और भुगतान की पुष्टि होते ही सीट शिक्षार्थी के लिए खुल जाती है।',
+    'sponsor.plListHeading': 'प्रायोजक की प्रतीक्षा में सीटें',
+    'sponsor.plSignIn': 'सीटें उन्हें दिखाई जाती हैं जो साइन इन हैं।',
+    'sponsor.plUnread': 'सीटें पढ़ी नहीं जा सकीं। कुछ भी वसूला नहीं गया और कोई सीट नहीं ली गई।',
+    'sponsor.plOff':
+      'सीट का प्रायोजन अभी बंद है, इसलिए न कोई सीट ली जा सकती है और न माँगी जा सकती है।',
+    'sponsor.plNone':
+      'अभी कोई सीट प्रायोजक की प्रतीक्षा में नहीं है। स्टाफ़ की स्वीकृति के बाद अनुरोध यहाँ आता है।',
+    'sponsor.plForChild': 'बच्चे के लिए',
+    'sponsor.plForAdult': 'वयस्क के लिए',
+    'sponsor.plPriceNote':
+      'आपके देश में इस कोर्स की क़ीमत। प्रायोजित सीट होती है, यह गिफ़्ट कार्ड नहीं है।',
+    'sponsor.plNoPrice':
+      'आपके देश में इस कोर्स की कोई क़ीमत नहीं है, इसलिए यह सीट यहाँ से नहीं ली जा सकती।',
+    'sponsor.plPriceUnread': 'इस सीट की क़ीमत पढ़ी नहीं जा सकी, इसलिए अभी यह नहीं ली जा सकती।',
+    'sponsor.plNoteLabel': 'स्टाफ़ के लिए एक नोट, यदि आप चाहें',
+    'sponsor.plTake': 'इस सीट को प्रायोजित करें',
+    'sponsor.plTaken': 'यह सीट अब आपके भुगतान करने के लिए है: {amount}',
+    'sponsor.plTakenNext':
+      'कुछ भी नहीं लिया गया। आपका प्रायोजित सीटों का पेज बताता है कि भुगतान कैसे करना है।',
+    'sponsor.plWhyGone': 'यह सीट अभी-अभी ले ली गई है, या अब खुली नहीं है। कोई और चुनें।',
+    'sponsor.plWhyOwn':
+      'यह वही सीट है जो आपने स्वयं माँगी थी। आप अपने ही अनुरोध को प्रायोजित नहीं कर सकते।',
+    'sponsor.tooLong': 'यह इस बॉक्स की क्षमता से अधिक लंबा है।',
+    'sponsor.plWhyFailed': 'यह नहीं हो सका। न कुछ वसूला गया और न कुछ बदला।',
+    'sponsor.unconfirmed':
+      'हम पुष्टि नहीं कर सके कि यह दर्ज हुआ या नहीं। दोबारा कोशिश करने से पहले अपनी प्रायोजित सीटें देख लें।',
+    'sponsor.plAskHeading': 'सीट माँगना',
+    'sponsor.rqLede':
+      'कोई कोर्स आपकी पहुँच से बाहर हो तो स्थिति के बारे में कुछ वाक्य लिखें। स्टाफ़ उसे पढ़ता है और दोनों ही स्थितियों में कारण सहित उत्तर देता है। माँगने में कुछ ख़र्च नहीं होता और कोई किसी बात के लिए बाध्य नहीं होता।',
+    'sponsor.rqCourse': 'कौन-सा कोर्स?',
+    'sponsor.rqChoose': 'एक कोर्स चुनें',
+    'sponsor.rqReason': 'स्थिति क्या है?',
+    'sponsor.rqReasonNote':
+      'केवल निर्णय लेने वाला स्टाफ़ पढ़ता है, और कोई नहीं। सीट का भुगतान करने वाले को नहीं दिखाया जाता।',
+    'sponsor.rqSubmit': 'यह सीट माँगें',
+    'sponsor.rqDone':
+      'माँग लिया गया। स्टाफ़ इसे पढ़ेगा, और उत्तर, अपने कारण सहित, आपके प्रायोजित सीटों के पेज पर होगा।',
+    'sponsor.rqNoLearner':
+      'इस खाते में अभी कोई शिक्षार्थी नहीं है, इसलिए किसी के लिए माँगा नहीं जा सकता।',
+    'sponsor.rqNoCourse': 'अभी कोई कोर्स बिक्री पर नहीं है, इसलिए माँगने को कुछ नहीं है।',
+    'sponsor.rqPrivacy':
+      'यदि अनुरोध स्वीकृत हो जाए, तो प्रायोजक को सीट का कोड, कोर्स, वह बच्चे के लिए है या वयस्क के लिए, और क़ीमत दिखती है। आपका नाम, आपका परिवार या जो आपने यहाँ लिखा, वह कभी नहीं।',
+    'sponsor.rqWhyReason': 'स्थिति के बारे में एक वाक्य लिखें। निर्णय लेने वाला यही पढ़ता है।',
+    'sponsor.rqWhyHas':
+      'उस शिक्षार्थी के पास यह कोर्स पहले से है, इसलिए माँगने को कुछ नहीं है।',
+    'sponsor.rqWhyAsked': 'इस कोर्स के लिए पहले से एक अनुरोध खुला है।',
   },
   fr: {
     'sponsor.lede':
@@ -597,6 +1100,66 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Cette promesse ne peut pas être payée ici : elle a été payée ou annulée, ou elle ne fait pas partie des vôtres.',
     'sponsor.nextPay':
       'Rien n’est prélevé tant que vous n’avez pas payé. La place s’ouvre lorsque le paiement est confirmé.',
+    'sponsor.plEyebrow': 'Parrainage',
+    'sponsor.plTitle': 'Payer le cours de quelqu’un d’autre',
+    'sponsor.plLede':
+      'Un apprenant qui ne peut pas payer un cours le demande, et l’équipe décide. Une demande approuvée apparaît ici sous la forme d’une place, avec un code et le prix du cours, et jamais un nom. Vous choisissez une place ; l’apprenant reçoit le cours.',
+    'sponsor.plSeeHeading': 'Ce que vous voyez, et ce que vous ne voyez pas',
+    'sponsor.plSeeBody':
+      'Le code de la place, le cours, s’il s’adresse à un enfant ou à un adulte, et le prix dans votre pays. Ni le nom, ni l’âge, ni la famille de l’apprenant, ni un mot de ce qui a été écrit. Cela est lu par les membres de l’équipe qui décident, et par personne d’autre.',
+    'sponsor.plPayHeading': 'Ce que vous payez, et quand',
+    'sponsor.plPayBody':
+      'Le prix du cours dans votre pays, calculé comme pour un achat. Prendre une place est une promesse et ne prélève rien. Votre page des places parrainées indique comment la promesse se paie, et la place s’ouvre à l’apprenant lorsque le paiement est confirmé.',
+    'sponsor.plListHeading': 'Places en attente d’un parrainage',
+    'sponsor.plSignIn': 'Les places sont montrées aux personnes connectées.',
+    'sponsor.plUnread':
+      'Les places n’ont pas pu être lues. Rien n’a été débité et aucune place n’a été prise.',
+    'sponsor.plOff':
+      'Le parrainage de places est désactivé pour le moment ; aucune place ne peut donc être prise ni demandée.',
+    'sponsor.plNone':
+      'Aucune place n’attend de parrainage pour le moment. Une demande apparaît ici une fois approuvée par l’équipe.',
+    'sponsor.plForChild': 'Pour un enfant',
+    'sponsor.plForAdult': 'Pour un adulte',
+    'sponsor.plPriceNote':
+      'Le prix de ce cours dans votre pays. C’est la place qui est parrainée, pas une carte cadeau.',
+    'sponsor.plNoPrice':
+      'Ce cours n’a pas de prix dans votre pays ; cette place ne peut donc pas être prise d’ici.',
+    'sponsor.plPriceUnread':
+      'Le prix de cette place n’a pas pu être lu ; elle ne peut donc pas être prise pour l’instant.',
+    'sponsor.plNoteLabel': 'Un mot pour l’équipe, si vous le souhaitez',
+    'sponsor.plTake': 'Parrainer cette place',
+    'sponsor.plTaken': 'Cette place est à vous, à payer : {amount}',
+    'sponsor.plTakenNext':
+      'Rien n’a été prélevé. Votre page des places parrainées indique comment payer.',
+    'sponsor.plWhyGone':
+      'Cette place vient d’être prise, ou n’est plus ouverte. Choisissez-en une autre.',
+    'sponsor.plWhyOwn':
+      'C’est la place que vous avez demandée. Vous ne pouvez pas parrainer votre propre demande.',
+    'sponsor.tooLong': 'C’est plus long que ce que cette zone peut contenir.',
+    'sponsor.plWhyFailed': 'Cela n’a pas fonctionné. Rien n’a été débité et rien n’a changé.',
+    'sponsor.unconfirmed':
+      'Nous n’avons pas pu confirmer que cela a été enregistré. Consultez vos places parrainées avant de réessayer.',
+    'sponsor.plAskHeading': 'Demander une place',
+    'sponsor.rqLede':
+      'Si un cours est hors de portée, écrivez quelques phrases sur la situation. L’équipe les lit et répond dans les deux cas, avec un motif. Demander ne coûte rien et n’oblige personne.',
+    'sponsor.rqCourse': 'Quel cours ?',
+    'sponsor.rqChoose': 'Choisissez un cours',
+    'sponsor.rqReason': 'Quelle est la situation ?',
+    'sponsor.rqReasonNote':
+      'Lu par les membres de l’équipe qui décident, et par personne d’autre. Jamais montré à la personne qui paie la place.',
+    'sponsor.rqSubmit': 'Demander cette place',
+    'sponsor.rqDone':
+      'Demande envoyée. L’équipe la lira, et la réponse, avec son motif, figurera sur votre page des places parrainées.',
+    'sponsor.rqNoLearner':
+      'Il n’y a pas encore d’apprenant sur ce compte ; il n’y a donc personne pour qui demander.',
+    'sponsor.rqNoCourse':
+      'Aucun cours n’est en vente pour le moment ; il n’y a donc rien à demander.',
+    'sponsor.rqPrivacy':
+      'Si la demande est approuvée, la personne qui parraine voit le code de la place, le cours, s’il s’adresse à un enfant ou à un adulte, et le prix. Jamais votre nom, votre famille ni ce que vous avez écrit ici.',
+    'sponsor.rqWhyReason':
+      'Écrivez une phrase sur la situation. C’est ce que lit la personne qui décide.',
+    'sponsor.rqWhyHas': 'Cet apprenant a déjà ce cours ; il n’y a donc rien à demander.',
+    'sponsor.rqWhyAsked': 'Une demande est déjà ouverte pour ce cours.',
   },
   es: {
     'sponsor.lede':
@@ -652,6 +1215,64 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Este compromiso no se puede pagar aquí: ya se pagó o se canceló, o no es uno de los suyos.',
     'sponsor.nextPay':
       'No se cobra nada hasta que usted pague. La plaza se abre cuando se confirma el pago.',
+    'sponsor.plEyebrow': 'Patrocinio',
+    'sponsor.plTitle': 'Pagar el curso de otra persona',
+    'sponsor.plLede':
+      'Un alumno que no puede pagar un curso lo solicita, y el equipo decide. Una solicitud aprobada aparece aquí como una plaza, con un código y el precio del curso, y nunca con un nombre. Usted elige una plaza; el alumno recibe el curso.',
+    'sponsor.plSeeHeading': 'Lo que usted ve, y lo que no',
+    'sponsor.plSeeBody':
+      'El código de la plaza, el curso, si es para un niño o para un adulto, y el precio en su país. No el nombre, la edad ni la familia del alumno, ni una palabra de lo que escribió. Eso lo lee el personal del equipo que decide, y nadie más.',
+    'sponsor.plPayHeading': 'Lo que usted paga, y cuándo',
+    'sponsor.plPayBody':
+      'El precio del curso en su país, calculado igual que en una compra. Tomar una plaza es un compromiso y no cobra nada. Su página de plazas patrocinadas indica cómo se paga el compromiso, y la plaza se abre para el alumno cuando se confirma el pago.',
+    'sponsor.plListHeading': 'Plazas a la espera de un patrocinio',
+    'sponsor.plSignIn': 'Las plazas se muestran a quienes han iniciado sesión.',
+    'sponsor.plUnread':
+      'No se pudieron leer las plazas. No se ha cobrado nada y no se ha tomado ninguna plaza.',
+    'sponsor.plOff':
+      'El patrocinio de plazas está desactivado por ahora, así que no se puede tomar ni solicitar ninguna plaza.',
+    'sponsor.plNone':
+      'Ahora mismo ninguna plaza espera un patrocinio. Una solicitud aparece aquí cuando el equipo la aprueba.',
+    'sponsor.plForChild': 'Para un niño',
+    'sponsor.plForAdult': 'Para un adulto',
+    'sponsor.plPriceNote':
+      'El precio de este curso en su país. Lo que se patrocina es la plaza, no una tarjeta regalo.',
+    'sponsor.plNoPrice':
+      'Este curso no tiene precio en su país, así que esta plaza no se puede tomar desde aquí.',
+    'sponsor.plPriceUnread':
+      'No se pudo leer el precio de esta plaza, así que por ahora no se puede tomar.',
+    'sponsor.plNoteLabel': 'Una nota para el equipo, si lo desea',
+    'sponsor.plTake': 'Patrocinar esta plaza',
+    'sponsor.plTaken': 'Esta plaza es suya para pagarla: {amount}',
+    'sponsor.plTakenNext':
+      'No se ha cobrado nada. Su página de plazas patrocinadas indica cómo pagar.',
+    'sponsor.plWhyGone': 'Esa plaza se acaba de tomar, o ya no está abierta. Elija otra.',
+    'sponsor.plWhyOwn':
+      'Esa es la plaza que usted solicitó. No puede patrocinar su propia solicitud.',
+    'sponsor.tooLong': 'Eso es más largo de lo que cabe en este cuadro.',
+    'sponsor.plWhyFailed': 'No funcionó. No se ha cobrado nada y no ha cambiado nada.',
+    'sponsor.unconfirmed':
+      'No pudimos confirmar si eso quedó registrado. Consulte sus plazas patrocinadas antes de volver a intentarlo.',
+    'sponsor.plAskHeading': 'Solicitar una plaza',
+    'sponsor.rqLede':
+      'Si un curso está fuera de su alcance, escriba unas frases sobre la situación. El equipo las lee y responde en ambos casos, con un motivo. Solicitar no cuesta nada y no obliga a nadie.',
+    'sponsor.rqCourse': '¿Qué curso?',
+    'sponsor.rqChoose': 'Elija un curso',
+    'sponsor.rqReason': '¿Cuál es la situación?',
+    'sponsor.rqReasonNote':
+      'Lo lee el personal del equipo que decide, y nadie más. No se muestra a quien paga la plaza.',
+    'sponsor.rqSubmit': 'Solicitar esta plaza',
+    'sponsor.rqDone':
+      'Solicitud enviada. El equipo la leerá, y la respuesta, con su motivo, estará en su página de plazas patrocinadas.',
+    'sponsor.rqNoLearner':
+      'Todavía no hay ningún alumno en esta cuenta, así que no hay nadie para quien solicitar.',
+    'sponsor.rqNoCourse':
+      'Ahora mismo no hay ningún curso a la venta, así que no hay nada que solicitar.',
+    'sponsor.rqPrivacy':
+      'Si la solicitud se aprueba, quien patrocina ve el código de la plaza, el curso, si es para un niño o para un adulto, y el precio. Nunca su nombre, su familia ni lo que usted escribió aquí.',
+    'sponsor.rqWhyReason': 'Escriba una frase sobre la situación. Es lo que lee quien decide.',
+    'sponsor.rqWhyHas': 'Ese alumno ya tiene este curso, así que no hay nada que solicitar.',
+    'sponsor.rqWhyAsked': 'Ya hay una solicitud abierta para este curso.',
   },
   pt: {
     'sponsor.lede':
@@ -708,6 +1329,64 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Esta promessa não pode ser paga aqui: já foi paga ou cancelada, ou não é uma das suas.',
     'sponsor.nextPay':
       'Nada é cobrado até pagar. O lugar abre quando o pagamento for confirmado.',
+    'sponsor.plEyebrow': 'Patrocínio',
+    'sponsor.plTitle': 'Pagar o curso de outra pessoa',
+    'sponsor.plLede':
+      'Um aluno que não consegue pagar um curso pede-o, e a equipa decide. Um pedido aprovado aparece aqui como um lugar, com um código e o preço do curso, e nunca com um nome. Escolhe um lugar; o aluno recebe o curso.',
+    'sponsor.plSeeHeading': 'O que vê, e o que não vê',
+    'sponsor.plSeeBody':
+      'O código do lugar, o curso, se é para uma criança ou para um adulto, e o preço no seu país. Não o nome, a idade nem a família do aluno, nem uma palavra do que foi escrito. Isso é lido pelas pessoas da equipa que decidem, e por mais ninguém.',
+    'sponsor.plPayHeading': 'O que paga, e quando',
+    'sponsor.plPayBody':
+      'O preço do curso no seu país, calculado como numa compra. Ficar com um lugar é uma promessa e não cobra nada. A sua página de lugares patrocinados indica como a promessa é paga, e o lugar abre para o aluno quando o pagamento for confirmado.',
+    'sponsor.plListHeading': 'Lugares à espera de um patrocínio',
+    'sponsor.plSignIn': 'Os lugares são mostrados a quem iniciou sessão.',
+    'sponsor.plUnread':
+      'Não foi possível ler os lugares. Nada foi cobrado e nenhum lugar foi ocupado.',
+    'sponsor.plOff':
+      'O patrocínio de lugares está desligado de momento, por isso nenhum lugar pode ser ocupado nem pedido.',
+    'sponsor.plNone':
+      'De momento nenhum lugar espera um patrocínio. Um pedido aparece aqui depois de a equipa o aprovar.',
+    'sponsor.plForChild': 'Para uma criança',
+    'sponsor.plForAdult': 'Para um adulto',
+    'sponsor.plPriceNote':
+      'O preço deste curso no seu país. O que é patrocinado é o lugar, não um cartão de oferta.',
+    'sponsor.plNoPrice':
+      'Este curso não tem preço no seu país, por isso este lugar não pode ser ocupado a partir daqui.',
+    'sponsor.plPriceUnread':
+      'Não foi possível ler o preço deste lugar, por isso não pode ser ocupado por agora.',
+    'sponsor.plNoteLabel': 'Uma nota para a equipa, se quiser',
+    'sponsor.plTake': 'Patrocinar este lugar',
+    'sponsor.plTaken': 'Este lugar é seu para pagar: {amount}',
+    'sponsor.plTakenNext':
+      'Nada foi cobrado. A sua página de lugares patrocinados indica como pagar.',
+    'sponsor.plWhyGone':
+      'Esse lugar acabou de ser ocupado, ou já não está aberto. Escolha outro.',
+    'sponsor.plWhyOwn': 'Esse é o lugar que pediu. Não pode patrocinar o seu próprio pedido.',
+    'sponsor.tooLong': 'Isso é mais longo do que esta caixa comporta.',
+    'sponsor.plWhyFailed': 'Não resultou. Nada foi cobrado e nada mudou.',
+    'sponsor.unconfirmed':
+      'Não conseguimos confirmar se isso ficou registado. Veja os seus lugares patrocinados antes de tentar de novo.',
+    'sponsor.plAskHeading': 'Pedir um lugar',
+    'sponsor.rqLede':
+      'Se um curso estiver fora do seu alcance, escreva algumas frases sobre a situação. A equipa lê-as e responde nos dois casos, com um motivo. Pedir não custa nada e não obriga ninguém.',
+    'sponsor.rqCourse': 'Que curso?',
+    'sponsor.rqChoose': 'Escolha um curso',
+    'sponsor.rqReason': 'Qual é a situação?',
+    'sponsor.rqReasonNote':
+      'Lido pelas pessoas da equipa que decidem, e por mais ninguém. Não é mostrado a quem paga o lugar.',
+    'sponsor.rqSubmit': 'Pedir este lugar',
+    'sponsor.rqDone':
+      'Pedido enviado. A equipa vai lê-lo, e a resposta, com o seu motivo, estará na sua página de lugares patrocinados.',
+    'sponsor.rqNoLearner':
+      'Ainda não há nenhum aluno nesta conta, por isso não há ninguém para quem pedir.',
+    'sponsor.rqNoCourse':
+      'De momento não há nenhum curso à venda, por isso não há nada para pedir.',
+    'sponsor.rqPrivacy':
+      'Se o pedido for aprovado, quem patrocina vê o código do lugar, o curso, se é para uma criança ou para um adulto, e o preço. Nunca o seu nome, a sua família nem o que escreveu aqui.',
+    'sponsor.rqWhyReason': 'Escreva uma frase sobre a situação. É o que lê quem decide.',
+    'sponsor.rqWhyHas': 'Esse aluno já tem este curso, por isso não há nada para pedir.',
+    'sponsor.rqWhyAsked': 'Já existe um pedido aberto para este curso.',
   },
   sw: {
     'sponsor.lede':
@@ -764,6 +1443,63 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Ahadi hii haiwezi kulipwa hapa: imeshalipwa au imesitishwa, au si mojawapo ya ahadi zako.',
     'sponsor.nextPay':
       'Hakuna kinachochukuliwa hadi ulipe. Nafasi hufunguliwa malipo yanapothibitishwa.',
+    'sponsor.plEyebrow': 'Ufadhili',
+    'sponsor.plTitle': 'Mlipie mtu mwingine kozi',
+    'sponsor.plLede':
+      'Mwanafunzi asiyeweza kulipia kozi huiomba, na wafanyakazi huamua. Ombi lililokubaliwa huonekana hapa kama nafasi yenye msimbo na bei ya kozi, na kamwe halina jina. Wewe unachagua nafasi; mwanafunzi anapata kozi.',
+    'sponsor.plSeeHeading': 'Unachokiona, na usichokiona',
+    'sponsor.plSeeBody':
+      'Msimbo wa nafasi, kozi, kama ni ya mtoto au ya mtu mzima, na bei katika nchi yako. Si jina la mwanafunzi, umri wake wala familia yake, wala neno lolote la alichoandika. Hilo husomwa na wafanyakazi wanaoamua, na hakuna mwingine.',
+    'sponsor.plPayHeading': 'Unacholipa, na lini',
+    'sponsor.plPayBody':
+      'Bei ya kozi katika nchi yako, inayokokotolewa kama ya ununuzi. Kuchukua nafasi ni ahadi na hakuchukui pesa. Ukurasa wako wa nafasi zilizofadhiliwa unaeleza jinsi ahadi inavyolipwa, na nafasi hufunguliwa kwa mwanafunzi malipo yanapothibitishwa.',
+    'sponsor.plListHeading': 'Nafasi zinazosubiri mfadhili',
+    'sponsor.plSignIn': 'Nafasi huonyeshwa kwa watu walioingia.',
+    'sponsor.plUnread':
+      'Nafasi hazikuweza kusomwa. Hakuna kilichotozwa na hakuna nafasi iliyochukuliwa.',
+    'sponsor.plOff':
+      'Ufadhili wa nafasi umezimwa kwa sasa, kwa hiyo hakuna nafasi inayoweza kuchukuliwa wala kuombwa.',
+    'sponsor.plNone':
+      'Hakuna nafasi inayosubiri mfadhili kwa sasa. Ombi huonekana hapa baada ya wafanyakazi kulikubali.',
+    'sponsor.plForChild': 'Kwa mtoto',
+    'sponsor.plForAdult': 'Kwa mtu mzima',
+    'sponsor.plPriceNote':
+      'Bei ya kozi hii katika nchi yako. Kinachofadhiliwa ni nafasi, si kadi ya zawadi.',
+    'sponsor.plNoPrice':
+      'Kozi hii haina bei katika nchi yako, kwa hiyo nafasi hii haiwezi kuchukuliwa kutoka hapa.',
+    'sponsor.plPriceUnread':
+      'Bei ya nafasi hii haikuweza kusomwa, kwa hiyo haiwezi kuchukuliwa kwa sasa.',
+    'sponsor.plNoteLabel': 'Ujumbe kwa wafanyakazi, ukipenda',
+    'sponsor.plTake': 'Fadhili nafasi hii',
+    'sponsor.plTaken': 'Nafasi hii sasa ni yako kuilipia: {amount}',
+    'sponsor.plTakenNext':
+      'Hakuna kilichochukuliwa. Ukurasa wako wa nafasi zilizofadhiliwa unaeleza jinsi ya kulipa.',
+    'sponsor.plWhyGone':
+      'Nafasi hiyo imechukuliwa sasa hivi, au haiko wazi tena. Chagua nyingine.',
+    'sponsor.plWhyOwn': 'Hiyo ni nafasi uliyoiomba wewe. Huwezi kufadhili ombi lako mwenyewe.',
+    'sponsor.tooLong': 'Hiyo ni ndefu kuliko kisanduku hiki kinavyoweza kubeba.',
+    'sponsor.plWhyFailed': 'Haikufanikiwa. Hakuna kilichotozwa na hakuna kilichobadilika.',
+    'sponsor.unconfirmed':
+      'Hatukuweza kuthibitisha kama hilo lilirekodiwa. Angalia nafasi zako zilizofadhiliwa kabla ya kujaribu tena.',
+    'sponsor.plAskHeading': 'Kuomba nafasi',
+    'sponsor.rqLede':
+      'Ikiwa kozi iko nje ya uwezo wako, andika sentensi chache kuhusu hali ilivyo. Wafanyakazi huzisoma na kujibu kwa vyovyote vile, pamoja na sababu. Kuomba hakuna gharama na hakumlazimishi mtu yeyote.',
+    'sponsor.rqCourse': 'Kozi ipi?',
+    'sponsor.rqChoose': 'Chagua kozi',
+    'sponsor.rqReason': 'Hali ikoje?',
+    'sponsor.rqReasonNote':
+      'Husomwa na wafanyakazi wanaoamua, na hakuna mwingine. Haionyeshwi kwa anayelipia nafasi.',
+    'sponsor.rqSubmit': 'Omba nafasi hii',
+    'sponsor.rqDone':
+      'Limeombwa. Wafanyakazi watalisoma, na jibu, pamoja na sababu yake, litakuwa kwenye ukurasa wako wa nafasi zilizofadhiliwa.',
+    'sponsor.rqNoLearner':
+      'Bado hakuna mwanafunzi kwenye akaunti hii, kwa hiyo hakuna wa kumwombea.',
+    'sponsor.rqNoCourse': 'Hakuna kozi inayouzwa kwa sasa, kwa hiyo hakuna cha kuomba.',
+    'sponsor.rqPrivacy':
+      'Ombi likikubaliwa, mfadhili huona msimbo wa nafasi, kozi, kama ni ya mtoto au ya mtu mzima, na bei. Kamwe si jina lako, familia yako wala ulichoandika hapa.',
+    'sponsor.rqWhyReason': 'Andika sentensi moja kuhusu hali ilivyo. Ndiyo anayosoma anayeamua.',
+    'sponsor.rqWhyHas': 'Mwanafunzi huyo tayari ana kozi hii, kwa hiyo hakuna cha kuomba.',
+    'sponsor.rqWhyAsked': 'Tayari kuna ombi lililo wazi la kozi hii.',
   },
   af: {
     'sponsor.lede':
@@ -820,6 +1556,66 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Hierdie belofte kan nie hier betaal word nie: dit is reeds betaal of gekanselleer, of dit is nie een van joune nie.',
     'sponsor.nextPay':
       'Niks word geneem totdat jy betaal nie. Die plek gaan oop wanneer die betaling bevestig is.',
+    'sponsor.plEyebrow': 'Borgskap',
+    'sponsor.plTitle': 'Betaal vir iemand anders se kursus',
+    'sponsor.plLede':
+      '’n Leerder wat nie ’n kursus kan bekostig nie, vra daarvoor, en die personeel besluit. ’n Goedgekeurde versoek verskyn hier as ’n plek met ’n kode en die prys van die kursus, en nooit met ’n naam nie. Jy kies ’n plek; die leerder kry die kursus.',
+    'sponsor.plSeeHeading': 'Wat jy sien, en wat jy nie sien nie',
+    'sponsor.plSeeBody':
+      'Die kode van die plek, die kursus, of dit vir ’n kind of ’n volwassene is, en die prys in jou land. Nie die leerder se naam, ouderdom of gesin nie, en nie ’n woord van wat geskryf is nie. Dit word gelees deur die personeel wat besluit, en deur niemand anders nie.',
+    'sponsor.plPayHeading': 'Wat jy betaal, en wanneer',
+    'sponsor.plPayBody':
+      'Die prys van die kursus in jou land, bereken soos vir ’n aankoop. Om ’n plek te neem is ’n belofte en neem geen geld nie. Jou bladsy van geborgde plekke sê hoe die belofte betaal word, en die plek gaan vir die leerder oop wanneer die betaling bevestig is.',
+    'sponsor.plListHeading': 'Plekke wat vir ’n borg wag',
+    'sponsor.plSignIn': 'Die plekke word gewys aan mense wat aangemeld is.',
+    'sponsor.plUnread':
+      'Die plekke kon nie gelees word nie. Niks is gehef nie en geen plek is geneem nie.',
+    'sponsor.plOff':
+      'Borgskap van plekke is tans afgeskakel, dus kan geen plek geneem of aangevra word nie.',
+    'sponsor.plNone':
+      'Geen plek wag tans vir ’n borg nie. ’n Versoek verskyn hier sodra die personeel dit goedkeur.',
+    'sponsor.plForChild': 'Vir ’n kind',
+    'sponsor.plForAdult': 'Vir ’n volwassene',
+    'sponsor.plPriceNote':
+      'Die prys van hierdie kursus in jou land. Dit is die plek wat geborg word, nie ’n geskenkkaart nie.',
+    'sponsor.plNoPrice':
+      'Hierdie kursus het geen prys in jou land nie, dus kan hierdie plek nie van hier af geneem word nie.',
+    'sponsor.plPriceUnread':
+      'Die prys van hierdie plek kon nie gelees word nie, dus kan dit nie nou geneem word nie.',
+    'sponsor.plNoteLabel': '’n Nota vir die personeel, as jy wil',
+    'sponsor.plTake': 'Borg hierdie plek',
+    'sponsor.plTaken': 'Hierdie plek is joune om voor te betaal: {amount}',
+    'sponsor.plTakenNext':
+      'Niks is geneem nie. Jou bladsy van geborgde plekke sê hoe om te betaal.',
+    'sponsor.plWhyGone':
+      'Daardie plek is pas geneem, of is nie meer oop nie. Kies ’n ander een.',
+    'sponsor.plWhyOwn':
+      'Dit is die plek wat jy self aangevra het. Jy kan nie jou eie versoek borg nie.',
+    'sponsor.tooLong': 'Dit is langer as wat hierdie blokkie kan hou.',
+    'sponsor.plWhyFailed': 'Dit het nie gewerk nie. Niks is gehef nie en niks het verander nie.',
+    'sponsor.unconfirmed':
+      'Ons kon nie bevestig of dit aangeteken is nie. Kyk na jou geborgde plekke voordat jy weer probeer.',
+    'sponsor.plAskHeading': 'Om ’n plek aan te vra',
+    'sponsor.rqLede':
+      'As ’n kursus buite jou bereik is, skryf ’n paar sinne oor die situasie. Die personeel lees dit en antwoord in albei gevalle, met ’n rede. Om te vra kos niks en verplig niemand nie.',
+    'sponsor.rqCourse': 'Watter kursus?',
+    'sponsor.rqChoose': 'Kies ’n kursus',
+    'sponsor.rqReason': 'Wat is die situasie?',
+    'sponsor.rqReasonNote':
+      'Gelees deur die personeel wat besluit, en deur niemand anders nie. Word nie gewys aan wie vir die plek betaal nie.',
+    'sponsor.rqSubmit': 'Vra hierdie plek aan',
+    'sponsor.rqDone':
+      'Aangevra. Die personeel sal dit lees, en die antwoord, met sy rede, sal op jou bladsy van geborgde plekke wees.',
+    'sponsor.rqNoLearner':
+      'Daar is nog geen leerder op hierdie rekening nie, dus is daar niemand om voor te vra nie.',
+    'sponsor.rqNoCourse': 'Geen kursus is tans te koop nie, dus is daar niks om aan te vra nie.',
+    'sponsor.rqPrivacy':
+      'As die versoek goedgekeur word, sien ’n borg die kode van die plek, die kursus, of dit vir ’n kind of ’n volwassene is, en die prys. Nooit jou naam, jou gesin of wat jy hier geskryf het nie.',
+    'sponsor.rqWhyReason':
+      'Skryf ’n sin oor die situasie. Dit is wat die persoon wat besluit, lees.',
+    'sponsor.rqWhyHas':
+      'Daardie leerder het reeds hierdie kursus, dus is daar niks om aan te vra nie.',
+    'sponsor.rqWhyAsked': 'Daar is reeds ’n oop versoek vir hierdie kursus.',
   },
   'zh-hans': {
     'sponsor.lede': '别人付费的课程，以及你为别人学习而付费的课程。双方都不会知道对方是谁。',
@@ -862,6 +1658,49 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.payApprove': '请在你的手机上批准付款。付款确认后，名额即向学习者开放。这可能需要一点时间。',
     'sponsor.payNot': '这项承诺无法在这里支付：它已支付或已取消，或者不是你的承诺。',
     'sponsor.nextPay': '在你付款之前不会扣取任何款项。付款确认后名额开放。',
+    'sponsor.plEyebrow': '资助',
+    'sponsor.plTitle': '为别人的课程付费',
+    'sponsor.plLede':
+      '负担不起某门课程的学习者提出申请，由工作人员决定。获批准的申请会在这里显示为一个名额，带有代码和课程价格，绝不带姓名。你选择一个名额；学习者得到课程。',
+    'sponsor.plSeeHeading': '你能看到什么，看不到什么',
+    'sponsor.plSeeBody':
+      '名额代码、课程、面向儿童还是成人，以及你所在国家的价格。没有学习者的姓名、年龄或家庭，也没有他们所写内容的任何一个字。那些内容只由做决定的工作人员阅读，别人都看不到。',
+    'sponsor.plPayHeading': '你付多少，何时付',
+    'sponsor.plPayBody':
+      '课程在你所在国家的价格，计算方式与购买时相同。领取名额是一项承诺，不会扣款。你的资助名额页面会说明如何支付这项承诺，付款确认后名额即向学习者开放。',
+    'sponsor.plListHeading': '等待资助人的名额',
+    'sponsor.plSignIn': '名额只向已登录的人显示。',
+    'sponsor.plUnread': '无法读取名额。没有收取任何费用，也没有领取任何名额。',
+    'sponsor.plOff': '名额资助目前已关闭，因此不能领取名额，也不能申请名额。',
+    'sponsor.plNone': '目前没有名额在等待资助人。申请经工作人员批准后会显示在这里。',
+    'sponsor.plForChild': '面向儿童',
+    'sponsor.plForAdult': '面向成人',
+    'sponsor.plPriceNote': '这门课程在你所在国家的价格。被资助的是这个名额，不是礼品卡。',
+    'sponsor.plNoPrice': '这门课程在你所在国家没有价格，因此无法从这里领取这个名额。',
+    'sponsor.plPriceUnread': '无法读取这个名额的价格，因此暂时不能领取。',
+    'sponsor.plNoteLabel': '给工作人员的留言（如果你愿意）',
+    'sponsor.plTake': '资助这个名额',
+    'sponsor.plTaken': '这个名额现在由你付费：{amount}',
+    'sponsor.plTakenNext': '没有扣取任何款项。你的资助名额页面会说明如何付款。',
+    'sponsor.plWhyGone': '那个名额刚刚被领取，或已不再开放。请另选一个。',
+    'sponsor.plWhyOwn': '那是你自己申请的名额。你不能资助自己的申请。',
+    'sponsor.tooLong': '这超出了此框能容纳的长度。',
+    'sponsor.plWhyFailed': '没有成功。没有收取任何费用，也没有任何变化。',
+    'sponsor.unconfirmed': '我们无法确认是否已记录。再次尝试之前，请先查看你的资助名额。',
+    'sponsor.plAskHeading': '申请名额',
+    'sponsor.rqLede': '如果某门课程负担不起，请写几句话说明情况。工作人员会阅读，无论结果如何都会答复并说明理由。申请不收费，也不使任何人承担义务。',
+    'sponsor.rqCourse': '哪一门课程？',
+    'sponsor.rqChoose': '请选择课程',
+    'sponsor.rqReason': '情况是怎样的？',
+    'sponsor.rqReasonNote': '只由做决定的工作人员阅读，别人都看不到。不会向为名额付费的人显示。',
+    'sponsor.rqSubmit': '申请这个名额',
+    'sponsor.rqDone': '已申请。工作人员会阅读，答复连同理由会显示在你的资助名额页面上。',
+    'sponsor.rqNoLearner': '这个账户还没有学习者，因此没有可以为其申请的人。',
+    'sponsor.rqNoCourse': '目前没有在售的课程，因此没有可申请的内容。',
+    'sponsor.rqPrivacy': '如果申请获批准，资助人会看到名额代码、课程、面向儿童还是成人，以及价格。绝不会看到你的姓名、你的家庭或你在这里写的内容。',
+    'sponsor.rqWhyReason': '请写一句话说明情况。做决定的人读的就是它。',
+    'sponsor.rqWhyHas': '那位学习者已经拥有这门课程，因此没有可申请的内容。',
+    'sponsor.rqWhyAsked': '这门课程已经有一项待处理的申请。',
   },
   'zh-hant': {
     'sponsor.lede': '別人付費的課程，以及你為別人學習而付費的課程。雙方都不會知道對方是誰。',
@@ -904,6 +1743,49 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.payApprove': '請在你的手機上核准付款。付款確認後，名額即向學習者開放。這可能需要一點時間。',
     'sponsor.payNot': '這項承諾無法在這裡支付：它已支付或已取消，或者不是你的承諾。',
     'sponsor.nextPay': '在你付款之前不會扣取任何款項。付款確認後名額開放。',
+    'sponsor.plEyebrow': '贊助',
+    'sponsor.plTitle': '為別人的課程付費',
+    'sponsor.plLede':
+      '負擔不起某門課程的學習者提出申請，由工作人員決定。獲核准的申請會在這裡顯示為一個名額，帶有代碼和課程價格，絕不帶姓名。你選擇一個名額；學習者得到課程。',
+    'sponsor.plSeeHeading': '你能看到什麼，看不到什麼',
+    'sponsor.plSeeBody':
+      '名額代碼、課程、對象是兒童還是成人，以及你所在國家的價格。沒有學習者的姓名、年齡或家庭，也沒有他們所寫內容的任何一個字。那些內容只由做決定的工作人員閱讀，別人都看不到。',
+    'sponsor.plPayHeading': '你付多少，何時付',
+    'sponsor.plPayBody':
+      '課程在你所在國家的價格，計算方式與購買時相同。領取名額是一項承諾，不會扣款。你的贊助名額頁面會說明如何支付這項承諾，付款確認後名額即向學習者開放。',
+    'sponsor.plListHeading': '等待贊助人的名額',
+    'sponsor.plSignIn': '名額只向已登入的人顯示。',
+    'sponsor.plUnread': '無法讀取名額。沒有收取任何費用，也沒有領取任何名額。',
+    'sponsor.plOff': '名額贊助目前已關閉，因此不能領取名額，也不能申請名額。',
+    'sponsor.plNone': '目前沒有名額在等待贊助人。申請經工作人員核准後會顯示在這裡。',
+    'sponsor.plForChild': '對象為兒童',
+    'sponsor.plForAdult': '對象為成人',
+    'sponsor.plPriceNote': '這門課程在你所在國家的價格。被贊助的是這個名額，不是禮品卡。',
+    'sponsor.plNoPrice': '這門課程在你所在國家沒有價格，因此無法從這裡領取這個名額。',
+    'sponsor.plPriceUnread': '無法讀取這個名額的價格，因此暫時不能領取。',
+    'sponsor.plNoteLabel': '給工作人員的留言（如果你願意）',
+    'sponsor.plTake': '贊助這個名額',
+    'sponsor.plTaken': '這個名額現在由你付費：{amount}',
+    'sponsor.plTakenNext': '沒有扣取任何款項。你的贊助名額頁面會說明如何付款。',
+    'sponsor.plWhyGone': '那個名額剛剛被領取，或已不再開放。請另選一個。',
+    'sponsor.plWhyOwn': '那是你自己申請的名額。你不能贊助自己的申請。',
+    'sponsor.tooLong': '這超出了此框能容納的長度。',
+    'sponsor.plWhyFailed': '沒有成功。沒有收取任何費用，也沒有任何變化。',
+    'sponsor.unconfirmed': '我們無法確認是否已記錄。再次嘗試之前，請先查看你的贊助名額。',
+    'sponsor.plAskHeading': '申請名額',
+    'sponsor.rqLede': '如果某門課程負擔不起，請寫幾句話說明情況。工作人員會閱讀，無論結果如何都會答覆並說明理由。申請不收費，也不使任何人承擔義務。',
+    'sponsor.rqCourse': '哪一門課程？',
+    'sponsor.rqChoose': '請選擇課程',
+    'sponsor.rqReason': '情況是怎樣的？',
+    'sponsor.rqReasonNote': '只由做決定的工作人員閱讀，別人都看不到。不會向為名額付費的人顯示。',
+    'sponsor.rqSubmit': '申請這個名額',
+    'sponsor.rqDone': '已申請。工作人員會閱讀，答覆連同理由會顯示在你的贊助名額頁面上。',
+    'sponsor.rqNoLearner': '這個帳戶還沒有學習者，因此沒有可以為其申請的人。',
+    'sponsor.rqNoCourse': '目前沒有販售中的課程，因此沒有可申請的內容。',
+    'sponsor.rqPrivacy': '如果申請獲核准，贊助人會看到名額代碼、課程、對象是兒童還是成人，以及價格。絕不會看到你的姓名、你的家庭或你在這裡寫的內容。',
+    'sponsor.rqWhyReason': '請寫一句話說明情況。做決定的人讀的就是它。',
+    'sponsor.rqWhyHas': '那位學習者已經擁有這門課程，因此沒有可申請的內容。',
+    'sponsor.rqWhyAsked': '這門課程已經有一項待處理的申請。',
   },
   vi: {
     'sponsor.lede':
@@ -960,6 +1842,60 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Không thể thanh toán cam kết này tại đây: nó đã được thanh toán hoặc đã bị huỷ, hoặc không phải là cam kết của bạn.',
     'sponsor.nextPay':
       'Không có gì bị thu cho đến khi bạn thanh toán. Suất được mở khi khoản thanh toán được xác nhận.',
+    'sponsor.plEyebrow': 'Tài trợ',
+    'sponsor.plTitle': 'Trả tiền khoá học cho người khác',
+    'sponsor.plLede':
+      'Học viên không đủ khả năng trả cho một khoá học sẽ xin khoá đó, và nhân viên quyết định. Yêu cầu được duyệt hiện ở đây thành một suất có mã và giá khoá học, và không bao giờ có tên. Bạn chọn một suất; học viên nhận khoá học.',
+    'sponsor.plSeeHeading': 'Bạn thấy gì, và không thấy gì',
+    'sponsor.plSeeBody':
+      'Mã suất, khoá học, dành cho trẻ em hay người lớn, và giá tại nước bạn. Không có tên, tuổi hay gia đình của học viên, và không một chữ nào trong những gì họ đã viết. Phần đó chỉ do nhân viên quyết định đọc, không ai khác.',
+    'sponsor.plPayHeading': 'Bạn trả gì, và khi nào',
+    'sponsor.plPayBody':
+      'Giá khoá học tại nước bạn, tính như khi mua. Nhận một suất là một cam kết và không thu tiền. Trang các suất được tài trợ của bạn cho biết cam kết được thanh toán thế nào, và suất mở cho học viên khi khoản thanh toán được xác nhận.',
+    'sponsor.plListHeading': 'Các suất đang chờ người tài trợ',
+    'sponsor.plSignIn': 'Các suất được hiển thị cho người đã đăng nhập.',
+    'sponsor.plUnread':
+      'Không đọc được các suất. Chưa thu khoản nào và chưa suất nào được nhận.',
+    'sponsor.plOff': 'Việc tài trợ suất hiện đang tắt, nên không thể nhận hay xin suất nào.',
+    'sponsor.plNone':
+      'Hiện không có suất nào đang chờ người tài trợ. Yêu cầu hiện ở đây sau khi nhân viên duyệt.',
+    'sponsor.plForChild': 'Dành cho trẻ em',
+    'sponsor.plForAdult': 'Dành cho người lớn',
+    'sponsor.plPriceNote':
+      'Giá khoá học này tại nước bạn. Thứ được tài trợ là suất học, không phải thẻ quà tặng.',
+    'sponsor.plNoPrice':
+      'Khoá học này không có giá tại nước bạn, nên không thể nhận suất này từ đây.',
+    'sponsor.plPriceUnread': 'Không đọc được giá của suất này, nên hiện chưa thể nhận.',
+    'sponsor.plNoteLabel': 'Lời nhắn cho nhân viên, nếu bạn muốn',
+    'sponsor.plTake': 'Tài trợ suất này',
+    'sponsor.plTaken': 'Suất này giờ thuộc về bạn để thanh toán: {amount}',
+    'sponsor.plTakenNext':
+      'Chưa thu khoản nào. Trang các suất được tài trợ của bạn cho biết cách thanh toán.',
+    'sponsor.plWhyGone': 'Suất đó vừa được nhận, hoặc không còn mở. Hãy chọn suất khác.',
+    'sponsor.plWhyOwn':
+      'Đó là suất chính bạn đã xin. Bạn không thể tài trợ yêu cầu của chính mình.',
+    'sponsor.tooLong': 'Nội dung đó dài hơn mức ô này chứa được.',
+    'sponsor.plWhyFailed': 'Việc đó không thành công. Chưa thu khoản nào và không có gì thay đổi.',
+    'sponsor.unconfirmed':
+      'Chúng tôi không xác nhận được việc đó đã được ghi nhận hay chưa. Hãy xem các suất được tài trợ của bạn trước khi thử lại.',
+    'sponsor.plAskHeading': 'Xin một suất',
+    'sponsor.rqLede':
+      'Nếu một khoá học ngoài khả năng của bạn, hãy viết vài câu về hoàn cảnh. Nhân viên sẽ đọc và trả lời dù kết quả thế nào, kèm lý do. Việc xin không tốn gì và không ràng buộc ai.',
+    'sponsor.rqCourse': 'Khoá học nào?',
+    'sponsor.rqChoose': 'Chọn một khoá học',
+    'sponsor.rqReason': 'Hoàn cảnh thế nào?',
+    'sponsor.rqReasonNote':
+      'Chỉ do nhân viên quyết định đọc, không ai khác. Không hiển thị cho người trả tiền cho suất đó.',
+    'sponsor.rqSubmit': 'Xin suất này',
+    'sponsor.rqDone':
+      'Đã xin. Nhân viên sẽ đọc, và câu trả lời, kèm lý do, sẽ có trên trang các suất được tài trợ của bạn.',
+    'sponsor.rqNoLearner': 'Tài khoản này chưa có học viên nào, nên chưa có ai để xin cho.',
+    'sponsor.rqNoCourse': 'Hiện không có khoá học nào đang bán, nên không có gì để xin.',
+    'sponsor.rqPrivacy':
+      'Nếu yêu cầu được duyệt, người tài trợ thấy mã suất, khoá học, dành cho trẻ em hay người lớn, và giá. Không bao giờ thấy tên bạn, gia đình bạn hay những gì bạn viết ở đây.',
+    'sponsor.rqWhyReason': 'Hãy viết một câu về hoàn cảnh. Đó là điều người quyết định sẽ đọc.',
+    'sponsor.rqWhyHas': 'Học viên đó đã có khoá học này, nên không có gì để xin.',
+    'sponsor.rqWhyAsked': 'Đã có một yêu cầu đang mở cho khoá học này.',
   },
   th: {
     'sponsor.lede':
@@ -1014,6 +1950,57 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'ไม่สามารถชำระเงินตามคำมั่นนี้ที่นี่ได้: คำมั่นนี้ชำระแล้วหรือถูกยกเลิกแล้ว หรือไม่ใช่คำมั่นของคุณ',
     'sponsor.nextPay':
       'จะไม่มีการหักเงินจนกว่าคุณจะชำระ ที่นั่งจะเปิดเมื่อยืนยันการชำระเงินแล้ว',
+    'sponsor.plEyebrow': 'การอุปถัมภ์',
+    'sponsor.plTitle': 'จ่ายค่าหลักสูตรให้ผู้อื่น',
+    'sponsor.plLede':
+      'ผู้เรียนที่ไม่สามารถจ่ายค่าหลักสูตรได้จะขอหลักสูตรนั้น และเจ้าหน้าที่เป็นผู้ตัดสิน คำขอที่อนุมัติแล้วจะปรากฏที่นี่เป็นที่นั่งพร้อมรหัสและราคาหลักสูตร และไม่มีชื่อเลย คุณเลือกที่นั่ง ผู้เรียนได้รับหลักสูตร',
+    'sponsor.plSeeHeading': 'สิ่งที่คุณเห็น และสิ่งที่คุณไม่เห็น',
+    'sponsor.plSeeBody':
+      'รหัสที่นั่ง หลักสูตร สำหรับเด็กหรือผู้ใหญ่ และราคาในประเทศของคุณ ไม่มีชื่อ อายุ หรือครอบครัวของผู้เรียน และไม่มีแม้แต่คำเดียวจากสิ่งที่เขียนไว้ ส่วนนั้นอ่านโดยเจ้าหน้าที่ผู้ตัดสินเท่านั้น ไม่มีผู้อื่น',
+    'sponsor.plPayHeading': 'สิ่งที่คุณจ่าย และจ่ายเมื่อใด',
+    'sponsor.plPayBody':
+      'ราคาหลักสูตรในประเทศของคุณ คำนวณเช่นเดียวกับการซื้อ การรับที่นั่งเป็นคำมั่นและยังไม่มีการหักเงิน หน้าที่นั่งที่มีผู้อุปถัมภ์ของคุณบอกวิธีชำระตามคำมั่น และที่นั่งจะเปิดให้ผู้เรียนเมื่อยืนยันการชำระเงินแล้ว',
+    'sponsor.plListHeading': 'ที่นั่งที่รอผู้อุปถัมภ์',
+    'sponsor.plSignIn': 'ที่นั่งจะแสดงแก่ผู้ที่ลงชื่อเข้าใช้แล้ว',
+    'sponsor.plUnread':
+      'อ่านรายการที่นั่งไม่ได้ ยังไม่มีการเรียกเก็บเงินและยังไม่มีการรับที่นั่งใด',
+    'sponsor.plOff': 'การอุปถัมภ์ที่นั่งปิดอยู่ในขณะนี้ จึงรับที่นั่งหรือขอที่นั่งไม่ได้',
+    'sponsor.plNone':
+      'ขณะนี้ไม่มีที่นั่งที่รอผู้อุปถัมภ์ คำขอจะปรากฏที่นี่เมื่อเจ้าหน้าที่อนุมัติแล้ว',
+    'sponsor.plForChild': 'สำหรับเด็ก',
+    'sponsor.plForAdult': 'สำหรับผู้ใหญ่',
+    'sponsor.plPriceNote':
+      'ราคาหลักสูตรนี้ในประเทศของคุณ สิ่งที่ได้รับการอุปถัมภ์คือที่นั่ง ไม่ใช่บัตรของขวัญ',
+    'sponsor.plNoPrice': 'หลักสูตรนี้ไม่มีราคาในประเทศของคุณ จึงรับที่นั่งนี้จากที่นี่ไม่ได้',
+    'sponsor.plPriceUnread': 'อ่านราคาของที่นั่งนี้ไม่ได้ จึงยังรับไม่ได้ในขณะนี้',
+    'sponsor.plNoteLabel': 'ข้อความถึงเจ้าหน้าที่ หากคุณต้องการ',
+    'sponsor.plTake': 'อุปถัมภ์ที่นั่งนี้',
+    'sponsor.plTaken': 'ที่นั่งนี้เป็นของคุณที่จะชำระ: {amount}',
+    'sponsor.plTakenNext': 'ยังไม่มีการหักเงิน หน้าที่นั่งที่มีผู้อุปถัมภ์ของคุณบอกวิธีชำระ',
+    'sponsor.plWhyGone': 'ที่นั่งนั้นเพิ่งถูกรับไป หรือไม่เปิดแล้ว โปรดเลือกที่นั่งอื่น',
+    'sponsor.plWhyOwn': 'นั่นคือที่นั่งที่คุณขอเอง คุณอุปถัมภ์คำขอของตัวเองไม่ได้',
+    'sponsor.tooLong': 'ข้อความนั้นยาวเกินกว่าที่ช่องนี้รับได้',
+    'sponsor.plWhyFailed': 'ไม่สำเร็จ ไม่มีการเรียกเก็บเงินและไม่มีอะไรเปลี่ยนแปลง',
+    'sponsor.unconfirmed':
+      'เรายืนยันไม่ได้ว่าบันทึกแล้วหรือไม่ โปรดดูที่นั่งที่มีผู้อุปถัมภ์ของคุณก่อนลองอีกครั้ง',
+    'sponsor.plAskHeading': 'การขอที่นั่ง',
+    'sponsor.rqLede':
+      'หากหลักสูตรใดเกินกำลังของคุณ โปรดเขียนสองสามประโยคเกี่ยวกับสถานการณ์ เจ้าหน้าที่จะอ่านและตอบไม่ว่าผลจะเป็นอย่างไร พร้อมเหตุผล การขอไม่มีค่าใช้จ่ายและไม่ผูกมัดใคร',
+    'sponsor.rqCourse': 'หลักสูตรใด',
+    'sponsor.rqChoose': 'เลือกหลักสูตร',
+    'sponsor.rqReason': 'สถานการณ์เป็นอย่างไร',
+    'sponsor.rqReasonNote':
+      'อ่านโดยเจ้าหน้าที่ผู้ตัดสินเท่านั้น ไม่มีผู้อื่น ไม่แสดงแก่ผู้ที่จ่ายค่าที่นั่ง',
+    'sponsor.rqSubmit': 'ขอที่นั่งนี้',
+    'sponsor.rqDone':
+      'ขอแล้ว เจ้าหน้าที่จะอ่าน และคำตอบพร้อมเหตุผลจะอยู่ในหน้าที่นั่งที่มีผู้อุปถัมภ์ของคุณ',
+    'sponsor.rqNoLearner': 'บัญชีนี้ยังไม่มีผู้เรียน จึงยังไม่มีผู้ที่จะขอให้',
+    'sponsor.rqNoCourse': 'ขณะนี้ไม่มีหลักสูตรที่วางขาย จึงไม่มีสิ่งใดให้ขอ',
+    'sponsor.rqPrivacy':
+      'หากคำขอได้รับอนุมัติ ผู้อุปถัมภ์จะเห็นรหัสที่นั่ง หลักสูตร สำหรับเด็กหรือผู้ใหญ่ และราคา ไม่มีวันเห็นชื่อของคุณ ครอบครัวของคุณ หรือสิ่งที่คุณเขียนไว้ที่นี่',
+    'sponsor.rqWhyReason': 'โปรดเขียนหนึ่งประโยคเกี่ยวกับสถานการณ์ นั่นคือสิ่งที่ผู้ตัดสินอ่าน',
+    'sponsor.rqWhyHas': 'ผู้เรียนคนนั้นมีหลักสูตรนี้อยู่แล้ว จึงไม่มีสิ่งใดให้ขอ',
+    'sponsor.rqWhyAsked': 'มีคำขอที่ยังเปิดอยู่สำหรับหลักสูตรนี้แล้ว',
   },
   fil: {
     'sponsor.lede':
@@ -1069,6 +2056,64 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Hindi mababayaran dito ang pangakong ito: nabayaran na ito o kinansela, o hindi ito isa sa iyong mga pangako.',
     'sponsor.nextPay':
       'Walang kinukuha hanggang sa magbayad ka. Nagbubukas ang puwesto kapag nakumpirma ang bayad.',
+    'sponsor.plEyebrow': 'Pag-sponsor',
+    'sponsor.plTitle': 'Bayaran ang kurso ng ibang tao',
+    'sponsor.plLede':
+      'Ang mag-aaral na hindi kayang bayaran ang isang kurso ay humihiling nito, at ang mga kawani ang nagpapasya. Lumalabas dito ang inaprubahang kahilingan bilang isang puwesto na may code at presyo ng kurso, at hindi kailanman may pangalan. Ikaw ang pumipili ng puwesto; ang mag-aaral ang nakakakuha ng kurso.',
+    'sponsor.plSeeHeading': 'Ang nakikita mo, at ang hindi',
+    'sponsor.plSeeBody':
+      'Ang code ng puwesto, ang kurso, kung para ito sa bata o sa nasa hustong gulang, at ang presyo sa iyong bansa. Hindi ang pangalan, edad o pamilya ng mag-aaral, at wala ni isang salita ng isinulat nila. Binabasa iyon ng mga kawaning nagpapasya, at wala nang iba.',
+    'sponsor.plPayHeading': 'Ang binabayaran mo, at kailan',
+    'sponsor.plPayBody':
+      'Ang presyo ng kurso sa iyong bansa, kinukuwenta gaya ng sa pagbili. Ang pagkuha ng puwesto ay isang pangako at walang kinukuhang pera. Sinasabi ng iyong pahina ng mga puwestong may sponsor kung paano binabayaran ang pangako, at nagbubukas ang puwesto para sa mag-aaral kapag nakumpirma ang bayad.',
+    'sponsor.plListHeading': 'Mga puwestong naghihintay ng sponsor',
+    'sponsor.plSignIn': 'Ipinapakita ang mga puwesto sa mga naka-sign in.',
+    'sponsor.plUnread':
+      'Hindi nabasa ang mga puwesto. Walang siningil at walang puwestong nakuha.',
+    'sponsor.plOff':
+      'Nakapatay sa ngayon ang pag-sponsor ng puwesto, kaya walang puwestong makukuha o mahihiling.',
+    'sponsor.plNone':
+      'Walang puwestong naghihintay ng sponsor sa ngayon. Lumalabas dito ang kahilingan kapag inaprubahan ng mga kawani.',
+    'sponsor.plForChild': 'Para sa bata',
+    'sponsor.plForAdult': 'Para sa nasa hustong gulang',
+    'sponsor.plPriceNote':
+      'Ang presyo ng kursong ito sa iyong bansa. Ang puwesto ang ini-sponsor, hindi isang gift card.',
+    'sponsor.plNoPrice':
+      'Walang presyo ang kursong ito sa iyong bansa, kaya hindi makukuha ang puwestong ito mula rito.',
+    'sponsor.plPriceUnread':
+      'Hindi nabasa ang presyo ng puwestong ito, kaya hindi pa ito makukuha ngayon.',
+    'sponsor.plNoteLabel': 'Isang tala para sa mga kawani, kung gusto mo',
+    'sponsor.plTake': 'I-sponsor ang puwestong ito',
+    'sponsor.plTaken': 'Sa iyo na ang puwestong ito para bayaran: {amount}',
+    'sponsor.plTakenNext':
+      'Walang kinuha. Sinasabi ng iyong pahina ng mga puwestong may sponsor kung paano magbayad.',
+    'sponsor.plWhyGone': 'Kakakuha lang ng puwestong iyon, o hindi na ito bukas. Pumili ng iba.',
+    'sponsor.plWhyOwn':
+      'Iyan ang puwestong ikaw mismo ang humiling. Hindi mo mai-sponsor ang sarili mong kahilingan.',
+    'sponsor.tooLong': 'Mas mahaba iyon kaysa sa kayang ilaman ng kahong ito.',
+    'sponsor.plWhyFailed': 'Hindi iyon gumana. Walang siningil at walang nagbago.',
+    'sponsor.unconfirmed':
+      'Hindi namin nakumpirma kung naitala iyon. Tingnan ang iyong mga puwestong may sponsor bago sumubok muli.',
+    'sponsor.plAskHeading': 'Paghiling ng puwesto',
+    'sponsor.rqLede':
+      'Kung hindi mo abot ang isang kurso, sumulat ng ilang pangungusap tungkol sa sitwasyon. Binabasa ito ng mga kawani at sumasagot sila anuman ang pasya, na may dahilan. Walang bayad ang paghiling at wala itong inoobliga.',
+    'sponsor.rqCourse': 'Aling kurso?',
+    'sponsor.rqChoose': 'Pumili ng kurso',
+    'sponsor.rqReason': 'Ano ang sitwasyon?',
+    'sponsor.rqReasonNote':
+      'Binabasa ng mga kawaning nagpapasya, at wala nang iba. Hindi ipinapakita sa nagbabayad ng puwesto.',
+    'sponsor.rqSubmit': 'Hilingin ang puwestong ito',
+    'sponsor.rqDone':
+      'Nahiling na. Babasahin ito ng mga kawani, at ang sagot, kasama ang dahilan nito, ay nasa iyong pahina ng mga puwestong may sponsor.',
+    'sponsor.rqNoLearner': 'Wala pang mag-aaral sa account na ito, kaya wala pang mahihilingan.',
+    'sponsor.rqNoCourse': 'Walang kursong ibinebenta sa ngayon, kaya walang mahihiling.',
+    'sponsor.rqPrivacy':
+      'Kapag inaprubahan ang kahilingan, nakikita ng sponsor ang code ng puwesto, ang kurso, kung para ito sa bata o sa nasa hustong gulang, at ang presyo. Hindi kailanman ang iyong pangalan, ang iyong pamilya o ang isinulat mo rito.',
+    'sponsor.rqWhyReason':
+      'Sumulat ng isang pangungusap tungkol sa sitwasyon. Iyon ang binabasa ng nagpapasya.',
+    'sponsor.rqWhyHas':
+      'Mayroon nang kursong ito ang mag-aaral na iyon, kaya walang mahihiling.',
+    'sponsor.rqWhyAsked': 'Mayroon nang bukas na kahilingan para sa kursong ito.',
   },
   uz: {
     'sponsor.lede':
@@ -1124,6 +2169,64 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Bu vaʼdani shu yerda toʻlab boʻlmaydi: u toʻlangan yoki bekor qilingan, yoki sizning vaʼdalaringizdan emas.',
     'sponsor.nextPay':
       'Siz toʻlamaguningizcha hech narsa olinmaydi. Toʻlov tasdiqlanganda oʻrin ochiladi.',
+    'sponsor.plEyebrow': 'Homiylik',
+    'sponsor.plTitle': 'Boshqa kishining kursi uchun toʻlang',
+    'sponsor.plLede':
+      'Kursga qurbi yetmagan oʻquvchi uni soʻraydi, xodimlar esa qaror qiladi. Maʼqullangan soʻrov bu yerda kodi va kurs narxi bilan oʻrin sifatida koʻrinadi, ism esa hech qachon koʻrsatilmaydi. Siz oʻrinni tanlaysiz; kursni oʻquvchi oladi.',
+    'sponsor.plSeeHeading': 'Nimani koʻrasiz va nimani koʻrmaysiz',
+    'sponsor.plSeeBody':
+      'Oʻrin kodi, kurs, u bola uchunmi yoki katta yoshli uchunmi, va mamlakatingizdagi narx. Oʻquvchining ismi, yoshi yoki oilasi emas, yozganlaridan bir soʻz ham emas. Uni faqat qaror qiladigan xodimlar oʻqiydi, boshqa hech kim emas.',
+    'sponsor.plPayHeading': 'Nima toʻlaysiz va qachon',
+    'sponsor.plPayBody':
+      'Kursning mamlakatingizdagi narxi, xarid uchun qanday hisoblansa, shunday. Oʻrinni olish vaʼdadir va pul olinmaydi. Homiylik oʻrinlari sahifangiz vaʼda qanday toʻlanishini aytadi, toʻlov tasdiqlanganda esa oʻrin oʻquvchi uchun ochiladi.',
+    'sponsor.plListHeading': 'Homiy kutayotgan oʻrinlar',
+    'sponsor.plSignIn': 'Oʻrinlar tizimga kirgan kishilarga koʻrsatiladi.',
+    'sponsor.plUnread':
+      'Oʻrinlarni oʻqib boʻlmadi. Hech narsa undirilmadi va hech bir oʻrin olinmadi.',
+    'sponsor.plOff':
+      'Oʻrin homiyligi hozir oʻchirilgan, shuning uchun oʻrin olib ham, soʻrab ham boʻlmaydi.',
+    'sponsor.plNone':
+      'Hozir homiy kutayotgan oʻrin yoʻq. Soʻrov xodimlar maʼqullagandan keyin bu yerda koʻrinadi.',
+    'sponsor.plForChild': 'Bola uchun',
+    'sponsor.plForAdult': 'Katta yoshli uchun',
+    'sponsor.plPriceNote':
+      'Bu kursning mamlakatingizdagi narxi. Homiylik qilinadigani oʻrin, sovgʻa kartasi emas.',
+    'sponsor.plNoPrice':
+      'Bu kursning mamlakatingizda narxi yoʻq, shuning uchun bu oʻrinni shu yerdan olib boʻlmaydi.',
+    'sponsor.plPriceUnread':
+      'Bu oʻrinning narxini oʻqib boʻlmadi, shuning uchun uni hozircha olib boʻlmaydi.',
+    'sponsor.plNoteLabel': 'Xodimlar uchun izoh, agar xohlasangiz',
+    'sponsor.plTake': 'Bu oʻringa homiylik qilish',
+    'sponsor.plTaken': 'Bu oʻrin endi toʻlash uchun sizniki: {amount}',
+    'sponsor.plTakenNext':
+      'Hech narsa olinmadi. Homiylik oʻrinlari sahifangiz qanday toʻlashni aytadi.',
+    'sponsor.plWhyGone': 'Bu oʻrin hozirgina olindi yoki endi ochiq emas. Boshqasini tanlang.',
+    'sponsor.plWhyOwn': 'Bu oʻzingiz soʻragan oʻrin. Oʻz soʻrovingizga homiylik qila olmaysiz.',
+    'sponsor.tooLong': 'Bu shu maydonga sigʻadiganidan uzunroq.',
+    'sponsor.plWhyFailed': 'Bu amalga oshmadi. Hech narsa undirilmadi va hech narsa oʻzgarmadi.',
+    'sponsor.unconfirmed':
+      'Bu qayd etilgan-etilmaganini tasdiqlay olmadik. Qayta urinishdan oldin homiylik oʻrinlaringizni koʻring.',
+    'sponsor.plAskHeading': 'Oʻrin soʻrash',
+    'sponsor.rqLede':
+      'Agar kursga qurbingiz yetmasa, vaziyat haqida bir necha gap yozing. Xodimlar uni oʻqiydi va har ikki holatda ham sababi bilan javob beradi. Soʻrashning hech qanday toʻlovi yoʻq va hech kimni majbur qilmaydi.',
+    'sponsor.rqCourse': 'Qaysi kurs?',
+    'sponsor.rqChoose': 'Kursni tanlang',
+    'sponsor.rqReason': 'Vaziyat qanday?',
+    'sponsor.rqReasonNote':
+      'Faqat qaror qiladigan xodimlar oʻqiydi, boshqa hech kim emas. Oʻrin uchun toʻlaydigan kishiga koʻrsatilmaydi.',
+    'sponsor.rqSubmit': 'Bu oʻrinni soʻrash',
+    'sponsor.rqDone':
+      'Soʻraldi. Xodimlar uni oʻqiydi, javob esa sababi bilan homiylik oʻrinlari sahifangizda boʻladi.',
+    'sponsor.rqNoLearner':
+      'Bu hisobda hali oʻquvchi yoʻq, shuning uchun soʻrab beriladigan kishi yoʻq.',
+    'sponsor.rqNoCourse': 'Hozir sotuvda kurs yoʻq, shuning uchun soʻraladigan narsa yoʻq.',
+    'sponsor.rqPrivacy':
+      'Soʻrov maʼqullansa, homiy oʻrin kodini, kursni, u bola uchunmi yoki katta yoshli uchunmi ekanini va narxni koʻradi. Ismingizni, oilangizni yoki bu yerda yozganingizni hech qachon koʻrmaydi.',
+    'sponsor.rqWhyReason':
+      'Vaziyat haqida bir gap yozing. Qaror qiladigan kishi aynan shuni oʻqiydi.',
+    'sponsor.rqWhyHas':
+      'Bu oʻquvchida bu kurs allaqachon bor, shuning uchun soʻraladigan narsa yoʻq.',
+    'sponsor.rqWhyAsked': 'Bu kurs uchun allaqachon ochiq soʻrov bor.',
   },
   kk: {
     'sponsor.lede':
@@ -1177,6 +2280,61 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.payNot':
       'Бұл уәдені осы жерде төлеу мүмкін емес: ол төленген немесе күші жойылған, не болмаса сіздің уәделеріңіздің бірі емес.',
     'sponsor.nextPay': 'Сіз төлемейінше ештеңе алынбайды. Төлем расталғанда орын ашылады.',
+    'sponsor.plEyebrow': 'Демеушілік',
+    'sponsor.plTitle': 'Басқа біреудің курсының ақысын төлеңіз',
+    'sponsor.plLede':
+      'Курстың ақысын төлей алмайтын оқушы оны сұрайды, ал қызметкерлер шешім қабылдайды. Мақұлданған өтініш мұнда коды мен курстың бағасы бар орын болып көрінеді, аты ешқашан көрсетілмейді. Сіз орынды таңдайсыз; курсты оқушы алады.',
+    'sponsor.plSeeHeading': 'Нені көресіз, нені көрмейсіз',
+    'sponsor.plSeeBody':
+      'Орынның коды, курс, оның балаға немесе ересекке арналғаны және еліңіздегі баға. Оқушының аты, жасы не отбасы емес, жазғанынан бір сөз де емес. Оны тек шешім қабылдайтын қызметкерлер оқиды, басқа ешкім оқымайды.',
+    'sponsor.plPayHeading': 'Не төлейсіз және қашан',
+    'sponsor.plPayBody':
+      'Курстың еліңіздегі бағасы, сатып алғандағыдай есептеледі. Орынды алу — уәде, ақша алынбайды. Демеушілік орындар бетіңіз уәденің қалай төленетінін айтады, төлем расталғанда орын оқушыға ашылады.',
+    'sponsor.plListHeading': 'Демеуші күтіп тұрған орындар',
+    'sponsor.plSignIn': 'Орындар жүйеге кірген адамдарға көрсетіледі.',
+    'sponsor.plUnread':
+      'Орындарды оқу мүмкін болмады. Ештеңе алынған жоқ және ешбір орын алынған жоқ.',
+    'sponsor.plOff':
+      'Орынға демеушілік қазір өшірулі, сондықтан орын алу да, сұрау да мүмкін емес.',
+    'sponsor.plNone':
+      'Қазір демеуші күтіп тұрған орын жоқ. Өтініш қызметкерлер мақұлдағаннан кейін мұнда көрінеді.',
+    'sponsor.plForChild': 'Балаға арналған',
+    'sponsor.plForAdult': 'Ересекке арналған',
+    'sponsor.plPriceNote':
+      'Бұл курстың еліңіздегі бағасы. Демеушілік жасалатын нәрсе — орын, сыйлық картасы емес.',
+    'sponsor.plNoPrice':
+      'Бұл курстың еліңізде бағасы жоқ, сондықтан бұл орынды осы жерден алу мүмкін емес.',
+    'sponsor.plPriceUnread':
+      'Бұл орынның бағасын оқу мүмкін болмады, сондықтан оны әзірге алу мүмкін емес.',
+    'sponsor.plNoteLabel': 'Қаласаңыз, қызметкерлерге жазба',
+    'sponsor.plTake': 'Осы орынға демеуші болу',
+    'sponsor.plTaken': 'Бұл орын енді төлеу үшін сіздікі: {amount}',
+    'sponsor.plTakenNext':
+      'Ештеңе алынған жоқ. Демеушілік орындар бетіңіз қалай төлеу керегін айтады.',
+    'sponsor.plWhyGone': 'Бұл орын жаңа ғана алынды немесе енді ашық емес. Басқасын таңдаңыз.',
+    'sponsor.plWhyOwn': 'Бұл — өзіңіз сұраған орын. Өз өтінішіңізге демеуші бола алмайсыз.',
+    'sponsor.tooLong': 'Бұл осы өріске сыятынынан ұзын.',
+    'sponsor.plWhyFailed': 'Бұл орындалмады. Ештеңе алынған жоқ және ештеңе өзгерген жоқ.',
+    'sponsor.unconfirmed':
+      'Оның тіркелген-тіркелмегенін растай алмадық. Қайта әрекеттенбес бұрын демеушілік орындарыңызды қараңыз.',
+    'sponsor.plAskHeading': 'Орын сұрау',
+    'sponsor.rqLede':
+      'Курсқа қолыңыз жетпесе, жағдай туралы бірнеше сөйлем жазыңыз. Қызметкерлер оны оқып, екі жағдайда да себебімен жауап береді. Сұраудың ешқандай ақысы жоқ және ешкімді міндеттемейді.',
+    'sponsor.rqCourse': 'Қай курс?',
+    'sponsor.rqChoose': 'Курсты таңдаңыз',
+    'sponsor.rqReason': 'Жағдай қандай?',
+    'sponsor.rqReasonNote':
+      'Тек шешім қабылдайтын қызметкерлер оқиды, басқа ешкім оқымайды. Орынның ақысын төлейтін адамға көрсетілмейді.',
+    'sponsor.rqSubmit': 'Осы орынды сұрау',
+    'sponsor.rqDone':
+      'Сұралды. Қызметкерлер оны оқиды, ал жауап себебімен бірге демеушілік орындар бетіңізде болады.',
+    'sponsor.rqNoLearner': 'Бұл тіркелгіде әлі оқушы жоқ, сондықтан кім үшін сұрайтын ешкім жоқ.',
+    'sponsor.rqNoCourse': 'Қазір сатылымда курс жоқ, сондықтан сұрайтын ештеңе жоқ.',
+    'sponsor.rqPrivacy':
+      'Өтініш мақұлданса, демеуші орынның кодын, курсты, оның балаға немесе ересекке арналғанын және бағаны көреді. Атыңызды, отбасыңызды немесе осы жерде жазғаныңызды ешқашан көрмейді.',
+    'sponsor.rqWhyReason': 'Жағдай туралы бір сөйлем жазыңыз. Шешім қабылдайтын адам соны оқиды.',
+    'sponsor.rqWhyHas': 'Ол оқушыда бұл курс бұрыннан бар, сондықтан сұрайтын ештеңе жоқ.',
+    'sponsor.rqWhyAsked': 'Бұл курс бойынша ашық өтініш бұрыннан бар.',
   },
   az: {
     'sponsor.lede':
@@ -1231,6 +2389,62 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.payNot':
       'Bu söz burada ödənilə bilməz: o ya ödənilib, ya ləğv edilib, ya da sizin sözlərinizdən biri deyil.',
     'sponsor.nextPay': 'Siz ödəyənə qədər heç nə götürülmür. Ödəniş təsdiqlənəndə yer açılır.',
+    'sponsor.plEyebrow': 'Sponsorluq',
+    'sponsor.plTitle': 'Başqa birinin kursunun haqqını ödəyin',
+    'sponsor.plLede':
+      'Kursun haqqını ödəyə bilməyən öyrənən onu istəyir, əməkdaşlar isə qərar verir. Təsdiqlənmiş istək burada kodu və kursun qiyməti olan yer kimi görünür, ad isə heç vaxt göstərilmir. Siz yer seçirsiniz; kursu öyrənən alır.',
+    'sponsor.plSeeHeading': 'Nəyi görürsünüz, nəyi görmürsünüz',
+    'sponsor.plSeeBody':
+      'Yerin kodu, kurs, onun uşaq və ya böyük üçün olması və ölkənizdəki qiymət. Öyrənənin adı, yaşı və ya ailəsi deyil, yazdıqlarından bir söz belə deyil. Onu yalnız qərar verən əməkdaşlar oxuyur, başqa heç kim oxumur.',
+    'sponsor.plPayHeading': 'Nə ödəyirsiniz və nə vaxt',
+    'sponsor.plPayBody':
+      'Kursun ölkənizdəki qiyməti, alış üçün hesablandığı kimi. Yeri götürmək sözdür və pul götürülmür. Sponsorlu yerlər səhifəniz sözün necə ödəndiyini deyir, ödəniş təsdiqlənəndə isə yer öyrənən üçün açılır.',
+    'sponsor.plListHeading': 'Sponsor gözləyən yerlər',
+    'sponsor.plSignIn': 'Yerlər daxil olmuş şəxslərə göstərilir.',
+    'sponsor.plUnread':
+      'Yerləri oxumaq mümkün olmadı. Heç nə tutulmayıb və heç bir yer götürülməyib.',
+    'sponsor.plOff':
+      'Yer sponsorluğu hazırda söndürülüb, ona görə nə yer götürmək, nə də istəmək olar.',
+    'sponsor.plNone':
+      'Hazırda sponsor gözləyən yer yoxdur. İstək əməkdaşlar təsdiqlədikdən sonra burada görünür.',
+    'sponsor.plForChild': 'Uşaq üçün',
+    'sponsor.plForAdult': 'Böyük üçün',
+    'sponsor.plPriceNote':
+      'Bu kursun ölkənizdəki qiyməti. Sponsorluq edilən yerdir, hədiyyə kartı deyil.',
+    'sponsor.plNoPrice':
+      'Bu kursun ölkənizdə qiyməti yoxdur, ona görə bu yeri buradan götürmək olmur.',
+    'sponsor.plPriceUnread':
+      'Bu yerin qiymətini oxumaq mümkün olmadı, ona görə onu hələlik götürmək olmur.',
+    'sponsor.plNoteLabel': 'İstəsəniz, əməkdaşlar üçün qeyd',
+    'sponsor.plTake': 'Bu yerə sponsor olun',
+    'sponsor.plTaken': 'Bu yer indi ödəmək üçün sizindir: {amount}',
+    'sponsor.plTakenNext': 'Heç nə götürülməyib. Sponsorlu yerlər səhifəniz necə ödəməyi deyir.',
+    'sponsor.plWhyGone': 'Bu yer indicə götürülüb və ya artıq açıq deyil. Başqasını seçin.',
+    'sponsor.plWhyOwn':
+      'Bu, özünüzün istədiyiniz yerdir. Öz istəyinizə sponsor ola bilməzsiniz.',
+    'sponsor.tooLong': 'Bu, xananın tutduğundan uzundur.',
+    'sponsor.plWhyFailed': 'Alınmadı. Heç nə tutulmayıb və heç nə dəyişməyib.',
+    'sponsor.unconfirmed':
+      'Bunun qeydə alınıb-alınmadığını təsdiqləyə bilmədik. Yenidən cəhd etməzdən əvvəl sponsorlu yerlərinizə baxın.',
+    'sponsor.plAskHeading': 'Yer istəmək',
+    'sponsor.rqLede':
+      'Kurs imkanınızdan kənardırsa, vəziyyət haqqında bir neçə cümlə yazın. Əməkdaşlar onu oxuyur və hər iki halda səbəbi ilə cavab verir. İstəməyin heç bir haqqı yoxdur və heç kimi məcbur etmir.',
+    'sponsor.rqCourse': 'Hansı kurs?',
+    'sponsor.rqChoose': 'Kurs seçin',
+    'sponsor.rqReason': 'Vəziyyət necədir?',
+    'sponsor.rqReasonNote':
+      'Yalnız qərar verən əməkdaşlar oxuyur, başqa heç kim oxumur. Yerin haqqını ödəyən şəxsə göstərilmir.',
+    'sponsor.rqSubmit': 'Bu yeri istəyin',
+    'sponsor.rqDone':
+      'İstənildi. Əməkdaşlar onu oxuyacaq, cavab isə səbəbi ilə birlikdə sponsorlu yerlər səhifənizdə olacaq.',
+    'sponsor.rqNoLearner': 'Bu hesabda hələ öyrənən yoxdur, ona görə kimin üçünsə istəmək olmur.',
+    'sponsor.rqNoCourse': 'Hazırda satışda kurs yoxdur, ona görə istəniləcək bir şey yoxdur.',
+    'sponsor.rqPrivacy':
+      'İstək təsdiqlənərsə, sponsor yerin kodunu, kursu, onun uşaq və ya böyük üçün olmasını və qiyməti görür. Adınızı, ailənizi və ya burada yazdığınızı heç vaxt görmür.',
+    'sponsor.rqWhyReason': 'Vəziyyət haqqında bir cümlə yazın. Qərar verən şəxs məhz onu oxuyur.',
+    'sponsor.rqWhyHas':
+      'Həmin öyrənəndə bu kurs artıq var, ona görə istəniləcək bir şey yoxdur.',
+    'sponsor.rqWhyAsked': 'Bu kurs üçün artıq açıq istək var.',
   },
   tg: {
     'sponsor.lede':
@@ -1286,6 +2500,65 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Ин ваъдаро дар ин ҷо пардохтан мумкин нест: он пардохт ё бекор шудааст, ё аз ваъдаҳои шумо нест.',
     'sponsor.nextPay':
       'То шумо пардохт накунед, ҳеҷ чиз гирифта намешавад. Ҷой ҳангоми тасдиқи пардохт кушода мешавад.',
+    'sponsor.plEyebrow': 'Сарпарастӣ',
+    'sponsor.plTitle': 'Ҳаққи курси каси дигарро пардозед',
+    'sponsor.plLede':
+      'Хонандае, ки ҳаққи курсро пардохта наметавонад, онро дархост мекунад ва кормандон қарор мекунанд. Дархости тасдиқшуда дар ин ҷо ҳамчун ҷой бо рамз ва нархи курс намоён мешавад ва ҳеҷ гоҳ бо ном нест. Шумо ҷойро интихоб мекунед; курсро хонанда мегирад.',
+    'sponsor.plSeeHeading': 'Чиро мебинед ва чиро намебинед',
+    'sponsor.plSeeBody':
+      'Рамзи ҷой, курс, барои кӯдак ё калонсол буданаш ва нарх дар кишвари шумо. На ном, на син ва на оилаи хонанда, ва на як калима аз навиштааш. Онро танҳо кормандоне, ки қарор мекунанд, мехонанд ва ҳеҷ каси дигар.',
+    'sponsor.plPayHeading': 'Чӣ мепардозед ва кай',
+    'sponsor.plPayBody':
+      'Нархи курс дар кишвари шумо, ҳамон тавре ки барои харид ҳисоб мешавад. Гирифтани ҷой ваъда аст ва пуле гирифта намешавад. Саҳифаи ҷойҳои сарпарастии шумо мегӯяд, ки ваъда чӣ гуна пардохт мешавад, ва ҷой ҳангоми тасдиқи пардохт барои хонанда кушода мешавад.',
+    'sponsor.plListHeading': 'Ҷойҳои мунтазири сарпараст',
+    'sponsor.plSignIn': 'Ҷойҳо ба шахсоне нишон дода мешаванд, ки ворид шудаанд.',
+    'sponsor.plUnread':
+      'Ҷойҳоро хондан муяссар нашуд. Ҳеҷ чиз ситонида нашуд ва ҳеҷ ҷой гирифта нашуд.',
+    'sponsor.plOff':
+      'Сарпарастии ҷой ҳоло хомӯш аст, бинобар ин на ҷой гирифтан мумкин аст ва на дархост кардан.',
+    'sponsor.plNone':
+      'Ҳоло ҳеҷ ҷой мунтазири сарпараст нест. Дархост пас аз тасдиқи кормандон дар ин ҷо намоён мешавад.',
+    'sponsor.plForChild': 'Барои кӯдак',
+    'sponsor.plForAdult': 'Барои калонсол',
+    'sponsor.plPriceNote':
+      'Нархи ин курс дар кишвари шумо. Он чи сарпарастӣ мешавад, ҷой аст, на корти тӯҳфа.',
+    'sponsor.plNoPrice':
+      'Ин курс дар кишвари шумо нарх надорад, бинобар ин ин ҷойро аз ин ҷо гирифтан мумкин нест.',
+    'sponsor.plPriceUnread':
+      'Нархи ин ҷойро хондан муяссар нашуд, бинобар ин онро ҳоло гирифтан мумкин нест.',
+    'sponsor.plNoteLabel': 'Ёддошт барои кормандон, агар хоҳед',
+    'sponsor.plTake': 'Ба ин ҷой сарпарастӣ кунед',
+    'sponsor.plTaken': 'Ин ҷой акнун барои пардохт аз они шумост: {amount}',
+    'sponsor.plTakenNext':
+      'Ҳеҷ чиз гирифта нашудааст. Саҳифаи ҷойҳои сарпарастии шумо мегӯяд, ки чӣ гуна пардохт кунед.',
+    'sponsor.plWhyGone': 'Он ҷой ҳозир гирифта шуд ё дигар кушода нест. Дигареро интихоб кунед.',
+    'sponsor.plWhyOwn':
+      'Ин ҳамон ҷоест, ки худатон дархост кардаед. Ба дархости худ сарпарастӣ карда наметавонед.',
+    'sponsor.tooLong': 'Ин аз ғунҷоиши ин майдон дарозтар аст.',
+    'sponsor.plWhyFailed': 'Ин нашуд. Ҳеҷ чиз ситонида нашуд ва ҳеҷ чиз тағйир наёфт.',
+    'sponsor.unconfirmed':
+      'Мо тасдиқ карда натавонистем, ки ин сабт шудааст ё не. Пеш аз кӯшиши дубора ҷойҳои сарпарастии худро бинед.',
+    'sponsor.plAskHeading': 'Дархости ҷой',
+    'sponsor.rqLede':
+      'Агар курс аз имкони шумо берун бошад, дар бораи вазъият чанд ҷумла нависед. Кормандон онро мехонанд ва дар ҳар ду ҳолат бо зикри сабаб ҷавоб медиҳанд. Дархост ҳеҷ ҳаққе надорад ва ҳеҷ касро вазифадор намекунад.',
+    'sponsor.rqCourse': 'Кадом курс?',
+    'sponsor.rqChoose': 'Курсро интихоб кунед',
+    'sponsor.rqReason': 'Вазъият чӣ гуна аст?',
+    'sponsor.rqReasonNote':
+      'Танҳо кормандоне, ки қарор мекунанд, мехонанд ва ҳеҷ каси дигар. Ба касе, ки ҳаққи ҷойро мепардозад, нишон дода намешавад.',
+    'sponsor.rqSubmit': 'Ин ҷойро дархост кунед',
+    'sponsor.rqDone':
+      'Дархост шуд. Кормандон онро мехонанд ва ҷавоб бо сабабаш дар саҳифаи ҷойҳои сарпарастии шумо хоҳад буд.',
+    'sponsor.rqNoLearner':
+      'Дар ин ҳисоб ҳоло хонандае нест, бинобар ин касе нест, ки барояш дархост шавад.',
+    'sponsor.rqNoCourse': 'Ҳоло ҳеҷ курс дар фурӯш нест, бинобар ин чизе барои дархост нест.',
+    'sponsor.rqPrivacy':
+      'Агар дархост тасдиқ шавад, сарпараст рамзи ҷой, курс, барои кӯдак ё калонсол буданаш ва нархро мебинад. Номи шумо, оилаи шумо ё он чиро, ки дар ин ҷо навиштаед, ҳеҷ гоҳ намебинад.',
+    'sponsor.rqWhyReason':
+      'Дар бораи вазъият як ҷумла нависед. Шахси қароркунанда маҳз ҳаминро мехонад.',
+    'sponsor.rqWhyHas':
+      'Он хонанда аллакай ин курсро дорад, бинобар ин чизе барои дархост нест.',
+    'sponsor.rqWhyAsked': 'Барои ин курс аллакай дархости кушода ҳаст.',
   },
   ky: {
     'sponsor.lede':
@@ -1339,6 +2612,63 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.payNot':
       'Бул убаданы бул жерде төлөөгө болбойт: ал төлөнгөн же жокко чыгарылган, же сиздин убадаларыңыздын бири эмес.',
     'sponsor.nextPay': 'Сиз төлөмөйүнчө эч нерсе алынбайт. Төлөм ырасталганда орун ачылат.',
+    'sponsor.plEyebrow': 'Демөөрчүлүк',
+    'sponsor.plTitle': 'Башка бирөөнүн курсунун акысын төлөңүз',
+    'sponsor.plLede':
+      'Курстун акысын төлөй албаган окуучу аны сурайт, ал эми кызматкерлер чечим кабыл алат. Жактырылган өтүнүч бул жерде коду жана курстун баасы бар орун болуп көрүнөт, аты эч качан көрсөтүлбөйт. Сиз орунду тандайсыз; курсту окуучу алат.',
+    'sponsor.plSeeHeading': 'Эмнени көрөсүз, эмнени көрбөйсүз',
+    'sponsor.plSeeBody':
+      'Орундун коду, курс, анын балага же чоң кишиге арналганы жана өлкөңүздөгү баа. Окуучунун аты, жашы же үй-бүлөсү эмес, жазганынан бир сөз да эмес. Аны чечим кабыл алган кызматкерлер гана окуйт, башка эч ким окубайт.',
+    'sponsor.plPayHeading': 'Эмне төлөйсүз жана качан',
+    'sponsor.plPayBody':
+      'Курстун өлкөңүздөгү баасы, сатып алгандагыдай эсептелет. Орунду алуу — убада, акча алынбайт. Демөөрчүлүк орундар барагыңыз убада кантип төлөнөрүн айтат, төлөм ырасталганда орун окуучуга ачылат.',
+    'sponsor.plListHeading': 'Демөөрчү күтүп турган орундар',
+    'sponsor.plSignIn': 'Орундар системага кирген адамдарга көрсөтүлөт.',
+    'sponsor.plUnread':
+      'Орундарды окуу мүмкүн болгон жок. Эч нерсе алынган жок жана эч бир орун алынган жок.',
+    'sponsor.plOff':
+      'Орунга демөөрчүлүк азыр өчүрүлгөн, ошондуктан орун алууга да, суроого да болбойт.',
+    'sponsor.plNone':
+      'Азыр демөөрчү күтүп турган орун жок. Өтүнүч кызматкерлер жактыргандан кийин бул жерде көрүнөт.',
+    'sponsor.plForChild': 'Балага арналган',
+    'sponsor.plForAdult': 'Чоң кишиге арналган',
+    'sponsor.plPriceNote':
+      'Бул курстун өлкөңүздөгү баасы. Демөөрчүлүк кылынган нерсе — орун, белек картасы эмес.',
+    'sponsor.plNoPrice':
+      'Бул курстун өлкөңүздө баасы жок, ошондуктан бул орунду бул жерден алууга болбойт.',
+    'sponsor.plPriceUnread':
+      'Бул орундун баасын окуу мүмкүн болгон жок, ошондуктан аны азырынча алууга болбойт.',
+    'sponsor.plNoteLabel': 'Кааласаңыз, кызматкерлерге жазуу',
+    'sponsor.plTake': 'Ушул орунга демөөрчү болуу',
+    'sponsor.plTaken': 'Бул орун эми төлөө үчүн сиздики: {amount}',
+    'sponsor.plTakenNext':
+      'Эч нерсе алынган жок. Демөөрчүлүк орундар барагыңыз кантип төлөөнү айтат.',
+    'sponsor.plWhyGone': 'Ал орун азыр эле алынды же эми ачык эмес. Башкасын тандаңыз.',
+    'sponsor.plWhyOwn': 'Бул — өзүңүз сураган орун. Өз өтүнүчүңүзгө демөөрчү боло албайсыз.',
+    'sponsor.tooLong': 'Бул ушул талаага батканынан узун.',
+    'sponsor.plWhyFailed': 'Бул ишке ашкан жок. Эч нерсе алынган жок жана эч нерсе өзгөргөн жок.',
+    'sponsor.unconfirmed':
+      'Анын катталган-катталбаганын ырастай алган жокпуз. Кайра аракет кылуудан мурун демөөрчүлүк орундарыңызды караңыз.',
+    'sponsor.plAskHeading': 'Орун суроо',
+    'sponsor.rqLede':
+      'Курс колуңуздан келбесе, абал тууралуу бир нече сүйлөм жазыңыз. Кызматкерлер аны окуп, эки учурда тең себеби менен жооп берет. Суроонун эч кандай акысы жок жана эч кимди милдеттендирбейт.',
+    'sponsor.rqCourse': 'Кайсы курс?',
+    'sponsor.rqChoose': 'Курсту тандаңыз',
+    'sponsor.rqReason': 'Абал кандай?',
+    'sponsor.rqReasonNote':
+      'Чечим кабыл алган кызматкерлер гана окуйт, башка эч ким окубайт. Орундун акысын төлөгөн адамга көрсөтүлбөйт.',
+    'sponsor.rqSubmit': 'Ушул орунду суроо',
+    'sponsor.rqDone':
+      'Суралды. Кызматкерлер аны окуйт, ал эми жооп себеби менен бирге демөөрчүлүк орундар барагыңызда болот.',
+    'sponsor.rqNoLearner':
+      'Бул аккаунтта азырынча окуучу жок, ошондуктан ким үчүн сурай турган эч ким жок.',
+    'sponsor.rqNoCourse': 'Азыр сатыкта курс жок, ошондуктан сурай турган эч нерсе жок.',
+    'sponsor.rqPrivacy':
+      'Өтүнүч жактырылса, демөөрчү орундун кодун, курсту, анын балага же чоң кишиге арналганын жана бааны көрөт. Атыңызды, үй-бүлөңүздү же бул жерде жазганыңызды эч качан көрбөйт.',
+    'sponsor.rqWhyReason': 'Абал тууралуу бир сүйлөм жазыңыз. Чечим кабыл алган адам ошону окуйт.',
+    'sponsor.rqWhyHas':
+      'Ал окуучуда бул курс мурунтан эле бар, ошондуктан сурай турган эч нерсе жок.',
+    'sponsor.rqWhyAsked': 'Бул курс боюнча ачык өтүнүч мурунтан эле бар.',
   },
   tk: {
     'sponsor.lede':
@@ -1393,6 +2723,61 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'sponsor.payNot':
       'Bu sözi şu ýerde töläp bolmaýar: ol tölenen ýa-da ýatyrylan, ýa-da siziň sözleriňiziň biri däl.',
     'sponsor.nextPay': 'Siz töleýänçäňiz hiç zat alynmaýar. Töleg tassyklananda orun açylýar.',
+    'sponsor.plEyebrow': 'Howandarlyk',
+    'sponsor.plTitle': 'Başga biriniň kursunyň tölegini töläň',
+    'sponsor.plLede':
+      'Kursuň tölegini töläp bilmeýän okuwçy ony soraýar, işgärler bolsa karar berýär. Tassyklanan haýyş şu ýerde kody we kursuň bahasy bolan orun hökmünde görünýär, at bolsa hiç haçan görkezilmeýär. Siz orny saýlaýarsyňyz; kursy okuwçy alýar.',
+    'sponsor.plSeeHeading': 'Nämäni görýärsiňiz we nämäni görmeýärsiňiz',
+    'sponsor.plSeeBody':
+      'Ornuň kody, kurs, onuň çaga ýa-da uly adam üçindigi we ýurduňyzdaky baha. Okuwçynyň ady, ýaşy ýa-da maşgalasy däl, ýazanlaryndan ýeke söz hem däl. Ony diňe karar berýän işgärler okaýar, başga hiç kim okamaýar.',
+    'sponsor.plPayHeading': 'Näme töleýärsiňiz we haçan',
+    'sponsor.plPayBody':
+      'Kursuň ýurduňyzdaky bahasy, satyn almakdaky ýaly hasaplanýar. Orny almak sözdür we pul alynmaýar. Howandarlyk orunlary sahypaňyz sözüň nähili tölenýändigini aýdýar, töleg tassyklananda bolsa orun okuwçy üçin açylýar.',
+    'sponsor.plListHeading': 'Howandara garaşýan orunlar',
+    'sponsor.plSignIn': 'Orunlar ulgama giren adamlara görkezilýär.',
+    'sponsor.plUnread': 'Orunlary okap bolmady. Hiç zat tutulmady we hiç bir orun alynmady.',
+    'sponsor.plOff':
+      'Orun howandarlygy häzir öçürilen, şonuň üçin orun alyp hem, sorap hem bolmaýar.',
+    'sponsor.plNone':
+      'Häzir howandara garaşýan orun ýok. Haýyş işgärler tassyklandan soň şu ýerde görünýär.',
+    'sponsor.plForChild': 'Çaga üçin',
+    'sponsor.plForAdult': 'Uly adam üçin',
+    'sponsor.plPriceNote':
+      'Bu kursuň ýurduňyzdaky bahasy. Howandarlyk edilýän zat orundyr, sowgat karty däl.',
+    'sponsor.plNoPrice':
+      'Bu kursuň ýurduňyzda bahasy ýok, şonuň üçin bu orny şu ýerden alyp bolmaýar.',
+    'sponsor.plPriceUnread':
+      'Bu ornuň bahasyny okap bolmady, şonuň üçin ony häzirlikçe alyp bolmaýar.',
+    'sponsor.plNoteLabel': 'Isleseňiz, işgärler üçin bellik',
+    'sponsor.plTake': 'Bu orna howandarlyk ediň',
+    'sponsor.plTaken': 'Bu orun indi tölemek üçin siziňki: {amount}',
+    'sponsor.plTakenNext':
+      'Hiç zat alynmady. Howandarlyk orunlary sahypaňyz nähili tölemelidigini aýdýar.',
+    'sponsor.plWhyGone': 'Ol orun ýaňy alyndy ýa-da indi açyk däl. Başgasyny saýlaň.',
+    'sponsor.plWhyOwn': 'Bu öz soran ornuňyz. Öz haýyşyňyza howandarlyk edip bilmersiňiz.',
+    'sponsor.tooLong': 'Bu şu meýdana sygýanyndan uzyn.',
+    'sponsor.plWhyFailed': 'Bu başa barmady. Hiç zat tutulmady we hiç zat üýtgemedi.',
+    'sponsor.unconfirmed':
+      'Munuň bellige alnandygyny ýa-da alynmandygyny tassyklap bilmedik. Gaýtadan synanyşmazdan öň howandarlyk orunlaryňyza serediň.',
+    'sponsor.plAskHeading': 'Orun soramak',
+    'sponsor.rqLede':
+      'Kurs eliňizden gelmeýän bolsa, ýagdaý barada birnäçe sözlem ýazyň. Işgärler ony okaýar we iki ýagdaýda hem sebäbi bilen jogap berýär. Soramagyň hiç hili tölegi ýok we hiç kimi borçly etmeýär.',
+    'sponsor.rqCourse': 'Haýsy kurs?',
+    'sponsor.rqChoose': 'Kursy saýlaň',
+    'sponsor.rqReason': 'Ýagdaý nähili?',
+    'sponsor.rqReasonNote':
+      'Diňe karar berýän işgärler okaýar, başga hiç kim okamaýar. Ornuň tölegini töleýän adama görkezilmeýär.',
+    'sponsor.rqSubmit': 'Bu orny soraň',
+    'sponsor.rqDone':
+      'Soraldy. Işgärler ony okar, jogap bolsa sebäbi bilen bilelikde howandarlyk orunlary sahypaňyzda bolar.',
+    'sponsor.rqNoLearner':
+      'Bu hasapda entek okuwçy ýok, şonuň üçin kimdir biri üçin sorap bolmaýar.',
+    'sponsor.rqNoCourse': 'Häzir satuwda kurs ýok, şonuň üçin soraljak zat ýok.',
+    'sponsor.rqPrivacy':
+      'Haýyş tassyklansa, howandar ornuň koduny, kursy, onuň çaga ýa-da uly adam üçindigini we bahany görýär. Adyňyzy, maşgalaňyzy ýa-da şu ýerde ýazanyňyzy hiç haçan görmeýär.',
+    'sponsor.rqWhyReason': 'Ýagdaý barada bir sözlem ýazyň. Karar berýän adam hut şony okaýar.',
+    'sponsor.rqWhyHas': 'Ol okuwçyda bu kurs eýýäm bar, şonuň üçin soraljak zat ýok.',
+    'sponsor.rqWhyAsked': 'Bu kurs üçin eýýäm açyk haýyş bar.',
   },
   ta: {
     'sponsor.lede':
@@ -1449,6 +2834,67 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'இந்த உறுதிமொழிக்கு இங்கே கட்டணம் செலுத்த முடியாது: அது செலுத்தப்பட்டுவிட்டது அல்லது ரத்து செய்யப்பட்டது, அல்லது அது உங்களுடையது அல்ல.',
     'sponsor.nextPay':
       'நீங்கள் செலுத்தும் வரை எதுவும் எடுக்கப்படுவதில்லை. கட்டணம் உறுதிப்படுத்தப்பட்டதும் இடம் திறக்கும்.',
+    'sponsor.plEyebrow': 'நிதியுதவி',
+    'sponsor.plTitle': 'வேறொருவரின் பாடநெறிக்குக் கட்டணம் செலுத்துங்கள்',
+    'sponsor.plLede':
+      'ஒரு பாடநெறிக்குக் கட்டணம் செலுத்த இயலாத கற்பவர் அதைக் கேட்கிறார், பணியாளர்கள் முடிவு செய்கிறார்கள். அங்கீகரிக்கப்பட்ட கோரிக்கை இங்கே ஒரு குறியீடும் பாடநெறியின் விலையும் கொண்ட இடமாகத் தோன்றும், ஒருபோதும் பெயருடன் அல்ல. நீங்கள் ஓர் இடத்தைத் தேர்வு செய்கிறீர்கள்; கற்பவர் பாடநெறியைப் பெறுகிறார்.',
+    'sponsor.plSeeHeading': 'நீங்கள் பார்ப்பதும், பார்க்காததும்',
+    'sponsor.plSeeBody':
+      'இடத்தின் குறியீடு, பாடநெறி, அது குழந்தைக்கா வயது வந்தவருக்கா என்பது, மற்றும் உங்கள் நாட்டில் விலை. கற்பவரின் பெயர், வயது அல்லது குடும்பம் இல்லை, அவர்கள் எழுதியதில் ஒரு சொல்லும் இல்லை. அதை முடிவு செய்யும் பணியாளர்கள் மட்டுமே படிக்கிறார்கள், வேறு யாரும் இல்லை.',
+    'sponsor.plPayHeading': 'நீங்கள் என்ன செலுத்துகிறீர்கள், எப்போது',
+    'sponsor.plPayBody':
+      'உங்கள் நாட்டில் பாடநெறியின் விலை, வாங்கும்போது கணக்கிடப்படுவது போலவே. இடத்தை எடுப்பது ஓர் உறுதிமொழி, அதனால் பணம் எடுக்கப்படுவதில்லை. உறுதிமொழிக்கு எப்படிக் கட்டணம் செலுத்துவது என்பதை உங்கள் நிதியுதவி பெற்ற இடங்கள் பக்கம் சொல்லும், கட்டணம் உறுதிப்படுத்தப்பட்டதும் இடம் கற்பவருக்குத் திறக்கும்.',
+    'sponsor.plListHeading': 'நிதியுதவியாளருக்காகக் காத்திருக்கும் இடங்கள்',
+    'sponsor.plSignIn': 'உள்நுழைந்தவர்களுக்கு இடங்கள் காட்டப்படும்.',
+    'sponsor.plUnread':
+      'இடங்களைப் படிக்க முடியவில்லை. எதுவும் வசூலிக்கப்படவில்லை, எந்த இடமும் எடுக்கப்படவில்லை.',
+    'sponsor.plOff':
+      'இடத்துக்கான நிதியுதவி தற்போது நிறுத்தப்பட்டுள்ளது, எனவே இடத்தை எடுக்கவோ கேட்கவோ முடியாது.',
+    'sponsor.plNone':
+      'இப்போது எந்த இடமும் நிதியுதவியாளருக்காகக் காத்திருக்கவில்லை. பணியாளர்கள் அங்கீகரித்ததும் கோரிக்கை இங்கே தோன்றும்.',
+    'sponsor.plForChild': 'குழந்தைக்கு',
+    'sponsor.plForAdult': 'வயது வந்தவருக்கு',
+    'sponsor.plPriceNote':
+      'உங்கள் நாட்டில் இந்தப் பாடநெறியின் விலை. நிதியுதவி பெறுவது இடம்தான், பரிசு அட்டை அல்ல.',
+    'sponsor.plNoPrice':
+      'உங்கள் நாட்டில் இந்தப் பாடநெறிக்கு விலை இல்லை, எனவே இந்த இடத்தை இங்கிருந்து எடுக்க முடியாது.',
+    'sponsor.plPriceUnread':
+      'இந்த இடத்தின் விலையைப் படிக்க முடியவில்லை, எனவே இப்போதைக்கு இதை எடுக்க முடியாது.',
+    'sponsor.plNoteLabel': 'பணியாளர்களுக்கு ஒரு குறிப்பு, விரும்பினால்',
+    'sponsor.plTake': 'இந்த இடத்துக்கு நிதியுதவி செய்யுங்கள்',
+    'sponsor.plTaken': 'இந்த இடம் இப்போது நீங்கள் கட்டணம் செலுத்துவதற்கானது: {amount}',
+    'sponsor.plTakenNext':
+      'எதுவும் எடுக்கப்படவில்லை. எப்படிச் செலுத்துவது என்பதை உங்கள் நிதியுதவி பெற்ற இடங்கள் பக்கம் சொல்லும்.',
+    'sponsor.plWhyGone':
+      'அந்த இடம் இப்போதுதான் எடுக்கப்பட்டது, அல்லது இனி திறந்திருக்கவில்லை. வேறொன்றைத் தேர்வு செய்யுங்கள்.',
+    'sponsor.plWhyOwn':
+      'அது நீங்களே கேட்ட இடம். உங்கள் சொந்தக் கோரிக்கைக்கு நீங்கள் நிதியுதவி செய்ய முடியாது.',
+    'sponsor.tooLong': 'இது இந்தப் பெட்டி கொள்ளும் அளவைவிட நீளமானது.',
+    'sponsor.plWhyFailed': 'அது நடக்கவில்லை. எதுவும் வசூலிக்கப்படவில்லை, எதுவும் மாறவில்லை.',
+    'sponsor.unconfirmed':
+      'அது பதிவானதா என்பதை எங்களால் உறுதிப்படுத்த முடியவில்லை. மீண்டும் முயலும் முன் உங்கள் நிதியுதவி பெற்ற இடங்களைப் பாருங்கள்.',
+    'sponsor.plAskHeading': 'இடம் கேட்பது',
+    'sponsor.rqLede':
+      'ஒரு பாடநெறி உங்கள் சக்திக்கு அப்பாற்பட்டதாக இருந்தால், நிலைமையைப் பற்றிச் சில வாக்கியங்கள் எழுதுங்கள். பணியாளர்கள் அதைப் படித்து, எந்த முடிவாக இருந்தாலும் காரணத்துடன் பதிலளிப்பார்கள். கேட்பதற்கு எந்தச் செலவும் இல்லை, அது யாரையும் கட்டுப்படுத்தாது.',
+    'sponsor.rqCourse': 'எந்தப் பாடநெறி?',
+    'sponsor.rqChoose': 'ஒரு பாடநெறியைத் தேர்வு செய்யுங்கள்',
+    'sponsor.rqReason': 'நிலைமை என்ன?',
+    'sponsor.rqReasonNote':
+      'முடிவு செய்யும் பணியாளர்கள் மட்டுமே படிக்கிறார்கள், வேறு யாரும் இல்லை. இடத்துக்குக் கட்டணம் செலுத்துபவருக்குக் காட்டப்படாது.',
+    'sponsor.rqSubmit': 'இந்த இடத்தைக் கேளுங்கள்',
+    'sponsor.rqDone':
+      'கேட்கப்பட்டது. பணியாளர்கள் அதைப் படிப்பார்கள், பதில் அதன் காரணத்துடன் உங்கள் நிதியுதவி பெற்ற இடங்கள் பக்கத்தில் இருக்கும்.',
+    'sponsor.rqNoLearner':
+      'இந்தக் கணக்கில் இன்னும் கற்பவர் யாரும் இல்லை, எனவே யாருக்காகவும் கேட்க முடியாது.',
+    'sponsor.rqNoCourse':
+      'இப்போது எந்தப் பாடநெறியும் விற்பனையில் இல்லை, எனவே கேட்பதற்கு எதுவும் இல்லை.',
+    'sponsor.rqPrivacy':
+      'கோரிக்கை அங்கீகரிக்கப்பட்டால், நிதியுதவியாளர் இடத்தின் குறியீடு, பாடநெறி, அது குழந்தைக்கா வயது வந்தவருக்கா என்பது, மற்றும் விலையைப் பார்ப்பார். உங்கள் பெயர், உங்கள் குடும்பம் அல்லது நீங்கள் இங்கே எழுதியதை ஒருபோதும் பார்க்கமாட்டார்.',
+    'sponsor.rqWhyReason':
+      'நிலைமையைப் பற்றி ஒரு வாக்கியம் எழுதுங்கள். முடிவு செய்பவர் படிப்பது அதுதான்.',
+    'sponsor.rqWhyHas':
+      'அந்தக் கற்பவரிடம் இந்தப் பாடநெறி ஏற்கெனவே உள்ளது, எனவே கேட்பதற்கு எதுவும் இல்லை.',
+    'sponsor.rqWhyAsked': 'இந்தப் பாடநெறிக்கு ஏற்கெனவே ஒரு திறந்த கோரிக்கை உள்ளது.',
   },
   ne: {
     'sponsor.lede':
@@ -1504,5 +2950,59 @@ export const SPONSOR: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'यो वचनको भुक्तानी यहाँ गर्न सकिँदैन: यो तिरिसकिएको छ वा रद्द गरिएको छ, वा यो तपाईंको वचन होइन।',
     'sponsor.nextPay':
       'तपाईंले भुक्तानी नगरेसम्म केही पनि लिइँदैन। भुक्तानी पुष्टि भएपछि सिट खुल्छ।',
+    'sponsor.plEyebrow': 'प्रायोजन',
+    'sponsor.plTitle': 'अरू कसैको कोर्सको शुल्क तिर्नुहोस्',
+    'sponsor.plLede':
+      'कोर्सको शुल्क तिर्न नसक्ने सिकारुले त्यो माग्छन्, र कर्मचारीले निर्णय गर्छन्। स्वीकृत अनुरोध यहाँ कोड र कोर्सको मूल्यसहितको सिटका रूपमा देखिन्छ, नाम कहिल्यै देखिँदैन। तपाईं सिट छान्नुहुन्छ; कोर्स सिकारुले पाउँछन्।',
+    'sponsor.plSeeHeading': 'तपाईं के देख्नुहुन्छ, र के देख्नुहुन्न',
+    'sponsor.plSeeBody':
+      'सिटको कोड, कोर्स, त्यो बालबालिकाका लागि हो कि वयस्कका लागि, र तपाईंको देशमा मूल्य। सिकारुको नाम, उमेर वा परिवार होइन, र उनले लेखेको एउटा शब्द पनि होइन। त्यो निर्णय गर्ने कर्मचारीले मात्र पढ्छन्, अरू कसैले होइन।',
+    'sponsor.plPayHeading': 'तपाईं के तिर्नुहुन्छ, र कहिले',
+    'sponsor.plPayBody':
+      'तपाईंको देशमा कोर्सको मूल्य, खरिदका लागि जसरी हिसाब गरिन्छ त्यसरी नै। सिट लिनु एउटा वचन हो र यसबाट पैसा लिइँदैन। तपाईंको प्रायोजित सिटहरूको पृष्ठले वचनको भुक्तानी कसरी हुन्छ भनेर बताउँछ, र भुक्तानी पुष्टि भएपछि सिट सिकारुका लागि खुल्छ।',
+    'sponsor.plListHeading': 'प्रायोजकको प्रतीक्षामा रहेका सिटहरू',
+    'sponsor.plSignIn': 'सिटहरू साइन इन गरेका व्यक्तिलाई देखाइन्छ।',
+    'sponsor.plUnread': 'सिटहरू पढ्न सकिएन। केही पनि शुल्क लिइएको छैन र कुनै सिट लिइएको छैन।',
+    'sponsor.plOff': 'सिटको प्रायोजन अहिले बन्द छ, त्यसैले न सिट लिन सकिन्छ न माग्न सकिन्छ।',
+    'sponsor.plNone':
+      'अहिले कुनै सिट प्रायोजकको प्रतीक्षामा छैन। कर्मचारीले स्वीकृत गरेपछि अनुरोध यहाँ देखिन्छ।',
+    'sponsor.plForChild': 'बालबालिकाका लागि',
+    'sponsor.plForAdult': 'वयस्कका लागि',
+    'sponsor.plPriceNote':
+      'तपाईंको देशमा यो कोर्सको मूल्य। प्रायोजन हुने भनेको सिट हो, उपहार कार्ड होइन।',
+    'sponsor.plNoPrice':
+      'तपाईंको देशमा यो कोर्सको मूल्य छैन, त्यसैले यो सिट यहाँबाट लिन सकिँदैन।',
+    'sponsor.plPriceUnread': 'यो सिटको मूल्य पढ्न सकिएन, त्यसैले अहिले यो लिन सकिँदैन।',
+    'sponsor.plNoteLabel': 'कर्मचारीका लागि टिप्पणी, चाहनुहुन्छ भने',
+    'sponsor.plTake': 'यो सिट प्रायोजन गर्नुहोस्',
+    'sponsor.plTaken': 'यो सिट अब तपाईंले भुक्तानी गर्नका लागि हो: {amount}',
+    'sponsor.plTakenNext':
+      'केही पनि लिइएको छैन। तपाईंको प्रायोजित सिटहरूको पृष्ठले कसरी भुक्तानी गर्ने भनेर बताउँछ।',
+    'sponsor.plWhyGone': 'त्यो सिट भर्खरै लिइयो, वा अब खुला छैन। अर्को छान्नुहोस्।',
+    'sponsor.plWhyOwn':
+      'त्यो तपाईं आफैंले मागेको सिट हो। आफ्नै अनुरोधलाई प्रायोजन गर्न सकिँदैन।',
+    'sponsor.tooLong': 'यो यस बाकसमा अट्नेभन्दा लामो छ।',
+    'sponsor.plWhyFailed': 'त्यो भएन। केही पनि शुल्क लिइएन र केही पनि बदलिएन।',
+    'sponsor.unconfirmed':
+      'त्यो दर्ता भयो कि भएन भनेर हामीले पुष्टि गर्न सकेनौं। फेरि प्रयास गर्नुअघि आफ्ना प्रायोजित सिटहरू हेर्नुहोस्।',
+    'sponsor.plAskHeading': 'सिट माग्ने',
+    'sponsor.rqLede':
+      'कुनै कोर्स तपाईंको पहुँचबाहिर छ भने अवस्थाबारे केही वाक्य लेख्नुहोस्। कर्मचारीले त्यो पढ्छन् र जुनसुकै अवस्थामा कारणसहित जवाफ दिन्छन्। माग्न केही खर्च लाग्दैन र यसले कसैलाई बाध्य पार्दैन।',
+    'sponsor.rqCourse': 'कुन कोर्स?',
+    'sponsor.rqChoose': 'कोर्स छान्नुहोस्',
+    'sponsor.rqReason': 'अवस्था के हो?',
+    'sponsor.rqReasonNote':
+      'निर्णय गर्ने कर्मचारीले मात्र पढ्छन्, अरू कसैले होइन। सिटको शुल्क तिर्ने व्यक्तिलाई देखाइँदैन।',
+    'sponsor.rqSubmit': 'यो सिट माग्नुहोस्',
+    'sponsor.rqDone':
+      'मागियो। कर्मचारीले त्यो पढ्नेछन्, र जवाफ, त्यसको कारणसहित, तपाईंको प्रायोजित सिटहरूको पृष्ठमा हुनेछ।',
+    'sponsor.rqNoLearner': 'यो खातामा अझै कुनै सिकारु छैन, त्यसैले कसैका लागि माग्न सकिँदैन।',
+    'sponsor.rqNoCourse': 'अहिले कुनै कोर्स बिक्रीमा छैन, त्यसैले माग्ने केही छैन।',
+    'sponsor.rqPrivacy':
+      'अनुरोध स्वीकृत भयो भने प्रायोजकले सिटको कोड, कोर्स, त्यो बालबालिकाका लागि हो कि वयस्कका लागि, र मूल्य देख्छन्। तपाईंको नाम, तपाईंको परिवार वा तपाईंले यहाँ लेखेको कुरा कहिल्यै देख्दैनन्।',
+    'sponsor.rqWhyReason':
+      'अवस्थाबारे एउटा वाक्य लेख्नुहोस्। निर्णय गर्ने व्यक्तिले पढ्ने त्यही हो।',
+    'sponsor.rqWhyHas': 'त्यो सिकारुसँग यो कोर्स पहिल्यै छ, त्यसैले माग्ने केही छैन।',
+    'sponsor.rqWhyAsked': 'यो कोर्सका लागि पहिल्यै एउटा खुला अनुरोध छ।',
   },
 };

@@ -8722,6 +8722,37 @@ individual with no registered company can be verified for a live account
 M-Pesa in Kenya is not on the sandbox account, and what a live account needs
 to be given it.
 
+## The sponsors' pool and asking for a seat, in the reader's language — **DECIDED 2026-11-19**
+
+`/sponsor` and `/sponsor/apply` were the two English pages a sponsor or a
+family passes through to reach the translated one. Forty sentences more in
+the `sponsor` part; the nineteen held languages still read 13%.
+
+- *Staff are "staff".* The English said "the owner or finance". That is who
+  decides today, and a sentence in twenty-seven languages should not have to
+  change when it does.
+- *What the page says about paying is true both ways.* "Taking a seat is a
+  pledge and takes no money", and the sponsored seats page says how the
+  pledge is paid: true with a payment service connected and without one.
+  The old text said no provider was connected and that the page "explains
+  how to pay", which it never did.
+- *One name for a seat that cannot be taken any more* (`gone`): somebody
+  else took it, it closed, or the code names none. The sponsor does the same
+  thing about all three.
+- *Unread is not empty, three times.* The pool, the learners and the
+  courses: each was drawn as "none" when it could not be read.
+- *The database's words for a course are not printed.* Audience and
+  difficulty go through the catalogue; a value with no word is left out.
+- *Two sentences are never joined by this code's own full stop.* After a
+  seat is taken the page says two things; they are two lines, because not
+  every language ends a sentence with a point.
+- *No placeholder text.* The two example texts in the boxes are gone; a
+  label and a note say what is wanted, and nothing disappears on typing.
+- *The route names its refusals for these two actions only.* The staff
+  desk's three actions keep the shape the staff desk reads.
+
+Against a stand-in only. No speaker has read any of it.
+
 ## Staff are shown money that opened no seat, and every screen says amounts in major units — **DECIDED 2026-11-19**
 
 A payment can be confirmed for a pledge that can no longer be honoured. The

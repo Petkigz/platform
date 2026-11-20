@@ -1,106 +1,190 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { countryFromHeaders } from '@/lib/geo';
+import { LOCALE_COOKIE, chooseLocale, languageShownFor, translator, type MessageKey } from '@/lib/i18n';
 import { parsePool } from '@/lib/sponsorship';
-import { SponsorPool } from './sponsor-pool';
+import { amountOf } from '@/lib/sponsorship-outcome';
+import { SponsorPool, type PoolWords, type SeatShown } from './sponsor-pool';
 
 export const dynamic = 'force-dynamic';
 
+/** The language this page is written in for this reader, and whether that is the one they chose. */
+async function readerLanguage() {
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code: locale } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  const shown = languageShownFor(locale, 'sponsor');
+  return { locale, shown, hdrs };
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { shown } = await readerLanguage();
+  return { title: translator(shown.code)('sponsor.plTitle') };
+}
+
+const DIFFICULTY: Record<string, MessageKey> = {
+  beginner: 'difficulty.beginner',
+  intermediate: 'difficulty.intermediate',
+  advanced: 'difficulty.advanced',
+};
+
 /**
- * Sponsoring a seat.
+ * Sponsoring a seat, in the reader's language.
  *
- * The page is reachable without an account — somebody may want to know what
- * this is before signing in — but the pool is only read for a signed-in person,
- * because `sponsorship_pool()` refuses a session with no user. That is honest
- * rather than coy: there is nothing to show a visitor that they could act on.
+ * The page is reachable without an account (somebody may want to know what
+ * this is before signing in), but the pool is read only for a signed-in
+ * person, because `sponsorship_pool()` refuses a session with no user.
  *
- * Nothing here is priced by the page. Each seat arrives with the course price
- * resolved for this reader's market, the same function checkout uses.
+ * **Nothing here is priced by the page.** Each seat arrives with the course
+ * price resolved for this reader's market, the same function checkout uses,
+ * and is said in major units (`amountOf`). A seat whose price cannot be read
+ * as an amount is shown and cannot be taken.
+ *
+ * **Unread is not empty.** A pool that could not be read is said as that. It
+ * used to be drawn as "no seats are waiting", which is a different fact.
+ *
+ * **A course's own words are the catalogue's.** Who a course is for and how
+ * hard it is are said through the catalogue; a value this page has no word
+ * for is left out, and the database's word is never printed.
+ *
+ * **What the page says about paying is true with a payment service and
+ * without one**: taking a seat is a pledge and takes no money, and the
+ * sponsored seats page says how the pledge is paid.
+ *
+ * Forty sentences in twenty-seven languages (`messages/sponsor.ts`),
+ * unreviewed; a language held for review reads the page in English, whole,
+ * under `lang="en"`.
  */
 export default async function SponsorPage() {
+  const { locale, shown, hdrs } = await readerLanguage();
+  const t = translator(shown.code);
+  const frame = shown.code !== locale ? { lang: shown.code, dir: shown.dir } : {};
+
   const supabase = isSupabaseConfigured() ? await createClient() : null;
   const user = supabase ? (await supabase.auth.getUser()).data.user : null;
-  const country = countryFromHeaders(await headers());
+  const country = countryFromHeaders(hdrs);
 
-  let pool = parsePool({ enabled: true, seats: [] });
+  // null: not read (nobody signed in, or the database did not answer).
+  let pool: ReturnType<typeof parsePool> = null;
   if (supabase && user) {
-    const { data } = await supabase.rpc('sponsorship_pool', { p_country: country });
-    pool = parsePool(data) ?? pool;
+    const { data, error } = await supabase.rpc('sponsorship_pool', { p_country: country });
+    pool = error ? null : parsePool(data);
   }
 
+  const seats: SeatShown[] = (pool?.seats ?? []).map((seat) => {
+    const price = seat.amountMinor && seat.currencyCode ? amountOf(seat.amountMinor, seat.currencyCode) : null;
+    const audience =
+      seat.audience === 'child' ? t('sponsor.plForChild')
+      : seat.audience === 'adult' ? t('sponsor.plForAdult')
+      : seat.audience === 'both' ? t('audience.both')
+      : null;
+    const difficultyKey = seat.difficulty ? DIFFICULTY[seat.difficulty] : undefined;
+    return {
+      seatCode: seat.seatCode,
+      title: seat.courseTitle,
+      about: [audience, difficultyKey ? t(difficultyKey) : null].filter((part): part is string => Boolean(part)),
+      price,
+      // Why it cannot be taken, when it cannot: no price in this market, or one that is not an amount.
+      blocked: price ? null : !seat.amountMinor || !seat.currencyCode ? t('sponsor.plNoPrice') : t('sponsor.plPriceUnread'),
+    };
+  });
+
+  const words: PoolWords = {
+    aCourse: t('sponsor.aCourse'),
+    seat: t('sponsor.seat'),
+    priceNote: t('sponsor.plPriceNote'),
+    noteLabel: t('sponsor.plNoteLabel'),
+    optional: t('family.optional'),
+    take: t('sponsor.plTake'),
+    taking: t('buy.starting'),
+    taken: t('sponsor.plTaken'),
+    takenNext: t('sponsor.plTakenNext'),
+    pledgeNote: t('sponsor.nextPay'),
+    mine: t('account.sponsorMine'),
+    reasons: {
+      gone: t('sponsor.plWhyGone'),
+      own_seat: t('sponsor.plWhyOwn'),
+      no_price: t('sponsor.plNoPrice'),
+      off: t('sponsor.plOff'),
+      too_long: t('sponsor.tooLong'),
+      not_signed_in: t('buy.signedOut'),
+      malformed: t('sponsor.plWhyFailed'),
+      failed: t('sponsor.plWhyFailed'),
+      unconfirmed: t('sponsor.unconfirmed'),
+    },
+  };
+
   return (
-    <div className="container section">
-      <p className="eyebrow">Sponsoring</p>
-      <h1>Pay for somebody else’s course</h1>
-      <p className="lede">
-        A learner who cannot afford a course asks for it. The owner or finance reads the request
-        and decides. If it is approved, the seat appears here with a code and the price of the
-        course — and never a name. You choose a seat; they get the course.
-      </p>
+    <div className="container section" {...frame}>
+      <p className="eyebrow">{t('sponsor.plEyebrow')}</p>
+      <h1>{t('sponsor.plTitle')}</h1>
+      <p className="lede">{t('sponsor.plLede')}</p>
 
       <div className="grid" style={{ marginTop: '1.5rem' }}>
         <div className="card">
-          <h2 style={{ marginTop: 0 }}>What you see, and what you do not</h2>
-          <p className="meta">
-            A seat code, the course, who the course is for, and the price where you are. Not the
-            learner’s name, their age, their family or a word of what they wrote. The note they
-            sent is read by staff deciding the request and by nobody else.
-          </p>
+          <h2 style={{ marginTop: 0 }}>{t('sponsor.plSeeHeading')}</h2>
+          <p className="meta">{t('sponsor.plSeeBody')}</p>
         </div>
         <div className="card">
-          <h2 style={{ marginTop: 0 }}>What you pay, and when</h2>
-          <p className="meta">
-            The price of the course in your own market, resolved the same way a purchase is. No
-            card or mobile-money provider is connected to this platform yet, so taking a seat
-            records a pledge and explains how to pay; staff record the money and the seat opens
-            then. Nothing is charged automatically.
-          </p>
+          <h2 style={{ marginTop: 0 }}>{t('sponsor.plPayHeading')}</h2>
+          <p className="meta">{t('sponsor.plPayBody')}</p>
         </div>
       </div>
 
-      <h2 style={{ marginTop: '2.25rem' }}>Seats waiting for a sponsor</h2>
-
-      {!supabase && (
-        <div className="notice">
-          The platform is not connected to a database in this deployment, so the pool cannot be
-          read.
-        </div>
-      )}
+      <h2 style={{ marginTop: '2.25rem' }}>{t('sponsor.plListHeading')}</h2>
 
       {supabase && !user && (
-        <div className="notice">
-          <strong>The pool is shown to signed-in people.</strong> Sign in to see the seats, or
-          read on to see how a request is made.{' '}
-          <Link href="/sign-in?next=/sponsor">Sign in</Link>
+        <div className="notice" data-pool="signed-out">
+          {t('sponsor.plSignIn')} <Link href="/sign-in?next=/sponsor">{t('action.signIn')}</Link>
         </div>
       )}
 
-      {supabase && user && pool && <SponsorPool seats={pool.seats} signedIn country={country} />}
-
-      {supabase && user && !pool && (
-        <div className="notice error">
-          The seats could not be read. Nothing has been charged and no seat was taken.
+      {/* Signed in, or no database at all, and nothing could be read. */}
+      {(!supabase || user) && !pool && (
+        <div className="notice error" role="alert" data-pool="unread">
+          {t('sponsor.plUnread')}
         </div>
       )}
+
+      {pool && !pool.enabled && (
+        <div className="notice warn" data-pool="off">
+          {t('sponsor.plOff')}
+        </div>
+      )}
+
+      {pool?.enabled && seats.length === 0 && (
+        <p className="empty" data-pool="none">
+          {t('sponsor.plNone')}
+        </p>
+      )}
+
+      {pool?.enabled && seats.length > 0 && <SponsorPool seats={seats} country={country} words={words} />}
+
+      <p className="muted" style={{ marginTop: '1.25rem' }}>
+        {t('sponsor.zakat')}
+      </p>
 
       <div className="card" style={{ marginTop: '2rem' }}>
-        <h2 style={{ marginTop: 0 }}>Asking for a seat</h2>
-        <p className="meta">
-          If a course is out of reach, you can ask. You write a sentence about the situation, the
-          owner or finance reads it, and you are told the answer either way with a reason. Asking
-          costs nothing and obliges nobody.
-        </p>
-        <p style={{ marginTop: '0.75rem' }}>
+        <h2 style={{ marginTop: 0 }}>{t('sponsor.plAskHeading')}</h2>
+        <p className="meta">{t('sponsor.askedHow')}</p>
+        <div className="page-actions" style={{ marginTop: '0.75rem' }}>
           <Link href="/sponsor/apply" className="btn secondary">
-            Ask for a sponsored seat
-          </Link>{' '}
-          <Link href="/catalogue" className="btn ghost">
-            Browse the courses
+            {t('sponsor.askLink')}
           </Link>
-        </p>
+          <Link href="/catalogue" className="btn ghost">
+            {t('refer.lnBrowse')}
+          </Link>
+          <Link href="/account/sponsorship" className="btn ghost">
+            {t('account.sponsorMine')}
+          </Link>
+        </div>
       </div>
     </div>
   );

@@ -2619,6 +2619,28 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The sponsors' pool and asking for a seat in the reader's language, 2026-11-19
+
+- *The words.* Forty more sentences in `messages/sponsor.ts` (eighty now),
+  twenty-seven languages, **read by no speaker** (`tmp-words/u23`). The
+  form's shared words are the buy page's and the shell's.
+- *Names, not sentences.* `lib/sponsor-pool-outcome.ts` + test (7): every
+  key `pledge_sponsorship()` and `apply_for_sponsorship()` raise is read out
+  of the migration and has a name; the two length limits are the database's.
+- *The route.* `/api/sponsorship` answers asking and taking with `reason`
+  and a status of its own, inside a `try`, `no-store`; the database's
+  sentence goes to the log.
+- *The pages.* Both server pages with a client island that is handed its
+  words. Unread is said as unread in three places where it was "none".
+- *Checked.* `scripts/sponsor-pool-route-smoke.mjs` in `ci.yml` and, with a
+  browser, in `responsive-smoke.yml`: English, Arabic, French, Hausa over
+  HTTP; English, Arabic, Tamil, Filipino and French in a browser at 320px,
+  with both forms pressed.
+- *Not shown.* A real request, decision or pledge; twenty-two languages in
+  a browser. *Known:* a name with brackets in the right-to-left chooser.
+- *Counts.* 1514 keys; server-only 1146; unwritten while held 1242; held
+  192 of 1514, still 13%.
+
 ### Money that opened no seat, on the staff desk; and amounts in major units, 2026-11-19
 
 - *The desk.* `/admin/sponsorships` reads the audit lines the database

@@ -6,9 +6,18 @@
  * no learner field to render, and the applicant's parser has no donor field.
  * The database does not send them; this file does not invent them.
  *
- * The other rule is the money one. A pledge is not a payment, and no screen may
- * imply that a card or a mobile-money prompt exists — nothing can take a
- * sponsorship automatically, so staff record what arrived.
+ * The other rule is the money one. A pledge is not a payment. (When this was
+ * written nothing could take a sponsorship automatically; since 2026-11-19 a
+ * pledge can be paid at checkout, and the sentences about that are the
+ * catalogue's, not this file's.)
+ *
+ * **Who still reads this file's English.** The staff desk, which stays
+ * English. The parsers are used by every sponsorship page. The describers
+ * (`seatPrice`, `audienceWords`, `pledgeNextStep`, the status words and
+ * `sponsorshipRefusal`) were what `/sponsor`, `/sponsor/apply` and
+ * `/account/sponsorship` printed for every reader; those three pages now
+ * say everything through `messages/sponsor.ts`, and `sponsorshipRefusal` is
+ * left for the staff desk's three actions.
  */
 
 import { amountOf } from './sponsorship-outcome.ts';

@@ -144,6 +144,9 @@ jobs:
       - name: Sponsored seats page synthetic HTTP regression
         run: node scripts/sponsorship-route-smoke.mjs
 
+      - name: Sponsors' pool, asking page and sponsorship route synthetic HTTP regression
+        run: node scripts/sponsor-pool-route-smoke.mjs
+
       - name: Catalogue synthetic HTTP regression
         run: node scripts/catalogue-route-smoke.mjs
 

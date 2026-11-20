@@ -130,9 +130,10 @@ test('the two boards raise one thing, and report the switch themselves', () => {
 const KEYS = Object.keys(en).filter((key) => key.startsWith('sponsor.')) as (keyof typeof en)[];
 const CODES = Object.keys(SPONSOR) as LocaleCode[];
 
-test('the pages have their forty sentences in twenty-seven languages', () => {
-  // Thirty-five for the page of both seats, five for paying a pledge.
-  assert.equal(KEYS.length, 40);
+test('the pages have their eighty sentences in twenty-seven languages', () => {
+  // Thirty-five for the page of both seats, five for paying a pledge, forty
+  // for the pool a sponsor chooses from and for asking for a seat.
+  assert.equal(KEYS.length, 80);
   assert.equal(CODES.length, 27);
   for (const code of CODES) {
     const own = SPONSOR[code]!;
@@ -226,9 +227,14 @@ test('the page says states, dates and amounts through the catalogue and nothing 
   for (const match of PAGE.matchAll(/'((?:sponsor|account|merge|refer)\.[A-Za-z0-9]+)'/gu)) {
     assert.ok(Object.hasOwn(en, match[1]!), `${match[1]} is not a sentence`);
   }
-  // And every sentence written for it is used, on this page or on the one that pays a pledge.
-  for (const key of KEYS) assert.ok(PAGE.includes(`'${key}'`) || PAY.includes(`'${key}'`), `${key} is written and not used`);
+  // And every sentence written is used, on this page, the one that pays a pledge, the pool or the page for asking.
+  for (const key of KEYS) {
+    assert.ok([PAGE, PAY, POOL, ASK].some((page) => page.includes(`'${key}'`)), `${key} is written and not used`);
+  }
 });
+
+const POOL = read('../app/sponsor/page.tsx');
+const ASK = read('../app/sponsor/apply/page.tsx');
 
 const PAY = read('../app/account/sponsorship/pay/[id]/page.tsx');
 const PAY_FORM = read('../app/account/sponsorship/pay/[id]/pay-form.tsx');

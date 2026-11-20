@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 13% there (192 of 1474 sentences; it was 71% of 272, then
+  the nineteen reads 13% there (192 of 1514 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -811,9 +811,17 @@ written: not a held draft, nothing.
   nobody). It now prints an amount in major units; it printed minor units,
   so 19.99 read as 1999. **The sentence about zakat is one of the
   thirty-five and no speaker or scholar has read any translation of it.**
-  **Still English there:** the two pages its links go to, `/sponsor` and
-  `/sponsor/apply`, with every refusal they print (`lib/sponsorship.ts`),
-  and whatever staff wrote as a reason, which is printed as written.
+  The two pages its links go to, `/sponsor` and `/sponsor/apply`, are in the
+  reader's language since 2026-11-19 (forty more sentences in the same
+  twenty-seven languages, `tmp-words/u23`, **unreviewed**; checked by
+  `scripts/sponsor-pool-route-smoke.mjs`, with a browser in five languages).
+  Their refusals have names and statuses and neither prints the database's
+  words. **Still English there:** whatever staff wrote as a reason, which is
+  printed as written; a course's title and a learner's name, which are
+  theirs; and the staff desk. **Not exercised:** a real request, decision or
+  pledge through either page; the other twenty-two languages in a browser.
+  A learner's name with brackets in it is drawn out of order in the
+  right-to-left chooser (an `<option>` cannot hold a `<bdi>`).
   **Known and not fixed:** nothing in the product tells a sponsor how to
   pay a pledge; the page now says only that it collects no payment and
   that staff record one when it arrives. **Since 2026-11-19 a pledge can be
@@ -836,8 +844,8 @@ written: not a held draft, nothing.
   payment has been read through this page from a real database.
   **Still English, every one of them:**
   the pages it links to: `/account/password`, `/billing`,
-  `/institution`, `/notifications`, `/policies`, `/teach/apply`, `/sponsor`
-  (with `/sponsor/apply`) and `/forgot-password`. A reader is taken from a
+  `/institution`, `/notifications`, `/policies`, `/teach/apply`
+  and `/forgot-password`. A reader is taken from a
   page in their language to an English one by each of those links.
   The preferred-language field is stored and read by nothing; the page now
   says so under the field, and whether to wire it or remove it is undecided.

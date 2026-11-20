@@ -1994,6 +1994,65 @@ export const en = {
     'This pledge cannot be paid here: it has been paid or called off, or it is not one of yours.',
   'sponsor.nextPay':
     'Nothing is taken until you pay. The seat opens when the payment is confirmed.',
+  // The pool a sponsor chooses a seat from (`pl…`) and asking for a seat
+  // (`rq…`), 2026-11-19. `tooLong` and `unconfirmed` serve both. Staff are
+  // "staff", never a named role; nobody is given a gender.
+  'sponsor.plEyebrow': 'Sponsoring',
+  'sponsor.plTitle': 'Pay for somebody else’s course',
+  'sponsor.plLede':
+    'A learner who cannot afford a course asks for it, and staff decide. An approved request appears here as a seat with a code and the price of the course, and never a name. You choose a seat; the learner gets the course.',
+  'sponsor.plSeeHeading': 'What you see, and what you do not',
+  'sponsor.plSeeBody':
+    'A seat code, the course, whether it is for a child or an adult, and the price where you are. Not the learner’s name, age or family, and not a word of what they wrote. That is read by the staff who decide, and by nobody else.',
+  'sponsor.plPayHeading': 'What you pay, and when',
+  'sponsor.plPayBody':
+    'The price of the course where you are, worked out as it is for a purchase. Taking a seat is a pledge and takes no money. Your sponsored seats page says how the pledge is paid, and the seat opens for the learner when the payment is confirmed.',
+  'sponsor.plListHeading': 'Seats waiting for a sponsor',
+  'sponsor.plSignIn': 'The seats are shown to people who are signed in.',
+  'sponsor.plUnread':
+    'The seats could not be read. Nothing has been charged and no seat was taken.',
+  'sponsor.plOff':
+    'Sponsoring a seat is switched off at the moment, so no seat can be taken and none can be asked for.',
+  'sponsor.plNone':
+    'No seat is waiting for a sponsor right now. A request appears here once staff approve it.',
+  'sponsor.plForChild': 'For a child',
+  'sponsor.plForAdult': 'For an adult',
+  'sponsor.plPriceNote':
+    'The price of this course where you are. It is the seat that is sponsored, not a gift card.',
+  'sponsor.plNoPrice':
+    'This course has no price where you are, so this seat cannot be taken from here.',
+  'sponsor.plPriceUnread':
+    'The price of this seat could not be read, so it cannot be taken just now.',
+  'sponsor.plNoteLabel': 'A note for staff, if you want one',
+  'sponsor.plTake': 'Sponsor this seat',
+  'sponsor.plTaken': 'This seat is yours to pay for: {amount}',
+  'sponsor.plTakenNext': 'Nothing has been taken. Your sponsored seats page says how to pay.',
+  'sponsor.plWhyGone': 'That seat has just been taken, or is no longer open. Choose another.',
+  'sponsor.plWhyOwn': 'That is the seat you asked for. You cannot sponsor your own request.',
+  'sponsor.tooLong': 'That is longer than this box holds.',
+  'sponsor.plWhyFailed': 'That did not work. Nothing was charged and nothing changed.',
+  'sponsor.unconfirmed':
+    'We could not confirm whether that was recorded. Look at your sponsored seats before trying again.',
+  'sponsor.plAskHeading': 'Asking for a seat',
+  'sponsor.rqLede':
+    'If a course is out of reach, write a few sentences about the situation. Staff read it and answer either way, with a reason. Asking costs nothing and obliges nobody.',
+  'sponsor.rqCourse': 'Which course?',
+  'sponsor.rqChoose': 'Choose a course',
+  'sponsor.rqReason': 'What is the situation?',
+  'sponsor.rqReasonNote':
+    'Read by the staff who decide, and by nobody else. Not shown to whoever pays for the seat.',
+  'sponsor.rqSubmit': 'Ask for this seat',
+  'sponsor.rqDone':
+    'Asked. Staff will read it, and the answer, with its reason, will be on your sponsored seats page.',
+  'sponsor.rqNoLearner':
+    'There is no learner on this account yet, so there is nobody to ask for.',
+  'sponsor.rqNoCourse': 'No course is on sale at the moment, so there is nothing to ask for.',
+  'sponsor.rqPrivacy':
+    'If the request is approved, a sponsor sees a seat code, the course, whether it is for a child or an adult, and the price. Never your name, your family or what you wrote here.',
+  'sponsor.rqWhyReason':
+    'Write a sentence about the situation. It is what the person deciding reads.',
+  'sponsor.rqWhyHas': 'That learner already has this course, so there is nothing to ask for.',
+  'sponsor.rqWhyAsked': 'There is already an open request for this course.',
 } as const;
 
 export type MessageKey = keyof typeof en;
