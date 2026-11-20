@@ -8851,7 +8851,8 @@ Settled in building it:
   amount. Otherwise it says what it said before.
 
 Not done by it: a teacher's share of a sponsored seat (neither path writes
-earnings), and the migration is not on the hosted test project. Both
+earnings). The migration went to the hosted test project the same day
+(run `44582224581`, approved by the owner). Both
 switches ship off.
 
 ## The 353rd migration goes to the test project the same way as the ten — **DECIDED 2026-11-19**

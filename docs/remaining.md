@@ -829,8 +829,8 @@ written: not a held draft, nothing.
   is paid through has one line and no product, and `/orders` (still
   English) shows it by the line's own English title; money that arrives for
   a pledge called off in the meantime is recorded in the audit trail and
-  nowhere a member of staff would be shown it. The migration is not on the
-  hosted test project. No request, pledge or recorded
+  nowhere a member of staff would be shown it. The migration is on the
+  hosted test project since 2026-11-19, with both switches off. No request, pledge or recorded
   payment has been read through this page from a real database.
   **Still English, every one of them:**
   the pages it links to: `/account/password`, `/billing`,
@@ -1027,11 +1027,11 @@ make the twenty-seven served languages reviewed. And no speaker has been found
 for any language: until one is, the four stay unavailable and the nineteen stay
 in English on the companion screens, indefinitely.
 
-The existing Supabase test project has 353 of the tree's 354 migrations applied
-(the 353rd, `20261281146000_merge_request_privacy.sql`, was applied on
-2026-11-19 by a job of its own; the 354th,
-`20261281147000_sponsorship_checkout.sql`, written the same day, waits for
-the owner's approval and a job of its own): the initial
+The existing Supabase test project has all 354 of the tree's migrations applied
+(the 353rd, `20261281146000_merge_request_privacy.sql`, and the 354th,
+`20261281147000_sponsorship_checkout.sql`, each by a job of its own on
+2026-11-19, runs `44505560049` and `44582224581`, both approved by the
+owner): the initial
 342 via the owner-approved GitHub run `43611493767`, and 1360–1450 via the
 owner-approved run `44131878224` on 2026-11-17. A read-only check after the
 first found 185 public base tables and zero Auth users; after the second, zero

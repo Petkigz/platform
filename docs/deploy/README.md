@@ -401,14 +401,13 @@ project. Review the exact commit before approving it.
 `44131878224` (commit `9996437`). The job is spent: run again it would apply
 nothing and only repeat the comparison.
 
-**One migration is in the tree and not on the hosted project (2026-11-18):**
-`20261281146000_merge_request_privacy.sql`. It was written after the owner's
-decision about merge requests and has passed the database suites; nothing
-has applied it to the hosted test project, and the job above cannot (it
-applies exactly the ten it was reviewed for and refuses a tree with more).
-Applying it needs the owner's approval and a job reviewed for exactly this
-one file. Until then the hosted database answers a merge request the old
-way; the switch for merging is off there and it has no accounts.
+**Two migrations were written after the ten** and each went to the hosted
+project by a job reviewed for exactly that one file (below):
+`20261281146000_merge_request_privacy.sql` and
+`20261281147000_sponsorship_checkout.sql`, both on 2026-11-19. The job
+above could apply neither: it applies exactly the ten it was reviewed for
+and refuses a tree with more. The next migration needs a job of its own in
+the same way. The hosted project is at 354, the same as this tree.
 
 Read back afterwards through the read-only connector, separately from the job:
 
@@ -495,7 +494,7 @@ one file. At 353 it only repeats the comparison. It does not switch
 the test project records 353. This job is now spent too.
 
 **The 354th, `20261281147000_sponsorship_checkout.sql`** (a sponsor pays a
-pledge through checkout) is in the tree and **not on the test project**. Its
+pledge through checkout). Its
 job is `scripts/hosted-migration-354.mjs`, run by the workflow "Apply
 Supabase test migration 354" on a commit whose message starts
 `test: apply ayahspring test migration 354`, behind the same environment and
@@ -504,6 +503,11 @@ own column absent, rehearses on the hosted database and rolls back, compares
 the two roles' privileges with the tested database built from all 354, and
 applies only if the CLI's dry-run names exactly that one file. Both switches
 the migration serves ship off, and the job turns neither on.
+**Done:** run `44582224581`, approved by the owner on 2026-11-19, succeeded;
+the test project records 354. (A first run was cancelled before asking for
+approval, because the earlier migration workflows share a concurrency group
+and every push starts all of them; this job has a group of its own.) This
+job is now spent too.
 - The application that matches 1360–1450 has **not** been deployed. Any older
   build pointed at this project will be refused by the database when it saves
   a resume position or writes an answer row directly. That is the intended

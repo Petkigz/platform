@@ -2623,13 +2623,26 @@ claim external integrations work without credentials or provider callbacks.
 
 `20261281147000_sponsorship_checkout.sql`, through
 `scripts/hosted-migration-354.mjs` and the workflow "Apply Supabase test
-migration 354", started by the commit that added this paragraph. **It
-applies nothing until the owner approves it** in the environment
-`ayahspring-test-migration-apply`. Read through the connector just before:
-353 recorded, latest `20261281146000`, no Auth user, no learner, no pledge,
-no order line, and the migration's own column absent. The outcome is written
-here when there is one. It turns neither `commerce.sponsorship` nor
-`commerce.checkout` on.
+migration 354". **It applied nothing until the owner approved it** in the
+environment `ayahspring-test-migration-apply`. Read through the connector
+just before: 353 recorded, latest `20261281146000`, no Auth user, no
+learner, no pledge, no order line, and the migration's own column absent.
+
+The first run (`44582063161`) was cancelled by GitHub before it could ask
+for approval: the earlier migration workflows share a concurrency group,
+every push starts all of them, and only one is kept waiting. The job was
+given a group of its own and started again.
+
+**Outcome: applied.** The owner approved run `44582224581` and every step
+succeeded, the rehearsal and the comparison of the two roles' privileges
+among them. Read through the connector afterwards: 354 recorded, latest
+`20261281147000`; the column, the function and the trigger are there; a
+visitor may not call `create_sponsorship_order()` and somebody signed in
+may; still no Auth user and no learner; `commerce.sponsorship`,
+`commerce.checkout` and `platform.account_merge` all still off. The hosted
+test project and this tree are at the same 354. Not shown by it: Auth, a
+signed-in request through PostgREST, or the application, none of which has
+run against that database.
 
 ### A sponsor pays a pledge through checkout, 2026-11-19
 
@@ -2655,8 +2668,8 @@ Decided earlier the same day; built once the pawaPay probe had passed
   route against stand-ins.
 - *Not shown.* A real provider or callback; the pay page in a browser in
   more than five languages (English, Arabic, Tamil, Filipino, French); a
-  held language beyond Hausa; the migration on the hosted project, where it
-  is **not applied**.
+  held language beyond Hausa. (The migration was applied to the hosted
+  test project later the same day: see above.)
 - *Known and not fixed.* Money that arrives for a pledge called off in the
   meantime is in the audit trail and on no staff screen. A sponsored seat
   pays the teacher no share. `/orders` shows the pledge's order by an
@@ -2970,8 +2983,9 @@ work country by country; merge requests get both protections on offer.
   Airtel's answer shape and whether Airtel accepts a 36-character hex
   transaction id are from published documentation and other people's
   integrations. The webhook's new check has unit tests for its decision
-  and none that drive the whole handler. The migration is not on the
-  hosted project.
+  and none that drive the whole handler. (The migration was applied to
+  the hosted project on 2026-11-19, and the handler has been driven through
+  its route since, by `scripts/pawapay-route-smoke.mjs`.)
 - *Not built.* M-Pesa (Safaricom's API in Kenya, Vodacom's elsewhere),
   Orange Money, Wave, telebirr, Tigo/Mixx, MTN in the countries outside
   its Open API, Airtel's SmartCash in Nigeria. (All but Wave are reached
