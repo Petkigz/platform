@@ -11,6 +11,8 @@
  * sponsorship automatically, so staff record what arrived.
  */
 
+import { amountOf } from './sponsorship-outcome.ts';
+
 export type ApplicationStatus =
   | 'submitted'
   | 'approved'
@@ -317,7 +319,15 @@ export function seatPrice(seat: PoolSeat): { ok: boolean; label: string } {
       label: 'This course is not priced where you are, so this seat cannot be taken from here.',
     };
   }
-  return { ok: true, label: `${seat.currencyCode} ${seat.amountMinor}` };
+  // In major units, through `money.ts`. This printed the stored number, which
+  // is minor units: a seat that cost 19.99 was offered to sponsors at 1999.
+  // (In shillings, which have no cents, the two are the same number, which is
+  // how it went unseen.) An amount that cannot be read is not offered.
+  const label = amountOf(seat.amountMinor, seat.currencyCode);
+  if (!label) {
+    return { ok: false, label: 'The price of this seat could not be read, so it cannot be taken just now.' };
+  }
+  return { ok: true, label };
 }
 
 /** One sentence about where a pledge stands. Never implies a provider exists. */

@@ -29,7 +29,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { format, fromMinor } from './money.ts';
+import { format, formatMinor, fromMinor } from './money.ts';
 
 /** What the admin screens read from `currency_exchange_rates`. */
 export const RATE_COLUMNS =
@@ -768,17 +768,13 @@ export function describeRateSource(resolution: RateResolution): string {
   return `${resolution.source} · ${observed}${resolution.derived ? ' · inverted' : ''}`;
 }
 
-/** An amount in minor units, displayed through the D4 formatter. */
-export function formatMinor(amountMinor: string | null, currency: string): string {
-  if (amountMinor === null) return '—';
-  try {
-    return format(fromMinor(amountMinor, currency));
-  } catch {
-    // A figure the formatter refuses is shown raw rather than dropped: on a
-    // money screen, an amount that cannot be displayed is still an amount.
-    return `${currency} ${amountMinor}`;
-  }
-}
+/**
+ * An amount in minor units, displayed through the D4 formatter. It lives in
+ * `money.ts`, which a script sent to a browser can import without carrying
+ * this file's tables; it is named here too for the screens that already
+ * asked this file for it.
+ */
+export { formatMinor };
 
 // ---------------------------------------------------------------------------
 // Calls

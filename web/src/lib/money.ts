@@ -133,6 +133,23 @@ export function format(m: Money): string {
 }
 
 /**
+ * An amount as it is stored (minor units), said as an amount (major units).
+ *
+ * For a screen. `1999` in dollars is `USD 19.99`; `null` is a dash. A figure
+ * the formatter refuses is shown as it came, beside its currency, rather
+ * than dropped: on a money screen, an amount that cannot be displayed is
+ * still an amount.
+ */
+export function formatMinor(amountMinor: string | null, currency: string): string {
+  if (amountMinor === null) return '—';
+  try {
+    return format(fromMinor(amountMinor, currency));
+  } catch {
+    return `${currency} ${amountMinor}`;
+  }
+}
+
+/**
  * The amount as a plain decimal string, for providers whose API wants major
  * units ("100.50") rather than minor units.
  *

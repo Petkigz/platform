@@ -97,6 +97,9 @@ const fresh = () => ({
   // Sponsoring: the two switches, what the sponsor's board holds, and what
   // the database answers to "let me pay this pledge" ('ok' or [status, body]).
   checkout: true, sponsoring: true, pledges: [], pledgeOrder: 'ok', boardBroken: false,
+  // The staff desk: whether the caller is finance, what the desk lists, and
+  // the audit lines for payments that opened no seat (or that they cannot be read).
+  staff: false, desk: { enabled: true, waiting: [], seats: [], counts: { waiting: 0, approved: 0, funded: 0, declined: 0, pledged: 0, paid: 0 } }, late: [], lateBroken: false,
   // The attempts the database holds.
   attempts: [],
 });
@@ -213,7 +216,12 @@ const fake = createServer(async (req, res) => {
   else if (path === '/rest/v1/rpc/create_course_order') send(state.orderRow);
   else if (path === '/rest/v1/billing_account_memberships') send([{ billing_account_id: 'billing-1' }]);
   else if (path === '/rest/v1/rpc/notification_badge') send(0);
-  else if (path === '/rest/v1/rpc/has_role') send(false);
+  else if (path === '/rest/v1/rpc/has_role') send(state.staff && payload.p_role_code === 'finance_admin');
+  else if (path === '/rest/v1/rpc/sponsorship_overview') send(state.desk);
+  else if (path === '/rest/v1/governance_audit_events') {
+    if (state.lateBroken) send({ code: '57014', message: 'SYNTHETIC-DATABASE canceling statement due to statement timeout' }, 500);
+    else send(state.late);
+  }
   else if (path === '/rest/v1/payment_attempts') {
     if (req.method === 'GET') send(state.attempts.map((a) => ({ id: a.id })));
     else if (req.method === 'POST') { const row = { id: `attempt-${state.attempts.length + 1}`, ...payload }; state.attempts.push(row); send(one ? { id: row.id } : [{ id: row.id }], 201); }
@@ -772,6 +780,73 @@ try {
     state = fresh();
   }
   console.log('Paying a pledge, synthetic database, MTN and pawaPay: the page of pledges links to a pay page only for the pledge that can be paid for exactly its amount, and for none with either switch off; the pay page shows the pledge, its amount in major units and the services that collect it, in English, Arabic and (as English, marked) Hausa; a pledge that is paid, somebody else’s, made up or not an id is answered with one sentence and the same page; a pledge nobody can collect, checkout switched off and a board that cannot be read are each said as that with no form; signed out goes to sign in; paying sends the database the pledge’s id and nothing else, asks MTN for the pledge’s amount, and records no withdrawal box; six refusals by the database each under its own name and status with none of its words; a pledge and a course together are malformed.');
+
+  // ==================================================== the staff desk
+  // Money that arrived for a pledge and opened no seat: staff are shown it.
+  {
+    const WAITING = 'aaaaaaaa-1111-4111-8111-aaaaaaaaaaaa';
+    const TWICE = 'bbbbbbbb-2222-4222-8222-bbbbbbbbbbbb';
+    const GONE = 'cccccccc-3333-4333-8333-cccccccccccc';
+    const desk = () => {
+      state = fresh(); state.staff = true; calls.length = 0;
+      state.desk = { enabled: true, waiting: [], counts: { waiting: 0, approved: 0, funded: 1, declined: 0, pledged: 1, paid: 1 }, seats: [
+        { id: WAITING, seatCode: 'SPN-AB12CD', courseTitle: 'Synthetic course', donor: 'Synthetic sponsor', status: 'pledged', amountMinor: '50000', currencyCode: 'UGX', reference: null, pledgedAt: '2026-11-17T10:00:00Z' },
+        { id: TWICE, seatCode: 'SPN-EF34GH', courseTitle: 'Paid course', donor: 'Another sponsor', status: 'paid', amountMinor: '1999', currencyCode: 'USD', reference: 'BANK-7', pledgedAt: '2026-11-01T10:00:00Z' },
+      ] };
+      state.late = [
+        { target_id: GONE, detail: { orderId: '11111111-1111-4111-8111-111111111111', reason: 'pledge_withdrawn', amountMinor: '33000', currency: 'UGX' }, occurred_at: '2026-11-19T08:17:01Z' },
+        { target_id: WAITING, detail: { orderId: ORDER, reason: 'course_not_available', amountMinor: '50000', currency: 'UGX' }, occurred_at: '2026-11-18T08:17:01Z' },
+        { target_id: TWICE, detail: { orderId: OTHER_ORDER, reason: 'pledge_paid', amountMinor: '1999', currency: 'USD' }, occurred_at: '2026-11-17T08:17:01Z' },
+        // A line somebody mangled: no pledge it could be about, so it is not drawn.
+        { target_id: 'not-an-id', detail: { reason: '<b>refund now</b>' }, occurred_at: 'yesterday' },
+      ];
+    };
+    const open = async () => {
+      const response = await fetch(`${origin}/admin/sponsorships`, { headers: { cookie, 'accept-language': 'en' }, redirect: 'manual', signal: AbortSignal.timeout(90000) });
+      const html = await response.text();
+      return { status: response.status, main: response.status === 200 ? inner(html) : '', location: response.headers.get('location') };
+    };
+
+    // Not finance and not the owner: sent away, and nothing is read.
+    desk(); state.staff = false;
+    let seen = await open();
+    assert.equal(seen.status, 307); assert.match(seen.location ?? '', /\/admin$/);
+    assert.equal(written('/rest/v1/governance_audit_events').length, 0, 'the audit trail was read for somebody who is not staff');
+
+    desk();
+    seen = await open();
+    assert.equal(seen.status, 200, logs.slice(-2000));
+    // The page asks for exactly these lines, newest first.
+    const asked = written('/rest/v1/governance_audit_events');
+    assert.equal(asked.length, 1);
+    for (const piece of ['action=eq.sponsorship.payment_unapplied', 'target_type=eq.sponsorship', 'order=occurred_at.desc', 'limit=50']) assert.ok(asked[0].query.includes(piece), `the page asks without ${piece}`);
+    assert.ok(seen.main.includes('data-unapplied="3"'), 'three payments are not drawn as three');
+    for (const piece of [
+      '<h2 style="margin-top:0">Money that arrived and opened no seat</h2>',
+      // Called off: in major units, the reason, what to do, and that the pledge is gone.
+      '<bdi dir="ltr">UGX 33000</bdi>', 'The sponsor had called the pledge off before the payment was confirmed.', 'refund the order.', 'The pledge is no longer open.', 'Order <bdi dir="ltr">11111111-1111-4111-8111-111111111111</bdi>.',
+      // The course was withdrawn: the money can still buy the seat, and the pledge is still below.
+      'The course had no published version when the payment was confirmed.', 'record this payment against the pledge with the order as its reference; otherwise refund the order.', 'The pledge is still waiting below.', '<bdi dir="ltr">SPN-AB12CD</bdi>',
+      // Paid twice: 19.99, not 1999.
+      '<bdi dir="ltr">USD 19.99</bdi>', 'so this is a second payment for one seat.', 'The pledge is recorded as paid, by the earlier payment.',
+      'This page cannot tell whether an order has since been refunded',
+      'A pledge paid at checkout has an order',
+    ]) assert.ok(seen.main.includes(piece), `the staff desk lacks: ${piece}`);
+    for (const word of ['refund now', 'yesterday', 'USD 1999', 'creates <strong>no order</strong>, charges', 'SYNTHETIC']) assert.ok(!seen.main.includes(word), `the staff desk says "${word}"`);
+    assert.equal(seen.main.split('data-reason=').length - 1, 3);
+
+    // None: no section, and no alarm.
+    desk(); state.late = [];
+    seen = await open();
+    assert.ok(!seen.main.includes('Money that arrived and opened no seat') && !seen.main.includes('could not be read just now'));
+    // They cannot be read: said aloud, as that, and without the database's sentence.
+    desk(); state.lateBroken = true;
+    seen = await open();
+    assert.ok(seen.main.includes('role="alert"') && seen.main.includes('Payments that arrived and opened no seat could not be read just now. That is not the same as there being none'), 'an unread audit trail is not said as unread');
+    assert.ok(!seen.main.includes('SYNTHETIC-DATABASE') && !seen.main.includes('Money that arrived and opened no seat'));
+    state = fresh();
+  }
+  console.log('Staff desk for sponsored seats, synthetic database: somebody who is not finance is sent away and the audit trail is not read; three payments that opened no seat are each drawn with the amount in major units, why nothing was granted, what there is to do and what has happened to the pledge since, and a mangled line is not drawn; the page says it cannot tell whether an order was refunded; none is no section; an audit trail that cannot be read is said as that, aloud, without the database’s words.');
 
   // ============================================================ the webhook
   const DEPOSIT = 'f4401bd2-1568-4140-bf2d-eb77d2b2b639';

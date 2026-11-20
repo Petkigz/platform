@@ -3,6 +3,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { formatMinor } from '@/lib/money';
+// Amounts are stored in minor units and said in major ones (`formatMinor`):
+// this screen printed the stored number, so 19.99 read as 1999.
+
 type Clawback = { orderId: string; paidEntries: number; at: string };
 type Adjustment = { id: string; order_id: string | null; financial_transaction_id: string | null; adjustment_type: string; amount_minor: string | number; currency_code: string; reason: string; created_at: string };
 
@@ -83,7 +87,7 @@ export function AdjustmentManager({ clawbacks, adjustments }: { clawbacks: Clawb
         <h2>Adjustment history</h2>
         {adjustments.length === 0 ? <p className="empty">No adjustments recorded.</p> : (
           <div className="card"><ul className="lessons">{adjustments.map((row) => <li key={row.id}>
-            <span className="t"><strong>{row.adjustment_type}</strong> · {row.amount_minor} {row.currency_code}
+            <span className="t"><strong>{row.adjustment_type}</strong> · {formatMinor(String(row.amount_minor), row.currency_code)}
               <span className="muted" style={{ display: 'block' }}>{row.reason}</span>
               <code style={{ fontSize: '0.8rem' }}>{row.order_id ?? row.financial_transaction_id}</code>
             </span>

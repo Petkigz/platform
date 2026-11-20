@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 
 import type { SponsorshipOverview } from '@/lib/sponsorship';
+import { amountOf } from '@/lib/sponsorship-outcome';
 
 /**
  * The two acts on this desk: decide a request, and record money that arrived.
@@ -146,10 +147,9 @@ export function SponsorshipDesk({ overview }: { overview: SponsorshipOverview })
           <ul className="lessons">
             {overview.seats.map((row, index) => {
               const key = row.seatCode ?? `seat-${index}`;
-              const owed =
-                row.amountMinor && row.currencyCode
-                  ? `${row.currencyCode} ${row.amountMinor}`
-                  : 'an amount the pledge did not record';
+              // Major units. This printed the stored minor units: 19.99 read as 1999,
+              // to the person who tells a sponsor what to pay.
+              const owed = amountOf(row.amountMinor, row.currencyCode) ?? 'an amount the pledge did not record';
               return (
                 <li key={key}>
                   <p className="meta" style={{ marginTop: 0 }}>

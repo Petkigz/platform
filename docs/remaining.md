@@ -828,8 +828,10 @@ written: not a held draft, nothing.
   earnings; no tax or transfer fee is added to a pledge; the order a pledge
   is paid through has one line and no product, and `/orders` (still
   English) shows it by the line's own English title; money that arrives for
-  a pledge called off in the meantime is recorded in the audit trail and
-  nowhere a member of staff would be shown it. The migration is on the
+  a pledge called off in the meantime is recorded in the audit trail and,
+  since later the same day, drawn first on the staff desk
+  (`/admin/sponsorships`), which cannot tell whether the order has since
+  been refunded and says so; a line cannot be marked as dealt with. The migration is on the
   hosted test project since 2026-11-19, with both switches off. No request, pledge or recorded
   payment has been read through this page from a real database.
   **Still English, every one of them:**

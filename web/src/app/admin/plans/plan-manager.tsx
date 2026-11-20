@@ -3,6 +3,10 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { formatMinor } from '@/lib/money';
+// Amounts are stored in minor units and said in major ones (`formatMinor`):
+// this screen printed the stored number, so 19.99 read as 1999.
+
 import {
   featureLabel,
   TIER_CHOICES,
@@ -337,7 +341,7 @@ export function PlanManager({
               <div style={{ marginTop: '1rem' }}><strong>Prices</strong>
                 {version.prices.length === 0 ? <p className="muted">No price configured.</p> : (
                   <ul>{version.prices.map((price) => <li key={price.id}>
-                    {price.amount_minor} {price.currency_code} · {price.status}{price.market ? ` · ${price.market}` : ''}
+                    {formatMinor(String(price.amount_minor), price.currency_code)} · {price.status}{price.market ? ` · ${price.market}` : ''}
                   </li>)}</ul>
                 )}
               </div>

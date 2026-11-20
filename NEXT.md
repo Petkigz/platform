@@ -2619,6 +2619,28 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### Money that opened no seat, on the staff desk; and amounts in major units, 2026-11-19
+
+- *The desk.* `/admin/sponsorships` reads the audit lines the database
+  writes when a payment is confirmed for a pledge that can no longer be
+  honoured, and draws each first on the page: the amount, why nothing was
+  granted, what there is to do, what has happened to the pledge since, the
+  order. `lib/sponsorship-unapplied.ts` + test (5). No migration.
+- *It says what it cannot tell*: whether an order was refunded.
+- *The page's old sentence was no longer true* ("a sponsored seat creates
+  no order") and now says which seats have one.
+- **Seven screens printed stored minor units as the amount** (19.99 as
+  1999): this desk, the sponsors' pool, the sentence after pledging, and
+  four staff money screens. Fixed; `lib/minor-units-shown.test.ts` scans
+  every screen for it. Unseen until now because every fixture was in
+  shillings.
+- *Checked.* The database suite (staff read the lines through row-level
+  security; a sponsor and a learner cannot); a new part of
+  `scripts/pawapay-route-smoke.mjs` through the real page.
+- *Not shown.* The desk in a browser; the four other staff screens were
+  changed and not opened. *Not built:* marking a line as dealt with; a
+  refund from this page.
+
 ### The 354th migration, asked of the test project, 2026-11-19
 
 `20261281147000_sponsorship_checkout.sql`, through
@@ -2671,7 +2693,8 @@ Decided earlier the same day; built once the pawaPay probe had passed
   held language beyond Hausa. (The migration was applied to the hosted
   test project later the same day: see above.)
 - *Known and not fixed.* Money that arrives for a pledge called off in the
-  meantime is in the audit trail and on no staff screen. A sponsored seat
+  meantime is in the audit trail; the staff desk shows it since later the
+  same day (below). A sponsored seat
   pays the teacher no share. `/orders` shows the pledge's order by an
   English line title.
 

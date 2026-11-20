@@ -3,6 +3,10 @@
 import {useState} from 'react';
 import {useRouter} from 'next/navigation';
 
+import { formatMinor } from '@/lib/money';
+// Amounts are stored in minor units and said in major ones (`formatMinor`):
+// this screen printed the stored number, so 19.99 read as 1999.
+
 type Dispute={id:string;financial_transaction_id:string;order_id:string|null;dispute_type:string;provider:string;provider_reference:string|null;disputed_amount_minor:string|number;currency_code:string;status:string;opened_at:string;resolution_notes:string|null};
 export function DisputeManager({disputes}:{disputes:Dispute[]}){
   const router=useRouter();const[busy,setBusy]=useState<string|null>(null);const[message,setMessage]=useState<string|null>(null);const[notice,setNotice]=useState<string|null>(null);
@@ -19,7 +23,7 @@ export function DisputeManager({disputes}:{disputes:Dispute[]}){
     </section>
     <section className="section-sm"><h2>Dispute cases</h2>{disputes.length===0?<p className="empty">No payment disputes recorded.</p>:<div className="grid cols-2">{disputes.map(d=><article className="card" key={d.id}>
       <div className="outline-h"><h3>{d.dispute_type}</h3><span className="badge neutral">{d.status}</span></div>
-      <p>{d.provider} · {d.disputed_amount_minor} {d.currency_code}</p><p className="muted">Opened {new Date(d.opened_at).toLocaleDateString()}</p>
+      <p>{d.provider} · {formatMinor(String(d.disputed_amount_minor), d.currency_code)}</p><p className="muted">Opened {new Date(d.opened_at).toLocaleDateString()}</p>
       <p><code>{d.financial_transaction_id}</code></p>{d.order_id&&<p>Order <code>{d.order_id}</code></p>}{d.provider_reference&&<p>Reference <code>{d.provider_reference}</code></p>}
       {d.resolution_notes&&<div className="notice">{d.resolution_notes}</div>}
       {d.status==='open'&&<form onSubmit={e=>{e.preventDefault();const notes=String(new FormData(e.currentTarget).get('notes')??'');void send({action:'update',disputeId:d.id,status:'under_review',notes},`review:${d.id}`);}}><label>Review note<input name="notes" required maxLength={1000}/></label><button className="btn secondary" disabled={busy!==null}>Start review</button></form>}

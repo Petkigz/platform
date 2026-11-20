@@ -325,6 +325,22 @@ export async function run(ctx) {
       eq(lines.length, 1, 'audit lines'); eq(lines[0].reason, 'pledge_withdrawn', 'the reason');
       eq(lines[0].orderId, made.orderId, 'the order'); eq(lines[0].amountMinor, '33000', 'the amount');
       eq((await audits('sponsorship.paid', p.sponsorshipId)).length, 0, 'a seat was recorded as paid');
+
+      // The staff desk shows that line, so staff have to be able to read it
+      // as themselves, through row-level security; and nobody else may.
+      const readAs = async (actor) => (await asActor(actor,
+        `select target_id, detail, occurred_at from public.governance_audit_events
+          where action = 'sponsorship.payment_unapplied' and target_type = 'sponsorship' and target_id = $1`,
+        [p.sponsorshipId])).rows;
+      const seen = await readAs(finance);
+      eq(seen.length, 1, 'what finance reads');
+      eq(seen[0].detail.reason, 'pledge_withdrawn', 'the reason finance reads');
+      eq(seen[0].detail.orderId, made.orderId, 'the order finance reads');
+      assert(seen[0].occurred_at, 'the line has no time');
+      eq((await readAs(admin)).length, 1, 'what the owner reads');
+      eq((await readAs(p.donor.userId)).length, 0, 'what the sponsor reads of the audit trail');
+      eq((await readAs(p.learner.userId)).length, 0, 'what the learner reads of the audit trail');
+      await rejects(() => readAs(null), /permission denied/);
     });
 
     await test('money that arrives after staff recorded the pledge by hand is recorded as a second payment, not a second seat', async () => {

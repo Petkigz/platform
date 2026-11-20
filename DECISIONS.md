@@ -8722,6 +8722,39 @@ individual with no registered company can be verified for a live account
 M-Pesa in Kenya is not on the sandbox account, and what a live account needs
 to be given it.
 
+## Staff are shown money that opened no seat, and every screen says amounts in major units — **DECIDED 2026-11-19**
+
+A payment can be confirmed for a pledge that can no longer be honoured. The
+database records that in the audit trail and grants nothing. Nothing showed
+staff the line, so a sponsor could have paid for a seat that never opened
+with nobody told. The owner said to continue with that first.
+
+- *The staff desk reads the audit trail itself*, as the member of staff,
+  through row-level security. No new function and no migration: finance and
+  the owner may already read these lines, and a sponsor and a learner may
+  not (`supabase/tests/sponsorship_checkout.test.mjs` holds both).
+- *Each line says why, and what there is to do*, per reason
+  (`lib/sponsorship-unapplied.ts`). Only one reason leaves the seat still
+  obtainable: a course withdrawn at that moment, where the pledge is still
+  waiting and staff can apply the money by hand.
+- *The desk does not claim to know what it cannot.* It cannot tell whether
+  an order has since been refunded, and it says so, and tells staff to look
+  the order up before refunding so that nobody is refunded twice. A line
+  stays after it is dealt with.
+- *Unread is not none.* If the audit trail cannot be read the desk says so
+  aloud.
+
+**Found in doing it: seven screens printed money as it is stored.** Minor
+units beside a currency code: 19.99 read as 1999. The staff desk for
+sponsored seats, the pool a sponsor chooses a seat from, the sentence a
+sponsor is shown after pledging, and the staff screens for disputes,
+adjustments, plan prices and reconciliation. In shillings, which have no
+cents, the stored number and the amount are the same, and every fixture was
+in shillings. All seven now go through `money.ts`, and
+`lib/minor-units-shown.test.ts` fails if a screen prints a stored amount
+again. Nothing had been charged at a wrong amount: no payment has ever been
+taken, and what a provider is asked for never came from these screens.
+
 ## M-Pesa in Kenya has a road of its own — **DECIDED 2026-11-19**
 
 The aggregator's sandbox account was not given M-Pesa in Kenya, the service
@@ -8837,8 +8870,8 @@ Settled in building it:
   off since, already recorded by hand, the request no longer approved, the
   course withdrawn: the order is paid, the pledge is left as it was, and the
   audit trail says why nothing was granted. Failing the payment would hide
-  money that has moved. **Nothing yet shows staff that line**; it is in the
-  audit trail only.
+  money that has moved. The staff desk shows those lines since 2026-11-19
+  (below).
 - *The amount is the pledge's, exactly.* No tax and no transfer fee: the
   sponsor was told one number.
 - *Asking twice is one order*, while it waits. A paid order whose pledge

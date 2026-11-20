@@ -128,6 +128,19 @@ describe('the pool', () => {
     assert.equal(seatPrice(pool.seats[0]!).ok, true);
   });
 
+  it('offers a seat at its price in major units, and not at all when the price cannot be read', () => {
+    const seat = (price: unknown) => parsePool({ enabled: true, seats: [{ seatCode: 'SPN-ABC123', price }] })!.seats[0]!;
+    // 19.99 was offered to sponsors as 1999: the stored number is minor units.
+    assert.deepEqual(seatPrice(seat({ amountMinor: 1999, currencyCode: 'USD' })), { ok: true, label: 'USD 19.99' });
+    assert.deepEqual(seatPrice(seat({ amountMinor: '5000', currencyCode: 'KWD' })), { ok: true, label: 'KWD 5.000' });
+    assert.deepEqual(seatPrice(seat({ amountMinor: '40000', currencyCode: 'UGX' })), { ok: true, label: 'UGX 40000' });
+    for (const price of [{ amountMinor: '19.99', currencyCode: 'USD' }, { amountMinor: '1999', currencyCode: 'usd' }, { amountMinor: '-5', currencyCode: 'USD' }]) {
+      const said = seatPrice(seat(price));
+      assert.equal(said.ok, false, JSON.stringify(price));
+      assert.match(said.label, /could not be read/);
+    }
+  });
+
   it('drops a seat with no code, because a seat nobody can name cannot be taken', () => {
     const pool = parsePool({ seats: [{ courseTitle: 'No code' }, { seatCode: 'SPN-ABC123' }] });
     assert.ok(pool);

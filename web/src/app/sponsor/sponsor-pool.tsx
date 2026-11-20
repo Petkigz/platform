@@ -3,6 +3,8 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { amountOf } from '@/lib/sponsorship-outcome';
+
 import {
   ZAKAT_HONESTY,
   audienceWords,
@@ -56,9 +58,12 @@ export function SponsorPool({
         return;
       }
       setTone('info');
+      // Major units. This printed the stored minor units, so a sponsor who had
+      // just pledged 19.99 was told the seat was theirs to pay for at 1999.
+      const owed = amountOf(out.amountMinor, out.currencyCode);
       setMessage(
-        `Seat ${seat.seatCode} is yours to pay for: ${out.currencyCode ?? ''} ${out.amountMinor ?? ''}. ` +
-          'Nothing has been taken — the next step explains how the payment is recorded.',
+        `Seat ${seat.seatCode} is yours to pay for${owed ? `: ${owed}` : ''}. ` +
+          'Nothing has been taken. Your sponsored seats page says what happens next.',
       );
       startTransition(() => router.refresh());
     } catch {

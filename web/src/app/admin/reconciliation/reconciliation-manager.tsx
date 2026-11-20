@@ -3,6 +3,12 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { formatMinor } from '@/lib/money';
+// Amounts are stored in minor units and said in major ones (`formatMinor`):
+// this screen printed the stored number, so 19.99 read as 1999.
+const said = (amount: string | number | null, currency: string | null) =>
+  amount === null ? '—' : currency ? formatMinor(String(amount), currency) : `${amount} minor units, currency not recorded`;
+
 type Item={id:string;provider_reference:string|null;internal_amount_minor:string|number|null;provider_amount_minor:string|number|null;currency_code:string|null;match_status:string;discrepancy_reason:string|null;financial_transaction_id:string|null};
 type Reconciliation={id:string;provider:string;period_start:string;period_end:string;status:string;started_at:string;closed_at:string|null;payment_reconciliation_items:Item[]};
 export type RateChoice={id:string;base:string;quote:string;rate:string;source:string};
@@ -38,7 +44,7 @@ export function ReconciliationManager({runs,rates}:{runs:Reconciliation[];rates:
         <h4>Statement lines</h4>
         {run.payment_reconciliation_items.length===0?<p className="muted">No lines entered.</p>:<ul>{run.payment_reconciliation_items.map(item=><li key={item.id} style={{marginBottom:'0.75rem'}}>
           <strong>{item.match_status}</strong> · <code>{item.provider_reference}</code><br/>
-          Provider: {item.provider_amount_minor} {item.currency_code} · Internal: {item.internal_amount_minor ?? '—'} {item.currency_code}
+          Provider: {said(item.provider_amount_minor, item.currency_code)} · Internal: {said(item.internal_amount_minor, item.currency_code)}
           {item.discrepancy_reason&&<span className="muted" style={{display:'block'}}>{item.discrepancy_reason}</span>}
           {item.financial_transaction_id&&run.status!=='closed'&&<details style={{cursor:'pointer',color:'var(--green-700,#176b45)',marginTop:'0.4rem'}}>
             <summary>Record what landed</summary>
