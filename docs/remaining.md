@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 11% there (192 of 1814 sentences; it was 71% of 272, then
+  the nineteen reads 10% there (192 of 1849 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -549,8 +549,8 @@ still unreviewed and still saying so.
   screens, 13% of 1434 with the two for inviting a friend and of 1514 with
   the pages of sponsored seats, 12% of 1568 with my orders and of 1665 with the notification centre, 11%
   of 1707 with the two plans pages and of 1736 with the page an account's
-  plans are kept on, of 1769 with the policy pages, then this with the
-  institution page),
+  plans are kept on, of 1769 with the policy pages and of 1814 with the
+  institution page, then this with the page that asks to teach),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -847,9 +847,9 @@ written: not a held draft, nothing.
   hosted test project since 2026-11-19, with both switches off. No request, pledge or recorded
   payment has been read through this page from a real database.
   **Still English, every one of them:**
-  the pages it links to: `/account/password`, `/teach/apply`
-  and `/forgot-password`. (`/policies` and `/institution` are in the
-  reader's language since 2026-11-23; see their own entries below.) (`/notifications` is in the reader's language
+  the pages it links to: `/account/password`
+  and `/forgot-password`. (`/policies`, `/institution` and `/teach/apply` are
+  in the reader's language since 2026-11-23; see their own entries below.) (`/notifications` is in the reader's language
   since 2026-11-23, `messages/notify.ts`, forty-two sentences, unreviewed;
   the text of a stored message is still the English the database wrote, and
   the page says so. Checked by `scripts/notifications-route-smoke.mjs` on a
@@ -871,6 +871,36 @@ written: not a held draft, nothing.
   inviting, applying to teach, the phone card), an account that signs in by
   phone code, a closed or suspended account in a language other than
   English, and any of the other twenty-four languages in a browser.
+- *Applying to teach (2026-11-23).* `/teach/apply` is in the reader's
+  language for the twenty-seven languages with nothing held
+  (`messages/tapply.ts`, thirty-five sentences, **read by no speaker**) and in
+  English, marked, for the nineteen: the rule that applying is not being
+  appointed, the four boxes and what is wrong with each, an application that
+  is waiting, refused, taken back or approved, and applications being closed.
+  **Not translated, for any reader:** what the applicant wrote and the note
+  the owner leaves. They are shown as written, and the page says the owner
+  reads an application untranslated. An owner who reads only English
+  receives whatever language the applicant wrote in; nothing tells the
+  applicant which languages the owner reads.
+  **Still English:** the staff queue that answers an application
+  (`/admin/teachers`) and its action in the route.
+  **Not built:** telling the applicant when an answer comes. Deciding writes
+  no notification, so the page says to look again; nothing was added to the
+  database in this piece. Keeping what was typed if the page is left before
+  sending. A limit on the box for qualifications in the database (the form
+  stops at 4,000 characters; the table has only a minimum).
+  Checked by `scripts/teach-apply-route-smoke.mjs` on a synthetic backend in
+  which every applicant, sentence and answer is invented: HTTP in English and
+  Arabic and one held language; signed out; open and closed; each of the four
+  states of an application, with and without a note; five ways the read can
+  fail; twelve typing mistakes and every sentence sending and taking back
+  raise, as the route answers them; Chromium in English, Arabic and Tamil at
+  320, 390 and 1440 wide, and the form and the button pressed in Arabic at
+  390. **Not checked:** a real database, row-level security or the table's
+  own constraints (`supabase/tests/teaching_applications.test.mjs` runs
+  those, not this); the flag being on anywhere (it is off); twenty-four
+  languages in a browser; a screen reader announcing the sentence under a
+  box.
 - *The institution page (2026-11-23).* What a member reads on `/institution`
   is in the reader's language for the twenty-seven languages with nothing
   held (`messages/inst.ts`, forty-five sentences, **read by no speaker**) and

@@ -3,6 +3,14 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { teachingRefusal } from '@/lib/teaching';
+import {
+  APPLY_ENGLISH,
+  applicationFaultOf,
+  applicationOf,
+  applyReasonOf,
+  applyStatusOf,
+  type ApplyOutcome,
+} from '@/lib/teaching-outcome';
 
 /**
  * The three things anybody does about teaching, in one place.
@@ -15,6 +23,16 @@ import { teachingRefusal } from '@/lib/teaching';
  * role is created inside `decide_teaching_application()` alongside the decision
  * that justifies it, so there is no request a caller could send that makes
  * somebody a teacher without a written reason attached.
+ *
+ * **Sending and taking back are answered by name.** `submit` and `withdraw`
+ * are what the applicant's page calls, in whatever language that reader has,
+ * so each refusal is `{ ok: false, code }` with that name's own status
+ * (`lib/teaching-outcome.ts`) and an English sentence for a caller with no
+ * words of its own. The database's own text is logged and sent to nobody.
+ * What was typed is checked against the table's four rules before the
+ * database is asked, so the reader is told which box is wrong.
+ *
+ * `decide` is the staff desk's, in English, and answers as it always did.
  */
 export async function POST(request: Request) {
   if (!isSupabaseConfigured()) {
@@ -29,13 +47,21 @@ export async function POST(request: Request) {
   }
   const body = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
 
+  const action = typeof body.action === 'string' ? body.action : '';
+  const named = (code: ApplyOutcome) =>
+    NextResponse.json({ ok: false, code, message: APPLY_ENGLISH[code] }, { status: applyStatusOf(code) });
+  const applicants = action === 'submit' || action === 'withdraw';
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ ok: false, message: 'Sign in first.' }, { status: 401 });
+  if (!user) {
+    return applicants
+      ? named('not_signed_in')
+      : NextResponse.json({ ok: false, message: 'Sign in first.' }, { status: 401 });
+  }
 
-  const action = typeof body.action === 'string' ? body.action : '';
   const str = (value: unknown): string | null =>
     typeof value === 'string' && value.trim() !== '' ? value : null;
 
@@ -43,33 +69,43 @@ export async function POST(request: Request) {
     NextResponse.json({ ok: false, ...teachingRefusal(message) }, { status });
 
   if (action === 'submit') {
-    const headline = str(body.headline);
-    const qualifications = str(body.qualifications);
-    const sampleUrl = str(body.sampleUrl);
-    if (!headline || !qualifications || !sampleUrl) {
-      return NextResponse.json(
-        {
-          ok: false,
-          code: 'incomplete',
-          message: 'A headline, your qualifications and a link to a sample lesson are all needed.',
-        },
-        { status: 400 },
-      );
+    const fields = applicationOf(body);
+    const fault = applicationFaultOf(fields);
+    if (fault) return named(fault);
+    const asked = await supabase
+      .rpc('submit_teaching_application', {
+        p_headline: fields.headline,
+        p_qualifications: fields.qualifications,
+        p_sample_url: fields.sampleUrl,
+        p_note: fields.note,
+      })
+      .then((r) => r, () => ({ data: null, error: { code: null, message: 'the request could not be made' } }));
+    if (asked.error) {
+      const code = applyReasonOf(asked.error);
+      if (code === 'refused' || code === 'unconfirmed') {
+        console.error('teaching: an application was not sent:', asked.error.message);
+      }
+      return named(code);
     }
-    const { data, error } = await supabase.rpc('submit_teaching_application', {
-      p_headline: headline,
-      p_qualifications: qualifications,
-      p_sample_url: sampleUrl,
-      p_note: str(body.note),
-    });
-    if (error) return fail(error.message);
-    return NextResponse.json({ ok: true, ...(data as object) });
+    const said = asked.data as { status?: unknown } | null;
+    if (said?.status !== 'submitted') return named('unconfirmed');
+    return NextResponse.json({ ok: true, status: 'submitted' });
   }
 
   if (action === 'withdraw') {
-    const { data, error } = await supabase.rpc('withdraw_teaching_application');
-    if (error) return fail(error.message);
-    return NextResponse.json({ ok: true, ...(data as object) });
+    const asked = await supabase
+      .rpc('withdraw_teaching_application')
+      .then((r) => r, () => ({ data: null, error: { code: null, message: 'the request could not be made' } }));
+    if (asked.error) {
+      const code = applyReasonOf(asked.error);
+      if (code === 'refused' || code === 'unconfirmed') {
+        console.error('teaching: an application was not taken back:', asked.error.message);
+      }
+      return named(code);
+    }
+    const said = asked.data as { status?: unknown } | null;
+    if (said?.status !== 'withdrawn') return named('unconfirmed');
+    return NextResponse.json({ ok: true, status: 'withdrawn' });
   }
 
   if (action === 'decide') {

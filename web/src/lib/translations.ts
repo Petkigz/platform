@@ -303,6 +303,7 @@ const SECTION_LABELS: Record<string, string> = {
   subs: 'Your plans',
   policy: 'Policies and terms',
   inst: 'Your institution',
+  tapply: 'Applying to teach',
 };
 
 export const SECTIONS: Section[] = (() => {

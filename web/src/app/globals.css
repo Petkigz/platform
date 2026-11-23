@@ -1618,6 +1618,37 @@ textarea { resize: vertical; min-height: 4rem; }
 .inst-page .scroll-x th, .inst-page .scroll-x td { text-align: start; padding: 0.3rem 0.6rem; vertical-align: top; }
 .inst-page th[scope='row'] { font-weight: 400; min-width: 10rem; overflow-wrap: anywhere; }
 
+/* The page that asks to teach. One column; what a person typed keeps its
+   line breaks and wraps wherever it must, because a web address and a
+   paragraph with no spaces are both things somebody will paste. */
+.tapply-page > .notice, .tapply-page > .tapply-card { margin-bottom: 1.25rem; }
+.tapply-page .notice > p { margin: 0 0 0.5rem; }
+.tapply-page .notice > :last-child { margin-bottom: 0; }
+.tapply-rule { color: var(--text-soft); margin: 0; overflow-wrap: anywhere; }
+.tapply-card > h2 { margin: 0 0 0.5rem; font-size: 1.2rem; overflow-wrap: anywhere; }
+.tapply-card > p { margin: 0 0 0.75rem; overflow-wrap: anywhere; }
+/* Where the application stands is a short sentence, not a one-word label:
+   in Tamil it is longer than a 320-pixel screen, so it wraps. */
+.tapply-card .badge { white-space: normal; overflow-wrap: anywhere; }
+.tapply-sent { margin: 0 0 1rem; display: grid; gap: 0.2rem; }
+.tapply-sent dt { font-weight: 600; margin-top: 0.6rem; }
+.tapply-sent dd { margin: 0; overflow-wrap: anywhere; }
+.tapply-written { white-space: pre-wrap; overflow-wrap: anywhere; }
+blockquote.tapply-written { margin: 0; padding-inline-start: 0.75rem; border-inline-start: 3px solid var(--border); }
+.tapply-note-head { font-weight: 600; }
+.tapply-facts { list-style: none; margin: 0 0 1rem; padding: 0; display: grid; gap: 0.3rem; color: var(--text-soft); overflow-wrap: anywhere; }
+.tapply-form { display: grid; gap: 0.4rem; grid-template-columns: minmax(0, 1fr); }
+.tapply-form label { font-weight: 600; margin-top: 0.5rem; }
+.tapply-form .tapply-hint { margin: 0; font-size: 0.92rem; overflow-wrap: anywhere; }
+.tapply-form [aria-invalid='true'] { border-color: var(--danger); }
+.tapply-form .tapply-wrong { margin: 0; color: var(--danger); font-weight: 600; overflow-wrap: anywhere; }
+.tapply-form > .notice { margin-top: 0.5rem; }
+.tapply-form > .btn { margin-top: 0.75rem; }
+.tapply-ask { display: grid; gap: 0.6rem; justify-items: start; }
+.tapply-ask > .notice { justify-self: stretch; }
+.tapply-ways { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.5rem; }
+.tapply-ways .btn { width: auto; }
+
 /* The notification centre (`app/notifications/`). Stacked lines, not a table:
    a message is a kind, the stored text, and when. */
 .told-page > .notice { margin-bottom: 1.5rem; }

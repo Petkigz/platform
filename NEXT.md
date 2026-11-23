@@ -2619,6 +2619,47 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### Applying to teach in the reader's language, 2026-11-23
+
+- *The words.* Thirty-five sentences in a new part, `messages/tapply.ts`,
+  twenty-seven languages, **read by no speaker** (`tmp-words/u32`). Three
+  more are reused from other parts for signed out, refused and not known.
+- *The page.* `app/teach/apply/page.tsx` draws every state; `reader.ts`
+  chooses the language and builds the words for `apply-form.tsx` and
+  `withdraw-button.tsx`, which import no catalogue. See `DECISIONS.md`.
+- *Rules a test holds.* `lib/teaching-outcome.ts` + test (15): every
+  `raise exception` in the newest `submit_teaching_application` and
+  `withdraw_teaching_application` has a name; the four limits are the
+  table's own, and the test fails if a later migration alters the table;
+  deciding writes no notification (which is why the page says to look
+  again); the route sends none of the database's sentences for sending or
+  taking back; the page prints no database text; neither island holds a
+  sentence of its own.
+- *Found on the way.* (1) The send button was grey until three rules nobody
+  stated were met. (2) A failed read was drawn as the empty form. (3) The
+  route sent the database's sentence for any refusal it did not know, at
+  400. (4) Two requests at one instant: the second got the unique index's
+  own English. (5) "You can send another" was said with applications
+  closed. (6) The status of a waiting application sat in a one-line label
+  wider than a 320-pixel screen in Tamil. (7) Clearing the last message on
+  press moved the button, and a double tap landed on the link below and left
+  the page. (8) The date had no time zone and was always British English.
+  (9) An applicant is never told an answer has come; not fixed, said on the
+  page.
+- *Checked.* `scripts/teach-apply-route-smoke.mjs` in `ci.yml` and, with a
+  browser, in `responsive-smoke.yml`.
+- *Not shown.* Anything from a real database: the stand-in answers what it
+  is asked. The table's constraints and row-level security are run in
+  `supabase/tests/teaching_applications.test.mjs`, not here. The flag
+  `teaching.applications` is off everywhere. Twenty-four languages in a
+  browser; Tamil was drawn without a Tamil font, so only its layout was
+  seen. A screen reader.
+- *Not built.* A message when an application is answered. The staff queue
+  in any language but English. A draft kept if the page is left.
+- *Counts.* 1849 keys; server-only 1481; unwritten while held 1577; held
+  192 of 1849, 10.38%, shown as 10%. 133 page routes, no new route handler;
+  33 smoke scripts. The translation audit stayed at 195 of 200.
+
 ### The institution page in the reader's language, 2026-11-23
 
 - *The words.* Forty-five sentences in a new part, `messages/inst.ts`,

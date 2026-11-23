@@ -8765,6 +8765,65 @@ read 12%.
 sentence nobody prints; the receipt, which every line links to and which is
 still English.
 
+## Applying to teach, in the reader's language, and what is said under a box — **DECIDED 2026-11-23**
+
+`/teach/apply` was an English page with a button that stayed grey until three
+unstated rules were met. It is now in the reader's language: thirty-five
+sentences in a part of their own, `tapply`; the nineteen held languages read
+10%. None of this was asked for by name; it is the builder's reading of what
+the database does, and can be changed.
+
+- *What people typed is not translated, and the page says so.* The
+  applicant's four answers and the owner's note are shown as written, with
+  `dir="auto"` and an empty `lang`. One sentence says the owner reads an
+  application as it was written. The page does not say which languages the
+  owner reads, because nothing records that.
+- *The button can always be pressed.* It used to be disabled until the
+  headline had four letters, the qualifications twenty and the link began
+  with `http`, and nothing said which was missing. Now pressing it checks the
+  same four rules the table has (`lib/teaching-outcome.ts`, read against the
+  migration by a test), says what is wrong under the box, in the reader's
+  language, and puts the caret there. Nothing is sent until the check passes,
+  and the route runs the same check before the database is asked. The
+  browser's own bubbles are off: they speak the browser's language.
+- *What the form last said stays until the answer comes.* Clearing it on
+  press moved the button up under the finger, and the second press of a
+  double tap landed on the link below the form and left the page with what
+  was typed lost. Found by the browser check, which now holds the button
+  still.
+- *A refusal is a name with a status.* Sending and taking back answer
+  `{ ok: false, code }`: `not_signed_in` 401; six typing mistakes 400;
+  `applications_closed` 403; `already_teaching`, `already_applied`,
+  `nothing_to_withdraw` 409; `refused` 500; `unconfirmed` 502. The second of
+  two requests at one instant is stopped by the unique index, not by the
+  function's own sentence, and is told `already_applied` all the same. An
+  answer that does not say "submitted" or "withdrawn" is `unconfirmed`, and
+  the page is read again. The three "too long" names share one sentence,
+  because the boxes stop taking letters at their limit and only a caller
+  that is not this form can meet them. `not_signed_in`, `refused` and
+  `unconfirmed` reuse sentences that already existed (`buy.signedOut`,
+  `inst.failed`, `inst.unsure`) rather than adding three that say the same.
+- *Unread is not "no application".* A failed read, or a reply that does not
+  say whether applications are open and whether this account teaches, used
+  to be drawn as the empty form or as "closed". It is now one sentence, with
+  no form, at status 200; the database's text is logged and shown to nobody.
+- *A sentence is drawn only where it is true.* "You can send another" is
+  said to somebody refused only while applications are open. A teacher
+  appointed some other way is not told an application was approved, and is
+  not shown an old refusal.
+- *Nobody is told when the answer comes, and the page says so.*
+  `decide_teaching_application` writes no notification. Rather than add one
+  here (a migration, and a stored English sentence), the waiting card says
+  the answer will be shown on this page and to look again. Whether to send
+  a message is with the open question about notifications as kind and
+  values.
+- *The staff desk is unchanged.* `decide` and the queue are English and
+  answer as before; `teachingRefusal` now serves only them.
+  `APPOINTMENT_NOTICE` and `describeStatus`, English sentences this page
+  alone used, are removed; the rule is `tapply.byAppointment`.
+- *A date names its clock.* "Sent on" was `toLocaleDateString('en-GB')`, a
+  server's date with no zone. It is `formatDateTime` in UTC, saying UTC.
+
 ## What a member reads on the institution page, and what stays English — **DECIDED 2026-11-23**
 
 `/institution` was an English page that printed the database's own sentence

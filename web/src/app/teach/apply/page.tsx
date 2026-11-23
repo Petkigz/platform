@@ -1,138 +1,239 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
+import { Say } from '@/components/say';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import {
-  APPOINTMENT_NOTICE,
-  describeStatus,
-  parseOwnApplication,
-  safeSampleUrl,
-} from '@/lib/teaching';
+import { formatDateTime, translator } from '@/lib/i18n';
+import { parseOwnApplication, safeSampleUrl } from '@/lib/teaching';
 import { TeachingApplyForm } from './apply-form';
+import { READ_FAILED, formWords, readerLanguage, withdrawWords } from './reader';
 import { WithdrawApplication } from './withdraw-button';
 
 export const dynamic = 'force-dynamic';
 
-function when(iso: string | null): string {
-  if (!iso) return '—';
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return '—';
-  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+export async function generateMetadata(): Promise<Metadata> {
+  const { shown } = await readerLanguage();
+  return { title: translator(shown.code)('account.teachLink') };
 }
 
 /**
  * Applying to teach.
  *
- * Reachable by anybody signed in — this is the one page under `/teach` that a
- * person without the role may open, and that is the point of it. `/teach` itself
- * still turns a learner away, and this page says why in the same breath as it
- * offers the form: the appointment is made by a person, and applying is how you
- * ask for one.
+ * Reachable by anybody signed in: this is the one page under `/teach` that a
+ * person without the role may open, and that is the point of it. `/teach`
+ * itself still turns a learner away, and this page says why in the same
+ * breath as it offers the form: the appointment is made by a person, and
+ * applying is how you ask for one.
  *
- * The form disappears once somebody holds an application or the role, and what
- * replaces it is the answer rather than a disabled button.
+ * The form disappears once somebody holds an application or the role, and
+ * what replaces it is the answer rather than a disabled button.
+ *
+ * **The page is in the reader's language; what people typed is not.** The
+ * applicant's own words and the note the owner leaves are shown as written,
+ * with `dir="auto"` and an empty `lang` (the language is not known), and the
+ * page says in one sentence that the owner reads an application untranslated.
+ *
+ * **Unread is said, never drawn as "no application".** A reply that is an
+ * error, or that does not say whether applications are open and whether this
+ * account teaches, is `tapply.unread`, with no form: the database's own text
+ * is logged and shown to nobody.
+ *
+ * **A sentence is drawn only where it is true.** "You can send another" is
+ * said to somebody refused or who took theirs back only while applications
+ * are open; a closed page says closed and nothing else.
+ *
+ * **Nobody is told when the answer comes**: deciding writes no notification.
+ * The card for a waiting application says to look here again.
  */
 export default async function TeachApplyPage() {
   if (!isSupabaseConfigured()) redirect('/');
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Not knowing who is reading is treated as nobody: they are sent to sign in.
+  const user = await supabase.auth.getUser().then(
+    (r) => r.data.user,
+    () => null,
+  );
   if (!user) redirect('/sign-in?next=/teach/apply');
 
-  const { data } = await supabase.rpc('my_teaching_application');
-  const board = parseOwnApplication(data);
+  const { locale, shown } = await readerLanguage();
+  const t = translator(shown.code);
+  const frame = shown.code !== locale ? { lang: shown.code, dir: shown.dir } : {};
+
+  const mine = await supabase.rpc('my_teaching_application').then(
+    (r) => r,
+    () => READ_FAILED,
+  );
+  const said = mine.data as { open?: unknown; isInstructor?: unknown } | null;
+  const board =
+    !mine.error && said && typeof said.open === 'boolean' && typeof said.isInstructor === 'boolean'
+      ? parseOwnApplication(said)
+      : null;
+  if (!board) {
+    console.error(
+      'teach/apply: the application could not be read:',
+      mine.error?.message ?? 'a reply that does not say whether applications are open',
+    );
+  }
+
+  const head = (
+    <>
+      <nav className="crumbs">
+        <Link href="/account">{t('learn.account')}</Link>
+        <span aria-hidden>›</span>
+        <span>{t('account.teachLink')}</span>
+      </nav>
+      <div className="page-head">
+        <h1>{t('account.teachLink')}</h1>
+        <p className="tapply-rule">{t('tapply.byAppointment')}</p>
+      </div>
+    </>
+  );
+  const ways = (
+    <p className="tapply-ways">
+      <Link href="/catalogue" className="btn secondary">
+        {t('nav.catalogue')}
+      </Link>
+      <Link href="/learn" className="btn ghost">
+        {t('nav.learn')}
+      </Link>
+    </p>
+  );
 
   if (!board) {
     return (
-      <div className="container section">
-        <p className="eyebrow">Teaching</p>
-        <h1>Apply to teach</h1>
-        <div className="notice error">
-          Your application could not be read. Nothing has been sent or changed by this page.
+      <div className="page tapply-page" {...frame}>
+        {head}
+        <div className="notice error" role="alert" data-tapply-state="unread">
+          {t('tapply.unread')}
         </div>
+        {ways}
       </div>
     );
   }
 
   const application = board.application;
-  const openApplication = application && application.status === 'submitted';
+  // Typed by a person, in a language this page does not know.
+  const written = { dir: 'auto', lang: '' } as const;
+  const note = application?.decisionReason ? (
+    <>
+      <p className="tapply-note-head">{t('tapply.noteLeft')}</p>
+      <blockquote className="tapply-written" data-tapply-note {...written}>
+        {application.decisionReason}
+      </blockquote>
+    </>
+  ) : null;
 
-  return (
-    <div className="container section">
-      <p className="eyebrow">
-        <Link href="/about">About</Link>
-      </p>
-      <h1>Apply to teach</h1>
-      <p className="lede">{APPOINTMENT_NOTICE}</p>
-
-      {board.isInstructor && (
-        <div className="notice" style={{ marginTop: '1rem' }}>
-          <strong>You already teach here.</strong> There is nothing to apply for.{' '}
-          <Link href="/teach">Go to your courses</Link>.
-        </div>
-      )}
-
-      {!board.isInstructor && openApplication && application && (
-        <section className="card" style={{ marginTop: '1rem' }}>
-          <div className="outline-h" style={{ marginTop: 0 }}>
-            <h2 style={{ margin: 0 }}>Your application</h2>
-            <span className="badge neutral">{describeStatus(application.status)}</span>
-          </div>
-          <p className="meta" style={{ marginTop: '0.5rem' }}>
-            <strong>{application.headline}</strong> · sent {when(application.submittedAt)}
-          </p>
-          <p className="muted">{application.qualifications}</p>
-          {safeSampleUrl(application.sampleUrl) && (
+  if (board.isInstructor) {
+    const approved = application?.status === 'approved';
+    return (
+      <div className="page tapply-page" {...frame}>
+        {head}
+        <div className="notice info" data-tapply-state="teaches">
+          {approved && (
             <p>
-              <a href={safeSampleUrl(application.sampleUrl)!} rel="noreferrer noopener" target="_blank">
-                The sample lesson you sent
-              </a>
+              <strong>{t('tapply.approved')}</strong>
             </p>
           )}
-          <WithdrawApplication />
+          {approved && note}
+          <p>
+            {t('tapply.teachesAlready')} <Link href="/teach">{t('tapply.toCourses')}</Link>
+          </p>
+        </div>
+        {ways}
+      </div>
+    );
+  }
+
+  if (application?.status === 'submitted') {
+    const link = safeSampleUrl(application.sampleUrl);
+    const sentAt = application.submittedAt ? formatDateTime(locale, application.submittedAt, 'UTC') : '';
+    return (
+      <div className="page tapply-page" {...frame}>
+        {head}
+        <section className="card tapply-card" data-tapply-state="waiting">
+          <h2>{t('tapply.yours')}</h2>
+          <p>
+            <span className="badge neutral">{t('tapply.waiting')}</span>
+          </p>
+          <dl className="tapply-sent">
+            <dt>{t('tapply.fieldTeach')}</dt>
+            <dd {...written}>{application.headline}</dd>
+            <dt>{t('tapply.fieldKnow')}</dt>
+            <dd className="tapply-written" {...written}>
+              {application.qualifications}
+            </dd>
+            <dt>{t('tapply.sampleLink')}</dt>
+            <dd>
+              {link ? (
+                <a href={link} rel="noreferrer noopener" target="_blank" dir="ltr">
+                  {application.sampleUrl}
+                </a>
+              ) : (
+                <bdi dir="ltr">{application.sampleUrl}</bdi>
+              )}
+            </dd>
+            {application.note && (
+              <>
+                <dt>{t('tapply.fieldElse')}</dt>
+                <dd className="tapply-written" {...written}>
+                  {application.note}
+                </dd>
+              </>
+            )}
+          </dl>
+          <ul className="tapply-facts">
+            {sentAt && (
+              <li>
+                <Say text={t('tapply.sentOn')} parts={{ date: <bdi>{sentAt}</bdi> }} />
+              </li>
+            )}
+            <li>{t('tapply.asWritten')}</li>
+            <li>{t('tapply.answerHere')}</li>
+            <li>{t('tapply.withdrawNote')}</li>
+          </ul>
+          <WithdrawApplication words={withdrawWords(t)} />
         </section>
-      )}
+        {ways}
+      </div>
+    );
+  }
 
-      {!board.isInstructor && application?.status === 'declined' && (
-        <div className="notice warn" style={{ marginTop: '1rem' }}>
-          <strong>Not approved this time.</strong>
-          {application.decisionReason && <> The note left for you: “{application.decisionReason}”</>}{' '}
-          You can send another application — people improve, and a second look costs nothing.
+  return (
+    <div className="page tapply-page" {...frame}>
+      {head}
+
+      {application?.status === 'declined' && (
+        <div className="notice warn" data-tapply-answer="declined">
+          <p>
+            <strong>{t('tapply.declined')}</strong>
+            {board.open && <> {t('tapply.again')}</>}
+          </p>
+          {note}
         </div>
       )}
 
-      {!board.isInstructor && application?.status === 'withdrawn' && (
-        <div className="notice" style={{ marginTop: '1rem' }}>
-          You took your application back. You can send a new one below.
+      {application?.status === 'withdrawn' && board.open && (
+        <div className="notice" data-tapply-answer="withdrawn">
+          {t('tapply.withdrawn')}
         </div>
       )}
 
-      {!board.isInstructor && board.open && !openApplication && (
-        <div style={{ marginTop: '1.5rem' }}>
-          <h2>What the owner reads</h2>
-          <TeachingApplyForm />
+      {board.open ? (
+        <section className="card tapply-card" data-tapply-state="form">
+          <h2>{t('tapply.formTitle')}</h2>
+          <p className="muted">{t('tapply.asWritten')}</p>
+          <TeachingApplyForm words={formWords(t)} />
+        </section>
+      ) : (
+        <div className="notice" data-tapply-state="closed">
+          {t('tapply.closed')} <Link href="/support">{t('missing.help')}</Link>
         </div>
       )}
 
-      {!board.isInstructor && !board.open && (
-        <div className="notice" style={{ marginTop: '1rem' }}>
-          <strong>Applications are closed at the moment.</strong> Nothing can be sent from this
-          page, and nothing has been lost — if you would like to teach here, ask the owner
-          directly. The courses are still open to learn from.
-        </div>
-      )}
-
-      <p style={{ marginTop: '1.5rem' }}>
-        <Link href="/catalogue" className="btn secondary">
-          Browse the courses
-        </Link>{' '}
-        <Link href="/learn" className="btn ghost">
-          My learning
-        </Link>
-      </p>
+      {ways}
     </div>
   );
 }

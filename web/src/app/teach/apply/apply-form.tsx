@@ -1,128 +1,255 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+
+import {
+  HEADLINE_MAX,
+  NOTE_MAX,
+  QUALIFICATIONS_MAX,
+  SAMPLE_MAX,
+  applicationFaultOf,
+  applicationOf,
+  applyOutcomeOf,
+  faultFieldOf,
+  type ApplyFault,
+  type ApplyOutcome,
+} from '@/lib/teaching-outcome';
+
+/** What the form says, already in the reader's language. */
+export type ApplyFormWords = {
+  teach: string;
+  teachHint: string;
+  know: string;
+  knowHint: string;
+  sample: string;
+  sampleHint: string;
+  other: string;
+  /** "(optional)", beside the last label. */
+  optional: string;
+  otherHint: string;
+  send: string;
+  working: string;
+  /** The request could not be made at all. */
+  unreachable: string;
+  reasons: Record<ApplyOutcome, string>;
+};
+
+type Field = ReturnType<typeof faultFieldOf>;
+
+const FAULTS: readonly string[] = [
+  'headline_short',
+  'headline_long',
+  'qualifications_short',
+  'qualifications_long',
+  'sample_not_link',
+  'note_long',
+];
 
 /**
  * The application form.
  *
- * Four fields and one honest paragraph. Nothing here is a promise: the button
- * says "Send to the owner", not "become a teacher", and the sentence below it
- * says the same thing again for anybody who skipped the paragraph above.
+ * Four boxes. Nothing here is a promise: the button says "Send to the owner",
+ * not "become a teacher", and the page has said above it that applying is not
+ * being appointed.
  *
- * The sample lesson is a link rather than an upload, because a platform with no
- * media pipeline for applicants cannot accept the file — and because a link is
- * something an owner can actually watch before deciding.
+ * The sample lesson is a link rather than an upload, because a platform with
+ * no media pipeline for applicants cannot accept the file, and because a link
+ * is something an owner can watch before deciding.
+ *
+ * **The button is never greyed out for what was typed.** It used to be
+ * disabled until three rules were met, with nothing saying which. Now it can
+ * always be pressed; the same check the route makes runs here first, says
+ * what is wrong under the box in the reader's language, and puts the caret
+ * in it. Nothing is sent until the check passes. The browser's own bubbles are switched off
+ * (`noValidate`) because they speak the browser's language, not the page's.
+ *
+ * **A refusal is a name.** The route answers `{ ok: false, code }` with that
+ * name's own status; `words.reasons` has the sentence. A name that arrives
+ * with another status, or no name, is `unconfirmed`, and the page is read
+ * again: if the application was written after all, the page shows it, and
+ * the database will not take a second one.
  */
-export function TeachingApplyForm() {
+export function TeachingApplyForm({ words }: { words: ApplyFormWords }) {
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const asking = useRef(false);
+  const boxes = useRef<Partial<Record<Field, HTMLInputElement | HTMLTextAreaElement | null>>>({});
   const [headline, setHeadline] = useState('');
   const [qualifications, setQualifications] = useState('');
   const [sampleUrl, setSampleUrl] = useState('');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState<string | null>(null);
+  const [tone, setTone] = useState<'warn' | 'error'>('error');
+  const [message, setMessage] = useState<string | null>(null);
+  const [wrong, setWrong] = useState<Field | null>(null);
 
-  const ready =
-    headline.trim().length >= 4 &&
-    qualifications.trim().length >= 20 &&
-    /^https?:\/\/\S+$/i.test(sampleUrl.trim());
+  function point(fault: ApplyFault) {
+    const field = faultFieldOf(fault);
+    setWrong(field);
+    setTone('error');
+    setMessage(words.reasons[fault]);
+    boxes.current[field]?.focus();
+  }
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
+    // Two presses in one moment are one request.
+    if (asking.current) return;
+
+    const fields = applicationOf({ headline, qualifications, sampleUrl, note });
+    const fault = applicationFaultOf(fields);
+    if (fault) {
+      point(fault);
+      return;
+    }
+
+    asking.current = true;
+    // What the form last said stays where it is until the answer comes.
+    // Taking it away now would move the button up under a finger that is
+    // still on it, and a second tap would land on the link below.
     setBusy(true);
-    setError(null);
-    setDone(null);
+
+    let res: Response;
     try {
-      const res = await fetch('/api/teaching/apply', {
+      res = await fetch('/api/teaching/apply', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          action: 'submit',
-          headline,
-          qualifications,
-          sampleUrl,
-          note: note.trim() === '' ? null : note,
-        }),
+        body: JSON.stringify({ action: 'submit', ...fields }),
       });
-      const out = (await res.json()) as { ok?: boolean; message?: string };
-      if (!out.ok) {
-        setError(out.message ?? 'That did not send.');
-        return;
-      }
-      setDone('Sent. It is with the owner now, and the answer will be on this page.');
-      startTransition(() => router.refresh());
     } catch {
-      setError('The request could not be sent. Nothing was created.');
-    } finally {
+      setWrong(null);
+      setTone('warn');
+      setMessage(words.unreachable);
+      asking.current = false;
       setBusy(false);
+      return;
+    }
+    const json = (await res.json().catch(() => null)) as { ok?: unknown; code?: unknown } | null;
+    asking.current = false;
+    setBusy(false);
+
+    if (res.ok && json?.ok === true) {
+      // The page draws the application, and where its answer will be shown.
+      router.refresh();
+      return;
+    }
+    const named = res.ok ? 'unconfirmed' : applyOutcomeOf(res.status, json?.code);
+    if (FAULTS.includes(named)) {
+      point(named as ApplyFault);
+      return;
+    }
+    setWrong(null);
+    setTone(named === 'refused' || named === 'unconfirmed' ? 'warn' : 'error');
+    setMessage(words.reasons[named]);
+    // The page may be behind what the database holds: read it again.
+    if (named === 'already_applied' || named === 'already_teaching' || named === 'applications_closed' || named === 'unconfirmed') {
+      router.refresh();
     }
   }
 
+  // A mistake in a box is said under that box, and the box is described by it.
+  const why = (field: Field, id: string) =>
+    wrong === field && message ? (
+      <p className="tapply-wrong" id={`${id}-wrong`} role="alert" data-tapply-refusal>
+        {message}
+      </p>
+    ) : null;
+  const about = (field: Field, id: string) => (wrong === field ? `${id}-hint ${id}-wrong` : `${id}-hint`);
+
   return (
-    <form className="card" onSubmit={submit} style={{ display: 'grid', gap: '0.65rem', maxWidth: '46rem' }}>
-      <label htmlFor="teach-headline">What would you teach, in one line?</label>
+    <form className="tapply-form" onSubmit={submit} noValidate data-tapply-form>
+      <label htmlFor="teach-headline">{words.teach}</label>
       <input
         id="teach-headline"
+        ref={(el) => {
+          boxes.current.headline = el;
+        }}
         type="text"
-        maxLength={160}
-        required
+        dir="auto"
+        maxLength={HEADLINE_MAX}
         value={headline}
         onChange={(event) => setHeadline(event.target.value)}
-        disabled={busy || pending}
-        placeholder="Tajweed and Quran recitation for children"
+        readOnly={busy}
+        aria-describedby={about('headline', 'teach-headline')}
+        aria-invalid={wrong === 'headline'}
       />
+      <p className="muted tapply-hint" id="teach-headline-hint">
+        {words.teachHint}
+      </p>
+      {why('headline', 'teach-headline')}
 
-      <label htmlFor="teach-qualifications">What you know, and who you learned it from</label>
+      <label htmlFor="teach-qualifications">{words.know}</label>
       <textarea
         id="teach-qualifications"
+        ref={(el) => {
+          boxes.current.qualifications = el;
+        }}
         rows={5}
-        maxLength={4000}
-        required
+        dir="auto"
+        maxLength={QUALIFICATIONS_MAX}
         value={qualifications}
         onChange={(event) => setQualifications(event.target.value)}
-        disabled={busy || pending}
-        placeholder="An ijazah in Hafs from a named teacher, years taught, institutions, languages."
+        readOnly={busy}
+        aria-describedby={about('qualifications', 'teach-qualifications')}
+        aria-invalid={wrong === 'qualifications'}
       />
-      <p className="muted" style={{ margin: '-0.3rem 0 0' }}>
-        In your own words. A teacher’s credentials are checked by a person here, not by a
-        dropdown, so write what you would say to another teacher.
+      <p className="muted tapply-hint" id="teach-qualifications-hint">
+        {words.knowHint}
       </p>
+      {why('qualifications', 'teach-qualifications')}
 
-      <label htmlFor="teach-sample">A sample lesson</label>
+      <label htmlFor="teach-sample">{words.sample}</label>
       <input
         id="teach-sample"
+        ref={(el) => {
+          boxes.current.sample = el;
+        }}
         type="url"
-        maxLength={500}
-        required
+        inputMode="url"
+        dir="ltr"
+        maxLength={SAMPLE_MAX}
         value={sampleUrl}
         onChange={(event) => setSampleUrl(event.target.value)}
-        disabled={busy || pending}
+        readOnly={busy}
         placeholder="https://"
+        aria-describedby={about('sample', 'teach-sample')}
+        aria-invalid={wrong === 'sample'}
       />
-      <p className="muted" style={{ margin: '-0.3rem 0 0' }}>
-        A link to a lesson you have recorded or streamed. It has to be something the owner can
-        watch — a file cannot be uploaded here.
+      <p className="muted tapply-hint" id="teach-sample-hint">
+        {words.sampleHint}
       </p>
+      {why('sample', 'teach-sample')}
 
-      <label htmlFor="teach-note">Anything else (optional)</label>
+      <label htmlFor="teach-note">
+        {words.other} <span className="muted">{words.optional}</span>
+      </label>
       <textarea
         id="teach-note"
+        ref={(el) => {
+          boxes.current.note = el;
+        }}
         rows={3}
-        maxLength={1000}
+        dir="auto"
+        maxLength={NOTE_MAX}
         value={note}
         onChange={(event) => setNote(event.target.value)}
-        disabled={busy || pending}
-        placeholder="The hours you can teach, your time zone, the languages you teach in."
+        readOnly={busy}
+        aria-describedby={about('note', 'teach-note')}
+        aria-invalid={wrong === 'note'}
       />
+      <p className="muted tapply-hint" id="teach-note-hint">
+        {words.otherHint}
+      </p>
+      {why('note', 'teach-note')}
 
-      {error && <div className="notice error" role="alert">{error}</div>}
-      {done && <div className="notice" role="status">{done}</div>}
+      {message && !wrong ? (
+        <div className={`notice ${tone}`} role={tone === 'error' ? 'alert' : 'status'} data-tapply-refusal>
+          {message}
+        </div>
+      ) : null}
 
-      <button type="submit" className="btn" disabled={busy || pending || !ready}>
-        {busy ? 'Sending…' : 'Send to the owner'}
+      <button type="submit" className="btn" disabled={busy} aria-busy={busy} data-tapply-button="submit">
+        {busy ? words.working : words.send}
       </button>
     </form>
   );

@@ -180,6 +180,13 @@ for (const [file, key] of [
   ['inst.ts', 'inst.unread'],
   ['inst.ts', 'inst.joinClosed'],
   ['inst.ts', 'inst.noMatch'],
+  // The page that asks to teach is a server page, and hands its form and
+  // its button the words they say. What it says before the form, and what
+  // it says to somebody who teaches already or whose application could not
+  // be read, must be in nothing a browser downloads.
+  ['tapply.ts', 'tapply.byAppointment'],
+  ['tapply.ts', 'tapply.unread'],
+  ['tapply.ts', 'tapply.closed'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

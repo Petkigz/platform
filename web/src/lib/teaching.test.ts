@@ -2,9 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  APPOINTMENT_NOTICE,
   canTeach,
-  describeStatus,
   parseOwnApplication,
   parseQueue,
   safeSampleUrl,
@@ -101,21 +99,6 @@ describe('the staff queue', () => {
     assert.equal(queue.counts.waiting, 0);
     assert.equal(queue.counts.approved, 0);
     assert.deepEqual(queue.decided, []);
-  });
-});
-
-describe('what each status means', () => {
-  it('never implies an application made somebody a teacher', () => {
-    assert.match(describeStatus('submitted'), /waiting to be read/);
-    assert.match(describeStatus('declined'), /Not approved/);
-    assert.match(describeStatus('withdrawn'), /took this back/);
-    assert.match(describeStatus('approved'), /Approved/);
-  });
-
-  it('carries the appointment rule beside the form', () => {
-    assert.match(APPOINTMENT_NOTICE, /by appointment/);
-    assert.match(APPOINTMENT_NOTICE, /does not create a teacher/);
-    assert.match(APPOINTMENT_NOTICE, /still passes review/);
   });
 });
 

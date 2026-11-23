@@ -155,21 +155,6 @@ export function parseQueue(input: unknown): TeachingQueue | null {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Words
-// ---------------------------------------------------------------------------
-
-const STATUS_WORDS: Record<string, string> = {
-  submitted: 'With the owner, waiting to be read',
-  approved: 'Approved — you may teach here now',
-  declined: 'Not approved this time',
-  withdrawn: 'You took this back',
-};
-
-export function describeStatus(status: ApplicationStatus): string {
-  return STATUS_WORDS[status] ?? 'Recorded';
-}
-
 /**
  * Whether this person can start teaching. Only an approved application, or a
  * role somebody already held, gets a yes — and the screen says so rather than
@@ -180,17 +165,12 @@ export function canTeach(board: OwnApplicationBoard | null): boolean {
 }
 
 /**
- * What applying does not do, said once so every screen can carry it. This is
- * the sentence the "by appointment" rule needs beside a form that says
- * "apply" — the next line has to be that applying is not being appointed.
+ * What a refusal from the database means, in an English sentence.
+ *
+ * For the staff desk's `decide`. Sending and taking back, which the
+ * applicant's page calls in the reader's language, are answered by name from
+ * `teaching-outcome.ts`.
  */
-export const APPOINTMENT_NOTICE =
-  'Teaching here is by appointment. Sending this asks the owner to consider you; it ' +
-  'does not create a teacher, a course or a page, and nothing you write here publishes ' +
-  'anything. If it is approved, every course you write still passes review before a ' +
-  'learner sees it.';
-
-/** What a refusal from the database means, in a sentence. */
 export function teachingRefusal(message: string): { code: string; message: string } {
   const key = /teaching:([a-z_]+)/i.exec(message)?.[1]?.toLowerCase();
   const sentences: Record<string, string> = {

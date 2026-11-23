@@ -336,6 +336,19 @@ jobs:
             node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Institution responsive test::${s}`)' "$RUNNER_TEMP/institution-responsive.log"
             exit 1
           fi
+      - name: Check the page that asks to teach in three languages, and that a mistake is said under its own box
+        env:
+          RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs
+        run: |
+          set -euo pipefail
+          export RESPONSIVE_CHROME="$(command -v google-chrome || command -v chromium)"
+          if node scripts/teach-apply-route-smoke.mjs > "$RUNNER_TEMP/teach-apply-responsive.log" 2>&1; then
+            cat "$RUNNER_TEMP/teach-apply-responsive.log"
+          else
+            cat "$RUNNER_TEMP/teach-apply-responsive.log"
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Teaching application responsive test::${s}`)' "$RUNNER_TEMP/teach-apply-responsive.log"
+            exit 1
+          fi
       - name: Check the page that pays a pledge, in four languages, and that its form offers one press
         env:
           RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs

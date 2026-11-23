@@ -2460,6 +2460,56 @@ export const en = {
     'The parts below are for this institution’s administrators and are in English for now.',
   'inst.csvNote': 'The headings inside the file are in English.',
   'inst.whySignedOut': 'You are signed out. Sign in and try again.',
+
+  // The page that asks to teach, its form and taking an application back
+  // (`tapply.ts`), for the same twenty-seven languages as the dashboard,
+  // 2026-11-23. What the applicant types and the note the owner leaves are
+  // not translated, and the page says so.
+  'tapply.byAppointment':
+    'Teaching here is by appointment. Sending this asks the owner to consider you. It does not make you a teacher, and it creates no course and no page. Nothing you write here is published. If you are approved, every course you write is still reviewed before a learner sees it.',
+  'tapply.asWritten': 'The owner reads what you write as you wrote it. It is not translated.',
+  'tapply.unread':
+    'Your application could not be read. This page sent nothing and changed nothing.',
+  'tapply.teachesAlready': 'You already teach here, so there is nothing to apply for.',
+  'tapply.toCourses': 'Go to your courses',
+  'tapply.approved': 'Your application was approved.',
+  'tapply.noteLeft': 'The note left for you, as it was written:',
+  'tapply.yours': 'Your application',
+  'tapply.waiting': 'With the owner, waiting to be read',
+  'tapply.sentOn': 'Sent on: {date}',
+  'tapply.answerHere':
+    'The answer will be shown on this page. No message is sent when it comes, so look here again.',
+  'tapply.sampleLink': 'The sample lesson you sent',
+  'tapply.withdrawDo': 'Take this application back',
+  'tapply.withdrawNote':
+    'You can take it back at any time before it is answered. You do not have to say why.',
+  'tapply.declined': 'Not approved this time.',
+  'tapply.again': 'You can send another application.',
+  'tapply.withdrawn': 'You took your application back. You can send a new one.',
+  'tapply.closed':
+    'Applications are closed at the moment, so nothing can be sent from this page. If you would like to teach here, ask the owner.',
+  'tapply.formTitle': 'What the owner reads',
+  'tapply.fieldTeach': 'What would you teach, in one line?',
+  'tapply.hintTeach': 'For example: tajweed and Quran recitation for children.',
+  'tapply.fieldKnow': 'What you know, and who you learned it from',
+  'tapply.hintKnow':
+    'In your own words. A person checks a teacher’s qualifications here, so write what you would tell another teacher: for example an ijazah and who gave it, the years you have taught, and where.',
+  'tapply.fieldSample': 'A link to a sample lesson',
+  'tapply.hintSample':
+    'A link to a lesson you have recorded or streamed. The owner has to be able to watch it. A file cannot be uploaded here.',
+  'tapply.fieldElse': 'Anything else',
+  'tapply.hintElse':
+    'For example the hours you can teach, your time zone and the languages you teach in.',
+  'tapply.sendDo': 'Send to the owner',
+  'tapply.whyTeach': 'Say what you would teach, in a few words.',
+  'tapply.whyKnow': 'Write a sentence or two about what you know and who you learned it from.',
+  'tapply.whySample':
+    'That is not a link the owner can open. Paste the whole address of the lesson, with no spaces in it.',
+  'tapply.whyLong': 'One of the boxes holds more than it can take. Shorten it and send again.',
+  'tapply.whyClosed': 'Applications to teach are closed at the moment. Nothing was sent.',
+  'tapply.whyApplied': 'You already have an application with the owner. Wait for the answer.',
+  'tapply.whyNothing':
+    'There is no application waiting to be taken back. It may already have been answered.',
 } as const;
 
 export type MessageKey = keyof typeof en;
