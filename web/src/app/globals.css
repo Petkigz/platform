@@ -1529,6 +1529,40 @@ textarea { resize: vertical; min-height: 4rem; }
 .receipt-foot p { margin: 0.2rem 0; }
 .receipt-links { margin-top: 1.5rem; }
 
+/* The notification centre (`app/notifications/`). Stacked lines, not a table:
+   a message is a kind, the stored text, and when. */
+.told-page > .notice { margin-bottom: 1.5rem; }
+.told-section { margin-bottom: 2rem; }
+.told-section h2, .told-prefs h2 { margin: 0 0 0.6rem; font-size: 1.15rem; }
+.told-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.75rem; margin-bottom: 0.6rem; }
+.told-head h2 { margin: 0; }
+.told-list { list-style: none; margin: 0; padding: 0 1rem; }
+.told-list li { padding: 0.85rem 0; border-bottom: 1px solid var(--border); min-width: 0; }
+.told-list li:last-child { border-bottom: 0; }
+.told-list p { margin: 0.2rem 0 0; overflow-wrap: anywhere; }
+.told-kind { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.6rem; }
+.told-name { font-weight: 600; }
+/* What the database wrote, set apart from what the page says about it. */
+.told-stored { margin-top: 0.35rem; padding-inline-start: 0.7rem; border-inline-start: 3px solid var(--border); font-size: 0.93rem; }
+.told-stored p, .told-text p { margin: 0.1rem 0 0; overflow-wrap: anywhere; }
+.told-text { margin-top: 0.25rem; }
+.told-foot { display: flex; flex-wrap: wrap; gap: 0.2rem 1rem; font-size: 0.85rem; }
+.told-english { margin: 0 0 0.6rem; font-size: 0.9rem; }
+.told-mark { margin-top: 1rem; }
+.told-mark .btn { width: auto; }
+.told-mark p { margin: 0.5rem 0 0; }
+.told-anchor { margin-top: 2rem; scroll-margin-top: 1rem; }
+.told-prefs h2 { margin-top: 0; }
+.told-prefs > p { margin: 0 0 0.5rem; }
+.told-switches { list-style: none; margin: 0.75rem 0 0; padding: 0; display: grid; gap: 0.85rem; }
+.told-switch { display: flex; align-items: flex-start; gap: 0.6rem; min-width: 0; }
+.told-switch input { flex: 0 0 auto; width: auto; margin-top: 0.3rem; }
+.told-switch > span { min-width: 0; overflow-wrap: anywhere; }
+.told-what, .told-note { display: block; font-size: 0.9rem; }
+.told-note { font-size: 0.82rem; font-style: italic; }
+.told-prefs .notice { margin-top: 0.85rem; }
+.told-links { margin-top: 1.5rem; }
+
 @media (max-width: 600px) {
   .receipt-sheet { padding: 1.5rem 1.15rem; }
   .receipt-number { text-align: start; }

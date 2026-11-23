@@ -156,6 +156,9 @@ jobs:
       - name: Receipt synthetic HTTP regression
         run: node scripts/receipt-route-smoke.mjs
 
+      - name: Notifications synthetic HTTP regression
+        run: node scripts/notifications-route-smoke.mjs
+
       - name: Catalogue synthetic HTTP regression
         run: node scripts/catalogue-route-smoke.mjs
 

@@ -3,9 +3,9 @@
  *
  * The vocabulary is closed and lives in the database (`notification_preferences`
  * and the notification table both check it), so this file names the eight kinds
- * the platform can send and says what each one is for. The labels are here
- * rather than in SQL because a sentence about a payout belongs next to the code
- * that renders it — but the *list* is not invented here: `parsePreferences()`
+ * the platform can send and points at the sentence that says what each one is
+ * for. The sentences are in the catalogue, in the reader's language, rather
+ * than in SQL — but the *list* is not invented here: `parsePreferences()`
  * throws on a kind this file does not know, so adding an eighth kind in a
  * migration without updating this screen is an error rather than a silently
  * unlabelled switch.
@@ -37,65 +37,32 @@ export type NotificationKind =
 
 export type KindInfo = {
   kind: NotificationKind;
-  label: string;
-  description: string;
+  /**
+   * The kind's name, as a sentence in the catalogue. It is said in two
+   * places: beside the switch, and above a message of that kind, so it is
+   * written as something that happened.
+   */
+  labelKey:
+    | 'notify.kPayoutPaid' | 'notify.kPayoutFailed' | 'notify.kPayoutCancelled' | 'notify.kMediaFailed'
+    | 'notify.kClassStarting' | 'notify.kPlanRenewing' | 'notify.kLiveCancelled' | 'notify.kRecordingReady';
+  /** What the kind is for, and what switching it off costs. */
+  descriptionKey:
+    | 'notify.dPayoutPaid' | 'notify.dPayoutFailed' | 'notify.dPayoutCancelled' | 'notify.dMediaFailed'
+    | 'notify.dClassStarting' | 'notify.dPlanRenewing' | 'notify.dLiveCancelled' | 'notify.dRecordingReady';
   locked: boolean;
 };
 
+// The words are in the catalogue (`messages/notify.ts`), in the reader's
+// language. They used to be here, in English, for every reader.
 export const NOTIFICATION_KINDS: KindInfo[] = [
-  {
-    kind: 'payout_paid',
-    label: 'A payout reaches you',
-    description: 'When money owed to you has been sent.',
-    locked: false,
-  },
-  {
-    kind: 'payout_failed',
-    label: 'A payout fails',
-    description:
-      'When a transfer did not go through. Always on: it is how you find out, and the fix is usually yours to make.',
-    locked: true,
-  },
-  {
-    kind: 'payout_cancelled',
-    label: 'A payout is cancelled',
-    description:
-      'When a payout is withdrawn before it is sent. Always on, for the same reason as a failure.',
-    locked: true,
-  },
-  {
-    kind: 'media_encode_failed',
-    label: 'A recording of yours will not play',
-    description:
-      'When an upload could not be prepared for playback and nothing can be done about it silently. Turning this off means finding out from a learner instead. It does not affect whether the file is fixed.',
-    locked: false,
-  },
-  {
-    kind: 'class_starting',
-    label: 'A class is about to start',
-    description: 'A reminder for a live class in a course you or a child of yours is in.',
-    locked: false,
-  },
-  {
-    kind: 'plan_renewing',
-    label: 'A plan renews soon',
-    description: 'Three days before a subscription renews, so cancelling is possible in time.',
-    locked: false,
-  },
-  {
-    kind: 'live_cancelled',
-    label: 'A class you were going to is cancelled',
-    description:
-      'When a live class you or a child of yours was enrolled in is called off, with the reason. Turning this off means finding out by opening the room instead — the class still says it was cancelled, and why.',
-    locked: false,
-  },
-  {
-    kind: 'live_recording_ready',
-    label: 'A recording of a class is ready',
-    description:
-      'When the teacher puts the recording of a class you or a child of yours was in. Turning this off means finding out by opening the class page instead — the recording is still there, and still watchable while your enrolment lasts.',
-    locked: false,
-  },
+  { kind: 'payout_paid', labelKey: 'notify.kPayoutPaid', descriptionKey: 'notify.dPayoutPaid', locked: false },
+  { kind: 'payout_failed', labelKey: 'notify.kPayoutFailed', descriptionKey: 'notify.dPayoutFailed', locked: true },
+  { kind: 'payout_cancelled', labelKey: 'notify.kPayoutCancelled', descriptionKey: 'notify.dPayoutCancelled', locked: true },
+  { kind: 'media_encode_failed', labelKey: 'notify.kMediaFailed', descriptionKey: 'notify.dMediaFailed', locked: false },
+  { kind: 'class_starting', labelKey: 'notify.kClassStarting', descriptionKey: 'notify.dClassStarting', locked: false },
+  { kind: 'plan_renewing', labelKey: 'notify.kPlanRenewing', descriptionKey: 'notify.dPlanRenewing', locked: false },
+  { kind: 'live_cancelled', labelKey: 'notify.kLiveCancelled', descriptionKey: 'notify.dLiveCancelled', locked: false },
+  { kind: 'live_recording_ready', labelKey: 'notify.kRecordingReady', descriptionKey: 'notify.dRecordingReady', locked: false },
 ];
 
 export type Preference = {
@@ -113,10 +80,11 @@ export type Preference = {
 
 export class PreferencesError extends Error {}
 
-const BY_KIND = new Map(NOTIFICATION_KINDS.map((k) => [k.kind, k]));
+const BY_KIND = new Map<string, KindInfo>(NOTIFICATION_KINDS.map((k) => [k.kind, k]));
 
-export function describeKind(kind: string): KindInfo | null {
-  return BY_KIND.get(kind as NotificationKind) ?? null;
+/** What this screen knows about a kind, or null. A `Map`, so a kind named `constructor` is not one. */
+export function describeKind(kind: unknown): KindInfo | null {
+  return typeof kind === 'string' ? (BY_KIND.get(kind) ?? null) : null;
 }
 
 /**
@@ -124,7 +92,8 @@ export function describeKind(kind: string): KindInfo | null {
  *
  * Every kind the database knows must have a label here; a kind that arrives
  * without one is a screen that cannot explain itself, so it throws rather than
- * rendering an unlabelled toggle.
+ * rendering an unlabelled toggle. The page catches that and says the choices
+ * could not be read; it used to answer with an error page.
  */
 export function parsePreferences(value: unknown): Preference[] {
   if (!Array.isArray(value)) {
@@ -150,18 +119,73 @@ export function parsePreferences(value: unknown): Preference[] {
   });
 }
 
-/** The note beside a switch whose feature this platform does not run yet. */
-export function availabilityNote(pref: Preference): string | null {
-  if (pref.available) return null;
-  return 'Not in use on this platform yet. Your choice is saved and applies if it is switched on.';
-}
+/**
+ * The sentence above the switches, as the name of one and a count.
+ *
+ * Only what can be chosen is counted: the two locked kinds are on whatever
+ * anybody does. The count is put after a colon by the catalogue, so no
+ * language has to agree a noun with it.
+ */
+export type PreferenceSummary =
+  | { key: 'notify.sumAllOn' }
+  | { key: 'notify.sumAllOff' }
+  | { key: 'notify.sumOff'; count: number };
 
-/** One sentence above the switches. */
-export function preferenceSummary(prefs: Preference[]): string {
+export function preferenceSummary(prefs: readonly Preference[]): PreferenceSummary {
   const live = prefs.filter((p) => !p.locked);
   const off = live.filter((p) => !p.enabled);
-  if (live.length === 0) return 'Everything the platform can tell you is on.';
-  if (off.length === 0) return 'Everything you can choose is on.';
-  if (off.length === live.length) return 'You have switched off every optional message.';
-  return `${off.length} optional ${off.length === 1 ? 'message is' : 'messages are'} switched off.`;
+  if (off.length === 0) return { key: 'notify.sumAllOn' };
+  if (off.length === live.length) return { key: 'notify.sumAllOff' };
+  return { key: 'notify.sumOff', count: off.length };
+}
+
+/**
+ * Why a switch was not changed, as a name the screen has a sentence for.
+ *
+ * `/api/notifications/preferences` used to send back the sentence
+ * `set_notification_preference()` raised, in English, and the screen printed
+ * it. The route now sends one of these and logs the database's sentence.
+ *
+ * `failed` is "the database said no and nothing was written". `unconfirmed`
+ * is different: the request left and no answer that can be read came back,
+ * so the change may have been saved. The screen must not say it was not.
+ */
+export const PREFERENCE_REFUSALS = ['unconfigured', 'malformed', 'signed_out', 'unknown_kind', 'locked', 'failed', 'unconfirmed'] as const;
+export type PreferenceRefusal = (typeof PREFERENCE_REFUSALS)[number];
+
+const REFUSAL_STATUS: Record<PreferenceRefusal, number> = {
+  unconfigured: 503,
+  malformed: 400,
+  signed_out: 401,
+  unknown_kind: 400,
+  locked: 409,
+  failed: 500,
+  unconfirmed: 502,
+};
+
+export function preferenceRefusalStatus(reason: PreferenceRefusal): number {
+  return REFUSAL_STATUS[reason];
+}
+
+/**
+ * What the database said, as a name.
+ *
+ * `set_notification_preference()` refuses three ways and gives each its own
+ * SQLSTATE: signed out (42501), a kind it does not know (22023) and one of
+ * the two that cannot be silenced (23514). Anything else is not a refusal
+ * this code understands, so it is `failed` and nothing is claimed about it.
+ */
+export function preferenceRefusalOf(code: unknown): PreferenceRefusal {
+  if (code === '42501') return 'signed_out';
+  if (code === '22023') return 'unknown_kind';
+  if (code === '23514') return 'locked';
+  return 'failed';
+}
+
+/** What a request to change a switch asked for, or null when it is not one. */
+export function preferenceChangeOf(body: unknown): { kind: string; enabled: boolean } | null {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return null;
+  const input = body as Record<string, unknown>;
+  if (typeof input.kind !== 'string' || typeof input.enabled !== 'boolean') return null;
+  return { kind: input.kind, enabled: input.enabled };
 }

@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 12% there (192 of 1623 sentences; it was 71% of 272, then
+  the nineteen reads 12% there (192 of 1665 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -846,8 +846,13 @@ written: not a held draft, nothing.
   payment has been read through this page from a real database.
   **Still English, every one of them:**
   the pages it links to: `/account/password`,
-  `/institution`, `/notifications`, `/policies`, `/teach/apply`
-  and `/forgot-password`. A reader is taken from a
+  `/institution`, `/policies`, `/teach/apply`
+  and `/forgot-password`. (`/notifications` is in the reader's language
+  since 2026-11-23, `messages/notify.ts`, forty-two sentences, unreviewed;
+  the text of a stored message is still the English the database wrote, and
+  the page says so. Checked by `scripts/notifications-route-smoke.mjs` on a
+  stand-in. **Not exercised:** a notification written by a real payout or
+  class and read through it.) A reader is taken from a
   page in their language to an English one by each of those links.
   The preferred-language field is stored and read by nothing; the page now
   says so under the field, and whether to wire it or remove it is undecided.

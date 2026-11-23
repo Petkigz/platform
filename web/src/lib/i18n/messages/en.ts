@@ -2194,6 +2194,63 @@ export const en = {
   'receipt.rfDoneOn': 'Returned on: {date}',
   'receipt.record':
     'This document is made from the order record the platform holds. It is not a tax invoice.',
+
+  // The notification centre (`notify.ts`), for the same twenty-seven
+  // languages as the dashboard, 2026-11-23. The page's own words and the
+  // eight kinds' names and descriptions. A stored message is not here: it
+  // is English prose from the database, shown beneath its kind's name.
+  'notify.lead':
+    'Messages from the platform, shown inside the application. They are not sent to an inbox or a phone. This page is the only place they appear.',
+  'notify.unread':
+    'Your notifications could not be read just now. That is not the same as having none.',
+  'notify.soon': 'Coming up',
+  'notify.recent': 'Recent',
+  'notify.unreadCount': 'Unread: {count}',
+  'notify.unreadMark': 'Unread',
+  'notify.none': 'No messages yet.',
+  'notify.inEnglish':
+    'The messages themselves are written in English for now. The line above each one says what it is about.',
+  'notify.classAt': 'A class starts on: {date}',
+  'notify.planNamed': 'Plan: {name}',
+  'notify.renewsOn': 'The next period starts on: {date}',
+  'notify.renewCancel': 'Cancel before then if you do not want it to continue.',
+  'notify.markAll': 'Mark all as read',
+  'notify.marked': 'Marked as read: {count}',
+  'notify.markFailed': 'They could not be marked as read just now.',
+  'notify.prefsTitle': 'What you are told',
+  'notify.prefsBody': 'These switches decide what appears on this page.',
+  'notify.prefsUnread': 'What you have chosen could not be read just now. Nothing was changed.',
+  'notify.sumAllOn': 'Everything you can choose is on.',
+  'notify.sumAllOff': 'You have switched off every optional message.',
+  'notify.sumOff': 'Optional messages switched off: {count}',
+  'notify.always': 'Always on',
+  'notify.notInUse':
+    'Not in use on this platform yet. Your choice is saved and applies if it is switched on.',
+  'notify.prefLocked': 'Being told that money owed to you did not arrive cannot be switched off.',
+  'notify.prefFailed': 'That change was not saved.',
+  'notify.prefUnsure': 'No answer came back. Reload this page to see whether the change was saved.',
+  'notify.kPayoutPaid': 'A payout was sent to you',
+  'notify.kPayoutFailed': 'A payout did not go through',
+  'notify.kPayoutCancelled': 'A payout request was cancelled',
+  'notify.kMediaFailed': 'A recording of yours will not play',
+  'notify.kClassStarting': 'A class is about to start',
+  'notify.kPlanRenewing': 'A plan renews soon',
+  'notify.kLiveCancelled': 'A class you were going to was cancelled',
+  'notify.kRecordingReady': 'A recording of a class is ready',
+  'notify.dPayoutPaid': 'When money owed to you has been sent.',
+  'notify.dPayoutFailed':
+    'When a transfer did not go through. Always on: it is how you find out, and the fix is usually yours to make.',
+  'notify.dPayoutCancelled':
+    'When a payout is withdrawn before it is sent. Always on, for the same reason as a failure.',
+  'notify.dMediaFailed':
+    'When an upload could not be prepared for playback. Turning this off means finding out from a learner instead. It does not affect whether the file is fixed.',
+  'notify.dClassStarting': 'A reminder for a live class in a course you or a child of yours is in.',
+  'notify.dPlanRenewing':
+    'Three days before a subscription renews, so cancelling is possible in time.',
+  'notify.dLiveCancelled':
+    'When a live class you or a child of yours was enrolled in is called off, with the reason. Turning this off means finding out by opening the room instead. The class still says it was cancelled, and why.',
+  'notify.dRecordingReady':
+    'When a recording is added for a class you or a child of yours was in. Turning this off means finding out by opening the class page instead. The recording is still there, and can still be watched while your enrolment lasts.',
 } as const;
 
 export type MessageKey = keyof typeof en;

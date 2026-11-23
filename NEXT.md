@@ -2619,6 +2619,51 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### Notifications in the reader's language, 2026-11-23
+
+- *The words.* Forty-two sentences in a new part, `messages/notify.ts`,
+  twenty-seven languages, **read by no speaker** (`tmp-words/u27`): the
+  page's own, and a name and a description for each of the eight kinds. The
+  English descriptions were in `lib/notification-prefs.ts`; that file now
+  holds the list and points at the catalogue.
+- *What is still English, on purpose.* The title and body of a stored
+  message, which the database composed. To a reader of another language the
+  page names the message's kind, sets the stored text apart, marks it
+  `lang="en"` and says once that it is English. See `DECISIONS.md`.
+- *The page.* `app/notifications/page.tsx` and two islands handed their
+  words. Reminders are said from the catalogue. Dates are the reader's
+  language, in UTC and labelled so. The link to payouts that every reader
+  was shown is gone; a message about a payout carries its own.
+- *Rules a test holds.* `lib/notifications.ts` + test (7): what a reply must
+  hold to be shown, which addresses are followed, which ids a request may
+  name, a plan's name out of its reminder, and that nothing which writes a
+  notification queues a message. `lib/notification-prefs.test.ts` rewritten
+  (21): the kinds and the locked pair are read out of the migrations rather
+  than typed twice.
+- *Found on the way.* (1) `POST /api/notifications` with no usable list of
+  ids marked **every** message the caller had as read, because the database
+  reads "no ids" that way. Nothing on the site sent such a request; anything
+  else that did would have. It is refused now. (2) Both routes returned the
+  database's sentence to the browser and the screen printed it. (3) The page
+  answered with an error page when either reply failed, or when the database
+  knew a kind the page did not. (4) A switch that was pressed moved to the
+  position asked for when the answer did not say where it was. It now moves
+  only on an answer that names the kind and the position. (5) The table's
+  rule for an address lets `//host` through; the page no longer relies on it.
+- *Checked.* `scripts/notifications-route-smoke.mjs` in `ci.yml` and, with a
+  browser, in `responsive-smoke.yml`: English, Arabic, French, Hausa over
+  HTTP; six kinds of unread centre and four of unread switches; both routes;
+  English, Arabic, Tamil, Filipino and French in a browser at 320px;
+  switches and marking pressed in English and Arabic.
+- *Not shown.* A notification written by a real payout, upload or class and
+  read through the page; the database refusing somebody else's message (the
+  stand-in marks what it is told to); twenty-two languages in a browser;
+  Tamil's words in a screenshot (the sandbox draws boxes). The address rule
+  is the page's only: the table still accepts `//host`.
+- *Counts.* 1665 keys; server-only 1297; unwritten while held 1393; held
+  192 of 1665, 11.53%, still shown as 12%. The translation audit stayed at
+  195 of 200.
+
 ### Next.js 16.4.2 → 16.4.5, 2026-11-23
 
 - *Why.* The development server's own overlay reported it in a screenshot of

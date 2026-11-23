@@ -145,6 +145,13 @@ for (const [file, key] of [
   ['receipt.ts', 'receipt.notBody'],
   ['receipt.ts', 'receipt.unread'],
   ['receipt.ts', 'receipt.record'],
+  // The notification centre is a server page with two islands, each handed
+  // the words it says. What the page says about where a message goes, about
+  // a centre it could not read, and what an island says when no answer came
+  // back must be in nothing a browser downloads.
+  ['notify.ts', 'notify.lead'],
+  ['notify.ts', 'notify.unread'],
+  ['notify.ts', 'notify.prefUnsure'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

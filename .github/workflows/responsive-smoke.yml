@@ -271,6 +271,19 @@ jobs:
             node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Receipt responsive test::${s}`)' "$RUNNER_TEMP/receipt-responsive.log"
             exit 1
           fi
+      - name: Check notifications in five languages on a phone, that a switch moves only when the database says so, and that unread is said
+        env:
+          RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs
+        run: |
+          set -euo pipefail
+          export RESPONSIVE_CHROME="$(command -v google-chrome || command -v chromium)"
+          if node scripts/notifications-route-smoke.mjs > "$RUNNER_TEMP/notifications-responsive.log" 2>&1; then
+            cat "$RUNNER_TEMP/notifications-responsive.log"
+          else
+            cat "$RUNNER_TEMP/notifications-responsive.log"
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Notifications responsive test::${s}`)' "$RUNNER_TEMP/notifications-responsive.log"
+            exit 1
+          fi
       - name: Check the page that pays a pledge, in four languages, and that its form offers one press
         env:
           RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs

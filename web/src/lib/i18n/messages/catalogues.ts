@@ -38,6 +38,7 @@ import { SPONSOR } from './sponsor.ts';
 import { ORDERS } from './orders.ts';
 import { BILLING } from './billing.ts';
 import { RECEIPT } from './receipt.ts';
+import { NOTIFY } from './notify.ts';
 import { LESSON } from './lesson.ts';
 import { isHeld } from './held.ts';
 import { ASIA_AZ } from './asia-az.ts';
@@ -871,6 +872,8 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   BILLING,
   // The receipt, on the same rule.
   RECEIPT,
+  // The notification centre, on the same rule.
+  NOTIFY,
 );
 
 /**

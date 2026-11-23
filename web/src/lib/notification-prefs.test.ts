@@ -1,27 +1,56 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
+import { translator } from './i18n/index.ts';
 import {
-  availabilityNote,
   describeKind,
   NOTIFICATION_KINDS,
   parsePreferences,
+  PREFERENCE_REFUSALS,
+  preferenceChangeOf,
+  preferenceRefusalOf,
+  preferenceRefusalStatus,
   preferenceSummary,
   type Preference,
 } from './notification-prefs.ts';
 
+const en = translator('en');
+const here = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
+const LATEST = here('../../../supabase/migrations/20261281009000_live_recording.sql');
+
 test('the eight kinds are the eight the database can send, in its order', () => {
   // The order is the database's (`my_notification_preferences()`), not a choice
   // made here: a screen that reorders the list is a screen whose next kind is
-  // forgotten in the other list.
-  assert.deepEqual(
-    NOTIFICATION_KINDS.map((k) => k.kind),
-    [
-      'payout_paid', 'payout_failed', 'payout_cancelled',
-      'media_encode_failed', 'class_starting', 'plan_renewing', 'live_cancelled',
-      'live_recording_ready',
-    ],
-  );
+  // forgotten in the other list. Read out of the function itself.
+  const fn = LATEST.slice(LATEST.indexOf('create or replace function public.my_notification_preferences('));
+  const list = /foreach v_kind in array array\[([^\]]+)\]/u.exec(fn)?.[1] ?? '';
+  const inDatabase = [...list.matchAll(/'([a-z_]+)'/gu)].map((m) => m[1]);
+  assert.equal(inDatabase.length, 8);
+  assert.deepEqual(NOTIFICATION_KINDS.map((k) => k.kind), inDatabase);
+});
+
+test('every kind has a name and a description, and no two share one', () => {
+  const keys = NOTIFICATION_KINDS.flatMap((k) => [k.labelKey, k.descriptionKey]);
+  assert.equal(new Set(keys).size, 16);
+  for (const key of keys) {
+    const said = en(key);
+    assert.notEqual(said, key, `${key} is not in the catalogue`);
+    assert.ok(said.length > 10, key);
+  }
+  // The sentences are the catalogue's. None is left in this file.
+  const source = here('./notification-prefs.ts');
+  assert.doesNotMatch(source, /\blabel: '|\bdescription: '/u);
+  assert.doesNotMatch(source, /Not in use on this platform yet|optional message/u);
+});
+
+test('a kind’s name reads as something that happened, in both places it is said', () => {
+  // It is the label beside a switch and the line above a message, so it is
+  // not a category ("Payouts") and not an instruction ("Tell me when…").
+  for (const k of NOTIFICATION_KINDS) {
+    assert.match(en(k.labelKey), /^A /u, k.kind);
+    assert.doesNotMatch(en(k.labelKey), /[.:!?]$/u, k.kind);
+  }
 });
 
 test('a cancelled class is a choice, and the description says what silence costs', () => {
@@ -30,9 +59,9 @@ test('a cancelled class is a choice, and the description says what silence costs
   // warning rather than the fact — and the switch says so.
   const info = describeKind('live_cancelled');
   assert.ok(info);
-  assert.equal(info!.locked, false);
-  assert.match(info!.description, /finding out by opening the room/);
-  assert.match(info!.description, /still says it was cancelled/);
+  assert.equal(info.locked, false);
+  assert.match(en(info.descriptionKey), /finding out by opening the room/);
+  assert.match(en(info.descriptionKey), /still says it was cancelled/);
 });
 
 test('a recording being ready is a choice, and the description says what silence costs', () => {
@@ -40,13 +69,18 @@ test('a recording being ready is a choice, and the description says what silence
   // not the class. That is what makes it a switch rather than an obligation.
   const info = describeKind('live_recording_ready');
   assert.ok(info);
-  assert.equal(info!.locked, false);
-  assert.match(info!.description, /still there/);
+  assert.equal(info.locked, false);
+  assert.match(en(info.descriptionKey), /still there/);
 });
 
 test('exactly two kinds are locked, and they are the money failures', () => {
   const locked = NOTIFICATION_KINDS.filter((k) => k.locked).map((k) => k.kind);
   assert.deepEqual(locked, ['payout_failed', 'payout_cancelled']);
+  // The database's own rule, so the two cannot drift apart.
+  const rule = here('../../../supabase/migrations/20261277000100_notification_preferences.sql');
+  const fn = rule.slice(rule.indexOf('function public.notification_kind_is_locked('));
+  assert.match(fn.slice(0, 400), /p_kind in \('payout_failed', 'payout_cancelled'\)/u);
+  for (const kind of locked) assert.match(en(describeKind(kind)!.descriptionKey), /Always on/);
 });
 
 test('a failed encode is a choice, and the description says what silence costs', () => {
@@ -56,9 +90,25 @@ test('a failed encode is a choice, and the description says what silence costs',
   // instead of hidden.
   const info = describeKind('media_encode_failed');
   assert.ok(info);
-  assert.equal(info!.locked, false);
-  assert.match(info!.description, /finding out from a learner/);
-  assert.match(info!.description, /does not affect whether the file is fixed/);
+  assert.equal(info.locked, false);
+  assert.match(en(info.descriptionKey), /finding out from a learner/);
+  assert.match(en(info.descriptionKey), /does not affect whether the file is fixed/);
+});
+
+test('no sentence about a kind promises an email, a text or a push', () => {
+  // `delivery.notifications` is off and no provider is chosen. These are
+  // messages inside the application.
+  for (const key of ['notify.lead', 'notify.prefsBody', ...NOTIFICATION_KINDS.map((k) => k.descriptionKey)] as const) {
+    assert.doesNotMatch(en(key), /\b(we|will) (email|text|send)|by email|by SMS|push notification/iu, key);
+  }
+  assert.match(en('notify.lead'), /not sent to an inbox or a phone/u);
+});
+
+test('a name every object has is not a kind', () => {
+  for (const name of ['constructor', '__proto__', 'toString', 'hasOwnProperty', 'nope', '', 7, null, undefined, {}]) {
+    assert.equal(describeKind(name), null, String(name));
+  }
+  assert.throws(() => parsePreferences([{ kind: 'constructor', enabled: true }]), /does not know/);
 });
 
 test('a list from the database comes back in the order it arrived', () => {
@@ -88,6 +138,7 @@ test('a kind this screen does not know is an error, not an unlabelled switch', (
 test('a reply that is not a list is an error', () => {
   assert.throws(() => parsePreferences({}), /did not load/);
   assert.throws(() => parsePreferences(null), /did not load/);
+  assert.throws(() => parsePreferences(undefined), /did not load/);
 });
 
 test('the sentence counts only what can be chosen', () => {
@@ -98,35 +149,40 @@ test('the sentence counts only what can be chosen', () => {
     available = true,
   ): Preference => ({ kind, enabled, locked, available });
 
-  assert.equal(
+  assert.deepEqual(
     preferenceSummary([
       pref('payout_paid', true), pref('payout_failed', true, true),
       pref('payout_cancelled', true, true), pref('media_encode_failed', true),
       pref('class_starting', true), pref('plan_renewing', true),
       pref('live_cancelled', true),
     ]),
-    'Everything you can choose is on.',
+    { key: 'notify.sumAllOn' },
   );
 
-  assert.equal(
+  assert.deepEqual(
     preferenceSummary([
       pref('payout_paid', true), pref('payout_failed', true, true),
       pref('payout_cancelled', true, true), pref('media_encode_failed', true),
       pref('class_starting', false), pref('plan_renewing', true),
       pref('live_cancelled', true),
     ]),
-    '1 optional message is switched off.',
+    { key: 'notify.sumOff', count: 1 },
   );
 
-  assert.equal(
+  assert.deepEqual(
     preferenceSummary([
       pref('payout_paid', false), pref('payout_failed', true, true),
       pref('payout_cancelled', true, true), pref('media_encode_failed', false),
       pref('class_starting', false), pref('plan_renewing', false),
       pref('live_cancelled', false),
     ]),
-    'You have switched off every optional message.',
+    { key: 'notify.sumAllOff' },
   );
+
+  // The count is said after a colon, so one and many are the same sentence.
+  assert.equal(en('notify.sumOff', { count: '1' }), 'Optional messages switched off: 1');
+  assert.equal(en('notify.sumAllOn'), 'Everything you can choose is on.');
+  assert.equal(en('notify.sumAllOff'), 'You have switched off every optional message.');
 });
 
 test('a kind that is not in use yet says so, and still keeps the choice', () => {
@@ -136,12 +192,13 @@ test('a kind that is not in use yet says so, and still keeps the choice', () => 
   assert.equal(off?.available, false);
   // The switch is still usable: a choice made in advance is not an error.
   assert.equal(off?.enabled, true);
-  assert.match(availabilityNote(off!)!, /Not in use on this platform yet/);
+  assert.match(en('notify.notInUse'), /Not in use on this platform yet/);
+  assert.match(en('notify.notInUse'), /Your choice is saved/);
 
   const [live] = parsePreferences([
     { kind: 'class_starting', enabled: true, locked: false, available: true },
   ]);
-  assert.equal(availabilityNote(live!), null);
+  assert.equal(live?.available, true);
 });
 
 test('a reply without the availability field is treated as live', () => {
@@ -150,21 +207,64 @@ test('a reply without the availability field is treated as live', () => {
   assert.equal(pref?.available, true);
 });
 
-test('a kind is described in a sentence a person can act on', () => {
-  const info = describeKind('payout_failed');
-  assert.ok(info);
-  assert.match(info!.description, /Always on/);
-  assert.equal(describeKind('nope'), null);
-});
-
 test('the media kind is a preference the database will accept', () => {
-  // End to end with the migration's own lists: if `media_encode_failed` were
-  // missing from the CHECK, the RPC or the `foreach`, the reply would not parse
-  // and this test would fail on the throw rather than on an assertion.
   const prefs = parsePreferences([
     { kind: 'media_encode_failed', enabled: false, locked: false, available: true },
   ]);
   assert.equal(prefs[0]?.kind, 'media_encode_failed');
   assert.equal(prefs[0]?.enabled, false);
-  assert.equal(availabilityNote(prefs[0]!), null);
+});
+
+test('each way the database refuses a switch has a name, and the rest claim nothing', () => {
+  // The three refusals and their SQLSTATEs, read out of the function.
+  const fn = LATEST.slice(
+    LATEST.indexOf('create or replace function public.set_notification_preference('),
+    LATEST.indexOf('create or replace function public.my_notification_preferences('),
+  );
+  const raised = [...fn.matchAll(/using errcode = '([a-z_]+)'/gu)].map((m) => m[1]);
+  assert.deepEqual(raised, ['insufficient_privilege', 'invalid_parameter_value', 'check_violation']);
+
+  assert.equal(preferenceRefusalOf('42501'), 'signed_out');
+  assert.equal(preferenceRefusalOf('22023'), 'unknown_kind');
+  assert.equal(preferenceRefusalOf('23514'), 'locked');
+  for (const other of ['23505', 'PGRST301', '', null, undefined, 42501]) {
+    assert.equal(preferenceRefusalOf(other), 'failed', String(other));
+  }
+
+  const statuses = Object.fromEntries(PREFERENCE_REFUSALS.map((r) => [r, preferenceRefusalStatus(r)]));
+  assert.deepEqual(statuses, {
+    unconfigured: 503, malformed: 400, signed_out: 401, unknown_kind: 400, locked: 409, failed: 500, unconfirmed: 502,
+  });
+});
+
+test('a change names a kind and says on or off, and nothing else is one', () => {
+  assert.deepEqual(preferenceChangeOf({ kind: 'payout_paid', enabled: false, extra: 1 }), { kind: 'payout_paid', enabled: false });
+  for (const bad of [null, undefined, 'x', [], [{ kind: 'payout_paid', enabled: true }], {}, { kind: 'payout_paid' },
+    { enabled: true }, { kind: 7, enabled: true }, { kind: 'payout_paid', enabled: 'true' }, { kind: 'payout_paid', enabled: 1 }]) {
+    assert.equal(preferenceChangeOf(bad), null, JSON.stringify(bad));
+  }
+});
+
+test('neither route sends the database’s sentence to a browser', () => {
+  for (const path of ['../app/api/notifications/route.ts', '../app/api/notifications/preferences/route.ts']) {
+    const route = here(path);
+    assert.doesNotMatch(route, /message: error\.message/u, path);
+    assert.doesNotMatch(route, /NextResponse\.json\([^)]*error\.message/u, path);
+    assert.match(route, /console\.error\('\[notifications\]/u, path);
+    assert.match(route, /'Cache-Control': 'no-store'/u, path);
+  }
+  // The switch that moved is the one the database said moved.
+  const island = here('../app/notifications/preferences.tsx');
+  assert.match(island, /json\.value\?\.kind !== pref\.kind/u);
+  assert.doesNotMatch(island, /json\.message|result\?\.message/u);
+  assert.doesNotMatch(here('../app/notifications/notification-actions.tsx'), /\.message/u);
+});
+
+test('the page says what it could not read, and does not throw it', () => {
+  const page = here('../app/notifications/page.tsx');
+  assert.doesNotMatch(page, /throw new Error/u);
+  assert.match(page, /data-centre="unread"/u);
+  assert.match(page, /data-preferences="unread"/u);
+  assert.doesNotMatch(page, /Intl\.DateTimeFormat\('en'/u);
+  assert.match(page, /languageShownFor\(locale, 'notify'\)/u);
 });

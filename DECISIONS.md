@@ -8765,6 +8765,52 @@ read 12%.
 sentence nobody prints; the receipt, which every line links to and which is
 still English.
 
+## Notifications, in the reader's language as far as the record allows — **DECIDED 2026-11-23**
+
+`/notifications` is where the platform tells a person something inside the
+application, and where they choose what they are told. Forty-two sentences in
+a part of its own, `notify`; the nineteen held languages still read 12%.
+
+- *The page's own words are the reader's. A stored message's are not, and the
+  page says so.* A notification is a row whose title and body were composed
+  in English by the database, with an amount, a reference or somebody's
+  reason inside, and nothing in the row says which part is which. So to a
+  reader of another language the page names the kind of message in their
+  language, shows the stored text beneath it set apart and marked as English,
+  and says once, above the list, that the messages themselves are in English
+  for now. To a reader of English the stored text is the message and is shown
+  alone. **Not done, and not decided:** storing a message as a kind and its
+  values so that it can be said in any language. That is a change to four
+  database functions and to every row already written.
+- *A reminder is said whole.* The two reminders are worked out when the page
+  is read and arrive with the moment they are about as a value, so the page
+  says its own sentence for each. A plan's name is taken off the words the
+  function puts after it; a test reads those words out of the migration.
+- *A kind has one name in two places*: beside its switch and above a message
+  of that kind. So it is written as something that happened.
+- *Not read is said, and one failure does not take the other.* The page used
+  to answer with an error page when either reply failed, and when the
+  database knew a kind the page did not. A centre that could not be read now
+  says so and still shows the switches; switches that could not be read say
+  so and still show the messages. One message that makes no sense makes the
+  centre unread rather than one message shorter.
+- *A message of a kind the page has no word for is shown with no name.* It is
+  not hidden: it is somebody's message. Its stored word is never printed.
+- *Only an address inside this site is followed.* The table's check is
+  `href ~ '^/'`, which a browser reads as another site when the address is
+  `//host`. No function writes such an address today. The page does not rely
+  on that.
+- *A request to mark messages read has to name them.* The database reads "no
+  ids" as "every message I have", and the route sent it that whenever the
+  body held no usable list. It now refuses.
+- *Neither route sends a browser the database's sentence.* Each refusal has a
+  name and a status; the sentence is logged. An answer that cannot be read
+  after a switch was pressed is "unconfirmed" and the screen says to reload:
+  the change may have been saved.
+- *It says where a message goes, and only that.* "They are not sent to an
+  inbox or a phone." That is true of how they are written: no function that
+  writes a notification queues a message. A test holds it.
+
 ## The receipt, in the reader's language — **DECIDED 2026-11-23**
 
 `/orders/<id>/receipt` is the document a payer keeps or hands to somebody.
