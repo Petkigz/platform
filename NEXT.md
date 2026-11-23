@@ -2619,6 +2619,55 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The plans pages in the reader's language, 2026-11-23
+
+- *The words.* Forty-two sentences in a new part, `messages/plans.ts`,
+  twenty-seven languages, **read by no speaker** (`tmp-words/u28`). The
+  sentences for a phone number, a service and a lost reply are the buy
+  page's, reused.
+- *Two pages where there was one.* `app/plans/page.tsx` is the list;
+  `app/plans/[id]/page.tsx` is where one plan is paid for, with the form
+  `plan-pay-form.tsx` handed its words. `storefront.ts` reads for both and
+  never throws. `plan-storefront.tsx`, the old form on every card, is
+  deleted. `/plans/` is closed to crawlers. See `DECISIONS.md`.
+- *Rules a test holds.* `lib/plan-outcome.ts` + test (7): each of the
+  writer's twelve sentences, read out of the migration, has a reason; each
+  reason has a status and a sentence. `lib/plans.ts` + test (9): which
+  prices an account is shown, one card per plan and period, who a plan can
+  be for, and what an account already holds of a plan.
+  `lib/checkout.ts`: `createPlanOrder` answers by name and no longer throws.
+- *Found on the way.* (1) The old form never sent a phone number, and both
+  connected kinds of service ask the handset, so with a service connected
+  every plan order would have been refused for its number: a plan could not
+  have been bought. (2) With no service connected the route wrote the order
+  anyway, and the waiting subscription that came with it made the writer
+  refuse every later order for that plan. (3) A refusal the route had no
+  name for was sent to the browser in the database's words and printed.
+  (4) A failed read of the billing account was the framework's error page
+  from an API route, and any failed read on `/plans` was the "this page
+  broke" screen. (5) The page listed every active version of a plan, with
+  "version N" and the stored word for its period, and offered every learner
+  of the family for every plan, including those the writer refuses.
+  (6) What a plan carried was printed as stored, `Feature:
+  offline_downloads`. The one feature there is now has a sentence, said
+  only while `learning.offline` is on; a feature with no sentence is not
+  printed.
+- *Checked.* `scripts/plans-route-smoke.mjs` in `ci.yml` and, with a
+  browser, in `responsive-smoke.yml`: Next started twice, with no service
+  and with a synthetic one. `scripts/buy-route-smoke.mjs` now expects a plan
+  to be refused, unwritten, when nothing can take payment.
+- *Not shown.* Anything from a real database: the stand-in answers what it
+  is asked, so that the page shows the price the writer would take is a
+  reading of the migration and not a test of it. A plan order becoming
+  access. A payment for a plan. The pages with the switch on anywhere
+  hosted: it is off. Twenty-four languages in a browser.
+- *Not built.* Renewal; a retry of a plan order that failed; a code, tax or
+  fee on a plan; the 14-day withdrawal question for a plan.
+  `/subscriptions`, where a waiting order is cancelled, is still English.
+- *Counts.* 1707 keys; server-only 1339; unwritten while held 1435; held
+  192 of 1707, 11.25%, shown as 11%. 133 page routes. The translation audit
+  stayed at 195 of 200.
+
 ### Notifications in the reader's language, 2026-11-23
 
 - *The words.* Forty-two sentences in a new part, `messages/notify.ts`,

@@ -1529,6 +1529,24 @@ textarea { resize: vertical; min-height: 4rem; }
 .receipt-foot p { margin: 0.2rem 0; }
 .receipt-links { margin-top: 1.5rem; }
 
+/* The plans on sale and the page one is paid for on. A card is a stack of
+   labelled lines, like an order: the price first, then who it covers, then
+   what it opens. */
+.plan-list {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+  align-items: start;
+  margin-top: 1.25rem;
+}
+.plan-card { display: grid; gap: 0.6rem; align-content: start; }
+.plan-card h2 { margin: 0; overflow-wrap: anywhere; }
+.plan-card > p { margin: 0; overflow-wrap: anywhere; }
+.plan-lines { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.25rem; overflow-wrap: anywhere; }
+.plan-lines:empty { display: none; }
+.plan-prices { font-size: 1.05rem; }
+.plan-action { margin-top: 0.4rem; }
+
 /* The notification centre (`app/notifications/`). Stacked lines, not a table:
    a message is a kind, the stored text, and when. */
 .told-page > .notice { margin-bottom: 1.5rem; }

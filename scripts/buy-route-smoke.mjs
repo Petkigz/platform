@@ -441,11 +441,13 @@ try {
     assert.equal(provider.length, 0, 'a provider was called that is not configured');
     assert.equal(calls.filter((c) => c.path === '/rest/v1/payment_attempts').length, 0, 'an attempt was recorded with no provider to attempt it');
 
-    // A plan goes through the same route and keeps the shape its page reads.
-    state.plan = refusal(400, 'P0001', 'checkout:disabled');
+    // A plan goes through the same route. With nothing to take payment it is
+    // not ordered at all; `plans-route-smoke.mjs` follows the rest of it.
+    calls.length = 0;
     answer = await send('/api/checkout', { planVersionId: PLAN, priceId: 'price-1', learnerProfileId: OWN });
     assert.equal(answer.status, 503);
-    assert.deepEqual(answer.json, { error: 'Subscriptions are not open on this platform yet.', code: 'checkout_disabled' });
+    assert.deepEqual(answer.json, { reason: 'provider_unavailable', error: 'No payment provider can take this payment yet.' });
+    assert.equal(rpcs('create_plan_order').length, 0, 'a plan was ordered with nothing to pay it through');
     state = fresh();
 
     // The price check.
@@ -475,7 +477,7 @@ try {
     assert.deepEqual(rpcs('quote_course_order').map((c) => c.payload), [{ p_course_id: COURSE, p_learner_profile_id: OWN, p_buyer_country: 'UG', p_promotion_code: 'eid24' }]);
     assert.equal(rpcs('create_course_order').length, 0, 'asking the price wrote an order');
     state = fresh();
-    console.log('Checkout routes, no provider connected: signed out 401, malformed 400, nobody named 400, a number typed with no service to read it for left unread, 23 writer refusals each under its own name and status with no order in the reply, an unnamed refusal 500 in the route’s words, no answer from the database 502 "unconfirmed", a choice that could not be recorded and a missing provider each naming the order that exists; the writer is sent a course, a learner, a country and a code and nothing else; a plan keeps its old reply; the price check answers the same names and writes nothing. The stand-in enforces nothing: not real Auth, RLS or the writer’s own rules.');
+    console.log('Checkout routes, no provider connected: signed out 401, malformed 400, nobody named 400, a number typed with no service to read it for left unread, 23 writer refusals each under its own name and status with no order in the reply, an unnamed refusal 500 in the route’s words, no answer from the database 502 "unconfirmed", a choice that could not be recorded and a missing provider each naming the order that exists; the writer is sent a course, a learner, a country and a code and nothing else; a plan is not ordered while nothing can take payment for it; the price check answers the same names and writes nothing. The stand-in enforces nothing: not real Auth, RLS or the writer’s own rules.');
 
     if (process.env.RESPONSIVE_PLAYWRIGHT && process.env.RESPONSIVE_CHROME) {
       const { chromium } = await import(pathToFileURL(process.env.RESPONSIVE_PLAYWRIGHT).href);

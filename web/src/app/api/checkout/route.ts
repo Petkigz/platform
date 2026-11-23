@@ -23,6 +23,8 @@ import {
   type CheckoutReason,
   type PledgeOutcome,
 } from '@/lib/checkout-outcome';
+import { PLAN_ENGLISH, planStatusOf, type PlanOutcome } from '@/lib/plan-outcome';
+import { fromMinor, type Money } from '@/lib/money';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,13 +77,20 @@ type Body = {
  *     `returnUrl` with nothing settled, and the entitlement arrives when the
  *     webhook lands. The UI has to be built to wait rather than to assume.
  *
- * **A refusal names its reason** (`lib/checkout-outcome.ts`). `error` is still
- * an English sentence, for the plan checkout and for any caller with no words
- * of its own; the buy page's form reads `reason` and says its own sentence in
- * the reader's language. A course refusal is answered with the status that
- * belongs to its reason, and the form trusts a reason only when it arrives
- * with that status. The database's own sentence is not sent for a course.
- * (For a plan it still can be: `createPlanOrder` has no keys to match.)
+ * **A refusal names its reason** (`lib/checkout-outcome.ts`, and
+ * `lib/plan-outcome.ts` for a plan). `error` is still an English sentence,
+ * for any caller with no words of its own; each page's form reads `reason`
+ * and says its own sentence in the reader's language. A refusal is answered
+ * with the status that belongs to its reason, and a form trusts a reason only
+ * when it arrives with that status. The database's own sentence is not sent,
+ * for a course, a pledge or a plan.
+ *
+ * **A plan is not ordered unless it can be paid for.** `create_plan_order()`
+ * writes a pending subscription beside the order and refuses a second one for
+ * the same plan while the first is pending. A course order that cannot be
+ * paid yet is harmless; a plan order that cannot be paid stops the plan being
+ * bought at all until somebody cancels it. So for a plan the service is
+ * checked against the price before the writer is called.
  */
 const NO_PROVIDER_SENTENCE =
   'No payment provider is configured yet, so this order cannot be paid. ' +
@@ -104,6 +113,10 @@ const PLEDGE_SENTENCES: Record<PledgeOutcome, string> = {
 };
 const refusePledge = (reason: PledgeOutcome) =>
   NextResponse.json({ reason, error: PLEDGE_SENTENCES[reason] }, { status: pledgeStatusOf(reason) });
+
+/** The same, for a plan. */
+const refusePlan = (reason: PlanOutcome, extra: Record<string, unknown> = {}) =>
+  NextResponse.json({ reason, error: PLAN_ENGLISH[reason], ...extra }, { status: planStatusOf(reason) });
 
 export async function POST(request: Request) {
   if (!isSupabaseConfigured()) {
@@ -149,10 +162,10 @@ export async function POST(request: Request) {
   // A price is still part of a plan checkout. A course has no price to post:
   // which one applies is decided by the buyer's country, in the writer.
   if (planVersionId && !priceId) {
-    return refuse('malformed', 'Choose a price for the plan.');
+    return refusePlan('malformed');
   }
   if (planVersionId && !learnerProfileId) {
-    return refuse('learner_required', 'Choose the learner who will use this subscription.');
+    return refusePlan('learner_required');
   }
   // One purchase covers one learner, so a course order names them too. A
   // pledge names nobody: the sponsor must not learn who they are helping.
@@ -192,13 +205,14 @@ export async function POST(request: Request) {
       const parsed = parsePhone(typed, provider.market.country);
       if (!parsed.ok) {
         const { ok: _ok, ...why } = parsed;
+        if (planVersionId) return refusePlan('phone_invalid', { phone: why });
         return refuse('phone_invalid', 'That phone number is not valid.', { phone: why });
       }
       msisdn = parsed.e164;
     } else {
       // A provider tied to no country cannot say whose a local number is.
       const normalised = toE164(typed);
-      if (!normalised) return refuse('phone_invalid', 'That phone number is not valid.');
+      if (!normalised) return planVersionId ? refusePlan('phone_invalid') : refuse('phone_invalid', 'That phone number is not valid.');
       msisdn = normalised;
     }
   }
@@ -219,12 +233,53 @@ export async function POST(request: Request) {
     }
     result = made;
   } else if (isPlanCheckout) {
-    result = await createPlanOrder(supabase, {
+    // Before anything is written: can the chosen service take this price?
+    // See the note above the route. The price is read the way the plans page
+    // reads it (an active price is public); the writer reads it again and is
+    // the one that decides. A price that cannot be read here is left to the
+    // writer to refuse, in its own terms.
+    if (!provider.available) return refusePlan('provider_unavailable');
+    const listed = await supabase
+      .from('prices')
+      .select('amount_minor,currency_code')
+      .eq('id', priceId)
+      .eq('plan_version_id', planVersionId)
+      .maybeSingle();
+    if (listed.error) {
+      console.error('checkout: a plan price could not be read:', listed.error.message);
+      return refusePlan('refused');
+    }
+    const price = listed.data as { amount_minor?: unknown; currency_code?: unknown } | null;
+    if (price) {
+      let money: Money | null = null;
+      try {
+        money = fromMinor(String(price.amount_minor), String(price.currency_code));
+      } catch {
+        money = null;
+      }
+      if (
+        !money ||
+        (provider.market && provider.market.currency !== money.currency) ||
+        (provider.accepts && !provider.accepts(money))
+      ) {
+        return refusePlan('provider_unavailable');
+      }
+    }
+    const made = await createPlanOrder(supabase, {
       planVersionId,
       priceId,
       learnerProfileId,
       userId: user.id,
     });
+    if (!made.ok) {
+      // Kept for whoever runs the site: the database's sentence used to be
+      // sent to the payer, and for a refusal with no name it is the only copy.
+      if (made.reason === 'refused' || made.reason === 'unconfirmed') {
+        console.error(`checkout: a plan order was ${made.reason}:`, made.message);
+      }
+      return refusePlan(made.reason);
+    }
+    result = made;
   } else {
     // The learner this purchase is for. A learner who already holds a live
     // entitlement should not be charged again; resolveOffering is the same
@@ -253,46 +308,22 @@ export async function POST(request: Request) {
       result = await createOrder(supabase, { courseId, learnerProfileId, country, promotionCode });
     }
   }
-  if (!result.ok && result.reason) {
+  if (!result.ok) {
     // A course. The reason has its own status, and a refusal nobody wrote a
     // sentence for is answered in this route's words: the database's stay here.
     // Kept for whoever runs the site: it was the only copy, and it used to be
-    // sent to the payer.
-    if (result.reason === 'refused') console.error('checkout: a refusal with no name:', result.message);
+    // sent to the payer. (`createOrder` names every refusal; one that somehow
+    // arrived without a name is treated as one nobody wrote a sentence for.)
+    const reason = result.reason ?? 'refused';
+    if (reason === 'refused') console.error('checkout: a refusal with no name:', result.message);
     const error =
-      result.reason === 'refused'
+      reason === 'refused'
         ? CHECKOUT_REFUSED_SENTENCE
-        : result.reason === 'unconfirmed'
+        : reason === 'unconfirmed'
           ? CHECKOUT_UNCONFIRMED_SENTENCE
           : result.message;
-    return refuse(result.reason, error, { code: result.code });
+    return refuse(reason, error, { code: result.code });
   }
-  if (!result.ok) {
-    // A plan. 409 for the expected conflicts, 404 when there is nothing to buy, and 503
-    // when the platform itself is closed: `commerce.checkout` ships off and the
-    // order writer refuses while it is. A payer who meets that deserves "not
-    // open yet" rather than "your request was wrong" (400) or "something broke"
-    // (500). 500 is the fallback, so a refusal nobody thought about stays loud.
-    const status: number =
-      result.code === 'checkout_disabled'
-        ? 503
-        : result.code === 'forbidden'
-          ? 403
-          : result.code === 'not_found'
-            ? 404
-          : result.code === 'error'
-            ? 500
-            : result.code === 'price_not_available' ||
-                result.code === 'not_paid_course' ||
-                result.code === 'not_sold_here' ||
-                result.code === 'already_entitled' ||
-                result.code === 'promotion_refused' ||
-                result.code === 'conflict'
-              ? 409
-              : 400;
-    return NextResponse.json({ error: result.message, code: result.code }, { status });
-  }
-
   // The buyer's answer about the 14-day right, recorded before any money moves.
   //
   // It is deliberately not folded into `create_course_order()`: the writer's job
@@ -321,6 +352,7 @@ export async function POST(request: Request) {
   // attempt, it is harmless because it confers nothing, and the payer sees a
   // clear sentence instead of a broken redirect.
   if (!provider.available) {
+    if (isPlanCheckout) return refusePlan('provider_unavailable', { orderId: result.orderId });
     return refuse('provider_unavailable', NO_PROVIDER_SENTENCE, {
       code: 'provider_unavailable',
       orderId: result.orderId,
@@ -331,6 +363,7 @@ export async function POST(request: Request) {
   // while something changed, or a request made by hand. Nobody is prompted
   // for an amount in a currency their account does not hold.
   if (provider.market && provider.market.currency !== result.currencyCode) {
+    if (isPlanCheckout) return refusePlan('provider_unavailable', { orderId: result.orderId });
     return refuse('provider_unavailable', NO_PROVIDER_SENTENCE, {
       code: 'provider_unavailable',
       orderId: result.orderId,
@@ -344,6 +377,7 @@ export async function POST(request: Request) {
     console.error(
       `checkout: ${provider.id} cannot collect the total of order ${result.orderId} (${result.currencyCode}, with a fraction it does not take)`,
     );
+    if (isPlanCheckout) return refusePlan('provider_unavailable', { orderId: result.orderId });
     return refuse('provider_unavailable', NO_PROVIDER_SENTENCE, {
       code: 'provider_unavailable',
       orderId: result.orderId,
@@ -417,6 +451,7 @@ export async function POST(request: Request) {
       // names an environment variable and a section of DECISIONS.md, and it
       // used to be sent to the payer. The order exists here too, and the
       // reply used to leave it out.
+      if (isPlanCheckout) return refusePlan('provider_unavailable', { orderId: result.orderId });
       return refuse('provider_unavailable', NO_PROVIDER_SENTENCE, {
         code: 'provider_unavailable',
         orderId: result.orderId,
@@ -424,6 +459,8 @@ export async function POST(request: Request) {
     }
     // Never leak a provider's internal error to the payer, and never pretend
     // the order failed: it exists, it is pending, and it can be retried.
+    // (Not "try again" for a plan: its order has to be cancelled first.)
+    if (isPlanCheckout) return refusePlan('provider_failed', { orderId: result.orderId });
     return refuse('provider_failed', 'The payment provider could not start this payment. Try again.', {
       orderId: result.orderId,
     });

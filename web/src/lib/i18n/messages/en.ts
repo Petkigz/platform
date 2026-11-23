@@ -2251,6 +2251,65 @@ export const en = {
     'When a live class you or a child of yours was enrolled in is called off, with the reason. Turning this off means finding out by opening the room instead. The class still says it was cancelled, and why.',
   'notify.dRecordingReady':
     'When a recording is added for a class you or a child of yours was in. Turning this off means finding out by opening the class page instead. The recording is still there, and can still be watched while your enrolment lasts.',
+
+  // The plans page and the page a plan is paid for on (`plans.ts`), for the
+  // same twenty-seven languages as the dashboard, 2026-11-23. A price is
+  // said with the period it pays for, never as "per month": nothing renews.
+  'plans.title': 'Choose a learning plan',
+  'plans.lede':
+    'A plan opens courses for the learners it covers, for the period it is paid for. It starts when payment is confirmed, not when the order is placed.',
+  'plans.shelves':
+    '{basic} opens the lessons. {plus} is the VIP package: the same lessons, and more besides. Each plan lists what it opens.',
+  'plans.noRenew':
+    'Nothing is taken again automatically. When the period ends, the plan ends unless it is paid for again.',
+  'plans.closedLead': 'Plans are not on sale yet.',
+  'plans.closedBody':
+    'When they are, each plan and its price will be listed here. Nothing can be bought before then.',
+  'plans.unread':
+    'The plans could not be read just now. This does not mean there are none. Try again in a moment.',
+  'plans.none': 'No plan is on sale at the moment.',
+  'plans.forWeek': 'For one week: {amount}',
+  'plans.forMonth': 'For one month: {amount}',
+  'plans.forQuarter': 'For three months: {amount}',
+  'plans.forYear': 'For one year: {amount}',
+  'plans.forOnce': 'One payment: {amount}',
+  'plans.adults': 'Places for adults: {count}',
+  'plans.children': 'Places for children: {count}',
+  'plans.opens': 'What it opens',
+  'plans.subject': 'Every course in this subject: {name}',
+  'plans.offline': 'Saving lessons in the app, to watch with no connection',
+  'plans.noPrice': 'This plan has no price for your account yet, so it cannot be bought here.',
+  'plans.choose': 'Choose this plan',
+  'plans.payLede':
+    'Choose who this plan is for and how to pay. The plan starts once the payment is confirmed.',
+  'plans.notHere': 'This plan is not on sale, or there is no such plan.',
+  'plans.whichPrice': 'Which price?',
+  'plans.whoFor': 'Who is this plan for?',
+  'plans.forOne': 'This plan is for: {name}',
+  'plans.nobodyLead': 'There is nobody on your account this plan can cover yet.',
+  'plans.nobodyBody':
+    'A place for an adult is for you, once you are a learner on this account. A place for a child is for a child in your family.',
+  'plans.noService': 'So a plan cannot be bought yet. No order has been placed.',
+  'plans.noServiceHere':
+    'No payment service connected to this platform collects the currency this plan is priced in here: {currency}',
+  'plans.approve':
+    'Approve the payment on your phone. The plan starts once the payment is confirmed. This can take a moment.',
+  'plans.waiting':
+    'An order for this plan is waiting for payment. To start again, cancel it under your subscriptions first.',
+  'plans.haveLive': 'This account already has this plan. It runs until: {date}',
+  'plans.whyGone': 'This plan is not on sale any more. No order was placed.',
+  'plans.whyPrice':
+    'That price is not available to your account any more. No order was placed. Open the plans again to see the current price.',
+  'plans.whySlot': 'This plan has no place for that learner. No order was placed.',
+  'plans.whyAlready':
+    'This account already has this plan, or an order for it that is still waiting. Look at your subscriptions.',
+  'plans.whyAccount':
+    'Your place on this billing account does not allow you to pay from it. No order was placed.',
+  'plans.whyLearner': 'That learner cannot be chosen from this account. No order was placed.',
+  'plans.whyClosed': 'Plans are not on sale yet, so no order was placed. Nothing has been charged.',
+  'plans.whyChoose': 'Choose who this plan is for.',
+  'plans.whyNoService': 'No payment service can take this payment at the moment.',
+  'plans.whyFailed': 'The payment could not be started.',
 } as const;
 
 export type MessageKey = keyof typeof en;

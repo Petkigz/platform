@@ -1,125 +1,220 @@
+import Link from 'next/link';
+import type { Metadata } from 'next';
+
+import { Say } from '@/components/say';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
-import { format, fromMinor } from '@/lib/money';
-import { PlanStorefront } from './plan-storefront';
+import { formatNumber, translator } from '@/lib/i18n';
+import { PERIOD_KEY } from '@/lib/plans';
+import { PlanSeen } from './plan-seen';
+import { SUBSCRIPTIONS_FLAG, readStorefront, readerLanguage, type Storefront } from './storefront';
 
 export const dynamic = 'force-dynamic';
 
-type RawPlan = { id: string; code: string; name: string; description: string | null; tier: string };
-type RawVersion = { id: string; plan_id: string; version_number: number; billing_interval: string; adult_allowance: number; child_allowance: number };
-type RawPrice = { id: string; plan_version_id: string; amount_minor: string | number; currency_code: string; billing_interval: string; market: string | null };
-type RawEntitlement = {
-  plan_version_id: string;
-  scope_type: string;
-  feature_code: string | null;
-  subject_areas: { name: string } | null;
-  products: { name: string } | null;
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { shown } = await readerLanguage();
+  return { title: translator(shown.code)('plans.title') };
+}
 
+/**
+ * The plans on sale.
+ *
+ * In the reader's language, for the twenty-seven it is written in
+ * (`messages/plans.ts`); English, marked as English, for the rest.
+ *
+ * **What a card says, and what it does not.** A plan's name and description
+ * as whoever made the plan wrote them. The price with the period it pays
+ * for, and only a price this visitor's account would be charged: the page
+ * used to list every market's price for everybody, as a number beside a
+ * country code. How many adults and children it has places for. What it
+ * opens, in sentences: the page used to print "Feature: offline_downloads"
+ * and "version 3". Nothing here says a plan renews, because nothing renews
+ * one; `plans.noRenew` says so.
+ *
+ * **Paying is another page** (`/plans/[id]`), one plan at a time, like a
+ * course and a pledge. This page used to carry a form in every card that
+ * sent no payment service and no phone number.
+ *
+ * **Not read is said as not read.** See `storefront.ts`.
+ */
 export default async function PlansPage() {
-  if (!isSupabaseConfigured()) {
-    return <div className="container section"><h1>Subscription plans</h1><p className="notice warn">Payments are not configured on this deployment.</p></div>;
-  }
-  const supabase = await createClient();
+  const { locale, shown } = await readerLanguage();
+  const t = translator(shown.code);
+  const frame = shown.code !== locale ? { lang: shown.code, dir: shown.dir } : {};
 
-  // commerce.subscriptions ships off, and the writer refuses while it is off.
-  // Reading the catalogue anyway would offer a plan the platform will not sell,
-  // so the page says that instead of showing prices it cannot honour.
-  if (!(await isFlagEnabled(supabase, 'commerce.subscriptions'))) {
+  let store: Storefront = { state: 'closed' };
+  let signedIn = false;
+  if (isSupabaseConfigured()) {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    signedIn = user !== null;
+    // commerce.subscriptions ships off, and the writer refuses while it is
+    // off. The catalogue is not read at all then: a price shown is a price
+    // somebody expects to be able to pay. A switch that cannot be read is
+    // not treated as off or as on.
+    const open = await isFlagEnabled(supabase, SUBSCRIPTIONS_FLAG).catch(() => null);
+    store =
+      open === null
+        ? { state: 'unread' }
+        : open
+          ? await readStorefront(supabase, user?.id ?? null)
+          : { state: 'closed' };
+  }
+
+  const head = (
+    <div className="page-head">
+      <p className="eyebrow">{t('nav.plans')}</p>
+      <h1>{t('plans.title')}</h1>
+    </div>
+  );
+
+  if (store.state === 'closed') {
     return (
-      <div className="container section">
-        <p className="eyebrow">AyahSpring subscriptions</p>
-        <h1>Choose a learning plan</h1>
-        <p className="notice warn">
-          Subscriptions are not open yet. When they open, the plans and their prices
-          will be listed here; nothing can be bought before then.
-        </p>
+      <div className="page" {...frame}>
+        {head}
+        <div className="notice warn" data-plans-state="closed">
+          <strong>{t('plans.closedLead')}</strong> {t('plans.closedBody')}
+        </div>
       </div>
     );
   }
 
-  const [{ data: plansData, error: plansError }, { data: userResult }] = await Promise.all([
-    supabase.from('plans').select('id,code,name,description,tier').eq('status','active').is('deleted_at',null).order('tier').order('name'),
-    supabase.auth.getUser(),
-  ]);
-  if (plansError) throw new Error(plansError.message);
-  const plans = (plansData ?? []) as RawPlan[];
-  const planIds = plans.map((p) => p.id);
-
-  let versions: RawVersion[] = [];
-  if (planIds.length) {
-    const { data, error } = await supabase.from('plan_versions')
-      .select('id,plan_id,version_number,billing_interval,adult_allowance,child_allowance')
-      .in('plan_id',planIds).eq('status','active').order('version_number',{ascending:false});
-    if (error) throw new Error(error.message);
-    versions = (data ?? []) as RawVersion[];
-  }
-  const versionIds = versions.map((v) => v.id);
-  let prices: RawPrice[] = [];
-  let entitlements: RawEntitlement[] = [];
-  if (versionIds.length) {
-    const [priceResult, entitlementResult] = await Promise.all([
-      supabase.from('prices').select('id,plan_version_id,amount_minor,currency_code,billing_interval,market')
-        .in('plan_version_id',versionIds).eq('status','active').is('effective_until',null),
-      supabase.from('plan_entitlements')
-        .select('plan_version_id,scope_type,feature_code,subject_areas(name),products(name)')
-        .in('plan_version_id',versionIds),
-    ]);
-    if (priceResult.error) throw new Error(priceResult.error.message);
-    if (entitlementResult.error) throw new Error(entitlementResult.error.message);
-    prices = (priceResult.data ?? []) as unknown as RawPrice[];
-    entitlements = (entitlementResult.data ?? []) as unknown as RawEntitlement[];
+  if (store.state === 'unread') {
+    return (
+      <div className="page" {...frame}>
+        {head}
+        <div className="notice error" role="alert" data-plans-state="unread">
+          {t('plans.unread')}
+        </div>
+      </div>
+    );
   }
 
-  let learners: { id: string; name: string; type: string; ageBand: string | null }[] = [];
-  if (userResult.user) {
-    const { data, error } = await supabase.from('learner_profiles')
-      .select('id,display_name,learner_type,age_band').eq('status','active').is('deleted_at',null)
-      .order('display_name');
-    if (error) throw new Error(error.message);
-    learners = (data ?? []).map((row) => ({
-      id: row.id,
-      name: row.display_name,
-      type: row.learner_type,
-      ageBand: row.age_band,
-    }));
-  }
-
-  const mapped = plans.map((plan) => ({
-    id: plan.id,
-    code: plan.code,
-    name: plan.name,
-    description: plan.description,
-    tier: plan.tier,
-    versions: versions.filter((v) => v.plan_id === plan.id).map((version) => ({
-      id: version.id,
-      versionNumber: version.version_number,
-      interval: version.billing_interval,
-      adultAllowance: version.adult_allowance,
-      childAllowance: version.child_allowance,
-      prices: prices.filter((p) => p.plan_version_id === version.id).map((price) => ({
-        id: price.id,
-        amountLabel: format(fromMinor(String(price.amount_minor), price.currency_code)),
-        currency: price.currency_code,
-        interval: price.billing_interval,
-        market: price.market,
-      })),
-      entitlements: entitlements.filter((e) => e.plan_version_id === version.id).map((e) =>
-        e.scope_type === 'catalogue' ? `Subject catalogue: ${e.subject_areas?.name ?? 'subject area'}`
-          : e.scope_type === 'feature' ? `Feature: ${e.feature_code}`
-            : `Product: ${e.products?.name ?? 'included product'}`),
-    })),
-  }));
+  const seen = new Set<string>();
 
   return (
-    <div className="container section">
-      <p className="eyebrow">AyahSpring subscriptions</p>
-      <h1>Choose a learning plan</h1>
-      <p className="lede">
-        Basic is the course itself. Plus is the VIP package: the same lessons plus benefits such as
-        watching them inside the app with no connection. Select who will learn. A subscription starts only when payment is verified; the amount comes from the published plan price, not this page.</p>
-      <PlanStorefront plans={mapped} learners={learners} />
+    <div className="page" {...frame}>
+      {head}
+      <p className="lede">{t('plans.lede')}</p>
+
+      {store.cards.length === 0 ? (
+        <div className="notice" data-plans-state="none">
+          {t('plans.none')}
+        </div>
+      ) : (
+        <>
+          {/* What the two shelves are. Their names are names, the same on every screen. */}
+          <p className="muted">
+            <Say
+              text={t('plans.shelves')}
+              parts={{
+                basic: <bdi lang="en" dir="ltr">Basic</bdi>,
+                plus: <bdi lang="en" dir="ltr">Plus</bdi>,
+              }}
+            />
+          </p>
+          <div className="plan-list" data-plans-state="open">
+          {store.cards.map((card) => {
+            const first = !seen.has(card.planId);
+            seen.add(card.planId);
+            const href = signedIn ? `/plans/${card.versionId}` : `/sign-in?next=/plans/${card.versionId}`;
+            return (
+              <article key={card.versionId} className="card plan-card" data-plan={card.versionId}>
+                {first && signedIn && <PlanSeen planId={card.planId} />}
+                {/* The shelf's name is a name, the same on every screen. */}
+                {card.tier && (
+                  <p className="eyebrow">
+                    <bdi lang="en" dir="ltr">
+                      {card.tier === 'plus' ? 'Plus' : 'Basic'}
+                    </bdi>
+                  </p>
+                )}
+                {/* The plan's own words, in whatever language they were written in. */}
+                <h2 dir="auto">{card.name}</h2>
+                {card.description && (
+                  <p className="muted" dir="auto">
+                    {card.description}
+                  </p>
+                )}
+
+                {card.offers.length === 0 ? (
+                  <p className="notice warn">{t('plans.noPrice')}</p>
+                ) : (
+                  <ul className="plan-lines plan-prices">
+                    {card.offers.map((offer) => (
+                      <li key={offer.priceId}>
+                        <Say
+                          text={t(PERIOD_KEY[card.period])}
+                          parts={{
+                            amount: (
+                              <strong>
+                                <bdi dir="ltr">{offer.amount}</bdi>
+                              </strong>
+                            ),
+                          }}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                <ul className="plan-lines">
+                  {card.adults > 0 && (
+                    <li>
+                      <Say text={t('plans.adults')} parts={{ count: formatNumber(locale, card.adults) }} />
+                    </li>
+                  )}
+                  {card.children > 0 && (
+                    <li>
+                      <Say text={t('plans.children')} parts={{ count: formatNumber(locale, card.children) }} />
+                    </li>
+                  )}
+                </ul>
+
+                {card.includes.length > 0 && (
+                  <>
+                    <p className="eyebrow">{t('plans.opens')}</p>
+                    <ul className="plan-lines">
+                      {card.includes.map((item, index) => (
+                        <li key={index}>
+                          {item.kind === 'subject' ? (
+                            <Say text={t('plans.subject')} parts={{ name: <bdi>{item.name}</bdi> }} />
+                          ) : item.kind === 'product' ? (
+                            <bdi>{item.name}</bdi>
+                          ) : (
+                            t('plans.offline')
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+
+                {card.offers.length > 0 && (
+                  <p className="plan-action">
+                    <Link href={href} className="btn">
+                      {t('plans.choose')}
+                    </Link>
+                  </p>
+                )}
+              </article>
+            );
+          })}
+          </div>
+        </>
+      )}
+
+      <p className="muted" style={{ marginTop: '1.5rem' }}>
+        {t('plans.noRenew')}
+      </p>
+      {signedIn && (
+        <p>
+          <Link href="/subscriptions">{t('nav.subscriptions')}</Link>
+        </p>
+      )}
     </div>
   );
 }

@@ -103,6 +103,7 @@ export const DISALLOWED_PREFIXES: readonly string[] = [
   '/notifications',
   '/orders',
   '/panel',
+  '/plans/',
   '/review',
   '/saved',
   '/share',

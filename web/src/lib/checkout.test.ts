@@ -494,12 +494,12 @@ test('each promotion refusal is a different sentence, and none leaks the key', a
   }
 });
 
-test('plan checkout refuses while subscriptions are off, in the course checkout words', async () => {
+test('plan checkout refuses while subscriptions are off, by name', async () => {
   // commerce.subscriptions ships off and create_plan_order() now refuses while
   // it is off. Before this, the plans page hid the catalogue but the writer was
   // reachable, so "off" was a property of the screen rather than the platform.
   const { client } = stubClient(baseData());
-  client.rpc = async () => ({ data: null, error: { message: 'checkout:disabled' } });
+  client.rpc = async () => ({ data: null, error: { code: '42501', message: 'checkout:disabled' } });
 
   const result = await createPlanOrder(client, {
     planVersionId: 'version-1',
@@ -510,10 +510,55 @@ test('plan checkout refuses while subscriptions are off, in the course checkout 
 
   assert.equal(result.ok, false, 'a disabled plan checkout was accepted');
   if (result.ok) return;
-  assert.equal(result.code, 'checkout_disabled');
-  assert.match(result.message, /not open/i);
-  assert.equal(result.message.includes('checkout:'), false,
-    'the payer was shown the raw refusal key');
+  assert.equal(result.reason, 'disabled');
+});
+
+test('a plan refusal is a name, and an answer that is not the database\'s is unconfirmed', async () => {
+  const ask = async (error: unknown, data: unknown = null) => {
+    const { client } = stubClient(baseData());
+    client.rpc = async () => ({ data, error });
+    const result = await createPlanOrder(client, {
+      planVersionId: 'version-1', priceId: 'price-1', learnerProfileId: 'learner-1', userId: 'user-1',
+    });
+    assert.equal(result.ok, false);
+    return result.ok ? null : result.reason;
+  };
+  assert.equal(await ask({ code: '23505', message: 'this billing account already has a pending or unexpired subscription to that plan' }), 'already_subscribed');
+  assert.equal(await ask({ code: '22023', message: 'that price is not available in the billing account country' }), 'price_not_available');
+  assert.equal(await ask({ code: 'P0002', message: 'that plan version is not currently available' }), 'plan_not_available');
+  // A sentence nobody named is a refusal, and the order was rolled back with it.
+  assert.equal(await ask({ code: 'P0001', message: 'something new' }), 'refused');
+  // No SQLSTATE: this is not the database answering. An order may exist.
+  assert.equal(await ask({ message: 'fetch failed' }), 'unconfirmed');
+  assert.equal(await ask({ code: '08006', message: 'connection failure' }), 'unconfirmed');
+  // No error and no order named.
+  assert.equal(await ask(null, []), 'unconfirmed');
+
+  // Nothing is asked of the writer with a learner or a price missing.
+  const { client } = stubClient(baseData());
+  let asked = 0;
+  client.rpc = async () => { asked += 1; return { data: null, error: null }; };
+  const nobody = await createPlanOrder(client, { planVersionId: 'version-1', priceId: 'price-1', learnerProfileId: '', userId: 'user-1' });
+  assert.equal(nobody.ok === false && nobody.reason, 'learner_required');
+  const unpriced = await createPlanOrder(client, { planVersionId: 'version-1', priceId: '', learnerProfileId: 'learner-1', userId: 'user-1' });
+  assert.equal(unpriced.ok === false && unpriced.reason, 'malformed');
+  assert.equal(asked, 0);
+});
+
+test('a billing account that cannot be read refuses the plan and does not throw', async () => {
+  const { client } = stubClient(baseData());
+  const from = client.from.bind(client);
+  let asked = 0;
+  client.from = (table: string) => {
+    if (table === 'billing_account_memberships') throw new Error('network down');
+    return from(table);
+  };
+  client.rpc = async () => { asked += 1; return { data: null, error: null }; };
+  const result = await createPlanOrder(client, {
+    planVersionId: 'version-1', priceId: 'price-1', learnerProfileId: 'learner-1', userId: 'user-1',
+  });
+  assert.equal(result.ok === false && result.reason, 'refused');
+  assert.equal(asked, 0, 'the writer was called with no billing account');
 });
 
 test('a payment attempt is recorded with a stable idempotency key', async () => {

@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 12% there (192 of 1665 sentences; it was 71% of 272, then
+  the nineteen reads 11% there (192 of 1707 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -547,8 +547,8 @@ still unreviewed and still saying so.
   with the page for putting a copy back and of 1228 with the phone card,
   15% of 1315 with the merge screen, 14% of 1383 with the two sharing
   screens, 13% of 1434 with the two for inviting a friend and of 1514 with
-  the pages of sponsored seats, 12% of 1568 with my orders, then this with
-  what you have paid),
+  the pages of sponsored seats, 12% of 1568 with my orders and of 1665 with the notification centre, then
+  this with the two plans pages),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -869,6 +869,37 @@ written: not a held draft, nothing.
   inviting, applying to teach, the phone card), an account that signs in by
   phone code, a closed or suspended account in a language other than
   English, and any of the other twenty-four languages in a browser.
+- *The plans pages (2026-11-23).* `/plans` and `/plans/[id]` are in the
+  reader's language for the twenty-seven languages with nothing held
+  (`messages/plans.ts`, forty-two sentences, **read by no speaker**) and in
+  English, marked, for the nineteen. Both are closed while
+  `commerce.subscriptions` is off, which is how the platform ships, so no
+  reader has seen either. **Still English on them for every reader:** a
+  plan's own name and description, the names of the subject and the product
+  it opens (all typed by staff, shown as written), and the two shelf names,
+  Basic and Plus, which are marked as English. `/subscriptions`, which both
+  link to and where a waiting order is cancelled, is English.
+  **Not built:** renewal (a plan ends when its period does, and the pages
+  say so); a retry of a plan order whose payment failed (the buyer cancels
+  the waiting order on `/subscriptions` and starts again, and the page says
+  that rather than "try again"); a discount code on a plan; tax or a fee on
+  a plan; a trial; and **the 14-day withdrawal question** the course buy
+  page asks a buyer in the EU, EEA or UK. The plan page does not ask it and
+  the old one did not either, so a plan sold to such a buyer starts with the
+  right to withdraw intact and nothing recorded about it. Whether a plan
+  should ask is undecided.
+  Checked by `scripts/plans-route-smoke.mjs` on a synthetic backend and a
+  synthetic provider, in which no money exists: HTTP in English, Arabic and
+  Hausa; each read that can fail, one at a time; a visitor's prices and an
+  account's; each of the order writer's twelve sentences as the route
+  answers it; Chromium in English, Arabic and Tamil at 320, 390 and 1440
+  wide for the list, and the form pressed in Arabic at 390. **Not
+  checked:** a real database (the stand-in refuses only what it is told to,
+  so which price an account may be charged is the page's reading of the
+  writer's rule, compared with the migration by a person and not by a
+  test); a plan order turning into access; a payment arriving for a plan; a
+  price in a currency with decimals through a real provider; two services
+  at once; twenty-four languages in a browser.
 - *The family pages (2026-11-18).* `/family`, its three forms (create a
   family, add a child, the adult's own card) and `/family/[childId]`, a
   hundred sentences in the same twenty-seven languages
@@ -920,8 +951,8 @@ written: not a held draft, nothing.
   withdrawal box, with the two sentences under it and the link to the policy
   (`DECISIONS.md` says why it is not simply translated), and a charge the
   database names itself. A provider's name, an amount and the course's title
-  are as they are written. `/plans` and `/policies/refunds`, which it links
-  to, are English. `/orders` is in the reader's language since 2026-11-23
+  are as they are written. `/policies/refunds`, which it links
+  to, is English; `/plans` is in the reader's language since 2026-11-23. `/orders` is in the reader's language since 2026-11-23
   (`messages/orders.ts`, fifty-four sentences, unreviewed; checked by
   `scripts/orders-route-smoke.mjs` on a stand-in in which no money exists,
   with a browser in five languages). **Still English from it:** the staff
@@ -988,8 +1019,7 @@ written: not a held draft, nothing.
   `scripts/pawapay-route-smoke.mjs`; a payment worker that polls, and the
   order turning into access in a real database, are not); a redirecting provider, since both
   adapters ask the handset instead; two providers at once, so the "Pay with"
-  choice was never drawn; a plan order, whose unnamed refusals still carry
-  the database's sentence to `/plans`; a number from outside Uganda typed
+  choice was never drawn; a number from outside Uganda typed
   without its plus, which is read as Ugandan and refused or misread; the
   other twenty-four languages in a browser; and Tamil letters themselves,
   which the test browser on the builder's machine draws as boxes for want of

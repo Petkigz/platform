@@ -284,6 +284,19 @@ jobs:
             node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Notifications responsive test::${s}`)' "$RUNNER_TEMP/notifications-responsive.log"
             exit 1
           fi
+      - name: Check the plans list in three languages at three widths, and that the form that pays for a plan offers one press
+        env:
+          RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs
+        run: |
+          set -euo pipefail
+          export RESPONSIVE_CHROME="$(command -v google-chrome || command -v chromium)"
+          if node scripts/plans-route-smoke.mjs > "$RUNNER_TEMP/plans-responsive.log" 2>&1; then
+            cat "$RUNNER_TEMP/plans-responsive.log"
+          else
+            cat "$RUNNER_TEMP/plans-responsive.log"
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Notifications responsive test::${s}`)' "$RUNNER_TEMP/plans-responsive.log"
+            exit 1
+          fi
       - name: Check the page that pays a pledge, in four languages, and that its form offers one press
         env:
           RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs

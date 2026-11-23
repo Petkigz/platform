@@ -8765,6 +8765,69 @@ read 12%.
 sentence nobody prints; the receipt, which every line links to and which is
 still English.
 
+## A plan is sold on two pages, and is not ordered unless it can be paid — **DECIDED 2026-11-23**
+
+`/plans` was one English page that listed every active version of every plan
+with a form on each card. It is now a list, and a page where one plan is paid
+for (`/plans/[id]`), in the reader's language: forty-two sentences in a part
+of its own, `plans`; the nineteen held languages read 11%. Both stay closed
+while `commerce.subscriptions` is off. None of this was asked for by name; it
+is the builder's reading of what the order writer does, and can be changed.
+
+- *An order for a plan is not written unless something can collect it.* The
+  writer creates the order and a **waiting subscription** together, and
+  refuses a second subscription to the same plan while the first is waiting.
+  So an order that cannot be paid is not a harmless leftover, as it is for a
+  course: it stands in the way of every later attempt until somebody cancels
+  it. The route now reads the price and asks whether the chosen service is
+  connected and collects that currency **before** it calls the writer, and
+  answers `provider_unavailable` with nothing written. The page does the same
+  sum and draws no form when the answer is no.
+- *After an order exists, the page never says "try again".* A provider that
+  fails after the order is written leaves that waiting subscription. The
+  sentence says an order is waiting and that it is cancelled under
+  subscriptions, the button is taken away, and the link is drawn. Pressing
+  again could only be refused.
+- *A refusal has a name; the database's sentence goes to the log.* The writer
+  has twelve sentences. Each is read into one of eight reasons with a status
+  (`lib/plan-outcome.ts`), and a sentence nobody named is `refused` at 500.
+  The reply to the browser is a reason and the route's own English; the form
+  says the reason in the reader's language and believes a reason only when
+  the status agrees with it.
+- *A price is shown only to an account that would be charged it.* The writer
+  takes a price that is active, open-ended, started, of the version's period,
+  and either for no market or for the billing account's country. The list
+  shows exactly that: the account's country first, then the price for no
+  market, and when two prices in one currency are left it shows neither,
+  because the page cannot say which the buyer would pay. A visitor has no
+  account, so sees the prices for no market. The country a request arrives
+  from is not used: the writer does not use it.
+- *One card for each plan and period, on the newest terms.* Older terms that
+  are still marked active are what somebody already holds, not what is on
+  sale; they are not listed and their address says the plan is not on sale.
+- *A price is said with the period it pays for*, "For one month: UGX 30000",
+  and never "per month", because nothing is taken again. Both pages say that
+  when the period ends the plan ends unless it is paid for again. Renewal is
+  not built; when it is, these sentences change with it.
+- *Basic and Plus are names.* They are printed as written, marked as English,
+  on every screen and in every language, and one sentence under the lede
+  says what the two shelves are, with "VIP" as the owner said it on
+  2026-10-22. A plan's own name and description are whatever staff typed.
+- *Who a plan can be for is the writer's rule, drawn.* An adult place is the
+  buyer's own learner profile; a child place is a child of the family.
+  Another adult of the family is not offered, because the writer refuses
+  them. With nobody to offer, the page says so and offers the two ways to
+  have somebody: learn on this account, or the family page.
+- *Not read is said.* Every read on both pages can fail without the page
+  failing: the switch, the plans, their terms, prices and contents, the
+  billing account and the learners. Each is "could not be read just now",
+  at status 200, and never "no plans". The account's subscriptions are the
+  one read that may fail quietly: the form is still drawn and the writer
+  decides.
+- *Not asked: the 14-day withdrawal question.* The course buy page asks it
+  of a buyer in the EU, EEA or UK. The plan page does not, and the page it
+  replaces did not. `docs/remaining.md` lists it as undecided.
+
 ## Notifications, in the reader's language as far as the record allows — **DECIDED 2026-11-23**
 
 `/notifications` is where the platform tells a person something inside the

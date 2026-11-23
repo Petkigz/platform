@@ -133,8 +133,11 @@ test('the two routes send the reason with its own status and keep the database�
 
   // A course refusal nobody wrote a sentence for is answered in the route's
   // words, and the database's are logged rather than sent.
-  assert.match(checkout, /result\.reason === 'refused'\s+\? CHECKOUT_REFUSED_SENTENCE/u);
-  assert.match(checkout, /if \(result\.reason === 'refused'\) console\.error\(/u);
+  // (The writer names every refusal; one that arrives with no name is read
+  // as one nobody wrote a sentence for.)
+  assert.match(checkout, /const reason = result\.reason \?\? 'refused';/u);
+  assert.match(checkout, /reason === 'refused'\s+\? CHECKOUT_REFUSED_SENTENCE/u);
+  assert.match(checkout, /if \(reason === 'refused'\) console\.error\(/u);
   assert.match(quote, /reason === 'refused' \|\| reason === 'unconfirmed' \? QUOTE_FAILED_SENTENCE : result\.message/u);
 
   // The provider's "not configured" error names an environment variable and a
@@ -185,9 +188,11 @@ test('the two routes send the reason with its own status and keep the database�
   // The reader's own digits are digits.
   assert.equal(number('٠٧٧٢ ١٢٣ ٤٥٦', 'UG'), '+256772123456');
 
-  // Every refusal in the checkout route goes through `refuse`, except the
-  // plan checkout's, which has no keys to match and keeps its old shape.
+  // Every refusal in the checkout route carries a reason. A plan's used to
+  // go out bare, with the database's sentence as its `error`; it has its own
+  // names now (`lib/plan-outcome.ts`) and the route's own English.
   const bare = checkout.match(/NextResponse\.json\(\s*\{ error:/gu) ?? [];
-  assert.equal(bare.length, 1, 'a refusal is sent without a reason');
-  assert.match(checkout, /return NextResponse\.json\(\{ error: result\.message, code: result\.code \}, \{ status \}\);/u);
+  assert.equal(bare.length, 0, 'a refusal is sent without a reason');
+  assert.match(checkout, /NextResponse\.json\(\{ reason, error: PLAN_ENGLISH\[reason\], \.\.\.extra \}, \{ status: planStatusOf\(reason\) \}\)/u);
+  assert.doesNotMatch(checkout, /error: (?:result|made)\.message/u);
 });

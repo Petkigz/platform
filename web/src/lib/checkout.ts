@@ -40,6 +40,7 @@ import {
 } from './checkout-outcome.ts';
 import { fromMinor, format, type Money } from './money.ts';
 import { orderCodeReasonOf, type OrderCodeReason } from './orders-outcome.ts';
+import { planReasonOf, type PlanOutcome } from './plan-outcome.ts';
 
 export type CheckoutErrorCode =
   | 'not_found'
@@ -623,51 +624,99 @@ export type CreatePlanOrderArgs = {
   userId: string;
 };
 
+export type CreatePlanOrderResult =
+  | { ok: true; orderId: string; amount: Money; currencyCode: string }
+  | { ok: false; reason: PlanOutcome; message: string };
+
+/**
+ * The billing account a plan would be paid from, and its country, without
+ * opening one.
+ *
+ * The same account `resolveBillingAccount` chooses, so the plans page prices
+ * a plan for the account the order will hang off. `create_plan_order()` takes
+ * a price for a market only when it is this account's `billing_country`; the
+ * page offers the same prices and no others. Somebody with no account yet has
+ * no country, and is offered the prices that are for no market.
+ */
+export async function planBillingAccount(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<{ read: true; id: string | null; country: string | null } | { read: false }> {
+  const { data: memberships, error } = await supabase
+    .from('billing_account_memberships')
+    .select('billing_account_id')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .order('granted_at', { ascending: true })
+    .limit(1);
+  if (error || !Array.isArray(memberships)) return { read: false };
+  const id = (memberships as { billing_account_id?: unknown }[])[0]?.billing_account_id;
+  if (typeof id !== 'string' || id === '') return { read: true, id: null, country: null };
+
+  const { data: account, error: accountErr } = await supabase
+    .from('billing_accounts')
+    .select('billing_country')
+    .eq('id', id)
+    .maybeSingle();
+  if (accountErr) return { read: false };
+  const country = (account as { billing_country?: unknown } | null)?.billing_country;
+  return { read: true, id, country: typeof country === 'string' && /^[A-Z]{2}$/u.test(country) ? country : null };
+}
+
 /**
  * Start a subscription checkout from a selected plan version, price id and
  * learner profile. The SQL writer resolves the amount from `prices`, verifies
  * the learner belongs to the payer/family and creates only a pending order and
  * pending subscription. It grants no access until the verified payment writer
  * confirms the order.
+ *
+ * **A refusal is a name** (`lib/plan-outcome.ts`). This used to hand back the
+ * database's own sentence as the message, and the route sent it to the
+ * browser. `message` is still that sentence, for the log and for nothing
+ * else.
+ *
+ * **Nothing here throws.** Finding or opening the billing account used to:
+ * a failed read became the framework's error page, in answer to a request
+ * for JSON. It happens before the writer is called, so no order exists and
+ * the answer is `refused`.
  */
 export async function createPlanOrder(
   supabase: SupabaseClient,
   args: CreatePlanOrderArgs,
-): Promise<CreateOrderResult> {
-  if (!args.planVersionId || !args.priceId || !args.learnerProfileId) {
-    return { ok: false, code: 'error', message: 'Choose a plan, price and learner.' };
+): Promise<CreatePlanOrderResult> {
+  if (!args.planVersionId || !args.priceId) {
+    return { ok: false, reason: 'malformed', message: 'no plan version or no price' };
+  }
+  if (!args.learnerProfileId) {
+    return { ok: false, reason: 'learner_required', message: 'no learner' };
   }
 
-  const billingAccountId = await resolveBillingAccount(supabase, args.userId);
+  let billingAccountId: string | null;
+  try {
+    billingAccountId = await resolveBillingAccount(supabase, args.userId);
+  } catch (error) {
+    return { ok: false, reason: 'refused', message: `billing account: ${error instanceof Error ? error.message : String(error)}` };
+  }
   if (!billingAccountId) {
-    return { ok: false, code: 'error', message: 'Could not open a billing account. Please try again.' };
+    return { ok: false, reason: 'refused', message: 'billing account: none found and none opened' };
   }
 
-  const { data, error } = await supabase.rpc('create_plan_order', {
-    p_billing_account_id: billingAccountId,
-    p_plan_version_id: args.planVersionId,
-    p_price_id: args.priceId,
-    p_learner_profile_id: args.learnerProfileId,
-  });
+  let answer: { data: unknown; error: { code?: string | null; message?: string | null } | null };
+  try {
+    answer = await supabase.rpc('create_plan_order', {
+      p_billing_account_id: billingAccountId,
+      p_plan_version_id: args.planVersionId,
+      p_price_id: args.priceId,
+      p_learner_profile_id: args.learnerProfileId,
+    });
+  } catch (error) {
+    // The request left and no answer came back: an order may exist.
+    return { ok: false, reason: 'unconfirmed', message: error instanceof Error ? error.message : String(error) };
+  }
+  const { data, error } = answer;
 
   if (error) {
-    const message = error.message;
-    const code: CheckoutErrorCode = /checkout:disabled/i.test(message)
-      ? 'checkout_disabled'
-      : /not currently available|not available for this plan/i.test(message)
-        ? 'price_not_available'
-        : /already has a pending or unexpired subscription/i.test(message)
-          ? 'conflict'
-          : /not found/i.test(message)
-            ? 'not_found'
-            : 'error';
-    return {
-      ok: false,
-      code,
-      message: code === 'checkout_disabled'
-        ? 'Subscriptions are not open on this platform yet.'
-        : message,
-    };
+    return { ok: false, reason: planReasonOf(error), message: error.message ?? '' };
   }
 
   const row = (Array.isArray(data) ? data[0] : data) as {
@@ -677,15 +726,17 @@ export async function createPlanOrder(
     currency_code?: string;
   } | null;
   if (!row?.order_id || row.amount_minor === undefined || !row.currency_code) {
-    return { ok: false, code: 'error', message: 'The subscription order was not created.' };
+    // The writer answered without an error and without an order to name.
+    return { ok: false, reason: 'unconfirmed', message: 'create_plan_order answered with no order' };
   }
 
-  return {
-    ok: true,
-    orderId: String(row.order_id),
-    amount: fromMinor(String(row.amount_minor), row.currency_code),
-    currencyCode: row.currency_code,
-  };
+  let amount: Money;
+  try {
+    amount = fromMinor(String(row.amount_minor), row.currency_code);
+  } catch {
+    return { ok: false, reason: 'unconfirmed', message: 'create_plan_order answered with an amount that is not money' };
+  }
+  return { ok: true, orderId: String(row.order_id), amount, currencyCode: row.currency_code };
 }
 
 export type AttemptMethod =
