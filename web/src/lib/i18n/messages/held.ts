@@ -111,6 +111,7 @@ export const UNWRITTEN_WHILE_HELD: readonly string[] = [
   'receipt',
   'notify',
   'plans',
+  'subs',
 ];
 
 /** Whether this sentence is deliberately absent from this language's file. */

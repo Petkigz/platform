@@ -1,0 +1,1019 @@
+import type { LocaleCode } from '../locales.ts';
+import type { Messages } from './en.ts';
+
+/**
+ * The page an account's plans are kept on (`app/subscriptions/page.tsx`) and
+ * its two forms: put a learner on a plan, and cancel.
+ *
+ * Same rule as `learn.ts`, `course.ts`, `lesson.ts`, `assess.ts`, `assign.ts`,
+ * `missing.ts`, `broke.ts`, `player.ts`, `account.ts`, `family.ts`, `buy.ts`,
+ * `close.ts`, `export.ts`, `reading.ts`, `restore.ts`, `phone.ts`, `merge.ts`,
+ * `share.ts`, `refer.ts`, `sponsor.ts`, `orders.ts`, `billing.ts`,
+ * `receipt.ts`, `notify.ts` and `plans.ts`: written for the twenty-seven
+ * languages with nothing held in `held.ts`, and for no other. See
+ * `UNWRITTEN_WHILE_HELD`.
+ *
+ * **What is said about a plan is a sentence, not the stored word.** The
+ * database has seven words for a subscription and never writes "expired", so
+ * `waiting`, `until`, `ended`, `stopped` and `withdrawn` are worked out from
+ * the status and the date (`lib/subscriptions.ts`).
+ *
+ * **What cancelling does is said as the database does it.**
+ * `cancel_subscription()` takes nothing away: what was paid for is dated to
+ * the end of the period and stays, no money is returned, and nobody else can
+ * be added afterwards. Nothing renews, so cancelling stops no payment, and
+ * `cancelPlanNote` says both. When something does renew, that sentence is
+ * the one to change.
+ *
+ * **Cancelling an order is a different thing** (`cancelOrder`): nothing was
+ * paid, no reason is asked, and the plans page sends people here to do it.
+ *
+ * A plan's own name and a learner's name are not here; they are shown as
+ * written. A learner whose name the row policy does not show is `someone`.
+ */
+export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
+  ar: {
+    'subs.title': 'خططك',
+    'subs.lede': 'كل خطة في حسابك: ما تفتحه، ومن يتعلّم عليها، ومتى تنتهي.',
+    'subs.unread':
+      'تعذّرت قراءة خططك الآن. هذا لا يعني أنه لا توجد لديك خطط. حاول مرة أخرى بعد قليل.',
+    'subs.partUnread':
+      'تعذّرت قراءة جزء من هذه الصفحة الآن، ولذلك ينقص بعضها. حاول مرة أخرى بعد قليل.',
+    'subs.none': 'لا توجد خطة في هذا الحساب.',
+    'subs.unnamed': 'خطة لم تعد معروضة للبيع',
+    'subs.waiting': 'في انتظار الدفع. لم تبدأ بعد.',
+    'subs.until': 'سارية حتى: {date}',
+    'subs.ended': 'انتهت في: {date}',
+    'subs.stopped': 'أُلغيت. مدفوعة حتى: {date}',
+    'subs.withdrawn': 'أُلغيت قبل أن تُدفع.',
+    'subs.learners': 'من يتعلّم على هذه الخطة',
+    'subs.noLearner': 'لا أحد يتعلّم على هذه الخطة بعد.',
+    'subs.someone': 'متعلّم لا يظهر لك اسمه',
+    'subs.add': 'إضافة متعلّم',
+    'subs.addDo': 'أضف إلى هذه الخطة',
+    'subs.full': 'كل الأماكن في هذه الخطة مشغولة.',
+    'subs.cancelOrder': 'إلغاء هذا الطلب',
+    'subs.cancelOrderNote':
+      'هذا يلغي الطلب قبل دفعه لتتمكّن من البدء من جديد. إذا كان طلب دفع ما زال ينتظر على هاتف، فلا توافق عليه.',
+    'subs.cancelPlan': 'إلغاء هذه الخطة',
+    'subs.cancelPlanNote':
+      'الإلغاء لا يعيد أي مبلغ ولا ينهي الخطة قبل موعدها. لا يُخصم شيء مرة أخرى سواء ألغيت أم لا. بعد الإلغاء لا يمكن إضافة أحد آخر إليها. هذه الخطة مدفوعة حتى: {date}',
+    'subs.reason': 'لماذا تلغي؟',
+    'subs.whyReason': 'اكتب سبب الإلغاء.',
+    'subs.whyNotYours': 'لا يمكن تغيير هذه الخطة من حسابك.',
+    'subs.whyNotRunning': 'هذه الخطة غير سارية، فلا يمكن إضافة أحد إليها.',
+    'subs.whyLearner': 'لا يمكن وضع ذلك المتعلّم على هذه الخطة من حسابك.',
+    'subs.whySlot': 'ذلك المكان شُغل للتوّ. لم يُضف أحد.',
+    'subs.failed': 'تعذّر تنفيذ ذلك. لم يتغيّر شيء.',
+    'subs.unsure':
+      'لم نتمكّن من التأكّد من تنفيذ ذلك. راجع هذه الصفحة من جديد قبل المحاولة مرة أخرى.',
+  },
+  ur: {
+    'subs.title': 'آپ کے پلان',
+    'subs.lede':
+      'آپ کے اکاؤنٹ کا ہر پلان: یہ کیا کھولتا ہے، اس پر کون سیکھ رہا ہے اور یہ کب ختم ہوتا ہے۔',
+    'subs.unread':
+      'آپ کے پلان ابھی پڑھے نہیں جا سکے۔ اس کا یہ مطلب نہیں کہ آپ کا کوئی پلان نہیں ہے۔ تھوڑی دیر بعد دوبارہ کوشش کریں۔',
+    'subs.partUnread':
+      'اس صفحے کا کچھ حصہ ابھی پڑھا نہیں جا سکا، اس لیے اس میں سے کچھ غائب ہے۔ تھوڑی دیر بعد دوبارہ کوشش کریں۔',
+    'subs.none': 'اس اکاؤنٹ پر کوئی پلان نہیں ہے۔',
+    'subs.unnamed': 'ایک پلان جو اب فروخت کے لیے نہیں ہے',
+    'subs.waiting': 'ادائیگی کا منتظر ہے۔ یہ ابھی شروع نہیں ہوا۔',
+    'subs.until': 'اس تاریخ تک جاری ہے: {date}',
+    'subs.ended': 'ختم ہوا: {date}',
+    'subs.stopped': 'منسوخ ہو چکا ہے۔ اس تاریخ تک ادا شدہ ہے: {date}',
+    'subs.withdrawn': 'ادائیگی سے پہلے منسوخ ہو گیا۔',
+    'subs.learners': 'اس پلان پر سیکھنے والے',
+    'subs.noLearner': 'اس پلان پر ابھی کوئی نہیں سیکھ رہا۔',
+    'subs.someone': 'ایک سیکھنے والا جس کا نام آپ کو نہیں دکھایا جاتا',
+    'subs.add': 'سیکھنے والا شامل کریں',
+    'subs.addDo': 'اس پلان میں شامل کریں',
+    'subs.full': 'اس پلان کی ہر جگہ بھر چکی ہے۔',
+    'subs.cancelOrder': 'یہ آرڈر منسوخ کریں',
+    'subs.cancelOrderNote':
+      'اس سے آرڈر ادائیگی سے پہلے منسوخ ہو جاتا ہے تاکہ آپ نئے سرے سے شروع کر سکیں۔ اگر ادائیگی کی کوئی درخواست ابھی کسی فون پر منتظر ہے تو اسے منظور نہ کریں۔',
+    'subs.cancelPlan': 'یہ پلان منسوخ کریں',
+    'subs.cancelPlanNote':
+      'منسوخ کرنے سے کوئی رقم واپس نہیں ہوتی اور پلان وقت سے پہلے ختم نہیں ہوتا۔ آپ منسوخ کریں یا نہ کریں، دوبارہ کچھ نہیں لیا جاتا۔ منسوخ کرنے کے بعد اس میں کسی اور کو شامل نہیں کیا جا سکتا۔ یہ پلان اس تاریخ تک ادا شدہ ہے: {date}',
+    'subs.reason': 'آپ کیوں منسوخ کر رہے ہیں؟',
+    'subs.whyReason': 'لکھیں کہ آپ کیوں منسوخ کر رہے ہیں۔',
+    'subs.whyNotYours': 'یہ پلان آپ کے اکاؤنٹ سے تبدیل نہیں کیا جا سکتا۔',
+    'subs.whyNotRunning': 'یہ پلان جاری نہیں ہے، اس لیے اس میں کسی کو شامل نہیں کیا جا سکتا۔',
+    'subs.whyLearner': 'اس سیکھنے والے کو آپ کے اکاؤنٹ سے اس پلان پر نہیں رکھا جا سکتا۔',
+    'subs.whySlot': 'وہ جگہ ابھی ابھی بھر گئی ہے۔ کسی کو شامل نہیں کیا گیا۔',
+    'subs.failed': 'یہ نہیں ہو سکا۔ کچھ تبدیل نہیں ہوا۔',
+    'subs.unsure': 'ہم تصدیق نہیں کر سکے کہ یہ ہو گیا۔ دوبارہ کوشش سے پہلے یہ صفحہ پھر دیکھیں۔',
+  },
+  fa: {
+    'subs.title': 'طرح‌های شما',
+    'subs.lede':
+      'هر طرحِ حساب شما: چه چیزی را باز می‌کند، چه کسی با آن یاد می‌گیرد و چه زمانی تمام می‌شود.',
+    'subs.unread':
+      'طرح‌های شما اکنون خوانده نشدند. این به آن معنا نیست که طرحی ندارید. کمی بعد دوباره امتحان کنید.',
+    'subs.partUnread':
+      'بخشی از این صفحه اکنون خوانده نشد و برای همین چیزی از آن کم است. کمی بعد دوباره امتحان کنید.',
+    'subs.none': 'هیچ طرحی در این حساب نیست.',
+    'subs.unnamed': 'طرحی که دیگر برای فروش عرضه نمی‌شود',
+    'subs.waiting': 'در انتظار پرداخت است. هنوز شروع نشده است.',
+    'subs.until': 'برقرار است تا: {date}',
+    'subs.ended': 'پایان یافت: {date}',
+    'subs.stopped': 'لغو شده است. پرداخت‌شده تا: {date}',
+    'subs.withdrawn': 'پیش از پرداخت لغو شد.',
+    'subs.learners': 'کسانی که با این طرح یاد می‌گیرند',
+    'subs.noLearner': 'هنوز کسی با این طرح یاد نمی‌گیرد.',
+    'subs.someone': 'یادگیرنده‌ای که نامش به شما نشان داده نمی‌شود',
+    'subs.add': 'افزودن یادگیرنده',
+    'subs.addDo': 'افزودن به این طرح',
+    'subs.full': 'همهٔ جاهای این طرح پر شده است.',
+    'subs.cancelOrder': 'لغو این سفارش',
+    'subs.cancelOrderNote':
+      'این کار سفارش را پیش از پرداخت لغو می‌کند تا بتوانید دوباره شروع کنید. اگر درخواست پرداختی هنوز روی تلفنی منتظر است، آن را تأیید نکنید.',
+    'subs.cancelPlan': 'لغو این طرح',
+    'subs.cancelPlanNote':
+      'لغو کردن پولی را برنمی‌گرداند و طرح را زودتر تمام نمی‌کند. چه لغو کنید چه نکنید، دوباره چیزی برداشت نمی‌شود. پس از لغو، کس دیگری را نمی‌توان به آن افزود. این طرح پرداخت شده است تا: {date}',
+    'subs.reason': 'چرا لغو می‌کنید؟',
+    'subs.whyReason': 'بنویسید چرا لغو می‌کنید.',
+    'subs.whyNotYours': 'این طرح را نمی‌توان از حساب شما تغییر داد.',
+    'subs.whyNotRunning': 'این طرح برقرار نیست، پس نمی‌توان کسی را به آن افزود.',
+    'subs.whyLearner': 'آن یادگیرنده را نمی‌توان از حساب شما روی این طرح گذاشت.',
+    'subs.whySlot': 'آن جا همین حالا پر شد. کسی افزوده نشد.',
+    'subs.failed': 'این کار انجام نشد. چیزی تغییر نکرد.',
+    'subs.unsure':
+      'نتوانستیم مطمئن شویم که این کار انجام شد. پیش از تلاش دوباره، این صفحه را دوباره ببینید.',
+  },
+  'fa-af': {
+    'subs.title': 'پلان‌های شما',
+    'subs.lede':
+      'هر پلانِ حساب شما: چه چیزی را باز می‌کند، کی با آن یاد می‌گیرد و چه وقت ختم می‌شود.',
+    'subs.unread':
+      'پلان‌های شما فعلاً خوانده نشدند. این به آن معنا نیست که پلانی ندارید. کمی بعد دوباره کوشش کنید.',
+    'subs.partUnread':
+      'یک بخش این صفحه فعلاً خوانده نشد و از همین خاطر چیزی از آن کم است. کمی بعد دوباره کوشش کنید.',
+    'subs.none': 'هیچ پلانی در این حساب نیست.',
+    'subs.unnamed': 'پلانی که دیگر برای فروش گذاشته نمی‌شود',
+    'subs.waiting': 'منتظر پرداخت است. هنوز شروع نشده است.',
+    'subs.until': 'جریان دارد تا: {date}',
+    'subs.ended': 'ختم شد: {date}',
+    'subs.stopped': 'لغو شده است. پرداخت‌شده تا: {date}',
+    'subs.withdrawn': 'پیش از پرداخت لغو شد.',
+    'subs.learners': 'کسانی که با این پلان یاد می‌گیرند',
+    'subs.noLearner': 'هنوز کسی با این پلان یاد نمی‌گیرد.',
+    'subs.someone': 'شاگردی که نامش به شما نشان داده نمی‌شود',
+    'subs.add': 'افزودن شاگرد',
+    'subs.addDo': 'افزودن به این پلان',
+    'subs.full': 'همهٔ جای‌های این پلان پر شده است.',
+    'subs.cancelOrder': 'لغو این فرمایش',
+    'subs.cancelOrderNote':
+      'این کار فرمایش را پیش از پرداخت لغو می‌کند تا بتوانید دوباره شروع کنید. اگر درخواست پرداختی هنوز روی تلیفونی منتظر است، آن را تأیید نکنید.',
+    'subs.cancelPlan': 'لغو این پلان',
+    'subs.cancelPlanNote':
+      'لغو کردن پولی را پس نمی‌دهد و پلان را زودتر ختم نمی‌کند. چه لغو کنید چه نکنید، دوباره چیزی گرفته نمی‌شود. پس از لغو، کس دیگری را به آن افزوده نمی‌توانید. این پلان پرداخت شده است تا: {date}',
+    'subs.reason': 'چرا لغو می‌کنید؟',
+    'subs.whyReason': 'بنویسید که چرا لغو می‌کنید.',
+    'subs.whyNotYours': 'این پلان از حساب شما تغییر داده شده نمی‌تواند.',
+    'subs.whyNotRunning': 'این پلان جریان ندارد، پس کسی به آن افزوده شده نمی‌تواند.',
+    'subs.whyLearner': 'آن شاگرد از حساب شما روی این پلان گذاشته شده نمی‌تواند.',
+    'subs.whySlot': 'آن جای همین حالا پر شد. کسی افزوده نشد.',
+    'subs.failed': 'این کار انجام نشد. چیزی تغییر نکرد.',
+    'subs.unsure':
+      'نتوانستیم مطمئن شویم که این کار انجام شد. پیش از کوشش دوباره، این صفحه را دوباره ببینید.',
+  },
+  tr: {
+    'subs.title': 'Planlarınız',
+    'subs.lede': 'Hesabınızdaki her plan: neyi açtığı, onunla kimin öğrendiği ve ne zaman bittiği.',
+    'subs.unread':
+      'Planlarınız şu anda okunamadı. Bu, planınız olmadığı anlamına gelmez. Biraz sonra yeniden deneyin.',
+    'subs.partUnread':
+      'Bu sayfanın bir bölümü şu anda okunamadı, bu yüzden bir kısmı eksik. Biraz sonra yeniden deneyin.',
+    'subs.none': 'Bu hesapta plan yok.',
+    'subs.unnamed': 'Artık satışta olmayan bir plan',
+    'subs.waiting': 'Ödeme bekleniyor. Henüz başlamadı.',
+    'subs.until': 'Şu tarihe kadar sürüyor: {date}',
+    'subs.ended': 'Sona erdi: {date}',
+    'subs.stopped': 'İptal edildi. Şu tarihe kadar ödenmiş: {date}',
+    'subs.withdrawn': 'Ödenmeden önce iptal edildi.',
+    'subs.learners': 'Bu planla öğrenenler',
+    'subs.noLearner': 'Bu planla henüz kimse öğrenmiyor.',
+    'subs.someone': 'Adı size gösterilmeyen bir öğrenci',
+    'subs.add': 'Öğrenci ekle',
+    'subs.addDo': 'Bu plana ekle',
+    'subs.full': 'Bu plandaki bütün yerler dolu.',
+    'subs.cancelOrder': 'Bu siparişi iptal et',
+    'subs.cancelOrderNote':
+      'Bu, siparişi ödenmeden önce iptal eder; böylece yeniden başlayabilirsiniz. Bir telefonda hâlâ bekleyen bir ödeme isteği varsa onu onaylamayın.',
+    'subs.cancelPlan': 'Bu planı iptal et',
+    'subs.cancelPlanNote':
+      'İptal etmek para iadesi sağlamaz ve planı erken bitirmez. İptal etseniz de etmeseniz de yeniden bir tutar alınmaz. İptalden sonra plana başka kimse eklenemez. Bu plan şu tarihe kadar ödenmiş: {date}',
+    'subs.reason': 'Neden iptal ediyorsunuz?',
+    'subs.whyReason': 'Neden iptal ettiğinizi yazın.',
+    'subs.whyNotYours': 'Bu plan sizin hesabınızdan değiştirilemez.',
+    'subs.whyNotRunning': 'Bu plan sürmüyor, bu yüzden ona kimse eklenemez.',
+    'subs.whyLearner': 'O öğrenci sizin hesabınızdan bu plana konulamaz.',
+    'subs.whySlot': 'O yer az önce doldu. Kimse eklenmedi.',
+    'subs.failed': 'Bu yapılamadı. Hiçbir şey değişmedi.',
+    'subs.unsure':
+      'Bunun yapıldığını doğrulayamadık. Yeniden denemeden önce bu sayfaya tekrar bakın.',
+  },
+  id: {
+    'subs.title': 'Paket Anda',
+    'subs.lede':
+      'Setiap paket di akun Anda: apa yang dibukanya, siapa yang belajar dengannya, dan kapan berakhir.',
+    'subs.unread':
+      'Paket Anda tidak dapat dibaca saat ini. Ini tidak berarti Anda tidak punya paket. Coba lagi sebentar lagi.',
+    'subs.partUnread':
+      'Sebagian halaman ini tidak dapat dibaca saat ini, sehingga ada yang tidak tampil. Coba lagi sebentar lagi.',
+    'subs.none': 'Tidak ada paket di akun ini.',
+    'subs.unnamed': 'Paket yang sudah tidak dijual',
+    'subs.waiting': 'Menunggu pembayaran. Belum dimulai.',
+    'subs.until': 'Berlaku sampai: {date}',
+    'subs.ended': 'Berakhir pada: {date}',
+    'subs.stopped': 'Dibatalkan. Sudah dibayar sampai: {date}',
+    'subs.withdrawn': 'Dibatalkan sebelum dibayar.',
+    'subs.learners': 'Yang belajar dengan paket ini',
+    'subs.noLearner': 'Belum ada yang belajar dengan paket ini.',
+    'subs.someone': 'Peserta didik yang namanya tidak ditampilkan kepada Anda',
+    'subs.add': 'Tambah peserta didik',
+    'subs.addDo': 'Tambahkan ke paket ini',
+    'subs.full': 'Semua tempat di paket ini sudah terisi.',
+    'subs.cancelOrder': 'Batalkan pesanan ini',
+    'subs.cancelOrderNote':
+      'Ini membatalkan pesanan sebelum dibayar, agar Anda bisa memulai lagi. Jika masih ada permintaan pembayaran yang menunggu di sebuah ponsel, jangan disetujui.',
+    'subs.cancelPlan': 'Batalkan paket ini',
+    'subs.cancelPlanNote':
+      'Membatalkan tidak mengembalikan uang dan tidak mengakhiri paket lebih awal. Tidak ada yang ditagih lagi, baik Anda membatalkan maupun tidak. Setelah dibatalkan, tidak ada orang lain yang bisa ditambahkan. Paket ini sudah dibayar sampai: {date}',
+    'subs.reason': 'Mengapa Anda membatalkan?',
+    'subs.whyReason': 'Tuliskan mengapa Anda membatalkan.',
+    'subs.whyNotYours': 'Paket ini tidak dapat diubah dari akun Anda.',
+    'subs.whyNotRunning': 'Paket ini tidak sedang berlaku, jadi tidak ada yang bisa ditambahkan.',
+    'subs.whyLearner': 'Peserta didik itu tidak dapat dimasukkan ke paket ini dari akun Anda.',
+    'subs.whySlot': 'Tempat itu baru saja terisi. Tidak ada yang ditambahkan.',
+    'subs.failed': 'Itu tidak dapat dilakukan. Tidak ada yang berubah.',
+    'subs.unsure':
+      'Kami tidak dapat memastikan bahwa itu sudah dilakukan. Lihat halaman ini lagi sebelum mencoba sekali lagi.',
+  },
+  ms: {
+    'subs.title': 'Pelan anda',
+    'subs.lede':
+      'Setiap pelan pada akaun anda: apa yang dibukanya, siapa yang belajar dengannya dan bila ia tamat.',
+    'subs.unread':
+      'Pelan anda tidak dapat dibaca sekarang. Ini tidak bermakna anda tiada pelan. Cuba lagi sebentar lagi.',
+    'subs.partUnread':
+      'Sebahagian halaman ini tidak dapat dibaca sekarang, jadi ada yang tidak dipaparkan. Cuba lagi sebentar lagi.',
+    'subs.none': 'Tiada pelan pada akaun ini.',
+    'subs.unnamed': 'Pelan yang tidak lagi dijual',
+    'subs.waiting': 'Menunggu pembayaran. Belum bermula.',
+    'subs.until': 'Berjalan hingga: {date}',
+    'subs.ended': 'Tamat pada: {date}',
+    'subs.stopped': 'Dibatalkan. Sudah dibayar hingga: {date}',
+    'subs.withdrawn': 'Dibatalkan sebelum dibayar.',
+    'subs.learners': 'Yang belajar dengan pelan ini',
+    'subs.noLearner': 'Belum ada sesiapa yang belajar dengan pelan ini.',
+    'subs.someone': 'Pelajar yang namanya tidak dipaparkan kepada anda',
+    'subs.add': 'Tambah pelajar',
+    'subs.addDo': 'Tambah ke pelan ini',
+    'subs.full': 'Semua tempat dalam pelan ini sudah diisi.',
+    'subs.cancelOrder': 'Batalkan pesanan ini',
+    'subs.cancelOrderNote':
+      'Ini membatalkan pesanan sebelum dibayar, supaya anda boleh bermula semula. Jika masih ada permintaan pembayaran yang menunggu pada telefon, jangan luluskannya.',
+    'subs.cancelPlan': 'Batalkan pelan ini',
+    'subs.cancelPlanNote':
+      'Pembatalan tidak memulangkan wang dan tidak menamatkan pelan lebih awal. Tiada apa-apa dicaj lagi sama ada anda membatalkan atau tidak. Selepas dibatalkan, tiada orang lain boleh ditambah. Pelan ini sudah dibayar hingga: {date}',
+    'subs.reason': 'Mengapa anda membatalkan?',
+    'subs.whyReason': 'Tulis mengapa anda membatalkan.',
+    'subs.whyNotYours': 'Pelan ini tidak boleh diubah daripada akaun anda.',
+    'subs.whyNotRunning': 'Pelan ini tidak sedang berjalan, jadi tiada sesiapa boleh ditambah.',
+    'subs.whyLearner': 'Pelajar itu tidak boleh dimasukkan ke pelan ini daripada akaun anda.',
+    'subs.whySlot': 'Tempat itu baru sahaja diisi. Tiada sesiapa ditambah.',
+    'subs.failed': 'Itu tidak dapat dilakukan. Tiada apa-apa yang berubah.',
+    'subs.unsure':
+      'Kami tidak dapat mengesahkan bahawa itu sudah dilakukan. Lihat halaman ini semula sebelum mencuba sekali lagi.',
+  },
+  bn: {
+    'subs.title': 'আপনার প্ল্যান',
+    'subs.lede':
+      'আপনার অ্যাকাউন্টের প্রতিটি প্ল্যান: এটি কী খুলে দেয়, কে এতে শিখছে এবং কখন শেষ হয়।',
+    'subs.unread':
+      'আপনার প্ল্যানগুলো এখন পড়া যায়নি। এর মানে এই নয় যে আপনার কোনো প্ল্যান নেই। একটু পরে আবার চেষ্টা করুন।',
+    'subs.partUnread':
+      'এই পাতার একটি অংশ এখন পড়া যায়নি, তাই কিছু অংশ দেখা যাচ্ছে না। একটু পরে আবার চেষ্টা করুন।',
+    'subs.none': 'এই অ্যাকাউন্টে কোনো প্ল্যান নেই।',
+    'subs.unnamed': 'একটি প্ল্যান যা আর বিক্রিতে নেই',
+    'subs.waiting': 'পেমেন্টের অপেক্ষায় আছে। এখনও শুরু হয়নি।',
+    'subs.until': 'চলবে এই তারিখ পর্যন্ত: {date}',
+    'subs.ended': 'শেষ হয়েছে: {date}',
+    'subs.stopped': 'বাতিল হয়েছে। এই তারিখ পর্যন্ত পরিশোধ করা আছে: {date}',
+    'subs.withdrawn': 'পরিশোধের আগেই বাতিল হয়েছে।',
+    'subs.learners': 'এই প্ল্যানে যারা শিখছে',
+    'subs.noLearner': 'এই প্ল্যানে এখনও কেউ শিখছে না।',
+    'subs.someone': 'একজন শিক্ষার্থী, যার নাম আপনাকে দেখানো হয় না',
+    'subs.add': 'শিক্ষার্থী যোগ করুন',
+    'subs.addDo': 'এই প্ল্যানে যোগ করুন',
+    'subs.full': 'এই প্ল্যানের সব জায়গা পূর্ণ।',
+    'subs.cancelOrder': 'এই অর্ডার বাতিল করুন',
+    'subs.cancelOrderNote':
+      'এতে পরিশোধের আগেই অর্ডারটি বাতিল হয়, যাতে আপনি নতুন করে শুরু করতে পারেন। কোনো ফোনে পেমেন্টের অনুরোধ এখনও অপেক্ষায় থাকলে সেটি অনুমোদন করবেন না।',
+    'subs.cancelPlan': 'এই প্ল্যান বাতিল করুন',
+    'subs.cancelPlanNote':
+      'বাতিল করলে কোনো টাকা ফেরত আসে না এবং প্ল্যান আগে শেষ হয় না। আপনি বাতিল করুন বা না করুন, আবার কিছু নেওয়া হয় না। বাতিলের পর এতে আর কাউকে যোগ করা যায় না। এই প্ল্যান এই তারিখ পর্যন্ত পরিশোধ করা আছে: {date}',
+    'subs.reason': 'আপনি কেন বাতিল করছেন?',
+    'subs.whyReason': 'কেন বাতিল করছেন তা লিখুন।',
+    'subs.whyNotYours': 'এই প্ল্যান আপনার অ্যাকাউন্ট থেকে বদলানো যাবে না।',
+    'subs.whyNotRunning': 'এই প্ল্যান চালু নেই, তাই এতে কাউকে যোগ করা যাবে না।',
+    'subs.whyLearner': 'ওই শিক্ষার্থীকে আপনার অ্যাকাউন্ট থেকে এই প্ল্যানে রাখা যাবে না।',
+    'subs.whySlot': 'ওই জায়গাটি এইমাত্র পূর্ণ হয়েছে। কাউকে যোগ করা হয়নি।',
+    'subs.failed': 'এটি করা যায়নি। কিছুই বদলায়নি।',
+    'subs.unsure':
+      'এটি হয়েছে কি না আমরা নিশ্চিত হতে পারিনি। আবার চেষ্টার আগে এই পাতাটি আবার দেখুন।',
+  },
+  hi: {
+    'subs.title': 'आपकी योजनाएँ',
+    'subs.lede':
+      'आपके खाते की हर योजना: वह क्या खोलती है, उस पर कौन सीख रहा है और वह कब समाप्त होती है।',
+    'subs.unread':
+      'आपकी योजनाएँ अभी पढ़ी नहीं जा सकीं। इसका यह अर्थ नहीं कि आपकी कोई योजना नहीं है। थोड़ी देर में फिर कोशिश करें।',
+    'subs.partUnread':
+      'इस पृष्ठ का एक भाग अभी पढ़ा नहीं जा सका, इसलिए उसमें से कुछ नहीं दिख रहा। थोड़ी देर में फिर कोशिश करें।',
+    'subs.none': 'इस खाते पर कोई योजना नहीं है।',
+    'subs.unnamed': 'एक योजना जो अब बिक्री में नहीं है',
+    'subs.waiting': 'भुगतान की प्रतीक्षा में है। अभी शुरू नहीं हुई।',
+    'subs.until': 'इस तारीख तक चलेगी: {date}',
+    'subs.ended': 'समाप्त हुई: {date}',
+    'subs.stopped': 'रद्द हो चुकी है। इस तारीख तक भुगतान किया हुआ है: {date}',
+    'subs.withdrawn': 'भुगतान से पहले रद्द हो गई।',
+    'subs.learners': 'इस योजना पर सीखने वाले',
+    'subs.noLearner': 'इस योजना पर अभी कोई नहीं सीख रहा।',
+    'subs.someone': 'एक शिक्षार्थी, जिसका नाम आपको नहीं दिखाया जाता',
+    'subs.add': 'शिक्षार्थी जोड़ें',
+    'subs.addDo': 'इस योजना में जोड़ें',
+    'subs.full': 'इस योजना के सभी स्थान भर चुके हैं।',
+    'subs.cancelOrder': 'यह ऑर्डर रद्द करें',
+    'subs.cancelOrderNote':
+      'इससे ऑर्डर भुगतान से पहले रद्द हो जाता है, ताकि आप नए सिरे से शुरू कर सकें। यदि भुगतान का कोई अनुरोध अभी किसी फ़ोन पर प्रतीक्षा में है, तो उसे स्वीकृत न करें।',
+    'subs.cancelPlan': 'यह योजना रद्द करें',
+    'subs.cancelPlanNote':
+      'रद्द करने से कोई पैसा वापस नहीं आता और योजना समय से पहले समाप्त नहीं होती। आप रद्द करें या न करें, दोबारा कुछ नहीं लिया जाता। रद्द करने के बाद इसमें किसी और को नहीं जोड़ा जा सकता। यह योजना इस तारीख तक भुगतान की हुई है: {date}',
+    'subs.reason': 'आप क्यों रद्द कर रहे हैं?',
+    'subs.whyReason': 'लिखें कि आप क्यों रद्द कर रहे हैं।',
+    'subs.whyNotYours': 'यह योजना आपके खाते से बदली नहीं जा सकती।',
+    'subs.whyNotRunning': 'यह योजना चल नहीं रही है, इसलिए इसमें किसी को नहीं जोड़ा जा सकता।',
+    'subs.whyLearner': 'उस शिक्षार्थी को आपके खाते से इस योजना पर नहीं रखा जा सकता।',
+    'subs.whySlot': 'वह स्थान अभी-अभी भर गया। किसी को नहीं जोड़ा गया।',
+    'subs.failed': 'यह नहीं हो सका। कुछ नहीं बदला।',
+    'subs.unsure':
+      'हम पुष्टि नहीं कर सके कि यह हो गया। दोबारा कोशिश करने से पहले यह पृष्ठ फिर देखें।',
+  },
+  fr: {
+    'subs.title': 'Vos formules',
+    'subs.lede':
+      'Chaque formule de votre compte : ce qu’elle ouvre, qui apprend avec elle et quand elle se termine.',
+    'subs.unread':
+      'Vos formules n’ont pas pu être lues pour le moment. Cela ne veut pas dire que vous n’en avez pas. Réessayez dans un instant.',
+    'subs.partUnread':
+      'Une partie de cette page n’a pas pu être lue pour le moment ; il en manque donc une partie. Réessayez dans un instant.',
+    'subs.none': 'Il n’y a aucune formule sur ce compte.',
+    'subs.unnamed': 'Une formule qui n’est plus en vente',
+    'subs.waiting': 'En attente de paiement. Elle n’a pas commencé.',
+    'subs.until': 'En cours jusqu’au : {date}',
+    'subs.ended': 'Terminée le : {date}',
+    'subs.stopped': 'Annulée. Payée jusqu’au : {date}',
+    'subs.withdrawn': 'Annulée avant d’avoir été payée.',
+    'subs.learners': 'Qui apprend avec cette formule',
+    'subs.noLearner': 'Personne n’apprend encore avec cette formule.',
+    'subs.someone': 'Un apprenant dont le nom ne vous est pas montré',
+    'subs.add': 'Ajouter un apprenant',
+    'subs.addDo': 'Ajouter à cette formule',
+    'subs.full': 'Toutes les places de cette formule sont prises.',
+    'subs.cancelOrder': 'Annuler cette commande',
+    'subs.cancelOrderNote':
+      'Cela annule la commande avant son paiement, pour que vous puissiez recommencer. Si une demande de paiement attend encore sur un téléphone, ne l’approuvez pas.',
+    'subs.cancelPlan': 'Annuler cette formule',
+    'subs.cancelPlanNote':
+      'Annuler ne rembourse rien et ne met pas fin à la formule plus tôt. Rien n’est prélevé de nouveau, que vous annuliez ou non. Après l’annulation, personne d’autre ne peut y être ajouté. Cette formule est payée jusqu’au : {date}',
+    'subs.reason': 'Pourquoi annulez-vous ?',
+    'subs.whyReason': 'Écrivez pourquoi vous annulez.',
+    'subs.whyNotYours': 'Cette formule ne peut pas être modifiée depuis votre compte.',
+    'subs.whyNotRunning': 'Cette formule n’est pas en cours ; personne ne peut donc y être ajouté.',
+    'subs.whyLearner':
+      'Cet apprenant ne peut pas être placé sur cette formule depuis votre compte.',
+    'subs.whySlot': 'Cette place vient d’être prise. Personne n’a été ajouté.',
+    'subs.failed': 'Cela n’a pas pu être fait. Rien n’a été modifié.',
+    'subs.unsure':
+      'Nous n’avons pas pu confirmer que cela a été fait. Regardez de nouveau cette page avant de réessayer.',
+  },
+  es: {
+    'subs.title': 'Sus planes',
+    'subs.lede': 'Cada plan de su cuenta: qué abre, quién aprende con él y cuándo termina.',
+    'subs.unread':
+      'No se pudieron leer sus planes en este momento. Esto no significa que no tenga ninguno. Inténtelo de nuevo en un momento.',
+    'subs.partUnread':
+      'No se pudo leer una parte de esta página en este momento, por lo que falta algo. Inténtelo de nuevo en un momento.',
+    'subs.none': 'No hay ningún plan en esta cuenta.',
+    'subs.unnamed': 'Un plan que ya no está a la venta',
+    'subs.waiting': 'A la espera de pago. No ha comenzado.',
+    'subs.until': 'Vigente hasta: {date}',
+    'subs.ended': 'Terminó el: {date}',
+    'subs.stopped': 'Cancelado. Pagado hasta: {date}',
+    'subs.withdrawn': 'Cancelado antes de pagarse.',
+    'subs.learners': 'Quién aprende con este plan',
+    'subs.noLearner': 'Todavía nadie aprende con este plan.',
+    'subs.someone': 'Un alumno cuyo nombre no se le muestra',
+    'subs.add': 'Añadir un alumno',
+    'subs.addDo': 'Añadir a este plan',
+    'subs.full': 'Todas las plazas de este plan están ocupadas.',
+    'subs.cancelOrder': 'Cancelar este pedido',
+    'subs.cancelOrderNote':
+      'Esto cancela el pedido antes de pagarlo, para que pueda empezar de nuevo. Si todavía hay una solicitud de pago esperando en un teléfono, no la apruebe.',
+    'subs.cancelPlan': 'Cancelar este plan',
+    'subs.cancelPlanNote':
+      'Cancelar no devuelve dinero ni termina el plan antes de tiempo. No se vuelve a cobrar nada, cancele o no. Después de cancelar no se puede añadir a nadie más. Este plan está pagado hasta: {date}',
+    'subs.reason': '¿Por qué cancela?',
+    'subs.whyReason': 'Escriba por qué cancela.',
+    'subs.whyNotYours': 'Este plan no se puede cambiar desde su cuenta.',
+    'subs.whyNotRunning': 'Este plan no está vigente, así que no se puede añadir a nadie.',
+    'subs.whyLearner': 'Ese alumno no se puede poner en este plan desde su cuenta.',
+    'subs.whySlot': 'Esa plaza acaba de ocuparse. No se añadió a nadie.',
+    'subs.failed': 'No se pudo hacer. No se cambió nada.',
+    'subs.unsure':
+      'No pudimos confirmar que se haya hecho. Vuelva a mirar esta página antes de intentarlo otra vez.',
+  },
+  pt: {
+    'subs.title': 'Os seus planos',
+    'subs.lede': 'Cada plano da sua conta: o que abre, quem aprende com ele e quando termina.',
+    'subs.unread':
+      'Não foi possível ler os seus planos neste momento. Isto não significa que não tenha nenhum. Tente de novo daqui a pouco.',
+    'subs.partUnread':
+      'Não foi possível ler uma parte desta página neste momento, por isso falta alguma coisa. Tente de novo daqui a pouco.',
+    'subs.none': 'Não há nenhum plano nesta conta.',
+    'subs.unnamed': 'Um plano que já não está à venda',
+    'subs.waiting': 'À espera de pagamento. Ainda não começou.',
+    'subs.until': 'Em vigor até: {date}',
+    'subs.ended': 'Terminou em: {date}',
+    'subs.stopped': 'Cancelado. Pago até: {date}',
+    'subs.withdrawn': 'Cancelado antes de ser pago.',
+    'subs.learners': 'Quem aprende com este plano',
+    'subs.noLearner': 'Ainda ninguém aprende com este plano.',
+    'subs.someone': 'Um aluno cujo nome não lhe é mostrado',
+    'subs.add': 'Adicionar um aluno',
+    'subs.addDo': 'Adicionar a este plano',
+    'subs.full': 'Todos os lugares deste plano estão ocupados.',
+    'subs.cancelOrder': 'Cancelar esta encomenda',
+    'subs.cancelOrderNote':
+      'Isto cancela a encomenda antes de ser paga, para que possa recomeçar. Se ainda houver um pedido de pagamento à espera num telefone, não o aprove.',
+    'subs.cancelPlan': 'Cancelar este plano',
+    'subs.cancelPlanNote':
+      'Cancelar não devolve dinheiro nem termina o plano mais cedo. Nada volta a ser cobrado, quer cancele quer não. Depois de cancelar, não é possível adicionar mais ninguém. Este plano está pago até: {date}',
+    'subs.reason': 'Porque está a cancelar?',
+    'subs.whyReason': 'Escreva porque está a cancelar.',
+    'subs.whyNotYours': 'Este plano não pode ser alterado a partir da sua conta.',
+    'subs.whyNotRunning':
+      'Este plano não está em vigor, por isso não é possível adicionar ninguém.',
+    'subs.whyLearner': 'Esse aluno não pode ser colocado neste plano a partir da sua conta.',
+    'subs.whySlot': 'Esse lugar acabou de ser ocupado. Ninguém foi adicionado.',
+    'subs.failed': 'Não foi possível fazer isso. Nada foi alterado.',
+    'subs.unsure':
+      'Não conseguimos confirmar que isso foi feito. Volte a ver esta página antes de tentar outra vez.',
+  },
+  sw: {
+    'subs.title': 'Mipango yako',
+    'subs.lede':
+      'Kila mpango kwenye akaunti yako: unafungua nini, nani anajifunza kwa mpango huo na unaisha lini.',
+    'subs.unread':
+      'Mipango yako haikuweza kusomwa sasa hivi. Hii haimaanishi kwamba huna mpango. Jaribu tena baada ya muda mfupi.',
+    'subs.partUnread':
+      'Sehemu ya ukurasa huu haikuweza kusomwa sasa hivi, kwa hiyo baadhi yake haipo. Jaribu tena baada ya muda mfupi.',
+    'subs.none': 'Hakuna mpango kwenye akaunti hii.',
+    'subs.unnamed': 'Mpango ambao hauuzwi tena',
+    'subs.waiting': 'Unasubiri malipo. Haujaanza.',
+    'subs.until': 'Unaendelea hadi: {date}',
+    'subs.ended': 'Uliisha: {date}',
+    'subs.stopped': 'Umefutwa. Umelipiwa hadi: {date}',
+    'subs.withdrawn': 'Ulifutwa kabla ya kulipiwa.',
+    'subs.learners': 'Wanaojifunza kwa mpango huu',
+    'subs.noLearner': 'Bado hakuna anayejifunza kwa mpango huu.',
+    'subs.someone': 'Mwanafunzi ambaye jina lake halionyeshwi kwako',
+    'subs.add': 'Ongeza mwanafunzi',
+    'subs.addDo': 'Ongeza kwenye mpango huu',
+    'subs.full': 'Nafasi zote za mpango huu zimejaa.',
+    'subs.cancelOrder': 'Futa agizo hili',
+    'subs.cancelOrderNote':
+      'Hii inafuta agizo kabla halijalipwa, ili uweze kuanza upya. Ikiwa ombi la malipo bado linasubiri kwenye simu, usilikubali.',
+    'subs.cancelPlan': 'Futa mpango huu',
+    'subs.cancelPlanNote':
+      'Kufuta hakurudishi pesa na hakumalizi mpango mapema. Hakuna kinachotozwa tena, ufute au usifute. Baada ya kufuta, hakuna mtu mwingine anayeweza kuongezwa. Mpango huu umelipiwa hadi: {date}',
+    'subs.reason': 'Kwa nini unafuta?',
+    'subs.whyReason': 'Andika kwa nini unafuta.',
+    'subs.whyNotYours': 'Mpango huu hauwezi kubadilishwa kutoka akaunti yako.',
+    'subs.whyNotRunning': 'Mpango huu hauendelei, kwa hiyo hakuna anayeweza kuongezwa.',
+    'subs.whyLearner': 'Mwanafunzi huyo hawezi kuwekwa kwenye mpango huu kutoka akaunti yako.',
+    'subs.whySlot': 'Nafasi hiyo imechukuliwa sasa hivi. Hakuna aliyeongezwa.',
+    'subs.failed': 'Hilo halikuweza kufanyika. Hakuna kilichobadilika.',
+    'subs.unsure':
+      'Hatukuweza kuthibitisha kwamba hilo limefanyika. Tazama ukurasa huu tena kabla ya kujaribu mara nyingine.',
+  },
+  af: {
+    'subs.title': 'Jou planne',
+    'subs.lede':
+      'Elke plan op jou rekening: wat dit oopmaak, wie daarmee leer en wanneer dit eindig.',
+    'subs.unread':
+      'Jou planne kon nie nou gelees word nie. Dit beteken nie dat jy geen het nie. Probeer oor ’n oomblik weer.',
+    'subs.partUnread':
+      '’n Deel van hierdie bladsy kon nie nou gelees word nie, dus ontbreek iets. Probeer oor ’n oomblik weer.',
+    'subs.none': 'Daar is geen plan op hierdie rekening nie.',
+    'subs.unnamed': '’n Plan wat nie meer te koop is nie',
+    'subs.waiting': 'Wag op betaling. Dit het nog nie begin nie.',
+    'subs.until': 'Loop tot: {date}',
+    'subs.ended': 'Het geëindig op: {date}',
+    'subs.stopped': 'Gekanselleer. Betaal tot: {date}',
+    'subs.withdrawn': 'Gekanselleer voordat dit betaal is.',
+    'subs.learners': 'Wie met hierdie plan leer',
+    'subs.noLearner': 'Niemand leer nog met hierdie plan nie.',
+    'subs.someone': '’n Leerder wie se naam nie aan jou gewys word nie',
+    'subs.add': 'Voeg ’n leerder by',
+    'subs.addDo': 'Voeg by hierdie plan',
+    'subs.full': 'Elke plek op hierdie plan is geneem.',
+    'subs.cancelOrder': 'Kanselleer hierdie bestelling',
+    'subs.cancelOrderNote':
+      'Dit kanselleer die bestelling voordat dit betaal is, sodat jy weer kan begin. As ’n betalingsversoek nog op ’n foon wag, moenie dit goedkeur nie.',
+    'subs.cancelPlan': 'Kanselleer hierdie plan',
+    'subs.cancelPlanNote':
+      'Kansellasie gee geen geld terug nie en beëindig die plan nie vroeër nie. Niks word weer geneem nie, of jy kanselleer of nie. Ná kansellasie kan niemand anders bygevoeg word nie. Hierdie plan is betaal tot: {date}',
+    'subs.reason': 'Hoekom kanselleer jy?',
+    'subs.whyReason': 'Skryf hoekom jy kanselleer.',
+    'subs.whyNotYours': 'Hierdie plan kan nie vanaf jou rekening verander word nie.',
+    'subs.whyNotRunning': 'Hierdie plan loop nie, dus kan niemand bygevoeg word nie.',
+    'subs.whyLearner':
+      'Daardie leerder kan nie vanaf jou rekening op hierdie plan geplaas word nie.',
+    'subs.whySlot': 'Daardie plek is pas geneem. Niemand is bygevoeg nie.',
+    'subs.failed': 'Dit kon nie gedoen word nie. Niks is verander nie.',
+    'subs.unsure':
+      'Ons kon nie bevestig dat dit gedoen is nie. Kyk weer na hierdie bladsy voordat jy nog ’n keer probeer.',
+  },
+  'zh-hans': {
+    'subs.title': '您的方案',
+    'subs.lede': '您账户中的每个方案：它开放什么、谁在用它学习、何时结束。',
+    'subs.unread': '暂时无法读取您的方案。这并不表示您没有方案。请稍后再试。',
+    'subs.partUnread': '暂时无法读取本页的一部分，因此有些内容没有显示。请稍后再试。',
+    'subs.none': '此账户没有方案。',
+    'subs.unnamed': '一个已不再出售的方案',
+    'subs.waiting': '正在等待付款。尚未开始。',
+    'subs.until': '有效期至：{date}',
+    'subs.ended': '已结束：{date}',
+    'subs.stopped': '已取消。已付费至：{date}',
+    'subs.withdrawn': '付款前已取消。',
+    'subs.learners': '使用此方案学习的人',
+    'subs.noLearner': '还没有人使用此方案学习。',
+    'subs.someone': '一位不向您显示姓名的学习者',
+    'subs.add': '添加学习者',
+    'subs.addDo': '添加到此方案',
+    'subs.full': '此方案的名额已全部占用。',
+    'subs.cancelOrder': '取消此订单',
+    'subs.cancelOrderNote': '这会在付款前取消订单，以便您重新开始。如果手机上仍有等待中的付款请求，请不要批准。',
+    'subs.cancelPlan': '取消此方案',
+    'subs.cancelPlanNote': '取消不会退款，也不会提前结束方案。无论是否取消，都不会再次扣款。取消后无法再添加其他人。此方案已付费至：{date}',
+    'subs.reason': '您为什么取消？',
+    'subs.whyReason': '请写下取消的原因。',
+    'subs.whyNotYours': '无法从您的账户更改此方案。',
+    'subs.whyNotRunning': '此方案不在有效期内，因此无法添加任何人。',
+    'subs.whyLearner': '无法从您的账户把该学习者加入此方案。',
+    'subs.whySlot': '该名额刚刚被占用。没有添加任何人。',
+    'subs.failed': '无法完成此操作。没有任何更改。',
+    'subs.unsure': '我们无法确认此操作是否已完成。再次尝试前，请重新查看本页。',
+  },
+  'zh-hant': {
+    'subs.title': '您的方案',
+    'subs.lede': '您帳號中的每個方案：它開放什麼、誰在用它學習、何時結束。',
+    'subs.unread': '暫時無法讀取您的方案。這並不表示您沒有方案。請稍後再試。',
+    'subs.partUnread': '暫時無法讀取本頁的一部分，因此有些內容沒有顯示。請稍後再試。',
+    'subs.none': '此帳號沒有方案。',
+    'subs.unnamed': '一個已不再販售的方案',
+    'subs.waiting': '正在等待付款。尚未開始。',
+    'subs.until': '有效期至：{date}',
+    'subs.ended': '已結束：{date}',
+    'subs.stopped': '已取消。已付費至：{date}',
+    'subs.withdrawn': '付款前已取消。',
+    'subs.learners': '使用此方案學習的人',
+    'subs.noLearner': '還沒有人使用此方案學習。',
+    'subs.someone': '一位不向您顯示姓名的學習者',
+    'subs.add': '新增學習者',
+    'subs.addDo': '加入此方案',
+    'subs.full': '此方案的名額已全部占用。',
+    'subs.cancelOrder': '取消此訂單',
+    'subs.cancelOrderNote': '這會在付款前取消訂單，讓您可以重新開始。如果手機上仍有等待中的付款請求，請不要核准。',
+    'subs.cancelPlan': '取消此方案',
+    'subs.cancelPlanNote': '取消不會退款，也不會提前結束方案。無論是否取消，都不會再次扣款。取消後無法再加入其他人。此方案已付費至：{date}',
+    'subs.reason': '您為什麼取消？',
+    'subs.whyReason': '請寫下取消的原因。',
+    'subs.whyNotYours': '無法從您的帳號變更此方案。',
+    'subs.whyNotRunning': '此方案不在有效期內，因此無法加入任何人。',
+    'subs.whyLearner': '無法從您的帳號把該學習者加入此方案。',
+    'subs.whySlot': '該名額剛剛被占用。沒有加入任何人。',
+    'subs.failed': '無法完成此操作。沒有任何變更。',
+    'subs.unsure': '我們無法確認此操作是否已完成。再次嘗試前，請重新查看本頁。',
+  },
+  vi: {
+    'subs.title': 'Các gói của bạn',
+    'subs.lede':
+      'Mỗi gói trong tài khoản của bạn: gói mở những gì, ai đang học bằng gói đó và khi nào gói kết thúc.',
+    'subs.unread':
+      'Hiện chưa đọc được các gói của bạn. Điều này không có nghĩa là bạn không có gói nào. Hãy thử lại sau giây lát.',
+    'subs.partUnread':
+      'Hiện chưa đọc được một phần của trang này nên trang còn thiếu. Hãy thử lại sau giây lát.',
+    'subs.none': 'Tài khoản này không có gói nào.',
+    'subs.unnamed': 'Một gói không còn được bán',
+    'subs.waiting': 'Đang chờ thanh toán. Gói chưa bắt đầu.',
+    'subs.until': 'Có hiệu lực đến: {date}',
+    'subs.ended': 'Đã kết thúc: {date}',
+    'subs.stopped': 'Đã huỷ. Đã thanh toán đến: {date}',
+    'subs.withdrawn': 'Đã huỷ trước khi thanh toán.',
+    'subs.learners': 'Người đang học bằng gói này',
+    'subs.noLearner': 'Chưa có ai học bằng gói này.',
+    'subs.someone': 'Một học viên mà bạn không được xem tên',
+    'subs.add': 'Thêm học viên',
+    'subs.addDo': 'Thêm vào gói này',
+    'subs.full': 'Mọi chỗ trong gói này đã có người.',
+    'subs.cancelOrder': 'Huỷ đơn hàng này',
+    'subs.cancelOrderNote':
+      'Thao tác này huỷ đơn hàng trước khi thanh toán để bạn có thể bắt đầu lại. Nếu vẫn còn yêu cầu thanh toán đang chờ trên điện thoại, đừng chấp thuận.',
+    'subs.cancelPlan': 'Huỷ gói này',
+    'subs.cancelPlanNote':
+      'Huỷ không hoàn lại tiền và không kết thúc gói sớm hơn. Dù bạn huỷ hay không, không có khoản nào bị thu thêm. Sau khi huỷ, không thể thêm ai khác vào gói. Gói này đã được thanh toán đến: {date}',
+    'subs.reason': 'Vì sao bạn huỷ?',
+    'subs.whyReason': 'Hãy viết lý do bạn huỷ.',
+    'subs.whyNotYours': 'Không thể thay đổi gói này từ tài khoản của bạn.',
+    'subs.whyNotRunning': 'Gói này hiện không có hiệu lực nên không thể thêm ai vào.',
+    'subs.whyLearner': 'Không thể đưa học viên đó vào gói này từ tài khoản của bạn.',
+    'subs.whySlot': 'Chỗ đó vừa có người. Không ai được thêm vào.',
+    'subs.failed': 'Không thực hiện được. Không có gì thay đổi.',
+    'subs.unsure':
+      'Chúng tôi chưa xác nhận được việc này đã xong hay chưa. Hãy xem lại trang này trước khi thử lần nữa.',
+  },
+  th: {
+    'subs.title': 'แพ็กเกจของคุณ',
+    'subs.lede':
+      'แพ็กเกจแต่ละรายการในบัญชีของคุณ: เปิดอะไรให้บ้าง ใครกำลังเรียนด้วยแพ็กเกจนั้น และสิ้นสุดเมื่อใด',
+    'subs.unread':
+      'ขณะนี้ยังอ่านแพ็กเกจของคุณไม่ได้ ซึ่งไม่ได้หมายความว่าคุณไม่มีแพ็กเกจ โปรดลองอีกครั้งในอีกสักครู่',
+    'subs.partUnread':
+      'ขณะนี้ยังอ่านบางส่วนของหน้านี้ไม่ได้ จึงมีบางอย่างขาดไป โปรดลองอีกครั้งในอีกสักครู่',
+    'subs.none': 'บัญชีนี้ไม่มีแพ็กเกจ',
+    'subs.unnamed': 'แพ็กเกจที่ไม่ได้ขายแล้ว',
+    'subs.waiting': 'กำลังรอการชำระเงิน ยังไม่เริ่ม',
+    'subs.until': 'ใช้ได้ถึง: {date}',
+    'subs.ended': 'สิ้นสุดแล้ว: {date}',
+    'subs.stopped': 'ยกเลิกแล้ว ชำระเงินไว้ถึง: {date}',
+    'subs.withdrawn': 'ยกเลิกก่อนชำระเงิน',
+    'subs.learners': 'ผู้ที่เรียนด้วยแพ็กเกจนี้',
+    'subs.noLearner': 'ยังไม่มีใครเรียนด้วยแพ็กเกจนี้',
+    'subs.someone': 'ผู้เรียนที่คุณไม่ได้รับอนุญาตให้เห็นชื่อ',
+    'subs.add': 'เพิ่มผู้เรียน',
+    'subs.addDo': 'เพิ่มในแพ็กเกจนี้',
+    'subs.full': 'ที่ในแพ็กเกจนี้เต็มทุกที่แล้ว',
+    'subs.cancelOrder': 'ยกเลิกคำสั่งซื้อนี้',
+    'subs.cancelOrderNote':
+      'การดำเนินการนี้ยกเลิกคำสั่งซื้อก่อนชำระเงิน เพื่อให้คุณเริ่มใหม่ได้ หากยังมีคำขอชำระเงินรออยู่บนโทรศัพท์ โปรดอย่าอนุมัติ',
+    'subs.cancelPlan': 'ยกเลิกแพ็กเกจนี้',
+    'subs.cancelPlanNote':
+      'การยกเลิกไม่คืนเงินและไม่ทำให้แพ็กเกจสิ้นสุดเร็วขึ้น จะไม่มีการเก็บเงินอีกไม่ว่าคุณจะยกเลิกหรือไม่ หลังยกเลิกแล้วจะเพิ่มคนอื่นไม่ได้ แพ็กเกจนี้ชำระเงินไว้ถึง: {date}',
+    'subs.reason': 'เหตุใดคุณจึงยกเลิก',
+    'subs.whyReason': 'โปรดเขียนเหตุผลที่คุณยกเลิก',
+    'subs.whyNotYours': 'เปลี่ยนแปลงแพ็กเกจนี้จากบัญชีของคุณไม่ได้',
+    'subs.whyNotRunning': 'แพ็กเกจนี้ไม่ได้ใช้งานอยู่ จึงเพิ่มใครไม่ได้',
+    'subs.whyLearner': 'นำผู้เรียนคนนั้นเข้าแพ็กเกจนี้จากบัญชีของคุณไม่ได้',
+    'subs.whySlot': 'ที่นั้นเพิ่งมีคนใช้ไป ไม่มีการเพิ่มใคร',
+    'subs.failed': 'ทำรายการนั้นไม่ได้ ไม่มีอะไรเปลี่ยนแปลง',
+    'subs.unsure': 'เรายืนยันไม่ได้ว่ารายการนั้นสำเร็จแล้ว โปรดดูหน้านี้อีกครั้งก่อนลองใหม่',
+  },
+  fil: {
+    'subs.title': 'Ang iyong mga plano',
+    'subs.lede':
+      'Bawat plano sa iyong account: kung ano ang binubuksan nito, sino ang nag-aaral gamit ito at kailan ito matatapos.',
+    'subs.unread':
+      'Hindi mabasa ang iyong mga plano sa ngayon. Hindi ito nangangahulugang wala kang plano. Subukan muli maya-maya.',
+    'subs.partUnread':
+      'Hindi mabasa ang isang bahagi ng pahinang ito sa ngayon, kaya may kulang dito. Subukan muli maya-maya.',
+    'subs.none': 'Walang plano sa account na ito.',
+    'subs.unnamed': 'Isang planong hindi na ibinebenta',
+    'subs.waiting': 'Naghihintay ng bayad. Hindi pa ito nagsisimula.',
+    'subs.until': 'Tatagal hanggang: {date}',
+    'subs.ended': 'Natapos noong: {date}',
+    'subs.stopped': 'Kinansela. Bayad hanggang: {date}',
+    'subs.withdrawn': 'Kinansela bago pa mabayaran.',
+    'subs.learners': 'Mga nag-aaral gamit ang planong ito',
+    'subs.noLearner': 'Wala pang nag-aaral gamit ang planong ito.',
+    'subs.someone': 'Isang mag-aaral na hindi ipinapakita sa iyo ang pangalan',
+    'subs.add': 'Magdagdag ng mag-aaral',
+    'subs.addDo': 'Idagdag sa planong ito',
+    'subs.full': 'Puno na ang lahat ng puwesto sa planong ito.',
+    'subs.cancelOrder': 'Kanselahin ang order na ito',
+    'subs.cancelOrderNote':
+      'Kinakansela nito ang order bago pa ito mabayaran, para makapagsimula kang muli. Kung may kahilingan sa pagbabayad na naghihintay pa sa isang telepono, huwag itong aprubahan.',
+    'subs.cancelPlan': 'Kanselahin ang planong ito',
+    'subs.cancelPlanNote':
+      'Walang ibinabalik na pera ang pagkansela at hindi nito tinatapos nang mas maaga ang plano. Walang sisingiling muli, kanselahin mo man o hindi. Pagkatapos magkansela, wala nang ibang maidaragdag. Bayad ang planong ito hanggang: {date}',
+    'subs.reason': 'Bakit ka nagkakansela?',
+    'subs.whyReason': 'Isulat kung bakit ka nagkakansela.',
+    'subs.whyNotYours': 'Hindi mababago ang planong ito mula sa iyong account.',
+    'subs.whyNotRunning': 'Hindi tumatakbo ang planong ito, kaya walang maidaragdag dito.',
+    'subs.whyLearner':
+      'Hindi mailalagay ang mag-aaral na iyon sa planong ito mula sa iyong account.',
+    'subs.whySlot': 'Kakakuha lang ng puwestong iyon. Walang naidagdag.',
+    'subs.failed': 'Hindi iyon nagawa. Walang nabago.',
+    'subs.unsure':
+      'Hindi namin nakumpirma na nagawa iyon. Tingnan muli ang pahinang ito bago sumubok ulit.',
+  },
+  uz: {
+    'subs.title': 'Tariflaringiz',
+    'subs.lede':
+      'Hisobingizdagi har bir tarif: u nimani ochadi, u bilan kim oʻqiyapti va qachon tugaydi.',
+    'subs.unread':
+      'Tariflaringizni hozir oʻqib boʻlmadi. Bu sizda tarif yoʻq degani emas. Birozdan soʻng qayta urinib koʻring.',
+    'subs.partUnread':
+      'Bu sahifaning bir qismini hozir oʻqib boʻlmadi, shuning uchun unda nimadir yetishmayapti. Birozdan soʻng qayta urinib koʻring.',
+    'subs.none': 'Bu hisobda tarif yoʻq.',
+    'subs.unnamed': 'Endi sotilmaydigan tarif',
+    'subs.waiting': 'Toʻlov kutilmoqda. Hali boshlanmagan.',
+    'subs.until': 'Shu vaqtgacha amal qiladi: {date}',
+    'subs.ended': 'Tugagan: {date}',
+    'subs.stopped': 'Bekor qilingan. Shu vaqtgacha toʻlangan: {date}',
+    'subs.withdrawn': 'Toʻlovdan oldin bekor qilingan.',
+    'subs.learners': 'Bu tarif bilan oʻqiyotganlar',
+    'subs.noLearner': 'Bu tarif bilan hali hech kim oʻqimayapti.',
+    'subs.someone': 'Ismi sizga koʻrsatilmaydigan oʻquvchi',
+    'subs.add': 'Oʻquvchi qoʻshish',
+    'subs.addDo': 'Bu tarifga qoʻshish',
+    'subs.full': 'Bu tarifdagi barcha oʻrinlar band.',
+    'subs.cancelOrder': 'Bu buyurtmani bekor qilish',
+    'subs.cancelOrderNote':
+      'Bu buyurtmani toʻlovdan oldin bekor qiladi, shunda qaytadan boshlay olasiz. Agar toʻlov soʻrovi hali biror telefonda kutib turgan boʻlsa, uni tasdiqlamang.',
+    'subs.cancelPlan': 'Bu tarifni bekor qilish',
+    'subs.cancelPlanNote':
+      'Bekor qilish pulni qaytarmaydi va tarifni muddatidan oldin tugatmaydi. Bekor qilsangiz ham, qilmasangiz ham, qayta hech narsa olinmaydi. Bekor qilingandan soʻng unga boshqa hech kimni qoʻshib boʻlmaydi. Bu tarif shu vaqtgacha toʻlangan: {date}',
+    'subs.reason': 'Nega bekor qilyapsiz?',
+    'subs.whyReason': 'Nega bekor qilayotganingizni yozing.',
+    'subs.whyNotYours': 'Bu tarifni sizning hisobingizdan oʻzgartirib boʻlmaydi.',
+    'subs.whyNotRunning': 'Bu tarif amalda emas, shuning uchun unga hech kimni qoʻshib boʻlmaydi.',
+    'subs.whyLearner': 'Oʻsha oʻquvchini sizning hisobingizdan bu tarifga qoʻyib boʻlmaydi.',
+    'subs.whySlot': 'Oʻsha oʻrin hozirgina band boʻldi. Hech kim qoʻshilmadi.',
+    'subs.failed': 'Buni bajarib boʻlmadi. Hech narsa oʻzgarmadi.',
+    'subs.unsure':
+      'Bu bajarilganini tasdiqlay olmadik. Qayta urinishdan oldin bu sahifaga yana qarang.',
+  },
+  kk: {
+    'subs.title': 'Тарифтеріңіз',
+    'subs.lede':
+      'Тіркелгіңіздегі әр тариф: ол нені ашады, онымен кім оқып жатыр және қашан аяқталады.',
+    'subs.unread':
+      'Тарифтеріңізді қазір оқу мүмкін болмады. Бұл сізде тариф жоқ дегенді білдірмейді. Сәлден соң қайталап көріңіз.',
+    'subs.partUnread':
+      'Бұл беттің бір бөлігін қазір оқу мүмкін болмады, сондықтан кей жері көрсетілмей тұр. Сәлден соң қайталап көріңіз.',
+    'subs.none': 'Бұл тіркелгіде тариф жоқ.',
+    'subs.unnamed': 'Енді сатылмайтын тариф',
+    'subs.waiting': 'Төлем күтілуде. Әлі басталған жоқ.',
+    'subs.until': 'Мына уақытқа дейін жарамды: {date}',
+    'subs.ended': 'Аяқталды: {date}',
+    'subs.stopped': 'Тоқтатылған. Мына уақытқа дейін төленген: {date}',
+    'subs.withdrawn': 'Төленбей тұрып тоқтатылған.',
+    'subs.learners': 'Осы тарифпен оқып жатқандар',
+    'subs.noLearner': 'Осы тарифпен әлі ешкім оқып жатқан жоқ.',
+    'subs.someone': 'Аты сізге көрсетілмейтін оқушы',
+    'subs.add': 'Оқушы қосу',
+    'subs.addDo': 'Осы тарифке қосу',
+    'subs.full': 'Осы тарифтегі барлық орын бос емес.',
+    'subs.cancelOrder': 'Осы тапсырысты тоқтату',
+    'subs.cancelOrderNote':
+      'Бұл тапсырысты төленбей тұрып тоқтатады, сонда қайта бастай аласыз. Егер төлем сұрауы әлі бір телефонда күтіп тұрса, оны мақұлдамаңыз.',
+    'subs.cancelPlan': 'Осы тарифті тоқтату',
+    'subs.cancelPlanNote':
+      'Тоқтату ақшаны қайтармайды және тарифті мерзімінен бұрын аяқтамайды. Тоқтатсаңыз да, тоқтатпасаңыз да, қайтадан ештеңе алынбайды. Тоқтатқаннан кейін оған басқа ешкімді қосу мүмкін емес. Бұл тариф мына уақытқа дейін төленген: {date}',
+    'subs.reason': 'Неге тоқтатып жатырсыз?',
+    'subs.whyReason': 'Неге тоқтатып жатқаныңызды жазыңыз.',
+    'subs.whyNotYours': 'Бұл тарифті сіздің тіркелгіңізден өзгерту мүмкін емес.',
+    'subs.whyNotRunning': 'Бұл тариф жарамды емес, сондықтан оған ешкімді қосу мүмкін емес.',
+    'subs.whyLearner': 'Сол оқушыны сіздің тіркелгіңізден осы тарифке қою мүмкін емес.',
+    'subs.whySlot': 'Сол орын жаңа ғана алынды. Ешкім қосылған жоқ.',
+    'subs.failed': 'Мұны орындау мүмкін болмады. Ештеңе өзгерген жоқ.',
+    'subs.unsure':
+      'Мұның орындалғанын растай алмадық. Қайта әрекет етпес бұрын осы бетті тағы қараңыз.',
+  },
+  az: {
+    'subs.title': 'Tarifləriniz',
+    'subs.lede': 'Hesabınızdakı hər tarif: nəyi açır, onunla kim öyrənir və nə vaxt bitir.',
+    'subs.unread':
+      'Tariflərinizi indi oxumaq mümkün olmadı. Bu, tarifinizin olmadığı demək deyil. Bir azdan yenidən cəhd edin.',
+    'subs.partUnread':
+      'Bu səhifənin bir hissəsini indi oxumaq mümkün olmadı, ona görə nəsə çatışmır. Bir azdan yenidən cəhd edin.',
+    'subs.none': 'Bu hesabda tarif yoxdur.',
+    'subs.unnamed': 'Artıq satışda olmayan tarif',
+    'subs.waiting': 'Ödəniş gözlənilir. Hələ başlamayıb.',
+    'subs.until': 'Bu vaxta qədər davam edir: {date}',
+    'subs.ended': 'Bitib: {date}',
+    'subs.stopped': 'Ləğv edilib. Bu vaxta qədər ödənilib: {date}',
+    'subs.withdrawn': 'Ödənilməmişdən əvvəl ləğv edilib.',
+    'subs.learners': 'Bu tariflə öyrənənlər',
+    'subs.noLearner': 'Bu tariflə hələ heç kim öyrənmir.',
+    'subs.someone': 'Adı sizə göstərilməyən öyrənən',
+    'subs.add': 'Öyrənən əlavə et',
+    'subs.addDo': 'Bu tarifə əlavə et',
+    'subs.full': 'Bu tarifdəki bütün yerlər tutulub.',
+    'subs.cancelOrder': 'Bu sifarişi ləğv et',
+    'subs.cancelOrderNote':
+      'Bu, sifarişi ödənilməmişdən əvvəl ləğv edir ki, yenidən başlaya biləsiniz. Əgər ödəniş sorğusu hələ bir telefonda gözləyirsə, onu təsdiqləməyin.',
+    'subs.cancelPlan': 'Bu tarifi ləğv et',
+    'subs.cancelPlanNote':
+      'Ləğv etmək pulu qaytarmır və tarifi vaxtından əvvəl bitirmir. Ləğv etsəniz də, etməsəniz də, yenidən heç nə tutulmur. Ləğv etdikdən sonra ona başqa heç kimi əlavə etmək olmaz. Bu tarif bu vaxta qədər ödənilib: {date}',
+    'subs.reason': 'Niyə ləğv edirsiniz?',
+    'subs.whyReason': 'Niyə ləğv etdiyinizi yazın.',
+    'subs.whyNotYours': 'Bu tarifi sizin hesabınızdan dəyişmək olmaz.',
+    'subs.whyNotRunning': 'Bu tarif qüvvədə deyil, ona görə ona heç kimi əlavə etmək olmaz.',
+    'subs.whyLearner': 'Həmin öyrənəni sizin hesabınızdan bu tarifə qoymaq olmaz.',
+    'subs.whySlot': 'Həmin yer indicə tutuldu. Heç kim əlavə edilmədi.',
+    'subs.failed': 'Bunu etmək mümkün olmadı. Heç nə dəyişmədi.',
+    'subs.unsure':
+      'Bunun edildiyini təsdiqləyə bilmədik. Yenidən cəhd etməzdən əvvəl bu səhifəyə bir də baxın.',
+  },
+  tg: {
+    'subs.title': 'Нақшаҳои шумо',
+    'subs.lede':
+      'Ҳар нақшаи ҳисоби шумо: он чиро мекушояд, бо он кӣ меомӯзад ва кай ба охир мерасад.',
+    'subs.unread':
+      'Нақшаҳои шуморо ҳозир хондан муяссар нашуд. Ин маънои онро надорад, ки шумо нақша надоред. Каме баъд дубора кӯшиш кунед.',
+    'subs.partUnread':
+      'Як қисми ин саҳифаро ҳозир хондан муяссар нашуд, бинобар ин чизе намерасад. Каме баъд дубора кӯшиш кунед.',
+    'subs.none': 'Дар ин ҳисоб нақша нест.',
+    'subs.unnamed': 'Нақшае, ки дигар фурӯхта намешавад',
+    'subs.waiting': 'Мунтазири пардохт аст. Ҳанӯз оғоз нашудааст.',
+    'subs.until': 'То ин вақт идома дорад: {date}',
+    'subs.ended': 'Ба охир расид: {date}',
+    'subs.stopped': 'Бекор шудааст. То ин вақт пардохт шудааст: {date}',
+    'subs.withdrawn': 'Пеш аз пардохт бекор шудааст.',
+    'subs.learners': 'Онҳое, ки бо ин нақша меомӯзанд',
+    'subs.noLearner': 'Бо ин нақша ҳанӯз касе намеомӯзад.',
+    'subs.someone': 'Хонандае, ки номаш ба шумо нишон дода намешавад',
+    'subs.add': 'Илова кардани хонанда',
+    'subs.addDo': 'Ба ин нақша илова кардан',
+    'subs.full': 'Ҳамаи ҷойҳои ин нақша банд аст.',
+    'subs.cancelOrder': 'Бекор кардани ин фармоиш',
+    'subs.cancelOrderNote':
+      'Ин фармоишро пеш аз пардохт бекор мекунад, то шумо аз нав оғоз карда тавонед. Агар дархости пардохт ҳанӯз дар ягон телефон мунтазир бошад, онро тасдиқ накунед.',
+    'subs.cancelPlan': 'Бекор кардани ин нақша',
+    'subs.cancelPlanNote':
+      'Бекор кардан пулро барнамегардонад ва нақшаро пеш аз мӯҳлат ба охир намерасонад. Хоҳ бекор кунед, хоҳ не, дубора чизе гирифта намешавад. Пас аз бекор кардан ба он каси дигарро илова кардан мумкин нест. Ин нақша то ин вақт пардохт шудааст: {date}',
+    'subs.reason': 'Чаро бекор мекунед?',
+    'subs.whyReason': 'Нависед, ки чаро бекор мекунед.',
+    'subs.whyNotYours': 'Ин нақшаро аз ҳисоби шумо тағйир додан мумкин нест.',
+    'subs.whyNotRunning':
+      'Ин нақша амал намекунад, бинобар ин ба он касеро илова кардан мумкин нест.',
+    'subs.whyLearner': 'Он хонандаро аз ҳисоби шумо ба ин нақша гузоштан мумкин нест.',
+    'subs.whySlot': 'Он ҷой ҳозир банд шуд. Касе илова нашуд.',
+    'subs.failed': 'Инро иҷро кардан муяссар нашуд. Чизе тағйир наёфт.',
+    'subs.unsure':
+      'Мо тасдиқ карда натавонистем, ки ин иҷро шуд. Пеш аз кӯшиши дубора ин саҳифаро боз бинед.',
+  },
+  ky: {
+    'subs.title': 'Тарифтериңиз',
+    'subs.lede':
+      'Аккаунтуңуздагы ар бир тариф: ал эмнени ачат, аны менен ким окуп жатат жана качан аяктайт.',
+    'subs.unread':
+      'Тарифтериңизди азыр окуу мүмкүн болгон жок. Бул сизде тариф жок дегенди билдирбейт. Бир аздан кийин кайра аракет кылыңыз.',
+    'subs.partUnread':
+      'Бул барактын бир бөлүгүн азыр окуу мүмкүн болгон жок, ошондуктан бир нерсеси жетишпейт. Бир аздан кийин кайра аракет кылыңыз.',
+    'subs.none': 'Бул аккаунтта тариф жок.',
+    'subs.unnamed': 'Эми сатылбаган тариф',
+    'subs.waiting': 'Төлөм күтүлүүдө. Али баштала элек.',
+    'subs.until': 'Ушул убакка чейин жарактуу: {date}',
+    'subs.ended': 'Аяктады: {date}',
+    'subs.stopped': 'Жокко чыгарылган. Ушул убакка чейин төлөнгөн: {date}',
+    'subs.withdrawn': 'Төлөнө электе жокко чыгарылган.',
+    'subs.learners': 'Ушул тариф менен окуп жаткандар',
+    'subs.noLearner': 'Ушул тариф менен азырынча эч ким окуй элек.',
+    'subs.someone': 'Аты сизге көрсөтүлбөгөн окуучу',
+    'subs.add': 'Окуучу кошуу',
+    'subs.addDo': 'Ушул тарифке кошуу',
+    'subs.full': 'Ушул тарифтеги бардык орундар ээленген.',
+    'subs.cancelOrder': 'Бул буйрутманы жокко чыгаруу',
+    'subs.cancelOrderNote':
+      'Бул буйрутманы төлөнө электе жокко чыгарат, ошондо кайра баштай аласыз. Эгер төлөм суроосу дагы эле кайсы бир телефондо күтүп турса, аны ырастабаңыз.',
+    'subs.cancelPlan': 'Бул тарифти жокко чыгаруу',
+    'subs.cancelPlanNote':
+      'Жокко чыгаруу акчаны кайтарбайт жана тарифти мөөнөтүнөн мурда аяктатпайт. Жокко чыгарсаңыз да, чыгарбасаңыз да, кайра эч нерсе алынбайт. Жокко чыгаргандан кийин ага башка эч кимди кошууга болбойт. Бул тариф ушул убакка чейин төлөнгөн: {date}',
+    'subs.reason': 'Эмне үчүн жокко чыгарып жатасыз?',
+    'subs.whyReason': 'Эмне үчүн жокко чыгарып жатканыңызды жазыңыз.',
+    'subs.whyNotYours': 'Бул тарифти сиздин аккаунтуңуздан өзгөртүүгө болбойт.',
+    'subs.whyNotRunning': 'Бул тариф жарактуу эмес, ошондуктан ага эч кимди кошууга болбойт.',
+    'subs.whyLearner': 'Ал окуучуну сиздин аккаунтуңуздан бул тарифке коюуга болбойт.',
+    'subs.whySlot': 'Ал орун азыр эле ээленди. Эч ким кошулган жок.',
+    'subs.failed': 'Муну аткаруу мүмкүн болгон жок. Эч нерсе өзгөргөн жок.',
+    'subs.unsure':
+      'Мунун аткарылганын ырастай алган жокпуз. Кайра аракет кылардан мурда бул баракты дагы бир карап көрүңүз.',
+  },
+  tk: {
+    'subs.title': 'Meýilnamalaryňyz',
+    'subs.lede':
+      'Hasabyňyzdaky her meýilnama: ol nämäni açýar, onuň bilen kim okaýar we haçan gutarýar.',
+    'subs.unread':
+      'Meýilnamalaryňyzy häzir okap bolmady. Bu sizde meýilnama ýok diýmek däl. Biraz wagtdan gaýtadan synanyşyň.',
+    'subs.partUnread':
+      'Bu sahypanyň bir bölegini häzir okap bolmady, şonuň üçin onda bir zat ýetmeýär. Biraz wagtdan gaýtadan synanyşyň.',
+    'subs.none': 'Bu hasapda meýilnama ýok.',
+    'subs.unnamed': 'Indi satylmaýan meýilnama',
+    'subs.waiting': 'Tölege garaşylýar. Entek başlanmady.',
+    'subs.until': 'Şu wagta çenli dowam edýär: {date}',
+    'subs.ended': 'Gutardy: {date}',
+    'subs.stopped': 'Ýatyryldy. Şu wagta çenli tölenen: {date}',
+    'subs.withdrawn': 'Tölenmänkä ýatyryldy.',
+    'subs.learners': 'Şu meýilnama bilen okaýanlar',
+    'subs.noLearner': 'Şu meýilnama bilen entek hiç kim okanok.',
+    'subs.someone': 'Ady size görkezilmeýän okuwçy',
+    'subs.add': 'Okuwçy goşmak',
+    'subs.addDo': 'Şu meýilnama goşmak',
+    'subs.full': 'Şu meýilnamadaky ähli orunlar eýelenen.',
+    'subs.cancelOrder': 'Bu sargydy ýatyrmak',
+    'subs.cancelOrderNote':
+      'Bu sargydy tölenmänkä ýatyrýar, şonda täzeden başlap bilersiňiz. Eger töleg haýyşy entek haýsydyr bir telefonda garaşyp duran bolsa, ony tassyklamaň.',
+    'subs.cancelPlan': 'Bu meýilnamany ýatyrmak',
+    'subs.cancelPlanNote':
+      'Ýatyrmak puly yzyna gaýtarmaýar we meýilnamany möhletinden öň gutarmaýar. Ýatyrsaňyz-da, ýatyrmasaňyz-da, gaýtadan hiç zat alynmaýar. Ýatyrylandan soň oňa başga hiç kimi goşup bolmaýar. Bu meýilnama şu wagta çenli tölenen: {date}',
+    'subs.reason': 'Näme üçin ýatyrýarsyňyz?',
+    'subs.whyReason': 'Näme üçin ýatyrýandygyňyzy ýazyň.',
+    'subs.whyNotYours': 'Bu meýilnamany siziň hasabyňyzdan üýtgedip bolmaýar.',
+    'subs.whyNotRunning': 'Bu meýilnama hereket edenok, şonuň üçin oňa hiç kimi goşup bolmaýar.',
+    'subs.whyLearner': 'Şol okuwçyny siziň hasabyňyzdan bu meýilnama goýup bolmaýar.',
+    'subs.whySlot': 'Şol orun ýaňy eýelendi. Hiç kim goşulmady.',
+    'subs.failed': 'Muny ýerine ýetirip bolmady. Hiç zat üýtgemedi.',
+    'subs.unsure':
+      'Munuň ýerine ýetirilendigini tassyklap bilmedik. Gaýtadan synanyşmazdan öň bu sahypa ýene bir gezek serediň.',
+  },
+  ta: {
+    'subs.title': 'உங்கள் திட்டங்கள்',
+    'subs.lede':
+      'உங்கள் கணக்கில் உள்ள ஒவ்வொரு திட்டமும்: அது எதைத் திறக்கிறது, அதில் யார் கற்கிறார்கள், அது எப்போது முடிகிறது.',
+    'subs.unread':
+      'உங்கள் திட்டங்களை இப்போது படிக்க முடியவில்லை. இதற்கு உங்களிடம் திட்டம் இல்லை என்று பொருள் அல்ல. சிறிது நேரத்தில் மீண்டும் முயலவும்.',
+    'subs.partUnread':
+      'இந்தப் பக்கத்தின் ஒரு பகுதியை இப்போது படிக்க முடியவில்லை, அதனால் சில விடுபட்டுள்ளன. சிறிது நேரத்தில் மீண்டும் முயலவும்.',
+    'subs.none': 'இந்தக் கணக்கில் எந்தத் திட்டமும் இல்லை.',
+    'subs.unnamed': 'இனி விற்பனையில் இல்லாத ஒரு திட்டம்',
+    'subs.waiting': 'கட்டணத்திற்காகக் காத்திருக்கிறது. இன்னும் தொடங்கவில்லை.',
+    'subs.until': 'இதுவரை நீடிக்கும்: {date}',
+    'subs.ended': 'முடிந்தது: {date}',
+    'subs.stopped': 'ரத்து செய்யப்பட்டது. இதுவரை கட்டணம் செலுத்தப்பட்டுள்ளது: {date}',
+    'subs.withdrawn': 'கட்டணம் செலுத்தும் முன் ரத்து செய்யப்பட்டது.',
+    'subs.learners': 'இந்தத் திட்டத்தில் கற்பவர்கள்',
+    'subs.noLearner': 'இந்தத் திட்டத்தில் இன்னும் யாரும் கற்கவில்லை.',
+    'subs.someone': 'பெயர் உங்களுக்குக் காட்டப்படாத ஒரு கற்பவர்',
+    'subs.add': 'கற்பவரைச் சேர்க்கவும்',
+    'subs.addDo': 'இந்தத் திட்டத்தில் சேர்க்கவும்',
+    'subs.full': 'இந்தத் திட்டத்தின் எல்லா இடங்களும் நிரம்பிவிட்டன.',
+    'subs.cancelOrder': 'இந்த ஆர்டரை ரத்து செய்யவும்',
+    'subs.cancelOrderNote':
+      'இது கட்டணம் செலுத்தும் முன் ஆர்டரை ரத்து செய்கிறது, அதனால் நீங்கள் மீண்டும் தொடங்கலாம். ஒரு தொலைபேசியில் கட்டணக் கோரிக்கை இன்னும் காத்திருந்தால், அதை அங்கீகரிக்க வேண்டாம்.',
+    'subs.cancelPlan': 'இந்தத் திட்டத்தை ரத்து செய்யவும்',
+    'subs.cancelPlanNote':
+      'ரத்து செய்வதால் பணம் திரும்பக் கிடைக்காது, திட்டம் முன்கூட்டியே முடியாது. நீங்கள் ரத்து செய்தாலும் செய்யாவிட்டாலும் மீண்டும் எதுவும் வசூலிக்கப்படாது. ரத்து செய்த பிறகு இதில் வேறு யாரையும் சேர்க்க முடியாது. இந்தத் திட்டத்திற்கு இதுவரை கட்டணம் செலுத்தப்பட்டுள்ளது: {date}',
+    'subs.reason': 'ஏன் ரத்து செய்கிறீர்கள்?',
+    'subs.whyReason': 'ஏன் ரத்து செய்கிறீர்கள் என்று எழுதவும்.',
+    'subs.whyNotYours': 'இந்தத் திட்டத்தை உங்கள் கணக்கிலிருந்து மாற்ற முடியாது.',
+    'subs.whyNotRunning': 'இந்தத் திட்டம் நடப்பில் இல்லை, அதனால் இதில் யாரையும் சேர்க்க முடியாது.',
+    'subs.whyLearner': 'அந்தக் கற்பவரை உங்கள் கணக்கிலிருந்து இந்தத் திட்டத்தில் வைக்க முடியாது.',
+    'subs.whySlot': 'அந்த இடம் இப்போதுதான் நிரம்பியது. யாரும் சேர்க்கப்படவில்லை.',
+    'subs.failed': 'அதைச் செய்ய முடியவில்லை. எதுவும் மாறவில்லை.',
+    'subs.unsure':
+      'அது செய்யப்பட்டதா என்பதை எங்களால் உறுதிப்படுத்த முடியவில்லை. மீண்டும் முயலும் முன் இந்தப் பக்கத்தை மறுபடியும் பார்க்கவும்.',
+  },
+  ne: {
+    'subs.title': 'तपाईंका योजनाहरू',
+    'subs.lede': 'तपाईंको खाताको हरेक योजना: यसले के खोल्छ, यसमा को सिक्दै छ र यो कहिले सकिन्छ।',
+    'subs.unread':
+      'तपाईंका योजनाहरू अहिले पढ्न सकिएन। यसको अर्थ तपाईंसँग योजना छैन भन्ने होइन। केही बेरमा फेरि प्रयास गर्नुहोस्।',
+    'subs.partUnread':
+      'यस पृष्ठको एउटा भाग अहिले पढ्न सकिएन, त्यसैले केही कुरा देखिएको छैन। केही बेरमा फेरि प्रयास गर्नुहोस्।',
+    'subs.none': 'यो खातामा कुनै योजना छैन।',
+    'subs.unnamed': 'अब बिक्रीमा नरहेको एउटा योजना',
+    'subs.waiting': 'भुक्तानीको प्रतीक्षामा छ। अझै सुरु भएको छैन।',
+    'subs.until': 'यस समयसम्म चल्छ: {date}',
+    'subs.ended': 'सकियो: {date}',
+    'subs.stopped': 'रद्द गरिएको छ। यस समयसम्म भुक्तानी गरिएको छ: {date}',
+    'subs.withdrawn': 'भुक्तानी हुनुअघि रद्द गरियो।',
+    'subs.learners': 'यस योजनामा सिक्नेहरू',
+    'subs.noLearner': 'यस योजनामा अझै कोही सिक्दै छैन।',
+    'subs.someone': 'एक जना सिकारु, जसको नाम तपाईंलाई देखाइँदैन',
+    'subs.add': 'सिकारु थप्नुहोस्',
+    'subs.addDo': 'यस योजनामा थप्नुहोस्',
+    'subs.full': 'यस योजनाका सबै स्थान भरिएका छन्।',
+    'subs.cancelOrder': 'यो अर्डर रद्द गर्नुहोस्',
+    'subs.cancelOrderNote':
+      'यसले अर्डरलाई भुक्तानी हुनुअघि रद्द गर्छ, ताकि तपाईं फेरि सुरु गर्न सक्नुहुन्छ। भुक्तानीको अनुरोध अझै कुनै फोनमा पर्खिरहेको छ भने त्यसलाई स्वीकृत नगर्नुहोस्।',
+    'subs.cancelPlan': 'यो योजना रद्द गर्नुहोस्',
+    'subs.cancelPlanNote':
+      'रद्द गर्दा पैसा फिर्ता हुँदैन र योजना समयअघि सकिँदैन। तपाईंले रद्द गरे पनि नगरे पनि फेरि केही लिइँदैन। रद्द गरेपछि यसमा अरू कसैलाई थप्न सकिँदैन। यो योजना यस समयसम्म भुक्तानी गरिएको छ: {date}',
+    'subs.reason': 'तपाईं किन रद्द गर्दै हुनुहुन्छ?',
+    'subs.whyReason': 'किन रद्द गर्दै हुनुहुन्छ लेख्नुहोस्।',
+    'subs.whyNotYours': 'यो योजना तपाईंको खाताबाट परिवर्तन गर्न सकिँदैन।',
+    'subs.whyNotRunning': 'यो योजना चलिरहेको छैन, त्यसैले यसमा कसैलाई थप्न सकिँदैन।',
+    'subs.whyLearner': 'ती सिकारुलाई तपाईंको खाताबाट यस योजनामा राख्न सकिँदैन।',
+    'subs.whySlot': 'त्यो स्थान भर्खरै भरियो। कसैलाई थपिएन।',
+    'subs.failed': 'त्यो गर्न सकिएन। केही परिवर्तन भएन।',
+    'subs.unsure':
+      'त्यो भयो भनेर हामीले पुष्टि गर्न सकेनौँ। फेरि प्रयास गर्नुअघि यो पृष्ठ फेरि हेर्नुहोस्।',
+  },
+};

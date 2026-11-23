@@ -159,6 +159,13 @@ for (const [file, key] of [
   ['plans.ts', 'plans.lede'],
   ['plans.ts', 'plans.unread'],
   ['plans.ts', 'plans.waiting'],
+  // The page an account's plans are kept on is a server page, and hands its
+  // two forms the words they say. What it says about itself and about plans
+  // it could not read must be in nothing a browser downloads. (What the
+  // forms say is in the page a browser is sent, not in a script.)
+  ['subs.ts', 'subs.lede'],
+  ['subs.ts', 'subs.unread'],
+  ['subs.ts', 'subs.partUnread'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

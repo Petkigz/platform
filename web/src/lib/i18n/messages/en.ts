@@ -2310,6 +2310,46 @@ export const en = {
   'plans.whyChoose': 'Choose who this plan is for.',
   'plans.whyNoService': 'No payment service can take this payment at the moment.',
   'plans.whyFailed': 'The payment could not be started.',
+
+  // The page an account's plans are kept on, and its two forms (`subs.ts`),
+  // for the same twenty-seven languages as the dashboard, 2026-11-23. What
+  // is said about a plan is worked out from its status and its date, and
+  // what cancelling does is said as the database does it: nothing is taken
+  // away, nothing is returned, and nothing was going to be taken again.
+  'subs.title': 'Your plans',
+  'subs.lede': 'Each plan on your account: what it opens, who is learning on it and when it ends.',
+  'subs.unread':
+    'Your plans could not be read just now. This does not mean you have none. Try again in a moment.',
+  'subs.partUnread':
+    'Part of this page could not be read just now, so some of it is missing. Try again in a moment.',
+  'subs.none': 'There is no plan on this account.',
+  'subs.unnamed': 'A plan that is no longer on sale',
+  'subs.waiting': 'Waiting for payment. It has not started.',
+  'subs.until': 'Runs until: {date}',
+  'subs.ended': 'Ended: {date}',
+  'subs.stopped': 'Cancelled. Paid for until: {date}',
+  'subs.withdrawn': 'Cancelled before it was paid for.',
+  'subs.learners': 'Learning on this plan',
+  'subs.noLearner': 'Nobody is learning on this plan yet.',
+  'subs.someone': 'A learner whose name is not shown to you',
+  'subs.add': 'Add a learner',
+  'subs.addDo': 'Add to this plan',
+  'subs.full': 'Every place on this plan is taken.',
+  'subs.cancelOrder': 'Cancel this order',
+  'subs.cancelOrderNote':
+    'This cancels the order before it is paid, so that you can start again. If a payment request is still waiting on a phone, do not approve it.',
+  'subs.cancelPlan': 'Cancel this plan',
+  'subs.cancelPlanNote':
+    'Cancelling returns no money and does not end the plan early. Nothing is taken again whether you cancel or not. After cancelling, nobody else can be added to it. This plan is paid for until: {date}',
+  'subs.reason': 'Why are you cancelling?',
+  'subs.whyReason': 'Write why you are cancelling.',
+  'subs.whyNotYours': 'This plan cannot be changed from your account.',
+  'subs.whyNotRunning': 'This plan is not running, so nobody can be added to it.',
+  'subs.whyLearner': 'That learner cannot be put on this plan from your account.',
+  'subs.whySlot': 'That place has just been taken. Nobody was added.',
+  'subs.failed': 'That could not be done. Nothing was changed.',
+  'subs.unsure':
+    'We could not confirm that this was done. Look at this page again before trying once more.',
 } as const;
 
 export type MessageKey = keyof typeof en;

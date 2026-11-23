@@ -162,6 +162,9 @@ jobs:
       - name: Plans synthetic HTTP regression
         run: node scripts/plans-route-smoke.mjs
 
+      - name: Subscriptions synthetic HTTP regression
+        run: node scripts/subscriptions-route-smoke.mjs
+
       - name: Catalogue synthetic HTTP regression
         run: node scripts/catalogue-route-smoke.mjs
 

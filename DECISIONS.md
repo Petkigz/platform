@@ -8765,6 +8765,77 @@ read 12%.
 sentence nobody prints; the receipt, which every line links to and which is
 still English.
 
+## What an account's plans page says, and what cancelling is — **DECIDED 2026-11-23**
+
+`/subscriptions` was one English page that printed each subscription's stored
+status beside two dates, offered every learner the reader could see, and
+asked everybody who cancelled for a reason. It is now in the reader's
+language: twenty-nine sentences in a part of its own, `subs`; the nineteen
+held languages still read 11%. None of this was asked for by name; it is the
+builder's reading of what the two writers do, and can be changed.
+
+- *What is said about a plan comes from its status and its date.* The table
+  allows seven status words and the database writes three: `pending` with the
+  order, `active` when it is paid, `cancelled` when somebody cancels. Nothing
+  writes `expired`, so a plan whose period is over still says `active` in its
+  row, and the old page said so. The page now says one of five sentences
+  (`lib/subscriptions.ts`): waiting for payment; runs until a date; cancelled
+  and paid for until a date; ended on a date; cancelled before it was paid.
+  A row that fits none of these is drawn with no sentence about its state.
+- *What cancelling does is said as the database does it.*
+  `cancel_subscription()` revokes nothing: its own comment says existing
+  grants are deliberately kept and run out at the end of the paid period. So
+  the form says that cancelling returns no money and does not end the plan
+  early, and that afterwards nobody else can be added (the writer that adds a
+  learner refuses a cancelled plan). It also says nothing is taken again
+  whether you cancel or not, because nothing renews. The old lede said
+  "cancelling stops the next period", which described a renewal that does not
+  exist. **This means cancelling a paid plan changes only two things today:
+  the record, and who can be added.** When renewal is built, that sentence
+  changes with it.
+- *An order that was never paid is cancelled with one press and no question.*
+  The plans page sends people here to do it, because a waiting order blocks
+  every later order for that plan. The writer requires a written reason for
+  every cancellation, so the route records a fixed sentence saying the buyer
+  cancelled before payment and that no reason was asked for
+  (`UNPAID_CANCEL_REASON`). It does this only when the row it reads says
+  `pending`; a request with no reason for anything else is refused before the
+  writer is called. A paid plan still needs the subscriber's own words, up to
+  500 characters.
+- *A refusal has a name; the database's sentence goes to the log.* The two
+  writers, the function and the trigger they call raise twelve sentences
+  between them. Each is read into one of nine reasons with a status
+  (`lib/subscription-outcome.ts`); a sentence nobody named is `refused` at
+  500, and no five-character answer from the database is `unconfirmed` at 502.
+  The old route sent whatever was raised, which for a full plan carried the
+  plan version's id, and chose its status by looking for words in it. "Not
+  found" and "not permitted" are one name, so a reply does not confirm to a
+  stranger that an id exists.
+- *Cancelling twice is not a failure.* The writer answers false for a plan
+  already cancelled; the route says `ok` with `changed: false`.
+- *Who can be added is only who the writer would take.* The reader's own adult
+  profile for an adult place, a child for a child's, while a place of that
+  kind is free and the plan is running. Another adult of the family is not
+  offered. When every place is taken the card says so.
+- *The page reads no switch.* `commerce.subscriptions` decides whether a plan
+  can be bought. Somebody who already has one keeps this page, and both
+  forms, whatever that switch says.
+- *Not read is said.* The list unread is one sentence that says it does not
+  mean there is no plan, at status 200. Learners, what plans open, or the
+  summary unread leave the cards drawn and one sentence above them saying
+  part is missing; a form is not offered for what was not read. The old page
+  threw on two of its reads and drew an empty plan on the third.
+- *A success says nothing of its own.* The page is read again and the card
+  changes; that part of the card is marked to be read out when it changes.
+  There is no "added" or "cancelled" sentence.
+- *Left out on purpose.* The start of the paid period, the kind of place each
+  learner holds, a child's age band in the list, and the line that told a
+  Basic subscriber what Plus adds. In its place the plans page's sentence
+  about the two shelves is shown above the cards, with the link to the plans.
+- *Not decided here.* Whether an owner should be able to end a plan early
+  with money returned; taking a learner off a plan; whether a plan that ended
+  should stay on this page for ever (it does, newest first).
+
 ## A plan is sold on two pages, and is not ordered unless it can be paid — **DECIDED 2026-11-23**
 
 `/plans` was one English page that listed every active version of every plan

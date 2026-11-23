@@ -478,11 +478,11 @@ try {
     await reader.page.goto(`${origin}/language`, { waitUntil: 'networkidle' });
     assert.equal(await reader.page.evaluate(() => document.documentElement.lang), 'ha');
     const settings = await reader.page.locator('body').textContent();
-    // 192 of 1707: the 80 companion lines are held, and the 1435 lines of
+    // 192 of 1736: the 80 companion lines are held, and the 1464 lines of
     // the learner's own screens (dashboard, course, lesson, assessment,
     // assignment, wrong-address, broken-page, player, account, family, buy,
     // closing, a copy of your data, reading, putting a copy back, phone,
-    // merge, sharing, inviting a friend, sponsored seats, my orders, what you have paid, the receipt, notifications and plans) were never
+    // merge, sharing, inviting a friend, sponsored seats, my orders, what you have paid, the receipt, notifications, plans and the plans an account has) were never
     // written for a held
     // language
     // (`UNWRITTEN_WHILE_HELD`).

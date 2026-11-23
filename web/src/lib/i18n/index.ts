@@ -93,7 +93,7 @@ const SERVER_ONLY_PREFIXES: readonly string[] = [
   'learn.', 'course.', 'lesson.', 'assess.', 'assign.', 'missing.', 'account.',
   'family.', 'buy.', 'close.', 'export.', 'reading.', 'restore.', 'phone.',
   'merge.', 'share.', 'refer.', 'sponsor.', 'orders.', 'billing.', 'receipt.', 'notify.',
-  'plans.',
+  'plans.', 'subs.',
 ];
 
 /** Everything a client component outside the companion pages can ask for. */

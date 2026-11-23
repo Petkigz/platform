@@ -300,6 +300,7 @@ const SECTION_LABELS: Record<string, string> = {
   receipt: 'Receipt',
   notify: 'Notifications',
   plans: 'Plans',
+  subs: 'Your plans',
 };
 
 export const SECTIONS: Section[] = (() => {

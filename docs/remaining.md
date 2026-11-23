@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 11% there (192 of 1707 sentences; it was 71% of 272, then
+  the nineteen reads 11% there (192 of 1736 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -547,8 +547,9 @@ still unreviewed and still saying so.
   with the page for putting a copy back and of 1228 with the phone card,
   15% of 1315 with the merge screen, 14% of 1383 with the two sharing
   screens, 13% of 1434 with the two for inviting a friend and of 1514 with
-  the pages of sponsored seats, 12% of 1568 with my orders and of 1665 with the notification centre, then
-  this with the two plans pages),
+  the pages of sponsored seats, 12% of 1568 with my orders and of 1665 with the notification centre, 11%
+  of 1707 with the two plans pages, then this with the page an account's
+  plans are kept on),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -869,6 +870,37 @@ written: not a held draft, nothing.
   inviting, applying to teach, the phone card), an account that signs in by
   phone code, a closed or suspended account in a language other than
   English, and any of the other twenty-four languages in a browser.
+- *The page an account's plans are kept on (2026-11-23).* `/subscriptions`
+  is in the reader's language for the twenty-seven languages with nothing
+  held (`messages/subs.ts`, twenty-nine sentences, **read by no speaker**)
+  and in English, marked, for the nineteen. No plan has been sold anywhere,
+  so no reader has seen a card on it. **Still English on it for every
+  reader:** a plan's own name, the names of the subject and the product it
+  opens, and the shelf names Basic and Plus, marked as English.
+  **What cancelling a paid plan does today is very little, and the page says
+  so:** the database keeps the access that was paid for until the period
+  ends, returns nothing, and stops anybody else being added. Nothing renews,
+  so there is no later payment for cancelling to stop.
+  **Not built:** taking a learner off a plan once they are on it (a place,
+  once given, stays given for the period); ending a plan early; any refund
+  from this page (asking for one is on `/orders`); a sentence that says
+  "added" or "cancelled" (the card changes instead, and is marked to be read
+  out); renewal.
+  **A recorded reason nobody wrote.** An order cancelled before it was paid
+  is stored with the sentence "Cancelled by the buyer before payment. No
+  reason was asked for." in the column where a subscriber's reason goes,
+  because the writer refuses a cancellation with none. Anybody reading
+  cancellation reasons later should expect it.
+  Checked by `scripts/subscriptions-route-smoke.mjs` on a synthetic backend
+  in which no money exists: HTTP in English, Arabic and Hausa; each read
+  that can fail, one at a time; six plans in six states; each of the two
+  writers' twelve sentences as the route answers it; Chromium in English,
+  Arabic and Tamil at 320, 390 and 1440 wide, and both forms pressed in
+  Arabic at 390. **Not checked:** a real database (the stand-in refuses
+  only what it is told to); the row policies that decide which plans and
+  learners a reader sees; a member of a billing account who may not cancel;
+  two people adding to the last place at once, other than as a refusal the
+  stand-in was told to give; twenty-four languages in a browser.
 - *The plans pages (2026-11-23).* `/plans` and `/plans/[id]` are in the
   reader's language for the twenty-seven languages with nothing held
   (`messages/plans.ts`, forty-two sentences, **read by no speaker**) and in
@@ -878,7 +910,8 @@ written: not a held draft, nothing.
   plan's own name and description, the names of the subject and the product
   it opens (all typed by staff, shown as written), and the two shelf names,
   Basic and Plus, which are marked as English. `/subscriptions`, which both
-  link to and where a waiting order is cancelled, is English.
+  link to and where a waiting order is cancelled, is in the reader's
+  language since later the same day (below).
   **Not built:** renewal (a plan ends when its period does, and the pages
   say so); a retry of a plan order whose payment failed (the buyer cancels
   the waiting order on `/subscriptions` and starts again, and the page says

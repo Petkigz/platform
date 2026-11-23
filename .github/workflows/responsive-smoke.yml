@@ -12,7 +12,7 @@ concurrency:
 jobs:
   responsive:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
@@ -294,7 +294,20 @@ jobs:
             cat "$RUNNER_TEMP/plans-responsive.log"
           else
             cat "$RUNNER_TEMP/plans-responsive.log"
-            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Notifications responsive test::${s}`)' "$RUNNER_TEMP/plans-responsive.log"
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Plans responsive test::${s}`)' "$RUNNER_TEMP/plans-responsive.log"
+            exit 1
+          fi
+      - name: Check the page an account's plans are kept on in three languages at three widths, and that its two forms each send one request
+        env:
+          RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs
+        run: |
+          set -euo pipefail
+          export RESPONSIVE_CHROME="$(command -v google-chrome || command -v chromium)"
+          if node scripts/subscriptions-route-smoke.mjs > "$RUNNER_TEMP/subscriptions-responsive.log" 2>&1; then
+            cat "$RUNNER_TEMP/subscriptions-responsive.log"
+          else
+            cat "$RUNNER_TEMP/subscriptions-responsive.log"
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Subscriptions responsive test::${s}`)' "$RUNNER_TEMP/subscriptions-responsive.log"
             exit 1
           fi
       - name: Check the page that pays a pledge, in four languages, and that its form offers one press

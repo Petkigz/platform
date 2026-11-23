@@ -2619,6 +2619,48 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The page an account's plans are kept on, 2026-11-23
+
+- *The words.* Twenty-nine sentences in a new part, `messages/subs.ts`,
+  twenty-seven languages, **read by no speaker** (`tmp-words/u29`). The
+  words for places, for what a plan opens and for the two shelves are the
+  plans page's, reused; "choose a learner" and "(child)" are the buy page's.
+- *The page and its forms.* `app/subscriptions/page.tsx` reads and draws;
+  `subscription-manager.tsx` is one island per card, handed its words, with
+  the two forms. `app/api/subscriptions/route.ts` answers by name. See
+  `DECISIONS.md`.
+- *Rules a test holds.* `lib/subscription-outcome.ts` + test (5): every
+  `raise exception` in the newest `cancel_subscription`,
+  `allocate_subscription_learner`, `grant_subscription_plan_entitlements`
+  and `enforce_family_slot_capacity`, read out of the migrations, has a
+  reason; each reason has a status. `lib/subscriptions.ts` + test (8): what
+  is said from a status and a date, the cards, and who can be added.
+- *Found on the way.* (1) A plan whose period was over was printed as
+  `active`, because nothing ever writes `expired`. (2) The lede said
+  cancelling "stops the next period"; there is no next period. (3) The route
+  sent the database's sentence to the browser, with a plan version's id in
+  it when a plan was full, and picked its status by searching the sentence.
+  (4) Either of two failed reads was the "this page broke" screen. (5) The
+  list offered every learner the reader could see, most of whom the writer
+  refuses. (6) Cancel was offered for five stored words, three of which
+  nothing writes, and asked for a reason even for an order nobody had paid.
+  (7) The plans step in `responsive-smoke.yml` reported its failure under
+  the notifications step's title.
+- *Checked.* `scripts/subscriptions-route-smoke.mjs` in `ci.yml` and, with a
+  browser, in `responsive-smoke.yml` (whose job limit went from 15 to 20
+  minutes: it was taking under twelve with one step fewer).
+- *Not shown.* Anything from a real database: the stand-in answers what it
+  is asked, so that a cancelled plan keeps its access is the migration's
+  comment and code, read by a person, not a test of it here
+  (`supabase/tests/subscriptions.test.mjs` is where the writers themselves
+  are run). The row policies. Twenty-four languages in a browser; Tamil was
+  drawn but this sandbox has no Tamil font, so only its layout was seen.
+- *Not built.* Taking a learner off a plan; ending a plan early; renewal; a
+  sentence for a success.
+- *Counts.* 1736 keys; server-only 1368; unwritten while held 1464; held
+  192 of 1736, 11.06%, shown as 11%. 133 page routes; 30 smoke scripts. The
+  translation audit stayed at 195 of 200.
+
 ### The plans pages in the reader's language, 2026-11-23
 
 - *The words.* Forty-two sentences in a new part, `messages/plans.ts`,
@@ -2663,7 +2705,8 @@ claim external integrations work without credentials or provider callbacks.
   hosted: it is off. Twenty-four languages in a browser.
 - *Not built.* Renewal; a retry of a plan order that failed; a code, tax or
   fee on a plan; the 14-day withdrawal question for a plan.
-  `/subscriptions`, where a waiting order is cancelled, is still English.
+  `/subscriptions`, where a waiting order is cancelled, was still English
+  (done later the same day, above).
 - *Counts.* 1707 keys; server-only 1339; unwritten while held 1435; held
   192 of 1707, 11.25%, shown as 11%. 133 page routes. The translation audit
   stayed at 195 of 200.

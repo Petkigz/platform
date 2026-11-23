@@ -1547,6 +1547,23 @@ textarea { resize: vertical; min-height: 4rem; }
 .plan-prices { font-size: 1.05rem; }
 .plan-action { margin-top: 0.4rem; }
 
+/* The plans an account has (`app/subscriptions/`): the same card, with what
+   is true of the plan now under its name, and its two forms at the foot. */
+.sub-now { display: grid; gap: 0.5rem; }
+.sub-now p, .sub-now h3 { margin: 0; overflow-wrap: anywhere; }
+.sub-standing { font-weight: 600; }
+.sub-card h3 { margin: 0; }
+.sub-forms { display: grid; gap: 0.9rem; margin-top: 0.4rem; border-top: 1px solid var(--line, rgba(23, 116, 75, 0.18)); padding-top: 0.9rem; }
+.sub-form { display: grid; gap: 0.5rem; justify-items: start; }
+.sub-form > select, .sub-form > textarea, .sub-form > .notice { justify-self: stretch; }
+.sub-form p { margin: 0; overflow-wrap: anywhere; }
+.sub-cancel > summary { cursor: pointer; color: var(--green-700); padding: 0.35rem 0; min-height: 2.75rem; display: flex; align-items: center; gap: 0.4rem; }
+.sub-cancel > summary::before { content: '+'; font-weight: 700; }
+.sub-cancel[open] > summary::before { content: '\2212'; }
+.sub-cancel > summary::-webkit-details-marker { display: none; }
+.sub-cancel > .sub-form { margin-top: 0.5rem; }
+.sub-ways { margin-top: 1.5rem; }
+
 /* The notification centre (`app/notifications/`). Stacked lines, not a table:
    a message is a kind, the stored text, and when. */
 .told-page > .notice { margin-bottom: 1.5rem; }

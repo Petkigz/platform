@@ -3,157 +3,211 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-type Allocation = { id: string; learner_profile_id: string; slot_type: string; status: string; learner_profiles: { display_name: string; learner_type: string } | null };
-type Subscription = {
-  id: string;
-  status: string;
-  current_period_start: string | null;
-  current_period_end: string | null;
-  cancelled_at: string | null;
-  plans: { name: string; code: string } | null;
-  plan_versions: { billing_interval: string; adult_allowance: number; child_allowance: number } | null;
-  family_plan_allocations: Allocation[];
+import { Say } from '@/components/say';
+import { subscriptionOutcomeOf, type SubscriptionOutcome } from '@/lib/subscription-outcome';
+
+/**
+ * The words these forms say. Chosen on the server, in the reader's language:
+ * a script sent to a browser holds no catalogue.
+ */
+export type SubscriptionWords = {
+  add: string;
+  choose: string;
+  /** `{name}` and the word for a child's profile. */
+  learnerChild: string;
+  addDo: string;
+  adding: string;
+  cancelOrder: string;
+  cancelOrderNote: string;
+  cancelPlan: string;
+  /** With `{date}` in it: the end of what was paid for. */
+  cancelPlanNote: string;
+  reason: string;
+  working: string;
+  /** The request could not be made at all. */
+  unreachable: string;
+  reasons: Record<SubscriptionOutcome, string>;
 };
-type Learner = { id: string; display_name: string; learner_type: string; age_band: string | null };
 
-/** What a plan gives, as `my_plan_summary()` reports it. */
-export type PlanContents = {
-  tier: string;
-  features: Array<{ code: string; label: string }>;
-  subjects: string[];
-};
-
-function date(value: string | null): string {
-  if (!value) return 'Not started';
-  return new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(new Date(value));
-}
-
+/**
+ * The two things a subscriber can do to one plan: put a learner on it, and
+ * cancel.
+ *
+ * **Cancelling an order and cancelling a plan are two forms.** An order that
+ * was never paid is cancelled with one press and no question: the plans page
+ * sends people here to do exactly that. A plan that was paid for is behind a
+ * disclosure, says what cancelling does and does not do, and asks why. The
+ * old form asked everybody for a reason and offered "cancel" for five stored
+ * words, three of which nothing ever writes.
+ *
+ * **What is said after a refusal is this page's sentence for its name.** The
+ * old form printed the reply's `message`, which was the database's own.
+ * A reason is believed only when it arrives with its own status
+ * (`subscriptionOutcomeOf`); anything else is "we could not confirm".
+ *
+ * **A success says nothing here.** The page is read again, and the card
+ * itself changes: the learner is in the list, or the plan says it was
+ * cancelled. That part of the card is read out when it changes. Cancelling
+ * something that was already cancelled is a success too.
+ *
+ * Both writers can be asked twice without harm, so the buttons come back
+ * after every answer.
+ */
 export function SubscriptionManager({
-  subscriptions,
-  learners,
-  contents = {},
+  subscriptionId,
+  addable,
+  cancel,
+  until,
+  words,
 }: {
-  subscriptions: Subscription[];
-  learners: Learner[];
-  contents?: Record<string, PlanContents>;
+  subscriptionId: string;
+  /** Who the writer would take now. Empty when nobody, or when that was not read. */
+  addable: { id: string; name: string; type: 'adult' | 'child' }[];
+  cancel: 'order' | 'plan' | null;
+  /** The end of the paid period, already said in the reader's language. */
+  until: string | null;
+  words: SubscriptionWords;
 }) {
   const router = useRouter();
-  const [busy, setBusy] = useState<string | null>(null);
+  const [busy, setBusy] = useState<'add' | 'cancel' | null>(null);
+  const [learnerId, setLearnerId] = useState('');
+  const [reason, setReason] = useState('');
+  const [tone, setTone] = useState<'warn' | 'error'>('error');
   const [message, setMessage] = useState<string | null>(null);
 
-  async function action(payload: Record<string, string>, key: string) {
-    setBusy(key);
+  async function send(kind: 'add' | 'cancel', payload: Record<string, string>) {
+    if (busy !== null) return;
+    setBusy(kind);
     setMessage(null);
+
+    let res: Response;
     try {
-      const response = await fetch('/api/subscriptions', {
+      res = await fetch('/api/subscriptions', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ subscriptionId, ...payload }),
       });
-      const result = (await response.json().catch(() => null)) as { ok?: boolean; message?: string } | null;
-      if (!response.ok || result?.ok !== true) {
-        setMessage(result?.message ?? 'Could not update the subscription.');
-        return;
-      }
-      router.refresh();
     } catch {
-      setMessage('Could not reach the subscription service. Please try again.');
-    } finally {
+      setTone('warn');
+      setMessage(words.unreachable);
       setBusy(null);
+      return;
     }
+    const json = (await res.json().catch(() => null)) as { ok?: unknown; reason?: unknown } | null;
+    setBusy(null);
+
+    if (res.ok && json?.ok === true) {
+      setLearnerId('');
+      setReason('');
+      router.refresh();
+      return;
+    }
+    const named = subscriptionOutcomeOf(res.status, json?.reason);
+    setTone(named === 'refused' || named === 'unconfirmed' ? 'warn' : 'error');
+    setMessage(words.reasons[named]);
+    // The page may be behind what the database holds: read it again.
+    if (named === 'no_slot' || named === 'not_running' || named === 'unconfirmed') router.refresh();
+  }
+
+  function add() {
+    // Nobody chosen is said here; nothing is asked of the server.
+    if (learnerId === '') {
+      setTone('error');
+      setMessage(words.choose);
+      return;
+    }
+    void send('add', { action: 'allocate', learnerProfileId: learnerId });
+  }
+
+  function cancelPlan() {
+    const written = reason.trim();
+    if (written === '') {
+      setTone('error');
+      setMessage(words.reasons.reason_required);
+      return;
+    }
+    void send('cancel', { action: 'cancel', reason: written });
   }
 
   return (
-    <>
-      {message && <div className="notice" role="alert">{message}</div>}
-      {subscriptions.length === 0 ? <p className="empty">No subscriptions yet. <a href="/plans">Browse plans</a>.</p> : (
-        <div className="grid cols-2">
-          {subscriptions.map((subscription) => {
-            const version = subscription.plan_versions;
-            const allocated = new Set(subscription.family_plan_allocations.filter((a) => a.status === 'active').map((a) => a.learner_profile_id));
-            const availableLearners = learners.filter((l) => !allocated.has(l.id));
-            const canAllocate = subscription.status === 'active';
-            const canCancel = ['pending','trialing','active','past_due','paused'].includes(subscription.status);
-            const plan = contents[subscription.id];
-            return (
-              <article className="card" key={subscription.id}>
-                <p className="eyebrow">{version?.billing_interval ?? 'subscription'} · {subscription.status}</p>
-                <h2>
-                  {subscription.plans?.name ?? 'Learning plan'}{' '}
-                  {plan && (
-                    <span className={`badge ${plan.tier === 'plus' ? 'ok' : 'neutral'}`}>
-                      {plan.tier === 'plus' ? 'Plus' : 'Basic'}
-                    </span>
-                  )}
-                </h2>
-                <p>Current paid period: {date(subscription.current_period_start)} – {date(subscription.current_period_end)}</p>
-                {plan && (
-                  <div>
-                    <h3>What this plan includes</h3>
-                    {plan.features.length === 0
-                      && plan.subjects.length === 0
-                      ? <p className="muted">The course itself.</p>
-                      : (
-                        <ul>
-                          {plan.features.map((feature) => (
-                            <li key={feature.code}>{feature.label}</li>
-                          ))}
-                          {plan.subjects.length > 0 && (
-                            <li>Every course in {plan.subjects.join(', ')}</li>
-                          )}
-                        </ul>
-                      )}
-                    {plan.tier !== 'plus' && (
-                      <p className="muted" style={{ fontSize: '0.9rem' }}>
-                        Plus adds watching lessons inside the app with no connection.{' '}
-                        <a href="/plans">Compare the plans</a>
-                      </p>
-                    )}
-                  </div>
-                )}
-                {subscription.cancelled_at && <p className="notice">Cancelled. Access already paid for continues until {date(subscription.current_period_end)}.</p>}
-                <h3>Allocated learners</h3>
-                {subscription.family_plan_allocations.filter((a) => a.status === 'active').length === 0
-                  ? <p className="muted">No learner is allocated yet.</p>
-                  : <ul>{subscription.family_plan_allocations.filter((a) => a.status === 'active').map((allocation) => (
-                    <li key={allocation.id}>{allocation.learner_profiles?.display_name ?? 'Learner'} · {allocation.slot_type}</li>
-                  ))}</ul>}
-                {canAllocate && availableLearners.length > 0 && (
-                  <form onSubmit={(event) => {
-                    event.preventDefault();
-                    const learnerProfileId = String(new FormData(event.currentTarget).get('learnerProfileId') ?? '');
-                    if (learnerProfileId) void action({ action: 'allocate', subscriptionId: subscription.id, learnerProfileId }, `allocate:${subscription.id}`);
-                  }}>
-                    <label>Add a learner
-                      <select name="learnerProfileId" required defaultValue="">
-                        <option value="" disabled>Choose a learner</option>
-                        {availableLearners.map((learner) => <option key={learner.id} value={learner.id}>
-                          {learner.display_name} · {learner.learner_type === 'child' ? `Child, ${learner.age_band}` : 'Adult'}
-                        </option>)}
-                      </select>
-                    </label>
-                    <button className="btn secondary" disabled={busy !== null}>{busy === `allocate:${subscription.id}` ? 'Adding…' : 'Add learner'}</button>
-                  </form>
-                )}
-                {canCancel && (
-                  <form onSubmit={(event) => {
-                    event.preventDefault();
-                    const reason = String(new FormData(event.currentTarget).get('reason') ?? '');
-                    void action({ action: 'cancel', subscriptionId: subscription.id, reason }, `cancel:${subscription.id}`);
-                  }}>
-                    <label>Reason for cancellation
-                      <textarea name="reason" required maxLength={500} rows={2} placeholder="Tell us why you are cancelling" />
-                    </label>
-                    <button className="btn secondary" disabled={busy !== null}>{busy === `cancel:${subscription.id}` ? 'Cancelling…' : 'Cancel subscription'}</button>
-                    {subscription.current_period_end && <p className="muted" style={{ fontSize: '0.85rem' }}>Cancelling does not remove access already paid for; it remains until {date(subscription.current_period_end)}.</p>}
-                  </form>
-                )}
-                {version && <p className="muted" style={{ fontSize: '0.85rem' }}>Allowances: {version.adult_allowance} adult, {version.child_allowance} child.</p>}
-              </article>
-            );
-          })}
+    <div className="sub-forms" data-sub-forms>
+      {addable.length > 0 && (
+        <div className="sub-form" data-sub-add>
+          <label htmlFor={`sub-add-${subscriptionId}`} className="eyebrow">
+            {words.add}
+          </label>
+          <select
+            id={`sub-add-${subscriptionId}`}
+            value={learnerId}
+            onChange={(e) => {
+              setLearnerId(e.target.value);
+              setMessage(null);
+            }}
+            disabled={busy !== null}
+          >
+            <option value="">{words.choose}</option>
+            {addable.map((learner) => (
+              <option key={learner.id} value={learner.id}>
+                {learner.type === 'child'
+                  ? words.learnerChild.replace('{name}', `\u2068${learner.name}\u2069`)
+                  : learner.name}
+              </option>
+            ))}
+          </select>
+          <button type="button" className="btn secondary" onClick={add} disabled={busy !== null}>
+            {busy === 'add' ? words.adding : words.addDo}
+          </button>
         </div>
       )}
-    </>
+
+      {cancel === 'order' && (
+        <div className="sub-form" data-sub-cancel="order">
+          <p className="muted">{words.cancelOrderNote}</p>
+          <button
+            type="button"
+            className="btn secondary"
+            onClick={() => void send('cancel', { action: 'cancel' })}
+            disabled={busy !== null}
+          >
+            {busy === 'cancel' ? words.working : words.cancelOrder}
+          </button>
+        </div>
+      )}
+
+      {cancel === 'plan' && (
+        <details className="sub-cancel" data-sub-cancel="plan">
+          <summary>{words.cancelPlan}</summary>
+          <div className="sub-form">
+            <p className="muted">
+              <Say text={words.cancelPlanNote} parts={{ date: <bdi>{until ?? ''}</bdi> }} />
+            </p>
+            <label htmlFor={`sub-reason-${subscriptionId}`} className="eyebrow">
+              {words.reason}
+            </label>
+            <textarea
+              id={`sub-reason-${subscriptionId}`}
+              rows={3}
+              maxLength={500}
+              dir="auto"
+              value={reason}
+              onChange={(e) => {
+                setReason(e.target.value);
+                setMessage(null);
+              }}
+              disabled={busy !== null}
+            />
+            <button type="button" className="btn danger" onClick={cancelPlan} disabled={busy !== null}>
+              {busy === 'cancel' ? words.working : words.cancelPlan}
+            </button>
+          </div>
+        </details>
+      )}
+
+      {message && (
+        <div className={`notice ${tone === 'error' ? 'error' : 'warn'}`} role="alert" data-sub-answer>
+          {message}
+        </div>
+      )}
+    </div>
   );
 }
