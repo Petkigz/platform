@@ -15,6 +15,7 @@ import {
   getPaymentProvider,
   knownProviderIds,
   providersForCurrency,
+  providerNameOf,
 } from './payments/registry.ts';
 import { AIRTEL_MARKETS, MTN_MOMO_MARKETS, internationalDigits, isNumberOf, nationalDigits } from './payments/markets.ts';
 import { bindPayment, failureIsFor } from './payments/binding.ts';
@@ -912,4 +913,34 @@ test('with no credentials configured, nothing is available', () => {
   // and the assertion below is the one to read.
   const has = process.env.MTN_MOMO_API_KEY || process.env.AIRTEL_CLIENT_ID;
   if (!has) assert.equal(availableProviders().length, 0);
+});
+
+test('a receipt names a payment service by its own name, and names nobody it has never heard of', () => {
+  // The same with and without credentials: a receipt outlives an account.
+  assert.equal(providerNameOf('mtn_momo'), 'MTN MoMo');
+  assert.equal(providerNameOf('mtn_momo_ug'), 'MTN MoMo');
+  assert.equal(providerNameOf(' mtn_momo_ug '), 'MTN MoMo');
+  assert.equal(providerNameOf('airtel_money_ug'), 'Airtel Money');
+  assert.equal(providerNameOf('mpesa_ke'), 'M-Pesa');
+  // Every id a provider could have been recorded under has a name with no underscore in it.
+  for (const id of knownProviderIds()) {
+    const name = providerNameOf(id);
+    assert.ok(name && !name.includes('_') && name !== 'Payments not configured', `${id}: ${name}`);
+  }
+  // A country the service is not in, a service nobody wrote, and what is not an id.
+  assert.equal(providerNameOf('mtn_momo_zz'), null);
+  assert.equal(providerNameOf('stripe'), null);
+  assert.equal(providerNameOf('unconfigured'), null);
+  assert.equal(providerNameOf(''), null);
+  assert.equal(providerNameOf(null), null);
+  assert.equal(providerNameOf('__proto__'), null);
+});
+
+test('an id that is a name every object has is nobody, and does not throw', () => {
+  // These reach the registry from a callback's address.
+  for (const id of ['__proto__', 'constructor', 'toString', 'constructor_ug', 'hasOwnProperty_ke', '__proto___ug']) {
+    assert.equal(getPaymentProvider(id).id, 'unconfigured', id);
+    assert.equal(getPaymentProvider(id).available, false, id);
+    assert.equal(providerNameOf(id), null, id);
+  }
 });

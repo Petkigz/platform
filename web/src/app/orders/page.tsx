@@ -24,6 +24,8 @@ import {
 import { RefundForm, type RefundWords } from './refund-form';
 import { PromotionActions, type CodeWords } from './promotion-actions';
 
+import { Ending } from '../_shared/ending';
+
 export const dynamic = 'force-dynamic';
 
 type AdjustmentRow = {
@@ -97,23 +99,6 @@ const ADJUSTMENT: Record<AdjustmentKind, MessageKey> = {
   fee: 'orders.lnFee',
   other: 'orders.adjOther',
 };
-
-/**
- * A sentence that ends in what is put into it, with that set apart.
- *
- * Every sentence on this page that carries an amount or a date ends with it,
- * after a colon, so no language has to inflect it. The value is isolated and,
- * for an amount, read left to right whatever the page's direction.
- */
-function Ending({ words, gap, value, ltr }: { words: string; gap: 'amount' | 'date'; value: string; ltr?: boolean }) {
-  const lead = words.split(`{${gap}}`)[0] ?? '';
-  return (
-    <>
-      {lead}
-      {ltr ? <bdi dir="ltr">{value}</bdi> : <bdi>{value}</bdi>}
-    </>
-  );
-}
 
 /**
  * My orders, in the reader's language.

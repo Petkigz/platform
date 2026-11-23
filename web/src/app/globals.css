@@ -712,9 +712,10 @@ input:focus, select:focus, textarea:focus {
 
 /* Left alignment set anywhere would otherwise follow the element into an RTL
    block and pin its text to the wrong edge. One rule, stated once.
-   The two print documents are exempt by construction: the certificate and the
-   receipt carry `dir="ltr"` in their own markup, because their words are English
-   and untranslated and a reader's language must not turn them around. */
+   The certificate is exempt by construction: it carries `dir="ltr"` in its own
+   markup, because its words are English and untranslated and a reader's
+   language must not turn them around. (The receipt was the other one until
+   2026-11-23, when it was written in the reader's language and let go.) */
 [dir='rtl'] { text-align: start; }
 
 /* Screen-reader-only. A `.sr-only` that does not hide anything is worse than
@@ -1459,10 +1460,10 @@ textarea { resize: vertical; min-height: 4rem; }
 .certificate-meta { color: var(--muted); font-size: 0.8rem; }
 .certificate-number-block { text-align: end; }
 .certificate-number-block a { font-size: 0.85rem; }
-/* The certificate and the receipt are the one place where a reader's language
-   must not turn the page around: their words are English and untranslated, both
-   sheets declare `dir="ltr"`, and a rule scoped to `[dir='rtl']` would still
-   reach inside them because the *document* is right to left. So nothing here is
+/* The certificate is the one place where a reader's language must not turn
+   the page around: its words are English and untranslated, the sheet declares
+   `dir="ltr"`, and a rule scoped to `[dir='rtl']` would still reach inside it
+   because the *document* is right to left. So nothing here is
    direction-conditional. The edges below are logical only because the build
    refuses physical ones, and under `ltr` the two compute the same pixel. */
 .certificate-sheet.is-revoked { filter: grayscale(0.8); }
@@ -1487,39 +1488,61 @@ textarea { resize: vertical; min-height: 4rem; }
   border-radius: 0.9rem;
   box-shadow: 0 18px 45px rgba(12, 62, 42, 0.08);
 }
+.receipt-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+.receipt-bar .eyebrow { margin: 0; }
+.receipt-bar .btn { width: auto; margin: 0; }
+.receipt-page > .notice { margin-bottom: 1rem; }
 .receipt-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1.5rem; flex-wrap: wrap; }
 .receipt-brand { margin: 0; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--brand, #17744b); display: flex; align-items: center; gap: 0.5rem; }
 .receipt-sheet h1 { margin: 0.35rem 0 0; font-size: clamp(1.5rem, 3vw, 2rem); }
+.receipt-state { margin: 0.5rem 0 0; }
 .receipt-number { text-align: end; display: grid; gap: 0.15rem; }
-.receipt-number strong { font-size: 1.1rem; letter-spacing: 0.04em; }
-.receipt-label { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.receipt-number strong { font-size: 1.1rem; }
 .receipt-meta { font-size: 0.8rem; color: var(--muted); }
-.receipt-facts { margin: 1.75rem 0 0; }
-.receipt-lines { width: 100%; border-collapse: collapse; margin: 1.75rem 0 0; }
-.receipt-lines th { text-align: start; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding-bottom: 0.5rem; border-bottom: 1px solid var(--line, rgba(23, 116, 75, 0.18)); }
-.receipt-lines td { padding: 0.7rem 0; border-bottom: 1px solid var(--line, rgba(23, 116, 75, 0.1)); vertical-align: top; }
-.receipt-lines .amount { text-align: end; white-space: nowrap; }
-.receipt-total { margin: 1.5rem 0 0; display: flex; justify-content: flex-end; }
-.receipt-total .facts { min-width: 280px; }
-.receipt-due dd { font-size: 1.2rem; }
+.receipt-people { margin: 1.75rem 0 0; }
+.receipt-people p { margin: 0.2rem 0; overflow-wrap: anywhere; }
+/* What was bought: a name and what it came to, on one line where they fit.
+   The amount is never broken and never pushed off the side. */
+.receipt-lines { list-style: none; margin: 1.75rem 0 0; padding: 0; border-top: 1px solid var(--line, rgba(23, 116, 75, 0.18)); }
+.receipt-lines li { padding: 0.7rem 0; border-bottom: 1px solid var(--line, rgba(23, 116, 75, 0.1)); }
+.receipt-lines p { margin: 0.2rem 0 0; }
+.receipt-line { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0.25rem 1.5rem; }
+.receipt-line span { overflow-wrap: anywhere; min-width: 0; }
+.receipt-line strong { white-space: nowrap; }
+.receipt-none { margin: 1.75rem 0 0; }
+.receipt-total { margin: 1.5rem 0 0; text-align: end; }
+.receipt-total p { margin: 0.25rem 0; }
+/* What changed the total, with the note somebody wrote beside it, which may be one long word. */
+.receipt-adjustment { overflow-wrap: anywhere; }
+.receipt-due { font-size: 1.2rem; }
+/* An amount and the order's number stay in one piece. On a narrow phone the
+   total in Arabic broke between the currency and the figure, and a number
+   breaks at its hyphen. A payment reference is not in this list: it can be
+   longer than the screen is wide, and has to be allowed to break. */
+.receipt-total bdi[dir="ltr"], .receipt-number bdi[dir="ltr"], .receipt-lines bdi[dir="ltr"], .receipt-refunds bdi[dir="ltr"] { white-space: nowrap; }
 .receipt-payment { margin-top: 2rem; border-top: 1px solid var(--line, rgba(23, 116, 75, 0.18)); padding-top: 1.25rem; }
-.receipt-payment h2 { margin: 0 0 0.5rem; font-size: 1rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
-.receipt-payment p { margin: 0; }
+.receipt-payment h2 { margin: 0 0 0.5rem; font-size: 1rem; color: var(--muted); }
+.receipt-payment p { margin: 0.2rem 0; overflow-wrap: anywhere; }
 .receipt-refunds { margin: 0.75rem 0 0; padding-inline-start: 1.1rem; color: var(--muted); }
+.receipt-refunds li { margin-top: 0.35rem; }
 .receipt-foot { margin-top: 2.25rem; border-top: 1px solid var(--line, rgba(23, 116, 75, 0.18)); padding-top: 1rem; font-size: 0.85rem; color: var(--muted); }
 .receipt-foot p { margin: 0.2rem 0; }
+.receipt-links { margin-top: 1.5rem; }
 
 @media (max-width: 600px) {
   .receipt-sheet { padding: 1.5rem 1.15rem; }
   .receipt-number { text-align: start; }
-  .receipt-total .facts { min-width: 0; width: 100%; }
+  .receipt-total { text-align: start; }
 }
 
 @page receipt { size: A4 portrait; margin: 14mm; }
 @media print {
   body:has(.receipt-page) { background: #fff; }
   body:has(.receipt-page) .masthead,
-  body:has(.receipt-page) footer,
+  /* The site's footer, not the sheet's own. `footer` alone also hid the last
+     lines of the receipt, so the sentence saying what the document is and is
+     not was on the screen and never on the paper. */
+  body:has(.receipt-page) footer:not(.receipt-foot),
   body:has(.receipt-page) .no-print { display: none !important; }
   body:has(.receipt-page) main { margin: 0; padding: 0; }
   .receipt-page { width: 100%; max-width: none; margin: 0; padding: 0; }

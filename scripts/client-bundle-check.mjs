@@ -138,6 +138,13 @@ for (const [file, key] of [
   ['billing.ts', 'billing.askNote'],
   ['billing.ts', 'billing.unread'],
   ['billing.ts', 'billing.recBody'],
+  // The receipt is a server page with one island, a button that is handed
+  // its label. What it says about an order that is not a receipt, one that
+  // could not be read, and what the document is must be in that page and in
+  // nothing a browser downloads.
+  ['receipt.ts', 'receipt.notBody'],
+  ['receipt.ts', 'receipt.unread'],
+  ['receipt.ts', 'receipt.record'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

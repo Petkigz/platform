@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 12% there (192 of 1605 sentences; it was 71% of 272, then
+  the nineteen reads 12% there (192 of 1623 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -919,10 +919,22 @@ written: not a held draft, nothing.
   to, are English. `/orders` is in the reader's language since 2026-11-23
   (`messages/orders.ts`, fifty-four sentences, unreviewed; checked by
   `scripts/orders-route-smoke.mjs` on a stand-in in which no money exists,
-  with a browser in five languages). **Still English from it:** the receipt
-  (`/orders/<id>/receipt`), the staff refund screens, a course's title, and
-  what staff wrote beside an adjustment, which is printed as written. **Not
-  exercised:** a real order, refund request or code through it.
+  with a browser in five languages). **Still English from it:** the staff
+  refund screens, a course's title, and what staff wrote beside an
+  adjustment, which is printed as written. **Not exercised:** a real order,
+  refund request or code through it.
+  The receipt (`/orders/<id>/receipt`) is in the reader's language since
+  2026-11-23 too (`messages/receipt.ts`, eighteen sentences, unreviewed;
+  checked by `scripts/receipt-route-smoke.mjs` on a stand-in in which no
+  money exists, with a browser in five languages, on a screen and as
+  print). It is a receipt only for an order that was paid; anything else
+  says no payment has been confirmed, on paper too. It no longer prints
+  what staff typed when recording a payment by hand. **Still English on
+  it:** a course's title, the names of the account and the learner, and a
+  note beside an adjustment. **Not exercised:** an order read from a real
+  database through it, a sheet actually printed, or that somebody else's
+  order is refused (that is the row policies' to show; the stand-in only
+  shows that an order which is not returned is a 404).
   `/billing`, the statement it links to, is in the reader's language since
   2026-11-23 too (`messages/billing.ts`, thirty-seven sentences, unreviewed;
   checked by `scripts/billing-route-smoke.mjs` on a stand-in in which no

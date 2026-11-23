@@ -2619,6 +2619,47 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The receipt in the reader's language, 2026-11-23
+
+- *The words.* Eighteen sentences in a new part, `messages/receipt.ts`,
+  twenty-seven languages, **read by no speaker** (`tmp-words/u26`). The
+  rest of the sheet borrows from my orders and the statement. One sentence
+  was rewritten after the page was read: an unpaid order said "nothing has
+  been charged", which the platform does not know while a payment is being
+  confirmed; it says "no payment has been confirmed".
+- *The page.* A server page and a print button handed its label. A list of
+  labelled lines replaced the table. The parts are the order's own four
+  figures (`orderLinesOf`), so tax and fees are on the sheet and it adds up.
+  Withdrawn adjustments are left off. The payment service is named by
+  `providerNameOf()` from the adapter's own label; a service with no
+  adapter is not named. `payment_evidence` and `method` are not read: they
+  are what staff typed for a colleague.
+- *Rules a test holds.* `lib/receipt.ts` + test (5): only a completed
+  refund counts as returned; a completed refund in another currency, a
+  refund in a state with no sentence, or a completed one with no date makes
+  the whole sheet unread. An order in a state the page has no word for is
+  unread too, because whether money moved is what the state would say.
+- *Found on the way.* (1) `getPaymentProvider()` threw on an id such as
+  `__proto__` or `constructor_ug`, which can arrive in a callback's
+  address: a plain-object lookup found inherited names. It now looks up own
+  names only; two tests. (2) The print rules hid every `footer` on the
+  page, so the sheet's last lines, including "it is not a tax invoice",
+  were never printed. (3) "This is not a receipt" was left off the paper;
+  it is printed now. (4) At 320px in Arabic the total broke between the
+  currency and the figure.
+- *Checked.* `scripts/receipt-route-smoke.mjs` in `ci.yml` and, with a
+  browser, in `responsive-smoke.yml`: English, Arabic, French, Hausa over
+  HTTP, eight kinds of unread; English, Arabic, Tamil, Filipino and French
+  in a browser at 320px, with print rules applied in the browser.
+- *Not shown.* An order from a real database through the page; that the
+  database refuses somebody else's order (the stand-in returns what it is
+  told to); a sheet on a printer; twenty-two languages in a browser.
+  *Still English:* a course's title, the two names, a note beside an
+  adjustment.
+- *Counts.* 1623 keys; server-only 1255; unwritten while held 1351; held
+  192 of 1623, 11.83%, still shown as 12%. The translation audit stayed at
+  195 of 200.
+
 ### What you have paid in the reader's language, 2026-11-23
 
 - *The words.* Thirty-seven sentences in a new part, `messages/billing.ts`,

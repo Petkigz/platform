@@ -252,7 +252,10 @@ test('the page says everything through the catalogue, and unread is not empty', 
   assert.doesNotMatch(PAGE, /amountMinor=\{o\.total_minor\}/u);
   // Amounts in major units, left to right; dates with their zone, in UTC.
   assert.match(PAGE, /const when = \(iso: string\) => formatDateTime\(shown\.code, iso, 'UTC'\);/u);
-  assert.match(PAGE, /\{ltr \? <bdi dir="ltr">\{value\}<\/bdi> : <bdi>\{value\}<\/bdi>\}/u);
+  // The piece that isolates a value is shared with the statement and the receipt now; the page has to use it and it has to isolate.
+  assert.match(PAGE, /import \{ Ending \} from '\.\.\/_shared\/ending';/u);
+  assert.doesNotMatch(PAGE, /function Ending\(/u);
+  assert.match(read('../app/_shared/ending.tsx'), /\{ltr \? <bdi dir="ltr">\{value\}<\/bdi> : <bdi>\{value\}<\/bdi>\}/u);
   assert.doesNotMatch(PAGE, /fromMinor|format\(/u);
   // A title somebody typed and a note somebody wrote keep their own direction.
   assert.match(PAGE, /<bdi>\{title\}<\/bdi>/u);

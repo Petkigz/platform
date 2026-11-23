@@ -23,6 +23,8 @@ import {
   type WaitingState,
 } from '@/lib/statement';
 
+import { Ending } from '../_shared/ending';
+
 export const dynamic = 'force-dynamic';
 
 /** The language this page is written in for this reader, and whether that is the one they chose. */
@@ -60,24 +62,6 @@ const WAITING_STATE: Record<WaitingState, MessageKey> = {
   dpLost: 'billing.dpLost',
   dpWithdrawn: 'billing.dpWithdrawn',
 };
-
-/**
- * A sentence that ends in what is put into it, with that set apart.
- *
- * Every sentence on this page that carries an amount, a code, a title or
- * something the payer typed ends with it, after a colon, so no language has
- * to inflect it. The value is isolated; an amount or a code is read left to
- * right whatever the page's direction, and anything else finds its own.
- */
-function Ending({ words, gap, value, ltr }: { words: string; gap: string; value: string; ltr?: boolean }) {
-  const lead = words.split(`{${gap}}`)[0] ?? '';
-  return (
-    <>
-      {lead}
-      {ltr ? <bdi dir="ltr">{value}</bdi> : <bdi>{value}</bdi>}
-    </>
-  );
-}
 
 /**
  * True when every amount in the statement can be said correctly.

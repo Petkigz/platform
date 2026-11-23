@@ -8765,6 +8765,47 @@ read 12%.
 sentence nobody prints; the receipt, which every line links to and which is
 still English.
 
+## The receipt, in the reader's language — **DECIDED 2026-11-23**
+
+`/orders/<id>/receipt` is the document a payer keeps or hands to somebody.
+Eighteen sentences in a part of its own, `receipt`; the nineteen held
+languages still read 12%.
+
+- *A receipt is for money that was confirmed, and for nothing else.* A paid,
+  partly refunded or refunded order is a receipt. Any other order is headed
+  "Order", totals "to pay", and carries "This is not a receipt. No payment
+  has been confirmed for this order" on the screen and on the paper. It does
+  not say nothing was charged: a payer who has just approved a prompt knows
+  that better than the page does.
+- *The sheet adds up.* Its parts are the order's subtotal, discount, tax and
+  fee. Each line shows what the line came to; quantity and the price of one
+  appear only for more than one. Adjustments that were withdrawn are history
+  and are on my orders, not here.
+- *Returned means completed.* A refund that was asked for, is with the
+  payment service or was refused has returned nothing and is listed saying
+  so. Only a completed one has a date and is in "returned".
+- *Whole or not at all.* An order that cannot be read, a figure that cannot
+  be said, a completed refund in another currency, or an order or refund in
+  a state this code has no word for: the page says the order could not be
+  read and that this does not change what was paid. It never draws part of a
+  receipt. The reason is logged. Rejected: listing a refund in an unknown
+  state with its amount alone, which was built first and read as money
+  returned on a sheet whose total had left it out.
+- *The service by its name, or not named.* The adapter's label is printed
+  (`MTN MoMo`). A service with no adapter in this code gets "payment
+  confirmed" and its reference, not its stored identifier.
+- *What staff typed stays with staff.* A payment recorded by hand has a note
+  written for a colleague. The receipt used to print it after "Confirmed
+  by". It is no longer read by this page.
+- *Not found is one answer.* What is not an id, an id that names nothing and
+  an order the reader may not see are the same 404.
+- *It follows the reader.* The sheet is no longer held left to right;
+  amounts, the number and references are.
+
+**Not decided here:** a tax invoice. The sheet says it is not one. What a
+tax invoice has to carry depends on where the business is registered, which
+is open.
+
 ## My orders, in the reader's language — **DECIDED 2026-11-23**
 
 `/orders` is where somebody finds out whether they paid and whether they can

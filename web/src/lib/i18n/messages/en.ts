@@ -2168,6 +2168,32 @@ export const en = {
   'billing.recLead': 'This is the platform’s record, not your bank’s.',
   'billing.recBody':
     'A refund shown here as completed may take a few days to reach you, and a fee charged for receiving it is not this platform’s. Neither appears on this page. Amounts are shown in the currency you were charged. Nothing here is converted into another one.',
+
+  // The receipt (`receipt.ts`), for the same twenty-seven languages as the
+  // dashboard, 2026-11-23. An order that has not been paid is not a receipt
+  // (`notLead`, `totalDue`). The rest of the sheet is borrowed from my
+  // orders and from the statement.
+  'receipt.notLead': 'This is not a receipt.',
+  'receipt.notBody':
+    'No payment has been confirmed for this order. What follows is the order as it stands.',
+  'receipt.unread':
+    'This order could not be read just now. That does not change what has been paid.',
+  'receipt.print': 'Print or save as PDF',
+  'receipt.number': 'Number: {number}',
+  'receipt.billedTo': 'Billed to: {name}',
+  'receipt.forLearner': 'For: {name}',
+  'receipt.paidOn': 'Paid on: {date}',
+  'receipt.noLines': 'No items are recorded on this order.',
+  'receipt.anItem': 'Untitled item',
+  'receipt.qty': 'Quantity: {count}',
+  'receipt.unit': 'Price for one: {amount}',
+  'receipt.totalPaid': 'Total paid: {amount}',
+  'receipt.totalDue': 'Total to pay: {amount}',
+  'receipt.through': 'Paid through: {provider}',
+  'receipt.reference': 'Payment reference: {reference}',
+  'receipt.rfDoneOn': 'Returned on: {date}',
+  'receipt.record':
+    'This document is made from the order record the platform holds. It is not a tax invoice.',
 } as const;
 
 export type MessageKey = keyof typeof en;

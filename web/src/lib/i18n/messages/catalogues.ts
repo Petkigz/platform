@@ -37,6 +37,7 @@ import { REFER } from './refer.ts';
 import { SPONSOR } from './sponsor.ts';
 import { ORDERS } from './orders.ts';
 import { BILLING } from './billing.ts';
+import { RECEIPT } from './receipt.ts';
 import { LESSON } from './lesson.ts';
 import { isHeld } from './held.ts';
 import { ASIA_AZ } from './asia-az.ts';
@@ -868,6 +869,8 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   ORDERS,
   // What you have paid, on the same rule.
   BILLING,
+  // The receipt, on the same rule.
+  RECEIPT,
 );
 
 /**

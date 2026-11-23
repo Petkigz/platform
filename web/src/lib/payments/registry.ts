@@ -128,10 +128,13 @@ export function registerPaymentProvider(id: ProviderId, factory: Factory): void 
 
 /** The service and country an id names, or null for an id nobody could have issued. */
 function builtin(id: ProviderId): { service: Service; country: string | undefined } | null {
-  const whole = SERVICES[id];
+  // Own names only. `SERVICES['constructor']` is a function every object has,
+  // and an id arrives from a callback's address, which anybody can type.
+  const named = (name: string) => (Object.hasOwn(SERVICES, name) ? SERVICES[name] : undefined);
+  const whole = named(id);
   if (whole) return { service: whole, country: undefined };
   const match = /^(.+)_([a-z]{2})$/u.exec(id);
-  const service = match ? SERVICES[match[1]!] : undefined;
+  const service = match ? named(match[1]!) : undefined;
   const country = match?.[2]?.toUpperCase();
   if (!service || !country || !service.countries.includes(country)) return null;
   return { service, country };
@@ -263,6 +266,32 @@ export function getPaymentProvider(id?: ProviderId): PaymentProvider {
   if (pinned) return getPaymentProvider(pinned);
 
   return availableProviders()[0] ?? new UnconfiguredPaymentProvider();
+}
+
+/**
+ * The name a payer knows a provider by, or null.
+ *
+ * For a receipt. A payment attempt is recorded under the provider's id
+ * (`mtn_momo_ug`), which is this code's word and not the payer's; the receipt
+ * printed it with the underscores taken out. The name is the adapter's own
+ * label ("MTN MoMo"), which is the same whether or not the account's
+ * credentials are present today, so a receipt for a payment made last year
+ * still names the service after its account has been closed.
+ *
+ * Null for an id nobody here could have issued. The receipt then says the
+ * payment was confirmed and names nobody, rather than printing a stored
+ * identifier or "Payments not configured".
+ */
+export function providerNameOf(id: unknown): string | null {
+  if (typeof id !== 'string' || id.trim() === '') return null;
+  const factory = factoryFor(id.trim());
+  if (!factory) return null;
+  try {
+    const label = factory().label.trim();
+    return label === '' ? null : label;
+  } catch {
+    return null;
+  }
 }
 
 export function configuredProviderId(): ProviderId | null {
