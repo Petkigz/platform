@@ -179,3 +179,88 @@ export function isQuiet(account: StatementAccount): boolean {
 export function waitingCount(account: StatementAccount): number {
   return account.currencies.reduce((sum, c) => sum + c.notYetMoney.length, 0);
 }
+
+/**
+ * What a thing that has not moved money has reached, as a name the page has a
+ * sentence for.
+ *
+ * `my_statement()` sends a sentence with each waiting row (`says`), and it
+ * sends it in English. The page was printing it, which put a line of English
+ * in the middle of an Arabic statement. The page now says its own sentence,
+ * chosen by the row's kind and state, and `says` is not shown at all.
+ *
+ * Every state the function can send has a name here; a test reads the
+ * migration and fails when one is added without. Three states of a bank's
+ * case (`open`, `under_review`, `evidence_submitted`) are one name: to the
+ * payer they are the same fact, that the bank has not decided and nothing has
+ * moved.
+ */
+export const WAITING_STATES = {
+  refund_request: {
+    requested: 'rqRequested',
+    approved: 'rqApproved',
+    rejected: 'rqRejected',
+    withdrawn: 'rqWithdrawn',
+  },
+  refund: {
+    pending: 'rfPending',
+    failed: 'rfFailed',
+  },
+  dispute: {
+    open: 'dpOpen',
+    under_review: 'dpOpen',
+    evidence_submitted: 'dpOpen',
+    won: 'dpWon',
+    lost: 'dpLost',
+    withdrawn: 'dpWithdrawn',
+  },
+} as const;
+
+export type WaitingKind = keyof typeof WAITING_STATES;
+
+export type WaitingState =
+  | 'rqRequested' | 'rqApproved' | 'rqRejected' | 'rqWithdrawn'
+  | 'rfPending' | 'rfFailed'
+  | 'dpOpen' | 'dpWon' | 'dpLost' | 'dpWithdrawn';
+
+/** The kind of a waiting row, when it is one this page has a word for. */
+export function waitingKindOf(kind: string): WaitingKind | null {
+  return Object.hasOwn(WAITING_STATES, kind) ? (kind as WaitingKind) : null;
+}
+
+/**
+ * The name of what a waiting row has reached, or nothing.
+ *
+ * Nothing is an answer: a kind or a state added to the database later is
+ * drawn with its amount under "not counted yet" and no sentence, rather than
+ * with a sentence that belongs to something else.
+ */
+export function waitingStateOf(kind: string, status: string | null): WaitingState | null {
+  const known = waitingKindOf(kind);
+  if (!known || !status) return null;
+  const states: Record<string, WaitingState> = WAITING_STATES[known];
+  return Object.hasOwn(states, status) ? (states[status] ?? null) : null;
+}
+
+/**
+ * Whether a movement is a payment, a refund, or something this page has no
+ * word for. The direction is still known for the third, so it is still
+ * counted and still drawn.
+ */
+export function movementKindOf(kind: string): 'charge' | 'refund' | null {
+  return kind === 'charge' || kind === 'refund' ? kind : null;
+}
+
+/**
+ * The title a movement was sold under, when the database had one.
+ *
+ * With no title the function writes `Order <number>` in English. That is not
+ * a title, and the number is printed beside the line anyway, so it is nothing
+ * here and the page says "payment" or "refund" alone.
+ */
+export function movementTitleOf(row: Pick<Movement, 'description' | 'orderNumber'>): string | null {
+  const text = row.description?.trim();
+  if (!text) return null;
+  if (text === 'Order' || text === `Order ${row.orderNumber ?? ''}`.trim()) return null;
+  return text;
+}

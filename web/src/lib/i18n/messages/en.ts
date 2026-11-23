@@ -2119,6 +2119,55 @@ export const en = {
   'orders.pmWhyPaid': 'This order is no longer waiting for payment, so its code cannot be changed.',
   'orders.pmWhyHas': 'This order already has a code. Take it off first.',
   'orders.pmFailed': 'That could not be changed. Nothing was charged.',
+
+  // What you have paid (`billing.ts`), for the same twenty-seven languages
+  // as the dashboard, 2026-11-23. A sum is `sum…`, a movement `mv…`, what is
+  // waiting `wt…` with its state (`rq…` a request, `rf…` a refund being
+  // sent, `dp…` a case with a bank). Only money that moved is called paid
+  // or returned.
+  'billing.lede':
+    'Money that has moved, and money that has not yet. Only the first changes the net figure.',
+  'billing.noAccount':
+    'You are not on a billing account yet. One is created the first time you buy something, and everything you pay appears here afterwards.',
+  'billing.unread':
+    'What you have paid could not be read just now. That is not the same as having paid nothing.',
+  'billing.billedIn': 'Billed in: {currency}',
+  'billing.quiet': 'Nothing has been paid on this account yet.',
+  'billing.sumPaid': 'Paid',
+  'billing.sumReturned': 'Returned',
+  'billing.sumNet': 'Net paid',
+  'billing.noneMoved': 'Nothing has moved in this currency.',
+  'billing.mvPayment': 'Payment',
+  'billing.mvPaymentFor': 'Payment: {what}',
+  'billing.mvRefund': 'Refund',
+  'billing.mvRefundFor': 'Refund: {what}',
+  'billing.mvPaid': 'Paid: {amount}',
+  'billing.mvReturned': 'Returned: {amount}',
+  'billing.mvAfter': 'Net paid after this: {amount}',
+  'billing.waitTitle': 'Not counted yet',
+  'billing.waitBody':
+    'None of this has moved money, so none of it changes the net paid figure above.',
+  'billing.wtRequest': 'Refund asked for: {amount}',
+  'billing.wtRefund': 'Refund: {amount}',
+  'billing.wtDispute': 'Case with your bank: {amount}',
+  'billing.wtOther': 'Not counted yet: {amount}',
+  'billing.rqRequested': 'Asked for. Nobody has decided yet.',
+  'billing.rqApproved': 'Approved, but not sent yet. Nothing has been returned.',
+  'billing.rqRejected': 'Declined. Nothing was returned. You can ask why through the help page.',
+  'billing.rqWithdrawn': 'The request was withdrawn.',
+  'billing.rfPending': 'Sent to the payment service. Waiting for it to confirm.',
+  'billing.rfFailed': 'The payment service refused it. Nothing was returned.',
+  'billing.dpOpen': 'Your bank has a case open. Nothing has moved in this record.',
+  'billing.dpWon': 'The case was decided in the platform’s favour, so nothing was returned.',
+  'billing.dpLost':
+    'The case was decided in your favour. This record has no entry for it, so the figures above do not include it.',
+  'billing.dpWithdrawn': 'The case was withdrawn.',
+  'billing.youWrote': 'You wrote: {reason}',
+  'billing.waiting': 'Still waiting on this account: {count}',
+  'billing.askNote': 'Asking for a refund does not return money. A completed refund does.',
+  'billing.recLead': 'This is the platform’s record, not your bank’s.',
+  'billing.recBody':
+    'A refund shown here as completed may take a few days to reach you, and a fee charged for receiving it is not this platform’s. Neither appears on this page. Amounts are shown in the currency you were charged. Nothing here is converted into another one.',
 } as const;
 
 export type MessageKey = keyof typeof en;

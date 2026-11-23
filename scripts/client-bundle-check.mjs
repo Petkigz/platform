@@ -132,6 +132,12 @@ for (const [file, key] of [
   ['orders.ts', 'orders.rfSent'],
   ['orders.ts', 'orders.unread'],
   ['orders.ts', 'orders.pmWhyPaid'],
+  // What you have paid has no script of its own. That asking is not a
+  // refund, that a statement could not be read, and whose record this is
+  // must be in that page and in nothing a browser downloads.
+  ['billing.ts', 'billing.askNote'],
+  ['billing.ts', 'billing.unread'],
+  ['billing.ts', 'billing.recBody'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

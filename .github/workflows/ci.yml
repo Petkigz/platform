@@ -150,6 +150,9 @@ jobs:
       - name: My orders, refund request and order code synthetic HTTP regression
         run: node scripts/orders-route-smoke.mjs
 
+      - name: What you have paid synthetic HTTP regression
+        run: node scripts/billing-route-smoke.mjs
+
       - name: Catalogue synthetic HTTP regression
         run: node scripts/catalogue-route-smoke.mjs
 

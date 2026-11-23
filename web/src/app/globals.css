@@ -2273,3 +2273,32 @@ html[data-motion='reduce'] *::after {
 .order-form label { font-weight: 600; font-size: 0.9rem; }
 .order-form p { margin: 0; }
 .order-code { width: auto; max-width: 12rem; }
+
+/* --------------------------------------------------------------------------
+   What you have paid
+   -------------------------------------------------------------------------- */
+
+/* One billing account, then one card for each currency it was charged in.
+   Logical properties throughout, as on my orders. */
+.statement-account { margin-top: 2rem; }
+.statement-account:first-child { margin-top: 0; }
+.statement-head h2 { margin: 0; overflow-wrap: anywhere; }
+.statement-head p { margin: 0.15rem 0 0; font-size: 0.85rem; }
+.statement-card { margin-top: 1rem; }
+/* Three sums side by side where there is room, one under another on a phone:
+   a figure is never broken across two lines. */
+.statement-sums { margin-top: 0; gap: 1rem 2rem; }
+.statement-sums .n { white-space: nowrap; }
+.statement-card > .lessons, .statement-card > .empty { margin-top: 1.25rem; }
+.statement-row > p { margin: 0.25rem 0 0; }
+/* When, and which order: two things on a line where they fit and one under
+   the other where they do not. A dot between them was left hanging at the
+   end of a line on a phone, and an order's number broke at its hyphen. */
+.statement-when { display: flex; flex-wrap: wrap; gap: 0 0.75rem; }
+.statement-when a { white-space: nowrap; }
+.statement-waiting { margin-top: 1.5rem; }
+.statement-waiting h3 { margin: 0; font-size: 1rem; }
+.statement-waiting > p { margin: 0.25rem 0 0.5rem; font-size: 0.85rem; }
+.statement-foot { margin-top: 0.75rem; font-size: 0.85rem; }
+.statement-note { margin-top: 2rem; }
+.statement-links { margin-top: 1.5rem; }

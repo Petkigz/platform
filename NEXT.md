@@ -2619,6 +2619,37 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### What you have paid in the reader's language, 2026-11-23
+
+- *The words.* Thirty-seven sentences in a new part, `messages/billing.ts`,
+  twenty-seven languages, **read by no speaker** (`tmp-words/u25`). Only
+  money that moved is called paid or returned; each sentence about something
+  on the way says nothing has been returned where that is so.
+- *Names, not sentences.* `lib/statement.ts` gained `waitingStateOf()`,
+  `waitingKindOf()`, `movementKindOf()` and `movementTitleOf()`; its test
+  (15) reads the twelve states `my_statement()` writes a sentence for out of
+  the migration and fails when one has no name. Twelve states, ten names: a
+  bank's case that is open, under review or with evidence sent is one thing
+  to the payer.
+- *The page.* One server page, no script. A list of labelled lines replaced
+  the table, which hid the running figure off the side of a phone. The
+  database's `says` and the stored state are no longer printed. With no
+  title the database writes `Order <number>`; the page says "payment" and
+  prints the number. A statement that failed, came in a shape the parser
+  refuses, or holds an amount that cannot be said is "could not be read,
+  which is not the same as having paid nothing", as an alert; the reason is
+  logged. It used to throw.
+- *Checked.* `scripts/billing-route-smoke.mjs` in `ci.yml` and, with a
+  browser, in `responsive-smoke.yml`: English, Arabic, French, Hausa over
+  HTTP; English, Arabic, Tamil, Filipino and French in a browser at 320px.
+- *Not shown.* A statement from a real database through the page; a real
+  payment or refund; twenty-two languages in a browser. *Still English:* a
+  course's title, an account's name, what the payer typed, and the receipt
+  each line links to.
+- *Counts.* 1605 keys; server-only 1237; unwritten while held 1333; held
+  192 of 1605, 11.96%, still shown as 12%. Web tests 2543. The translation
+  audit stayed at 195 of 200.
+
 ### My orders in the reader's language, 2026-11-23
 
 - *The words.* Fifty-four sentences in a new part, `messages/orders.ts`,

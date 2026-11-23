@@ -8723,6 +8723,48 @@ individual with no registered company can be verified for a live account
 M-Pesa in Kenya is not on the sandbox account, and what a live account needs
 to be given it.
 
+## What you have paid, in the reader's language — **DECIDED 2026-11-23**
+
+`/billing` is the statement a payer reads after a refund. Thirty-seven
+sentences in a part of its own, `billing`; the nineteen held languages still
+read 12%.
+
+- *The page says its own sentences.* `my_statement()` sends an English
+  sentence with each thing that has not moved money. The page stopped
+  printing it and says one of ten of its own, chosen by the row's kind and
+  state. The function is unchanged and still sends its sentence; this page
+  is the only thing that calls it, so nothing prints that sentence now. The
+  cost is that a state
+  added to the function later has an amount and no sentence here until it is
+  given one in twenty-eight languages; a test reads the migration and fails
+  on that day, so it is found by a developer and not by a payer.
+- *Three states of a bank's case are one sentence.* Open, under review and
+  evidence sent all read "your bank has a case open; nothing has moved in
+  this record". The difference is the platform's work, not the payer's news.
+- *No badge.* The stored state (`under_review`) was printed in a badge
+  beside the sentence that already said it. It is in an attribute now, for
+  the tests.
+- *A list, not a table.* Four columns do not fit 320 pixels, and the column
+  that went off the side was the running figure, which is the one a reader
+  checks the sum with. Each movement is a few labelled lines; every amount
+  follows its label after a colon, so no language inflects it.
+- *Unread is not zero, and one bad figure is unread.* The page threw on a
+  failed read, which drew the site's broken-page screen. It now says the
+  statement could not be read and that this is not the same as having paid
+  nothing. An amount that cannot be said correctly (a currency the money
+  code refuses, a figure that is not whole) makes the whole statement
+  unread rather than being left out, because a statement with a line
+  missing no longer adds up to what it prints.
+- *An unknown movement is still drawn.* A kind the page has no word for is
+  shown by its title, with its amount and direction. Dropping it would
+  understate what a family paid.
+- *What somebody typed is theirs.* The reason on a refund request is shown
+  as written, after "you wrote", in its own direction.
+
+**Not decided here:** whether `my_statement()` should stop writing a
+sentence nobody prints; the receipt, which every line links to and which is
+still English.
+
 ## My orders, in the reader's language — **DECIDED 2026-11-23**
 
 `/orders` is where somebody finds out whether they paid and whether they can

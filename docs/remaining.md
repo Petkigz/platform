@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 12% there (192 of 1568 sentences; it was 71% of 272, then
+  the nineteen reads 12% there (192 of 1605 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -547,7 +547,8 @@ still unreviewed and still saying so.
   with the page for putting a copy back and of 1228 with the phone card,
   15% of 1315 with the merge screen, 14% of 1383 with the two sharing
   screens, 13% of 1434 with the two for inviting a friend and of 1514 with
-  the pages of sponsored seats, then this with my orders),
+  the pages of sponsored seats, 12% of 1568 with my orders, then this with
+  what you have paid),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -844,7 +845,7 @@ written: not a held draft, nothing.
   hosted test project since 2026-11-19, with both switches off. No request, pledge or recorded
   payment has been read through this page from a real database.
   **Still English, every one of them:**
-  the pages it links to: `/account/password`, `/billing`,
+  the pages it links to: `/account/password`,
   `/institution`, `/notifications`, `/policies`, `/teach/apply`
   and `/forgot-password`. A reader is taken from a
   page in their language to an English one by each of those links.
@@ -922,6 +923,17 @@ written: not a held draft, nothing.
   (`/orders/<id>/receipt`), the staff refund screens, a course's title, and
   what staff wrote beside an adjustment, which is printed as written. **Not
   exercised:** a real order, refund request or code through it.
+  `/billing`, the statement it links to, is in the reader's language since
+  2026-11-23 too (`messages/billing.ts`, thirty-seven sentences, unreviewed;
+  checked by `scripts/billing-route-smoke.mjs` on a stand-in in which no
+  money exists, with a browser in five languages). It no longer prints the
+  sentence `my_statement()` writes beside each thing that is waiting, nor a
+  stored state; it says its own, and a state it has no word for has an
+  amount and no sentence. A statement that cannot be read is said as that
+  (the page used to throw). **Still English on it:** a course's title, the
+  account's name, and what the payer typed. **Not exercised:** a statement
+  read from a real database through it, or any language but five in a
+  browser.
   Checked by `scripts/buy-route-smoke.mjs`, which starts the site twice
   against a synthetic backend: once with no payment provider, which is how
   the site stands, and once with the MTN adapter pointed at the script
