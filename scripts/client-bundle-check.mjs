@@ -126,6 +126,12 @@ for (const [file, key] of [
   ['sponsor.ts', 'sponsor.plWhyGone'],
   ['sponsor.ts', 'sponsor.rqDone'],
   ['sponsor.ts', 'sponsor.plPayBody'],
+  // My orders has two forms, both handed their words by the page. That a
+  // request is not a refund, that orders could not be read, and why a code
+  // cannot be changed must be in that page and in no script.
+  ['orders.ts', 'orders.rfSent'],
+  ['orders.ts', 'orders.unread'],
+  ['orders.ts', 'orders.pmWhyPaid'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

@@ -2053,6 +2053,72 @@ export const en = {
     'Write a sentence about the situation. It is what the person deciding reads.',
   'sponsor.rqWhyHas': 'That learner already has this course, so there is nothing to ask for.',
   'sponsor.rqWhyAsked': 'There is already an open request for this course.',
+
+  // My orders (`orders.ts`), for the same twenty-seven languages as the
+  // dashboard, 2026-11-23. States are `st…`, an order's own lines `ln…`,
+  // asking for a refund `rf…`, a code on an unpaid order `pm…`. Nothing here
+  // says money has been returned before it has.
+  'orders.title': 'My orders',
+  'orders.waitLead': 'Still waiting for confirmation.',
+  'orders.waitBody':
+    'You came back from the payment screen, and the payment has not been confirmed yet. Access opens as soon as it is. You can leave this page and come back.',
+  'orders.paidLead': 'Payment confirmed.',
+  'orders.paidBody': 'Access is open.',
+  'orders.none': 'You have not placed any orders yet.',
+  'orders.unread':
+    'Your orders could not be read just now. Nothing has changed: this page only reads.',
+  'orders.anOrder': 'Order',
+  'orders.stDraft': 'Not started',
+  'orders.stPending': 'Waiting for payment',
+  'orders.stConfirming': 'Payment being confirmed',
+  'orders.stPaid': 'Paid',
+  'orders.stPartRefunded': 'Partly refunded',
+  'orders.stRefunded': 'Refunded',
+  'orders.stCancelled': 'Cancelled',
+  'orders.stFailed': 'Failed',
+  'orders.stExpired': 'Expired',
+  'orders.notPaid': 'Not paid, so no access yet',
+  'orders.learn': 'Start learning',
+  'orders.receipt': 'Receipt',
+  'orders.placedOn': 'Placed on: {date}',
+  'orders.total': 'Total: {amount}',
+  'orders.lnSubtotal': 'Subtotal: {amount}',
+  'orders.lnDiscount': 'Discount: {amount}',
+  'orders.lnTax': 'Tax: {amount}',
+  'orders.lnFee': 'Fee: {amount}',
+  'orders.adjOther': 'Adjustment: {amount}',
+  'orders.adjWithdrawn': 'Withdrawn',
+  'orders.footNote':
+    'Access opens when a payment is confirmed. Coming back from a payment screen is not confirmation.',
+  'orders.billing': 'What you have paid',
+  'orders.billingNote':
+    'Money that has moved and money that has not, across every order on your account.',
+  'orders.rfAsk': 'Ask for a refund',
+  'orders.rfUntil': 'A refund can be asked for until: {date}',
+  'orders.rfClosed': 'The time for asking for a refund on this order ended on: {date}',
+  'orders.rfRuleLaw': 'This is the 14 days the law gives for withdrawing from a purchase.',
+  'orders.rfRuleWaived':
+    'The 14 days the law gives do not apply to this order, because the course was opened at once at the buyer’s request.',
+  'orders.rfNothingLeft': 'Everything paid on this order has already been returned.',
+  'orders.rfUnread': 'Whether a refund can be asked for on this order could not be read just now.',
+  'orders.rfWhy': 'Why are you asking for a refund?',
+  'orders.rfAmount': 'Amount asked for: {amount}',
+  'orders.rfSend': 'Send the request',
+  'orders.rfSent': 'Sent. A person will review it. Nothing has been refunded yet.',
+  'orders.rfNote':
+    'A person reviews every request. Access stays open until a refund is actually paid back.',
+  'orders.rfWhyReason': 'Say what the refund is for.',
+  'orders.rfWhyNotYours': 'That order is not on your account.',
+  'orders.rfWhyTooMuch': 'That is more than is left to refund on this order.',
+  'orders.rfWhyClosed': 'The time for asking for a refund on this order has ended.',
+  'orders.rfFailed': 'The request could not be sent. Nothing was changed.',
+  'orders.unconfirmed':
+    'We could not confirm whether that was recorded. Reload this page before trying again.',
+  'orders.pmUse': 'Use this code',
+  'orders.pmRemove': 'Take the code off',
+  'orders.pmWhyPaid': 'This order is no longer waiting for payment, so its code cannot be changed.',
+  'orders.pmWhyHas': 'This order already has a code. Take it off first.',
+  'orders.pmFailed': 'That could not be changed. Nothing was charged.',
 } as const;
 
 export type MessageKey = keyof typeof en;

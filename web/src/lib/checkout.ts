@@ -39,6 +39,7 @@ import {
   type PledgeOutcome,
 } from './checkout-outcome.ts';
 import { fromMinor, format, type Money } from './money.ts';
+import { orderCodeReasonOf, type OrderCodeReason } from './orders-outcome.ts';
 
 export type CheckoutErrorCode =
   | 'not_found'
@@ -545,7 +546,7 @@ type OrderPromotionRow = {
 
 export type OrderPromotionResult =
   | { ok: true; code: string; total: Money; discount: Money }
-  | { ok: false; code: CheckoutErrorCode; message: string };
+  | { ok: false; code: CheckoutErrorCode; message: string; reason: OrderCodeReason };
 
 /**
  * Putting a code on an order that already exists, and taking one off again.
@@ -564,19 +565,21 @@ export async function applyPromotionToOrder(
   args: { orderId: string; code: string },
 ): Promise<OrderPromotionResult> {
   const code = args.code.trim();
-  if (!args.orderId) return { ok: false, code: 'error', message: 'That order is missing.' };
-  if (code === '') return { ok: false, code: 'error', message: 'Type the code first.' };
+  if (!args.orderId) return { ok: false, code: 'error', message: 'That order is missing.', reason: 'malformed' };
+  if (code === '') return { ok: false, code: 'error', message: 'Type the code first.', reason: 'malformed' };
 
   const { data, error } = await supabase.rpc('apply_promotion_to_order', {
     p_order_id: args.orderId,
     p_code: code,
   });
-  if (error) return { ok: false, ...mapCourseOrderRefusal(error.message) };
+  if (error) return { ok: false, ...mapCourseOrderRefusal(error.message), reason: orderCodeReasonOf(error) };
 
   const row = data as OrderPromotionRow | null;
   if (!row?.code || row.discountMinor === undefined
       || row.totalMinor === undefined || !row.currencyCode) {
-    return { ok: false, code: 'error', message: 'The code was applied but the answer was unreadable.' };
+    // The writer answered without an error, so the code is on the order; what
+    // it came to could not be read. The page is the place to look.
+    return { ok: false, code: 'error', message: 'The code was applied but the answer was unreadable.', reason: 'unconfirmed' };
   }
 
   return {
@@ -592,17 +595,17 @@ export async function removePromotionFromOrder(
   supabase: SupabaseClient,
   orderId: string,
 ): Promise<OrderPromotionResult> {
-  if (!orderId) return { ok: false, code: 'error', message: 'That order is missing.' };
+  if (!orderId) return { ok: false, code: 'error', message: 'That order is missing.', reason: 'malformed' };
 
   const { data, error } = await supabase.rpc('remove_promotion_from_order', {
     p_order_id: orderId,
   });
-  if (error) return { ok: false, ...mapCourseOrderRefusal(error.message) };
+  if (error) return { ok: false, ...mapCourseOrderRefusal(error.message), reason: orderCodeReasonOf(error) };
 
   const row = data as OrderPromotionRow | null;
   if (!row?.code || row.removedMinor === undefined
       || row.totalMinor === undefined || !row.currencyCode) {
-    return { ok: false, code: 'error', message: 'The code was taken off but the answer was unreadable.' };
+    return { ok: false, code: 'error', message: 'The code was taken off but the answer was unreadable.', reason: 'unconfirmed' };
   }
 
   return {

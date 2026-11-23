@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 13% there (192 of 1514 sentences; it was 71% of 272, then
+  the nineteen reads 12% there (192 of 1568 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -546,8 +546,8 @@ still unreviewed and still saying so.
   a copy of your data, 17% of 1130 with the reading settings, 16% of 1199
   with the page for putting a copy back and of 1228 with the phone card,
   15% of 1315 with the merge screen, 14% of 1383 with the two sharing
-  screens, 13% of 1434 with the two for inviting a friend, then this
-  with the page of sponsored seats),
+  screens, 13% of 1434 with the two for inviting a friend and of 1514 with
+  the pages of sponsored seats, then this with my orders),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -834,8 +834,9 @@ written: not a held draft, nothing.
   test browser in five of the twenty-seven languages. **Known:** a sponsored seat pays the
   teacher no share, by hand or at checkout, because neither path writes
   earnings; no tax or transfer fee is added to a pledge; the order a pledge
-  is paid through has one line and no product, and `/orders` (still
-  English) shows it by the line's own English title; money that arrives for
+  is paid through has one line and no product, and `/orders` (in the
+  reader's language since 2026-11-23) shows it by the line's own English
+  title; money that arrives for
   a pledge called off in the meantime is recorded in the audit trail and,
   since later the same day, drawn first on the staff desk
   (`/admin/sponsorships`), which cannot tell whether the order has since
@@ -913,8 +914,14 @@ written: not a held draft, nothing.
   withdrawal box, with the two sentences under it and the link to the policy
   (`DECISIONS.md` says why it is not simply translated), and a charge the
   database names itself. A provider's name, an amount and the course's title
-  are as they are written. `/orders`, `/plans` and `/policies/refunds`, which
-  it links to, are English.
+  are as they are written. `/plans` and `/policies/refunds`, which it links
+  to, are English. `/orders` is in the reader's language since 2026-11-23
+  (`messages/orders.ts`, fifty-four sentences, unreviewed; checked by
+  `scripts/orders-route-smoke.mjs` on a stand-in in which no money exists,
+  with a browser in five languages). **Still English from it:** the receipt
+  (`/orders/<id>/receipt`), the staff refund screens, a course's title, and
+  what staff wrote beside an adjustment, which is printed as written. **Not
+  exercised:** a real order, refund request or code through it.
   Checked by `scripts/buy-route-smoke.mjs`, which starts the site twice
   against a synthetic backend: once with no payment provider, which is how
   the site stands, and once with the MTN adapter pointed at the script

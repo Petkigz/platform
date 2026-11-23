@@ -2242,3 +2242,34 @@ html[data-motion='reduce'] *::after {
 .companion-page .counter-tap { min-height: 3.5rem; padding-inline: 2.25rem; font-size: 1.1rem; }
 .companion-head .lede { margin: 0.9rem 0 0; max-width: 60ch; }
 .companion-head .muted { margin: 0.4rem 0 0; max-width: 60ch; }
+
+/* --------------------------------------------------------------------------
+   My orders
+   -------------------------------------------------------------------------- */
+
+/* One order: its name and state on a line, what it came to under that, then
+   what can be done about it. Logical properties throughout, so the page
+   reads the same way round in a right-to-left language. */
+.order-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; }
+.order-head strong { overflow-wrap: anywhere; }
+[data-order] > .meta, [data-order] > .order-line { margin: 0.25rem 0 0; }
+.order-line { font-size: 0.9rem; }
+/* What changed the total, under the parts it changed: set in, so a discount
+   and the code that gave it do not read as two discounts. */
+[data-order] > .order-adjustment { margin-inline-start: 1rem; font-size: 0.85rem; }
+/* What somebody wrote beside a line may be one long word. */
+.order-note { overflow-wrap: anywhere; }
+/* The sentence under the list sat against the card's edge. */
+.order-foot { margin-top: 1rem; }
+.order-rule { display: block; }
+.order-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; margin-top: 0.6rem; }
+.order-actions:empty { display: none; }
+.order-actions .btn { width: auto; margin-top: 0; }
+.order-part { margin-top: 0.75rem; }
+.order-part > p { margin: 0 0 0.35rem; }
+.order-form { display: grid; gap: 0.5rem; justify-items: start; max-width: 34rem; }
+.order-form > .btn { width: auto; margin-top: 0; }
+.order-form textarea, .order-form .notice { justify-self: stretch; }
+.order-form label { font-weight: 600; font-size: 0.9rem; }
+.order-form p { margin: 0; }
+.order-code { width: auto; max-width: 12rem; }

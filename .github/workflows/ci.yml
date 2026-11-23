@@ -147,6 +147,9 @@ jobs:
       - name: Sponsors' pool, asking page and sponsorship route synthetic HTTP regression
         run: node scripts/sponsor-pool-route-smoke.mjs
 
+      - name: My orders, refund request and order code synthetic HTTP regression
+        run: node scripts/orders-route-smoke.mjs
+
       - name: Catalogue synthetic HTTP regression
         run: node scripts/catalogue-route-smoke.mjs
 

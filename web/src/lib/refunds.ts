@@ -1,6 +1,13 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { MoneyError, fromMajor, fromMinor, format, isCurrency } from './money.ts';
 import { one, type Embedded } from './embed.ts';
+import {
+  REFUND_ASK_ENGLISH,
+  REFUND_REASON_MAX,
+  refundAskReasonOf,
+  refundAskStatusOf,
+  type RefundAskReason,
+} from './orders-outcome.ts';
 
 export type RefundRequest = {
   id: string;
@@ -28,7 +35,7 @@ export type QueueItem = RefundRequest & {
   requester: { display_name: string | null } | null;
 };
 
-const REQUEST_REASON_MAX = 1000;
+const REQUEST_REASON_MAX = REFUND_REASON_MAX;
 
 export type RequestInput = {
   orderId?: unknown;
@@ -38,7 +45,15 @@ export type RequestInput = {
 
 export type RequestResult =
   | { ok: true; requestId: string }
-  | { ok: false; status: number; error: string };
+  | { ok: false; status: number; reason: RefundAskReason; error: string };
+
+/** A named refusal, with that name's own status. `error` is English and ours. */
+const refuseAsk = (reason: RefundAskReason, error: string = REFUND_ASK_ENGLISH[reason]): RequestResult => ({
+  ok: false,
+  status: refundAskStatusOf(reason),
+  reason,
+  error,
+});
 
 /**
  * Ask for money back.
@@ -52,6 +67,13 @@ export type RequestResult =
  * The amount is the caller's, the currency is not: the function takes it from
  * the order, so a refund cannot be recorded in a different currency to the
  * capture.
+ *
+ * **Every refusal has a name** (`lib/orders-outcome.ts`), and the sentence
+ * that goes back with it is this file's. The database's own sentence used to
+ * be passed through for a closed window and for anything unanticipated; it
+ * is now written to the server's log and nowhere else. An error that is not
+ * the database's answer (no SQLSTATE, or the connection's class) is
+ * `unconfirmed`: a request may have been recorded.
  */
 export async function requestRefund(
   supabase: SupabaseClient,
@@ -60,17 +82,9 @@ export async function requestRefund(
   const orderId = typeof input.orderId === 'string' ? input.orderId : '';
   const reason = typeof input.reason === 'string' ? input.reason.trim() : '';
 
-  if (!orderId) return { ok: false, status: 400, error: 'orderId is required.' };
-  if (!reason) {
-    return { ok: false, status: 400, error: 'Say what the refund is for.' };
-  }
-  if (reason.length > REQUEST_REASON_MAX) {
-    return {
-      ok: false,
-      status: 400,
-      error: `Please keep it under ${REQUEST_REASON_MAX} characters.`,
-    };
-  }
+  if (!orderId) return refuseAsk('malformed', 'orderId is required.');
+  if (!reason) return refuseAsk('reason_required');
+  if (reason.length > REQUEST_REASON_MAX) return refuseAsk('too_long');
 
   // D4: money is integer minor units, never floating point. A caller sending
   // "300.5" or a float is refused rather than rounded, because rounding here is
@@ -81,15 +95,11 @@ export async function requestRefund(
       ? String(input.amountMinor)
       : '';
   if (!/^\d+$/.test(raw)) {
-    return {
-      ok: false,
-      status: 400,
-      error: 'amountMinor must be a whole number of minor units.',
-    };
+    return refuseAsk('malformed', 'amountMinor must be a whole number of minor units.');
   }
   const amountMinor = BigInt(raw);
   if (amountMinor <= 0n) {
-    return { ok: false, status: 400, error: 'A refund has to be more than zero.' };
+    return refuseAsk('malformed', 'A refund has to be more than zero.');
   }
 
   const { data, error } = await supabase.rpc('request_refund', {
@@ -98,32 +108,10 @@ export async function requestRefund(
     p_reason: reason,
   });
   if (error) {
-    const msg = error.message.toLowerCase();
-    if (msg.includes('not on the billing account')) {
-      return { ok: false, status: 403, error: 'That order is not on your billing account.' };
-    }
-    if (msg.includes('nothing to refund')) {
-      return { ok: false, status: 409, error: 'That order has not been paid, so there is nothing to refund.' };
-    }
-    if (msg.includes('exceeds the refundable balance')) {
-      return {
-        ok: false,
-        status: 409,
-        error: 'That is more than is left to refund on this order.',
-      };
-    }
-    if (msg.includes('refund window closed')) {
-      // The database's sentence carries the date the window closed, so it is
-      // passed through rather than replaced with something vaguer. A stale tab
-      // is the usual way a caller reaches this: the button was there when the
-      // page was rendered and the clock ran out while it sat open.
-      return {
-        ok: false,
-        status: 409,
-        error: `${error.message.charAt(0).toUpperCase()}${error.message.slice(1)}.`,
-      };
-    }
-    return { ok: false, status: 400, error: error.message };
+    const why = refundAskReasonOf(error);
+    // Kept for whoever runs the site; never sent to the reader.
+    if (why === 'failed') console.error('refunds: a request refused with no name:', error.message);
+    return refuseAsk(why);
   }
 
   return { ok: true, requestId: String(data) };

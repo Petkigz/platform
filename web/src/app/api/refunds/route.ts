@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { requestRefund } from '@/lib/refunds';
+import { REFUND_ASK_ENGLISH, refundAskStatusOf, type RefundAskReason } from '@/lib/orders-outcome';
 
 /**
  * POST /api/refunds — ask for money back on an order.
@@ -13,12 +14,24 @@ import { requestRefund } from '@/lib/refunds';
  * cover it.
  *
  * No money moves. This creates a request for a person to decide.
+ *
+ * **Every refusal is named** (`reason`, with a status of its own:
+ * `lib/orders-outcome.ts`). The orders page is in the reader's language and
+ * says its own sentence for each; `error` is still sent, in English, for a
+ * caller with no words of its own, and is never the database's sentence. A
+ * request that got no answer at all is `unconfirmed`: one may have been
+ * recorded, and the form says to reload before trying again.
  */
+const NO_STORE = { 'Cache-Control': 'no-store' } as const;
+
+const refuse = (reason: RefundAskReason, error: string = REFUND_ASK_ENGLISH[reason]) =>
+  NextResponse.json({ ok: false, reason, error }, { status: refundAskStatusOf(reason), headers: NO_STORE });
+
 export async function POST(request: Request) {
   if (!isSupabaseConfigured()) {
     return NextResponse.json(
-      { error: 'Supabase is not configured on this deployment.' },
-      { status: 503 },
+      { ok: false, error: 'Supabase is not configured on this deployment.' },
+      { status: 503, headers: NO_STORE },
     );
   }
 
@@ -26,23 +39,23 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: 'Expected a JSON body.' }, { status: 400 });
+    return refuse('malformed');
   }
+  const input = (body && typeof body === 'object' ? body : {}) as Record<string, unknown>;
 
-  const input = (body ?? {}) as Record<string, unknown>;
-  const supabase = await createClient();
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return refuse('not_signed_in');
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Sign in to request a refund.' }, { status: 401 });
+    const result = await requestRefund(supabase, input);
+    if (!result.ok) return refuse(result.reason, result.error);
+
+    return NextResponse.json({ ok: true, requestId: result.requestId }, { status: 201, headers: NO_STORE });
+  } catch {
+    // No answer at all: a request may have been recorded.
+    return refuse('unconfirmed');
   }
-
-  const result = await requestRefund(supabase, input);
-  if (!result.ok) {
-    return NextResponse.json({ error: result.error }, { status: result.status });
-  }
-
-  return NextResponse.json({ ok: true, requestId: result.requestId }, { status: 201 });
 }

@@ -31,7 +31,7 @@ function one<T>(rows: T[], label: string): T {
  * what would have been sent to the database.
  */
 function stubRpc(
-  result: { data?: unknown; error?: { message: string } } = { data: 'req-1' },
+  result: { data?: unknown; error?: { message: string; code?: string } } = { data: 'req-1' },
 ) {
   const calls: RpcCall[] = [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -218,7 +218,7 @@ test('an overlong reason is refused', async () => {
 
 test('an order that is not yours is a 403, not a generic failure', async () => {
   const { client } = stubRpc({
-    error: { message: 'you are not on the billing account for this order' },
+    error: { code: '42501', message: 'you are not on the billing account for this order' },
   });
 
   const res = await requestRefund(client, {
@@ -230,42 +230,15 @@ test('an order that is not yours is a 403, not a generic failure', async () => {
   assert.equal(res.ok, false);
   if (!res.ok) {
     assert.equal(res.status, 403);
+    assert.equal(res.reason, 'not_yours');
     assert.match(res.error, /not on your billing account/);
   }
 });
 
 test('an unpaid order is a 409 with an explanation', async () => {
   const { client } = stubRpc({
-    error: { message: 'order is pending_payment, so there is nothing to refund' },
+    error: { code: '23514', message: 'order is pending_payment, so there is nothing to refund' },
   });
-
-  const res = await requestRefund(client, {
-    orderId: 'order-1',
-    amountMinor: '30000',
-    reason: 'Please',
-  });
-
-  assert.equal(res.ok, false);
-  if (!res.ok) assert.equal(res.status, 409);
-});
-
-test('asking for more than is left is a 409', async () => {
-  const { client } = stubRpc({
-    error: { message: 'refund request of 99999 exceeds the refundable balance of 30000' },
-  });
-
-  const res = await requestRefund(client, {
-    orderId: 'order-1',
-    amountMinor: '99999',
-    reason: 'Please',
-  });
-
-  assert.equal(res.ok, false);
-  if (!res.ok) assert.equal(res.status, 409);
-});
-
-test('an unrecognised database error still surfaces its message', async () => {
-  const { client } = stubRpc({ error: { message: 'something unexpected happened' } });
 
   const res = await requestRefund(client, {
     orderId: 'order-1',
@@ -275,8 +248,59 @@ test('an unrecognised database error still surfaces its message', async () => {
 
   assert.equal(res.ok, false);
   if (!res.ok) {
-    assert.equal(res.status, 400);
-    assert.match(res.error, /something unexpected/);
+    assert.equal(res.status, 409);
+    assert.equal(res.reason, 'not_paid');
+  }
+});
+
+test('asking for more than is left is a 409', async () => {
+  const { client } = stubRpc({
+    error: { code: '23514', message: 'refund request of 99999 exceeds the refundable balance of 30000' },
+  });
+
+  const res = await requestRefund(client, {
+    orderId: 'order-1',
+    amountMinor: '99999',
+    reason: 'Please',
+  });
+
+  assert.equal(res.ok, false);
+  if (!res.ok) {
+    assert.equal(res.status, 409);
+    assert.equal(res.reason, 'too_much');
+  }
+});
+
+test('an unrecognised database refusal is loud, is logged, and keeps its words on the server', async (t) => {
+  // It used to be a 400 carrying the database's own sentence to the customer.
+  const logged = t.mock.method(console, 'error', () => {});
+  const { client } = stubRpc({ error: { code: '23514', message: 'something unexpected happened' } });
+
+  const res = await requestRefund(client, {
+    orderId: 'order-1',
+    amountMinor: '30000',
+    reason: 'Please',
+  });
+
+  assert.equal(res.ok, false);
+  if (!res.ok) {
+    assert.equal(res.status, 500);
+    assert.equal(res.reason, 'failed');
+    assert.doesNotMatch(res.error, /something unexpected/);
+  }
+  assert.equal(logged.mock.callCount(), 1);
+  assert.match(String(logged.mock.calls[0]?.arguments[1]), /something unexpected/);
+});
+
+test('an error that is not the database\'s answer is unconfirmed: a request may have been recorded', async () => {
+  for (const error of [{ message: 'fetch failed' }, { code: '08006', message: 'connection failure' }, { code: '', message: 'say what the refund is for' }]) {
+    const { client } = stubRpc({ error });
+    const res = await requestRefund(client, { orderId: 'order-1', amountMinor: '30000', reason: 'Please' });
+    assert.equal(res.ok, false);
+    if (!res.ok) {
+      assert.equal(res.status, 502);
+      assert.equal(res.reason, 'unconfirmed');
+    }
   }
 });
 
@@ -493,9 +517,9 @@ test('a standing that cannot be read does not break the order list', async () =>
   assert.equal(await fetchRefundStanding(client, 'order-1'), null);
 });
 
-test('a refund refused for the window is said in the database words', async () => {
+test('a refund refused for the window is named, and the database words stay behind', async () => {
   const { client } = stubRpc({
-    error: { message: 'the refund window closed on 26 Oct 2026 at 09:14 UTC — a refund can be asked for within 72 hours of payment' },
+    error: { code: '23514', message: 'the refund window closed on 26 Oct 2026 at 09:14 UTC — a refund can be asked for within 72 hours of payment' },
   });
   const res = await requestRefund(client, {
     orderId: 'order-1',
@@ -505,7 +529,9 @@ test('a refund refused for the window is said in the database words', async () =
   assert.equal(res.ok, false);
   if (!res.ok) {
     assert.equal(res.status, 409);
-    assert.match(res.error, /^The refund window closed on 26 Oct 2026/);
+    assert.equal(res.reason, 'window_closed');
+    // The date is the page's to say, in the reader's language, from the standing.
+    assert.doesNotMatch(res.error, /26 Oct 2026|72 hours/);
   }
 });
 

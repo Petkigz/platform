@@ -7962,7 +7962,8 @@ owner chose the first.
   form, 19% since the page for closing an account, 18% since the pages for
   getting a copy of your data, 17% since the reading settings, 16% since
   the page for putting a copy back, 15% since the merge screen, 14% since
-  the two sharing screens, 13% since the two screens for inviting a friend.
+  the two sharing screens, 13% since the two screens for inviting a friend,
+  12% since my orders.
 - **The test that refused a language under half is removed.** Nothing in the
   tests now limits how much English one of these languages shows. That is the
   cost of this choice and it was put to the owner in those words.
@@ -8721,6 +8722,35 @@ individual with no registered company can be verified for a live account
 (if not, this adapter cannot take a payment however right it is); and why
 M-Pesa in Kenya is not on the sandbox account, and what a live account needs
 to be given it.
+
+## My orders, in the reader's language — **DECIDED 2026-11-23**
+
+`/orders` is where somebody finds out whether they paid and whether they can
+have the money back. Fifty-four sentences in a part of its own, `orders`;
+the nineteen held languages now read 12%.
+
+- *A request is not a refund.* What the form says after a request goes in is
+  that it was sent and nothing has been refunded yet. No sentence on the
+  page says money has been returned unless the order's own state says so.
+- *A state with no word is left out.* The page printed the stored name
+  (`pending_payment`). A state added to the database later now shows no
+  badge until it is given a word in twenty-eight languages, rather than an
+  English identifier in an Arabic page. The stored name stays in an
+  attribute, for the tests.
+- *Unread is not none.* Orders that could not be read are said as that, and
+  whether a refund can be asked for has a fourth answer, "could not be read
+  just now", with no button. The page drew both as empty.
+- *A refusal has a name or it is 500.* The route matches the six sentences
+  `request_refund()` raises and the `promotion:<key>` codes; anything else
+  is the route's own "could not be done", never the database's sentence. A
+  test reads the migrations so that a new refusal cannot arrive unnamed.
+- *No answer is its own answer.* A request that reached nothing, or whose
+  reply never came, is 502 `unconfirmed`: the reader is told to look at the
+  page before asking again, because the request may have gone in.
+- *Somebody else's order is not there.* One reply for both, byte for byte.
+- *The receipt and the staff screens stay English.* The receipt is a
+  document with its own rules (what a receipt must say differs by country)
+  and has not been read for this; staff work in English today.
 
 ## The sponsors' pool and asking for a seat, in the reader's language — **DECIDED 2026-11-19**
 

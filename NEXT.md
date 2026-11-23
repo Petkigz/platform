@@ -2619,6 +2619,37 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### My orders in the reader's language, 2026-11-23
+
+- *The words.* Fifty-four sentences in a new part, `messages/orders.ts`,
+  twenty-seven languages, **read by no speaker** (`tmp-words/u24`). None
+  says money has been returned before it has: a request that went in is
+  "sent, nothing refunded yet".
+- *Names, not sentences.* `lib/orders-outcome.ts` + test (9): a refund
+  request has ten outcomes and a code twenty-one, each with a status. The
+  six sentences `request_refund()` raises and every `promotion:<key>` are
+  read out of the migrations, so a new refusal fails the test until it has
+  a name. A refusal nobody named is 500 in the route's words; no answer is
+  502 `unconfirmed`, which tells the reader to look before asking twice.
+- *The routes.* `/api/refunds` and `/api/orders/promotion` answer with
+  `reason` and a status, `no-store`; the database's sentence goes to the
+  log. Somebody else's order and one that is not there are the same reply.
+- *The page.* A server page and two islands handed their words. A state the
+  page has no word for is left out, not printed as stored. A total is in
+  major units (it printed minor units: 19.99 read as 1999). Orders that
+  could not be read are said as that; they were drawn as "no orders yet".
+  Refund standing is four different things, with a button on one.
+- *Checked.* `scripts/orders-route-smoke.mjs` in `ci.yml` and, with a
+  browser, in `responsive-smoke.yml`: English, Arabic, French, Hausa over
+  HTTP; English, Arabic, Tamil, Filipino and French in a browser at 320px
+  with every form open; both forms pressed in English, one in Arabic.
+- *Not shown.* A real order, payment, refund request or code; twenty-two
+  languages in a browser. *Still English:* `/orders/<id>/receipt`, the staff
+  refund screens, a course's title, what staff wrote beside an adjustment.
+- *Counts.* 1568 keys; server-only 1200; unwritten while held 1296; held
+  192 of 1568, now 12%. Web tests 2540. The translation audit stands at 195
+  findings against a limit of 200: the next part has five to spare.
+
 ### The sponsors' pool and asking for a seat in the reader's language, 2026-11-19
 
 - *The words.* Forty more sentences in `messages/sponsor.ts` (eighty now),

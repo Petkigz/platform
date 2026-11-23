@@ -3,6 +3,16 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { orderCodeOutcomeOf, type OrderCodeReason } from '@/lib/orders-outcome';
+
+/** The words this form says. A script sent to a browser holds no catalogue. */
+export type CodeWords = {
+  label: string;
+  use: string;
+  remove: string;
+  reasons: Record<OrderCodeReason, string>;
+};
+
 /**
  * The code on an unpaid order, and the two things a family may do about it.
  *
@@ -12,12 +22,17 @@ import { useRouter } from 'next/navigation';
  * because after that the discount is part of what was charged, and changing it is a
  * refund rather than a re-price.
  *
- * The sentences in here come from the database. This component has no opinion about
- * whether a code is valid, for this course, in this country, or used up.
+ * This component has no opinion about whether a code is valid, for this course, in this
+ * country, or used up. The database decides; the route names what it decided
+ * (`orders-outcome.ts`); and what is said here is the page's sentence for that name, in
+ * the reader's language. The server's own sentence is never shown. A press that got no
+ * answer is not a failure: the order may have been re-priced, so the reader is told to
+ * reload before trying again.
  */
 export function PromotionActions({
   orderId,
   applied,
+  words,
 }: {
   orderId: string;
   /**
@@ -27,75 +42,80 @@ export function PromotionActions({
    * label is the kind of parsing that goes wrong quietly.
    */
   applied: boolean;
+  words: CodeWords;
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [said, setSaid] = useState<{ tone: 'warn' | 'error'; text: string } | null>(null);
   const [code, setCode] = useState('');
 
   async function send(action: 'apply' | 'remove') {
+    if (busy) return;
     setBusy(true);
-    setError(null);
+    setSaid(null);
+    let res: Response;
     try {
-      const res = await fetch('/api/orders/promotion', {
+      res = await fetch('/api/orders/promotion', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ action, orderId, code: action === 'apply' ? code : undefined }),
       });
-      const json = (await res.json().catch(() => null)) as
-        | { ok: boolean; message?: string }
-        | null;
+    } catch {
+      setSaid({ tone: 'warn', text: words.reasons.unconfirmed });
+      setBusy(false);
+      return;
+    }
+    const json = (await res.json().catch(() => null)) as { ok?: unknown; reason?: unknown } | null;
+    setBusy(false);
 
-      if (!res.ok || !json?.ok) {
-        setError(json?.message ?? 'That could not be changed.');
-        return;
-      }
+    if (res.ok && json?.ok === true) {
       setCode('');
       startTransition(() => router.refresh());
-    } finally {
-      setBusy(false);
+      return;
+    }
+    const why = orderCodeOutcomeOf(res.status, json?.reason);
+    // The order already has no code, which is what was asked for: the page was out of date.
+    if (why !== 'none_applied') setSaid({ tone: why === 'unconfirmed' ? 'warn' : 'error', text: words.reasons[why] });
+    if (why === 'none_applied' || why === 'already_applied' || why === 'order_not_pending') {
+      startTransition(() => router.refresh());
     }
   }
 
   return (
-    <span className="stack" style={{ gap: '0.35rem' }}>
+    <div className="order-form" data-code-form={applied ? 'applied' : 'none'}>
       {applied ? (
-        <span className="row" style={{ gap: '0.5rem', flexWrap: 'wrap' }}>
-          <button
-            type="button"
-            className="btn tiny ghost"
-            disabled={busy}
-            onClick={() => send('remove')}
-          >
-            {busy ? 'Taking it off…' : 'Take the code off'}
+        <div className="order-actions">
+          <button type="button" className="btn ghost" disabled={busy} onClick={() => send('remove')}>
+            {words.remove}
           </button>
-        </span>
+        </div>
       ) : (
-        <span className="row" style={{ gap: '0.5rem', flexWrap: 'wrap' }}>
-          <input
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            placeholder="Promotion code"
-            aria-label={`Promotion code for order ${orderId}`}
-            autoCapitalize="characters"
-            autoComplete="off"
-            maxLength={32}
-            style={{ maxWidth: '12rem' }}
-          />
-          <button
-            type="button"
-            className="btn tiny"
-            disabled={busy || code.trim() === ''}
-            onClick={() => send('apply')}
-          >
-            {busy ? 'Applying…' : 'Use this code'}
-          </button>
-        </span>
+        <>
+          <label htmlFor={`c-${orderId}`}>{words.label}</label>
+          <div className="order-actions">
+            <input
+              id={`c-${orderId}`}
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              autoCapitalize="characters"
+              autoComplete="off"
+              spellCheck={false}
+              maxLength={32}
+              dir="ltr"
+              className="order-code"
+            />
+            <button type="button" className="btn secondary" disabled={busy || code.trim() === ''} onClick={() => send('apply')}>
+              {words.use}
+            </button>
+          </div>
+        </>
       )}
-      {error && (
-        <span className="danger" style={{ fontSize: '0.85rem' }} role="alert">{error}</span>
+      {said && (
+        <div className={`notice ${said.tone === 'error' ? 'error' : 'warn'}`} role="alert" data-code-said={said.tone}>
+          {said.text}
+        </div>
       )}
-    </span>
+    </div>
   );
 }

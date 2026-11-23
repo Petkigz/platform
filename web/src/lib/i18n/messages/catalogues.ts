@@ -35,6 +35,7 @@ import { MERGE } from './merge.ts';
 import { SHARE } from './share.ts';
 import { REFER } from './refer.ts';
 import { SPONSOR } from './sponsor.ts';
+import { ORDERS } from './orders.ts';
 import { LESSON } from './lesson.ts';
 import { isHeld } from './held.ts';
 import { ASIA_AZ } from './asia-az.ts';
@@ -862,6 +863,8 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   REFER,
   // Sponsored seats, both sides on one page, on the same rule.
   SPONSOR,
+  // My orders and its two forms, on the same rule.
+  ORDERS,
 );
 
 /**
