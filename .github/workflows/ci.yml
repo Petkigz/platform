@@ -168,6 +168,9 @@ jobs:
       - name: Policies synthetic HTTP regression
         run: node scripts/policies-route-smoke.mjs
 
+      - name: Institution synthetic HTTP regression
+        run: node scripts/institution-route-smoke.mjs
+
       - name: Catalogue synthetic HTTP regression
         run: node scripts/catalogue-route-smoke.mjs
 

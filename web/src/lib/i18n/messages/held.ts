@@ -113,6 +113,7 @@ export const UNWRITTEN_WHILE_HELD: readonly string[] = [
   'plans',
   'subs',
   'policy',
+  'inst',
 ];
 
 /** Whether this sentence is deliberately absent from this language's file. */

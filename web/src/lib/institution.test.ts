@@ -2,7 +2,6 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  REPORT_NOTICE,
   SSO_NOTICE,
   describeDomainStatus,
   dnsRecord,
@@ -121,6 +120,27 @@ describe('the report', () => {
     assert.match(csv, /"Fiqh, book one","2","3","1"/);
     assert.match(csv, /"2026-10",3/);
   });
+
+  it('never hands a spreadsheet a course title it would run', () => {
+    const csv = reportCsv({
+      from: null,
+      to: null,
+      totals: { members: 0, learners: 0, enrolments: 0, completions: 0, certificates: 0 },
+      courses: [
+        { course: '=HYPERLINK("https://example.test","Tajwid")', learnerProfiles: 1, enrolments: 1, completions: 0 },
+        { course: '+1 Arabic', learnerProfiles: 1, enrolments: 1, completions: 0 },
+        { course: '@home', learnerProfiles: 1, enrolments: 1, completions: 0 },
+        { course: 'Sirah - part 2', learnerProfiles: 1, enrolments: 1, completions: 0 },
+      ],
+      months: [],
+    });
+    const lines = csv.split('\n');
+    assert.equal(lines[1], '"\'=HYPERLINK(""https://example.test"",""Tajwid"")","1","1","0"');
+    assert.equal(lines[2], '"\'+1 Arabic","1","1","0"');
+    assert.equal(lines[3], '"\'@home","1","1","0"');
+    // A hyphen inside a title is a title.
+    assert.equal(lines[4], '"Sirah - part 2","1","1","0"');
+  });
 });
 
 describe('the directory', () => {
@@ -153,12 +173,6 @@ describe('what the words say', () => {
   it('says single sign-on is not connected', () => {
     assert.match(SSO_NOTICE, /SAML and OIDC/);
     assert.match(SSO_NOTICE, /no “sign in with your school account”/);
-  });
-
-  it('says a report is counts, and that one can still point at somebody', () => {
-    assert.match(REPORT_NOTICE, /counts, not records/);
-    assert.match(REPORT_NOTICE, /count of one/);
-    assert.match(REPORT_NOTICE, /no name, no learner id and no email/);
   });
 
   it('maps a refusal to a sentence and leaks no raw error', () => {

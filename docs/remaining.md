@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 11% there (192 of 1769 sentences; it was 71% of 272, then
+  the nineteen reads 11% there (192 of 1814 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -549,7 +549,8 @@ still unreviewed and still saying so.
   screens, 13% of 1434 with the two for inviting a friend and of 1514 with
   the pages of sponsored seats, 12% of 1568 with my orders and of 1665 with the notification centre, 11%
   of 1707 with the two plans pages and of 1736 with the page an account's
-  plans are kept on, then this with the policy pages),
+  plans are kept on, of 1769 with the policy pages, then this with the
+  institution page),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -846,9 +847,9 @@ written: not a held draft, nothing.
   hosted test project since 2026-11-19, with both switches off. No request, pledge or recorded
   payment has been read through this page from a real database.
   **Still English, every one of them:**
-  the pages it links to: `/account/password`,
-  `/institution`, `/policies`, `/teach/apply`
-  and `/forgot-password`. (`/notifications` is in the reader's language
+  the pages it links to: `/account/password`, `/teach/apply`
+  and `/forgot-password`. (`/policies` and `/institution` are in the
+  reader's language since 2026-11-23; see their own entries below.) (`/notifications` is in the reader's language
   since 2026-11-23, `messages/notify.ts`, forty-two sentences, unreviewed;
   the text of a stored message is still the English the database wrote, and
   the page says so. Checked by `scripts/notifications-route-smoke.mjs` on a
@@ -870,6 +871,33 @@ written: not a held draft, nothing.
   inviting, applying to teach, the phone card), an account that signs in by
   phone code, a closed or suspended account in a language other than
   English, and any of the other twenty-four languages in a browser.
+- *The institution page (2026-11-23).* What a member reads on `/institution`
+  is in the reader's language for the twenty-seven languages with nothing
+  held (`messages/inst.ts`, forty-five sentences, **read by no speaker**) and
+  in English, marked, for the nineteen: whether their address could join and
+  what joining adds to the counts, the institution's name and when they
+  joined, the counts between two dates, the table by course, the file, and
+  leaving.
+  **Still English, for every reader:** the three cards an administrator
+  fills in (how it looks, the domain, the keys) and the line about seats
+  above them, marked as English under one sentence saying so; the headings
+  inside the file; an institution's and a course's own names; and the two
+  pages this one links to, `/institution/claim` and `/institution/seats`.
+  **Not built:** the enrolments by month on the page (the database returns
+  them and they are in the file, under an English heading); a member being told which institution their address matches before
+  they press Join (the board does not say).
+  Checked by `scripts/institution-route-smoke.mjs` on a synthetic backend in
+  which every institution, course and number is invented: HTTP in English
+  and Arabic and one held language; signed out; could join, no match and
+  joining closed; a member and an administrator; each read that can fail;
+  both refused pairs of dates; every sentence joining and leaving raise as
+  the route answers it; Chromium in English, Arabic and Tamil at 320, 390
+  and 1440 wide, and both buttons pressed in Arabic at 390, with the file
+  read back. **Not checked:** a real database or row-level security (that a
+  member receives no domains or keys is the database's code, run in
+  `supabase/tests/institutions.test.mjs`, not here); the administrator's
+  cards being used; a real institution's logo; twenty-four languages in a
+  browser.
 - *The policy pages (2026-11-23).* `/policies` and `/policies/[slug]` are in
   the reader's language for the twenty-seven languages with nothing held
   (`messages/policy.ts`, thirty-three sentences, **read by no speaker**) and

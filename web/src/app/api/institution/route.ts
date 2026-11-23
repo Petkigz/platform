@@ -4,6 +4,12 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { institutionRefusal } from '@/lib/institution';
+import {
+  MEMBERSHIP_ENGLISH,
+  membershipReasonOf,
+  membershipStatusOf,
+  type MembershipOutcome,
+} from '@/lib/institution-outcome';
 import { generateSeatCode, formatSeatCode, seatCodeTail } from '@/lib/seats';
 
 /**
@@ -18,6 +24,13 @@ import { generateSeatCode, formatSeatCode, seatCodeTail } from '@/lib/seats';
  * length of one response — long enough to show it once — and in nobody's table
  * afterwards. That is why `create_institution_api_key()` takes a prefix and a
  * hash rather than a secret.
+ *
+ * **Joining and leaving answer with a name.** Those two are what any member
+ * meets, in any language, so `join` and `leave` answer `{ ok: false, code }`
+ * with that name's own status (see `lib/institution-outcome.ts`) and the page
+ * has the sentence. What the database said beyond a name it raised on purpose
+ * is logged here and sent to nobody. The other actions belong to screens that
+ * are in English and still read `message`.
  */
 export async function POST(request: Request) {
   if (!isSupabaseConfigured()) {
@@ -36,7 +49,9 @@ export async function POST(request: Request) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ ok: false, message: 'Sign in first.' }, { status: 401 });
+  if (!user) {
+    return NextResponse.json({ ok: false, code: 'not_signed_in', message: 'Sign in first.' }, { status: 401 });
+  }
 
   const action = typeof body.action === 'string' ? body.action : '';
   const str = (value: unknown): string | null =>
@@ -364,15 +379,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, ...(data as object) });
   }
 
-  if (action === 'join') {
-    const { data, error } = await supabase.rpc('join_institution');
-    if (error) return fail(error.message);
-    return NextResponse.json({ ok: true, ...(data as object) });
-  }
+  if (action === 'join' || action === 'leave') {
+    const refuse = (code: MembershipOutcome) =>
+      NextResponse.json({ ok: false, code, message: MEMBERSHIP_ENGLISH[code] }, { status: membershipStatusOf(code) });
 
-  if (action === 'leave') {
-    const { data, error } = await supabase.rpc('leave_institution');
-    if (error) return fail(error.message);
+    const asked = await supabase
+      .rpc(action === 'join' ? 'join_institution' : 'leave_institution')
+      .then((r) => r, () => ({ data: null, error: { code: '', message: 'the request could not be made' } }));
+    if (asked.error) {
+      const code = membershipReasonOf(asked.error);
+      if (code === 'refused' || code === 'unconfirmed') {
+        console.error(`institution: ${action} was ${code}:`, asked.error.message);
+      }
+      return refuse(code);
+    }
+    const data = asked.data && typeof asked.data === 'object' && !Array.isArray(asked.data) ? asked.data : {};
     return NextResponse.json({ ok: true, ...(data as object) });
   }
 

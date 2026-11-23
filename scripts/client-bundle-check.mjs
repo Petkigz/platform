@@ -173,6 +173,13 @@ for (const [file, key] of [
   ['policy.ts', 'policy.lede'],
   ['policy.ts', 'policy.unread'],
   ['policy.ts', 'policy.draftBody'],
+  // The institution page is a server page, and hands its two islands the
+  // words they say. What it says about an institution it could not read and
+  // about why nobody can join by an address must be in nothing a browser
+  // downloads.
+  ['inst.ts', 'inst.unread'],
+  ['inst.ts', 'inst.joinClosed'],
+  ['inst.ts', 'inst.noMatch'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

@@ -130,17 +130,6 @@ export const INSTITUTION_TYPES: { value: string; label: string }[] = [
   { value: 'organisation', label: 'Organisation' },
 ];
 
-/**
- * What a report is, said once, so every screen and the API documentation can
- * carry the same sentence rather than three approximations of it.
- */
-export const REPORT_NOTICE =
-  'This is counts, not records. It counts the accounts that joined, the learner profiles ' +
-  'belonging to them and to their children, the enrolments those profiles made in the window, ' +
-  'completions and certificates — and it returns no name, no learner id and no email. A learner ' +
-  'who has no account in this institution is not counted. A count of one can still point at ' +
-  'somebody, so treat a small number as you would a name.';
-
 export const SSO_NOTICE =
   'Domain identity is what exists: prove you control the domain, and an account whose address is ' +
   'at it may ask to join. Single sign-on is not connected — SAML and OIDC need an identity ' +
@@ -424,16 +413,25 @@ export function safeLogoUrl(value: string | null): string | null {
   }
 }
 
-/** The report as a CSV the institution can open in a spreadsheet. */
+/**
+ * The report as a CSV the institution can open in a spreadsheet.
+ *
+ * **A course title is data, never a formula.** A teacher typed it, and Excel
+ * and Sheets run a cell that starts with `=`, `+`, `-`, `@`, a tab or a
+ * carriage return. Such a title gets an apostrophe in front, which those
+ * applications read as "this is text" and do not show: the same rule as
+ * `lib/csv.ts`, which this file was written before.
+ */
 export function reportCsv(report: InstitutionReport): string {
   const rows: string[] = [];
+  const cell = (value: string | number): string => {
+    const text = String(value);
+    const safe = /^[=+\-@\t\r]/u.test(text) ? `'${text}` : text;
+    return `"${safe.replace(/"/g, '""')}"`;
+  };
   rows.push('"Course","Learner profiles","Enrolments","Completions"');
   for (const row of report.courses) {
-    rows.push(
-      [row.course, row.learnerProfiles, row.enrolments, row.completions]
-        .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
-        .join(','),
-    );
+    rows.push([row.course, row.learnerProfiles, row.enrolments, row.completions].map(cell).join(','));
   }
   rows.push('');
   rows.push('"Month","Enrolments"');

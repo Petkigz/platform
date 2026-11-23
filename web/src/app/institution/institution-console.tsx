@@ -5,34 +5,31 @@ import { useRouter } from 'next/navigation';
 
 import {
   ACCENTS,
-  REPORT_NOTICE,
   SSO_NOTICE,
   describeDomainStatus,
   dnsRecord,
-  reportCsv,
   safeLogoUrl,
-  type InstitutionReport,
   type MyInstitution,
 } from '@/lib/institution';
 
 /**
- * The institution console.
+ * The fields an institution's administrators fill in.
  *
- * One page, four cards, each behind its own switch — and each card says what it
- * cannot do. The branding card says there is no colour picker and no upload. The
- * domain card says a claim is not a verified domain and that staff check the
- * record. The key card shows the secret once and then cannot show it again. The
- * report card says it is counts, not records.
+ * Three cards, each behind its own switch, and each says what it cannot do.
+ * The branding card says there is no colour picker and no upload. The domain
+ * card says a claim is not a verified domain and that staff check the record.
+ * The key card shows the secret once and then cannot show it again.
+ *
+ * **Administrators only, and in English for now.** The page draws this only
+ * for an administrator, inside a block marked as English, under a sentence in
+ * the reader's language that says so. What every member meets (joining, the
+ * counts, leaving) is on the page itself, in their language.
+ *
+ * The domain card used to be drawn for every member. `my_institution()`
+ * gives a member no domains at all, so the card told them "No domain has
+ * been claimed" about an institution whose domain they had just joined by.
  */
-export function InstitutionConsole({
-  board,
-  report,
-  window,
-}: {
-  board: MyInstitution;
-  report: InstitutionReport | null;
-  window: { from: string; to: string };
-}) {
+export function InstitutionConsole({ board }: { board: MyInstitution }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [busy, setBusy] = useState<string | null>(null);
@@ -75,17 +72,6 @@ export function InstitutionConsole({
     } finally {
       setBusy(null);
     }
-  }
-
-  function downloadCsv() {
-    if (!report) return;
-    const blob = new Blob([reportCsv(report)], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `institution-report-${window.from}-to-${window.to}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
   }
 
   return (
@@ -178,43 +164,41 @@ export function InstitutionConsole({
         </section>
       )}
 
-      {board.flags.sso && (
+      {board.flags.sso && isAdmin && (
         <section className="card">
           <h2 style={{ marginTop: 0 }}>Your domain</h2>
           <p className="muted">{SSO_NOTICE}</p>
 
-          {isAdmin && (
-            <div className="row" style={{ gap: '0.5rem', flexWrap: 'wrap' }}>
-              <label htmlFor="claim-domain" className="eyebrow" style={{ alignSelf: 'center' }}>
-                Domain
-              </label>
-              <input
-                id="claim-domain"
-                value={domain}
-                onChange={(event) => setDomain(event.target.value)}
-                placeholder="school.example"
-                disabled={busy === 'claim' || pending}
-                style={{ flex: '1 1 16rem' }}
-              />
-              <button
-                type="button"
-                className="btn secondary"
-                disabled={busy === 'claim' || pending || domain.trim() === ''}
-                onClick={async () => {
-                  const out = await call({ action: 'claim', domain }, 'claim');
-                  if (out) {
-                    setDone(
-                      'Claimed. Publish the TXT record below, and a staff member will check it. ' +
-                        'Until they do, nobody can join by this domain.',
-                    );
-                    setDomain('');
-                  }
-                }}
-              >
-                {busy === 'claim' ? 'Claiming…' : 'Claim this domain'}
-              </button>
-            </div>
-          )}
+          <div className="row" style={{ gap: '0.5rem', flexWrap: 'wrap' }}>
+            <label htmlFor="claim-domain" className="eyebrow" style={{ alignSelf: 'center' }}>
+              Domain
+            </label>
+            <input
+              id="claim-domain"
+              value={domain}
+              onChange={(event) => setDomain(event.target.value)}
+              placeholder="school.example"
+              disabled={busy === 'claim' || pending}
+              style={{ flex: '1 1 16rem' }}
+            />
+            <button
+              type="button"
+              className="btn secondary"
+              disabled={busy === 'claim' || pending || domain.trim() === ''}
+              onClick={async () => {
+                const out = await call({ action: 'claim', domain }, 'claim');
+                if (out) {
+                  setDone(
+                    'Claimed. Publish the TXT record below, and a staff member will check it. ' +
+                      'Until they do, nobody can join by this domain.',
+                  );
+                  setDomain('');
+                }
+              }}
+            >
+              {busy === 'claim' ? 'Claiming…' : 'Claim this domain'}
+            </button>
+          </div>
 
           {board.domains.length === 0 ? (
             <p className="muted">No domain has been claimed.</p>
@@ -240,88 +224,6 @@ export function InstitutionConsole({
                 </div>
               ))}
             </div>
-          )}
-        </section>
-      )}
-
-      {board.flags.reporting && (
-        <section className="card">
-          <h2 style={{ marginTop: 0 }}>What your people studied</h2>
-          <p className="muted">{REPORT_NOTICE}</p>
-
-          <form method="get" className="row" style={{ gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
-            <label htmlFor="from" className="eyebrow" style={{ alignSelf: 'center' }}>
-              From
-            </label>
-            <input id="from" name="from" type="date" defaultValue={window.from} />
-            <label htmlFor="to" className="eyebrow" style={{ alignSelf: 'center' }}>
-              To
-            </label>
-            <input id="to" name="to" type="date" defaultValue={window.to} />
-            <button type="submit" className="btn secondary">
-              Read this window
-            </button>
-            {report && (
-              <button type="button" className="btn ghost" onClick={downloadCsv}>
-                Download as CSV
-              </button>
-            )}
-          </form>
-
-          {report ? (
-            <>
-              <div className="stats">
-                <div>
-                  <div className="n">{report.totals.members}</div>
-                  <div className="l">accounts joined</div>
-                </div>
-                <div>
-                  <div className="n">{report.totals.learners}</div>
-                  <div className="l">learner profiles</div>
-                </div>
-                <div>
-                  <div className="n">{report.totals.enrolments}</div>
-                  <div className="l">enrolments</div>
-                </div>
-                <div>
-                  <div className="n">{report.totals.completions}</div>
-                  <div className="l">completed</div>
-                </div>
-                <div>
-                  <div className="n">{report.totals.certificates}</div>
-                  <div className="l">certificates</div>
-                </div>
-              </div>
-
-              {report.courses.length === 0 ? (
-                <p className="empty">Nothing was enrolled in this window.</p>
-              ) : (
-                <div className="scroll-x">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Course</th>
-                        <th>Learner profiles</th>
-                        <th>Enrolments</th>
-                        <th>Completed</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {report.courses.map((row) => (
-                        <tr key={row.course}>
-                          <td>{row.course}</td>
-                          <td>{row.learnerProfiles}</td>
-                          <td>{row.enrolments}</td>
-                          <td>{row.completions}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </>
-          ) : (
-            <p className="muted">The report could not be read. Nothing was changed.</p>
           )}
         </section>
       )}
@@ -427,32 +329,6 @@ export function InstitutionConsole({
           )}
         </section>
       )}
-
-      {!isAdmin && (
-        <p className="muted">
-          You are a member of this institution. Its administrators manage the branding, the domain
-          and the keys; you can read where you belong and leave at any time.
-        </p>
-      )}
-
-      <section className="card">
-        <h2 style={{ marginTop: 0 }}>Leaving</h2>
-        <p className="muted">
-          Leaving ends your membership. It does not delete your account or anything you have
-          learned — your courses stay in your own account.
-        </p>
-        <button
-          type="button"
-          className="btn secondary"
-          disabled={busy === 'leave' || pending}
-          onClick={async () => {
-            const out = await call({ action: 'leave' }, 'leave');
-            if (out) setDone('You have left. Your learning is untouched.');
-          }}
-        >
-          {busy === 'leave' ? 'Leaving…' : 'Leave this institution'}
-        </button>
-      </section>
     </div>
   );
 }

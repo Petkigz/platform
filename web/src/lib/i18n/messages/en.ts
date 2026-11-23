@@ -2399,6 +2399,67 @@ export const en = {
   'policy.agreeFailed': 'Your agreement could not be recorded. Nothing was changed.',
   'policy.agreeUnsure':
     'We could not confirm that your agreement was recorded. Open this page again to see.',
+
+  // The institution page a member opens, joining and leaving, and the counts
+  // (`inst.ts`), for the same twenty-seven languages as the dashboard,
+  // 2026-11-23. The fields an administrator fills in are not here: they are
+  // in English for now and the page says so above them.
+  'inst.title': 'Institutions',
+  'inst.yours': 'Your institution',
+  'inst.unread':
+    'Your institution could not be read just now. This does not mean you are not in one. Try again in a moment.',
+  'inst.notIn': 'You are not in an institution',
+  'inst.canJoin':
+    'Your email address is at a domain that an institution has shown is its own, so you may join it. Nothing happens by itself: you join by pressing the button.',
+  'inst.joinMeans':
+    'Joining adds you and the learners in your family to that institution’s numbers: how many of its people enrolled in each course and how many finished. Its members are shown those numbers. No name is shown. A small number can still point at somebody.',
+  'inst.joinDo': 'Join this institution',
+  'inst.joinClosed':
+    'Joining an institution with an email address is not open at the moment. An institution’s administrators are named by the platform.',
+  'inst.noMatch':
+    'No institution has a checked email domain that matches your address. If your school or madrasah should be here, ask its administrator.',
+  'inst.haveCode': 'Do you have a code from a school? It is used on another page.',
+  'inst.useCode': 'Use a code',
+  'inst.memberNote':
+    'You are a member of this institution. Its administrators manage it. You can leave at any time.',
+  'inst.joinedOn': 'You joined on: {date}',
+  'inst.reportTitle': 'What its people studied',
+  'inst.reportWhat':
+    'These are numbers, not records. They count the accounts that joined, the learners in those accounts’ families, the courses those learners enrolled in between the two dates, the courses finished and the certificates issued. No name and no email address is shown. A learner with no account in this institution is not counted. A number as small as one can still point at somebody, so treat a small number as you would a name.',
+  'inst.from': 'From',
+  'inst.to': 'To',
+  'inst.readDo': 'Show these dates',
+  'inst.csvDo': 'Download as a file',
+  'inst.statAccounts': 'Accounts that joined: {count}',
+  'inst.statLearners': 'Learners in their families: {count}',
+  'inst.statEnrolments': 'Enrolments between the two dates: {count}',
+  'inst.statFinished': 'Courses finished between the two dates: {count}',
+  'inst.statCertificates': 'Certificates issued between the two dates: {count}',
+  'inst.byCourse': 'By course',
+  'inst.colCourse': 'Course',
+  'inst.colLearners': 'Learners',
+  'inst.colEnrolments': 'Enrolments',
+  'inst.colFinished': 'Finished',
+  'inst.noneEnrolled': 'Nobody enrolled in anything between these dates.',
+  'inst.reportUnread':
+    'The numbers could not be read just now. This does not mean there are none. Try again in a moment.',
+  'inst.badWindow': 'Choose a start date that is not after the end date.',
+  'inst.windowTooLong': 'Choose two dates no more than two years apart.',
+  'inst.leaveTitle': 'Leaving',
+  'inst.leaveBody':
+    'Leaving ends your membership, and you and your family are no longer counted in its numbers. It does not delete your account or anything you have learned.',
+  'inst.leaveDo': 'Leave this institution',
+  'inst.whyLastAdmin':
+    'You are its only administrator. Somebody else has to be made an administrator before you can leave.',
+  'inst.whyAlready': 'You already belong to an institution.',
+  'inst.whyNoMatch': 'No checked email domain matches your address, so you were not joined.',
+  'inst.whyNotMember': 'You are not a member of an institution.',
+  'inst.failed': 'That could not be done. Nothing was changed.',
+  'inst.unsure': 'We could not confirm that this was done. Open this page again to see.',
+  'inst.adminEnglish':
+    'The parts below are for this institution’s administrators and are in English for now.',
+  'inst.csvNote': 'The headings inside the file are in English.',
+  'inst.whySignedOut': 'You are signed out. Sign in and try again.',
 } as const;
 
 export type MessageKey = keyof typeof en;

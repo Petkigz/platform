@@ -1585,6 +1585,39 @@ textarea { resize: vertical; min-height: 4rem; }
 .policy-kept, .policy-concern { margin-top: 1.5rem; }
 .policy-ways { margin-top: 1rem; }
 
+/* The institution page (`app/institution/`). The cards stack with a gap, a
+   refusal sits under the button that was refused at the full width, and the
+   two dates and their button wrap rather than push a phone sideways. */
+.inst-page > .notice, .inst-page > .inst-card { margin-bottom: 1.25rem; }
+.inst-card > h2 { margin: 0 0 0.5rem; font-size: 1.2rem; overflow-wrap: anywhere; }
+.inst-card > h3 { margin: 1.25rem 0 0.5rem; font-size: 1.05rem; }
+.inst-card > p { margin: 0 0 0.75rem; overflow-wrap: anywhere; }
+.inst-logo { max-height: 56px; max-width: 100%; margin-bottom: 0.5rem; }
+.inst-facts, .inst-totals { list-style: none; margin: 0 0 1.25rem; padding: 0; display: grid; gap: 0.3rem; overflow-wrap: anywhere; }
+.inst-facts { color: var(--text-soft); }
+.inst-facts:empty { display: none; }
+.inst-totals { margin: 1rem 0 0; }
+.inst-dates { display: grid; gap: 0.35rem; max-width: 24rem; margin: 0 0 1rem; }
+.inst-dates label { font-weight: 600; }
+.inst-dates input { margin-bottom: 0.4rem; }
+.inst-ask, .inst-file { display: grid; gap: 0.6rem; justify-items: start; }
+.inst-ask > .notice { justify-self: stretch; }
+.inst-file { margin-top: 1rem; }
+.inst-file > p { margin: 0; }
+.inst-code { margin-top: 1.25rem; }
+.inst-english { margin: 0 0 0.75rem; }
+.inst-admin { margin-bottom: 1.25rem; }
+/* The administrator's cards were wider than a phone: a grid column grows to
+   its widest item, and an address in a sentence and a status badge had no
+   place to break. */
+.inst-admin .stack { grid-template-columns: minmax(0, 1fr); }
+.inst-admin .outline-h { flex-wrap: wrap; }
+.inst-admin code, .inst-admin .badge, .inst-admin strong { overflow-wrap: anywhere; white-space: normal; }
+/* A course keeps a readable column and the table scrolls inside its own box;
+   a title with no place to break wraps rather than making that box a mile wide. */
+.inst-page .scroll-x th, .inst-page .scroll-x td { text-align: start; padding: 0.3rem 0.6rem; vertical-align: top; }
+.inst-page th[scope='row'] { font-weight: 400; min-width: 10rem; overflow-wrap: anywhere; }
+
 /* The notification centre (`app/notifications/`). Stacked lines, not a table:
    a message is a kind, the stored text, and when. */
 .told-page > .notice { margin-bottom: 1.5rem; }

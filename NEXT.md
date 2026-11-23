@@ -2619,6 +2619,54 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The institution page in the reader's language, 2026-11-23
+
+- *The words.* Forty-five sentences in a new part, `messages/inst.ts`,
+  twenty-seven languages, **read by no speaker** (`tmp-words/u31`).
+- *The page.* `app/institution/page.tsx` reads and draws everything a member
+  sees: joining, the name and when they joined, the counts, the table by
+  course, leaving. `reader.ts` chooses the language and builds the buttons'
+  words; `join-button.tsx` is both buttons; `report-file.tsx` makes the file
+  from what the page drew. `institution-console.tsx` is now only the three
+  cards an administrator fills in, in English. See `DECISIONS.md`.
+- *Rules a test holds.* `lib/institution-outcome.ts` + test (15): every
+  `raise exception` in the newest `join_institution` and
+  `leave_institution`, read out of the migrations, has a name; each name has
+  a status; the 731-day limit and the family rule are the database's; the
+  route sends none of the database's sentences for joining or leaving; the
+  page throws on no read and prints no database text; neither button imports
+  the database client or a catalogue.
+- *Found on the way.* (1) A failed read printed the database's own message
+  on the page. (2) The sentence before the join button said nothing about
+  your learning is shared beyond the counts; joining is what adds you and
+  your family to them. (3) The route answered joining and leaving with one
+  sentence for every refusal it did not know, at 400. (4) A report that
+  could not be read and a start date after the end date were the same
+  English line. (5) A course title starting with `=`, `+`, `-` or `@` went
+  into the file as a formula. (6) "Leave at any time" was said to the only
+  administrator, who cannot. (7) At 320 wide the administrator's cards were
+  wider than the screen: a grid column grew to its longest unbreakable
+  address. (8) `REPORT_NOTICE`, an English sentence "every screen and the
+  API documentation" was to share, was used by this page only; it is
+  removed, and the sentence is `inst.reportWhat`.
+- *Checked.* `scripts/institution-route-smoke.mjs` in `ci.yml` and, with a
+  browser, in `responsive-smoke.yml`.
+- *Not shown.* Anything from a real database: the stand-in answers what it
+  is asked, and every institution, course and number in it is invented. That
+  a member is given no domains or keys is `my_institution()`'s code
+  (`supabase/tests/institutions.test.mjs` is where it is run), not something
+  this page was seen to enforce. The administrator's cards being pressed.
+  Twenty-four languages in a browser; Tamil was drawn but this sandbox has no
+  Tamil font, so only its layout was seen.
+- *Not built.* The administrator's cards in any language but English.
+  `/institution/claim` and `/institution/seats`, which this page links to and
+  which are still English. A translated file. Enrolments by month on the
+  page: the database returns them and the file has them, and the page has
+  never drawn them.
+- *Counts.* 1814 keys; server-only 1446; unwritten while held 1542; held
+  192 of 1814, 10.58%, shown as 11%. 133 page routes, no new route handler;
+  32 smoke scripts. The translation audit stayed at 195 of 200.
+
 ### The policy pages in the reader's language, 2026-11-23
 
 - *The words.* Thirty-three sentences in a new part, `messages/policy.ts`,

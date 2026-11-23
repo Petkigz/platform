@@ -302,6 +302,7 @@ const SECTION_LABELS: Record<string, string> = {
   plans: 'Plans',
   subs: 'Your plans',
   policy: 'Policies and terms',
+  inst: 'Your institution',
 };
 
 export const SECTIONS: Section[] = (() => {

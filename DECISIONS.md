@@ -8765,6 +8765,53 @@ read 12%.
 sentence nobody prints; the receipt, which every line links to and which is
 still English.
 
+## What a member reads on the institution page, and what stays English — **DECIDED 2026-11-23**
+
+`/institution` was an English page that printed the database's own sentence
+when a read failed. The half a member reads is now in the reader's language:
+forty-five sentences in a part of their own, `inst`; the nineteen held
+languages still read 11%. None of this was asked for by name; it is the
+builder's reading of what the database does, and can be changed.
+
+- *The administrator's cards stay English, and the page says so.* How it
+  looks, the domain and the keys are filled in by one or two people per
+  institution, in fields whose answers the staff desk reads in English. They
+  are drawn only for an administrator, marked as English and left to right,
+  under one sentence in the reader's language saying that they are. A member
+  never sees them. Translating them is a unit of its own and was not started.
+- *Joining says what it does before the button.* The page used to say that
+  nothing about your learning is shared beyond the counts the institution
+  already sees. Joining is what puts you **and the learners in your family**
+  into those counts (`institution_report_data` counts the profiles linked to
+  a member's account and the profiles in the families that account belongs
+  to; a test reads that out of the migration). The sentence now says so, and
+  that a small number can point at one person.
+- *"Could not be read" is not "you are not in an institution".* A session
+  that could not be checked sends the reader to sign in; a board that could
+  not be read is said as that, at 200, with no button. The report is read
+  apart from the board, so counts that could not be read are a sentence and
+  never noughts.
+- *Joining and leaving are answered by name.* `lib/institution-outcome.ts`
+  names what `join_institution()` and `leave_institution()` raise, with a
+  status each: `not_signed_in` 401, `no_verified_domain` 403,
+  `already_joined`, `not_a_member` and `last_admin` 409, anything unnamed
+  500, no answer 502. The route sends the name and an English sentence; the
+  page says it in the reader's language. The other actions on that route
+  (branding, domains, keys) answer as before, for the English screens that
+  call them.
+- *Two dates the database would refuse are refused before it is asked.* A
+  start after the end, and more than 731 days, are named on the page; a test
+  holds 731 to the number in `institution_report`. A date that is not a day
+  is ignored and the default stands: the 365 days ending today, by the
+  server's UTC day.
+- *"You can leave at any time" is said to a member, not to an administrator.*
+  The only administrator cannot leave, and is told why when they try.
+- *The time of joining is printed on a named clock, UTC.* The page does not
+  know the reader's time zone, and a time with no zone on it is a guess.
+- *The file's headings are English and the page says so.* The same file goes
+  to whoever the institution reports to. A course title that starts like a
+  formula is written as text in it; it was not before.
+
 ## What the policy pages translate, and what agreeing is checked against — **DECIDED 2026-11-23**
 
 `/policies` and `/policies/[slug]` were English pages; the second threw when
