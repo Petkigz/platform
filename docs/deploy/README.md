@@ -19,7 +19,8 @@ no card is required. No alternative commercial host has been proven to run this 
 The owner has not approved paid services.
 
 **Cloudflare Workers feasibility probe (local only):** An isolated copy used
-OpenNext Cloudflare 1.20.12, Wrangler 4.162.0 and this app's Next.js 16.4.2.
+OpenNext Cloudflare 1.20.12, Wrangler 4.162.0 and Next.js 16.4.2, which the
+app was pinned to at the time (it is on 16.4.5 since 2026-11-23).
 In the sandbox, Next's production build compiled, but adapter bundling did not
 complete within three minutes and exited 137 after an attempted stop; the cause
 is not established. Subsequently, GitHub Actions run `43692527936` completed the
@@ -38,7 +39,7 @@ resolve applicable advisories before adopting them. An older compatible adapter,
 added to the application. See [OpenNext's setup and limitations](https://opennext.js.org/cloudflare/get-started)
 and check current versions, free-plan limits and terms before another experiment.
 A second isolated probe, GitHub Actions run `43692993427`, used Next 16.4.5
-instead of the app's pinned 16.4.2 to satisfy OpenNext Cloudflare 1.20.17,
+instead of the app's then-pinned 16.4.2 to satisfy OpenNext Cloudflare 1.20.17,
 with Wrangler 4.162.0. Its local build, Wrangler `deploy --dry-run` (no upload),
 and the same local runtime smoke passed. Follow-up run `43694107734` also loaded
 an emitted static asset and verified that `/admin`, `/learn` and the prayer page

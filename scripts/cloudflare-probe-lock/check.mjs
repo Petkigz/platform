@@ -10,7 +10,10 @@ const candidateWeb = read('scripts/cloudflare-probe-lock/web-package.json');
 assert.deepEqual(candidateRoot.overrides, { '@opennextjs/cloudflare': { glob: '14.0.6' } });
 delete candidateRoot.overrides;
 assert.deepEqual(candidateRoot, root, 'root manifest differs beyond the reviewed probe override');
-assert.equal(web.dependencies.next, '16.4.2', 'revisit the experimental Next version when the app changes');
+// The app moved to the probe's version on 2026-11-23, when 16.0.0–16.4.4 was
+// reported as affected by seven advisories. The two are the same now, and
+// this still fails when either moves without the other being looked at.
+assert.equal(web.dependencies.next, '16.4.5', 'revisit the experimental Next version when the app changes');
 assert.equal(candidateWeb.dependencies.next, '16.4.5');
 assert.equal(candidateWeb.devDependencies['@opennextjs/cloudflare'], '1.20.17');
 assert.equal(candidateWeb.devDependencies.wrangler, '4.162.0');

@@ -2619,6 +2619,26 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### Next.js 16.4.2 → 16.4.5, 2026-11-23
+
+- *Why.* The development server's own overlay reported it in a screenshot of
+  the receipt: `npm audit` lists seven moderate advisories against Next
+  16.0.0–16.4.4. Four are about `use cache` and Cache Components, which this
+  app does not use. **Whether the other three could be reached here was not
+  worked out** (an image-optimiser bypass, a cookie exposed on Edge routes,
+  and response mix-up when a self-hosted app forwards fetched responses);
+  the app was moved off the affected range instead.
+- *Why 16.4.5 and not 16.4.6.* It is the version the Cloudflare probe's own
+  lock file already builds and was run with against OpenNext 1.20.17, so the
+  app and the probe are on one version and the probe's lock is untouched.
+  16.4.6 is newer and is not known here to work with that adapter.
+- *Checked.* The lock file changed only in `next`, `@next/env` and the
+  `@next/swc-*` builds. `npm audit`: 0. Type check, 2550 web tests, a
+  production build, the bundle check and six route smokes with a browser
+  passed locally. **Not checked:** the old preview Worker, which was built
+  from an earlier commit and still runs the old version until it is deleted
+  or rebuilt.
+
 ### The receipt in the reader's language, 2026-11-23
 
 - *The words.* Eighteen sentences in a new part, `messages/receipt.ts`,
