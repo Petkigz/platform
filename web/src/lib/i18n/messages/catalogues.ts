@@ -41,6 +41,7 @@ import { RECEIPT } from './receipt.ts';
 import { NOTIFY } from './notify.ts';
 import { PLANS } from './plans.ts';
 import { SUBS } from './subs.ts';
+import { POLICY } from './policy.ts';
 import { LESSON } from './lesson.ts';
 import { isHeld } from './held.ts';
 import { ASIA_AZ } from './asia-az.ts';
@@ -878,6 +879,8 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   NOTIFY,
   PLANS,
   SUBS,
+  // The policy register and one document's page, on the same rule.
+  POLICY,
 );
 
 /**

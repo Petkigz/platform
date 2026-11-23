@@ -1564,6 +1564,27 @@ textarea { resize: vertical; min-height: 4rem; }
 .sub-cancel > .sub-form { margin-top: 0.5rem; }
 .sub-ways { margin-top: 1.5rem; }
 
+/* The policy register and one document (`app/policies/`). A column for
+   reading: the text is the owner's, so it keeps its own direction, and a
+   long word or an address in it wraps instead of widening the page. */
+.policy-page > .notice { margin-bottom: 1.25rem; }
+.policy-list { list-style: none; margin: 1.25rem 0 0; padding: 0; display: grid; gap: 1rem; }
+.policy-card h2 { margin: 0 0 0.3rem; font-size: 1.2rem; overflow-wrap: anywhere; }
+.policy-card > p { margin: 0 0 0.6rem; overflow-wrap: anywhere; }
+.policy-facts { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.2rem; font-size: 0.95rem; color: var(--text-soft); overflow-wrap: anywhere; }
+.policy-page > .policy-facts { margin-bottom: 0.9rem; }
+.policy-change, .policy-as-written { margin: 0 0 0.6rem; overflow-wrap: anywhere; }
+.policy-body { margin-top: 1.5rem; overflow-wrap: anywhere; }
+.policy-body h2 { margin: 2rem 0 0; font-size: 1.25rem; }
+.policy-body p { margin: 0.75rem 0 0; white-space: pre-line; }
+.policy-agree { margin-top: 2rem; display: grid; gap: 0.6rem; }
+.policy-agree h2, .policy-agree p { margin: 0; overflow-wrap: anywhere; }
+.policy-accept { display: grid; gap: 0.6rem; justify-items: start; }
+.policy-accept > .notice { justify-self: stretch; }
+.policy-agreed { font-weight: 600; }
+.policy-kept, .policy-concern { margin-top: 1.5rem; }
+.policy-ways { margin-top: 1rem; }
+
 /* The notification centre (`app/notifications/`). Stacked lines, not a table:
    a message is a kind, the stored text, and when. */
 .told-page > .notice { margin-bottom: 1.5rem; }

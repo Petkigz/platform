@@ -8765,6 +8765,71 @@ read 12%.
 sentence nobody prints; the receipt, which every line links to and which is
 still English.
 
+## What the policy pages translate, and what agreeing is checked against — **DECIDED 2026-11-23**
+
+`/policies` and `/policies/[slug]` were English pages; the second threw when
+a read failed, and its button called the database from the browser. They are
+now in the reader's language: thirty-three sentences in a part of their own,
+`policy`; the nineteen held languages still read 11%. None of this was asked
+for by name; it is the builder's reading of what the database does, and can
+be changed.
+
+- *The document is not translated, and the page says so.* A policy's title,
+  summary, change note and text are typed by the owner in English. They are
+  shown as written and marked as English on every page, and a page in another
+  language says above the text that the document is shown in the language it
+  was written in. What somebody agrees to is that text. A translation nobody
+  approved would be a different text with the same button under it. **This
+  means a reader who has no English is asked to agree to something they
+  cannot read.** That is true of the documents, not of this page, and it is
+  the owner's to decide: publish translations as documents of their own, or
+  say which language governs.
+- *Agreeing is checked against the version the page showed.*
+  `accept_policy(p_slug)` agrees to whatever version is live at the instant
+  it runs. Its comment explains why it takes no version id: a client could
+  name a retired one. But it also means a page left open while the owner
+  publishes records an agreement to a text the reader never saw. The button
+  now sends the version number it was showing to `POST /api/policies`; the
+  route reads the live version, and a different number is `changed` at 409
+  with the writer not asked. The button says the document changed and reads
+  the page again.
+- *One gap is left, and it is said rather than hidden.* Between the route's
+  read and the writer's insert the owner can still publish. The writer's
+  reply names the version it recorded, so when that is not the one on the
+  page the button says a newer version was published while the page was open
+  and the agreement was recorded for that one, and keeps saying it after the
+  page has been read again. **Closing the gap needs `accept_policy()` to take
+  the expected version number and refuse inside its own transaction. That is
+  a migration, so it was not done here.**
+- *A refusal has a name; the database's sentence goes to the log.* The writer
+  raises three sentences (`policy:not_signed_in`, `policy:not_found`,
+  `policy:not_in_force`); with `malformed`, `changed`, `refused` and
+  `unconfirmed` that is seven reasons, each with a status
+  (`lib/policy-outcome.ts`). A test reads the `raise exception` lines out of
+  the newest `accept_policy` and `my_policy_standing` and requires each to
+  have a name. The old button printed the database's own text whenever it did
+  not recognise it. Gone, no live version and changed are one sentence to the
+  reader, because what they do next is the same.
+- *A second press is not a failure.* The writer answers a repeat with the
+  time of the first; the route says `ok` with `changed: false`.
+- *Not read is said.* Either read of the register failing, or the document or
+  its live text, is one sentence at status 200 that says it does not mean
+  there are no policies. Whether this reader has already agreed is a lesser
+  read: without it the button is still offered, because pressing twice does
+  no harm, and nothing is said about how many documents wait.
+- *A day is printed as a day.* `effective_at` is a `date`. It is printed
+  through a new `formatDay`, which reads the year, month and day as written
+  and puts no clock and no zone on them. The time somebody agreed is a
+  moment and is printed in UTC, named.
+- *The heading is the link's words.* The page is called what the footer link
+  to it is called (`footer.terms`), so no reader follows "Terms and privacy"
+  to a page called something else.
+- *Dropped from the old pages.* "No summary yet." (a document with no summary
+  now has no summary line); the sentence that an account is governed "by what
+  the screens actually do" until a document is approved (it claimed a legal
+  position nobody decided); the button's sentence built from the title in
+  lower case; a link to an anchor that was not on the page.
+
 ## What an account's plans page says, and what cancelling is — **DECIDED 2026-11-23**
 
 `/subscriptions` was one English page that printed each subscription's stored

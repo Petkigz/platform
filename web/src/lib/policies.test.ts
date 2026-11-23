@@ -2,9 +2,8 @@ import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
 
 import {
-  acceptanceLabel,
   approvalProblem,
-  audienceLabel,
+  audienceOf,
   bodyBlocks,
   canPublish,
   decisionCount,
@@ -21,14 +20,15 @@ import {
   type RegisterDocument,
 } from './policies.ts';
 
-test('an audience reads as a sentence, not as a database value', () => {
-  assert.equal(audienceLabel('everyone'), 'Everyone');
-  assert.equal(audienceLabel('child'), 'Children and their guardians');
-  assert.equal(audienceLabel('teacher'), 'Teachers');
-  assert.equal(audienceLabel('institution'), 'Institutions');
+test('an audience is one of four names, and never nobody', () => {
+  assert.equal(audienceOf('everyone'), 'everyone');
+  assert.equal(audienceOf('child'), 'child');
+  assert.equal(audienceOf('teacher'), 'teacher');
+  assert.equal(audienceOf('institution'), 'institution');
   // A value nobody planned for falls back rather than printing `undefined`.
-  assert.equal(audienceLabel('guardian'), 'Everyone');
-  assert.equal(audienceLabel(null), 'Everyone');
+  assert.equal(audienceOf('guardian'), 'everyone');
+  assert.equal(audienceOf(null), 'everyone');
+  assert.equal(audienceOf(undefined), 'everyone');
 });
 
 test('only a live version makes a document in force', () => {
@@ -45,12 +45,6 @@ test('a document with no live version says so, rather than showing a version', (
   assert.equal(statusNote({ versionNumber: 1, effectiveAt: '2026-11-01T00:00:00' }),
     'Version 1, in force from 2026-11-01');
   assert.equal(liveLine({ versionNumber: 3, effectiveAt: null }), 'Version 3, in force');
-});
-
-test('an accepted document shows when it was agreed, not a button', () => {
-  assert.equal(acceptanceLabel(null), 'Agree to this version');
-  assert.equal(acceptanceLabel(undefined), 'Agree to this version');
-  assert.equal(acceptanceLabel('2026-10-27T09:14:00+00:00'), 'Agreed on 2026-10-27');
 });
 
 test('open decisions are counted the way the database counts them', () => {

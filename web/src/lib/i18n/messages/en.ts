@@ -2350,6 +2350,55 @@ export const en = {
   'subs.failed': 'That could not be done. Nothing was changed.',
   'subs.unsure':
     'We could not confirm that this was done. Look at this page again before trying once more.',
+
+  // The policy register, one document's page and the button that records an
+  // agreement (`policy.ts`), for the same twenty-seven languages as the
+  // dashboard, 2026-11-23. These are the words round a document. The
+  // document itself is the owner's, in the language it was written in.
+  'policy.lede':
+    'What you agree to when you learn or teach here, what is done with your data, and what happens when something goes wrong.',
+  'policy.kept':
+    'Every version of a document is kept. A change is a new version that takes effect on a date, never an edit to an old one, and where it needs your agreement you are asked again.',
+  'policy.unread':
+    'The policies could not be read just now. This does not mean there are none. Try again in a moment.',
+  'policy.none': 'No policy has been written yet.',
+  'policy.noneLead': 'None of these is in force yet.',
+  'policy.noneBody':
+    'A document is published only when the owner of the platform has answered the questions in it that only they can answer, such as which law applies and who is responsible for your data. Until then it is not in force, and a draft is not shown.',
+  'policy.inForceCount': 'Documents in force: {count}',
+  'policy.othersDraft': 'The others are written and not yet approved.',
+  'policy.forEveryone': 'For everyone',
+  'policy.forChild': 'For children and their guardians',
+  'policy.forTeacher': 'For teachers',
+  'policy.forInstitution': 'For institutions',
+  'policy.notYet': 'Not in force yet',
+  'policy.versionNo': 'Version: {number}',
+  'policy.inForceFrom': 'In force from: {date}',
+  'policy.mustAgree': 'You will be asked to agree to it, and the time you agree is kept.',
+  'policy.noSign': 'It is for reading. There is nothing to agree to.',
+  'policy.concern':
+    'A concern about how somebody behaved, or about a child’s safety, is not a question about a policy. It goes to a person.',
+  'policy.draftBody':
+    'This document is written, but no version of it has been approved, so there is nothing here to read or to agree to. A draft is not shown, because it can still change. Nothing here asks for your agreement until a version is approved.',
+  'policy.changed': 'What changed in this version: {note}',
+  'policy.asWritten': 'The document is shown in the language it was written in.',
+  'policy.agreeTitle': 'Your agreement',
+  'policy.agreeSignIn':
+    'This document asks for your agreement, and the time you give it is kept with your account. Sign in first.',
+  'policy.agreeSignInDo': 'Sign in to agree',
+  'policy.agreeNote':
+    'Agreeing records that you have read this version and accept it. The version and the time are kept with your account.',
+  'policy.agreeDo': 'Agree to this version',
+  'policy.agreed': 'You agreed to this version on: {date}',
+  'policy.agreedWhere': 'What you have agreed to is listed on your account page.',
+  'policy.agreedNewer':
+    'A newer version was published while this page was open, and your agreement was recorded for that one. This page now shows it. Read it.',
+  'policy.waitingCount': 'Documents waiting for your agreement: {count}',
+  'policy.whyChanged':
+    'This document changed after this page was opened, so nothing was recorded. Read it again before you agree.',
+  'policy.agreeFailed': 'Your agreement could not be recorded. Nothing was changed.',
+  'policy.agreeUnsure':
+    'We could not confirm that your agreement was recorded. Open this page again to see.',
 } as const;
 
 export type MessageKey = keyof typeof en;

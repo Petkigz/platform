@@ -482,7 +482,7 @@ try {
     // the learner's own screens (dashboard, course, lesson, assessment,
     // assignment, wrong-address, broken-page, player, account, family, buy,
     // closing, a copy of your data, reading, putting a copy back, phone,
-    // merge, sharing, inviting a friend, sponsored seats, my orders, what you have paid, the receipt, notifications, plans and the plans an account has) were never
+    // merge, sharing, inviting a friend, sponsored seats, my orders, what you have paid, the receipt, notifications, plans, the plans an account has and the policy pages) were never
     // written for a held
     // language
     // (`UNWRITTEN_WHILE_HELD`).

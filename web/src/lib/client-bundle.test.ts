@@ -130,9 +130,10 @@ test('no client component imports the server Supabase client or the service key'
 test('the functions a client may use to format are in a file with no catalogue behind it', () => {
   const format = readFileSync(join(src, 'lib', 'i18n', 'format.ts'), 'utf8');
   assert.deepEqual(runtimeImports(join(src, 'lib', 'i18n', 'format.ts')), []);
-  for (const name of ['fill', 'pluralForm', 'formatNumber', 'formatPercent', 'formatDateTime']) {
+  for (const name of ['fill', 'pluralForm', 'formatNumber', 'formatPercent', 'formatDateTime', 'formatDay']) {
     assert.match(format, new RegExp(`export function ${name}\\(`, 'u'));
   }
   // And the server's entry point still offers them, so nothing else had to change.
   assert.match(readFileSync(join(src, 'lib', 'i18n', 'index.ts'), 'utf8'), /export \{ fill, formatDateTime, formatNumber, formatPercent, pluralForm \};/u);
+  assert.match(readFileSync(join(src, 'lib', 'i18n', 'index.ts'), 'utf8'), /export \{ formatDay \} from '\.\/format\.ts';/u);
 });

@@ -105,3 +105,29 @@ export function formatDateTime(code: LocaleCode | string, iso: string, timeZone?
     return new Intl.DateTimeFormat('en', options).format(when);
   }
 }
+
+/**
+ * A calendar day that was stored with no time: the day a policy took effect.
+ *
+ * `effective_at` is a `date`. Through `formatDateTime` it would be printed
+ * with a midnight and a zone that nobody stored, and in a browser west of
+ * Greenwich it would be the day before. This reads the year, the month and
+ * the day as they were written and prints that day, in the language's own
+ * calendar and digits, with no clock on it.
+ *
+ * A value that is not a day is the empty string, as it is for a moment.
+ */
+export function formatDay(code: LocaleCode | string, day: string | null | undefined): string {
+  const parts = /^(\d{4})-(\d{2})-(\d{2})(?:$|[T ])/u.exec(day ?? '');
+  if (!parts) return '';
+  const [year, month, date] = [Number(parts[1]), Number(parts[2]), Number(parts[3])];
+  const when = new Date(Date.UTC(year, month - 1, date));
+  // 2026-02-31 is not a day; `Date` would quietly make it the third of March.
+  if (when.getUTCFullYear() !== year || when.getUTCMonth() !== month - 1 || when.getUTCDate() !== date) return '';
+  const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' };
+  try {
+    return new Intl.DateTimeFormat(code, options).format(when);
+  } catch {
+    return new Intl.DateTimeFormat('en', options).format(when);
+  }
+}

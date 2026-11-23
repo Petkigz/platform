@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 11% there (192 of 1736 sentences; it was 71% of 272, then
+  the nineteen reads 11% there (192 of 1769 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -548,8 +548,8 @@ still unreviewed and still saying so.
   15% of 1315 with the merge screen, 14% of 1383 with the two sharing
   screens, 13% of 1434 with the two for inviting a friend and of 1514 with
   the pages of sponsored seats, 12% of 1568 with my orders and of 1665 with the notification centre, 11%
-  of 1707 with the two plans pages, then this with the page an account's
-  plans are kept on),
+  of 1707 with the two plans pages and of 1736 with the page an account's
+  plans are kept on, then this with the policy pages),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -870,6 +870,35 @@ written: not a held draft, nothing.
   inviting, applying to teach, the phone card), an account that signs in by
   phone code, a closed or suspended account in a language other than
   English, and any of the other twenty-four languages in a browser.
+- *The policy pages (2026-11-23).* `/policies` and `/policies/[slug]` are in
+  the reader's language for the twenty-seven languages with nothing held
+  (`messages/policy.ts`, thirty-three sentences, **read by no speaker**) and
+  in English, marked, for the nineteen.
+  **The documents themselves are English for every reader:** title, summary,
+  change note and text, shown as the owner wrote them and marked as English,
+  with one sentence on the page saying so. A reader with no English is
+  therefore asked to agree to a text they cannot read. Translating a policy
+  is a decision about which text binds, and is the owner's.
+  **Agreeing is checked against the version on the page, with one gap left.**
+  The route refuses when the live version is not the one the page showed.
+  If the owner publishes in the instant between that check and the write,
+  the agreement is recorded for the newer version and the page says so.
+  Closing that needs `accept_policy()` to take the expected version: a
+  migration, **not written**.
+  **Not built:** earlier versions for a reader to look back at; a translated
+  document; anything on `/admin/policies`, which is unchanged and English.
+  Checked by `scripts/policies-route-smoke.mjs` on a synthetic backend in
+  which every document is invented: HTTP in English, Arabic and Hausa,
+  signed out and signed in; each read that can fail, one at a time; a draft,
+  a document for reading only and one that asks for agreement; each of the
+  writer's three sentences as the route answers it, and a version that is
+  not the live one; Chromium in English, Arabic and Tamil at 320, 390 and
+  1440 wide, and the button pressed in Arabic at 390, including a version
+  published while the page was open. **Not checked:** a real database (the
+  stand-in refuses only what it is told to); that a signed-out visitor is
+  allowed to read the register by the real grants; the teacher dashboard's
+  use of the same button, other than that it compiles; the seven real
+  documents on these pages; twenty-four languages in a browser.
 - *The page an account's plans are kept on (2026-11-23).* `/subscriptions`
   is in the reader's language for the twenty-seven languages with nothing
   held (`messages/subs.ts`, twenty-nine sentences, **read by no speaker**)

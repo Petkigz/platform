@@ -1,175 +1,236 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
+import { Say } from '@/components/say';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
+import { formatDateTime, formatDay, formatNumber, translator } from '@/lib/i18n';
 import {
-  audienceLabel,
-  liveLine,
+  audienceOf,
+  isInForce,
   readableBlocks,
   type PolicyDocumentRow,
   type PolicyPageView,
   type PolicyStanding,
 } from '@/lib/policies';
+import { isPolicySlug } from '@/lib/policy-outcome';
+import { AUDIENCE_WORDS, READ_FAILED, acceptWords, readerLanguage } from '../reader';
 import { AcceptPolicy } from './accept-policy';
 
 export const dynamic = 'force-dynamic';
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}): Promise<Metadata> {
+type Params = Promise<{ slug: string }>;
+
+/**
+ * The tab's name: the document's own title when it can be read, and the
+ * register's name when it cannot. Never a reason for the page to fail.
+ */
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+  const { shown } = await readerLanguage();
+  const fallback = { title: translator(shown.code)('footer.terms') };
+  if (!isSupabaseConfigured()) return fallback;
   const { slug } = await params;
-  if (!isSupabaseConfigured()) return { title: slug };
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from('policy_documents')
-    .select('title, summary')
-    .eq('slug', slug)
-    .maybeSingle();
-  if (!data) return { title: slug.replace(/-/g, ' ') };
-  const title = String(data.title ?? slug);
-  const description = typeof data.summary === 'string' ? data.summary : '';
-  return {
-    title,
-    ...(description ? { description } : {}),
-    alternates: { canonical: `/policies/${slug}` },
-  };
+  if (!isPolicySlug(slug)) return fallback;
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase.from('policy_documents').select('title, summary').eq('slug', slug).maybeSingle();
+    const row = data as { title?: string; summary?: string | null } | null;
+    if (!row?.title) return fallback;
+    return { title: row.title, description: row.summary ?? undefined };
+  } catch {
+    return fallback;
+  }
 }
 
 /**
- * One document — screen 50.
+ * One policy.
  *
- * The text shown is the *live* version, read through `policy_page()`, which
- * returns null when nothing is in force. A signed-out visitor can read it; that
- * is the point of a term. A signed-in visitor whose account owes an agreement
- * gets the button, and the button names the version it is agreeing to.
+ * In the reader's language, for the twenty-seven it is written in
+ * (`messages/policy.ts`); English, marked as English, for the rest.
  *
- * The empty state is the interesting one. It says a draft exists and why it is
- * not shown: a document nobody has approved is not yet an agreement, and showing
- * it here would let a reader believe they were bound by a paragraph that is still
- * being decided.
+ * **The document is not translated.** Its title, summary, change note and
+ * text are the owner's, in English, shown as written and marked as English,
+ * and the page says so above the text. What somebody agrees to is that text.
+ * A translation of it that nobody approved would be a different text.
+ *
+ * It shows the live version or says there is none. It never shows a draft.
+ *
+ * **Not read is said as not read.** The page used to throw when the document
+ * or its live text could not be read. Either is now one sentence at status
+ * 200. Whether the reader has agreed already is a lesser read: without it the
+ * button is still offered, and pressing it twice is not a mistake, because
+ * the writer answers a second agreement with the time of the first.
+ *
+ * **Agreeing goes through `/api/policies`**, with the version this page
+ * showed. See that route for why.
  */
-export default async function PolicyPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+export default async function PolicyDocumentPage({ params }: { params: Params }) {
   if (!isSupabaseConfigured()) notFound();
 
   const { slug } = await params;
-  const supabase = await createClient();
+  // A slug the table could not hold names no document; nothing is asked.
+  if (!isPolicySlug(slug)) notFound();
 
+  const { locale, shown } = await readerLanguage();
+  const t = translator(shown.code);
+  const frame = shown.code !== locale ? { lang: shown.code, dir: shown.dir } : {};
+  const written = shown.code === 'en' ? {} : { lang: 'en', dir: 'ltr' as const };
+
+  const supabase = await createClient();
   const [documentResult, pageResult, userResult] = await Promise.all([
     supabase
       .from('policy_documents')
       .select('slug, title, summary, audience, acceptance_required')
       .eq('slug', slug)
-      .maybeSingle(),
-    supabase.rpc('policy_page', { p_slug: slug }),
-    supabase.auth.getUser(),
+      .maybeSingle()
+      .then((r) => r, () => READ_FAILED),
+    supabase.rpc('policy_page', { p_slug: slug } as never).then((r) => r, () => READ_FAILED),
+    // Not knowing who is reading is treated as nobody: they are sent to sign in.
+    supabase.auth.getUser().then((r) => r.data.user, () => null),
   ]);
-  if (documentResult.error) throw new Error(documentResult.error.message);
-  if (pageResult.error) throw new Error(pageResult.error.message);
+
+  const ways = (
+    <>
+      <p className="muted policy-kept">{t('policy.kept')}</p>
+      <p className="policy-ways">
+        <Link href="/policies">{t('footer.terms')}</Link>
+      </p>
+    </>
+  );
+
+  if (documentResult.error || pageResult.error) {
+    console.error('policies: a document could not be read:', documentResult.error?.message ?? pageResult.error?.message);
+    return (
+      <div className="page policy-page" {...frame}>
+        <div className="page-head">
+          <h1>{t('footer.terms')}</h1>
+        </div>
+        <div className="notice error" role="alert" data-policy-state="unread">
+          {t('policy.unread')}
+        </div>
+        {ways}
+      </div>
+    );
+  }
 
   const document = documentResult.data as unknown as PolicyDocumentRow | null;
   if (!document) notFound();
-  const page = (pageResult.data ?? null) as unknown as PolicyPageView | null;
+  const found = (pageResult.data ?? null) as unknown as PolicyPageView | null;
+  const page = found && isInForce(found) ? found : null;
 
-  const user = userResult.data.user;
-  let acceptedAt: string | null = null;
-  let outstanding = 0;
-  if (user) {
-    const { data: standingData } = await supabase.rpc('my_policy_standing');
-    const standing = (standingData ?? null) as PolicyStanding | null;
-    outstanding = Number(standing?.outstanding ?? 0);
-    acceptedAt = standing?.acceptanceRequired.find((row) => row.slug === slug)?.acceptedAt ?? null;
+  const head = (
+    <div className="page-head">
+      <p className="eyebrow">
+        <Link href="/policies">{t('footer.terms')}</Link>
+      </p>
+      <h1 {...written}>{document.title}</h1>
+      {document.summary ? (
+        <p className="lede" {...written}>
+          {document.summary}
+        </p>
+      ) : null}
+    </div>
+  );
+
+  if (!page) {
+    return (
+      <div className="page policy-page" {...frame}>
+        {head}
+        <div className="notice" data-policy-state="draft">
+          <strong>{t('policy.notYet')}</strong> {t('policy.draftBody')}
+        </div>
+        {ways}
+      </div>
+    );
   }
 
+  const user = userResult;
+  // Whether this reader has agreed to this version, and how many documents
+  // still wait for them. Unread is `null`: not "no", and not "none".
+  let acceptedAt: string | null = null;
+  let outstanding: number | null = null;
+  if (user && document.acceptance_required) {
+    const standing = await supabase.rpc('my_policy_standing').then((r) => r, () => READ_FAILED);
+    if (standing.error) {
+      console.error('policies: what this account has agreed to could not be read:', standing.error.message);
+    } else {
+      const read = (standing.data ?? null) as PolicyStanding | null;
+      const rows = Array.isArray(read?.acceptanceRequired) ? read.acceptanceRequired : [];
+      const row = rows.find((one) => one.slug === document.slug && one.versionNumber === page.versionNumber);
+      acceptedAt = typeof row?.acceptedAt === 'string' ? row.acceptedAt : null;
+      outstanding = typeof read?.outstanding === 'number' ? read.outstanding : null;
+    }
+  }
+
+  const day = formatDay(locale, page.effectiveAt);
+  const blocks = readableBlocks(page.body);
+
   return (
-    <div className="container section">
-      <p className="eyebrow"><Link href="/policies">Policies</Link></p>
-      <h1>{document.title}</h1>
-      <p className="lede">{document.summary ?? 'No summary yet.'}</p>
+    <div className="page policy-page" data-policy-state="live" data-policy-version={page.versionNumber} {...frame}>
+      {head}
 
-      {!page ? (
-        <>
-          <div className="notice" style={{ maxWidth: '46rem', marginTop: '1rem' }}>
-            <strong>Not in force yet.</strong> This document has been written and versioned,
-            but no version has been approved, so there is nothing here for you to read or
-            agree to. A draft is not shown: it still carries questions only the operator can
-            answer, and one of them can change what the document says. Nothing on this page
-            binds you until it is approved.
-          </div>
-          <p className="muted" style={{ maxWidth: '46rem' }}>
-            In the meantime, an account here is governed by what the screens actually do —
-            the catalogue, the account page and this register are the description.
-          </p>
-        </>
-      ) : (
-        <>
-          <p className="muted" style={{ maxWidth: '46rem', marginTop: '1rem' }}>
-            {liveLine({ versionNumber: page.versionNumber, effectiveAt: page.effectiveAt })}
-            {' · '}
-            For {audienceLabel(page.audience).toLowerCase()}
-            {page.changeNote ? ` · ${page.changeNote}` : ''}
-          </p>
+      <ul className="policy-facts">
+        <li>
+          <strong>{t('policy.versionNo', { number: formatNumber(locale, page.versionNumber) })}</strong>
+        </li>
+        {day ? (
+          <li>
+            <Say text={t('policy.inForceFrom')} parts={{ date: <bdi>{day}</bdi> }} />
+          </li>
+        ) : null}
+        <li>{t(AUDIENCE_WORDS[audienceOf(page.audience)])}</li>
+      </ul>
+      {page.changeNote ? (
+        <p className="muted policy-change">
+          <Say text={t('policy.changed')} parts={{ note: <bdi {...written}>{page.changeNote}</bdi> }} />
+        </p>
+      ) : null}
+      {shown.code === 'en' ? null : <p className="muted policy-as-written">{t('policy.asWritten')}</p>}
 
-          <article style={{ maxWidth: '46rem', marginTop: '1.5rem' }}>
-            {readableBlocks(page.body).map((block, index) => (
-              block.kind === 'heading' ? (
-                <h2 key={index} style={{ marginTop: '2rem' }}>{block.text}</h2>
-              ) : (
-                <p key={index} style={{ marginTop: '0.75rem', whiteSpace: 'pre-line' }}>
-                  {block.text}
+      <article className="policy-body" data-policy-body {...written}>
+        {blocks.map((block, index) =>
+          block.kind === 'heading' ? <h2 key={index}>{block.text}</h2> : <p key={index}>{block.text}</p>,
+        )}
+      </article>
+
+      {document.acceptance_required ? (
+        <section className="card policy-agree" data-policy-agree={user ? (acceptedAt ? 'agreed' : 'asked') : 'signed-out'}>
+          <h2>{t('policy.agreeTitle')}</h2>
+          {user ? (
+            <>
+              <AcceptPolicy
+                slug={document.slug}
+                version={page.versionNumber}
+                agreedAt={acceptedAt ? formatDateTime(locale, acceptedAt, 'UTC') : null}
+                locale={locale}
+                words={acceptWords(t)}
+              />
+              {acceptedAt ? (
+                <p className="muted">
+                  {t('policy.agreedWhere')} <Link href="/account">{t('export.inAccount')}</Link>
                 </p>
-              )
-            ))}
-          </article>
-
-          {document.acceptance_required && (
-            <section className="card" style={{ maxWidth: '46rem', marginTop: '2rem' }}>
-              <h2 style={{ marginTop: 0 }}>Your agreement</h2>
-              {user ? (
-                <AcceptPolicy
-                  slug={document.slug}
-                  title={document.title}
-                  versionNumber={page.versionNumber}
-                  acceptedAt={acceptedAt}
-                />
-              ) : (
-                <>
-                  <p className="muted">
-                    This document asks for your agreement, and the time you give it is kept
-                    against your account. Sign in first.
-                  </p>
-                  <p>
-                    <Link className="btn" href={`/sign-in?next=/policies/${document.slug}`}>
-                      Sign in to agree
-                    </Link>
-                  </p>
-                </>
-              )}
-              {user && outstanding > 0 && acceptedAt === null && (
-                <p className="muted" style={{ fontSize: '0.9rem' }}>
-                  {outstanding === 1
-                    ? 'This is the one document waiting for you.'
-                    : `${outstanding} documents are waiting for you in total.`}
+              ) : null}
+              {acceptedAt === null && outstanding !== null && outstanding > 0 ? (
+                <p className="muted" data-policy-waiting>
+                  {t('policy.waitingCount', { count: formatNumber(locale, outstanding) })}
                 </p>
-              )}
-            </section>
+              ) : null}
+            </>
+          ) : (
+            <>
+              <p className="muted">{t('policy.agreeSignIn')}</p>
+              <p>
+                <Link className="btn" href={`/sign-in?next=/policies/${document.slug}`}>
+                  {t('policy.agreeSignInDo')}
+                </Link>
+              </p>
+            </>
           )}
-        </>
-      )}
+        </section>
+      ) : null}
 
-      <p className="muted" style={{ marginTop: '1.5rem', maxWidth: '46rem', fontSize: '0.9rem' }}>
-        Every version is kept. If this text changes, the new version takes effect on a date
-        rather than quietly replacing the one you read — and where a change needs your
-        agreement, you will be asked again.
-      </p>
-      <p style={{ marginTop: '1rem' }}><Link href="/policies">All policies</Link></p>
+      {ways}
     </div>
   );
 }

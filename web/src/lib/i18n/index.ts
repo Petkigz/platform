@@ -32,6 +32,7 @@ export {
 };
 // No catalogue behind these: see `format.ts` for why they live apart.
 export { fill, formatDateTime, formatNumber, formatPercent, pluralForm };
+export { formatDay } from './format.ts';
 export type { Direction, Locale, LocaleCode, LocaleSource, MessageKey };
 
 export type Translate = (key: MessageKey, vars?: Record<string, string | number>) => string;
@@ -93,7 +94,7 @@ const SERVER_ONLY_PREFIXES: readonly string[] = [
   'learn.', 'course.', 'lesson.', 'assess.', 'assign.', 'missing.', 'account.',
   'family.', 'buy.', 'close.', 'export.', 'reading.', 'restore.', 'phone.',
   'merge.', 'share.', 'refer.', 'sponsor.', 'orders.', 'billing.', 'receipt.', 'notify.',
-  'plans.', 'subs.',
+  'plans.', 'subs.', 'policy.',
 ];
 
 /** Everything a client component outside the companion pages can ask for. */

@@ -62,15 +62,16 @@ export type PolicyStanding = {
   history: { slug: string; title: string; versionNumber: number; acceptedAt: string }[];
 };
 
-const AUDIENCE_LABELS: Record<string, string> = {
-  everyone: 'Everyone',
-  child: 'Children and their guardians',
-  teacher: 'Teachers',
-  institution: 'Institutions',
-};
-
-export function audienceLabel(audience: string | null | undefined): string {
-  return AUDIENCE_LABELS[String(audience ?? '')] ?? 'Everyone';
+/**
+ * Which of the four audiences a stored word is.
+ *
+ * The reader's pages say the audience in the reader's language, so they need
+ * the name and not an English label. A word nobody planned for is
+ * `everyone`: a document is never shown as being for nobody.
+ */
+export function audienceOf(audience: string | null | undefined): PolicyAudience {
+  const word = String(audience ?? '');
+  return word === 'child' || word === 'teacher' || word === 'institution' ? word : 'everyone';
 }
 
 /** A document is in force only when there is a live version behind it. */
@@ -94,12 +95,6 @@ export function liveLine(live: { versionNumber: number; effectiveAt: string | nu
   return date
     ? `Version ${live.versionNumber}, in force from ${date}`
     : `Version ${live.versionNumber}, in force`;
-}
-
-/** What the button on a document page says. */
-export function acceptanceLabel(acceptedAt: string | null | undefined): string {
-  if (!acceptedAt) return 'Agree to this version';
-  return `Agreed on ${String(acceptedAt).slice(0, 10)}`;
 }
 
 // ---------------------------------------------------------------------------

@@ -166,6 +166,13 @@ for (const [file, key] of [
   ['subs.ts', 'subs.lede'],
   ['subs.ts', 'subs.unread'],
   ['subs.ts', 'subs.partUnread'],
+  // The policy register and a document's page are server pages, and the
+  // button that records an agreement is handed its words. What the register
+  // says about itself, about policies it could not read and about a draft
+  // must be in nothing a browser downloads.
+  ['policy.ts', 'policy.lede'],
+  ['policy.ts', 'policy.unread'],
+  ['policy.ts', 'policy.draftBody'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

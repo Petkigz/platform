@@ -12,6 +12,8 @@ import {
   type TeacherTerms,
 } from '@/lib/licence';
 import { AcceptPolicy } from '@/app/policies/[slug]/accept-policy';
+import { acceptWords } from '@/app/policies/reader';
+import { translator } from '@/lib/i18n';
 import { TakedownAnswer } from './takedown-answer';
 import { ConductCard } from './conduct-card';
 import { IjazahCard } from './ijazah-card';
@@ -143,11 +145,15 @@ export default async function TeachPage() {
           {termsSentence(terms)}
         </p>
         {needsSignature(terms) && (
+          // This page is in English, so the button is given English words.
+          // The version named in the sentence above is the one agreed to:
+          // the route refuses if a newer one has been published since.
           <AcceptPolicy
             slug={terms.slug}
-            title={terms.title}
-            versionNumber={terms.versionNumber as number}
-            acceptedAt={terms.acceptedAt}
+            version={terms.versionNumber as number}
+            agreedAt={null}
+            locale="en"
+            words={acceptWords(translator('en'))}
           />
         )}
       </section>

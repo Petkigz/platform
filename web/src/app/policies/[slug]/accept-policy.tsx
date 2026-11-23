@@ -3,74 +3,140 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { createClient } from '@/lib/supabase/client';
-import { acceptanceLabel, describePolicyError } from '@/lib/policies';
+import { Say } from '@/components/say';
+import { formatDateTime } from '@/lib/i18n/format';
+import { policyOutcomeOf, type PolicyOutcome } from '@/lib/policy-outcome';
 
 /**
- * The one button that records consent.
+ * The words this button says. Chosen on the server, in the reader's
+ * language: a script sent to a browser holds no catalogue.
+ */
+export type AcceptWords = {
+  note: string;
+  agree: string;
+  working: string;
+  /** With `{date}` in it: when this reader agreed. */
+  agreed: string;
+  /** The agreement was recorded for a newer version than the page showed. */
+  agreedNewer: string;
+  /** The request could not be made at all. */
+  unreachable: string;
+  reasons: Record<PolicyOutcome, string>;
+};
+
+/**
+ * The agreement button.
  *
- * It sends the **slug**, never a version id. The database resolves the version
- * that is live at that moment, so a page left open across a publication cannot
- * collect agreement to the version the reader is no longer looking at.
+ * **It asks `/api/policies`, with the version the page showed.** It used to
+ * call `accept_policy()` from the browser by slug alone, so somebody who
+ * left the page open while a new version was published agreed to a text they
+ * had not been shown. The route now refuses that with `changed`, and this
+ * button reads the page again so the new text is in front of them.
+ *
+ * **What it says after a refusal is this page's sentence for its name.** The
+ * old button printed the database's own text when it did not recognise it.
+ * A reason is believed only when it arrives with its own status
+ * (`policyOutcomeOf`); anything else is "we could not confirm".
+ *
+ * **Agreed is said here, with the time**, and stays said when the page is
+ * read again: the same component is drawn, now with the time the server
+ * read. A second press that the writer answered with the first time is a
+ * success like any other.
+ *
+ * The time is printed in UTC and says so, as the server prints it, so it
+ * does not change when the page is read again.
  */
 export function AcceptPolicy({
   slug,
-  title,
-  versionNumber,
-  acceptedAt,
+  version,
+  agreedAt,
+  locale,
+  words,
 }: {
   slug: string;
-  title: string;
-  versionNumber: number;
-  acceptedAt: string | null;
+  /** The version number the page is showing. */
+  version: number;
+  /** When this reader agreed to that version, already said in their language. Null when they have not, or when that was not read. */
+  agreedAt: string | null;
+  locale: string;
+  words: AcceptWords;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [agreedAt, setAgreedAt] = useState<string | null>(acceptedAt);
+  const [tone, setTone] = useState<'warn' | 'error'>('error');
+  const [message, setMessage] = useState<string | null>(null);
+  /** What this button was told when it asked: the time, for which version, and which one the page showed then. */
+  const [told, setTold] = useState<{ at: string; version: number; shown: number } | null>(null);
 
-  async function submit(event: React.FormEvent) {
-    event.preventDefault();
-    setError(null);
+  async function agree() {
+    if (busy) return;
     setBusy(true);
+    setMessage(null);
+
+    let res: Response;
     try {
-      const supabase = createClient();
-      const { data, error: rpcError } = await supabase.rpc('accept_policy', { p_slug: slug });
-      if (rpcError) {
-        setError(describePolicyError(rpcError.message));
-        return;
-      }
-      const result = data as { acceptedAt?: string; versionNumber?: number } | null;
-      setAgreedAt(result?.acceptedAt ?? new Date().toISOString());
-      // The page also carries the outstanding count, so it is refetched rather
-      // than patched by hand.
-      router.refresh();
+      res = await fetch('/api/policies', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ slug, version }),
+      });
     } catch {
-      setError('Could not reach the server. Check your connection and try again.');
-    } finally {
+      setTone('warn');
+      setMessage(words.unreachable);
       setBusy(false);
+      return;
+    }
+    const json = (await res.json().catch(() => null)) as {
+      ok?: unknown;
+      reason?: unknown;
+      version?: unknown;
+      acceptedAt?: unknown;
+    } | null;
+    setBusy(false);
+
+    if (res.ok && json?.ok === true && typeof json.version === 'number' && typeof json.acceptedAt === 'string') {
+      setTold({ at: formatDateTime(locale, json.acceptedAt, 'UTC'), version: json.version, shown: version });
+      router.refresh();
+      return;
+    }
+    const named = res.ok ? 'unconfirmed' : policyOutcomeOf(res.status, json?.reason);
+    setTone(named === 'refused' || named === 'unconfirmed' ? 'warn' : 'error');
+    setMessage(words.reasons[named]);
+    // The page may be behind what the database holds: read it again.
+    if (named === 'changed' || named === 'not_in_force' || named === 'not_found' || named === 'unconfirmed') {
+      router.refresh();
     }
   }
 
+  // Recorded for a version this page was not showing when the button was
+  // pressed. It stays said after the page is read again and shows that one.
+  const newer = told !== null && told.version !== told.shown;
+  const when = agreedAt ?? told?.at ?? null;
+
   return (
-    <form onSubmit={submit} style={{ display: 'grid', gap: '0.65rem' }}>
-      <p className="muted" style={{ margin: 0 }}>
-        {agreedAt
-          ? `You have agreed to this version of the ${title.toLowerCase()}. The time is kept against your account, and the text you agreed to cannot be edited afterwards.`
-          : `Agreeing records that you have read version ${versionNumber} and accept it. The version and the time are kept against your account, and this text cannot be edited afterwards — a change is published as a new version.`}
-      </p>
-      {error && <div className="notice error" role="alert">{error}</div>}
-      <div>
-        <button type="submit" className="btn" disabled={busy || agreedAt !== null}>
-          {busy ? 'Recording…' : acceptanceLabel(agreedAt)}
-        </button>
-      </div>
-      {agreedAt && (
-        <p className="muted" style={{ margin: 0, fontSize: '0.9rem' }}>
-          Nothing further is needed. <a href="#your-agreement">Where this is kept</a>{' '}
-          is your account page; the same list is on <a href="/policies">the register</a>.
+    <div className="policy-accept" data-policy-accept={when ? 'agreed' : 'asked'}>
+      {when ? (
+        <p className="policy-agreed" role="status">
+          <Say text={words.agreed} parts={{ date: <bdi>{when}</bdi> }} />
         </p>
+      ) : (
+        <>
+          <p className="muted">{words.note}</p>
+          <button type="button" className="btn" onClick={agree} disabled={busy} aria-busy={busy} data-policy-agree-button>
+            {busy ? words.working : words.agree}
+          </button>
+        </>
       )}
-    </form>
+      {newer ? (
+        <div className="notice warn" role="alert" data-policy-newer>
+          {words.agreedNewer}
+        </div>
+      ) : null}
+      {message ? (
+        <div className={`notice ${tone}`} role={tone === 'error' ? 'alert' : 'status'} data-policy-refusal>
+          {message}
+        </div>
+      ) : null}
+    </div>
   );
 }

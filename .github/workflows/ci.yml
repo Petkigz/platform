@@ -165,6 +165,9 @@ jobs:
       - name: Subscriptions synthetic HTTP regression
         run: node scripts/subscriptions-route-smoke.mjs
 
+      - name: Policies synthetic HTTP regression
+        run: node scripts/policies-route-smoke.mjs
+
       - name: Catalogue synthetic HTTP regression
         run: node scripts/catalogue-route-smoke.mjs
 

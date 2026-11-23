@@ -2619,6 +2619,52 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The policy pages in the reader's language, 2026-11-23
+
+- *The words.* Thirty-three sentences in a new part, `messages/policy.ts`,
+  twenty-seven languages, **read by no speaker** (`tmp-words/u30`). The
+  heading is the footer link's words; "ask for help", "home", "your
+  account", "working" and the two sentences for a lost connection and a lost
+  session are other parts', reused.
+- *The pages and the button.* `app/policies/page.tsx` and
+  `app/policies/[slug]/page.tsx` read and draw; `reader.ts` beside them
+  chooses the language and builds the button's words;
+  `[slug]/accept-policy.tsx` is the button, handed its words.
+  `app/api/policies/route.ts` is new and answers by name. See `DECISIONS.md`.
+- *Rules a test holds.* `lib/policy-outcome.ts` + test (9): every
+  `raise exception` in the newest `accept_policy` and `my_policy_standing`,
+  read out of the migrations, has a reason; each reason has a status; the
+  route checks the version before it asks the writer and sends none of the
+  database's sentences; neither page throws on a read; the button does not
+  import the database client; a day is printed with no clock.
+- *Found on the way.* (1) The button agreed by slug from the browser, so a
+  page left open over a publication recorded an agreement to a version the
+  reader had not been shown. (2) When it did not recognise a refusal it
+  printed the database's text. (3) Either of two failed reads on each page
+  was the "this page broke" screen. (4) The effective date and the time of
+  agreement were the first ten characters of the stored value. (5) The
+  button linked to an anchor that did not exist. (6) The teacher dashboard
+  uses the same button for the teacher terms and had the first two faults
+  too; it now goes through the route with the version its sentence names.
+  That page is still English.
+- *Checked.* `scripts/policies-route-smoke.mjs` in `ci.yml` and, with a
+  browser, in `responsive-smoke.yml` (whose job limit went from 20 to 25
+  minutes: it took fifteen with one step fewer).
+- *Not shown.* Anything from a real database: the stand-in answers what it
+  is asked, and every document in it is invented. That anon may read the
+  register and that an account cannot agree for another are the migration's
+  grants and code (`supabase/tests/policies.test.mjs` is where the writer
+  itself is run). The teacher dashboard's button in a browser. Twenty-four
+  languages in a browser; Tamil was drawn but this sandbox has no Tamil
+  font, so only its layout was seen.
+- *Not built.* `accept_policy()` taking the expected version, which is what
+  closes the last gap and is a migration. A translated document. A list of
+  earlier versions for a reader. `/account` still says what it said about
+  policies; `/admin/policies` and its editor are untouched and English.
+- *Counts.* 1769 keys; server-only 1401; unwritten while held 1497; held
+  192 of 1769, 10.85%, shown as 11%. 133 page routes, one more route
+  handler; 31 smoke scripts. The translation audit stayed at 195 of 200.
+
 ### The page an account's plans are kept on, 2026-11-23
 
 - *The words.* Twenty-nine sentences in a new part, `messages/subs.ts`,
