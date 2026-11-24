@@ -408,7 +408,9 @@ project by a job reviewed for exactly that one file (below):
 `20261281147000_sponsorship_checkout.sql`, both on 2026-11-19. The job
 above could apply neither: it applies exactly the ten it was reviewed for
 and refuses a tree with more. The next migration needs a job of its own in
-the same way. The hosted project is at 354, the same as this tree.
+the same way. Two more went that way on 2026-11-24, in one job (the 355th
+and 356th, below). The hosted project is at 356. This tree has one more, the
+357th, whose job has not run.
 
 Read back afterwards through the read-only connector, separately from the job:
 
@@ -511,7 +513,14 @@ with the tested database built from all 356, and applies only if the CLI's
 dry-run names exactly those two files. The CLI applies each file in its own
 transaction: if the second failed after the first was recorded, the job
 would say the history records 355 and would not start again; that state
-needs a person. At 356 it only repeats the comparison. **Not run yet.**
+needs a person. At 356 it only repeats the comparison.
+**Done:** run `45358527173`, approved by the owner on 2026-11-24, succeeded;
+the test project records 356. Read through the connector afterwards, the
+history ends with `notification_facts` and `policy_version_shown`. (The
+job's log cannot be read from the workspace; every step's result can, and
+the last step succeeds only when the history and the two roles' privileges
+are as expected.) Not shown by it: Auth, a request through PostgREST, or the
+application, which has not been deployed. This job is now spent too.
 
 **The application and the 356th go in that order.** From this commit
 `POST /api/policies` calls the two-argument `accept_policy()`. An
@@ -529,7 +538,7 @@ the same approval. It starts only from exactly the 356, so it cannot run
 before the job above has; it rehearses on the hosted database and rolls
 back, compares the two roles' privileges with the tested database built from
 all 357, and applies only if the CLI's dry-run names exactly that one file.
-**Not asked for and not run.**
+**Not run.** It applies nothing until the owner approves the run.
 
 **The application and the 357th go in that order too.** From this commit the
 plan pages tell a buyer in the EU, the EEA or the UK that the plan ends when

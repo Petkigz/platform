@@ -2619,6 +2619,17 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The test project at 356, 2026-11-24
+
+- *Done.* The owner approved run `45358527173`; it succeeded. The test
+  project records the 355th and 356th migrations. Read through the
+  connector afterwards: the history ends with `notification_facts` and
+  `policy_version_shown`. The job's log cannot be read from the workspace;
+  each step's result can.
+- *Not done.* The 357th (the entry below) is not there. The application has
+  not been deployed. Nothing about Auth, PostgREST or the pages is shown by
+  a migration job.
+
 ### A plan given back within fourteen days, 2026-11-24
 
 - *Decided by the owner, 2026-11-24.* A buyer in the European Union, the
